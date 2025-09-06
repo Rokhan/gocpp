@@ -103,7 +103,7 @@
 | [TourOfGo/moretypes/pointers.go](tests/TourOfGo/moretypes/pointers.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/pointers.cpp)) | ✔️ |
 | [TourOfGo/moretypes/range.go](tests/TourOfGo/moretypes/range.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/range.cpp)) | ✔️ |
 | [TourOfGo/moretypes/range-continued.go](tests/TourOfGo/moretypes/range-continued.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/range-continued.cpp)) | ✔️ |
-| [TourOfGo/moretypes/slice-bounds.go](tests/TourOfGo/moretypes/slice-bounds.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/slice-bounds.cpp)) | ❌ |
+| [TourOfGo/moretypes/slice-bounds.go](tests/TourOfGo/moretypes/slice-bounds.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/slice-bounds.cpp)) | ✔️ |
 | [TourOfGo/moretypes/slice-len-cap.go](tests/TourOfGo/moretypes/slice-len-cap.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/slice-len-cap.cpp)) | ❌ |
 | [TourOfGo/moretypes/slice-literals.go](tests/TourOfGo/moretypes/slice-literals.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/slice-literals.cpp)) | ✔️ |
 | [TourOfGo/moretypes/slices.go](tests/TourOfGo/moretypes/slices.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/slices.cpp)) | ✔️ |

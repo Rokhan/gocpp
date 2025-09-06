@@ -436,7 +436,7 @@ func addIndentation(input string, indent string) string {
 	return strings.Join(lines, "\n")
 }
 
-func buildOutType(outTypes []outType, typeParams map[string][]string) string {
+func buildOutType(outTypes []outType, typeParams typeParams) string {
 	var resultType string
 	switch len(outTypes) {
 	case 0:
@@ -819,7 +819,7 @@ func mkTemplateParameter(name string, deps []string) string {
 	}
 }
 
-func mkTemplateParameters(templatePrms map[string][]string) []string {
+func mkTemplateParameters(templatePrms typeParams) []string {
 	var templatePrmsStr []string
 	for name, deps := range templatePrms {
 		templatePrmsStr = append(templatePrmsStr, mkTemplateParameter(name, deps))
@@ -830,12 +830,12 @@ func mkTemplateParameters(templatePrms map[string][]string) []string {
 	return templatePrmsStr
 }
 
-func mkTemplateDec(templatePrms map[string][]string) string {
+func mkTemplateDec(templatePrms typeParams) string {
 	templatePrmsStr := mkTemplateParameters(templatePrms)
 	return fmt.Sprintf("template<%s>", strings.Join(templatePrmsStr, ", "))
 }
 
-func mkVariadicTemplateDec(templatePrms map[string][]string, variadicPrm string) string {
+func mkVariadicTemplateDec(templatePrms typeParams, variadicPrm string) string {
 	if len(templatePrms) == 0 {
 		return fmt.Sprintf("template<typename... %s>", variadicPrm)
 	} else {

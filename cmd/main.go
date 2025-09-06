@@ -1278,7 +1278,9 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 
 	case *ast.FuncDecl:
 		cv.ConvertDoc(d.Doc)
-		ctx := ctContext{inDeclaration: true, namespace: cv.namespace}
+
+		typeParams := cv.GetFuncTypeParameters(d)
+		ctx := ctContext{inDeclaration: true, namespace: cv.namespace, typeParams: typeParams}
 		params := cv.readFieldsCtx(d.Recv, ctx)
 		params.setIsRecv()
 		params = append(params, cv.readFieldsCtx(d.Type.Params, ctx)...)
@@ -1298,16 +1300,6 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		}
 
 		usedTypeParams = deduplicate(usedTypeParams)
-
-		typeParams := map[string][]string{}
-		if d.Type.TypeParams != nil {
-			for _, tp := range d.Type.TypeParams.List {
-				for _, name := range tp.Names {
-					cppName := GetCppName(name.Name)
-					typeParams[cppName] = cv.GetCppTypeParameters(tp.Type)
-				}
-			}
-		}
 
 		if len(typeParams) == 0 {
 			for _, name := range usedTypeParams {
@@ -1409,6 +1401,21 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		cv.Panicf("convertDecls, unmanaged subtype")
 	}
 	return
+}
+
+type typeParams map[string][]string
+
+func (cv *cppConverter) GetFuncTypeParameters(d *ast.FuncDecl) typeParams {
+	typeParams := typeParams{}
+	if d.Type.TypeParams != nil {
+		for _, tp := range d.Type.TypeParams.List {
+			for _, name := range tp.Names {
+				cppName := GetCppName(name.Name)
+				typeParams[cppName] = cv.GetCppTypeParameters(tp.Type)
+			}
+		}
+	}
+	return typeParams
 }
 
 func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (outPlaces []place) {
@@ -2635,6 +2642,7 @@ type ctContext struct {
 	ensureHasTypeName  bool
 	ensureHasBlankName bool
 	namespace          string
+	typeParams         typeParams
 }
 
 // Maybe merge this function with "convertExprToType" in future ?
@@ -2666,6 +2674,10 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 
 		cv.checkCanFwd(&identType)
 		cv.checkIsParam(n, &identType)
+
+		if deps, ok := ctx.typeParams[identType.str]; ok && len(deps) != 0 {
+			identType.str = fmt.Sprintf("%s<%s>", identType.str, strings.Join(deps, ", "))
+		}
 		return identType
 
 	case *ast.ArrayType:

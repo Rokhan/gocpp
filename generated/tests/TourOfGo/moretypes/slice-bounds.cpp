@@ -29,6 +29,10 @@ namespace golang::main
         mocklib::Println(s);
         s = s.make_slice(1);
         mocklib::Println(s);
+        s = s.make_slice(0);
+        mocklib::Println(s);
+        s = s.make_slice(0, 0, 0);
+        mocklib::Println(s);
     }
 
 }

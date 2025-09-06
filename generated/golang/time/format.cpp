@@ -449,7 +449,6 @@ namespace golang::time
     // Never printed, just needs to be non-nil for return by atoi.
     gocpp::error errAtoi = errors::New("time: invalid number"s);
     // Duplicates functionality in strconv, but avoids dependency.
-
     template<typename bytes>
     std::tuple<int, struct gocpp::error> atoi(bytes s)
     {
@@ -1059,7 +1058,6 @@ namespace golang::time
     }
 
     // isDigit reports whether s[i] is in range and is a decimal digit.
-
     template<typename bytes>
     bool isDigit(bytes s, int i)
     {
@@ -1861,7 +1859,6 @@ namespace golang::time
         return b == '.' || b == ',';
     }
 
-
     template<typename bytes>
     std::tuple<int, std::string, struct gocpp::error> parseNanoseconds(bytes value, int nbytes)
     {
@@ -1897,7 +1894,6 @@ namespace golang::time
 
     gocpp::error errLeadingInt = errors::New("time: bad [0-9]*"s);
     // leadingInt consumes the leading [0-9]* from s.
-
     template<typename bytes>
     std::tuple<uint64_t, bytes, struct gocpp::error> leadingInt(bytes s)
     {

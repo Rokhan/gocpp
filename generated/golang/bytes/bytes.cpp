@@ -459,7 +459,7 @@ namespace golang::bytes
             {
                 break;
             }
-            a[i] = s.make_slice(, m + sepSave, m + sepSave);
+            a[i] = s.make_slice(0, m + sepSave, m + sepSave);
             s = s.make_slice(m + len(sep));
             i++;
         }

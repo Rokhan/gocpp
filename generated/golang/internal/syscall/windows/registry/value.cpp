@@ -137,7 +137,7 @@ namespace golang::registry
         {
             return {""s, typ, nullptr};
         }
-        auto u = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(, len(data) / 2, len(data) / 2);
+        auto u = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(0, len(data) / 2, len(data) / 2);
         return {syscall::UTF16ToString(u), typ, nullptr};
     }
 
@@ -240,7 +240,7 @@ namespace golang::registry
         {
             return {nullptr, typ, nullptr};
         }
-        auto p = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(, len(data) / 2, len(data) / 2);
+        auto p = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(0, len(data) / 2, len(data) / 2);
         if(len(p) == 0)
         {
             return {nullptr, typ, nullptr};
@@ -363,7 +363,7 @@ namespace golang::registry
         {
             return err;
         }
-        auto buf = (gocpp::array<unsigned char, 1 << 29>*)(unsafe::Pointer(& v[0])).make_slice(, len(v) * 2, len(v) * 2);
+        auto buf = (gocpp::array<unsigned char, 1 << 29>*)(unsafe::Pointer(& v[0])).make_slice(0, len(v) * 2, len(v) * 2);
         return rec::setValue(gocpp::recv(k), name, valtype, buf);
     }
 
@@ -399,7 +399,7 @@ namespace golang::registry
             ss += s + "\x00"s;
         }
         auto v = utf16::Encode(gocpp::slice<gocpp::rune>(ss + "\x00"s));
-        auto buf = (gocpp::array<unsigned char, 1 << 29>*)(unsafe::Pointer(& v[0])).make_slice(, len(v) * 2, len(v) * 2);
+        auto buf = (gocpp::array<unsigned char, 1 << 29>*)(unsafe::Pointer(& v[0])).make_slice(0, len(v) * 2, len(v) * 2);
         return rec::setValue(gocpp::recv(k), name, MULTI_SZ, buf);
     }
 

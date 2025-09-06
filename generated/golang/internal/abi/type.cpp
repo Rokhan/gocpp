@@ -283,7 +283,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.mcount > 0"s)).make_slice(, t->Mcount, t->Mcount);
+        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.mcount > 0"s)).make_slice(0, t->Mcount, t->Mcount);
     }
 
     gocpp::slice<Method> rec::ExportedMethods(struct UncommonType* t)
@@ -292,7 +292,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.xcount > 0"s)).make_slice(, t->Xcount, t->Xcount);
+        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.xcount > 0"s)).make_slice(0, t->Xcount, t->Xcount);
     }
 
     // addChecked returns p+x.
@@ -1146,7 +1146,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Type*, 1 << 16>*)(addChecked(unsafe::Pointer(t), uadd, "t.inCount > 0"s)).make_slice(, t->InCount, t->InCount);
+        return (gocpp::array<Type*, 1 << 16>*)(addChecked(unsafe::Pointer(t), uadd, "t.inCount > 0"s)).make_slice(0, t->InCount, t->InCount);
     }
 
     gocpp::slice<Type*> rec::OutSlice(struct FuncType* t)

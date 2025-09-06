@@ -245,9 +245,9 @@ namespace golang::runtime
         auto x = rec::Uncommon(gocpp::recv(typ));
         auto ni = len(inter->Methods);
         auto nt = int(x->Mcount);
-        auto xmhdr = (gocpp::array<abi::Method, 1 << 16>*)(add(unsafe::Pointer(x), uintptr_t(x->Moff))).make_slice(, nt, nt);
+        auto xmhdr = (gocpp::array<abi::Method, 1 << 16>*)(add(unsafe::Pointer(x), uintptr_t(x->Moff))).make_slice(0, nt, nt);
         auto j = 0;
-        auto methods = (gocpp::array<unsafe::Pointer, 1 << 16>*)(unsafe::Pointer(& m->fun[0])).make_slice(, ni, ni);
+        auto methods = (gocpp::array<unsafe::Pointer, 1 << 16>*)(unsafe::Pointer(& m->fun[0])).make_slice(0, ni, ni);
         unsafe::Pointer fun0 = {};
         imethods:
         for(auto k = 0; k < ni; k++)

@@ -27,7 +27,6 @@ namespace golang::bytealg
     // PrimeRK is the prime base used in Rabin-Karp algorithm.
     // HashStr returns the hash and the appropriate multiplicative
     // factor for use in Rabin-Karp algorithm.
-
     template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep)
     {
@@ -51,7 +50,6 @@ namespace golang::bytealg
 
     // HashStrRev returns the hash of the reverse of sep and the
     // appropriate multiplicative factor for use in Rabin-Karp algorithm.
-
     template<typename T>
     std::tuple<uint32_t, uint32_t> HashStrRev(T sep)
     {
@@ -75,7 +73,6 @@ namespace golang::bytealg
 
     // IndexRabinKarp uses the Rabin-Karp search algorithm to return the index of the
     // first occurrence of sep in s, or -1 if not present.
-
     template<typename T>
     int IndexRabinKarp(T s, T sep)
     {
@@ -106,7 +103,6 @@ namespace golang::bytealg
 
     // LastIndexRabinKarp uses the Rabin-Karp search algorithm to return the last index of the
     // occurrence of sep in s, or -1 if not present.
-
     template<typename T>
     int LastIndexRabinKarp(T s, T sep)
     {

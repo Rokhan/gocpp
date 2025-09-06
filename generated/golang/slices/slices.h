@@ -107,18 +107,18 @@ namespace golang::slices
     void Reverse(S<E> s);
     
     template<template<typename> class  S, typename E>
-    S<E> Concat(gocpp::slice<S> slices);
+    S<E> Concat(gocpp::slice<S<E>> slices);
     
     template<template<typename> class  S, typename E, typename... Args>
     S<E> Concat(Args... slices)
     {
-        return Concat(gocpp::ToSlice<S>(slices...));
+        return Concat(gocpp::ToSlice<S<E>>(slices...));
     }
     
     template<template<typename> class  S, typename E, typename... Args>
-    S<E> Concat(S value, Args... slices)
+    S<E> Concat(S<E> value, Args... slices)
     {
-        return Concat(gocpp::ToSlice<S>(value, slices...));
+        return Concat(gocpp::ToSlice<S<E>>(value, slices...));
     }
 
     namespace rec

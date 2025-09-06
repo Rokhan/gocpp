@@ -21,7 +21,6 @@ namespace golang::slices
     }
 
     // insertionSortCmpFunc sorts data[a:b] using insertion sort.
-
     template<typename E>
     void insertionSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
@@ -36,7 +35,6 @@ namespace golang::slices
 
     // siftDownCmpFunc implements the heap property on data[lo:hi].
     // first is an offset into the array where the root of the heap lies.
-
     template<typename E>
     void siftDownCmpFunc(gocpp::slice<E> data, int lo, int hi, int first, std::function<int (E a, E b)> cmp)
     {
@@ -61,7 +59,6 @@ namespace golang::slices
         }
     }
 
-
     template<typename E>
     void heapSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
@@ -85,7 +82,6 @@ namespace golang::slices
     // C++ implementation: https://github.com/orlp/pdqsort
     // Rust implementation: https://docs.rs/pdqsort/latest/pdqsort/
     // limit is the number of allowed bad (very unbalanced) pivots before falling back to heapsort.
-
     template<typename E>
     void pdqsortCmpFunc(gocpp::slice<E> data, int a, int b, int limit, std::function<int (E a, E b)> cmp)
     {
@@ -153,7 +149,6 @@ namespace golang::slices
     // Let p = data[pivot]
     // Moves elements in data[a:b] around, so that data[i]<p and data[j]>=p for i<newpivot and j>newpivot.
     // On return, data[newpivot] = p
-
     template<typename E>
     std::tuple<int, bool> partitionCmpFunc(gocpp::slice<E> data, int a, int b, int pivot, std::function<int (E a, E b)> cmp)
     {
@@ -201,7 +196,6 @@ namespace golang::slices
 
     // partitionEqualCmpFunc partitions data[a:b] into elements equal to data[pivot] followed by elements greater than data[pivot].
     // It assumed that data[a:b] does not contain elements smaller than the data[pivot].
-
     template<typename E>
     int partitionEqualCmpFunc(gocpp::slice<E> data, int a, int b, int pivot, std::function<int (E a, E b)> cmp)
     {
@@ -230,7 +224,6 @@ namespace golang::slices
     }
 
     // partialInsertionSortCmpFunc partially sorts a slice, returns true if the slice is sorted at the end.
-
     template<typename E>
     bool partialInsertionSortCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
@@ -280,7 +273,6 @@ namespace golang::slices
 
     // breakPatternsCmpFunc scatters some elements around in an attempt to break some patterns
     // that might cause imbalanced partitions in quicksort.
-
     template<typename E>
     void breakPatternsCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
@@ -306,7 +298,6 @@ namespace golang::slices
     // [0,8): chooses a static pivot.
     // [8,shortestNinther): uses the simple median-of-three method.
     // [shortestNinther,∞): uses the Tukey ninther method.
-
     template<typename E>
     std::tuple<int, slices::sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
     {
@@ -351,7 +342,6 @@ namespace golang::slices
     }
 
     // order2CmpFunc returns x,y where data[x] <= data[y], where x,y=a,b or x,y=b,a.
-
     template<typename E>
     std::tuple<int, int> order2CmpFunc(gocpp::slice<E> data, int a, int b, int* swaps, std::function<int (E a, E b)> cmp)
     {
@@ -364,7 +354,6 @@ namespace golang::slices
     }
 
     // medianCmpFunc returns x where data[x] is the median of data[a],data[b],data[c], where x is a, b, or c.
-
     template<typename E>
     int medianCmpFunc(gocpp::slice<E> data, int a, int b, int c, int* swaps, std::function<int (E a, E b)> cmp)
     {
@@ -375,13 +364,11 @@ namespace golang::slices
     }
 
     // medianAdjacentCmpFunc finds the median of data[a - 1], data[a], data[a + 1] and stores the index into a.
-
     template<typename E>
     int medianAdjacentCmpFunc(gocpp::slice<E> data, int a, int* swaps, std::function<int (E a, E b)> cmp)
     {
         return medianCmpFunc(data, a - 1, a, a + 1, swaps, cmp);
     }
-
 
     template<typename E>
     void reverseRangeCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp)
@@ -396,7 +383,6 @@ namespace golang::slices
         }
     }
 
-
     template<typename E>
     void swapRangeCmpFunc(gocpp::slice<E> data, int a, int b, int n, std::function<int (E a, E b)> cmp)
     {
@@ -405,7 +391,6 @@ namespace golang::slices
             std::tie(data[a + i], data[b + i]) = std::tuple{data[b + i], data[a + i]};
         }
     }
-
 
     template<typename E>
     void stableCmpFunc(gocpp::slice<E> data, int n, std::function<int (E a, E b)> cmp)
@@ -455,7 +440,6 @@ namespace golang::slices
     // symMerge assumes non-degenerate arguments: a < m && m < b.
     // Having the caller check this condition eliminates many leaf recursion calls,
     // which improves performance.
-
     template<typename E>
     void symMergeCmpFunc(gocpp::slice<E> data, int a, int m, int b, std::function<int (E a, E b)> cmp)
     {
@@ -549,7 +533,6 @@ namespace golang::slices
     // Data of the form 'x u v y' is changed to 'x v u y'.
     // rotate performs at most b-a many calls to data.Swap,
     // and it assumes non-degenerate arguments: a < m && m < b.
-
     template<typename E>
     void rotateCmpFunc(gocpp::slice<E> data, int a, int m, int b, std::function<int (E a, E b)> cmp)
     {

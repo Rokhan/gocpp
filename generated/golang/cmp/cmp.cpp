@@ -65,7 +65,6 @@ namespace golang::cmp
     // Less reports whether x is less than y.
     // For floating-point types, a NaN is considered less than any non-NaN,
     // and -0.0 is not less than (is equal to) 0.0.
-
     template<typename T>
     bool Less(T x, T y)
     {
@@ -80,7 +79,6 @@ namespace golang::cmp
     //
     // For floating-point types, a NaN is considered less than any non-NaN,
     // a NaN is considered equal to a NaN, and -0.0 is equal to 0.0.
-
     template<typename T>
     int Compare(T x, T y)
     {
@@ -103,7 +101,6 @@ namespace golang::cmp
 
     // isNaN reports whether x is a NaN without requiring the math package.
     // This will always return false if T is not floating-point.
-
     template<typename T>
     bool isNaN(T x)
     {
@@ -112,7 +109,6 @@ namespace golang::cmp
 
     // Or returns the first of its arguments that is not equal to the zero value.
     // If no argument is non-zero, it returns the zero value.
-
     template<typename T>
     T Or(gocpp::slice<T> vals)
     {

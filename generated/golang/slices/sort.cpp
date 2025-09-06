@@ -25,7 +25,6 @@ namespace golang::slices
 
     // Sort sorts a slice of any ordered type in ascending order.
     // When sorting floating-point numbers, NaNs are ordered before other values.
-
     template<template<typename> class  S, typename E>
     void Sort(S<E> x)
     {
@@ -40,7 +39,6 @@ namespace golang::slices
     //
     // SortFunc requires that cmp is a strict weak ordering.
     // See https://en.wikipedia.org/wiki/Weak_ordering#Strict_weak_orderings.
-
     template<template<typename> class  S, typename E>
     void SortFunc(S<E> x, std::function<int (E a, E b)> cmp)
     {
@@ -50,7 +48,6 @@ namespace golang::slices
 
     // SortStableFunc sorts the slice x while keeping the original order of equal
     // elements, using cmp to compare elements in the same way as [SortFunc].
-
     template<template<typename> class  S, typename E>
     void SortStableFunc(S<E> x, std::function<int (E a, E b)> cmp)
     {
@@ -58,7 +55,6 @@ namespace golang::slices
     }
 
     // IsSorted reports whether x is sorted in ascending order.
-
     template<template<typename> class  S, typename E>
     bool IsSorted(S<E> x)
     {
@@ -74,7 +70,6 @@ namespace golang::slices
 
     // IsSortedFunc reports whether x is sorted in ascending order, with cmp as the
     // comparison function as defined by [SortFunc].
-
     template<template<typename> class  S, typename E>
     bool IsSortedFunc(S<E> x, std::function<int (E a, E b)> cmp)
     {
@@ -91,7 +86,6 @@ namespace golang::slices
     // Min returns the minimal value in x. It panics if x is empty.
     // For floating-point numbers, Min propagates NaNs (any NaN value in x
     // forces the output to be NaN).
-
     template<template<typename> class  S, typename E>
     E Min(S<E> x)
     {
@@ -110,7 +104,6 @@ namespace golang::slices
     // MinFunc returns the minimal value in x, using cmp to compare elements.
     // It panics if x is empty. If there is more than one minimal element
     // according to the cmp function, MinFunc returns the first one.
-
     template<template<typename> class  S, typename E>
     E MinFunc(S<E> x, std::function<int (E a, E b)> cmp)
     {
@@ -132,7 +125,6 @@ namespace golang::slices
     // Max returns the maximal value in x. It panics if x is empty.
     // For floating-point E, Max propagates NaNs (any NaN value in x
     // forces the output to be NaN).
-
     template<template<typename> class  S, typename E>
     E Max(S<E> x)
     {
@@ -151,7 +143,6 @@ namespace golang::slices
     // MaxFunc returns the maximal value in x, using cmp to compare elements.
     // It panics if x is empty. If there is more than one maximal element
     // according to the cmp function, MaxFunc returns the first one.
-
     template<template<typename> class  S, typename E>
     E MaxFunc(S<E> x, std::function<int (E a, E b)> cmp)
     {
@@ -174,7 +165,6 @@ namespace golang::slices
     // where target is found, or the position where target would appear in the
     // sort order; it also returns a bool saying whether the target is really found
     // in the slice. The slice must be sorted in increasing order.
-
     template<template<typename> class  S, typename E>
     std::tuple<int, bool> BinarySearch(S<E> x, E target)
     {
@@ -202,7 +192,6 @@ namespace golang::slices
     // or a positive number if the slice element follows the target.
     // cmp must implement the same ordering as the slice, such that if
     // cmp(a, t) < 0 and cmp(b, t) >= 0, then a must precede b in the slice.
-
     template<template<typename> class  S, typename E, typename T>
     std::tuple<int, bool> BinarySearchFunc(S<E> x, T target, std::function<int (E _1, T _2)> cmp)
     {
@@ -240,7 +229,6 @@ namespace golang::slices
 
     // isNaN reports whether x is a NaN without requiring the math package.
     // This will always return false if T is not floating-point.
-
     template<typename T>
     bool isNaN(T x)
     {

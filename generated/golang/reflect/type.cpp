@@ -4129,7 +4129,6 @@ namespace golang::reflect
     }
 
     // TypeFor returns the [Type] that represents the type argument T.
-
     template<typename T>
     struct Type TypeFor()
     {

@@ -175,9 +175,9 @@ namespace golang::runtime
         auto cas1 = (gocpp::array<scase, 1 << 16>*)(unsafe::Pointer(cas0));
         auto order1 = (gocpp::array<uint16_t, 1 << 17>*)(unsafe::Pointer(order0));
         auto ncases = nsends + nrecvs;
-        auto scases = cas1.make_slice(, ncases, ncases);
-        auto pollorder = order1.make_slice(, ncases, ncases);
-        auto lockorder = order1.make_slice(ncases).make_slice(, ncases, ncases);
+        auto scases = cas1.make_slice(0, ncases, ncases);
+        auto pollorder = order1.make_slice(0, ncases, ncases);
+        auto lockorder = order1.make_slice(ncases).make_slice(0, ncases, ncases);
         // Even when raceenabled is true, there might be select
         // statements in packages compiled without -race (e.g.,
         // ensureSigM in runtime/signal_unix.go).
@@ -185,7 +185,7 @@ namespace golang::runtime
         if(raceenabled && pc0 != nullptr)
         {
             auto pc1 = (gocpp::array<uintptr_t, 1 << 16>*)(unsafe::Pointer(pc0));
-            pcs = pc1.make_slice(, ncases, ncases);
+            pcs = pc1.make_slice(0, ncases, ncases);
         }
         auto casePC = [=](int casi) mutable -> uintptr_t
         {

@@ -337,7 +337,6 @@ namespace golang::runtime
     }
 
     // lookup returns &s[idx].
-
     template<typename spanSetBlock>
     atomic::Pointer<spanSetBlock>* rec::lookup(struct spanSetSpinePointer s, uintptr_t idx)
     {

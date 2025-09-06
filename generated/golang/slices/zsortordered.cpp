@@ -22,7 +22,6 @@ namespace golang::slices
     }
 
     // insertionSortOrdered sorts data[a:b] using insertion sort.
-
     template<typename E>
     void insertionSortOrdered(gocpp::slice<E> data, int a, int b)
     {
@@ -37,7 +36,6 @@ namespace golang::slices
 
     // siftDownOrdered implements the heap property on data[lo:hi].
     // first is an offset into the array where the root of the heap lies.
-
     template<typename E>
     void siftDownOrdered(gocpp::slice<E> data, int lo, int hi, int first)
     {
@@ -62,7 +60,6 @@ namespace golang::slices
         }
     }
 
-
     template<typename E>
     void heapSortOrdered(gocpp::slice<E> data, int a, int b)
     {
@@ -86,7 +83,6 @@ namespace golang::slices
     // C++ implementation: https://github.com/orlp/pdqsort
     // Rust implementation: https://docs.rs/pdqsort/latest/pdqsort/
     // limit is the number of allowed bad (very unbalanced) pivots before falling back to heapsort.
-
     template<typename E>
     void pdqsortOrdered(gocpp::slice<E> data, int a, int b, int limit)
     {
@@ -154,7 +150,6 @@ namespace golang::slices
     // Let p = data[pivot]
     // Moves elements in data[a:b] around, so that data[i]<p and data[j]>=p for i<newpivot and j>newpivot.
     // On return, data[newpivot] = p
-
     template<typename E>
     std::tuple<int, bool> partitionOrdered(gocpp::slice<E> data, int a, int b, int pivot)
     {
@@ -202,7 +197,6 @@ namespace golang::slices
 
     // partitionEqualOrdered partitions data[a:b] into elements equal to data[pivot] followed by elements greater than data[pivot].
     // It assumed that data[a:b] does not contain elements smaller than the data[pivot].
-
     template<typename E>
     int partitionEqualOrdered(gocpp::slice<E> data, int a, int b, int pivot)
     {
@@ -231,7 +225,6 @@ namespace golang::slices
     }
 
     // partialInsertionSortOrdered partially sorts a slice, returns true if the slice is sorted at the end.
-
     template<typename E>
     bool partialInsertionSortOrdered(gocpp::slice<E> data, int a, int b)
     {
@@ -281,7 +274,6 @@ namespace golang::slices
 
     // breakPatternsOrdered scatters some elements around in an attempt to break some patterns
     // that might cause imbalanced partitions in quicksort.
-
     template<typename E>
     void breakPatternsOrdered(gocpp::slice<E> data, int a, int b)
     {
@@ -307,7 +299,6 @@ namespace golang::slices
     // [0,8): chooses a static pivot.
     // [8,shortestNinther): uses the simple median-of-three method.
     // [shortestNinther,∞): uses the Tukey ninther method.
-
     template<typename E>
     std::tuple<int, slices::sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b)
     {
@@ -352,7 +343,6 @@ namespace golang::slices
     }
 
     // order2Ordered returns x,y where data[x] <= data[y], where x,y=a,b or x,y=b,a.
-
     template<typename E>
     std::tuple<int, int> order2Ordered(gocpp::slice<E> data, int a, int b, int* swaps)
     {
@@ -365,7 +355,6 @@ namespace golang::slices
     }
 
     // medianOrdered returns x where data[x] is the median of data[a],data[b],data[c], where x is a, b, or c.
-
     template<typename E>
     int medianOrdered(gocpp::slice<E> data, int a, int b, int c, int* swaps)
     {
@@ -376,13 +365,11 @@ namespace golang::slices
     }
 
     // medianAdjacentOrdered finds the median of data[a - 1], data[a], data[a + 1] and stores the index into a.
-
     template<typename E>
     int medianAdjacentOrdered(gocpp::slice<E> data, int a, int* swaps)
     {
         return medianOrdered(data, a - 1, a, a + 1, swaps);
     }
-
 
     template<typename E>
     void reverseRangeOrdered(gocpp::slice<E> data, int a, int b)
@@ -397,7 +384,6 @@ namespace golang::slices
         }
     }
 
-
     template<typename E>
     void swapRangeOrdered(gocpp::slice<E> data, int a, int b, int n)
     {
@@ -406,7 +392,6 @@ namespace golang::slices
             std::tie(data[a + i], data[b + i]) = std::tuple{data[b + i], data[a + i]};
         }
     }
-
 
     template<typename E>
     void stableOrdered(gocpp::slice<E> data, int n)
@@ -456,7 +441,6 @@ namespace golang::slices
     // symMerge assumes non-degenerate arguments: a < m && m < b.
     // Having the caller check this condition eliminates many leaf recursion calls,
     // which improves performance.
-
     template<typename E>
     void symMergeOrdered(gocpp::slice<E> data, int a, int m, int b)
     {
@@ -550,7 +534,6 @@ namespace golang::slices
     // Data of the form 'x u v y' is changed to 'x v u y'.
     // rotate performs at most b-a many calls to data.Swap,
     // and it assumes non-degenerate arguments: a < m && m < b.
-
     template<typename E>
     void rotateOrdered(gocpp::slice<E> data, int a, int m, int b)
     {

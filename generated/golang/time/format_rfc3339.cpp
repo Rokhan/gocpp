@@ -94,7 +94,6 @@ namespace golang::time
         return {b, nullptr};
     }
 
-
     template<typename bytes>
     std::tuple<struct Time, bool> parseRFC3339(bytes s, struct Location* local)
     {

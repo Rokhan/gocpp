@@ -576,7 +576,7 @@ namespace golang::utf8
     // Valid reports whether p consists entirely of valid UTF-8-encoded runes.
     bool Valid(gocpp::slice<unsigned char> p)
     {
-        p = p.make_slice(, len(p), len(p));
+        p = p.make_slice(0, len(p), len(p));
         for(; len(p) >= 8; )
         {
             auto first32 = uint32_t(p[0]) | (uint32_t(p[1]) << 8) | (uint32_t(p[2]) << 16) | (uint32_t(p[3]) << 24);

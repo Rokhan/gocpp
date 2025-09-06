@@ -135,7 +135,6 @@ namespace golang::atomic
     }
 
     // Load atomically loads and returns the value stored in x.
-
     template<typename T>
     T* rec::Load(golang::atomic::Pointer<T>* x)
     {
@@ -143,7 +142,6 @@ namespace golang::atomic
     }
 
     // Store atomically stores val into x.
-
     template<typename T>
     void rec::Store(golang::atomic::Pointer<T>* x, T* val)
     {
@@ -151,7 +149,6 @@ namespace golang::atomic
     }
 
     // Swap atomically stores new into x and returns the previous value.
-
     template<typename T>
     T* rec::Swap(golang::atomic::Pointer<T>* x, T* go_new)
     {
@@ -160,7 +157,6 @@ namespace golang::atomic
     }
 
     // CompareAndSwap executes the compare-and-swap operation for x.
-
     template<typename T>
     bool rec::CompareAndSwap(golang::atomic::Pointer<T>* x, T* old, T* go_new)
     {

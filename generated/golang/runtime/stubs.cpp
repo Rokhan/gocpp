@@ -181,7 +181,6 @@ namespace golang::runtime
     // USE CAREFULLY!
     //
     //go:nosplit
-
     template<typename T>
     T* noEscapePtr(T* p)
     {

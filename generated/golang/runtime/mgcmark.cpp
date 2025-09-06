@@ -139,7 +139,7 @@ namespace golang::runtime
                 work.nBSSRoots = nBSSRoots;
             }
         }
-        mheap_.markArenas = mheap_.allArenas.make_slice(, len(mheap_.allArenas), len(mheap_.allArenas));
+        mheap_.markArenas = mheap_.allArenas.make_slice(0, len(mheap_.allArenas), len(mheap_.allArenas));
         work.nSpanRoots = len(mheap_.markArenas) * (pagesPerArena / pagesPerSpanRoot);
         work.stackRoots = allGsSnapshot();
         work.nStackRoots = len(work.stackRoots);

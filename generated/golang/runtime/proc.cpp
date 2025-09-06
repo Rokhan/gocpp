@@ -638,7 +638,7 @@ namespace golang::runtime
     gocpp::slice<g*> allGsSnapshot()
     {
         assertWorldStoppedOrLockHeld(& allglock);
-        return allgs.make_slice(, len(allgs), len(allgs));
+        return allgs.make_slice(0, len(allgs), len(allgs));
     }
 
     // atomicAllG returns &allgs[0] and len(allgs) for use with atomicAllGIndex.

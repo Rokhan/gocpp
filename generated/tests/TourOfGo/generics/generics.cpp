@@ -23,7 +23,6 @@ namespace golang::main
     // PrimeRK is the prime base used in Rabin-Karp algorithm.
     // HashStr returns the hash and the appropriate multiplicative
     // factor for use in Rabin-Karp algorithm.
-
     template<typename T>
     std::tuple<uint32_t, uint32_t> HashStr(T sep)
     {
@@ -78,7 +77,6 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-
     template<typename T>
     T rec::Get(golang::main::Wrapper<T>* p)
     {
@@ -86,7 +84,6 @@ namespace golang::main
     }
 
     // from cmp/cmp.go
-
     template<typename T>
     T Or(gocpp::slice<T> vals)
     {
@@ -100,7 +97,6 @@ namespace golang::main
         }
         return zero;
     }
-
 
     template<typename T>
     T Dummy1(std::string dummy, gocpp::slice<T> vals)
@@ -116,7 +112,6 @@ namespace golang::main
         return zero;
     }
 
-
     template<typename T, typename U>
     U OneOrDefault(gocpp::map<T, U> dummy)
     {
@@ -131,7 +126,6 @@ namespace golang::main
         return zero;
     }
 
-
     template<typename T>
     bool RemoveOne(gocpp::channel<T> dummy)
     {
@@ -139,13 +133,11 @@ namespace golang::main
         return ok;
     }
 
-
     template<typename T>
     int UnusedGenericParameter()
     {
         return 3;
     }
-
 
     template<typename T>
     T Zero()
@@ -155,7 +147,6 @@ namespace golang::main
     }
 
     // from slices/slices.go
-
     template<template<typename> class  S, typename E>
     S<E> Grow(S<E> s, int n)
     {
@@ -230,7 +221,6 @@ namespace golang::main
     {
         return value.PrintTo(os);
     }
-
 
     template<typename T>
     void rec::Store(golang::main::Pointer<T>* x, T* val)

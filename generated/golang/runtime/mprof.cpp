@@ -397,7 +397,7 @@ namespace golang::runtime
         {
             go_throw("bad profile stack count"s);
         }
-        return stk.make_slice(, b->nstk, b->nstk);
+        return stk.make_slice(0, b->nstk, b->nstk);
     }
 
     // mp returns the memRecord associated with the memProfile bucket b.

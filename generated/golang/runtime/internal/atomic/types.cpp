@@ -856,7 +856,6 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-
     template<typename T>
     T* rec::Load(golang::atomic::Pointer<T>* p)
     {
@@ -872,7 +871,6 @@ namespace golang::atomic
     // Prefer Store instead.
     //
     //go:nosplit
-
     template<typename T>
     void rec::StoreNoWB(golang::atomic::Pointer<T>* p, T* value)
     {
@@ -882,7 +880,6 @@ namespace golang::atomic
     // Store updates the value atomically.
     //
     //go:nosplit
-
     template<typename T>
     void rec::Store(golang::atomic::Pointer<T>* p, T* value)
     {
@@ -901,7 +898,6 @@ namespace golang::atomic
     // Prefer CompareAndSwap instead.
     //
     //go:nosplit
-
     template<typename T>
     bool rec::CompareAndSwapNoWB(golang::atomic::Pointer<T>* p, T* old, T* go_new)
     {
@@ -912,7 +908,6 @@ namespace golang::atomic
     // compares u's value with old, and if they're equal,
     // swaps u's value with new.
     // It reports whether the swap ran.
-
     template<typename T>
     bool rec::CompareAndSwap(golang::atomic::Pointer<T>* p, T* old, T* go_new)
     {

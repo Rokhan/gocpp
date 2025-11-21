@@ -55,7 +55,7 @@ namespace golang::runtime
         golang::runtime::chunkIdx start;
         golang::runtime::chunkIdx end;
         addrRanges inUse;
-        /* gocpp_id_0 scav; [Known incomplete type] */
+        gocpp_id_0 scav;
         mutex* mheapLock;
         golang::runtime::sysMemStat* sysStat;
         uintptr_t summaryMappedReady;

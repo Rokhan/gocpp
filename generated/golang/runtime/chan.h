@@ -86,8 +86,8 @@ namespace golang::runtime
         golang::runtime::_type* elemtype;
         unsigned int sendx;
         unsigned int recvx;
-        /* waitq recvq; [Known incomplete type] */
-        /* waitq sendq; [Known incomplete type] */
+        waitq recvq;
+        waitq sendq;
         mutex lock;
 
         using isGoStruct = void;

@@ -32,7 +32,7 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct noCopy& value);
     struct Cond
     {
-        /* noCopy noCopy; [Known incomplete type] */
+        noCopy noCopy;
         Locker L;
         notifyList notify;
         golang::sync::copyChecker checker;

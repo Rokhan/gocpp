@@ -18,7 +18,7 @@ namespace golang::runtime
 {
     struct cpuProfile
     {
-        /* mutex lock; [Known incomplete type] */
+        mutex lock;
         bool on;
         profBuf* log;
         gocpp::array<uintptr_t, 1000> extra;

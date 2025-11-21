@@ -408,13 +408,13 @@ namespace golang::runtime
         cpu::CacheLinePad _2;
         gocpp::array<gocpp::array<heapArena*, 1 << arenaL2Bits>*, 1 << arenaL1Bits> arenas;
         bool arenasHugePages;
-        /* linearAlloc heapArenaAlloc; [Known incomplete type] */
+        linearAlloc heapArenaAlloc;
         arenaHint* arenaHints;
-        /* linearAlloc arena; [Known incomplete type] */
+        linearAlloc arena;
         gocpp::slice<golang::runtime::arenaIdx> allArenas;
         gocpp::slice<golang::runtime::arenaIdx> sweepArenas;
         gocpp::slice<golang::runtime::arenaIdx> markArenas;
-        /* gocpp_id_0 curArena; [Known incomplete type] */
+        gocpp_id_0 curArena;
         gocpp::array<gocpp_id_1, numSpanClasses> central;
         fixalloc spanalloc;
         fixalloc cachealloc;
@@ -424,7 +424,7 @@ namespace golang::runtime
         fixalloc specialPinCounterAlloc;
         mutex speciallock;
         fixalloc arenaHintAlloc;
-        /* gocpp_id_2 userArena; [Known incomplete type] */
+        gocpp_id_2 userArena;
         specialfinalizer* unused;
 
         using isGoStruct = void;

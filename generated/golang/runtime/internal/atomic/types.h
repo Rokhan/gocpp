@@ -46,7 +46,7 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct align64& value);
     struct Int32
     {
-        /* noCopy noCopy; [Known incomplete type] */
+        noCopy noCopy;
         int32_t value;
 
         using isGoStruct = void;
@@ -63,7 +63,7 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Int32& value);
     struct Int64
     {
-        /* noCopy noCopy; [Known incomplete type] */
+        noCopy noCopy;
         align64 _1;
         int64_t value;
 
@@ -81,7 +81,7 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Int64& value);
     struct Uint8
     {
-        /* noCopy noCopy; [Known incomplete type] */
+        noCopy noCopy;
         uint8_t value;
 
         using isGoStruct = void;
@@ -98,7 +98,7 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Uint8& value);
     struct Uint32
     {
-        /* noCopy noCopy; [Known incomplete type] */
+        noCopy noCopy;
         uint32_t value;
 
         using isGoStruct = void;
@@ -115,7 +115,7 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Uint32& value);
     struct Uint64
     {
-        /* noCopy noCopy; [Known incomplete type] */
+        noCopy noCopy;
         align64 _1;
         uint64_t value;
 
@@ -133,7 +133,7 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Uint64& value);
     struct Uintptr
     {
-        /* noCopy noCopy; [Known incomplete type] */
+        noCopy noCopy;
         uintptr_t value;
 
         using isGoStruct = void;
@@ -150,7 +150,7 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Uintptr& value);
     struct UnsafePointer
     {
-        /* noCopy noCopy; [Known incomplete type] */
+        noCopy noCopy;
         unsafe::Pointer value;
 
         using isGoStruct = void;

@@ -99,7 +99,7 @@ namespace golang::runtime
     extern atomic::UnsafePointer buckhash;
     struct mProfCycleHolder
     {
-        /* atomic::Uint32 value; [Known incomplete type] */
+        atomic::Uint32 value;
 
         using isGoStruct = void;
 
@@ -129,7 +129,7 @@ namespace golang::runtime
     void saveblockevent(int64_t cycles, int64_t rate, int skip, golang::runtime::bucketType which);
     struct lockTimer
     {
-        /* mutex* lock; [Known incomplete type] */
+        mutex* lock;
         int64_t timeRate;
         int64_t timeStart;
         int64_t tickStart;
@@ -148,7 +148,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct lockTimer& value);
     struct mLockProfile
     {
-        /* atomic::Int64 waitTime; [Known incomplete type] */
+        atomic::Int64 waitTime;
         gocpp::array<uintptr_t, maxStack> stack;
         uintptr_t pending;
         int64_t cycles;
@@ -231,7 +231,7 @@ namespace golang::runtime
     void tracegc();
     struct memRecord
     {
-        /* memRecordCycle active; [Known incomplete type] */
+        memRecordCycle active;
         gocpp::array<memRecordCycle, 3> future;
 
         using isGoStruct = void;

@@ -164,7 +164,7 @@ namespace golang::bisect
         bool quiet;
         bool enable;
         gocpp::slice<cond> list;
-        /* atomicPointerDedup dedup; [Known incomplete type] */
+        atomicPointerDedup dedup;
 
         using isGoStruct = void;
 

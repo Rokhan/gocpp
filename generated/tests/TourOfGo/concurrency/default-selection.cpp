@@ -47,7 +47,7 @@ namespace golang::main
                         break;
                     default:
                         mocklib::Println("    ."s);
-                        mocklib::Sleep(50 * mocklib::Millisecond);
+                        mocklib::Sleep(51 * mocklib::Millisecond);
                         break;
                 }
             }

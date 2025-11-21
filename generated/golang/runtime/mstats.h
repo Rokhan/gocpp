@@ -162,7 +162,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct consistentHeapStats& value);
     struct mstats
     {
-        /* consistentHeapStats heapStats; [Known incomplete type] */
+        consistentHeapStats heapStats;
         golang::runtime::sysMemStat stacks_sys;
         golang::runtime::sysMemStat mspan_sys;
         golang::runtime::sysMemStat mcache_sys;

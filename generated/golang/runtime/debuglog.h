@@ -58,10 +58,10 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         uint64_t write;
-        /* debugLogBuf data; [Known incomplete type] */
+        debugLogBuf data;
         uint64_t tick;
         uint64_t nano;
-        /* debugLogReader r; [Known incomplete type] */
+        debugLogReader r;
         gocpp::array<unsigned char, 10> buf;
 
         using isGoStruct = void;
@@ -79,9 +79,9 @@ namespace golang::runtime
     struct dlogger
     {
         sys::NotInHeap _1;
-        /* debugLogWriter w; [Known incomplete type] */
+        debugLogWriter w;
         dlogger* allLink;
-        /* atomic::Uint32 owned; [Known incomplete type] */
+        atomic::Uint32 owned;
 
         using isGoStruct = void;
 

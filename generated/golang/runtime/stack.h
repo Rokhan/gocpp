@@ -45,7 +45,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         mutex mu;
-        /* mSpanList span; [Known incomplete type] */
+        mSpanList span;
 
         using isGoStruct = void;
 

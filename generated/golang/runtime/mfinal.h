@@ -39,7 +39,7 @@ namespace golang::runtime
     extern gocpp::array<unsigned char, _FinBlockSize / goarch::PtrSize / 8> finptrmask;
     struct finalizer
     {
-        /* funcval* fn; [Known incomplete type] */
+        funcval* fn;
         unsafe::Pointer arg;
         uintptr_t nret;
         golang::runtime::_type* fint;
@@ -76,7 +76,7 @@ namespace golang::runtime
         finblock* next;
         uint32_t cnt;
         int32_t _2;
-        /* gocpp::array<finalizer, (_FinBlockSize - 2 * goarch::PtrSize - 2 * 4) / gocpp::Sizeof<finalizer>()> fin; [Known incomplete type] */
+        gocpp::array<finalizer, (_FinBlockSize - 2 * goarch::PtrSize - 2 * 4) / gocpp::Sizeof<finalizer>()> fin;
 
         using isGoStruct = void;
 

@@ -35,7 +35,7 @@ namespace golang::runtime
 {
     struct traceEventWriter
     {
-        /* traceWriter w; [Known incomplete type] */
+        traceWriter w;
 
         using isGoStruct = void;
 

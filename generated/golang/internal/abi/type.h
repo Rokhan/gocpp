@@ -154,7 +154,7 @@ namespace golang::abi
     struct InterfaceType
     {
         Type Type;
-        /* Name PkgPath; [Known incomplete type] */
+        Name PkgPath;
         gocpp::slice<Imethod> Methods;
 
         using isGoStruct = void;
@@ -247,7 +247,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct PtrType& value);
     struct StructField
     {
-        /* Name Name; [Known incomplete type] */
+        Name Name;
         Type* Typ;
         uintptr_t Offset;
 
@@ -266,7 +266,7 @@ namespace golang::abi
     struct StructType
     {
         Type Type;
-        /* Name PkgPath; [Known incomplete type] */
+        Name PkgPath;
         gocpp::slice<StructField> Fields;
 
         using isGoStruct = void;

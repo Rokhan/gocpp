@@ -49,8 +49,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
     struct addrRange
     {
-        /* offAddr base; [Known incomplete type] */
-        /* offAddr limit; [Known incomplete type] */
+        offAddr base;
+        offAddr limit;
 
         using isGoStruct = void;
 

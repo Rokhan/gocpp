@@ -18,7 +18,7 @@ namespace golang::sync
 {
     struct Pool
     {
-        /* noCopy noCopy; [Known incomplete type] */
+        noCopy noCopy;
         unsafe::Pointer local;
         uintptr_t localSize;
         unsafe::Pointer victim;

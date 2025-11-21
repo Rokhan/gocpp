@@ -55,7 +55,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct spanSetSpinePointer& value);
     struct spanSetBlockAlloc
     {
-        /* golang::runtime::lfstack stack; [Known incomplete type] */
+        golang::runtime::lfstack stack;
 
         using isGoStruct = void;
 
@@ -104,11 +104,11 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct atomicMSpanPointer& value);
     struct spanSet
     {
-        /* mutex spineLock; [Known incomplete type] */
-        /* atomicSpanSetSpinePointer spine; [Known incomplete type] */
+        mutex spineLock;
+        atomicSpanSetSpinePointer spine;
         atomic::Uintptr spineLen;
         uintptr_t spineCap;
-        /* atomicHeadTailIndex index; [Known incomplete type] */
+        atomicHeadTailIndex index;
 
         using isGoStruct = void;
 

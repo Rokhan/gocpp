@@ -96,7 +96,7 @@ namespace golang::time
         std::string extend;
         int64_t cacheStart;
         int64_t cacheEnd;
-        /* time::zone* cacheZone; [Known incomplete type] */
+        time::zone* cacheZone;
 
         using isGoStruct = void;
 

@@ -26,7 +26,7 @@ namespace golang::runtime
         gocpp::slice<unsafe::Pointer> tags;
         golang::runtime::profIndex rNext;
         gocpp::slice<uint64_t> overflowBuf;
-        /* note wait; [Known incomplete type] */
+        note wait;
 
         using isGoStruct = void;
 

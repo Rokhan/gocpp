@@ -121,7 +121,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         stackObjectBufHdr stackObjectBufHdr;
-        /* gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<runtime::stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj; [Known incomplete type] */
+        gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<runtime::stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj;
 
         using isGoStruct = void;
 

@@ -319,86 +319,11 @@ var knownMissingDeps = []*errorFilter{
 }
 
 var knownIncomplete = []*errorFilter{
-	{"InterfaceType::PkgPath", "internal/abi/type"}, // Declaration order problem
-	{"StructField::Name", "internal/abi/type"},      // Declaration order problem
-	{"StructType::PkgPath", "internal/abi/type"},    // Declaration order problem
+	{"gcBitsArena::bits", "runtime/mheap"}, // type declaration ignored in header becuase of other error
 
-	{"dlogger::w", "runtime/debuglog"},           // Declaration order problem
-	{"dlogger::owned", "runtime/debuglog"},       // Type not declared because of error in included files
-	{"debugLogWriter::data", "runtime/debuglog"}, // Declaration order problem
-	{"debugLogWriter::r", "runtime/debuglog"},    // Declaration order problem
-
-	{"memRecord::active", "runtime/mprof"},       // Declaration order problem
-	{"mProfCycleHolder::value", "runtime/mprof"}, // Type not declared because of error in included files
-	{"lockTimer::lock", "runtime/mprof"},         // Type not declared because of error in included files
-	{"mLockProfile::waitTime", "runtime/mprof"},  // Type not declared because of error in included files
-
-	{"mcentral::partial", "runtime/mcentral"}, // Type not declared because of error in included files
-	{"mcentral::full", "runtime/mcentral"},    // Type not declared because of error in included files
-
-	{"finblock::_", "runtime/mfinal"},   // ??? !!!
-	{"finblock::fin", "runtime/mfinal"}, // Unknwon constants in type
-	{"finalizer::fn", "runtime/mfinal"}, // Unknwon constants in type
-
-	{"hchan::recvq", "runtime/chan"}, // Declaration order problem
-	{"hchan::sendq", "runtime/chan"}, // Declaration order problem
-
-	{"mstats::heapStats", "runtime/mstats"}, // Declaration order problem
-
-	{"addrRange::base", "runtime/mranges"},  // Declaration order problem
-	{"addrRange::limit", "runtime/mranges"}, // Declaration order problem
-
-	{"pageAlloc::scav", "runtime/mpagealloc"}, // Missing inlined subtype gocpp_id_0
-
-	{"mheap::_", "runtime/mheap"},              // ??? !!!
-	{"mheap::curArena", "runtime/mheap"},       // Missing inlined subtype gocpp_id_0
-	{"mheap::userArena", "runtime/mheap"},      // Missing inlined subtype gocpp_id_2
-	{"mheap::heapArenaAlloc", "runtime/mheap"}, // Multi header Declaration order problem with runtime/malloc
-	{"mheap::arena", "runtime/mheap"},          // Multi header Declaration order problem with runtime/malloc
-	{"gcBitsArena::bits", "runtime/mheap"},     // type declaration ignored in header becuase of other error
-
-	{"stackpoolItem::span", "runtime/stack"}, // Multi header Declaration order problem with runtime/mheap
-
-	{"stackWorkBuf::obj", "runtime/mgcstack"},   // Declaration order + Need special case to manage unsafe::Sizeof
-	{"stackObjectBuf::obj", "runtime/mgcstack"}, // Multi header Declaration order problem with runtime/malloc
+	{"stackWorkBuf::obj", "runtime/mgcstack"}, // Declaration order + Need special case to manage unsafe::Sizeof
 
 	{"workbuf::obj", "runtime/mgcwork"}, // Need special case to manage unsafe::Sizeof
-
-	{"Int32::noCopy", "runtime/internal/atomic/types"},         // Declaration order problem
-	{"Int64::noCopy", "runtime/internal/atomic/types"},         // Declaration order problem
-	{"Int64::_", "runtime/internal/atomic/types"},              // Declaration order problem
-	{"Uint8::noCopy", "runtime/internal/atomic/types"},         // Declaration order problem
-	{"Uint32::noCopy", "runtime/internal/atomic/types"},        // Declaration order problem
-	{"Uint64::noCopy", "runtime/internal/atomic/types"},        // Declaration order problem
-	{"Uint64::_", "runtime/internal/atomic/types"},             // Declaration order problem
-	{"Uintptr::noCopy", "runtime/internal/atomic/types"},       // Declaration order problem
-	{"UnsafePointer::noCopy", "runtime/internal/atomic/types"}, // Declaration order problem
-
-	{"spanSet::spineLock", "runtime/mspanset"},       // Multi header Declaration order problem with runtime/malloc
-	{"spanSet::spine", "runtime/mspanset"},           // Declaration order problem
-	{"spanSet::index", "runtime/mspanset"},           // Declaration order problem
-	{"spanSetBlockAlloc::stack", "runtime/mspanset"}, // Declaration order problem
-
-	{"cpuProfile::lock", "runtime/cpuprof"}, // Multi header Declaration order problem with runtime/malloc
-
-	{"profBuf::wait", "runtime/profbuf"}, // Multi header Declaration order problem with runtime/malloc
-
-	{"traceEventWriter::w", "runtime/trace2event"}, // Multi header Declaration order problem with runtime/malloc
-
-	{"Bool::_", "sync/atomic/type"},    // Declaration order problem
-	{"Pointer::_", "sync/atomic/type"}, // Declaration order problem
-	{"Int32::_", "sync/atomic/type"},   // Declaration order problem
-	{"Int64::_", "sync/atomic/type"},   // Declaration order problem
-	{"Uint32::_", "sync/atomic/type"},  // Declaration order problem
-	{"Uint64::_", "sync/atomic/type"},  // Declaration order problem
-	{"Uintptr::_", "sync/atomic/type"}, // Declaration order problem
-
-	{"Cond::noCopy", "sync/cond"}, // Declaration order problem
-	{"Pool::noCopy", "sync/pool"}, // Declaration order problem
-
-	{"Matcher::dedup", "internal/bisect/bisect"}, // Declaration order problem
-
-	{"Location::cacheZone", "time/zoneinfo"}, // Declaration order problem
 
 	{"Method::Func", "reflect/type"},          // Multi header Declaration order problem
 	{"methodValue::rcvr", "reflect/makefunc"}, // Multi header Declaration order problem

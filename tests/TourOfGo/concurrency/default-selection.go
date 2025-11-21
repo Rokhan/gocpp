@@ -21,7 +21,7 @@ func main() {
 			return
 		default:
 			fmt.Println("    .")
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(51 * time.Millisecond)
 		}
 	}
 }

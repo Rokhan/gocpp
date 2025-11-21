@@ -30,7 +30,7 @@
 | [TourOfGo/concurrency/buffered-channels.go](tests/TourOfGo/concurrency/buffered-channels.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/buffered-channels.cpp)) | ✔️ |
 | [TourOfGo/concurrency/channels.go](tests/TourOfGo/concurrency/channels.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/channels.cpp)) | ❌ |
 | [TourOfGo/concurrency/channels-opt.go](tests/TourOfGo/concurrency/channels-opt.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/channels-opt.cpp)) | ✔️ |
-| [TourOfGo/concurrency/default-selection.go](tests/TourOfGo/concurrency/default-selection.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/default-selection.cpp)) | ❌ |
+| [TourOfGo/concurrency/default-selection.go](tests/TourOfGo/concurrency/default-selection.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/default-selection.cpp)) | ✔️ |
 | [TourOfGo/concurrency/exercise-equivalent-binary-trees.go](tests/TourOfGo/concurrency/exercise-equivalent-binary-trees.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/exercise-equivalent-binary-trees.cpp)) | ❌ |
 | [TourOfGo/concurrency/exercise-web-crawler.go](tests/TourOfGo/concurrency/exercise-web-crawler.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/exercise-web-crawler.cpp)) | ❌ |
 | [TourOfGo/concurrency/goroutines.go](tests/TourOfGo/concurrency/goroutines.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/concurrency/goroutines.cpp)) | ✔️ |
@@ -111,7 +111,7 @@
 | [TourOfGo/moretypes/slices-pointers.go](tests/TourOfGo/moretypes/slices-pointers.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/slices-pointers.cpp)) | ✔️ |
 | [TourOfGo/moretypes/struct-fields.go](tests/TourOfGo/moretypes/struct-fields.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-fields.cpp)) | ✔️ |
 | [TourOfGo/moretypes/struct-fields-initializer.go](tests/TourOfGo/moretypes/struct-fields-initializer.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-fields-initializer.cpp)) | ✔️ |
-| [TourOfGo/moretypes/struct-literals.go](tests/TourOfGo/moretypes/struct-literals.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-literals.cpp)) | ❌ |
+| [TourOfGo/moretypes/struct-literals.go](tests/TourOfGo/moretypes/struct-literals.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-literals.cpp)) | ✔️ |
 | [TourOfGo/moretypes/struct-pointers.go](tests/TourOfGo/moretypes/struct-pointers.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-pointers.cpp)) | ✔️ |
 | [TourOfGo/moretypes/structs.go](tests/TourOfGo/moretypes/structs.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/structs.cpp)) | ✔️ |
 | [TourOfGo/moretypes/typedef.go](tests/TourOfGo/moretypes/typedef.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/typedef.cpp)) | ✔️ |
@@ -430,7 +430,7 @@
 | $(ImportDir)/sync/atomic/doc.go | ✔️ ([cpp](generated/golang/sync/atomic/doc.cpp), [h](generated/golang/sync/atomic/doc.h))| ❌ |
 | $(ImportDir)/sync/atomic/type.go | ✔️ ([cpp](generated/golang/sync/atomic/type.cpp), [h](generated/golang/sync/atomic/type.h))| ✔️ |
 | $(ImportDir)/sync/atomic/value.go | ✔️ ([cpp](generated/golang/sync/atomic/value.cpp), [h](generated/golang/sync/atomic/value.h))| ❌ |
-| $(ImportDir)/sync/cond.go | ✔️ ([cpp](generated/golang/sync/cond.cpp), [h](generated/golang/sync/cond.h))| ❌ |
+| $(ImportDir)/sync/cond.go | ✔️ ([cpp](generated/golang/sync/cond.cpp), [h](generated/golang/sync/cond.h))| ✔️ |
 | $(ImportDir)/sync/map.go | ✔️ ([cpp](generated/golang/sync/map.cpp), [h](generated/golang/sync/map.h))| ❌ |
 | $(ImportDir)/sync/mutex.go | ✔️ ([cpp](generated/golang/sync/mutex.cpp), [h](generated/golang/sync/mutex.h))| ❌ |
 | $(ImportDir)/sync/once.go | ✔️ ([cpp](generated/golang/sync/once.cpp), [h](generated/golang/sync/once.h))| ✔️ |

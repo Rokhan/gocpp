@@ -7,6 +7,8 @@ OUTDIR=generated
 LOGDIR=log
 SUPPORT_FILES=includes/gocpp/support.h includes/gocpp/support.fwd.h
 
+_=$(shell mkdir -p $(OUTDIR)/golang)
+
 GENERATED_GOLANG_LIB_CPP_FILES=$(shell find $(OUTDIR)/golang -name '*.cpp')
 GENERATED_GOLANG_LIB_OBJ_FILES=$(patsubst  $(OUTDIR)/%, $(LOGDIR)/%, $(GENERATED_GOLANG_LIB_CPP_FILES:.cpp=.o))
 GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES=$(GENERATED_GOLANG_LIB_OBJ_FILES:.o=.full.md)
@@ -182,6 +184,10 @@ $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES): $(LOGDIR)/%.full.md : $(LOGDIR)/%.obj.
 
 clean-full-md:
 	rm $$(find $(LOGDIR) -name '*.full.md')
+
+clean-exe-obj:
+	rm $$(find $(LOGDIR) -name '*.exe')
+	rm $$(find $(LOGDIR) -name '*.o')
 
 clean:
 	rm -rf $(LOGDIR) $(OUTDIR)

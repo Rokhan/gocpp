@@ -5,14 +5,19 @@ var baseIndent string = "    "
 // receiver namespace
 var recNs = "rec"
 
+const cpp_str_lit = "_s"
+const cpp_string_type = "gocpp::string"
+const cpp_cplx64_type = "gocpp::complex64"
+const cpp_cplx128_type = "gocpp::complex128"
+
 // cf following files to add missing types:
 //
 //	=> "go\types\basic.go"
 //	=> "go\types\universe.go"
 var stdTypeMapping = map[string]string{
 	"byte":       "unsigned char",
-	"complex64":  "gocpp::complex64",
-	"complex128": "gocpp::complex128",
+	"complex64":  cpp_cplx64_type,
+	"complex128": cpp_cplx128_type,
 	"float":      "double",
 	"float32":    "float",
 	"float64":    "double",
@@ -28,14 +33,14 @@ var stdTypeMapping = map[string]string{
 	"int32":      "int32_t",
 	"int64":      "int64_t",
 	"rune":       "gocpp::rune",
-	"string":     "std::string",
+	"string":     cpp_string_type,
 	// untyped types !!!
 	"untyped bool":    "bool",
-	"untyped complex": "goccp::complex128",
+	"untyped complex": cpp_cplx128_type,
 	"untyped float":   "double",
 	"untyped int":     "int",
 	"untyped rune":    "gocpp::rune",
-	"untyped string":  "std::string",
+	"untyped string":  cpp_string_type,
 	// predefined types. To do: need a way to map them to type defined in "golang/runtime"
 	"error": "gocpp::error",
 }
@@ -283,8 +288,8 @@ var stdFuncMapping = map[string]string{
 
 	// type conversions
 	"byte":       "(unsigned char)",
-	"complex64":  "gocpp::complex64",
-	"complex128": "gocpp::complex128",
+	"complex64":  cpp_cplx64_type,
+	"complex128": cpp_cplx128_type,
 	"float":      "double",
 	"float32":    "float",
 	"float64":    "double",
@@ -293,7 +298,7 @@ var stdFuncMapping = map[string]string{
 	"int32":      "int32_t",
 	"int64":      "int64_t",
 	"rune":       "gocpp::rune",
-	"string":     "std::string",
+	"string":     cpp_string_type,
 	"uint":       "(unsigned int)",
 	"uint8":      "uint8_t",
 	"uint16":     "uint16_t",

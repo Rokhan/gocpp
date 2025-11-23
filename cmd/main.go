@@ -2616,9 +2616,11 @@ func (cv *cppConverter) IsFunc(expr ast.Expr) bool {
 
 func (cv *cppConverter) checkCanFwd(cppType *cppType) {
 	switch cppType.str {
-	case "std::string":
+	case cpp_string_type:
 		cppType.canFwd = false
-	case "gocpp::complex128":
+	case cpp_cplx64_type:
+		cppType.isStruct = true
+	case cpp_cplx128_type:
 		cppType.isStruct = true
 	}
 }
@@ -3316,7 +3318,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		var basicLit string
 		switch n.Kind {
 		case token.IMAG:
-			basicLit = "gocpp::complex128"
+			basicLit = cpp_cplx128_type
 			canFwd = false
 		case token.INT:
 			basicLit = "long"
@@ -3325,7 +3327,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		case token.CHAR:
 			basicLit = "char"
 		case token.STRING:
-			basicLit = "std::string"
+			basicLit = cpp_string_type
 			canFwd = false
 		default:
 			cv.Panicf("Unmanaged token in convert type %v, token %v, position %v", reflect.TypeOf(node), n.Kind, cv.Position(n))
@@ -3372,9 +3374,11 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		cppType := mkCppType(typeStr, nil)
 
 		switch typeStr {
-		case "std::string":
+		case cpp_string_type:
 			cppType.canFwd = false
-		case "gocpp::complex128":
+		case cpp_cplx64_type:
+			cppType.canFwd = false
+		case cpp_cplx128_type:
 			cppType.canFwd = false
 		}
 		return cppType
@@ -3590,10 +3594,10 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 			switch n.Value[0] {
 			case '`':
 				// TODO: check if there is other replacements to do
-				content := "\"" + strings.ReplaceAll(strings.Trim(n.Value, "`"), "\\", "\\\\") + "\"s"
+				content := "\"" + strings.ReplaceAll(strings.Trim(n.Value, "`"), "\\", "\\\\") + "\"" + cpp_str_lit
 				return mkCppExpr(content)
 			case '"':
-				return mkCppExpr(n.Value + "s")
+				return mkCppExpr(n.Value + cpp_str_lit)
 			default:
 				return mkCppExpr(n.Value)
 			}

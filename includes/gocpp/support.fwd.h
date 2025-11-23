@@ -34,10 +34,11 @@ namespace gocpp
     template<typename T, int N> struct array;
     template<typename K, typename V> struct map;
     
-    struct GoPanic;
     struct complex128;
-    struct go_any;
     struct Defer;
+    struct GoPanic;
+    struct go_any;
+    struct string;
 
     using rune = int;
 

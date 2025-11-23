@@ -20,7 +20,7 @@
 
 namespace golang
 {
-    using namespace std::string_literals;
+    constexpr gocpp::string operator""_s(const char* src, std::size_t);
 
     // Temporary definitions to mock broken include files
     namespace runtime
@@ -66,22 +66,22 @@ namespace golang
     {
         namespace rec
         {
-            std::string Error(struct errorString* e);
+            gocpp::string Error(struct errorString* e);
         }
     }
     namespace poll
     {
         namespace rec
         {
-            std::string Error(struct errNetClosing e);
-            std::string Error(struct DeadlineExceededError* e);
+            gocpp::string Error(struct errNetClosing e);
+            gocpp::string Error(struct DeadlineExceededError* e);
         }
     }
     namespace main
     {
         namespace rec
         {
-            std::string Error(struct MyError* e);
+            gocpp::string Error(struct MyError* e);
         }
     }
     namespace hex
@@ -89,7 +89,7 @@ namespace golang
         using InvalidByteError = unsigned char;
         namespace rec
         {
-            std::string Error(const InvalidByteError& e);
+            gocpp::string Error(const InvalidByteError& e);
         }
     }
 }
@@ -98,6 +98,7 @@ namespace mocklib
 {
     std::string Sprint(const std::any& value);
     std::string Sprint(const gocpp::go_any& value);
+    inline std::string RuneToString(gocpp::rune r);
 
     template<typename T>
     std::ostream& PrintSliceTo(std::false_type, std::ostream& os, gocpp::slice<T> const& slice);
@@ -114,7 +115,7 @@ namespace mocklib
 namespace gocpp
 {
 
-    [[noreturn]] void panic(const std::string& message);
+    [[noreturn]] void panic(const gocpp::string& message);
 
     inline dp::thread_pool<>& global_pool()
     {
@@ -134,7 +135,7 @@ namespace gocpp
         // "catch(const GoPanic& p)" syntax
         std::shared_ptr<bool> recovered = std::make_shared<bool>(false);
 
-        GoPanic(const std::string& message) : runtime_error(message)
+        inline GoPanic(const std::string& message) : runtime_error(message)
         {
         }
     };
@@ -143,13 +144,13 @@ namespace gocpp
         using any::any;
     };
 
-    template<typename T>
-    bool operator ==(gocpp::go_any const& lhs, T const& rhs) {
-        if(lhs.type() != typeid(T))
+    template<std::same_as<gocpp::go_any> T, typename U>
+    bool operator ==(const T& lhs, U const& rhs) {
+        if(lhs.type() != typeid(U))
         {
             return false;
         }
-        return std::any_cast<T>(lhs) == rhs;
+        return std::any_cast<U>(lhs) == rhs;
     }
 
     // template<typename T>
@@ -161,11 +162,11 @@ namespace gocpp
     //     return lhs == std::any_cast<T>(rhs);
     // }
 
-    std::ostream& operator<<(std::ostream& os, gocpp::go_any const& value) {
+    inline std::ostream& operator<<(std::ostream& os, gocpp::go_any const& value) {
         return os << mocklib::Sprint(value);
     }
 
-    const std::type_info& type_info(const std::any& value)
+    inline const std::type_info& type_info(const std::any& value)
     {
         const auto& info = value.type();
         if(info == typeid(const char * const))
@@ -230,6 +231,61 @@ namespace gocpp
     inline static complex128 operator+(complex128 c, int i) { return c.base() + double(i); };
     inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };
     inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };
+
+    struct string : std::string
+    {
+        using std::string::string;
+
+        inline string(const string& src) : std::string(src) { }
+        inline string(string&& src) : std::string(std::move(src)) { }
+
+        inline string(const std::string& src) : std::string(src) { }
+        inline string(std::string&& src) : std::string(std::move(src)) { }
+
+        inline string(const rune& src) : std::string(mocklib::RuneToString(src)) { }
+
+        inline string make_slice(size_t low) const
+        {
+            return string(this->substr(low));
+        }
+
+        // Assignment operators
+        inline string& operator=(const string& src)
+        {
+            std::string::operator=(src);
+            return *this;
+        }
+
+        inline string& operator=(string&& src) noexcept
+        {
+            std::string::operator=(std::move(src));
+            return *this;
+        }
+
+        inline string& operator=(const std::string& src)
+        {
+            std::string::operator=(src);
+            return *this;
+        }
+
+        inline string& operator=(std::string&& src) noexcept
+        {
+            std::string::operator=(std::move(src));
+            return *this;
+        }
+
+        inline string& operator=(const char* s)
+        {
+            std::string::operator=(s ? s : "");
+            return *this;
+        }
+
+        inline string& operator=(const rune& r)
+        {
+            std::string::operator=(mocklib::RuneToString(r));
+            return *this;
+        }
+    };
 
     inline size_t len(const std::string& input)
     {
@@ -522,12 +578,12 @@ namespace gocpp
 
     template <typename T>
     concept IsRefError = requires(const T& t) {
-        { Error(t) } -> std::convertible_to<std::string>;
+        { Error(t) } -> std::convertible_to<gocpp::string>;
     };
     
     template <typename T>
     concept IsPtrError = requires(const T *t) {
-        { Error(t) } -> std::convertible_to<std::string>;
+        { Error(t) } -> std::convertible_to<gocpp::string>;
     };
     
     template <typename T>
@@ -541,7 +597,7 @@ namespace gocpp
 
         error() : optional(std::nullopt) {}
         error(std::nullptr_t) : optional(std::nullopt) {}
-        error(const std::string& msg) : optional(msg) {}
+        error(const gocpp::string& msg) : optional(msg) {}
         
         // Temporary mock, we lose the original type
         template<typename T> requires IsRefError<T>
@@ -569,7 +625,7 @@ namespace gocpp
 
         friend bool operator==(const error& lhs, const error& rhs) = default;
 
-        friend bool operator==(const error& lhs, const std::string& rhs)
+        friend bool operator==(const error& lhs, const gocpp::string& rhs)
         {
             return lhs.has_value() && lhs.value() == rhs;
         }
@@ -579,7 +635,7 @@ namespace gocpp
             return !lhs.has_value();
         }
 
-        friend bool operator==(const std::string& lhs, const error& rhs)
+        friend bool operator==(const gocpp::string& lhs, const error& rhs)
         {
             return rhs == lhs;
         }
@@ -655,7 +711,7 @@ namespace gocpp
         }
     };
 
-    [[noreturn]] void panic(const std::string& message)
+    [[noreturn]] void panic(const gocpp::string& message)
     {
         throw GoPanic(message);
     }
@@ -1311,6 +1367,11 @@ namespace std
 
 namespace golang
 {
+    constexpr gocpp::string operator""_s(const char* src, std::size_t)
+    {
+        return gocpp::string(src);
+    }
+
     using gocpp::len;
     using go_any = gocpp::go_any;
     using namespace mocklib;
@@ -1420,6 +1481,64 @@ namespace mocklib
         {
             mutex->unlock();
         }
+    }
+        
+    // TODO : call the method generated in utf8 translation "EncodeRune"
+    inline std::string RuneToString(gocpp::rune r)
+    {
+        const char RuneError = '\uFFFD';
+        const char MaxRune = '\U0010FFFF';
+        const long UTFMax = 4;
+        const long surrogateMin = 0xD800;
+        const long surrogateMax = 0xDFFF;
+        const long tx = 0b10000000;
+        const long t2 = 0b11000000;
+        const long t3 = 0b11100000;
+        const long t4 = 0b11110000;
+        const long maskx = 0b00111111;
+        const int rune1Max = (1 << 7) - 1;
+        const int rune2Max = (1 << 11) - 1;
+        const int rune3Max = (1 << 16) - 1;
+
+        {
+            std::string p;
+            auto i = uint32_t(r);
+            int conditionId = -1;
+            if(i <= rune1Max) { conditionId = 0; }
+            else if(i <= rune2Max) { conditionId = 1; }
+            else if(i > MaxRune) { conditionId = 2; }
+            else if(surrogateMin <= i && i <= surrogateMax) { conditionId = 3; }
+            else if(i <= rune3Max) { conditionId = 4; }
+            switch(conditionId)
+            {
+                case 0:
+                    p.resize(1);
+                    p[0] = (unsigned char)(r);
+                    break;
+                case 1:
+                    p.resize(2);
+                    p[0] = t2 | (unsigned char)(r >> 6);
+                    p[1] = tx | (unsigned char)(r) & maskx;
+                    break;
+                case 2:
+                case 3:
+                    r = RuneError;
+                case 4:
+                    p.resize(3);
+                    p[0] = t3 | (unsigned char)(r >> 12);
+                    p[1] = tx | (unsigned char)(r >> 6) & maskx;
+                    p[2] = tx | (unsigned char)(r) & maskx;
+                    break;
+                default:
+                    p.resize(4);
+                    p[0] = t4 | (unsigned char)(r >> 18);
+                    p[1] = tx | (unsigned char)(r >> 12) & maskx;
+                    p[2] = tx | (unsigned char)(r >> 6) & maskx;
+                    p[3] = tx | (unsigned char)(r) & maskx;
+                    break;
+            }
+        }
+        
     }
 
     std::ostream& PrintTo(std::ostream& os, const Date& value);

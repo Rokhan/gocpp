@@ -49,7 +49,7 @@ namespace golang::os
     }
 
     // stat implements both Stat and Lstat of a file.
-    std::tuple<os::FileInfo, struct gocpp::error> stat(std::string funcname, std::string name, bool followSurrogates)
+    std::tuple<os::FileInfo, struct gocpp::error> stat(gocpp::string funcname, gocpp::string name, bool followSurrogates)
     {
         gocpp::Defer defer;
         try
@@ -82,7 +82,7 @@ namespace golang::os
                 if(err != nullptr)
                 {
                     return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                        x.Op = "FindFirstFile"s;
+                        x.Op = "FindFirstFile"_s;
                         x.Path = name;
                         x.Err = err;
                     })};
@@ -119,7 +119,7 @@ namespace golang::os
             if(err != nullptr)
             {
                 return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                    x.Op = "CreateFile"s;
+                    x.Op = "CreateFile"_s;
                     x.Path = name;
                     x.Err = err;
                 })};
@@ -133,7 +133,7 @@ namespace golang::os
                 if(err != nullptr)
                 {
                     return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                        x.Op = "CreateFile"s;
+                        x.Op = "CreateFile"_s;
                         x.Path = name;
                         x.Err = err;
                     })};
@@ -149,13 +149,13 @@ namespace golang::os
         }
     }
 
-    std::tuple<os::FileInfo, struct gocpp::error> statHandle(std::string name, syscall::Handle h)
+    std::tuple<os::FileInfo, struct gocpp::error> statHandle(gocpp::string name, syscall::Handle h)
     {
         auto [ft, err] = syscall::GetFileType(h);
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "GetFileType"s;
+                x.Op = "GetFileType"_s;
                 x.Path = name;
                 x.Err = err;
             })};
@@ -188,20 +188,20 @@ namespace golang::os
     }
 
     // statNolog implements Stat for Windows.
-    std::tuple<os::FileInfo, struct gocpp::error> statNolog(std::string name)
+    std::tuple<os::FileInfo, struct gocpp::error> statNolog(gocpp::string name)
     {
-        return stat("Stat"s, name, true);
+        return stat("Stat"_s, name, true);
     }
 
     // lstatNolog implements Lstat for Windows.
-    std::tuple<os::FileInfo, struct gocpp::error> lstatNolog(std::string name)
+    std::tuple<os::FileInfo, struct gocpp::error> lstatNolog(gocpp::string name)
     {
         auto followSurrogates = false;
-        if(name != ""s && IsPathSeparator(name[len(name) - 1]))
+        if(name != ""_s && IsPathSeparator(name[len(name) - 1]))
         {
             followSurrogates = true;
         }
-        return stat("Lstat"s, name, followSurrogates);
+        return stat("Lstat"_s, name, followSurrogates);
     }
 
 }

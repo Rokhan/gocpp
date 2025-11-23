@@ -10,7 +10,7 @@ namespace golang::runtime
     using uint16InterfacePtr = uint16_t;
     using uint32InterfacePtr = uint32_t;
     using uint64InterfacePtr = uint64_t;
-    using stringInterfacePtr = std::string;
+    using stringInterfacePtr = gocpp::string;
     using sliceInterfacePtr = gocpp::slice<unsigned char>;
 }
 #include "golang/runtime/runtime2.fwd.h"

@@ -38,7 +38,7 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
-    extern gocpp::slice<std::string> kindNames;
+    extern gocpp::slice<gocpp::string> kindNames;
     struct Method
     {
         golang::abi::NameOff Name;
@@ -78,7 +78,7 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UncommonType& value);
-    unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, std::string whySafe);
+    unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, gocpp::string whySafe);
     struct Imethod
     {
         golang::abi::NameOff Name;
@@ -113,7 +113,7 @@ namespace golang::abi
 
     std::ostream& operator<<(std::ostream& os, const struct Name& value);
     int writeVarint(gocpp::slice<unsigned char> buf, int n);
-    struct Name NewName(std::string n, std::string tag, bool exported, bool embedded);
+    struct Name NewName(gocpp::string n, gocpp::string tag, bool exported, bool embedded);
     struct ArrayType
     {
         Type Type;
@@ -301,7 +301,7 @@ namespace golang::abi
 
     namespace rec
     {
-        std::string String(golang::abi::Kind k);
+        gocpp::string String(golang::abi::Kind k);
         abi::Kind Kind(struct Type* t);
         bool HasName(struct Type* t);
         bool Pointers(struct Type* t);
@@ -340,15 +340,15 @@ namespace golang::abi
         gocpp::slice<Type*> OutSlice(struct FuncType* t);
         bool IsVariadic(struct FuncType* t);
         bool Embedded(struct StructField* f);
-        unsigned char* DataChecked(struct Name n, int off, std::string whySafe);
+        unsigned char* DataChecked(struct Name n, int off, gocpp::string whySafe);
         unsigned char* Data(struct Name n, int off);
         bool IsExported(struct Name n);
         bool HasTag(struct Name n);
         bool IsEmbedded(struct Name n);
         std::tuple<int, int> ReadVarint(struct Name n, int off);
         bool IsBlank(struct Name n);
-        std::string Name(struct Name n);
-        std::string Tag(struct Name n);
+        gocpp::string Name(struct Name n);
+        gocpp::string Tag(struct Name n);
     }
 }
 

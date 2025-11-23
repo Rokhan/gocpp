@@ -224,7 +224,7 @@ namespace golang::runtime
         auto n = int(s->nelems) - int(s->allocCount);
         if(n == 0 || s->freeindex == s->nelems || s->allocCount == s->nelems)
         {
-            go_throw("span has no free objects"s);
+            go_throw("span has no free objects"_s);
         }
         auto freeByteBase = s->freeindex &^ (64 - 1);
         auto whichByte = freeByteBase / 8;
@@ -241,7 +241,7 @@ namespace golang::runtime
     {
         if(s->allocCount == 0)
         {
-            go_throw("uncaching span but s.allocCount == 0"s);
+            go_throw("uncaching span but s.allocCount == 0"_s);
         }
         auto sg = mheap_.sweepgen;
         auto stale = s->sweepgen == sg + 1;

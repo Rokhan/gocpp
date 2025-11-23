@@ -56,9 +56,9 @@ namespace golang::image
     }
 
     // String returns a string representation of p like "(3,4)".
-    std::string rec::String(struct Point p)
+    gocpp::string rec::String(struct Point p)
     {
-        return "("s + strconv::Itoa(p.X) + ","s + strconv::Itoa(p.Y) + ")"s;
+        return "("_s + strconv::Itoa(p.X) + ","_s + strconv::Itoa(p.Y) + ")"_s;
     }
 
     // Add returns the vector p+q.
@@ -167,9 +167,9 @@ namespace golang::image
     }
 
     // String returns a string representation of r like "(3,4)-(6,5)".
-    std::string rec::String(struct Rectangle r)
+    gocpp::string rec::String(struct Rectangle r)
     {
-        return rec::String(gocpp::recv(r.Min)) + "-"s + rec::String(gocpp::recv(r.Max));
+        return rec::String(gocpp::recv(r.Min)) + "-"_s + rec::String(gocpp::recv(r.Max));
     }
 
     // Dx returns r's width.

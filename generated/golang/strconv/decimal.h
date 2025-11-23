@@ -37,7 +37,7 @@ namespace golang::strconv
     struct leftCheat
     {
         int delta;
-        std::string cutoff;
+        gocpp::string cutoff;
 
         using isGoStruct = void;
 
@@ -51,14 +51,14 @@ namespace golang::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct leftCheat& value);
-    bool prefixIsLessThan(gocpp::slice<unsigned char> b, std::string s);
+    bool prefixIsLessThan(gocpp::slice<unsigned char> b, gocpp::string s);
     void leftShift(struct decimal* a, unsigned int k);
     bool shouldRoundUp(struct decimal* a, int nd);
     extern gocpp::slice<leftCheat> leftcheats;
 
     namespace rec
     {
-        std::string String(struct decimal* a);
+        gocpp::string String(struct decimal* a);
         void Assign(struct decimal* a, uint64_t v);
         void Shift(struct decimal* a, int k);
         void Round(struct decimal* a, int nd);

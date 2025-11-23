@@ -95,8 +95,8 @@ namespace golang::runtime
         }
         runtime::traceArg stack(struct traceLocker tl, int skip);
         runtime::traceArg startPC(struct traceLocker tl, uintptr_t pc);
-        runtime::traceArg string(struct traceLocker tl, std::string s);
-        runtime::traceArg uniqueString(struct traceLocker tl, std::string s);
+        runtime::traceArg string(struct traceLocker tl, gocpp::string s);
+        runtime::traceArg uniqueString(struct traceLocker tl, gocpp::string s);
     }
 }
 

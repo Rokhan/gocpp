@@ -273,7 +273,7 @@ namespace golang::unsafe
     //
     // Since Go strings are immutable, the bytes passed to String
     // must not be modified afterwards.
-    std::string String(unsigned char* ptr, golang::unsafe::IntegerType len)
+    gocpp::string String(unsigned char* ptr, golang::unsafe::IntegerType len)
     /* convertBlockStmt, nil block */;
 
     // StringData returns a pointer to the underlying bytes of str.
@@ -281,7 +281,7 @@ namespace golang::unsafe
     //
     // Since Go strings are immutable, the bytes returned by StringData
     // must not be modified.
-    unsigned char* StringData(std::string str)
+    unsigned char* StringData(gocpp::string str)
     /* convertBlockStmt, nil block */;
 
 }

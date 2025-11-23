@@ -70,7 +70,7 @@ namespace golang::runtime
         golang::runtime::_type* _interface;
         golang::runtime::_type* concrete;
         golang::runtime::_type* asserted;
-        std::string missingMethod;
+        gocpp::string missingMethod;
 
         using isGoStruct = void;
 
@@ -87,7 +87,7 @@ namespace golang::runtime
     gocpp::slice<unsigned char> itoa(gocpp::slice<unsigned char> buf, uint64_t val);
     struct errorAddressString
     {
-        std::string msg;
+        gocpp::string msg;
         uintptr_t addr;
 
         using isGoStruct = void;
@@ -121,8 +121,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct boundsError& value);
-    extern gocpp::array<std::string, 9> boundsErrorFmts;
-    extern gocpp::array<std::string, 8> boundsNegErrorFmts;
+    extern gocpp::array<gocpp::string, 9> boundsErrorFmts;
+    extern gocpp::array<gocpp::string, 8> boundsNegErrorFmts;
     gocpp::slice<unsigned char> appendIntStr(gocpp::slice<unsigned char> b, int64_t v, bool go_signed);
     struct stringer : gocpp::Interface
     {
@@ -150,7 +150,7 @@ namespace golang::runtime
 
         struct Istringer
         {
-            virtual std::string vString() = 0;
+            virtual gocpp::string vString() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -161,7 +161,7 @@ namespace golang::runtime
                 value.reset(ptr);
             }
 
-            std::string vString() override;
+            gocpp::string vString() override;
 
             StoreT value;
         };
@@ -171,8 +171,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        std::string String(const gocpp::PtrRecv<struct stringer, false>& self);
-        std::string String(const gocpp::ObjRecv<struct stringer>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct stringer, false>& self);
+        gocpp::string String(const gocpp::ObjRecv<struct stringer>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct stringer& value);
@@ -183,16 +183,16 @@ namespace golang::runtime
     namespace rec
     {
         void RuntimeError(TypeAssertionError*);
-        std::string Error(struct TypeAssertionError* e);
+        gocpp::string Error(struct TypeAssertionError* e);
         void RuntimeError(golang::runtime::errorString e);
-        std::string Error(golang::runtime::errorString e);
+        gocpp::string Error(golang::runtime::errorString e);
         void RuntimeError(struct errorAddressString e);
-        std::string Error(struct errorAddressString e);
+        gocpp::string Error(struct errorAddressString e);
         uintptr_t Addr(struct errorAddressString e);
         void RuntimeError(golang::runtime::plainError e);
-        std::string Error(golang::runtime::plainError e);
+        gocpp::string Error(golang::runtime::plainError e);
         void RuntimeError(struct boundsError e);
-        std::string Error(struct boundsError e);
+        gocpp::string Error(struct boundsError e);
     }
 }
 

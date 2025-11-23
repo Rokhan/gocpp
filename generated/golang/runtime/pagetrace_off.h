@@ -62,7 +62,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pageTraceBuf& value);
-    void initPageTrace(std::string env);
+    void initPageTrace(gocpp::string env);
     void finishPageTrace();
 
     namespace rec

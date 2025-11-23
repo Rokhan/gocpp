@@ -112,12 +112,12 @@ namespace golang::runtime
         {
             if(n > uintptr_t(len(a->head->data)))
             {
-                go_throw("traceRegion: alloc too large"s);
+                go_throw("traceRegion: alloc too large"_s);
             }
             auto block = (traceRegionAllocBlock*)(sysAlloc(gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys));
             if(block == nullptr)
             {
-                go_throw("traceRegion: out of memory"s);
+                go_throw("traceRegion: out of memory"_s);
             }
             block->next = a->head;
             a->head = block;

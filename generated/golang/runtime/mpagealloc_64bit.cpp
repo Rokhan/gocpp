@@ -74,7 +74,7 @@ namespace golang::runtime
             auto r = sysReserve(nullptr, b);
             if(r == nullptr)
             {
-                go_throw("failed to reserve page summary memory"s);
+                go_throw("failed to reserve page summary memory"_s);
             }
             auto sl = notInHeapSlice {(notInHeap*)(r), 0, entries};
             p->summary[l] = *(gocpp::slice<runtime::pallocSum>*)(unsafe::Pointer(& sl));
@@ -95,8 +95,8 @@ namespace golang::runtime
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
-            print("runtime: base = "s, hex(base), ", limit = "s, hex(limit), "\n"s);
-            go_throw("sysGrow bounds not aligned to pallocChunkBytes"s);
+            print("runtime: base = "_s, hex(base), ", limit = "_s, hex(limit), "\n"_s);
+            go_throw("sysGrow bounds not aligned to pallocChunkBytes"_s);
         }
         auto addrRangeToSummaryRange = [=](int level, struct addrRange r) mutable -> std::tuple<int, int>
         {
@@ -150,8 +150,8 @@ namespace golang::runtime
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
-            print("runtime: base = "s, hex(base), ", limit = "s, hex(limit), "\n"s);
-            go_throw("sysGrow bounds not aligned to pallocChunkBytes"s);
+            print("runtime: base = "_s, hex(base), ", limit = "_s, hex(limit), "\n"_s);
+            go_throw("sysGrow bounds not aligned to pallocChunkBytes"_s);
         }
         auto scSize = gocpp::Sizeof<atomicScavChunkData>();
         auto haveMin = rec::Load(gocpp::recv(s->min));

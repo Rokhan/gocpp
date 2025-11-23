@@ -23,7 +23,7 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Printf("Now you have %g problems.\n"s, std::sqrt(7));
+        mocklib::Printf("Now you have %g problems.\n"_s, std::sqrt(7));
     }
 
 }

@@ -30,8 +30,8 @@ namespace golang::hex
         using strings::rec::String;
     }
 
-    std::string hextable = "0123456789abcdef"s;
-    std::string reverseHexTable = ""s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\xff\xff\xff\xff\xff\xff"s + "\xff\x0a\x0b\x0c\x0d\x0e\x0f\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\x0a\x0b\x0c\x0d\x0e\x0f\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"s;
+    gocpp::string hextable = "0123456789abcdef"_s;
+    gocpp::string reverseHexTable = ""_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\xff\xff\xff\xff\xff\xff"_s + "\xff\x0a\x0b\x0c\x0d\x0e\x0f\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\x0a\x0b\x0c\x0d\x0e\x0f\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s + "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"_s;
     // EncodedLen returns the length of an encoding of n source bytes.
     // Specifically, it returns n * 2.
     int EncodedLen(int n)
@@ -68,11 +68,11 @@ namespace golang::hex
     // ErrLength reports an attempt to decode an odd-length input
     // using [Decode] or [DecodeString].
     // The stream-based Decoder returns [io.ErrUnexpectedEOF] instead of ErrLength.
-    gocpp::error ErrLength = errors::New("encoding/hex: odd length hex string"s);
+    gocpp::error ErrLength = errors::New("encoding/hex: odd length hex string"_s);
     // InvalidByteError values describe errors resulting from an invalid byte in a hex string.
-    std::string rec::Error(golang::hex::InvalidByteError e)
+    gocpp::string rec::Error(golang::hex::InvalidByteError e)
     {
-        return mocklib::Sprintf("encoding/hex: invalid byte: %#U"s, gocpp::rune(e));
+        return mocklib::Sprintf("encoding/hex: invalid byte: %#U"_s, gocpp::rune(e));
     }
 
     // DecodedLen returns the length of a decoding of x source bytes.
@@ -133,11 +133,11 @@ namespace golang::hex
     }
 
     // EncodeToString returns the hexadecimal encoding of src.
-    std::string EncodeToString(gocpp::slice<unsigned char> src)
+    gocpp::string EncodeToString(gocpp::slice<unsigned char> src)
     {
         auto dst = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), EncodedLen(len(src)));
         Encode(dst, src);
-        return std::string(dst);
+        return gocpp::string(dst);
     }
 
     // DecodeString returns the bytes represented by the hexadecimal string s.
@@ -146,7 +146,7 @@ namespace golang::hex
     // characters and that src has even length.
     // If the input is malformed, DecodeString returns
     // the bytes decoded before the error.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> DecodeString(std::string s)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> DecodeString(gocpp::string s)
     {
         auto src = gocpp::slice<unsigned char>(s);
         auto [n, err] = Decode(src, src);
@@ -155,11 +155,11 @@ namespace golang::hex
 
     // Dump returns a string that contains a hex dump of the given data. The format
     // of the hex dump matches the output of `hexdump -C` on the command line.
-    std::string Dump(gocpp::slice<unsigned char> data)
+    gocpp::string Dump(gocpp::slice<unsigned char> data)
     {
         if(len(data) == 0)
         {
-            return ""s;
+            return ""_s;
         }
         strings::Builder buf = {};
         rec::Grow(gocpp::recv(buf), (1 + ((len(data) - 1) / 16)) * 79);
@@ -390,7 +390,7 @@ namespace golang::hex
         struct gocpp::error err;
         if(h->closed)
         {
-            return {0, errors::New("encoding/hex: dumper closed"s)};
+            return {0, errors::New("encoding/hex: dumper closed"_s)};
         }
         for(auto [i, gocpp_ignored] : data)
         {

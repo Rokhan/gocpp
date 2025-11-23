@@ -25,8 +25,8 @@ namespace golang::main
         gocpp::Defer defer;
         try
         {
-            defer.push_back([=]{ mocklib::Println("world"s); });
-            mocklib::Println("hello"s);
+            defer.push_back([=]{ mocklib::Println("world"_s); });
+            mocklib::Println("hello"_s);
         }
         catch(gocpp::GoPanic& gp)
         {

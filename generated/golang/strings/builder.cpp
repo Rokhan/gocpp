@@ -80,12 +80,12 @@ namespace golang::strings
         else
         if(b->addr != b)
         {
-            gocpp::panic("strings: illegal use of non-zero Builder copied by value"s);
+            gocpp::panic("strings: illegal use of non-zero Builder copied by value"_s);
         }
     }
 
     // String returns the accumulated string.
-    std::string rec::String(struct Builder* b)
+    gocpp::string rec::String(struct Builder* b)
     {
         return unsafe::String(unsafe::SliceData(b->buf), len(b->buf));
     }
@@ -128,7 +128,7 @@ namespace golang::strings
         rec::copyCheck(gocpp::recv(b));
         if(n < 0)
         {
-            gocpp::panic("strings.Builder.Grow: negative count"s);
+            gocpp::panic("strings.Builder.Grow: negative count"_s);
         }
         if(cap(b->buf) - len(b->buf) < n)
         {
@@ -166,7 +166,7 @@ namespace golang::strings
 
     // WriteString appends the contents of s to b's buffer.
     // It returns the length of s and a nil error.
-    std::tuple<int, struct gocpp::error> rec::WriteString(struct Builder* b, std::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(struct Builder* b, gocpp::string s)
     {
         rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, s);

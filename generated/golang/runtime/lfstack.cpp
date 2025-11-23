@@ -48,8 +48,8 @@ namespace golang::runtime
         auto go_new = lfstackPack(node, node->pushcnt);
         if(auto node1 = lfstackUnpack(go_new); node1 != node)
         {
-            print("runtime: lfstack.push invalid packing: node="s, node, " cnt="s, hex(node->pushcnt), " packed="s, hex(go_new), " -> node="s, node1, "\n"s);
-            go_throw("lfstack.push"s);
+            print("runtime: lfstack.push invalid packing: node="_s, node, " cnt="_s, hex(node->pushcnt), " packed="_s, hex(go_new), " -> node="_s, node1, "\n"_s);
+            go_throw("lfstack.push"_s);
         }
         for(; ; )
         {
@@ -91,13 +91,13 @@ namespace golang::runtime
     {
         if(auto [base, gocpp_id_0, gocpp_id_1] = findObject(uintptr_t(unsafe::Pointer(node)), 0, 0); base != 0)
         {
-            go_throw("lfstack node allocated from the heap"s);
+            go_throw("lfstack node allocated from the heap"_s);
         }
         if(lfstackUnpack(lfstackPack(node, ~ uintptr_t(0))) != node)
         {
             printlock();
-            println("runtime: bad lfnode address"s, hex(uintptr_t(unsafe::Pointer(node))));
-            go_throw("bad lfnode address"s);
+            println("runtime: bad lfnode address"_s, hex(uintptr_t(unsafe::Pointer(node))));
+            go_throw("bad lfnode address"_s);
         }
     }
 

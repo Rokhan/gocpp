@@ -93,8 +93,8 @@ namespace golang::windows
 
     namespace rec
     {
-        std::string Path(struct SymbolicLinkReparseBuffer* rb);
-        std::string Path(struct MountPointReparseBuffer* rb);
+        gocpp::string Path(struct SymbolicLinkReparseBuffer* rb);
+        gocpp::string Path(struct MountPointReparseBuffer* rb);
     }
 }
 

@@ -129,7 +129,7 @@ namespace golang::binary
         return rec::PutUint64(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
     template<typename T, typename StoreT>
-    std::string ByteOrder::ByteOrderImpl<T, StoreT>::vString()
+    gocpp::string ByteOrder::ByteOrderImpl<T, StoreT>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -196,12 +196,12 @@ namespace golang::binary
             return self.obj.value->vPutUint64(_1, _2);
         }
 
-        std::string String(const gocpp::PtrRecv<struct ByteOrder, false>& self)
+        gocpp::string String(const gocpp::PtrRecv<struct ByteOrder, false>& self)
         {
             return self.ptr->value->vString();
         }
 
-        std::string String(const gocpp::ObjRecv<struct ByteOrder>& self)
+        gocpp::string String(const gocpp::ObjRecv<struct ByteOrder>& self)
         {
             return self.obj.value->vString();
         }
@@ -256,7 +256,7 @@ namespace golang::binary
         return rec::AppendUint64(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
     template<typename T, typename StoreT>
-    std::string AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vString()
+    gocpp::string AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -293,12 +293,12 @@ namespace golang::binary
             return self.obj.value->vAppendUint64(_1, _2);
         }
 
-        std::string String(const gocpp::PtrRecv<struct AppendByteOrder, false>& self)
+        gocpp::string String(const gocpp::PtrRecv<struct AppendByteOrder, false>& self)
         {
             return self.ptr->value->vString();
         }
 
-        std::string String(const gocpp::ObjRecv<struct AppendByteOrder>& self)
+        gocpp::string String(const gocpp::ObjRecv<struct AppendByteOrder>& self)
         {
             return self.obj.value->vString();
         }
@@ -401,14 +401,14 @@ namespace golang::binary
         return append(b, (unsigned char)(v), (unsigned char)(v >> 8), (unsigned char)(v >> 16), (unsigned char)(v >> 24), (unsigned char)(v >> 32), (unsigned char)(v >> 40), (unsigned char)(v >> 48), (unsigned char)(v >> 56));
     }
 
-    std::string rec::String(littleEndian)
+    gocpp::string rec::String(littleEndian)
     {
-        return "LittleEndian"s;
+        return "LittleEndian"_s;
     }
 
-    std::string rec::GoString(littleEndian)
+    gocpp::string rec::GoString(littleEndian)
     {
-        return "binary.LittleEndian"s;
+        return "binary.LittleEndian"_s;
     }
 
     
@@ -499,24 +499,24 @@ namespace golang::binary
         return append(b, (unsigned char)(v >> 56), (unsigned char)(v >> 48), (unsigned char)(v >> 40), (unsigned char)(v >> 32), (unsigned char)(v >> 24), (unsigned char)(v >> 16), (unsigned char)(v >> 8), (unsigned char)(v));
     }
 
-    std::string rec::String(bigEndian)
+    gocpp::string rec::String(bigEndian)
     {
-        return "BigEndian"s;
+        return "BigEndian"_s;
     }
 
-    std::string rec::GoString(bigEndian)
+    gocpp::string rec::GoString(bigEndian)
     {
-        return "binary.BigEndian"s;
+        return "binary.BigEndian"_s;
     }
 
-    std::string rec::String(nativeEndian)
+    gocpp::string rec::String(nativeEndian)
     {
-        return "NativeEndian"s;
+        return "NativeEndian"_s;
     }
 
-    std::string rec::GoString(nativeEndian)
+    gocpp::string rec::GoString(nativeEndian)
     {
-        return "binary.NativeEndian"s;
+        return "binary.NativeEndian"_s;
     }
 
     // Read reads structured binary data from r into data.
@@ -768,7 +768,7 @@ namespace golang::binary
         }
         if(size < 0)
         {
-            return errors::New("binary.Read: invalid type "s + rec::String(gocpp::recv(reflect::TypeOf(data))));
+            return errors::New("binary.Read: invalid type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
         auto d = gocpp::InitPtr<decoder>([=](auto& x) {
             x.order = order;
@@ -1092,7 +1092,7 @@ namespace golang::binary
         auto size = dataSize(v);
         if(size < 0)
         {
-            return errors::New("binary.Write: some values are not fixed-sized in type "s + rec::String(gocpp::recv(reflect::TypeOf(data))));
+            return errors::New("binary.Write: some values are not fixed-sized in type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
         auto e = gocpp::InitPtr<encoder>([=](auto& x) {
@@ -1402,7 +1402,7 @@ namespace golang::binary
                     {
                         {
                             auto v_tmp = rec::Field(gocpp::recv(v), i);
-                            if(auto& v = v_tmp; rec::CanSet(gocpp::recv(v)) || rec::Field(gocpp::recv(t), i).Name != "_"s)
+                            if(auto& v = v_tmp; rec::CanSet(gocpp::recv(v)) || rec::Field(gocpp::recv(t), i).Name != "_"_s)
                             {
                                 rec::value(gocpp::recv(d), v);
                             }
@@ -1504,7 +1504,7 @@ namespace golang::binary
                     {
                         {
                             auto v_tmp = rec::Field(gocpp::recv(v), i);
-                            if(auto& v = v_tmp; rec::CanSet(gocpp::recv(v)) || rec::Field(gocpp::recv(t), i).Name != "_"s)
+                            if(auto& v = v_tmp; rec::CanSet(gocpp::recv(v)) || rec::Field(gocpp::recv(t), i).Name != "_"_s)
                             {
                                 rec::value(gocpp::recv(e), v);
                             }

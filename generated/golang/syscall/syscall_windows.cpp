@@ -41,12 +41,12 @@ namespace golang::syscall
     // function panics instead of returning an error.
     //
     // Deprecated: Use UTF16FromString instead.
-    gocpp::slice<uint16_t> StringToUTF16(std::string s)
+    gocpp::slice<uint16_t> StringToUTF16(gocpp::string s)
     {
         auto [a, err] = UTF16FromString(s);
         if(err != nullptr)
         {
-            gocpp::panic("syscall: string with NUL passed to StringToUTF16"s);
+            gocpp::panic("syscall: string with NUL passed to StringToUTF16"_s);
         }
         return a;
     }
@@ -55,7 +55,7 @@ namespace golang::syscall
     // s, with a terminating NUL added. If s contains a NUL byte at any
     // location, it returns (nil, EINVAL). Unpaired surrogates
     // are encoded using WTF-8.
-    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> UTF16FromString(std::string s)
+    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> UTF16FromString(gocpp::string s)
     {
         if(bytealg::IndexByteString(s, 0) != - 1)
         {
@@ -69,7 +69,7 @@ namespace golang::syscall
     // UTF16ToString returns the UTF-8 encoding of the UTF-16 sequence s,
     // with a terminating NUL removed. Unpaired surrogates are decoded
     // using WTF-8 instead of UTF-8 encoding.
-    std::string UTF16ToString(gocpp::slice<uint16_t> s)
+    gocpp::string UTF16ToString(gocpp::slice<uint16_t> s)
     {
         auto maxLen = 0;
         for(auto [i, v] : s)
@@ -104,11 +104,11 @@ namespace golang::syscall
 
     // utf16PtrToString is like UTF16ToString, but takes *uint16
     // as a parameter instead of []uint16.
-    std::string utf16PtrToString(uint16_t* p)
+    gocpp::string utf16PtrToString(uint16_t* p)
     {
         if(p == nullptr)
         {
-            return ""s;
+            return ""_s;
         }
         auto end = unsafe::Pointer(p);
         auto n = 0;
@@ -126,7 +126,7 @@ namespace golang::syscall
     // returning an error.
     //
     // Deprecated: Use UTF16PtrFromString instead.
-    uint16_t* StringToUTF16Ptr(std::string s)
+    uint16_t* StringToUTF16Ptr(gocpp::string s)
     {
         return & StringToUTF16(s)[0];
     }
@@ -135,7 +135,7 @@ namespace golang::syscall
     // the UTF-8 string s, with a terminating NUL added. If s
     // contains a NUL byte at any location, it returns (nil, EINVAL).
     // Unpaired surrogates are encoded using WTF-8.
-    std::tuple<uint16_t*, struct gocpp::error> UTF16PtrFromString(std::string s)
+    std::tuple<uint16_t*, struct gocpp::error> UTF16PtrFromString(gocpp::string s)
     {
         auto [a, err] = UTF16FromString(s);
         if(err != nullptr)
@@ -168,7 +168,7 @@ namespace golang::syscall
         return formatMessage(flags, uintptr_t(msgsrc), msgid, langid, buf, args);
     }
 
-    std::string rec::Error(golang::syscall::Errno e)
+    gocpp::string rec::Error(golang::syscall::Errno e)
     {
         auto idx = int(e - APPLICATION_ERROR);
         if(0 <= idx && idx < len(errors))
@@ -184,7 +184,7 @@ namespace golang::syscall
             std::tie(n, err) = formatMessage(flags, 0, uint32_t(e), 0, b, nullptr);
             if(err != nullptr)
             {
-                return "winapi error #"s + itoa::Itoa(int(e));
+                return "winapi error #"_s + itoa::Itoa(int(e));
             }
         }
         for(; n > 0 && (b[n - 1] == '\n' || b[n - 1] == '\r'); n--)
@@ -266,7 +266,7 @@ namespace golang::syscall
         return & sa;
     }
 
-    std::tuple<syscall::Handle, struct gocpp::error> Open(std::string path, int mode, uint32_t perm)
+    std::tuple<syscall::Handle, struct gocpp::error> Open(gocpp::string path, int mode, uint32_t perm)
     {
         syscall::Handle fd;
         struct gocpp::error err;
@@ -457,7 +457,7 @@ namespace golang::syscall
     }
 
     int64_t ioSync;
-    LazyProc* procSetFilePointerEx = rec::NewProc(gocpp::recv(modkernel32), "SetFilePointerEx"s);
+    LazyProc* procSetFilePointerEx = rec::NewProc(gocpp::recv(modkernel32), "SetFilePointerEx"_s);
     // setFilePointerEx calls SetFilePointerEx.
     // See https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfilepointerex
     struct gocpp::error setFilePointerEx(golang::syscall::Handle handle, int64_t distToMove, int64_t* newFilePointer, uint32_t whence)
@@ -473,12 +473,12 @@ namespace golang::syscall
             {
                 auto condition = runtime::GOARCH;
                 int conditionId = -1;
-                if(condition == "386"s) { conditionId = 0; }
-                else if(condition == "arm"s) { conditionId = 1; }
+                if(condition == "386"_s) { conditionId = 0; }
+                else if(condition == "arm"_s) { conditionId = 1; }
                 switch(conditionId)
                 {
                     default:
-                        gocpp::panic("unsupported 32-bit architecture"s);
+                        gocpp::panic("unsupported 32-bit architecture"_s);
                         break;
                     case 0:
                         std::tie(gocpp_id_2, gocpp_id_3, e1) = Syscall6(rec::Addr(gocpp::recv(procSetFilePointerEx)), 5, uintptr_t(handle), uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(unsafe::Pointer(newFilePointer)), uintptr_t(whence), 0);
@@ -541,9 +541,9 @@ namespace golang::syscall
         return r;
     }
 
-    std::tuple<std::string, struct gocpp::error> Getwd()
+    std::tuple<gocpp::string, struct gocpp::error> Getwd()
     {
-        std::string wd;
+        gocpp::string wd;
         struct gocpp::error err;
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 300);
         for(; ; )
@@ -551,7 +551,7 @@ namespace golang::syscall
             auto [n, e] = GetCurrentDirectory(uint32_t(len(b)), & b[0]);
             if(e != nullptr)
             {
-                return {""s, e};
+                return {""_s, e};
             }
             if(int(n) <= len(b))
             {
@@ -561,7 +561,7 @@ namespace golang::syscall
         }
     }
 
-    struct gocpp::error Chdir(std::string path)
+    struct gocpp::error Chdir(gocpp::string path)
     {
         struct gocpp::error err;
         uint16_t* pathp;
@@ -573,7 +573,7 @@ namespace golang::syscall
         return SetCurrentDirectory(pathp);
     }
 
-    struct gocpp::error Mkdir(std::string path, uint32_t mode)
+    struct gocpp::error Mkdir(gocpp::string path, uint32_t mode)
     {
         struct gocpp::error err;
         uint16_t* pathp;
@@ -585,7 +585,7 @@ namespace golang::syscall
         return CreateDirectory(pathp, nullptr);
     }
 
-    struct gocpp::error Rmdir(std::string path)
+    struct gocpp::error Rmdir(gocpp::string path)
     {
         struct gocpp::error err;
         uint16_t* pathp;
@@ -597,7 +597,7 @@ namespace golang::syscall
         return RemoveDirectory(pathp);
     }
 
-    struct gocpp::error Unlink(std::string path)
+    struct gocpp::error Unlink(gocpp::string path)
     {
         struct gocpp::error err;
         uint16_t* pathp;
@@ -609,7 +609,7 @@ namespace golang::syscall
         return DeleteFile(pathp);
     }
 
-    struct gocpp::error Rename(std::string oldpath, std::string newpath)
+    struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath)
     {
         struct gocpp::error err;
         uint16_t* from;
@@ -627,16 +627,16 @@ namespace golang::syscall
         return MoveFile(from, to);
     }
 
-    std::tuple<std::string, struct gocpp::error> ComputerName()
+    std::tuple<gocpp::string, struct gocpp::error> ComputerName()
     {
-        std::string name;
+        gocpp::string name;
         struct gocpp::error err;
         uint32_t n = MAX_COMPUTERNAME_LENGTH + 1;
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
         auto e = GetComputerName(& b[0], & n);
         if(e != nullptr)
         {
-            return {""s, e};
+            return {""_s, e};
         }
         return {UTF16ToString(b.make_slice(0, n)), nullptr};
     }
@@ -699,7 +699,7 @@ namespace golang::syscall
         return nullptr;
     }
 
-    struct gocpp::error Utimes(std::string path, gocpp::slice<Timeval> tv)
+    struct gocpp::error Utimes(gocpp::string path, gocpp::slice<Timeval> tv)
     {
         gocpp::Defer defer;
         try
@@ -740,7 +740,7 @@ namespace golang::syscall
     }
 
     // This matches the value in os/file_windows.go.
-    struct gocpp::error UtimesNano(std::string path, gocpp::slice<Timespec> ts)
+    struct gocpp::error UtimesNano(gocpp::string path, gocpp::slice<Timespec> ts)
     {
         gocpp::Defer defer;
         try
@@ -786,7 +786,7 @@ namespace golang::syscall
         return FlushFileBuffers(fd);
     }
 
-    struct gocpp::error Chmod(std::string path, uint32_t mode)
+    struct gocpp::error Chmod(gocpp::string path, uint32_t mode)
     {
         struct gocpp::error err;
         auto [p, e] = UTF16PtrFromString(path);
@@ -1234,7 +1234,7 @@ namespace golang::syscall
                     {
                         n++;
                     }
-                    sa->Name = std::string(unsafe::Slice((unsigned char*)(unsafe::Pointer(& pp->Path[0])), n));
+                    sa->Name = gocpp::string(unsafe::Slice((unsigned char*)(unsafe::Pointer(& pp->Path[0])), n));
                     return {sa, nullptr};
                     break;
                 case 1:
@@ -1517,7 +1517,7 @@ namespace golang::syscall
         auto err = LoadConnectEx();
         if(err != nullptr)
         {
-            return errorspkg::New("failed to find ConnectEx: "s + rec::Error(gocpp::recv(err)));
+            return errorspkg::New("failed to find ConnectEx: "_s + rec::Error(gocpp::recv(err)));
         }
         unsafe::Pointer ptr;
         int32_t n;
@@ -2003,13 +2003,13 @@ namespace golang::syscall
     }
 
     // TODO(brainman): fix all needed for os
-    struct gocpp::error Link(std::string oldpath, std::string newpath)
+    struct gocpp::error Link(gocpp::string oldpath, gocpp::string newpath)
     {
         struct gocpp::error err;
         return go_EWINDOWS;
     }
 
-    struct gocpp::error Symlink(std::string path, std::string link)
+    struct gocpp::error Symlink(gocpp::string path, gocpp::string link)
     {
         struct gocpp::error err;
         return go_EWINDOWS;
@@ -2021,13 +2021,13 @@ namespace golang::syscall
         return go_EWINDOWS;
     }
 
-    struct gocpp::error Chown(std::string path, int uid, int gid)
+    struct gocpp::error Chown(gocpp::string path, int uid, int gid)
     {
         struct gocpp::error err;
         return go_EWINDOWS;
     }
 
-    struct gocpp::error Lchown(std::string path, int uid, int gid)
+    struct gocpp::error Lchown(gocpp::string path, int uid, int gid)
     {
         struct gocpp::error err;
         return go_EWINDOWS;
@@ -2074,17 +2074,17 @@ namespace golang::syscall
     {
     }
 
-    std::string rec::String(golang::syscall::Signal s)
+    gocpp::string rec::String(golang::syscall::Signal s)
     {
         if(0 <= s && int(s) < len(signals))
         {
             auto str = signals[s];
-            if(str != ""s)
+            if(str != ""_s)
             {
                 return str;
             }
         }
-        return "signal "s + itoa::Itoa(int(s));
+        return "signal "_s + itoa::Itoa(int(s));
     }
 
     struct gocpp::error LoadCreateSymbolicLink()
@@ -2093,7 +2093,7 @@ namespace golang::syscall
     }
 
     // Readlink returns the destination of the named symbolic link.
-    std::tuple<int, struct gocpp::error> Readlink(std::string path, gocpp::slice<unsigned char> buf)
+    std::tuple<int, struct gocpp::error> Readlink(gocpp::string path, gocpp::slice<unsigned char> buf)
     {
         gocpp::Defer defer;
         try
@@ -2115,7 +2115,7 @@ namespace golang::syscall
                 return {- 1, err};
             }
             auto rdb = (reparseDataBuffer*)(unsafe::Pointer(& rdbbuf[0]));
-            std::string s = {};
+            gocpp::string s = {};
             //Go switch emulation
             {
                 auto condition = rdb->ReparseTag;
@@ -2130,20 +2130,20 @@ namespace golang::syscall
                         s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
                         if(data->Flags & _SYMLINK_FLAG_RELATIVE == 0)
                         {
-                            if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\"s)
+                            if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\"_s)
                             {
                                 s = s.make_slice(4);
                                 //Go switch emulation
                                 {
                                     int conditionId = -1;
                                     if(len(s) >= 2 && s[1] == ':') { conditionId = 0; }
-                                    else if(len(s) >= 4 && s.make_slice(0, 4) == "UNC\\"s) { conditionId = 1; }
+                                    else if(len(s) >= 4 && s.make_slice(0, 4) == "UNC\\"_s) { conditionId = 1; }
                                     switch(conditionId)
                                     {
                                         case 0:
                                             break;
                                         case 1:
-                                            s = "\\\\"s + s.make_slice(4);
+                                            s = "\\\\"_s + s.make_slice(4);
                                             break;
                                         default:
                                             break;
@@ -2159,7 +2159,7 @@ namespace golang::syscall
                         auto data = (mountPointReparseBuffer*)(unsafe::Pointer(& rdb->reparseBuffer));
                         auto p = (gocpp::array<uint16_t, 0xffff>*)(unsafe::Pointer(& data->PathBuffer[0]));
                         s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
-                        if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\"s)
+                        if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\"_s)
                         {
                             s = s.make_slice(4);
                         }
@@ -2203,7 +2203,7 @@ namespace golang::syscall
             *key = uint32_t(ukey);
             if(uintptr_t(*key) != ukey && err == nullptr)
             {
-                err = errorspkg::New("GetQueuedCompletionStatus returned key overflow"s);
+                err = errorspkg::New("GetQueuedCompletionStatus returned key overflow"_s);
             }
         }
         return err;
@@ -2226,7 +2226,7 @@ namespace golang::syscall
         {
             if(err == nullptr)
             {
-                return {nullptr, errorspkg::New("unable to query buffer size from InitializeProcThreadAttributeList"s)};
+                return {nullptr, errorspkg::New("unable to query buffer size from InitializeProcThreadAttributeList"_s)};
             }
             return {nullptr, err};
         }

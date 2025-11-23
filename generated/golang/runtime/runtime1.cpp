@@ -116,11 +116,11 @@ namespace golang::runtime
 
     void goargs()
     {
-        if(GOOS == "windows"s)
+        if(GOOS == "windows"_s)
         {
             return;
         }
-        argslice = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), argc);
+        argslice = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), argc);
         for(auto i = int32_t(0); i < argc; i++)
         {
             argslice[i] = gostringnocopy(argv_index(argv, i));
@@ -134,14 +134,14 @@ namespace golang::runtime
         {
             n++;
         }
-        envs = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), n);
+        envs = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), n);
         for(auto i = int32_t(0); i < n; i++)
         {
             envs[i] = gostring(argv_index(argv, argc + 1 + i));
         }
     }
 
-    gocpp::slice<std::string> environ()
+    gocpp::slice<gocpp::string> environ()
     {
         return envs;
     }
@@ -156,45 +156,45 @@ namespace golang::runtime
         test_x64 = 0;
         if(atomic::Cas64(& test_z64, test_x64, 1))
         {
-            go_throw("cas64 failed"s);
+            go_throw("cas64 failed"_s);
         }
         if(test_x64 != 0)
         {
-            go_throw("cas64 failed"s);
+            go_throw("cas64 failed"_s);
         }
         test_x64 = 42;
         if(! atomic::Cas64(& test_z64, test_x64, 1))
         {
-            go_throw("cas64 failed"s);
+            go_throw("cas64 failed"_s);
         }
         if(test_x64 != 42 || test_z64 != 1)
         {
-            go_throw("cas64 failed"s);
+            go_throw("cas64 failed"_s);
         }
         if(atomic::Load64(& test_z64) != 1)
         {
-            go_throw("load64 failed"s);
+            go_throw("load64 failed"_s);
         }
         atomic::Store64(& test_z64, (1 << 40) + 1);
         if(atomic::Load64(& test_z64) != (1 << 40) + 1)
         {
-            go_throw("store64 failed"s);
+            go_throw("store64 failed"_s);
         }
         if(atomic::Xadd64(& test_z64, (1 << 40) + 1) != (2 << 40) + 2)
         {
-            go_throw("xadd64 failed"s);
+            go_throw("xadd64 failed"_s);
         }
         if(atomic::Load64(& test_z64) != (2 << 40) + 2)
         {
-            go_throw("xadd64 failed"s);
+            go_throw("xadd64 failed"_s);
         }
         if(atomic::Xchg64(& test_z64, (3 << 40) + 3) != (2 << 40) + 2)
         {
-            go_throw("xchg64 failed"s);
+            go_throw("xchg64 failed"_s);
         }
         if(atomic::Load64(& test_z64) != (3 << 40) + 3)
         {
-            go_throw("xchg64 failed"s);
+            go_throw("xchg64 failed"_s);
         }
     }
 
@@ -280,152 +280,152 @@ namespace golang::runtime
         y1t y1 = {};
         if(gocpp::Sizeof<int8_t>() != 1)
         {
-            go_throw("bad a"s);
+            go_throw("bad a"_s);
         }
         if(gocpp::Sizeof<uint8_t>() != 1)
         {
-            go_throw("bad b"s);
+            go_throw("bad b"_s);
         }
         if(gocpp::Sizeof<int16_t>() != 2)
         {
-            go_throw("bad c"s);
+            go_throw("bad c"_s);
         }
         if(gocpp::Sizeof<uint16_t>() != 2)
         {
-            go_throw("bad d"s);
+            go_throw("bad d"_s);
         }
         if(gocpp::Sizeof<int32_t>() != 4)
         {
-            go_throw("bad e"s);
+            go_throw("bad e"_s);
         }
         if(gocpp::Sizeof<uint32_t>() != 4)
         {
-            go_throw("bad f"s);
+            go_throw("bad f"_s);
         }
         if(gocpp::Sizeof<int64_t>() != 8)
         {
-            go_throw("bad g"s);
+            go_throw("bad g"_s);
         }
         if(gocpp::Sizeof<uint64_t>() != 8)
         {
-            go_throw("bad h"s);
+            go_throw("bad h"_s);
         }
         if(gocpp::Sizeof<float>() != 4)
         {
-            go_throw("bad i"s);
+            go_throw("bad i"_s);
         }
         if(gocpp::Sizeof<double>() != 8)
         {
-            go_throw("bad j"s);
+            go_throw("bad j"_s);
         }
         if(gocpp::Sizeof<unsafe::Pointer>() != goarch::PtrSize)
         {
-            go_throw("bad k"s);
+            go_throw("bad k"_s);
         }
         if(gocpp::Sizeof<uint16_t*>() != goarch::PtrSize)
         {
-            go_throw("bad l"s);
+            go_throw("bad l"_s);
         }
         if(gocpp::Sizeof<x1t>() != 1)
         {
-            go_throw("bad unsafe.Sizeof x1"s);
+            go_throw("bad unsafe.Sizeof x1"_s);
         }
         if(unsafe::Offsetof(y1.y) != 1)
         {
-            go_throw("bad offsetof y1.y"s);
+            go_throw("bad offsetof y1.y"_s);
         }
         if(gocpp::Sizeof<y1t>() != 2)
         {
-            go_throw("bad unsafe.Sizeof y1"s);
+            go_throw("bad unsafe.Sizeof y1"_s);
         }
         if(timediv(12345 * 1000000000 + 54321, 1000000000, & e) != 12345 || e != 54321)
         {
-            go_throw("bad timediv"s);
+            go_throw("bad timediv"_s);
         }
         uint32_t z = {};
         z = 1;
         if(! atomic::Cas(& z, 1, 2))
         {
-            go_throw("cas1"s);
+            go_throw("cas1"_s);
         }
         if(z != 2)
         {
-            go_throw("cas2"s);
+            go_throw("cas2"_s);
         }
         z = 4;
         if(atomic::Cas(& z, 5, 6))
         {
-            go_throw("cas3"s);
+            go_throw("cas3"_s);
         }
         if(z != 4)
         {
-            go_throw("cas4"s);
+            go_throw("cas4"_s);
         }
         z = 0xffffffff;
         if(! atomic::Cas(& z, 0xffffffff, 0xfffffffe))
         {
-            go_throw("cas5"s);
+            go_throw("cas5"_s);
         }
         if(z != 0xfffffffe)
         {
-            go_throw("cas6"s);
+            go_throw("cas6"_s);
         }
         m = gocpp::array<unsigned char, 4> {1, 1, 1, 1};
         atomic::Or8(& m[1], 0xf0);
         if(m[0] != 1 || m[1] != 0xf1 || m[2] != 1 || m[3] != 1)
         {
-            go_throw("atomicor8"s);
+            go_throw("atomicor8"_s);
         }
         m = gocpp::array<unsigned char, 4> {0xff, 0xff, 0xff, 0xff};
         atomic::And8(& m[1], 0x1);
         if(m[0] != 0xff || m[1] != 0x1 || m[2] != 0xff || m[3] != 0xff)
         {
-            go_throw("atomicand8"s);
+            go_throw("atomicand8"_s);
         }
         *(uint64_t*)(unsafe::Pointer(& j)) = ~ uint64_t(0);
         if(j == j)
         {
-            go_throw("float64nan"s);
+            go_throw("float64nan"_s);
         }
         if(! (j != j))
         {
-            go_throw("float64nan1"s);
+            go_throw("float64nan1"_s);
         }
         *(uint64_t*)(unsafe::Pointer(& j1)) = ~ uint64_t(1);
         if(j == j1)
         {
-            go_throw("float64nan2"s);
+            go_throw("float64nan2"_s);
         }
         if(! (j != j1))
         {
-            go_throw("float64nan3"s);
+            go_throw("float64nan3"_s);
         }
         *(uint32_t*)(unsafe::Pointer(& i)) = ~ uint32_t(0);
         if(i == i)
         {
-            go_throw("float32nan"s);
+            go_throw("float32nan"_s);
         }
         if(i == i)
         {
-            go_throw("float32nan1"s);
+            go_throw("float32nan1"_s);
         }
         *(uint32_t*)(unsafe::Pointer(& i1)) = ~ uint32_t(1);
         if(i == i1)
         {
-            go_throw("float32nan2"s);
+            go_throw("float32nan2"_s);
         }
         if(i == i1)
         {
-            go_throw("float32nan3"s);
+            go_throw("float32nan3"_s);
         }
         testAtomic64();
         if(fixedStack != round2(fixedStack))
         {
-            go_throw("FixedStack is not power-of-2"s);
+            go_throw("FixedStack is not power-of-2"_s);
         }
         if(! checkASM())
         {
-            go_throw("assembly checks failed"s);
+            go_throw("assembly checks failed"_s);
         }
     }
 
@@ -613,82 +613,82 @@ namespace golang::runtime
     // already have an initial value.
     gocpp_id_0 debug;
     gocpp::slice<dbgVar*> dbgvars = gocpp::slice<dbgVar*> {gocpp::Init<>([](auto& x) {
-        x.name = "allocfreetrace"s;
+        x.name = "allocfreetrace"_s;
         x.value = & debug.allocfreetrace;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "clobberfree"s;
+        x.name = "clobberfree"_s;
         x.value = & debug.clobberfree;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "cgocheck"s;
+        x.name = "cgocheck"_s;
         x.value = & debug.cgocheck;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "disablethp"s;
+        x.name = "disablethp"_s;
         x.value = & debug.disablethp;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "dontfreezetheworld"s;
+        x.name = "dontfreezetheworld"_s;
         x.value = & debug.dontfreezetheworld;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "efence"s;
+        x.name = "efence"_s;
         x.value = & debug.efence;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "gccheckmark"s;
+        x.name = "gccheckmark"_s;
         x.value = & debug.gccheckmark;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "gcpacertrace"s;
+        x.name = "gcpacertrace"_s;
         x.value = & debug.gcpacertrace;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "gcshrinkstackoff"s;
+        x.name = "gcshrinkstackoff"_s;
         x.value = & debug.gcshrinkstackoff;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "gcstoptheworld"s;
+        x.name = "gcstoptheworld"_s;
         x.value = & debug.gcstoptheworld;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "gctrace"s;
+        x.name = "gctrace"_s;
         x.value = & debug.gctrace;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "invalidptr"s;
+        x.name = "invalidptr"_s;
         x.value = & debug.invalidptr;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "madvdontneed"s;
+        x.name = "madvdontneed"_s;
         x.value = & debug.madvdontneed;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "runtimecontentionstacks"s;
+        x.name = "runtimecontentionstacks"_s;
         x.atomic = & debug.runtimeContentionStacks;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "sbrk"s;
+        x.name = "sbrk"_s;
         x.value = & debug.sbrk;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "scavtrace"s;
+        x.name = "scavtrace"_s;
         x.value = & debug.scavtrace;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "scheddetail"s;
+        x.name = "scheddetail"_s;
         x.value = & debug.scheddetail;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "schedtrace"s;
+        x.name = "schedtrace"_s;
         x.value = & debug.schedtrace;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "tracebackancestors"s;
+        x.name = "tracebackancestors"_s;
         x.value = & debug.tracebackancestors;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "asyncpreemptoff"s;
+        x.name = "asyncpreemptoff"_s;
         x.value = & debug.asyncpreemptoff;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "inittrace"s;
+        x.name = "inittrace"_s;
         x.value = & debug.inittrace;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "harddecommit"s;
+        x.name = "harddecommit"_s;
         x.value = & debug.harddecommit;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "adaptivestackstart"s;
+        x.name = "adaptivestackstart"_s;
         x.value = & debug.adaptivestackstart;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "tracefpunwindoff"s;
+        x.name = "tracefpunwindoff"_s;
         x.value = & debug.tracefpunwindoff;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "panicnil"s;
+        x.name = "panicnil"_s;
         x.atomic = & debug.panicnil;
     }), gocpp::Init<>([](auto& x) {
-        x.name = "traceadvanceperiod"s;
+        x.name = "traceadvanceperiod"_s;
         x.value = & debug.traceadvanceperiod;
     })};
     void parsedebugvars()
@@ -696,15 +696,15 @@ namespace golang::runtime
         debug.cgocheck = 1;
         debug.invalidptr = 1;
         debug.adaptivestackstart = 1;
-        if(GOOS == "linux"s)
+        if(GOOS == "linux"_s)
         {
             debug.madvdontneed = 1;
         }
         debug.traceadvanceperiod = defaultTraceAdvancePeriod;
-        auto godebug = gogetenv("GODEBUG"s);
+        auto godebug = gogetenv("GODEBUG"_s);
         auto p = new(string);
         *p = godebug;
-        rec::Store<std::string>(gocpp::recv(godebugEnv), p);
+        rec::Store<gocpp::string>(gocpp::recv(godebugEnv), p);
         for(auto [gocpp_ignored, v] : dbgvars)
         {
             if(v->def != 0)
@@ -723,15 +723,15 @@ namespace golang::runtime
         parsegodebug(godebugDefault, nullptr);
         parsegodebug(godebug, nullptr);
         debug.malloc = (debug.allocfreetrace | debug.inittrace | debug.sbrk) != 0;
-        setTraceback(gogetenv("GOTRACEBACK"s));
+        setTraceback(gogetenv("GOTRACEBACK"_s));
         traceback_env = traceback_cache;
     }
 
     // reparsedebugvars reparses the runtime's debug variables
     // because the environment variable has been changed to env.
-    void reparsedebugvars(std::string env)
+    void reparsedebugvars(gocpp::string env)
     {
-        auto seen = gocpp::make(gocpp::Tag<gocpp::map<std::string, bool>>());
+        auto seen = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
         parsegodebug(env, seen);
         parsegodebug(godebugDefault, seen);
         for(auto [gocpp_ignored, v] : dbgvars)
@@ -753,17 +753,17 @@ namespace golang::runtime
     // and only change values not already seen. After doing this for both
     // the environment and the default settings, the caller must also call
     // cleargodebug(seen) to reset any now-unset values back to their defaults.
-    void parsegodebug(std::string godebug, gocpp::map<std::string, bool> seen)
+    void parsegodebug(gocpp::string godebug, gocpp::map<gocpp::string, bool> seen)
     {
-        for(auto p = godebug; p != ""s; )
+        for(auto p = godebug; p != ""_s; )
         {
-            std::string field = {};
+            gocpp::string field = {};
             if(seen == nullptr)
             {
                 auto i = bytealg::IndexByteString(p, ',');
                 if(i < 0)
                 {
-                    std::tie(field, p) = std::tuple{p, ""s};
+                    std::tie(field, p) = std::tuple{p, ""_s};
                 }
                 else
                 {
@@ -779,7 +779,7 @@ namespace golang::runtime
                 }
                 if(i < 0)
                 {
-                    std::tie(p, field) = std::tuple{""s, p};
+                    std::tie(p, field) = std::tuple{""_s, p};
                 }
                 else
                 {
@@ -800,7 +800,7 @@ namespace golang::runtime
             {
                 seen[key] = true;
             }
-            if(seen == nullptr && key == "memprofilerate"s)
+            if(seen == nullptr && key == "memprofilerate"_s)
             {
                 if(auto [n, ok] = atoi(value); ok)
                 {
@@ -831,25 +831,25 @@ namespace golang::runtime
         }
         if(debug.cgocheck > 1)
         {
-            go_throw("cgocheck > 1 mode is no longer supported at runtime. Use GOEXPERIMENT=cgocheck2 at build time instead."s);
+            go_throw("cgocheck > 1 mode is no longer supported at runtime. Use GOEXPERIMENT=cgocheck2 at build time instead."_s);
         }
     }
 
     //go:linkname setTraceback runtime/debug.SetTraceback
-    void setTraceback(std::string level)
+    void setTraceback(gocpp::string level)
     {
         uint32_t t = {};
         //Go switch emulation
         {
             auto condition = level;
             int conditionId = -1;
-            if(condition == "none"s) { conditionId = 0; }
-            else if(condition == "single"s) { conditionId = 1; }
-            else if(condition == ""s) { conditionId = 2; }
-            else if(condition == "all"s) { conditionId = 3; }
-            else if(condition == "system"s) { conditionId = 4; }
-            else if(condition == "crash"s) { conditionId = 5; }
-            else if(condition == "wer"s) { conditionId = 6; }
+            if(condition == "none"_s) { conditionId = 0; }
+            else if(condition == "single"_s) { conditionId = 1; }
+            else if(condition == ""_s) { conditionId = 2; }
+            else if(condition == "all"_s) { conditionId = 3; }
+            else if(condition == "system"_s) { conditionId = 4; }
+            else if(condition == "crash"_s) { conditionId = 5; }
+            else if(condition == "wer"_s) { conditionId = 6; }
             switch(conditionId)
             {
                 case 0:
@@ -869,7 +869,7 @@ namespace golang::runtime
                     t = (2 << tracebackShift) | tracebackAll | tracebackCrash;
                     break;
                 case 6:
-                    if(GOOS == "windows"s)
+                    if(GOOS == "windows"_s)
                     {
                         t = (2 << tracebackShift) | tracebackAll | tracebackCrash;
                         enableWER();

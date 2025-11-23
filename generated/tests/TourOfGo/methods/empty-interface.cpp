@@ -26,13 +26,13 @@ namespace golang::main
         describe(i);
         i = 42;
         describe(i);
-        i = "hello"s;
+        i = "hello"_s;
         describe(i);
     }
 
     void describe(std::any i)
     {
-        mocklib::Printf("(%v, %T)\n"s, i, i);
+        mocklib::Printf("(%v, %T)\n"_s, i, i);
     }
 
 }

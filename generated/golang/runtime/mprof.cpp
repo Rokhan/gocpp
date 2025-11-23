@@ -372,7 +372,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 default:
-                    go_throw("invalid profile bucket type"s);
+                    go_throw("invalid profile bucket type"_s);
                     break;
                 case 0:
                     size += gocpp::Sizeof<memRecord>();
@@ -395,7 +395,7 @@ namespace golang::runtime
         auto stk = (gocpp::array<uintptr_t, maxStack>*)(add(unsafe::Pointer(b), gocpp::Sizeof<bucket>()));
         if(b->nstk > maxStack)
         {
-            go_throw("bad profile stack count"s);
+            go_throw("bad profile stack count"_s);
         }
         return stk.make_slice(0, b->nstk, b->nstk);
     }
@@ -405,7 +405,7 @@ namespace golang::runtime
     {
         if(b->typ != memProfile)
         {
-            go_throw("bad use of bucket.mp"s);
+            go_throw("bad use of bucket.mp"_s);
         }
         auto data = add(unsafe::Pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
         return (memRecord*)(data);
@@ -416,7 +416,7 @@ namespace golang::runtime
     {
         if(b->typ != blockProfile && b->typ != mutexProfile)
         {
-            go_throw("bad use of bucket.bp"s);
+            go_throw("bad use of bucket.bp"_s);
         }
         auto data = add(unsafe::Pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
         return (blockRecord*)(data);
@@ -435,7 +435,7 @@ namespace golang::runtime
                 bh = (runtime::buckhashArray*)(sysAlloc(gocpp::Sizeof<runtime::buckhashArray>(), & memstats.buckhash_sys));
                 if(bh == nullptr)
                 {
-                    go_throw("runtime: cannot allocate memory"s);
+                    go_throw("runtime: cannot allocate memory"_s);
                 }
                 rec::StoreNoWB(gocpp::recv(buckhash), unsafe::Pointer(bh));
             }
@@ -1606,7 +1606,7 @@ namespace golang::runtime
     {
         if(rec::ptr(gocpp::recv(getg()->m->p)) == nullptr)
         {
-            go_throw("no P available, write barriers are forbidden"s);
+            go_throw("no P available, write barriers are forbidden"_s);
         }
         tryRecordGoroutineProfile(gp1, osyield);
     }
@@ -1657,8 +1657,8 @@ namespace golang::runtime
     {
         if(readgstatus(gp1) == _Grunning)
         {
-            print("doRecordGoroutineProfile gp1="s, gp1->goid, "\n"s);
-            go_throw("cannot read stack of running goroutine"s);
+            print("doRecordGoroutineProfile gp1="_s, gp1->goid, "\n"_s);
+            go_throw("cannot read stack of running goroutine"_s);
         }
         auto offset = int(rec::Add(gocpp::recv(goroutineProfile.offset), 1)) - 1;
         if(offset >= len(goroutineProfile.records))
@@ -1811,11 +1811,11 @@ namespace golang::runtime
         gp->m->traceback = 2;
         if(typ == nullptr)
         {
-            print("tracealloc("s, p, ", "s, hex(size), ")\n"s);
+            print("tracealloc("_s, p, ", "_s, hex(size), ")\n"_s);
         }
         else
         {
-            print("tracealloc("s, p, ", "s, hex(size), ", "s, rec::string(gocpp::recv(toRType(typ))), ")\n"s);
+            print("tracealloc("_s, p, ", "_s, hex(size), ", "_s, rec::string(gocpp::recv(toRType(typ))), ")\n"_s);
         }
         if(gp->m->curg == nullptr || gp == gp->m->curg)
         {
@@ -1832,7 +1832,7 @@ namespace golang::runtime
             goroutineheader(gp->m->curg);
             traceback(~ uintptr_t(0), ~ uintptr_t(0), 0, gp->m->curg);
         }
-        print("\n"s);
+        print("\n"_s);
         gp->m->traceback = 0;
         unlock(& tracelock);
     }
@@ -1842,7 +1842,7 @@ namespace golang::runtime
         lock(& tracelock);
         auto gp = getg();
         gp->m->traceback = 2;
-        print("tracefree("s, p, ", "s, hex(size), ")\n"s);
+        print("tracefree("_s, p, ", "_s, hex(size), ")\n"_s);
         goroutineheader(gp);
         auto pc = getcallerpc();
         auto sp = getcallersp();
@@ -1850,7 +1850,7 @@ namespace golang::runtime
         {
             traceback(pc, sp, 0, gp);
         });
-        print("\n"s);
+        print("\n"_s);
         gp->m->traceback = 0;
         unlock(& tracelock);
     }
@@ -1860,10 +1860,10 @@ namespace golang::runtime
         lock(& tracelock);
         auto gp = getg();
         gp->m->traceback = 2;
-        print("tracegc()\n"s);
+        print("tracegc()\n"_s);
         tracebackothers(gp);
-        print("end tracegc\n"s);
-        print("\n"s);
+        print("end tracegc\n"_s);
+        print("\n"_s);
         gp->m->traceback = 0;
         unlock(& tracelock);
     }

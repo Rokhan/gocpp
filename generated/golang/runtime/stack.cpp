@@ -250,7 +250,7 @@ namespace golang::runtime
     {
         if(_StackCacheSize & _PageMask != 0)
         {
-            go_throw("cache size must be a multiple of page size"s);
+            go_throw("cache size must be a multiple of page size"_s);
         }
         for(auto [i, gocpp_ignored] : stackpool)
         {
@@ -288,15 +288,15 @@ namespace golang::runtime
             s = rec::allocManual(gocpp::recv(mheap_), _StackCacheSize >> _PageShift, spanAllocStack);
             if(s == nullptr)
             {
-                go_throw("out of memory"s);
+                go_throw("out of memory"_s);
             }
             if(s->allocCount != 0)
             {
-                go_throw("bad allocCount"s);
+                go_throw("bad allocCount"_s);
             }
             if(rec::ptr(gocpp::recv(s->manualFreeList)) != nullptr)
             {
-                go_throw("bad manualFreeList"s);
+                go_throw("bad manualFreeList"_s);
             }
             osStackAlloc(s);
             s->elemsize = fixedStack << order;
@@ -311,7 +311,7 @@ namespace golang::runtime
         auto x = s->manualFreeList;
         if(rec::ptr(gocpp::recv(x)) == nullptr)
         {
-            go_throw("span has no free stacks"s);
+            go_throw("span has no free stacks"_s);
         }
         s->manualFreeList = rec::ptr(gocpp::recv(x))->next;
         s->allocCount++;
@@ -328,7 +328,7 @@ namespace golang::runtime
         auto s = spanOfUnchecked(uintptr_t(x));
         if(rec::get(gocpp::recv(s->state)) != mSpanManual)
         {
-            go_throw("freeing stack not in a stack span"s);
+            go_throw("freeing stack not in a stack span"_s);
         }
         if(rec::ptr(gocpp::recv(s->manualFreeList)) == nullptr)
         {
@@ -354,7 +354,7 @@ namespace golang::runtime
     {
         if(stackDebug >= 1)
         {
-            print("stackcacherefill order="s, order, "\n"s);
+            print("stackcacherefill order="_s, order, "\n"_s);
         }
         // Grab some stacks from the global cache.
         // Grab half of the allowed capacity (to prevent thrashing).
@@ -378,7 +378,7 @@ namespace golang::runtime
     {
         if(stackDebug >= 1)
         {
-            print("stackcacherelease order="s, order, "\n"s);
+            print("stackcacherelease order="_s, order, "\n"_s);
         }
         auto x = c->stackcache[order].list;
         auto size = c->stackcache[order].size;
@@ -400,7 +400,7 @@ namespace golang::runtime
     {
         if(stackDebug >= 1)
         {
-            print("stackcache clear\n"s);
+            print("stackcache clear\n"_s);
         }
         for(auto order = uint8_t(0); order < _NumStackOrders; order++)
         {
@@ -429,15 +429,15 @@ namespace golang::runtime
         auto thisg = getg();
         if(thisg != thisg->m->g0)
         {
-            go_throw("stackalloc not on scheduler stack"s);
+            go_throw("stackalloc not on scheduler stack"_s);
         }
         if(n & (n - 1) != 0)
         {
-            go_throw("stack size not a power of 2"s);
+            go_throw("stack size not a power of 2"_s);
         }
         if(stackDebug >= 1)
         {
-            print("stackalloc "s, n, "\n"s);
+            print("stackalloc "_s, n, "\n"_s);
         }
         if(debug.efence != 0 || stackFromSystem != 0)
         {
@@ -445,7 +445,7 @@ namespace golang::runtime
             auto v = sysAlloc(uintptr_t(n), & memstats.stacks_sys);
             if(v == nullptr)
             {
-                go_throw("out of memory (stackalloc)"s);
+                go_throw("out of memory (stackalloc)"_s);
             }
             return stack {uintptr_t(v), uintptr_t(v) + uintptr_t(n)};
         }
@@ -463,7 +463,7 @@ namespace golang::runtime
                 n2 >>= 1;
             }
             runtime::gclinkptr x = {};
-            if(stackNoCache != 0 || thisg->m->p == 0 || thisg->m->preemptoff != ""s)
+            if(stackNoCache != 0 || thisg->m->p == 0 || thisg->m->preemptoff != ""_s)
             {
                 lock(& stackpool[order].item.mu);
                 x = stackpoolalloc(order);
@@ -501,7 +501,7 @@ namespace golang::runtime
                 s = rec::allocManual(gocpp::recv(mheap_), npage, spanAllocStack);
                 if(s == nullptr)
                 {
-                    go_throw("out of memory"s);
+                    go_throw("out of memory"_s);
                 }
                 osStackAlloc(s);
                 s->elemsize = uintptr_t(n);
@@ -522,7 +522,7 @@ namespace golang::runtime
         }
         if(stackDebug >= 1)
         {
-            print("  allocated "s, v, "\n"s);
+            print("  allocated "_s, v, "\n"_s);
         }
         return stack {uintptr_t(v), uintptr_t(v) + uintptr_t(n)};
     }
@@ -540,15 +540,15 @@ namespace golang::runtime
         auto n = stk.hi - stk.lo;
         if(n & (n - 1) != 0)
         {
-            go_throw("stack not a power of 2"s);
+            go_throw("stack not a power of 2"_s);
         }
         if(stk.lo + n < stk.hi)
         {
-            go_throw("bad stack size"s);
+            go_throw("bad stack size"_s);
         }
         if(stackDebug >= 1)
         {
-            println("stackfree"s, v, n);
+            println("stackfree"_s, v, n);
             memclrNoHeapPointers(v, n);
         }
         if(debug.efence != 0 || stackFromSystem != 0)
@@ -581,7 +581,7 @@ namespace golang::runtime
                 n2 >>= 1;
             }
             auto x = gclinkptr(v);
-            if(stackNoCache != 0 || gp->m->p == 0 || gp->m->preemptoff != ""s)
+            if(stackNoCache != 0 || gp->m->p == 0 || gp->m->preemptoff != ""_s)
             {
                 lock(& stackpool[order].item.mu);
                 stackpoolfree(x, order);
@@ -605,7 +605,7 @@ namespace golang::runtime
             if(rec::get(gocpp::recv(s->state)) != mSpanManual)
             {
                 println(hex(rec::base(gocpp::recv(s))), v);
-                go_throw("bad span state"s);
+                go_throw("bad span state"_s);
             }
             if(gcphase == _GCoff)
             {
@@ -624,9 +624,9 @@ namespace golang::runtime
 
     uintptr_t maxstacksize = 1 << 20;
     uintptr_t maxstackceiling = maxstacksize;
-    gocpp::slice<std::string> ptrnames = gocpp::Init<gocpp::slice<std::string>>([](auto& x) {
-        x[0] = "scalar"s;
-        x[1] = "ptr"s;
+    gocpp::slice<gocpp::string> ptrnames = gocpp::Init<gocpp::slice<gocpp::string>>([](auto& x) {
+        x[0] = "scalar"_s;
+        x[1] = "ptr"_s;
     });
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -671,14 +671,14 @@ namespace golang::runtime
         auto p = *pp;
         if(stackDebug >= 4)
         {
-            print("        "s, pp, ":"s, hex(p), "\n"s);
+            print("        "_s, pp, ":"_s, hex(p), "\n"_s);
         }
         if(adjinfo->old.lo <= p && p < adjinfo->old.hi)
         {
             *pp = p + adjinfo->delta;
             if(stackDebug >= 3)
             {
-                print("        adjust ptr "s, pp, ":"s, hex(p), " -> "s, hex(*pp), "\n"s);
+                print("        adjust ptr "_s, pp, ":"_s, hex(p), " -> "_s, hex(*pp), "\n"_s);
             }
         }
     }
@@ -742,7 +742,7 @@ namespace golang::runtime
             {
                 for(auto j = uintptr_t(0); j < 8; j++)
                 {
-                    print("        "s, add(scanp, (i + j) * goarch::PtrSize), ":"s, ptrnames[rec::ptrbit(gocpp::recv(bv), i + j)], ":"s, hex(*(uintptr_t*)(add(scanp, (i + j) * goarch::PtrSize))), " # "s, i, " "s, *addb(bv->bytedata, i / 8), "\n"s);
+                    print("        "_s, add(scanp, (i + j) * goarch::PtrSize), ":"_s, ptrnames[rec::ptrbit(gocpp::recv(bv), i + j)], ":"_s, hex(*(uintptr_t*)(add(scanp, (i + j) * goarch::PtrSize))), " # "_s, i, " "_s, *addb(bv->bytedata, i / 8), "\n"_s);
                 }
             }
             auto b = *(addb(bv->bytedata, i / 8));
@@ -756,14 +756,14 @@ namespace golang::runtime
                 if(rec::valid(gocpp::recv(f)) && 0 < p && p < minLegalPointer && debug.invalidptr != 0)
                 {
                     getg()->m->traceback = 2;
-                    print("runtime: bad pointer in frame "s, funcname(f), " at "s, pp, ": "s, hex(p), "\n"s);
-                    go_throw("invalid pointer found on stack"s);
+                    print("runtime: bad pointer in frame "_s, funcname(f), " at "_s, pp, ": "_s, hex(p), "\n"_s);
+                    go_throw("invalid pointer found on stack"_s);
                 }
                 if(minp <= p && p < maxp)
                 {
                     if(stackDebug >= 3)
                     {
-                        print("adjust ptr "s, hex(p), " "s, funcname(f), "\n"s);
+                        print("adjust ptr "_s, hex(p), " "_s, funcname(f), "\n"_s);
                     }
                     if(useCAS)
                     {
@@ -792,22 +792,22 @@ namespace golang::runtime
         auto f = frame->fn;
         if(stackDebug >= 2)
         {
-            print("    adjusting "s, funcname(f), " frame=["s, hex(frame->sp), ","s, hex(frame->fp), "] pc="s, hex(frame->pc), " continpc="s, hex(frame->continpc), "\n"s);
+            print("    adjusting "_s, funcname(f), " frame=["_s, hex(frame->sp), ","_s, hex(frame->fp), "] pc="_s, hex(frame->pc), " continpc="_s, hex(frame->continpc), "\n"_s);
         }
         if((goarch::ArchFamily == goarch::AMD64 || goarch::ArchFamily == goarch::ARM64) && frame->argp - frame->varp == 2 * goarch::PtrSize)
         {
             if(stackDebug >= 3)
             {
-                print("      saved bp\n"s);
+                print("      saved bp\n"_s);
             }
             if(debugCheckBP)
             {
                 auto bp = *(uintptr_t*)(unsafe::Pointer(frame->varp));
                 if(bp != 0 && (bp < adjinfo->old.lo || bp >= adjinfo->old.hi))
                 {
-                    println("runtime: found invalid frame pointer"s);
-                    print("bp="s, hex(bp), " min="s, hex(adjinfo->old.lo), " max="s, hex(adjinfo->old.hi), "\n"s);
-                    go_throw("bad frame pointer"s);
+                    println("runtime: found invalid frame pointer"_s);
+                    print("bp="_s, hex(bp), " min="_s, hex(adjinfo->old.lo), " max="_s, hex(adjinfo->old.hi), "\n"_s);
+                    go_throw("bad frame pointer"_s);
                 }
             }
             adjustpointer(adjinfo, unsafe::Pointer(frame->varp));
@@ -822,7 +822,7 @@ namespace golang::runtime
         {
             if(stackDebug >= 3)
             {
-                print("      args\n"s);
+                print("      args\n"_s);
             }
             adjustpointers(unsafe::Pointer(frame->argp), & args, adjinfo, funcInfo {});
         }
@@ -877,14 +877,14 @@ namespace golang::runtime
             auto bp = gp->sched.bp;
             if(bp != 0 && (bp < adjinfo->old.lo || bp >= adjinfo->old.hi))
             {
-                println("runtime: found invalid top frame pointer"s);
-                print("bp="s, hex(bp), " min="s, hex(adjinfo->old.lo), " max="s, hex(adjinfo->old.hi), "\n"s);
-                go_throw("bad top frame pointer"s);
+                println("runtime: found invalid top frame pointer"_s);
+                print("bp="_s, hex(bp), " min="_s, hex(adjinfo->old.lo), " max="_s, hex(adjinfo->old.hi), "\n"_s);
+                go_throw("bad top frame pointer"_s);
             }
         }
         auto oldfp = gp->sched.bp;
         adjustpointer(adjinfo, unsafe::Pointer(& gp->sched.bp));
-        if(GOARCH == "arm64"s)
+        if(GOARCH == "arm64"_s)
         {
             if(oldfp == gp->sched.sp - goarch::PtrSize)
             {
@@ -989,12 +989,12 @@ namespace golang::runtime
     {
         if(gp->syscallsp != 0)
         {
-            go_throw("stack growth not allowed in system call"s);
+            go_throw("stack growth not allowed in system call"_s);
         }
         auto old = gp->stack;
         if(old.lo == 0)
         {
-            go_throw("nil stackbase"s);
+            go_throw("nil stackbase"_s);
         }
         auto used = old.hi - gp->sched.sp;
         rec::addScannableStack(gocpp::recv(gcController), rec::ptr(gocpp::recv(getg()->m->p)), int64_t(newsize) - int64_t(old.hi - old.lo));
@@ -1005,7 +1005,7 @@ namespace golang::runtime
         }
         if(stackDebug >= 1)
         {
-            print("copystack gp="s, gp, " ["s, hex(old.lo), " "s, hex(old.hi - used), " "s, hex(old.hi), "]"s, " -> ["s, hex(go_new.lo), " "s, hex(go_new.hi - used), " "s, hex(go_new.hi), "]/"s, newsize, "\n"s);
+            print("copystack gp="_s, gp, " ["_s, hex(old.lo), " "_s, hex(old.hi - used), " "_s, hex(old.hi), "]"_s, " -> ["_s, hex(go_new.lo), " "_s, hex(go_new.hi - used), " "_s, hex(go_new.hi), "]/"_s, newsize, "\n"_s);
         }
         // Compute adjustment.
         adjustinfo adjinfo = {};
@@ -1016,7 +1016,7 @@ namespace golang::runtime
         {
             if(newsize < old.hi - old.lo && rec::Load(gocpp::recv(gp->parkingOnChan)))
             {
-                go_throw("racy sudog adjustment due to parking on channel"s);
+                go_throw("racy sudog adjustment due to parking on channel"_s);
             }
             adjustsudogs(gp, & adjinfo);
         }
@@ -1078,14 +1078,14 @@ namespace golang::runtime
         auto thisg = getg();
         if(rec::ptr(gocpp::recv(thisg->m->morebuf.g))->stackguard0 == stackFork)
         {
-            go_throw("stack growth after fork"s);
+            go_throw("stack growth after fork"_s);
         }
         if(rec::ptr(gocpp::recv(thisg->m->morebuf.g)) != thisg->m->curg)
         {
-            print("runtime: newstack called from g="s, hex(thisg->m->morebuf.g), "\n"s + "\tm="s, thisg->m, " m->curg="s, thisg->m->curg, " m->g0="s, thisg->m->g0, " m->gsignal="s, thisg->m->gsignal, "\n"s);
+            print("runtime: newstack called from g="_s, hex(thisg->m->morebuf.g), "\n"_s + "\tm="_s, thisg->m, " m->curg="_s, thisg->m->curg, " m->g0="_s, thisg->m->g0, " m->gsignal="_s, thisg->m->gsignal, "\n"_s);
             auto morebuf = thisg->m->morebuf;
             traceback(morebuf.pc, morebuf.sp, morebuf.lr, rec::ptr(gocpp::recv(morebuf.g)));
-            go_throw("runtime: wrong goroutine in newstack"s);
+            go_throw("runtime: wrong goroutine in newstack"_s);
         }
         auto gp = thisg->m->curg;
         if(thisg->m->curg->throwsplit)
@@ -1093,17 +1093,17 @@ namespace golang::runtime
             auto morebuf = thisg->m->morebuf;
             gp->syscallsp = morebuf.sp;
             gp->syscallpc = morebuf.pc;
-            auto [pcname, pcoff] = std::tuple{"(unknown)"s, uintptr_t(0)};
+            auto [pcname, pcoff] = std::tuple{"(unknown)"_s, uintptr_t(0)};
             auto f = findfunc(gp->sched.pc);
             if(rec::valid(gocpp::recv(f)))
             {
                 pcname = funcname(f);
                 pcoff = gp->sched.pc - rec::entry(gocpp::recv(f));
             }
-            print("runtime: newstack at "s, pcname, "+"s, hex(pcoff), " sp="s, hex(gp->sched.sp), " stack=["s, hex(gp->stack.lo), ", "s, hex(gp->stack.hi), "]\n"s, "\tmorebuf={pc:"s, hex(morebuf.pc), " sp:"s, hex(morebuf.sp), " lr:"s, hex(morebuf.lr), "}\n"s, "\tsched={pc:"s, hex(gp->sched.pc), " sp:"s, hex(gp->sched.sp), " lr:"s, hex(gp->sched.lr), " ctxt:"s, gp->sched.ctxt, "}\n"s);
+            print("runtime: newstack at "_s, pcname, "+"_s, hex(pcoff), " sp="_s, hex(gp->sched.sp), " stack=["_s, hex(gp->stack.lo), ", "_s, hex(gp->stack.hi), "]\n"_s, "\tmorebuf={pc:"_s, hex(morebuf.pc), " sp:"_s, hex(morebuf.sp), " lr:"_s, hex(morebuf.lr), "}\n"_s, "\tsched={pc:"_s, hex(gp->sched.pc), " sp:"_s, hex(gp->sched.sp), " lr:"_s, hex(gp->sched.lr), " ctxt:"_s, gp->sched.ctxt, "}\n"_s);
             thisg->m->traceback = 2;
             traceback(morebuf.pc, morebuf.sp, morebuf.lr, gp);
-            go_throw("runtime: stack split at bad time"s);
+            go_throw("runtime: stack split at bad time"_s);
         }
         auto morebuf = thisg->m->morebuf;
         thisg->m->morebuf.pc = 0;
@@ -1122,7 +1122,7 @@ namespace golang::runtime
         }
         if(gp->stack.lo == 0)
         {
-            go_throw("missing stack in newstack"s);
+            go_throw("missing stack in newstack"_s);
         }
         auto sp = gp->sched.sp;
         if(goarch::ArchFamily == goarch::AMD64 || goarch::ArchFamily == goarch::I386 || goarch::ArchFamily == goarch::WASM)
@@ -1131,23 +1131,23 @@ namespace golang::runtime
         }
         if(stackDebug >= 1 || sp < gp->stack.lo)
         {
-            print("runtime: newstack sp="s, hex(sp), " stack=["s, hex(gp->stack.lo), ", "s, hex(gp->stack.hi), "]\n"s, "\tmorebuf={pc:"s, hex(morebuf.pc), " sp:"s, hex(morebuf.sp), " lr:"s, hex(morebuf.lr), "}\n"s, "\tsched={pc:"s, hex(gp->sched.pc), " sp:"s, hex(gp->sched.sp), " lr:"s, hex(gp->sched.lr), " ctxt:"s, gp->sched.ctxt, "}\n"s);
+            print("runtime: newstack sp="_s, hex(sp), " stack=["_s, hex(gp->stack.lo), ", "_s, hex(gp->stack.hi), "]\n"_s, "\tmorebuf={pc:"_s, hex(morebuf.pc), " sp:"_s, hex(morebuf.sp), " lr:"_s, hex(morebuf.lr), "}\n"_s, "\tsched={pc:"_s, hex(gp->sched.pc), " sp:"_s, hex(gp->sched.sp), " lr:"_s, hex(gp->sched.lr), " ctxt:"_s, gp->sched.ctxt, "}\n"_s);
         }
         if(sp < gp->stack.lo)
         {
-            print("runtime: gp="s, gp, ", goid="s, gp->goid, ", gp->status="s, hex(readgstatus(gp)), "\n "s);
-            print("runtime: split stack overflow: "s, hex(sp), " < "s, hex(gp->stack.lo), "\n"s);
-            go_throw("runtime: split stack overflow"s);
+            print("runtime: gp="_s, gp, ", goid="_s, gp->goid, ", gp->status="_s, hex(readgstatus(gp)), "\n "_s);
+            print("runtime: split stack overflow: "_s, hex(sp), " < "_s, hex(gp->stack.lo), "\n"_s);
+            go_throw("runtime: split stack overflow"_s);
         }
         if(preempt)
         {
             if(gp == thisg->m->g0)
             {
-                go_throw("runtime: preempt g0"s);
+                go_throw("runtime: preempt g0"_s);
             }
             if(thisg->m->p == 0 && thisg->m->locks == 0)
             {
-                go_throw("runtime: g is running but p is not"s);
+                go_throw("runtime: g is running but p is not"_s);
             }
             if(gp->preemptShrink)
             {
@@ -1180,20 +1180,20 @@ namespace golang::runtime
         {
             if(maxstacksize < maxstackceiling)
             {
-                print("runtime: goroutine stack exceeds "s, maxstacksize, "-byte limit\n"s);
+                print("runtime: goroutine stack exceeds "_s, maxstacksize, "-byte limit\n"_s);
             }
             else
             {
-                print("runtime: goroutine stack exceeds "s, maxstackceiling, "-byte limit\n"s);
+                print("runtime: goroutine stack exceeds "_s, maxstackceiling, "-byte limit\n"_s);
             }
-            print("runtime: sp="s, hex(sp), " stack=["s, hex(gp->stack.lo), ", "s, hex(gp->stack.hi), "]\n"s);
-            go_throw("stack overflow"s);
+            print("runtime: sp="_s, hex(sp), " stack=["_s, hex(gp->stack.lo), ", "_s, hex(gp->stack.hi), "]\n"_s);
+            go_throw("stack overflow"_s);
         }
         casgstatus(gp, _Grunning, _Gcopystack);
         copystack(gp, newsize);
         if(stackDebug >= 1)
         {
-            print("stack grow done\n"s);
+            print("stack grow done\n"_s);
         }
         casgstatus(gp, _Gcopystack, _Grunning);
         gogo(& gp->sched);
@@ -1237,22 +1237,22 @@ namespace golang::runtime
     {
         if(gp->stack.lo == 0)
         {
-            go_throw("missing stack in shrinkstack"s);
+            go_throw("missing stack in shrinkstack"_s);
         }
         if(auto s = readgstatus(gp); s & _Gscan == 0)
         {
             if(! (gp == getg()->m->curg && getg() != getg()->m->curg && s == _Grunning))
             {
-                go_throw("bad status in shrinkstack"s);
+                go_throw("bad status in shrinkstack"_s);
             }
         }
         if(! isShrinkStackSafe(gp))
         {
-            go_throw("shrinkstack at bad time"s);
+            go_throw("shrinkstack at bad time"_s);
         }
         if(gp == getg()->m->curg && gp->m->libcallsp != 0)
         {
-            go_throw("shrinking stack in libcall"s);
+            go_throw("shrinking stack in libcall"_s);
         }
         if(debug.gcshrinkstackoff > 0)
         {
@@ -1276,7 +1276,7 @@ namespace golang::runtime
         }
         if(stackDebug > 0)
         {
-            print("shrinking stack "s, oldsize, "->"s, newsize, "\n"s);
+            print("shrinking stack "_s, oldsize, "->"_s, newsize, "\n"_s);
         }
         copystack(gp, newsize);
     }
@@ -1395,7 +1395,7 @@ namespace golang::runtime
     //go:linkname morestackc
     void morestackc()
     {
-        go_throw("attempt to execute system stack code on user stack"s);
+        go_throw("attempt to execute system stack code on user stack"_s);
     }
 
     // startingStackSize is the amount of stack that new goroutines start with.

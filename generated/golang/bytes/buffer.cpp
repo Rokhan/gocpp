@@ -70,8 +70,8 @@ namespace golang::bytes
     // Don't use iota for these, as the values need to correspond with the
     // names and comments, which is easier to see when being explicit.
     // ErrTooLarge is passed to panic if memory cannot be allocated to store data in a buffer.
-    gocpp::error ErrTooLarge = errors::New("bytes.Buffer: too large"s);
-    gocpp::error errNegativeRead = errors::New("bytes.Buffer: reader returned negative count from Read"s);
+    gocpp::error ErrTooLarge = errors::New("bytes.Buffer: too large"_s);
+    gocpp::error errNegativeRead = errors::New("bytes.Buffer: reader returned negative count from Read"_s);
     // Bytes returns a slice of length b.Len() holding the unread portion of the buffer.
     // The slice is valid for use only until the next buffer modification (that is,
     // only until the next call to a method like [Buffer.Read], [Buffer.Write], [Buffer.Reset], or [Buffer.Truncate]).
@@ -95,13 +95,13 @@ namespace golang::bytes
     // as a string. If the [Buffer] is a nil pointer, it returns "<nil>".
     //
     // To build strings more efficiently, see the strings.Builder type.
-    std::string rec::String(struct Buffer* b)
+    gocpp::string rec::String(struct Buffer* b)
     {
         if(b == nullptr)
         {
-            return "<nil>"s;
+            return "<nil>"_s;
         }
-        return std::string(b->buf.make_slice(b->off));
+        return gocpp::string(b->buf.make_slice(b->off));
     }
 
     // empty reports whether the unread portion of the buffer is empty.
@@ -143,7 +143,7 @@ namespace golang::bytes
         b->lastRead = opInvalid;
         if(n < 0 || n > rec::Len(gocpp::recv(b)))
         {
-            gocpp::panic("bytes.Buffer: truncation out of range"s);
+            gocpp::panic("bytes.Buffer: truncation out of range"_s);
         }
         b->buf = b->buf.make_slice(0, b->off + n);
     }
@@ -218,7 +218,7 @@ namespace golang::bytes
     {
         if(n < 0)
         {
-            gocpp::panic("bytes.Buffer.Grow: negative count"s);
+            gocpp::panic("bytes.Buffer.Grow: negative count"_s);
         }
         auto m = rec::grow(gocpp::recv(b), n);
         b->buf = b->buf.make_slice(0, m);
@@ -243,7 +243,7 @@ namespace golang::bytes
     // WriteString appends the contents of s to the buffer, growing the buffer as
     // needed. The return value n is the length of s; err is always nil. If the
     // buffer becomes too large, WriteString will panic with [ErrTooLarge].
-    std::tuple<int, struct gocpp::error> rec::WriteString(struct Buffer* b, std::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(struct Buffer* b, gocpp::string s)
     {
         int n;
         struct gocpp::error err;
@@ -334,7 +334,7 @@ namespace golang::bytes
             auto [m, e] = rec::Write(gocpp::recv(w), b->buf.make_slice(b->off));
             if(m > nBytes)
             {
-                gocpp::panic("bytes.Buffer.WriteTo: invalid Write count"s);
+                gocpp::panic("bytes.Buffer.WriteTo: invalid Write count"_s);
             }
             b->off += m;
             n = int64_t(m);
@@ -491,7 +491,7 @@ namespace golang::bytes
     {
         if(b->lastRead <= opInvalid)
         {
-            return errors::New("bytes.Buffer: UnreadRune: previous operation was not a successful ReadRune"s);
+            return errors::New("bytes.Buffer: UnreadRune: previous operation was not a successful ReadRune"_s);
         }
         if(b->off >= int(b->lastRead))
         {
@@ -501,7 +501,7 @@ namespace golang::bytes
         return nullptr;
     }
 
-    gocpp::error errUnreadByte = errors::New("bytes.Buffer: UnreadByte: previous operation was not a successful read"s);
+    gocpp::error errUnreadByte = errors::New("bytes.Buffer: UnreadByte: previous operation was not a successful read"_s);
     // UnreadByte unreads the last byte returned by the most recent successful
     // read operation that read at least one byte. If a write has happened since
     // the last read, if the last read returned an error, or if the read read zero
@@ -560,13 +560,13 @@ namespace golang::bytes
     // it returns the data read before the error and the error itself (often io.EOF).
     // ReadString returns err != nil if and only if the returned data does not end
     // in delim.
-    std::tuple<std::string, struct gocpp::error> rec::ReadString(struct Buffer* b, unsigned char delim)
+    std::tuple<gocpp::string, struct gocpp::error> rec::ReadString(struct Buffer* b, unsigned char delim)
     {
-        std::string line;
+        gocpp::string line;
         struct gocpp::error err;
         gocpp::slice<unsigned char> slice;
         std::tie(slice, err) = rec::readSlice(gocpp::recv(b), delim);
-        return {std::string(slice), err};
+        return {gocpp::string(slice), err};
     }
 
     // NewBuffer creates and initializes a new [Buffer] using buf as its
@@ -591,7 +591,7 @@ namespace golang::bytes
     //
     // In most cases, new([Buffer]) (or just declaring a [Buffer] variable) is
     // sufficient to initialize a [Buffer].
-    struct Buffer* NewBufferString(std::string s)
+    struct Buffer* NewBufferString(gocpp::string s)
     {
         return gocpp::InitPtr<Buffer>([=](auto& x) {
             x.buf = gocpp::slice<unsigned char>(s);

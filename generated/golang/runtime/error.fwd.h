@@ -7,9 +7,9 @@
 namespace golang::runtime
 {
     struct Error;
-    using errorString = std::string;
+    using errorString = gocpp::string;
     struct errorAddressString;
-    using plainError = std::string;
+    using plainError = gocpp::string;
     struct boundsError;
     using boundsErrorCode = uint8_t;
     struct stringer;

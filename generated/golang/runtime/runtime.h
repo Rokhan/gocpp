@@ -35,21 +35,21 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct ticksType& value);
     int64_t ticksPerSecond();
-    extern gocpp::slice<std::string> envs;
-    extern gocpp::slice<std::string> argslice;
-    gocpp::slice<std::string> syscall_runtime_envs();
+    extern gocpp::slice<gocpp::string> envs;
+    extern gocpp::slice<gocpp::string> argslice;
+    gocpp::slice<gocpp::string> syscall_runtime_envs();
     int syscall_Getpagesize();
-    gocpp::slice<std::string> os_runtime_args();
+    gocpp::slice<gocpp::string> os_runtime_args();
     void syscall_Exit(int code);
-    extern std::string godebugDefault;
-    extern atomic::Pointer<std::function<void (std::string _1, std::string _2)>> godebugUpdate;
-    extern atomic::Pointer<std::string> godebugEnv;
-    extern atomic::Pointer<std::function<std::function<void ()> (std::string _1)>> godebugNewIncNonDefault;
-    void godebug_setUpdate(std::function<void (std::string _1, std::string _2)> update);
-    void godebug_setNewIncNonDefault(std::function<std::function<void ()> (std::string _1)> newIncNonDefault);
+    extern gocpp::string godebugDefault;
+    extern atomic::Pointer<std::function<void (gocpp::string _1, gocpp::string _2)>> godebugUpdate;
+    extern atomic::Pointer<gocpp::string> godebugEnv;
+    extern atomic::Pointer<std::function<std::function<void ()> (gocpp::string _1)>> godebugNewIncNonDefault;
+    void godebug_setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update);
+    void godebug_setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
     struct godebugInc
     {
-        std::string name;
+        gocpp::string name;
         atomic::Pointer<std::function<void ()>> inc;
 
         using isGoStruct = void;
@@ -65,9 +65,9 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct godebugInc& value);
     void godebugNotify(bool envChanged);
-    void syscall_runtimeSetenv(std::string key, std::string value);
-    void syscall_runtimeUnsetenv(std::string key);
-    void writeErrStr(std::string s);
+    void syscall_runtimeSetenv(gocpp::string key, gocpp::string value);
+    void syscall_runtimeUnsetenv(gocpp::string key);
+    void writeErrStr(gocpp::string s);
     extern gocpp::slice<uintptr_t> auxv;
     gocpp::slice<uintptr_t> getAuxv();
     extern ticksType ticks;

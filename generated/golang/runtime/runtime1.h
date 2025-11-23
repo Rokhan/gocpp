@@ -42,14 +42,14 @@ namespace golang::runtime
     void args(int32_t c, unsigned char** v);
     void goargs();
     void goenvs_unix();
-    gocpp::slice<std::string> environ();
+    gocpp::slice<gocpp::string> environ();
     extern uint64_t test_z64;
     extern uint64_t test_x64;
     void testAtomic64();
     void check();
     struct dbgVar
     {
-        std::string name;
+        gocpp::string name;
         int32_t* value;
         atomic::Int32* atomic;
         int32_t def;
@@ -68,9 +68,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct dbgVar& value);
     extern gocpp_id_0 debug;
     void parsedebugvars();
-    void reparsedebugvars(std::string env);
-    void parsegodebug(std::string godebug, gocpp::map<std::string, bool> seen);
-    void setTraceback(std::string level);
+    void reparsedebugvars(gocpp::string env);
+    void parsegodebug(gocpp::string godebug, gocpp::map<gocpp::string, bool> seen);
+    void setTraceback(gocpp::string level);
     int32_t timediv(int64_t v, int32_t div, int32_t* rem);
     struct m* acquirem();
     void releasem(struct m* mp);

@@ -56,7 +56,7 @@ namespace golang::image
 
     namespace rec
     {
-        std::string String(struct Point p);
+        gocpp::string String(struct Point p);
         struct Point Add(struct Point p, struct Point q);
         struct Point Sub(struct Point p, struct Point q);
         struct Point Mul(struct Point p, int k);
@@ -64,7 +64,7 @@ namespace golang::image
         bool In(struct Point p, struct Rectangle r);
         struct Point Mod(struct Point p, struct Rectangle r);
         bool Eq(struct Point p, struct Point q);
-        std::string String(struct Rectangle r);
+        gocpp::string String(struct Rectangle r);
         int Dx(struct Rectangle r);
         int Dy(struct Rectangle r);
         struct Point Size(struct Rectangle r);

@@ -88,12 +88,12 @@ namespace golang::reflectlite
     }
 
     template<typename T, typename StoreT>
-    std::string Type::TypeImpl<T, StoreT>::vName()
+    gocpp::string Type::TypeImpl<T, StoreT>::vName()
     {
         return rec::Name(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
-    std::string Type::TypeImpl<T, StoreT>::vPkgPath()
+    gocpp::string Type::TypeImpl<T, StoreT>::vPkgPath()
     {
         return rec::PkgPath(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -123,7 +123,7 @@ namespace golang::reflectlite
         return rec::Comparable(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename StoreT>
-    std::string Type::TypeImpl<T, StoreT>::vString()
+    gocpp::string Type::TypeImpl<T, StoreT>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -145,22 +145,22 @@ namespace golang::reflectlite
 
     namespace rec
     {
-        std::string Name(const gocpp::PtrRecv<struct Type, false>& self)
+        gocpp::string Name(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value->vName();
         }
 
-        std::string Name(const gocpp::ObjRecv<struct Type>& self)
+        gocpp::string Name(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value->vName();
         }
 
-        std::string PkgPath(const gocpp::PtrRecv<struct Type, false>& self)
+        gocpp::string PkgPath(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value->vPkgPath();
         }
 
-        std::string PkgPath(const gocpp::ObjRecv<struct Type>& self)
+        gocpp::string PkgPath(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value->vPkgPath();
         }
@@ -215,12 +215,12 @@ namespace golang::reflectlite
             return self.obj.value->vComparable();
         }
 
-        std::string String(const gocpp::PtrRecv<struct Type, false>& self)
+        gocpp::string String(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value->vString();
         }
 
-        std::string String(const gocpp::ObjRecv<struct Type>& self)
+        gocpp::string String(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value->vString();
         }
@@ -408,7 +408,7 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    unsigned char* rec::data(struct name n, int off, std::string whySafe)
+    unsigned char* rec::data(struct name n, int off, gocpp::string whySafe)
     {
         return (unsigned char*)(add(unsafe::Pointer(n.bytes), uintptr_t(off), whySafe));
     }
@@ -435,7 +435,7 @@ namespace golang::reflectlite
         auto v = 0;
         for(auto i = 0; ; i++)
         {
-            auto x = *rec::data(gocpp::recv(n), off + i, "read varint"s);
+            auto x = *rec::data(gocpp::recv(n), off + i, "read varint"_s);
             v += int(x & 0x7f) << (7 * i);
             if(x & 0x80 == 0)
             {
@@ -444,32 +444,32 @@ namespace golang::reflectlite
         }
     }
 
-    std::string rec::name(struct name n)
+    gocpp::string rec::name(struct name n)
     {
         if(n.bytes == nullptr)
         {
-            return ""s;
+            return ""_s;
         }
         auto [i, l] = rec::readVarint(gocpp::recv(n), 1);
-        return unsafe::String(rec::data(gocpp::recv(n), 1 + i, "non-empty string"s), l);
+        return unsafe::String(rec::data(gocpp::recv(n), 1 + i, "non-empty string"_s), l);
     }
 
-    std::string rec::tag(struct name n)
+    gocpp::string rec::tag(struct name n)
     {
         if(! rec::hasTag(gocpp::recv(n)))
         {
-            return ""s;
+            return ""_s;
         }
         auto [i, l] = rec::readVarint(gocpp::recv(n), 1);
         auto [i2, l2] = rec::readVarint(gocpp::recv(n), 1 + i + l);
-        return unsafe::String(rec::data(gocpp::recv(n), 1 + i + l + i2, "non-empty string"s), l2);
+        return unsafe::String(rec::data(gocpp::recv(n), 1 + i + l + i2, "non-empty string"_s), l2);
     }
 
-    std::string pkgPath(abi::Name n)
+    gocpp::string pkgPath(abi::Name n)
     {
-        if(n.Bytes == nullptr || *rec::DataChecked(gocpp::recv(n), 0, "name flag field"s) & (1 << 2) == 0)
+        if(n.Bytes == nullptr || *rec::DataChecked(gocpp::recv(n), 0, "name flag field"_s) & (1 << 2) == 0)
         {
-            return ""s;
+            return ""_s;
         }
         auto [i, l] = rec::ReadVarint(gocpp::recv(n), 1);
         auto off = 1 + i + l;
@@ -479,7 +479,7 @@ namespace golang::reflectlite
             off += i2 + l2;
         }
         int32_t nameOff = {};
-        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"s))).make_slice(0));
+        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"_s))).make_slice(0));
         auto pkgPathName = name {(unsigned char*)(resolveTypeOff(unsafe::Pointer(n.Bytes), nameOff))};
         return rec::name(gocpp::recv(pkgPathName));
     }
@@ -517,7 +517,7 @@ namespace golang::reflectlite
         return rec::Uncommon(gocpp::recv(t));
     }
 
-    std::string rec::String(reflectlite::rtype t)
+    gocpp::string rec::String(reflectlite::rtype t)
     {
         auto s = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), t.Str)));
         if(t.TFlag & abi::TFlagExtraStar != 0)
@@ -552,25 +552,25 @@ namespace golang::reflectlite
         return len(rec::exportedMethods(gocpp::recv(t)));
     }
 
-    std::string rec::PkgPath(reflectlite::rtype t)
+    gocpp::string rec::PkgPath(reflectlite::rtype t)
     {
         if(t.TFlag & abi::TFlagNamed == 0)
         {
-            return ""s;
+            return ""_s;
         }
         auto ut = rec::uncommon(gocpp::recv(t));
         if(ut == nullptr)
         {
-            return ""s;
+            return ""_s;
         }
         return rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), ut->PkgPath)));
     }
 
-    std::string rec::Name(reflectlite::rtype t)
+    gocpp::string rec::Name(reflectlite::rtype t)
     {
         if(! rec::HasName(gocpp::recv(t)))
         {
-            return ""s;
+            return ""_s;
         }
         auto s = rec::String(gocpp::recv(t));
         auto i = len(s) - 1;
@@ -610,7 +610,7 @@ namespace golang::reflectlite
         {
             return et;
         }
-        gocpp::panic("reflect: Elem of invalid type "s + rec::String(gocpp::recv(toRType(t))));
+        gocpp::panic("reflect: Elem of invalid type "_s + rec::String(gocpp::recv(toRType(t))));
     }
 
     struct Type rec::Elem(reflectlite::rtype t)
@@ -623,7 +623,7 @@ namespace golang::reflectlite
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: In of non-func type"s);
+            gocpp::panic("reflect: In of non-func type"_s);
         }
         return toType(rec::InSlice(gocpp::recv(tt))[i]);
     }
@@ -633,7 +633,7 @@ namespace golang::reflectlite
         auto tt = rec::MapType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: Key of non-map type"s);
+            gocpp::panic("reflect: Key of non-map type"_s);
         }
         return toType(tt->Key);
     }
@@ -643,7 +643,7 @@ namespace golang::reflectlite
         auto tt = rec::ArrayType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: Len of non-array type"s);
+            gocpp::panic("reflect: Len of non-array type"_s);
         }
         return int(tt->Len);
     }
@@ -653,7 +653,7 @@ namespace golang::reflectlite
         auto tt = rec::StructType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: NumField of non-struct type"s);
+            gocpp::panic("reflect: NumField of non-struct type"_s);
         }
         return len(tt->Fields);
     }
@@ -663,7 +663,7 @@ namespace golang::reflectlite
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: NumIn of non-func type"s);
+            gocpp::panic("reflect: NumIn of non-func type"_s);
         }
         return int(tt->InCount);
     }
@@ -673,7 +673,7 @@ namespace golang::reflectlite
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: NumOut of non-func type"s);
+            gocpp::panic("reflect: NumOut of non-func type"_s);
         }
         return rec::NumOut(gocpp::recv(tt));
     }
@@ -683,7 +683,7 @@ namespace golang::reflectlite
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
         {
-            gocpp::panic("reflect: Out of non-func type"s);
+            gocpp::panic("reflect: Out of non-func type"_s);
         }
         return toType(rec::OutSlice(gocpp::recv(tt))[i]);
     }
@@ -695,7 +695,7 @@ namespace golang::reflectlite
     // record why the addition is safe, which is to say why the addition
     // does not cause x to advance to the very end of p's allocation
     // and therefore point incorrectly at the next block in memory.
-    unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, std::string whySafe)
+    unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, gocpp::string whySafe)
     {
         return unsafe::Pointer(uintptr_t(p) + x);
     }
@@ -712,11 +712,11 @@ namespace golang::reflectlite
     {
         if(u == nullptr)
         {
-            gocpp::panic("reflect: nil type passed to Type.Implements"s);
+            gocpp::panic("reflect: nil type passed to Type.Implements"_s);
         }
         if(rec::Kind(gocpp::recv(u)) != Interface)
         {
-            gocpp::panic("reflect: non-interface type passed to Type.Implements"s);
+            gocpp::panic("reflect: non-interface type passed to Type.Implements"_s);
         }
         return implements(rec::common(gocpp::recv(u)), rec::common(gocpp::recv(t)));
     }
@@ -725,7 +725,7 @@ namespace golang::reflectlite
     {
         if(u == nullptr)
         {
-            gocpp::panic("reflect: nil type passed to Type.AssignableTo"s);
+            gocpp::panic("reflect: nil type passed to Type.AssignableTo"_s);
         }
         auto uu = rec::common(gocpp::recv(u));
         auto tt = rec::common(gocpp::recv(t));
@@ -766,12 +766,12 @@ namespace golang::reflectlite
                     if(! rec::IsExported(gocpp::recv(tmName)))
                     {
                         auto tmPkgPath = pkgPath(tmName);
-                        if(tmPkgPath == ""s)
+                        if(tmPkgPath == ""_s)
                         {
                             tmPkgPath = rec::Name(gocpp::recv(t->PkgPath));
                         }
                         auto vmPkgPath = pkgPath(vmName);
-                        if(vmPkgPath == ""s)
+                        if(vmPkgPath == ""_s)
                         {
                             vmPkgPath = rec::Name(gocpp::recv(v->PkgPath));
                         }
@@ -806,12 +806,12 @@ namespace golang::reflectlite
                 if(! rec::IsExported(gocpp::recv(tmName)))
                 {
                     auto tmPkgPath = pkgPath(tmName);
-                    if(tmPkgPath == ""s)
+                    if(tmPkgPath == ""_s)
                     {
                         tmPkgPath = rec::Name(gocpp::recv(t->PkgPath));
                     }
                     auto vmPkgPath = pkgPath(vmName);
-                    if(vmPkgPath == ""s)
+                    if(vmPkgPath == ""_s)
                     {
                         vmPkgPath = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(rV), v->PkgPath)));
                     }

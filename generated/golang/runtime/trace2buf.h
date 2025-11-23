@@ -119,7 +119,7 @@ namespace golang::runtime
         void byte(struct traceBuf* buf, unsigned char v);
         void varint(struct traceBuf* buf, uint64_t v);
         int varintReserve(struct traceBuf* buf);
-        void stringData(struct traceBuf* buf, std::string s);
+        void stringData(struct traceBuf* buf, gocpp::string s);
         bool available(struct traceBuf* buf, int size);
         void varintAt(struct traceBuf* buf, int pos, uint64_t v);
     }

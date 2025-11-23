@@ -52,7 +52,7 @@ namespace golang::binary
             virtual void vPutUint16(gocpp::slice<unsigned char> _1, uint16_t _2) = 0;
             virtual void vPutUint32(gocpp::slice<unsigned char> _1, uint32_t _2) = 0;
             virtual void vPutUint64(gocpp::slice<unsigned char> _1, uint64_t _2) = 0;
-            virtual std::string vString() = 0;
+            virtual gocpp::string vString() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -75,7 +75,7 @@ namespace golang::binary
 
             void vPutUint64(gocpp::slice<unsigned char> _1, uint64_t _2) override;
 
-            std::string vString() override;
+            gocpp::string vString() override;
 
             StoreT value;
         };
@@ -103,8 +103,8 @@ namespace golang::binary
         void PutUint64(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint64_t _2);
         void PutUint64(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1, uint64_t _2);
 
-        std::string String(const gocpp::PtrRecv<struct ByteOrder, false>& self);
-        std::string String(const gocpp::ObjRecv<struct ByteOrder>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct ByteOrder, false>& self);
+        gocpp::string String(const gocpp::ObjRecv<struct ByteOrder>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ByteOrder& value);
@@ -137,7 +137,7 @@ namespace golang::binary
             virtual gocpp::slice<unsigned char> vAppendUint16(gocpp::slice<unsigned char> _1, uint16_t _2) = 0;
             virtual gocpp::slice<unsigned char> vAppendUint32(gocpp::slice<unsigned char> _1, uint32_t _2) = 0;
             virtual gocpp::slice<unsigned char> vAppendUint64(gocpp::slice<unsigned char> _1, uint64_t _2) = 0;
-            virtual std::string vString() = 0;
+            virtual gocpp::string vString() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -154,7 +154,7 @@ namespace golang::binary
 
             gocpp::slice<unsigned char> vAppendUint64(gocpp::slice<unsigned char> _1, uint64_t _2) override;
 
-            std::string vString() override;
+            gocpp::string vString() override;
 
             StoreT value;
         };
@@ -173,8 +173,8 @@ namespace golang::binary
         gocpp::slice<unsigned char> AppendUint64(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint64_t _2);
         gocpp::slice<unsigned char> AppendUint64(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char> _1, uint64_t _2);
 
-        std::string String(const gocpp::PtrRecv<struct AppendByteOrder, false>& self);
-        std::string String(const gocpp::ObjRecv<struct AppendByteOrder>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct AppendByteOrder, false>& self);
+        gocpp::string String(const gocpp::ObjRecv<struct AppendByteOrder>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct AppendByteOrder& value);
@@ -247,8 +247,8 @@ namespace golang::binary
         uint64_t Uint64(littleEndian, gocpp::slice<unsigned char> b);
         void PutUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v);
         gocpp::slice<unsigned char> AppendUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v);
-        std::string String(littleEndian);
-        std::string GoString(littleEndian);
+        gocpp::string String(littleEndian);
+        gocpp::string GoString(littleEndian);
         uint16_t Uint16(bigEndian, gocpp::slice<unsigned char> b);
         void PutUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v);
         gocpp::slice<unsigned char> AppendUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v);
@@ -258,10 +258,10 @@ namespace golang::binary
         uint64_t Uint64(bigEndian, gocpp::slice<unsigned char> b);
         void PutUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v);
         gocpp::slice<unsigned char> AppendUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v);
-        std::string String(bigEndian);
-        std::string GoString(bigEndian);
-        std::string String(nativeEndian);
-        std::string GoString(nativeEndian);
+        gocpp::string String(bigEndian);
+        gocpp::string GoString(bigEndian);
+        gocpp::string String(nativeEndian);
+        gocpp::string GoString(nativeEndian);
         bool bool(golang::binary::decoder* d);
         void bool(golang::binary::encoder* e, bool x);
         uint8_t uint8(golang::binary::decoder* d);

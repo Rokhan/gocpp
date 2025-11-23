@@ -35,11 +35,11 @@ namespace golang::io
     // Seek whence values.
     // ErrShortWrite means that a write accepted fewer bytes than requested
     // but failed to return an explicit error.
-    gocpp::error ErrShortWrite = errors::New("short write"s);
+    gocpp::error ErrShortWrite = errors::New("short write"_s);
     // errInvalidWrite means that a write returned an impossible count.
-    gocpp::error errInvalidWrite = errors::New("invalid write result"s);
+    gocpp::error errInvalidWrite = errors::New("invalid write result"_s);
     // ErrShortBuffer means that a read required a longer buffer than was provided.
-    gocpp::error ErrShortBuffer = errors::New("short buffer"s);
+    gocpp::error ErrShortBuffer = errors::New("short buffer"_s);
     // EOF is the error returned by Read when no more input is available.
     // (Read must return EOF itself, not an error wrapping EOF,
     // because callers will test for EOF using ==.)
@@ -47,14 +47,14 @@ namespace golang::io
     // If the EOF occurs unexpectedly in a structured data stream,
     // the appropriate error is either [ErrUnexpectedEOF] or some other error
     // giving more detail.
-    gocpp::error go_EOF = errors::New("EOF"s);
+    gocpp::error go_EOF = errors::New("EOF"_s);
     // ErrUnexpectedEOF means that EOF was encountered in the
     // middle of reading a fixed-size block or data structure.
-    gocpp::error ErrUnexpectedEOF = errors::New("unexpected EOF"s);
+    gocpp::error ErrUnexpectedEOF = errors::New("unexpected EOF"_s);
     // ErrNoProgress is returned by some clients of a [Reader] when
     // many calls to Read have failed to return any data or error,
     // usually the sign of a broken [Reader] implementation.
-    gocpp::error ErrNoProgress = errors::New("multiple Read calls return no data or error"s);
+    gocpp::error ErrNoProgress = errors::New("multiple Read calls return no data or error"_s);
     // Reader is the interface that wraps the basic Read method.
     //
     // Read reads up to len(p) bytes into p. It returns the number of bytes
@@ -1123,19 +1123,19 @@ namespace golang::io
     }
 
     template<typename T, typename StoreT>
-    std::tuple<int, struct gocpp::error> StringWriter::StringWriterImpl<T, StoreT>::vWriteString(std::string s)
+    std::tuple<int, struct gocpp::error> StringWriter::StringWriterImpl<T, StoreT>::vWriteString(gocpp::string s)
     {
         return rec::WriteString(gocpp::PtrRecv<T, false>(value.get()), s);
     }
 
     namespace rec
     {
-        std::tuple<int, struct gocpp::error> WriteString(const gocpp::PtrRecv<struct StringWriter, false>& self, std::string s)
+        std::tuple<int, struct gocpp::error> WriteString(const gocpp::PtrRecv<struct StringWriter, false>& self, gocpp::string s)
         {
             return self.ptr->value->vWriteString(s);
         }
 
-        std::tuple<int, struct gocpp::error> WriteString(const gocpp::ObjRecv<struct StringWriter>& self, std::string s)
+        std::tuple<int, struct gocpp::error> WriteString(const gocpp::ObjRecv<struct StringWriter>& self, gocpp::string s)
         {
             return self.obj.value->vWriteString(s);
         }
@@ -1149,7 +1149,7 @@ namespace golang::io
     // WriteString writes the contents of the string s to w, which accepts a slice of bytes.
     // If w implements [StringWriter], [StringWriter.WriteString] is invoked directly.
     // Otherwise, [Writer.Write] is called exactly once.
-    std::tuple<int, struct gocpp::error> WriteString(struct Writer w, std::string s)
+    std::tuple<int, struct gocpp::error> WriteString(struct Writer w, gocpp::string s)
     {
         int n;
         struct gocpp::error err;
@@ -1262,7 +1262,7 @@ namespace golang::io
         struct gocpp::error err;
         if(buf != nullptr && len(buf) == 0)
         {
-            gocpp::panic("empty buffer in CopyBuffer"s);
+            gocpp::panic("empty buffer in CopyBuffer"_s);
         }
         return copyBuffer(dst, src, buf);
     }
@@ -1473,8 +1473,8 @@ namespace golang::io
         return {n, err};
     }
 
-    gocpp::error errWhence = errors::New("Seek: invalid whence"s);
-    gocpp::error errOffset = errors::New("Seek: invalid offset"s);
+    gocpp::error errWhence = errors::New("Seek: invalid whence"_s);
+    gocpp::error errOffset = errors::New("Seek: invalid offset"_s);
     std::tuple<int64_t, struct gocpp::error> rec::Seek(struct SectionReader* s, int64_t offset, int whence)
     {
         //Go switch emulation
@@ -1738,7 +1738,7 @@ namespace golang::io
         return {len(p), nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> rec::WriteString(discard, std::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(discard, gocpp::string s)
     {
         return {len(s), nullptr};
     }

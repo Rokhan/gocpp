@@ -20,7 +20,7 @@ namespace golang::math
 
     double archExp2(double x)
     {
-        gocpp::panic("not implemented"s);
+        gocpp::panic("not implemented"_s);
     }
 
 }

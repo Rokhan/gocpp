@@ -13,7 +13,7 @@
 
 namespace golang::unicode
 {
-    extern std::string Version;
+    extern gocpp::string Version;
     extern RangeTable* _C;
     extern RangeTable* _Cc;
     extern RangeTable* _Cf;
@@ -506,11 +506,11 @@ namespace golang::unicode
     extern RangeTable* Variation_Selector;
     extern RangeTable* White_Space;
     extern gocpp::slice<unicode::CaseRange> CaseRanges;
-    extern gocpp::map<std::string, RangeTable*> FoldCategory;
-    extern gocpp::map<std::string, RangeTable*> FoldScript;
-    extern gocpp::map<std::string, RangeTable*> Categories;
-    extern gocpp::map<std::string, RangeTable*> Scripts;
-    extern gocpp::map<std::string, RangeTable*> Properties;
+    extern gocpp::map<gocpp::string, RangeTable*> FoldCategory;
+    extern gocpp::map<gocpp::string, RangeTable*> FoldScript;
+    extern gocpp::map<gocpp::string, RangeTable*> Categories;
+    extern gocpp::map<gocpp::string, RangeTable*> Scripts;
+    extern gocpp::map<gocpp::string, RangeTable*> Properties;
 
     namespace rec
     {

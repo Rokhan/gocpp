@@ -18,6 +18,6 @@ namespace golang::goarch
         using namespace mocklib::rec;
     }
 
-    std::string GOARCH = "amd64"s;
+    gocpp::string GOARCH = "amd64"_s;
 }
 

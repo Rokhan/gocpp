@@ -28,11 +28,11 @@ namespace golang::strconv
     {
         if(prec < 0)
         {
-            gocpp::panic("ryuFtoaFixed32 called with negative prec"s);
+            gocpp::panic("ryuFtoaFixed32 called with negative prec"_s);
         }
         if(prec > 9)
         {
-            gocpp::panic("ryuFtoaFixed32 called with prec > 9"s);
+            gocpp::panic("ryuFtoaFixed32 called with prec > 9"_s);
         }
         if(mant == 0)
         {
@@ -50,7 +50,7 @@ namespace golang::strconv
         auto [di, dexp2, d0] = mult64bitPow10(mant, e2, q);
         if(dexp2 >= 0)
         {
-            gocpp::panic("not enough significant bits after mult64bitPow10"s);
+            gocpp::panic("not enough significant bits after mult64bitPow10"_s);
         }
         if(q < 0 && q >= - 10 && divisibleByPower5(uint64_t(mant), - q))
         {
@@ -83,7 +83,7 @@ namespace golang::strconv
     {
         if(prec > 18)
         {
-            gocpp::panic("ryuFtoaFixed64 called with prec > 18"s);
+            gocpp::panic("ryuFtoaFixed64 called with prec > 18"_s);
         }
         if(mant == 0)
         {
@@ -101,7 +101,7 @@ namespace golang::strconv
         auto [di, dexp2, d0] = mult128bitPow10(mant, e2, q);
         if(dexp2 >= 0)
         {
-            gocpp::panic("not enough significant bits after mult128bitPow10"s);
+            gocpp::panic("not enough significant bits after mult128bitPow10"_s);
         }
         if(q < 0 && q >= - 22 && divisibleByPower5(mant, - q))
         {
@@ -254,7 +254,7 @@ namespace golang::strconv
         }
         if(e2 >= 0)
         {
-            gocpp::panic("not enough significant bits after mult128bitPow10"s);
+            gocpp::panic("not enough significant bits after mult128bitPow10"_s);
         }
         if(q > 55)
         {
@@ -480,7 +480,7 @@ namespace golang::strconv
         }
         if(q < detailedPowersOfTenMinExp10 || detailedPowersOfTenMaxExp10 < q)
         {
-            gocpp::panic("mult64bitPow10: power of 10 is out of range"s);
+            gocpp::panic("mult64bitPow10: power of 10 is out of range"_s);
         }
         auto pow = detailedPowersOfTen[q - detailedPowersOfTenMinExp10][1];
         if(q < 0)
@@ -513,7 +513,7 @@ namespace golang::strconv
         }
         if(q < detailedPowersOfTenMinExp10 || detailedPowersOfTenMaxExp10 < q)
         {
-            gocpp::panic("mult128bitPow10: power of 10 is out of range"s);
+            gocpp::panic("mult128bitPow10: power of 10 is out of range"_s);
         }
         auto pow = detailedPowersOfTen[q - detailedPowersOfTenMinExp10];
         if(q < 0)

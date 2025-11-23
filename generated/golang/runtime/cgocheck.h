@@ -13,7 +13,7 @@
 
 namespace golang::runtime
 {
-    extern std::string cgoWriteBarrierFail;
+    extern gocpp::string cgoWriteBarrierFail;
     void cgoCheckPtrWrite(unsafe::Pointer* dst, unsafe::Pointer src);
     void cgoCheckMemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src);
     void cgoCheckMemmove2(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t off, uintptr_t size);

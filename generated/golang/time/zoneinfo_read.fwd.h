@@ -7,7 +7,7 @@
 namespace golang::time
 {
     const int maxFileSize = 10 << 20;
-    using fileSizeError = std::string;
+    using fileSizeError = gocpp::string;
     const long seekStart = 0;
     const long seekCurrent = 1;
     const long seekEnd = 2;

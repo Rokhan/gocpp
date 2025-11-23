@@ -64,20 +64,20 @@ namespace golang::fmt
 
     // Strings for use with buffer.WriteString.
     // This is less overhead than using buffer.Write with byte arrays.
-    std::string commaSpaceString = ", "s;
-    std::string nilAngleString = "<nil>"s;
-    std::string nilParenString = "(nil)"s;
-    std::string nilString = "nil"s;
-    std::string mapString = "map["s;
-    std::string percentBangString = "%!"s;
-    std::string missingString = "(MISSING)"s;
-    std::string badIndexString = "(BADINDEX)"s;
-    std::string panicString = "(PANIC="s;
-    std::string extraString = "%!(EXTRA "s;
-    std::string badWidthString = "%!(BADWIDTH)"s;
-    std::string badPrecString = "%!(BADPREC)"s;
-    std::string noVerbString = "%!(NOVERB)"s;
-    std::string invReflectString = "<invalid reflect.Value>"s;
+    gocpp::string commaSpaceString = ", "_s;
+    gocpp::string nilAngleString = "<nil>"_s;
+    gocpp::string nilParenString = "(nil)"_s;
+    gocpp::string nilString = "nil"_s;
+    gocpp::string mapString = "map["_s;
+    gocpp::string percentBangString = "%!"_s;
+    gocpp::string missingString = "(MISSING)"_s;
+    gocpp::string badIndexString = "(BADINDEX)"_s;
+    gocpp::string panicString = "(PANIC="_s;
+    gocpp::string extraString = "%!(EXTRA "_s;
+    gocpp::string badWidthString = "%!(BADWIDTH)"_s;
+    gocpp::string badPrecString = "%!(BADPREC)"_s;
+    gocpp::string noVerbString = "%!(NOVERB)"_s;
+    gocpp::string invReflectString = "<invalid reflect.Value>"_s;
     // State represents the printer state passed to custom formatters.
     // It provides access to the io.Writer interface plus information about
     // the flags and options for the operand's format specifier.
@@ -255,19 +255,19 @@ namespace golang::fmt
     }
 
     template<typename T, typename StoreT>
-    std::string Stringer::StringerImpl<T, StoreT>::vString()
+    gocpp::string Stringer::StringerImpl<T, StoreT>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
 
     namespace rec
     {
-        std::string String(const gocpp::PtrRecv<struct Stringer, false>& self)
+        gocpp::string String(const gocpp::PtrRecv<struct Stringer, false>& self)
         {
             return self.ptr->value->vString();
         }
 
-        std::string String(const gocpp::ObjRecv<struct Stringer>& self)
+        gocpp::string String(const gocpp::ObjRecv<struct Stringer>& self)
         {
             return self.obj.value->vString();
         }
@@ -307,19 +307,19 @@ namespace golang::fmt
     }
 
     template<typename T, typename StoreT>
-    std::string GoStringer::GoStringerImpl<T, StoreT>::vGoString()
+    gocpp::string GoStringer::GoStringerImpl<T, StoreT>::vGoString()
     {
         return rec::GoString(gocpp::PtrRecv<T, false>(value.get()));
     }
 
     namespace rec
     {
-        std::string GoString(const gocpp::PtrRecv<struct GoStringer, false>& self)
+        gocpp::string GoString(const gocpp::PtrRecv<struct GoStringer, false>& self)
         {
             return self.ptr->value->vGoString();
         }
 
-        std::string GoString(const gocpp::ObjRecv<struct GoStringer>& self)
+        gocpp::string GoString(const gocpp::ObjRecv<struct GoStringer>& self)
         {
             return self.obj.value->vGoString();
         }
@@ -336,11 +336,11 @@ namespace golang::fmt
     // flags, the width, and the precision. Missing flags, width, and precision are
     // omitted. This function allows a Formatter to reconstruct the original
     // directive triggering the call to Format.
-    std::string FormatString(struct State state, gocpp::rune verb)
+    gocpp::string FormatString(struct State state, gocpp::rune verb)
     {
         gocpp::array<unsigned char, 16> tmp = {};
         auto b = append(tmp.make_slice(0, 0), '%');
-        for(auto [gocpp_ignored, c] : " +-#0"s)
+        for(auto [gocpp_ignored, c] : " +-#0"_s)
         {
             if(rec::Flag(gocpp::recv(state), int(c)))
             {
@@ -357,7 +357,7 @@ namespace golang::fmt
             b = strconv::AppendInt(b, int64_t(p), 10);
         }
         b = utf8::AppendRune(b, verb);
-        return std::string(b);
+        return gocpp::string(b);
     }
 
     // Use simple []byte instead of bytes.Buffer to avoid large dependency.
@@ -366,7 +366,7 @@ namespace golang::fmt
         *b = append(*b, p);
     }
 
-    void rec::writeString(golang::fmt::buffer* b, std::string s)
+    void rec::writeString(golang::fmt::buffer* b, gocpp::string s)
     {
         *b = append(*b, s);
     }
@@ -535,7 +535,7 @@ namespace golang::fmt
 
     // Implement WriteString so that we can call io.WriteString
     // on a pp (through state), for efficiency.
-    std::tuple<int, struct gocpp::error> rec::WriteString(struct pp* p, std::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(struct pp* p, gocpp::string s)
     {
         int ret;
         struct gocpp::error err;
@@ -545,7 +545,7 @@ namespace golang::fmt
 
     // Fprintf formats according to a format specifier and writes to w.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, std::string format, gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a)
     {
         int n;
         struct gocpp::error err;
@@ -558,7 +558,7 @@ namespace golang::fmt
 
     // Printf formats according to a format specifier and writes to standard output.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, struct gocpp::error> Printf(std::string format, gocpp::slice<go_any> a)
+    std::tuple<int, struct gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a)
     {
         int n;
         struct gocpp::error err;
@@ -566,18 +566,18 @@ namespace golang::fmt
     }
 
     // Sprintf formats according to a format specifier and returns the resulting string.
-    std::string Sprintf(std::string format, gocpp::slice<go_any> a)
+    gocpp::string Sprintf(gocpp::string format, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
         rec::doPrintf(gocpp::recv(p), format, a);
-        auto s = std::string(p->buf);
+        auto s = gocpp::string(p->buf);
         rec::free(gocpp::recv(p));
         return s;
     }
 
     // Appendf formats according to a format specifier, appends the result to the byte
     // slice, and returns the updated slice.
-    gocpp::slice<unsigned char> Appendf(gocpp::slice<unsigned char> b, std::string format, gocpp::slice<go_any> a)
+    gocpp::slice<unsigned char> Appendf(gocpp::slice<unsigned char> b, gocpp::string format, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
         rec::doPrintf(gocpp::recv(p), format, a);
@@ -612,11 +612,11 @@ namespace golang::fmt
 
     // Sprint formats using the default formats for its operands and returns the resulting string.
     // Spaces are added between operands when neither is a string.
-    std::string Sprint(gocpp::slice<go_any> a)
+    gocpp::string Sprint(gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
         rec::doPrint(gocpp::recv(p), a);
-        auto s = std::string(p->buf);
+        auto s = gocpp::string(p->buf);
         rec::free(gocpp::recv(p));
         return s;
     }
@@ -658,11 +658,11 @@ namespace golang::fmt
 
     // Sprintln formats using the default formats for its operands and returns the resulting string.
     // Spaces are always added between operands and a newline is appended.
-    std::string Sprintln(gocpp::slice<go_any> a)
+    gocpp::string Sprintln(gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
         rec::doPrintln(gocpp::recv(p), a);
-        auto s = std::string(p->buf);
+        auto s = gocpp::string(p->buf);
         rec::free(gocpp::recv(p));
         return s;
     }
@@ -701,7 +701,7 @@ namespace golang::fmt
     }
 
     // parsenum converts ASCII to integer.  num is 0 (and isnum is false) if no number present.
-    std::tuple<int, bool, int> parsenum(std::string s, int start, int end)
+    std::tuple<int, bool, int> parsenum(gocpp::string s, int start, int end)
     {
         int num;
         bool isnum;
@@ -939,7 +939,7 @@ namespace golang::fmt
                     rec::fmtFloat(gocpp::recv(p), real(v), size / 2, verb);
                     p->fmt.plus = true;
                     rec::fmtFloat(gocpp::recv(p), imag(v), size / 2, verb);
-                    rec::writeString(gocpp::recv(p->buf), "i)"s);
+                    rec::writeString(gocpp::recv(p->buf), "i)"_s);
                     p->fmt.plus = oldPlus;
                     break;
                 default:
@@ -949,7 +949,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::fmtString(struct pp* p, std::string v, gocpp::rune verb)
+    void rec::fmtString(struct pp* p, gocpp::string v, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -991,7 +991,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::fmtBytes(struct pp* p, gocpp::slice<unsigned char> v, gocpp::rune verb, std::string typeString)
+    void rec::fmtBytes(struct pp* p, gocpp::slice<unsigned char> v, gocpp::rune verb, gocpp::string typeString)
     {
         //Go switch emulation
         {
@@ -1050,7 +1050,7 @@ namespace golang::fmt
                     rec::fmtBx(gocpp::recv(p->fmt), v, udigits);
                     break;
                 case 5:
-                    rec::fmtQ(gocpp::recv(p->fmt), std::string(v));
+                    rec::fmtQ(gocpp::recv(p->fmt), gocpp::string(v));
                     break;
                 default:
                     rec::printValue(gocpp::recv(p), reflect::ValueOf(v), verb, 0);
@@ -1106,7 +1106,7 @@ namespace golang::fmt
                     {
                         rec::writeByte(gocpp::recv(p->buf), '(');
                         rec::writeString(gocpp::recv(p->buf), rec::String(gocpp::recv(rec::Type(gocpp::recv(value)))));
-                        rec::writeString(gocpp::recv(p->buf), ")("s);
+                        rec::writeString(gocpp::recv(p->buf), ")("_s);
                         if(u == 0)
                         {
                             rec::writeString(gocpp::recv(p->buf), nilString);
@@ -1146,7 +1146,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::catchPanic(struct pp* p, go_any arg, gocpp::rune verb, std::string method)
+    void rec::catchPanic(struct pp* p, go_any arg, gocpp::rune verb, gocpp::string method)
     {
         if(auto err = gocpp::recover(); err != nullptr)
         {
@@ -1165,7 +1165,7 @@ namespace golang::fmt
             rec::writeRune(gocpp::recv(p->buf), verb);
             rec::writeString(gocpp::recv(p->buf), panicString);
             rec::writeString(gocpp::recv(p->buf), method);
-            rec::writeString(gocpp::recv(p->buf), " method: "s);
+            rec::writeString(gocpp::recv(p->buf), " method: "_s);
             p->panicking = true;
             rec::printArg(gocpp::recv(p), err, 'v');
             p->panicking = false;
@@ -1197,7 +1197,7 @@ namespace golang::fmt
             if(auto [formatter, ok] = gocpp::getValue<Formatter>(p->arg); ok)
             {
                 handled = true;
-                defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "Format"s); });
+                defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "Format"_s); });
                 rec::Format(gocpp::recv(formatter), p, verb);
                 return handled;
             }
@@ -1206,7 +1206,7 @@ namespace golang::fmt
                 if(auto [stringer, ok] = gocpp::getValue<GoStringer>(p->arg); ok)
                 {
                     handled = true;
-                    defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "GoString"s); });
+                    defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "GoString"_s); });
                     rec::fmtS(gocpp::recv(p->fmt), rec::GoString(gocpp::recv(stringer)));
                     return handled;
                 }
@@ -1241,7 +1241,7 @@ namespace golang::fmt
                                     {
                                         gocpp::error v = gocpp::any_cast<gocpp::error>(p->arg);
                                         handled = true;
-                                        defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "Error"s); });
+                                        defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "Error"_s); });
                                         rec::fmtString(gocpp::recv(p), rec::Error(gocpp::recv(v)), verb);
                                         return handled;
                                         break;
@@ -1250,7 +1250,7 @@ namespace golang::fmt
                                     {
                                         Stringer v = gocpp::any_cast<Stringer>(p->arg);
                                         handled = true;
-                                        defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "String"s); });
+                                        defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "String"_s); });
                                         rec::fmtString(gocpp::recv(p), rec::String(gocpp::recv(v)), verb);
                                         return handled;
                                         break;
@@ -1332,7 +1332,7 @@ namespace golang::fmt
             else if(gocpp_id_2 == typeid(uint32_t)) { conditionId = 13; }
             else if(gocpp_id_2 == typeid(uint64_t)) { conditionId = 14; }
             else if(gocpp_id_2 == typeid(uintptr_t)) { conditionId = 15; }
-            else if(gocpp_id_2 == typeid(std::string)) { conditionId = 16; }
+            else if(gocpp_id_2 == typeid(gocpp::string)) { conditionId = 16; }
             else if(gocpp_id_2 == typeid(gocpp::slice<unsigned char>)) { conditionId = 17; }
             else if(gocpp_id_2 == typeid(reflect::Value)) { conditionId = 18; }
             switch(conditionId)
@@ -1435,14 +1435,14 @@ namespace golang::fmt
                 }
                 case 16:
                 {
-                    std::string f = gocpp::any_cast<std::string>(arg);
+                    gocpp::string f = gocpp::any_cast<gocpp::string>(arg);
                     rec::fmtString(gocpp::recv(p), f, verb);
                     break;
                 }
                 case 17:
                 {
                     gocpp::slice<unsigned char> f = gocpp::any_cast<gocpp::slice<unsigned char>>(arg);
-                    rec::fmtBytes(gocpp::recv(p), f, verb, "[]byte"s);
+                    rec::fmtBytes(gocpp::recv(p), f, verb, "[]byte"_s);
                     break;
                 }
                 case 18:
@@ -1640,7 +1640,7 @@ namespace golang::fmt
                         }
                         if(p->fmt.plusV || p->fmt.sharpV)
                         {
-                            if(auto name = rec::Field(gocpp::recv(rec::Type(gocpp::recv(f))), i).Name; name != ""s)
+                            if(auto name = rec::Field(gocpp::recv(rec::Type(gocpp::recv(f))), i).Name; name != ""_s)
                             {
                                 rec::writeString(gocpp::recv(p->buf), name);
                                 rec::writeByte(gocpp::recv(p->buf), ':');
@@ -1853,7 +1853,7 @@ namespace golang::fmt
     // The returned values are the index, the number of bytes to consume
     // up to the closing paren, if present, and whether the number parsed
     // ok. The bytes to consume will be 1 if no closing paren is present.
-    std::tuple<int, int, bool> parseArgNumber(std::string format)
+    std::tuple<int, int, bool> parseArgNumber(gocpp::string format)
     {
         int index;
         int wid;
@@ -1880,7 +1880,7 @@ namespace golang::fmt
     // argNumber returns the next argument to evaluate, which is either the value of the passed-in
     // argNum or the value of the bracketed integer that begins format[i:]. It also returns
     // the new value of i, that is, the index of the next byte of the format to process.
-    std::tuple<int, int, bool> rec::argNumber(struct pp* p, int argNum, std::string format, int i, int numArgs)
+    std::tuple<int, int, bool> rec::argNumber(struct pp* p, int argNum, gocpp::string format, int i, int numArgs)
     {
         int newArgNum;
         int newi;
@@ -1913,7 +1913,7 @@ namespace golang::fmt
         rec::writeString(gocpp::recv(p->buf), missingString);
     }
 
-    void rec::doPrintf(struct pp* p, std::string format, gocpp::slice<go_any> a)
+    void rec::doPrintf(struct pp* p, gocpp::string format, gocpp::slice<go_any> a)
     {
         auto end = len(format);
         auto argNum = 0;

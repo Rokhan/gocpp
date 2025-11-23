@@ -12,7 +12,7 @@
 namespace golang::bytealg
 {
     int Index(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
-    int IndexString(std::string a, std::string b);
+    int IndexString(gocpp::string a, gocpp::string b);
 
     namespace rec
     {

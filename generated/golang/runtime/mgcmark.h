@@ -67,7 +67,7 @@ namespace golang::runtime
     void scanConservative(uintptr_t b, uintptr_t n, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* state);
     void shade(uintptr_t b);
     void greyobject(uintptr_t obj, uintptr_t base, uintptr_t off, struct mspan* span, struct gcWork* gcw, uintptr_t objIndex);
-    void gcDumpObject(std::string label, uintptr_t obj, uintptr_t off);
+    void gcDumpObject(gocpp::string label, uintptr_t obj, uintptr_t off);
     void gcmarknewobject(struct mspan* span, uintptr_t obj);
     void gcMarkTinyAllocs();
 

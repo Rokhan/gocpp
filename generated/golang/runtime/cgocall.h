@@ -72,10 +72,10 @@ namespace golang::runtime
     void cgounimpl();
     extern uint64_t racecgosync;
     void cgoCheckPointer(go_any ptr, go_any arg);
-    extern std::string cgoCheckPointerFail;
-    extern std::string cgoResultFail;
-    void cgoCheckArg(golang::runtime::_type* t, unsafe::Pointer p, bool indir, bool top, std::string msg);
-    std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(unsafe::Pointer p, std::string msg);
+    extern gocpp::string cgoCheckPointerFail;
+    extern gocpp::string cgoResultFail;
+    void cgoCheckArg(golang::runtime::_type* t, unsafe::Pointer p, bool indir, bool top, gocpp::string msg);
+    std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(unsafe::Pointer p, gocpp::string msg);
     bool cgoIsGoPointer(unsafe::Pointer p);
     bool cgoInRange(unsafe::Pointer p, uintptr_t start, uintptr_t end);
     void cgoCheckResult(go_any val);

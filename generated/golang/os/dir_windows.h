@@ -34,7 +34,7 @@ namespace golang::os
         int bufp;
         uint32_t vol;
         uint32_t go_class;
-        std::string path;
+        gocpp::string path;
 
         using isGoStruct = void;
 
@@ -70,12 +70,12 @@ namespace golang::os
     namespace rec
     {
         void close(struct dirInfo* d);
-        std::tuple<gocpp::slice<std::string>, gocpp::slice<os::DirEntry>, gocpp::slice<os::FileInfo>, struct gocpp::error> readdir(struct File* file, int n, golang::os::readdirMode mode);
-        std::string Name(struct dirEntry de);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<os::DirEntry>, gocpp::slice<os::FileInfo>, struct gocpp::error> readdir(struct File* file, int n, golang::os::readdirMode mode);
+        gocpp::string Name(struct dirEntry de);
         bool IsDir(struct dirEntry de);
         os::FileMode Type(struct dirEntry de);
         std::tuple<os::FileInfo, struct gocpp::error> Info(struct dirEntry de);
-        std::string String(struct dirEntry de);
+        gocpp::string String(struct dirEntry de);
     }
 }
 

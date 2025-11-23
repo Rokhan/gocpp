@@ -37,8 +37,8 @@
 
 namespace golang::runtime
 {
-    void panicCheck1(uintptr_t pc, std::string msg);
-    void panicCheck2(std::string err);
+    void panicCheck1(uintptr_t pc, gocpp::string msg);
+    void panicCheck2(gocpp::string err);
     void goPanicIndex(int x, int y);
     void goPanicIndexU(unsigned int x, int y);
     void goPanicSliceAlen(int x, int y);
@@ -119,10 +119,10 @@ namespace golang::runtime
     extern godebugInc* panicnil;
     void gopanic(go_any e);
     go_any gorecover(uintptr_t argp);
-    void sync_throw(std::string s);
-    void sync_fatal(std::string s);
-    void go_throw(std::string s);
-    void fatal(std::string s);
+    void sync_throw(gocpp::string s);
+    void sync_fatal(gocpp::string s);
+    void go_throw(gocpp::string s);
+    void fatal(gocpp::string s);
     extern atomic::Uint32 runningPanicDefers;
     extern atomic::Uint32 panicking;
     extern mutex paniclk;
@@ -139,7 +139,7 @@ namespace golang::runtime
 
     namespace rec
     {
-        std::string Error(PanicNilError*);
+        gocpp::string Error(PanicNilError*);
         void RuntimeError(PanicNilError*);
         void start(struct _panic* p, uintptr_t pc, unsafe::Pointer sp);
         std::tuple<std::function<void ()>, bool> nextDefer(struct _panic* p);

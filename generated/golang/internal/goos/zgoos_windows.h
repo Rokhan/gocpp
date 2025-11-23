@@ -11,7 +11,7 @@
 
 namespace golang::goos
 {
-    extern std::string GOOS;
+    extern gocpp::string GOOS;
 
     namespace rec
     {

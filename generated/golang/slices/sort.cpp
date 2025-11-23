@@ -91,7 +91,7 @@ namespace golang::slices
     {
         if(len(x) < 1)
         {
-            gocpp::panic("slices.Min: empty list"s);
+            gocpp::panic("slices.Min: empty list"_s);
         }
         auto m = x[0];
         for(auto i = 1; i < len(x); i++)
@@ -109,7 +109,7 @@ namespace golang::slices
     {
         if(len(x) < 1)
         {
-            gocpp::panic("slices.MinFunc: empty list"s);
+            gocpp::panic("slices.MinFunc: empty list"_s);
         }
         auto m = x[0];
         for(auto i = 1; i < len(x); i++)
@@ -130,7 +130,7 @@ namespace golang::slices
     {
         if(len(x) < 1)
         {
-            gocpp::panic("slices.Max: empty list"s);
+            gocpp::panic("slices.Max: empty list"_s);
         }
         auto m = x[0];
         for(auto i = 1; i < len(x); i++)
@@ -148,7 +148,7 @@ namespace golang::slices
     {
         if(len(x) < 1)
         {
-            gocpp::panic("slices.MaxFunc: empty list"s);
+            gocpp::panic("slices.MaxFunc: empty list"_s);
         }
         auto m = x[0];
         for(auto i = 1; i < len(x); i++)

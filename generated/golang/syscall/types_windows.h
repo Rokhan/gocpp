@@ -13,7 +13,7 @@
 
 namespace golang::syscall
 {
-    extern gocpp::array<std::string, 16> signals;
+    extern gocpp::array<gocpp::string, 16> signals;
     extern gocpp::slice<unsigned char> OID_PKIX_KP_SERVER_AUTH;
     extern gocpp::slice<unsigned char> OID_SERVER_GATED_CRYPTO;
     extern gocpp::slice<unsigned char> OID_SGC_NETSCAPE;

@@ -196,7 +196,7 @@ namespace golang::runtime
         }
         if(sfreeindex > snelems)
         {
-            go_throw("s.freeindex > s.nelems"s);
+            go_throw("s.freeindex > s.nelems"_s);
         }
         auto aCache = s->allocCache;
         auto bitIndex = sys::TrailingZeros64(aCache);
@@ -259,8 +259,8 @@ namespace golang::runtime
         auto q = uintptr_t((uint64_t(n) * uint64_t(s->divMul)) >> 32);
         if(doubleCheck && q != n / s->elemsize)
         {
-            println(n, "/"s, s->elemsize, "should be"s, n / s->elemsize, "but got"s, q);
-            go_throw("bad magic division"s);
+            println(n, "/"_s, s->elemsize, "should be"_s, n / s->elemsize, "but got"_s, q);
+            go_throw("bad magic division"_s);
         }
         return q;
     }
@@ -322,7 +322,7 @@ namespace golang::runtime
         mbits = markBitsForAddr(base);
         if(mbits.mask != 1)
         {
-            go_throw("markBitsForSpan: unaligned start"s);
+            go_throw("markBitsForSpan: unaligned start"_s);
         }
         return mbits;
     }
@@ -348,28 +348,28 @@ namespace golang::runtime
     void badPointer(struct mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff)
     {
         printlock();
-        print("runtime: pointer "s, hex(p));
+        print("runtime: pointer "_s, hex(p));
         if(s != nullptr)
         {
             auto state = rec::get(gocpp::recv(s->state));
             if(state != mSpanInUse)
             {
-                print(" to unallocated span"s);
+                print(" to unallocated span"_s);
             }
             else
             {
-                print(" to unused region of span"s);
+                print(" to unused region of span"_s);
             }
-            print(" span.base()="s, hex(rec::base(gocpp::recv(s))), " span.limit="s, hex(s->limit), " span.state="s, state);
+            print(" span.base()="_s, hex(rec::base(gocpp::recv(s))), " span.limit="_s, hex(s->limit), " span.state="_s, state);
         }
-        print("\n"s);
+        print("\n"_s);
         if(refBase != 0)
         {
-            print("runtime: found in object at *("s, hex(refBase), "+"s, hex(refOff), ")\n"s);
-            gcDumpObject("object"s, refBase, refOff);
+            print("runtime: found in object at *("_s, hex(refBase), "+"_s, hex(refOff), ")\n"_s);
+            gcDumpObject("object"_s, refBase, refOff);
         }
         getg()->m->traceback = 2;
-        go_throw("found bad pointer in Go heap (incorrect use of unsafe or cgo?)"s);
+        go_throw("found bad pointer in Go heap (incorrect use of unsafe or cgo?)"_s);
     }
 
     // findObject returns the base address for the heap object containing
@@ -395,7 +395,7 @@ namespace golang::runtime
         s = spanOf(p);
         if(s == nullptr)
         {
-            if((GOARCH == "amd64"s || GOARCH == "arm64"s) && p == clobberdeadPtr && debug.invalidptr != 0)
+            if((GOARCH == "amd64"_s || GOARCH == "arm64"_s) && p == clobberdeadPtr && debug.invalidptr != 0)
             {
                 badPointer(s, p, refBase, refOff);
             }
@@ -493,17 +493,17 @@ namespace golang::runtime
     {
         if(typ == nullptr)
         {
-            go_throw("runtime: typeBitsBulkBarrier without type"s);
+            go_throw("runtime: typeBitsBulkBarrier without type"_s);
         }
         if(typ->Size_ != size)
         {
-            println("runtime: typeBitsBulkBarrier with type "s, rec::string(gocpp::recv(toRType(typ))), " of size "s, typ->Size_, " but memory size"s, size);
-            go_throw("runtime: invalid typeBitsBulkBarrier"s);
+            println("runtime: typeBitsBulkBarrier with type "_s, rec::string(gocpp::recv(toRType(typ))), " of size "_s, typ->Size_, " but memory size"_s, size);
+            go_throw("runtime: invalid typeBitsBulkBarrier"_s);
         }
         if(typ->Kind_ & kindGCProg != 0)
         {
-            println("runtime: typeBitsBulkBarrier with type "s, rec::string(gocpp::recv(toRType(typ))), " with GC prog"s);
-            go_throw("runtime: invalid typeBitsBulkBarrier"s);
+            println("runtime: typeBitsBulkBarrier with type "_s, rec::string(gocpp::recv(toRType(typ))), " with GC prog"_s);
+            go_throw("runtime: invalid typeBitsBulkBarrier"_s);
         }
         if(! writeBarrier.enabled)
         {
@@ -616,7 +616,7 @@ namespace golang::runtime
         n = runGCProg(prog, & x[0]);
         if(x[len(x) - 1] != 0xa1)
         {
-            go_throw("progToPointerMask: overflow"s);
+            go_throw("progToPointerMask: overflow"_s);
         }
         return bitvector {int32_t(n), & x[0]};
     }
@@ -825,19 +825,19 @@ namespace golang::runtime
             p = add1(p);
             if(x == 0)
             {
-                print("\t"s, nptr, " end\n"s);
+                print("\t"_s, nptr, " end\n"_s);
                 break;
             }
             if(x & 0x80 == 0)
             {
-                print("\t"s, nptr, " lit "s, x, ":"s);
+                print("\t"_s, nptr, " lit "_s, x, ":"_s);
                 auto n = int(x + 7) / 8;
                 for(auto i = 0; i < n; i++)
                 {
-                    print(" "s, hex(*p));
+                    print(" "_s, hex(*p));
                     p = add1(p);
                 }
-                print("\n"s);
+                print("\n"_s);
                 nptr += int(x);
             }
             else
@@ -867,7 +867,7 @@ namespace golang::runtime
                         break;
                     }
                 }
-                print("\t"s, nptr, " repeat "s, nbit, " × "s, count, "\n"s);
+                print("\t"_s, nptr, " repeat "_s, nbit, " × "_s, count, "\n"_s);
                 nptr += nbit * count;
             }
         }

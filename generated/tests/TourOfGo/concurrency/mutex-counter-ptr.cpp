@@ -59,7 +59,7 @@ namespace golang::main
     }
 
     // Inc increments the counter for the given key.
-    void rec::Inc(struct SafeCounter* c, std::string key)
+    void rec::Inc(struct SafeCounter* c, gocpp::string key)
     {
         rec::Lock(gocpp::recv(c->mu));
         c->v[key]++;
@@ -67,7 +67,7 @@ namespace golang::main
     }
 
     // Value returns the current value of the counter for the given key.
-    int rec::Value(struct SafeCounter* c, std::string key)
+    int rec::Value(struct SafeCounter* c, gocpp::string key)
     {
         gocpp::Defer defer;
         try
@@ -85,15 +85,15 @@ namespace golang::main
     void main()
     {
         auto c = gocpp::InitPtr<SafeCounter>([=](auto& x) {
-            x.v = gocpp::make(gocpp::Tag<gocpp::map<std::string, int>>());
+            x.v = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
         });
         for(auto i = 0; i < 1000; i++)
         {
-            gocpp::go([&]{ rec::Inc(gocpp::recv(c), "somekey"s); });
+            gocpp::go([&]{ rec::Inc(gocpp::recv(c), "somekey"_s); });
         }
         mocklib::Sleep(mocklib::Second);
-        mocklib::Println("result: "s, rec::Value(gocpp::recv(c), "somekey"s));
-        mocklib::Println("expected: "s, 1000);
+        mocklib::Println("result: "_s, rec::Value(gocpp::recv(c), "somekey"_s));
+        mocklib::Println("expected: "_s, 1000);
     }
 
 }

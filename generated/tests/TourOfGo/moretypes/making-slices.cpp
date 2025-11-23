@@ -23,22 +23,22 @@ namespace golang::main
     void main()
     {
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 5);
-        printSlice("a"s, a);
+        printSlice("a"_s, a);
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 0, 5);
-        printSlice("b"s, b);
+        printSlice("b"_s, b);
         auto bc = b.make_slice(0, 2);
-        printSlice("bc"s, bc);
+        printSlice("bc"_s, bc);
         auto bd = b.make_slice(2, 5);
-        printSlice("bd"s, bd);
+        printSlice("bd"_s, bd);
         auto ac = a.make_slice(0, 2);
-        printSlice("bc"s, ac);
+        printSlice("bc"_s, ac);
         auto ad = a.make_slice(2, 5);
-        printSlice("bd"s, ad);
+        printSlice("bd"_s, ad);
     }
 
-    void printSlice(std::string s, gocpp::slice<int> x)
+    void printSlice(gocpp::string s, gocpp::slice<int> x)
     {
-        mocklib::Printf("%v len=%v cap=%v %v\n"s, s, len(x), cap(x), x);
+        mocklib::Printf("%v len=%v cap=%v %v\n"_s, s, len(x), cap(x), x);
     }
 
 }

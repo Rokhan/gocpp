@@ -22,15 +22,15 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Println(fetcher["https://golang.org/"s]->body);
-        for(auto [gocpp_ignored, url] : fetcher["https://golang.org/"s]->urls)
+        mocklib::Println(fetcher["https://golang.org/"_s]->body);
+        for(auto [gocpp_ignored, url] : fetcher["https://golang.org/"_s]->urls)
         {
-            mocklib::Println(" -> "s, url);
+            mocklib::Println(" -> "_s, url);
         }
-        mocklib::Print("Small primes:"s);
+        mocklib::Print("Small primes:"_s);
         for(auto [gocpp_ignored, prime] : smallPrimes)
         {
-            mocklib::Printf(" %v"s, prime);
+            mocklib::Printf(" %v"_s, prime);
         }
         mocklib::Println();
     }
@@ -69,7 +69,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    main::fakeFetcher fetcher = main::fakeFetcher {{ "https://golang.org/"s, new fakeResult {"The Go Programming Language"s, gocpp::slice<std::string> {"https://golang.org/pkg/"s, "https://golang.org/cmd/"s}} }, { "https://golang.org/pkg/"s, new fakeResult {"Packages"s, gocpp::slice<std::string> {"https://golang.org/"s, "https://golang.org/cmd/"s, "https://golang.org/pkg/fmt/"s, "https://golang.org/pkg/os/"s}} }, { "https://golang.org/pkg/fmt/"s, new fakeResult {"Package fmt"s, gocpp::slice<std::string> {"https://golang.org/"s, "https://golang.org/pkg/"s}} }, { "https://golang.org/pkg/os/"s, new fakeResult {"Package os"s, gocpp::slice<std::string> {"https://golang.org/"s, "https://golang.org/pkg/"s}} }};
+    main::fakeFetcher fetcher = main::fakeFetcher {{ "https://golang.org/"_s, new fakeResult {"The Go Programming Language"_s, gocpp::slice<gocpp::string> {"https://golang.org/pkg/"_s, "https://golang.org/cmd/"_s}} }, { "https://golang.org/pkg/"_s, new fakeResult {"Packages"_s, gocpp::slice<gocpp::string> {"https://golang.org/"_s, "https://golang.org/cmd/"_s, "https://golang.org/pkg/fmt/"_s, "https://golang.org/pkg/os/"_s}} }, { "https://golang.org/pkg/fmt/"_s, new fakeResult {"Package fmt"_s, gocpp::slice<gocpp::string> {"https://golang.org/"_s, "https://golang.org/pkg/"_s}} }, { "https://golang.org/pkg/os/"_s, new fakeResult {"Package os"_s, gocpp::slice<gocpp::string> {"https://golang.org/"_s, "https://golang.org/pkg/"_s}} }};
 }
 
 int main()

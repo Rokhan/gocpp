@@ -117,9 +117,9 @@ namespace golang::os
     // if the underlying file system supports it.
     // Useful for testing purposes.
     bool allowReadDirFileID = true;
-    std::tuple<gocpp::slice<std::string>, gocpp::slice<os::DirEntry>, gocpp::slice<os::FileInfo>, struct gocpp::error> rec::readdir(struct File* file, int n, golang::os::readdirMode mode)
+    std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<os::DirEntry>, gocpp::slice<os::FileInfo>, struct gocpp::error> rec::readdir(struct File* file, int n, golang::os::readdirMode mode)
     {
-        gocpp::slice<std::string> names;
+        gocpp::slice<gocpp::string> names;
         gocpp::slice<os::DirEntry> dirents;
         gocpp::slice<os::FileInfo> infos;
         struct gocpp::error err;
@@ -137,7 +137,7 @@ namespace golang::os
             if(err != nullptr)
             {
                 err = gocpp::InitPtr<os::PathError>([=](auto& x) {
-                    x.Op = "readdir"s;
+                    x.Op = "readdir"_s;
                     x.Path = file->name;
                     x.Err = err;
                 });
@@ -160,7 +160,7 @@ namespace golang::os
                     if(err != nullptr)
                     {
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
-                            x.Op = "readdir"s;
+                            x.Op = "readdir"_s;
                             x.Path = file->name;
                             x.Err = err;
                         });
@@ -194,7 +194,7 @@ namespace golang::os
                     if(auto [s, gocpp_id_0] = rec::Stat(gocpp::recv(file)); s != nullptr && ! rec::IsDir(gocpp::recv(s)))
                     {
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
-                            x.Op = "readdir"s;
+                            x.Op = "readdir"_s;
                             x.Path = file->name;
                             x.Err = syscall::go_ENOTDIR;
                         });
@@ -202,7 +202,7 @@ namespace golang::os
                     else
                     {
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
-                            x.Op = "GetFileInformationByHandleEx"s;
+                            x.Op = "GetFileInformationByHandleEx"_s;
                             x.Path = file->name;
                             x.Err = err;
                         });
@@ -316,7 +316,7 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    std::string rec::Name(struct dirEntry de)
+    gocpp::string rec::Name(struct dirEntry de)
     {
         return rec::Name(gocpp::recv(de.fs));
     }
@@ -336,7 +336,7 @@ namespace golang::os
         return {de.fs, nullptr};
     }
 
-    std::string rec::String(struct dirEntry de)
+    gocpp::string rec::String(struct dirEntry de)
     {
         return fs::FormatDirEntry(de);
     }

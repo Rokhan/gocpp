@@ -215,9 +215,9 @@ namespace golang::bisect
     // and false from ShouldPrint for all changes. Callers can avoid calling
     // [Hash], [Matcher.ShouldEnable], and [Matcher.ShouldPrint] entirely
     // when they recognize the nil Matcher.
-    std::tuple<struct Matcher*, struct gocpp::error> New(std::string pattern)
+    std::tuple<struct Matcher*, struct gocpp::error> New(gocpp::string pattern)
     {
-        if(pattern == ""s)
+        if(pattern == ""_s)
         {
             return {nullptr, nullptr};
         }
@@ -227,9 +227,9 @@ namespace golang::bisect
         {
             m->quiet = true;
             p = p.make_slice(1);
-            if(p == ""s)
+            if(p == ""_s)
             {
-                return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
+                return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
             }
         }
         for(; len(p) > 0 && p[0] == 'v'; )
@@ -237,9 +237,9 @@ namespace golang::bisect
             m->verbose = true;
             m->quiet = false;
             p = p.make_slice(1);
-            if(p == ""s)
+            if(p == ""_s)
             {
-                return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
+                return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
             }
         }
         m->enable = true;
@@ -247,15 +247,15 @@ namespace golang::bisect
         {
             m->enable = ! m->enable;
             p = p.make_slice(1);
-            if(p == ""s)
+            if(p == ""_s)
             {
-                return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
+                return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
             }
         }
-        if(p == "n"s)
+        if(p == "n"_s)
         {
             m->enable = ! m->enable;
-            p = "y"s;
+            p = "y"_s;
         }
         auto result = true;
         auto bits = uint64_t(0);
@@ -306,7 +306,7 @@ namespace golang::bisect
                 switch(conditionId)
                 {
                     default:
-                        return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
+                        return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
                         break;
                     case 0:
                     case 1:
@@ -318,7 +318,7 @@ namespace golang::bisect
                     case 7:
                         if(wid != 4)
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
+                            return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
                         }
                     case 8:
                     case 9:
@@ -339,7 +339,7 @@ namespace golang::bisect
                     case 21:
                         if(wid != 4)
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
+                            return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
                         }
                         bits <<= 4;
                         bits |= uint64_t(c &^ 0x20 - 'A' + 10);
@@ -347,7 +347,7 @@ namespace golang::bisect
                     case 22:
                         if(i + 1 < len(p) && (p[i + 1] == '0' || p[i + 1] == '1'))
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
+                            return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
                         }
                         bits = 0;
                         break;
@@ -355,18 +355,18 @@ namespace golang::bisect
                     case 24:
                         if(c == '+' && result == false)
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax (+ after -): "s + pattern}};
+                            return {nullptr, new parseError {"invalid pattern syntax (+ after -): "_s + pattern}};
                         }
                         if(i > 0)
                         {
                             auto n = (i - start) * wid;
                             if(n > 64)
                             {
-                                return {nullptr, new parseError {"pattern bits too long: "s + pattern}};
+                                return {nullptr, new parseError {"pattern bits too long: "_s + pattern}};
                             }
                             if(n <= 0)
                             {
-                                return {nullptr, new parseError {"invalid pattern syntax: "s + pattern}};
+                                return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
                             }
                             if(p[start] == 'y')
                             {
@@ -558,7 +558,7 @@ namespace golang::bisect
 
     // FileLine reports whether the change identified by file and line should be enabled.
     // If the change should be printed, FileLine prints a one-line report to w.
-    bool rec::FileLine(struct Matcher* m, struct Writer w, std::string file, int line)
+    bool rec::FileLine(struct Matcher* m, struct Writer w, gocpp::string file, int line)
     {
         if(m == nullptr)
         {
@@ -569,7 +569,7 @@ namespace golang::bisect
 
     // fileLine does the real work for FileLine.
     // This lets FileLine's body handle m == nil and potentially be inlined.
-    bool rec::fileLine(struct Matcher* m, struct Writer w, std::string file, int line)
+    bool rec::fileLine(struct Matcher* m, struct Writer w, gocpp::string file, int line)
     {
         auto h = Hash(file, line);
         if(rec::ShouldPrint(gocpp::recv(m), h))
@@ -587,7 +587,7 @@ namespace golang::bisect
     }
 
     // printFileLine prints a non-marker-only report for file:line to w.
-    struct gocpp::error printFileLine(struct Writer w, uint64_t h, std::string file, int line)
+    struct gocpp::error printFileLine(struct Writer w, uint64_t h, gocpp::string file, int line)
     {
         auto markerLen = 40;
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, markerLen + len(file) + 24);
@@ -599,7 +599,7 @@ namespace golang::bisect
     }
 
     // appendFileLine appends file:line to dst, returning the extended slice.
-    gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, std::string file, int line)
+    gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, gocpp::string file, int line)
     {
         dst = append(dst, file);
         dst = append(dst, ':');
@@ -762,7 +762,7 @@ namespace golang::bisect
             auto [f, more] = rec::Next(gocpp::recv(frames));
             buf = append(buf, prefix);
             buf = append(buf, rec::Name(gocpp::recv(f.Func)));
-            buf = append(buf, "()\n"s);
+            buf = append(buf, "()\n"_s);
             buf = append(buf, prefix);
             buf = append(buf, '\t');
             buf = appendFileLine(buf, f.File, f.Line);
@@ -781,20 +781,20 @@ namespace golang::bisect
     // Marker returns the match marker text to use on any line reporting details
     // about a match of the given ID.
     // It always returns the hexadecimal format.
-    std::string Marker(uint64_t id)
+    gocpp::string Marker(uint64_t id)
     {
-        return std::string(AppendMarker(nullptr, id));
+        return gocpp::string(AppendMarker(nullptr, id));
     }
 
     // AppendMarker is like [Marker] but appends the marker to dst.
     gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id)
     {
-        auto prefix = "[bisect-match 0x"s;
+        auto prefix = "[bisect-match 0x"_s;
         gocpp::array<unsigned char, len(prefix) + 16 + 1> buf = {};
         copy(buf.make_slice(0), prefix);
         for(auto i = 0; i < 16; i++)
         {
-            buf[len(prefix) + i] = "0123456789abcdef"s[id >> 60];
+            buf[len(prefix) + i] = "0123456789abcdef"_s[id >> 60];
             id <<= 4;
         }
         buf[len(prefix) + 16] = ']';
@@ -806,12 +806,12 @@ namespace golang::bisect
     // the ID from the match marker,
     // and whether a marker was found at all.
     // If there is no marker, CutMarker returns line, 0, false.
-    std::tuple<std::string, uint64_t, bool> CutMarker(std::string line)
+    std::tuple<gocpp::string, uint64_t, bool> CutMarker(gocpp::string line)
     {
-        std::string short;
+        gocpp::string short;
         uint64_t id;
         bool ok;
-        auto prefix = "[bisect-match "s;
+        auto prefix = "[bisect-match "_s;
         auto i = 0;
         for(; ; i++)
         {
@@ -834,7 +834,7 @@ namespace golang::bisect
             return {line, 0, false};
         }
         auto idstr = line.make_slice(i + len(prefix), j);
-        if(len(idstr) >= 3 && idstr.make_slice(0, 2) == "0x"s)
+        if(len(idstr) >= 3 && idstr.make_slice(0, 2) == "0x"_s)
         {
             if(len(idstr) > 2 + 16)
             {
@@ -867,7 +867,7 @@ namespace golang::bisect
         }
         else
         {
-            if(idstr == ""s || len(idstr) > 64)
+            if(idstr == ""_s || len(idstr) > 64)
             {
                 return {line, 0, false};
             }
@@ -919,7 +919,7 @@ namespace golang::bisect
             {
                 const auto& gocpp_id_3 = gocpp::type_info(v);
                 int conditionId = -1;
-                if(gocpp_id_3 == typeid(std::string)) { conditionId = 0; }
+                if(gocpp_id_3 == typeid(gocpp::string)) { conditionId = 0; }
                 else if(gocpp_id_3 == typeid(unsigned char)) { conditionId = 1; }
                 else if(gocpp_id_3 == typeid(int)) { conditionId = 2; }
                 else if(gocpp_id_3 == typeid(unsigned int)) { conditionId = 3; }
@@ -928,7 +928,7 @@ namespace golang::bisect
                 else if(gocpp_id_3 == typeid(int64_t)) { conditionId = 6; }
                 else if(gocpp_id_3 == typeid(uint64_t)) { conditionId = 7; }
                 else if(gocpp_id_3 == typeid(uintptr_t)) { conditionId = 8; }
-                else if(gocpp_id_3 == typeid(gocpp::slice<std::string>)) { conditionId = 9; }
+                else if(gocpp_id_3 == typeid(gocpp::slice<gocpp::string>)) { conditionId = 9; }
                 else if(gocpp_id_3 == typeid(gocpp::slice<unsigned char>)) { conditionId = 10; }
                 else if(gocpp_id_3 == typeid(gocpp::slice<int>)) { conditionId = 11; }
                 else if(gocpp_id_3 == typeid(gocpp::slice<unsigned int>)) { conditionId = 12; }
@@ -942,12 +942,12 @@ namespace golang::bisect
                     default:
                     {
                         auto v = v;
-                        gocpp::panic("bisect.Hash: unexpected argument type"s);
+                        gocpp::panic("bisect.Hash: unexpected argument type"_s);
                         break;
                     }
                     case 0:
                     {
-                        std::string v = gocpp::any_cast<std::string>(v);
+                        gocpp::string v = gocpp::any_cast<gocpp::string>(v);
                         h = fnvString(h, v);
                         break;
                     }
@@ -1001,7 +1001,7 @@ namespace golang::bisect
                     }
                     case 9:
                     {
-                        gocpp::slice<std::string> v = gocpp::any_cast<gocpp::slice<std::string>>(v);
+                        gocpp::slice<gocpp::string> v = gocpp::any_cast<gocpp::slice<gocpp::string>>(v);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvString(h, x);
@@ -1117,7 +1117,7 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct parseError* e)
+    gocpp::string rec::Error(struct parseError* e)
     {
         return e->text;
     }
@@ -1129,7 +1129,7 @@ namespace golang::bisect
         return h;
     }
 
-    uint64_t fnvString(uint64_t h, std::string x)
+    uint64_t fnvString(uint64_t h, gocpp::string x)
     {
         for(auto i = 0; i < len(x); i++)
         {

@@ -52,7 +52,7 @@ namespace golang::runtime
     unsafe::Pointer convT16(uint16_t val);
     unsafe::Pointer convT32(uint32_t val);
     unsafe::Pointer convT64(uint64_t val);
-    unsafe::Pointer convTstring(std::string val);
+    unsafe::Pointer convTstring(gocpp::string val);
     unsafe::Pointer convTslice(gocpp::slice<unsigned char> val);
     struct itab* assertE2I(golang::runtime::interfacetype* inter, golang::runtime::_type* t);
     struct itab* assertE2I2(golang::runtime::interfacetype* inter, golang::runtime::_type* t);
@@ -79,7 +79,7 @@ namespace golang::runtime
     {
         struct itab* find(struct itabTableType* t, golang::runtime::interfacetype* inter, golang::runtime::_type* typ);
         void add(struct itabTableType* t, struct itab* m);
-        std::string init(struct itab* m);
+        gocpp::string init(struct itab* m);
     }
 }
 

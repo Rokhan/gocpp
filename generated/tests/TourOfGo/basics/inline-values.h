@@ -16,8 +16,8 @@ namespace golang::main
     extern main::ints smallPrimes;
     struct fakeResult
     {
-        std::string body;
-        gocpp::slice<std::string> urls;
+        gocpp::string body;
+        gocpp::slice<gocpp::string> urls;
 
         using isGoStruct = void;
 

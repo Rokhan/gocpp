@@ -14,7 +14,7 @@
 namespace golang::os
 {
     extern gocpp_id_0 getwdCache;
-    std::tuple<std::string, struct gocpp::error> Getwd();
+    std::tuple<gocpp::string, struct gocpp::error> Getwd();
 
     namespace rec
     {

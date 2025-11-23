@@ -27,7 +27,7 @@ namespace golang::os
 
     // Stat returns a FileInfo describing the named file.
     // If there is an error, it will be of type *PathError.
-    std::tuple<os::FileInfo, struct gocpp::error> Stat(std::string name)
+    std::tuple<os::FileInfo, struct gocpp::error> Stat(gocpp::string name)
     {
         testlog::Stat(name);
         return statNolog(name);
@@ -41,7 +41,7 @@ namespace golang::os
     // On Windows, if the file is a reparse point that is a surrogate for another
     // named entity (such as a symbolic link or mounted folder), the returned
     // FileInfo describes the reparse point, and makes no attempt to resolve it.
-    std::tuple<os::FileInfo, struct gocpp::error> Lstat(std::string name)
+    std::tuple<os::FileInfo, struct gocpp::error> Lstat(gocpp::string name)
     {
         testlog::Stat(name);
         return lstatNolog(name);

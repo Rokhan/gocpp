@@ -14,11 +14,11 @@
 
 namespace golang::time
 {
-    extern gocpp::slice<std::string> platformZoneSources;
-    std::tuple<bool, struct gocpp::error> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname);
-    std::tuple<std::string, struct gocpp::error> toEnglishName(std::string stdname, std::string dstname);
-    std::string extractCAPS(std::string desc);
-    std::tuple<std::string, std::string> abbrev(syscall::Timezoneinformation* z);
+    extern gocpp::slice<gocpp::string> platformZoneSources;
+    std::tuple<bool, struct gocpp::error> matchZoneKey(registry::Key zones, gocpp::string kname, gocpp::string stdname, gocpp::string dstname);
+    std::tuple<gocpp::string, struct gocpp::error> toEnglishName(gocpp::string stdname, gocpp::string dstname);
+    gocpp::string extractCAPS(gocpp::string desc);
+    std::tuple<gocpp::string, gocpp::string> abbrev(syscall::Timezoneinformation* z);
     int64_t pseudoUnix(int year, syscall::Systemtime* d);
     void initLocalFromTZI(syscall::Timezoneinformation* i);
     extern syscall::Timezoneinformation usPacific;

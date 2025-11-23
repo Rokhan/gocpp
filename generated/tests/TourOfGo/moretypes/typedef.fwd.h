@@ -10,8 +10,8 @@ namespace golang::main
     using IntegerType = int;
     struct Vertex;
     using vvvv1 = Vertex;
-    using str1 = std::string;
-    using str2 = std::string;
+    using str1 = gocpp::string;
+    using str2 = gocpp::string;
     using Pointer = main::ArbitraryType*;
     using VertexAlias = Vertex;
     using VertexPtr = Vertex*;

@@ -90,7 +90,7 @@ namespace golang::os
     }
 
     // Name returns the name of the file as presented to Open.
-    std::string rec::Name(struct File* f)
+    gocpp::string rec::Name(struct File* f)
     {
         return f->name;
     }
@@ -101,9 +101,9 @@ namespace golang::os
     // Note that the Go runtime writes to standard error for panics and crashes;
     // closing Stderr may cause those messages to go elsewhere, perhaps
     // to a file opened later.
-    File* Stdin = NewFile(uintptr_t(syscall::Stdin), "/dev/stdin"s);
-    File* Stdout = NewFile(uintptr_t(syscall::Stdout), "/dev/stdout"s);
-    File* Stderr = NewFile(uintptr_t(syscall::Stderr), "/dev/stderr"s);
+    File* Stdin = NewFile(uintptr_t(syscall::Stdin), "/dev/stdin"_s);
+    File* Stdout = NewFile(uintptr_t(syscall::Stdout), "/dev/stdout"_s);
+    File* Stderr = NewFile(uintptr_t(syscall::Stderr), "/dev/stderr"_s);
     // Flags to OpenFile wrapping those of the underlying system. Not all
     // flags may be implemented on a given system.
     // Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.
@@ -151,9 +151,9 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct LinkError* e)
+    gocpp::string rec::Error(struct LinkError* e)
     {
-        return e->Op + " "s + e->Old + " "s + e->New + ": "s + rec::Error(gocpp::recv(e->Err));
+        return e->Op + " "_s + e->Old + " "_s + e->New + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
     struct gocpp::error rec::Unwrap(struct LinkError* e)
@@ -168,13 +168,13 @@ namespace golang::os
     {
         int n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "read"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "read"_s); err != nullptr)
         {
             return {0, err};
         }
         gocpp::error e;
         std::tie(n, e) = rec::read(gocpp::recv(f), b);
-        return {n, rec::wrapErr(gocpp::recv(f), "read"s, e)};
+        return {n, rec::wrapErr(gocpp::recv(f), "read"_s, e)};
     }
 
     // ReadAt reads len(b) bytes from the File starting at byte offset off.
@@ -185,16 +185,16 @@ namespace golang::os
     {
         int n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "read"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "read"_s); err != nullptr)
         {
             return {0, err};
         }
         if(off < 0)
         {
             return {0, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "readat"s;
+                x.Op = "readat"_s;
                 x.Path = f->name;
-                x.Err = errors::New("negative offset"s);
+                x.Err = errors::New("negative offset"_s);
             })};
         }
         for(; len(b) > 0; )
@@ -202,7 +202,7 @@ namespace golang::os
             auto [m, e] = rec::pread(gocpp::recv(f), b, off);
             if(e != nullptr)
             {
-                err = rec::wrapErr(gocpp::recv(f), "read"s, e);
+                err = rec::wrapErr(gocpp::recv(f), "read"_s, e);
                 break;
             }
             n += m;
@@ -217,7 +217,7 @@ namespace golang::os
     {
         int64_t n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "write"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "write"_s); err != nullptr)
         {
             return {0, err};
         }
@@ -228,7 +228,7 @@ namespace golang::os
         {
             return genericReadFrom(f, r);
         }
-        return {n, rec::wrapErr(gocpp::recv(f), "write"s, e)};
+        return {n, rec::wrapErr(gocpp::recv(f), "write"_s, e)};
     }
 
     // noReadFrom can be embedded alongside another type to
@@ -263,7 +263,7 @@ namespace golang::os
     // It should never be called.
     std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(noReadFrom, io::Reader)
     {
-        gocpp::panic("can't happen"s);
+        gocpp::panic("can't happen"_s);
     }
 
     // fileWithoutReadFrom implements all the methods of *File other
@@ -315,7 +315,7 @@ namespace golang::os
     {
         int n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "write"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "write"_s); err != nullptr)
         {
             return {0, err};
         }
@@ -332,12 +332,12 @@ namespace golang::os
         epipecheck(f, e);
         if(e != nullptr)
         {
-            err = rec::wrapErr(gocpp::recv(f), "write"s, e);
+            err = rec::wrapErr(gocpp::recv(f), "write"_s, e);
         }
         return {n, err};
     }
 
-    gocpp::error errWriteAtInAppendMode = errors::New("os: invalid use of WriteAt on file opened with O_APPEND"s);
+    gocpp::error errWriteAtInAppendMode = errors::New("os: invalid use of WriteAt on file opened with O_APPEND"_s);
     // WriteAt writes len(b) bytes to the File starting at byte offset off.
     // It returns the number of bytes written and an error, if any.
     // WriteAt returns a non-nil error when n != len(b).
@@ -347,7 +347,7 @@ namespace golang::os
     {
         int n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "write"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "write"_s); err != nullptr)
         {
             return {0, err};
         }
@@ -358,9 +358,9 @@ namespace golang::os
         if(off < 0)
         {
             return {0, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "writeat"s;
+                x.Op = "writeat"_s;
                 x.Path = f->name;
-                x.Err = errors::New("negative offset"s);
+                x.Err = errors::New("negative offset"_s);
             })};
         }
         for(; len(b) > 0; )
@@ -368,7 +368,7 @@ namespace golang::os
             auto [m, e] = rec::pwrite(gocpp::recv(f), b, off);
             if(e != nullptr)
             {
-                err = rec::wrapErr(gocpp::recv(f), "write"s, e);
+                err = rec::wrapErr(gocpp::recv(f), "write"_s, e);
                 break;
             }
             n += m;
@@ -383,7 +383,7 @@ namespace golang::os
     {
         int64_t n;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "read"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "read"_s); err != nullptr)
         {
             return {0, err};
         }
@@ -392,7 +392,7 @@ namespace golang::os
         std::tie(n, handled, e) = rec::writeTo(gocpp::recv(f), w);
         if(handled)
         {
-            return {n, rec::wrapErr(gocpp::recv(f), "read"s, e)};
+            return {n, rec::wrapErr(gocpp::recv(f), "read"_s, e)};
         }
         return genericWriteTo(f, w);
     }
@@ -429,7 +429,7 @@ namespace golang::os
     // It should never be called.
     std::tuple<int64_t, struct gocpp::error> rec::WriteTo(noWriteTo, io::Writer)
     {
-        gocpp::panic("can't happen"s);
+        gocpp::panic("can't happen"_s);
     }
 
     // fileWithoutWriteTo implements all the methods of *File other
@@ -483,7 +483,7 @@ namespace golang::os
     {
         int64_t ret;
         struct gocpp::error err;
-        if(auto err = rec::checkValid(gocpp::recv(f), "seek"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "seek"_s); err != nullptr)
         {
             return {0, err};
         }
@@ -494,14 +494,14 @@ namespace golang::os
         }
         if(e != nullptr)
         {
-            return {0, rec::wrapErr(gocpp::recv(f), "seek"s, e)};
+            return {0, rec::wrapErr(gocpp::recv(f), "seek"_s, e)};
         }
         return {r, nullptr};
     }
 
     // WriteString is like Write, but writes the contents of string s rather than
     // a slice of bytes.
-    std::tuple<int, struct gocpp::error> rec::WriteString(struct File* f, std::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(struct File* f, gocpp::string s)
     {
         int n;
         struct gocpp::error err;
@@ -512,7 +512,7 @@ namespace golang::os
     // Mkdir creates a new directory with the specified name and permission
     // bits (before umask).
     // If there is an error, it will be of type *PathError.
-    struct gocpp::error Mkdir(std::string name, golang::os::FileMode perm)
+    struct gocpp::error Mkdir(gocpp::string name, golang::os::FileMode perm)
     {
         auto longName = fixLongPath(name);
         auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
@@ -522,7 +522,7 @@ namespace golang::os
         if(e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "mkdir"s;
+                x.Op = "mkdir"_s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -540,7 +540,7 @@ namespace golang::os
     }
 
     // setStickyBit adds ModeSticky to the permission bits of path, non atomic.
-    struct gocpp::error setStickyBit(std::string name)
+    struct gocpp::error setStickyBit(gocpp::string name)
     {
         auto [fi, err] = Stat(name);
         if(err != nullptr)
@@ -552,13 +552,13 @@ namespace golang::os
 
     // Chdir changes the current working directory to the named directory.
     // If there is an error, it will be of type *PathError.
-    struct gocpp::error Chdir(std::string dir)
+    struct gocpp::error Chdir(gocpp::string dir)
     {
         if(auto e = syscall::Chdir(dir); e != nullptr)
         {
             testlog::Open(dir);
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "chdir"s;
+                x.Op = "chdir"_s;
                 x.Path = dir;
                 x.Err = e;
             });
@@ -578,7 +578,7 @@ namespace golang::os
     // the returned file can be used for reading; the associated file
     // descriptor has mode O_RDONLY.
     // If there is an error, it will be of type *PathError.
-    std::tuple<struct File*, struct gocpp::error> Open(std::string name)
+    std::tuple<struct File*, struct gocpp::error> Open(gocpp::string name)
     {
         return OpenFile(name, O_RDONLY, 0);
     }
@@ -588,7 +588,7 @@ namespace golang::os
     // (before umask). If successful, methods on the returned File can
     // be used for I/O; the associated file descriptor has mode O_RDWR.
     // If there is an error, it will be of type *PathError.
-    std::tuple<struct File*, struct gocpp::error> Create(std::string name)
+    std::tuple<struct File*, struct gocpp::error> Create(gocpp::string name)
     {
         return OpenFile(name, O_RDWR | O_CREATE | O_TRUNC, 0666);
     }
@@ -599,7 +599,7 @@ namespace golang::os
     // is passed, it is created with mode perm (before umask). If successful,
     // methods on the returned File can be used for I/O.
     // If there is an error, it will be of type *PathError.
-    std::tuple<struct File*, struct gocpp::error> OpenFile(std::string name, int flag, golang::os::FileMode perm)
+    std::tuple<struct File*, struct gocpp::error> OpenFile(gocpp::string name, int flag, golang::os::FileMode perm)
     {
         testlog::Open(name);
         auto [f, err] = openFileNolog(name, flag, perm);
@@ -612,13 +612,13 @@ namespace golang::os
     }
 
     // lstat is overridden in tests.
-    fs::FileInfo, gocpp::error> (std::string)> lstat = Lstat;
+    fs::FileInfo, gocpp::error> (gocpp::string)> lstat = Lstat;
     // Rename renames (moves) oldpath to newpath.
     // If newpath already exists and is not a directory, Rename replaces it.
     // OS-specific restrictions may apply when oldpath and newpath are in different directories.
     // Even within the same directory, on non-Unix platforms Rename is not an atomic operation.
     // If there is an error, it will be of type *LinkError.
-    struct gocpp::error Rename(std::string oldpath, std::string newpath)
+    struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath)
     {
         return rename(oldpath, newpath);
     }
@@ -628,7 +628,7 @@ namespace golang::os
     //
     // If the link destination is relative, Readlink returns the relative path
     // without resolving it to an absolute one.
-    std::tuple<std::string, struct gocpp::error> Readlink(std::string name)
+    std::tuple<gocpp::string, struct gocpp::error> Readlink(gocpp::string name)
     {
         return readlink(name);
     }
@@ -650,7 +650,7 @@ namespace golang::os
     // wrapErr wraps an error that occurred during an operation on an open file.
     // It passes io.EOF through unchanged, otherwise converts
     // poll.ErrFileClosing to ErrClosed and wraps the error in a PathError.
-    struct gocpp::error rec::wrapErr(struct File* f, std::string op, struct gocpp::error err)
+    struct gocpp::error rec::wrapErr(struct File* f, gocpp::string op, struct gocpp::error err)
     {
         if(err == nullptr || err == io::go_EOF)
         {
@@ -663,7 +663,7 @@ namespace golang::os
         else
         if(checkWrapErr && errors::Is(err, poll::ErrFileClosing))
         {
-            gocpp::panic("unexpected error wrapping poll.ErrFileClosing: "s + rec::Error(gocpp::recv(err)));
+            gocpp::panic("unexpected error wrapping poll.ErrFileClosing: "_s + rec::Error(gocpp::recv(err)));
         }
         return gocpp::InitPtr<os::PathError>([=](auto& x) {
             x.Op = op;
@@ -681,7 +681,7 @@ namespace golang::os
     //
     // The directory is neither guaranteed to exist nor have accessible
     // permissions.
-    std::string TempDir()
+    gocpp::string TempDir()
     {
         return tempDir();
     }
@@ -699,53 +699,53 @@ namespace golang::os
     //
     // If the location cannot be determined (for example, $HOME is not defined),
     // then it will return an error.
-    std::tuple<std::string, struct gocpp::error> UserCacheDir()
+    std::tuple<gocpp::string, struct gocpp::error> UserCacheDir()
     {
-        std::string dir = {};
+        gocpp::string dir = {};
         //Go switch emulation
         {
             auto condition = mocklib::GOOS;
             int conditionId = -1;
-            if(condition == "windows"s) { conditionId = 0; }
-            else if(condition == "darwin"s) { conditionId = 1; }
-            else if(condition == "ios"s) { conditionId = 2; }
-            else if(condition == "plan9"s) { conditionId = 3; }
+            if(condition == "windows"_s) { conditionId = 0; }
+            else if(condition == "darwin"_s) { conditionId = 1; }
+            else if(condition == "ios"_s) { conditionId = 2; }
+            else if(condition == "plan9"_s) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
-                    dir = Getenv("LocalAppData"s);
-                    if(dir == ""s)
+                    dir = Getenv("LocalAppData"_s);
+                    if(dir == ""_s)
                     {
-                        return {""s, errors::New("%LocalAppData% is not defined"s)};
+                        return {""_s, errors::New("%LocalAppData% is not defined"_s)};
                     }
                     break;
                 case 1:
                 case 2:
-                    dir = Getenv("HOME"s);
-                    if(dir == ""s)
+                    dir = Getenv("HOME"_s);
+                    if(dir == ""_s)
                     {
-                        return {""s, errors::New("$HOME is not defined"s)};
+                        return {""_s, errors::New("$HOME is not defined"_s)};
                     }
-                    dir += "/Library/Caches"s;
+                    dir += "/Library/Caches"_s;
                     break;
                 case 3:
-                    dir = Getenv("home"s);
-                    if(dir == ""s)
+                    dir = Getenv("home"_s);
+                    if(dir == ""_s)
                     {
-                        return {""s, errors::New("$home is not defined"s)};
+                        return {""_s, errors::New("$home is not defined"_s)};
                     }
-                    dir += "/lib/cache"s;
+                    dir += "/lib/cache"_s;
                     break;
                 default:
-                    dir = Getenv("XDG_CACHE_HOME"s);
-                    if(dir == ""s)
+                    dir = Getenv("XDG_CACHE_HOME"_s);
+                    if(dir == ""_s)
                     {
-                        dir = Getenv("HOME"s);
-                        if(dir == ""s)
+                        dir = Getenv("HOME"_s);
+                        if(dir == ""_s)
                         {
-                            return {""s, errors::New("neither $XDG_CACHE_HOME nor $HOME are defined"s)};
+                            return {""_s, errors::New("neither $XDG_CACHE_HOME nor $HOME are defined"_s)};
                         }
-                        dir += "/.cache"s;
+                        dir += "/.cache"_s;
                     }
                     break;
             }
@@ -766,53 +766,53 @@ namespace golang::os
     //
     // If the location cannot be determined (for example, $HOME is not defined),
     // then it will return an error.
-    std::tuple<std::string, struct gocpp::error> UserConfigDir()
+    std::tuple<gocpp::string, struct gocpp::error> UserConfigDir()
     {
-        std::string dir = {};
+        gocpp::string dir = {};
         //Go switch emulation
         {
             auto condition = mocklib::GOOS;
             int conditionId = -1;
-            if(condition == "windows"s) { conditionId = 0; }
-            else if(condition == "darwin"s) { conditionId = 1; }
-            else if(condition == "ios"s) { conditionId = 2; }
-            else if(condition == "plan9"s) { conditionId = 3; }
+            if(condition == "windows"_s) { conditionId = 0; }
+            else if(condition == "darwin"_s) { conditionId = 1; }
+            else if(condition == "ios"_s) { conditionId = 2; }
+            else if(condition == "plan9"_s) { conditionId = 3; }
             switch(conditionId)
             {
                 case 0:
-                    dir = Getenv("AppData"s);
-                    if(dir == ""s)
+                    dir = Getenv("AppData"_s);
+                    if(dir == ""_s)
                     {
-                        return {""s, errors::New("%AppData% is not defined"s)};
+                        return {""_s, errors::New("%AppData% is not defined"_s)};
                     }
                     break;
                 case 1:
                 case 2:
-                    dir = Getenv("HOME"s);
-                    if(dir == ""s)
+                    dir = Getenv("HOME"_s);
+                    if(dir == ""_s)
                     {
-                        return {""s, errors::New("$HOME is not defined"s)};
+                        return {""_s, errors::New("$HOME is not defined"_s)};
                     }
-                    dir += "/Library/Application Support"s;
+                    dir += "/Library/Application Support"_s;
                     break;
                 case 3:
-                    dir = Getenv("home"s);
-                    if(dir == ""s)
+                    dir = Getenv("home"_s);
+                    if(dir == ""_s)
                     {
-                        return {""s, errors::New("$home is not defined"s)};
+                        return {""_s, errors::New("$home is not defined"_s)};
                     }
-                    dir += "/lib"s;
+                    dir += "/lib"_s;
                     break;
                 default:
-                    dir = Getenv("XDG_CONFIG_HOME"s);
-                    if(dir == ""s)
+                    dir = Getenv("XDG_CONFIG_HOME"_s);
+                    if(dir == ""_s)
                     {
-                        dir = Getenv("HOME"s);
-                        if(dir == ""s)
+                        dir = Getenv("HOME"_s);
+                        if(dir == ""_s)
                         {
-                            return {""s, errors::New("neither $XDG_CONFIG_HOME nor $HOME are defined"s)};
+                            return {""_s, errors::New("neither $XDG_CONFIG_HOME nor $HOME are defined"_s)};
                         }
-                        dir += "/.config"s;
+                        dir += "/.config"_s;
                     }
                     break;
             }
@@ -828,26 +828,26 @@ namespace golang::os
     //
     // If the expected variable is not set in the environment, UserHomeDir
     // returns either a platform-specific default value or a non-nil error.
-    std::tuple<std::string, struct gocpp::error> UserHomeDir()
+    std::tuple<gocpp::string, struct gocpp::error> UserHomeDir()
     {
-        auto [env, enverr] = std::tuple{"HOME"s, "$HOME"s};
+        auto [env, enverr] = std::tuple{"HOME"_s, "$HOME"_s};
         //Go switch emulation
         {
             auto condition = mocklib::GOOS;
             int conditionId = -1;
-            if(condition == "windows"s) { conditionId = 0; }
-            else if(condition == "plan9"s) { conditionId = 1; }
+            if(condition == "windows"_s) { conditionId = 0; }
+            else if(condition == "plan9"_s) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
-                    std::tie(env, enverr) = std::tuple{"USERPROFILE"s, "%userprofile%"s};
+                    std::tie(env, enverr) = std::tuple{"USERPROFILE"_s, "%userprofile%"_s};
                     break;
                 case 1:
-                    std::tie(env, enverr) = std::tuple{"home"s, "$home"s};
+                    std::tie(env, enverr) = std::tuple{"home"_s, "$home"_s};
                     break;
             }
         }
-        if(auto v = Getenv(env); v != ""s)
+        if(auto v = Getenv(env); v != ""_s)
         {
             return {v, nullptr};
         }
@@ -855,19 +855,19 @@ namespace golang::os
         {
             auto condition = mocklib::GOOS;
             int conditionId = -1;
-            if(condition == "android"s) { conditionId = 0; }
-            else if(condition == "ios"s) { conditionId = 1; }
+            if(condition == "android"_s) { conditionId = 0; }
+            else if(condition == "ios"_s) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
-                    return {"/sdcard"s, nullptr};
+                    return {"/sdcard"_s, nullptr};
                     break;
                 case 1:
-                    return {"/"s, nullptr};
+                    return {"/"_s, nullptr};
                     break;
             }
         }
-        return {""s, errors::New(enverr + " is not defined"s)};
+        return {""_s, errors::New(enverr + " is not defined"_s)};
     }
 
     // Chmod changes the mode of the named file to mode.
@@ -888,7 +888,7 @@ namespace golang::os
     //
     // On Plan 9, the mode's permission bits, ModeAppend, ModeExclusive,
     // and ModeTemporary are used.
-    struct gocpp::error Chmod(std::string name, golang::os::FileMode mode)
+    struct gocpp::error Chmod(gocpp::string name, golang::os::FileMode mode)
     {
         return chmod(name, mode);
     }
@@ -953,7 +953,7 @@ namespace golang::os
     // This implements the syscall.Conn interface.
     std::tuple<syscall::RawConn, struct gocpp::error> rec::SyscallConn(struct File* f)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "SyscallConn"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SyscallConn"_s); err != nullptr)
         {
             return {nullptr, err};
         }
@@ -975,18 +975,18 @@ namespace golang::os
     //
     // The result implements [io/fs.StatFS], [io/fs.ReadFileFS] and
     // [io/fs.ReadDirFS].
-    fs::FS DirFS(std::string dir)
+    fs::FS DirFS(gocpp::string dir)
     {
         return dirFS(dir);
     }
 
-    std::tuple<fs::File, struct gocpp::error> rec::Open(golang::os::dirFS dir, std::string name)
+    std::tuple<fs::File, struct gocpp::error> rec::Open(golang::os::dirFS dir, gocpp::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "open"s;
+                x.Op = "open"_s;
                 x.Path = name;
                 x.Err = err;
             })};
@@ -1005,13 +1005,13 @@ namespace golang::os
     // with the given name in the directory. The function provides
     // robust handling for small files and special file systems.
     // Through this method, dirFS implements [io/fs.ReadFileFS].
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::ReadFile(golang::os::dirFS dir, std::string name)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::ReadFile(golang::os::dirFS dir, gocpp::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "readfile"s;
+                x.Op = "readfile"_s;
                 x.Path = name;
                 x.Err = err;
             })};
@@ -1031,13 +1031,13 @@ namespace golang::os
 
     // ReadDir reads the named directory, returning all its directory entries sorted
     // by filename. Through this method, dirFS implements [io/fs.ReadDirFS].
-    std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> rec::ReadDir(golang::os::dirFS dir, std::string name)
+    std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> rec::ReadDir(golang::os::dirFS dir, gocpp::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "readdir"s;
+                x.Op = "readdir"_s;
                 x.Path = name;
                 x.Err = err;
             })};
@@ -1055,13 +1055,13 @@ namespace golang::os
         return {entries, nullptr};
     }
 
-    std::tuple<fs::FileInfo, struct gocpp::error> rec::Stat(golang::os::dirFS dir, std::string name)
+    std::tuple<fs::FileInfo, struct gocpp::error> rec::Stat(golang::os::dirFS dir, gocpp::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "stat"s;
+                x.Op = "stat"_s;
                 x.Path = name;
                 x.Err = err;
             })};
@@ -1077,34 +1077,34 @@ namespace golang::os
     }
 
     // join returns the path for name in dir.
-    std::tuple<std::string, struct gocpp::error> rec::join(golang::os::dirFS dir, std::string name)
+    std::tuple<gocpp::string, struct gocpp::error> rec::join(golang::os::dirFS dir, gocpp::string name)
     {
-        if(dir == ""s)
+        if(dir == ""_s)
         {
-            return {""s, errors::New("os: DirFS with empty root"s)};
+            return {""_s, errors::New("os: DirFS with empty root"_s)};
         }
         if(! fs::ValidPath(name))
         {
-            return {""s, ErrInvalid};
+            return {""_s, ErrInvalid};
         }
         auto [name_tmp, err] = safefilepath::FromFS(name);
         auto& name = name_tmp;
         if(err != nullptr)
         {
-            return {""s, ErrInvalid};
+            return {""_s, ErrInvalid};
         }
         if(IsPathSeparator(dir[len(dir) - 1]))
         {
-            return {std::string(dir) + name, nullptr};
+            return {gocpp::string(dir) + name, nullptr};
         }
-        return {std::string(dir) + std::string(PathSeparator) + name, nullptr};
+        return {gocpp::string(dir) + gocpp::string(PathSeparator) + name, nullptr};
     }
 
     // ReadFile reads the named file and returns the contents.
     // A successful call returns err == nil, not err == EOF.
     // Because ReadFile reads the whole file, it does not treat an EOF from Read
     // as an error to be reported.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadFile(std::string name)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadFile(gocpp::string name)
     {
         gocpp::Defer defer;
         try
@@ -1160,7 +1160,7 @@ namespace golang::os
     // otherwise WriteFile truncates it before writing, without changing permissions.
     // Since WriteFile requires multiple system calls to complete, a failure mid-operation
     // can leave the file in a partially written state.
-    struct gocpp::error WriteFile(std::string name, gocpp::slice<unsigned char> data, golang::os::FileMode perm)
+    struct gocpp::error WriteFile(gocpp::string name, gocpp::slice<unsigned char> data, golang::os::FileMode perm)
     {
         auto [f, err] = OpenFile(name, O_WRONLY | O_CREATE | O_TRUNC, perm);
         if(err != nullptr)

@@ -15,7 +15,7 @@
 namespace golang::adler32
 {
     hash::Hash32 New();
-    extern std::string magic;
+    extern gocpp::string magic;
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
     adler32::digest update(golang::adler32::digest d, gocpp::slice<unsigned char> p);

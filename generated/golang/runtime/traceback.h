@@ -60,9 +60,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct unwinder& value);
     int tracebackPCs(struct unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
     void printArgs(struct funcInfo f, unsafe::Pointer argp, uintptr_t pc);
-    std::tuple<std::string, std::string, std::string> funcNamePiecesForPrint(std::string name);
-    std::string funcNameForPrint(std::string name);
-    void printFuncName(std::string name);
+    std::tuple<gocpp::string, gocpp::string, gocpp::string> funcNamePiecesForPrint(gocpp::string name);
+    gocpp::string funcNameForPrint(gocpp::string name);
+    void printFuncName(gocpp::string name);
     void printcreatedby(struct g* gp);
     void printcreatedby1(struct funcInfo f, uintptr_t pc, uint64_t goid);
     void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
@@ -75,9 +75,9 @@ namespace golang::runtime
     int gcallers(struct g* gp, int skip, gocpp::slice<uintptr_t> pcbuf);
     bool showframe(struct srcFunc sf, struct g* gp, bool firstFrame, abi::FuncID calleeID);
     bool showfuncinfo(struct srcFunc sf, bool firstFrame, abi::FuncID calleeID);
-    bool isExportedRuntime(std::string name);
+    bool isExportedRuntime(gocpp::string name);
     bool elideWrapperCalling(abi::FuncID id);
-    extern gocpp::array<std::string, 10> gStatusStrings;
+    extern gocpp::array<gocpp::string, 10> gStatusStrings;
     void goroutineheader(struct g* gp);
     void tracebackothers(struct g* me);
     void tracebackHexdump(struct stack stk, struct stkframe* frame, uintptr_t bad);

@@ -188,7 +188,7 @@ namespace golang::png
 
     namespace rec
     {
-        void writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, std::string name);
+        void writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, gocpp::string name);
         void writeIHDR(struct encoder* e);
         void writePLTEAndTRNS(struct encoder* e, color::Palette p);
         std::tuple<int, struct gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b);

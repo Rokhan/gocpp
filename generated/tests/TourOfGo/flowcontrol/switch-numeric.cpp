@@ -25,7 +25,7 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Print("Roman Time"s);
+        mocklib::Print("Roman Time"_s);
         auto hour = 1 + (rec::Hour(gocpp::recv(mocklib::Date::Now())) % 12);
         //Go switch emulation
         {
@@ -46,43 +46,43 @@ namespace golang::main
             switch(conditionId)
             {
                 case 0:
-                    mocklib::Println("I"s);
+                    mocklib::Println("I"_s);
                     break;
                 case 1:
-                    mocklib::Println("II"s);
+                    mocklib::Println("II"_s);
                     break;
                 case 2:
-                    mocklib::Println("III"s);
+                    mocklib::Println("III"_s);
                     break;
                 case 3:
-                    mocklib::Println("IV"s);
+                    mocklib::Println("IV"_s);
                     break;
                 case 4:
-                    mocklib::Println("V"s);
+                    mocklib::Println("V"_s);
                     break;
                 case 5:
-                    mocklib::Println("VI"s);
+                    mocklib::Println("VI"_s);
                     break;
                 case 6:
-                    mocklib::Println("VII"s);
+                    mocklib::Println("VII"_s);
                     break;
                 case 7:
-                    mocklib::Println("VIII"s);
+                    mocklib::Println("VIII"_s);
                     break;
                 case 8:
-                    mocklib::Println("IX"s);
+                    mocklib::Println("IX"_s);
                     break;
                 case 9:
-                    mocklib::Println("X"s);
+                    mocklib::Println("X"_s);
                     break;
                 case 10:
-                    mocklib::Println("XI"s);
+                    mocklib::Println("XI"_s);
                     break;
                 case 11:
-                    mocklib::Println("XII"s);
+                    mocklib::Println("XII"_s);
                     break;
                 default:
-                    gocpp::panic("Should not happen"s);
+                    gocpp::panic("Should not happen"_s);
                     break;
             }
         }

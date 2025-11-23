@@ -98,7 +98,7 @@ namespace golang::runtime
     void initExceptionHandler()
     {
         stdcall2(_AddVectoredExceptionHandler, 1, abi::FuncPCABI0(exceptiontramp));
-        if(GOARCH == "386"s)
+        if(GOARCH == "386"_s)
         {
             stdcall1(_SetUnhandledExceptionFilter, abi::FuncPCABI0(lastcontinuetramp));
         }
@@ -116,7 +116,7 @@ namespace golang::runtime
     bool isAbort(struct context* r)
     {
         auto pc = rec::ip(gocpp::recv(r));
-        if(GOARCH == "386"s || GOARCH == "amd64"s || GOARCH == "arm"s)
+        if(GOARCH == "386"_s || GOARCH == "amd64"_s || GOARCH == "arm"_s)
         {
             pc--;
         }
@@ -193,7 +193,7 @@ namespace golang::runtime
 
     struct g* sigFetchG()
     {
-        if(GOARCH == "386"s)
+        if(GOARCH == "386"_s)
         {
             return sigFetchGSafe();
         }
@@ -235,7 +235,7 @@ namespace golang::runtime
                     fn = lastcontinuehandler;
                     break;
                 default:
-                    go_throw("unknown sigtramp callback"s);
+                    go_throw("unknown sigtramp callback"_s);
                     break;
             }
         }
@@ -382,7 +382,7 @@ namespace golang::runtime
         {
             return _EXCEPTION_CONTINUE_SEARCH;
         }
-        if(GOARCH == "arm64"s && info->exceptioncode == _EXCEPTION_ILLEGAL_INSTRUCTION && (rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r))))
+        if(GOARCH == "arm64"_s && info->exceptioncode == _EXCEPTION_ILLEGAL_INSTRUCTION && (rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r))))
         {
             return _EXCEPTION_CONTINUE_SEARCH;
         }
@@ -404,17 +404,17 @@ namespace golang::runtime
         g0->stack.lo = 0;
         g0->stackguard0 = g0->stack.lo + stackGuard;
         g0->stackguard1 = g0->stackguard0;
-        print("Exception "s, hex(info->exceptioncode), " "s, hex(info->exceptioninformation[0]), " "s, hex(info->exceptioninformation[1]), " "s, hex(rec::ip(gocpp::recv(r))), "\n"s);
-        print("PC="s, hex(rec::ip(gocpp::recv(r))), "\n"s);
+        print("Exception "_s, hex(info->exceptioncode), " "_s, hex(info->exceptioninformation[0]), " "_s, hex(info->exceptioninformation[1]), " "_s, hex(rec::ip(gocpp::recv(r))), "\n"_s);
+        print("PC="_s, hex(rec::ip(gocpp::recv(r))), "\n"_s);
         if(g0->m->incgo && gp == g0->m->g0 && g0->m->curg != nullptr)
         {
             if(iscgo)
             {
-                print("signal arrived during external code execution\n"s);
+                print("signal arrived during external code execution\n"_s);
             }
             gp = g0->m->curg;
         }
-        print("\n"s);
+        print("\n"_s);
         g0->m->throwing = throwTypeRuntime;
         rec::set(gocpp::recv(g0->m->caughtsig), gp);
         auto [level, gocpp_id_0, docrash] = gotraceback();
@@ -436,7 +436,7 @@ namespace golang::runtime
         auto gp = getg();
         if(! canpanic())
         {
-            go_throw("unexpected signal during runtime execution"s);
+            go_throw("unexpected signal during runtime execution"_s);
         }
         //Go switch emulation
         {
@@ -465,13 +465,13 @@ namespace golang::runtime
                     }
                     if(inUserArenaChunk(gp->sigcode1))
                     {
-                        print("accessed data from freed user arena "s, hex(gp->sigcode1), "\n"s);
+                        print("accessed data from freed user arena "_s, hex(gp->sigcode1), "\n"_s);
                     }
                     else
                     {
-                        print("unexpected fault address "s, hex(gp->sigcode1), "\n"s);
+                        print("unexpected fault address "_s, hex(gp->sigcode1), "\n"_s);
                     }
-                    go_throw("fault"s);
+                    go_throw("fault"_s);
                     break;
                 case 2:
                     panicdivide();
@@ -488,7 +488,7 @@ namespace golang::runtime
                     break;
             }
         }
-        go_throw("fault"s);
+        go_throw("fault"_s);
     }
 
     void initsig(bool preinit)
@@ -507,9 +507,9 @@ namespace golang::runtime
     {
     }
 
-    std::string signame(uint32_t sig)
+    gocpp::string signame(uint32_t sig)
     {
-        return ""s;
+        return ""_s;
     }
 
     //go:nosplit

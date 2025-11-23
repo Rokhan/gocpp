@@ -26,9 +26,9 @@ namespace golang::main
     gocpp::complex128 z = std::sqrt(- 5 + gocpp::complex128(0, 12));
     void main()
     {
-        mocklib::Printf("Type: %T Value: %v\n"s, ToBe, ToBe);
-        mocklib::Printf("Type: %T Value: %v\n"s, MaxInt, MaxInt);
-        mocklib::Printf("Type: %T Value: %v\n"s, z, z);
+        mocklib::Printf("Type: %T Value: %v\n"_s, ToBe, ToBe);
+        mocklib::Printf("Type: %T Value: %v\n"_s, MaxInt, MaxInt);
+        mocklib::Printf("Type: %T Value: %v\n"_s, z, z);
     }
 
 }

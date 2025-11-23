@@ -38,7 +38,7 @@ namespace golang::bytes
     // A nil argument is equivalent to an empty slice.
     bool Equal(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     {
-        return std::string(a) == std::string(b);
+        return gocpp::string(a) == gocpp::string(b);
     }
 
     // Compare returns an integer comparing two byte slices lexicographically.
@@ -108,7 +108,7 @@ namespace golang::bytes
     }
 
     // ContainsAny reports whether any of the UTF-8-encoded code points in chars are within b.
-    bool ContainsAny(gocpp::slice<unsigned char> b, std::string chars)
+    bool ContainsAny(gocpp::slice<unsigned char> b, gocpp::string chars)
     {
         return IndexAny(b, chars) >= 0;
     }
@@ -229,9 +229,9 @@ namespace golang::bytes
     // It returns the byte index of the first occurrence in s of any of the Unicode
     // code points in chars. It returns -1 if chars is empty or if there is no code
     // point in common.
-    int IndexAny(gocpp::slice<unsigned char> s, std::string chars)
+    int IndexAny(gocpp::slice<unsigned char> s, gocpp::string chars)
     {
-        if(chars == ""s)
+        if(chars == ""_s)
         {
             return - 1;
         }
@@ -296,7 +296,7 @@ namespace golang::bytes
             {
                 if(len(chars) == width)
                 {
-                    if(chars == std::string(r))
+                    if(chars == gocpp::string(r))
                     {
                         return i;
                     }
@@ -304,7 +304,7 @@ namespace golang::bytes
                 }
                 if(bytealg::MaxLen >= width)
                 {
-                    if(bytealg::IndexString(chars, std::string(r)) >= 0)
+                    if(bytealg::IndexString(chars, gocpp::string(r)) >= 0)
                     {
                         return i;
                     }
@@ -326,9 +326,9 @@ namespace golang::bytes
     // points. It returns the byte index of the last occurrence in s of any of
     // the Unicode code points in chars. It returns -1 if chars is empty or if
     // there is no code point in common.
-    int LastIndexAny(gocpp::slice<unsigned char> s, std::string chars)
+    int LastIndexAny(gocpp::slice<unsigned char> s, gocpp::string chars)
     {
-        if(chars == ""s)
+        if(chars == ""_s)
         {
             return - 1;
         }
@@ -403,7 +403,7 @@ namespace golang::bytes
             {
                 if(len(chars) == size)
                 {
-                    if(chars == std::string(r))
+                    if(chars == gocpp::string(r))
                     {
                         return i;
                     }
@@ -411,7 +411,7 @@ namespace golang::bytes
                 }
                 if(bytealg::MaxLen >= size)
                 {
-                    if(bytealg::IndexString(chars, std::string(r)) >= 0)
+                    if(bytealg::IndexString(chars, gocpp::string(r)) >= 0)
                     {
                         return i;
                     }
@@ -675,7 +675,7 @@ namespace golang::bytes
         {
             if(len(sep) >= maxInt / (len(s) - 1))
             {
-                gocpp::panic("bytes: Join output length overflow"s);
+                gocpp::panic("bytes: Join output length overflow"_s);
             }
             n += len(sep) * (len(s) - 1);
         }
@@ -683,7 +683,7 @@ namespace golang::bytes
         {
             if(len(v) > maxInt - n)
             {
-                gocpp::panic("bytes: Join output length overflow"s);
+                gocpp::panic("bytes: Join output length overflow"_s);
             }
             n += len(v);
         }
@@ -746,11 +746,11 @@ namespace golang::bytes
         }
         if(count < 0)
         {
-            gocpp::panic("bytes: negative Repeat count"s);
+            gocpp::panic("bytes: negative Repeat count"_s);
         }
         if(len(b) >= maxInt / count)
         {
-            gocpp::panic("bytes: Repeat output length overflow"s);
+            gocpp::panic("bytes: Repeat output length overflow"_s);
         }
         auto n = len(b) * count;
         if(len(b) == 0)
@@ -810,7 +810,7 @@ namespace golang::bytes
         {
             if(! hasLower)
             {
-                return append(gocpp::slice<unsigned char>(""s), s);
+                return append(gocpp::slice<unsigned char>(""_s), s);
             }
             auto b = bytealg::MakeNoZero(len(s));
             for(auto i = 0; i < len(s); i++)
@@ -846,7 +846,7 @@ namespace golang::bytes
         {
             if(! hasUpper)
             {
-                return append(gocpp::slice<unsigned char>(""s), s);
+                return append(gocpp::slice<unsigned char>(""_s), s);
             }
             auto b = bytealg::MakeNoZero(len(s));
             for(auto i = 0; i < len(s); i++)
@@ -1110,7 +1110,7 @@ namespace golang::bytes
     // is unused to avoid bounds checks in asciiSet.contains.
     // makeASCIISet creates a set of ASCII characters and reports whether all
     // characters in chars are ASCII.
-    std::tuple<bytes::asciiSet, bool> makeASCIISet(std::string chars)
+    std::tuple<bytes::asciiSet, bool> makeASCIISet(gocpp::string chars)
     {
         bytes::asciiSet as;
         bool ok;
@@ -1135,7 +1135,7 @@ namespace golang::bytes
     // containsRune is a simplified version of strings.ContainsRune
     // to avoid importing the strings package.
     // We avoid bytes.ContainsRune to avoid allocating a temporary copy of s.
-    bool containsRune(std::string s, gocpp::rune r)
+    bool containsRune(gocpp::string s, gocpp::rune r)
     {
         for(auto [gocpp_ignored, c] : s)
         {
@@ -1149,13 +1149,13 @@ namespace golang::bytes
 
     // Trim returns a subslice of s by slicing off all leading and
     // trailing UTF-8-encoded code points contained in cutset.
-    gocpp::slice<unsigned char> Trim(gocpp::slice<unsigned char> s, std::string cutset)
+    gocpp::slice<unsigned char> Trim(gocpp::slice<unsigned char> s, gocpp::string cutset)
     {
         if(len(s) == 0)
         {
             return nullptr;
         }
-        if(cutset == ""s)
+        if(cutset == ""_s)
         {
             return s;
         }
@@ -1172,13 +1172,13 @@ namespace golang::bytes
 
     // TrimLeft returns a subslice of s by slicing off all leading
     // UTF-8-encoded code points contained in cutset.
-    gocpp::slice<unsigned char> TrimLeft(gocpp::slice<unsigned char> s, std::string cutset)
+    gocpp::slice<unsigned char> TrimLeft(gocpp::slice<unsigned char> s, gocpp::string cutset)
     {
         if(len(s) == 0)
         {
             return nullptr;
         }
-        if(cutset == ""s)
+        if(cutset == ""_s)
         {
             return s;
         }
@@ -1223,7 +1223,7 @@ namespace golang::bytes
         return s;
     }
 
-    gocpp::slice<unsigned char> trimLeftUnicode(gocpp::slice<unsigned char> s, std::string cutset)
+    gocpp::slice<unsigned char> trimLeftUnicode(gocpp::slice<unsigned char> s, gocpp::string cutset)
     {
         for(; len(s) > 0; )
         {
@@ -1247,9 +1247,9 @@ namespace golang::bytes
 
     // TrimRight returns a subslice of s by slicing off all trailing
     // UTF-8-encoded code points that are contained in cutset.
-    gocpp::slice<unsigned char> TrimRight(gocpp::slice<unsigned char> s, std::string cutset)
+    gocpp::slice<unsigned char> TrimRight(gocpp::slice<unsigned char> s, gocpp::string cutset)
     {
-        if(len(s) == 0 || cutset == ""s)
+        if(len(s) == 0 || cutset == ""_s)
         {
             return s;
         }
@@ -1286,7 +1286,7 @@ namespace golang::bytes
         return s;
     }
 
-    gocpp::slice<unsigned char> trimRightUnicode(gocpp::slice<unsigned char> s, std::string cutset)
+    gocpp::slice<unsigned char> trimRightUnicode(gocpp::slice<unsigned char> s, gocpp::string cutset)
     {
         for(; len(s) > 0; )
         {

@@ -24,7 +24,7 @@ namespace golang::os
 
     // Expand replaces ${var} or $var in the string based on the mapping function.
     // For example, os.ExpandEnv(s) is equivalent to os.Expand(s, os.Getenv).
-    std::string Expand(std::string s, std::function<std::string (std::string _1)> mapping)
+    gocpp::string Expand(gocpp::string s, std::function<gocpp::string (gocpp::string _1)> mapping)
     {
         gocpp::slice<unsigned char> buf = {};
         auto i = 0;
@@ -38,11 +38,11 @@ namespace golang::os
                 }
                 buf = append(buf, s.make_slice(i, j));
                 auto [name, w] = getShellName(s.make_slice(j + 1));
-                if(name == ""s && w > 0)
+                if(name == ""_s && w > 0)
                 {
                 }
                 else
-                if(name == ""s)
+                if(name == ""_s)
                 {
                     buf = append(buf, s[j]);
                 }
@@ -58,13 +58,13 @@ namespace golang::os
         {
             return s;
         }
-        return std::string(buf) + s.make_slice(i);
+        return gocpp::string(buf) + s.make_slice(i);
     }
 
     // ExpandEnv replaces ${var} or $var in the string according to the values
     // of the current environment variables. References to undefined
     // variables are replaced by the empty string.
-    std::string ExpandEnv(std::string s)
+    gocpp::string ExpandEnv(gocpp::string s)
     {
         return Expand(s, Getenv);
     }
@@ -129,7 +129,7 @@ namespace golang::os
     // getShellName returns the name that begins the string and the number of bytes
     // consumed to extract it. If the name is enclosed in {}, it's part of a ${}
     // expansion and two more bytes are needed than the length of the name.
-    std::tuple<std::string, int> getShellName(std::string s)
+    std::tuple<gocpp::string, int> getShellName(gocpp::string s)
     {
         //Go switch emulation
         {
@@ -149,12 +149,12 @@ namespace golang::os
                         {
                             if(i == 1)
                             {
-                                return {""s, 2};
+                                return {""_s, 2};
                             }
                             return {s.make_slice(1, i), i + 1};
                         }
                     }
-                    return {""s, 1};
+                    return {""_s, 1};
                     break;
                 case 1:
                     return {s.make_slice(0, 1), 1};
@@ -172,7 +172,7 @@ namespace golang::os
     // Getenv retrieves the value of the environment variable named by the key.
     // It returns the value, which will be empty if the variable is not present.
     // To distinguish between an empty value and an unset value, use LookupEnv.
-    std::string Getenv(std::string key)
+    gocpp::string Getenv(gocpp::string key)
     {
         testlog::Getenv(key);
         auto [v, gocpp_id_0] = syscall::Getenv(key);
@@ -184,7 +184,7 @@ namespace golang::os
     // value (which may be empty) is returned and the boolean is true.
     // Otherwise the returned value will be empty and the boolean will
     // be false.
-    std::tuple<std::string, bool> LookupEnv(std::string key)
+    std::tuple<gocpp::string, bool> LookupEnv(gocpp::string key)
     {
         testlog::Getenv(key);
         return syscall::Getenv(key);
@@ -192,18 +192,18 @@ namespace golang::os
 
     // Setenv sets the value of the environment variable named by the key.
     // It returns an error, if any.
-    struct gocpp::error Setenv(std::string key, std::string value)
+    struct gocpp::error Setenv(gocpp::string key, gocpp::string value)
     {
         auto err = syscall::Setenv(key, value);
         if(err != nullptr)
         {
-            return NewSyscallError("setenv"s, err);
+            return NewSyscallError("setenv"_s, err);
         }
         return nullptr;
     }
 
     // Unsetenv unsets a single environment variable.
-    struct gocpp::error Unsetenv(std::string key)
+    struct gocpp::error Unsetenv(gocpp::string key)
     {
         return syscall::Unsetenv(key);
     }
@@ -216,7 +216,7 @@ namespace golang::os
 
     // Environ returns a copy of strings representing the environment,
     // in the form "key=value".
-    gocpp::slice<std::string> Environ()
+    gocpp::slice<gocpp::string> Environ()
     {
         return syscall::Environ();
     }

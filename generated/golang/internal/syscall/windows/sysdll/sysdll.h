@@ -11,8 +11,8 @@
 
 namespace golang::sysdll
 {
-    extern gocpp::map<std::string, bool> IsSystemDLL;
-    std::string Add(std::string dll);
+    extern gocpp::map<gocpp::string, bool> IsSystemDLL;
+    gocpp::string Add(gocpp::string dll);
 
     namespace rec
     {

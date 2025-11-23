@@ -12,8 +12,8 @@
 
 namespace golang::main
 {
-    std::tuple<std::string, int, gocpp::slice<std::string>> f1();
-    std::tuple<std::string, int, gocpp::array<std::string, 3>> f2();
+    std::tuple<gocpp::string, int, gocpp::slice<gocpp::string>> f1();
+    std::tuple<gocpp::string, int, gocpp::array<gocpp::string, 3>> f2();
     void main();
 
     namespace rec

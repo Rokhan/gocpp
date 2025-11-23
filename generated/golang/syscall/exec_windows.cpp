@@ -42,11 +42,11 @@ namespace golang::syscall
     //   - every double quote (") is escaped by back slash (\);
     //   - finally, s is wrapped with double quotes (arg -> "arg"),
     //     but only if there is space or tab inside s.
-    std::string EscapeArg(std::string s)
+    gocpp::string EscapeArg(gocpp::string s)
     {
         if(len(s) == 0)
         {
-            return """"s;
+            return """"_s;
         }
         for(auto i = 0; i < len(s); i++)
         {
@@ -66,7 +66,7 @@ namespace golang::syscall
                     case 3:
                         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(s) + 2);
                         b = appendEscapeArg(b, s);
-                        return std::string(b);
+                        return gocpp::string(b);
                         break;
                 }
             }
@@ -76,11 +76,11 @@ namespace golang::syscall
 
     // appendEscapeArg escapes the string s, as per escapeArg,
     // appends the result to b, and returns the updated slice.
-    gocpp::slice<unsigned char> appendEscapeArg(gocpp::slice<unsigned char> b, std::string s)
+    gocpp::slice<unsigned char> appendEscapeArg(gocpp::slice<unsigned char> b, gocpp::string s)
     {
         if(len(s) == 0)
         {
-            return append(b, """"s);
+            return append(b, """"_s);
         }
         auto needsBackslash = false;
         auto hasSpace = false;
@@ -163,7 +163,7 @@ namespace golang::syscall
 
     // makeCmdLine builds a command line out of args by escaping "special"
     // characters and joining the arguments with spaces.
-    std::string makeCmdLine(gocpp::slice<std::string> args)
+    gocpp::string makeCmdLine(gocpp::slice<gocpp::string> args)
     {
         gocpp::slice<unsigned char> b = {};
         for(auto [gocpp_ignored, v] : args)
@@ -174,7 +174,7 @@ namespace golang::syscall
             }
             b = appendEscapeArg(b, v);
         }
-        return std::string(b);
+        return gocpp::string(b);
     }
 
     // createEnvBlock converts an array of environment strings into
@@ -182,11 +182,11 @@ namespace golang::syscall
     // terminated strings followed by a nil.
     // Last bytes are two UCS-2 NULs, or four NUL bytes.
     // If any string contains a NUL, it returns (nil, EINVAL).
-    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<std::string> envv)
+    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<gocpp::string> envv)
     {
         if(len(envv) == 0)
         {
-            return {utf16::Encode(gocpp::slice<gocpp::rune>("\x00\x00"s)), nullptr};
+            return {utf16::Encode(gocpp::slice<gocpp::rune>("\x00\x00"_s)), nullptr};
         }
         int length = {};
         for(auto [gocpp_ignored, s] : envv)
@@ -223,15 +223,15 @@ namespace golang::syscall
     }
 
     // FullPath retrieves the full path of the specified file.
-    std::tuple<std::string, struct gocpp::error> FullPath(std::string name)
+    std::tuple<gocpp::string, struct gocpp::error> FullPath(gocpp::string name)
     {
-        std::string path;
+        gocpp::string path;
         struct gocpp::error err;
         uint16_t* p;
         std::tie(p, err) = UTF16PtrFromString(name);
         if(err != nullptr)
         {
-            return {""s, err};
+            return {""_s, err};
         }
         auto n = uint32_t(100);
         for(; ; )
@@ -240,7 +240,7 @@ namespace golang::syscall
             std::tie(n, err) = GetFullPathName(p, uint32_t(len(buf)), & buf[0], nullptr);
             if(err != nullptr)
             {
-                return {""s, err};
+                return {""_s, err};
             }
             if(n <= uint32_t(len(buf)))
             {
@@ -254,19 +254,19 @@ namespace golang::syscall
         return c == '\\' || c == '/';
     }
 
-    std::tuple<std::string, struct gocpp::error> normalizeDir(std::string dir)
+    std::tuple<gocpp::string, struct gocpp::error> normalizeDir(gocpp::string dir)
     {
-        std::string name;
+        gocpp::string name;
         struct gocpp::error err;
-        std::string ndir;
+        gocpp::string ndir;
         std::tie(ndir, err) = FullPath(dir);
         if(err != nullptr)
         {
-            return {""s, err};
+            return {""_s, err};
         }
         if(len(ndir) > 2 && isSlash(ndir[0]) && isSlash(ndir[1]))
         {
-            return {""s, go_EINVAL};
+            return {""_s, go_EINVAL};
         }
         return {ndir, nullptr};
     }
@@ -280,13 +280,13 @@ namespace golang::syscall
         return ch;
     }
 
-    std::tuple<std::string, struct gocpp::error> joinExeDirAndFName(std::string dir, std::string p)
+    std::tuple<gocpp::string, struct gocpp::error> joinExeDirAndFName(gocpp::string dir, gocpp::string p)
     {
-        std::string name;
+        gocpp::string name;
         struct gocpp::error err;
         if(len(p) == 0)
         {
-            return {""s, go_EINVAL};
+            return {""_s, go_EINVAL};
         }
         if(len(p) > 2 && isSlash(p[0]) && isSlash(p[1]))
         {
@@ -296,7 +296,7 @@ namespace golang::syscall
         {
             if(len(p) == 2)
             {
-                return {""s, go_EINVAL};
+                return {""_s, go_EINVAL};
             }
             if(isSlash(p[2]))
             {
@@ -307,11 +307,11 @@ namespace golang::syscall
                 auto [d, err] = normalizeDir(dir);
                 if(err != nullptr)
                 {
-                    return {""s, err};
+                    return {""_s, err};
                 }
                 if(volToUpper(int(p[0])) == volToUpper(int(d[0])))
                 {
-                    return FullPath(d + "\\"s + p.make_slice(2));
+                    return FullPath(d + "\\"_s + p.make_slice(2));
                 }
                 else
                 {
@@ -324,7 +324,7 @@ namespace golang::syscall
             auto [d, err] = normalizeDir(dir);
             if(err != nullptr)
             {
-                return {""s, err};
+                return {""_s, err};
             }
             if(isSlash(p[0]))
             {
@@ -332,7 +332,7 @@ namespace golang::syscall
             }
             else
             {
-                return FullPath(d + "\\"s + p);
+                return FullPath(d + "\\"_s + p);
             }
         }
     }
@@ -430,7 +430,7 @@ namespace golang::syscall
 
     ProcAttr zeroProcAttr;
     SysProcAttr zeroSysProcAttr;
-    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(std::string argv0, gocpp::slice<std::string> argv, struct ProcAttr* attr)
+    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, struct ProcAttr* attr)
     {
         gocpp::Defer defer;
         try
@@ -480,8 +480,8 @@ namespace golang::syscall
             {
                 return {0, 0, err};
             }
-            std::string cmdline = {};
-            if(sys->CmdLine != ""s)
+            gocpp::string cmdline = {};
+            if(sys->CmdLine != ""_s)
             {
                 cmdline = sys->CmdLine;
             }
@@ -602,7 +602,7 @@ namespace golang::syscall
         }
     }
 
-    struct gocpp::error Exec(std::string argv0, gocpp::slice<std::string> argv, gocpp::slice<std::string> envv)
+    struct gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv)
     {
         struct gocpp::error err;
         return go_EWINDOWS;

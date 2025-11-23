@@ -180,7 +180,7 @@ namespace golang::godebug
     // To disable that panic for access to an undocumented setting,
     // prefix the name with a #, as in godebug.New("#gofsystrace").
     // The # is a signal to New but not part of the key used in $GODEBUG.
-    struct Setting* New(std::string name)
+    struct Setting* New(gocpp::string name)
     {
         return gocpp::InitPtr<Setting>([=](auto& x) {
             x.name = name;
@@ -188,9 +188,9 @@ namespace golang::godebug
     }
 
     // Name returns the name of the setting.
-    std::string rec::Name(struct Setting* s)
+    gocpp::string rec::Name(struct Setting* s)
     {
-        if(s->name != ""s && s->name[0] == '#')
+        if(s->name != ""_s && s->name[0] == '#')
         {
             return s->name.make_slice(1);
         }
@@ -200,13 +200,13 @@ namespace golang::godebug
     // Undocumented reports whether this is an undocumented setting.
     bool rec::Undocumented(struct Setting* s)
     {
-        return s->name != ""s && s->name[0] == '#';
+        return s->name != ""_s && s->name[0] == '#';
     }
 
     // String returns a printable form for the setting: name=value.
-    std::string rec::String(struct Setting* s)
+    gocpp::string rec::String(struct Setting* s)
     {
-        return rec::Name(gocpp::recv(s)) + "="s + rec::Value(gocpp::recv(s));
+        return rec::Name(gocpp::recv(s)) + "="_s + rec::Value(gocpp::recv(s));
     }
 
     // IncNonDefault increments the non-default behavior counter
@@ -225,9 +225,9 @@ namespace golang::godebug
     {
         if(s->info == nullptr || s->info->Opaque)
         {
-            gocpp::panic("godebug: unexpected IncNonDefault of "s + s->name);
+            gocpp::panic("godebug: unexpected IncNonDefault of "_s + s->name);
         }
-        registerMetric("/godebug/non-default-behavior/"s + rec::Name(gocpp::recv(s)) + ":events"s, s->nonDefault.Load);
+        registerMetric("/godebug/non-default-behavior/"_s + rec::Name(gocpp::recv(s)) + ":events"_s, s->nonDefault.Load);
     }
 
     // cache is a cache of all the GODEBUG settings,
@@ -252,26 +252,26 @@ namespace golang::godebug
     // making Value efficient to call as frequently as needed.
     // Clients should therefore typically not attempt their own
     // caching of Value's result.
-    std::string rec::Value(struct Setting* s)
+    gocpp::string rec::Value(struct Setting* s)
     {
         rec::Do(gocpp::recv(s->once), [=]() mutable -> void
         {
             s->setting = lookup(rec::Name(gocpp::recv(s)));
             if(s->info == nullptr && ! rec::Undocumented(gocpp::recv(s)))
             {
-                gocpp::panic("godebug: Value of name not listed in godebugs.All: "s + s->name);
+                gocpp::panic("godebug: Value of name not listed in godebugs.All: "_s + s->name);
             }
         });
         auto v = *rec::Load<value>(gocpp::recv(s->value));
         if(v.bisect != nullptr && ! rec::Stack(gocpp::recv(v.bisect), & go_stderr))
         {
-            return ""s;
+            return ""_s;
         }
         return v.text;
     }
 
     // lookup returns the unique *setting value for the given name.
-    struct setting* lookup(std::string name)
+    struct setting* lookup(gocpp::string name)
     {
         if(auto [v, ok] = rec::Load(gocpp::recv(cache), name); ok)
         {
@@ -295,14 +295,14 @@ namespace golang::godebug
     // (due to use of os.Setenv, for example).
     //
     //go:linkname setUpdate
-    void setUpdate(std::function<void (std::string _1, std::string _2)> update)
+    void setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update)
     /* convertBlockStmt, nil block */;
 
     // registerMetric is provided by package runtime.
     // It forwards registrations to runtime/metrics.
     //
     //go:linkname registerMetric
-    void registerMetric(std::string name, std::function<uint64_t ()> read)
+    void registerMetric(gocpp::string name, std::function<uint64_t ()> read)
     /* convertBlockStmt, nil block */;
 
     // setNewIncNonDefault is provided by package runtime.
@@ -317,7 +317,7 @@ namespace golang::godebug
     // since it cannot import godebug.
     //
     //go:linkname setNewIncNonDefault
-    void setNewIncNonDefault(std::function<std::function<void ()> (std::string _1)> newIncNonDefault)
+    void setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault)
     /* convertBlockStmt, nil block */;
 
     void init()
@@ -326,7 +326,7 @@ namespace golang::godebug
         setNewIncNonDefault(newIncNonDefault);
     }
 
-    std::function<void ()> newIncNonDefault(std::string name)
+    std::function<void ()> newIncNonDefault(gocpp::string name)
     {
         auto s = New(name);
         rec::Value(gocpp::recv(s));
@@ -337,19 +337,19 @@ namespace golang::godebug
     // update records an updated GODEBUG setting.
     // def is the default GODEBUG setting for the running binary,
     // and env is the current value of the $GODEBUG environment variable.
-    void update(std::string def, std::string env)
+    void update(gocpp::string def, gocpp::string env)
     {
         gocpp::Defer defer;
         try
         {
             rec::Lock(gocpp::recv(updateMu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(updateMu)); });
-            auto did = gocpp::make(gocpp::Tag<gocpp::map<std::string, bool>>());
+            auto did = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
             parse(did, env);
             parse(did, def);
             rec::Range(gocpp::recv(cache), [=](go_any name, go_any s) mutable -> bool
             {
-                if(! did[gocpp::getValue<std::string>(name)])
+                if(! did[gocpp::getValue<gocpp::string>(name)])
                 {
                     rec::Store<value>(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
                 }
@@ -370,7 +370,7 @@ namespace golang::godebug
     // Each value v can also have the form v#pattern,
     // in which case the GODEBUG is only enabled for call stacks
     // matching pattern, for use with golang.org/x/tools/cmd/bisect.
-    void parse(gocpp::map<std::string, bool> did, std::string s)
+    void parse(gocpp::map<gocpp::string, bool> did, gocpp::string s)
     {
         auto end = len(s);
         auto eq = - 1;

@@ -15,7 +15,7 @@
 
 namespace golang::runtime
 {
-    gocpp::slice<unsigned char> bytes(std::string s);
+    gocpp::slice<unsigned char> bytes(gocpp::string s);
     extern gocpp::array<unsigned char, 512> printBacklog;
     extern int printBacklogIndex;
     void recordForPanic(gocpp::slice<unsigned char> b);
@@ -34,7 +34,7 @@ namespace golang::runtime
     void printhex(uint64_t v);
     void printpointer(unsafe::Pointer p);
     void printuintptr(uintptr_t p);
-    void printstring(std::string s);
+    void printstring(gocpp::string s);
     void printslice(gocpp::slice<unsigned char> s);
     void printeface(struct eface e);
     void printiface(struct iface i);

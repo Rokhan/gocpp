@@ -13,7 +13,7 @@
 
 namespace golang::syscall
 {
-    extern gocpp::array<std::string, 131> errors;
+    extern gocpp::array<gocpp::string, 131> errors;
 
     namespace rec
     {

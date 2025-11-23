@@ -26,10 +26,10 @@
 namespace golang::os
 {
     uint32_t syscallMode(golang::os::FileMode i);
-    struct gocpp::error chmod(std::string name, golang::os::FileMode mode);
-    struct gocpp::error Chown(std::string name, int uid, int gid);
-    struct gocpp::error Lchown(std::string name, int uid, int gid);
-    struct gocpp::error Chtimes(std::string name, mocklib::Date atime, mocklib::Date mtime);
+    struct gocpp::error chmod(gocpp::string name, golang::os::FileMode mode);
+    struct gocpp::error Chown(gocpp::string name, int uid, int gid);
+    struct gocpp::error Lchown(gocpp::string name, int uid, int gid);
+    struct gocpp::error Chtimes(gocpp::string name, mocklib::Date atime, mocklib::Date mtime);
     struct gocpp::error ignoringEINTR(std::function<struct gocpp::error ()> fn);
 
     namespace rec
@@ -47,7 +47,7 @@ namespace golang::os
         struct gocpp::error setDeadline(struct File* f, mocklib::Date t);
         struct gocpp::error setReadDeadline(struct File* f, mocklib::Date t);
         struct gocpp::error setWriteDeadline(struct File* f, mocklib::Date t);
-        struct gocpp::error checkValid(struct File* f, std::string op);
+        struct gocpp::error checkValid(struct File* f, gocpp::string op);
     }
 }
 

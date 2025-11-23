@@ -23,7 +23,7 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Println("My favorite number is"s, mocklib::Intn(10));
+        mocklib::Println("My favorite number is"_s, mocklib::Intn(10));
     }
 
 }

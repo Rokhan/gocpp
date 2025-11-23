@@ -345,7 +345,7 @@ namespace golang::runtime
         {
             auto heapGoal = rec::heapGoal(gocpp::recv(c));
             auto assistRatio = rec::Load(gocpp::recv(c->assistWorkPerByte));
-            print("pacer: assist ratio="s, assistRatio, " (scan "s, rec::Load(gocpp::recv(gcController.heapScan)) >> 20, " MB in "s, work.initialHeapLive >> 20, "->"s, heapGoal >> 20, " MB)"s, " workers="s, dedicatedMarkWorkersNeeded, "+"s, c->fractionalUtilizationGoal, "\n"s);
+            print("pacer: assist ratio="_s, assistRatio, " (scan "_s, rec::Load(gocpp::recv(gcController.heapScan)) >> 20, " MB in "_s, work.initialHeapLive >> 20, "->"_s, heapGoal >> 20, " MB)"_s, " workers="_s, dedicatedMarkWorkersNeeded, "+"_s, c->fractionalUtilizationGoal, "\n"_s);
         }
     }
 
@@ -459,10 +459,10 @@ namespace golang::runtime
         {
             printlock();
             auto goal = gcGoalUtilization * 100;
-            print("pacer: "s, int(utilization * 100), "% CPU ("s, int(goal), " exp.) for "s);
-            print(rec::Load(gocpp::recv(c->heapScanWork)), "+"s, rec::Load(gocpp::recv(c->stackScanWork)), "+"s, rec::Load(gocpp::recv(c->globalsScanWork)), " B work ("s, c->lastHeapScan + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan)), " B exp.) "s);
+            print("pacer: "_s, int(utilization * 100), "% CPU ("_s, int(goal), " exp.) for "_s);
+            print(rec::Load(gocpp::recv(c->heapScanWork)), "+"_s, rec::Load(gocpp::recv(c->stackScanWork)), "+"_s, rec::Load(gocpp::recv(c->globalsScanWork)), " B work ("_s, c->lastHeapScan + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan)), " B exp.) "_s);
             auto live = rec::Load(gocpp::recv(c->heapLive));
-            print("in "s, c->triggered, " B -> "s, live, " B (∆goal "s, int64_t(live) - int64_t(c->lastHeapGoal), ", cons/mark "s, oldConsMark, ")"s);
+            print("in "_s, c->triggered, " B -> "_s, live, " B (∆goal "_s, int64_t(live) - int64_t(c->lastHeapGoal), ", cons/mark "_s, oldConsMark, ")"_s);
             println();
             printunlock();
         }
@@ -514,7 +514,7 @@ namespace golang::runtime
     {
         if(gcBlackenEnabled == 0)
         {
-            go_throw("gcControllerState.findRunnable: blackening not enabled"s);
+            go_throw("gcControllerState.findRunnable: blackening not enabled"_s);
         }
         if(now == 0)
         {
@@ -629,7 +629,7 @@ namespace golang::runtime
                     rec::removeIdleMarkWorker(gocpp::recv(c));
                     break;
                 default:
-                    go_throw("markWorkerStop: unknown mark worker mode"s);
+                    go_throw("markWorkerStop: unknown mark worker mode"_s);
                     break;
             }
         }
@@ -836,9 +836,9 @@ namespace golang::runtime
         trigger = gocpp::min(trigger, maxTrigger);
         if(trigger > goal)
         {
-            print("trigger="s, trigger, " heapGoal="s, goal, "\n"s);
-            print("minTrigger="s, minTrigger, " maxTrigger="s, maxTrigger, "\n"s);
-            go_throw("produced a trigger greater than the heap goal"s);
+            print("trigger="_s, trigger, " heapGoal="_s, goal, "\n"_s);
+            print("minTrigger="_s, minTrigger, " maxTrigger="_s, maxTrigger, "\n"_s);
+            go_throw("produced a trigger greater than the heap goal"_s);
         }
         return {trigger, goal};
     }
@@ -927,8 +927,8 @@ namespace golang::runtime
 
     int32_t readGOGC()
     {
-        auto p = gogetenv("GOGC"s);
-        if(p == "off"s)
+        auto p = gogetenv("GOGC"_s);
+        if(p == "off"_s)
         {
             return - 1;
         }
@@ -978,16 +978,16 @@ namespace golang::runtime
 
     int64_t readGOMEMLIMIT()
     {
-        auto p = gogetenv("GOMEMLIMIT"s);
-        if(p == ""s || p == "off"s)
+        auto p = gogetenv("GOMEMLIMIT"_s);
+        if(p == ""_s || p == "off"_s)
         {
             return maxInt64;
         }
         auto [n, ok] = parseByteCount(p);
         if(! ok)
         {
-            print("GOMEMLIMIT="s, p, "\n"s);
-            go_throw("malformed GOMEMLIMIT; see `go doc runtime/debug.SetMemoryLimit`"s);
+            print("GOMEMLIMIT="_s, p, "\n"_s);
+            go_throw("malformed GOMEMLIMIT; see `go doc runtime/debug.SetMemoryLimit`"_s);
         }
         return n;
     }
@@ -1014,8 +1014,8 @@ namespace golang::runtime
             }
             if(n < 0)
             {
-                print("n="s, n, " max="s, max, "\n"s);
-                go_throw("negative idle mark workers"s);
+                print("n="_s, n, " max="_s, max, "\n"_s);
+                go_throw("negative idle mark workers"_s);
             }
             auto go_new = uint64_t(uint32_t(n + 1)) | (uint64_t(max) << 32);
             if(rec::CompareAndSwap(gocpp::recv(c->idleMarkWorkers), old, go_new))
@@ -1049,8 +1049,8 @@ namespace golang::runtime
             auto [n, max] = std::tuple{int32_t(old & uint64_t(~ uint32_t(0))), int32_t(old >> 32)};
             if(n - 1 < 0)
             {
-                print("n="s, n, " max="s, max, "\n"s);
-                go_throw("negative idle mark workers"s);
+                print("n="_s, n, " max="_s, max, "\n"_s);
+                go_throw("negative idle mark workers"_s);
             }
             auto go_new = uint64_t(uint32_t(n - 1)) | (uint64_t(max) << 32);
             if(rec::CompareAndSwap(gocpp::recv(c->idleMarkWorkers), old, go_new))
@@ -1073,8 +1073,8 @@ namespace golang::runtime
             auto n = int32_t(old & uint64_t(~ uint32_t(0)));
             if(n < 0)
             {
-                print("n="s, n, " max="s, max, "\n"s);
-                go_throw("negative idle mark workers"s);
+                print("n="_s, n, " max="_s, max, "\n"_s);
+                go_throw("negative idle mark workers"_s);
             }
             auto go_new = uint64_t(uint32_t(n)) | (uint64_t(max) << 32);
             if(rec::CompareAndSwap(gocpp::recv(c->idleMarkWorkers), old, go_new))

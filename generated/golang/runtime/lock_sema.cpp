@@ -73,7 +73,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp->m->locks < 0)
         {
-            go_throw("runtime·lock: lock count"s);
+            go_throw("runtime·lock: lock count"_s);
         }
         gp->m->locks++;
         if(atomic::Casuintptr(& l->key, 0, locked))
@@ -178,7 +178,7 @@ namespace golang::runtime
         gp->m->locks--;
         if(gp->m->locks < 0)
         {
-            go_throw("runtime·unlock: lock count"s);
+            go_throw("runtime·unlock: lock count"_s);
         }
         if(gp->m->locks == 0 && gp->preempt)
         {
@@ -213,7 +213,7 @@ namespace golang::runtime
                 case 0:
                     break;
                 case 1:
-                    go_throw("notewakeup - double wakeup"s);
+                    go_throw("notewakeup - double wakeup"_s);
                     break;
                 default:
                     semawakeup((m*)(unsafe::Pointer(v)));
@@ -227,14 +227,14 @@ namespace golang::runtime
         auto gp = getg();
         if(gp != gp->m->g0)
         {
-            go_throw("notesleep not on g0"s);
+            go_throw("notesleep not on g0"_s);
         }
         semacreate(gp->m);
         if(! atomic::Casuintptr(& n->key, 0, uintptr_t(unsafe::Pointer(gp->m))))
         {
             if(n->key != locked)
             {
-                go_throw("notesleep - waitm out of sync"s);
+                go_throw("notesleep - waitm out of sync"_s);
             }
             return;
         }
@@ -264,7 +264,7 @@ namespace golang::runtime
         {
             if(n->key != locked)
             {
-                go_throw("notetsleep - waitm out of sync"s);
+                go_throw("notetsleep - waitm out of sync"_s);
             }
             return true;
         }
@@ -332,13 +332,13 @@ namespace golang::runtime
                         gp->m->blocked = true;
                         if(semasleep(- 1) < 0)
                         {
-                            go_throw("runtime: unable to acquire - semaphore out of sync"s);
+                            go_throw("runtime: unable to acquire - semaphore out of sync"_s);
                         }
                         gp->m->blocked = false;
                         return true;
                         break;
                     default:
-                        go_throw("runtime: unexpected waitm - semaphore out of sync"s);
+                        go_throw("runtime: unexpected waitm - semaphore out of sync"_s);
                         break;
                 }
             }
@@ -350,7 +350,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp != gp->m->g0)
         {
-            go_throw("notetsleep not on g0"s);
+            go_throw("notetsleep not on g0"_s);
         }
         semacreate(gp->m);
         return notetsleep_internal(n, ns, nullptr, 0);
@@ -363,7 +363,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp == gp->m->g0)
         {
-            go_throw("notetsleepg on g0"s);
+            go_throw("notetsleepg on g0"_s);
         }
         semacreate(gp->m);
         entersyscallblock();

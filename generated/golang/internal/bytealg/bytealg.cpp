@@ -83,7 +83,7 @@ namespace golang::bytealg
         {
             h = h * PrimeRK + uint32_t(s[i]);
         }
-        if(h == hashss && std::string(s.make_slice(0, n)) == std::string(sep))
+        if(h == hashss && gocpp::string(s.make_slice(0, n)) == gocpp::string(sep))
         {
             return 0;
         }
@@ -93,7 +93,7 @@ namespace golang::bytealg
             h += uint32_t(s[i]);
             h -= pow * uint32_t(s[i - n]);
             i++;
-            if(h == hashss && std::string(s.make_slice(i - n, i)) == std::string(sep))
+            if(h == hashss && gocpp::string(s.make_slice(i - n, i)) == gocpp::string(sep))
             {
                 return i - n;
             }
@@ -114,7 +114,7 @@ namespace golang::bytealg
         {
             h = h * PrimeRK + uint32_t(s[i]);
         }
-        if(h == hashss && std::string(s.make_slice(last)) == std::string(sep))
+        if(h == hashss && gocpp::string(s.make_slice(last)) == gocpp::string(sep))
         {
             return last;
         }
@@ -123,7 +123,7 @@ namespace golang::bytealg
             h *= PrimeRK;
             h += uint32_t(s[i]);
             h -= pow * uint32_t(s[i + n]);
-            if(h == hashss && std::string(s.make_slice(i, i + n)) == std::string(sep))
+            if(h == hashss && gocpp::string(s.make_slice(i, i + n)) == gocpp::string(sep))
             {
                 return i;
             }

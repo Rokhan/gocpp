@@ -125,9 +125,9 @@ namespace golang::runtime
     {
     }
 
-    std::string rec::Error(struct TypeAssertionError* e)
+    gocpp::string rec::Error(struct TypeAssertionError* e)
     {
-        auto inter = "interface"s;
+        auto inter = "interface"_s;
         if(e->_interface != nullptr)
         {
             inter = rec::string(gocpp::recv(toRType(e->_interface)));
@@ -135,26 +135,26 @@ namespace golang::runtime
         auto as = rec::string(gocpp::recv(toRType(e->asserted)));
         if(e->concrete == nullptr)
         {
-            return "interface conversion: "s + inter + " is nil, not "s + as;
+            return "interface conversion: "_s + inter + " is nil, not "_s + as;
         }
         auto cs = rec::string(gocpp::recv(toRType(e->concrete)));
-        if(e->missingMethod == ""s)
+        if(e->missingMethod == ""_s)
         {
-            auto msg = "interface conversion: "s + inter + " is "s + cs + ", not "s + as;
+            auto msg = "interface conversion: "_s + inter + " is "_s + cs + ", not "_s + as;
             if(cs == as)
             {
                 if(rec::pkgpath(gocpp::recv(toRType(e->concrete))) != rec::pkgpath(gocpp::recv(toRType(e->asserted))))
                 {
-                    msg += " (types from different packages)"s;
+                    msg += " (types from different packages)"_s;
                 }
                 else
                 {
-                    msg += " (types from different scopes)"s;
+                    msg += " (types from different scopes)"_s;
                 }
             }
             return msg;
         }
-        return "interface conversion: "s + cs + " is not "s + as + ": missing method "s + e->missingMethod;
+        return "interface conversion: "_s + cs + " is not "_s + as + ": missing method "_s + e->missingMethod;
     }
 
     // itoa converts val to a decimal representation. The result is
@@ -180,9 +180,9 @@ namespace golang::runtime
     {
     }
 
-    std::string rec::Error(golang::runtime::errorString e)
+    gocpp::string rec::Error(golang::runtime::errorString e)
     {
-        return "runtime error: "s + std::string(e);
+        return "runtime error: "_s + gocpp::string(e);
     }
 
     
@@ -221,9 +221,9 @@ namespace golang::runtime
     {
     }
 
-    std::string rec::Error(struct errorAddressString e)
+    gocpp::string rec::Error(struct errorAddressString e)
     {
-        return "runtime error: "s + e.msg;
+        return "runtime error: "_s + e.msg;
     }
 
     // Addr returns the memory address where a fault occurred.
@@ -243,9 +243,9 @@ namespace golang::runtime
     {
     }
 
-    std::string rec::Error(golang::runtime::plainError e)
+    gocpp::string rec::Error(golang::runtime::plainError e)
     {
-        return std::string(e);
+        return gocpp::string(e);
     }
 
     // A boundsError represents an indexing or slicing operation gone wrong.
@@ -290,27 +290,27 @@ namespace golang::runtime
     // boundsErrorFmts provide error text for various out-of-bounds panics.
     // Note: if you change these strings, you should adjust the size of the buffer
     // in boundsError.Error below as well.
-    gocpp::array<std::string, 9> boundsErrorFmts = gocpp::Init<gocpp::array<std::string, 9>>([](auto& x) {
-        x[boundsIndex] = "index out of range [%x] with length %y"s;
-        x[boundsSliceAlen] = "slice bounds out of range [:%x] with length %y"s;
-        x[boundsSliceAcap] = "slice bounds out of range [:%x] with capacity %y"s;
-        x[boundsSliceB] = "slice bounds out of range [%x:%y]"s;
-        x[boundsSlice3Alen] = "slice bounds out of range [::%x] with length %y"s;
-        x[boundsSlice3Acap] = "slice bounds out of range [::%x] with capacity %y"s;
-        x[boundsSlice3B] = "slice bounds out of range [:%x:%y]"s;
-        x[boundsSlice3C] = "slice bounds out of range [%x:%y:]"s;
-        x[boundsConvert] = "cannot convert slice with length %y to array or pointer to array with length %x"s;
+    gocpp::array<gocpp::string, 9> boundsErrorFmts = gocpp::Init<gocpp::array<gocpp::string, 9>>([](auto& x) {
+        x[boundsIndex] = "index out of range [%x] with length %y"_s;
+        x[boundsSliceAlen] = "slice bounds out of range [:%x] with length %y"_s;
+        x[boundsSliceAcap] = "slice bounds out of range [:%x] with capacity %y"_s;
+        x[boundsSliceB] = "slice bounds out of range [%x:%y]"_s;
+        x[boundsSlice3Alen] = "slice bounds out of range [::%x] with length %y"_s;
+        x[boundsSlice3Acap] = "slice bounds out of range [::%x] with capacity %y"_s;
+        x[boundsSlice3B] = "slice bounds out of range [:%x:%y]"_s;
+        x[boundsSlice3C] = "slice bounds out of range [%x:%y:]"_s;
+        x[boundsConvert] = "cannot convert slice with length %y to array or pointer to array with length %x"_s;
     });
     // boundsNegErrorFmts are overriding formats if x is negative. In this case there's no need to report y.
-    gocpp::array<std::string, 8> boundsNegErrorFmts = gocpp::Init<gocpp::array<std::string, 8>>([](auto& x) {
-        x[boundsIndex] = "index out of range [%x]"s;
-        x[boundsSliceAlen] = "slice bounds out of range [:%x]"s;
-        x[boundsSliceAcap] = "slice bounds out of range [:%x]"s;
-        x[boundsSliceB] = "slice bounds out of range [%x:]"s;
-        x[boundsSlice3Alen] = "slice bounds out of range [::%x]"s;
-        x[boundsSlice3Acap] = "slice bounds out of range [::%x]"s;
-        x[boundsSlice3B] = "slice bounds out of range [:%x:]"s;
-        x[boundsSlice3C] = "slice bounds out of range [%x::]"s;
+    gocpp::array<gocpp::string, 8> boundsNegErrorFmts = gocpp::Init<gocpp::array<gocpp::string, 8>>([](auto& x) {
+        x[boundsIndex] = "index out of range [%x]"_s;
+        x[boundsSliceAlen] = "slice bounds out of range [:%x]"_s;
+        x[boundsSliceAcap] = "slice bounds out of range [:%x]"_s;
+        x[boundsSliceB] = "slice bounds out of range [%x:]"_s;
+        x[boundsSlice3Alen] = "slice bounds out of range [::%x]"_s;
+        x[boundsSlice3Acap] = "slice bounds out of range [::%x]"_s;
+        x[boundsSlice3B] = "slice bounds out of range [:%x:]"_s;
+        x[boundsSlice3C] = "slice bounds out of range [%x::]"_s;
     });
     void rec::RuntimeError(struct boundsError e)
     {
@@ -328,7 +328,7 @@ namespace golang::runtime
         return b;
     }
 
-    std::string rec::Error(struct boundsError e)
+    gocpp::string rec::Error(struct boundsError e)
     {
         auto fmt = boundsErrorFmts[e.code];
         if(e.go_signed && e.x < 0)
@@ -336,7 +336,7 @@ namespace golang::runtime
             fmt = boundsNegErrorFmts[e.code];
         }
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 100);
-        b = append(b, "runtime error: "s);
+        b = append(b, "runtime error: "_s);
         for(auto i = 0; i < len(fmt); i++)
         {
             auto c = fmt[i];
@@ -363,7 +363,7 @@ namespace golang::runtime
                 }
             }
         }
-        return std::string(b);
+        return gocpp::string(b);
     }
 
     
@@ -391,19 +391,19 @@ namespace golang::runtime
     }
 
     template<typename T, typename StoreT>
-    std::string stringer::stringerImpl<T, StoreT>::vString()
+    gocpp::string stringer::stringerImpl<T, StoreT>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
 
     namespace rec
     {
-        std::string String(const gocpp::PtrRecv<struct stringer, false>& self)
+        gocpp::string String(const gocpp::PtrRecv<struct stringer, false>& self)
         {
             return self.ptr->value->vString();
         }
 
-        std::string String(const gocpp::ObjRecv<struct stringer>& self)
+        gocpp::string String(const gocpp::ObjRecv<struct stringer>& self)
         {
             return self.obj.value->vString();
         }
@@ -440,13 +440,13 @@ namespace golang::runtime
             else if(gocpp_id_0 == typeid(double)) { conditionId = 14; }
             else if(gocpp_id_0 == typeid(gocpp::complex64)) { conditionId = 15; }
             else if(gocpp_id_0 == typeid(gocpp::complex128)) { conditionId = 16; }
-            else if(gocpp_id_0 == typeid(std::string)) { conditionId = 17; }
+            else if(gocpp_id_0 == typeid(gocpp::string)) { conditionId = 17; }
             switch(conditionId)
             {
                 case 0:
                 {
                     untyped nil v = gocpp::any_cast<untyped nil>(i);
-                    print("nil"s);
+                    print("nil"_s);
                     break;
                 }
                 case 1:
@@ -547,7 +547,7 @@ namespace golang::runtime
                 }
                 case 17:
                 {
-                    std::string v = gocpp::any_cast<std::string>(i);
+                    gocpp::string v = gocpp::any_cast<gocpp::string>(i);
                     print(v);
                     break;
                 }
@@ -589,49 +589,49 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    print(typestring, "(""s, *(std::string*)(eface->data), "")"s);
+                    print(typestring, "(""_s, *(gocpp::string*)(eface->data), "")"_s);
                     break;
                 case 1:
-                    print(typestring, "("s, *(bool*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(bool*)(eface->data), ")"_s);
                     break;
                 case 2:
-                    print(typestring, "("s, *(int*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(int*)(eface->data), ")"_s);
                     break;
                 case 3:
-                    print(typestring, "("s, *(int8_t*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(int8_t*)(eface->data), ")"_s);
                     break;
                 case 4:
-                    print(typestring, "("s, *(int16_t*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(int16_t*)(eface->data), ")"_s);
                     break;
                 case 5:
-                    print(typestring, "("s, *(int32_t*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(int32_t*)(eface->data), ")"_s);
                     break;
                 case 6:
-                    print(typestring, "("s, *(int64_t*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(int64_t*)(eface->data), ")"_s);
                     break;
                 case 7:
-                    print(typestring, "("s, *(unsigned int*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(unsigned int*)(eface->data), ")"_s);
                     break;
                 case 8:
-                    print(typestring, "("s, *(uint8_t*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(uint8_t*)(eface->data), ")"_s);
                     break;
                 case 9:
-                    print(typestring, "("s, *(uint16_t*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(uint16_t*)(eface->data), ")"_s);
                     break;
                 case 10:
-                    print(typestring, "("s, *(uint32_t*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(uint32_t*)(eface->data), ")"_s);
                     break;
                 case 11:
-                    print(typestring, "("s, *(uint64_t*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(uint64_t*)(eface->data), ")"_s);
                     break;
                 case 12:
-                    print(typestring, "("s, *(uintptr_t*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(uintptr_t*)(eface->data), ")"_s);
                     break;
                 case 13:
-                    print(typestring, "("s, *(float*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(float*)(eface->data), ")"_s);
                     break;
                 case 14:
-                    print(typestring, "("s, *(double*)(eface->data), ")"s);
+                    print(typestring, "("_s, *(double*)(eface->data), ")"_s);
                     break;
                 case 15:
                     print(typestring, *(gocpp::complex64*)(eface->data));
@@ -640,7 +640,7 @@ namespace golang::runtime
                     print(typestring, *(gocpp::complex128*)(eface->data));
                     break;
                 default:
-                    print("("s, typestring, ") "s, eface->data);
+                    print("("_s, typestring, ") "_s, eface->data);
                     break;
             }
         }
@@ -657,26 +657,26 @@ namespace golang::runtime
         auto i = bytealg::IndexByteString(name, '(');
         if(i < 0)
         {
-            go_throw("panicwrap: no ( in "s + name);
+            go_throw("panicwrap: no ( in "_s + name);
         }
         auto pkg = name.make_slice(0, i - 1);
-        if(i + 2 >= len(name) || name.make_slice(i - 1, i + 2) != ".(*"s)
+        if(i + 2 >= len(name) || name.make_slice(i - 1, i + 2) != ".(*"_s)
         {
-            go_throw("panicwrap: unexpected string after package name: "s + name);
+            go_throw("panicwrap: unexpected string after package name: "_s + name);
         }
         name = name.make_slice(i + 2);
         i = bytealg::IndexByteString(name, ')');
         if(i < 0)
         {
-            go_throw("panicwrap: no ) in "s + name);
+            go_throw("panicwrap: no ) in "_s + name);
         }
-        if(i + 2 >= len(name) || name.make_slice(i, i + 2) != ")."s)
+        if(i + 2 >= len(name) || name.make_slice(i, i + 2) != ")."_s)
         {
-            go_throw("panicwrap: unexpected string after type name: "s + name);
+            go_throw("panicwrap: unexpected string after type name: "_s + name);
         }
         auto typ = name.make_slice(0, i);
         auto meth = name.make_slice(i + 2);
-        gocpp::panic(plainError("value method "s + pkg + "."s + typ + "."s + meth + " called using nil *"s + typ + " pointer"s));
+        gocpp::panic(plainError("value method "_s + pkg + "."_s + typ + "."_s + meth + " called using nil *"_s + typ + " pointer"_s));
     }
 
 }

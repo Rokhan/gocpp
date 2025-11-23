@@ -31,7 +31,7 @@ namespace golang::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct floatInfo& value);
-    std::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize);
+    gocpp::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize);
     gocpp::slice<unsigned char> AppendFloat(gocpp::slice<unsigned char> dst, double f, unsigned char fmt, int prec, int bitSize);
     gocpp::slice<unsigned char> genericFtoa(gocpp::slice<unsigned char> dst, double val, unsigned char fmt, int prec, int bitSize);
     gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt);

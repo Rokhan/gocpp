@@ -289,35 +289,35 @@ namespace golang::runtime
     {
         if(class_to_size[_TinySizeClass] != _TinySize)
         {
-            go_throw("bad TinySizeClass"s);
+            go_throw("bad TinySizeClass"_s);
         }
         if(heapArenaBitmapWords & (heapArenaBitmapWords - 1) != 0)
         {
-            go_throw("heapArenaBitmapWords not a power of 2"s);
+            go_throw("heapArenaBitmapWords not a power of 2"_s);
         }
         if(physPageSize == 0)
         {
-            go_throw("failed to get system page size"s);
+            go_throw("failed to get system page size"_s);
         }
         if(physPageSize > maxPhysPageSize)
         {
-            print("system page size ("s, physPageSize, ") is larger than maximum page size ("s, maxPhysPageSize, ")\n"s);
-            go_throw("bad system page size"s);
+            print("system page size ("_s, physPageSize, ") is larger than maximum page size ("_s, maxPhysPageSize, ")\n"_s);
+            go_throw("bad system page size"_s);
         }
         if(physPageSize < minPhysPageSize)
         {
-            print("system page size ("s, physPageSize, ") is smaller than minimum page size ("s, minPhysPageSize, ")\n"s);
-            go_throw("bad system page size"s);
+            print("system page size ("_s, physPageSize, ") is smaller than minimum page size ("_s, minPhysPageSize, ")\n"_s);
+            go_throw("bad system page size"_s);
         }
         if(physPageSize & (physPageSize - 1) != 0)
         {
-            print("system page size ("s, physPageSize, ") must be a power of 2\n"s);
-            go_throw("bad system page size"s);
+            print("system page size ("_s, physPageSize, ") must be a power of 2\n"_s);
+            go_throw("bad system page size"_s);
         }
         if(physHugePageSize & (physHugePageSize - 1) != 0)
         {
-            print("system huge page size ("s, physHugePageSize, ") must be a power of 2\n"s);
-            go_throw("bad system huge page size"s);
+            print("system huge page size ("_s, physHugePageSize, ") must be a power of 2\n"_s);
+            go_throw("bad system huge page size"_s);
         }
         if(physHugePageSize > maxPhysHugePageSize)
         {
@@ -332,13 +332,13 @@ namespace golang::runtime
         }
         if(pagesPerArena % pagesPerSpanRoot != 0)
         {
-            print("pagesPerArena ("s, pagesPerArena, ") is not divisible by pagesPerSpanRoot ("s, pagesPerSpanRoot, ")\n"s);
-            go_throw("bad pagesPerSpanRoot"s);
+            print("pagesPerArena ("_s, pagesPerArena, ") is not divisible by pagesPerSpanRoot ("_s, pagesPerSpanRoot, ")\n"_s);
+            go_throw("bad pagesPerSpanRoot"_s);
         }
         if(pagesPerArena % pagesPerReclaimerChunk != 0)
         {
-            print("pagesPerArena ("s, pagesPerArena, ") is not divisible by pagesPerReclaimerChunk ("s, pagesPerReclaimerChunk, ")\n"s);
-            go_throw("bad pagesPerReclaimerChunk"s);
+            print("pagesPerArena ("_s, pagesPerArena, ") is not divisible by pagesPerReclaimerChunk ("_s, pagesPerReclaimerChunk, ")\n"_s);
+            go_throw("bad pagesPerReclaimerChunk"_s);
         }
         if(goexperiment::AllocHeaders)
         {
@@ -353,16 +353,16 @@ namespace golang::runtime
             }
             if(! minSizeForMallocHeaderIsSizeClass)
             {
-                go_throw("min size of malloc header is not a size class boundary"s);
+                go_throw("min size of malloc header is not a size class boundary"_s);
             }
             if(minSizeForMallocHeader / goarch::PtrSize > 8 * goarch::PtrSize)
             {
-                go_throw("max pointer/scan bitmap size for headerless objects is too large"s);
+                go_throw("max pointer/scan bitmap size for headerless objects is too large"_s);
             }
         }
         if(minTagBits > taggedPointerBits)
         {
-            go_throw("taggedPointerbits too small"s);
+            go_throw("taggedPointerbits too small"_s);
         }
         rec::init(gocpp::recv(mheap_));
         mcache0 = allocmcache();
@@ -384,9 +384,9 @@ namespace golang::runtime
                 {
                     int conditionId = -1;
                     if(raceenabled) { conditionId = 0; }
-                    else if(GOARCH == "arm64"s && GOOS == "ios"s) { conditionId = 1; }
-                    else if(GOARCH == "arm64"s) { conditionId = 2; }
-                    else if(GOOS == "aix"s) { conditionId = 3; }
+                    else if(GOARCH == "arm64"_s && GOOS == "ios"_s) { conditionId = 1; }
+                    else if(GOARCH == "arm64"_s) { conditionId = 2; }
+                    else if(GOOS == "aix"_s) { conditionId = 3; }
                     switch(conditionId)
                     {
                         case 0:
@@ -537,7 +537,7 @@ namespace golang::runtime
         {
             if(raceenabled)
             {
-                go_throw("too many address space collisions for -race mode"s);
+                go_throw("too many address space collisions for -race mode"_s);
             }
             std::tie(v, size) = sysReserveAligned(nullptr, n, heapArenaBytes);
             if(v == nullptr)
@@ -552,31 +552,31 @@ namespace golang::runtime
             std::tie(hint->next, mheap_.arenaHints) = std::tuple{mheap_.arenaHints, hint};
         }
         {
-            std::string bad = {};
+            gocpp::string bad = {};
             auto p = uintptr_t(v);
             if(p + size < p)
             {
-                bad = "region exceeds uintptr range"s;
+                bad = "region exceeds uintptr range"_s;
             }
             else
             if(arenaIndex(p) >= (1 << arenaBits))
             {
-                bad = "base outside usable address space"s;
+                bad = "base outside usable address space"_s;
             }
             else
             if(arenaIndex(p + size - 1) >= (1 << arenaBits))
             {
-                bad = "end outside usable address space"s;
+                bad = "end outside usable address space"_s;
             }
-            if(bad != ""s)
+            if(bad != ""_s)
             {
-                print("runtime: memory allocated by OS ["s, hex(p), ", "s, hex(p + size), ") not in usable address space: "s, bad, "\n"s);
-                go_throw("memory reservation exceeds address space limit"s);
+                print("runtime: memory allocated by OS ["_s, hex(p), ", "_s, hex(p + size), ") not in usable address space: "_s, bad, "\n"_s);
+                go_throw("memory reservation exceeds address space limit"_s);
             }
         }
         if(uintptr_t(v) & (heapArenaBytes - 1) != 0)
         {
-            go_throw("misrounded allocation in sysAlloc"s);
+            go_throw("misrounded allocation in sysAlloc"_s);
         }
         mapped:
         for(auto ri = arenaIndex(uintptr_t(v)); ri <= arenaIndex(uintptr_t(v) + size - 1); ri++)
@@ -587,7 +587,7 @@ namespace golang::runtime
                 l2 = (gocpp::array<heapArena*, 1 << arenaL2Bits>*)(sysAllocOS(gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>()));
                 if(l2 == nullptr)
                 {
-                    go_throw("out of memory allocating heap arena map"s);
+                    go_throw("out of memory allocating heap arena map"_s);
                 }
                 if(h->arenasHugePages)
                 {
@@ -601,7 +601,7 @@ namespace golang::runtime
             }
             if(l2[rec::l2(gocpp::recv(ri))] != nullptr)
             {
-                go_throw("arena already initialized"s);
+                go_throw("arena already initialized"_s);
             }
             heapArena* r = {};
             r = (heapArena*)(rec::alloc(gocpp::recv(h->heapArenaAlloc), gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
@@ -610,7 +610,7 @@ namespace golang::runtime
                 r = (heapArena*)(persistentalloc(gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
                 if(r == nullptr)
                 {
-                    go_throw("out of memory allocating heap arena metadata"s);
+                    go_throw("out of memory allocating heap arena metadata"_s);
                 }
             }
             if(go_register)
@@ -625,7 +625,7 @@ namespace golang::runtime
                     auto newArray = (notInHeap*)(persistentalloc(size, goarch::PtrSize, & memstats.gcMiscSys));
                     if(newArray == nullptr)
                     {
-                        go_throw("out of memory allocating allArenas"s);
+                        go_throw("out of memory allocating allArenas"_s);
                     }
                     auto oldSlice = h->allArenas;
                     *(notInHeapSlice*)(unsafe::Pointer(& h->allArenas)) = notInHeapSlice {newArray, len(h->allArenas), int(size / goarch::PtrSize)};
@@ -662,7 +662,7 @@ namespace golang::runtime
             int conditionId = -1;
             if(p == 0) { conditionId = 0; }
             else if(p & (align - 1) == 0) { conditionId = 1; }
-            else if(GOOS == "windows"s) { conditionId = 2; }
+            else if(GOOS == "windows"_s) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -680,7 +680,7 @@ namespace golang::runtime
                         sysFreeOS(p2, size);
                         if(retries++; retries == 100)
                         {
-                            go_throw("failed to allocate aligned heap memory; too many retries"s);
+                            go_throw("failed to allocate aligned heap memory; too many retries"_s);
                         }
                         goto retry;
                     }
@@ -783,8 +783,8 @@ namespace golang::runtime
         {
             if(s->allocCount != s->nelems)
             {
-                println("runtime: s.allocCount="s, s->allocCount, "s.nelems="s, s->nelems);
-                go_throw("s.allocCount != s.nelems && freeIndex == s.nelems"s);
+                println("runtime: s.allocCount="_s, s->allocCount, "s.nelems="_s, s->nelems);
+                go_throw("s.allocCount != s.nelems && freeIndex == s.nelems"_s);
             }
             rec::refill(gocpp::recv(c), spc);
             shouldhelpgc = true;
@@ -793,14 +793,14 @@ namespace golang::runtime
         }
         if(freeIndex >= s->nelems)
         {
-            go_throw("freeIndex is not valid"s);
+            go_throw("freeIndex is not valid"_s);
         }
         v = gclinkptr(uintptr_t(freeIndex) * s->elemsize + rec::base(gocpp::recv(s)));
         s->allocCount++;
         if(s->allocCount > s->nelems)
         {
-            println("s.allocCount="s, s->allocCount, "s.nelems="s, s->nelems);
-            go_throw("s.allocCount > s.nelems"s);
+            println("s.allocCount="_s, s->allocCount, "s.nelems="_s, s->nelems);
+            go_throw("s.allocCount > s.nelems"_s);
         }
         return {v, s, shouldhelpgc};
     }
@@ -812,7 +812,7 @@ namespace golang::runtime
     {
         if(gcphase == _GCmarktermination)
         {
-            go_throw("mallocgc called with gcphase == _GCmarktermination"s);
+            go_throw("mallocgc called with gcphase == _GCmarktermination"_s);
         }
         if(size == 0)
         {
@@ -861,11 +861,11 @@ namespace golang::runtime
         auto mp = acquirem();
         if(mp->mallocing != 0)
         {
-            go_throw("malloc deadlock"s);
+            go_throw("malloc deadlock"_s);
         }
         if(mp->gsignal == getg())
         {
-            go_throw("malloc during signal"s);
+            go_throw("malloc during signal"_s);
         }
         mp->mallocing = 1;
         auto shouldhelpgc = false;
@@ -873,7 +873,7 @@ namespace golang::runtime
         auto c = getMCache(mp);
         if(c == nullptr)
         {
-            go_throw("mallocgc called without a P or outside bootstrapping"s);
+            go_throw("mallocgc called without a P or outside bootstrapping"_s);
         }
         mspan* span = {};
         runtime::_type** header = {};
@@ -1056,11 +1056,11 @@ namespace golang::runtime
         {
             if(! noscan)
             {
-                go_throw("delayed zeroing on data that may contain pointers"s);
+                go_throw("delayed zeroing on data that may contain pointers"_s);
             }
             if(goexperiment::AllocHeaders && header != nullptr)
             {
-                go_throw("unexpected malloc header in delayed zeroing of large object"s);
+                go_throw("unexpected malloc header in delayed zeroing of large object"_s);
             }
             memclrNoHeapPointersChunked(size, x);
         }
@@ -1179,7 +1179,7 @@ namespace golang::runtime
         auto [mem, overflow] = math::MulUintptr(typ->Size_, uintptr_t(n));
         if(overflow || mem > maxAlloc || n < 0)
         {
-            gocpp::panic(plainError("runtime: allocation size out of range"s));
+            gocpp::panic(plainError("runtime: allocation size out of range"_s));
         }
         return mallocgc(mem, typ, true);
     }
@@ -1195,7 +1195,7 @@ namespace golang::runtime
         auto c = getMCache(mp);
         if(c == nullptr)
         {
-            go_throw("profilealloc called without a P or outside bootstrapping"s);
+            go_throw("profilealloc called without a P or outside bootstrapping"_s);
         }
         c->nextSample = nextSample();
         mProf_Malloc(x, size);
@@ -1214,7 +1214,7 @@ namespace golang::runtime
         {
             return 0;
         }
-        if(GOOS == "plan9"s)
+        if(GOOS == "plan9"_s)
         {
             if(auto gp = getg(); gp == gp->m->gsignal)
             {
@@ -1385,17 +1385,17 @@ namespace golang::runtime
         auto maxBlock = 64 << 10;
         if(size == 0)
         {
-            go_throw("persistentalloc: size == 0"s);
+            go_throw("persistentalloc: size == 0"_s);
         }
         if(align != 0)
         {
             if(align & (align - 1) != 0)
             {
-                go_throw("persistentalloc: align is not a power of 2"s);
+                go_throw("persistentalloc: align is not a power of 2"_s);
             }
             if(align > _PageSize)
             {
-                go_throw("persistentalloc: align is too large"s);
+                go_throw("persistentalloc: align is too large"_s);
             }
         }
         else
@@ -1427,7 +1427,7 @@ namespace golang::runtime
                 {
                     unlock(& globalAlloc.mutex);
                 }
-                go_throw("runtime: cannot allocate memory"s);
+                go_throw("runtime: cannot allocate memory"_s);
             }
             for(; ; )
             {

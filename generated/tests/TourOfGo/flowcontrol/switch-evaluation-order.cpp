@@ -25,7 +25,7 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Println("When's Saturday?"s);
+        mocklib::Println("When's Saturday?"_s);
         auto today = rec::Weekday(gocpp::recv(mocklib::Date::Now()));
         //Go switch emulation
         {
@@ -37,16 +37,16 @@ namespace golang::main
             switch(conditionId)
             {
                 case 0:
-                    mocklib::Println("Today."s);
+                    mocklib::Println("Today."_s);
                     break;
                 case 1:
-                    mocklib::Println("Tomorrow."s);
+                    mocklib::Println("Tomorrow."_s);
                     break;
                 case 2:
-                    mocklib::Println("In two days."s);
+                    mocklib::Println("In two days."_s);
                     break;
                 default:
-                    mocklib::Println("Too far away."s);
+                    mocklib::Println("Too far away."_s);
                     break;
             }
         }

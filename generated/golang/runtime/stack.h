@@ -70,7 +70,7 @@ namespace golang::runtime
     struct stack stackalloc(uint32_t n);
     void stackfree(struct stack stk);
     extern uintptr_t maxstacksize;
-    extern gocpp::slice<std::string> ptrnames;
+    extern gocpp::slice<gocpp::string> ptrnames;
     struct adjustinfo
     {
         stack old;

@@ -136,9 +136,9 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct SyscallError* e)
+    gocpp::string rec::Error(struct SyscallError* e)
     {
-        return e->Syscall + ": "s + rec::Error(gocpp::recv(e->Err));
+        return e->Syscall + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
     struct gocpp::error rec::Unwrap(struct SyscallError* e)
@@ -156,7 +156,7 @@ namespace golang::os
     // NewSyscallError returns, as an error, a new SyscallError
     // with the given system call name and error details.
     // As a convenience, if err is nil, NewSyscallError returns nil.
-    struct gocpp::error NewSyscallError(std::string syscall, struct gocpp::error err)
+    struct gocpp::error NewSyscallError(gocpp::string syscall, struct gocpp::error err)
     {
         if(err == nullptr)
         {

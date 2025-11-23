@@ -184,7 +184,7 @@ namespace golang::runtime
             auto next = c->gp;
             if(rec::ptr(gocpp::recv(next)) == nullptr)
             {
-                go_throw("coroswitch on exited coro"s);
+                go_throw("coroswitch on exited coro"_s);
             }
             runtime::guintptr self = {};
             rec::set(gocpp::recv(self), gp);

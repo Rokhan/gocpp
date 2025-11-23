@@ -26,11 +26,11 @@ namespace golang::os
 
     // basename removes trailing slashes and the leading
     // directory name and drive letter from path name.
-    std::string basename(std::string name)
+    gocpp::string basename(gocpp::string name)
     {
         if(len(name) == 2 && name[1] == ':')
         {
-            name = "."s;
+            name = "."_s;
         }
         else
         if(len(name) > 2 && name[1] == ':')
@@ -53,28 +53,28 @@ namespace golang::os
         return name;
     }
 
-    bool isAbs(std::string path)
+    bool isAbs(gocpp::string path)
     {
         bool b;
         auto v = volumeName(path);
-        if(v == ""s)
+        if(v == ""_s)
         {
             return false;
         }
         path = path.make_slice(len(v));
-        if(path == ""s)
+        if(path == ""_s)
         {
             return false;
         }
         return IsPathSeparator(path[0]);
     }
 
-    std::string volumeName(std::string path)
+    gocpp::string volumeName(gocpp::string path)
     {
-        std::string v;
+        gocpp::string v;
         if(len(path) < 2)
         {
-            return ""s;
+            return ""_s;
         }
         auto c = path[0];
         if(path[1] == ':' && ('0' <= c && c <= '9' || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z'))
@@ -107,10 +107,10 @@ namespace golang::os
                 }
             }
         }
-        return ""s;
+        return ""_s;
     }
 
-    std::string fromSlash(std::string path)
+    gocpp::string fromSlash(gocpp::string path)
     {
         // Replace each '/' with '\\' if present
         gocpp::slice<unsigned char> pathbuf = {};
@@ -133,10 +133,10 @@ namespace golang::os
             return path;
         }
         copy(pathbuf.make_slice(lastSlash), path.make_slice(lastSlash));
-        return std::string(pathbuf);
+        return gocpp::string(pathbuf);
     }
 
-    std::string dirname(std::string path)
+    gocpp::string dirname(gocpp::string path)
     {
         auto vol = volumeName(path);
         auto i = len(path) - 1;
@@ -150,9 +150,9 @@ namespace golang::os
         {
             dir = dir.make_slice(0, last);
         }
-        if(dir == ""s)
+        if(dir == ""_s)
         {
-            dir = "."s;
+            dir = "."_s;
         }
         return vol + dir;
     }
@@ -168,7 +168,7 @@ namespace golang::os
     // path unmodified.
     //
     // See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
-    std::string fixLongPath(std::string path)
+    gocpp::string fixLongPath(gocpp::string path)
     {
         if(canUseLongPaths)
         {
@@ -178,7 +178,7 @@ namespace golang::os
         {
             return path;
         }
-        if(len(path) >= 2 && path.make_slice(0, 2) == "\\\\"s)
+        if(len(path) >= 2 && path.make_slice(0, 2) == "\\\\"_s)
         {
             return path;
         }
@@ -186,8 +186,8 @@ namespace golang::os
         {
             return path;
         }
-        auto prefix = "\\\\?"s;
-        auto pathbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(prefix) + len(path) + len("\\"s));
+        auto prefix = "\\\\?"_s;
+        auto pathbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(prefix) + len(path) + len("\\"_s));
         copy(pathbuf, prefix);
         auto n = len(path);
         auto [r, w] = std::tuple{0, len(prefix)};
@@ -222,12 +222,12 @@ namespace golang::os
                 }
             }
         }
-        if(w == len("\\\\?\\c:"s))
+        if(w == len("\\\\?\\c:"_s))
         {
             pathbuf[w] = '\\';
             w++;
         }
-        return std::string(pathbuf.make_slice(0, w));
+        return gocpp::string(pathbuf.make_slice(0, w));
     }
 
 }

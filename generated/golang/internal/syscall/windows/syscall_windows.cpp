@@ -33,11 +33,11 @@ namespace golang::windows
 
     // UTF16PtrToString is like UTF16ToString, but takes *uint16
     // as a parameter instead of []uint16.
-    std::string UTF16PtrToString(uint16_t* p)
+    gocpp::string UTF16PtrToString(uint16_t* p)
     {
         if(p == nullptr)
         {
-            return ""s;
+            return ""_s;
         }
         auto end = unsafe::Pointer(p);
         auto n = 0;
@@ -696,7 +696,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error Rename(std::string oldpath, std::string newpath)
+    struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath)
     {
         auto [from, err] = syscall::UTF16PtrFromString(oldpath);
         if(err != nullptr)

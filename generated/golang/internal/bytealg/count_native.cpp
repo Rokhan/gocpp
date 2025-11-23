@@ -23,7 +23,7 @@ namespace golang::bytealg
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    int CountString(std::string s, unsigned char c)
+    int CountString(gocpp::string s, unsigned char c)
     /* convertBlockStmt, nil block */;
 
     // A backup implementation to use by assembly.
@@ -40,7 +40,7 @@ namespace golang::bytealg
         return n;
     }
 
-    int countGenericString(std::string s, unsigned char c)
+    int countGenericString(gocpp::string s, unsigned char c)
     {
         auto n = 0;
         for(auto i = 0; i < len(s); i++)

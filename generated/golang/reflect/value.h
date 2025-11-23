@@ -41,7 +41,7 @@ namespace golang::reflect
     struct Value unpackEface(go_any i);
     struct ValueError
     {
-        std::string Method;
+        gocpp::string Method;
         golang::reflect::Kind Kind;
 
         using isGoStruct = void;
@@ -56,7 +56,7 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
-    std::string valueMethodName();
+    gocpp::string valueMethodName();
     struct emptyInterface
     {
         abi::Type* typ;
@@ -114,11 +114,11 @@ namespace golang::reflect
     extern abi::Type* bytesType;
     extern bool callGC;
     void callReflect(struct makeFuncImpl* ctxt, unsafe::Pointer frame, bool* retValid, abi::RegArgs* regs);
-    std::tuple<abi::Type*, reflect::funcType*, unsafe::Pointer> methodReceiver(std::string op, struct Value v, int methodIndex);
+    std::tuple<abi::Type*, reflect::funcType*, unsafe::Pointer> methodReceiver(gocpp::string op, struct Value v, int methodIndex);
     void storeRcvr(struct Value v, unsafe::Pointer p);
     uintptr_t align(uintptr_t x, uintptr_t n);
     void callMethod(struct methodValue* ctxt, unsafe::Pointer frame, bool* retValid, abi::RegArgs* regs);
-    std::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value> _1)> f);
+    gocpp::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value> _1)> f);
     struct gocpp_id_5 : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -294,8 +294,8 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SliceHeader& value);
-    void typesMustMatch(std::string what, struct Type t1, struct Type t2);
-    unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, std::string whySafe);
+    void typesMustMatch(gocpp::string what, struct Type t1, struct Type t2);
+    unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, gocpp::string whySafe);
     struct Value Append(struct Value s, gocpp::slice<Value> x);
     
     template<typename... Args>
@@ -349,7 +349,7 @@ namespace golang::reflect
     struct Value makeFloat(golang::reflect::flag f, double v, struct Type t);
     struct Value makeFloat32(golang::reflect::flag f, double v, struct Type t);
     struct Value makeComplex(golang::reflect::flag f, struct gocpp::complex128 v, struct Type t);
-    struct Value makeString(golang::reflect::flag f, std::string v, struct Type t);
+    struct Value makeString(golang::reflect::flag f, gocpp::string v, struct Type t);
     struct Value makeBytes(golang::reflect::flag f, gocpp::slice<unsigned char> v, struct Type t);
     struct Value makeRunes(golang::reflect::flag f, gocpp::slice<gocpp::rune> v, struct Type t);
     struct Value cvtInt(struct Value v, struct Type t);
@@ -380,13 +380,13 @@ namespace golang::reflect
     unsafe::Pointer makechan(abi::Type* typ, int size);
     unsafe::Pointer makemap(abi::Type* t, int cap);
     unsafe::Pointer mapaccess(abi::Type* t, unsafe::Pointer m, unsafe::Pointer key);
-    unsafe::Pointer mapaccess_faststr(abi::Type* t, unsafe::Pointer m, std::string key);
+    unsafe::Pointer mapaccess_faststr(abi::Type* t, unsafe::Pointer m, gocpp::string key);
     void mapassign0(abi::Type* t, unsafe::Pointer m, unsafe::Pointer key, unsafe::Pointer val);
     void mapassign(abi::Type* t, unsafe::Pointer m, unsafe::Pointer key, unsafe::Pointer val);
-    void mapassign_faststr0(abi::Type* t, unsafe::Pointer m, std::string key, unsafe::Pointer val);
-    void mapassign_faststr(abi::Type* t, unsafe::Pointer m, std::string key, unsafe::Pointer val);
+    void mapassign_faststr0(abi::Type* t, unsafe::Pointer m, gocpp::string key, unsafe::Pointer val);
+    void mapassign_faststr(abi::Type* t, unsafe::Pointer m, gocpp::string key, unsafe::Pointer val);
     void mapdelete(abi::Type* t, unsafe::Pointer m, unsafe::Pointer key);
-    void mapdelete_faststr(abi::Type* t, unsafe::Pointer m, std::string key);
+    void mapdelete_faststr(abi::Type* t, unsafe::Pointer m, gocpp::string key);
     void mapiterinit(abi::Type* t, unsafe::Pointer m, struct hiter* it);
     unsafe::Pointer mapiterkey(struct hiter* it);
     unsafe::Pointer mapiterelem(struct hiter* it);
@@ -450,7 +450,7 @@ namespace golang::reflect
         reflect::flag ro(golang::reflect::flag f);
         abi::Type* typ(struct Value v);
         unsafe::Pointer pointer(struct Value v);
-        std::string Error(struct ValueError* e);
+        gocpp::string Error(struct ValueError* e);
         void mustBe(golang::reflect::flag f, golang::reflect::Kind expected);
         void mustBeExported(golang::reflect::flag f);
         void mustBeExportedSlow(golang::reflect::flag f);
@@ -466,7 +466,7 @@ namespace golang::reflect
         bool CanSet(struct Value v);
         gocpp::slice<Value> Call(struct Value v, gocpp::slice<Value> in);
         gocpp::slice<Value> CallSlice(struct Value v, gocpp::slice<Value> in);
-        gocpp::slice<Value> call(struct Value v, std::string op, gocpp::slice<Value> in);
+        gocpp::slice<Value> call(struct Value v, gocpp::string op, gocpp::slice<Value> in);
         int Cap(struct Value v);
         int capNonSlice(struct Value v);
         void Close(struct Value v);
@@ -476,8 +476,8 @@ namespace golang::reflect
         struct Value Field(struct Value v, int i);
         struct Value FieldByIndex(struct Value v, gocpp::slice<int> index);
         std::tuple<struct Value, struct gocpp::error> FieldByIndexErr(struct Value v, gocpp::slice<int> index);
-        struct Value FieldByName(struct Value v, std::string name);
-        struct Value FieldByNameFunc(struct Value v, std::function<bool (std::string _1)> match);
+        struct Value FieldByName(struct Value v, gocpp::string name);
+        struct Value FieldByNameFunc(struct Value v, std::function<bool (gocpp::string _1)> match);
         bool CanFloat(struct Value v);
         double Float(struct Value v);
         struct Value Index(struct Value v, int i);
@@ -506,7 +506,7 @@ namespace golang::reflect
         void panicNotMap(golang::reflect::flag f);
         struct Value Method(struct Value v, int i);
         int NumMethod(struct Value v);
-        struct Value MethodByName(struct Value v, std::string name);
+        struct Value MethodByName(struct Value v, gocpp::string name);
         int NumField(struct Value v);
         bool OverflowComplex(struct Value v, struct gocpp::complex128 x);
         bool OverflowFloat(struct Value v, double x);
@@ -529,11 +529,11 @@ namespace golang::reflect
         void SetMapIndex(struct Value v, struct Value key, struct Value elem);
         void SetUint(struct Value v, uint64_t x);
         void SetPointer(struct Value v, unsafe::Pointer x);
-        void SetString(struct Value v, std::string x);
+        void SetString(struct Value v, gocpp::string x);
         struct Value Slice(struct Value v, int i, int j);
         struct Value Slice3(struct Value v, int i, int j, int k);
-        std::string String(struct Value v);
-        std::string stringNonString(struct Value v);
+        gocpp::string String(struct Value v);
+        gocpp::string stringNonString(struct Value v);
         std::tuple<struct Value, bool> TryRecv(struct Value v);
         bool TrySend(struct Value v, struct Value x);
         struct Type Type(struct Value v);
@@ -546,7 +546,7 @@ namespace golang::reflect
         void grow(struct Value v, int n);
         struct Value extendSlice(struct Value v, int n);
         void Clear(struct Value v);
-        struct Value assignTo(struct Value v, std::string context, abi::Type* dst, unsafe::Pointer target);
+        struct Value assignTo(struct Value v, gocpp::string context, abi::Type* dst, unsafe::Pointer target);
         struct Value Convert(struct Value v, struct Type t);
         bool CanConvert(struct Value v, struct Type t);
         bool Comparable(struct Value v);

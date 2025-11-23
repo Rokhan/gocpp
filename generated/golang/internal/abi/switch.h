@@ -49,7 +49,7 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitchCacheEntry& value);
-    bool UseInterfaceSwitchCache(std::string goarch);
+    bool UseInterfaceSwitchCache(gocpp::string goarch);
     struct TypeAssert
     {
         TypeAssertCache* Cache;

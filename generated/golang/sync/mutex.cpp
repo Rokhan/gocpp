@@ -30,10 +30,10 @@ namespace golang::sync
     }
 
     // Provided by runtime via linkname.
-    void go_throw(std::string)
+    void go_throw(gocpp::string)
     /* convertBlockStmt, nil block */;
 
-    void fatal(std::string)
+    void fatal(gocpp::string)
     /* convertBlockStmt, nil block */;
 
     // A Mutex is a mutual exclusion lock.
@@ -243,7 +243,7 @@ namespace golang::sync
             {
                 if(go_new & mutexWoken == 0)
                 {
-                    go_throw("sync: inconsistent mutex state"s);
+                    go_throw("sync: inconsistent mutex state"_s);
                 }
                 go_new &^= mutexWoken;
             }
@@ -265,7 +265,7 @@ namespace golang::sync
                 {
                     if(old & (mutexLocked | mutexWoken) != 0 || (old >> mutexWaiterShift) == 0)
                     {
-                        go_throw("sync: inconsistent mutex state"s);
+                        go_throw("sync: inconsistent mutex state"_s);
                     }
                     auto delta = int32_t(mutexLocked - (1 << mutexWaiterShift));
                     if(! starving || (old >> mutexWaiterShift) == 1)
@@ -313,7 +313,7 @@ namespace golang::sync
     {
         if((go_new + mutexLocked) & mutexLocked == 0)
         {
-            fatal("sync: unlock of unlocked mutex"s);
+            fatal("sync: unlock of unlocked mutex"_s);
         }
         if(go_new & mutexStarving == 0)
         {

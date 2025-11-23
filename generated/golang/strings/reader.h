@@ -15,7 +15,7 @@ namespace golang::strings
 {
     struct Reader
     {
-        std::string s;
+        gocpp::string s;
         int64_t i;
         int prevRune;
 
@@ -31,7 +31,7 @@ namespace golang::strings
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
-    struct Reader* NewReader(std::string s);
+    struct Reader* NewReader(gocpp::string s);
 
     namespace rec
     {
@@ -45,7 +45,7 @@ namespace golang::strings
         struct gocpp::error UnreadRune(struct Reader* r);
         std::tuple<int64_t, struct gocpp::error> Seek(struct Reader* r, int64_t offset, int whence);
         std::tuple<int64_t, struct gocpp::error> WriteTo(struct Reader* r, io::Writer w);
-        void Reset(struct Reader* r, std::string s);
+        void Reset(struct Reader* r, gocpp::string s);
     }
 }
 

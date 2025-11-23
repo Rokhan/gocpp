@@ -57,7 +57,7 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
-    std::string cgoWriteBarrierFail = "unpinned Go pointer stored into non-Go memory"s;
+    gocpp::string cgoWriteBarrierFail = "unpinned Go pointer stored into non-Go memory"_s;
     // cgoCheckPtrWrite is called whenever a pointer is stored into memory.
     // It throws if the program is storing an unpinned Go pointer into non-Go
     // memory.
@@ -99,7 +99,7 @@ namespace golang::runtime
         }
         systemstack([=]() mutable -> void
         {
-            println("write of unpinned Go pointer"s, hex(uintptr_t(src)), "to non-Go memory"s, hex(uintptr_t(unsafe::Pointer(dst))));
+            println("write of unpinned Go pointer"_s, hex(uintptr_t(src)), "to non-Go memory"_s, hex(uintptr_t(unsafe::Pointer(dst))));
             go_throw(cgoWriteBarrierFail);
         });
     }
@@ -333,7 +333,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 default:
-                    go_throw("can't happen"s);
+                    go_throw("can't happen"_s);
                     break;
                 case 0:
                     auto at = (runtime::arraytype*)(unsafe::Pointer(typ));

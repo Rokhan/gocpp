@@ -13,10 +13,10 @@ namespace golang::godebugs
 {
     struct Info
     {
-        std::string Name;
-        std::string Package;
+        gocpp::string Name;
+        gocpp::string Package;
         int Changed;
-        std::string Old;
+        gocpp::string Old;
         bool Opaque;
 
         using isGoStruct = void;
@@ -31,7 +31,7 @@ namespace golang::godebugs
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Info& value);
-    struct Info* Lookup(std::string name);
+    struct Info* Lookup(gocpp::string name);
     extern gocpp::slice<Info> All;
 
     namespace rec

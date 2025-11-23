@@ -266,9 +266,9 @@ namespace golang::runtime
     {
         if(levelLogPages[0] > logMaxPackedValue)
         {
-            print("runtime: root level max pages = "s, 1 << levelLogPages[0], "\n"s);
-            print("runtime: summary max pages = "s, maxPackedValue, "\n"s);
-            go_throw("root level max pages doesn't fit in summary"s);
+            print("runtime: root level max pages = "_s, 1 << levelLogPages[0], "\n"_s);
+            print("runtime: summary max pages = "_s, maxPackedValue, "\n"_s);
+            go_throw("root level max pages doesn't fit in summary"_s);
         }
         p->sysStat = sysStat;
         rec::init(gocpp::recv(p->inUse), sysStat);
@@ -335,7 +335,7 @@ namespace golang::runtime
                 auto r = sysAlloc(l2Size, p->sysStat);
                 if(r == nullptr)
                 {
-                    go_throw("pageAlloc: out of memory"s);
+                    go_throw("pageAlloc: out of memory"_s);
                 }
                 if(! p->test)
                 {
@@ -607,9 +607,9 @@ namespace golang::runtime
             else
             if(! (rec::lessThan(gocpp::recv(rec::add(gocpp::recv(addr), size - 1)), firstFree.base) || rec::lessThan(gocpp::recv(firstFree.bound), addr)))
             {
-                print("runtime: addr = "s, hex(rec::addr(gocpp::recv(addr))), ", size = "s, size, "\n"s);
-                print("runtime: base = "s, hex(rec::addr(gocpp::recv(firstFree.base))), ", bound = "s, hex(rec::addr(gocpp::recv(firstFree.bound))), "\n"s);
-                go_throw("range partially overlaps"s);
+                print("runtime: addr = "_s, hex(rec::addr(gocpp::recv(addr))), ", size = "_s, size, "\n"_s);
+                print("runtime: base = "_s, hex(rec::addr(gocpp::recv(firstFree.base))), ", bound = "_s, hex(rec::addr(gocpp::recv(firstFree.bound))), "\n"_s);
+                go_throw("range partially overlaps"_s);
             }
         };
         auto lastSum = packPallocSum(0, 0, 0);
@@ -681,16 +681,16 @@ namespace golang::runtime
             {
                 return {0, maxSearchAddr()};
             }
-            print("runtime: summary["s, l - 1, "]["s, lastSumIdx, "] = "s, rec::start(gocpp::recv(lastSum)), ", "s, rec::max(gocpp::recv(lastSum)), ", "s, rec::end(gocpp::recv(lastSum)), "\n"s);
-            print("runtime: level = "s, l, ", npages = "s, npages, ", j0 = "s, j0, "\n"s);
-            print("runtime: p.searchAddr = "s, hex(rec::addr(gocpp::recv(p->searchAddr))), ", i = "s, i, "\n"s);
-            print("runtime: levelShift[level] = "s, levelShift[l], ", levelBits[level] = "s, levelBits[l], "\n"s);
+            print("runtime: summary["_s, l - 1, "]["_s, lastSumIdx, "] = "_s, rec::start(gocpp::recv(lastSum)), ", "_s, rec::max(gocpp::recv(lastSum)), ", "_s, rec::end(gocpp::recv(lastSum)), "\n"_s);
+            print("runtime: level = "_s, l, ", npages = "_s, npages, ", j0 = "_s, j0, "\n"_s);
+            print("runtime: p.searchAddr = "_s, hex(rec::addr(gocpp::recv(p->searchAddr))), ", i = "_s, i, "\n"_s);
+            print("runtime: levelShift[level] = "_s, levelShift[l], ", levelBits[level] = "_s, levelBits[l], "\n"_s);
             for(auto j = 0; j < len(entries); j++)
             {
                 auto sum = entries[j];
-                print("runtime: summary["s, l, "]["s, i + j, "] = ("s, rec::start(gocpp::recv(sum)), ", "s, rec::max(gocpp::recv(sum)), ", "s, rec::end(gocpp::recv(sum)), ")\n"s);
+                print("runtime: summary["_s, l, "]["_s, i + j, "] = ("_s, rec::start(gocpp::recv(sum)), ", "_s, rec::max(gocpp::recv(sum)), ", "_s, rec::end(gocpp::recv(sum)), ")\n"_s);
             }
-            go_throw("bad summary data"s);
+            go_throw("bad summary data"_s);
             if(false) {
             nextLevel_continue:
                 continue;
@@ -703,9 +703,9 @@ namespace golang::runtime
         if(j == ~ (unsigned int)(0))
         {
             auto sum = p->summary[len(p->summary) - 1][i];
-            print("runtime: summary["s, len(p->summary) - 1, "]["s, i, "] = ("s, rec::start(gocpp::recv(sum)), ", "s, rec::max(gocpp::recv(sum)), ", "s, rec::end(gocpp::recv(sum)), ")\n"s);
-            print("runtime: npages = "s, npages, "\n"s);
-            go_throw("bad summary data"s);
+            print("runtime: summary["_s, len(p->summary) - 1, "]["_s, i, "] = ("_s, rec::start(gocpp::recv(sum)), ", "_s, rec::max(gocpp::recv(sum)), ", "_s, rec::end(gocpp::recv(sum)), ")\n"_s);
+            print("runtime: npages = "_s, npages, "\n"_s);
+            go_throw("bad summary data"_s);
         }
         auto addr = chunkBase(ci) + uintptr_t(j) * pageSize;
         auto searchAddr = chunkBase(ci) + uintptr_t(searchIdx) * pageSize;
@@ -743,9 +743,9 @@ namespace golang::runtime
                 auto [j, searchIdx] = rec::find(gocpp::recv(rec::chunkOf(gocpp::recv(p), i)), npages, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
                 if(j == ~ (unsigned int)(0))
                 {
-                    print("runtime: max = "s, max, ", npages = "s, npages, "\n"s);
-                    print("runtime: searchIdx = "s, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))), ", p.searchAddr = "s, hex(rec::addr(gocpp::recv(p->searchAddr))), "\n"s);
-                    go_throw("bad summary data"s);
+                    print("runtime: max = "_s, max, ", npages = "_s, npages, "\n"_s);
+                    print("runtime: searchIdx = "_s, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))), ", p.searchAddr = "_s, hex(rec::addr(gocpp::recv(p->searchAddr))), "\n"_s);
+                    go_throw("bad summary data"_s);
                 }
                 addr = chunkBase(i) + uintptr_t(j) * pageSize;
                 searchAddr = offAddr {chunkBase(i) + uintptr_t(searchIdx) * pageSize};

@@ -21,7 +21,7 @@ namespace golang::os
 {
     struct fileStat
     {
-        std::string name;
+        gocpp::string name;
         uint32_t FileAttributes;
         syscall::Filetime CreationTime;
         syscall::Filetime LastAccessTime;
@@ -31,7 +31,7 @@ namespace golang::os
         uint32_t ReparseTag;
         uint32_t filetype;
         mocklib::Mutex Mutex;
-        std::string path;
+        gocpp::string path;
         uint32_t vol;
         uint32_t idxhi;
         uint32_t idxlo;
@@ -49,7 +49,7 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileStat& value);
-    std::tuple<struct fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(std::string path, syscall::Handle h);
+    std::tuple<struct fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h);
     struct fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d);
     struct fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d);
     struct fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
@@ -65,7 +65,7 @@ namespace golang::os
         mocklib::Date ModTime(struct fileStat* fs);
         go_any Sys(struct fileStat* fs);
         struct gocpp::error loadFileId(struct fileStat* fs);
-        struct gocpp::error saveInfoFromPath(struct fileStat* fs, std::string path);
+        struct gocpp::error saveInfoFromPath(struct fileStat* fs, gocpp::string path);
     }
 }
 

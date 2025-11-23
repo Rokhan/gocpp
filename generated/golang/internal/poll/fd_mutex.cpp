@@ -72,7 +72,7 @@ namespace golang::poll
     // 20 bits - total number of references (read+write+misc).
     // 20 bits - number of outstanding read waiters.
     // 20 bits - number of outstanding write waiters.
-    std::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)"s;
+    gocpp::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)"_s;
     // incref adds a reference to mu.
     // It reports whether mu is available for reading or writing.
     bool rec::incref(struct fdMutex* mu)
@@ -139,7 +139,7 @@ namespace golang::poll
             auto old = atomic::LoadUint64(& mu->state);
             if(old & mutexRefMask == 0)
             {
-                gocpp::panic("inconsistent poll.fdMutex"s);
+                gocpp::panic("inconsistent poll.fdMutex"_s);
             }
             auto go_new = old - mutexRef;
             if(atomic::CompareAndSwapUint64(& mu->state, old, go_new))
@@ -233,7 +233,7 @@ namespace golang::poll
             auto old = atomic::LoadUint64(& mu->state);
             if(old & mutexBit == 0 || old & mutexRefMask == 0)
             {
-                gocpp::panic("inconsistent poll.fdMutex"s);
+                gocpp::panic("inconsistent poll.fdMutex"_s);
             }
             auto go_new = (old &^ mutexBit) - mutexRef;
             if(old & mutexMask != 0)

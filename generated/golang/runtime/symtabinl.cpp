@@ -221,9 +221,9 @@ namespace golang::runtime
     // physical function).
     //
     // It returns "?", 0 if something goes wrong.
-    std::tuple<std::string, int> rec::fileLine(struct inlineUnwinder* u, struct inlineFrame uf)
+    std::tuple<gocpp::string, int> rec::fileLine(struct inlineUnwinder* u, struct inlineFrame uf)
     {
-        std::string file;
+        gocpp::string file;
         int line;
         int32_t line32;
         std::tie(file, line32) = funcline1(u->f, uf.pc, false);

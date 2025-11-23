@@ -213,15 +213,15 @@ namespace golang::runtime
         auto etyp = e->_type;
         if(etyp == nullptr)
         {
-            gocpp::panic(errorString("runtime.Pinner: argument is nil"s));
+            gocpp::panic(errorString("runtime.Pinner: argument is nil"_s));
         }
         if(auto kind = etyp->Kind_ & kindMask; kind != kindPtr && kind != kindUnsafePointer)
         {
-            gocpp::panic(errorString("runtime.Pinner: argument is not a pointer: "s + rec::string(gocpp::recv(toRType(etyp)))));
+            gocpp::panic(errorString("runtime.Pinner: argument is not a pointer: "_s + rec::string(gocpp::recv(toRType(etyp)))));
         }
         if(inUserArenaChunk(uintptr_t(e->data)))
         {
-            gocpp::panic(errorString("runtime.Pinner: object was allocated into an arena"s));
+            gocpp::panic(errorString("runtime.Pinner: object was allocated into an arena"_s));
         }
         return e->data;
     }
@@ -259,7 +259,7 @@ namespace golang::runtime
         {
             if(! pin)
             {
-                gocpp::panic(errorString("tried to unpin non-Go pointer"s));
+                gocpp::panic(errorString("tried to unpin non-Go pointer"_s));
             }
             return false;
         }
@@ -315,7 +315,7 @@ namespace golang::runtime
             }
             else
             {
-                go_throw("runtime.Pinner: object already unpinned"s);
+                go_throw("runtime.Pinner: object already unpinned"_s);
             }
         }
         unlock(& span->speciallock);
@@ -501,7 +501,7 @@ namespace golang::runtime
         auto [ref, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
         if(! exists)
         {
-            go_throw("runtime.Pinner: decreased non-existing pin counter"s);
+            go_throw("runtime.Pinner: decreased non-existing pin counter"_s);
         }
         auto counter = (specialPinCounter*)(unsafe::Pointer(*ref));
         counter->counter--;
@@ -538,7 +538,7 @@ namespace golang::runtime
     // panic function is a variable, that can be overwritten by a test.
     std::function<void (void)> pinnerLeakPanic = []() mutable -> void
     {
-        gocpp::panic(errorString("runtime.Pinner: found leaking pinned pointer; forgot to call Unpin()?"s));
+        gocpp::panic(errorString("runtime.Pinner: found leaking pinned pointer; forgot to call Unpin()?"_s));
     };
 }
 

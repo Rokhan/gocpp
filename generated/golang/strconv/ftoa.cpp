@@ -85,9 +85,9 @@ namespace golang::strconv
     // zeros are removed).
     // The special precision -1 uses the smallest number of digits
     // necessary such that ParseFloat will return f exactly.
-    std::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize)
+    gocpp::string FormatFloat(double f, unsigned char fmt, int prec, int bitSize)
     {
-        return std::string(genericFtoa(gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, gocpp::max(prec + 4, 24)), f, fmt, prec, bitSize));
+        return gocpp::string(genericFtoa(gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, gocpp::max(prec + 4, 24)), f, fmt, prec, bitSize));
     }
 
     // AppendFloat appends the string form of the floating-point number f,
@@ -118,7 +118,7 @@ namespace golang::strconv
                     flt = & float64info;
                     break;
                 default:
-                    gocpp::panic("strconv: illegal AppendFloat/FormatFloat bitSize"s);
+                    gocpp::panic("strconv: illegal AppendFloat/FormatFloat bitSize"_s);
                     break;
             }
         }
@@ -135,7 +135,7 @@ namespace golang::strconv
             {
                 case 0:
                     // Inf, NaN
-                    std::string s = {};
+                    gocpp::string s = {};
                     //Go switch emulation
                     {
                         int conditionId = -1;
@@ -144,13 +144,13 @@ namespace golang::strconv
                         switch(conditionId)
                         {
                             case 0:
-                                s = "NaN"s;
+                                s = "NaN"_s;
                                 break;
                             case 1:
-                                s = "-Inf"s;
+                                s = "-Inf"_s;
                                 break;
                             default:
-                                s = "+Inf"s;
+                                s = "+Inf"_s;
                                 break;
                         }
                     }

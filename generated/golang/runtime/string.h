@@ -12,18 +12,18 @@
 
 namespace golang::runtime
 {
-    std::string concatstrings(golang::runtime::tmpBuf* buf, gocpp::slice<std::string> a);
-    std::string concatstring2(golang::runtime::tmpBuf* buf, std::string a0, std::string a1);
-    std::string concatstring3(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2);
-    std::string concatstring4(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3);
-    std::string concatstring5(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3, std::string a4);
-    std::string slicebytetostring(golang::runtime::tmpBuf* buf, unsigned char* ptr, int n);
-    bool stringDataOnStack(std::string s);
-    std::tuple<std::string, gocpp::slice<unsigned char>> rawstringtmp(golang::runtime::tmpBuf* buf, int l);
-    std::string slicebytetostringtmp(unsigned char* ptr, int n);
-    gocpp::slice<unsigned char> stringtoslicebyte(golang::runtime::tmpBuf* buf, std::string s);
-    gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array<gocpp::rune, tmpStringBufSize>* buf, std::string s);
-    std::string slicerunetostring(golang::runtime::tmpBuf* buf, gocpp::slice<gocpp::rune> a);
+    gocpp::string concatstrings(golang::runtime::tmpBuf* buf, gocpp::slice<gocpp::string> a);
+    gocpp::string concatstring2(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1);
+    gocpp::string concatstring3(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1, gocpp::string a2);
+    gocpp::string concatstring4(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3);
+    gocpp::string concatstring5(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4);
+    gocpp::string slicebytetostring(golang::runtime::tmpBuf* buf, unsigned char* ptr, int n);
+    bool stringDataOnStack(gocpp::string s);
+    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(golang::runtime::tmpBuf* buf, int l);
+    gocpp::string slicebytetostringtmp(unsigned char* ptr, int n);
+    gocpp::slice<unsigned char> stringtoslicebyte(golang::runtime::tmpBuf* buf, gocpp::string s);
+    gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array<gocpp::rune, tmpStringBufSize>* buf, gocpp::string s);
+    gocpp::string slicerunetostring(golang::runtime::tmpBuf* buf, gocpp::slice<gocpp::rune> a);
     struct stringStruct
     {
         unsafe::Pointer str;
@@ -58,25 +58,25 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stringStructDWARF& value);
-    struct stringStruct* stringStructOf(std::string* sp);
-    std::string intstring(gocpp::array<unsigned char, 4>* buf, int64_t v);
-    std::tuple<std::string, gocpp::slice<unsigned char>> rawstring(int size);
+    struct stringStruct* stringStructOf(gocpp::string* sp);
+    gocpp::string intstring(gocpp::array<unsigned char, 4>* buf, int64_t v);
+    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstring(int size);
     gocpp::slice<unsigned char> rawbyteslice(int size);
     gocpp::slice<gocpp::rune> rawruneslice(int size);
     gocpp::slice<unsigned char> gobytes(unsigned char* p, int n);
-    std::string gostring(unsigned char* p);
-    std::string internal_syscall_gostring(unsigned char* p);
-    std::string gostringn(unsigned char* p, int l);
-    bool hasPrefix(std::string s, std::string prefix);
-    bool hasSuffix(std::string s, std::string suffix);
-    std::tuple<int64_t, bool> atoi64(std::string s);
-    std::tuple<int, bool> atoi(std::string s);
-    std::tuple<int32_t, bool> atoi32(std::string s);
-    std::tuple<int64_t, bool> parseByteCount(std::string s);
+    gocpp::string gostring(unsigned char* p);
+    gocpp::string internal_syscall_gostring(unsigned char* p);
+    gocpp::string gostringn(unsigned char* p, int l);
+    bool hasPrefix(gocpp::string s, gocpp::string prefix);
+    bool hasSuffix(gocpp::string s, gocpp::string suffix);
+    std::tuple<int64_t, bool> atoi64(gocpp::string s);
+    std::tuple<int, bool> atoi(gocpp::string s);
+    std::tuple<int32_t, bool> atoi32(gocpp::string s);
+    std::tuple<int64_t, bool> parseByteCount(gocpp::string s);
     int findnull(unsigned char* s);
     int findnullw(uint16_t* s);
-    std::string gostringnocopy(unsigned char* str);
-    std::string gostringw(uint16_t* strw);
+    gocpp::string gostringnocopy(unsigned char* str);
+    gocpp::string gostringw(uint16_t* strw);
 
     namespace rec
     {

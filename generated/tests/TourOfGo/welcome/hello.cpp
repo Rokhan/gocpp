@@ -22,7 +22,7 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Println("Hello, 世界"s);
+        mocklib::Println("Hello, 世界"_s);
     }
 
 }

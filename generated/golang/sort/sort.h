@@ -100,10 +100,10 @@ namespace golang::sort
     bool isNaN(double f);
     void Ints(gocpp::slice<int> x);
     void Float64s(gocpp::slice<double> x);
-    void Strings(gocpp::slice<std::string> x);
+    void Strings(gocpp::slice<gocpp::string> x);
     bool IntsAreSorted(gocpp::slice<int> x);
     bool Float64sAreSorted(gocpp::slice<double> x);
-    bool StringsAreSorted(gocpp::slice<std::string> x);
+    bool StringsAreSorted(gocpp::slice<gocpp::string> x);
     void Stable(struct Interface data);
     struct reverse
     {

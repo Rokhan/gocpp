@@ -23,19 +23,19 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Printf("Hello, world.\n"s);
-        auto hello = "Hello"s;
-        auto world = "World"s;
-        helloFunc(hello, world, "!"s);
+        mocklib::Printf("Hello, world.\n"_s);
+        auto hello = "Hello"_s;
+        auto world = "World"_s;
+        helloFunc(hello, world, "!"_s);
         using Yyy = color::Color;
         Yyy _ = {};
         auto a = 5;
         auto b = 8 + 7;
-        mocklib::Printf("result = %d\n"s, a * b + 4);
-        mocklib::Printf("\n"s);
-        printN("zzz1"s, square(3));
+        mocklib::Printf("result = %d\n"_s, a * b + 4);
+        mocklib::Printf("\n"_s);
+        printN("zzz1"_s, square(3));
         auto n = square(2);
-        printN("zzz2"s, n);
+        printN("zzz2"_s, n);
     }
 
     int square(int num)
@@ -43,14 +43,14 @@ namespace golang::main
         return num * num;
     }
 
-    void helloFunc(std::string str1, std::string str2, std::string str3)
+    void helloFunc(gocpp::string str1, gocpp::string str2, gocpp::string str3)
     {
-        mocklib::Printf(str1 + ", "s + str2 + str3);
+        mocklib::Printf(str1 + ", "_s + str2 + str3);
     }
 
-    void printN(std::string str1, int n)
+    void printN(gocpp::string str1, int n)
     {
-        mocklib::Printf(str1 + "%d\n"s, n);
+        mocklib::Printf(str1 + "%d\n"_s, n);
     }
 
 }

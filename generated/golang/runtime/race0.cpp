@@ -44,135 +44,135 @@ namespace golang::runtime
 
     void raceReadObjectPC(golang::runtime::_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void raceWriteObjectPC(golang::runtime::_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     std::tuple<uintptr_t, uintptr_t> raceinit()
     {
-        go_throw("race"s);
+        go_throw("race"_s);
         return {0, 0};
     }
 
     void racefini()
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     uintptr_t raceproccreate()
     {
-        go_throw("race"s);
+        go_throw("race"_s);
         return 0;
     }
 
     void raceprocdestroy(uintptr_t ctx)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racemapshadow(unsafe::Pointer addr, uintptr_t size)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racewritepc(unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racereadpc(unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racereadrangepc(unsafe::Pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racewriterangepc(unsafe::Pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void raceacquire(unsafe::Pointer addr)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void raceacquireg(struct g* gp, unsafe::Pointer addr)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void raceacquirectx(uintptr_t racectx, unsafe::Pointer addr)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racerelease(unsafe::Pointer addr)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racereleaseg(struct g* gp, unsafe::Pointer addr)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racereleaseacquire(unsafe::Pointer addr)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racereleaseacquireg(struct g* gp, unsafe::Pointer addr)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racereleasemerge(unsafe::Pointer addr)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racereleasemergeg(struct g* gp, unsafe::Pointer addr)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racefingo()
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racemalloc(unsafe::Pointer p, uintptr_t sz)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racefree(unsafe::Pointer p, uintptr_t sz)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     uintptr_t racegostart(uintptr_t pc)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
         return 0;
     }
 
     void racegoend()
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
     void racectxend(uintptr_t racectx)
     {
-        go_throw("race"s);
+        go_throw("race"_s);
     }
 
 }

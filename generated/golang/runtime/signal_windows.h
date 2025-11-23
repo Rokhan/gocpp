@@ -57,7 +57,7 @@ namespace golang::runtime
     void sigenable(uint32_t sig);
     void sigdisable(uint32_t sig);
     void sigignore(uint32_t sig);
-    std::string signame(uint32_t sig);
+    gocpp::string signame(uint32_t sig);
     void crash();
     void dieFromException(struct exceptionrecord* info, struct context* r);
     struct gsignalStack

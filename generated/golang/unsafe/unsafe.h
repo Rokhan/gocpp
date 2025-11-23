@@ -17,8 +17,8 @@ namespace golang::unsafe
     unsafe::Pointer Add(golang::unsafe::Pointer ptr, golang::unsafe::IntegerType len);
     gocpp::slice<unsafe::ArbitraryType> Slice(golang::unsafe::ArbitraryType* ptr, golang::unsafe::IntegerType len);
     unsafe::ArbitraryType* SliceData(gocpp::slice<golang::unsafe::ArbitraryType> slice);
-    std::string String(unsigned char* ptr, golang::unsafe::IntegerType len);
-    unsigned char* StringData(std::string str);
+    gocpp::string String(unsigned char* ptr, golang::unsafe::IntegerType len);
+    unsigned char* StringData(gocpp::string str);
 
     namespace rec
     {

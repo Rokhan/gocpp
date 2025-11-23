@@ -8,5 +8,5 @@ namespace golang::main
 {
     using ints = gocpp::slice<int>;
     struct fakeResult;
-    using fakeFetcher = gocpp::map<std::string, fakeResult*>;
+    using fakeFetcher = gocpp::map<gocpp::string, fakeResult*>;
 }

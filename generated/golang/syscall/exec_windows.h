@@ -19,21 +19,21 @@
 namespace golang::syscall
 {
     extern sync::RWMutex ForkLock;
-    std::string EscapeArg(std::string s);
-    gocpp::slice<unsigned char> appendEscapeArg(gocpp::slice<unsigned char> b, std::string s);
-    std::string makeCmdLine(gocpp::slice<std::string> args);
-    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<std::string> envv);
+    gocpp::string EscapeArg(gocpp::string s);
+    gocpp::slice<unsigned char> appendEscapeArg(gocpp::slice<unsigned char> b, gocpp::string s);
+    gocpp::string makeCmdLine(gocpp::slice<gocpp::string> args);
+    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<gocpp::string> envv);
     void CloseOnExec(golang::syscall::Handle fd);
     struct gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking);
-    std::tuple<std::string, struct gocpp::error> FullPath(std::string name);
+    std::tuple<gocpp::string, struct gocpp::error> FullPath(gocpp::string name);
     bool isSlash(uint8_t c);
-    std::tuple<std::string, struct gocpp::error> normalizeDir(std::string dir);
+    std::tuple<gocpp::string, struct gocpp::error> normalizeDir(gocpp::string dir);
     int volToUpper(int ch);
-    std::tuple<std::string, struct gocpp::error> joinExeDirAndFName(std::string dir, std::string p);
+    std::tuple<gocpp::string, struct gocpp::error> joinExeDirAndFName(gocpp::string dir, gocpp::string p);
     struct ProcAttr
     {
-        std::string Dir;
-        gocpp::slice<std::string> Env;
+        gocpp::string Dir;
+        gocpp::slice<gocpp::string> Env;
         gocpp::slice<uintptr_t> Files;
         SysProcAttr* Sys;
 
@@ -52,7 +52,7 @@ namespace golang::syscall
     struct SysProcAttr
     {
         bool HideWindow;
-        std::string CmdLine;
+        gocpp::string CmdLine;
         uint32_t CreationFlags;
         golang::syscall::Token Token;
         SecurityAttributes* ProcessAttributes;
@@ -73,8 +73,8 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SysProcAttr& value);
-    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(std::string argv0, gocpp::slice<std::string> argv, struct ProcAttr* attr);
-    struct gocpp::error Exec(std::string argv0, gocpp::slice<std::string> argv, gocpp::slice<std::string> envv);
+    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, struct ProcAttr* attr);
+    struct gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv);
     extern ProcAttr zeroProcAttr;
     extern SysProcAttr zeroSysProcAttr;
 

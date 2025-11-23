@@ -34,7 +34,7 @@ namespace golang::runtime
         using abi::rec::Hasher;
     }
 
-    unsafe::Pointer mapaccess1_faststr(golang::runtime::maptype* t, struct hmap* h, std::string ky)
+    unsafe::Pointer mapaccess1_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string ky)
     {
         if(raceenabled && h != nullptr)
         {
@@ -47,7 +47,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map read and map write"s);
+            fatal("concurrent map read and map write"_s);
         }
         auto key = stringStructOf(& ky);
         if(h->B == 0)
@@ -148,7 +148,7 @@ namespace golang::runtime
         return unsafe::Pointer(& zeroVal[0]);
     }
 
-    std::tuple<unsafe::Pointer, bool> mapaccess2_faststr(golang::runtime::maptype* t, struct hmap* h, std::string ky)
+    std::tuple<unsafe::Pointer, bool> mapaccess2_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string ky)
     {
         if(raceenabled && h != nullptr)
         {
@@ -161,7 +161,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map read and map write"s);
+            fatal("concurrent map read and map write"_s);
         }
         auto key = stringStructOf(& ky);
         if(h->B == 0)
@@ -262,11 +262,11 @@ namespace golang::runtime
         return {unsafe::Pointer(& zeroVal[0]), false};
     }
 
-    unsafe::Pointer mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, std::string s)
+    unsafe::Pointer mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string s)
     {
         if(h == nullptr)
         {
-            gocpp::panic(plainError("assignment to entry in nil map"s));
+            gocpp::panic(plainError("assignment to entry in nil map"_s));
         }
         if(raceenabled)
         {
@@ -275,7 +275,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map writes"s);
+            fatal("concurrent map writes"_s);
         }
         auto key = stringStructOf(& s);
         auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& s)), uintptr_t(h->hash0));
@@ -358,13 +358,13 @@ namespace golang::runtime
         auto elem = add(unsafe::Pointer(insertb), dataOffset + bucketCnt * 2 * goarch::PtrSize + inserti * uintptr_t(t->ValueSize));
         if(h->flags & hashWriting == 0)
         {
-            fatal("concurrent map writes"s);
+            fatal("concurrent map writes"_s);
         }
         h->flags &^= hashWriting;
         return elem;
     }
 
-    void mapdelete_faststr(golang::runtime::maptype* t, struct hmap* h, std::string ky)
+    void mapdelete_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string ky)
     {
         if(raceenabled && h != nullptr)
         {
@@ -377,7 +377,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map writes"s);
+            fatal("concurrent map writes"_s);
         }
         auto key = stringStructOf(& ky);
         auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
@@ -470,7 +470,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting == 0)
         {
-            fatal("concurrent map writes"s);
+            fatal("concurrent map writes"_s);
         }
         h->flags &^= hashWriting;
     }
@@ -517,7 +517,7 @@ namespace golang::runtime
                     }
                     if(top < minTopHash)
                     {
-                        go_throw("bad map state"s);
+                        go_throw("bad map state"_s);
                     }
                     uint8_t useY = {};
                     if(! rec::sameSizeGrow(gocpp::recv(h)))
@@ -538,7 +538,7 @@ namespace golang::runtime
                         dst->e = add(dst->k, bucketCnt * 2 * goarch::PtrSize);
                     }
                     dst->b->tophash[dst->i & (bucketCnt - 1)] = top;
-                    *(std::string*)(dst->k) = *(std::string*)(k);
+                    *(gocpp::string*)(dst->k) = *(gocpp::string*)(k);
                     typedmemmove(t->Elem, dst->e, e);
                     dst->i++;
                     dst->k = add(dst->k, 2 * goarch::PtrSize);

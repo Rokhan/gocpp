@@ -23,30 +23,30 @@ namespace golang::syscall
     // Windows errors.
     // Invented values to support what package os expects.
     // More invented values for signals
-    gocpp::array<std::string, 16> signals = gocpp::Init<gocpp::array<std::string, 16>>([](auto& x) {
-        x[1] = "hangup"s;
-        x[2] = "interrupt"s;
-        x[3] = "quit"s;
-        x[4] = "illegal instruction"s;
-        x[5] = "trace/breakpoint trap"s;
-        x[6] = "aborted"s;
-        x[7] = "bus error"s;
-        x[8] = "floating point exception"s;
-        x[9] = "killed"s;
-        x[10] = "user defined signal 1"s;
-        x[11] = "segmentation fault"s;
-        x[12] = "user defined signal 2"s;
-        x[13] = "broken pipe"s;
-        x[14] = "alarm clock"s;
-        x[15] = "terminated"s;
+    gocpp::array<gocpp::string, 16> signals = gocpp::Init<gocpp::array<gocpp::string, 16>>([](auto& x) {
+        x[1] = "hangup"_s;
+        x[2] = "interrupt"_s;
+        x[3] = "quit"_s;
+        x[4] = "illegal instruction"_s;
+        x[5] = "trace/breakpoint trap"_s;
+        x[6] = "aborted"_s;
+        x[7] = "bus error"_s;
+        x[8] = "floating point exception"_s;
+        x[9] = "killed"_s;
+        x[10] = "user defined signal 1"_s;
+        x[11] = "segmentation fault"_s;
+        x[12] = "user defined signal 2"_s;
+        x[13] = "broken pipe"_s;
+        x[14] = "alarm clock"_s;
+        x[15] = "terminated"_s;
     });
     // flags for CreateToolhelp32Snapshot
     // do not reorder
     // do not reorder
     // wincrypt.h
-    gocpp::slice<unsigned char> OID_PKIX_KP_SERVER_AUTH = gocpp::slice<unsigned char>("1.3.6.1.5.5.7.3.1\x00"s);
-    gocpp::slice<unsigned char> OID_SERVER_GATED_CRYPTO = gocpp::slice<unsigned char>("1.3.6.1.4.1.311.10.3.3\x00"s);
-    gocpp::slice<unsigned char> OID_SGC_NETSCAPE = gocpp::slice<unsigned char>("2.16.840.1.113730.4.1\x00"s);
+    gocpp::slice<unsigned char> OID_PKIX_KP_SERVER_AUTH = gocpp::slice<unsigned char>("1.3.6.1.5.5.7.3.1\x00"_s);
+    gocpp::slice<unsigned char> OID_SERVER_GATED_CRYPTO = gocpp::slice<unsigned char>("1.3.6.1.4.1.311.10.3.3\x00"_s);
+    gocpp::slice<unsigned char> OID_SGC_NETSCAPE = gocpp::slice<unsigned char>("2.16.840.1.113730.4.1\x00"_s);
     struct gocpp_id_0
     {
 

@@ -20,32 +20,32 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
-    std::tuple<std::string, int, gocpp::slice<std::string>> f1()
+    std::tuple<gocpp::string, int, gocpp::slice<gocpp::string>> f1()
     {
-        return {"f1"s, 1001, gocpp::slice<std::string> {"a"s, "b"s}};
+        return {"f1"_s, 1001, gocpp::slice<gocpp::string> {"a"_s, "b"_s}};
     }
 
-    std::tuple<std::string, int, gocpp::array<std::string, 3>> f2()
+    std::tuple<gocpp::string, int, gocpp::array<gocpp::string, 3>> f2()
     {
-        return {"f2"s, 1002, gocpp::array<std::string, 3> {"c"s, "d"s, "e"s}};
+        return {"f2"_s, 1002, gocpp::array<gocpp::string, 3> {"c"_s, "d"_s, "e"_s}};
     }
 
     void main()
     {
-        auto [s1, i1] = std::tuple{"string1"s, 1};
+        auto [s1, i1] = std::tuple{"string1"_s, 1};
         mocklib::Println(s1, i1);
         int i2;
-        std::tie(s1, i2) = std::tuple{"string2"s, 2};
+        std::tie(s1, i2) = std::tuple{"string2"_s, 2};
         mocklib::Println(s1, i2);
-        std::string s2;
-        std::tie(s2, i2) = std::tuple{"string3"s, 3};
+        gocpp::string s2;
+        std::tie(s2, i2) = std::tuple{"string3"_s, 3};
         mocklib::Println(s2, i2);
-        std::tie(s2, i2) = std::tuple{"string4"s, 4};
+        std::tie(s2, i2) = std::tuple{"string4"_s, 4};
         mocklib::Println(s2, i2);
-        gocpp::slice<std::string> a1;
+        gocpp::slice<gocpp::string> a1;
         std::tie(s2, i2, a1) = f1();
         mocklib::Println(s2, i2, a1);
-        gocpp::array<std::string, 3> a2;
+        gocpp::array<gocpp::string, 3> a2;
         std::tie(s2, i2, a2) = f2();
         mocklib::Println(s2, i2, a2);
     }

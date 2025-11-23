@@ -21,11 +21,11 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
-    std::string sqrt(double x)
+    gocpp::string sqrt(double x)
     {
         if(x < 0)
         {
-            return sqrt(- x) + "i"s;
+            return sqrt(- x) + "i"_s;
         }
         return mocklib::Sprint(std::sqrt(x));
     }

@@ -151,7 +151,7 @@ namespace golang::runtime
                 switch(conditionId)
                 {
                     default:
-                        go_throw("sigsend: inconsistent state"s);
+                        go_throw("sigsend: inconsistent state"_s);
                         break;
                     case 0:
                         if(rec::CompareAndSwap(gocpp::recv(sig.state), sigIdle, sigSending))
@@ -165,7 +165,7 @@ namespace golang::runtime
                     case 2:
                         if(rec::CompareAndSwap(gocpp::recv(sig.state), sigReceiving, sigIdle))
                         {
-                            if(GOOS == "darwin"s || GOOS == "ios"s)
+                            if(GOOS == "darwin"_s || GOOS == "ios"_s)
                             {
                                 sigNoteWakeup(& sig.note);
                                 goto Send_break;
@@ -215,12 +215,12 @@ namespace golang::runtime
                     switch(conditionId)
                     {
                         default:
-                            go_throw("signal_recv: inconsistent state"s);
+                            go_throw("signal_recv: inconsistent state"_s);
                             break;
                         case 0:
                             if(rec::CompareAndSwap(gocpp::recv(sig.state), sigIdle, sigReceiving))
                             {
-                                if(GOOS == "darwin"s || GOOS == "ios"s)
+                                if(GOOS == "darwin"_s || GOOS == "ios"_s)
                                 {
                                     sigNoteSleep(& sig.note);
                                     goto Receive_break;
@@ -281,7 +281,7 @@ namespace golang::runtime
         if(! sig.inuse)
         {
             sig.inuse = true;
-            if(GOOS == "darwin"s || GOOS == "ios"s)
+            if(GOOS == "darwin"_s || GOOS == "ios"_s)
             {
                 sigNoteSetup(& sig.note);
             }

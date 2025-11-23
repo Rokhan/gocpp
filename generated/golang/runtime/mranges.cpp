@@ -76,7 +76,7 @@ namespace golang::runtime
         auto r = addrRange {offAddr {base}, offAddr {limit}};
         if((base - arenaBaseOffset >= base) != (limit - arenaBaseOffset >= limit))
         {
-            go_throw("addr range base and limit are not in the same memory segment"s);
+            go_throw("addr range base and limit are not in the same memory segment"_s);
         }
         return r;
     }
@@ -110,7 +110,7 @@ namespace golang::runtime
         else
         if(rec::lessThan(gocpp::recv(a.base), b.base) && rec::lessThan(gocpp::recv(b.limit), a.limit))
         {
-            go_throw("bad prune"s);
+            go_throw("bad prune"_s);
         }
         else
         if(rec::lessThan(gocpp::recv(b.limit), a.limit) && rec::lessThan(gocpp::recv(a.base), b.limit))
@@ -487,8 +487,8 @@ namespace golang::runtime
     {
         if(rec::size(gocpp::recv(r)) == 0)
         {
-            print("runtime: range = {"s, hex(rec::addr(gocpp::recv(r.base))), ", "s, hex(rec::addr(gocpp::recv(r.limit))), "}\n"s);
-            go_throw("attempted to add zero-sized address range"s);
+            print("runtime: range = {"_s, hex(rec::addr(gocpp::recv(r.base))), ", "_s, hex(rec::addr(gocpp::recv(r.limit))), "}\n"_s);
+            go_throw("attempted to add zero-sized address range"_s);
         }
         auto i = rec::findSucc(gocpp::recv(a), rec::addr(gocpp::recv(r.base)));
         auto coalescesDown = i > 0 && rec::equal(gocpp::recv(a->ranges[i - 1].limit), r.base);

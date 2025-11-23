@@ -17,8 +17,8 @@ namespace golang::syscall
     struct DLLError
     {
         gocpp::error Err;
-        std::string ObjName;
-        std::string Msg;
+        gocpp::string ObjName;
+        gocpp::string Msg;
 
         using isGoStruct = void;
 
@@ -56,7 +56,7 @@ namespace golang::syscall
     std::tuple<uintptr_t, syscall::Errno> getprocaddress(uintptr_t handle, uint8_t* procname);
     struct DLL
     {
-        std::string Name;
+        gocpp::string Name;
         golang::syscall::Handle Handle;
 
         using isGoStruct = void;
@@ -71,12 +71,12 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct DLL& value);
-    std::tuple<struct DLL*, struct gocpp::error> LoadDLL(std::string name);
-    struct DLL* MustLoadDLL(std::string name);
+    std::tuple<struct DLL*, struct gocpp::error> LoadDLL(gocpp::string name);
+    struct DLL* MustLoadDLL(gocpp::string name);
     struct Proc
     {
         DLL* Dll;
-        std::string Name;
+        gocpp::string Name;
         uintptr_t addr;
 
         using isGoStruct = void;
@@ -95,7 +95,7 @@ namespace golang::syscall
     {
         mocklib::Mutex mu;
         DLL* dll;
-        std::string Name;
+        gocpp::string Name;
 
         using isGoStruct = void;
 
@@ -109,11 +109,11 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LazyDLL& value);
-    struct LazyDLL* NewLazyDLL(std::string name);
+    struct LazyDLL* NewLazyDLL(gocpp::string name);
     struct LazyProc
     {
         mocklib::Mutex mu;
-        std::string Name;
+        gocpp::string Name;
         LazyDLL* l;
         Proc* proc;
 
@@ -132,10 +132,10 @@ namespace golang::syscall
 
     namespace rec
     {
-        std::string Error(struct DLLError* e);
+        gocpp::string Error(struct DLLError* e);
         struct gocpp::error Unwrap(struct DLLError* e);
-        std::tuple<struct Proc*, struct gocpp::error> FindProc(struct DLL* d, std::string name);
-        struct Proc* MustFindProc(struct DLL* d, std::string name);
+        std::tuple<struct Proc*, struct gocpp::error> FindProc(struct DLL* d, gocpp::string name);
+        struct Proc* MustFindProc(struct DLL* d, gocpp::string name);
         struct gocpp::error Release(struct DLL* d);
         uintptr_t Addr(struct Proc* p);
         std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(struct Proc* p, gocpp::slice<uintptr_t> a);
@@ -154,7 +154,7 @@ namespace golang::syscall
         struct gocpp::error Load(struct LazyDLL* d);
         void mustLoad(struct LazyDLL* d);
         uintptr_t Handle(struct LazyDLL* d);
-        struct LazyProc* NewProc(struct LazyDLL* d, std::string name);
+        struct LazyProc* NewProc(struct LazyDLL* d, gocpp::string name);
         struct gocpp::error Find(struct LazyProc* p);
         void mustFind(struct LazyProc* p);
         uintptr_t Addr(struct LazyProc* p);

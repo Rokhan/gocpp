@@ -36,12 +36,12 @@ namespace golang::runtime
     }
 
     //go:linkname plugin_lastmoduleinit plugin.lastmoduleinit
-    std::tuple<std::string, gocpp::map<std::string, go_any>, gocpp::slice<initTask*>, std::string> plugin_lastmoduleinit()
+    std::tuple<gocpp::string, gocpp::map<gocpp::string, go_any>, gocpp::slice<initTask*>, gocpp::string> plugin_lastmoduleinit()
     {
-        std::string path;
-        gocpp::map<std::string, go_any> syms;
+        gocpp::string path;
+        gocpp::map<gocpp::string, go_any> syms;
         gocpp::slice<initTask*> initTasks;
-        std::string errstr;
+        gocpp::string errstr;
         moduledata* md = {};
         for(auto pmd = firstmoduledata.next; pmd != nullptr; pmd = pmd->next)
         {
@@ -54,35 +54,35 @@ namespace golang::runtime
         }
         if(md == nullptr)
         {
-            go_throw("runtime: no plugin module data"s);
+            go_throw("runtime: no plugin module data"_s);
         }
-        if(md->pluginpath == ""s)
+        if(md->pluginpath == ""_s)
         {
-            go_throw("runtime: plugin has empty pluginpath"s);
+            go_throw("runtime: plugin has empty pluginpath"_s);
         }
         if(md->typemap != nullptr)
         {
-            return {""s, nullptr, nullptr, "plugin already loaded"s};
+            return {""_s, nullptr, nullptr, "plugin already loaded"_s};
         }
         for(auto [gocpp_ignored, pmd] : activeModules())
         {
             if(pmd->pluginpath == md->pluginpath)
             {
                 md->bad = true;
-                return {""s, nullptr, nullptr, "plugin already loaded"s};
+                return {""_s, nullptr, nullptr, "plugin already loaded"_s};
             }
             if(inRange(pmd->text, pmd->etext, md->text, md->etext) || inRange(pmd->bss, pmd->ebss, md->bss, md->ebss) || inRange(pmd->data, pmd->edata, md->data, md->edata) || inRange(pmd->types, pmd->etypes, md->types, md->etypes))
             {
-                println("plugin: new module data overlaps with previous moduledata"s);
-                println("\tpmd.text-etext="s, hex(pmd->text), "-"s, hex(pmd->etext));
-                println("\tpmd.bss-ebss="s, hex(pmd->bss), "-"s, hex(pmd->ebss));
-                println("\tpmd.data-edata="s, hex(pmd->data), "-"s, hex(pmd->edata));
-                println("\tpmd.types-etypes="s, hex(pmd->types), "-"s, hex(pmd->etypes));
-                println("\tmd.text-etext="s, hex(md->text), "-"s, hex(md->etext));
-                println("\tmd.bss-ebss="s, hex(md->bss), "-"s, hex(md->ebss));
-                println("\tmd.data-edata="s, hex(md->data), "-"s, hex(md->edata));
-                println("\tmd.types-etypes="s, hex(md->types), "-"s, hex(md->etypes));
-                go_throw("plugin: new module data overlaps with previous moduledata"s);
+                println("plugin: new module data overlaps with previous moduledata"_s);
+                println("\tpmd.text-etext="_s, hex(pmd->text), "-"_s, hex(pmd->etext));
+                println("\tpmd.bss-ebss="_s, hex(pmd->bss), "-"_s, hex(pmd->ebss));
+                println("\tpmd.data-edata="_s, hex(pmd->data), "-"_s, hex(pmd->edata));
+                println("\tpmd.types-etypes="_s, hex(pmd->types), "-"_s, hex(pmd->etypes));
+                println("\tmd.text-etext="_s, hex(md->text), "-"_s, hex(md->etext));
+                println("\tmd.bss-ebss="_s, hex(md->bss), "-"_s, hex(md->ebss));
+                println("\tmd.data-edata="_s, hex(md->data), "-"_s, hex(md->edata));
+                println("\tmd.types-etypes="_s, hex(md->types), "-"_s, hex(md->etypes));
+                go_throw("plugin: new module data overlaps with previous moduledata"_s);
             }
         }
         for(auto [gocpp_ignored, pkghash] : md->pkghashes)
@@ -90,7 +90,7 @@ namespace golang::runtime
             if(pkghash.linktimehash != *pkghash.runtimehash)
             {
                 md->bad = true;
-                return {""s, nullptr, nullptr, "plugin was built with a different version of package "s + pkghash.modulename};
+                return {""_s, nullptr, nullptr, "plugin was built with a different version of package "_s + pkghash.modulename};
             }
         }
         modulesinit();
@@ -103,7 +103,7 @@ namespace golang::runtime
             itabAdd(i);
         }
         unlock(& itabLock);
-        syms = gocpp::make(gocpp::Tag<gocpp::map<std::string, go_any>>(), len(md->ptab));
+        syms = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, go_any>>(), len(md->ptab));
         for(auto [gocpp_ignored, ptab] : md->ptab)
         {
             auto symName = resolveNameOff(unsafe::Pointer(md->types), ptab.name);
@@ -114,11 +114,11 @@ namespace golang::runtime
             auto name = rec::Name(gocpp::recv(symName));
             if(t->Kind_ & kindMask == kindFunc)
             {
-                name = "."s + name;
+                name = "."_s + name;
             }
             syms[name] = val;
         }
-        return {md->pluginpath, syms, md->inittasks, ""s};
+        return {md->pluginpath, syms, md->inittasks, ""_s};
     }
 
     void pluginftabverify(struct moduledata* md)
@@ -133,7 +133,7 @@ namespace golang::runtime
             }
             auto f = funcInfo {(_func*)(unsafe::Pointer(& md->pclntable[md->ftab[i].funcoff])), md};
             auto name = funcname(f);
-            auto name2 = "none"s;
+            auto name2 = "none"_s;
             auto entry2 = uintptr_t(0);
             auto f2 = findfunc(entry);
             if(rec::valid(gocpp::recv(f2)))
@@ -142,11 +142,11 @@ namespace golang::runtime
                 entry2 = rec::entry(gocpp::recv(f2));
             }
             badtable = true;
-            println("ftab entry"s, hex(entry), "/"s, hex(entry2), ": "s, name, "/"s, name2, "outside pc range:["s, hex(md->minpc), ","s, hex(md->maxpc), "], modulename="s, md->modulename, ", pluginpath="s, md->pluginpath);
+            println("ftab entry"_s, hex(entry), "/"_s, hex(entry2), ": "_s, name, "/"_s, name2, "outside pc range:["_s, hex(md->minpc), ","_s, hex(md->maxpc), "], modulename="_s, md->modulename, ", pluginpath="_s, md->pluginpath);
         }
         if(badtable)
         {
-            go_throw("runtime: plugin has bad symbol table"s);
+            go_throw("runtime: plugin has bad symbol table"_s);
         }
     }
 

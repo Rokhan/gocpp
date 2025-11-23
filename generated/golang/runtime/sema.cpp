@@ -206,7 +206,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp != gp->m->curg)
         {
-            go_throw("semacquire not on the G stack"s);
+            go_throw("semacquire not on the G stack"_s);
         }
         if(cansemacquire(addr))
         {
@@ -296,7 +296,7 @@ namespace golang::runtime
             }
             if(s->ticket != 0)
             {
-                go_throw("corrupted semaphore ticket"s);
+                go_throw("corrupted semaphore ticket"_s);
             }
             if(handoff && cansemacquire(addr))
             {
@@ -414,7 +414,7 @@ namespace golang::runtime
             {
                 if(s->parent->next != s)
                 {
-                    gocpp::panic("semaRoot queue"s);
+                    gocpp::panic("semaRoot queue"_s);
                 }
                 rec::rotateLeft(gocpp::recv(root), s->parent);
             }
@@ -557,7 +557,7 @@ namespace golang::runtime
         {
             if(p->next != x)
             {
-                go_throw("semaRoot rotateLeft"s);
+                go_throw("semaRoot rotateLeft"_s);
             }
             p->next = y;
         }
@@ -591,7 +591,7 @@ namespace golang::runtime
         {
             if(p->next != y)
             {
-                go_throw("semaRoot rotateRight"s);
+                go_throw("semaRoot rotateRight"_s);
             }
             p->next = x;
         }
@@ -769,8 +769,8 @@ namespace golang::runtime
     {
         if(sz != gocpp::Sizeof<notifyList>())
         {
-            print("runtime: bad notifyList size - sync="s, sz, " runtime="s, gocpp::Sizeof<notifyList>(), "\n"s);
-            go_throw("bad notifyList size"s);
+            print("runtime: bad notifyList size - sync="_s, sz, " runtime="_s, gocpp::Sizeof<notifyList>(), "\n"_s);
+            go_throw("bad notifyList size"_s);
         }
     }
 

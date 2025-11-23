@@ -269,11 +269,11 @@ namespace golang::runtime
     {
         if(t->Size_ > goarch::PtrSize)
         {
-            gocpp::panic("compileCallback: argument size is larger than uintptr"s);
+            gocpp::panic("compileCallback: argument size is larger than uintptr"_s);
         }
-        if(auto k = t->Kind_ & kindMask; GOARCH != "386"s && (k == kindFloat32 || k == kindFloat64))
+        if(auto k = t->Kind_ & kindMask; GOARCH != "386"_s && (k == kindFloat32 || k == kindFloat64))
         {
-            gocpp::panic("compileCallback: float arguments not supported"s);
+            gocpp::panic("compileCallback: float arguments not supported"_s);
         }
         if(t->Size_ == 0)
         {
@@ -378,7 +378,7 @@ namespace golang::runtime
                     break;
             }
         }
-        gocpp::panic("compileCallback: type "s + rec::string(gocpp::recv(toRType(t))) + " is currently not supported for use in system callbacks"s);
+        gocpp::panic("compileCallback: type "_s + rec::string(gocpp::recv(toRType(t))) + " is currently not supported for use in system callbacks"_s);
     }
 
     // assignReg attempts to assign a single register for an
@@ -453,14 +453,14 @@ namespace golang::runtime
         {
             auto condition = GOARCH;
             int conditionId = -1;
-            if(condition == "386"s) { conditionId = 0; }
-            else if(condition == "amd64"s) { conditionId = 1; }
-            else if(condition == "arm"s) { conditionId = 2; }
-            else if(condition == "arm64"s) { conditionId = 3; }
+            if(condition == "386"_s) { conditionId = 0; }
+            else if(condition == "amd64"_s) { conditionId = 1; }
+            else if(condition == "arm"_s) { conditionId = 2; }
+            else if(condition == "arm64"_s) { conditionId = 3; }
             switch(conditionId)
             {
                 default:
-                    gocpp::panic("unsupported architecture"s);
+                    gocpp::panic("unsupported architecture"_s);
                     break;
                 case 0:
                 case 1:
@@ -486,13 +486,13 @@ namespace golang::runtime
     uintptr_t compileCallback(struct eface fn, bool cdecl)
     {
         uintptr_t code;
-        if(GOARCH != "386"s)
+        if(GOARCH != "386"_s)
         {
             cdecl = false;
         }
         if(fn._type == nullptr || (fn._type->Kind_ & kindMask) != kindFunc)
         {
-            gocpp::panic("compileCallback: expected function with one uintptr-sized result"s);
+            gocpp::panic("compileCallback: expected function with one uintptr-sized result"_s);
         }
         auto ft = (runtime::functype*)(unsafe::Pointer(fn._type));
         // Check arguments and construct ABI translation.
@@ -505,15 +505,15 @@ namespace golang::runtime
         abiMap.retOffset = abiMap.dstStackSize;
         if(len(rec::OutSlice(gocpp::recv(ft))) != 1)
         {
-            gocpp::panic("compileCallback: expected function with one uintptr-sized result"s);
+            gocpp::panic("compileCallback: expected function with one uintptr-sized result"_s);
         }
         if(rec::OutSlice(gocpp::recv(ft))[0]->Size_ != goarch::PtrSize)
         {
-            gocpp::panic("compileCallback: expected function with one uintptr-sized result"s);
+            gocpp::panic("compileCallback: expected function with one uintptr-sized result"_s);
         }
         if(auto k = rec::OutSlice(gocpp::recv(ft))[0]->Kind_ & kindMask; k == kindFloat32 || k == kindFloat64)
         {
-            gocpp::panic("compileCallback: float results not supported"s);
+            gocpp::panic("compileCallback: float results not supported"_s);
         }
         if(intArgRegs == 0)
         {
@@ -523,7 +523,7 @@ namespace golang::runtime
         frameSize += abiMap.dstSpill;
         if(frameSize > callbackMaxFrame)
         {
-            gocpp::panic("compileCallback: function argument frame too large"s);
+            gocpp::panic("compileCallback: function argument frame too large"_s);
         }
         // For cdecl, the callee is responsible for popping its
         // arguments from the C stack.
@@ -547,7 +547,7 @@ namespace golang::runtime
         if(n >= len(cbs.ctxt))
         {
             cbsUnlock();
-            go_throw("too many callback functions"s);
+            go_throw("too many callback functions"_s);
         }
         auto c = winCallback {key.fn, retPop, abiMap};
         cbs.ctxt[n] = c;
@@ -622,7 +622,7 @@ namespace golang::runtime
                         memmove(goReg, add(a->args, part.srcStackOffset), part.len);
                         break;
                     default:
-                        gocpp::panic("bad ABI description"s);
+                        gocpp::panic("bad ABI description"_s);
                         break;
                 }
             }
@@ -862,7 +862,7 @@ namespace golang::runtime
                         args = tmp.make_slice(0);
                         break;
                     case 1:
-                        gocpp::panic("runtime: SyscallN has too many arguments"s);
+                        gocpp::panic("runtime: SyscallN has too many arguments"_s);
                         break;
                 }
             }

@@ -29,7 +29,7 @@ namespace golang::time
 
     // registerLoadFromEmbeddedTZData is called by the time/tzdata package,
     // if it is imported.
-    void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string _1)> f)
+    void registerLoadFromEmbeddedTZData(std::function<std::tuple<gocpp::string, struct gocpp::error> (gocpp::string _1)> f)
     {
         loadFromEmbeddedTZData = f;
     }
@@ -38,13 +38,13 @@ namespace golang::time
     // from tzdata information embedded in the binary itself.
     // This is set when the time/tzdata package is imported,
     // via registerLoadFromEmbeddedTzdata.
-    std::function<std::tuple<std::string, struct gocpp::error> (std::string zipname)> loadFromEmbeddedTZData;
+    std::function<std::tuple<gocpp::string, struct gocpp::error> (gocpp::string zipname)> loadFromEmbeddedTZData;
     // maxFileSize is the max permitted size of files read by readFile.
     // As reference, the zoneinfo.zip distributed by Go is ~350 KB,
     // so 10MB is overkill.
-    std::string rec::Error(golang::time::fileSizeError f)
+    gocpp::string rec::Error(golang::time::fileSizeError f)
     {
-        return "time: file "s + std::string(f) + " is too large"s;
+        return "time: file "_s + gocpp::string(f) + " is too large"_s;
     }
 
     // Copies of io.Seek* constants to avoid importing "io":
@@ -143,27 +143,27 @@ namespace golang::time
     }
 
     // Make a string by stopping at the first NUL
-    std::string byteString(gocpp::slice<unsigned char> p)
+    gocpp::string byteString(gocpp::slice<unsigned char> p)
     {
         for(auto i = 0; i < len(p); i++)
         {
             if(p[i] == 0)
             {
-                return std::string(p.make_slice(0, i));
+                return gocpp::string(p.make_slice(0, i));
             }
         }
-        return std::string(p);
+        return gocpp::string(p);
     }
 
-    gocpp::error errBadData = errors::New("malformed time zone information"s);
+    gocpp::error errBadData = errors::New("malformed time zone information"_s);
     // LoadLocationFromTZData returns a Location with the given name
     // initialized from the IANA Time Zone database-formatted data.
     // The data should be in the format of a standard IANA time zone file
     // (for example, the content of /etc/localtime on Unix systems).
-    std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data)
+    std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data)
     {
         auto d = dataIO {data, false};
-        if(auto magic = rec::read(gocpp::recv(d), 4); std::string(magic) != "TZif"s)
+        if(auto magic = rec::read(gocpp::recv(d), 4); gocpp::string(magic) != "TZif"_s)
         {
             return {nullptr, errBadData};
         }
@@ -264,11 +264,11 @@ namespace golang::time
         {
             return {nullptr, errBadData};
         }
-        std::string extend = {};
+        gocpp::string extend = {};
         auto rest = rec::rest(gocpp::recv(d));
         if(len(rest) > 2 && rest[0] == '\n' && rest[len(rest) - 1] == '\n')
         {
-            extend = std::string(rest.make_slice(1, len(rest) - 1));
+            extend = gocpp::string(rest.make_slice(1, len(rest) - 1));
         }
         auto nzone = n[NZone];
         if(nzone == 0)
@@ -300,9 +300,9 @@ namespace golang::time
                 return {nullptr, errBadData};
             }
             zones[i].name = byteString(abbrev.make_slice(b));
-            if(mocklib::GOOS == "aix"s && len(name) > 8 && (name.make_slice(0, 8) == "Etc/GMT+"s || name.make_slice(0, 8) == "Etc/GMT-"s))
+            if(mocklib::GOOS == "aix"_s && len(name) > 8 && (name.make_slice(0, 8) == "Etc/GMT+"_s || name.make_slice(0, 8) == "Etc/GMT-"_s))
             {
-                if(name != "Etc/GMT+0"s)
+                if(name != "Etc/GMT+0"_s)
                 {
                     zones[i].name = name.make_slice(4);
                 }
@@ -375,7 +375,7 @@ namespace golang::time
                     l->cacheEnd = tx[i + 1].when;
                 }
                 else
-                if(l->extend != ""s)
+                if(l->extend != ""_s)
                 {
                     if(auto [name, offset, estart, eend, isDST, ok] = tzset(l->extend, l->cacheStart, sec); ok)
                     {
@@ -401,7 +401,7 @@ namespace golang::time
         return {l, nullptr};
     }
 
-    int findZone(gocpp::slice<zone> zones, std::string name, int offset, bool isDST)
+    int findZone(gocpp::slice<zone> zones, gocpp::string name, int offset, bool isDST)
     {
         for(auto [i, z] : zones)
         {
@@ -415,15 +415,15 @@ namespace golang::time
 
     // loadTzinfoFromDirOrZip returns the contents of the file with the given name
     // in dir. dir can either be an uncompressed zip file, or a directory.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromDirOrZip(std::string dir, std::string name)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromDirOrZip(gocpp::string dir, gocpp::string name)
     {
-        if(len(dir) > 4 && dir.make_slice(len(dir) - 4) == ".zip"s)
+        if(len(dir) > 4 && dir.make_slice(len(dir) - 4) == ".zip"_s)
         {
             return loadTzinfoFromZip(dir, name);
         }
-        if(dir != ""s)
+        if(dir != ""_s)
         {
-            name = dir + "/"s + name;
+            name = dir + "/"_s + name;
         }
         return readFile(name);
     }
@@ -450,7 +450,7 @@ namespace golang::time
 
     // loadTzinfoFromZip returns the contents of the file with the given name
     // in the given uncompressed zip file.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromZip(std::string zipfile, std::string name)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromZip(gocpp::string zipfile, gocpp::string name)
     {
         gocpp::Defer defer;
         try
@@ -469,7 +469,7 @@ namespace golang::time
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), ztailsize);
             if(auto err = preadn(fd, buf, - ztailsize); err != nullptr || get4(buf) != zecheader)
             {
-                return {nullptr, errors::New("corrupt zip file "s + zipfile)};
+                return {nullptr, errors::New("corrupt zip file "_s + zipfile)};
             }
             auto n = get2(buf.make_slice(10));
             auto size = get4(buf.make_slice(12));
@@ -477,7 +477,7 @@ namespace golang::time
             buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
             if(auto err = preadn(fd, buf, off); err != nullptr)
             {
-                return {nullptr, errors::New("corrupt zip file "s + zipfile)};
+                return {nullptr, errors::New("corrupt zip file "_s + zipfile)};
             }
             for(auto i = 0; i < n; i++)
             {
@@ -493,24 +493,24 @@ namespace golang::time
                 auto off = get4(buf.make_slice(42));
                 auto zname = buf.make_slice(46, 46 + namelen);
                 buf = buf.make_slice(46 + namelen + xlen + fclen);
-                if(std::string(zname) != name)
+                if(gocpp::string(zname) != name)
                 {
                     continue;
                 }
                 if(meth != 0)
                 {
-                    return {nullptr, errors::New("unsupported compression for "s + name + " in "s + zipfile)};
+                    return {nullptr, errors::New("unsupported compression for "_s + name + " in "_s + zipfile)};
                 }
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), zheadersize + namelen);
-                if(auto err = preadn(fd, buf, off); err != nullptr || get4(buf) != zheader || get2(buf.make_slice(8)) != meth || get2(buf.make_slice(26)) != namelen || std::string(buf.make_slice(30, 30 + namelen)) != name)
+                if(auto err = preadn(fd, buf, off); err != nullptr || get4(buf) != zheader || get2(buf.make_slice(8)) != meth || get2(buf.make_slice(26)) != namelen || gocpp::string(buf.make_slice(30, 30 + namelen)) != name)
                 {
-                    return {nullptr, errors::New("corrupt zip file "s + zipfile)};
+                    return {nullptr, errors::New("corrupt zip file "_s + zipfile)};
                 }
                 xlen = get2(buf.make_slice(28));
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
                 if(auto err = preadn(fd, buf, off + 30 + namelen + xlen); err != nullptr)
                 {
-                    return {nullptr, errors::New("corrupt zip file "s + zipfile)};
+                    return {nullptr, errors::New("corrupt zip file "_s + zipfile)};
                 }
                 return {buf, nullptr};
             }
@@ -525,14 +525,14 @@ namespace golang::time
     // loadTzinfoFromTzdata returns the time zone information of the time zone
     // with the given name, from a tzdata database file as they are typically
     // found on android.
-    std::function<std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> (std::string file, std::string name)> loadTzinfoFromTzdata;
+    std::function<std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> (gocpp::string file, gocpp::string name)> loadTzinfoFromTzdata;
     // loadTzinfo returns the time zone information of the time zone
     // with the given name, from a given source. A source may be a
     // timezone database directory, tzdata database file or an uncompressed
     // zip file, containing the contents of such a directory.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfo(std::string name, std::string source)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfo(gocpp::string name, gocpp::string source)
     {
-        if(len(source) >= 6 && source.make_slice(len(source) - 6) == "tzdata"s)
+        if(len(source) >= 6 && source.make_slice(len(source) - 6) == "tzdata"_s)
         {
             return loadTzinfoFromTzdata(source, name);
         }
@@ -543,7 +543,7 @@ namespace golang::time
     // the specified sources. See loadTzinfo for a list of supported sources.
     // The first timezone data matching the given name that is successfully loaded
     // and parsed is returned as a Location.
-    std::tuple<struct Location*, struct gocpp::error> loadLocation(std::string name, gocpp::slice<std::string> sources)
+    std::tuple<struct Location*, struct gocpp::error> loadLocation(gocpp::string name, gocpp::slice<gocpp::string> sources)
     {
         struct Location* z;
         struct gocpp::error firstErr;
@@ -596,14 +596,14 @@ namespace golang::time
         {
             return {nullptr, firstErr};
         }
-        return {nullptr, errors::New("unknown time zone "s + name)};
+        return {nullptr, errors::New("unknown time zone "_s + name)};
     }
 
     // readFile reads and returns the content of the named file.
     // It is a trivial implementation of os.ReadFile, reimplemented
     // here to avoid depending on io/ioutil or os.
     // It returns an error if name exceeds maxFileSize bytes.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readFile(std::string name)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readFile(gocpp::string name)
     {
         gocpp::Defer defer;
         try

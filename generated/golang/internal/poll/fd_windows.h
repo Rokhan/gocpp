@@ -90,7 +90,7 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FD& value);
-    extern std::function<void (std::string net, struct FD* fd, struct gocpp::error err)> logInitFD;
+    extern std::function<void (gocpp::string net, struct FD* fd, struct gocpp::error err)> logInitFD;
 
     namespace rec
     {
@@ -98,7 +98,7 @@ namespace golang::poll
         void InitBufs(struct operation* o, gocpp::slice<gocpp::slice<unsigned char>>* buf);
         void ClearBufs(struct operation* o);
         void InitMsg(struct operation* o, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob);
-        std::tuple<std::string, struct gocpp::error> Init(struct FD* fd, std::string net, bool pollable);
+        std::tuple<gocpp::string, struct gocpp::error> Init(struct FD* fd, gocpp::string net, bool pollable);
         struct gocpp::error destroy(struct FD* fd);
         struct gocpp::error Close(struct FD* fd);
         std::tuple<int, struct gocpp::error> Read(struct FD* fd, gocpp::slice<unsigned char> buf);
@@ -115,8 +115,8 @@ namespace golang::poll
         std::tuple<int, struct gocpp::error> WriteToInet4(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
         std::tuple<int, struct gocpp::error> WriteToInet6(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
         struct gocpp::error ConnectEx(struct FD* fd, syscall::Sockaddr ra);
-        std::tuple<std::string, struct gocpp::error> acceptOne(struct FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, struct operation* o);
-        std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, std::string, struct gocpp::error> Accept(struct FD* fd, std::function<std::tuple<syscall::Handle, struct gocpp::error> ()> sysSocket);
+        std::tuple<gocpp::string, struct gocpp::error> acceptOne(struct FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, struct operation* o);
+        std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, gocpp::string, struct gocpp::error> Accept(struct FD* fd, std::function<std::tuple<syscall::Handle, struct gocpp::error> ()> sysSocket);
         std::tuple<int64_t, struct gocpp::error> Seek(struct FD* fd, int64_t offset, int whence);
         struct gocpp::error Fchmod(struct FD* fd, uint32_t mode);
         struct gocpp::error Fchdir(struct FD* fd);

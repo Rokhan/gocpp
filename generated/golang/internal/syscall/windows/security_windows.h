@@ -108,7 +108,7 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UserInfo4& value);
-    std::string GetSystemDirectory();
+    gocpp::string GetSystemDirectory();
     struct LUID_AND_ATTRIBUTES
     {
         LUID Luid;

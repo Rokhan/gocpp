@@ -83,7 +83,7 @@ namespace golang::runtime
         struct inlineFrame next(struct inlineUnwinder* u, struct inlineFrame uf);
         bool isInlined(struct inlineUnwinder* u, struct inlineFrame uf);
         struct srcFunc srcFunc(struct inlineUnwinder* u, struct inlineFrame uf);
-        std::tuple<std::string, int> fileLine(struct inlineUnwinder* u, struct inlineFrame uf);
+        std::tuple<gocpp::string, int> fileLine(struct inlineUnwinder* u, struct inlineFrame uf);
     }
 }
 

@@ -328,7 +328,7 @@ namespace golang::sort
     // Strings sorts a slice of strings in increasing order.
     //
     // Note: as of Go 1.22, this function simply calls [slices.Sort].
-    void Strings(gocpp::slice<std::string> x)
+    void Strings(gocpp::slice<gocpp::string> x)
     {
         stringsImpl(x);
     }
@@ -353,7 +353,7 @@ namespace golang::sort
     // StringsAreSorted reports whether the slice x is sorted in increasing order.
     //
     // Note: as of Go 1.22, this function simply calls [slices.IsSorted].
-    bool StringsAreSorted(gocpp::slice<std::string> x)
+    bool StringsAreSorted(gocpp::slice<gocpp::string> x)
     {
         return stringsAreSortedImpl(x);
     }

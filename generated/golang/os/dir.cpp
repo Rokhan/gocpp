@@ -82,9 +82,9 @@ namespace golang::os
     // nil error. If it encounters an error before the end of the
     // directory, Readdirnames returns the names read until that point and
     // a non-nil error.
-    std::tuple<gocpp::slice<std::string>, struct gocpp::error> rec::Readdirnames(struct File* f, int n)
+    std::tuple<gocpp::slice<gocpp::string>, struct gocpp::error> rec::Readdirnames(struct File* f, int n)
     {
-        gocpp::slice<std::string> names;
+        gocpp::slice<gocpp::string> names;
         struct gocpp::error err;
         if(f == nullptr)
         {
@@ -93,7 +93,7 @@ namespace golang::os
         std::tie(names, gocpp_id_2, gocpp_id_3, err) = rec::readdir(gocpp::recv(f), n, readdirName);
         if(names == nullptr)
         {
-            names = gocpp::slice<std::string> {};
+            names = gocpp::slice<gocpp::string> {};
         }
         return {names, err};
     }
@@ -132,7 +132,7 @@ namespace golang::os
     // If an error occurs reading the directory,
     // ReadDir returns the entries it was able to read before the error,
     // along with the error.
-    std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> ReadDir(std::string name)
+    std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> ReadDir(gocpp::string name)
     {
         gocpp::Defer defer;
         try

@@ -84,7 +84,7 @@ namespace golang::os
     // The single letters are the abbreviations
     // used by the String method's formatting.
     // Mask for the type bits. For regular files, none will be set.
-    std::string rec::Name(struct fileStat* fs)
+    gocpp::string rec::Name(struct fileStat* fs)
     {
         return fs->name;
     }

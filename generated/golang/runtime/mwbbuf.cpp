@@ -129,7 +129,7 @@ namespace golang::runtime
         }
         if((b->end - b->next) % gocpp::Sizeof<uintptr_t>() != 0)
         {
-            go_throw("bad write barrier buffer bounds"s);
+            go_throw("bad write barrier buffer bounds"_s);
         }
     }
 

@@ -23,7 +23,7 @@ namespace golang::syscall
 
     // encodeWTF16 returns the potentially ill-formed
     // UTF-16 encoding of s.
-    gocpp::slice<uint16_t> encodeWTF16(std::string s, gocpp::slice<uint16_t> buf)
+    gocpp::slice<uint16_t> encodeWTF16(gocpp::string s, gocpp::slice<uint16_t> buf)
     {
         for(auto i = 0; i < len(s); )
         {

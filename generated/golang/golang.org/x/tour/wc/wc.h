@@ -12,7 +12,7 @@
 
 namespace golang::wc
 {
-    void Test(std::function<gocpp::map<std::string, int> (std::string _1)> f);
+    void Test(std::function<gocpp::map<gocpp::string, int> (gocpp::string _1)> f);
     extern gocpp::slice<gocpp_id_0> testCases;
 
     namespace rec

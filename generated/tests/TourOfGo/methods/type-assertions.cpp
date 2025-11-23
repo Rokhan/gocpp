@@ -22,11 +22,11 @@ namespace golang::main
 
     void main()
     {
-        std::any i = "hello"s;
-        auto s = gocpp::getValue<std::string>(i);
+        std::any i = "hello"_s;
+        auto s = gocpp::getValue<gocpp::string>(i);
         mocklib::Println(s);
         bool ok;
-        std::tie(s, ok) = gocpp::getValue<std::string>(i);
+        std::tie(s, ok) = gocpp::getValue<gocpp::string>(i);
         mocklib::Println(s, ok);
         double f;
         std::tie(f, ok) = gocpp::getValue<double>(i);

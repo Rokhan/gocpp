@@ -28,6 +28,12 @@ namespace golang::main
         double f = std::sqrt(double(x * x + y * y));
         unsigned int z = (unsigned int)(f);
         mocklib::Println(x, y, z);
+        auto r = gocpp::rune('$');
+        mocklib::Println(r);
+        auto s1 = "Hello Word"_s.make_slice(5);
+        mocklib::Println(s1);
+        auto s2 = "Hello Word"_s;
+        mocklib::Println(s2.make_slice(5));
     }
 
 }

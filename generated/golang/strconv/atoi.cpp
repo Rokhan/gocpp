@@ -32,9 +32,9 @@ namespace golang::strconv
     }
 
     // ErrRange indicates that a value is out of range for the target type.
-    gocpp::error ErrRange = errors::New("value out of range"s);
+    gocpp::error ErrRange = errors::New("value out of range"_s);
     // ErrSyntax indicates that a value does not have the right syntax for the target type.
-    gocpp::error ErrSyntax = errors::New("invalid syntax"s);
+    gocpp::error ErrSyntax = errors::New("invalid syntax"_s);
     // A NumError records a failed conversion.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -71,9 +71,9 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct NumError* e)
+    gocpp::string rec::Error(struct NumError* e)
     {
-        return "strconv."s + e->Func + ": "s + "parsing "s + Quote(e->Num) + ": "s + rec::Error(gocpp::recv(e->Err));
+        return "strconv."_s + e->Func + ": "_s + "parsing "_s + Quote(e->Num) + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
     struct gocpp::error rec::Unwrap(struct NumError* e)
@@ -95,39 +95,39 @@ namespace golang::strconv
     // since it incurs a transitive dependency on "unicode".
     // Either move strings.Clone to an internal/bytealg or make the
     // "strings" to "unicode" dependency lighter (see https://go.dev/issue/54098).
-    std::string cloneString(std::string x)
+    gocpp::string cloneString(gocpp::string x)
     {
-        return std::string(gocpp::slice<unsigned char>(x));
+        return gocpp::string(gocpp::slice<unsigned char>(x));
     }
 
-    struct NumError* syntaxError(std::string fn, std::string str)
+    struct NumError* syntaxError(gocpp::string fn, gocpp::string str)
     {
         return new NumError {fn, cloneString(str), ErrSyntax};
     }
 
-    struct NumError* rangeError(std::string fn, std::string str)
+    struct NumError* rangeError(gocpp::string fn, gocpp::string str)
     {
         return new NumError {fn, cloneString(str), ErrRange};
     }
 
-    struct NumError* baseError(std::string fn, std::string str, int base)
+    struct NumError* baseError(gocpp::string fn, gocpp::string str, int base)
     {
-        return new NumError {fn, cloneString(str), errors::New("invalid base "s + Itoa(base))};
+        return new NumError {fn, cloneString(str), errors::New("invalid base "_s + Itoa(base))};
     }
 
-    struct NumError* bitSizeError(std::string fn, std::string str, int bitSize)
+    struct NumError* bitSizeError(gocpp::string fn, gocpp::string str, int bitSize)
     {
-        return new NumError {fn, cloneString(str), errors::New("invalid bit size "s + Itoa(bitSize))};
+        return new NumError {fn, cloneString(str), errors::New("invalid bit size "_s + Itoa(bitSize))};
     }
 
     // IntSize is the size in bits of an int or uint value.
     // ParseUint is like ParseInt but for unsigned numbers.
     //
     // A sign prefix is not permitted.
-    std::tuple<uint64_t, struct gocpp::error> ParseUint(std::string s, int base, int bitSize)
+    std::tuple<uint64_t, struct gocpp::error> ParseUint(gocpp::string s, int base, int bitSize)
     {
-        auto fnParseUint = "ParseUint"s;
-        if(s == ""s)
+        auto fnParseUint = "ParseUint"_s;
+        if(s == ""_s)
         {
             return {0, syntaxError(fnParseUint, s)};
         }
@@ -287,12 +287,12 @@ namespace golang::strconv
     // appropriate bitSize and sign.
     //
     // [integer literals]: https://go.dev/ref/spec#Integer_literals
-    std::tuple<int64_t, struct gocpp::error> ParseInt(std::string s, int base, int bitSize)
+    std::tuple<int64_t, struct gocpp::error> ParseInt(gocpp::string s, int base, int bitSize)
     {
         int64_t i;
         struct gocpp::error err;
-        auto fnParseInt = "ParseInt"s;
-        if(s == ""s)
+        auto fnParseInt = "ParseInt"_s;
+        if(s == ""_s)
         {
             return {0, syntaxError(fnParseInt, s)};
         }
@@ -339,9 +339,9 @@ namespace golang::strconv
     }
 
     // Atoi is equivalent to ParseInt(s, 10, 0), converted to type int.
-    std::tuple<int, struct gocpp::error> Atoi(std::string s)
+    std::tuple<int, struct gocpp::error> Atoi(gocpp::string s)
     {
-        auto fnAtoi = "Atoi"s;
+        auto fnAtoi = "Atoi"_s;
         auto sLen = len(s);
         if(intSize == 32 && (0 < sLen && sLen < 10) || intSize == 64 && (0 < sLen && sLen < 19))
         {
@@ -381,7 +381,7 @@ namespace golang::strconv
     // underscoreOK reports whether the underscores in s are allowed.
     // Checking them in this one function lets all the parsers skip over them simply.
     // Underscore must appear only between digits or between a base prefix and a digit.
-    bool underscoreOK(std::string s)
+    bool underscoreOK(gocpp::string s)
     {
         auto saw = '^';
         auto i = 0;

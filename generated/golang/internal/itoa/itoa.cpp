@@ -19,21 +19,21 @@ namespace golang::itoa
     }
 
     // Itoa converts val to a decimal string.
-    std::string Itoa(int val)
+    gocpp::string Itoa(int val)
     {
         if(val < 0)
         {
-            return "-"s + Uitoa((unsigned int)(- val));
+            return "-"_s + Uitoa((unsigned int)(- val));
         }
         return Uitoa((unsigned int)(val));
     }
 
     // Uitoa converts val to a decimal string.
-    std::string Uitoa(unsigned int val)
+    gocpp::string Uitoa(unsigned int val)
     {
         if(val == 0)
         {
-            return "0"s;
+            return "0"_s;
         }
         gocpp::array<unsigned char, 20> buf = {};
         auto i = len(buf) - 1;
@@ -45,16 +45,16 @@ namespace golang::itoa
             val = q;
         }
         buf[i] = (unsigned char)('0' + val);
-        return std::string(buf.make_slice(i));
+        return gocpp::string(buf.make_slice(i));
     }
 
-    std::string hex = "0123456789abcdef"s;
+    gocpp::string hex = "0123456789abcdef"_s;
     // Uitox converts val (a uint) to a hexadecimal string.
-    std::string Uitox(unsigned int val)
+    gocpp::string Uitox(unsigned int val)
     {
         if(val == 0)
         {
-            return "0x0"s;
+            return "0x0"_s;
         }
         gocpp::array<unsigned char, 20> buf = {};
         auto i = len(buf) - 1;
@@ -70,7 +70,7 @@ namespace golang::itoa
         buf[i] = 'x';
         i--;
         buf[i] = '0';
-        return std::string(buf.make_slice(i));
+        return gocpp::string(buf.make_slice(i));
     }
 
 }

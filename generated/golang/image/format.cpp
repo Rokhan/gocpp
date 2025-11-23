@@ -32,7 +32,7 @@ namespace golang::image
     }
 
     // ErrFormat indicates that decoding encountered an unknown format.
-    gocpp::error ErrFormat = errors::New("image: unknown format"s);
+    gocpp::error ErrFormat = errors::New("image: unknown format"_s);
     // A format holds an image format's name, magic header and how to decode it.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -81,7 +81,7 @@ namespace golang::image
     // string can contain "?" wildcards that each match any one byte.
     // [Decode] is the function that decodes the encoded image.
     // [DecodeConfig] is the function that decodes just its configuration.
-    void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig)
+    void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig)
     {
         rec::Lock(gocpp::recv(formatsMu));
         auto [formats, gocpp_id_0] = gocpp::getValue<gocpp::slice<format>>(rec::Load(gocpp::recv(atomicFormats)));
@@ -149,7 +149,7 @@ namespace golang::image
     }
 
     // match reports whether magic matches b. Magic may contain "?" wildcards.
-    bool match(std::string magic, gocpp::slice<unsigned char> b)
+    bool match(gocpp::string magic, gocpp::slice<unsigned char> b)
     {
         if(len(magic) != len(b))
         {
@@ -184,13 +184,13 @@ namespace golang::image
     // The string returned is the format name used during format registration.
     // Format registration is typically done by an init function in the codec-
     // specific package.
-    std::tuple<struct Image, std::string, struct gocpp::error> Decode(io::Reader r)
+    std::tuple<struct Image, gocpp::string, struct gocpp::error> Decode(io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);
         if(f.decode == nullptr)
         {
-            return {nullptr, ""s, ErrFormat};
+            return {nullptr, ""_s, ErrFormat};
         }
         auto [m, err] = rec::decode(gocpp::recv(f), rr);
         return {m, f.name, err};
@@ -200,13 +200,13 @@ namespace golang::image
     // been encoded in a registered format. The string returned is the format name
     // used during format registration. Format registration is typically done by
     // an init function in the codec-specific package.
-    std::tuple<struct Config, std::string, struct gocpp::error> DecodeConfig(io::Reader r)
+    std::tuple<struct Config, gocpp::string, struct gocpp::error> DecodeConfig(io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);
         if(f.decodeConfig == nullptr)
         {
-            return {Config {}, ""s, ErrFormat};
+            return {Config {}, ""_s, ErrFormat};
         }
         auto [c, err] = rec::decodeConfig(gocpp::recv(f), rr);
         return {c, f.name, err};

@@ -113,7 +113,7 @@ namespace golang::os
 
     // newFileStatFromGetFileInformationByHandle calls GetFileInformationByHandle
     // to gather all required information about the file handle h.
-    std::tuple<struct fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(std::string path, syscall::Handle h)
+    std::tuple<struct fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h)
     {
         struct fileStat* fs;
         struct gocpp::error err;
@@ -122,7 +122,7 @@ namespace golang::os
         if(err != nullptr)
         {
             return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "GetFileInformationByHandle"s;
+                x.Op = "GetFileInformationByHandle"_s;
                 x.Path = path;
                 x.Err = err;
             })};
@@ -138,7 +138,7 @@ namespace golang::os
             else
             {
                 return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
-                    x.Op = "GetFileInformationByHandleEx"s;
+                    x.Op = "GetFileInformationByHandleEx"_s;
                     x.Path = path;
                     x.Err = err;
                 })};
@@ -303,14 +303,14 @@ namespace golang::os
         {
             rec::Lock(gocpp::recv(fs));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(fs)); });
-            if(fs->path == ""s)
+            if(fs->path == ""_s)
             {
                 return nullptr;
             }
-            std::string path = {};
+            gocpp::string path = {};
             if(fs->appendNameToPath)
             {
-                path = fixLongPath(fs->path + "\\"s + fs->name);
+                path = fixLongPath(fs->path + "\\"_s + fs->name);
             }
             else
             {
@@ -335,7 +335,7 @@ namespace golang::os
             {
                 return err;
             }
-            fs->path = ""s;
+            fs->path = ""_s;
             fs->vol = i.VolumeSerialNumber;
             fs->idxhi = i.FileIndexHigh;
             fs->idxlo = i.FileIndexLow;
@@ -349,7 +349,7 @@ namespace golang::os
 
     // saveInfoFromPath saves full path of the file to be used by os.SameFile later,
     // and set name from path.
-    struct gocpp::error rec::saveInfoFromPath(struct fileStat* fs, std::string path)
+    struct gocpp::error rec::saveInfoFromPath(struct fileStat* fs, gocpp::string path)
     {
         fs->path = path;
         if(! isAbs(fs->path))
@@ -359,7 +359,7 @@ namespace golang::os
             if(err != nullptr)
             {
                 return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                    x.Op = "FullPath"s;
+                    x.Op = "FullPath"_s;
                     x.Path = path;
                     x.Err = err;
                 });

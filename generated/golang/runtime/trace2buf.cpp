@@ -180,7 +180,7 @@ namespace golang::runtime
                 w.traceBuf = (traceBuf*)(sysAlloc(gocpp::Sizeof<traceBuf>(), & memstats.other_sys));
                 if(w.traceBuf == nullptr)
                 {
-                    go_throw("trace: out of memory"s);
+                    go_throw("trace: out of memory"_s);
                 }
             }
         });
@@ -389,7 +389,7 @@ namespace golang::runtime
     }
 
     // stringData appends s's data directly to buf.
-    void rec::stringData(struct traceBuf* buf, std::string s)
+    void rec::stringData(struct traceBuf* buf, gocpp::string s)
     {
         buf->pos += copy(buf->arr.make_slice(buf->pos), s);
     }
@@ -420,7 +420,7 @@ namespace golang::runtime
         }
         if(v != 0)
         {
-            go_throw("v could not fit in traceBytesPerNumber"s);
+            go_throw("v could not fit in traceBytesPerNumber"_s);
         }
     }
 

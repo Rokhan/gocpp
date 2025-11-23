@@ -36,13 +36,13 @@ namespace golang::bytes
     gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int n);
     extern gocpp::error errUnreadByte;
     struct Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
-    struct Buffer* NewBufferString(std::string s);
+    struct Buffer* NewBufferString(gocpp::string s);
 
     namespace rec
     {
         gocpp::slice<unsigned char> Bytes(struct Buffer* b);
         gocpp::slice<unsigned char> AvailableBuffer(struct Buffer* b);
-        std::string String(struct Buffer* b);
+        gocpp::string String(struct Buffer* b);
         bool empty(struct Buffer* b);
         int Len(struct Buffer* b);
         int Cap(struct Buffer* b);
@@ -53,7 +53,7 @@ namespace golang::bytes
         int grow(struct Buffer* b, int n);
         void Grow(struct Buffer* b, int n);
         std::tuple<int, struct gocpp::error> Write(struct Buffer* b, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> WriteString(struct Buffer* b, std::string s);
+        std::tuple<int, struct gocpp::error> WriteString(struct Buffer* b, gocpp::string s);
         std::tuple<int64_t, struct gocpp::error> ReadFrom(struct Buffer* b, io::Reader r);
         std::tuple<int64_t, struct gocpp::error> WriteTo(struct Buffer* b, io::Writer w);
         struct gocpp::error WriteByte(struct Buffer* b, unsigned char c);
@@ -66,7 +66,7 @@ namespace golang::bytes
         struct gocpp::error UnreadByte(struct Buffer* b);
         std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadBytes(struct Buffer* b, unsigned char delim);
         std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readSlice(struct Buffer* b, unsigned char delim);
-        std::tuple<std::string, struct gocpp::error> ReadString(struct Buffer* b, unsigned char delim);
+        std::tuple<gocpp::string, struct gocpp::error> ReadString(struct Buffer* b, unsigned char delim);
     }
 }
 

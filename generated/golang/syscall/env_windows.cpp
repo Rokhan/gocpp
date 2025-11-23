@@ -24,14 +24,14 @@ namespace golang::syscall
         using namespace mocklib::rec;
     }
 
-    std::tuple<std::string, bool> Getenv(std::string key)
+    std::tuple<gocpp::string, bool> Getenv(gocpp::string key)
     {
-        std::string value;
+        gocpp::string value;
         bool found;
         auto [keyp, err] = UTF16PtrFromString(key);
         if(err != nullptr)
         {
-            return {""s, false};
+            return {""_s, false};
         }
         auto n = uint32_t(100);
         for(; ; )
@@ -40,7 +40,7 @@ namespace golang::syscall
             std::tie(n, err) = GetEnvironmentVariable(keyp, & b[0], uint32_t(len(b)));
             if(n == 0 && err == ERROR_ENVVAR_NOT_FOUND)
             {
-                return {""s, false};
+                return {""_s, false};
             }
             if(n <= uint32_t(len(b)))
             {
@@ -49,7 +49,7 @@ namespace golang::syscall
         }
     }
 
-    struct gocpp::error Setenv(std::string key, std::string value)
+    struct gocpp::error Setenv(gocpp::string key, gocpp::string value)
     {
         auto [v, err] = UTF16PtrFromString(value);
         if(err != nullptr)
@@ -71,7 +71,7 @@ namespace golang::syscall
         return nullptr;
     }
 
-    struct gocpp::error Unsetenv(std::string key)
+    struct gocpp::error Unsetenv(gocpp::string key)
     {
         auto [keyp, err] = UTF16PtrFromString(key);
         if(err != nullptr)
@@ -102,7 +102,7 @@ namespace golang::syscall
         }
     }
 
-    gocpp::slice<std::string> Environ()
+    gocpp::slice<gocpp::string> Environ()
     {
         gocpp::Defer defer;
         try
@@ -113,7 +113,7 @@ namespace golang::syscall
                 return nullptr;
             }
             defer.push_back([=]{ FreeEnvironmentStrings(envp); });
-            auto r = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), 0, 50);
+            auto r = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, 50);
             auto size = gocpp::Sizeof<uint16_t>();
             for(; *envp != 0; )
             {

@@ -20,9 +20,9 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
-    std::tuple<std::string, bool> dummy()
+    std::tuple<gocpp::string, bool> dummy()
     {
-        return {"dummyStr"s, true};
+        return {"dummyStr"_s, true};
     }
 
     bool okok = false;
@@ -77,7 +77,7 @@ namespace golang::main
                     mocklib::Println(s1);
                     break;
                 default:
-                    mocklib::Println("default"s);
+                    mocklib::Println("default"_s);
                     break;
             }
         }
@@ -93,7 +93,7 @@ namespace golang::main
                     mocklib::Println(s2);
                     break;
                 default:
-                    mocklib::Println("default"s);
+                    mocklib::Println("default"_s);
                     break;
             }
         }
@@ -109,7 +109,7 @@ namespace golang::main
                     mocklib::Println(s3);
                     break;
                 default:
-                    mocklib::Println("default"s);
+                    mocklib::Println("default"_s);
                     break;
             }
         }

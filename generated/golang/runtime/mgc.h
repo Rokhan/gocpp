@@ -54,7 +54,7 @@ namespace golang::runtime
     extern gocpp_id_0 writeBarrier;
     extern uint32_t gcBlackenEnabled;
     void setGCPhase(uint32_t x);
-    extern gocpp::array<std::string, 4> gcMarkWorkerModeStrings;
+    extern gocpp::array<gocpp::string, 4> gcMarkWorkerModeStrings;
     bool pollFractionalWorkerExit();
     struct gocpp_id_1
     {
@@ -178,7 +178,7 @@ namespace golang::runtime
     {
         return gcTestIsReachable(gocpp::ToSlice<unsafe::Pointer>(value, ptrs...));
     }
-    std::string gcTestPointerClass(unsafe::Pointer p);
+    gocpp::string gcTestPointerClass(unsafe::Pointer p);
     struct workType
     {
         golang::runtime::lfstack full;

@@ -72,7 +72,7 @@ namespace golang::errors
 
     // New returns an error that formats as the given text.
     // Each call to New returns a distinct error value even if the text is identical.
-    struct gocpp::error New(std::string text)
+    struct gocpp::error New(gocpp::string text)
     {
         return new errorString {text};
     }
@@ -107,7 +107,7 @@ namespace golang::errors
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct errorString* e)
+    gocpp::string rec::Error(struct errorString* e)
     {
         return e->s;
     }
@@ -125,6 +125,6 @@ namespace golang::errors
     //
     // Functions and methods should document the cases in which an error
     // wrapping this will be returned.
-    gocpp::error ErrUnsupported = New("unsupported operation"s);
+    gocpp::error ErrUnsupported = New("unsupported operation"_s);
 }
 

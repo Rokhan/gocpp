@@ -1090,7 +1090,7 @@ namespace golang::io
 
         struct IStringWriter
         {
-            virtual std::tuple<int, struct gocpp::error> vWriteString(std::string s) = 0;
+            virtual std::tuple<int, struct gocpp::error> vWriteString(gocpp::string s) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -1101,7 +1101,7 @@ namespace golang::io
                 value.reset(ptr);
             }
 
-            std::tuple<int, struct gocpp::error> vWriteString(std::string s) override;
+            std::tuple<int, struct gocpp::error> vWriteString(gocpp::string s) override;
 
             StoreT value;
         };
@@ -1111,12 +1111,12 @@ namespace golang::io
 
     namespace rec
     {
-        std::tuple<int, struct gocpp::error> WriteString(const gocpp::PtrRecv<struct StringWriter, false>& self, std::string s);
-        std::tuple<int, struct gocpp::error> WriteString(const gocpp::ObjRecv<struct StringWriter>& self, std::string s);
+        std::tuple<int, struct gocpp::error> WriteString(const gocpp::PtrRecv<struct StringWriter, false>& self, gocpp::string s);
+        std::tuple<int, struct gocpp::error> WriteString(const gocpp::ObjRecv<struct StringWriter>& self, gocpp::string s);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct StringWriter& value);
-    std::tuple<int, struct gocpp::error> WriteString(struct Writer w, std::string s);
+    std::tuple<int, struct gocpp::error> WriteString(struct Writer w, gocpp::string s);
     std::tuple<int, struct gocpp::error> ReadAtLeast(struct Reader r, gocpp::slice<unsigned char> buf, int min);
     std::tuple<int, struct gocpp::error> ReadFull(struct Reader r, gocpp::slice<unsigned char> buf);
     std::tuple<int64_t, struct gocpp::error> CopyN(struct Writer dst, struct Reader src, int64_t n);
@@ -1267,7 +1267,7 @@ namespace golang::io
         std::tuple<int64_t, struct gocpp::error> Seek(struct OffsetWriter* o, int64_t offset, int whence);
         std::tuple<int, struct gocpp::error> Read(struct teeReader* t, gocpp::slice<unsigned char> p);
         std::tuple<int, struct gocpp::error> Write(discard, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> WriteString(discard, std::string s);
+        std::tuple<int, struct gocpp::error> WriteString(discard, gocpp::string s);
         std::tuple<int64_t, struct gocpp::error> ReadFrom(discard, struct Reader r);
         struct gocpp::error Close(nopCloser);
         struct gocpp::error Close(nopCloserWriterTo);

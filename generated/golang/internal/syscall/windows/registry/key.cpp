@@ -65,7 +65,7 @@ namespace golang::registry
     // and returns the new key and an error.
     // The access parameter specifies desired access rights to the
     // key to be opened.
-    std::tuple<registry::Key, struct gocpp::error> OpenKey(golang::registry::Key k, std::string path, uint32_t access)
+    std::tuple<registry::Key, struct gocpp::error> OpenKey(golang::registry::Key k, gocpp::string path, uint32_t access)
     {
         auto [p, err] = syscall::UTF16PtrFromString(path);
         if(err != nullptr)
@@ -82,14 +82,14 @@ namespace golang::registry
     }
 
     // ReadSubKeyNames returns the names of subkeys of key k.
-    std::tuple<gocpp::slice<std::string>, struct gocpp::error> rec::ReadSubKeyNames(golang::registry::Key k)
+    std::tuple<gocpp::slice<gocpp::string>, struct gocpp::error> rec::ReadSubKeyNames(golang::registry::Key k)
     {
         gocpp::Defer defer;
         try
         {
             runtime::LockOSThread();
             defer.push_back([=]{ runtime::UnlockOSThread(); });
-            auto names = gocpp::make(gocpp::Tag<gocpp::slice<std::string>>(), 0);
+            auto names = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0);
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 256);
             loopItems:
             for(auto i = uint32_t(0); ; i++)
@@ -135,7 +135,7 @@ namespace golang::registry
     // whether the key already existed.
     // The access parameter specifies the access rights for the key
     // to be created.
-    std::tuple<registry::Key, bool, struct gocpp::error> CreateKey(golang::registry::Key k, std::string path, uint32_t access)
+    std::tuple<registry::Key, bool, struct gocpp::error> CreateKey(golang::registry::Key k, gocpp::string path, uint32_t access)
     {
         registry::Key newk;
         bool openedExisting;
@@ -151,7 +151,7 @@ namespace golang::registry
     }
 
     // DeleteKey deletes the subkey path of key k and its values.
-    struct gocpp::error DeleteKey(golang::registry::Key k, std::string path)
+    struct gocpp::error DeleteKey(golang::registry::Key k, gocpp::string path)
     {
         return regDeleteKey(syscall::Handle(k), syscall::StringToUTF16Ptr(path));
     }

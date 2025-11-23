@@ -12,14 +12,14 @@
 
 namespace golang::runtime
 {
-    std::tuple<uintptr_t, std::string, int, bool> Caller(int skip);
+    std::tuple<uintptr_t, gocpp::string, int, bool> Caller(int skip);
     int Callers(int skip, gocpp::slice<uintptr_t> pc);
-    extern std::string defaultGOROOT;
-    std::string GOROOT();
-    extern std::string buildVersion;
-    std::string Version();
-    extern std::string GOOS;
-    extern std::string GOARCH;
+    extern gocpp::string defaultGOROOT;
+    gocpp::string GOROOT();
+    extern gocpp::string buildVersion;
+    gocpp::string Version();
+    extern gocpp::string GOOS;
+    extern gocpp::string GOARCH;
 
     namespace rec
     {

@@ -22,7 +22,7 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
-    void say(std::string s)
+    void say(gocpp::string s)
     {
         for(auto i = 0; i < 5; i++)
         {
@@ -33,9 +33,9 @@ namespace golang::main
 
     void main()
     {
-        gocpp::go([&]{ say("world"s); });
+        gocpp::go([&]{ say("world"_s); });
         mocklib::Sleep(50 * mocklib::Millisecond);
-        say("hello"s);
+        say("hello"_s);
     }
 
 }

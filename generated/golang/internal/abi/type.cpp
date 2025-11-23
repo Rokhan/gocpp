@@ -123,7 +123,7 @@ namespace golang::abi
     // TypeOff is the offset to a type from moduledata.types.  See resolveTypeOff in runtime.
     // TextOff is an offset from the top of a text section.  See (rtype).textOff in runtime.
     // String returns the name of k.
-    std::string rec::String(golang::abi::Kind k)
+    gocpp::string rec::String(golang::abi::Kind k)
     {
         if(int(k) < len(kindNames))
         {
@@ -132,34 +132,34 @@ namespace golang::abi
         return kindNames[0];
     }
 
-    gocpp::slice<std::string> kindNames = gocpp::Init<gocpp::slice<std::string>>([](auto& x) {
-        x[Invalid] = "invalid"s;
-        x[Bool] = "bool"s;
-        x[Int] = "int"s;
-        x[Int8] = "int8"s;
-        x[Int16] = "int16"s;
-        x[Int32] = "int32"s;
-        x[Int64] = "int64"s;
-        x[Uint] = "uint"s;
-        x[Uint8] = "uint8"s;
-        x[Uint16] = "uint16"s;
-        x[Uint32] = "uint32"s;
-        x[Uint64] = "uint64"s;
-        x[Uintptr] = "uintptr"s;
-        x[Float32] = "float32"s;
-        x[Float64] = "float64"s;
-        x[Complex64] = "complex64"s;
-        x[Complex128] = "complex128"s;
-        x[Array] = "array"s;
-        x[Chan] = "chan"s;
-        x[Func] = "func"s;
-        x[Interface] = "interface"s;
-        x[Map] = "map"s;
-        x[Pointer] = "ptr"s;
-        x[Slice] = "slice"s;
-        x[String] = "string"s;
-        x[Struct] = "struct"s;
-        x[UnsafePointer] = "unsafe.Pointer"s;
+    gocpp::slice<gocpp::string> kindNames = gocpp::Init<gocpp::slice<gocpp::string>>([](auto& x) {
+        x[Invalid] = "invalid"_s;
+        x[Bool] = "bool"_s;
+        x[Int] = "int"_s;
+        x[Int8] = "int8"_s;
+        x[Int16] = "int16"_s;
+        x[Int32] = "int32"_s;
+        x[Int64] = "int64"_s;
+        x[Uint] = "uint"_s;
+        x[Uint8] = "uint8"_s;
+        x[Uint16] = "uint16"_s;
+        x[Uint32] = "uint32"_s;
+        x[Uint64] = "uint64"_s;
+        x[Uintptr] = "uintptr"_s;
+        x[Float32] = "float32"_s;
+        x[Float64] = "float64"_s;
+        x[Complex64] = "complex64"_s;
+        x[Complex128] = "complex128"_s;
+        x[Array] = "array"_s;
+        x[Chan] = "chan"_s;
+        x[Func] = "func"_s;
+        x[Interface] = "interface"_s;
+        x[Map] = "map"_s;
+        x[Pointer] = "ptr"_s;
+        x[Slice] = "slice"_s;
+        x[String] = "string"_s;
+        x[Struct] = "struct"_s;
+        x[UnsafePointer] = "unsafe.Pointer"_s;
     });
     abi::Kind rec::Kind(struct Type* t)
     {
@@ -283,7 +283,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.mcount > 0"s)).make_slice(0, t->Mcount, t->Mcount);
+        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.mcount > 0"_s)).make_slice(0, t->Mcount, t->Mcount);
     }
 
     gocpp::slice<Method> rec::ExportedMethods(struct UncommonType* t)
@@ -292,7 +292,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.xcount > 0"s)).make_slice(0, t->Xcount, t->Xcount);
+        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.xcount > 0"_s)).make_slice(0, t->Xcount, t->Xcount);
     }
 
     // addChecked returns p+x.
@@ -302,7 +302,7 @@ namespace golang::abi
     // record why the addition is safe, which is to say why the addition
     // does not cause x to advance to the very end of p's allocation
     // and therefore point incorrectly at the next block in memory.
-    unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, std::string whySafe)
+    unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, gocpp::string whySafe)
     {
         return unsafe::Pointer(uintptr_t(p) + x);
     }
@@ -1146,7 +1146,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Type*, 1 << 16>*)(addChecked(unsafe::Pointer(t), uadd, "t.inCount > 0"s)).make_slice(0, t->InCount, t->InCount);
+        return (gocpp::array<Type*, 1 << 16>*)(addChecked(unsafe::Pointer(t), uadd, "t.inCount > 0"_s)).make_slice(0, t->InCount, t->InCount);
     }
 
     gocpp::slice<Type*> rec::OutSlice(struct FuncType* t)
@@ -1161,7 +1161,7 @@ namespace golang::abi
         {
             uadd += gocpp::Sizeof<UncommonType>();
         }
-        return (gocpp::array<Type*, 1 << 17>*)(addChecked(unsafe::Pointer(t), uadd, "outCount > 0"s)).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
+        return (gocpp::array<Type*, 1 << 17>*)(addChecked(unsafe::Pointer(t), uadd, "outCount > 0"_s)).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }
 
     bool rec::IsVariadic(struct FuncType* t)
@@ -1307,7 +1307,7 @@ namespace golang::abi
 
     // DataChecked does pointer arithmetic on n's Bytes, and that arithmetic is asserted to
     // be safe for the reason in whySafe (which can appear in a backtrace, etc.)
-    unsigned char* rec::DataChecked(struct Name n, int off, std::string whySafe)
+    unsigned char* rec::DataChecked(struct Name n, int off, gocpp::string whySafe)
     {
         return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), whySafe));
     }
@@ -1316,7 +1316,7 @@ namespace golang::abi
     // be safe because the runtime made the call (other packages use DataChecked)
     unsigned char* rec::Data(struct Name n, int off)
     {
-        return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), "the runtime doesn't need to give you a reason"s));
+        return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), "the runtime doesn't need to give you a reason"_s));
     }
 
     // IsExported returns "is n exported?"
@@ -1344,7 +1344,7 @@ namespace golang::abi
         auto v = 0;
         for(auto i = 0; ; i++)
         {
-            auto x = *rec::DataChecked(gocpp::recv(n), off + i, "read varint"s);
+            auto x = *rec::DataChecked(gocpp::recv(n), off + i, "read varint"_s);
             v += int(x & 0x7f) << (7 * i);
             if(x & 0x80 == 0)
             {
@@ -1383,37 +1383,37 @@ namespace golang::abi
     }
 
     // Name returns the tag string for n, or empty if there is none.
-    std::string rec::Name(struct Name n)
+    gocpp::string rec::Name(struct Name n)
     {
         if(n.Bytes == nullptr)
         {
-            return ""s;
+            return ""_s;
         }
         auto [i, l] = rec::ReadVarint(gocpp::recv(n), 1);
-        return unsafe::String(rec::DataChecked(gocpp::recv(n), 1 + i, "non-empty string"s), l);
+        return unsafe::String(rec::DataChecked(gocpp::recv(n), 1 + i, "non-empty string"_s), l);
     }
 
     // Tag returns the tag string for n, or empty if there is none.
-    std::string rec::Tag(struct Name n)
+    gocpp::string rec::Tag(struct Name n)
     {
         if(! rec::HasTag(gocpp::recv(n)))
         {
-            return ""s;
+            return ""_s;
         }
         auto [i, l] = rec::ReadVarint(gocpp::recv(n), 1);
         auto [i2, l2] = rec::ReadVarint(gocpp::recv(n), 1 + i + l);
-        return unsafe::String(rec::DataChecked(gocpp::recv(n), 1 + i + l + i2, "non-empty string"s), l2);
+        return unsafe::String(rec::DataChecked(gocpp::recv(n), 1 + i + l + i2, "non-empty string"_s), l2);
     }
 
-    struct Name NewName(std::string n, std::string tag, bool exported, bool embedded)
+    struct Name NewName(gocpp::string n, gocpp::string tag, bool exported, bool embedded)
     {
         if(len(n) >= (1 << 29))
         {
-            gocpp::panic("abi.NewName: name too long: "s + n.make_slice(0, 1024) + "..."s);
+            gocpp::panic("abi.NewName: name too long: "_s + n.make_slice(0, 1024) + "..."_s);
         }
         if(len(tag) >= (1 << 29))
         {
-            gocpp::panic("abi.NewName: tag too long: "s + tag.make_slice(0, 1024) + "..."s);
+            gocpp::panic("abi.NewName: tag too long: "_s + tag.make_slice(0, 1024) + "..."_s);
         }
         gocpp::array<unsigned char, 10> nameLen = {};
         gocpp::array<unsigned char, 10> tagLen = {};

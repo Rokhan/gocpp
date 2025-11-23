@@ -116,7 +116,7 @@ namespace golang::runtime
         lock(& globalRand.lock);
         if(globalRand.init)
         {
-            fatal("randinit twice"s);
+            fatal("randinit twice"_s);
         }
         auto seed = & globalRand.seed;
         if(startupRand != nullptr)
@@ -174,7 +174,7 @@ namespace golang::runtime
         lock(& globalRand.lock);
         if(! globalRand.init)
         {
-            fatal("randinit missed"s);
+            fatal("randinit missed"_s);
         }
         for(; ; )
         {
@@ -194,7 +194,7 @@ namespace golang::runtime
         lock(& globalRand.lock);
         if(! globalRand.init)
         {
-            fatal("randinit missed"s);
+            fatal("randinit missed"_s);
         }
         rec::Reseed(gocpp::recv(globalRand.state));
         unlock(& globalRand.lock);

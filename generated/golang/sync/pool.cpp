@@ -305,7 +305,7 @@ namespace golang::sync
     {
         if(p == nullptr)
         {
-            gocpp::panic("nil Pool"s);
+            gocpp::panic("nil Pool"_s);
         }
         auto pid = runtime_procPin();
         auto s = runtime_LoadAcquintptr(& p->localSize);

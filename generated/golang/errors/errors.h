@@ -11,10 +11,10 @@
 
 namespace golang::errors
 {
-    struct gocpp::error New(std::string text);
+    struct gocpp::error New(gocpp::string text);
     struct errorString
     {
-        std::string s;
+        gocpp::string s;
 
         using isGoStruct = void;
 
@@ -32,7 +32,7 @@ namespace golang::errors
 
     namespace rec
     {
-        std::string Error(struct errorString* e);
+        gocpp::string Error(struct errorString* e);
     }
 }
 

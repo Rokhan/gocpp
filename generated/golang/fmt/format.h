@@ -13,8 +13,8 @@
 
 namespace golang::fmt
 {
-    extern std::string ldigits;
-    extern std::string udigits;
+    extern gocpp::string ldigits;
+    extern gocpp::string udigits;
     struct fmtFlags
     {
         bool widPresent;
@@ -66,18 +66,18 @@ namespace golang::fmt
         void init(struct fmt* f, buffer* buf);
         void writePadding(struct fmt* f, int n);
         void pad(struct fmt* f, gocpp::slice<unsigned char> b);
-        void padString(struct fmt* f, std::string s);
+        void padString(struct fmt* f, gocpp::string s);
         void fmtBoolean(struct fmt* f, bool v);
         void fmtUnicode(struct fmt* f, uint64_t u);
-        void fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, std::string digits);
-        std::string truncateString(struct fmt* f, std::string s);
+        void fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, gocpp::string digits);
+        gocpp::string truncateString(struct fmt* f, gocpp::string s);
         gocpp::slice<unsigned char> truncate(struct fmt* f, gocpp::slice<unsigned char> b);
-        void fmtS(struct fmt* f, std::string s);
+        void fmtS(struct fmt* f, gocpp::string s);
         void fmtBs(struct fmt* f, gocpp::slice<unsigned char> b);
-        void fmtSbx(struct fmt* f, std::string s, gocpp::slice<unsigned char> b, std::string digits);
-        void fmtSx(struct fmt* f, std::string s, std::string digits);
-        void fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, std::string digits);
-        void fmtQ(struct fmt* f, std::string s);
+        void fmtSbx(struct fmt* f, gocpp::string s, gocpp::slice<unsigned char> b, gocpp::string digits);
+        void fmtSx(struct fmt* f, gocpp::string s, gocpp::string digits);
+        void fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, gocpp::string digits);
+        void fmtQ(struct fmt* f, gocpp::string s);
         void fmtC(struct fmt* f, uint64_t c);
         void fmtQc(struct fmt* f, uint64_t c);
         void fmtFloat(struct fmt* f, double v, int size, gocpp::rune verb, int prec);

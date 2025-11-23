@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    extern gocpp::array<std::string, 6> errors;
+    extern gocpp::array<gocpp::string, 6> errors;
     void main();
 
     namespace rec

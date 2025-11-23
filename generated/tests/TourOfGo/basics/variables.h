@@ -37,9 +37,9 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct pos& value);
     extern std::function<void (void)> funcVar1;
     extern std::function<int (int)> funcVar2;
-    extern std::function<std::tuple<int, std::string> (int)> funcVar3;
+    extern std::function<std::tuple<int, gocpp::string> (int)> funcVar3;
     void main();
-    std::tuple<int, std::string> withNamedResults();
+    std::tuple<int, gocpp::string> withNamedResults();
     void inlineAssign(int i);
     void dummy_vars();
     void dummy_funcs();

@@ -260,7 +260,7 @@ namespace golang::flate
         }
         if(d->index != 0 || d->windowEnd != 0)
         {
-            gocpp::panic("internal error: fillWindow called with stale data"s);
+            gocpp::panic("internal error: fillWindow called with stale data"_s);
         }
         if(len(b) > windowSize)
         {
@@ -481,7 +481,7 @@ namespace golang::flate
         {
             if(d->index > d->windowEnd)
             {
-                gocpp::panic("index > windowEnd"s);
+                gocpp::panic("index > windowEnd"_s);
             }
             auto lookahead = d->windowEnd - d->index;
             if(lookahead < minMatchLength + maxMatchLength)
@@ -492,7 +492,7 @@ namespace golang::flate
                 }
                 if(d->index > d->windowEnd)
                 {
-                    gocpp::panic("index > windowEnd"s);
+                    gocpp::panic("index > windowEnd"_s);
                 }
                 if(lookahead == 0)
                 {
@@ -733,7 +733,7 @@ namespace golang::flate
                     d->step = (*compressor)->deflate;
                     break;
                 default:
-                    return mocklib::Errorf("flate: invalid compression level %d: want value in range [-2, 9]"s, level);
+                    return mocklib::Errorf("flate: invalid compression level %d: want value in range [-2, 9]"_s, level);
                     break;
             }
         }
@@ -889,7 +889,7 @@ namespace golang::flate
         return rec::Write(gocpp::recv(w->w), b);
     }
 
-    gocpp::error errWriterClosed = errors::New("flate: closed writer"s);
+    gocpp::error errWriterClosed = errors::New("flate: closed writer"_s);
     // A Writer takes data written to it and writes the compressed
     // form of that data to an underlying writer (see [NewWriter]).
     

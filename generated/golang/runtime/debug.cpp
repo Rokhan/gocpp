@@ -66,7 +66,7 @@ namespace golang::runtime
     // This call will go away when the scheduler improves.
     int GOMAXPROCS(int n)
     {
-        if(GOARCH == "wasm"s && n > 1)
+        if(GOARCH == "wasm"_s && n > 1)
         {
             n = 1;
         }
@@ -122,7 +122,7 @@ namespace golang::runtime
     }
 
     //go:linkname debug_modinfo runtime/debug.modinfo
-    std::string debug_modinfo()
+    gocpp::string debug_modinfo()
     {
         return modinfo;
     }

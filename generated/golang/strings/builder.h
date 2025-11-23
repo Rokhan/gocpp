@@ -34,7 +34,7 @@ namespace golang::strings
     namespace rec
     {
         void copyCheck(struct Builder* b);
-        std::string String(struct Builder* b);
+        gocpp::string String(struct Builder* b);
         int Len(struct Builder* b);
         int Cap(struct Builder* b);
         void Reset(struct Builder* b);
@@ -43,7 +43,7 @@ namespace golang::strings
         std::tuple<int, struct gocpp::error> Write(struct Builder* b, gocpp::slice<unsigned char> p);
         struct gocpp::error WriteByte(struct Builder* b, unsigned char c);
         std::tuple<int, struct gocpp::error> WriteRune(struct Builder* b, gocpp::rune r);
-        std::tuple<int, struct gocpp::error> WriteString(struct Builder* b, std::string s);
+        std::tuple<int, struct gocpp::error> WriteString(struct Builder* b, gocpp::string s);
     }
 }
 

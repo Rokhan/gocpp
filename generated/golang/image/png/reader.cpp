@@ -108,7 +108,7 @@ namespace golang::png
     // multiple IDAT chunks, and IDAT chunks must be sequential (i.e. they may not
     // have any other chunks between them).
     // https://www.w3.org/TR/PNG/#5ChunkOrdering
-    std::string pngHeader = "\x89PNG\r\n\x1a\n"s;
+    gocpp::string pngHeader = "\x89PNG\r\n\x1a\n"_s;
     
     template<typename T> requires gocpp::GoStruct<T>
     decoder::operator T()
@@ -178,23 +178,23 @@ namespace golang::png
     }
 
     // A FormatError reports that the input is not a valid PNG.
-    std::string rec::Error(golang::png::FormatError e)
+    gocpp::string rec::Error(golang::png::FormatError e)
     {
-        return "png: invalid format: "s + std::string(e);
+        return "png: invalid format: "_s + gocpp::string(e);
     }
 
-    FormatError chunkOrderError = FormatError("chunk out of order"s);
+    FormatError chunkOrderError = FormatError("chunk out of order"_s);
     // An UnsupportedError reports that the input uses a valid but unimplemented PNG feature.
-    std::string rec::Error(golang::png::UnsupportedError e)
+    gocpp::string rec::Error(golang::png::UnsupportedError e)
     {
-        return "png: unsupported feature: "s + std::string(e);
+        return "png: unsupported feature: "_s + gocpp::string(e);
     }
 
     struct gocpp::error rec::parseIHDR(struct decoder* d, uint32_t length)
     {
         if(length != 13)
         {
-            return FormatError("bad IHDR length"s);
+            return FormatError("bad IHDR length"_s);
         }
         if(auto [gocpp_id_0, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 13)); err != nullptr)
         {
@@ -203,32 +203,32 @@ namespace golang::png
         rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(0, 13));
         if(d->tmp[10] != 0)
         {
-            return UnsupportedError("compression method"s);
+            return UnsupportedError("compression method"_s);
         }
         if(d->tmp[11] != 0)
         {
-            return UnsupportedError("filter method"s);
+            return UnsupportedError("filter method"_s);
         }
         if(d->tmp[12] != itNone && d->tmp[12] != itAdam7)
         {
-            return FormatError("invalid interlace method"s);
+            return FormatError("invalid interlace method"_s);
         }
         d->interlace = int(d->tmp[12]);
         auto w = int32_t(rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4)));
         auto h = int32_t(rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(4, 8)));
         if(w <= 0 || h <= 0)
         {
-            return FormatError("non-positive dimension"s);
+            return FormatError("non-positive dimension"_s);
         }
         auto nPixels64 = int64_t(w) * int64_t(h);
         auto nPixels = int(nPixels64);
         if(nPixels64 != int64_t(nPixels))
         {
-            return UnsupportedError("dimension overflow"s);
+            return UnsupportedError("dimension overflow"_s);
         }
         if(nPixels != (nPixels * 8) / 8)
         {
-            return UnsupportedError("dimension overflow"s);
+            return UnsupportedError("dimension overflow"_s);
         }
         d->cb = cbInvalid;
         d->depth = int(d->tmp[8]);
@@ -357,7 +357,7 @@ namespace golang::png
         }
         if(d->cb == cbInvalid)
         {
-            return UnsupportedError(mocklib::Sprintf("bit depth %d, color type %d"s, d->tmp[8], d->tmp[9]));
+            return UnsupportedError(mocklib::Sprintf("bit depth %d, color type %d"_s, d->tmp[8], d->tmp[9]));
         }
         std::tie(d->width, d->height) = std::tuple{int(w), int(h)};
         return rec::verifyChecksum(gocpp::recv(d));
@@ -368,7 +368,7 @@ namespace golang::png
         auto np = int(length / 3);
         if(length % 3 != 0 || np <= 0 || np > 256 || np > (1 << (unsigned int)(d->depth)))
         {
-            return FormatError("bad PLTE length"s);
+            return FormatError("bad PLTE length"_s);
         }
         auto [n, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 3 * np));
         if(err != nullptr)
@@ -411,7 +411,7 @@ namespace golang::png
                 case 7:
                     break;
                 default:
-                    return FormatError("PLTE, color type mismatch"s);
+                    return FormatError("PLTE, color type mismatch"_s);
                     break;
             }
         }
@@ -444,7 +444,7 @@ namespace golang::png
                 case 4:
                     if(length != 2)
                     {
-                        return FormatError("bad tRNS length"s);
+                        return FormatError("bad tRNS length"_s);
                     }
                     auto [n, err] = io::ReadFull(d->r, d->tmp.make_slice(0, length));
                     if(err != nullptr)
@@ -479,7 +479,7 @@ namespace golang::png
                 case 6:
                     if(length != 6)
                     {
-                        return FormatError("bad tRNS length"s);
+                        return FormatError("bad tRNS length"_s);
                     }
                     std::tie(n, err) = io::ReadFull(d->r, d->tmp.make_slice(0, length));
                     if(err != nullptr)
@@ -496,7 +496,7 @@ namespace golang::png
                 case 10:
                     if(length > 256)
                     {
-                        return FormatError("bad tRNS length"s);
+                        return FormatError("bad tRNS length"_s);
                     }
                     std::tie(n, err) = io::ReadFull(d->r, d->tmp.make_slice(0, length));
                     if(err != nullptr)
@@ -515,7 +515,7 @@ namespace golang::png
                     }
                     break;
                 default:
-                    return FormatError("tRNS, color type mismatch"s);
+                    return FormatError("tRNS, color type mismatch"_s);
                     break;
             }
         }
@@ -548,16 +548,16 @@ namespace golang::png
                 return {0, err};
             }
             d->idatLength = rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4));
-            if(std::string(d->tmp.make_slice(4, 8)) != "IDAT"s)
+            if(gocpp::string(d->tmp.make_slice(4, 8)) != "IDAT"_s)
             {
-                return {0, FormatError("not enough pixel data"s)};
+                return {0, FormatError("not enough pixel data"_s)};
             }
             rec::Reset(gocpp::recv(d->crc));
             rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(4, 8));
         }
         if(int(d->idatLength) < 0)
         {
-            return {0, UnsupportedError("IDAT chunk length overflow"s)};
+            return {0, UnsupportedError("IDAT chunk length overflow"_s)};
         }
         auto [n, err] = rec::Read(gocpp::recv(d->r), p.make_slice(0, gocpp::min(len(p), int(d->idatLength))));
         rec::Write(gocpp::recv(d->crc), p.make_slice(0, n));
@@ -622,7 +622,7 @@ namespace golang::png
             }
             if(n != 0 || d->idatLength != 0)
             {
-                return {nullptr, FormatError("too much pixel data"s)};
+                return {nullptr, FormatError("too much pixel data"_s)};
             }
             return {img, nullptr};
         }
@@ -770,7 +770,7 @@ namespace golang::png
         auto rowSize = 1 + (int64_t(bitsPerPixel) * int64_t(width) + 7) / 8;
         if(rowSize != int64_t(int(rowSize)))
         {
-            return {nullptr, UnsupportedError("dimension overflow"s)};
+            return {nullptr, UnsupportedError("dimension overflow"_s)};
         }
         auto cr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), rowSize);
         auto pr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), rowSize);
@@ -781,7 +781,7 @@ namespace golang::png
             {
                 if(err == io::go_EOF || err == io::ErrUnexpectedEOF)
                 {
-                    return {nullptr, FormatError("not enough pixel data"s)};
+                    return {nullptr, FormatError("not enough pixel data"_s)};
                 }
                 return {nullptr, err};
             }
@@ -826,7 +826,7 @@ namespace golang::png
                         filterPaeth(cdat, pdat, bytesPerPixel);
                         break;
                     default:
-                        return {nullptr, FormatError("bad filter type"s)};
+                        return {nullptr, FormatError("bad filter type"_s)};
                         break;
                 }
             }
@@ -1294,7 +1294,7 @@ namespace golang::png
     {
         if(length != 0)
         {
-            return FormatError("bad IEND length"s);
+            return FormatError("bad IEND length"_s);
         }
         return rec::verifyChecksum(gocpp::recv(d));
     }
@@ -1310,13 +1310,13 @@ namespace golang::png
         rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(4, 8));
         //Go switch emulation
         {
-            auto condition = std::string(d->tmp.make_slice(4, 8));
+            auto condition = gocpp::string(d->tmp.make_slice(4, 8));
             int conditionId = -1;
-            if(condition == "IHDR"s) { conditionId = 0; }
-            else if(condition == "PLTE"s) { conditionId = 1; }
-            else if(condition == "tRNS"s) { conditionId = 2; }
-            else if(condition == "IDAT"s) { conditionId = 3; }
-            else if(condition == "IEND"s) { conditionId = 4; }
+            if(condition == "IHDR"_s) { conditionId = 0; }
+            else if(condition == "PLTE"_s) { conditionId = 1; }
+            else if(condition == "tRNS"_s) { conditionId = 2; }
+            else if(condition == "IDAT"_s) { conditionId = 3; }
+            else if(condition == "IEND"_s) { conditionId = 4; }
             switch(conditionId)
             {
                 case 0:
@@ -1388,7 +1388,7 @@ namespace golang::png
         }
         if(length > 0x7fffffff)
         {
-            return FormatError(mocklib::Sprintf("Bad chunk length: %d"s, length));
+            return FormatError(mocklib::Sprintf("Bad chunk length: %d"_s, length));
         }
         // Ignore this chunk (of a known length).
         gocpp::array<unsigned char, 4096> ignored = {};
@@ -1413,7 +1413,7 @@ namespace golang::png
         }
         if(rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4)) != rec::Sum32(gocpp::recv(d->crc)))
         {
-            return FormatError("invalid checksum"s);
+            return FormatError("invalid checksum"_s);
         }
         return nullptr;
     }
@@ -1425,9 +1425,9 @@ namespace golang::png
         {
             return err;
         }
-        if(std::string(d->tmp.make_slice(0, len(pngHeader))) != pngHeader)
+        if(gocpp::string(d->tmp.make_slice(0, len(pngHeader))) != pngHeader)
         {
-            return FormatError("not a PNG file"s);
+            return FormatError("not a PNG file"_s);
         }
         return nullptr;
     }
@@ -1569,7 +1569,7 @@ namespace golang::png
 
     void init()
     {
-        image::RegisterFormat("png"s, pngHeader, Decode, DecodeConfig);
+        image::RegisterFormat("png"_s, pngHeader, Decode, DecodeConfig);
     }
 
 }

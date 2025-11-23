@@ -26,7 +26,7 @@ namespace golang::main
         mocklib::Println(s, len(s), cap(s));
         if(s == nullptr)
         {
-            mocklib::Println("nil!"s);
+            mocklib::Println("nil!"_s);
         }
     }
 

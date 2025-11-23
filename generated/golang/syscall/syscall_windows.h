@@ -17,19 +17,19 @@
 
 namespace golang::syscall
 {
-    gocpp::slice<uint16_t> StringToUTF16(std::string s);
-    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> UTF16FromString(std::string s);
-    std::string UTF16ToString(gocpp::slice<uint16_t> s);
-    std::string utf16PtrToString(uint16_t* p);
-    uint16_t* StringToUTF16Ptr(std::string s);
-    std::tuple<uint16_t*, struct gocpp::error> UTF16PtrFromString(std::string s);
+    gocpp::slice<uint16_t> StringToUTF16(gocpp::string s);
+    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> UTF16FromString(gocpp::string s);
+    gocpp::string UTF16ToString(gocpp::slice<uint16_t> s);
+    gocpp::string utf16PtrToString(uint16_t* p);
+    uint16_t* StringToUTF16Ptr(gocpp::string s);
+    std::tuple<uint16_t*, struct gocpp::error> UTF16PtrFromString(gocpp::string s);
     uint32_t langid(uint16_t pri, uint16_t sub);
     std::tuple<uint32_t, struct gocpp::error> FormatMessage(uint32_t flags, uint32_t msgsrc, uint32_t msgid, uint32_t langid, gocpp::slice<uint16_t> buf, unsigned char* args);
     uintptr_t compileCallback(go_any fn, bool cleanstack);
     uintptr_t NewCallback(go_any fn);
     uintptr_t NewCallbackCDecl(go_any fn);
     struct SecurityAttributes* makeInheritSa();
-    std::tuple<syscall::Handle, struct gocpp::error> Open(std::string path, int mode, uint32_t perm);
+    std::tuple<syscall::Handle, struct gocpp::error> Open(gocpp::string path, int mode, uint32_t perm);
     std::tuple<int, struct gocpp::error> Read(golang::syscall::Handle fd, gocpp::slice<unsigned char> p);
     std::tuple<int, struct gocpp::error> Write(golang::syscall::Handle fd, gocpp::slice<unsigned char> p);
     struct gocpp::error ReadFile(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, uint32_t* done, struct Overlapped* overlapped);
@@ -43,20 +43,20 @@ namespace golang::syscall
     extern Handle Stdout;
     extern Handle Stderr;
     syscall::Handle getStdHandle(int h);
-    std::tuple<std::string, struct gocpp::error> Getwd();
-    struct gocpp::error Chdir(std::string path);
-    struct gocpp::error Mkdir(std::string path, uint32_t mode);
-    struct gocpp::error Rmdir(std::string path);
-    struct gocpp::error Unlink(std::string path);
-    struct gocpp::error Rename(std::string oldpath, std::string newpath);
-    std::tuple<std::string, struct gocpp::error> ComputerName();
+    std::tuple<gocpp::string, struct gocpp::error> Getwd();
+    struct gocpp::error Chdir(gocpp::string path);
+    struct gocpp::error Mkdir(gocpp::string path, uint32_t mode);
+    struct gocpp::error Rmdir(gocpp::string path);
+    struct gocpp::error Unlink(gocpp::string path);
+    struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath);
+    std::tuple<gocpp::string, struct gocpp::error> ComputerName();
     struct gocpp::error Ftruncate(golang::syscall::Handle fd, int64_t length);
     struct gocpp::error Gettimeofday(struct Timeval* tv);
     struct gocpp::error Pipe(gocpp::slice<golang::syscall::Handle> p);
-    struct gocpp::error Utimes(std::string path, gocpp::slice<Timeval> tv);
-    struct gocpp::error UtimesNano(std::string path, gocpp::slice<Timespec> ts);
+    struct gocpp::error Utimes(gocpp::string path, gocpp::slice<Timeval> tv);
+    struct gocpp::error UtimesNano(gocpp::string path, gocpp::slice<Timespec> ts);
     struct gocpp::error Fsync(golang::syscall::Handle fd);
-    struct gocpp::error Chmod(std::string path, uint32_t mode);
+    struct gocpp::error Chmod(gocpp::string path, uint32_t mode);
     struct gocpp::error LoadCancelIoEx();
     struct gocpp::error LoadSetFileCompletionNotificationModes();
     extern bool SocketDisableIPv6;
@@ -339,11 +339,11 @@ namespace golang::syscall
     int Getppid();
     std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> fdpath(golang::syscall::Handle fd, gocpp::slice<uint16_t> buf);
     struct gocpp::error Fchdir(golang::syscall::Handle fd);
-    struct gocpp::error Link(std::string oldpath, std::string newpath);
-    struct gocpp::error Symlink(std::string path, std::string link);
+    struct gocpp::error Link(gocpp::string oldpath, gocpp::string newpath);
+    struct gocpp::error Symlink(gocpp::string path, gocpp::string link);
     struct gocpp::error Fchmod(golang::syscall::Handle fd, uint32_t mode);
-    struct gocpp::error Chown(std::string path, int uid, int gid);
-    struct gocpp::error Lchown(std::string path, int uid, int gid);
+    struct gocpp::error Chown(gocpp::string path, int uid, int gid);
+    struct gocpp::error Lchown(gocpp::string path, int uid, int gid);
     struct gocpp::error Fchown(golang::syscall::Handle fd, int uid, int gid);
     int Getuid();
     int Geteuid();
@@ -351,7 +351,7 @@ namespace golang::syscall
     int Getegid();
     std::tuple<gocpp::slice<int>, struct gocpp::error> Getgroups();
     struct gocpp::error LoadCreateSymbolicLink();
-    std::tuple<int, struct gocpp::error> Readlink(std::string path, gocpp::slice<unsigned char> buf);
+    std::tuple<int, struct gocpp::error> Readlink(gocpp::string path, gocpp::slice<unsigned char> buf);
     std::tuple<syscall::Handle, struct gocpp::error> CreateIoCompletionPort(golang::syscall::Handle filehandle, golang::syscall::Handle cphandle, uint32_t key, uint32_t threadcnt);
     struct gocpp::error GetQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t* qty, uint32_t* key, struct Overlapped** overlapped, uint32_t timeout);
     struct gocpp::error PostQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t qty, uint32_t key, struct Overlapped* overlapped);
@@ -414,7 +414,7 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct SockaddrInet6& value);
     struct SockaddrUnix
     {
-        std::string Name;
+        gocpp::string Name;
         RawSockaddrUnix raw;
 
         using isGoStruct = void;
@@ -432,7 +432,7 @@ namespace golang::syscall
 
     namespace rec
     {
-        std::string Error(golang::syscall::Errno e);
+        gocpp::string Error(golang::syscall::Errno e);
         bool Is(golang::syscall::Errno e, struct gocpp::error target);
         bool Temporary(golang::syscall::Errno e);
         bool Timeout(golang::syscall::Errno e);
@@ -450,7 +450,7 @@ namespace golang::syscall
         bool Signaled(struct WaitStatus w);
         int TrapCause(struct WaitStatus w);
         void Signal(golang::syscall::Signal s);
-        std::string String(golang::syscall::Signal s);
+        gocpp::string String(golang::syscall::Signal s);
     }
 }
 

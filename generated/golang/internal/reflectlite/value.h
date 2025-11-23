@@ -36,7 +36,7 @@ namespace golang::reflectlite
     struct Value unpackEface(go_any i);
     struct ValueError
     {
-        std::string Method;
+        gocpp::string Method;
         golang::reflectlite::Kind Kind;
 
         using isGoStruct = void;
@@ -51,7 +51,7 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
-    std::string methodName();
+    gocpp::string methodName();
     struct emptyInterface
     {
         abi::Type* typ;
@@ -178,7 +178,7 @@ namespace golang::reflectlite
     int maplen(unsafe::Pointer);
     unsafe::Pointer unsafe_New(abi::Type*);
     struct Value ValueOf(go_any i);
-    unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, std::string whySafe);
+    unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, gocpp::string whySafe);
     void ifaceE2I(abi::Type* t, go_any src, unsafe::Pointer dst);
     void typedmemmove(abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src);
     void escapes(go_any x);
@@ -191,7 +191,7 @@ namespace golang::reflectlite
         reflectlite::flag ro(golang::reflectlite::flag f);
         abi::Type* typ(struct Value v);
         unsafe::Pointer pointer(struct Value v);
-        std::string Error(struct ValueError* e);
+        gocpp::string Error(struct ValueError* e);
         void mustBeExported(golang::reflectlite::flag f);
         void mustBeAssignable(golang::reflectlite::flag f);
         bool CanSet(struct Value v);
@@ -203,7 +203,7 @@ namespace golang::reflectlite
         int numMethod(struct Value v);
         void Set(struct Value v, struct Value x);
         struct Type Type(struct Value v);
-        struct Value assignTo(struct Value v, std::string context, abi::Type* dst, unsafe::Pointer target);
+        struct Value assignTo(struct Value v, gocpp::string context, abi::Type* dst, unsafe::Pointer target);
     }
 }
 

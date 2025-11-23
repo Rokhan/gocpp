@@ -346,7 +346,7 @@ namespace golang::windows
     // directory, which is typically, though not always, `C:\Windows\System32`.
     //
     //go:linkname GetSystemDirectory
-    std::string GetSystemDirectory()
+    gocpp::string GetSystemDirectory()
     /* convertBlockStmt, nil block */;
 
 }

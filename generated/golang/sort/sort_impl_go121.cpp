@@ -30,7 +30,7 @@ namespace golang::sort
         slices::Sort(x);
     }
 
-    void stringsImpl(gocpp::slice<std::string> x)
+    void stringsImpl(gocpp::slice<gocpp::string> x)
     {
         slices::Sort(x);
     }
@@ -45,7 +45,7 @@ namespace golang::sort
         return slices::IsSorted(x);
     }
 
-    bool stringsAreSortedImpl(gocpp::slice<std::string> x)
+    bool stringsAreSortedImpl(gocpp::slice<gocpp::string> x)
     {
         return slices::IsSorted(x);
     }

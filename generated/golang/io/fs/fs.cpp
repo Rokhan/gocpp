@@ -61,19 +61,19 @@ namespace golang::fs
     }
 
     template<typename T, typename StoreT>
-    std::tuple<struct File, struct gocpp::error> FS::FSImpl<T, StoreT>::vOpen(std::string name)
+    std::tuple<struct File, struct gocpp::error> FS::FSImpl<T, StoreT>::vOpen(gocpp::string name)
     {
         return rec::Open(gocpp::PtrRecv<T, false>(value.get()), name);
     }
 
     namespace rec
     {
-        std::tuple<struct File, struct gocpp::error> Open(const gocpp::PtrRecv<struct FS, false>& self, std::string name)
+        std::tuple<struct File, struct gocpp::error> Open(const gocpp::PtrRecv<struct FS, false>& self, gocpp::string name)
         {
             return self.ptr->value->vOpen(name);
         }
 
-        std::tuple<struct File, struct gocpp::error> Open(const gocpp::ObjRecv<struct FS>& self, std::string name)
+        std::tuple<struct File, struct gocpp::error> Open(const gocpp::ObjRecv<struct FS>& self, gocpp::string name)
         {
             return self.obj.value->vOpen(name);
         }
@@ -97,13 +97,13 @@ namespace golang::fs
     // Paths containing other characters such as backslash and colon
     // are accepted as valid, but those characters must never be
     // interpreted by an [FS] implementation as path element separators.
-    bool ValidPath(std::string name)
+    bool ValidPath(gocpp::string name)
     {
         if(! utf8::ValidString(name))
         {
             return false;
         }
-        if(name == "."s)
+        if(name == "."_s)
         {
             return true;
         }
@@ -115,7 +115,7 @@ namespace golang::fs
                 i++;
             }
             auto elem = name.make_slice(0, i);
-            if(elem == ""s || elem == "."s || elem == ".."s)
+            if(elem == ""_s || elem == "."_s || elem == ".."_s)
             {
                 return false;
             }
@@ -236,7 +236,7 @@ namespace golang::fs
     }
 
     template<typename T, typename StoreT>
-    std::string DirEntry::DirEntryImpl<T, StoreT>::vName()
+    gocpp::string DirEntry::DirEntryImpl<T, StoreT>::vName()
     {
         return rec::Name(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -258,12 +258,12 @@ namespace golang::fs
 
     namespace rec
     {
-        std::string Name(const gocpp::PtrRecv<struct DirEntry, false>& self)
+        gocpp::string Name(const gocpp::PtrRecv<struct DirEntry, false>& self)
         {
             return self.ptr->value->vName();
         }
 
-        std::string Name(const gocpp::ObjRecv<struct DirEntry>& self)
+        gocpp::string Name(const gocpp::ObjRecv<struct DirEntry>& self)
         {
             return self.obj.value->vName();
         }
@@ -415,7 +415,7 @@ namespace golang::fs
     }
 
     template<typename T, typename StoreT>
-    std::string FileInfo::FileInfoImpl<T, StoreT>::vName()
+    gocpp::string FileInfo::FileInfoImpl<T, StoreT>::vName()
     {
         return rec::Name(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -447,12 +447,12 @@ namespace golang::fs
 
     namespace rec
     {
-        std::string Name(const gocpp::PtrRecv<struct FileInfo, false>& self)
+        gocpp::string Name(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
             return self.ptr->value->vName();
         }
 
-        std::string Name(const gocpp::ObjRecv<struct FileInfo>& self)
+        gocpp::string Name(const gocpp::ObjRecv<struct FileInfo>& self)
         {
             return self.obj.value->vName();
         }
@@ -526,9 +526,9 @@ namespace golang::fs
     // The single letters are the abbreviations
     // used by the String method's formatting.
     // Mask for the type bits. For regular files, none will be set.
-    std::string rec::String(golang::fs::FileMode m)
+    gocpp::string rec::String(golang::fs::FileMode m)
     {
-        auto str = "dalTLDpSugct?"s;
+        auto str = "dalTLDpSugct?"_s;
         gocpp::array<unsigned char, 32> buf = {};
         auto w = 0;
         for(auto [i, c] : str)
@@ -544,7 +544,7 @@ namespace golang::fs
             buf[w] = '-';
             w++;
         }
-        auto rwx = "rwxrwxrwx"s;
+        auto rwx = "rwxrwxrwx"_s;
         for(auto [i, c] : rwx)
         {
             if(m & (1 << (unsigned int)(9 - 1 - i)) != 0)
@@ -557,7 +557,7 @@ namespace golang::fs
             }
             w++;
         }
-        return std::string(buf.make_slice(0, w));
+        return gocpp::string(buf.make_slice(0, w));
     }
 
     // IsDir reports whether m describes a directory.
@@ -622,9 +622,9 @@ namespace golang::fs
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct PathError* e)
+    gocpp::string rec::Error(struct PathError* e)
     {
-        return e->Op + " "s + e->Path + ": "s + rec::Error(gocpp::recv(e->Err));
+        return e->Op + " "_s + e->Path + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
     struct gocpp::error rec::Unwrap(struct PathError* e)

@@ -122,7 +122,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    bool UseInterfaceSwitchCache(std::string goarch)
+    bool UseInterfaceSwitchCache(gocpp::string goarch)
     {
         if(! go122InterfaceSwitchCache)
         {
@@ -132,17 +132,17 @@ namespace golang::abi
         {
             auto condition = goarch;
             int conditionId = -1;
-            if(condition == "amd64"s) { conditionId = 0; }
-            else if(condition == "arm64"s) { conditionId = 1; }
-            else if(condition == "loong64"s) { conditionId = 2; }
-            else if(condition == "mips"s) { conditionId = 3; }
-            else if(condition == "mipsle"s) { conditionId = 4; }
-            else if(condition == "mips64"s) { conditionId = 5; }
-            else if(condition == "mips64le"s) { conditionId = 6; }
-            else if(condition == "ppc64"s) { conditionId = 7; }
-            else if(condition == "ppc64le"s) { conditionId = 8; }
-            else if(condition == "riscv64"s) { conditionId = 9; }
-            else if(condition == "s390x"s) { conditionId = 10; }
+            if(condition == "amd64"_s) { conditionId = 0; }
+            else if(condition == "arm64"_s) { conditionId = 1; }
+            else if(condition == "loong64"_s) { conditionId = 2; }
+            else if(condition == "mips"_s) { conditionId = 3; }
+            else if(condition == "mipsle"_s) { conditionId = 4; }
+            else if(condition == "mips64"_s) { conditionId = 5; }
+            else if(condition == "mips64le"_s) { conditionId = 6; }
+            else if(condition == "ppc64"_s) { conditionId = 7; }
+            else if(condition == "ppc64le"_s) { conditionId = 8; }
+            else if(condition == "riscv64"_s) { conditionId = 9; }
+            else if(condition == "s390x"_s) { conditionId = 10; }
             switch(conditionId)
             {
                 case 0:

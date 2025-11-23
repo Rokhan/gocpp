@@ -20,7 +20,7 @@ namespace golang::reflect
 {
     struct Value MakeFunc(struct Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn);
     void makeFuncStub();
-    struct Value makeMethodValue(std::string op, struct Value v);
+    struct Value makeMethodValue(gocpp::string op, struct Value v);
     uintptr_t methodValueCallCodePtr();
     void methodValueCall();
     struct makeFuncCtxt

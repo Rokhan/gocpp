@@ -275,13 +275,13 @@ namespace golang::runtime
         auto s = c->alloc[spc];
         if(s->allocCount != s->nelems)
         {
-            go_throw("refill of span with free space remaining"s);
+            go_throw("refill of span with free space remaining"_s);
         }
         if(s != & emptymspan)
         {
             if(s->sweepgen != mheap_.sweepgen + 3)
             {
-                go_throw("bad sweepgen in refill"s);
+                go_throw("bad sweepgen in refill"_s);
             }
             rec::uncacheSpan(gocpp::recv(mheap_.central[spc].mcentral), s);
             auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
@@ -300,11 +300,11 @@ namespace golang::runtime
         s = rec::cacheSpan(gocpp::recv(mheap_.central[spc].mcentral));
         if(s == nullptr)
         {
-            go_throw("out of memory"s);
+            go_throw("out of memory"_s);
         }
         if(s->allocCount == s->nelems)
         {
-            go_throw("span has no free space"s);
+            go_throw("span has no free space"_s);
         }
         s->sweepgen = mheap_.sweepgen + 3;
         s->allocCountBeforeCache = s->allocCount;
@@ -319,7 +319,7 @@ namespace golang::runtime
     {
         if(size + _PageSize < size)
         {
-            go_throw("out of memory"s);
+            go_throw("out of memory"_s);
         }
         auto npages = size >> _PageShift;
         if(size & _PageMask != 0)
@@ -331,7 +331,7 @@ namespace golang::runtime
         auto s = rec::alloc(gocpp::recv(mheap_), npages, spc);
         if(s == nullptr)
         {
-            go_throw("out of memory"s);
+            go_throw("out of memory"_s);
         }
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xadd64(& stats->largeAlloc, int64_t(npages * pageSize));
@@ -393,8 +393,8 @@ namespace golang::runtime
         else
         if(flushGen != sg - 2)
         {
-            println("bad flushGen"s, flushGen, "in prepareForSweep; sweepgen"s, sg);
-            go_throw("bad flushGen"s);
+            println("bad flushGen"_s, flushGen, "in prepareForSweep; sweepgen"_s, sg);
+            go_throw("bad flushGen"_s);
         }
         rec::releaseAll(gocpp::recv(c));
         stackcache_clear(c);

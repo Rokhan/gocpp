@@ -12,22 +12,22 @@
 
 namespace golang::fmt
 {
-    struct gocpp::error Errorf(std::string format, gocpp::slice<go_any> a);
+    struct gocpp::error Errorf(gocpp::string format, gocpp::slice<go_any> a);
     
     template<typename... Args>
-    struct gocpp::error Errorf(std::string format, Args... a)
+    struct gocpp::error Errorf(gocpp::string format, Args... a)
     {
         return Errorf(format, gocpp::ToSlice<go_any>(a...));
     }
     
     template<typename... Args>
-    struct gocpp::error Errorf(std::string format, go_any value, Args... a)
+    struct gocpp::error Errorf(gocpp::string format, go_any value, Args... a)
     {
         return Errorf(format, gocpp::ToSlice<go_any>(value, a...));
     }
     struct wrapError
     {
-        std::string msg;
+        gocpp::string msg;
         gocpp::error err;
 
         using isGoStruct = void;
@@ -44,7 +44,7 @@ namespace golang::fmt
     std::ostream& operator<<(std::ostream& os, const struct wrapError& value);
     struct wrapErrors
     {
-        std::string msg;
+        gocpp::string msg;
         gocpp::slice<gocpp::error> errs;
 
         using isGoStruct = void;
@@ -62,9 +62,9 @@ namespace golang::fmt
 
     namespace rec
     {
-        std::string Error(struct wrapError* e);
+        gocpp::string Error(struct wrapError* e);
         struct gocpp::error Unwrap(struct wrapError* e);
-        std::string Error(struct wrapErrors* e);
+        gocpp::string Error(struct wrapErrors* e);
         gocpp::slice<gocpp::error> Unwrap(struct wrapErrors* e);
     }
 }

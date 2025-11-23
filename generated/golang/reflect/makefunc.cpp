@@ -96,7 +96,7 @@ namespace golang::reflect
     {
         if(rec::Kind(gocpp::recv(typ)) != Func)
         {
-            gocpp::panic("reflect: call of MakeFunc with non-Func type"s);
+            gocpp::panic("reflect: call of MakeFunc with non-Func type"_s);
         }
         auto t = rec::common(gocpp::recv(typ));
         auto ftyp = (reflect::funcType*)(unsafe::Pointer(t));
@@ -168,11 +168,11 @@ namespace golang::reflect
     // semantically equivalent to the input as far as the user of package
     // reflect can tell, but the true func representation can be handled
     // by code like Convert and Interface and Assign.
-    struct Value makeMethodValue(std::string op, struct Value v)
+    struct Value makeMethodValue(gocpp::string op, struct Value v)
     {
         if(v.flag & flagMethod == 0)
         {
-            gocpp::panic("reflect: internal error: invalid use of makeMethodValue"s);
+            gocpp::panic("reflect: internal error: invalid use of makeMethodValue"_s);
         }
         auto fl = v.flag & (flagRO | flagAddr | flagIndir);
         fl |= flag(rec::Kind(gocpp::recv(rec::typ(gocpp::recv(v)))));

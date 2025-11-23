@@ -50,12 +50,12 @@ namespace golang::reflect
             virtual int vAlign() = 0;
             virtual int vFieldAlign() = 0;
             virtual struct Method vMethod(int _1) = 0;
-            virtual std::tuple<struct Method, bool> vMethodByName(std::string _1) = 0;
+            virtual std::tuple<struct Method, bool> vMethodByName(gocpp::string _1) = 0;
             virtual int vNumMethod() = 0;
-            virtual std::string vName() = 0;
-            virtual std::string vPkgPath() = 0;
+            virtual gocpp::string vName() = 0;
+            virtual gocpp::string vPkgPath() = 0;
             virtual uintptr_t vSize() = 0;
-            virtual std::string vString() = 0;
+            virtual gocpp::string vString() = 0;
             virtual reflect::Kind vKind() = 0;
             virtual bool vImplements(struct Type u) = 0;
             virtual bool vAssignableTo(struct Type u) = 0;
@@ -67,8 +67,8 @@ namespace golang::reflect
             virtual struct Type vElem() = 0;
             virtual struct StructField vField(int i) = 0;
             virtual struct StructField vFieldByIndex(gocpp::slice<int> index) = 0;
-            virtual std::tuple<struct StructField, bool> vFieldByName(std::string name) = 0;
-            virtual std::tuple<struct StructField, bool> vFieldByNameFunc(std::function<bool (std::string _1)> match) = 0;
+            virtual std::tuple<struct StructField, bool> vFieldByName(gocpp::string name) = 0;
+            virtual std::tuple<struct StructField, bool> vFieldByNameFunc(std::function<bool (gocpp::string _1)> match) = 0;
             virtual struct Type vIn(int i) = 0;
             virtual struct Type vKey() = 0;
             virtual int vLen() = 0;
@@ -94,17 +94,17 @@ namespace golang::reflect
 
             struct Method vMethod(int _1) override;
 
-            std::tuple<struct Method, bool> vMethodByName(std::string _1) override;
+            std::tuple<struct Method, bool> vMethodByName(gocpp::string _1) override;
 
             int vNumMethod() override;
 
-            std::string vName() override;
+            gocpp::string vName() override;
 
-            std::string vPkgPath() override;
+            gocpp::string vPkgPath() override;
 
             uintptr_t vSize() override;
 
-            std::string vString() override;
+            gocpp::string vString() override;
 
             reflect::Kind vKind() override;
 
@@ -128,9 +128,9 @@ namespace golang::reflect
 
             struct StructField vFieldByIndex(gocpp::slice<int> index) override;
 
-            std::tuple<struct StructField, bool> vFieldByName(std::string name) override;
+            std::tuple<struct StructField, bool> vFieldByName(gocpp::string name) override;
 
-            std::tuple<struct StructField, bool> vFieldByNameFunc(std::function<bool (std::string _1)> match) override;
+            std::tuple<struct StructField, bool> vFieldByNameFunc(std::function<bool (gocpp::string _1)> match) override;
 
             struct Type vIn(int i) override;
 
@@ -167,23 +167,23 @@ namespace golang::reflect
         struct Method Method(const gocpp::PtrRecv<struct Type, false>& self, int _1);
         struct Method Method(const gocpp::ObjRecv<struct Type>& self, int _1);
 
-        std::tuple<struct Method, bool> MethodByName(const gocpp::PtrRecv<struct Type, false>& self, std::string _1);
-        std::tuple<struct Method, bool> MethodByName(const gocpp::ObjRecv<struct Type>& self, std::string _1);
+        std::tuple<struct Method, bool> MethodByName(const gocpp::PtrRecv<struct Type, false>& self, gocpp::string _1);
+        std::tuple<struct Method, bool> MethodByName(const gocpp::ObjRecv<struct Type>& self, gocpp::string _1);
 
         int NumMethod(const gocpp::PtrRecv<struct Type, false>& self);
         int NumMethod(const gocpp::ObjRecv<struct Type>& self);
 
-        std::string Name(const gocpp::PtrRecv<struct Type, false>& self);
-        std::string Name(const gocpp::ObjRecv<struct Type>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct Type, false>& self);
+        gocpp::string Name(const gocpp::ObjRecv<struct Type>& self);
 
-        std::string PkgPath(const gocpp::PtrRecv<struct Type, false>& self);
-        std::string PkgPath(const gocpp::ObjRecv<struct Type>& self);
+        gocpp::string PkgPath(const gocpp::PtrRecv<struct Type, false>& self);
+        gocpp::string PkgPath(const gocpp::ObjRecv<struct Type>& self);
 
         uintptr_t Size(const gocpp::PtrRecv<struct Type, false>& self);
         uintptr_t Size(const gocpp::ObjRecv<struct Type>& self);
 
-        std::string String(const gocpp::PtrRecv<struct Type, false>& self);
-        std::string String(const gocpp::ObjRecv<struct Type>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct Type, false>& self);
+        gocpp::string String(const gocpp::ObjRecv<struct Type>& self);
 
         reflect::Kind Kind(const gocpp::PtrRecv<struct Type, false>& self);
         reflect::Kind Kind(const gocpp::ObjRecv<struct Type>& self);
@@ -218,11 +218,11 @@ namespace golang::reflect
         struct StructField FieldByIndex(const gocpp::PtrRecv<struct Type, false>& self, gocpp::slice<int> index);
         struct StructField FieldByIndex(const gocpp::ObjRecv<struct Type>& self, gocpp::slice<int> index);
 
-        std::tuple<struct StructField, bool> FieldByName(const gocpp::PtrRecv<struct Type, false>& self, std::string name);
-        std::tuple<struct StructField, bool> FieldByName(const gocpp::ObjRecv<struct Type>& self, std::string name);
+        std::tuple<struct StructField, bool> FieldByName(const gocpp::PtrRecv<struct Type, false>& self, gocpp::string name);
+        std::tuple<struct StructField, bool> FieldByName(const gocpp::ObjRecv<struct Type>& self, gocpp::string name);
 
-        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::PtrRecv<struct Type, false>& self, std::function<bool (std::string _1)> match);
-        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::ObjRecv<struct Type>& self, std::function<bool (std::string _1)> match);
+        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::PtrRecv<struct Type, false>& self, std::function<bool (gocpp::string _1)> match);
+        std::tuple<struct StructField, bool> FieldByNameFunc(const gocpp::ObjRecv<struct Type>& self, std::function<bool (gocpp::string _1)> match);
 
         struct Type In(const gocpp::PtrRecv<struct Type, false>& self, int i);
         struct Type In(const gocpp::ObjRecv<struct Type>& self, int i);
@@ -367,9 +367,9 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct structType& value);
-    std::string pkgPath(abi::Name n);
-    abi::Name newName(std::string n, std::string tag, bool exported, bool embedded);
-    extern gocpp::slice<std::string> kindNames;
+    gocpp::string pkgPath(abi::Name n);
+    abi::Name newName(gocpp::string n, gocpp::string tag, bool exported, bool embedded);
+    extern gocpp::slice<gocpp::string> kindNames;
     unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
     unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off);
     unsafe::Pointer resolveTextOff(unsafe::Pointer rtype, int32_t off);
@@ -378,11 +378,11 @@ namespace golang::reflect
     reflect::aTypeOff resolveReflectType(abi::Type* t);
     reflect::aTextOff resolveReflectText(unsafe::Pointer ptr);
     unsafe::Pointer textOffFor(abi::Type* t, golang::reflect::aTextOff off);
-    std::string pkgPathFor(abi::Type* t);
-    std::string nameFor(abi::Type* t);
+    gocpp::string pkgPathFor(abi::Type* t);
+    gocpp::string nameFor(abi::Type* t);
     reflect::rtype* toRType(abi::Type* t);
     abi::Type* elem(abi::Type* t);
-    unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, std::string whySafe);
+    unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, gocpp::string whySafe);
     struct fieldScan
     {
         structType* typ;
@@ -426,7 +426,7 @@ namespace golang::reflect
     bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
     std::tuple<gocpp::slice<unsafe::Pointer>, gocpp::slice<gocpp::slice<int32_t>>> typelinks();
     abi::Type* rtypeOff(unsafe::Pointer section, int32_t off);
-    gocpp::slice<abi::Type*> typesByString(std::string s);
+    gocpp::slice<abi::Type*> typesByString(gocpp::string s);
     extern sync::Map lookupCache;
     struct cacheKey
     {
@@ -453,8 +453,8 @@ namespace golang::reflect
     extern mocklib::Mutex funcTypesMutex;
     struct Type initFuncTypes(int n);
     struct Type FuncOf(gocpp::slice<Type> in, gocpp::slice<Type> out, bool variadic);
-    std::string stringFor(abi::Type* t);
-    std::string funcStr(golang::reflect::funcType* ft);
+    gocpp::string stringFor(abi::Type* t);
+    gocpp::string funcStr(golang::reflect::funcType* ft);
     bool isReflexive(abi::Type* t);
     bool needKeyUpdate(abi::Type* t);
     bool hashMightPanic(abi::Type* t);
@@ -464,10 +464,10 @@ namespace golang::reflect
     struct Type SliceOf(struct Type t);
     extern gocpp_id_10 structLookupCache;
     bool isLetter(gocpp::rune ch);
-    bool isValidFieldName(std::string fieldName);
+    bool isValidFieldName(gocpp::string fieldName);
     struct Type StructOf(gocpp::slice<StructField> fields);
     void embeddedIfaceMethStub();
-    std::tuple<reflect::structField, std::string> runtimeStructField(struct StructField field);
+    std::tuple<reflect::structField, gocpp::string> runtimeStructField(struct StructField field);
     uintptr_t typeptrdata(abi::Type* t);
     struct Type ArrayOf(int length, struct Type elem);
     gocpp::slice<unsigned char> appendVarint(gocpp::slice<unsigned char> x, uintptr_t v);
@@ -533,8 +533,8 @@ namespace golang::reflect
     struct Type TypeFor();
     struct Method
     {
-        std::string Name;
-        std::string PkgPath;
+        gocpp::string Name;
+        gocpp::string PkgPath;
         Type Type;
         /* Value Func; [Known incomplete type] */
         int Index;
@@ -553,8 +553,8 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct Method& value);
     struct StructField
     {
-        std::string Name;
-        std::string PkgPath;
+        gocpp::string Name;
+        gocpp::string PkgPath;
         Type Type;
         golang::reflect::StructTag Tag;
         uintptr_t Offset;
@@ -601,11 +601,11 @@ namespace golang::reflect
         abi::Type* common(struct interfaceType* t);
         abi::UncommonType* uncommon(struct interfaceType* t);
         bool IsExported(struct Method m);
-        std::string String(golang::reflect::Kind k);
+        gocpp::string String(golang::reflect::Kind k);
         abi::Name nameOff(reflect::rtype* t, golang::reflect::aNameOff off);
         abi::Type* typeOff(reflect::rtype* t, golang::reflect::aTypeOff off);
         unsafe::Pointer textOff(reflect::rtype* t, golang::reflect::aTextOff off);
-        std::string String(reflect::rtype* t);
+        gocpp::string String(reflect::rtype* t);
         uintptr_t Size(reflect::rtype* t);
         int Bits(reflect::rtype* t);
         int Align(reflect::rtype* t);
@@ -614,15 +614,15 @@ namespace golang::reflect
         gocpp::slice<abi::Method> exportedMethods(reflect::rtype* t);
         int NumMethod(reflect::rtype* t);
         struct Method Method(reflect::rtype* t, int i);
-        std::tuple<struct Method, bool> MethodByName(reflect::rtype* t, std::string name);
-        std::string PkgPath(reflect::rtype* t);
-        std::string Name(reflect::rtype* t);
+        std::tuple<struct Method, bool> MethodByName(reflect::rtype* t, gocpp::string name);
+        gocpp::string PkgPath(reflect::rtype* t);
+        gocpp::string Name(reflect::rtype* t);
         reflect::ChanDir ChanDir(reflect::rtype* t);
         struct Type Elem(reflect::rtype* t);
         struct StructField Field(reflect::rtype* t, int i);
         struct StructField FieldByIndex(reflect::rtype* t, gocpp::slice<int> index);
-        std::tuple<struct StructField, bool> FieldByName(reflect::rtype* t, std::string name);
-        std::tuple<struct StructField, bool> FieldByNameFunc(reflect::rtype* t, std::function<bool (std::string _1)> match);
+        std::tuple<struct StructField, bool> FieldByName(reflect::rtype* t, gocpp::string name);
+        std::tuple<struct StructField, bool> FieldByNameFunc(reflect::rtype* t, std::function<bool (gocpp::string _1)> match);
         struct Type Key(reflect::rtype* t);
         int Len(reflect::rtype* t);
         int NumField(reflect::rtype* t);
@@ -631,17 +631,17 @@ namespace golang::reflect
         int NumOut(reflect::rtype* t);
         struct Type Out(reflect::rtype* t, int i);
         bool IsVariadic(reflect::rtype* t);
-        std::string String(golang::reflect::ChanDir d);
+        gocpp::string String(golang::reflect::ChanDir d);
         struct Method Method(struct interfaceType* t, int i);
         int NumMethod(struct interfaceType* t);
-        std::tuple<struct Method, bool> MethodByName(struct interfaceType* t, std::string name);
+        std::tuple<struct Method, bool> MethodByName(struct interfaceType* t, gocpp::string name);
         bool IsExported(struct StructField f);
-        std::string Get(golang::reflect::StructTag tag, std::string key);
-        std::tuple<std::string, bool> Lookup(golang::reflect::StructTag tag, std::string key);
+        gocpp::string Get(golang::reflect::StructTag tag, gocpp::string key);
+        std::tuple<gocpp::string, bool> Lookup(golang::reflect::StructTag tag, gocpp::string key);
         struct StructField Field(struct structType* t, int i);
         struct StructField FieldByIndex(struct structType* t, gocpp::slice<int> index);
-        std::tuple<struct StructField, bool> FieldByNameFunc(struct structType* t, std::function<bool (std::string _1)> match);
-        std::tuple<struct StructField, bool> FieldByName(struct structType* t, std::string name);
+        std::tuple<struct StructField, bool> FieldByNameFunc(struct structType* t, std::function<bool (gocpp::string _1)> match);
+        std::tuple<struct StructField, bool> FieldByName(struct structType* t, gocpp::string name);
         abi::Type* ptrTo(reflect::rtype* t);
         bool Implements(reflect::rtype* t, struct Type u);
         bool AssignableTo(reflect::rtype* t, struct Type u);

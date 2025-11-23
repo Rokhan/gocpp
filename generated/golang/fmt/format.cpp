@@ -23,8 +23,8 @@ namespace golang::fmt
         using namespace mocklib::rec;
     }
 
-    std::string ldigits = "0123456789abcdefx"s;
-    std::string udigits = "0123456789ABCDEFX"s;
+    gocpp::string ldigits = "0123456789abcdefx"_s;
+    gocpp::string udigits = "0123456789ABCDEFX"_s;
     // flags placed in a separate struct for easy clearing.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -183,7 +183,7 @@ namespace golang::fmt
     }
 
     // padString appends s to f.buf, padded on left (!f.minus) or right (f.minus).
-    void rec::padString(struct fmt* f, std::string s)
+    void rec::padString(struct fmt* f, gocpp::string s)
     {
         if(! f->widPresent || f->wid == 0)
         {
@@ -208,11 +208,11 @@ namespace golang::fmt
     {
         if(v)
         {
-            rec::padString(gocpp::recv(f), "true"s);
+            rec::padString(gocpp::recv(f), "true"_s);
         }
         else
         {
-            rec::padString(gocpp::recv(f), "false"s);
+            rec::padString(gocpp::recv(f), "false"_s);
         }
     }
 
@@ -269,7 +269,7 @@ namespace golang::fmt
     }
 
     // fmtInteger formats signed and unsigned integers.
-    void rec::fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, std::string digits)
+    void rec::fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, gocpp::string digits)
     {
         auto negative = isSigned && int64_t(u) < 0;
         if(negative)
@@ -352,7 +352,7 @@ namespace golang::fmt
                     }
                     break;
                 default:
-                    gocpp::panic("fmt: unknown base; can't happen"s);
+                    gocpp::panic("fmt: unknown base; can't happen"_s);
                     break;
             }
         }
@@ -427,7 +427,7 @@ namespace golang::fmt
     }
 
     // truncateString truncates the string s to the specified precision, if present.
-    std::string rec::truncateString(struct fmt* f, std::string s)
+    gocpp::string rec::truncateString(struct fmt* f, gocpp::string s)
     {
         if(f->precPresent)
         {
@@ -469,7 +469,7 @@ namespace golang::fmt
     }
 
     // fmtS formats a string.
-    void rec::fmtS(struct fmt* f, std::string s)
+    void rec::fmtS(struct fmt* f, gocpp::string s)
     {
         s = rec::truncateString(gocpp::recv(f), s);
         rec::padString(gocpp::recv(f), s);
@@ -483,7 +483,7 @@ namespace golang::fmt
     }
 
     // fmtSbx formats a string or byte slice as a hexadecimal encoding of its bytes.
-    void rec::fmtSbx(struct fmt* f, std::string s, gocpp::slice<unsigned char> b, std::string digits)
+    void rec::fmtSbx(struct fmt* f, gocpp::string s, gocpp::slice<unsigned char> b, gocpp::string digits)
     {
         auto length = len(b);
         if(b == nullptr)
@@ -557,26 +557,26 @@ namespace golang::fmt
     }
 
     // fmtSx formats a string as a hexadecimal encoding of its bytes.
-    void rec::fmtSx(struct fmt* f, std::string s, std::string digits)
+    void rec::fmtSx(struct fmt* f, gocpp::string s, gocpp::string digits)
     {
         rec::fmtSbx(gocpp::recv(f), s, nullptr, digits);
     }
 
     // fmtBx formats a byte slice as a hexadecimal encoding of its bytes.
-    void rec::fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, std::string digits)
+    void rec::fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, gocpp::string digits)
     {
-        rec::fmtSbx(gocpp::recv(f), ""s, b, digits);
+        rec::fmtSbx(gocpp::recv(f), ""_s, b, digits);
     }
 
     // fmtQ formats a string as a double-quoted, escaped Go string constant.
     // If f.sharp is set a raw (backquoted) string may be returned instead
     // if the string does not contain any control characters other than tab.
-    void rec::fmtQ(struct fmt* f, std::string s)
+    void rec::fmtQ(struct fmt* f, gocpp::string s)
     {
         s = rec::truncateString(gocpp::recv(f), s);
         if(f->sharp && strconv::CanBackquote(s))
         {
-            rec::padString(gocpp::recv(f), "`"s + s + "`"s);
+            rec::padString(gocpp::recv(f), "`"_s + s + "`"_s);
             return;
         }
         auto buf = f->intbuf.make_slice(0, 0);

@@ -45,7 +45,7 @@
 
 namespace golang::runtime
 {
-    extern std::string modinfo;
+    extern gocpp::string modinfo;
     extern m m0;
     extern g g0;
     extern mcache* mcache0;
@@ -90,8 +90,8 @@ namespace golang::runtime
     struct g* atomicAllGIndex(struct g** ptr, uintptr_t i);
     void forEachG(std::function<void (struct g* gp)> fn);
     void forEachGRace(std::function<void (struct g* gp)> fn);
-    void cpuinit(std::string env);
-    std::string getGodebugEarly();
+    void cpuinit(gocpp::string env);
+    gocpp::string getGodebugEarly();
     void schedinit();
     void dumpgstatus(struct g* gp);
     void checkmcount();
@@ -110,7 +110,7 @@ namespace golang::runtime
     uint32_t casgcopystack(struct g* gp);
     void casGToPreemptScan(struct g* gp, uint32_t old, uint32_t go_new);
     bool casGFromPreempted(struct g* gp, uint32_t old, uint32_t go_new);
-    extern gocpp::array<std::string, 17> stwReasonStrings;
+    extern gocpp::array<gocpp::string, 17> stwReasonStrings;
     struct worldStop
     {
         golang::runtime::stwReason reason;
@@ -185,8 +185,8 @@ namespace golang::runtime
     void addExtraM(struct m* mp);
     extern rwmutex allocmLock;
     extern rwmutex execLock;
-    extern std::string failthreadcreate;
-    extern std::string failallocatestack;
+    extern gocpp::string failthreadcreate;
+    extern gocpp::string failallocatestack;
     extern gocpp_id_1 newmHandoff;
     void newm(std::function<void ()> fn, struct p* pp, int64_t id);
     void newm1(struct m* mp);
@@ -451,7 +451,7 @@ namespace golang::runtime
     {
         void becomeSpinning(struct m* mp);
         bool hasCgoOnStack(struct m* mp);
-        std::string String(golang::runtime::stwReason r);
+        gocpp::string String(golang::runtime::stwReason r);
         bool isGC(golang::runtime::stwReason r);
         void init(struct p* pp, int32_t id);
         void destroy(struct p* pp);

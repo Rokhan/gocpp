@@ -23,7 +23,7 @@ namespace golang::main
     void main()
     {
         auto v = 42;
-        mocklib::Printf("v is of type %T\n"s, v);
+        mocklib::Printf("v is of type %T\n"_s, v);
     }
 
 }

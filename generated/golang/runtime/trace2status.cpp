@@ -77,8 +77,8 @@ namespace golang::runtime
     {
         if(status == traceGoBad)
         {
-            print("runtime: goid="s, goid, "\n"s);
-            go_throw("attempted to trace a bad status for a goroutine"s);
+            print("runtime: goid="_s, goid, "\n"_s);
+            go_throw("attempted to trace a bad status for a goroutine"_s);
         }
         w = rec::event(gocpp::recv(w), traceEvGoStatus, traceArg(goid), traceArg(uint64_t(mid)), traceArg(status));
         if(markAssist)
@@ -128,7 +128,7 @@ namespace golang::runtime
                     status = traceProcSyscall;
                     break;
                 default:
-                    go_throw("attempt to trace invalid or unsupported P status"s);
+                    go_throw("attempt to trace invalid or unsupported P status"_s);
                     break;
             }
         }
@@ -144,8 +144,8 @@ namespace golang::runtime
     {
         if(status == traceProcBad)
         {
-            print("runtime: pid="s, pid, "\n"s);
-            go_throw("attempted to trace a bad status for a proc"s);
+            print("runtime: pid="_s, pid, "\n"_s);
+            go_throw("attempted to trace a bad status for a proc"_s);
         }
         w = rec::event(gocpp::recv(w), traceEvProcStatus, traceArg(pid), traceArg(status));
         if(inSweep)
@@ -194,10 +194,10 @@ namespace golang::runtime
                     }
                     break;
                 case 6:
-                    go_throw("tried to trace dead goroutine"s);
+                    go_throw("tried to trace dead goroutine"_s);
                     break;
                 default:
-                    go_throw("tried to trace goroutine with invalid or unsupported status"s);
+                    go_throw("tried to trace goroutine with invalid or unsupported status"_s);
                     break;
             }
         }

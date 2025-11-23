@@ -201,7 +201,7 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct PalettedImage& value);
-    int pixelBufferLength(int bytesPerPixel, struct Rectangle r, std::string imageTypeName);
+    int pixelBufferLength(int bytesPerPixel, struct Rectangle r, gocpp::string imageTypeName);
     struct RGBA
     {
         gocpp::slice<uint8_t> Pix;

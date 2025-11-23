@@ -214,10 +214,10 @@ namespace golang::flate
 
     namespace rec
     {
-        std::string Error(golang::flate::CorruptInputError e);
-        std::string Error(golang::flate::InternalError e);
-        std::string Error(struct ReadError* e);
-        std::string Error(struct WriteError* e);
+        gocpp::string Error(golang::flate::CorruptInputError e);
+        gocpp::string Error(golang::flate::InternalError e);
+        gocpp::string Error(struct ReadError* e);
+        gocpp::string Error(struct WriteError* e);
         bool init(struct huffmanDecoder* h, gocpp::slice<int> lengths);
         void nextBlock(struct decompressor* f);
         std::tuple<int, struct gocpp::error> Read(struct decompressor* f, gocpp::slice<unsigned char> b);

@@ -13,7 +13,7 @@
 
 namespace golang::bisect
 {
-    std::tuple<struct Matcher*, struct gocpp::error> New(std::string pattern);
+    std::tuple<struct Matcher*, struct gocpp::error> New(gocpp::string pattern);
     struct atomicPointerDedup
     {
         unsafe::Pointer p;
@@ -48,8 +48,8 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cond& value);
-    struct gocpp::error printFileLine(struct Writer w, uint64_t h, std::string file, int line);
-    gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, std::string file, int line);
+    struct gocpp::error printFileLine(struct Writer w, uint64_t h, gocpp::string file, int line);
+    gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, gocpp::string file, int line);
     struct Writer : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -104,9 +104,9 @@ namespace golang::bisect
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
     struct gocpp::error PrintMarker(struct Writer w, uint64_t h);
     struct gocpp::error printStack(struct Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
-    std::string Marker(uint64_t id);
+    gocpp::string Marker(uint64_t id);
     gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id);
-    std::tuple<std::string, uint64_t, bool> CutMarker(std::string line);
+    std::tuple<gocpp::string, uint64_t, bool> CutMarker(gocpp::string line);
     uint64_t Hash(gocpp::slice<go_any> data);
     
     template<typename... Args>
@@ -122,7 +122,7 @@ namespace golang::bisect
     }
     struct parseError
     {
-        std::string text;
+        gocpp::string text;
 
         using isGoStruct = void;
 
@@ -137,7 +137,7 @@ namespace golang::bisect
 
     std::ostream& operator<<(std::ostream& os, const struct parseError& value);
     uint64_t fnv(uint64_t h, unsigned char x);
-    uint64_t fnvString(uint64_t h, std::string x);
+    uint64_t fnvString(uint64_t h, gocpp::string x);
     uint64_t fnvUint64(uint64_t h, uint64_t x);
     uint64_t fnvUint32(uint64_t h, uint32_t x);
     struct dedup
@@ -187,11 +187,11 @@ namespace golang::bisect
         bool ShouldEnable(struct Matcher* m, uint64_t id);
         bool ShouldPrint(struct Matcher* m, uint64_t id);
         bool matchResult(struct Matcher* m, uint64_t id);
-        bool FileLine(struct Matcher* m, struct Writer w, std::string file, int line);
-        bool fileLine(struct Matcher* m, struct Writer w, std::string file, int line);
+        bool FileLine(struct Matcher* m, struct Writer w, gocpp::string file, int line);
+        bool fileLine(struct Matcher* m, struct Writer w, gocpp::string file, int line);
         bool Stack(struct Matcher* m, struct Writer w);
         bool stack(struct Matcher* m, struct Writer w);
-        std::string Error(struct parseError* e);
+        gocpp::string Error(struct parseError* e);
         bool seen(struct dedup* d, uint64_t h);
         bool seenLossy(struct dedup* d, uint64_t h);
     }

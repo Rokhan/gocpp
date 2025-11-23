@@ -22,11 +22,11 @@ namespace golang::main
 
     void main()
     {
-        auto World = "世界"s;
-        mocklib::Println("Hello"s, World);
-        mocklib::Println("Happy"s, Pi, "Day"s);
+        auto World = "世界"_s;
+        mocklib::Println("Hello"_s, World);
+        mocklib::Println("Happy"_s, Pi, "Day"_s);
         auto Truth = true;
-        mocklib::Println("Go rules?"s, Truth);
+        mocklib::Println("Go rules?"_s, Truth);
     }
 
 }

@@ -25,15 +25,15 @@ namespace golang::main
     {
         for(auto [i, v] : pow)
         {
-            mocklib::Printf("2**%v = %v\n"s, i, v);
+            mocklib::Printf("2**%v = %v\n"_s, i, v);
         }
         for(auto [i, gocpp_ignored] : pow)
         {
-            mocklib::Printf("%v\n"s, i);
+            mocklib::Printf("%v\n"_s, i);
         }
         for(auto [gocpp_ignored, v] : pow)
         {
-            mocklib::Printf("%v\n"s, v);
+            mocklib::Printf("%v\n"_s, v);
         }
         int n = 0;
         for(const auto& _ : pow)

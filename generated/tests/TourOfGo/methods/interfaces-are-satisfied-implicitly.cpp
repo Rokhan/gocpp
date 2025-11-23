@@ -106,9 +106,9 @@ namespace golang::main
 
     void main()
     {
-        I i = T {"hello"s};
+        I i = T {"hello"_s};
         rec::M(gocpp::recv(i));
-        auto t = T {"hello"s};
+        auto t = T {"hello"_s};
         I j = t;
         rec::M(gocpp::recv(j));
     }

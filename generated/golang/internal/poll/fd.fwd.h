@@ -8,5 +8,5 @@ namespace golang::poll
 {
     struct errNetClosing;
     struct DeadlineExceededError;
-    using String = std::string;
+    using String = gocpp::string;
 }

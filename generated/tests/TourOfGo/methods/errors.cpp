@@ -54,14 +54,14 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct MyError* e)
+    gocpp::string rec::Error(struct MyError* e)
     {
-        return mocklib::Sprintf("at %v, %s"s, e->When, e->What);
+        return mocklib::Sprintf("at %v, %s"_s, e->When, e->What);
     }
 
     struct gocpp::error run()
     {
-        return new MyError {mocklib::Date::Now(), "it didn't work"s};
+        return new MyError {mocklib::Date::Now(), "it didn't work"_s};
     }
 
     void main()

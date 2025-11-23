@@ -18,7 +18,7 @@ namespace golang::time
 {
     struct zone
     {
-        std::string name;
+        gocpp::string name;
         int offset;
         bool isDST;
 
@@ -55,11 +55,11 @@ namespace golang::time
     std::ostream& operator<<(std::ostream& os, const struct zoneTrans& value);
     extern sync::Once localOnce;
     extern sync::Once unnamedFixedZonesOnce;
-    struct Location* FixedZone(std::string name, int offset);
-    struct Location* fixedZone(std::string name, int offset);
-    std::tuple<std::string, int, int64_t, int64_t, bool, bool> tzset(std::string s, int64_t lastTxSec, int64_t sec);
-    std::tuple<std::string, std::string, bool> tzsetName(std::string s);
-    std::tuple<int, std::string, bool> tzsetOffset(std::string s);
+    struct Location* FixedZone(gocpp::string name, int offset);
+    struct Location* fixedZone(gocpp::string name, int offset);
+    std::tuple<gocpp::string, int, int64_t, int64_t, bool, bool> tzset(gocpp::string s, int64_t lastTxSec, int64_t sec);
+    std::tuple<gocpp::string, gocpp::string, bool> tzsetName(gocpp::string s);
+    std::tuple<int, gocpp::string, bool> tzsetOffset(gocpp::string s);
     struct rule
     {
         golang::time::ruleKind kind;
@@ -80,20 +80,20 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rule& value);
-    std::tuple<struct rule, std::string, bool> tzsetRule(std::string s);
-    std::tuple<int, std::string, bool> tzsetNum(std::string s, int min, int max);
+    std::tuple<struct rule, gocpp::string, bool> tzsetRule(gocpp::string s);
+    std::tuple<int, gocpp::string, bool> tzsetNum(gocpp::string s, int min, int max);
     int tzruleTime(int year, struct rule r, int off);
     extern gocpp::error errLocation;
-    extern std::string* zoneinfo;
+    extern gocpp::string* zoneinfo;
     extern sync::Once zoneinfoOnce;
-    std::tuple<struct Location*, struct gocpp::error> LoadLocation(std::string name);
-    bool containsDotDot(std::string s);
+    std::tuple<struct Location*, struct gocpp::error> LoadLocation(gocpp::string name);
+    bool containsDotDot(gocpp::string s);
     struct Location
     {
-        std::string name;
+        gocpp::string name;
         gocpp::slice<zone> zone;
         gocpp::slice<zoneTrans> tx;
-        std::string extend;
+        gocpp::string extend;
         int64_t cacheStart;
         int64_t cacheEnd;
         time::zone* cacheZone;
@@ -119,11 +119,11 @@ namespace golang::time
     namespace rec
     {
         struct Location* get(struct Location* l);
-        std::string String(struct Location* l);
-        std::tuple<std::string, int, int64_t, int64_t, bool> lookup(struct Location* l, int64_t sec);
+        gocpp::string String(struct Location* l);
+        std::tuple<gocpp::string, int, int64_t, int64_t, bool> lookup(struct Location* l, int64_t sec);
         int lookupFirstZone(struct Location* l);
         bool firstZoneUsed(struct Location* l);
-        std::tuple<int, bool> lookupName(struct Location* l, std::string name, int64_t unix);
+        std::tuple<int, bool> lookupName(struct Location* l, gocpp::string name, int64_t unix);
     }
 }
 

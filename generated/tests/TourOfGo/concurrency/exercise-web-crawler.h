@@ -38,7 +38,7 @@ namespace golang::main
 
         struct IFetcher
         {
-            virtual std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> vFetch(std::string url) = 0;
+            virtual std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> vFetch(gocpp::string url) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -49,7 +49,7 @@ namespace golang::main
                 value.reset(ptr);
             }
 
-            std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> vFetch(std::string url) override;
+            std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> vFetch(gocpp::string url) override;
 
             StoreT value;
         };
@@ -59,17 +59,17 @@ namespace golang::main
 
     namespace rec
     {
-        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, std::string url);
-        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, std::string url);
+        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, gocpp::string url);
+        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, gocpp::string url);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Fetcher& value);
-    void Crawl(std::string url, int depth, struct Fetcher fetcher);
+    void Crawl(gocpp::string url, int depth, struct Fetcher fetcher);
     void main();
     struct fakeResult
     {
-        std::string body;
-        gocpp::slice<std::string> urls;
+        gocpp::string body;
+        gocpp::slice<gocpp::string> urls;
 
         using isGoStruct = void;
 
@@ -87,7 +87,7 @@ namespace golang::main
 
     namespace rec
     {
-        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(golang::main::fakeFetcher f, std::string url);
+        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetch(golang::main::fakeFetcher f, gocpp::string url);
     }
 }
 

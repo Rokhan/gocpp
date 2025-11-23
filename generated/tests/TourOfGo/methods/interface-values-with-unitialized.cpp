@@ -101,7 +101,7 @@ namespace golang::main
     {
         if(t == nullptr)
         {
-            mocklib::Println("<nil>"s);
+            mocklib::Println("<nil>"_s);
             return;
         }
         mocklib::Println(t->S);
@@ -114,14 +114,14 @@ namespace golang::main
         i = t;
         describe(i);
         rec::M(gocpp::recv(i));
-        i = new T {"hello"s};
+        i = new T {"hello"_s};
         describe(i);
         rec::M(gocpp::recv(i));
     }
 
     void describe(struct I i)
     {
-        mocklib::Printf("(%v, %T)\n"s, i, i);
+        mocklib::Printf("(%v, %T)\n"_s, i, i);
     }
 
 }

@@ -14,15 +14,15 @@
 
 namespace golang::syscall
 {
-    gocpp::slice<unsigned char> StringByteSlice(std::string s);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ByteSliceFromString(std::string s);
-    unsigned char* StringBytePtr(std::string s);
-    std::tuple<unsigned char*, struct gocpp::error> BytePtrFromString(std::string s);
+    gocpp::slice<unsigned char> StringByteSlice(gocpp::string s);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ByteSliceFromString(gocpp::string s);
+    unsigned char* StringBytePtr(gocpp::string s);
+    std::tuple<unsigned char*, struct gocpp::error> BytePtrFromString(gocpp::string s);
     extern uintptr_t _zero;
     int Getpagesize();
     void Exit(int code);
-    void runtimeSetenv(std::string k, std::string v);
-    void runtimeUnsetenv(std::string k);
+    void runtimeSetenv(gocpp::string k, gocpp::string v);
+    void runtimeUnsetenv(gocpp::string k);
 
     namespace rec
     {

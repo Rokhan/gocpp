@@ -50,7 +50,7 @@ namespace golang::runtime
     bool nilinterequal(unsafe::Pointer p, unsafe::Pointer q);
     bool efaceeq(golang::runtime::_type* t, unsafe::Pointer x, unsafe::Pointer y);
     bool ifaceeq(struct itab* tab, unsafe::Pointer x, unsafe::Pointer y);
-    uintptr_t stringHash(std::string s, uintptr_t seed);
+    uintptr_t stringHash(gocpp::string s, uintptr_t seed);
     uintptr_t bytesHash(gocpp::slice<unsigned char> b, uintptr_t seed);
     uintptr_t int32Hash(uint32_t i, uintptr_t seed);
     uintptr_t int64Hash(uint64_t i, uintptr_t seed);

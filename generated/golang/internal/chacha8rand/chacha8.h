@@ -61,7 +61,7 @@ namespace golang::chacha8rand
         void Init64(struct State* s, gocpp::array<uint64_t, 4> seed);
         void Refill(struct State* s);
         void Reseed(struct State* s);
-        std::string Error(errUnmarshalChaCha8*);
+        gocpp::string Error(errUnmarshalChaCha8*);
     }
 }
 

@@ -72,103 +72,103 @@ namespace golang::godebugs
     // Note: After adding entries to this table, update the list in doc/godebug.md as well.
     // (Otherwise the test in this package will fail.)
     gocpp::slice<Info> All = gocpp::slice<Info> {gocpp::Init<>([](auto& x) {
-        x.Name = "execerrdot"s;
-        x.Package = "os/exec"s;
+        x.Name = "execerrdot"_s;
+        x.Package = "os/exec"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "gocachehash"s;
-        x.Package = "cmd/go"s;
+        x.Name = "gocachehash"_s;
+        x.Package = "cmd/go"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "gocachetest"s;
-        x.Package = "cmd/go"s;
+        x.Name = "gocachetest"_s;
+        x.Package = "cmd/go"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "gocacheverify"s;
-        x.Package = "cmd/go"s;
+        x.Name = "gocacheverify"_s;
+        x.Package = "cmd/go"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "gotypesalias"s;
-        x.Package = "go/types"s;
+        x.Name = "gotypesalias"_s;
+        x.Package = "go/types"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "http2client"s;
-        x.Package = "net/http"s;
+        x.Name = "http2client"_s;
+        x.Package = "net/http"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "http2debug"s;
-        x.Package = "net/http"s;
+        x.Name = "http2debug"_s;
+        x.Package = "net/http"_s;
         x.Opaque = true;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "http2server"s;
-        x.Package = "net/http"s;
+        x.Name = "http2server"_s;
+        x.Package = "net/http"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "httplaxcontentlength"s;
-        x.Package = "net/http"s;
+        x.Name = "httplaxcontentlength"_s;
+        x.Package = "net/http"_s;
         x.Changed = 22;
-        x.Old = "1"s;
+        x.Old = "1"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "httpmuxgo121"s;
-        x.Package = "net/http"s;
+        x.Name = "httpmuxgo121"_s;
+        x.Package = "net/http"_s;
         x.Changed = 22;
-        x.Old = "1"s;
+        x.Old = "1"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "installgoroot"s;
-        x.Package = "go/build"s;
+        x.Name = "installgoroot"_s;
+        x.Package = "go/build"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "jstmpllitinterp"s;
-        x.Package = "html/template"s;
+        x.Name = "jstmpllitinterp"_s;
+        x.Package = "html/template"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "multipartmaxheaders"s;
-        x.Package = "mime/multipart"s;
+        x.Name = "multipartmaxheaders"_s;
+        x.Package = "mime/multipart"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "multipartmaxparts"s;
-        x.Package = "mime/multipart"s;
+        x.Name = "multipartmaxparts"_s;
+        x.Package = "mime/multipart"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "multipathtcp"s;
-        x.Package = "net"s;
+        x.Name = "multipathtcp"_s;
+        x.Package = "net"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "netdns"s;
-        x.Package = "net"s;
+        x.Name = "netdns"_s;
+        x.Package = "net"_s;
         x.Opaque = true;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "panicnil"s;
-        x.Package = "runtime"s;
+        x.Name = "panicnil"_s;
+        x.Package = "runtime"_s;
         x.Changed = 21;
-        x.Old = "1"s;
+        x.Old = "1"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "randautoseed"s;
-        x.Package = "math/rand"s;
+        x.Name = "randautoseed"_s;
+        x.Package = "math/rand"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "tarinsecurepath"s;
-        x.Package = "archive/tar"s;
+        x.Name = "tarinsecurepath"_s;
+        x.Package = "archive/tar"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "tls10server"s;
-        x.Package = "crypto/tls"s;
+        x.Name = "tls10server"_s;
+        x.Package = "crypto/tls"_s;
         x.Changed = 22;
-        x.Old = "1"s;
+        x.Old = "1"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "tlsmaxrsasize"s;
-        x.Package = "crypto/tls"s;
+        x.Name = "tlsmaxrsasize"_s;
+        x.Package = "crypto/tls"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "tlsrsakex"s;
-        x.Package = "crypto/tls"s;
+        x.Name = "tlsrsakex"_s;
+        x.Package = "crypto/tls"_s;
         x.Changed = 22;
-        x.Old = "1"s;
+        x.Old = "1"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "tlsunsafeekm"s;
-        x.Package = "crypto/tls"s;
+        x.Name = "tlsunsafeekm"_s;
+        x.Package = "crypto/tls"_s;
         x.Changed = 22;
-        x.Old = "1"s;
+        x.Old = "1"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "x509sha1"s;
-        x.Package = "crypto/x509"s;
+        x.Name = "x509sha1"_s;
+        x.Package = "crypto/x509"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "x509usefallbackroots"s;
-        x.Package = "crypto/x509"s;
+        x.Name = "x509usefallbackroots"_s;
+        x.Package = "crypto/x509"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "x509usepolicies"s;
-        x.Package = "crypto/x509"s;
+        x.Name = "x509usepolicies"_s;
+        x.Package = "crypto/x509"_s;
     }), gocpp::Init<>([](auto& x) {
-        x.Name = "zipinsecurepath"s;
-        x.Package = "archive/zip"s;
+        x.Name = "zipinsecurepath"_s;
+        x.Package = "archive/zip"_s;
     })};
     // Lookup returns the Info with the given name.
-    struct Info* Lookup(std::string name)
+    struct Info* Lookup(gocpp::string name)
     {
         auto lo = 0;
         auto hi = len(All);

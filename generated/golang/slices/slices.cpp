@@ -380,7 +380,7 @@ namespace golang::slices
     {
         if(n < 0)
         {
-            gocpp::panic("cannot be negative"s);
+            gocpp::panic("cannot be negative"_s);
         }
         if(n -= cap(s) - len(s); n > 0)
         {
@@ -461,7 +461,7 @@ namespace golang::slices
                 return i;
             }
         }
-        gocpp::panic("needle not found"s);
+        gocpp::panic("needle not found"_s);
     }
 
     // Reverse reverses the elements of the slice in place.
@@ -484,7 +484,7 @@ namespace golang::slices
             size += len(s);
             if(size < 0)
             {
-                gocpp::panic("len out of range"s);
+                gocpp::panic("len out of range"_s);
             }
         }
         auto newslice = Grow<S>(nullptr, size);

@@ -35,10 +35,10 @@ namespace golang::bufio
         using strings::rec::Write;
     }
 
-    gocpp::error ErrInvalidUnreadByte = errors::New("bufio: invalid use of UnreadByte"s);
-    gocpp::error ErrInvalidUnreadRune = errors::New("bufio: invalid use of UnreadRune"s);
-    gocpp::error ErrBufferFull = errors::New("bufio: buffer full"s);
-    gocpp::error ErrNegativeCount = errors::New("bufio: negative count"s);
+    gocpp::error ErrInvalidUnreadByte = errors::New("bufio: invalid use of UnreadByte"_s);
+    gocpp::error ErrInvalidUnreadRune = errors::New("bufio: invalid use of UnreadRune"_s);
+    gocpp::error ErrBufferFull = errors::New("bufio: buffer full"_s);
+    gocpp::error ErrNegativeCount = errors::New("bufio: negative count"_s);
     // Reader implements buffering for an io.Reader object.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -142,7 +142,7 @@ namespace golang::bufio
         });
     }
 
-    gocpp::error errNegativeRead = errors::New("bufio: reader returned negative count from Read"s);
+    gocpp::error errNegativeRead = errors::New("bufio: reader returned negative count from Read"_s);
     // fill reads a new chunk into the buffer.
     void rec::fill(struct Reader* b)
     {
@@ -154,7 +154,7 @@ namespace golang::bufio
         }
         if(b->w >= len(b->buf))
         {
-            gocpp::panic("bufio: tried to fill full buffer"s);
+            gocpp::panic("bufio: tried to fill full buffer"_s);
         }
         for(auto i = maxConsecutiveEmptyReads; i > 0; i--)
         {
@@ -497,7 +497,7 @@ namespace golang::bufio
             {
                 if(b->r == 0)
                 {
-                    gocpp::panic("bufio: tried to rewind past start of buffer"s);
+                    gocpp::panic("bufio: tried to rewind past start of buffer"_s);
                 }
                 b->r--;
                 line = line.make_slice(0, len(line) - 1);
@@ -587,7 +587,7 @@ namespace golang::bufio
     // ReadString returns err != nil if and only if the returned data does not end in
     // delim.
     // For simple uses, a Scanner may be more convenient.
-    std::tuple<std::string, struct gocpp::error> rec::ReadString(struct Reader* b, unsigned char delim)
+    std::tuple<gocpp::string, struct gocpp::error> rec::ReadString(struct Reader* b, unsigned char delim)
     {
         auto [full, frag, n, err] = rec::collectFragments(gocpp::recv(b), delim);
         // Allocate new buffer to hold the full pieces and the fragment.
@@ -652,7 +652,7 @@ namespace golang::bufio
         return {n, rec::readErr(gocpp::recv(b))};
     }
 
-    gocpp::error errNegativeWrite = errors::New("bufio: writer returned negative count from Write"s);
+    gocpp::error errNegativeWrite = errors::New("bufio: writer returned negative count from Write"_s);
     // writeBuf writes the [Reader]'s buffer to the writer.
     std::tuple<int64_t, struct gocpp::error> rec::writeBuf(struct Reader* b, io::Writer w)
     {
@@ -893,7 +893,7 @@ namespace golang::bufio
             n = rec::Available(gocpp::recv(b));
             if(n < utf8::UTFMax)
             {
-                return rec::WriteString(gocpp::recv(b), std::string(r));
+                return rec::WriteString(gocpp::recv(b), gocpp::string(r));
             }
         }
         size = utf8::EncodeRune(b->buf.make_slice(b->n), r);
@@ -905,7 +905,7 @@ namespace golang::bufio
     // It returns the number of bytes written.
     // If the count is less than len(s), it also returns an error explaining
     // why the write is short.
-    std::tuple<int, struct gocpp::error> rec::WriteString(struct Writer* b, std::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(struct Writer* b, gocpp::string s)
     {
         io::StringWriter sw = {};
         auto tryStringWriter = true;

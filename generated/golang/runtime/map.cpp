@@ -547,7 +547,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map read and map write"s);
+            fatal("concurrent map read and map write"_s);
         }
         auto hash = rec::Hasher(gocpp::recv(t), key, uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
@@ -630,7 +630,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map read and map write"s);
+            fatal("concurrent map read and map write"_s);
         }
         auto hash = rec::Hasher(gocpp::recv(t), key, uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
@@ -772,7 +772,7 @@ namespace golang::runtime
     {
         if(h == nullptr)
         {
-            gocpp::panic(plainError("assignment to entry in nil map"s));
+            gocpp::panic(plainError("assignment to entry in nil map"_s));
         }
         if(raceenabled)
         {
@@ -791,7 +791,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map writes"s);
+            fatal("concurrent map writes"_s);
         }
         auto hash = rec::Hasher(gocpp::recv(t), key, uintptr_t(h->hash0));
         h->flags ^= hashWriting;
@@ -887,7 +887,7 @@ namespace golang::runtime
         done:
         if(h->flags & hashWriting == 0)
         {
-            fatal("concurrent map writes"s);
+            fatal("concurrent map writes"_s);
         }
         h->flags &^= hashWriting;
         if(rec::IndirectElem(gocpp::recv(t)))
@@ -924,7 +924,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map writes"s);
+            fatal("concurrent map writes"_s);
         }
         auto hash = rec::Hasher(gocpp::recv(t), key, uintptr_t(h->hash0));
         h->flags ^= hashWriting;
@@ -1038,7 +1038,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting == 0)
         {
-            fatal("concurrent map writes"s);
+            fatal("concurrent map writes"_s);
         }
         h->flags &^= hashWriting;
     }
@@ -1061,7 +1061,7 @@ namespace golang::runtime
         }
         if(gocpp::Sizeof<hiter>() / goarch::PtrSize != 12)
         {
-            go_throw("hash_iter size incorrect"s);
+            go_throw("hash_iter size incorrect"_s);
         }
         it->h = h;
         it->B = h->B;
@@ -1093,7 +1093,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map iteration and map write"s);
+            fatal("concurrent map iteration and map write"_s);
         }
         auto t = it->t;
         auto bucket = it->bucket;
@@ -1215,7 +1215,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting != 0)
         {
-            fatal("concurrent map writes"s);
+            fatal("concurrent map writes"_s);
         }
         h->flags ^= hashWriting;
         auto markBucketsEmpty = [=](unsafe::Pointer bucket, uintptr_t mask) mutable -> void
@@ -1254,7 +1254,7 @@ namespace golang::runtime
         }
         if(h->flags & hashWriting == 0)
         {
-            fatal("concurrent map writes"s);
+            fatal("concurrent map writes"_s);
         }
         h->flags &^= hashWriting;
     }
@@ -1284,7 +1284,7 @@ namespace golang::runtime
         {
             if(h->extra->oldoverflow != nullptr)
             {
-                go_throw("oldoverflow is not nil"s);
+                go_throw("oldoverflow is not nil"_s);
             }
             h->extra->oldoverflow = h->extra->overflow;
             h->extra->overflow = nullptr;
@@ -1433,7 +1433,7 @@ namespace golang::runtime
                     }
                     if(top < minTopHash)
                     {
-                        go_throw("bad map state"s);
+                        go_throw("bad map state"_s);
                     }
                     auto k2 = k;
                     if(rec::IndirectKey(gocpp::recv(t)))
@@ -1459,7 +1459,7 @@ namespace golang::runtime
                     }
                     if(evacuatedX + 1 != evacuatedY || evacuatedX ^ 1 != evacuatedY)
                     {
-                        go_throw("bad evacuatedN"s);
+                        go_throw("bad evacuatedN"_s);
                     }
                     b->tophash[i] = evacuatedX + useY;
                     auto dst = & xy[useY];
@@ -1534,43 +1534,43 @@ namespace golang::runtime
     {
         if(t->Key->Equal == nullptr)
         {
-            go_throw("runtime.reflect_makemap: unsupported map key type"s);
+            go_throw("runtime.reflect_makemap: unsupported map key type"_s);
         }
         if(t->Key->Size_ > maxKeySize && (! rec::IndirectKey(gocpp::recv(t)) || t->KeySize != uint8_t(goarch::PtrSize)) || t->Key->Size_ <= maxKeySize && (rec::IndirectKey(gocpp::recv(t)) || t->KeySize != uint8_t(t->Key->Size_)))
         {
-            go_throw("key size wrong"s);
+            go_throw("key size wrong"_s);
         }
         if(t->Elem->Size_ > maxElemSize && (! rec::IndirectElem(gocpp::recv(t)) || t->ValueSize != uint8_t(goarch::PtrSize)) || t->Elem->Size_ <= maxElemSize && (rec::IndirectElem(gocpp::recv(t)) || t->ValueSize != uint8_t(t->Elem->Size_)))
         {
-            go_throw("elem size wrong"s);
+            go_throw("elem size wrong"_s);
         }
         if(t->Key->Align_ > bucketCnt)
         {
-            go_throw("key align too big"s);
+            go_throw("key align too big"_s);
         }
         if(t->Elem->Align_ > bucketCnt)
         {
-            go_throw("elem align too big"s);
+            go_throw("elem align too big"_s);
         }
         if(t->Key->Size_ % uintptr_t(t->Key->Align_) != 0)
         {
-            go_throw("key size not a multiple of key align"s);
+            go_throw("key size not a multiple of key align"_s);
         }
         if(t->Elem->Size_ % uintptr_t(t->Elem->Align_) != 0)
         {
-            go_throw("elem size not a multiple of elem align"s);
+            go_throw("elem size not a multiple of elem align"_s);
         }
         if(bucketCnt < 8)
         {
-            go_throw("bucketsize too small for proper alignment"s);
+            go_throw("bucketsize too small for proper alignment"_s);
         }
         if(dataOffset % uintptr_t(t->Key->Align_) != 0)
         {
-            go_throw("need padding in bucket (key)"s);
+            go_throw("need padding in bucket (key)"_s);
         }
         if(dataOffset % uintptr_t(t->Elem->Align_) != 0)
         {
-            go_throw("need padding in bucket (elem)"s);
+            go_throw("need padding in bucket (elem)"_s);
         }
         return makemap(t, cap, nullptr);
     }
@@ -1587,7 +1587,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_mapaccess_faststr reflect.mapaccess_faststr
-    unsafe::Pointer reflect_mapaccess_faststr(golang::runtime::maptype* t, struct hmap* h, std::string key)
+    unsafe::Pointer reflect_mapaccess_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key)
     {
         auto [elem, ok] = mapaccess2_faststr(t, h, key);
         if(! ok)
@@ -1605,7 +1605,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_mapassign_faststr reflect.mapassign_faststr0
-    void reflect_mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, std::string key, unsafe::Pointer elem)
+    void reflect_mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key, unsafe::Pointer elem)
     {
         auto p = mapassign_faststr(t, h, key);
         typedmemmove(t->Elem, p, elem);
@@ -1618,7 +1618,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_mapdelete_faststr reflect.mapdelete_faststr
-    void reflect_mapdelete_faststr(golang::runtime::maptype* t, struct hmap* h, std::string key)
+    void reflect_mapdelete_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key)
     {
         mapdelete_faststr(t, h, key);
     }
@@ -1772,7 +1772,7 @@ namespace golang::runtime
         }
         if(src->flags & hashWriting != 0)
         {
-            fatal("concurrent map clone and map write"s);
+            fatal("concurrent map clone and map write"_s);
         }
         if(src->B == 0 && ! (rec::IndirectKey(gocpp::recv(t)) && rec::NeedKeyUpdate(gocpp::recv(t))) && ! rec::IndirectElem(gocpp::recv(t)))
         {
@@ -1844,7 +1844,7 @@ namespace golang::runtime
                     }
                     if(src->flags & hashWriting != 0)
                     {
-                        fatal("concurrent map clone and map write"s);
+                        fatal("concurrent map clone and map write"_s);
                     }
                     auto srcK = add(unsafe::Pointer(srcBmap), dataOffset + i * uintptr_t(t->KeySize));
                     if(rec::IndirectKey(gocpp::recv(t)))
@@ -1923,7 +1923,7 @@ namespace golang::runtime
                 }
                 if(h->flags & hashWriting != 0)
                 {
-                    fatal("concurrent map read and map write"s);
+                    fatal("concurrent map read and map write"_s);
                 }
                 auto k = add(unsafe::Pointer(b), dataOffset + offi * uintptr_t(t->KeySize));
                 if(rec::IndirectKey(gocpp::recv(t)))
@@ -1932,7 +1932,7 @@ namespace golang::runtime
                 }
                 if(s->len >= s->cap)
                 {
-                    fatal("concurrent map read and map write"s);
+                    fatal("concurrent map read and map write"_s);
                 }
                 typedmemmove(t->Key, add(s->array, uintptr_t(s->len) * uintptr_t(rec::Size(gocpp::recv(t->Key)))), k);
                 s->len++;
@@ -1999,7 +1999,7 @@ namespace golang::runtime
                 }
                 if(h->flags & hashWriting != 0)
                 {
-                    fatal("concurrent map read and map write"s);
+                    fatal("concurrent map read and map write"_s);
                 }
                 auto ele = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + offi * uintptr_t(t->ValueSize));
                 if(rec::IndirectElem(gocpp::recv(t)))
@@ -2008,7 +2008,7 @@ namespace golang::runtime
                 }
                 if(s->len >= s->cap)
                 {
-                    fatal("concurrent map read and map write"s);
+                    fatal("concurrent map read and map write"_s);
                 }
                 typedmemmove(t->Elem, add(s->array, uintptr_t(s->len) * uintptr_t(rec::Size(gocpp::recv(t->Elem)))), ele);
                 s->len++;

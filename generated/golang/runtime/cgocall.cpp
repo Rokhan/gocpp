@@ -133,13 +133,13 @@ namespace golang::runtime
     //go:nosplit
     int32_t cgocall(unsafe::Pointer fn, unsafe::Pointer arg)
     {
-        if(! iscgo && GOOS != "solaris"s && GOOS != "illumos"s && GOOS != "windows"s)
+        if(! iscgo && GOOS != "solaris"_s && GOOS != "illumos"_s && GOOS != "windows"_s)
         {
-            go_throw("cgocall unavailable"s);
+            go_throw("cgocall unavailable"_s);
         }
         if(fn == nullptr)
         {
-            go_throw("cgocall nil"s);
+            go_throw("cgocall nil"_s);
         }
         if(raceenabled)
         {
@@ -188,8 +188,8 @@ namespace golang::runtime
             g0->stack.lo = sp - 32 * 1024;
             g0->stackguard0 = g0->stack.lo + stackGuard;
             g0->stackguard1 = g0->stackguard0;
-            print("M "s, mp->id, " procid "s, mp->procid, " runtime: cgocallback with sp="s, hex(sp), " out of bounds ["s, hex(lo), ", "s, hex(hi), "]"s);
-            print("\n"s);
+            print("M "_s, mp->id, " procid "_s, mp->procid, " runtime: cgocallback with sp="_s, hex(sp), " out of bounds ["_s, hex(lo), ", "_s, hex(hi), "]"_s);
+            print("\n"_s);
             exit(2);
         }
         g0->stack.hi = sp + 1024;
@@ -221,7 +221,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp != gp->m->curg)
         {
-            println("runtime: bad g in cgocallback"s);
+            println("runtime: bad g in cgocallback"_s);
             exit(2);
         }
         auto sp = gp->m->g0->sched.sp;
@@ -240,7 +240,7 @@ namespace golang::runtime
         osPreemptExtExit(gp->m);
         if(gp->nocgocallback)
         {
-            gocpp::panic("runtime: function marked with #cgo nocallback called back into Go"s);
+            gocpp::panic("runtime: function marked with #cgo nocallback called back into Go"_s);
         }
         cgocallbackg1(fn, frame, ctxt);
         gp->m->incgo = true;
@@ -251,7 +251,7 @@ namespace golang::runtime
         }
         if(gp->m != checkm)
         {
-            go_throw("m changed unexpectedly in cgocallbackg"s);
+            go_throw("m changed unexpectedly in cgocallbackg"_s);
         }
         osPreemptExtEnter(gp->m);
         reentersyscall(savedpc, uintptr_t(savedsp));
@@ -336,13 +336,13 @@ namespace golang::runtime
     // called from assembly.
     void badcgocallback()
     {
-        go_throw("misaligned stack in cgocallback"s);
+        go_throw("misaligned stack in cgocallback"_s);
     }
 
     // called from (incomplete) assembly.
     void cgounimpl()
     {
-        go_throw("cgo not implemented"s);
+        go_throw("cgo not implemented"_s);
     }
 
     uint64_t racecgosync;
@@ -397,7 +397,7 @@ namespace golang::runtime
                         top = false;
                         break;
                     default:
-                        go_throw("can't happen"s);
+                        go_throw("can't happen"_s);
                         break;
                 }
             }
@@ -405,14 +405,14 @@ namespace golang::runtime
         cgoCheckArg(t, ep->data, t->Kind_ & kindDirectIface == 0, top, cgoCheckPointerFail);
     }
 
-    std::string cgoCheckPointerFail = "cgo argument has Go pointer to unpinned Go pointer"s;
-    std::string cgoResultFail = "cgo result is unpinned Go pointer or points to unpinned Go pointer"s;
+    gocpp::string cgoCheckPointerFail = "cgo argument has Go pointer to unpinned Go pointer"_s;
+    gocpp::string cgoResultFail = "cgo result is unpinned Go pointer or points to unpinned Go pointer"_s;
     // cgoCheckArg is the real work of cgoCheckPointer. The argument p
     // is either a pointer to the value (of type t), or the value itself,
     // depending on indir. The top parameter is whether we are at the top
     // level, where Go pointers are allowed. Go pointers to pinned objects are
     // allowed as long as they don't reference other unpinned pointers.
-    void cgoCheckArg(golang::runtime::_type* t, unsafe::Pointer p, bool indir, bool top, std::string msg)
+    void cgoCheckArg(golang::runtime::_type* t, unsafe::Pointer p, bool indir, bool top, gocpp::string msg)
     {
         if(t->PtrBytes == 0 || p == nullptr)
         {
@@ -435,7 +435,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 default:
-                    go_throw("can't happen"s);
+                    go_throw("can't happen"_s);
                     break;
                 case 0:
                     auto at = (runtime::arraytype*)(unsafe::Pointer(t));
@@ -443,7 +443,7 @@ namespace golang::runtime
                     {
                         if(at->Len != 1)
                         {
-                            go_throw("can't happen"s);
+                            go_throw("can't happen"_s);
                         }
                         cgoCheckArg(at->Elem, p, at->Elem->Kind_ & kindDirectIface == 0, top, msg);
                         return;
@@ -529,7 +529,7 @@ namespace golang::runtime
                     {
                         if(len(st->Fields) != 1)
                         {
-                            go_throw("can't happen"s);
+                            go_throw("can't happen"_s);
                         }
                         cgoCheckArg(st->Fields[0].Typ, p, st->Fields[0].Typ->Kind_ & kindDirectIface == 0, top, msg);
                         return;
@@ -571,7 +571,7 @@ namespace golang::runtime
     // memory. It checks whether that Go memory contains any other
     // pointer into unpinned Go memory. If it does, we panic.
     // The return values are unused but useful to see in panic tracebacks.
-    std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(unsafe::Pointer p, std::string msg)
+    std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(unsafe::Pointer p, gocpp::string msg)
     {
         uintptr_t base;
         uintptr_t i;

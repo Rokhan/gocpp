@@ -24,12 +24,12 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
-    std::string gogetenv(std::string key)
+    gocpp::string gogetenv(gocpp::string key)
     {
         auto env = environ();
         if(env == nullptr)
         {
-            go_throw("getenv before env init"s);
+            go_throw("getenv before env init"_s);
         }
         for(auto [gocpp_ignored, s] : env)
         {
@@ -38,14 +38,14 @@ namespace golang::runtime
                 return s.make_slice(len(key) + 1);
             }
         }
-        return ""s;
+        return ""_s;
     }
 
     // envKeyEqual reports whether a == b, with ASCII-only case insensitivity
     // on Windows. The two strings must have the same length.
-    bool envKeyEqual(std::string a, std::string b)
+    bool envKeyEqual(gocpp::string a, gocpp::string b)
     {
-        if(GOOS == "windows"s)
+        if(GOOS == "windows"_s)
         {
             for(auto i = 0; i < len(a); i++)
             {
@@ -73,7 +73,7 @@ namespace golang::runtime
     unsafe::Pointer _cgo_setenv;
     unsafe::Pointer _cgo_unsetenv;
     // Update the C environment if cgo is loaded.
-    void setenv_c(std::string k, std::string v)
+    void setenv_c(gocpp::string k, gocpp::string v)
     {
         if(_cgo_setenv == nullptr)
         {
@@ -84,7 +84,7 @@ namespace golang::runtime
     }
 
     // Update the C environment if cgo is loaded.
-    void unsetenv_c(std::string k)
+    void unsetenv_c(gocpp::string k)
     {
         if(_cgo_unsetenv == nullptr)
         {
@@ -94,7 +94,7 @@ namespace golang::runtime
         asmcgocall(_cgo_unsetenv, unsafe::Pointer(& arg));
     }
 
-    unsafe::Pointer cstring(std::string s)
+    unsafe::Pointer cstring(gocpp::string s)
     {
         auto p = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(s) + 1);
         copy(p, s);

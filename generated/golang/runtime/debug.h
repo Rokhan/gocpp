@@ -17,7 +17,7 @@ namespace golang::runtime
     int64_t NumCgoCall();
     int64_t totalMutexWaitTimeNanos();
     int NumGoroutine();
-    std::string debug_modinfo();
+    gocpp::string debug_modinfo();
     void mayMoreStackPreempt();
     void mayMoreStackMove();
 

@@ -133,7 +133,7 @@ namespace golang::os
     }
 
     // See docs in file.go:Chmod.
-    struct gocpp::error chmod(std::string name, golang::os::FileMode mode)
+    struct gocpp::error chmod(gocpp::string name, golang::os::FileMode mode)
     {
         auto longName = fixLongPath(name);
         auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
@@ -143,7 +143,7 @@ namespace golang::os
         if(e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "chmod"s;
+                x.Op = "chmod"_s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -154,13 +154,13 @@ namespace golang::os
     // See docs in file.go:(*File).Chmod.
     struct gocpp::error rec::chmod(struct File* f, golang::os::FileMode mode)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "chmod"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "chmod"_s); err != nullptr)
         {
             return err;
         }
         if(auto e = rec::Fchmod(gocpp::recv(f->pfd), syscallMode(mode)); e != nullptr)
         {
-            return rec::wrapErr(gocpp::recv(f), "chmod"s, e);
+            return rec::wrapErr(gocpp::recv(f), "chmod"_s, e);
         }
         return nullptr;
     }
@@ -172,7 +172,7 @@ namespace golang::os
     //
     // On Windows or Plan 9, Chown always returns the syscall.EWINDOWS or
     // EPLAN9 error, wrapped in *PathError.
-    struct gocpp::error Chown(std::string name, int uid, int gid)
+    struct gocpp::error Chown(gocpp::string name, int uid, int gid)
     {
         auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
         {
@@ -181,7 +181,7 @@ namespace golang::os
         if(e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "chown"s;
+                x.Op = "chown"_s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -195,7 +195,7 @@ namespace golang::os
     //
     // On Windows, it always returns the syscall.EWINDOWS error, wrapped
     // in *PathError.
-    struct gocpp::error Lchown(std::string name, int uid, int gid)
+    struct gocpp::error Lchown(gocpp::string name, int uid, int gid)
     {
         auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
         {
@@ -204,7 +204,7 @@ namespace golang::os
         if(e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "lchown"s;
+                x.Op = "lchown"_s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -219,13 +219,13 @@ namespace golang::os
     // in *PathError.
     struct gocpp::error rec::Chown(struct File* f, int uid, int gid)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "chown"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "chown"_s); err != nullptr)
         {
             return err;
         }
         if(auto e = rec::Fchown(gocpp::recv(f->pfd), uid, gid); e != nullptr)
         {
-            return rec::wrapErr(gocpp::recv(f), "chown"s, e);
+            return rec::wrapErr(gocpp::recv(f), "chown"_s, e);
         }
         return nullptr;
     }
@@ -235,13 +235,13 @@ namespace golang::os
     // If there is an error, it will be of type *PathError.
     struct gocpp::error rec::Truncate(struct File* f, int64_t size)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "truncate"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "truncate"_s); err != nullptr)
         {
             return err;
         }
         if(auto e = rec::Ftruncate(gocpp::recv(f->pfd), size); e != nullptr)
         {
-            return rec::wrapErr(gocpp::recv(f), "truncate"s, e);
+            return rec::wrapErr(gocpp::recv(f), "truncate"_s, e);
         }
         return nullptr;
     }
@@ -251,13 +251,13 @@ namespace golang::os
     // of recently written data to disk.
     struct gocpp::error rec::Sync(struct File* f)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "sync"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "sync"_s); err != nullptr)
         {
             return err;
         }
         if(auto e = rec::Fsync(gocpp::recv(f->pfd)); e != nullptr)
         {
-            return rec::wrapErr(gocpp::recv(f), "sync"s, e);
+            return rec::wrapErr(gocpp::recv(f), "sync"_s, e);
         }
         return nullptr;
     }
@@ -269,7 +269,7 @@ namespace golang::os
     // The underlying filesystem may truncate or round the values to a
     // less precise time unit.
     // If there is an error, it will be of type *PathError.
-    struct gocpp::error Chtimes(std::string name, mocklib::Date atime, mocklib::Date mtime)
+    struct gocpp::error Chtimes(gocpp::string name, mocklib::Date atime, mocklib::Date mtime)
     {
         gocpp::array<syscall::Timespec, 2> utimes = {};
         auto set = [=](int i, mocklib::Date t) mutable -> void
@@ -291,7 +291,7 @@ namespace golang::os
         if(auto e = syscall::UtimesNano(fixLongPath(name), utimes.make_slice(0)); e != nullptr)
         {
             return gocpp::InitPtr<os::PathError>([=](auto& x) {
-                x.Op = "chtimes"s;
+                x.Op = "chtimes"_s;
                 x.Path = name;
                 x.Err = e;
             });
@@ -304,13 +304,13 @@ namespace golang::os
     // If there is an error, it will be of type *PathError.
     struct gocpp::error rec::Chdir(struct File* f)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "chdir"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "chdir"_s); err != nullptr)
         {
             return err;
         }
         if(auto e = rec::Fchdir(gocpp::recv(f->pfd)); e != nullptr)
         {
-            return rec::wrapErr(gocpp::recv(f), "chdir"s, e);
+            return rec::wrapErr(gocpp::recv(f), "chdir"_s, e);
         }
         return nullptr;
     }
@@ -318,7 +318,7 @@ namespace golang::os
     // setDeadline sets the read and write deadline.
     struct gocpp::error rec::setDeadline(struct File* f, mocklib::Date t)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "SetDeadline"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SetDeadline"_s); err != nullptr)
         {
             return err;
         }
@@ -328,7 +328,7 @@ namespace golang::os
     // setReadDeadline sets the read deadline.
     struct gocpp::error rec::setReadDeadline(struct File* f, mocklib::Date t)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "SetReadDeadline"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SetReadDeadline"_s); err != nullptr)
         {
             return err;
         }
@@ -338,7 +338,7 @@ namespace golang::os
     // setWriteDeadline sets the write deadline.
     struct gocpp::error rec::setWriteDeadline(struct File* f, mocklib::Date t)
     {
-        if(auto err = rec::checkValid(gocpp::recv(f), "SetWriteDeadline"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(f), "SetWriteDeadline"_s); err != nullptr)
         {
             return err;
         }
@@ -347,7 +347,7 @@ namespace golang::os
 
     // checkValid checks whether f is valid for use.
     // If not, it returns an appropriate error, perhaps incorporating the operation name op.
-    struct gocpp::error rec::checkValid(struct File* f, std::string op)
+    struct gocpp::error rec::checkValid(struct File* f, gocpp::string op)
     {
         if(f == nullptr)
         {

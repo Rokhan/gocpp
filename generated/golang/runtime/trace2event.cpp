@@ -198,7 +198,7 @@ namespace golang::runtime
     // string returns a traceArg representing s which may be passed to write.
     // The string is assumed to be relatively short and popular, so it may be
     // stored for a while in the string dictionary.
-    runtime::traceArg rec::string(struct traceLocker tl, std::string s)
+    runtime::traceArg rec::string(struct traceLocker tl, gocpp::string s)
     {
         return traceArg(rec::put(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
     }
@@ -206,7 +206,7 @@ namespace golang::runtime
     // uniqueString returns a traceArg representing s which may be passed to write.
     // The string is assumed to be unique or long, so it will be written out to
     // the trace eagerly.
-    runtime::traceArg rec::uniqueString(struct traceLocker tl, std::string s)
+    runtime::traceArg rec::uniqueString(struct traceLocker tl, gocpp::string s)
     {
         return traceArg(rec::emit(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
     }

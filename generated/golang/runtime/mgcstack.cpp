@@ -175,11 +175,11 @@ namespace golang::runtime
     {
         if(gocpp::Sizeof<stackWorkBuf>() > gocpp::Sizeof<workbuf>())
         {
-            gocpp::panic("stackWorkBuf too big"s);
+            gocpp::panic("stackWorkBuf too big"_s);
         }
         if(gocpp::Sizeof<stackObjectBuf>() > gocpp::Sizeof<workbuf>())
         {
-            gocpp::panic("stackObjectBuf too big"s);
+            gocpp::panic("stackObjectBuf too big"_s);
         }
     }
 
@@ -298,7 +298,7 @@ namespace golang::runtime
     {
         if(p < s->stack.lo || p >= s->stack.hi)
         {
-            go_throw("address not a stack address"s);
+            go_throw("address not a stack address"_s);
         }
         auto head = & s->buf;
         if(conservative)
@@ -387,7 +387,7 @@ namespace golang::runtime
         }
         if(x->nobj > 0 && uint32_t(addr - s->stack.lo) < x->obj[x->nobj - 1].off + x->obj[x->nobj - 1].size)
         {
-            go_throw("objects added out of order or overlapping"s);
+            go_throw("objects added out of order or overlapping"_s);
         }
         if(x->nobj == len(x->obj))
         {

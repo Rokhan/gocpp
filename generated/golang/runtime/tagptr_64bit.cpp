@@ -55,15 +55,15 @@ namespace golang::runtime
     // Tag bits that don't fit in the result are discarded.
     runtime::taggedPointer taggedPointerPack(unsafe::Pointer ptr, uintptr_t tag)
     {
-        if(GOOS == "aix"s)
+        if(GOOS == "aix"_s)
         {
-            if(GOARCH != "ppc64"s)
+            if(GOARCH != "ppc64"_s)
             {
-                go_throw("check this code for aix on non-ppc64"s);
+                go_throw("check this code for aix on non-ppc64"_s);
             }
             return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - aixAddrBits)) | uint64_t(tag & ((1 << aixTagBits) - 1)));
         }
-        if(GOARCH == "riscv64"s)
+        if(GOARCH == "riscv64"_s)
         {
             return taggedPointer((uint64_t(uintptr_t(ptr)) << (64 - riscv64AddrBits)) | uint64_t(tag & ((1 << riscv64TagBits) - 1)));
         }
@@ -73,15 +73,15 @@ namespace golang::runtime
     // Pointer returns the pointer from a taggedPointer.
     unsafe::Pointer rec::pointer(golang::runtime::taggedPointer tp)
     {
-        if(GOARCH == "amd64"s)
+        if(GOARCH == "amd64"_s)
         {
             return unsafe::Pointer(uintptr_t((int64_t(tp) >> tagBits) << 3));
         }
-        if(GOOS == "aix"s)
+        if(GOOS == "aix"_s)
         {
             return unsafe::Pointer(uintptr_t(((tp >> aixTagBits) << 3) | (0xa << 56)));
         }
-        if(GOARCH == "riscv64"s)
+        if(GOARCH == "riscv64"_s)
         {
             return unsafe::Pointer(uintptr_t((tp >> riscv64TagBits) << 3));
         }

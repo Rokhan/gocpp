@@ -63,7 +63,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct DLLError* e)
+    gocpp::string rec::Error(struct DLLError* e)
     {
         return e->Msg;
     }
@@ -150,7 +150,7 @@ namespace golang::syscall
     //
     // Use LazyDLL in golang.org/x/sys/windows for a secure way to
     // load system DLLs.
-    std::tuple<struct DLL*, struct gocpp::error> LoadDLL(std::string name)
+    std::tuple<struct DLL*, struct gocpp::error> LoadDLL(gocpp::string name)
     {
         auto [namep, err] = UTF16PtrFromString(name);
         if(err != nullptr)
@@ -172,7 +172,7 @@ namespace golang::syscall
             return {nullptr, gocpp::InitPtr<DLLError>([=](auto& x) {
                 x.Err = e;
                 x.ObjName = name;
-                x.Msg = "Failed to load "s + name + ": "s + rec::Error(gocpp::recv(e));
+                x.Msg = "Failed to load "_s + name + ": "_s + rec::Error(gocpp::recv(e));
             })};
         }
         auto d = gocpp::InitPtr<DLL>([=](auto& x) {
@@ -183,7 +183,7 @@ namespace golang::syscall
     }
 
     // MustLoadDLL is like LoadDLL but panics if load operation fails.
-    struct DLL* MustLoadDLL(std::string name)
+    struct DLL* MustLoadDLL(gocpp::string name)
     {
         auto [d, e] = LoadDLL(name);
         if(e != nullptr)
@@ -195,7 +195,7 @@ namespace golang::syscall
 
     // FindProc searches DLL d for procedure named name and returns *Proc
     // if found. It returns an error if search fails.
-    std::tuple<struct Proc*, struct gocpp::error> rec::FindProc(struct DLL* d, std::string name)
+    std::tuple<struct Proc*, struct gocpp::error> rec::FindProc(struct DLL* d, gocpp::string name)
     {
         struct Proc* proc;
         struct gocpp::error err;
@@ -211,7 +211,7 @@ namespace golang::syscall
             return {nullptr, gocpp::InitPtr<DLLError>([=](auto& x) {
                 x.Err = e;
                 x.ObjName = name;
-                x.Msg = "Failed to find "s + name + " procedure in "s + d->Name + ": "s + rec::Error(gocpp::recv(e));
+                x.Msg = "Failed to find "_s + name + " procedure in "_s + d->Name + ": "_s + rec::Error(gocpp::recv(e));
             })};
         }
         auto p = gocpp::InitPtr<Proc>([=](auto& x) {
@@ -223,7 +223,7 @@ namespace golang::syscall
     }
 
     // MustFindProc is like FindProc but panics if search fails.
-    struct Proc* rec::MustFindProc(struct DLL* d, std::string name)
+    struct Proc* rec::MustFindProc(struct DLL* d, gocpp::string name)
     {
         auto [p, e] = rec::FindProc(gocpp::recv(d), name);
         if(e != nullptr)
@@ -396,7 +396,7 @@ namespace golang::syscall
     }
 
     // NewProc returns a LazyProc for accessing the named procedure in the DLL d.
-    struct LazyProc* rec::NewProc(struct LazyDLL* d, std::string name)
+    struct LazyProc* rec::NewProc(struct LazyDLL* d, gocpp::string name)
     {
         return gocpp::InitPtr<LazyProc>([=](auto& x) {
             x.l = d;
@@ -405,7 +405,7 @@ namespace golang::syscall
     }
 
     // NewLazyDLL creates new LazyDLL associated with DLL file.
-    struct LazyDLL* NewLazyDLL(std::string name)
+    struct LazyDLL* NewLazyDLL(gocpp::string name)
     {
         return gocpp::InitPtr<LazyDLL>([=](auto& x) {
             x.Name = name;

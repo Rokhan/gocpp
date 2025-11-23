@@ -1999,50 +1999,50 @@ namespace golang::runtime
 
     // A waitReason explains why a goroutine has been stopped.
     // See gopark. Do not re-use waitReasons, add new ones.
-    gocpp::array<std::string, 37> waitReasonStrings = gocpp::Init<gocpp::array<std::string, 37>>([](auto& x) {
-        x[waitReasonZero] = ""s;
-        x[waitReasonGCAssistMarking] = "GC assist marking"s;
-        x[waitReasonIOWait] = "IO wait"s;
-        x[waitReasonChanReceiveNilChan] = "chan receive (nil chan)"s;
-        x[waitReasonChanSendNilChan] = "chan send (nil chan)"s;
-        x[waitReasonDumpingHeap] = "dumping heap"s;
-        x[waitReasonGarbageCollection] = "garbage collection"s;
-        x[waitReasonGarbageCollectionScan] = "garbage collection scan"s;
-        x[waitReasonPanicWait] = "panicwait"s;
-        x[waitReasonSelect] = "select"s;
-        x[waitReasonSelectNoCases] = "select (no cases)"s;
-        x[waitReasonGCAssistWait] = "GC assist wait"s;
-        x[waitReasonGCSweepWait] = "GC sweep wait"s;
-        x[waitReasonGCScavengeWait] = "GC scavenge wait"s;
-        x[waitReasonChanReceive] = "chan receive"s;
-        x[waitReasonChanSend] = "chan send"s;
-        x[waitReasonFinalizerWait] = "finalizer wait"s;
-        x[waitReasonForceGCIdle] = "force gc (idle)"s;
-        x[waitReasonSemacquire] = "semacquire"s;
-        x[waitReasonSleep] = "sleep"s;
-        x[waitReasonSyncCondWait] = "sync.Cond.Wait"s;
-        x[waitReasonSyncMutexLock] = "sync.Mutex.Lock"s;
-        x[waitReasonSyncRWMutexRLock] = "sync.RWMutex.RLock"s;
-        x[waitReasonSyncRWMutexLock] = "sync.RWMutex.Lock"s;
-        x[waitReasonTraceReaderBlocked] = "trace reader (blocked)"s;
-        x[waitReasonWaitForGCCycle] = "wait for GC cycle"s;
-        x[waitReasonGCWorkerIdle] = "GC worker (idle)"s;
-        x[waitReasonGCWorkerActive] = "GC worker (active)"s;
-        x[waitReasonPreempted] = "preempted"s;
-        x[waitReasonDebugCall] = "debug call"s;
-        x[waitReasonGCMarkTermination] = "GC mark termination"s;
-        x[waitReasonStoppingTheWorld] = "stopping the world"s;
-        x[waitReasonFlushProcCaches] = "flushing proc caches"s;
-        x[waitReasonTraceGoroutineStatus] = "trace goroutine status"s;
-        x[waitReasonTraceProcStatus] = "trace proc status"s;
-        x[waitReasonPageTraceFlush] = "page trace flush"s;
-        x[waitReasonCoroutine] = "coroutine"s;
+    gocpp::array<gocpp::string, 37> waitReasonStrings = gocpp::Init<gocpp::array<gocpp::string, 37>>([](auto& x) {
+        x[waitReasonZero] = ""_s;
+        x[waitReasonGCAssistMarking] = "GC assist marking"_s;
+        x[waitReasonIOWait] = "IO wait"_s;
+        x[waitReasonChanReceiveNilChan] = "chan receive (nil chan)"_s;
+        x[waitReasonChanSendNilChan] = "chan send (nil chan)"_s;
+        x[waitReasonDumpingHeap] = "dumping heap"_s;
+        x[waitReasonGarbageCollection] = "garbage collection"_s;
+        x[waitReasonGarbageCollectionScan] = "garbage collection scan"_s;
+        x[waitReasonPanicWait] = "panicwait"_s;
+        x[waitReasonSelect] = "select"_s;
+        x[waitReasonSelectNoCases] = "select (no cases)"_s;
+        x[waitReasonGCAssistWait] = "GC assist wait"_s;
+        x[waitReasonGCSweepWait] = "GC sweep wait"_s;
+        x[waitReasonGCScavengeWait] = "GC scavenge wait"_s;
+        x[waitReasonChanReceive] = "chan receive"_s;
+        x[waitReasonChanSend] = "chan send"_s;
+        x[waitReasonFinalizerWait] = "finalizer wait"_s;
+        x[waitReasonForceGCIdle] = "force gc (idle)"_s;
+        x[waitReasonSemacquire] = "semacquire"_s;
+        x[waitReasonSleep] = "sleep"_s;
+        x[waitReasonSyncCondWait] = "sync.Cond.Wait"_s;
+        x[waitReasonSyncMutexLock] = "sync.Mutex.Lock"_s;
+        x[waitReasonSyncRWMutexRLock] = "sync.RWMutex.RLock"_s;
+        x[waitReasonSyncRWMutexLock] = "sync.RWMutex.Lock"_s;
+        x[waitReasonTraceReaderBlocked] = "trace reader (blocked)"_s;
+        x[waitReasonWaitForGCCycle] = "wait for GC cycle"_s;
+        x[waitReasonGCWorkerIdle] = "GC worker (idle)"_s;
+        x[waitReasonGCWorkerActive] = "GC worker (active)"_s;
+        x[waitReasonPreempted] = "preempted"_s;
+        x[waitReasonDebugCall] = "debug call"_s;
+        x[waitReasonGCMarkTermination] = "GC mark termination"_s;
+        x[waitReasonStoppingTheWorld] = "stopping the world"_s;
+        x[waitReasonFlushProcCaches] = "flushing proc caches"_s;
+        x[waitReasonTraceGoroutineStatus] = "trace goroutine status"_s;
+        x[waitReasonTraceProcStatus] = "trace proc status"_s;
+        x[waitReasonPageTraceFlush] = "page trace flush"_s;
+        x[waitReasonCoroutine] = "coroutine"_s;
     });
-    std::string rec::String(golang::runtime::waitReason w)
+    gocpp::string rec::String(golang::runtime::waitReason w)
     {
         if(w < 0 || w >= waitReason(len(waitReasonStrings)))
         {
-            return "unknown wait reason"s;
+            return "unknown wait reason"_s;
         }
         return waitReasonStrings[w];
     }
@@ -2096,6 +2096,6 @@ namespace golang::runtime
     bool islibrary;
     bool isarchive;
     // Must agree with internal/buildcfg.FramePointerEnabled.
-    bool framepointer_enabled = GOARCH == "amd64"s || GOARCH == "arm64"s;
+    bool framepointer_enabled = GOARCH == "amd64"_s || GOARCH == "arm64"_s;
 }
 

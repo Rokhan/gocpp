@@ -226,8 +226,8 @@ namespace golang::runtime
         auto doubleCheck = false;
         if(doubleCheck && rec::objBase(gocpp::recv(span), addr) != addr)
         {
-            print("runtime: addr="s, addr, " base="s, rec::objBase(gocpp::recv(span), addr), "\n"s);
-            go_throw("typePointersOfUnchecked consisting of non-base-address for object"s);
+            print("runtime: addr="_s, addr, " base="_s, rec::objBase(gocpp::recv(span), addr), "\n"_s);
+            go_throw("typePointersOfUnchecked consisting of non-base-address for object"_s);
         }
         auto spc = span->spanclass;
         if(rec::noscan(gocpp::recv(spc)))
@@ -277,7 +277,7 @@ namespace golang::runtime
         auto doubleCheck = false;
         if(doubleCheck && (typ == nullptr || typ->Kind_ & kindGCProg != 0))
         {
-            go_throw("bad type passed to typePointersOfType"s);
+            go_throw("bad type passed to typePointersOfType"_s);
         }
         if(rec::noscan(gocpp::recv(span->spanclass)))
         {
@@ -487,7 +487,7 @@ namespace golang::runtime
     {
         if((dst | src | size) & (goarch::PtrSize - 1) != 0)
         {
-            go_throw("bulkBarrierPreWrite: unaligned arguments"s);
+            go_throw("bulkBarrierPreWrite: unaligned arguments"_s);
         }
         if(! writeBarrier.enabled)
         {
@@ -585,7 +585,7 @@ namespace golang::runtime
     {
         if((dst | src | size) & (goarch::PtrSize - 1) != 0)
         {
-            go_throw("bulkBarrierPreWrite: unaligned arguments"s);
+            go_throw("bulkBarrierPreWrite: unaligned arguments"_s);
         }
         if(! writeBarrier.enabled)
         {
@@ -813,11 +813,11 @@ namespace golang::runtime
         {
             if(rec::noscan(gocpp::recv(span->spanclass)))
             {
-                go_throw("heapBits called for noscan"s);
+                go_throw("heapBits called for noscan"_s);
             }
             if(span->elemsize > minSizeForMallocHeader)
             {
-                go_throw("heapBits called for span class that should have a malloc header"s);
+                go_throw("heapBits called for span class that should have a malloc header"_s);
             }
         }
         if(span->npages == 1)
@@ -924,10 +924,10 @@ namespace golang::runtime
             auto srcRead = rec::heapBitsSmallForAddr(gocpp::recv(span), x);
             if(srcRead != src)
             {
-                print("runtime: x="s, hex(x), " i="s, i, " j="s, j, " bits="s, bits, "\n"s);
-                print("runtime: dataSize="s, dataSize, " typ.Size_="s, typ->Size_, " typ.PtrBytes="s, typ->PtrBytes, "\n"s);
-                print("runtime: src0="s, hex(src0), " src="s, hex(src), " srcRead="s, hex(srcRead), "\n"s);
-                go_throw("bad pointer bits written for small object"s);
+                print("runtime: x="_s, hex(x), " i="_s, i, " j="_s, j, " bits="_s, bits, "\n"_s);
+                print("runtime: dataSize="_s, dataSize, " typ.Size_="_s, typ->Size_, " typ.PtrBytes="_s, typ->PtrBytes, "\n"_s);
+                print("runtime: src0="_s, hex(src0), " src="_s, hex(src), " srcRead="_s, hex(srcRead), "\n"_s);
+                go_throw("bad pointer bits written for small object"_s);
             }
         }
         return scanSize;
@@ -963,7 +963,7 @@ namespace golang::runtime
         {
             if(doubleCheck && (! heapBitsInSpan(dataSize) || ! heapBitsInSpan(span->elemsize)))
             {
-                go_throw("tried to write heap bits, but no heap bits in span"s);
+                go_throw("tried to write heap bits, but no heap bits in span"_s);
             }
             scanSize = rec::writeHeapBitsSmall(gocpp::recv(span), x, dataSize, typ);
         }
@@ -973,7 +973,7 @@ namespace golang::runtime
             {
                 if(rec::sizeclass(gocpp::recv(span->spanclass)) != 0)
                 {
-                    go_throw("GCProg for type that isn't large"s);
+                    go_throw("GCProg for type that isn't large"_s);
                 }
                 auto spaceNeeded = alignUp(gocpp::Sizeof<runtime::_type>(), goarch::PtrSize);
                 auto heapBitsOff = spaceNeeded;
@@ -1053,11 +1053,11 @@ namespace golang::runtime
                 std::tie(tp, addr) = rec::next(gocpp::recv(tp), x + span->elemsize);
                 if(addr == 0)
                 {
-                    println("runtime: found bad iterator"s);
+                    println("runtime: found bad iterator"_s);
                 }
                 if(addr != x + i)
                 {
-                    print("runtime: addr="s, hex(addr), " x+i="s, hex(x + i), "\n"s);
+                    print("runtime: addr="_s, hex(addr), " x+i="_s, hex(x + i), "\n"_s);
                     bad = true;
                 }
             }
@@ -1070,12 +1070,12 @@ namespace golang::runtime
             {
                 return;
             }
-            println("runtime: extra pointer:"s, hex(addr));
+            println("runtime: extra pointer:"_s, hex(addr));
         }
-        print("runtime: hasHeader="s, header != nullptr, " typ.Size_="s, typ->Size_, " hasGCProg="s, typ->Kind_ & kindGCProg != 0, "\n"s);
-        print("runtime: x="s, hex(x), " dataSize="s, dataSize, " elemsize="s, span->elemsize, "\n"s);
-        print("runtime: typ="s, unsafe::Pointer(typ), " typ.PtrBytes="s, typ->PtrBytes, "\n"s);
-        print("runtime: limit="s, hex(x + span->elemsize), "\n"s);
+        print("runtime: hasHeader="_s, header != nullptr, " typ.Size_="_s, typ->Size_, " hasGCProg="_s, typ->Kind_ & kindGCProg != 0, "\n"_s);
+        print("runtime: x="_s, hex(x), " dataSize="_s, dataSize, " elemsize="_s, span->elemsize, "\n"_s);
+        print("runtime: typ="_s, unsafe::Pointer(typ), " typ.PtrBytes="_s, typ->PtrBytes, "\n"_s);
+        print("runtime: limit="_s, hex(x + span->elemsize), "\n"_s);
         tp = rec::typePointersOfUnchecked(gocpp::recv(span), x);
         dumpTypePointers(tp);
         for(; ; )
@@ -1083,14 +1083,14 @@ namespace golang::runtime
             uintptr_t addr = {};
             if(std::tie(tp, addr) = rec::next(gocpp::recv(tp), x + span->elemsize); addr == 0)
             {
-                println("runtime: would've stopped here"s);
+                println("runtime: would've stopped here"_s);
                 dumpTypePointers(tp);
                 break;
             }
-            print("runtime: addr="s, hex(addr), "\n"s);
+            print("runtime: addr="_s, hex(addr), "\n"_s);
             dumpTypePointers(tp);
         }
-        go_throw("heapSetType: pointer entry not correct"s);
+        go_throw("heapSetType: pointer entry not correct"_s);
     }
 
     void doubleCheckHeapPointersInterior(uintptr_t x, uintptr_t interior, uintptr_t size, uintptr_t dataSize, golang::runtime::_type* typ, golang::runtime::_type** header, struct mspan* span)
@@ -1098,8 +1098,8 @@ namespace golang::runtime
         auto bad = false;
         if(interior < x)
         {
-            print("runtime: interior="s, hex(interior), " x="s, hex(x), "\n"s);
-            go_throw("found bad interior pointer"s);
+            print("runtime: interior="_s, hex(interior), " x="_s, hex(x), "\n"_s);
+            go_throw("found bad interior pointer"_s);
         }
         auto off = interior - x;
         auto tp = rec::typePointersOf(gocpp::recv(span), interior, size);
@@ -1121,12 +1121,12 @@ namespace golang::runtime
                 std::tie(tp, addr) = rec::next(gocpp::recv(tp), interior + size);
                 if(addr == 0)
                 {
-                    println("runtime: found bad iterator"s);
+                    println("runtime: found bad iterator"_s);
                     bad = true;
                 }
                 if(addr != x + i)
                 {
-                    print("runtime: addr="s, hex(addr), " x+i="s, hex(x + i), "\n"s);
+                    print("runtime: addr="_s, hex(addr), " x+i="_s, hex(x + i), "\n"_s);
                     bad = true;
                 }
             }
@@ -1139,11 +1139,11 @@ namespace golang::runtime
             {
                 return;
             }
-            println("runtime: extra pointer:"s, hex(addr));
+            println("runtime: extra pointer:"_s, hex(addr));
         }
-        print("runtime: hasHeader="s, header != nullptr, " typ.Size_="s, typ->Size_, "\n"s);
-        print("runtime: x="s, hex(x), " dataSize="s, dataSize, " elemsize="s, span->elemsize, " interior="s, hex(interior), " size="s, size, "\n"s);
-        print("runtime: limit="s, hex(interior + size), "\n"s);
+        print("runtime: hasHeader="_s, header != nullptr, " typ.Size_="_s, typ->Size_, "\n"_s);
+        print("runtime: x="_s, hex(x), " dataSize="_s, dataSize, " elemsize="_s, span->elemsize, " interior="_s, hex(interior), " size="_s, size, "\n"_s);
+        print("runtime: limit="_s, hex(interior + size), "\n"_s);
         tp = rec::typePointersOf(gocpp::recv(span), interior, size);
         dumpTypePointers(tp);
         for(; ; )
@@ -1151,14 +1151,14 @@ namespace golang::runtime
             uintptr_t addr = {};
             if(std::tie(tp, addr) = rec::next(gocpp::recv(tp), interior + size); addr == 0)
             {
-                println("runtime: would've stopped here"s);
+                println("runtime: would've stopped here"_s);
                 dumpTypePointers(tp);
                 break;
             }
-            print("runtime: addr="s, hex(addr), "\n"s);
+            print("runtime: addr="_s, hex(addr), "\n"_s);
             dumpTypePointers(tp);
         }
-        print("runtime: want: "s);
+        print("runtime: want: "_s);
         for(auto i = off; i < off + size; i += goarch::PtrSize)
         {
             auto want = false;
@@ -1173,15 +1173,15 @@ namespace golang::runtime
             }
             if(want)
             {
-                print("1"s);
+                print("1"_s);
             }
             else
             {
-                print("0"s);
+                print("0"_s);
             }
         }
         println();
-        go_throw("heapSetType: pointer entry not correct"s);
+        go_throw("heapSetType: pointer entry not correct"_s);
     }
 
     //go:nosplit
@@ -1218,8 +1218,8 @@ namespace golang::runtime
         {
             auto tp0 = rec::typePointersOfType(gocpp::recv(s), typ, addr);
             auto tp1 = rec::typePointersOf(gocpp::recv(s), addr, size);
-            print("runtime: addr="s, hex(addr), " size="s, size, "\n"s);
-            print("runtime: type="s, rec::string(gocpp::recv(toRType(typ))), "\n"s);
+            print("runtime: addr="_s, hex(addr), " size="_s, size, "\n"_s);
+            print("runtime: type="_s, rec::string(gocpp::recv(toRType(typ))), "\n"_s);
             dumpTypePointers(tp0);
             dumpTypePointers(tp1);
             for(; ; )
@@ -1228,29 +1228,29 @@ namespace golang::runtime
                 uintptr_t addr1 = {};
                 std::tie(tp0, addr0) = rec::next(gocpp::recv(tp0), addr + size);
                 std::tie(tp1, addr1) = rec::next(gocpp::recv(tp1), addr + size);
-                print("runtime: "s, hex(addr0), " "s, hex(addr1), "\n"s);
+                print("runtime: "_s, hex(addr0), " "_s, hex(addr1), "\n"_s);
                 if(addr0 == 0 && addr1 == 0)
                 {
                     break;
                 }
             }
-            go_throw("mismatch between typePointersOfType and typePointersOf"s);
+            go_throw("mismatch between typePointersOfType and typePointersOf"_s);
         }
     }
 
     void dumpTypePointers(struct typePointers tp)
     {
-        print("runtime: tp.elem="s, hex(tp.elem), " tp.typ="s, unsafe::Pointer(tp.typ), "\n"s);
-        print("runtime: tp.addr="s, hex(tp.addr), " tp.mask="s);
+        print("runtime: tp.elem="_s, hex(tp.elem), " tp.typ="_s, unsafe::Pointer(tp.typ), "\n"_s);
+        print("runtime: tp.addr="_s, hex(tp.addr), " tp.mask="_s);
         for(auto i = uintptr_t(0); i < ptrBits; i++)
         {
             if(tp.mask & (uintptr_t(1) << i) != 0)
             {
-                print("1"s);
+                print("1"_s);
             }
             else
             {
-                print("0"s);
+                print("0"_s);
             }
         }
         println();
@@ -1268,7 +1268,7 @@ namespace golang::runtime
         runtime::_type* et = {};
         if(t->Kind_ & kindMask != kindPtr)
         {
-            go_throw("bad argument to getgcmask: expected type to be a pointer to the value type whose mask is being queried"s);
+            go_throw("bad argument to getgcmask: expected type to be a pointer to the value type whose mask is being queried"_s);
         }
         et = (runtime::ptrtype*)(unsafe::Pointer(t))->Elem;
         for(auto [gocpp_ignored, datap] : activeModules())
@@ -1321,7 +1321,7 @@ namespace golang::runtime
             {
                 if(*(unsigned char*)(unsafe::Pointer(i)) != 0)
                 {
-                    go_throw("found non-zeroed tail of allocation"s);
+                    go_throw("found non-zeroed tail of allocation"_s);
                 }
             }
             for(; len(maskFromHeap) > 0 && maskFromHeap[len(maskFromHeap) - 1] == 0; )
@@ -1352,20 +1352,20 @@ namespace golang::runtime
                 }
                 if(differs)
                 {
-                    print("runtime: heap mask="s);
+                    print("runtime: heap mask="_s);
                     for(auto [gocpp_ignored, b] : maskFromHeap)
                     {
                         print(b);
                     }
                     println();
-                    print("runtime: type mask="s);
+                    print("runtime: type mask="_s);
                     for(auto [gocpp_ignored, b] : maskFromType)
                     {
                         print(b);
                     }
                     println();
-                    print("runtime: type="s, rec::string(gocpp::recv(toRType(et))), "\n"s);
-                    go_throw("found two different masks from two different methods"s);
+                    print("runtime: type="_s, rec::string(gocpp::recv(toRType(et))), "\n"_s);
+                    go_throw("found two different masks from two different methods"_s);
                 }
             }
             mask = maskFromHeap;
@@ -1448,7 +1448,7 @@ namespace golang::runtime
     // For !goexperiment.AllocHeaders, to pass TestIntendedInlining.
     void writeHeapBitsForAddr()
     {
-        gocpp::panic("not implemented"s);
+        gocpp::panic("not implemented"_s);
     }
 
     // For !goexperiment.AllocHeaders.
@@ -1483,7 +1483,7 @@ namespace golang::runtime
     //go:nosplit
     struct heapBits heapBitsForAddr(uintptr_t addr, uintptr_t size)
     {
-        gocpp::panic("not implemented"s);
+        gocpp::panic("not implemented"_s);
     }
 
     // For !goexperiment.AllocHeaders.
@@ -1491,7 +1491,7 @@ namespace golang::runtime
     //go:nosplit
     std::tuple<struct heapBits, uintptr_t> rec::next(struct heapBits h)
     {
-        gocpp::panic("not implemented"s);
+        gocpp::panic("not implemented"_s);
     }
 
     // For !goexperiment.AllocHeaders.
@@ -1499,7 +1499,7 @@ namespace golang::runtime
     //go:nosplit
     std::tuple<struct heapBits, uintptr_t> rec::nextFast(struct heapBits h)
     {
-        gocpp::panic("not implemented"s);
+        gocpp::panic("not implemented"_s);
     }
 
 }

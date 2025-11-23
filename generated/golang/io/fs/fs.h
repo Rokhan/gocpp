@@ -40,7 +40,7 @@ namespace golang::fs
 
         struct IFS
         {
-            virtual std::tuple<struct File, struct gocpp::error> vOpen(std::string name) = 0;
+            virtual std::tuple<struct File, struct gocpp::error> vOpen(gocpp::string name) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -51,7 +51,7 @@ namespace golang::fs
                 value.reset(ptr);
             }
 
-            std::tuple<struct File, struct gocpp::error> vOpen(std::string name) override;
+            std::tuple<struct File, struct gocpp::error> vOpen(gocpp::string name) override;
 
             StoreT value;
         };
@@ -61,12 +61,12 @@ namespace golang::fs
 
     namespace rec
     {
-        std::tuple<struct File, struct gocpp::error> Open(const gocpp::PtrRecv<struct FS, false>& self, std::string name);
-        std::tuple<struct File, struct gocpp::error> Open(const gocpp::ObjRecv<struct FS>& self, std::string name);
+        std::tuple<struct File, struct gocpp::error> Open(const gocpp::PtrRecv<struct FS, false>& self, gocpp::string name);
+        std::tuple<struct File, struct gocpp::error> Open(const gocpp::ObjRecv<struct FS>& self, gocpp::string name);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct FS& value);
-    bool ValidPath(std::string name);
+    bool ValidPath(gocpp::string name);
     struct File : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -157,7 +157,7 @@ namespace golang::fs
 
         struct IDirEntry
         {
-            virtual std::string vName() = 0;
+            virtual gocpp::string vName() = 0;
             virtual bool vIsDir() = 0;
             virtual fs::FileMode vType() = 0;
             virtual std::tuple<struct FileInfo, struct gocpp::error> vInfo() = 0;
@@ -171,7 +171,7 @@ namespace golang::fs
                 value.reset(ptr);
             }
 
-            std::string vName() override;
+            gocpp::string vName() override;
 
             bool vIsDir() override;
 
@@ -187,8 +187,8 @@ namespace golang::fs
 
     namespace rec
     {
-        std::string Name(const gocpp::PtrRecv<struct DirEntry, false>& self);
-        std::string Name(const gocpp::ObjRecv<struct DirEntry>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct DirEntry, false>& self);
+        gocpp::string Name(const gocpp::ObjRecv<struct DirEntry>& self);
 
         bool IsDir(const gocpp::PtrRecv<struct DirEntry, false>& self);
         bool IsDir(const gocpp::ObjRecv<struct DirEntry>& self);
@@ -289,7 +289,7 @@ namespace golang::fs
 
         struct IFileInfo
         {
-            virtual std::string vName() = 0;
+            virtual gocpp::string vName() = 0;
             virtual int64_t vSize() = 0;
             virtual fs::FileMode vMode() = 0;
             virtual mocklib::Date vModTime() = 0;
@@ -305,7 +305,7 @@ namespace golang::fs
                 value.reset(ptr);
             }
 
-            std::string vName() override;
+            gocpp::string vName() override;
 
             int64_t vSize() override;
 
@@ -325,8 +325,8 @@ namespace golang::fs
 
     namespace rec
     {
-        std::string Name(const gocpp::PtrRecv<struct FileInfo, false>& self);
-        std::string Name(const gocpp::ObjRecv<struct FileInfo>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct FileInfo, false>& self);
+        gocpp::string Name(const gocpp::ObjRecv<struct FileInfo>& self);
 
         int64_t Size(const gocpp::PtrRecv<struct FileInfo, false>& self);
         int64_t Size(const gocpp::ObjRecv<struct FileInfo>& self);
@@ -347,8 +347,8 @@ namespace golang::fs
     std::ostream& operator<<(std::ostream& os, const struct FileInfo& value);
     struct PathError
     {
-        std::string Op;
-        std::string Path;
+        gocpp::string Op;
+        gocpp::string Path;
         gocpp::error Err;
 
         using isGoStruct = void;
@@ -418,12 +418,12 @@ namespace golang::fs
 
     namespace rec
     {
-        std::string String(golang::fs::FileMode m);
+        gocpp::string String(golang::fs::FileMode m);
         bool IsDir(golang::fs::FileMode m);
         bool IsRegular(golang::fs::FileMode m);
         fs::FileMode Perm(golang::fs::FileMode m);
         fs::FileMode Type(golang::fs::FileMode m);
-        std::string Error(struct PathError* e);
+        gocpp::string Error(struct PathError* e);
         struct gocpp::error Unwrap(struct PathError* e);
         bool Timeout(struct PathError* e);
     }

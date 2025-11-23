@@ -85,23 +85,23 @@ namespace golang::tree
         return t;
     }
 
-    std::string rec::String(struct Tree* t)
+    gocpp::string rec::String(struct Tree* t)
     {
         if(t == nullptr)
         {
-            return "()"s;
+            return "()"_s;
         }
-        auto s = ""s;
+        auto s = ""_s;
         if(t->Left != nullptr)
         {
-            s += rec::String(gocpp::recv(t->Left)) + " "s;
+            s += rec::String(gocpp::recv(t->Left)) + " "_s;
         }
         s += mocklib::Sprint(t->Value);
         if(t->Right != nullptr)
         {
-            s += " "s + rec::String(gocpp::recv(t->Right));
+            s += " "_s + rec::String(gocpp::recv(t->Right));
         }
-        return "("s + s + ")"s;
+        return "("_s + s + ")"_s;
     }
 
 }

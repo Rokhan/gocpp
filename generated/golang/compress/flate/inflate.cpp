@@ -42,15 +42,15 @@ namespace golang::flate
     sync::Once fixedOnce;
     huffmanDecoder fixedHuffmanDecoder;
     // A CorruptInputError reports the presence of corrupt input at a given offset.
-    std::string rec::Error(golang::flate::CorruptInputError e)
+    gocpp::string rec::Error(golang::flate::CorruptInputError e)
     {
-        return "flate: corrupt input before offset "s + strconv::FormatInt(int64_t(e), 10);
+        return "flate: corrupt input before offset "_s + strconv::FormatInt(int64_t(e), 10);
     }
 
     // An InternalError reports an error in the flate code itself.
-    std::string rec::Error(golang::flate::InternalError e)
+    gocpp::string rec::Error(golang::flate::InternalError e)
     {
-        return "flate: internal error: "s + std::string(e);
+        return "flate: internal error: "_s + gocpp::string(e);
     }
 
     // A ReadError reports an error encountered while reading input.
@@ -88,9 +88,9 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct ReadError* e)
+    gocpp::string rec::Error(struct ReadError* e)
     {
-        return "flate: read error at offset "s + strconv::FormatInt(e->Offset, 10) + ": "s + rec::Error(gocpp::recv(e->Err));
+        return "flate: read error at offset "_s + strconv::FormatInt(e->Offset, 10) + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
     // A WriteError reports an error encountered while writing output.
@@ -128,9 +128,9 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct WriteError* e)
+    gocpp::string rec::Error(struct WriteError* e)
     {
-        return "flate: write error at offset "s + strconv::FormatInt(e->Offset, 10) + ": "s + rec::Error(gocpp::recv(e->Err));
+        return "flate: write error at offset "_s + strconv::FormatInt(e->Offset, 10) + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
     // Resetter resets a ReadCloser returned by [NewReader] or [NewReaderDict]
@@ -288,7 +288,7 @@ namespace golang::flate
                 auto off = j - (unsigned int)(link);
                 if(sanity && h->chunks[reverse] != 0)
                 {
-                    gocpp::panic("impossible: overwriting existing chunk"s);
+                    gocpp::panic("impossible: overwriting existing chunk"_s);
                 }
                 h->chunks[reverse] = uint32_t((off << huffmanValueShift) | (huffmanChunkBits + 1));
                 h->links[off] = gocpp::make(gocpp::Tag<gocpp::slice<uint32_t>>(), numLinks);
@@ -311,7 +311,7 @@ namespace golang::flate
                 {
                     if(sanity && h->chunks[off] != 0)
                     {
-                        gocpp::panic("impossible: overwriting existing chunk"s);
+                        gocpp::panic("impossible: overwriting existing chunk"_s);
                     }
                     h->chunks[off] = chunk;
                 }
@@ -321,7 +321,7 @@ namespace golang::flate
                 auto j = reverse & (huffmanNumChunks - 1);
                 if(sanity && h->chunks[j] & huffmanCountMask != huffmanChunkBits + 1)
                 {
-                    gocpp::panic("impossible: not an indirect chunk"s);
+                    gocpp::panic("impossible: not an indirect chunk"_s);
                 }
                 auto value = h->chunks[j] >> huffmanValueShift;
                 auto linktab = h->links[value];
@@ -330,7 +330,7 @@ namespace golang::flate
                 {
                     if(sanity && linktab[off] != 0)
                     {
-                        gocpp::panic("impossible: overwriting existing chunk"s);
+                        gocpp::panic("impossible: overwriting existing chunk"_s);
                     }
                     linktab[off] = chunk;
                 }
@@ -346,7 +346,7 @@ namespace golang::flate
                     {
                         continue;
                     }
-                    gocpp::panic("impossible: missing chunk"s);
+                    gocpp::panic("impossible: missing chunk"_s);
                 }
             }
             for(auto [gocpp_ignored, linktab] : h->links)
@@ -355,7 +355,7 @@ namespace golang::flate
                 {
                     if(chunk == 0)
                     {
-                        gocpp::panic("impossible: missing chunk"s);
+                        gocpp::panic("impossible: missing chunk"_s);
                     }
                 }
             }
@@ -641,7 +641,7 @@ namespace golang::flate
                 switch(conditionId)
                 {
                     default:
-                        return InternalError("unexpected length code"s);
+                        return InternalError("unexpected length code"_s);
                         break;
                     case 0:
                         rep = 3;

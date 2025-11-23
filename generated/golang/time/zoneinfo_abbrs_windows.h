@@ -13,8 +13,8 @@ namespace golang::time
 {
     struct abbr
     {
-        std::string std;
-        std::string dst;
+        gocpp::string std;
+        gocpp::string dst;
 
         using isGoStruct = void;
 
@@ -28,7 +28,7 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abbr& value);
-    extern gocpp::map<std::string, abbr> abbrs;
+    extern gocpp::map<gocpp::string, abbr> abbrs;
 
     namespace rec
     {

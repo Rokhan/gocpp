@@ -12,7 +12,7 @@ namespace golang::os
     struct LinkError;
     struct noReadFrom;
     struct noWriteTo;
-    using dirFS = std::string;
+    using dirFS = gocpp::string;
 }
 #include "golang/os/types.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"

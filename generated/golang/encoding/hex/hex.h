@@ -13,8 +13,8 @@
 
 namespace golang::hex
 {
-    extern std::string hextable;
-    extern std::string reverseHexTable;
+    extern gocpp::string hextable;
+    extern gocpp::string reverseHexTable;
     int EncodedLen(int n);
     int Encode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     gocpp::slice<unsigned char> AppendEncode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
@@ -22,9 +22,9 @@ namespace golang::hex
     int DecodedLen(int x);
     std::tuple<int, struct gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> AppendDecode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
-    std::string EncodeToString(gocpp::slice<unsigned char> src);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> DecodeString(std::string s);
-    std::string Dump(gocpp::slice<unsigned char> data);
+    gocpp::string EncodeToString(gocpp::slice<unsigned char> src);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> DecodeString(gocpp::string s);
+    gocpp::string Dump(gocpp::slice<unsigned char> data);
     struct encoder
     {
         io::Writer w;
@@ -90,7 +90,7 @@ namespace golang::hex
 
     namespace rec
     {
-        std::string Error(golang::hex::InvalidByteError e);
+        gocpp::string Error(golang::hex::InvalidByteError e);
         std::tuple<int, struct gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> p);
         std::tuple<int, struct gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p);
         std::tuple<int, struct gocpp::error> Write(struct dumper* h, gocpp::slice<unsigned char> data);

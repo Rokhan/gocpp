@@ -73,7 +73,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    std::string rec::string(struct rtype t)
+    gocpp::string rec::string(struct rtype t)
     {
         auto s = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), t.Str)));
         if(t.TFlag & abi::TFlagExtraStar != 0)
@@ -88,11 +88,11 @@ namespace golang::runtime
         return rec::Uncommon(gocpp::recv(t));
     }
 
-    std::string rec::name(struct rtype t)
+    gocpp::string rec::name(struct rtype t)
     {
         if(t.TFlag & abi::TFlagNamed == 0)
         {
-            return ""s;
+            return ""_s;
         }
         auto s = rec::string(gocpp::recv(t));
         auto i = len(s) - 1;
@@ -124,7 +124,7 @@ namespace golang::runtime
     // available. This is not the same as the reflect package's PkgPath
     // method, in that it returns the package path for struct and interface
     // types, not just named types.
-    std::string rec::pkgpath(struct rtype t)
+    gocpp::string rec::pkgpath(struct rtype t)
     {
         if(auto u = rec::uncommon(gocpp::recv(t)); u != nullptr)
         {
@@ -148,7 +148,7 @@ namespace golang::runtime
                     break;
             }
         }
-        return ""s;
+        return ""_s;
     }
 
     struct gocpp_id_0
@@ -245,8 +245,8 @@ namespace golang::runtime
                 auto res = md->types + uintptr_t(off);
                 if(res > md->etypes)
                 {
-                    println("runtime: nameOff"s, hex(off), "out of range"s, hex(md->types), "-"s, hex(md->etypes));
-                    go_throw("runtime: name offset out of range"s);
+                    println("runtime: nameOff"_s, hex(off), "out of range"_s, hex(md->types), "-"_s, hex(md->etypes));
+                    go_throw("runtime: name offset out of range"_s);
                 }
                 return gocpp::Init<runtime::name>([=](auto& x) {
                     x.Bytes = (unsigned char*)(unsafe::Pointer(res));
@@ -258,12 +258,12 @@ namespace golang::runtime
         reflectOffsUnlock();
         if(! found)
         {
-            println("runtime: nameOff"s, hex(off), "base"s, hex(base), "not in ranges:"s);
+            println("runtime: nameOff"_s, hex(off), "base"_s, hex(base), "not in ranges:"_s);
             for(auto next = & firstmoduledata; next != nullptr; next = next->next)
             {
-                println("\ttypes"s, hex(next->types), "etypes"s, hex(next->etypes));
+                println("\ttypes"_s, hex(next->types), "etypes"_s, hex(next->etypes));
             }
-            go_throw("runtime: name offset base pointer out of range"s);
+            go_throw("runtime: name offset base pointer out of range"_s);
         }
         return gocpp::Init<runtime::name>([=](auto& x) {
             x.Bytes = (unsigned char*)(res);
@@ -298,12 +298,12 @@ namespace golang::runtime
             reflectOffsUnlock();
             if(res == nullptr)
             {
-                println("runtime: typeOff"s, hex(off), "base"s, hex(base), "not in ranges:"s);
+                println("runtime: typeOff"_s, hex(off), "base"_s, hex(base), "not in ranges:"_s);
                 for(auto next = & firstmoduledata; next != nullptr; next = next->next)
                 {
-                    println("\ttypes"s, hex(next->types), "etypes"s, hex(next->etypes));
+                    println("\ttypes"_s, hex(next->types), "etypes"_s, hex(next->etypes));
                 }
-                go_throw("runtime: type offset base pointer out of range"s);
+                go_throw("runtime: type offset base pointer out of range"_s);
             }
             return (runtime::_type*)(res);
         }
@@ -314,8 +314,8 @@ namespace golang::runtime
         auto res = md->types + uintptr_t(off);
         if(res > md->etypes)
         {
-            println("runtime: typeOff"s, hex(off), "out of range"s, hex(md->types), "-"s, hex(md->etypes));
-            go_throw("runtime: type offset out of range"s);
+            println("runtime: typeOff"_s, hex(off), "out of range"_s, hex(md->types), "-"_s, hex(md->etypes));
+            go_throw("runtime: type offset out of range"_s);
         }
         return (runtime::_type*)(unsafe::Pointer(res));
     }
@@ -348,12 +348,12 @@ namespace golang::runtime
             reflectOffsUnlock();
             if(res == nullptr)
             {
-                println("runtime: textOff"s, hex(off), "base"s, hex(base), "not in ranges:"s);
+                println("runtime: textOff"_s, hex(off), "base"_s, hex(base), "not in ranges:"_s);
                 for(auto next = & firstmoduledata; next != nullptr; next = next->next)
                 {
-                    println("\ttypes"s, hex(next->types), "etypes"s, hex(next->etypes));
+                    println("\ttypes"_s, hex(next->types), "etypes"_s, hex(next->etypes));
                 }
-                go_throw("runtime: text offset base pointer out of range"s);
+                go_throw("runtime: text offset base pointer out of range"_s);
             }
             return res;
         }
@@ -361,11 +361,11 @@ namespace golang::runtime
         return unsafe::Pointer(res);
     }
 
-    std::string pkgPath(golang::runtime::name n)
+    gocpp::string pkgPath(golang::runtime::name n)
     {
         if(n.Bytes == nullptr || *rec::Data(gocpp::recv(n), 0) & (1 << 2) == 0)
         {
-            return ""s;
+            return ""_s;
         }
         auto [i, l] = rec::ReadVarint(gocpp::recv(n), 1);
         auto off = 1 + i + l;
@@ -769,8 +769,8 @@ namespace golang::runtime
                     return true;
                     break;
                 default:
-                    println("runtime: impossible type kind"s, kind);
-                    go_throw("runtime: impossible type kind"s);
+                    println("runtime: impossible type kind"_s, kind);
+                    go_throw("runtime: impossible type kind"_s);
                     return false;
                     break;
             }

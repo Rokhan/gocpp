@@ -38,7 +38,7 @@ namespace golang::runtime
     void metricsUnlock();
     void initMetrics();
     void compute0(struct statAggregate* _1, struct metricValue* out);
-    void godebug_registerMetric(std::string name, std::function<uint64_t ()> read);
+    void godebug_registerMetric(gocpp::string name, std::function<uint64_t ()> read);
     runtime::statDepSet makeStatDepSet(gocpp::slice<golang::runtime::statDep> deps);
     
     template<typename... Args>
@@ -173,7 +173,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct metricFloat64Histogram& value);
     struct metricName
     {
-        std::string name;
+        gocpp::string name;
         golang::runtime::metricKind kind;
 
         using isGoStruct = void;
@@ -188,10 +188,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricName& value);
-    gocpp::slice<std::string> readMetricNames();
+    gocpp::slice<gocpp::string> readMetricNames();
     void readMetrics(unsafe::Pointer samplesp, int len, int cap);
     void readMetricsLocked(unsafe::Pointer samplesp, int len, int cap);
-    extern gocpp::map<std::string, metricData> metrics;
+    extern gocpp::map<gocpp::string, metricData> metrics;
     struct statAggregate
     {
         golang::runtime::statDepSet ensured;
@@ -214,7 +214,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct statAggregate& value);
     struct metricSample
     {
-        std::string name;
+        gocpp::string name;
         metricValue value;
 
         using isGoStruct = void;

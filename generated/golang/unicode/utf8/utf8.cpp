@@ -100,7 +100,7 @@ namespace golang::utf8
     }
 
     // FullRuneInString is like FullRune but its input is a string.
-    bool FullRuneInString(std::string s)
+    bool FullRuneInString(gocpp::string s)
     {
         auto n = len(s);
         if(n == 0)
@@ -189,7 +189,7 @@ namespace golang::utf8
     // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
     // out of range, or is not the shortest possible UTF-8 encoding for the
     // value. No other validation is performed.
-    std::tuple<gocpp::rune, int> DecodeRuneInString(std::string s)
+    std::tuple<gocpp::rune, int> DecodeRuneInString(gocpp::string s)
     {
         gocpp::rune r;
         int size;
@@ -292,7 +292,7 @@ namespace golang::utf8
     // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
     // out of range, or is not the shortest possible UTF-8 encoding for the
     // value. No other validation is performed.
-    std::tuple<gocpp::rune, int> DecodeLastRuneInString(std::string s)
+    std::tuple<gocpp::rune, int> DecodeLastRuneInString(gocpp::string s)
     {
         gocpp::rune r;
         int size;
@@ -513,7 +513,7 @@ namespace golang::utf8
     }
 
     // RuneCountInString is like [RuneCount] but its input is a string.
-    int RuneCountInString(std::string s)
+    int RuneCountInString(gocpp::string s)
     {
         int n;
         auto ns = len(s);
@@ -635,7 +635,7 @@ namespace golang::utf8
     }
 
     // ValidString reports whether s consists entirely of valid UTF-8-encoded runes.
-    bool ValidString(std::string s)
+    bool ValidString(gocpp::string s)
     {
         for(; len(s) >= 8; )
         {

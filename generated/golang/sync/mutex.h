@@ -12,8 +12,8 @@
 
 namespace golang::sync
 {
-    void go_throw(std::string);
-    void fatal(std::string);
+    void go_throw(gocpp::string);
+    void fatal(gocpp::string);
     struct Mutex
     {
         int32_t state;

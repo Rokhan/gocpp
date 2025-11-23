@@ -102,7 +102,7 @@ namespace golang::runtime
     //go:nowritebarrierrec
     void badsystemstack()
     {
-        writeErrStr("fatal: systemstack called from unexpected goroutine"s);
+        writeErrStr("fatal: systemstack called from unexpected goroutine"_s);
     }
 
     // memclrNoHeapPointers clears n bytes starting at ptr.

@@ -13,7 +13,7 @@ namespace golang::sort
     struct reverse;
     using IntSlice = gocpp::slice<int>;
     using Float64Slice = gocpp::slice<double>;
-    using StringSlice = gocpp::slice<std::string>;
+    using StringSlice = gocpp::slice<gocpp::string>;
     const sort::sortedHint unknownHint = 0;
     const sort::sortedHint increasingHint = 1;
     const sort::sortedHint decreasingHint = 2;

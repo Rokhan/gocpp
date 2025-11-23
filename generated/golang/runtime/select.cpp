@@ -170,7 +170,7 @@ namespace golang::runtime
     {
         if(debugSelect)
         {
-            print("select: cas0="s, cas0, "\n"s);
+            print("select: cas0="_s, cas0, "\n"_s);
         }
         auto cas1 = (gocpp::array<scase, 1 << 16>*)(unsafe::Pointer(cas0));
         auto order1 = (gocpp::array<uint16_t, 1 << 17>*)(unsafe::Pointer(order0));
@@ -261,8 +261,8 @@ namespace golang::runtime
             {
                 if(rec::sortkey(gocpp::recv(scases[lockorder[i]].c)) > rec::sortkey(gocpp::recv(scases[lockorder[i + 1]].c)))
                 {
-                    print("i="s, i, " x="s, lockorder[i], " y="s, lockorder[i + 1], "\n"s);
-                    go_throw("select: broken sort"s);
+                    print("i="_s, i, " x="_s, lockorder[i], " y="_s, lockorder[i + 1], "\n"_s);
+                    go_throw("select: broken sort"_s);
                 }
             }
         }
@@ -332,7 +332,7 @@ namespace golang::runtime
         gp = getg();
         if(gp->waiting != nullptr)
         {
-            go_throw("gp.waiting != nil"s);
+            go_throw("gp.waiting != nil"_s);
         }
         nextp = & gp->waiting;
         for(auto [gocpp_ignored, casei] : lockorder)
@@ -412,12 +412,12 @@ namespace golang::runtime
         }
         if(cas == nullptr)
         {
-            go_throw("selectgo: bad wakeup"s);
+            go_throw("selectgo: bad wakeup"_s);
         }
         c = cas->c;
         if(debugSelect)
         {
-            print("wait-return: cas0="s, cas0, " c="s, c, " cas="s, cas, " send="s, casi < nsends, "\n"s);
+            print("wait-return: cas0="_s, cas0, " c="_s, c, " cas="_s, cas, " send="_s, casi < nsends, "\n"_s);
         }
         if(casi < nsends)
         {
@@ -530,7 +530,7 @@ namespace golang::runtime
         }, 2);
         if(debugSelect)
         {
-            print("syncrecv: cas0="s, cas0, " c="s, c, "\n"s);
+            print("syncrecv: cas0="_s, cas0, " c="_s, c, "\n"_s);
         }
         recvOK = true;
         goto retc;
@@ -565,7 +565,7 @@ namespace golang::runtime
         }, 2);
         if(debugSelect)
         {
-            print("syncsend: cas0="s, cas0, " c="s, c, "\n"s);
+            print("syncsend: cas0="_s, cas0, " c="_s, c, "\n"_s);
         }
         goto retc;
         retc:
@@ -576,7 +576,7 @@ namespace golang::runtime
         return {casi, recvOK};
         sclose:
         selunlock(scases, lockorder);
-        gocpp::panic(plainError("send on closed channel"s));
+        gocpp::panic(plainError("send on closed channel"_s));
     }
 
     uintptr_t rec::sortkey(struct hchan* c)

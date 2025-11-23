@@ -12,9 +12,9 @@
 namespace golang::bytealg
 {
     int Count(gocpp::slice<unsigned char> b, unsigned char c);
-    int CountString(std::string s, unsigned char c);
+    int CountString(gocpp::string s, unsigned char c);
     int countGeneric(gocpp::slice<unsigned char> b, unsigned char c);
-    int countGenericString(std::string s, unsigned char c);
+    int countGenericString(gocpp::string s, unsigned char c);
 
     namespace rec
     {

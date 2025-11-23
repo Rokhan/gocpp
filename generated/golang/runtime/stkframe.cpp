@@ -162,8 +162,8 @@ namespace golang::runtime
         {
             auto condition = funcname(f);
             int conditionId = -1;
-            if(condition == "reflect.makeFuncStub"s) { conditionId = 0; }
-            else if(condition == "reflect.methodValueCall"s) { conditionId = 1; }
+            if(condition == "reflect.makeFuncStub"_s) { conditionId = 0; }
+            else if(condition == "reflect.methodValueCall"_s) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -178,8 +178,8 @@ namespace golang::runtime
                     {
                         if(frame->pc != rec::entry(gocpp::recv(f)))
                         {
-                            print("runtime: confused by "s, funcname(f), ": no frame (sp="s, hex(frame->sp), " fp="s, hex(frame->fp), ") at entry+"s, hex(frame->pc - rec::entry(gocpp::recv(f))), "\n"s);
-                            go_throw("reflect mismatch"s);
+                            print("runtime: confused by "_s, funcname(f), ": no frame (sp="_s, hex(frame->sp), " fp="_s, hex(frame->fp), ") at entry+"_s, hex(frame->pc - rec::entry(gocpp::recv(f))), "\n"_s);
+                            go_throw("reflect mismatch"_s);
                         }
                         return {bitvector {}, false};
                     }
@@ -188,8 +188,8 @@ namespace golang::runtime
                     auto retValid = *(bool*)(unsafe::Pointer(arg0 + 4 * goarch::PtrSize));
                     if(mv->fn != rec::entry(gocpp::recv(f)))
                     {
-                        print("runtime: confused by "s, funcname(f), "\n"s);
-                        go_throw("reflect mismatch"s);
+                        print("runtime: confused by "_s, funcname(f), "\n"_s);
+                        go_throw("reflect mismatch"_s);
                     }
                     argMap = *mv->stack;
                     if(! retValid)
@@ -252,26 +252,26 @@ namespace golang::runtime
             auto stkmap = (stackmap*)(funcdata(f, abi::FUNCDATA_LocalsPointerMaps));
             if(stkmap == nullptr || stkmap->n <= 0)
             {
-                print("runtime: frame "s, funcname(f), " untyped locals "s, hex(frame->varp - size), "+"s, hex(size), "\n"s);
-                go_throw("missing stackmap"s);
+                print("runtime: frame "_s, funcname(f), " untyped locals "_s, hex(frame->varp - size), "+"_s, hex(size), "\n"_s);
+                go_throw("missing stackmap"_s);
             }
             if(stkmap->nbit > 0)
             {
                 if(stackid < 0 || stackid >= stkmap->n)
                 {
-                    print("runtime: pcdata is "s, stackid, " and "s, stkmap->n, " locals stack map entries for "s, funcname(f), " (targetpc="s, hex(targetpc), ")\n"s);
-                    go_throw("bad symbol table"s);
+                    print("runtime: pcdata is "_s, stackid, " and "_s, stkmap->n, " locals stack map entries for "_s, funcname(f), " (targetpc="_s, hex(targetpc), ")\n"_s);
+                    go_throw("bad symbol table"_s);
                 }
                 locals = stackmapdata(stkmap, stackid);
                 if(stackDebug >= 3 && debug)
                 {
-                    print("      locals "s, stackid, "/"s, stkmap->n, " "s, locals.n, " words "s, locals.bytedata, "\n"s);
+                    print("      locals "_s, stackid, "/"_s, stkmap->n, " "_s, locals.n, " words "_s, locals.bytedata, "\n"_s);
                 }
             }
             else
             if(stackDebug >= 3 && debug)
             {
-                print("      no locals to adjust\n"s);
+                print("      no locals to adjust\n"_s);
             }
         }
         // Arguments. First fetch frame size and special-case argument maps.
@@ -283,13 +283,13 @@ namespace golang::runtime
             auto& stackmap = stackmap_tmp;
             if(stackmap == nullptr || stackmap->n <= 0)
             {
-                print("runtime: frame "s, funcname(f), " untyped args "s, hex(frame->argp), "+"s, hex(args.n * goarch::PtrSize), "\n"s);
-                go_throw("missing stackmap"s);
+                print("runtime: frame "_s, funcname(f), " untyped args "_s, hex(frame->argp), "+"_s, hex(args.n * goarch::PtrSize), "\n"_s);
+                go_throw("missing stackmap"_s);
             }
             if(pcdata < 0 || pcdata >= stackmap->n)
             {
-                print("runtime: pcdata is "s, pcdata, " and "s, stackmap->n, " args stack map entries for "s, funcname(f), " (targetpc="s, hex(targetpc), ")\n"s);
-                go_throw("bad symbol table"s);
+                print("runtime: pcdata is "_s, pcdata, " and "_s, stackmap->n, " args stack map entries for "_s, funcname(f), " (targetpc="_s, hex(targetpc), ")\n"_s);
+                go_throw("bad symbol table"_s);
             }
             if(stackmap->nbit == 0)
             {
@@ -300,7 +300,7 @@ namespace golang::runtime
                 args = stackmapdata(stackmap, pcdata);
             }
         }
-        if((GOARCH == "amd64"s || GOARCH == "arm64"s || GOARCH == "loong64"s || GOARCH == "ppc64"s || GOARCH == "ppc64le"s || GOARCH == "riscv64"s) && gocpp::Sizeof<abi::RegArgs>() > 0 && isReflect)
+        if((GOARCH == "amd64"_s || GOARCH == "arm64"_s || GOARCH == "loong64"_s || GOARCH == "ppc64"_s || GOARCH == "ppc64le"_s || GOARCH == "riscv64"_s) && gocpp::Sizeof<abi::RegArgs>() > 0 && isReflect)
         {
             objs = methodValueCallFrameObjs.make_slice(0);
         }
@@ -325,7 +325,7 @@ namespace golang::runtime
         auto abiRegArgsType = efaceOf(& abiRegArgsEface)->_type;
         if(abiRegArgsType->Kind_ & kindGCProg != 0)
         {
-            go_throw("abiRegArgsType needs GC Prog, update methodValueCallFrameObjs"s);
+            go_throw("abiRegArgsType needs GC Prog, update methodValueCallFrameObjs"_s);
         }
         auto ptr = uintptr_t(unsafe::Pointer(& methodValueCallFrameObjs[0]));
         moduledata* mod = {};
@@ -339,7 +339,7 @@ namespace golang::runtime
         }
         if(mod == nullptr)
         {
-            go_throw("methodValueCallFrameObjs is not in a module"s);
+            go_throw("methodValueCallFrameObjs is not in a module"_s);
         }
         methodValueCallFrameObjs[0] = gocpp::Init<stackObjectRecord>([=](auto& x) {
             x.off = - int32_t(alignUp(abiRegArgsType->Size_, 8));

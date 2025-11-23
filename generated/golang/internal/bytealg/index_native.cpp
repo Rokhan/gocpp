@@ -29,7 +29,7 @@ namespace golang::bytealg
     // Requires 2 <= len(b) <= MaxLen.
     //
     //go:noescape
-    int IndexString(std::string a, std::string b)
+    int IndexString(gocpp::string a, gocpp::string b)
     /* convertBlockStmt, nil block */;
 
 }

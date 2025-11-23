@@ -157,12 +157,12 @@ namespace golang::runtime
         return r;
     }
 
-    gocpp::slice<std::string> envs;
-    gocpp::slice<std::string> argslice;
+    gocpp::slice<gocpp::string> envs;
+    gocpp::slice<gocpp::string> argslice;
     //go:linkname syscall_runtime_envs syscall.runtime_envs
-    gocpp::slice<std::string> syscall_runtime_envs()
+    gocpp::slice<gocpp::string> syscall_runtime_envs()
     {
-        return append(gocpp::slice<std::string> {}, envs);
+        return append(gocpp::slice<gocpp::string> {}, envs);
     }
 
     //go:linkname syscall_Getpagesize syscall.Getpagesize
@@ -172,9 +172,9 @@ namespace golang::runtime
     }
 
     //go:linkname os_runtime_args os.runtime_args
-    gocpp::slice<std::string> os_runtime_args()
+    gocpp::slice<gocpp::string> os_runtime_args()
     {
-        return append(gocpp::slice<std::string> {}, argslice);
+        return append(gocpp::slice<gocpp::string> {}, argslice);
     }
 
     //go:linkname syscall_Exit syscall.Exit
@@ -184,25 +184,25 @@ namespace golang::runtime
         exit(int32_t(code));
     }
 
-    std::string godebugDefault;
-    atomic::Pointer<std::function<void (std::string _1, std::string _2)>> godebugUpdate;
-    atomic::Pointer<std::string> godebugEnv;
-    atomic::Pointer<std::function<std::function<void ()> (std::string _1)>> godebugNewIncNonDefault;
+    gocpp::string godebugDefault;
+    atomic::Pointer<std::function<void (gocpp::string _1, gocpp::string _2)>> godebugUpdate;
+    atomic::Pointer<gocpp::string> godebugEnv;
+    atomic::Pointer<std::function<std::function<void ()> (gocpp::string _1)>> godebugNewIncNonDefault;
     //go:linkname godebug_setUpdate internal/godebug.setUpdate
-    void godebug_setUpdate(std::function<void (std::string _1, std::string _2)> update)
+    void godebug_setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update)
     {
-        auto p = new(gocpp::Tag<std::function<void (std::string _1, std::string _2)>>());
+        auto p = new(gocpp::Tag<std::function<void (gocpp::string _1, gocpp::string _2)>>());
         *p = update;
-        rec::Store<std::function<void (std::string, std::string)>>(gocpp::recv(godebugUpdate), p);
+        rec::Store<std::function<void (gocpp::string, gocpp::string)>>(gocpp::recv(godebugUpdate), p);
         godebugNotify(false);
     }
 
     //go:linkname godebug_setNewIncNonDefault internal/godebug.setNewIncNonDefault
-    void godebug_setNewIncNonDefault(std::function<std::function<void ()> (std::string _1)> newIncNonDefault)
+    void godebug_setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault)
     {
-        auto p = new(gocpp::Tag<std::function<std::function<void ()> (std::string _1)>>());
+        auto p = new(gocpp::Tag<std::function<std::function<void ()> (gocpp::string _1)>>());
         *p = newIncNonDefault;
-        rec::Store<std::function<func() (std::string)>>(gocpp::recv(godebugNewIncNonDefault), p);
+        rec::Store<std::function<func() (gocpp::string)>>(gocpp::recv(godebugNewIncNonDefault), p);
     }
 
     // A godebugInc provides access to internal/godebug's IncNonDefault function
@@ -245,7 +245,7 @@ namespace golang::runtime
         auto inc = rec::Load<std::function<void (void)>>(gocpp::recv(g->inc));
         if(inc == nullptr)
         {
-            auto newInc = rec::Load<std::function<func() (std::string)>>(gocpp::recv(godebugNewIncNonDefault));
+            auto newInc = rec::Load<std::function<func() (gocpp::string)>>(gocpp::recv(godebugNewIncNonDefault));
             if(newInc == nullptr)
             {
                 return;
@@ -270,9 +270,9 @@ namespace golang::runtime
 
     void godebugNotify(bool envChanged)
     {
-        auto update = rec::Load<std::function<void (std::string, std::string)>>(gocpp::recv(godebugUpdate));
-        std::string env = {};
-        if(auto p = rec::Load<std::string>(gocpp::recv(godebugEnv)); p != nullptr)
+        auto update = rec::Load<std::function<void (gocpp::string, gocpp::string)>>(gocpp::recv(godebugUpdate));
+        gocpp::string env = {};
+        if(auto p = rec::Load<gocpp::string>(gocpp::recv(godebugEnv)); p != nullptr)
         {
             env = *p;
         }
@@ -287,25 +287,25 @@ namespace golang::runtime
     }
 
     //go:linkname syscall_runtimeSetenv syscall.runtimeSetenv
-    void syscall_runtimeSetenv(std::string key, std::string value)
+    void syscall_runtimeSetenv(gocpp::string key, gocpp::string value)
     {
         setenv_c(key, value);
-        if(key == "GODEBUG"s)
+        if(key == "GODEBUG"_s)
         {
             auto p = new(string);
             *p = value;
-            rec::Store<std::string>(gocpp::recv(godebugEnv), p);
+            rec::Store<gocpp::string>(gocpp::recv(godebugEnv), p);
             godebugNotify(true);
         }
     }
 
     //go:linkname syscall_runtimeUnsetenv syscall.runtimeUnsetenv
-    void syscall_runtimeUnsetenv(std::string key)
+    void syscall_runtimeUnsetenv(gocpp::string key)
     {
         unsetenv_c(key);
-        if(key == "GODEBUG"s)
+        if(key == "GODEBUG"_s)
         {
-            rec::Store<std::string>(gocpp::recv(godebugEnv), nullptr);
+            rec::Store<gocpp::string>(gocpp::recv(godebugEnv), nullptr);
             godebugNotify(true);
         }
     }
@@ -313,7 +313,7 @@ namespace golang::runtime
     // writeErrStr writes a string to descriptor 2.
     //
     //go:nosplit
-    void writeErrStr(std::string s)
+    void writeErrStr(gocpp::string s)
     {
         write(2, unsafe::Pointer(unsafe::StringData(s)), int32_t(len(s)));
     }

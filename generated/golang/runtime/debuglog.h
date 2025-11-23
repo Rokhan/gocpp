@@ -114,7 +114,7 @@ namespace golang::runtime
         struct dlogger* u64(struct dlogger* l, uint64_t x);
         struct dlogger* hex(struct dlogger* l, uint64_t x);
         struct dlogger* p(struct dlogger* l, go_any x);
-        struct dlogger* s(struct dlogger* l, std::string x);
+        struct dlogger* s(struct dlogger* l, gocpp::string x);
         struct dlogger* pc(struct dlogger* l, uintptr_t x);
         struct dlogger* traceback(struct dlogger* l, gocpp::slice<uintptr_t> x);
         void ensure(struct debugLogWriter* l, uint64_t n);

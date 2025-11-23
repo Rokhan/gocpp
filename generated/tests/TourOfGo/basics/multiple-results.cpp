@@ -20,15 +20,15 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
-    std::tuple<std::string, std::string> swap(std::string x, std::string y)
+    std::tuple<gocpp::string, gocpp::string> swap(gocpp::string x, gocpp::string y)
     {
         return {y, x};
     }
 
     void main()
     {
-        auto [a, b] = swap("hello"s, "world"s);
-        auto [s, i, f] = std::tuple{"str"s, 5, 3.14159};
+        auto [a, b] = swap("hello"_s, "world"_s);
+        auto [s, i, f] = std::tuple{"str"_s, 5, 3.14159};
         mocklib::Println(a, b);
         mocklib::Println(s, i, f);
     }

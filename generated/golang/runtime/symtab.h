@@ -21,7 +21,7 @@ namespace golang::runtime
 {
     struct Frames* CallersFrames(gocpp::slice<uintptr_t> callers);
     int runtime_FrameStartLine(struct Frame* f);
-    std::string runtime_FrameSymbolName(struct Frame* f);
+    gocpp::string runtime_FrameSymbolName(struct Frame* f);
     gocpp::slice<uintptr_t> runtime_expandFinalInlineFrame(gocpp::slice<uintptr_t> stk);
     gocpp::slice<Frame> expandCgoFrames(uintptr_t pc);
     struct gocpp_id_0
@@ -69,9 +69,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct pcHeader& value);
     struct modulehash
     {
-        std::string modulename;
-        std::string linktimehash;
-        std::string* runtimehash;
+        gocpp::string modulename;
+        gocpp::string linktimehash;
+        gocpp::string* runtimehash;
 
         using isGoStruct = void;
 
@@ -202,11 +202,11 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct pcvalueCacheEnt& value);
     uintptr_t pcvalueCacheKey(uintptr_t targetpc);
     std::tuple<int32_t, uintptr_t> pcvalue(struct funcInfo f, uint32_t off, uintptr_t targetpc, bool strict);
-    std::string funcname(struct funcInfo f);
-    std::string funcpkgpath(struct funcInfo f);
-    std::string funcfile(struct funcInfo f, int32_t fileno);
-    std::tuple<std::string, int32_t> funcline1(struct funcInfo f, uintptr_t targetpc, bool strict);
-    std::tuple<std::string, int32_t> funcline(struct funcInfo f, uintptr_t targetpc);
+    gocpp::string funcname(struct funcInfo f);
+    gocpp::string funcpkgpath(struct funcInfo f);
+    gocpp::string funcfile(struct funcInfo f, int32_t fileno);
+    std::tuple<gocpp::string, int32_t> funcline1(struct funcInfo f, uintptr_t targetpc, bool strict);
+    std::tuple<gocpp::string, int32_t> funcline(struct funcInfo f, uintptr_t targetpc);
     int32_t funcspdelta(struct funcInfo f, uintptr_t targetpc);
     int32_t funcMaxSPDelta(struct funcInfo f);
     uint32_t pcdatastart(struct funcInfo f, uint32_t table);
@@ -239,8 +239,8 @@ namespace golang::runtime
     {
         uintptr_t PC;
         Func* Func;
-        std::string Function;
-        std::string File;
+        gocpp::string Function;
+        gocpp::string File;
         int Line;
         int startLine;
         uintptr_t Entry;
@@ -310,10 +310,10 @@ namespace golang::runtime
         gocpp::slice<int32_t> typelinks;
         gocpp::slice<itab*> itablinks;
         gocpp::slice<ptabEntry> ptab;
-        std::string pluginpath;
+        gocpp::string pluginpath;
         gocpp::slice<modulehash> pkghashes;
         gocpp::slice<initTask*> inittasks;
-        std::string modulename;
+        gocpp::string modulename;
         gocpp::slice<modulehash> modulehashes;
         uint8_t hasmain;
         bitvector gcdatamask;
@@ -381,17 +381,17 @@ namespace golang::runtime
         struct funcInfo funcInfo(struct _func* f);
         uintptr_t textAddr(struct moduledata* md, uint32_t off32);
         std::tuple<uint32_t, bool> textOff(struct moduledata* md, uintptr_t pc);
-        std::string funcName(struct moduledata* md, int32_t nameOff);
-        std::string Name(struct Func* f);
+        gocpp::string funcName(struct moduledata* md, int32_t nameOff);
+        gocpp::string Name(struct Func* f);
         uintptr_t Entry(struct Func* f);
-        std::tuple<std::string, int> FileLine(struct Func* f, uintptr_t pc);
+        std::tuple<gocpp::string, int> FileLine(struct Func* f, uintptr_t pc);
         int32_t startLine(struct Func* f);
         bool valid(struct funcInfo f);
         struct Func* _Func(struct funcInfo f);
         bool isInlined(struct _func* f);
         uintptr_t entry(struct funcInfo f);
         struct srcFunc srcFunc(struct funcInfo f);
-        std::string name(struct srcFunc s);
+        gocpp::string name(struct srcFunc s);
     }
 }
 

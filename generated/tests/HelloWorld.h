@@ -15,8 +15,8 @@ namespace golang::main
 {
     void main();
     int square(int num);
-    void helloFunc(std::string str1, std::string str2, std::string str3);
-    void printN(std::string str1, int n);
+    void helloFunc(gocpp::string str1, gocpp::string str2, gocpp::string str3);
+    void printN(gocpp::string str1, int n);
 
     namespace rec
     {

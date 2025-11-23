@@ -158,8 +158,8 @@ namespace golang::runtime
     {
         if(work.markrootNext < work.markrootJobs)
         {
-            print(work.markrootNext, " of "s, work.markrootJobs, " markroot jobs done\n"s);
-            go_throw("left over markroot jobs"s);
+            print(work.markrootNext, " of "_s, work.markrootJobs, " markroot jobs done\n"_s);
+            go_throw("left over markroot jobs"_s);
         }
         auto i = 0;
         forEachGRace([=](struct g* gp) mutable -> void
@@ -170,8 +170,8 @@ namespace golang::runtime
             }
             if(! gp->gcscandone)
             {
-                println("gp"s, gp, "goid"s, gp->goid, "status"s, readgstatus(gp), "gcscandone"s, gp->gcscandone);
-                go_throw("scan missed a g"s);
+                println("gp"_s, gp, "goid"_s, gp->goid, "status"_s, readgstatus(gp), "gcscandone"_s, gp->gcscandone);
+                go_throw("scan missed a g"_s);
             }
             i++;
         });
@@ -237,8 +237,8 @@ namespace golang::runtime
                     if(i < work.baseStacks || work.baseEnd <= i)
                     {
                         printlock();
-                        print("runtime: markroot index "s, i, " not in stack roots range ["s, work.baseStacks, ", "s, work.baseEnd, ")\n"s);
-                        go_throw("markroot: bad index"s);
+                        print("runtime: markroot index "_s, i, " not in stack roots range ["_s, work.baseStacks, ", "_s, work.baseEnd, ")\n"_s);
+                        go_throw("markroot: bad index"_s);
                     }
                     auto gp = work.stackRoots[i - work.baseStacks];
                     auto status = readgstatus(gp);
@@ -262,7 +262,7 @@ namespace golang::runtime
                         }
                         if(gp->gcscandone)
                         {
-                            go_throw("g already scanned"s);
+                            go_throw("g already scanned"_s);
                         }
                         workDone += scanstack(gp, gcw);
                         gp->gcscandone = true;
@@ -296,7 +296,7 @@ namespace golang::runtime
     {
         if(rootBlockBytes % (8 * goarch::PtrSize) != 0)
         {
-            go_throw("rootBlockBytes must be a multiple of 8*ptrSize"s);
+            go_throw("rootBlockBytes must be a multiple of 8*ptrSize"_s);
         }
         auto off = uintptr_t(shard) * rootBlockBytes;
         if(off >= n0)
@@ -368,13 +368,13 @@ namespace golang::runtime
                 auto s = ha->spans[arenaPage + (unsigned int)(i) * 8 + j];
                 if(auto state = rec::get(gocpp::recv(s->state)); state != mSpanInUse)
                 {
-                    print("s.state = "s, state, "\n"s);
-                    go_throw("non in-use span found with specials bit set"s);
+                    print("s.state = "_s, state, "\n"_s);
+                    go_throw("non in-use span found with specials bit set"_s);
                 }
                 if(! useCheckmark && ! (s->sweepgen == sg || s->sweepgen == sg + 3))
                 {
-                    print("sweep "s, s->sweepgen, " "s, sg, "\n"s);
-                    go_throw("gc: unswept span"s);
+                    print("sweep "_s, s->sweepgen, " "_s, sg, "\n"_s);
+                    go_throw("gc: unswept span"_s);
                 }
                 lock(& s->speciallock);
                 for(auto sp = s->specials; sp != nullptr; sp = sp->next)
@@ -406,7 +406,7 @@ namespace golang::runtime
         {
             return;
         }
-        if(auto mp = getg()->m; mp->locks > 0 || mp->preemptoff != ""s)
+        if(auto mp = getg()->m; mp->locks > 0 || mp->preemptoff != ""_s)
         {
             return;
         }
@@ -557,8 +557,8 @@ namespace golang::runtime
         auto decnwait = atomic::Xadd(& work.nwait, - 1);
         if(decnwait == work.nproc)
         {
-            println("runtime: work.nwait ="s, decnwait, "work.nproc="s, work.nproc);
-            go_throw("nwait > work.nprocs"s);
+            println("runtime: work.nwait ="_s, decnwait, "work.nproc="_s, work.nproc);
+            go_throw("nwait > work.nprocs"_s);
         }
         casGToWaiting(gp, _Grunning, waitReasonGCAssistMarking);
         auto gcw = & rec::ptr(gocpp::recv(getg()->m->p))->gcw;
@@ -569,8 +569,8 @@ namespace golang::runtime
         auto incnwait = atomic::Xadd(& work.nwait, + 1);
         if(incnwait > work.nproc)
         {
-            println("runtime: work.nwait="s, incnwait, "work.nproc="s, work.nproc);
-            go_throw("work.nwait > work.nproc"s);
+            println("runtime: work.nwait="_s, incnwait, "work.nproc="_s, work.nproc);
+            go_throw("work.nwait > work.nproc"_s);
         }
         if(incnwait == work.nproc && ! gcMarkWorkAvailable(nullptr))
         {
@@ -699,8 +699,8 @@ namespace golang::runtime
     {
         if(readgstatus(gp) & _Gscan == 0)
         {
-            print("runtime:scanstack: gp="s, gp, ", goid="s, gp->goid, ", gp->atomicstatus="s, hex(readgstatus(gp)), "\n"s);
-            go_throw("scanstack - bad status"s);
+            print("runtime:scanstack: gp="_s, gp, ", goid="_s, gp->goid, ", gp->atomicstatus="_s, hex(readgstatus(gp)), "\n"_s);
+            go_throw("scanstack - bad status"_s);
         }
         //Go switch emulation
         {
@@ -714,15 +714,15 @@ namespace golang::runtime
             switch(conditionId)
             {
                 default:
-                    print("runtime: gp="s, gp, ", goid="s, gp->goid, ", gp->atomicstatus="s, readgstatus(gp), "\n"s);
-                    go_throw("mark - bad status"s);
+                    print("runtime: gp="_s, gp, ", goid="_s, gp->goid, ", gp->atomicstatus="_s, readgstatus(gp), "\n"_s);
+                    go_throw("mark - bad status"_s);
                     break;
                 case 0:
                     return 0;
                     break;
                 case 1:
-                    print("runtime: gp="s, gp, ", goid="s, gp->goid, ", gp->atomicstatus="s, readgstatus(gp), "\n"s);
-                    go_throw("scanstack: goroutine not stopped"s);
+                    print("runtime: gp="_s, gp, ", goid="_s, gp->goid, ", gp->atomicstatus="_s, readgstatus(gp), "\n"_s);
+                    go_throw("scanstack: goroutine not stopped"_s);
                     break;
                 case 2:
                 case 3:
@@ -732,7 +732,7 @@ namespace golang::runtime
         }
         if(gp == getg())
         {
-            go_throw("can't scan our own stack"s);
+            go_throw("can't scan our own stack"_s);
         }
         // scannedSize is the amount of work we'll be reporting.
         //
@@ -762,11 +762,11 @@ namespace golang::runtime
         state.stack = gp->stack;
         if(stackTraceDebug)
         {
-            println("stack trace goroutine"s, gp->goid);
+            println("stack trace goroutine"_s, gp->goid);
         }
         if(debugScanConservative && gp->asyncSafePoint)
         {
-            print("scanning async preempted goroutine "s, gp->goid, " stack ["s, hex(gp->stack.lo), ","s, hex(gp->stack.hi), ")\n"s);
+            print("scanning async preempted goroutine "_s, gp->goid, " stack ["_s, hex(gp->stack.lo), ","_s, hex(gp->stack.hi), ")\n"_s);
         }
         if(gp->sched.ctxt != nullptr)
         {
@@ -819,10 +819,10 @@ namespace golang::runtime
             if(stackTraceDebug)
             {
                 printlock();
-                print("  live stkobj at"s, hex(state.stack.lo + uintptr_t(obj->off)), "of size"s, obj->size);
+                print("  live stkobj at"_s, hex(state.stack.lo + uintptr_t(obj->off)), "of size"_s, obj->size);
                 if(conservative)
                 {
-                    print(" (conservative)"s);
+                    print(" (conservative)"_s);
                 }
                 println();
                 printunlock();
@@ -861,7 +861,7 @@ namespace golang::runtime
                     {
                         continue;
                     }
-                    println("  dead stkobj at"s, hex(gp->stack.lo + uintptr_t(obj->off)), "of size"s, obj->r->size);
+                    println("  dead stkobj at"_s, hex(gp->stack.lo + uintptr_t(obj->off)), "of size"_s, obj->r->size);
                 }
             }
             x->nobj = 0;
@@ -869,7 +869,7 @@ namespace golang::runtime
         }
         if(state.buf != nullptr || state.cbuf != nullptr || state.freeBuf != nullptr)
         {
-            go_throw("remaining pointer buffers"s);
+            go_throw("remaining pointer buffers"_s);
         }
         return int64_t(scannedSize);
     }
@@ -881,7 +881,7 @@ namespace golang::runtime
     {
         if(_DebugGC > 1 && frame->continpc != 0)
         {
-            print("scanframe "s, funcname(frame->fn), "\n"s);
+            print("scanframe "_s, funcname(frame->fn), "\n"_s);
         }
         auto isAsyncPreempt = rec::valid(gocpp::recv(frame->fn)) && frame->fn.funcID == abi::FuncID_asyncPreempt;
         auto isDebugCall = rec::valid(gocpp::recv(frame->fn)) && frame->fn.funcID == abi::FuncID_debugCallV2;
@@ -889,7 +889,7 @@ namespace golang::runtime
         {
             if(debugScanConservative)
             {
-                println("conservatively scanning function"s, funcname(frame->fn), "at PC"s, hex(frame->continpc));
+                println("conservatively scanning function"_s, funcname(frame->fn), "at PC"_s, hex(frame->continpc));
             }
             if(frame->varp != 0)
             {
@@ -941,7 +941,7 @@ namespace golang::runtime
                 }
                 if(stackTraceDebug)
                 {
-                    println("stkobj at"s, hex(ptr), "of size"s, obj->size);
+                    println("stkobj at"_s, hex(ptr), "of size"_s, obj->size);
                 }
                 rec::addObject(gocpp::recv(state), ptr, obj);
             }
@@ -1008,7 +1008,7 @@ namespace golang::runtime
     {
         if(! writeBarrier.enabled)
         {
-            go_throw("gcDrain phase incorrect"s);
+            go_throw("gcDrain phase incorrect"_s);
         }
         auto gp = getg()->m->curg;
         auto pp = rec::ptr(gocpp::recv(gp->m->p));
@@ -1117,7 +1117,7 @@ namespace golang::runtime
     {
         if(! writeBarrier.enabled)
         {
-            go_throw("gcDrainN phase incorrect"s);
+            go_throw("gcDrainN phase incorrect"_s);
         }
         auto workFlushed = - gcw->heapScanWork;
         auto gp = getg()->m->curg;
@@ -1219,11 +1219,11 @@ namespace golang::runtime
         auto n = s->elemsize;
         if(n == 0)
         {
-            go_throw("scanobject n == 0"s);
+            go_throw("scanobject n == 0"_s);
         }
         if(rec::noscan(gocpp::recv(s->spanclass)))
         {
-            go_throw("scanobject of a noscan object"s);
+            go_throw("scanobject of a noscan object"_s);
         }
         typePointers tp = {};
         if(n > maxObletBytes)
@@ -1312,7 +1312,7 @@ namespace golang::runtime
         if(debugScanConservative)
         {
             printlock();
-            print("conservatively scanning ["s, hex(b), ","s, hex(b + n), ")\n"s);
+            print("conservatively scanning ["_s, hex(b), ","_s, hex(b + n), ")\n"_s);
             hexdumpWords(b, b + n, [=](uintptr_t p) mutable -> unsigned char
             {
                 if(ptrmask != nullptr)
@@ -1353,7 +1353,7 @@ namespace golang::runtime
                 {
                     if(i % (goarch::PtrSize * 8) != 0)
                     {
-                        go_throw("misaligned mask"s);
+                        go_throw("misaligned mask"_s);
                     }
                     i += goarch::PtrSize * 8 - goarch::PtrSize;
                     continue;
@@ -1409,7 +1409,7 @@ namespace golang::runtime
     {
         if(obj & (goarch::PtrSize - 1) != 0)
         {
-            go_throw("greyobject: obj not pointer-aligned"s);
+            go_throw("greyobject: obj not pointer-aligned"_s);
         }
         auto mbits = rec::markBitsForIndex(gocpp::recv(span), objIndex);
         if(useCheckmark)
@@ -1423,11 +1423,11 @@ namespace golang::runtime
         {
             if(debug.gccheckmark > 0 && rec::isFree(gocpp::recv(span), objIndex))
             {
-                print("runtime: marking free object "s, hex(obj), " found at *("s, hex(base), "+"s, hex(off), ")\n"s);
-                gcDumpObject("base"s, base, off);
-                gcDumpObject("obj"s, obj, ~ uintptr_t(0));
+                print("runtime: marking free object "_s, hex(obj), " found at *("_s, hex(base), "+"_s, hex(off), ")\n"_s);
+                gcDumpObject("base"_s, base, off);
+                gcDumpObject("obj"_s, obj, ~ uintptr_t(0));
                 getg()->m->traceback = 2;
-                go_throw("marking free object"s);
+                go_throw("marking free object"_s);
             }
             if(rec::isMarked(gocpp::recv(mbits)))
             {
@@ -1454,23 +1454,23 @@ namespace golang::runtime
 
     // gcDumpObject dumps the contents of obj for debugging and marks the
     // field at byte offset off in obj.
-    void gcDumpObject(std::string label, uintptr_t obj, uintptr_t off)
+    void gcDumpObject(gocpp::string label, uintptr_t obj, uintptr_t off)
     {
         auto s = spanOf(obj);
-        print(label, "="s, hex(obj));
+        print(label, "="_s, hex(obj));
         if(s == nullptr)
         {
-            print(" s=nil\n"s);
+            print(" s=nil\n"_s);
             return;
         }
-        print(" s.base()="s, hex(rec::base(gocpp::recv(s))), " s.limit="s, hex(s->limit), " s.spanclass="s, s->spanclass, " s.elemsize="s, s->elemsize, " s.state="s);
+        print(" s.base()="_s, hex(rec::base(gocpp::recv(s))), " s.limit="_s, hex(s->limit), " s.spanclass="_s, s->spanclass, " s.elemsize="_s, s->elemsize, " s.state="_s);
         if(auto state = rec::get(gocpp::recv(s->state)); 0 <= state && int(state) < len(mSpanStateNames))
         {
-            print(mSpanStateNames[state], "\n"s);
+            print(mSpanStateNames[state], "\n"_s);
         }
         else
         {
-            print("unknown("s, state, ")\n"s);
+            print("unknown("_s, state, ")\n"_s);
         }
         auto skipped = false;
         auto size = s->elemsize;
@@ -1487,19 +1487,19 @@ namespace golang::runtime
             }
             if(skipped)
             {
-                print(" ...\n"s);
+                print(" ...\n"_s);
                 skipped = false;
             }
-            print(" *("s, label, "+"s, i, ") = "s, hex(*(uintptr_t*)(unsafe::Pointer(obj + i))));
+            print(" *("_s, label, "+"_s, i, ") = "_s, hex(*(uintptr_t*)(unsafe::Pointer(obj + i))));
             if(i == off)
             {
-                print(" <=="s);
+                print(" <=="_s);
             }
-            print("\n"s);
+            print("\n"_s);
         }
         if(skipped)
         {
-            print(" ...\n"s);
+            print(" ...\n"_s);
         }
     }
 
@@ -1514,7 +1514,7 @@ namespace golang::runtime
     {
         if(useCheckmark)
         {
-            go_throw("gcmarknewobject called while doing checkmark"s);
+            go_throw("gcmarknewobject called while doing checkmark"_s);
         }
         auto objIndex = rec::objIndex(gocpp::recv(span), obj);
         rec::setMarked(gocpp::recv(rec::markBitsForIndex(gocpp::recv(span), objIndex)));

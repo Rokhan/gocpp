@@ -251,7 +251,7 @@ namespace golang::runtime
     {
         if(traceEnabled() || traceShuttingDown())
         {
-            return errorString("tracing is already enabled"s);
+            return errorString("tracing is already enabled"_s);
         }
         semacquire(& traceShutdownSema);
         semrelease(& traceShutdownSema);
@@ -488,10 +488,10 @@ namespace golang::runtime
                     if(i > 100000 && ! detectedDeadlock)
                     {
                         detectedDeadlock = true;
-                        println("runtime: failing to flush"s);
+                        println("runtime: failing to flush"_s);
                         for(auto mp = mToFlush; mp != nullptr; mp = mp->trace.link)
                         {
-                            print("runtime: m="s, mp->id, "\n"s);
+                            print("runtime: m="_s, mp->id, "\n"_s);
                         }
                     }
                     i++;
@@ -552,17 +552,17 @@ namespace golang::runtime
             lock(& trace.lock);
             if(! rec::empty(gocpp::recv(trace.full[gen % 2])))
             {
-                go_throw("trace: non-empty full trace buffer for done generation"s);
+                go_throw("trace: non-empty full trace buffer for done generation"_s);
             }
             if(stopTrace)
             {
                 if(! rec::empty(gocpp::recv(trace.full[1 - (gen % 2)])))
                 {
-                    go_throw("trace: non-empty full trace buffer for next generation"s);
+                    go_throw("trace: non-empty full trace buffer for next generation"_s);
                 }
                 if(trace.reading != nullptr || rec::Load<g>(gocpp::recv(trace.reader)) != nullptr)
                 {
-                    go_throw("trace: reading after shutdown"s);
+                    go_throw("trace: reading after shutdown"_s);
                 }
                 for(; trace.empty != nullptr; )
                 {
@@ -653,8 +653,8 @@ namespace golang::runtime
                 if(g2 != nullptr)
                 {
                     printlock();
-                    println("runtime: got trace reader"s, g2, g2->goid);
-                    go_throw("unexpected trace reader"s);
+                    println("runtime: got trace reader"_s, g2, g2->goid);
+                    go_throw("unexpected trace reader"_s);
                 }
                 return true;
             }, nullptr, waitReasonTraceReaderBlocked, traceBlockSystemGoroutine, 2);
@@ -678,7 +678,7 @@ namespace golang::runtime
             {
                 if(getg()->racectx != 0)
                 {
-                    go_throw("expected racectx == 0"s);
+                    go_throw("expected racectx == 0"_s);
                 }
                 getg()->racectx = getg()->m->curg->racectx;
                 defer.push_back([=]{ [=]() mutable -> void
@@ -690,7 +690,7 @@ namespace golang::runtime
             if(rec::Load<g>(gocpp::recv(trace.reader)) != nullptr)
             {
                 unlock(& trace.lock);
-                println("runtime: ReadTrace called from multiple goroutines simultaneously"s);
+                println("runtime: ReadTrace called from multiple goroutines simultaneously"_s);
                 return {nullptr, false};
             }
             if(auto buf = trace.reading; buf != nullptr)
@@ -703,7 +703,7 @@ namespace golang::runtime
             {
                 trace.headerWritten = true;
                 unlock(& trace.lock);
-                return {gocpp::slice<unsigned char>("go 1.22 trace\x00\x00\x00"s), false};
+                return {gocpp::slice<unsigned char>("go 1.22 trace\x00\x00\x00"_s), false};
             }
             if(rec::Load(gocpp::recv(trace.readerGen)) == 0)
             {

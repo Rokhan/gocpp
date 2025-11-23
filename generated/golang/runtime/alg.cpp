@@ -155,7 +155,7 @@ namespace golang::runtime
         auto t = tab->_type;
         if(t->Equal == nullptr)
         {
-            gocpp::panic(errorString("hash of unhashable type "s + rec::string(gocpp::recv(toRType(t)))));
+            gocpp::panic(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
         }
         if(isDirectIface(t))
         {
@@ -177,7 +177,7 @@ namespace golang::runtime
         }
         if(t->Equal == nullptr)
         {
-            gocpp::panic(errorString("hash of unhashable type "s + rec::string(gocpp::recv(toRType(t)))));
+            gocpp::panic(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
         }
         if(isDirectIface(t))
         {
@@ -281,7 +281,7 @@ namespace golang::runtime
                     return h;
                     break;
                 default:
-                    gocpp::panic(errorString("hash of unhashable type "s + rec::string(gocpp::recv(toRType(t)))));
+                    gocpp::panic(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
                     break;
             }
         }
@@ -349,7 +349,7 @@ namespace golang::runtime
                     }
                     if(t->Equal == nullptr)
                     {
-                        return errorString("hash of unhashable type "s + rec::string(gocpp::recv(toRType(t))));
+                        return errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t))));
                     }
                     if(isDirectIface(t))
                     {
@@ -387,7 +387,7 @@ namespace golang::runtime
                     return nullptr;
                     break;
                 default:
-                    return errorString("hash of unhashable type "s + rec::string(gocpp::recv(toRType(t))));
+                    return errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t))));
                     break;
             }
         }
@@ -451,7 +451,7 @@ namespace golang::runtime
 
     bool strequal(unsafe::Pointer p, unsafe::Pointer q)
     {
-        return *(std::string*)(p) == *(std::string*)(q);
+        return *(gocpp::string*)(p) == *(gocpp::string*)(q);
     }
 
     bool interequal(unsafe::Pointer p, unsafe::Pointer q)
@@ -477,7 +477,7 @@ namespace golang::runtime
         auto eq = t->Equal;
         if(eq == nullptr)
         {
-            gocpp::panic(errorString("comparing uncomparable type "s + rec::string(gocpp::recv(toRType(t)))));
+            gocpp::panic(errorString("comparing uncomparable type "_s + rec::string(gocpp::recv(toRType(t)))));
         }
         if(isDirectIface(t))
         {
@@ -496,7 +496,7 @@ namespace golang::runtime
         auto eq = t->Equal;
         if(eq == nullptr)
         {
-            gocpp::panic(errorString("comparing uncomparable type "s + rec::string(gocpp::recv(toRType(t)))));
+            gocpp::panic(errorString("comparing uncomparable type "_s + rec::string(gocpp::recv(toRType(t)))));
         }
         if(isDirectIface(t))
         {
@@ -506,7 +506,7 @@ namespace golang::runtime
     }
 
     // Testing adapters for hash quality tests (see hash_test.go)
-    uintptr_t stringHash(std::string s, uintptr_t seed)
+    uintptr_t stringHash(gocpp::string s, uintptr_t seed)
     {
         return strhash(noescape(unsafe::Pointer(& s)), seed);
     }
@@ -592,12 +592,12 @@ namespace golang::runtime
     gocpp::array<uintptr_t, 4> hashkey;
     void alginit()
     {
-        if((GOARCH == "386"s || GOARCH == "amd64"s) && cpu::X86.HasAES && cpu::X86.HasSSSE3 && cpu::X86.HasSSE41)
+        if((GOARCH == "386"_s || GOARCH == "amd64"_s) && cpu::X86.HasAES && cpu::X86.HasSSSE3 && cpu::X86.HasSSE41)
         {
             initAlgAES();
             return;
         }
-        if(GOARCH == "arm64"s && cpu::ARM64.HasAES)
+        if(GOARCH == "arm64"_s && cpu::ARM64.HasAES)
         {
             initAlgAES();
             return;

@@ -149,11 +149,11 @@ namespace golang::runtime
     void advanceEvacuationMark(struct hmap* h, golang::runtime::maptype* t, uintptr_t newbit);
     struct hmap* reflect_makemap(golang::runtime::maptype* t, int cap);
     unsafe::Pointer reflect_mapaccess(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key);
-    unsafe::Pointer reflect_mapaccess_faststr(golang::runtime::maptype* t, struct hmap* h, std::string key);
+    unsafe::Pointer reflect_mapaccess_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key);
     void reflect_mapassign(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key, unsafe::Pointer elem);
-    void reflect_mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, std::string key, unsafe::Pointer elem);
+    void reflect_mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key, unsafe::Pointer elem);
     void reflect_mapdelete(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key);
-    void reflect_mapdelete_faststr(golang::runtime::maptype* t, struct hmap* h, std::string key);
+    void reflect_mapdelete_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key);
     void reflect_mapiterinit(golang::runtime::maptype* t, struct hmap* h, struct hiter* it);
     void reflect_mapiternext(struct hiter* it);
     unsafe::Pointer reflect_mapiterkey(struct hiter* it);

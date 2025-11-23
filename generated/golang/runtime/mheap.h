@@ -108,7 +108,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct arenaHint& value);
-    extern gocpp::slice<std::string> mSpanStateNames;
+    extern gocpp::slice<gocpp::string> mSpanStateNames;
     struct mSpanStateBox
     {
         atomic::Uint8 s;

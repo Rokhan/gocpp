@@ -57,9 +57,9 @@ namespace golang::poll
     // Keep this string consistent because of issue #4373:
     // since historically programs have not been able to detect
     // this error, they look for the string.
-    std::string rec::Error(struct errNetClosing e)
+    gocpp::string rec::Error(struct errNetClosing e)
     {
-        return "use of closed network connection"s;
+        return "use of closed network connection"_s;
     }
 
     bool rec::Timeout(struct errNetClosing e)
@@ -77,10 +77,10 @@ namespace golang::poll
     errNetClosing ErrNetClosing = errNetClosing {};
     // ErrFileClosing is returned when a file descriptor is used after it
     // has been closed.
-    gocpp::error ErrFileClosing = errors::New("use of closed file"s);
+    gocpp::error ErrFileClosing = errors::New("use of closed file"_s);
     // ErrNoDeadline is returned when a request is made to set a deadline
     // on a file type that does not use the poller.
-    gocpp::error ErrNoDeadline = errors::New("file type does not support deadline"s);
+    gocpp::error ErrNoDeadline = errors::New("file type does not support deadline"_s);
     // Return the appropriate closing error based on isFile.
     struct gocpp::error errClosing(bool isFile)
     {
@@ -125,9 +125,9 @@ namespace golang::poll
     // The string is "i/o timeout" because that is what was returned
     // by earlier Go versions. Changing it may break programs that
     // match on error strings.
-    std::string rec::Error(struct DeadlineExceededError* e)
+    gocpp::string rec::Error(struct DeadlineExceededError* e)
     {
-        return "i/o timeout"s;
+        return "i/o timeout"_s;
     }
 
     bool rec::Timeout(struct DeadlineExceededError* e)
@@ -142,7 +142,7 @@ namespace golang::poll
 
     // ErrNotPollable is returned when the file or socket is not suitable
     // for event notification.
-    gocpp::error ErrNotPollable = errors::New("not pollable"s);
+    gocpp::error ErrNotPollable = errors::New("not pollable"_s);
     // consume removes data from a slice of byte slices, for writev.
     void consume(gocpp::slice<gocpp::slice<unsigned char>>* v, int64_t n)
     {

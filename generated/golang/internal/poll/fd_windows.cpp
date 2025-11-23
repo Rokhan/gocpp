@@ -235,7 +235,7 @@ namespace golang::poll
     {
         if(o->fd->pd.runtimeCtx == 0)
         {
-            return {0, errors::New("internal error: polling on unsupported descriptor type"s)};
+            return {0, errors::New("internal error: polling on unsupported descriptor type"_s)};
         }
         auto fd = o->fd;
         auto err = rec::prepare(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
@@ -295,7 +295,7 @@ namespace golang::poll
                 case 2:
                     break;
                 default:
-                    gocpp::panic("unexpected runtime.netpoll error: "s + rec::Error(gocpp::recv(netpollErr)));
+                    gocpp::panic("unexpected runtime.netpoll error: "_s + rec::Error(gocpp::recv(netpollErr)));
                     break;
             }
         }
@@ -395,38 +395,38 @@ namespace golang::poll
 
     // fileKind describes the kind of file.
     // logInitFD is set by tests to enable file descriptor initialization logging.
-    std::function<void (std::string net, struct FD* fd, struct gocpp::error err)> logInitFD;
+    std::function<void (gocpp::string net, struct FD* fd, struct gocpp::error err)> logInitFD;
     // Init initializes the FD. The Sysfd field should already be set.
     // This can be called multiple times on a single FD.
     // The net argument is a network name from the net package (e.g., "tcp"),
     // or "file" or "console" or "dir".
     // Set pollable to true if fd should be managed by runtime netpoll.
-    std::tuple<std::string, struct gocpp::error> rec::Init(struct FD* fd, std::string net, bool pollable)
+    std::tuple<gocpp::string, struct gocpp::error> rec::Init(struct FD* fd, gocpp::string net, bool pollable)
     {
         if(initErr != nullptr)
         {
-            return {""s, initErr};
+            return {""_s, initErr};
         }
         //Go switch emulation
         {
             auto condition = net;
             int conditionId = -1;
-            if(condition == "file"s) { conditionId = 0; }
-            else if(condition == "dir"s) { conditionId = 1; }
-            else if(condition == "console"s) { conditionId = 2; }
-            else if(condition == "pipe"s) { conditionId = 3; }
-            else if(condition == "tcp"s) { conditionId = 4; }
-            else if(condition == "tcp4"s) { conditionId = 5; }
-            else if(condition == "tcp6"s) { conditionId = 6; }
-            else if(condition == "udp"s) { conditionId = 7; }
-            else if(condition == "udp4"s) { conditionId = 8; }
-            else if(condition == "udp6"s) { conditionId = 9; }
-            else if(condition == "ip"s) { conditionId = 10; }
-            else if(condition == "ip4"s) { conditionId = 11; }
-            else if(condition == "ip6"s) { conditionId = 12; }
-            else if(condition == "unix"s) { conditionId = 13; }
-            else if(condition == "unixgram"s) { conditionId = 14; }
-            else if(condition == "unixpacket"s) { conditionId = 15; }
+            if(condition == "file"_s) { conditionId = 0; }
+            else if(condition == "dir"_s) { conditionId = 1; }
+            else if(condition == "console"_s) { conditionId = 2; }
+            else if(condition == "pipe"_s) { conditionId = 3; }
+            else if(condition == "tcp"_s) { conditionId = 4; }
+            else if(condition == "tcp4"_s) { conditionId = 5; }
+            else if(condition == "tcp6"_s) { conditionId = 6; }
+            else if(condition == "udp"_s) { conditionId = 7; }
+            else if(condition == "udp4"_s) { conditionId = 8; }
+            else if(condition == "udp6"_s) { conditionId = 9; }
+            else if(condition == "ip"_s) { conditionId = 10; }
+            else if(condition == "ip4"_s) { conditionId = 11; }
+            else if(condition == "ip6"_s) { conditionId = 12; }
+            else if(condition == "unix"_s) { conditionId = 13; }
+            else if(condition == "unixgram"_s) { conditionId = 14; }
+            else if(condition == "unixpacket"_s) { conditionId = 15; }
             switch(conditionId)
             {
                 case 0:
@@ -454,7 +454,7 @@ namespace golang::poll
                     fd->kind = kindNet;
                     break;
                 default:
-                    return {""s, errors::New("internal error: unknown network type "s + net)};
+                    return {""_s, errors::New("internal error: unknown network type "_s + net)};
                     break;
             }
         }
@@ -470,7 +470,7 @@ namespace golang::poll
         }
         if(err != nullptr)
         {
-            return {""s, err};
+            return {""_s, err};
         }
         if(pollable && useSetFileCompletionNotificationModes)
         {
@@ -479,12 +479,12 @@ namespace golang::poll
             {
                 auto condition = net;
                 int conditionId = -1;
-                if(condition == "tcp"s) { conditionId = 0; }
-                else if(condition == "tcp4"s) { conditionId = 1; }
-                else if(condition == "tcp6"s) { conditionId = 2; }
-                else if(condition == "udp"s) { conditionId = 3; }
-                else if(condition == "udp4"s) { conditionId = 4; }
-                else if(condition == "udp6"s) { conditionId = 5; }
+                if(condition == "tcp"_s) { conditionId = 0; }
+                else if(condition == "tcp4"_s) { conditionId = 1; }
+                else if(condition == "tcp6"_s) { conditionId = 2; }
+                else if(condition == "udp"_s) { conditionId = 3; }
+                else if(condition == "udp4"_s) { conditionId = 4; }
+                else if(condition == "udp6"_s) { conditionId = 5; }
                 switch(conditionId)
                 {
                     case 0:
@@ -507,9 +507,9 @@ namespace golang::poll
         {
             auto condition = net;
             int conditionId = -1;
-            if(condition == "udp"s) { conditionId = 0; }
-            else if(condition == "udp4"s) { conditionId = 1; }
-            else if(condition == "udp6"s) { conditionId = 2; }
+            if(condition == "udp"_s) { conditionId = 0; }
+            else if(condition == "udp4"_s) { conditionId = 1; }
+            else if(condition == "udp6"_s) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -521,7 +521,7 @@ namespace golang::poll
                     auto err = syscall::WSAIoctl(fd->Sysfd, syscall::SIO_UDP_CONNRESET, (unsigned char*)(unsafe::Pointer(& flag)), size, nullptr, 0, & ret, nullptr, 0);
                     if(err != nullptr)
                     {
-                        return {"wsaioctl"s, err};
+                        return {"wsaioctl"_s, err};
                     }
                     break;
             }
@@ -532,7 +532,7 @@ namespace golang::poll
         fd->wop.fd = fd;
         fd->rop.runtimeCtx = fd->pd.runtimeCtx;
         fd->wop.runtimeCtx = fd->pd.runtimeCtx;
-        return {""s, nullptr};
+        return {""_s, nullptr};
     }
 
     struct gocpp::error rec::destroy(struct FD* fd)
@@ -1307,7 +1307,7 @@ namespace golang::poll
         return err;
     }
 
-    std::tuple<std::string, struct gocpp::error> rec::acceptOne(struct FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, struct operation* o)
+    std::tuple<gocpp::string, struct gocpp::error> rec::acceptOne(struct FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, struct operation* o)
     {
         o->handle = s;
         o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
@@ -1318,27 +1318,27 @@ namespace golang::poll
         if(err != nullptr)
         {
             CloseFunc(s);
-            return {"acceptex"s, err};
+            return {"acceptex"_s, err};
         }
         err = syscall::Setsockopt(s, syscall::SOL_SOCKET, syscall::SO_UPDATE_ACCEPT_CONTEXT, (unsigned char*)(unsafe::Pointer(& fd->Sysfd)), int32_t(gocpp::Sizeof<syscall::Handle>()));
         if(err != nullptr)
         {
             CloseFunc(s);
-            return {"setsockopt"s, err};
+            return {"setsockopt"_s, err};
         }
-        return {""s, nullptr};
+        return {""_s, nullptr};
     }
 
     // Accept handles accepting a socket. The sysSocket parameter is used
     // to allocate the net socket.
-    std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, std::string, struct gocpp::error> rec::Accept(struct FD* fd, std::function<std::tuple<syscall::Handle, struct gocpp::error> ()> sysSocket)
+    std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, gocpp::string, struct gocpp::error> rec::Accept(struct FD* fd, std::function<std::tuple<syscall::Handle, struct gocpp::error> ()> sysSocket)
     {
         gocpp::Defer defer;
         try
         {
             if(auto err = rec::readLock(gocpp::recv(fd)); err != nullptr)
             {
-                return {syscall::InvalidHandle, nullptr, 0, ""s, err};
+                return {syscall::InvalidHandle, nullptr, 0, ""_s, err};
             }
             defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
             auto o = & fd->rop;
@@ -1348,13 +1348,13 @@ namespace golang::poll
                 auto [s, err] = sysSocket();
                 if(err != nullptr)
                 {
-                    return {syscall::InvalidHandle, nullptr, 0, ""s, err};
+                    return {syscall::InvalidHandle, nullptr, 0, ""_s, err};
                 }
-                std::string errcall;
+                gocpp::string errcall;
                 std::tie(errcall, err) = rec::acceptOne(gocpp::recv(fd), s, rawsa.make_slice(0), o);
                 if(err == nullptr)
                 {
-                    return {s, rawsa.make_slice(0), uint32_t(o->rsan), ""s, nullptr};
+                    return {s, rawsa.make_slice(0), uint32_t(o->rsan), ""_s, nullptr};
                 }
                 auto [errno, ok] = gocpp::getValue<syscall::Errno>(err);
                 if(! ok)
@@ -1780,7 +1780,7 @@ namespace golang::poll
         {
             if(len(p) > maxRW)
             {
-                return {0, 0, errors::New("packet is too large (only 1GB is allowed)"s)};
+                return {0, 0, errors::New("packet is too large (only 1GB is allowed)"_s)};
             }
             if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
@@ -1823,7 +1823,7 @@ namespace golang::poll
         {
             if(len(p) > maxRW)
             {
-                return {0, 0, errors::New("packet is too large (only 1GB is allowed)"s)};
+                return {0, 0, errors::New("packet is too large (only 1GB is allowed)"_s)};
             }
             if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
@@ -1859,7 +1859,7 @@ namespace golang::poll
         {
             if(len(p) > maxRW)
             {
-                return {0, 0, errors::New("packet is too large (only 1GB is allowed)"s)};
+                return {0, 0, errors::New("packet is too large (only 1GB is allowed)"_s)};
             }
             if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {

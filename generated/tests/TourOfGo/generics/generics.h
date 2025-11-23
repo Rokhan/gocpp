@@ -50,16 +50,16 @@ namespace golang::main
     }
     
     template<typename T>
-    T Dummy1(std::string dummy, gocpp::slice<T> vals);
+    T Dummy1(gocpp::string dummy, gocpp::slice<T> vals);
     
     template<typename T, typename... Args>
-    T Dummy1(std::string dummy, Args... vals)
+    T Dummy1(gocpp::string dummy, Args... vals)
     {
         return Dummy1(dummy, gocpp::ToSlice<T>(vals...));
     }
     
     template<typename T, typename... Args>
-    T Dummy1(std::string dummy, T value, Args... vals)
+    T Dummy1(gocpp::string dummy, T value, Args... vals)
     {
         return Dummy1(dummy, gocpp::ToSlice<T>(value, vals...));
     }

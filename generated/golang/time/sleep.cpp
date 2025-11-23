@@ -170,7 +170,7 @@ namespace golang::time
     {
         if(t->r.f == nullptr)
         {
-            gocpp::panic("time: Stop called on uninitialized Timer"s);
+            gocpp::panic("time: Stop called on uninitialized Timer"_s);
         }
         return stopTimer(& t->r);
     }
@@ -230,7 +230,7 @@ namespace golang::time
     {
         if(t->r.f == nullptr)
         {
-            gocpp::panic("time: Reset called on uninitialized Timer"s);
+            gocpp::panic("time: Reset called on uninitialized Timer"_s);
         }
         auto w = when(d);
         return resetTimer(& t->r, w);

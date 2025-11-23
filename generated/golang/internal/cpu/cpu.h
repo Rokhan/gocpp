@@ -30,10 +30,10 @@ namespace golang::cpu
 
     std::ostream& operator<<(std::ostream& os, const struct CacheLinePad& value);
     extern uintptr_t CacheLineSize;
-    void Initialize(std::string env);
+    void Initialize(gocpp::string env);
     struct option
     {
-        std::string Name;
+        gocpp::string Name;
         bool* Feature;
         bool Specified;
         bool Enable;
@@ -50,8 +50,8 @@ namespace golang::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct option& value);
-    void processOptions(std::string env);
-    int indexByte(std::string s, unsigned char c);
+    void processOptions(gocpp::string env);
+    int indexByte(gocpp::string s, unsigned char c);
     extern gocpp_id_0 X86;
     extern gocpp_id_1 ARM;
     extern gocpp_id_2 ARM64;

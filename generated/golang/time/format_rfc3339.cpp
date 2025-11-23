@@ -75,18 +75,18 @@ namespace golang::time
         //Go switch emulation
         {
             int conditionId = -1;
-            if(b[n0 + len("9999"s)] != '-') { conditionId = 0; }
+            if(b[n0 + len("9999"_s)] != '-') { conditionId = 0; }
             else if(b[len(b) - 1] != 'Z') { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
-                    return {b, errors::New("year outside of range [0,9999]"s)};
+                    return {b, errors::New("year outside of range [0,9999]"_s)};
                     break;
                 case 1:
-                    auto c = b[len(b) - len("Z07:00"s)];
-                    if(('0' <= c && c <= '9') || num2(b.make_slice(len(b) - len("07:00"s))) >= 24)
+                    auto c = b[len(b) - len("Z07:00"_s)];
+                    if(('0' <= c && c <= '9') || num2(b.make_slice(len(b) - len("07:00"_s))) >= 24)
                     {
-                        return {b, errors::New("timezone hour outside of range [0,23]"s)};
+                        return {b, errors::New("timezone hour outside of range [0,23]"_s)};
                     }
                     break;
             }
@@ -117,7 +117,7 @@ namespace golang::time
             }
             return x;
         };
-        if(len(s) < len("2006-01-02T15:04:05"s))
+        if(len(s) < len("2006-01-02T15:04:05"_s))
         {
             return {Time {}, false};
         }
@@ -146,7 +146,7 @@ namespace golang::time
         auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
         if(len(s) != 1 || s[0] != 'Z')
         {
-            if(len(s) != len("-07:00"s))
+            if(len(s) != len("-07:00"_s))
             {
                 return {Time {}, false};
             }
@@ -168,7 +168,7 @@ namespace golang::time
             }
             else
             {
-                rec::setLoc(gocpp::recv(t), FixedZone(""s, zoneOffset));
+                rec::setLoc(gocpp::recv(t), FixedZone(""_s, zoneOffset));
             }
         }
         return {t, true};
@@ -179,7 +179,7 @@ namespace golang::time
         auto [t, ok] = parseRFC3339(b, Local);
         if(! ok)
         {
-            auto [t, err] = Parse(RFC3339, std::string(b));
+            auto [t, err] = Parse(RFC3339, gocpp::string(b));
             if(err != nullptr)
             {
                 return {Time {}, err};
@@ -192,8 +192,8 @@ namespace golang::time
             {
                 int conditionId = -1;
                 if(true) { conditionId = 0; }
-                else if(b[len("2006-01-02T"s) + 1] == ':') { conditionId = 1; }
-                else if(b[len("2006-01-02T15:04:05"s)] == ',') { conditionId = 2; }
+                else if(b[len("2006-01-02T"_s) + 1] == ':') { conditionId = 1; }
+                else if(b[len("2006-01-02T15:04:05"_s)] == ',') { conditionId = 2; }
                 else if(b[len(b) - 1] != 'Z') { conditionId = 3; }
                 switch(conditionId)
                 {
@@ -201,30 +201,30 @@ namespace golang::time
                         return {t, nullptr};
                         break;
                     case 1:
-                        return {Time {}, new ParseError {RFC3339, std::string(b), "15"s, std::string(b.make_slice(len("2006-01-02T"s)).make_slice(0, 1)), ""s}};
+                        return {Time {}, new ParseError {RFC3339, gocpp::string(b), "15"_s, gocpp::string(b.make_slice(len("2006-01-02T"_s)).make_slice(0, 1)), ""_s}};
                         break;
                     case 2:
-                        return {Time {}, new ParseError {RFC3339, std::string(b), "."s, ","s, ""s}};
+                        return {Time {}, new ParseError {RFC3339, gocpp::string(b), "."_s, ","_s, ""_s}};
                         break;
                     case 3:
                         //Go switch emulation
                         {
                             int conditionId = -1;
-                            if(num2(b.make_slice(len(b) - len("07:00"s))) >= 24) { conditionId = 0; }
-                            else if(num2(b.make_slice(len(b) - len("00"s))) >= 60) { conditionId = 1; }
+                            if(num2(b.make_slice(len(b) - len("07:00"_s))) >= 24) { conditionId = 0; }
+                            else if(num2(b.make_slice(len(b) - len("00"_s))) >= 60) { conditionId = 1; }
                             switch(conditionId)
                             {
                                 case 0:
-                                    return {Time {}, new ParseError {RFC3339, std::string(b), "Z07:00"s, std::string(b.make_slice(len(b) - len("Z07:00"s))), ": timezone hour out of range"s}};
+                                    return {Time {}, new ParseError {RFC3339, gocpp::string(b), "Z07:00"_s, gocpp::string(b.make_slice(len(b) - len("Z07:00"_s))), ": timezone hour out of range"_s}};
                                     break;
                                 case 1:
-                                    return {Time {}, new ParseError {RFC3339, std::string(b), "Z07:00"s, std::string(b.make_slice(len(b) - len("Z07:00"s))), ": timezone minute out of range"s}};
+                                    return {Time {}, new ParseError {RFC3339, gocpp::string(b), "Z07:00"_s, gocpp::string(b.make_slice(len(b) - len("Z07:00"_s))), ": timezone minute out of range"_s}};
                                     break;
                             }
                         }
                         break;
                     default:
-                        return {Time {}, new ParseError {RFC3339, std::string(b), RFC3339, std::string(b), ""s}};
+                        return {Time {}, new ParseError {RFC3339, gocpp::string(b), RFC3339, gocpp::string(b), ""_s}};
                         break;
                 }
             }

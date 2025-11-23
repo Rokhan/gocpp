@@ -76,7 +76,7 @@ namespace golang::os
     std::ostream& operator<<(std::ostream& os, const struct timeout& value);
     struct SyscallError
     {
-        std::string Syscall;
+        gocpp::string Syscall;
         gocpp::error Err;
 
         using isGoStruct = void;
@@ -91,7 +91,7 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SyscallError& value);
-    struct gocpp::error NewSyscallError(std::string syscall, struct gocpp::error err);
+    struct gocpp::error NewSyscallError(gocpp::string syscall, struct gocpp::error err);
     bool IsExist(struct gocpp::error err);
     bool IsNotExist(struct gocpp::error err);
     bool IsPermission(struct gocpp::error err);
@@ -101,7 +101,7 @@ namespace golang::os
 
     namespace rec
     {
-        std::string Error(struct SyscallError* e);
+        gocpp::string Error(struct SyscallError* e);
         struct gocpp::error Unwrap(struct SyscallError* e);
         bool Timeout(struct SyscallError* e);
     }

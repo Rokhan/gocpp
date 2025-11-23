@@ -11,7 +11,7 @@ namespace golang::flate
     const long maxNumDist = 30;
     const long numCodes = 19;
     using CorruptInputError = int64_t;
-    using InternalError = std::string;
+    using InternalError = gocpp::string;
     struct ReadError;
     struct WriteError;
     const long huffmanChunkBits = 9;

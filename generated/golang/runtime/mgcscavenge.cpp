@@ -294,7 +294,7 @@ namespace golang::runtime
     {
         if(s->g != nullptr)
         {
-            go_throw("scavenger state is already wired"s);
+            go_throw("scavenger state is already wired"_s);
         }
         lockInit(& s->lock, lockRankScavenge);
         s->g = getg();
@@ -349,7 +349,7 @@ namespace golang::runtime
         lock(& s->lock);
         if(getg() != s->g)
         {
-            go_throw("tried to park scavenger from another goroutine"s);
+            go_throw("tried to park scavenger from another goroutine"_s);
         }
         s->parked = true;
         goparkunlock(& s->lock, waitReasonGCScavengeWait, traceBlockSystemGoroutine, 2);
@@ -396,7 +396,7 @@ namespace golang::runtime
         lock(& s->lock);
         if(getg() != s->g)
         {
-            go_throw("tried to sleep scavenger from another goroutine"s);
+            go_throw("tried to sleep scavenger from another goroutine"_s);
         }
         if(worked < minScavWorkTime)
         {
@@ -469,7 +469,7 @@ namespace golang::runtime
         lock(& s->lock);
         if(getg() != s->g)
         {
-            go_throw("tried to run scavenger from another goroutine"s);
+            go_throw("tried to run scavenger from another goroutine"_s);
         }
         unlock(& s->lock);
         for(; worked < minScavWorkTime; )
@@ -518,7 +518,7 @@ namespace golang::runtime
         }
         if(released > 0 && released < physPageSize)
         {
-            go_throw("released less than one physical page of memory"s);
+            go_throw("released less than one physical page of memory"_s);
         }
         return {released, worked};
     }
@@ -588,15 +588,15 @@ namespace golang::runtime
     {
         assertLockHeld(& scavenger.lock);
         printlock();
-        print("scav "s, releasedBg >> 10, " KiB work (bg), "s, releasedEager >> 10, " KiB work (eager), "s, rec::load(gocpp::recv(gcController.heapReleased)) >> 10, " KiB now, "s, (rec::load(gocpp::recv(gcController.heapInUse)) * 100) / heapRetained(), "% util"s);
+        print("scav "_s, releasedBg >> 10, " KiB work (bg), "_s, releasedEager >> 10, " KiB work (eager), "_s, rec::load(gocpp::recv(gcController.heapReleased)) >> 10, " KiB now, "_s, (rec::load(gocpp::recv(gcController.heapInUse)) * 100) / heapRetained(), "% util"_s);
         if(forced)
         {
-            print(" (forced)"s);
+            print(" (forced)"_s);
         }
         else
         if(scavenger.printControllerReset)
         {
-            print(" [controller reset]"s);
+            print(" [controller reset]"_s);
             scavenger.printControllerReset = false;
         }
         println();
@@ -716,7 +716,7 @@ namespace golang::runtime
                     x = apply(x, 0x7fffffffffffffff);
                     break;
                 default:
-                    go_throw("bad m value"s);
+                    go_throw("bad m value"_s);
                     break;
             }
         }
@@ -747,14 +747,14 @@ namespace golang::runtime
     {
         if(minimum & (minimum - 1) != 0 || minimum == 0)
         {
-            print("runtime: min = "s, minimum, "\n"s);
-            go_throw("min must be a non-zero power of 2"s);
+            print("runtime: min = "_s, minimum, "\n"_s);
+            go_throw("min must be a non-zero power of 2"_s);
         }
         else
         if(minimum > maxPagesPerPhysPage)
         {
-            print("runtime: min = "s, minimum, "\n"s);
-            go_throw("min too large"s);
+            print("runtime: min = "_s, minimum, "\n"_s);
+            go_throw("min too large"_s);
         }
         if(max == 0)
         {
@@ -1158,8 +1158,8 @@ namespace golang::runtime
     {
         if((unsigned int)(sc->inUse) + npages > pallocChunkPages)
         {
-            print("runtime: inUse="s, sc->inUse, " npages="s, npages, "\n"s);
-            go_throw("too many pages allocated in chunk?"s);
+            print("runtime: inUse="_s, sc->inUse, " npages="_s, npages, "\n"_s);
+            go_throw("too many pages allocated in chunk?"_s);
         }
         if(sc->gen != newGen)
         {
@@ -1178,8 +1178,8 @@ namespace golang::runtime
     {
         if((unsigned int)(sc->inUse) < npages)
         {
-            print("runtime: inUse="s, sc->inUse, " npages="s, npages, "\n"s);
-            go_throw("allocated pages below zero?"s);
+            print("runtime: inUse="_s, sc->inUse, " npages="_s, npages, "\n"_s);
+            go_throw("allocated pages below zero?"_s);
         }
         if(sc->gen != newGen)
         {

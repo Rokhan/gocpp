@@ -20,7 +20,7 @@ namespace golang::godebug
 {
     struct Setting
     {
-        std::string name;
+        gocpp::string name;
         sync::Once once;
         setting* setting;
 
@@ -57,7 +57,7 @@ namespace golang::godebug
     std::ostream& operator<<(std::ostream& os, const struct setting& value);
     struct value
     {
-        std::string text;
+        gocpp::string text;
         bisect::Matcher* bisect;
 
         using isGoStruct = void;
@@ -72,17 +72,17 @@ namespace golang::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct value& value);
-    struct Setting* New(std::string name);
+    struct Setting* New(gocpp::string name);
     extern sync::Map cache;
-    struct setting* lookup(std::string name);
-    void setUpdate(std::function<void (std::string _1, std::string _2)> update);
-    void registerMetric(std::string name, std::function<uint64_t ()> read);
-    void setNewIncNonDefault(std::function<std::function<void ()> (std::string _1)> newIncNonDefault);
+    struct setting* lookup(gocpp::string name);
+    void setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update);
+    void registerMetric(gocpp::string name, std::function<uint64_t ()> read);
+    void setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
     void init();
-    std::function<void ()> newIncNonDefault(std::string name);
+    std::function<void ()> newIncNonDefault(gocpp::string name);
     extern mocklib::Mutex updateMu;
-    void update(std::string def, std::string env);
-    void parse(gocpp::map<std::string, bool> did, std::string s);
+    void update(gocpp::string def, gocpp::string env);
+    void parse(gocpp::map<gocpp::string, bool> did, gocpp::string s);
     struct runtimeStderr
     {
 
@@ -104,12 +104,12 @@ namespace golang::godebug
 
     namespace rec
     {
-        std::string Name(struct Setting* s);
+        gocpp::string Name(struct Setting* s);
         bool Undocumented(struct Setting* s);
-        std::string String(struct Setting* s);
+        gocpp::string String(struct Setting* s);
         void IncNonDefault(struct Setting* s);
         void go_register(struct Setting* s);
-        std::string Value(struct Setting* s);
+        gocpp::string Value(struct Setting* s);
         std::tuple<int, struct gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
     }
 }

@@ -45,7 +45,7 @@ namespace golang::os
     struct gocpp_id_0
     {
         mocklib::Mutex Mutex;
-        std::string dir;
+        gocpp::string dir;
 
         using isGoStruct = void;
 
@@ -87,21 +87,21 @@ namespace golang::os
     // current directory. If the current directory can be
     // reached via multiple paths (due to symbolic links),
     // Getwd may return any one of them.
-    std::tuple<std::string, struct gocpp::error> Getwd()
+    std::tuple<gocpp::string, struct gocpp::error> Getwd()
     {
-        std::string dir;
+        gocpp::string dir;
         struct gocpp::error err;
-        if(mocklib::GOOS == "windows"s || mocklib::GOOS == "plan9"s)
+        if(mocklib::GOOS == "windows"_s || mocklib::GOOS == "plan9"_s)
         {
             return syscall::Getwd();
         }
         fs::FileInfo dot;
-        std::tie(dot, err) = statNolog("."s);
+        std::tie(dot, err) = statNolog("."_s);
         if(err != nullptr)
         {
-            return {""s, err};
+            return {""_s, err};
         }
-        dir = Getenv("PWD"s);
+        dir = Getenv("PWD"_s);
         if(len(dir) > 0 && dir[0] == '/')
         {
             auto [d, err] = statNolog(dir);
@@ -112,7 +112,7 @@ namespace golang::os
         }
         if(syscall::ImplementsGetwd)
         {
-            std::string s = {};
+            gocpp::string s = {};
             gocpp::error e = {};
             for(; ; )
             {
@@ -122,7 +122,7 @@ namespace golang::os
                     break;
                 }
             }
-            return {s, NewSyscallError("getwd"s, e)};
+            return {s, NewSyscallError("getwd"_s, e)};
         }
         rec::Lock(gocpp::recv(getwdCache));
         dir = getwdCache.dir;
@@ -136,26 +136,26 @@ namespace golang::os
             }
         }
         fs::FileInfo root;
-        std::tie(root, err) = statNolog("/"s);
+        std::tie(root, err) = statNolog("/"_s);
         if(err != nullptr)
         {
-            return {""s, err};
+            return {""_s, err};
         }
         if(SameFile(root, dot))
         {
-            return {"/"s, nullptr};
+            return {"/"_s, nullptr};
         }
-        dir = ""s;
-        for(auto parent = ".."s; ; parent = "../"s + parent)
+        dir = ""_s;
+        for(auto parent = ".."_s; ; parent = "../"_s + parent)
         {
             if(len(parent) >= 1024)
             {
-                return {""s, syscall::go_ENAMETOOLONG};
+                return {""_s, syscall::go_ENAMETOOLONG};
             }
             auto [fd, err] = openFileNolog(parent, O_RDONLY, 0);
             if(err != nullptr)
             {
-                return {""s, err};
+                return {""_s, err};
             }
             for(; ; )
             {
@@ -163,14 +163,14 @@ namespace golang::os
                 if(err != nullptr)
                 {
                     rec::Close(gocpp::recv(fd));
-                    return {""s, err};
+                    return {""_s, err};
                 }
                 for(auto [gocpp_ignored, name] : names)
                 {
-                    auto [d, gocpp_id_1] = lstatNolog(parent + "/"s + name);
+                    auto [d, gocpp_id_1] = lstatNolog(parent + "/"_s + name);
                     if(SameFile(d, dot))
                     {
-                        dir = "/"s + name + dir;
+                        dir = "/"_s + name + dir;
                         goto Found;
                     }
                 }
@@ -181,7 +181,7 @@ namespace golang::os
             rec::Close(gocpp::recv(fd));
             if(err != nullptr)
             {
-                return {""s, err};
+                return {""_s, err};
             }
             if(SameFile(pd, root))
             {

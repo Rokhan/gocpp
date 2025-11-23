@@ -148,16 +148,16 @@ namespace golang::main
         unsigned int z1 = (unsigned int)(f);
         mocklib::Println(x, y, z1);
         unsigned int z2 = (unsigned int)(f);
-        mocklib::Println("z2:"s, z2);
+        mocklib::Println("z2:"_s, z2);
         unsigned int z3 = (unsigned int)(z2);
-        mocklib::Println("z2:"s, z3);
+        mocklib::Println("z2:"_s, z3);
         go_any ifunc1 = (std::function<void ()>)(toto);
         mocklib::Println(ifunc1);
         go_any ifunc2 = (main::totoInt)();
         mocklib::Println(ifunc2);
-        auto m1 = gocpp::make(gocpp::Tag<gocpp::map<std::string, Vertex>>());
-        auto m2 = gocpp::make((gocpp::Tag<gocpp::map<std::string, Vertex>>()));
-        auto m3 = gocpp::make((gocpp::Tag<gocpp::map<std::string, Vertex>>()));
+        auto m1 = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Vertex>>());
+        auto m2 = gocpp::make((gocpp::Tag<gocpp::map<gocpp::string, Vertex>>()));
+        auto m3 = gocpp::make((gocpp::Tag<gocpp::map<gocpp::string, Vertex>>()));
         int i = {};
         mocklib::Println(m1, m2, m3, i);
     }

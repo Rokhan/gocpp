@@ -30,7 +30,7 @@ namespace golang::bytealg
         return - 1;
     }
 
-    int LastIndexByteString(std::string s, unsigned char c)
+    int LastIndexByteString(gocpp::string s, unsigned char c)
     {
         for(auto i = len(s) - 1; i >= 0; i--)
         {

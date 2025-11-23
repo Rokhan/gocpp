@@ -12,11 +12,11 @@
 
 namespace golang::syscall
 {
-    std::tuple<std::string, bool> Getenv(std::string key);
-    struct gocpp::error Setenv(std::string key, std::string value);
-    struct gocpp::error Unsetenv(std::string key);
+    std::tuple<gocpp::string, bool> Getenv(gocpp::string key);
+    struct gocpp::error Setenv(gocpp::string key, gocpp::string value);
+    struct gocpp::error Unsetenv(gocpp::string key);
     void Clearenv();
-    gocpp::slice<std::string> Environ();
+    gocpp::slice<gocpp::string> Environ();
 
     namespace rec
     {

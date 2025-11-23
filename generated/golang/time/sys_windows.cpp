@@ -29,7 +29,7 @@ namespace golang::time
     {
     }
 
-    std::tuple<uintptr_t, struct gocpp::error> open(std::string name)
+    std::tuple<uintptr_t, struct gocpp::error> open(gocpp::string name)
     {
         auto [fd, err] = syscall::Open(name, syscall::O_RDONLY, 0);
         if(err != nullptr)
@@ -71,7 +71,7 @@ namespace golang::time
             {
                 if(err == nullptr)
                 {
-                    return errors::New("short read"s);
+                    return errors::New("short read"_s);
                 }
                 return err;
             }

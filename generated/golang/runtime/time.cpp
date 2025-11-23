@@ -236,15 +236,15 @@ namespace golang::runtime
     {
         if(t->when <= 0)
         {
-            go_throw("timer when must be positive"s);
+            go_throw("timer when must be positive"_s);
         }
         if(t->period < 0)
         {
-            go_throw("timer period must be non-negative"s);
+            go_throw("timer period must be non-negative"_s);
         }
         if(rec::Load(gocpp::recv(t->status)) != timerNoStatus)
         {
-            go_throw("addtimer called with initialized timer"s);
+            go_throw("addtimer called with initialized timer"_s);
         }
         rec::Store(gocpp::recv(t->status), timerWaiting);
         auto when = t->when;
@@ -268,7 +268,7 @@ namespace golang::runtime
         }
         if(t->pp != 0)
         {
-            go_throw("doaddtimer: P already set in timer"s);
+            go_throw("doaddtimer: P already set in timer"_s);
         }
         rec::set(gocpp::recv(t->pp), pp);
         auto i = len(pp->timers);
@@ -374,7 +374,7 @@ namespace golang::runtime
     {
         if(auto t = pp->timers[i]; rec::ptr(gocpp::recv(t->pp)) != pp)
         {
-            go_throw("dodeltimer: wrong P"s);
+            go_throw("dodeltimer: wrong P"_s);
         }
         else
         {
@@ -413,7 +413,7 @@ namespace golang::runtime
     {
         if(auto t = pp->timers[0]; rec::ptr(gocpp::recv(t->pp)) != pp)
         {
-            go_throw("dodeltimer0: wrong P"s);
+            go_throw("dodeltimer0: wrong P"_s);
         }
         else
         {
@@ -445,11 +445,11 @@ namespace golang::runtime
     {
         if(when <= 0)
         {
-            go_throw("timer when must be positive"s);
+            go_throw("timer when must be positive"_s);
         }
         if(period < 0)
         {
-            go_throw("timer period must be non-negative"s);
+            go_throw("timer period must be non-negative"_s);
         }
         auto status = uint32_t(timerNoStatus);
         auto wasRemoved = false;
@@ -601,7 +601,7 @@ namespace golang::runtime
             auto t = pp->timers[0];
             if(rec::ptr(gocpp::recv(t->pp)) != pp)
             {
-                go_throw("cleantimers: bad p"s);
+                go_throw("cleantimers: bad p"_s);
             }
             //Go switch emulation
             {
@@ -761,7 +761,7 @@ namespace golang::runtime
             auto t = pp->timers[i];
             if(rec::ptr(gocpp::recv(t->pp)) != pp)
             {
-                go_throw("adjusttimers: bad p"s);
+                go_throw("adjusttimers: bad p"_s);
             }
             //Go switch emulation
             {
@@ -877,7 +877,7 @@ namespace golang::runtime
             auto t = pp->timers[0];
             if(rec::ptr(gocpp::recv(t->pp)) != pp)
             {
-                go_throw("runtimer: bad p"s);
+                go_throw("runtimer: bad p"_s);
             }
             //Go switch emulation
             {
@@ -1005,7 +1005,7 @@ namespace golang::runtime
             auto gp = getg();
             if(gp->racectx != 0)
             {
-                go_throw("runOneTimer: unexpected racectx"s);
+                go_throw("runOneTimer: unexpected racectx"_s);
             }
             gp->racectx = rec::ptr(gocpp::recv(gp->m->p))->timerRaceCtx;
         }
@@ -1149,14 +1149,14 @@ namespace golang::runtime
             auto p = (i - 1) / 4;
             if(t->when < pp->timers[p]->when)
             {
-                print("bad timer heap at "s, i, ": "s, p, ": "s, pp->timers[p]->when, ", "s, i, ": "s, t->when, "\n"s);
-                go_throw("bad timer heap"s);
+                print("bad timer heap at "_s, i, ": "_s, p, ": "_s, pp->timers[p]->when, ", "_s, i, ": "_s, t->when, "\n"_s);
+                go_throw("bad timer heap"_s);
             }
         }
         if(auto numTimers = int(rec::Load(gocpp::recv(pp->numTimers))); len(pp->timers) != numTimers)
         {
-            println("timer heap len"s, len(pp->timers), "!= numTimers"s, numTimers);
-            go_throw("bad timer heap len"s);
+            println("timer heap len"_s, len(pp->timers), "!= numTimers"_s, numTimers);
+            go_throw("bad timer heap len"_s);
         }
     }
 
@@ -1315,7 +1315,7 @@ namespace golang::runtime
     // See issue #25686.
     void badTimer()
     {
-        go_throw("timer data corruption"s);
+        go_throw("timer data corruption"_s);
     }
 
 }

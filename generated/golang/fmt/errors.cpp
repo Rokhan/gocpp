@@ -35,12 +35,12 @@ namespace golang::fmt
     // order they appear in the arguments.
     // It is invalid to supply the %w verb with an operand that does not implement
     // the error interface. The %w verb is otherwise a synonym for %v.
-    struct gocpp::error Errorf(std::string format, gocpp::slice<go_any> a)
+    struct gocpp::error Errorf(gocpp::string format, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
         p->wrapErrs = true;
         rec::doPrintf(gocpp::recv(p), format, a);
-        auto s = std::string(p->buf);
+        auto s = gocpp::string(p->buf);
         gocpp::error err = {};
         //Go switch emulation
         {
@@ -117,7 +117,7 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct wrapError* e)
+    gocpp::string rec::Error(struct wrapError* e)
     {
         return e->msg;
     }
@@ -159,7 +159,7 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    std::string rec::Error(struct wrapErrors* e)
+    gocpp::string rec::Error(struct wrapErrors* e)
     {
         return e->msg;
     }

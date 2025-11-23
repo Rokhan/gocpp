@@ -20,10 +20,10 @@ namespace golang::main
         using namespace mocklib::rec;
     }
 
-    gocpp::array<std::string, 6> errors = gocpp::Init<gocpp::array<std::string, 6>>([](auto& x) {
-        x[3] = "argument list too long"s;
-        x[5] = "permission denied"s;
-        x[1] = "address already in use"s;
+    gocpp::array<gocpp::string, 6> errors = gocpp::Init<gocpp::array<gocpp::string, 6>>([](auto& x) {
+        x[3] = "argument list too long"_s;
+        x[5] = "permission denied"_s;
+        x[1] = "address already in use"_s;
     });
     struct gocpp_id_0
         {

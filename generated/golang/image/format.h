@@ -21,8 +21,8 @@ namespace golang::image
     extern gocpp::error ErrFormat;
     struct format
     {
-        std::string name;
-        std::string magic;
+        gocpp::string name;
+        gocpp::string magic;
         std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode;
         std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig;
 
@@ -40,7 +40,7 @@ namespace golang::image
     std::ostream& operator<<(std::ostream& os, const struct format& value);
     extern mocklib::Mutex formatsMu;
     extern atomic::Value atomicFormats;
-    void RegisterFormat(std::string name, std::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig);
+    void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig);
     struct reader : gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -94,10 +94,10 @@ namespace golang::image
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
     struct reader asReader(io::Reader r);
-    bool match(std::string magic, gocpp::slice<unsigned char> b);
+    bool match(gocpp::string magic, gocpp::slice<unsigned char> b);
     struct format sniff(struct reader r);
-    std::tuple<struct Image, std::string, struct gocpp::error> Decode(io::Reader r);
-    std::tuple<struct Config, std::string, struct gocpp::error> DecodeConfig(io::Reader r);
+    std::tuple<struct Image, gocpp::string, struct gocpp::error> Decode(io::Reader r);
+    std::tuple<struct Config, gocpp::string, struct gocpp::error> DecodeConfig(io::Reader r);
 
     namespace rec
     {

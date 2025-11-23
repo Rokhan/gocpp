@@ -559,7 +559,7 @@ namespace golang::cpu
     // This is called by the runtime package early in program initialization,
     // before normal init functions are run. env is set by runtime if the OS supports
     // cpu feature options in GODEBUG.
-    void Initialize(std::string env)
+    void Initialize(gocpp::string env)
     {
         doinit();
         processOptions(env);
@@ -615,29 +615,29 @@ namespace golang::cpu
     // cpu packages options variable and values are either 'on' or 'off'.
     // If env contains cpu.all=off then all cpu features referenced through the options
     // variable are disabled. Other feature names and values result in warning messages.
-    void processOptions(std::string env)
+    void processOptions(gocpp::string env)
     {
         field:
-        for(; env != ""s; )
+        for(; env != ""_s; )
         {
-            auto field = ""s;
+            auto field = ""_s;
             auto i = indexByte(env, ',');
             if(i < 0)
             {
-                std::tie(field, env) = std::tuple{env, ""s};
+                std::tie(field, env) = std::tuple{env, ""_s};
             }
             else
             {
                 std::tie(field, env) = std::tuple{env.make_slice(0, i), env.make_slice(i + 1)};
             }
-            if(len(field) < 4 || field.make_slice(0, 4) != "cpu."s)
+            if(len(field) < 4 || field.make_slice(0, 4) != "cpu."_s)
             {
                 continue;
             }
             i = indexByte(field, '=');
             if(i < 0)
             {
-                print("GODEBUG: no value specified for \""s, field, "\"\n"s);
+                print("GODEBUG: no value specified for \""_s, field, "\"\n"_s);
                 continue;
             }
             auto [key, value] = std::tuple{field.make_slice(4, i), field.make_slice(i + 1)};
@@ -646,8 +646,8 @@ namespace golang::cpu
             {
                 auto condition = value;
                 int conditionId = -1;
-                if(condition == "on"s) { conditionId = 0; }
-                else if(condition == "off"s) { conditionId = 1; }
+                if(condition == "on"_s) { conditionId = 0; }
+                else if(condition == "off"_s) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -657,12 +657,12 @@ namespace golang::cpu
                         enable = false;
                         break;
                     default:
-                        print("GODEBUG: value \""s, value, "\" not supported for cpu option \""s, key, "\"\n"s);
+                        print("GODEBUG: value \""_s, value, "\" not supported for cpu option \""_s, key, "\"\n"_s);
                         goto field_continue;
                         break;
                 }
             }
-            if(key == "all"s)
+            if(key == "all"_s)
             {
                 for(auto [i, gocpp_ignored] : options)
                 {
@@ -680,7 +680,7 @@ namespace golang::cpu
                     goto field_continue;
                 }
             }
-            print("GODEBUG: unknown cpu feature \""s, key, "\"\n"s);
+            print("GODEBUG: unknown cpu feature \""_s, key, "\"\n"_s);
             if(false) {
             field_continue:
                 continue;
@@ -696,7 +696,7 @@ namespace golang::cpu
             }
             if(o.Enable && ! *o.Feature)
             {
-                print("GODEBUG: can not enable \""s, o.Name, "\", missing CPU support\n"s);
+                print("GODEBUG: can not enable \""_s, o.Name, "\", missing CPU support\n"_s);
                 continue;
             }
             *o.Feature = o.Enable;
@@ -707,7 +707,7 @@ namespace golang::cpu
     // or -1 if c is not present in s.
     // indexByte is semantically the same as [strings.IndexByte].
     // We copy this function because "internal/cpu" should not have external dependencies.
-    int indexByte(std::string s, unsigned char c)
+    int indexByte(gocpp::string s, unsigned char c)
     {
         for(auto i = 0; i < len(s); i++)
         {

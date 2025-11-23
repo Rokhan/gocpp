@@ -199,7 +199,7 @@ namespace golang::crc32
         d->crc = 0;
     }
 
-    std::string magic = "crc\x01"s;
+    gocpp::string magic = "crc\x01"_s;
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(struct digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
@@ -211,17 +211,17 @@ namespace golang::crc32
 
     struct gocpp::error rec::UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b)
     {
-        if(len(b) < len(magic) || std::string(b.make_slice(0, len(magic))) != magic)
+        if(len(b) < len(magic) || gocpp::string(b.make_slice(0, len(magic))) != magic)
         {
-            return errors::New("hash/crc32: invalid hash state identifier"s);
+            return errors::New("hash/crc32: invalid hash state identifier"_s);
         }
         if(len(b) != marshaledSize)
         {
-            return errors::New("hash/crc32: invalid hash state size"s);
+            return errors::New("hash/crc32: invalid hash state size"_s);
         }
         if(tableSum(d->tab) != readUint32(b.make_slice(4)))
         {
-            return errors::New("hash/crc32: tables do not match"s);
+            return errors::New("hash/crc32: tables do not match"_s);
         }
         d->crc = readUint32(b.make_slice(8));
         return nullptr;

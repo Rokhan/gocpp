@@ -325,8 +325,8 @@ namespace golang::runtime
     {
         uint32_t ones;
         uintptr_t entry;
-        std::string name;
-        std::string file;
+        gocpp::string name;
+        gocpp::string file;
         int32_t line;
         int32_t startLine;
 
@@ -466,7 +466,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ancestorInfo& value);
-    extern gocpp::array<std::string, 37> waitReasonStrings;
+    extern gocpp::array<gocpp::string, 37> waitReasonStrings;
     extern int32_t gomaxprocs;
     extern int32_t ncpu;
     extern int32_t newprocs;
@@ -570,7 +570,7 @@ namespace golang::runtime
         int64_t id;
         int32_t mallocing;
         golang::runtime::throwType throwing;
-        std::string preemptoff;
+        gocpp::string preemptoff;
         int32_t locks;
         int32_t dying;
         int32_t profilehz;
@@ -808,7 +808,7 @@ namespace golang::runtime
         void set(golang::runtime::puintptr* pp, struct p* p);
         struct m* ptr(golang::runtime::muintptr mp);
         void set(golang::runtime::muintptr* mp, struct m* m);
-        std::string String(golang::runtime::waitReason w);
+        gocpp::string String(golang::runtime::waitReason w);
         bool isMutexWait(golang::runtime::waitReason w);
     }
 }

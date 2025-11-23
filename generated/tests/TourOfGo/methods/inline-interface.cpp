@@ -182,11 +182,11 @@ namespace golang::main
     {
         if(i != nullptr)
         {
-            mocklib::Printf("(%v, %T) => %v\n"s, i, i, rec::Abs(gocpp::recv(i)));
+            mocklib::Printf("(%v, %T) => %v\n"_s, i, i, rec::Abs(gocpp::recv(i)));
         }
         else
         {
-            mocklib::Printf("(%v, %T)\n"s, i, i);
+            mocklib::Printf("(%v, %T)\n"_s, i, i);
         }
     }
 

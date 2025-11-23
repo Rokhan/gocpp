@@ -321,12 +321,12 @@ namespace golang::runtime
         if(auto offset = unsafe::Offsetof(memstats.heapStats); offset % 8 != 0)
         {
             println(offset);
-            go_throw("memstats.heapStats not aligned to 8 bytes"s);
+            go_throw("memstats.heapStats not aligned to 8 bytes"_s);
         }
         if(auto size = gocpp::Sizeof<heapStatsDelta>(); size % 8 != 0)
         {
             println(size);
-            go_throw("heapStatsDelta not a multiple of 8 bytes in size"s);
+            go_throw("heapStatsDelta not a multiple of 8 bytes in size"_s);
         }
     }
 
@@ -436,43 +436,43 @@ namespace golang::runtime
             lock(& trace.lock);
             if(rec::load(gocpp::recv(gcController.heapInUse)) != uint64_t(consStats.inHeap))
             {
-                print("runtime: heapInUse="s, rec::load(gocpp::recv(gcController.heapInUse)), "\n"s);
-                print("runtime: consistent value="s, consStats.inHeap, "\n"s);
-                go_throw("heapInUse and consistent stats are not equal"s);
+                print("runtime: heapInUse="_s, rec::load(gocpp::recv(gcController.heapInUse)), "\n"_s);
+                print("runtime: consistent value="_s, consStats.inHeap, "\n"_s);
+                go_throw("heapInUse and consistent stats are not equal"_s);
             }
             if(rec::load(gocpp::recv(gcController.heapReleased)) != uint64_t(consStats.released))
             {
-                print("runtime: heapReleased="s, rec::load(gocpp::recv(gcController.heapReleased)), "\n"s);
-                print("runtime: consistent value="s, consStats.released, "\n"s);
-                go_throw("heapReleased and consistent stats are not equal"s);
+                print("runtime: heapReleased="_s, rec::load(gocpp::recv(gcController.heapReleased)), "\n"_s);
+                print("runtime: consistent value="_s, consStats.released, "\n"_s);
+                go_throw("heapReleased and consistent stats are not equal"_s);
             }
             auto heapRetained = rec::load(gocpp::recv(gcController.heapInUse)) + rec::load(gocpp::recv(gcController.heapFree));
             auto consRetained = uint64_t(consStats.committed - consStats.inStacks - consStats.inWorkBufs - consStats.inPtrScalarBits);
             if(heapRetained != consRetained)
             {
-                print("runtime: global value="s, heapRetained, "\n"s);
-                print("runtime: consistent value="s, consRetained, "\n"s);
-                go_throw("measures of the retained heap are not equal"s);
+                print("runtime: global value="_s, heapRetained, "\n"_s);
+                print("runtime: consistent value="_s, consRetained, "\n"_s);
+                go_throw("measures of the retained heap are not equal"_s);
             }
             if(rec::Load(gocpp::recv(gcController.totalAlloc)) != totalAlloc)
             {
-                print("runtime: totalAlloc="s, rec::Load(gocpp::recv(gcController.totalAlloc)), "\n"s);
-                print("runtime: consistent value="s, totalAlloc, "\n"s);
-                go_throw("totalAlloc and consistent stats are not equal"s);
+                print("runtime: totalAlloc="_s, rec::Load(gocpp::recv(gcController.totalAlloc)), "\n"_s);
+                print("runtime: consistent value="_s, totalAlloc, "\n"_s);
+                go_throw("totalAlloc and consistent stats are not equal"_s);
             }
             if(rec::Load(gocpp::recv(gcController.totalFree)) != totalFree)
             {
-                print("runtime: totalFree="s, rec::Load(gocpp::recv(gcController.totalFree)), "\n"s);
-                print("runtime: consistent value="s, totalFree, "\n"s);
-                go_throw("totalFree and consistent stats are not equal"s);
+                print("runtime: totalFree="_s, rec::Load(gocpp::recv(gcController.totalFree)), "\n"_s);
+                print("runtime: consistent value="_s, totalFree, "\n"_s);
+                go_throw("totalFree and consistent stats are not equal"_s);
             }
             if(rec::Load(gocpp::recv(gcController.mappedReady)) != totalMapped - uint64_t(consStats.released))
             {
-                print("runtime: mappedReady="s, rec::Load(gocpp::recv(gcController.mappedReady)), "\n"s);
-                print("runtime: totalMapped="s, totalMapped, "\n"s);
-                print("runtime: released="s, uint64_t(consStats.released), "\n"s);
-                print("runtime: totalMapped-released="s, totalMapped - uint64_t(consStats.released), "\n"s);
-                go_throw("mappedReady and other memstats are not equal"s);
+                print("runtime: mappedReady="_s, rec::Load(gocpp::recv(gcController.mappedReady)), "\n"_s);
+                print("runtime: totalMapped="_s, totalMapped, "\n"_s);
+                print("runtime: released="_s, uint64_t(consStats.released), "\n"_s);
+                print("runtime: totalMapped-released="_s, totalMapped - uint64_t(consStats.released), "\n"_s);
+                go_throw("mappedReady and other memstats are not equal"_s);
             }
             unlock(& trace.lock);
             unlock(& sched.sysmonlock);
@@ -527,7 +527,7 @@ namespace golang::runtime
         auto p = *pauses;
         if(cap(p) < len(memstats.pause_ns) + 3)
         {
-            go_throw("short slice passed to readGCStats"s);
+            go_throw("short slice passed to readGCStats"_s);
         }
         lock(& mheap_.lock);
         auto n = memstats.numgc;
@@ -604,8 +604,8 @@ namespace golang::runtime
         auto val = atomic::Xadd64((uint64_t*)(s), n);
         if((n > 0 && int64_t(val) < n) || (n < 0 && int64_t(val) + n < n))
         {
-            print("runtime: val="s, val, " n="s, n, "\n"s);
-            go_throw("sysMemStat overflow"s);
+            print("runtime: val="_s, val, " n="_s, n, "\n"_s);
+            go_throw("sysMemStat overflow"_s);
         }
     }
 
@@ -767,8 +767,8 @@ namespace golang::runtime
             auto seq = rec::Add(gocpp::recv(pp->statsSeq), 1);
             if(seq % 2 == 0)
             {
-                print("runtime: seq="s, seq, "\n"s);
-                go_throw("bad sequence number"s);
+                print("runtime: seq="_s, seq, "\n"_s);
+                go_throw("bad sequence number"_s);
             }
         }
         else
@@ -800,8 +800,8 @@ namespace golang::runtime
             auto seq = rec::Add(gocpp::recv(pp->statsSeq), 1);
             if(seq % 2 != 0)
             {
-                print("runtime: seq="s, seq, "\n"s);
-                go_throw("bad sequence number"s);
+                print("runtime: seq="_s, seq, "\n"_s);
+                go_throw("bad sequence number"_s);
             }
         }
         else

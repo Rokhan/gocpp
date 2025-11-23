@@ -184,7 +184,7 @@ namespace golang::runtime
             auto [j, gocpp_id_0] = rec::find(gocpp::recv(chunk), 1, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
             if(j == ~ (unsigned int)(0))
             {
-                go_throw("bad summary data"s);
+                go_throw("bad summary data"_s);
             }
             c = gocpp::Init<pageCache>([=](auto& x) {
                 x.base = chunkBase(ci) + alignDown(uintptr_t(j), 64) * pageSize;

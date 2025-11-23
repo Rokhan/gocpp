@@ -23,15 +23,15 @@ namespace golang::main
 
     void main()
     {
-        auto board = gocpp::slice<gocpp::slice<std::string>> {gocpp::slice<std::string> {"_"s, "_"s, "_"s}, gocpp::slice<std::string> {"_"s, "_"s, "_"s}, gocpp::slice<std::string> {"_"s, "_"s, "_"s}};
-        board[0][0] = "X"s;
-        board[2][2] = "O"s;
-        board[1][2] = "X"s;
-        board[1][0] = "O"s;
-        board[0][2] = "X"s;
+        auto board = gocpp::slice<gocpp::slice<gocpp::string>> {gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s}, gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s}, gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s}};
+        board[0][0] = "X"_s;
+        board[2][2] = "O"_s;
+        board[1][2] = "X"_s;
+        board[1][0] = "O"_s;
+        board[0][2] = "X"_s;
         for(auto i = 0; i < len(board); i++)
         {
-            mocklib::Printf("%v\n"s, mocklib::StringsJoin(board[i], " "s));
+            mocklib::Printf("%v\n"_s, mocklib::StringsJoin(board[i], " "_s));
         }
     }
 

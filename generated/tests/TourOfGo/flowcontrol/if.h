@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    std::string sqrt(double x);
+    gocpp::string sqrt(double x);
     void main();
 
     namespace rec

@@ -49,8 +49,8 @@ namespace golang::runtime
             }
             if(small < 4096)
             {
-                print("runtime: VirtualFree of "s, small, " bytes failed with errno="s, getlasterror(), "\n"s);
-                go_throw("runtime: failed to decommit pages"s);
+                print("runtime: VirtualFree of "_s, small, " bytes failed with errno="_s, getlasterror(), "\n"_s);
+                go_throw("runtime: failed to decommit pages"_s);
             }
             v = add(v, small);
             n -= small;
@@ -86,12 +86,12 @@ namespace golang::runtime
                     {
                         case 0:
                         case 1:
-                            print("runtime: VirtualAlloc of "s, n, " bytes failed with errno="s, errno, "\n"s);
-                            go_throw("out of memory"s);
+                            print("runtime: VirtualAlloc of "_s, n, " bytes failed with errno="_s, errno, "\n"_s);
+                            go_throw("out of memory"_s);
                             break;
                         default:
-                            print("runtime: VirtualAlloc of "s, small, " bytes failed with errno="s, errno, "\n"s);
-                            go_throw("runtime: failed to commit pages"s);
+                            print("runtime: VirtualAlloc of "_s, small, " bytes failed with errno="_s, errno, "\n"_s);
+                            go_throw("runtime: failed to commit pages"_s);
                             break;
                     }
                 }
@@ -122,8 +122,8 @@ namespace golang::runtime
         auto r = stdcall3(_VirtualFree, uintptr_t(v), 0, _MEM_RELEASE);
         if(r == 0)
         {
-            print("runtime: VirtualFree of "s, n, " bytes failed with errno="s, getlasterror(), "\n"s);
-            go_throw("runtime: failed to release pages"s);
+            print("runtime: VirtualFree of "_s, n, " bytes failed with errno="_s, getlasterror(), "\n"_s);
+            go_throw("runtime: failed to release pages"_s);
         }
     }
 

@@ -24,8 +24,8 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Println("Welcome to the playground!"s);
-        mocklib::Println("The time is"s, mocklib::Date::Now());
+        mocklib::Println("Welcome to the playground!"_s);
+        mocklib::Println("The time is"_s, mocklib::Date::Now());
     }
 
 }

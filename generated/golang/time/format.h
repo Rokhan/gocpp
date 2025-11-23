@@ -14,34 +14,34 @@
 
 namespace golang::time
 {
-    extern std::string Layout;
-    extern std::string ANSIC;
-    extern std::string UnixDate;
-    extern std::string RubyDate;
-    extern std::string RFC822;
-    extern std::string RFC822Z;
-    extern std::string RFC850;
-    extern std::string RFC1123;
-    extern std::string RFC1123Z;
-    extern std::string RFC3339;
-    extern std::string RFC3339Nano;
-    extern std::string Kitchen;
-    extern std::string Stamp;
-    extern std::string StampMilli;
-    extern std::string StampMicro;
-    extern std::string StampNano;
-    extern std::string DateTime;
-    extern std::string DateOnly;
-    extern std::string TimeOnly;
+    extern gocpp::string Layout;
+    extern gocpp::string ANSIC;
+    extern gocpp::string UnixDate;
+    extern gocpp::string RubyDate;
+    extern gocpp::string RFC822;
+    extern gocpp::string RFC822Z;
+    extern gocpp::string RFC850;
+    extern gocpp::string RFC1123;
+    extern gocpp::string RFC1123Z;
+    extern gocpp::string RFC3339;
+    extern gocpp::string RFC3339Nano;
+    extern gocpp::string Kitchen;
+    extern gocpp::string Stamp;
+    extern gocpp::string StampMilli;
+    extern gocpp::string StampMicro;
+    extern gocpp::string StampNano;
+    extern gocpp::string DateTime;
+    extern gocpp::string DateOnly;
+    extern gocpp::string TimeOnly;
     extern gocpp::array<int, 6> std0x;
-    bool startsWithLowerCase(std::string str);
-    std::tuple<std::string, int, std::string> nextStdChunk(std::string layout);
-    extern gocpp::slice<std::string> longDayNames;
-    extern gocpp::slice<std::string> shortDayNames;
-    extern gocpp::slice<std::string> shortMonthNames;
-    extern gocpp::slice<std::string> longMonthNames;
-    bool match(std::string s1, std::string s2);
-    std::tuple<int, std::string, struct gocpp::error> lookup(gocpp::slice<std::string> tab, std::string val);
+    bool startsWithLowerCase(gocpp::string str);
+    std::tuple<gocpp::string, int, gocpp::string> nextStdChunk(gocpp::string layout);
+    extern gocpp::slice<gocpp::string> longDayNames;
+    extern gocpp::slice<gocpp::string> shortDayNames;
+    extern gocpp::slice<gocpp::string> shortMonthNames;
+    extern gocpp::slice<gocpp::string> longMonthNames;
+    bool match(gocpp::string s1, gocpp::string s2);
+    std::tuple<int, gocpp::string, struct gocpp::error> lookup(gocpp::slice<gocpp::string> tab, gocpp::string val);
     gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int x, int width);
     extern gocpp::error errAtoi;
     
@@ -54,11 +54,11 @@ namespace golang::time
     extern gocpp::error errBad;
     struct ParseError
     {
-        std::string Layout;
-        std::string Value;
-        std::string LayoutElem;
-        std::string ValueElem;
-        std::string Message;
+        gocpp::string Layout;
+        gocpp::string Value;
+        gocpp::string LayoutElem;
+        gocpp::string ValueElem;
+        gocpp::string Message;
 
         using isGoStruct = void;
 
@@ -72,43 +72,43 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ParseError& value);
-    struct ParseError* newParseError(std::string layout, std::string value, std::string layoutElem, std::string valueElem, std::string message);
-    std::string cloneString(std::string s);
-    extern std::string lowerhex;
-    std::string quote(std::string s);
+    struct ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message);
+    gocpp::string cloneString(gocpp::string s);
+    extern gocpp::string lowerhex;
+    gocpp::string quote(gocpp::string s);
     
     template<typename bytes>
     bool isDigit(bytes s, int i);
-    std::tuple<int, std::string, struct gocpp::error> getnum(std::string s, bool fixed);
-    std::tuple<int, std::string, struct gocpp::error> getnum3(std::string s, bool fixed);
-    std::string cutspace(std::string s);
-    std::tuple<std::string, struct gocpp::error> skip(std::string value, std::string prefix);
-    std::tuple<struct Time, struct gocpp::error> Parse(std::string layout, std::string value);
-    std::tuple<struct Time, struct gocpp::error> ParseInLocation(std::string layout, std::string value, struct Location* loc);
-    std::tuple<struct Time, struct gocpp::error> parse(std::string layout, std::string value, struct Location* defaultLocation, struct Location* local);
-    std::tuple<int, bool> parseTimeZone(std::string value);
-    int parseGMT(std::string value);
-    int parseSignedOffset(std::string value);
+    std::tuple<int, gocpp::string, struct gocpp::error> getnum(gocpp::string s, bool fixed);
+    std::tuple<int, gocpp::string, struct gocpp::error> getnum3(gocpp::string s, bool fixed);
+    gocpp::string cutspace(gocpp::string s);
+    std::tuple<gocpp::string, struct gocpp::error> skip(gocpp::string value, gocpp::string prefix);
+    std::tuple<struct Time, struct gocpp::error> Parse(gocpp::string layout, gocpp::string value);
+    std::tuple<struct Time, struct gocpp::error> ParseInLocation(gocpp::string layout, gocpp::string value, struct Location* loc);
+    std::tuple<struct Time, struct gocpp::error> parse(gocpp::string layout, gocpp::string value, struct Location* defaultLocation, struct Location* local);
+    std::tuple<int, bool> parseTimeZone(gocpp::string value);
+    int parseGMT(gocpp::string value);
+    int parseSignedOffset(gocpp::string value);
     bool commaOrPeriod(unsigned char b);
     
     template<typename bytes>
-    std::tuple<int, std::string, struct gocpp::error> parseNanoseconds(bytes value, int nbytes);
+    std::tuple<int, gocpp::string, struct gocpp::error> parseNanoseconds(bytes value, int nbytes);
     extern gocpp::error errLeadingInt;
     
     template<typename bytes>
     std::tuple<uint64_t, bytes, struct gocpp::error> leadingInt(bytes s);
-    std::tuple<uint64_t, double, std::string> leadingFraction(std::string s);
-    extern gocpp::map<std::string, uint64_t> unitMap;
-    std::tuple<time::Duration, struct gocpp::error> ParseDuration(std::string s);
+    std::tuple<uint64_t, double, gocpp::string> leadingFraction(gocpp::string s);
+    extern gocpp::map<gocpp::string, uint64_t> unitMap;
+    std::tuple<time::Duration, struct gocpp::error> ParseDuration(gocpp::string s);
 
     namespace rec
     {
-        std::string String(struct Time t);
-        std::string GoString(struct Time t);
-        std::string Format(struct Time t, std::string layout);
-        gocpp::slice<unsigned char> AppendFormat(struct Time t, gocpp::slice<unsigned char> b, std::string layout);
-        gocpp::slice<unsigned char> appendFormat(struct Time t, gocpp::slice<unsigned char> b, std::string layout);
-        std::string Error(struct ParseError* e);
+        gocpp::string String(struct Time t);
+        gocpp::string GoString(struct Time t);
+        gocpp::string Format(struct Time t, gocpp::string layout);
+        gocpp::slice<unsigned char> AppendFormat(struct Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
+        gocpp::slice<unsigned char> appendFormat(struct Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
+        gocpp::string Error(struct ParseError* e);
     }
 }
 

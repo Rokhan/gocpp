@@ -49,7 +49,7 @@ namespace golang::crc32
     std::ostream& operator<<(std::ostream& os, const struct digest& value);
     hash::Hash32 New(golang::crc32::Table* tab);
     hash::Hash32 NewIEEE();
-    extern std::string magic;
+    extern gocpp::string magic;
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
     uint32_t update(uint32_t crc, golang::crc32::Table* tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);

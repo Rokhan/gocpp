@@ -40,73 +40,73 @@ namespace golang::cpu
     void doinit()
     {
         options = gocpp::slice<option> {gocpp::Init<>([=](auto& x) {
-            x.Name = "adx"s;
+            x.Name = "adx"_s;
             x.Feature = & X86.HasADX;
         }), gocpp::Init<>([=](auto& x) {
-            x.Name = "aes"s;
+            x.Name = "aes"_s;
             x.Feature = & X86.HasAES;
         }), gocpp::Init<>([=](auto& x) {
-            x.Name = "erms"s;
+            x.Name = "erms"_s;
             x.Feature = & X86.HasERMS;
         }), gocpp::Init<>([=](auto& x) {
-            x.Name = "pclmulqdq"s;
+            x.Name = "pclmulqdq"_s;
             x.Feature = & X86.HasPCLMULQDQ;
         }), gocpp::Init<>([=](auto& x) {
-            x.Name = "rdtscp"s;
+            x.Name = "rdtscp"_s;
             x.Feature = & X86.HasRDTSCP;
         }), gocpp::Init<>([=](auto& x) {
-            x.Name = "sha"s;
+            x.Name = "sha"_s;
             x.Feature = & X86.HasSHA;
         })};
         auto level = getGOAMD64level();
         if(level < 2)
         {
             options = append(options, gocpp::Init<option>([=](auto& x) {
-                x.Name = "popcnt"s;
+                x.Name = "popcnt"_s;
                 x.Feature = & X86.HasPOPCNT;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "sse3"s;
+                x.Name = "sse3"_s;
                 x.Feature = & X86.HasSSE3;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "sse41"s;
+                x.Name = "sse41"_s;
                 x.Feature = & X86.HasSSE41;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "sse42"s;
+                x.Name = "sse42"_s;
                 x.Feature = & X86.HasSSE42;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "ssse3"s;
+                x.Name = "ssse3"_s;
                 x.Feature = & X86.HasSSSE3;
             }));
         }
         if(level < 3)
         {
             options = append(options, gocpp::Init<option>([=](auto& x) {
-                x.Name = "avx"s;
+                x.Name = "avx"_s;
                 x.Feature = & X86.HasAVX;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "avx2"s;
+                x.Name = "avx2"_s;
                 x.Feature = & X86.HasAVX2;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "bmi1"s;
+                x.Name = "bmi1"_s;
                 x.Feature = & X86.HasBMI1;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "bmi2"s;
+                x.Name = "bmi2"_s;
                 x.Feature = & X86.HasBMI2;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "fma"s;
+                x.Name = "fma"_s;
                 x.Feature = & X86.HasFMA;
             }));
         }
         if(level < 4)
         {
             options = append(options, gocpp::Init<option>([=](auto& x) {
-                x.Name = "avx512f"s;
+                x.Name = "avx512f"_s;
                 x.Feature = & X86.HasAVX512F;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "avx512bw"s;
+                x.Name = "avx512bw"_s;
                 x.Feature = & X86.HasAVX512BW;
             }), gocpp::Init<option>([=](auto& x) {
-                x.Name = "avx512vl"s;
+                x.Name = "avx512vl"_s;
                 x.Feature = & X86.HasAVX512VL;
             }));
         }
@@ -170,11 +170,11 @@ namespace golang::cpu
     // Name returns the CPU name given by the vendor.
     // If the CPU name can not be determined an
     // empty string is returned.
-    std::string Name()
+    gocpp::string Name()
     {
         if(maxExtendedFunctionInformation < 0x80000004)
         {
-            return ""s;
+            return ""_s;
         }
         auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 3 * 4 * 4);
         uint32_t eax = {};
@@ -199,7 +199,7 @@ namespace golang::cpu
                 break;
             }
         }
-        return std::string(data);
+        return gocpp::string(data);
     }
 
     gocpp::slice<unsigned char> appendBytes(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> args)

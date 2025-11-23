@@ -12,7 +12,7 @@
 
 namespace golang::strconv
 {
-    int index(std::string s, unsigned char c);
+    int index(gocpp::string s, unsigned char c);
 
     namespace rec
     {

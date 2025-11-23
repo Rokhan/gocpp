@@ -12,14 +12,14 @@
 
 namespace golang::runtime
 {
-    std::string gogetenv(std::string key);
-    bool envKeyEqual(std::string a, std::string b);
+    gocpp::string gogetenv(gocpp::string key);
+    bool envKeyEqual(gocpp::string a, gocpp::string b);
     unsigned char lowerASCII(unsigned char c);
     extern unsafe::Pointer _cgo_setenv;
     extern unsafe::Pointer _cgo_unsetenv;
-    void setenv_c(std::string k, std::string v);
-    void unsetenv_c(std::string k);
-    unsafe::Pointer cstring(std::string s);
+    void setenv_c(gocpp::string k, gocpp::string v);
+    void unsetenv_c(gocpp::string k);
+    unsafe::Pointer cstring(gocpp::string s);
 
     namespace rec
     {

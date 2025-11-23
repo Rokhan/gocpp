@@ -25,8 +25,8 @@ namespace golang::main
         int i = {};
         double f = {};
         bool b = {};
-        std::string s = {};
-        mocklib::Printf("%v %v %v %q\n"s, i, f, b, s);
+        gocpp::string s = {};
+        mocklib::Printf("%v %v %v %q\n"_s, i, f, b, s);
     }
 
 }

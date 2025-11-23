@@ -21,7 +21,7 @@ namespace golang::wc
     }
 
     // Test runs a test suite against f.
-    void Test(std::function<gocpp::map<std::string, int> (std::string _1)> f)
+    void Test(std::function<gocpp::map<gocpp::string, int> (gocpp::string _1)> f)
     {
         auto ok = true;
         for(auto [gocpp_ignored, c] : testCases)
@@ -43,17 +43,17 @@ namespace golang::wc
             }
             if(! ok)
             {
-                mocklib::Printf("FAIL\n f(%q) =\n  %#v\n want:\n  %#v"s, c.in, got, c.want);
+                mocklib::Printf("FAIL\n f(%q) =\n  %#v\n want:\n  %#v"_s, c.in, got, c.want);
                 break;
             }
-            mocklib::Printf("PASS\n f(%q) = \n  %#v\n"s, c.in, got);
+            mocklib::Printf("PASS\n f(%q) = \n  %#v\n"_s, c.in, got);
         }
     }
 
     struct gocpp_id_0
     {
-        std::string in;
-        gocpp::map<std::string, int> want;
+        gocpp::string in;
+        gocpp::map<gocpp::string, int> want;
 
         using isGoStruct = void;
 
@@ -90,6 +90,6 @@ namespace golang::wc
     }
 
 
-    gocpp::slice<gocpp_id_0> testCases = gocpp::slice<gocpp_id_0> { {"I am learning Go!"s, gocpp::map<std::string, int> {{ "I"s, 1 }, { "am"s, 1 }, { "learning"s, 1 }, { "Go!"s, 1 }}},  {"The quick brown fox jumped over the lazy dog."s, gocpp::map<std::string, int> {{ "The"s, 1 }, { "quick"s, 1 }, { "brown"s, 1 }, { "fox"s, 1 }, { "jumped"s, 1 }, { "over"s, 1 }, { "the"s, 1 }, { "lazy"s, 1 }, { "dog."s, 1 }}},  {"I ate a donut. Then I ate another donut."s, gocpp::map<std::string, int> {{ "I"s, 2 }, { "ate"s, 2 }, { "a"s, 1 }, { "donut."s, 2 }, { "Then"s, 1 }, { "another"s, 1 }}},  {"A man a plan a canal panama."s, gocpp::map<std::string, int> {{ "A"s, 1 }, { "man"s, 1 }, { "a"s, 2 }, { "plan"s, 1 }, { "canal"s, 1 }, { "panama."s, 1 }}}};
+    gocpp::slice<gocpp_id_0> testCases = gocpp::slice<gocpp_id_0> { {"I am learning Go!"_s, gocpp::map<gocpp::string, int> {{ "I"_s, 1 }, { "am"_s, 1 }, { "learning"_s, 1 }, { "Go!"_s, 1 }}},  {"The quick brown fox jumped over the lazy dog."_s, gocpp::map<gocpp::string, int> {{ "The"_s, 1 }, { "quick"_s, 1 }, { "brown"_s, 1 }, { "fox"_s, 1 }, { "jumped"_s, 1 }, { "over"_s, 1 }, { "the"_s, 1 }, { "lazy"_s, 1 }, { "dog."_s, 1 }}},  {"I ate a donut. Then I ate another donut."_s, gocpp::map<gocpp::string, int> {{ "I"_s, 2 }, { "ate"_s, 2 }, { "a"_s, 1 }, { "donut."_s, 2 }, { "Then"_s, 1 }, { "another"_s, 1 }}},  {"A man a plan a canal panama."_s, gocpp::map<gocpp::string, int> {{ "A"_s, 1 }, { "man"_s, 1 }, { "a"_s, 2 }, { "plan"_s, 1 }, { "canal"_s, 1 }, { "panama."_s, 1 }}}};
 }
 

@@ -170,7 +170,7 @@ namespace golang::runtime
         {
             if(r + 1 == 0 || r + 1 == - rwmutexMaxReaders)
             {
-                go_throw("runlock of unlocked rwmutex"s);
+                go_throw("runlock of unlocked rwmutex"_s);
             }
             if(rec::Add(gocpp::recv(rw->readerWait), - 1) == 0)
             {
@@ -216,7 +216,7 @@ namespace golang::runtime
         auto r = rec::Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);
         if(r >= rwmutexMaxReaders)
         {
-            go_throw("unlock of unlocked rwmutex"s);
+            go_throw("unlock of unlocked rwmutex"_s);
         }
         lock(& rw->rLock);
         for(; rec::ptr(gocpp::recv(rw->readers)) != nullptr; )

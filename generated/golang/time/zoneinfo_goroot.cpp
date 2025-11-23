@@ -18,13 +18,13 @@ namespace golang::time
         using namespace mocklib::rec;
     }
 
-    std::tuple<std::string, bool> gorootZoneSource(std::string goroot)
+    std::tuple<gocpp::string, bool> gorootZoneSource(gocpp::string goroot)
     {
-        if(goroot == ""s)
+        if(goroot == ""_s)
         {
-            return {""s, false};
+            return {""_s, false};
         }
-        return {goroot + "/lib/time/zoneinfo.zip"s, true};
+        return {goroot + "/lib/time/zoneinfo.zip"_s, true};
     }
 
 }

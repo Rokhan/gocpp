@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    std::tuple<std::string, std::string> swap(std::string x, std::string y);
+    std::tuple<gocpp::string, gocpp::string> swap(gocpp::string x, gocpp::string y);
     void main();
 
     namespace rec

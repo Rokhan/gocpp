@@ -54,64 +54,64 @@ namespace golang::testlog
     }
 
     template<typename T, typename StoreT>
-    void Interface::InterfaceImpl<T, StoreT>::vGetenv(std::string key)
+    void Interface::InterfaceImpl<T, StoreT>::vGetenv(gocpp::string key)
     {
         return rec::Getenv(gocpp::PtrRecv<T, false>(value.get()), key);
     }
     template<typename T, typename StoreT>
-    void Interface::InterfaceImpl<T, StoreT>::vStat(std::string file)
+    void Interface::InterfaceImpl<T, StoreT>::vStat(gocpp::string file)
     {
         return rec::Stat(gocpp::PtrRecv<T, false>(value.get()), file);
     }
     template<typename T, typename StoreT>
-    void Interface::InterfaceImpl<T, StoreT>::vOpen(std::string file)
+    void Interface::InterfaceImpl<T, StoreT>::vOpen(gocpp::string file)
     {
         return rec::Open(gocpp::PtrRecv<T, false>(value.get()), file);
     }
     template<typename T, typename StoreT>
-    void Interface::InterfaceImpl<T, StoreT>::vChdir(std::string dir)
+    void Interface::InterfaceImpl<T, StoreT>::vChdir(gocpp::string dir)
     {
         return rec::Chdir(gocpp::PtrRecv<T, false>(value.get()), dir);
     }
 
     namespace rec
     {
-        void Getenv(const gocpp::PtrRecv<struct Interface, false>& self, std::string key)
+        void Getenv(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string key)
         {
             return self.ptr->value->vGetenv(key);
         }
 
-        void Getenv(const gocpp::ObjRecv<struct Interface>& self, std::string key)
+        void Getenv(const gocpp::ObjRecv<struct Interface>& self, gocpp::string key)
         {
             return self.obj.value->vGetenv(key);
         }
 
-        void Stat(const gocpp::PtrRecv<struct Interface, false>& self, std::string file)
+        void Stat(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string file)
         {
             return self.ptr->value->vStat(file);
         }
 
-        void Stat(const gocpp::ObjRecv<struct Interface>& self, std::string file)
+        void Stat(const gocpp::ObjRecv<struct Interface>& self, gocpp::string file)
         {
             return self.obj.value->vStat(file);
         }
 
-        void Open(const gocpp::PtrRecv<struct Interface, false>& self, std::string file)
+        void Open(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string file)
         {
             return self.ptr->value->vOpen(file);
         }
 
-        void Open(const gocpp::ObjRecv<struct Interface>& self, std::string file)
+        void Open(const gocpp::ObjRecv<struct Interface>& self, gocpp::string file)
         {
             return self.obj.value->vOpen(file);
         }
 
-        void Chdir(const gocpp::PtrRecv<struct Interface, false>& self, std::string dir)
+        void Chdir(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string dir)
         {
             return self.ptr->value->vChdir(dir);
         }
 
-        void Chdir(const gocpp::ObjRecv<struct Interface>& self, std::string dir)
+        void Chdir(const gocpp::ObjRecv<struct Interface>& self, gocpp::string dir)
         {
             return self.obj.value->vChdir(dir);
         }
@@ -135,7 +135,7 @@ namespace golang::testlog
     {
         if(rec::Load(gocpp::recv(logger)) != nullptr)
         {
-            gocpp::panic("testlog: SetLogger must be called only once"s);
+            gocpp::panic("testlog: SetLogger must be called only once"_s);
         }
         rec::Store(gocpp::recv(logger), & impl);
     }
@@ -153,7 +153,7 @@ namespace golang::testlog
     }
 
     // Getenv calls Logger().Getenv, if a logger has been set.
-    void Getenv(std::string name)
+    void Getenv(gocpp::string name)
     {
         if(auto log = Logger(); log != nullptr)
         {
@@ -162,7 +162,7 @@ namespace golang::testlog
     }
 
     // Open calls Logger().Open, if a logger has been set.
-    void Open(std::string name)
+    void Open(gocpp::string name)
     {
         if(auto log = Logger(); log != nullptr)
         {
@@ -171,7 +171,7 @@ namespace golang::testlog
     }
 
     // Stat calls Logger().Stat, if a logger has been set.
-    void Stat(std::string name)
+    void Stat(gocpp::string name)
     {
         if(auto log = Logger(); log != nullptr)
         {

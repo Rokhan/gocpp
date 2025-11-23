@@ -135,8 +135,8 @@ namespace golang::runtime
         iocphandle = stdcall4(_CreateIoCompletionPort, _INVALID_HANDLE_VALUE, 0, 0, _DWORD_MAX);
         if(iocphandle == 0)
         {
-            println("runtime: CreateIoCompletionPort failed (errno="s, getlasterror(), ")"s);
-            go_throw("runtime: netpollinit failed"s);
+            println("runtime: CreateIoCompletionPort failed (errno="_s, getlasterror(), ")"_s);
+            go_throw("runtime: netpollinit failed"_s);
         }
     }
 
@@ -161,7 +161,7 @@ namespace golang::runtime
 
     void netpollarm(struct pollDesc* pd, int mode)
     {
-        go_throw("runtime: unused"s);
+        go_throw("runtime: unused"_s);
     }
 
     void netpollBreak()
@@ -172,8 +172,8 @@ namespace golang::runtime
         }
         if(stdcall4(_PostQueuedCompletionStatus, iocphandle, 0, 0, 0) == 0)
         {
-            println("runtime: netpoll: PostQueuedCompletionStatus failed (errno="s, getlasterror(), ")"s);
-            go_throw("runtime: netpoll: PostQueuedCompletionStatus failed"s);
+            println("runtime: netpoll: PostQueuedCompletionStatus failed (errno="_s, getlasterror(), ")"_s);
+            go_throw("runtime: netpoll: PostQueuedCompletionStatus failed"_s);
         }
     }
 
@@ -238,8 +238,8 @@ namespace golang::runtime
             {
                 return {gList {}, 0};
             }
-            println("runtime: GetQueuedCompletionStatusEx failed (errno="s, errno, ")"s);
-            go_throw("runtime: netpoll failed"s);
+            println("runtime: GetQueuedCompletionStatusEx failed (errno="_s, errno, ")"_s);
+            go_throw("runtime: netpoll failed"_s);
         }
         mp->blocked = false;
         auto delta = int32_t(0);
@@ -273,8 +273,8 @@ namespace golang::runtime
         auto mode = op->mode;
         if(mode != 'r' && mode != 'w')
         {
-            println("runtime: GetQueuedCompletionStatusEx returned invalid mode="s, mode);
-            go_throw("runtime: netpoll failed"s);
+            println("runtime: GetQueuedCompletionStatusEx returned invalid mode="_s, mode);
+            go_throw("runtime: netpoll failed"_s);
         }
         op->errno = errno;
         op->qty = qty;

@@ -26,12 +26,12 @@ namespace golang::syscall
 
     // TranslateAccountName converts a directory service
     // object name from one format to another.
-    std::tuple<std::string, struct gocpp::error> TranslateAccountName(std::string username, uint32_t from, uint32_t to, int initSize)
+    std::tuple<gocpp::string, struct gocpp::error> TranslateAccountName(gocpp::string username, uint32_t from, uint32_t to, int initSize)
     {
         auto [u, e] = UTF16PtrFromString(username);
         if(e != nullptr)
         {
-            return {""s, e};
+            return {""_s, e};
         }
         auto n = uint32_t(50);
         for(; ; )
@@ -44,11 +44,11 @@ namespace golang::syscall
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {
-                return {""s, e};
+                return {""_s, e};
             }
             if(n <= uint32_t(len(b)))
             {
-                return {""s, e};
+                return {""_s, e};
             }
         }
     }
@@ -123,7 +123,7 @@ namespace golang::syscall
 
     // StringToSid converts a string-format security identifier
     // sid into a valid, functional sid.
-    std::tuple<struct SID*, struct gocpp::error> StringToSid(std::string s)
+    std::tuple<struct SID*, struct gocpp::error> StringToSid(gocpp::string s)
     {
         gocpp::Defer defer;
         try
@@ -151,20 +151,20 @@ namespace golang::syscall
     // LookupSID retrieves a security identifier sid for the account
     // and the name of the domain on which the account was found.
     // System specify target computer to search.
-    std::tuple<struct SID*, std::string, uint32_t, struct gocpp::error> LookupSID(std::string system, std::string account)
+    std::tuple<struct SID*, gocpp::string, uint32_t, struct gocpp::error> LookupSID(gocpp::string system, gocpp::string account)
     {
         struct SID* sid;
-        std::string domain;
+        gocpp::string domain;
         uint32_t accType;
         struct gocpp::error err;
         if(len(account) == 0)
         {
-            return {nullptr, ""s, 0, go_EINVAL};
+            return {nullptr, ""_s, 0, go_EINVAL};
         }
         auto [acc, e] = UTF16PtrFromString(account);
         if(e != nullptr)
         {
-            return {nullptr, ""s, 0, e};
+            return {nullptr, ""_s, 0, e};
         }
         uint16_t* sys = {};
         if(len(system) > 0)
@@ -172,7 +172,7 @@ namespace golang::syscall
             std::tie(sys, e) = UTF16PtrFromString(system);
             if(e != nullptr)
             {
-                return {nullptr, ""s, 0, e};
+                return {nullptr, ""_s, 0, e};
             }
         }
         auto n = uint32_t(50);
@@ -189,18 +189,18 @@ namespace golang::syscall
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {
-                return {nullptr, ""s, 0, e};
+                return {nullptr, ""_s, 0, e};
             }
             if(n <= uint32_t(len(b)))
             {
-                return {nullptr, ""s, 0, e};
+                return {nullptr, ""_s, 0, e};
             }
         }
     }
 
     // String converts sid to a string format
     // suitable for display, storage, or transmission.
-    std::tuple<std::string, struct gocpp::error> rec::String(struct SID* sid)
+    std::tuple<gocpp::string, struct gocpp::error> rec::String(struct SID* sid)
     {
         gocpp::Defer defer;
         try
@@ -209,7 +209,7 @@ namespace golang::syscall
             auto e = ConvertSidToStringSid(sid, & s);
             if(e != nullptr)
             {
-                return {""s, e};
+                return {""_s, e};
             }
             defer.push_back([=]{ LocalFree((syscall::Handle)(unsafe::Pointer(s))); });
             return {utf16PtrToString(s), nullptr};
@@ -242,10 +242,10 @@ namespace golang::syscall
     // LookupAccount retrieves the name of the account for this sid
     // and the name of the first domain on which this sid is found.
     // System specify target computer to search for.
-    std::tuple<std::string, std::string, uint32_t, struct gocpp::error> rec::LookupAccount(struct SID* sid, std::string system)
+    std::tuple<gocpp::string, gocpp::string, uint32_t, struct gocpp::error> rec::LookupAccount(struct SID* sid, gocpp::string system)
     {
-        std::string account;
-        std::string domain;
+        gocpp::string account;
+        gocpp::string domain;
         uint32_t accType;
         struct gocpp::error err;
         uint16_t* sys = {};
@@ -254,7 +254,7 @@ namespace golang::syscall
             std::tie(sys, err) = UTF16PtrFromString(system);
             if(err != nullptr)
             {
-                return {""s, ""s, 0, err};
+                return {""_s, ""_s, 0, err};
             }
         }
         auto n = uint32_t(50);
@@ -270,11 +270,11 @@ namespace golang::syscall
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {
-                return {""s, ""s, 0, e};
+                return {""_s, ""_s, 0, e};
             }
             if(n <= uint32_t(len(b)))
             {
-                return {""s, ""s, 0, e};
+                return {""_s, ""_s, 0, e};
             }
         }
     }
@@ -451,7 +451,7 @@ namespace golang::syscall
 
     // GetUserProfileDirectory retrieves path to the
     // root directory of the access token t user's profile.
-    std::tuple<std::string, struct gocpp::error> rec::GetUserProfileDirectory(golang::syscall::Token t)
+    std::tuple<gocpp::string, struct gocpp::error> rec::GetUserProfileDirectory(golang::syscall::Token t)
     {
         auto n = uint32_t(100);
         for(; ; )
@@ -464,11 +464,11 @@ namespace golang::syscall
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {
-                return {""s, e};
+                return {""_s, e};
             }
             if(n <= uint32_t(len(b)))
             {
-                return {""s, e};
+                return {""_s, e};
             }
         }
     }

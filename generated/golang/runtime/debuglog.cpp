@@ -116,7 +116,7 @@ namespace golang::runtime
             l = (dlogger*)(sysAllocOS(gocpp::Sizeof<dlogger>()));
             if(l == nullptr)
             {
-                go_throw("failed to allocate debug log"s);
+                go_throw("failed to allocate debug log"_s);
             }
             l->w.r.data = & l->w.data;
             rec::Store(gocpp::recv(l->owned), 1);
@@ -211,7 +211,7 @@ namespace golang::runtime
         auto size = l->w.write - l->w.r.end;
         if(! rec::writeFrameAt(gocpp::recv(l->w), l->w.r.end, size))
         {
-            go_throw("record too large"s);
+            go_throw("record too large"_s);
         }
         l->w.r.end = l->w.write;
         if(putCachedDlogger(l))
@@ -363,7 +363,7 @@ namespace golang::runtime
                         rec::uvarint(gocpp::recv(l->w), uint64_t(uintptr_t(v->data)));
                         break;
                     default:
-                        go_throw("not a pointer type"s);
+                        go_throw("not a pointer type"_s);
                         break;
                 }
             }
@@ -372,7 +372,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct dlogger* rec::s(struct dlogger* l, std::string x)
+    struct dlogger* rec::s(struct dlogger* l, gocpp::string x)
     {
         if(! dlogEnabled)
         {
@@ -540,7 +540,7 @@ namespace golang::runtime
         {
             if(rec::skip(gocpp::recv(l->r)) == ~ uint64_t(0))
             {
-                go_throw("record wrapped around"s);
+                go_throw("record wrapped around"_s);
             }
         }
     }
@@ -829,11 +829,11 @@ namespace golang::runtime
             switch(conditionId)
             {
                 default:
-                    print("<unknown field type "s, hex(typ), " pos "s, r->begin - 1, " end "s, r->end, ">\n"s);
+                    print("<unknown field type "_s, hex(typ), " pos "_s, r->begin - 1, " end "_s, r->end, ">\n"_s);
                     return false;
                     break;
                 case 0:
-                    print("<unknown kind>"s);
+                    print("<unknown kind>"_s);
                     break;
                 case 1:
                     print(true);
@@ -856,7 +856,7 @@ namespace golang::runtime
                     if(r->begin + sl > r->end)
                     {
                         r->begin = r->end;
-                        print("<string length corrupted>"s);
+                        print("<string length corrupted>"_s);
                         break;
                     }
                     for(; sl > 0; )
@@ -879,11 +879,11 @@ namespace golang::runtime
                         x.len = len;
                     });
                     auto& str = str_tmp;
-                    auto s = *(std::string*)(unsafe::Pointer(& str));
+                    auto s = *(gocpp::string*)(unsafe::Pointer(& str));
                     print(s);
                     break;
                 case 9:
-                    print("..("s, rec::uvarint(gocpp::recv(r)), " more bytes).."s);
+                    print("..("_s, rec::uvarint(gocpp::recv(r)), " more bytes).."_s);
                     break;
                 case 10:
                     printDebugLogPC(uintptr_t(rec::uvarint(gocpp::recv(r))), false);
@@ -892,7 +892,7 @@ namespace golang::runtime
                     auto n = int(rec::uvarint(gocpp::recv(r)));
                     for(auto i = 0; i < n; i++)
                     {
-                        print("\n\t"s);
+                        print("\n\t"_s);
                         printDebugLogPC(uintptr_t(rec::uvarint(gocpp::recv(r))), true);
                     }
                     break;
@@ -1003,7 +1003,7 @@ namespace golang::runtime
         auto state1 = sysAllocOS(gocpp::Sizeof<readState>() * uintptr_t(n));
         if(state1 == nullptr)
         {
-            println("failed to allocate read state for"s, n, "logs"s);
+            println("failed to allocate read state for"_s, n, "logs"_s);
             printunlock();
             return;
         }
@@ -1040,18 +1040,18 @@ namespace golang::runtime
             auto s = & state[best.i];
             if(s->first)
             {
-                print(">> begin log "s, best.i);
+                print(">> begin log "_s, best.i);
                 if(s->lost != 0)
                 {
-                    print("; lost first "s, s->lost >> 10, "KB"s);
+                    print("; lost first "_s, s->lost >> 10, "KB"_s);
                 }
-                print(" <<\n"s);
+                print(" <<\n"_s);
                 s->first = false;
             }
             auto [end, gocpp_id_1, nano, p] = rec::header(gocpp::recv(s));
             auto oldEnd = s->end;
             s->end = end;
-            print("["s);
+            print("["_s);
             gocpp::array<unsigned char, 21> tmpbuf = {};
             auto pnano = int64_t(nano) - runtimeInitTime;
             if(pnano < 0)
@@ -1060,16 +1060,16 @@ namespace golang::runtime
             }
             auto pnanoBytes = itoaDiv(tmpbuf.make_slice(0), uint64_t(pnano), 9);
             print(slicebytetostringtmp((unsigned char*)(noescape(unsafe::Pointer(& pnanoBytes[0]))), len(pnanoBytes)));
-            print(" P "s, p, "] "s);
+            print(" P "_s, p, "] "_s);
             for(auto i = 0; s->begin < s->end; i++)
             {
                 if(i > 0)
                 {
-                    print(" "s);
+                    print(" "_s);
                 }
                 if(! rec::printVal(gocpp::recv(s)))
                 {
-                    print("<aborting P log>"s);
+                    print("<aborting P log>"_s);
                     end = oldEnd;
                     break;
                 }
@@ -1094,13 +1094,13 @@ namespace golang::runtime
         print(hex(pc));
         if(! rec::valid(gocpp::recv(fn)))
         {
-            print(" [unknown PC]"s);
+            print(" [unknown PC]"_s);
         }
         else
         {
             auto name = funcname(fn);
             auto [file, line] = funcline(fn, pc);
-            print(" ["s, name, "+"s, hex(pc - rec::entry(gocpp::recv(fn))), " "s, file, ":"s, line, "]"s);
+            print(" ["_s, name, "+"_s, hex(pc - rec::entry(gocpp::recv(fn))), " "_s, file, ":"_s, line, "]"_s);
         }
     }
 

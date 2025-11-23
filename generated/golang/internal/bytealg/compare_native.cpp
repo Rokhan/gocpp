@@ -23,7 +23,7 @@ namespace golang::bytealg
     /* convertBlockStmt, nil block */;
 
     //go:linkname abigen_runtime_cmpstring runtime.cmpstring
-    int abigen_runtime_cmpstring(std::string a, std::string b)
+    int abigen_runtime_cmpstring(gocpp::string a, gocpp::string b)
     /* convertBlockStmt, nil block */;
 
 }

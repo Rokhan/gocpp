@@ -259,27 +259,27 @@ namespace golang::runtime
 
     void dumpregs(struct context* r)
     {
-        print("rax     "s, hex(r->rax), "\n"s);
-        print("rbx     "s, hex(r->rbx), "\n"s);
-        print("rcx     "s, hex(r->rcx), "\n"s);
-        print("rdx     "s, hex(r->rdx), "\n"s);
-        print("rdi     "s, hex(r->rdi), "\n"s);
-        print("rsi     "s, hex(r->rsi), "\n"s);
-        print("rbp     "s, hex(r->rbp), "\n"s);
-        print("rsp     "s, hex(r->rsp), "\n"s);
-        print("r8      "s, hex(r->r8), "\n"s);
-        print("r9      "s, hex(r->r9), "\n"s);
-        print("r10     "s, hex(r->r10), "\n"s);
-        print("r11     "s, hex(r->r11), "\n"s);
-        print("r12     "s, hex(r->r12), "\n"s);
-        print("r13     "s, hex(r->r13), "\n"s);
-        print("r14     "s, hex(r->r14), "\n"s);
-        print("r15     "s, hex(r->r15), "\n"s);
-        print("rip     "s, hex(r->rip), "\n"s);
-        print("rflags  "s, hex(r->eflags), "\n"s);
-        print("cs      "s, hex(r->segcs), "\n"s);
-        print("fs      "s, hex(r->segfs), "\n"s);
-        print("gs      "s, hex(r->seggs), "\n"s);
+        print("rax     "_s, hex(r->rax), "\n"_s);
+        print("rbx     "_s, hex(r->rbx), "\n"_s);
+        print("rcx     "_s, hex(r->rcx), "\n"_s);
+        print("rdx     "_s, hex(r->rdx), "\n"_s);
+        print("rdi     "_s, hex(r->rdi), "\n"_s);
+        print("rsi     "_s, hex(r->rsi), "\n"_s);
+        print("rbp     "_s, hex(r->rbp), "\n"_s);
+        print("rsp     "_s, hex(r->rsp), "\n"_s);
+        print("r8      "_s, hex(r->r8), "\n"_s);
+        print("r9      "_s, hex(r->r9), "\n"_s);
+        print("r10     "_s, hex(r->r10), "\n"_s);
+        print("r11     "_s, hex(r->r11), "\n"_s);
+        print("r12     "_s, hex(r->r12), "\n"_s);
+        print("r13     "_s, hex(r->r13), "\n"_s);
+        print("r14     "_s, hex(r->r14), "\n"_s);
+        print("r15     "_s, hex(r->r15), "\n"_s);
+        print("rip     "_s, hex(r->rip), "\n"_s);
+        print("rflags  "_s, hex(r->eflags), "\n"_s);
+        print("cs      "_s, hex(r->segcs), "\n"_s);
+        print("fs      "_s, hex(r->segfs), "\n"_s);
+        print("gs      "_s, hex(r->seggs), "\n"_s);
     }
 
     

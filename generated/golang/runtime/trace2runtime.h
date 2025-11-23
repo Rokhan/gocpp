@@ -101,8 +101,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct pTraceState& value);
     void traceLockInit();
     void lockRankMayTraceFlush();
-    extern gocpp::array<std::string, 15> traceBlockReasonStrings;
-    extern gocpp::array<std::string, 3> traceGoStopReasonStrings;
+    extern gocpp::array<gocpp::string, 15> traceBlockReasonStrings;
+    extern gocpp::array<gocpp::string, 3> traceGoStopReasonStrings;
     bool traceEnabled();
     bool traceShuttingDown();
     struct traceLocker
@@ -127,10 +127,10 @@ namespace golang::runtime
     void traceRelease(struct traceLocker tl);
     void traceExitingSyscall();
     void traceExitedSyscall();
-    void trace_userTaskCreate(uint64_t id, uint64_t parentID, std::string taskType);
+    void trace_userTaskCreate(uint64_t id, uint64_t parentID, gocpp::string taskType);
     void trace_userTaskEnd(uint64_t id);
-    void trace_userRegion(uint64_t id, uint64_t mode, std::string name);
-    void trace_userLog(uint64_t id, std::string category, std::string message);
+    void trace_userRegion(uint64_t id, uint64_t mode, gocpp::string name);
+    void trace_userLog(uint64_t id, gocpp::string category, gocpp::string message);
     void traceProcFree(struct p* _1);
     void traceThreadDestroy(struct m* mp);
 

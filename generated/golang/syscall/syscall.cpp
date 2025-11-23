@@ -49,12 +49,12 @@ namespace golang::syscall
     // returning an error.
     //
     // Deprecated: Use ByteSliceFromString instead.
-    gocpp::slice<unsigned char> StringByteSlice(std::string s)
+    gocpp::slice<unsigned char> StringByteSlice(gocpp::string s)
     {
         auto [a, err] = ByteSliceFromString(s);
         if(err != nullptr)
         {
-            gocpp::panic("syscall: string with NUL passed to StringByteSlice"s);
+            gocpp::panic("syscall: string with NUL passed to StringByteSlice"_s);
         }
         return a;
     }
@@ -62,7 +62,7 @@ namespace golang::syscall
     // ByteSliceFromString returns a NUL-terminated slice of bytes
     // containing the text of s. If s contains a NUL byte at any
     // location, it returns (nil, EINVAL).
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ByteSliceFromString(std::string s)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ByteSliceFromString(gocpp::string s)
     {
         if(bytealg::IndexByteString(s, 0) != - 1)
         {
@@ -78,7 +78,7 @@ namespace golang::syscall
     // an error.
     //
     // Deprecated: Use BytePtrFromString instead.
-    unsigned char* StringBytePtr(std::string s)
+    unsigned char* StringBytePtr(gocpp::string s)
     {
         return & StringByteSlice(s)[0];
     }
@@ -86,7 +86,7 @@ namespace golang::syscall
     // BytePtrFromString returns a pointer to a NUL-terminated array of
     // bytes containing the text of s. If s contains a NUL byte at any
     // location, it returns (nil, EINVAL).
-    std::tuple<unsigned char*, struct gocpp::error> BytePtrFromString(std::string s)
+    std::tuple<unsigned char*, struct gocpp::error> BytePtrFromString(gocpp::string s)
     {
         auto [a, err] = ByteSliceFromString(s);
         if(err != nullptr)
@@ -134,10 +134,10 @@ namespace golang::syscall
     /* convertBlockStmt, nil block */;
 
     // runtimeSetenv and runtimeUnsetenv are provided by the runtime.
-    void runtimeSetenv(std::string k, std::string v)
+    void runtimeSetenv(gocpp::string k, gocpp::string v)
     /* convertBlockStmt, nil block */;
 
-    void runtimeUnsetenv(std::string k)
+    void runtimeUnsetenv(gocpp::string k)
     /* convertBlockStmt, nil block */;
 
 }

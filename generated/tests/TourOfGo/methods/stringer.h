@@ -14,7 +14,7 @@ namespace golang::main
 {
     struct Person
     {
-        std::string Name;
+        gocpp::string Name;
         int Age;
 
         using isGoStruct = void;
@@ -33,7 +33,7 @@ namespace golang::main
 
     namespace rec
     {
-        std::string String(struct Person p);
+        gocpp::string String(struct Person p);
     }
 }
 

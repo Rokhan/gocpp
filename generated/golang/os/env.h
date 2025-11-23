@@ -12,17 +12,17 @@
 
 namespace golang::os
 {
-    std::string Expand(std::string s, std::function<std::string (std::string _1)> mapping);
-    std::string ExpandEnv(std::string s);
+    gocpp::string Expand(gocpp::string s, std::function<gocpp::string (gocpp::string _1)> mapping);
+    gocpp::string ExpandEnv(gocpp::string s);
     bool isShellSpecialVar(uint8_t c);
     bool isAlphaNum(uint8_t c);
-    std::tuple<std::string, int> getShellName(std::string s);
-    std::string Getenv(std::string key);
-    std::tuple<std::string, bool> LookupEnv(std::string key);
-    struct gocpp::error Setenv(std::string key, std::string value);
-    struct gocpp::error Unsetenv(std::string key);
+    std::tuple<gocpp::string, int> getShellName(gocpp::string s);
+    gocpp::string Getenv(gocpp::string key);
+    std::tuple<gocpp::string, bool> LookupEnv(gocpp::string key);
+    struct gocpp::error Setenv(gocpp::string key, gocpp::string value);
+    struct gocpp::error Unsetenv(gocpp::string key);
     void Clearenv();
-    gocpp::slice<std::string> Environ();
+    gocpp::slice<gocpp::string> Environ();
 
     namespace rec
     {

@@ -23,7 +23,7 @@ namespace golang::bytealg
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    int IndexByteString(std::string s, unsigned char c)
+    int IndexByteString(gocpp::string s, unsigned char c)
     /* convertBlockStmt, nil block */;
 
 }

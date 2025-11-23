@@ -57,166 +57,166 @@ namespace golang::syscall
         return e;
     }
 
-    LazyDLL* modadvapi32 = NewLazyDLL(sysdll::Add("advapi32.dll"s));
-    LazyDLL* modcrypt32 = NewLazyDLL(sysdll::Add("crypt32.dll"s));
-    LazyDLL* moddnsapi = NewLazyDLL(sysdll::Add("dnsapi.dll"s));
-    LazyDLL* modiphlpapi = NewLazyDLL(sysdll::Add("iphlpapi.dll"s));
-    LazyDLL* modkernel32 = NewLazyDLL(sysdll::Add("kernel32.dll"s));
-    LazyDLL* modmswsock = NewLazyDLL(sysdll::Add("mswsock.dll"s));
-    LazyDLL* modnetapi32 = NewLazyDLL(sysdll::Add("netapi32.dll"s));
-    LazyDLL* modntdll = NewLazyDLL(sysdll::Add("ntdll.dll"s));
-    LazyDLL* modsecur32 = NewLazyDLL(sysdll::Add("secur32.dll"s));
-    LazyDLL* modshell32 = NewLazyDLL(sysdll::Add("shell32.dll"s));
-    LazyDLL* moduserenv = NewLazyDLL(sysdll::Add("userenv.dll"s));
-    LazyDLL* modws2_32 = NewLazyDLL(sysdll::Add("ws2_32.dll"s));
-    LazyProc* procConvertSidToStringSidW = rec::NewProc(gocpp::recv(modadvapi32), "ConvertSidToStringSidW"s);
-    LazyProc* procConvertStringSidToSidW = rec::NewProc(gocpp::recv(modadvapi32), "ConvertStringSidToSidW"s);
-    LazyProc* procCopySid = rec::NewProc(gocpp::recv(modadvapi32), "CopySid"s);
-    LazyProc* procCreateProcessAsUserW = rec::NewProc(gocpp::recv(modadvapi32), "CreateProcessAsUserW"s);
-    LazyProc* procCryptAcquireContextW = rec::NewProc(gocpp::recv(modadvapi32), "CryptAcquireContextW"s);
-    LazyProc* procCryptGenRandom = rec::NewProc(gocpp::recv(modadvapi32), "CryptGenRandom"s);
-    LazyProc* procCryptReleaseContext = rec::NewProc(gocpp::recv(modadvapi32), "CryptReleaseContext"s);
-    LazyProc* procGetLengthSid = rec::NewProc(gocpp::recv(modadvapi32), "GetLengthSid"s);
-    LazyProc* procGetTokenInformation = rec::NewProc(gocpp::recv(modadvapi32), "GetTokenInformation"s);
-    LazyProc* procLookupAccountNameW = rec::NewProc(gocpp::recv(modadvapi32), "LookupAccountNameW"s);
-    LazyProc* procLookupAccountSidW = rec::NewProc(gocpp::recv(modadvapi32), "LookupAccountSidW"s);
-    LazyProc* procOpenProcessToken = rec::NewProc(gocpp::recv(modadvapi32), "OpenProcessToken"s);
-    LazyProc* procRegCloseKey = rec::NewProc(gocpp::recv(modadvapi32), "RegCloseKey"s);
-    LazyProc* procRegEnumKeyExW = rec::NewProc(gocpp::recv(modadvapi32), "RegEnumKeyExW"s);
-    LazyProc* procRegOpenKeyExW = rec::NewProc(gocpp::recv(modadvapi32), "RegOpenKeyExW"s);
-    LazyProc* procRegQueryInfoKeyW = rec::NewProc(gocpp::recv(modadvapi32), "RegQueryInfoKeyW"s);
-    LazyProc* procRegQueryValueExW = rec::NewProc(gocpp::recv(modadvapi32), "RegQueryValueExW"s);
-    LazyProc* procCertAddCertificateContextToStore = rec::NewProc(gocpp::recv(modcrypt32), "CertAddCertificateContextToStore"s);
-    LazyProc* procCertCloseStore = rec::NewProc(gocpp::recv(modcrypt32), "CertCloseStore"s);
-    LazyProc* procCertCreateCertificateContext = rec::NewProc(gocpp::recv(modcrypt32), "CertCreateCertificateContext"s);
-    LazyProc* procCertEnumCertificatesInStore = rec::NewProc(gocpp::recv(modcrypt32), "CertEnumCertificatesInStore"s);
-    LazyProc* procCertFreeCertificateChain = rec::NewProc(gocpp::recv(modcrypt32), "CertFreeCertificateChain"s);
-    LazyProc* procCertFreeCertificateContext = rec::NewProc(gocpp::recv(modcrypt32), "CertFreeCertificateContext"s);
-    LazyProc* procCertGetCertificateChain = rec::NewProc(gocpp::recv(modcrypt32), "CertGetCertificateChain"s);
-    LazyProc* procCertOpenStore = rec::NewProc(gocpp::recv(modcrypt32), "CertOpenStore"s);
-    LazyProc* procCertOpenSystemStoreW = rec::NewProc(gocpp::recv(modcrypt32), "CertOpenSystemStoreW"s);
-    LazyProc* procCertVerifyCertificateChainPolicy = rec::NewProc(gocpp::recv(modcrypt32), "CertVerifyCertificateChainPolicy"s);
-    LazyProc* procDnsNameCompare_W = rec::NewProc(gocpp::recv(moddnsapi), "DnsNameCompare_W"s);
-    LazyProc* procDnsQuery_W = rec::NewProc(gocpp::recv(moddnsapi), "DnsQuery_W"s);
-    LazyProc* procDnsRecordListFree = rec::NewProc(gocpp::recv(moddnsapi), "DnsRecordListFree"s);
-    LazyProc* procGetAdaptersInfo = rec::NewProc(gocpp::recv(modiphlpapi), "GetAdaptersInfo"s);
-    LazyProc* procGetIfEntry = rec::NewProc(gocpp::recv(modiphlpapi), "GetIfEntry"s);
-    LazyProc* procCancelIo = rec::NewProc(gocpp::recv(modkernel32), "CancelIo"s);
-    LazyProc* procCancelIoEx = rec::NewProc(gocpp::recv(modkernel32), "CancelIoEx"s);
-    LazyProc* procCloseHandle = rec::NewProc(gocpp::recv(modkernel32), "CloseHandle"s);
-    LazyProc* procCreateDirectoryW = rec::NewProc(gocpp::recv(modkernel32), "CreateDirectoryW"s);
-    LazyProc* procCreateFileMappingW = rec::NewProc(gocpp::recv(modkernel32), "CreateFileMappingW"s);
-    LazyProc* procCreateFileW = rec::NewProc(gocpp::recv(modkernel32), "CreateFileW"s);
-    LazyProc* procCreateHardLinkW = rec::NewProc(gocpp::recv(modkernel32), "CreateHardLinkW"s);
-    LazyProc* procCreateIoCompletionPort = rec::NewProc(gocpp::recv(modkernel32), "CreateIoCompletionPort"s);
-    LazyProc* procCreatePipe = rec::NewProc(gocpp::recv(modkernel32), "CreatePipe"s);
-    LazyProc* procCreateProcessW = rec::NewProc(gocpp::recv(modkernel32), "CreateProcessW"s);
-    LazyProc* procCreateSymbolicLinkW = rec::NewProc(gocpp::recv(modkernel32), "CreateSymbolicLinkW"s);
-    LazyProc* procCreateToolhelp32Snapshot = rec::NewProc(gocpp::recv(modkernel32), "CreateToolhelp32Snapshot"s);
-    LazyProc* procDeleteFileW = rec::NewProc(gocpp::recv(modkernel32), "DeleteFileW"s);
-    LazyProc* procDeleteProcThreadAttributeList = rec::NewProc(gocpp::recv(modkernel32), "DeleteProcThreadAttributeList"s);
-    LazyProc* procDeviceIoControl = rec::NewProc(gocpp::recv(modkernel32), "DeviceIoControl"s);
-    LazyProc* procDuplicateHandle = rec::NewProc(gocpp::recv(modkernel32), "DuplicateHandle"s);
-    LazyProc* procExitProcess = rec::NewProc(gocpp::recv(modkernel32), "ExitProcess"s);
-    LazyProc* procFindClose = rec::NewProc(gocpp::recv(modkernel32), "FindClose"s);
-    LazyProc* procFindFirstFileW = rec::NewProc(gocpp::recv(modkernel32), "FindFirstFileW"s);
-    LazyProc* procFindNextFileW = rec::NewProc(gocpp::recv(modkernel32), "FindNextFileW"s);
-    LazyProc* procFlushFileBuffers = rec::NewProc(gocpp::recv(modkernel32), "FlushFileBuffers"s);
-    LazyProc* procFlushViewOfFile = rec::NewProc(gocpp::recv(modkernel32), "FlushViewOfFile"s);
-    LazyProc* procFormatMessageW = rec::NewProc(gocpp::recv(modkernel32), "FormatMessageW"s);
-    LazyProc* procFreeEnvironmentStringsW = rec::NewProc(gocpp::recv(modkernel32), "FreeEnvironmentStringsW"s);
-    LazyProc* procFreeLibrary = rec::NewProc(gocpp::recv(modkernel32), "FreeLibrary"s);
-    LazyProc* procGetCommandLineW = rec::NewProc(gocpp::recv(modkernel32), "GetCommandLineW"s);
-    LazyProc* procGetComputerNameW = rec::NewProc(gocpp::recv(modkernel32), "GetComputerNameW"s);
-    LazyProc* procGetConsoleMode = rec::NewProc(gocpp::recv(modkernel32), "GetConsoleMode"s);
-    LazyProc* procGetCurrentDirectoryW = rec::NewProc(gocpp::recv(modkernel32), "GetCurrentDirectoryW"s);
-    LazyProc* procGetCurrentProcess = rec::NewProc(gocpp::recv(modkernel32), "GetCurrentProcess"s);
-    LazyProc* procGetCurrentProcessId = rec::NewProc(gocpp::recv(modkernel32), "GetCurrentProcessId"s);
-    LazyProc* procGetEnvironmentStringsW = rec::NewProc(gocpp::recv(modkernel32), "GetEnvironmentStringsW"s);
-    LazyProc* procGetEnvironmentVariableW = rec::NewProc(gocpp::recv(modkernel32), "GetEnvironmentVariableW"s);
-    LazyProc* procGetExitCodeProcess = rec::NewProc(gocpp::recv(modkernel32), "GetExitCodeProcess"s);
-    LazyProc* procGetFileAttributesExW = rec::NewProc(gocpp::recv(modkernel32), "GetFileAttributesExW"s);
-    LazyProc* procGetFileAttributesW = rec::NewProc(gocpp::recv(modkernel32), "GetFileAttributesW"s);
-    LazyProc* procGetFileInformationByHandle = rec::NewProc(gocpp::recv(modkernel32), "GetFileInformationByHandle"s);
-    LazyProc* procGetFileType = rec::NewProc(gocpp::recv(modkernel32), "GetFileType"s);
-    LazyProc* procGetFinalPathNameByHandleW = rec::NewProc(gocpp::recv(modkernel32), "GetFinalPathNameByHandleW"s);
-    LazyProc* procGetFullPathNameW = rec::NewProc(gocpp::recv(modkernel32), "GetFullPathNameW"s);
-    LazyProc* procGetLastError = rec::NewProc(gocpp::recv(modkernel32), "GetLastError"s);
-    LazyProc* procGetLongPathNameW = rec::NewProc(gocpp::recv(modkernel32), "GetLongPathNameW"s);
-    LazyProc* procGetProcAddress = rec::NewProc(gocpp::recv(modkernel32), "GetProcAddress"s);
-    LazyProc* procGetProcessTimes = rec::NewProc(gocpp::recv(modkernel32), "GetProcessTimes"s);
-    LazyProc* procGetQueuedCompletionStatus = rec::NewProc(gocpp::recv(modkernel32), "GetQueuedCompletionStatus"s);
-    LazyProc* procGetShortPathNameW = rec::NewProc(gocpp::recv(modkernel32), "GetShortPathNameW"s);
-    LazyProc* procGetStartupInfoW = rec::NewProc(gocpp::recv(modkernel32), "GetStartupInfoW"s);
-    LazyProc* procGetStdHandle = rec::NewProc(gocpp::recv(modkernel32), "GetStdHandle"s);
-    LazyProc* procGetSystemTimeAsFileTime = rec::NewProc(gocpp::recv(modkernel32), "GetSystemTimeAsFileTime"s);
-    LazyProc* procGetTempPathW = rec::NewProc(gocpp::recv(modkernel32), "GetTempPathW"s);
-    LazyProc* procGetTimeZoneInformation = rec::NewProc(gocpp::recv(modkernel32), "GetTimeZoneInformation"s);
-    LazyProc* procGetVersion = rec::NewProc(gocpp::recv(modkernel32), "GetVersion"s);
-    LazyProc* procInitializeProcThreadAttributeList = rec::NewProc(gocpp::recv(modkernel32), "InitializeProcThreadAttributeList"s);
-    LazyProc* procLoadLibraryW = rec::NewProc(gocpp::recv(modkernel32), "LoadLibraryW"s);
-    LazyProc* procLocalFree = rec::NewProc(gocpp::recv(modkernel32), "LocalFree"s);
-    LazyProc* procMapViewOfFile = rec::NewProc(gocpp::recv(modkernel32), "MapViewOfFile"s);
-    LazyProc* procMoveFileW = rec::NewProc(gocpp::recv(modkernel32), "MoveFileW"s);
-    LazyProc* procOpenProcess = rec::NewProc(gocpp::recv(modkernel32), "OpenProcess"s);
-    LazyProc* procPostQueuedCompletionStatus = rec::NewProc(gocpp::recv(modkernel32), "PostQueuedCompletionStatus"s);
-    LazyProc* procProcess32FirstW = rec::NewProc(gocpp::recv(modkernel32), "Process32FirstW"s);
-    LazyProc* procProcess32NextW = rec::NewProc(gocpp::recv(modkernel32), "Process32NextW"s);
-    LazyProc* procReadConsoleW = rec::NewProc(gocpp::recv(modkernel32), "ReadConsoleW"s);
-    LazyProc* procReadDirectoryChangesW = rec::NewProc(gocpp::recv(modkernel32), "ReadDirectoryChangesW"s);
-    LazyProc* procReadFile = rec::NewProc(gocpp::recv(modkernel32), "ReadFile"s);
-    LazyProc* procRemoveDirectoryW = rec::NewProc(gocpp::recv(modkernel32), "RemoveDirectoryW"s);
-    LazyProc* procSetCurrentDirectoryW = rec::NewProc(gocpp::recv(modkernel32), "SetCurrentDirectoryW"s);
-    LazyProc* procSetEndOfFile = rec::NewProc(gocpp::recv(modkernel32), "SetEndOfFile"s);
-    LazyProc* procSetEnvironmentVariableW = rec::NewProc(gocpp::recv(modkernel32), "SetEnvironmentVariableW"s);
-    LazyProc* procSetFileAttributesW = rec::NewProc(gocpp::recv(modkernel32), "SetFileAttributesW"s);
-    LazyProc* procSetFileCompletionNotificationModes = rec::NewProc(gocpp::recv(modkernel32), "SetFileCompletionNotificationModes"s);
-    LazyProc* procSetFilePointer = rec::NewProc(gocpp::recv(modkernel32), "SetFilePointer"s);
-    LazyProc* procSetFileTime = rec::NewProc(gocpp::recv(modkernel32), "SetFileTime"s);
-    LazyProc* procSetHandleInformation = rec::NewProc(gocpp::recv(modkernel32), "SetHandleInformation"s);
-    LazyProc* procTerminateProcess = rec::NewProc(gocpp::recv(modkernel32), "TerminateProcess"s);
-    LazyProc* procUnmapViewOfFile = rec::NewProc(gocpp::recv(modkernel32), "UnmapViewOfFile"s);
-    LazyProc* procUpdateProcThreadAttribute = rec::NewProc(gocpp::recv(modkernel32), "UpdateProcThreadAttribute"s);
-    LazyProc* procVirtualLock = rec::NewProc(gocpp::recv(modkernel32), "VirtualLock"s);
-    LazyProc* procVirtualUnlock = rec::NewProc(gocpp::recv(modkernel32), "VirtualUnlock"s);
-    LazyProc* procWaitForSingleObject = rec::NewProc(gocpp::recv(modkernel32), "WaitForSingleObject"s);
-    LazyProc* procWriteConsoleW = rec::NewProc(gocpp::recv(modkernel32), "WriteConsoleW"s);
-    LazyProc* procWriteFile = rec::NewProc(gocpp::recv(modkernel32), "WriteFile"s);
-    LazyProc* procAcceptEx = rec::NewProc(gocpp::recv(modmswsock), "AcceptEx"s);
-    LazyProc* procGetAcceptExSockaddrs = rec::NewProc(gocpp::recv(modmswsock), "GetAcceptExSockaddrs"s);
-    LazyProc* procTransmitFile = rec::NewProc(gocpp::recv(modmswsock), "TransmitFile"s);
-    LazyProc* procNetApiBufferFree = rec::NewProc(gocpp::recv(modnetapi32), "NetApiBufferFree"s);
-    LazyProc* procNetGetJoinInformation = rec::NewProc(gocpp::recv(modnetapi32), "NetGetJoinInformation"s);
-    LazyProc* procNetUserGetInfo = rec::NewProc(gocpp::recv(modnetapi32), "NetUserGetInfo"s);
-    LazyProc* procRtlGetNtVersionNumbers = rec::NewProc(gocpp::recv(modntdll), "RtlGetNtVersionNumbers"s);
-    LazyProc* procGetUserNameExW = rec::NewProc(gocpp::recv(modsecur32), "GetUserNameExW"s);
-    LazyProc* procTranslateNameW = rec::NewProc(gocpp::recv(modsecur32), "TranslateNameW"s);
-    LazyProc* procCommandLineToArgvW = rec::NewProc(gocpp::recv(modshell32), "CommandLineToArgvW"s);
-    LazyProc* procGetUserProfileDirectoryW = rec::NewProc(gocpp::recv(moduserenv), "GetUserProfileDirectoryW"s);
-    LazyProc* procFreeAddrInfoW = rec::NewProc(gocpp::recv(modws2_32), "FreeAddrInfoW"s);
-    LazyProc* procGetAddrInfoW = rec::NewProc(gocpp::recv(modws2_32), "GetAddrInfoW"s);
-    LazyProc* procWSACleanup = rec::NewProc(gocpp::recv(modws2_32), "WSACleanup"s);
-    LazyProc* procWSAEnumProtocolsW = rec::NewProc(gocpp::recv(modws2_32), "WSAEnumProtocolsW"s);
-    LazyProc* procWSAIoctl = rec::NewProc(gocpp::recv(modws2_32), "WSAIoctl"s);
-    LazyProc* procWSARecv = rec::NewProc(gocpp::recv(modws2_32), "WSARecv"s);
-    LazyProc* procWSARecvFrom = rec::NewProc(gocpp::recv(modws2_32), "WSARecvFrom"s);
-    LazyProc* procWSASend = rec::NewProc(gocpp::recv(modws2_32), "WSASend"s);
-    LazyProc* procWSASendTo = rec::NewProc(gocpp::recv(modws2_32), "WSASendTo"s);
-    LazyProc* procWSAStartup = rec::NewProc(gocpp::recv(modws2_32), "WSAStartup"s);
-    LazyProc* procbind = rec::NewProc(gocpp::recv(modws2_32), "bind"s);
-    LazyProc* procclosesocket = rec::NewProc(gocpp::recv(modws2_32), "closesocket"s);
-    LazyProc* procconnect = rec::NewProc(gocpp::recv(modws2_32), "connect"s);
-    LazyProc* procgethostbyname = rec::NewProc(gocpp::recv(modws2_32), "gethostbyname"s);
-    LazyProc* procgetpeername = rec::NewProc(gocpp::recv(modws2_32), "getpeername"s);
-    LazyProc* procgetprotobyname = rec::NewProc(gocpp::recv(modws2_32), "getprotobyname"s);
-    LazyProc* procgetservbyname = rec::NewProc(gocpp::recv(modws2_32), "getservbyname"s);
-    LazyProc* procgetsockname = rec::NewProc(gocpp::recv(modws2_32), "getsockname"s);
-    LazyProc* procgetsockopt = rec::NewProc(gocpp::recv(modws2_32), "getsockopt"s);
-    LazyProc* proclisten = rec::NewProc(gocpp::recv(modws2_32), "listen"s);
-    LazyProc* procntohs = rec::NewProc(gocpp::recv(modws2_32), "ntohs"s);
-    LazyProc* procsetsockopt = rec::NewProc(gocpp::recv(modws2_32), "setsockopt"s);
-    LazyProc* procshutdown = rec::NewProc(gocpp::recv(modws2_32), "shutdown"s);
-    LazyProc* procsocket = rec::NewProc(gocpp::recv(modws2_32), "socket"s);
+    LazyDLL* modadvapi32 = NewLazyDLL(sysdll::Add("advapi32.dll"_s));
+    LazyDLL* modcrypt32 = NewLazyDLL(sysdll::Add("crypt32.dll"_s));
+    LazyDLL* moddnsapi = NewLazyDLL(sysdll::Add("dnsapi.dll"_s));
+    LazyDLL* modiphlpapi = NewLazyDLL(sysdll::Add("iphlpapi.dll"_s));
+    LazyDLL* modkernel32 = NewLazyDLL(sysdll::Add("kernel32.dll"_s));
+    LazyDLL* modmswsock = NewLazyDLL(sysdll::Add("mswsock.dll"_s));
+    LazyDLL* modnetapi32 = NewLazyDLL(sysdll::Add("netapi32.dll"_s));
+    LazyDLL* modntdll = NewLazyDLL(sysdll::Add("ntdll.dll"_s));
+    LazyDLL* modsecur32 = NewLazyDLL(sysdll::Add("secur32.dll"_s));
+    LazyDLL* modshell32 = NewLazyDLL(sysdll::Add("shell32.dll"_s));
+    LazyDLL* moduserenv = NewLazyDLL(sysdll::Add("userenv.dll"_s));
+    LazyDLL* modws2_32 = NewLazyDLL(sysdll::Add("ws2_32.dll"_s));
+    LazyProc* procConvertSidToStringSidW = rec::NewProc(gocpp::recv(modadvapi32), "ConvertSidToStringSidW"_s);
+    LazyProc* procConvertStringSidToSidW = rec::NewProc(gocpp::recv(modadvapi32), "ConvertStringSidToSidW"_s);
+    LazyProc* procCopySid = rec::NewProc(gocpp::recv(modadvapi32), "CopySid"_s);
+    LazyProc* procCreateProcessAsUserW = rec::NewProc(gocpp::recv(modadvapi32), "CreateProcessAsUserW"_s);
+    LazyProc* procCryptAcquireContextW = rec::NewProc(gocpp::recv(modadvapi32), "CryptAcquireContextW"_s);
+    LazyProc* procCryptGenRandom = rec::NewProc(gocpp::recv(modadvapi32), "CryptGenRandom"_s);
+    LazyProc* procCryptReleaseContext = rec::NewProc(gocpp::recv(modadvapi32), "CryptReleaseContext"_s);
+    LazyProc* procGetLengthSid = rec::NewProc(gocpp::recv(modadvapi32), "GetLengthSid"_s);
+    LazyProc* procGetTokenInformation = rec::NewProc(gocpp::recv(modadvapi32), "GetTokenInformation"_s);
+    LazyProc* procLookupAccountNameW = rec::NewProc(gocpp::recv(modadvapi32), "LookupAccountNameW"_s);
+    LazyProc* procLookupAccountSidW = rec::NewProc(gocpp::recv(modadvapi32), "LookupAccountSidW"_s);
+    LazyProc* procOpenProcessToken = rec::NewProc(gocpp::recv(modadvapi32), "OpenProcessToken"_s);
+    LazyProc* procRegCloseKey = rec::NewProc(gocpp::recv(modadvapi32), "RegCloseKey"_s);
+    LazyProc* procRegEnumKeyExW = rec::NewProc(gocpp::recv(modadvapi32), "RegEnumKeyExW"_s);
+    LazyProc* procRegOpenKeyExW = rec::NewProc(gocpp::recv(modadvapi32), "RegOpenKeyExW"_s);
+    LazyProc* procRegQueryInfoKeyW = rec::NewProc(gocpp::recv(modadvapi32), "RegQueryInfoKeyW"_s);
+    LazyProc* procRegQueryValueExW = rec::NewProc(gocpp::recv(modadvapi32), "RegQueryValueExW"_s);
+    LazyProc* procCertAddCertificateContextToStore = rec::NewProc(gocpp::recv(modcrypt32), "CertAddCertificateContextToStore"_s);
+    LazyProc* procCertCloseStore = rec::NewProc(gocpp::recv(modcrypt32), "CertCloseStore"_s);
+    LazyProc* procCertCreateCertificateContext = rec::NewProc(gocpp::recv(modcrypt32), "CertCreateCertificateContext"_s);
+    LazyProc* procCertEnumCertificatesInStore = rec::NewProc(gocpp::recv(modcrypt32), "CertEnumCertificatesInStore"_s);
+    LazyProc* procCertFreeCertificateChain = rec::NewProc(gocpp::recv(modcrypt32), "CertFreeCertificateChain"_s);
+    LazyProc* procCertFreeCertificateContext = rec::NewProc(gocpp::recv(modcrypt32), "CertFreeCertificateContext"_s);
+    LazyProc* procCertGetCertificateChain = rec::NewProc(gocpp::recv(modcrypt32), "CertGetCertificateChain"_s);
+    LazyProc* procCertOpenStore = rec::NewProc(gocpp::recv(modcrypt32), "CertOpenStore"_s);
+    LazyProc* procCertOpenSystemStoreW = rec::NewProc(gocpp::recv(modcrypt32), "CertOpenSystemStoreW"_s);
+    LazyProc* procCertVerifyCertificateChainPolicy = rec::NewProc(gocpp::recv(modcrypt32), "CertVerifyCertificateChainPolicy"_s);
+    LazyProc* procDnsNameCompare_W = rec::NewProc(gocpp::recv(moddnsapi), "DnsNameCompare_W"_s);
+    LazyProc* procDnsQuery_W = rec::NewProc(gocpp::recv(moddnsapi), "DnsQuery_W"_s);
+    LazyProc* procDnsRecordListFree = rec::NewProc(gocpp::recv(moddnsapi), "DnsRecordListFree"_s);
+    LazyProc* procGetAdaptersInfo = rec::NewProc(gocpp::recv(modiphlpapi), "GetAdaptersInfo"_s);
+    LazyProc* procGetIfEntry = rec::NewProc(gocpp::recv(modiphlpapi), "GetIfEntry"_s);
+    LazyProc* procCancelIo = rec::NewProc(gocpp::recv(modkernel32), "CancelIo"_s);
+    LazyProc* procCancelIoEx = rec::NewProc(gocpp::recv(modkernel32), "CancelIoEx"_s);
+    LazyProc* procCloseHandle = rec::NewProc(gocpp::recv(modkernel32), "CloseHandle"_s);
+    LazyProc* procCreateDirectoryW = rec::NewProc(gocpp::recv(modkernel32), "CreateDirectoryW"_s);
+    LazyProc* procCreateFileMappingW = rec::NewProc(gocpp::recv(modkernel32), "CreateFileMappingW"_s);
+    LazyProc* procCreateFileW = rec::NewProc(gocpp::recv(modkernel32), "CreateFileW"_s);
+    LazyProc* procCreateHardLinkW = rec::NewProc(gocpp::recv(modkernel32), "CreateHardLinkW"_s);
+    LazyProc* procCreateIoCompletionPort = rec::NewProc(gocpp::recv(modkernel32), "CreateIoCompletionPort"_s);
+    LazyProc* procCreatePipe = rec::NewProc(gocpp::recv(modkernel32), "CreatePipe"_s);
+    LazyProc* procCreateProcessW = rec::NewProc(gocpp::recv(modkernel32), "CreateProcessW"_s);
+    LazyProc* procCreateSymbolicLinkW = rec::NewProc(gocpp::recv(modkernel32), "CreateSymbolicLinkW"_s);
+    LazyProc* procCreateToolhelp32Snapshot = rec::NewProc(gocpp::recv(modkernel32), "CreateToolhelp32Snapshot"_s);
+    LazyProc* procDeleteFileW = rec::NewProc(gocpp::recv(modkernel32), "DeleteFileW"_s);
+    LazyProc* procDeleteProcThreadAttributeList = rec::NewProc(gocpp::recv(modkernel32), "DeleteProcThreadAttributeList"_s);
+    LazyProc* procDeviceIoControl = rec::NewProc(gocpp::recv(modkernel32), "DeviceIoControl"_s);
+    LazyProc* procDuplicateHandle = rec::NewProc(gocpp::recv(modkernel32), "DuplicateHandle"_s);
+    LazyProc* procExitProcess = rec::NewProc(gocpp::recv(modkernel32), "ExitProcess"_s);
+    LazyProc* procFindClose = rec::NewProc(gocpp::recv(modkernel32), "FindClose"_s);
+    LazyProc* procFindFirstFileW = rec::NewProc(gocpp::recv(modkernel32), "FindFirstFileW"_s);
+    LazyProc* procFindNextFileW = rec::NewProc(gocpp::recv(modkernel32), "FindNextFileW"_s);
+    LazyProc* procFlushFileBuffers = rec::NewProc(gocpp::recv(modkernel32), "FlushFileBuffers"_s);
+    LazyProc* procFlushViewOfFile = rec::NewProc(gocpp::recv(modkernel32), "FlushViewOfFile"_s);
+    LazyProc* procFormatMessageW = rec::NewProc(gocpp::recv(modkernel32), "FormatMessageW"_s);
+    LazyProc* procFreeEnvironmentStringsW = rec::NewProc(gocpp::recv(modkernel32), "FreeEnvironmentStringsW"_s);
+    LazyProc* procFreeLibrary = rec::NewProc(gocpp::recv(modkernel32), "FreeLibrary"_s);
+    LazyProc* procGetCommandLineW = rec::NewProc(gocpp::recv(modkernel32), "GetCommandLineW"_s);
+    LazyProc* procGetComputerNameW = rec::NewProc(gocpp::recv(modkernel32), "GetComputerNameW"_s);
+    LazyProc* procGetConsoleMode = rec::NewProc(gocpp::recv(modkernel32), "GetConsoleMode"_s);
+    LazyProc* procGetCurrentDirectoryW = rec::NewProc(gocpp::recv(modkernel32), "GetCurrentDirectoryW"_s);
+    LazyProc* procGetCurrentProcess = rec::NewProc(gocpp::recv(modkernel32), "GetCurrentProcess"_s);
+    LazyProc* procGetCurrentProcessId = rec::NewProc(gocpp::recv(modkernel32), "GetCurrentProcessId"_s);
+    LazyProc* procGetEnvironmentStringsW = rec::NewProc(gocpp::recv(modkernel32), "GetEnvironmentStringsW"_s);
+    LazyProc* procGetEnvironmentVariableW = rec::NewProc(gocpp::recv(modkernel32), "GetEnvironmentVariableW"_s);
+    LazyProc* procGetExitCodeProcess = rec::NewProc(gocpp::recv(modkernel32), "GetExitCodeProcess"_s);
+    LazyProc* procGetFileAttributesExW = rec::NewProc(gocpp::recv(modkernel32), "GetFileAttributesExW"_s);
+    LazyProc* procGetFileAttributesW = rec::NewProc(gocpp::recv(modkernel32), "GetFileAttributesW"_s);
+    LazyProc* procGetFileInformationByHandle = rec::NewProc(gocpp::recv(modkernel32), "GetFileInformationByHandle"_s);
+    LazyProc* procGetFileType = rec::NewProc(gocpp::recv(modkernel32), "GetFileType"_s);
+    LazyProc* procGetFinalPathNameByHandleW = rec::NewProc(gocpp::recv(modkernel32), "GetFinalPathNameByHandleW"_s);
+    LazyProc* procGetFullPathNameW = rec::NewProc(gocpp::recv(modkernel32), "GetFullPathNameW"_s);
+    LazyProc* procGetLastError = rec::NewProc(gocpp::recv(modkernel32), "GetLastError"_s);
+    LazyProc* procGetLongPathNameW = rec::NewProc(gocpp::recv(modkernel32), "GetLongPathNameW"_s);
+    LazyProc* procGetProcAddress = rec::NewProc(gocpp::recv(modkernel32), "GetProcAddress"_s);
+    LazyProc* procGetProcessTimes = rec::NewProc(gocpp::recv(modkernel32), "GetProcessTimes"_s);
+    LazyProc* procGetQueuedCompletionStatus = rec::NewProc(gocpp::recv(modkernel32), "GetQueuedCompletionStatus"_s);
+    LazyProc* procGetShortPathNameW = rec::NewProc(gocpp::recv(modkernel32), "GetShortPathNameW"_s);
+    LazyProc* procGetStartupInfoW = rec::NewProc(gocpp::recv(modkernel32), "GetStartupInfoW"_s);
+    LazyProc* procGetStdHandle = rec::NewProc(gocpp::recv(modkernel32), "GetStdHandle"_s);
+    LazyProc* procGetSystemTimeAsFileTime = rec::NewProc(gocpp::recv(modkernel32), "GetSystemTimeAsFileTime"_s);
+    LazyProc* procGetTempPathW = rec::NewProc(gocpp::recv(modkernel32), "GetTempPathW"_s);
+    LazyProc* procGetTimeZoneInformation = rec::NewProc(gocpp::recv(modkernel32), "GetTimeZoneInformation"_s);
+    LazyProc* procGetVersion = rec::NewProc(gocpp::recv(modkernel32), "GetVersion"_s);
+    LazyProc* procInitializeProcThreadAttributeList = rec::NewProc(gocpp::recv(modkernel32), "InitializeProcThreadAttributeList"_s);
+    LazyProc* procLoadLibraryW = rec::NewProc(gocpp::recv(modkernel32), "LoadLibraryW"_s);
+    LazyProc* procLocalFree = rec::NewProc(gocpp::recv(modkernel32), "LocalFree"_s);
+    LazyProc* procMapViewOfFile = rec::NewProc(gocpp::recv(modkernel32), "MapViewOfFile"_s);
+    LazyProc* procMoveFileW = rec::NewProc(gocpp::recv(modkernel32), "MoveFileW"_s);
+    LazyProc* procOpenProcess = rec::NewProc(gocpp::recv(modkernel32), "OpenProcess"_s);
+    LazyProc* procPostQueuedCompletionStatus = rec::NewProc(gocpp::recv(modkernel32), "PostQueuedCompletionStatus"_s);
+    LazyProc* procProcess32FirstW = rec::NewProc(gocpp::recv(modkernel32), "Process32FirstW"_s);
+    LazyProc* procProcess32NextW = rec::NewProc(gocpp::recv(modkernel32), "Process32NextW"_s);
+    LazyProc* procReadConsoleW = rec::NewProc(gocpp::recv(modkernel32), "ReadConsoleW"_s);
+    LazyProc* procReadDirectoryChangesW = rec::NewProc(gocpp::recv(modkernel32), "ReadDirectoryChangesW"_s);
+    LazyProc* procReadFile = rec::NewProc(gocpp::recv(modkernel32), "ReadFile"_s);
+    LazyProc* procRemoveDirectoryW = rec::NewProc(gocpp::recv(modkernel32), "RemoveDirectoryW"_s);
+    LazyProc* procSetCurrentDirectoryW = rec::NewProc(gocpp::recv(modkernel32), "SetCurrentDirectoryW"_s);
+    LazyProc* procSetEndOfFile = rec::NewProc(gocpp::recv(modkernel32), "SetEndOfFile"_s);
+    LazyProc* procSetEnvironmentVariableW = rec::NewProc(gocpp::recv(modkernel32), "SetEnvironmentVariableW"_s);
+    LazyProc* procSetFileAttributesW = rec::NewProc(gocpp::recv(modkernel32), "SetFileAttributesW"_s);
+    LazyProc* procSetFileCompletionNotificationModes = rec::NewProc(gocpp::recv(modkernel32), "SetFileCompletionNotificationModes"_s);
+    LazyProc* procSetFilePointer = rec::NewProc(gocpp::recv(modkernel32), "SetFilePointer"_s);
+    LazyProc* procSetFileTime = rec::NewProc(gocpp::recv(modkernel32), "SetFileTime"_s);
+    LazyProc* procSetHandleInformation = rec::NewProc(gocpp::recv(modkernel32), "SetHandleInformation"_s);
+    LazyProc* procTerminateProcess = rec::NewProc(gocpp::recv(modkernel32), "TerminateProcess"_s);
+    LazyProc* procUnmapViewOfFile = rec::NewProc(gocpp::recv(modkernel32), "UnmapViewOfFile"_s);
+    LazyProc* procUpdateProcThreadAttribute = rec::NewProc(gocpp::recv(modkernel32), "UpdateProcThreadAttribute"_s);
+    LazyProc* procVirtualLock = rec::NewProc(gocpp::recv(modkernel32), "VirtualLock"_s);
+    LazyProc* procVirtualUnlock = rec::NewProc(gocpp::recv(modkernel32), "VirtualUnlock"_s);
+    LazyProc* procWaitForSingleObject = rec::NewProc(gocpp::recv(modkernel32), "WaitForSingleObject"_s);
+    LazyProc* procWriteConsoleW = rec::NewProc(gocpp::recv(modkernel32), "WriteConsoleW"_s);
+    LazyProc* procWriteFile = rec::NewProc(gocpp::recv(modkernel32), "WriteFile"_s);
+    LazyProc* procAcceptEx = rec::NewProc(gocpp::recv(modmswsock), "AcceptEx"_s);
+    LazyProc* procGetAcceptExSockaddrs = rec::NewProc(gocpp::recv(modmswsock), "GetAcceptExSockaddrs"_s);
+    LazyProc* procTransmitFile = rec::NewProc(gocpp::recv(modmswsock), "TransmitFile"_s);
+    LazyProc* procNetApiBufferFree = rec::NewProc(gocpp::recv(modnetapi32), "NetApiBufferFree"_s);
+    LazyProc* procNetGetJoinInformation = rec::NewProc(gocpp::recv(modnetapi32), "NetGetJoinInformation"_s);
+    LazyProc* procNetUserGetInfo = rec::NewProc(gocpp::recv(modnetapi32), "NetUserGetInfo"_s);
+    LazyProc* procRtlGetNtVersionNumbers = rec::NewProc(gocpp::recv(modntdll), "RtlGetNtVersionNumbers"_s);
+    LazyProc* procGetUserNameExW = rec::NewProc(gocpp::recv(modsecur32), "GetUserNameExW"_s);
+    LazyProc* procTranslateNameW = rec::NewProc(gocpp::recv(modsecur32), "TranslateNameW"_s);
+    LazyProc* procCommandLineToArgvW = rec::NewProc(gocpp::recv(modshell32), "CommandLineToArgvW"_s);
+    LazyProc* procGetUserProfileDirectoryW = rec::NewProc(gocpp::recv(moduserenv), "GetUserProfileDirectoryW"_s);
+    LazyProc* procFreeAddrInfoW = rec::NewProc(gocpp::recv(modws2_32), "FreeAddrInfoW"_s);
+    LazyProc* procGetAddrInfoW = rec::NewProc(gocpp::recv(modws2_32), "GetAddrInfoW"_s);
+    LazyProc* procWSACleanup = rec::NewProc(gocpp::recv(modws2_32), "WSACleanup"_s);
+    LazyProc* procWSAEnumProtocolsW = rec::NewProc(gocpp::recv(modws2_32), "WSAEnumProtocolsW"_s);
+    LazyProc* procWSAIoctl = rec::NewProc(gocpp::recv(modws2_32), "WSAIoctl"_s);
+    LazyProc* procWSARecv = rec::NewProc(gocpp::recv(modws2_32), "WSARecv"_s);
+    LazyProc* procWSARecvFrom = rec::NewProc(gocpp::recv(modws2_32), "WSARecvFrom"_s);
+    LazyProc* procWSASend = rec::NewProc(gocpp::recv(modws2_32), "WSASend"_s);
+    LazyProc* procWSASendTo = rec::NewProc(gocpp::recv(modws2_32), "WSASendTo"_s);
+    LazyProc* procWSAStartup = rec::NewProc(gocpp::recv(modws2_32), "WSAStartup"_s);
+    LazyProc* procbind = rec::NewProc(gocpp::recv(modws2_32), "bind"_s);
+    LazyProc* procclosesocket = rec::NewProc(gocpp::recv(modws2_32), "closesocket"_s);
+    LazyProc* procconnect = rec::NewProc(gocpp::recv(modws2_32), "connect"_s);
+    LazyProc* procgethostbyname = rec::NewProc(gocpp::recv(modws2_32), "gethostbyname"_s);
+    LazyProc* procgetpeername = rec::NewProc(gocpp::recv(modws2_32), "getpeername"_s);
+    LazyProc* procgetprotobyname = rec::NewProc(gocpp::recv(modws2_32), "getprotobyname"_s);
+    LazyProc* procgetservbyname = rec::NewProc(gocpp::recv(modws2_32), "getservbyname"_s);
+    LazyProc* procgetsockname = rec::NewProc(gocpp::recv(modws2_32), "getsockname"_s);
+    LazyProc* procgetsockopt = rec::NewProc(gocpp::recv(modws2_32), "getsockopt"_s);
+    LazyProc* proclisten = rec::NewProc(gocpp::recv(modws2_32), "listen"_s);
+    LazyProc* procntohs = rec::NewProc(gocpp::recv(modws2_32), "ntohs"_s);
+    LazyProc* procsetsockopt = rec::NewProc(gocpp::recv(modws2_32), "setsockopt"_s);
+    LazyProc* procshutdown = rec::NewProc(gocpp::recv(modws2_32), "shutdown"_s);
+    LazyProc* procsocket = rec::NewProc(gocpp::recv(modws2_32), "socket"_s);
     struct gocpp::error ConvertSidToStringSid(struct SID* sid, uint16_t** stringSid)
     {
         struct gocpp::error err;
@@ -527,7 +527,7 @@ namespace golang::syscall
         return same;
     }
 
-    struct gocpp::error DnsQuery(std::string name, uint16_t qtype, uint32_t options, unsigned char* extra, struct DNSRecord** qrs, unsigned char* pr)
+    struct gocpp::error DnsQuery(gocpp::string name, uint16_t qtype, uint32_t options, unsigned char* extra, struct DNSRecord** qrs, unsigned char* pr)
     {
         struct gocpp::error status;
         uint16_t* _p0 = {};
@@ -1069,7 +1069,7 @@ namespace golang::syscall
         return {n, err};
     }
 
-    std::tuple<uintptr_t, struct gocpp::error> GetProcAddress(golang::syscall::Handle module, std::string procname)
+    std::tuple<uintptr_t, struct gocpp::error> GetProcAddress(golang::syscall::Handle module, gocpp::string procname)
     {
         uintptr_t proc;
         struct gocpp::error err;
@@ -1205,7 +1205,7 @@ namespace golang::syscall
         return err;
     }
 
-    std::tuple<syscall::Handle, struct gocpp::error> LoadLibrary(std::string libname)
+    std::tuple<syscall::Handle, struct gocpp::error> LoadLibrary(gocpp::string libname)
     {
         syscall::Handle handle;
         struct gocpp::error err;
@@ -1811,7 +1811,7 @@ namespace golang::syscall
         return err;
     }
 
-    std::tuple<struct Hostent*, struct gocpp::error> GetHostByName(std::string name)
+    std::tuple<struct Hostent*, struct gocpp::error> GetHostByName(gocpp::string name)
     {
         struct Hostent* h;
         struct gocpp::error err;
@@ -1848,7 +1848,7 @@ namespace golang::syscall
         return err;
     }
 
-    std::tuple<struct Protoent*, struct gocpp::error> GetProtoByName(std::string name)
+    std::tuple<struct Protoent*, struct gocpp::error> GetProtoByName(gocpp::string name)
     {
         struct Protoent* p;
         struct gocpp::error err;
@@ -1874,7 +1874,7 @@ namespace golang::syscall
         return {p, err};
     }
 
-    std::tuple<struct Servent*, struct gocpp::error> GetServByName(std::string name, std::string proto)
+    std::tuple<struct Servent*, struct gocpp::error> GetServByName(gocpp::string name, gocpp::string proto)
     {
         struct Servent* s;
         struct gocpp::error err;

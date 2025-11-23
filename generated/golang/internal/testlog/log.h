@@ -39,10 +39,10 @@ namespace golang::testlog
 
         struct IInterface
         {
-            virtual void vGetenv(std::string key) = 0;
-            virtual void vStat(std::string file) = 0;
-            virtual void vOpen(std::string file) = 0;
-            virtual void vChdir(std::string dir) = 0;
+            virtual void vGetenv(gocpp::string key) = 0;
+            virtual void vStat(gocpp::string file) = 0;
+            virtual void vOpen(gocpp::string file) = 0;
+            virtual void vChdir(gocpp::string dir) = 0;
         };
 
         template<typename T, typename StoreT>
@@ -53,13 +53,13 @@ namespace golang::testlog
                 value.reset(ptr);
             }
 
-            void vGetenv(std::string key) override;
+            void vGetenv(gocpp::string key) override;
 
-            void vStat(std::string file) override;
+            void vStat(gocpp::string file) override;
 
-            void vOpen(std::string file) override;
+            void vOpen(gocpp::string file) override;
 
-            void vChdir(std::string dir) override;
+            void vChdir(gocpp::string dir) override;
 
             StoreT value;
         };
@@ -69,26 +69,26 @@ namespace golang::testlog
 
     namespace rec
     {
-        void Getenv(const gocpp::PtrRecv<struct Interface, false>& self, std::string key);
-        void Getenv(const gocpp::ObjRecv<struct Interface>& self, std::string key);
+        void Getenv(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string key);
+        void Getenv(const gocpp::ObjRecv<struct Interface>& self, gocpp::string key);
 
-        void Stat(const gocpp::PtrRecv<struct Interface, false>& self, std::string file);
-        void Stat(const gocpp::ObjRecv<struct Interface>& self, std::string file);
+        void Stat(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string file);
+        void Stat(const gocpp::ObjRecv<struct Interface>& self, gocpp::string file);
 
-        void Open(const gocpp::PtrRecv<struct Interface, false>& self, std::string file);
-        void Open(const gocpp::ObjRecv<struct Interface>& self, std::string file);
+        void Open(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string file);
+        void Open(const gocpp::ObjRecv<struct Interface>& self, gocpp::string file);
 
-        void Chdir(const gocpp::PtrRecv<struct Interface, false>& self, std::string dir);
-        void Chdir(const gocpp::ObjRecv<struct Interface>& self, std::string dir);
+        void Chdir(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string dir);
+        void Chdir(const gocpp::ObjRecv<struct Interface>& self, gocpp::string dir);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
     extern atomic::Value logger;
     void SetLogger(struct Interface impl);
     struct Interface Logger();
-    void Getenv(std::string name);
-    void Open(std::string name);
-    void Stat(std::string name);
+    void Getenv(gocpp::string name);
+    void Open(gocpp::string name);
+    void Stat(gocpp::string name);
 
     namespace rec
     {

@@ -12,13 +12,13 @@
 namespace golang::os
 {
     bool IsPathSeparator(uint8_t c);
-    std::string basename(std::string name);
-    bool isAbs(std::string path);
-    std::string volumeName(std::string path);
-    std::string fromSlash(std::string path);
-    std::string dirname(std::string path);
+    gocpp::string basename(gocpp::string name);
+    bool isAbs(gocpp::string path);
+    gocpp::string volumeName(gocpp::string path);
+    gocpp::string fromSlash(gocpp::string path);
+    gocpp::string dirname(gocpp::string path);
     extern bool canUseLongPaths;
-    std::string fixLongPath(std::string path);
+    gocpp::string fixLongPath(gocpp::string path);
 
     namespace rec
     {

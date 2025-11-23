@@ -25,20 +25,20 @@ namespace golang::main
     // from the tree to the channel ch.
     void Walk(tree::Tree* t, gocpp::channel<int> ch)
     {
-        gocpp::panic("Not implemented"s);
+        gocpp::panic("Not implemented"_s);
     }
 
     // Same determines whether the trees
     // t1 and t2 contain the same values.
     bool Same(tree::Tree* t1, tree::Tree* t2)
     {
-        gocpp::panic("Not implemented"s);
+        gocpp::panic("Not implemented"_s);
     }
 
     void main()
     {
         tree::Tree tree = {};
-        mocklib::Printf("%T"s, tree);
+        mocklib::Printf("%T"_s, tree);
     }
 
 }

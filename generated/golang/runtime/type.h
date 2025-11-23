@@ -36,7 +36,7 @@ namespace golang::runtime
     void reflectOffsUnlock();
     runtime::name resolveNameOff(unsafe::Pointer ptrInModule, golang::runtime::nameOff off);
     runtime::_type* resolveTypeOff(unsafe::Pointer ptrInModule, golang::runtime::typeOff off);
-    std::string pkgPath(golang::runtime::name n);
+    gocpp::string pkgPath(golang::runtime::name n);
     void typelinksinit();
     struct _typePair
     {
@@ -75,10 +75,10 @@ namespace golang::runtime
 
     namespace rec
     {
-        std::string string(struct rtype t);
+        gocpp::string string(struct rtype t);
         runtime::uncommontype* uncommon(struct rtype t);
-        std::string name(struct rtype t);
-        std::string pkgpath(struct rtype t);
+        gocpp::string name(struct rtype t);
+        gocpp::string pkgpath(struct rtype t);
         runtime::name nameOff(struct rtype t, golang::runtime::nameOff off);
         runtime::_type* typeOff(struct rtype t, golang::runtime::typeOff off);
         unsafe::Pointer textOff(struct rtype t, golang::runtime::textOff off);

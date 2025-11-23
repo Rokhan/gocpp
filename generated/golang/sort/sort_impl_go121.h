@@ -14,10 +14,10 @@ namespace golang::sort
 {
     void intsImpl(gocpp::slice<int> x);
     void float64sImpl(gocpp::slice<double> x);
-    void stringsImpl(gocpp::slice<std::string> x);
+    void stringsImpl(gocpp::slice<gocpp::string> x);
     bool intsAreSortedImpl(gocpp::slice<int> x);
     bool float64sAreSortedImpl(gocpp::slice<double> x);
-    bool stringsAreSortedImpl(gocpp::slice<std::string> x);
+    bool stringsAreSortedImpl(gocpp::slice<gocpp::string> x);
 
     namespace rec
     {

@@ -30,20 +30,20 @@ namespace golang::utf8
 
     std::ostream& operator<<(std::ostream& os, const struct acceptRange& value);
     bool FullRune(gocpp::slice<unsigned char> p);
-    bool FullRuneInString(std::string s);
+    bool FullRuneInString(gocpp::string s);
     std::tuple<gocpp::rune, int> DecodeRune(gocpp::slice<unsigned char> p);
-    std::tuple<gocpp::rune, int> DecodeRuneInString(std::string s);
+    std::tuple<gocpp::rune, int> DecodeRuneInString(gocpp::string s);
     std::tuple<gocpp::rune, int> DecodeLastRune(gocpp::slice<unsigned char> p);
-    std::tuple<gocpp::rune, int> DecodeLastRuneInString(std::string s);
+    std::tuple<gocpp::rune, int> DecodeLastRuneInString(gocpp::string s);
     int RuneLen(gocpp::rune r);
     int EncodeRune(gocpp::slice<unsigned char> p, gocpp::rune r);
     gocpp::slice<unsigned char> AppendRune(gocpp::slice<unsigned char> p, gocpp::rune r);
     gocpp::slice<unsigned char> appendRuneNonASCII(gocpp::slice<unsigned char> p, gocpp::rune r);
     int RuneCount(gocpp::slice<unsigned char> p);
-    int RuneCountInString(std::string s);
+    int RuneCountInString(gocpp::string s);
     bool RuneStart(unsigned char b);
     bool Valid(gocpp::slice<unsigned char> p);
-    bool ValidString(std::string s);
+    bool ValidString(gocpp::string s);
     bool ValidRune(gocpp::rune r);
     extern gocpp::array<acceptRange, 16> acceptRanges;
 

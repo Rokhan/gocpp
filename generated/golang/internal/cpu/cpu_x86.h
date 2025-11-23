@@ -18,7 +18,7 @@ namespace golang::cpu
     extern uint32_t maxExtendedFunctionInformation;
     void doinit();
     bool isSet(uint32_t hwc, uint32_t value);
-    std::string Name();
+    gocpp::string Name();
     gocpp::slice<unsigned char> appendBytes(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> args);
     
     template<typename... Args>

@@ -250,14 +250,14 @@ namespace golang::runtime
     {
         if(sl.sweepGen != mheap_.sweepgen)
         {
-            go_throw("sweeper left outstanding across sweep generations"s);
+            go_throw("sweeper left outstanding across sweep generations"_s);
         }
         for(; ; )
         {
             auto state = rec::Load(gocpp::recv(a->state));
             if((state &^ sweepDrainedMask) - 1 >= sweepDrainedMask)
             {
-                go_throw("mismatched begin/end of activeSweep"s);
+                go_throw("mismatched begin/end of activeSweep"_s);
             }
             if(rec::CompareAndSwap(gocpp::recv(a->state), state, state - 1))
             {
@@ -268,7 +268,7 @@ namespace golang::runtime
                 if(debug.gcpacertrace > 0)
                 {
                     auto live = rec::Load(gocpp::recv(gcController.heapLive));
-                    print("pacer: sweep done at heap size "s, live >> 20, "MB; allocated "s, (live - mheap_.sweepHeapLiveBasis) >> 20, "MB during sweep; swept "s, rec::Load(gocpp::recv(mheap_.pagesSwept)), " pages at "s, mheap_.sweepPagesPerByte, " pages/byte\n"s);
+                    print("pacer: sweep done at heap size "_s, live >> 20, "MB; allocated "_s, (live - mheap_.sweepHeapLiveBasis) >> 20, "MB during sweep; swept "_s, rec::Load(gocpp::recv(mheap_.pagesSwept)), " pages at "_s, mheap_.sweepPagesPerByte, " pages/byte\n"_s);
                 }
                 return;
             }
@@ -334,7 +334,7 @@ namespace golang::runtime
         }
         if(rec::sweepers(gocpp::recv(sweep.active)) != 0)
         {
-            go_throw("active sweepers found at start of mark phase"s);
+            go_throw("active sweepers found at start of mark phase"_s);
         }
         auto sg = mheap_.sweepgen;
         for(auto [i, gocpp_ignored] : mheap_.central)
@@ -467,7 +467,7 @@ namespace golang::runtime
     {
         if(! l->valid)
         {
-            go_throw("use of invalid sweepLocker"s);
+            go_throw("use of invalid sweepLocker"_s);
         }
         if(atomic::Load(& s->sweepgen) != l->sweepGen - 2)
         {
@@ -506,8 +506,8 @@ namespace golang::runtime
             {
                 if(! (s->sweepgen == sl.sweepGen || s->sweepgen == sl.sweepGen + 3))
                 {
-                    print("runtime: bad span s.state="s, state, " s.sweepgen="s, s->sweepgen, " sweepgen="s, sl.sweepGen, "\n"s);
-                    go_throw("non in-use span in unswept list"s);
+                    print("runtime: bad span s.state="_s, state, " s.sweepgen="_s, s->sweepgen, " sweepgen="_s, sl.sweepGen, "\n"_s);
+                    go_throw("non in-use span in unswept list"_s);
                 }
                 continue;
             }
@@ -569,7 +569,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp->m->locks == 0 && gp->m->mallocing == 0 && gp != gp->m->g0)
         {
-            go_throw("mspan.ensureSwept: m is not locked"s);
+            go_throw("mspan.ensureSwept: m is not locked"_s);
         }
         auto sl = rec::begin(gocpp::recv(sweep.active));
         if(sl.valid)
@@ -606,7 +606,7 @@ namespace golang::runtime
         auto gp = getg();
         if(gp->m->locks == 0 && gp->m->mallocing == 0 && gp != gp->m->g0)
         {
-            go_throw("mspan.sweep: m is not locked"s);
+            go_throw("mspan.sweep: m is not locked"_s);
         }
         auto s = sl->mspan;
         if(! preserve)
@@ -616,8 +616,8 @@ namespace golang::runtime
         auto sweepgen = mheap_.sweepgen;
         if(auto state = rec::get(gocpp::recv(s->state)); state != mSpanInUse || s->sweepgen != sweepgen - 1)
         {
-            print("mspan.sweep: state="s, state, " sweepgen="s, s->sweepgen, " mheap.sweepgen="s, sweepgen, "\n"s);
-            go_throw("mspan.sweep: bad span state"s);
+            print("mspan.sweep: state="_s, state, " sweepgen="_s, s->sweepgen, " mheap.sweepgen="_s, sweepgen, "\n"_s);
+            go_throw("mspan.sweep: bad span state"_s);
         }
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
@@ -734,8 +734,8 @@ namespace golang::runtime
         auto nfreed = s->allocCount - nalloc;
         if(nalloc > s->allocCount)
         {
-            print("runtime: nelems="s, s->nelems, " nalloc="s, nalloc, " previous allocCount="s, s->allocCount, " nfreed="s, nfreed, "\n"s);
-            go_throw("sweep increased allocation count"s);
+            print("runtime: nelems="_s, s->nelems, " nalloc="_s, nalloc, " previous allocCount="_s, s->allocCount, " nfreed="_s, nfreed, "\n"_s);
+            go_throw("sweep increased allocation count"_s);
         }
         s->allocCount = nalloc;
         s->freeindex = 0;
@@ -753,19 +753,19 @@ namespace golang::runtime
         rec::refillAllocCache(gocpp::recv(s), 0);
         if(auto state = rec::get(gocpp::recv(s->state)); state != mSpanInUse || s->sweepgen != sweepgen - 1)
         {
-            print("mspan.sweep: state="s, state, " sweepgen="s, s->sweepgen, " mheap.sweepgen="s, sweepgen, "\n"s);
-            go_throw("mspan.sweep: bad span state after sweep"s);
+            print("mspan.sweep: state="_s, state, " sweepgen="_s, s->sweepgen, " mheap.sweepgen="_s, sweepgen, "\n"_s);
+            go_throw("mspan.sweep: bad span state after sweep"_s);
         }
         if(s->sweepgen == sweepgen + 1 || s->sweepgen == sweepgen + 3)
         {
-            go_throw("swept cached span"s);
+            go_throw("swept cached span"_s);
         }
         atomic::Store(& s->sweepgen, sweepgen);
         if(s->isUserArenaChunk)
         {
             if(preserve)
             {
-                go_throw("sweep: tried to preserve a user arena span"s);
+                go_throw("sweep: tried to preserve a user arena span"_s);
             }
             if(nalloc > 0)
             {
@@ -778,7 +778,7 @@ namespace golang::runtime
             {
                 if(s->list != & mheap_.userArena.quarantineList)
                 {
-                    go_throw("user arena span is on the wrong list"s);
+                    go_throw("user arena span is on the wrong list"_s);
                 }
                 lock(& mheap_.lock);
                 rec::remove(gocpp::recv(mheap_.userArena.quarantineList), s);
@@ -867,7 +867,7 @@ namespace golang::runtime
     void rec::reportZombies(struct mspan* s)
     {
         printlock();
-        print("runtime: marked free object in span "s, s, ", elemsize="s, s->elemsize, " freeindex="s, s->freeindex, " (bad use of unsafe.Pointer? try -d=checkptr)\n"s);
+        print("runtime: marked free object in span "_s, s, ", elemsize="_s, s->elemsize, " freeindex="_s, s->freeindex, " (bad use of unsafe.Pointer? try -d=checkptr)\n"_s);
         auto mbits = rec::markBitsForBase(gocpp::recv(s));
         auto abits = rec::allocBitsForIndex(gocpp::recv(s), 0);
         for(auto i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
@@ -877,26 +877,26 @@ namespace golang::runtime
             auto alloc = i < uintptr_t(s->freeindex) || rec::isMarked(gocpp::recv(abits));
             if(alloc)
             {
-                print(" alloc"s);
+                print(" alloc"_s);
             }
             else
             {
-                print(" free "s);
+                print(" free "_s);
             }
             if(rec::isMarked(gocpp::recv(mbits)))
             {
-                print(" marked  "s);
+                print(" marked  "_s);
             }
             else
             {
-                print(" unmarked"s);
+                print(" unmarked"_s);
             }
             auto zombie = rec::isMarked(gocpp::recv(mbits)) && ! alloc;
             if(zombie)
             {
-                print(" zombie"s);
+                print(" zombie"_s);
             }
-            print("\n"s);
+            print("\n"_s);
             if(zombie)
             {
                 auto length = s->elemsize;
@@ -909,7 +909,7 @@ namespace golang::runtime
             rec::advance(gocpp::recv(mbits));
             rec::advance(gocpp::recv(abits));
         }
-        go_throw("found pointer to free object"s);
+        go_throw("found pointer to free object"_s);
     }
 
     // deductSweepCredit deducts sweep credit for allocating a span of

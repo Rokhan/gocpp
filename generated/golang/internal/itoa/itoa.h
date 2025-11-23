@@ -11,10 +11,10 @@
 
 namespace golang::itoa
 {
-    std::string Itoa(int val);
-    std::string Uitoa(unsigned int val);
-    extern std::string hex;
-    std::string Uitox(unsigned int val);
+    gocpp::string Itoa(int val);
+    gocpp::string Uitoa(unsigned int val);
+    extern gocpp::string hex;
+    gocpp::string Uitox(unsigned int val);
 
     namespace rec
     {

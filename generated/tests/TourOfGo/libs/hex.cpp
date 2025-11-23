@@ -23,27 +23,27 @@ namespace golang::main
 
     void main()
     {
-        auto src = gocpp::slice<unsigned char>("Hello"s);
+        auto src = gocpp::slice<unsigned char>("Hello"_s);
         auto dst = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), hex::EncodedLen(len(src)));
         hex::Encode(dst, src);
-        mocklib::Printf("%s\n"s, dst);
+        mocklib::Printf("%s\n"_s, dst);
         auto decoded = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), hex::DecodedLen(len(dst)));
         auto [gocpp_id_0, err] = hex::Decode(decoded, dst);
         if(err != nullptr)
         {
             mocklib::Println(err);
         }
-        mocklib::Printf("%s\n"s, decoded);
+        mocklib::Printf("%s\n"_s, decoded);
         auto dump = hex::Dump(src);
         mocklib::Println(dump);
-        auto s = "48656c6c6f"s;
+        auto s = "48656c6c6f"_s;
         gocpp::slice<unsigned char> data;
         std::tie(data, err) = hex::DecodeString(s);
         if(err != nullptr)
         {
             gocpp::panic(err);
         }
-        mocklib::Printf("%s\n"s, data);
+        mocklib::Printf("%s\n"_s, data);
         auto str = hex::EncodeToString(src);
         mocklib::Println(str);
     }

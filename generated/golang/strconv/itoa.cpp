@@ -23,7 +23,7 @@ namespace golang::strconv
     // FormatUint returns the string representation of i in the given base,
     // for 2 <= base <= 36. The result uses the lower-case letters 'a' to 'z'
     // for digit values >= 10.
-    std::string FormatUint(uint64_t i, int base)
+    gocpp::string FormatUint(uint64_t i, int base)
     {
         if(fastSmalls && i < nSmalls && base == 10)
         {
@@ -36,7 +36,7 @@ namespace golang::strconv
     // FormatInt returns the string representation of i in the given base,
     // for 2 <= base <= 36. The result uses the lower-case letters 'a' to 'z'
     // for digit values >= 10.
-    std::string FormatInt(int64_t i, int base)
+    gocpp::string FormatInt(int64_t i, int base)
     {
         if(fastSmalls && 0 <= i && i < nSmalls && base == 10)
         {
@@ -47,7 +47,7 @@ namespace golang::strconv
     }
 
     // Itoa is equivalent to FormatInt(int64(i), 10).
-    std::string Itoa(int i)
+    gocpp::string Itoa(int i)
     {
         return FormatInt(int64_t(i), 10);
     }
@@ -77,7 +77,7 @@ namespace golang::strconv
     }
 
     // small returns the string for an i with 0 <= i < nSmalls.
-    std::string small(int i)
+    gocpp::string small(int i)
     {
         if(i < 10)
         {
@@ -86,20 +86,20 @@ namespace golang::strconv
         return smallsString.make_slice(i * 2, i * 2 + 2);
     }
 
-    std::string smallsString = "00010203040506070809"s + "10111213141516171819"s + "20212223242526272829"s + "30313233343536373839"s + "40414243444546474849"s + "50515253545556575859"s + "60616263646566676869"s + "70717273747576777879"s + "80818283848586878889"s + "90919293949596979899"s;
-    std::string digits = "0123456789abcdefghijklmnopqrstuvwxyz"s;
+    gocpp::string smallsString = "00010203040506070809"_s + "10111213141516171819"_s + "20212223242526272829"_s + "30313233343536373839"_s + "40414243444546474849"_s + "50515253545556575859"_s + "60616263646566676869"_s + "70717273747576777879"_s + "80818283848586878889"_s + "90919293949596979899"_s;
+    gocpp::string digits = "0123456789abcdefghijklmnopqrstuvwxyz"_s;
     // formatBits computes the string representation of u in the given base.
     // If neg is set, u is treated as negative int64 value. If append_ is
     // set, the string is appended to dst and the resulting byte slice is
     // returned as the first result value; otherwise the string is returned
     // as the second result value.
-    std::tuple<gocpp::slice<unsigned char>, std::string> formatBits(gocpp::slice<unsigned char> dst, uint64_t u, int base, bool neg, bool append_)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::string> formatBits(gocpp::slice<unsigned char> dst, uint64_t u, int base, bool neg, bool append_)
     {
         gocpp::slice<unsigned char> d;
-        std::string s;
+        gocpp::string s;
         if(base < 2 || base > len(digits))
         {
-            gocpp::panic("strconv: illegal AppendInt/FormatInt base"s);
+            gocpp::panic("strconv: illegal AppendInt/FormatInt base"_s);
         }
         gocpp::array<unsigned char, 64 + 1> a = {};
         auto i = len(a);
@@ -184,7 +184,7 @@ namespace golang::strconv
             d = append(dst, a.make_slice(i));
             return {d, s};
         }
-        s = std::string(a.make_slice(i));
+        s = gocpp::string(a.make_slice(i));
         return {d, s};
     }
 

@@ -37,7 +37,7 @@ namespace golang::reflectlite
         if(rec::Kind(gocpp::recv(v)) != Slice)
         {
             gocpp::panic(gocpp::InitPtr<ValueError>([=](auto& x) {
-                x.Method = "Swapper"s;
+                x.Method = "Swapper"_s;
                 x.Kind = rec::Kind(gocpp::recv(v));
             }));
         }
@@ -52,7 +52,7 @@ namespace golang::reflectlite
                 case 0:
                     return [=](int i, int j) mutable -> void
                     {
-                        gocpp::panic("reflect: slice index out of range"s);
+                        gocpp::panic("reflect: slice index out of range"_s);
                     };
                     break;
                 case 1:
@@ -60,7 +60,7 @@ namespace golang::reflectlite
                     {
                         if(i != 0 || j != 0)
                         {
-                            gocpp::panic("reflect: slice index out of range"s);
+                            gocpp::panic("reflect: slice index out of range"_s);
                         }
                     };
                     break;
@@ -81,7 +81,7 @@ namespace golang::reflectlite
             }
             if(rec::Kind(gocpp::recv(typ)) == String)
             {
-                auto ss = *(gocpp::slice<std::string>*)(v.ptr);
+                auto ss = *(gocpp::slice<gocpp::string>*)(v.ptr);
                 return [=](int i, int j) mutable -> void
                 {
                     std::tie(ss[i], ss[j]) = std::tuple{ss[j], ss[i]};
@@ -137,10 +137,10 @@ namespace golang::reflectlite
         {
             if((unsigned int)(i) >= (unsigned int)(s->Len) || (unsigned int)(j) >= (unsigned int)(s->Len))
             {
-                gocpp::panic("reflect: slice index out of range"s);
+                gocpp::panic("reflect: slice index out of range"_s);
             }
-            auto val1 = arrayAt(s->Data, i, size, "i < s.Len"s);
-            auto val2 = arrayAt(s->Data, j, size, "j < s.Len"s);
+            auto val1 = arrayAt(s->Data, i, size, "i < s.Len"_s);
+            auto val2 = arrayAt(s->Data, j, size, "j < s.Len"_s);
             typedmemmove(typ, tmp, val1);
             typedmemmove(typ, val1, val2);
             typedmemmove(typ, val2, tmp);

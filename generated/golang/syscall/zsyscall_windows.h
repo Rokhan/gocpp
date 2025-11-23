@@ -62,7 +62,7 @@ namespace golang::syscall
     std::tuple<syscall::Handle, struct gocpp::error> CertOpenSystemStore(golang::syscall::Handle hprov, uint16_t* name);
     struct gocpp::error CertVerifyCertificateChainPolicy(uintptr_t policyOID, struct CertChainContext* chain, struct CertChainPolicyPara* para, struct CertChainPolicyStatus* status);
     bool DnsNameCompare(uint16_t* name1, uint16_t* name2);
-    struct gocpp::error DnsQuery(std::string name, uint16_t qtype, uint32_t options, unsigned char* extra, struct DNSRecord** qrs, unsigned char* pr);
+    struct gocpp::error DnsQuery(gocpp::string name, uint16_t qtype, uint32_t options, unsigned char* extra, struct DNSRecord** qrs, unsigned char* pr);
     struct gocpp::error _DnsQuery(uint16_t* name, uint16_t qtype, uint32_t options, unsigned char* extra, struct DNSRecord** qrs, unsigned char* pr);
     void DnsRecordListFree(struct DNSRecord* rl, uint32_t freetype);
     struct gocpp::error GetAdaptersInfo(struct IpAdapterInfo* ai, uint32_t* ol);
@@ -109,7 +109,7 @@ namespace golang::syscall
     std::tuple<uint32_t, struct gocpp::error> GetFullPathName(uint16_t* path, uint32_t buflen, uint16_t* buf, uint16_t** fname);
     struct gocpp::error GetLastError();
     std::tuple<uint32_t, struct gocpp::error> GetLongPathName(uint16_t* path, uint16_t* buf, uint32_t buflen);
-    std::tuple<uintptr_t, struct gocpp::error> GetProcAddress(golang::syscall::Handle module, std::string procname);
+    std::tuple<uintptr_t, struct gocpp::error> GetProcAddress(golang::syscall::Handle module, gocpp::string procname);
     std::tuple<uintptr_t, struct gocpp::error> _GetProcAddress(golang::syscall::Handle module, unsigned char* procname);
     struct gocpp::error GetProcessTimes(golang::syscall::Handle handle, struct Filetime* creationTime, struct Filetime* exitTime, struct Filetime* kernelTime, struct Filetime* userTime);
     struct gocpp::error getQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t* qty, uintptr_t* key, struct Overlapped** overlapped, uint32_t timeout);
@@ -121,7 +121,7 @@ namespace golang::syscall
     std::tuple<uint32_t, struct gocpp::error> GetTimeZoneInformation(struct Timezoneinformation* tzi);
     std::tuple<uint32_t, struct gocpp::error> GetVersion();
     struct gocpp::error initializeProcThreadAttributeList(struct _PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t attrcount, uint32_t flags, uintptr_t* size);
-    std::tuple<syscall::Handle, struct gocpp::error> LoadLibrary(std::string libname);
+    std::tuple<syscall::Handle, struct gocpp::error> LoadLibrary(gocpp::string libname);
     std::tuple<syscall::Handle, struct gocpp::error> _LoadLibrary(uint16_t* libname);
     std::tuple<syscall::Handle, struct gocpp::error> LocalFree(golang::syscall::Handle hmem);
     std::tuple<uintptr_t, struct gocpp::error> MapViewOfFile(golang::syscall::Handle handle, uint32_t access, uint32_t offsetHigh, uint32_t offsetLow, uintptr_t length);
@@ -174,12 +174,12 @@ namespace golang::syscall
     struct gocpp::error bind(golang::syscall::Handle s, unsafe::Pointer name, int32_t namelen);
     struct gocpp::error Closesocket(golang::syscall::Handle s);
     struct gocpp::error connect(golang::syscall::Handle s, unsafe::Pointer name, int32_t namelen);
-    std::tuple<struct Hostent*, struct gocpp::error> GetHostByName(std::string name);
+    std::tuple<struct Hostent*, struct gocpp::error> GetHostByName(gocpp::string name);
     std::tuple<struct Hostent*, struct gocpp::error> _GetHostByName(unsigned char* name);
     struct gocpp::error getpeername(golang::syscall::Handle s, struct RawSockaddrAny* rsa, int32_t* addrlen);
-    std::tuple<struct Protoent*, struct gocpp::error> GetProtoByName(std::string name);
+    std::tuple<struct Protoent*, struct gocpp::error> GetProtoByName(gocpp::string name);
     std::tuple<struct Protoent*, struct gocpp::error> _GetProtoByName(unsigned char* name);
-    std::tuple<struct Servent*, struct gocpp::error> GetServByName(std::string name, std::string proto);
+    std::tuple<struct Servent*, struct gocpp::error> GetServByName(gocpp::string name, gocpp::string proto);
     std::tuple<struct Servent*, struct gocpp::error> _GetServByName(unsigned char* name, unsigned char* proto);
     struct gocpp::error getsockname(golang::syscall::Handle s, struct RawSockaddrAny* rsa, int32_t* addrlen);
     struct gocpp::error Getsockopt(golang::syscall::Handle s, int32_t level, int32_t optname, unsigned char* optval, int32_t* optlen);

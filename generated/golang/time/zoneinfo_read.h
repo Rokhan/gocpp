@@ -13,8 +13,8 @@
 
 namespace golang::time
 {
-    void registerLoadFromEmbeddedTZData(std::function<std::tuple<std::string, struct gocpp::error> (std::string _1)> f);
-    extern std::function<std::tuple<std::string, struct gocpp::error> (std::string zipname)> loadFromEmbeddedTZData;
+    void registerLoadFromEmbeddedTZData(std::function<std::tuple<gocpp::string, struct gocpp::error> (gocpp::string _1)> f);
+    extern std::function<std::tuple<gocpp::string, struct gocpp::error> (gocpp::string zipname)> loadFromEmbeddedTZData;
     struct dataIO
     {
         gocpp::slice<unsigned char> p;
@@ -32,22 +32,22 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dataIO& value);
-    std::string byteString(gocpp::slice<unsigned char> p);
+    gocpp::string byteString(gocpp::slice<unsigned char> p);
     extern gocpp::error errBadData;
-    std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(std::string name, gocpp::slice<unsigned char> data);
-    int findZone(gocpp::slice<zone> zones, std::string name, int offset, bool isDST);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromDirOrZip(std::string dir, std::string name);
+    std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data);
+    int findZone(gocpp::slice<zone> zones, gocpp::string name, int offset, bool isDST);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromDirOrZip(gocpp::string dir, gocpp::string name);
     int get4(gocpp::slice<unsigned char> b);
     int get2(gocpp::slice<unsigned char> b);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromZip(std::string zipfile, std::string name);
-    extern std::function<std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> (std::string file, std::string name)> loadTzinfoFromTzdata;
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfo(std::string name, std::string source);
-    std::tuple<struct Location*, struct gocpp::error> loadLocation(std::string name, gocpp::slice<std::string> sources);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readFile(std::string name);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromZip(gocpp::string zipfile, gocpp::string name);
+    extern std::function<std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> (gocpp::string file, gocpp::string name)> loadTzinfoFromTzdata;
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfo(gocpp::string name, gocpp::string source);
+    std::tuple<struct Location*, struct gocpp::error> loadLocation(gocpp::string name, gocpp::slice<gocpp::string> sources);
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readFile(gocpp::string name);
 
     namespace rec
     {
-        std::string Error(golang::time::fileSizeError f);
+        gocpp::string Error(golang::time::fileSizeError f);
         gocpp::slice<unsigned char> read(struct dataIO* d, int n);
         std::tuple<uint32_t, bool> big4(struct dataIO* d);
         std::tuple<uint64_t, bool> big8(struct dataIO* d);

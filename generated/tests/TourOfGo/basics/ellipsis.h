@@ -15,17 +15,17 @@ namespace golang::main
     extern bool ToBe;
     extern uint64_t MaxInt;
     extern gocpp::complex128 z;
-    void DummyPrintList(std::string format, gocpp::slice<std::any> elts);
-    void DummyPrintf(std::string format, gocpp::slice<std::any> a);
+    void DummyPrintList(gocpp::string format, gocpp::slice<std::any> elts);
+    void DummyPrintf(gocpp::string format, gocpp::slice<std::any> a);
     
     template<typename... Args>
-    void DummyPrintf(std::string format, Args... a)
+    void DummyPrintf(gocpp::string format, Args... a)
     {
         return DummyPrintf(format, gocpp::ToSlice<std::any>(a...));
     }
     
     template<typename... Args>
-    void DummyPrintf(std::string format, std::any value, Args... a)
+    void DummyPrintf(gocpp::string format, std::any value, Args... a)
     {
         return DummyPrintf(format, gocpp::ToSlice<std::any>(value, a...));
     }

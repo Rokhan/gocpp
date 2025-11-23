@@ -103,7 +103,7 @@ namespace golang::strings
         struct gocpp::error err;
         if(off < 0)
         {
-            return {0, errors::New("strings.Reader.ReadAt: negative offset"s)};
+            return {0, errors::New("strings.Reader.ReadAt: negative offset"_s)};
         }
         if(off >= int64_t(len(r->s)))
         {
@@ -135,7 +135,7 @@ namespace golang::strings
     {
         if(r->i <= 0)
         {
-            return errors::New("strings.Reader.UnreadByte: at beginning of string"s);
+            return errors::New("strings.Reader.UnreadByte: at beginning of string"_s);
         }
         r->prevRune = - 1;
         r->i--;
@@ -169,11 +169,11 @@ namespace golang::strings
     {
         if(r->i <= 0)
         {
-            return errors::New("strings.Reader.UnreadRune: at beginning of string"s);
+            return errors::New("strings.Reader.UnreadRune: at beginning of string"_s);
         }
         if(r->prevRune < 0)
         {
-            return errors::New("strings.Reader.UnreadRune: previous operation was not ReadRune"s);
+            return errors::New("strings.Reader.UnreadRune: previous operation was not ReadRune"_s);
         }
         r->i = int64_t(r->prevRune);
         r->prevRune = - 1;
@@ -204,13 +204,13 @@ namespace golang::strings
                     abs = int64_t(len(r->s)) + offset;
                     break;
                 default:
-                    return {0, errors::New("strings.Reader.Seek: invalid whence"s)};
+                    return {0, errors::New("strings.Reader.Seek: invalid whence"_s)};
                     break;
             }
         }
         if(abs < 0)
         {
-            return {0, errors::New("strings.Reader.Seek: negative position"s)};
+            return {0, errors::New("strings.Reader.Seek: negative position"_s)};
         }
         r->i = abs;
         return {abs, nullptr};
@@ -231,7 +231,7 @@ namespace golang::strings
         std::tie(m, err) = io::WriteString(w, s);
         if(m > len(s))
         {
-            gocpp::panic("strings.Reader.WriteTo: invalid WriteString count"s);
+            gocpp::panic("strings.Reader.WriteTo: invalid WriteString count"_s);
         }
         r->i += int64_t(m);
         n = int64_t(m);
@@ -243,14 +243,14 @@ namespace golang::strings
     }
 
     // Reset resets the [Reader] to be reading from s.
-    void rec::Reset(struct Reader* r, std::string s)
+    void rec::Reset(struct Reader* r, gocpp::string s)
     {
         *r = Reader {s, 0, - 1};
     }
 
     // NewReader returns a new [Reader] reading from s.
     // It is similar to [bytes.NewBufferString] but more efficient and non-writable.
-    struct Reader* NewReader(std::string s)
+    struct Reader* NewReader(gocpp::string s)
     {
         return new Reader {s, 0, - 1};
     }

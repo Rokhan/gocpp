@@ -153,7 +153,7 @@ namespace golang::poll
     {
         if(pd->runtimeCtx == 0)
         {
-            return errors::New("waiting for unsupported file type"s);
+            return errors::New("waiting for unsupported file type"_s);
         }
         auto res = runtime_pollWait(pd->runtimeCtx, mode);
         return convertErr(res, isFile);
@@ -211,8 +211,8 @@ namespace golang::poll
                     break;
             }
         }
-        println("unreachable: "s, res);
-        gocpp::panic("unreachable"s);
+        println("unreachable: "_s, res);
+        gocpp::panic("unreachable"_s);
     }
 
     // SetDeadline sets the read and write deadlines associated with fd.

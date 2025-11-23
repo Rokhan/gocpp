@@ -62,8 +62,8 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Dummy& value);
     struct gocpp_id_0
     {
-        std::string firstName;
-        std::string lastName;
+        gocpp::string firstName;
+        gocpp::string lastName;
 
         using isGoStruct = void;
 

@@ -70,11 +70,11 @@ namespace golang::time
         bool Before(struct Time t, struct Time u);
         int Compare(struct Time t, struct Time u);
         bool Equal(struct Time t, struct Time u);
-        std::string String(golang::time::Month m);
-        std::string String(golang::time::Weekday d);
+        gocpp::string String(golang::time::Month m);
+        gocpp::string String(golang::time::Weekday d);
         bool IsZero(struct Time t);
         uint64_t abs(struct Time t);
-        std::tuple<std::string, int, uint64_t> locabs(struct Time t);
+        std::tuple<gocpp::string, int, uint64_t> locabs(struct Time t);
         std::tuple<int, time::Month, int> Date(struct Time t);
         int Year(struct Time t);
         time::Month Month(struct Time t);
@@ -87,7 +87,7 @@ namespace golang::time
         int Second(struct Time t);
         int Nanosecond(struct Time t);
         int YearDay(struct Time t);
-        std::string String(golang::time::Duration d);
+        gocpp::string String(golang::time::Duration d);
         int format(golang::time::Duration d, gocpp::array<unsigned char, 32>* buf);
         int64_t Nanoseconds(golang::time::Duration d);
         int64_t Microseconds(golang::time::Duration d);
@@ -106,7 +106,7 @@ namespace golang::time
         struct Time Local(struct Time t);
         struct Time In(struct Time t, struct Location* loc);
         struct Location* Location(struct Time t);
-        std::tuple<std::string, int> Zone(struct Time t);
+        std::tuple<gocpp::string, int> Zone(struct Time t);
         std::tuple<struct Time, struct Time> ZoneBounds(struct Time t);
         int64_t Unix(struct Time t);
         int64_t UnixMilli(struct Time t);

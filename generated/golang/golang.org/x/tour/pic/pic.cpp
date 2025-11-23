@@ -87,7 +87,7 @@ namespace golang::pic
         {
             auto w = bufio::NewWriter(os::Stdout);
             defer.push_back([=]{ rec::Flush(gocpp::recv(w)); });
-            io::WriteString(w, "IMAGE:"s);
+            io::WriteString(w, "IMAGE:"_s);
             auto b64 = base64::NewEncoder(base64::StdEncoding, w);
             auto err = rec::Encode(gocpp::recv((gocpp::InitPtr<png::Encoder>([=](auto& x) {
                 x.CompressionLevel = png::BestCompression;
@@ -97,7 +97,7 @@ namespace golang::pic
                 gocpp::panic(err);
             }
             rec::Close(gocpp::recv(b64));
-            io::WriteString(w, "\n"s);
+            io::WriteString(w, "\n"_s);
         }
         catch(gocpp::GoPanic& gp)
         {

@@ -32,11 +32,11 @@ namespace golang::time
         using registry::rec::ReadSubKeyNames;
     }
 
-    gocpp::slice<std::string> platformZoneSources;
+    gocpp::slice<gocpp::string> platformZoneSources;
     // matchZoneKey checks if stdname and dstname match the corresponding key
     // values "MUI_Std" and MUI_Dlt" or "Std" and "Dlt" in the kname key stored
     // under the open registry key zones.
-    std::tuple<bool, struct gocpp::error> matchZoneKey(registry::Key zones, std::string kname, std::string stdname, std::string dstname)
+    std::tuple<bool, struct gocpp::error> matchZoneKey(registry::Key zones, gocpp::string kname, gocpp::string stdname, gocpp::string dstname)
     {
         gocpp::Defer defer;
         try
@@ -49,20 +49,20 @@ namespace golang::time
                 return {false, err};
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(k)); });
-            std::string std = {};
-            std::string dlt = {};
-            std::tie(std, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Std"s);
+            gocpp::string std = {};
+            gocpp::string dlt = {};
+            std::tie(std, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Std"_s);
             if(err == nullptr)
             {
-                std::tie(dlt, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Dlt"s);
+                std::tie(dlt, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Dlt"_s);
             }
             if(err != nullptr)
             {
-                if(std::tie(std, gocpp_id_0, err) = rec::GetStringValue(gocpp::recv(k), "Std"s); err != nullptr)
+                if(std::tie(std, gocpp_id_0, err) = rec::GetStringValue(gocpp::recv(k), "Std"_s); err != nullptr)
                 {
                     return {false, err};
                 }
-                if(std::tie(dlt, gocpp_id_1, err) = rec::GetStringValue(gocpp::recv(k), "Dlt"s); err != nullptr)
+                if(std::tie(dlt, gocpp_id_1, err) = rec::GetStringValue(gocpp::recv(k), "Dlt"_s); err != nullptr)
                 {
                     return {false, err};
                 }
@@ -85,22 +85,22 @@ namespace golang::time
 
     // toEnglishName searches the registry for an English name of a time zone
     // whose zone names are stdname and dstname and returns the English name.
-    std::tuple<std::string, struct gocpp::error> toEnglishName(std::string stdname, std::string dstname)
+    std::tuple<gocpp::string, struct gocpp::error> toEnglishName(gocpp::string stdname, gocpp::string dstname)
     {
         gocpp::Defer defer;
         try
         {
-            auto [k, err] = registry::OpenKey(registry::LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones"s, registry::ENUMERATE_SUB_KEYS | registry::QUERY_VALUE);
+            auto [k, err] = registry::OpenKey(registry::LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones"_s, registry::ENUMERATE_SUB_KEYS | registry::QUERY_VALUE);
             if(err != nullptr)
             {
-                return {""s, err};
+                return {""_s, err};
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(k)); });
-            gocpp::slice<std::string> names;
+            gocpp::slice<gocpp::string> names;
             std::tie(names, err) = rec::ReadSubKeyNames(gocpp::recv(k));
             if(err != nullptr)
             {
-                return {""s, err};
+                return {""_s, err};
             }
             for(auto [gocpp_ignored, name] : names)
             {
@@ -110,7 +110,7 @@ namespace golang::time
                     return {name, nullptr};
                 }
             }
-            return {""s, errors::New("English name for time zone ""s + stdname + "" not found in registry"s)};
+            return {""_s, errors::New("English name for time zone ""_s + stdname + "" not found in registry"_s)};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -119,7 +119,7 @@ namespace golang::time
     }
 
     // extractCAPS extracts capital letters from description desc.
-    std::string extractCAPS(std::string desc)
+    gocpp::string extractCAPS(gocpp::string desc)
     {
         gocpp::slice<gocpp::rune> short = {};
         for(auto [gocpp_ignored, c] : desc)
@@ -129,14 +129,14 @@ namespace golang::time
                 short = append(short, c);
             }
         }
-        return std::string(short);
+        return gocpp::string(short);
     }
 
     // abbrev returns the abbreviations to use for the given zone z.
-    std::tuple<std::string, std::string> abbrev(syscall::Timezoneinformation* z)
+    std::tuple<gocpp::string, gocpp::string> abbrev(syscall::Timezoneinformation* z)
     {
-        std::string std;
-        std::string dst;
+        gocpp::string std;
+        gocpp::string dst;
         auto stdName = syscall::UTF16ToString(z->StandardName.make_slice(0));
         auto [a, ok] = abbrs[stdName];
         if(! ok)
@@ -187,7 +187,7 @@ namespace golang::time
     void initLocalFromTZI(syscall::Timezoneinformation* i)
     {
         auto l = & localLoc;
-        l->name = "Local"s;
+        l->name = "Local"_s;
         auto nzone = 1;
         if(i->StandardDate.Month > 0)
         {
@@ -276,7 +276,7 @@ namespace golang::time
         syscall::Timezoneinformation i = {};
         if(auto [gocpp_id_2, err] = syscall::GetTimeZoneInformation(& i); err != nullptr)
         {
-            localLoc.name = "UTC"s;
+            localLoc.name = "UTC"_s;
             return;
         }
         initLocalFromTZI(& i);

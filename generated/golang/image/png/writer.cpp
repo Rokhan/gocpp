@@ -299,7 +299,7 @@ namespace golang::png
         return 256 - int(d);
     }
 
-    void rec::writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, std::string name)
+    void rec::writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, gocpp::string name)
     {
         if(e->err != nullptr)
         {
@@ -308,7 +308,7 @@ namespace golang::png
         auto n = uint32_t(len(b));
         if(int(n) != len(b))
         {
-            e->err = UnsupportedError(name + " chunk is too large: "s + strconv::Itoa(len(b)));
+            e->err = UnsupportedError(name + " chunk is too large: "_s + strconv::Itoa(len(b)));
             return;
         }
         rec::PutUint32(gocpp::recv(binary::BigEndian), e->header.make_slice(0, 4), n);
@@ -399,14 +399,14 @@ namespace golang::png
         e->tmp[10] = 0;
         e->tmp[11] = 0;
         e->tmp[12] = 0;
-        rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 13), "IHDR"s);
+        rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 13), "IHDR"_s);
     }
 
     void rec::writePLTEAndTRNS(struct encoder* e, color::Palette p)
     {
         if(len(p) < 1 || len(p) > 256)
         {
-            e->err = FormatError("bad palette length: "s + strconv::Itoa(len(p)));
+            e->err = FormatError("bad palette length: "_s + strconv::Itoa(len(p)));
             return;
         }
         auto last = - 1;
@@ -422,10 +422,10 @@ namespace golang::png
             }
             e->tmp[3 * 256 + i] = c1.A;
         }
-        rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 3 * len(p)), "PLTE"s);
+        rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 3 * len(p)), "PLTE"_s);
         if(last != - 1)
         {
-            rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(3 * 256, 3 * 256 + 1 + last), "tRNS"s);
+            rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(3 * 256, 3 * 256 + 1 + last), "tRNS"_s);
         }
     }
 
@@ -437,7 +437,7 @@ namespace golang::png
     // No other code should treat an encoder as an io.Writer.
     std::tuple<int, struct gocpp::error> rec::Write(struct encoder* e, gocpp::slice<unsigned char> b)
     {
-        rec::writeChunk(gocpp::recv(e), b, "IDAT"s);
+        rec::writeChunk(gocpp::recv(e), b, "IDAT"_s);
         if(e->err != nullptr)
         {
             return {0, e->err};
@@ -938,7 +938,7 @@ namespace golang::png
 
     void rec::writeIEND(struct encoder* e)
     {
-        rec::writeChunk(gocpp::recv(e), nullptr, "IEND"s);
+        rec::writeChunk(gocpp::recv(e), nullptr, "IEND"_s);
     }
 
     // Encode writes the Image m to w in PNG format. Any Image may be
@@ -958,7 +958,7 @@ namespace golang::png
             auto [mw, mh] = std::tuple{int64_t(rec::Dx(gocpp::recv(rec::Bounds(gocpp::recv(m))))), int64_t(rec::Dy(gocpp::recv(rec::Bounds(gocpp::recv(m)))))};
             if(mw <= 0 || mh <= 0 || mw >= (1 << 32) || mh >= (1 << 32))
             {
-                return FormatError("invalid image size: "s + strconv::FormatInt(mw, 10) + "x"s + strconv::FormatInt(mh, 10));
+                return FormatError("invalid image size: "_s + strconv::FormatInt(mw, 10) + "x"_s + strconv::FormatInt(mh, 10));
             }
             encoder* e = {};
             if(enc->BufferPool != nullptr)

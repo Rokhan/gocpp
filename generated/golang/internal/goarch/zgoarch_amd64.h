@@ -11,7 +11,7 @@
 
 namespace golang::goarch
 {
-    extern std::string GOARCH;
+    extern gocpp::string GOARCH;
 
     namespace rec
     {

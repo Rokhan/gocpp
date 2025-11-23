@@ -67,7 +67,7 @@ namespace golang::os
 
     struct gocpp::error rec::Control(struct rawConn* c, std::function<void (uintptr_t _1)> f)
     {
-        if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Control"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Control"_s); err != nullptr)
         {
             return err;
         }
@@ -78,7 +78,7 @@ namespace golang::os
 
     struct gocpp::error rec::Read(struct rawConn* c, std::function<bool (uintptr_t _1)> f)
     {
-        if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Read"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Read"_s); err != nullptr)
         {
             return err;
         }
@@ -89,7 +89,7 @@ namespace golang::os
 
     struct gocpp::error rec::Write(struct rawConn* c, std::function<bool (uintptr_t _1)> f)
     {
-        if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Write"s); err != nullptr)
+        if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Write"_s); err != nullptr)
         {
             return err;
         }

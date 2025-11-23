@@ -92,7 +92,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void initPageTrace(std::string env)
+    void initPageTrace(gocpp::string env)
     {
     }
 

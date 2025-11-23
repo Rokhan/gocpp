@@ -143,7 +143,7 @@ namespace golang::runtime
     extern gocpp::array<unsigned char, _MAX_PATH + 1> sysDirectory;
     extern uintptr_t sysDirectoryLen;
     void initSysDirectory();
-    std::string windows_GetSystemDirectory();
+    gocpp::string windows_GetSystemDirectory();
     uintptr_t windowsLoadSystemLib(gocpp::slice<uint16_t> name);
     void loadOptionalSyscalls();
     void monitorSuspendResume();

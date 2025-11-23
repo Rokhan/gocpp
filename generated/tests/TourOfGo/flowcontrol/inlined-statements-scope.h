@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    std::tuple<std::string, bool> dummy();
+    std::tuple<gocpp::string, bool> dummy();
     extern bool okok;
     void test_if();
     void test_for();

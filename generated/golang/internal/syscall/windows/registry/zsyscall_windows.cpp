@@ -56,15 +56,15 @@ namespace golang::registry
         return e;
     }
 
-    syscall::LazyDLL* modadvapi32 = syscall::NewLazyDLL(sysdll::Add("advapi32.dll"s));
-    syscall::LazyDLL* modkernel32 = syscall::NewLazyDLL(sysdll::Add("kernel32.dll"s));
-    syscall::LazyProc* procRegCreateKeyExW = rec::NewProc(gocpp::recv(modadvapi32), "RegCreateKeyExW"s);
-    syscall::LazyProc* procRegDeleteKeyW = rec::NewProc(gocpp::recv(modadvapi32), "RegDeleteKeyW"s);
-    syscall::LazyProc* procRegDeleteValueW = rec::NewProc(gocpp::recv(modadvapi32), "RegDeleteValueW"s);
-    syscall::LazyProc* procRegEnumValueW = rec::NewProc(gocpp::recv(modadvapi32), "RegEnumValueW"s);
-    syscall::LazyProc* procRegLoadMUIStringW = rec::NewProc(gocpp::recv(modadvapi32), "RegLoadMUIStringW"s);
-    syscall::LazyProc* procRegSetValueExW = rec::NewProc(gocpp::recv(modadvapi32), "RegSetValueExW"s);
-    syscall::LazyProc* procExpandEnvironmentStringsW = rec::NewProc(gocpp::recv(modkernel32), "ExpandEnvironmentStringsW"s);
+    syscall::LazyDLL* modadvapi32 = syscall::NewLazyDLL(sysdll::Add("advapi32.dll"_s));
+    syscall::LazyDLL* modkernel32 = syscall::NewLazyDLL(sysdll::Add("kernel32.dll"_s));
+    syscall::LazyProc* procRegCreateKeyExW = rec::NewProc(gocpp::recv(modadvapi32), "RegCreateKeyExW"_s);
+    syscall::LazyProc* procRegDeleteKeyW = rec::NewProc(gocpp::recv(modadvapi32), "RegDeleteKeyW"_s);
+    syscall::LazyProc* procRegDeleteValueW = rec::NewProc(gocpp::recv(modadvapi32), "RegDeleteValueW"_s);
+    syscall::LazyProc* procRegEnumValueW = rec::NewProc(gocpp::recv(modadvapi32), "RegEnumValueW"_s);
+    syscall::LazyProc* procRegLoadMUIStringW = rec::NewProc(gocpp::recv(modadvapi32), "RegLoadMUIStringW"_s);
+    syscall::LazyProc* procRegSetValueExW = rec::NewProc(gocpp::recv(modadvapi32), "RegSetValueExW"_s);
+    syscall::LazyProc* procExpandEnvironmentStringsW = rec::NewProc(gocpp::recv(modkernel32), "ExpandEnvironmentStringsW"_s);
     struct gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition)
     {
         struct gocpp::error regerrno;

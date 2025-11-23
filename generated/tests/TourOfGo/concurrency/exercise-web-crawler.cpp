@@ -46,19 +46,19 @@ namespace golang::main
     }
 
     template<typename T, typename StoreT>
-    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetcher::FetcherImpl<T, StoreT>::vFetch(std::string url)
+    std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetcher::FetcherImpl<T, StoreT>::vFetch(gocpp::string url)
     {
         return rec::Fetch(gocpp::PtrRecv<T, false>(value.get()), url);
     }
 
     namespace rec
     {
-        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, std::string url)
+        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, gocpp::string url)
         {
             return self.ptr->value->vFetch(url);
         }
 
-        std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, std::string url)
+        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, gocpp::string url)
         {
             return self.obj.value->vFetch(url);
         }
@@ -71,7 +71,7 @@ namespace golang::main
 
     // Crawl uses fetcher to recursively crawl
     // pages starting with url, to a maximum of depth.
-    void Crawl(std::string url, int depth, struct Fetcher fetcher)
+    void Crawl(gocpp::string url, int depth, struct Fetcher fetcher)
     {
         if(depth <= 0)
         {
@@ -83,7 +83,7 @@ namespace golang::main
             mocklib::Println(err);
             return;
         }
-        mocklib::Printf("found: %s %q\n"s, url, body);
+        mocklib::Printf("found: %s %q\n"_s, url, body);
         for(auto [gocpp_ignored, u] : urls)
         {
             Crawl(u, depth - 1, fetcher);
@@ -93,7 +93,7 @@ namespace golang::main
 
     void main()
     {
-        Crawl("https://golang.org/"s, 4, fetcher);
+        Crawl("https://golang.org/"_s, 4, fetcher);
     }
 
     // fakeFetcher is Fetcher that returns canned results.
@@ -129,17 +129,17 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<std::string, gocpp::slice<std::string>, struct gocpp::error> rec::Fetch(golang::main::fakeFetcher f, std::string url)
+    std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> rec::Fetch(golang::main::fakeFetcher f, gocpp::string url)
     {
         if(auto [res, ok] = f[url]; ok)
         {
             return {res->body, res->urls, nullptr};
         }
-        return {""s, nullptr, mocklib::Errorf("not found: %s"s, url)};
+        return {""_s, nullptr, mocklib::Errorf("not found: %s"_s, url)};
     }
 
     // fetcher is a populated fakeFetcher.
-    main::fakeFetcher fetcher = main::fakeFetcher {{ "https://golang.org/"s, new fakeResult {"The Go Programming Language"s, gocpp::slice<std::string> {"https://golang.org/pkg/"s, "https://golang.org/cmd/"s}} }, { "https://golang.org/pkg/"s, new fakeResult {"Packages"s, gocpp::slice<std::string> {"https://golang.org/"s, "https://golang.org/cmd/"s, "https://golang.org/pkg/fmt/"s, "https://golang.org/pkg/os/"s}} }, { "https://golang.org/pkg/fmt/"s, new fakeResult {"Package fmt"s, gocpp::slice<std::string> {"https://golang.org/"s, "https://golang.org/pkg/"s}} }, { "https://golang.org/pkg/os/"s, new fakeResult {"Package os"s, gocpp::slice<std::string> {"https://golang.org/"s, "https://golang.org/pkg/"s}} }};
+    main::fakeFetcher fetcher = main::fakeFetcher {{ "https://golang.org/"_s, new fakeResult {"The Go Programming Language"_s, gocpp::slice<gocpp::string> {"https://golang.org/pkg/"_s, "https://golang.org/cmd/"_s}} }, { "https://golang.org/pkg/"_s, new fakeResult {"Packages"_s, gocpp::slice<gocpp::string> {"https://golang.org/"_s, "https://golang.org/cmd/"_s, "https://golang.org/pkg/fmt/"_s, "https://golang.org/pkg/os/"_s}} }, { "https://golang.org/pkg/fmt/"_s, new fakeResult {"Package fmt"_s, gocpp::slice<gocpp::string> {"https://golang.org/"_s, "https://golang.org/pkg/"_s}} }, { "https://golang.org/pkg/os/"_s, new fakeResult {"Package os"_s, gocpp::slice<gocpp::string> {"https://golang.org/"_s, "https://golang.org/pkg/"_s}} }};
 }
 
 int main()

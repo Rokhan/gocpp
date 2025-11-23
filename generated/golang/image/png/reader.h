@@ -38,7 +38,7 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct interlaceScan& value);
-    extern std::string pngHeader;
+    extern gocpp::string pngHeader;
     struct decoder
     {
         io::Reader r;
@@ -76,8 +76,8 @@ namespace golang::png
 
     namespace rec
     {
-        std::string Error(golang::png::FormatError e);
-        std::string Error(golang::png::UnsupportedError e);
+        gocpp::string Error(golang::png::FormatError e);
+        gocpp::string Error(golang::png::UnsupportedError e);
         struct gocpp::error parseIHDR(struct decoder* d, uint32_t length);
         struct gocpp::error parsePLTE(struct decoder* d, uint32_t length);
         struct gocpp::error parsetRNS(struct decoder* d, uint32_t length);

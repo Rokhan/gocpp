@@ -43,23 +43,23 @@ namespace golang::reader
             {
                 if(v != 'A')
                 {
-                    fmt::Fprintf(os::Stderr, "got byte %x at offset %v, want 'A'\n"s, v, o + i);
+                    fmt::Fprintf(os::Stderr, "got byte %x at offset %v, want 'A'\n"_s, v, o + i);
                     return;
                 }
             }
             o += n;
             if(err != nullptr)
             {
-                fmt::Fprintf(os::Stderr, "read error: %v\n"s, err);
+                fmt::Fprintf(os::Stderr, "read error: %v\n"_s, err);
                 return;
             }
         }
         if(o == 0)
         {
-            fmt::Fprintf(os::Stderr, "read zero bytes after %d Read calls\n"s, i);
+            fmt::Fprintf(os::Stderr, "read zero bytes after %d Read calls\n"_s, i);
             return;
         }
-        mocklib::Println("OK!"s);
+        mocklib::Println("OK!"_s);
     }
 
 }

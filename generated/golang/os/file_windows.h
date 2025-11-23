@@ -27,7 +27,7 @@ namespace golang::os
     struct file
     {
         poll::FD pfd;
-        std::string name;
+        gocpp::string name;
         dirInfo* dirinfo;
         bool appendMode;
 
@@ -43,25 +43,25 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct file& value);
-    struct File* newFile(syscall::Handle h, std::string name, std::string kind);
-    struct File* newConsoleFile(syscall::Handle h, std::string name);
-    struct File* NewFile(uintptr_t fd, std::string name);
+    struct File* newFile(syscall::Handle h, gocpp::string name, gocpp::string kind);
+    struct File* newConsoleFile(syscall::Handle h, gocpp::string name);
+    struct File* NewFile(uintptr_t fd, gocpp::string name);
     void epipecheck(struct File* file, struct gocpp::error e);
-    extern std::string DevNull;
-    std::tuple<struct File*, struct gocpp::error> openFileNolog(std::string name, int flag, golang::os::FileMode perm);
-    struct gocpp::error Truncate(std::string name, int64_t size);
-    struct gocpp::error Remove(std::string name);
-    struct gocpp::error rename(std::string oldname, std::string newname);
+    extern gocpp::string DevNull;
+    std::tuple<struct File*, struct gocpp::error> openFileNolog(gocpp::string name, int flag, golang::os::FileMode perm);
+    struct gocpp::error Truncate(gocpp::string name, int64_t size);
+    struct gocpp::error Remove(gocpp::string name);
+    struct gocpp::error rename(gocpp::string oldname, gocpp::string newname);
     std::tuple<struct File*, struct File*, struct gocpp::error> Pipe();
     extern sync::Once useGetTempPath2Once;
     extern bool useGetTempPath2;
-    std::string tempDir();
-    struct gocpp::error Link(std::string oldname, std::string newname);
-    struct gocpp::error Symlink(std::string oldname, std::string newname);
-    std::tuple<syscall::Handle, struct gocpp::error> openSymlink(std::string path);
-    std::tuple<std::string, struct gocpp::error> normaliseLinkPath(std::string path);
-    std::tuple<std::string, struct gocpp::error> readReparseLink(std::string path);
-    std::tuple<std::string, struct gocpp::error> readlink(std::string name);
+    gocpp::string tempDir();
+    struct gocpp::error Link(gocpp::string oldname, gocpp::string newname);
+    struct gocpp::error Symlink(gocpp::string oldname, gocpp::string newname);
+    std::tuple<syscall::Handle, struct gocpp::error> openSymlink(gocpp::string path);
+    std::tuple<gocpp::string, struct gocpp::error> normaliseLinkPath(gocpp::string path);
+    std::tuple<gocpp::string, struct gocpp::error> readReparseLink(gocpp::string path);
+    std::tuple<gocpp::string, struct gocpp::error> readlink(gocpp::string name);
 
     namespace rec
     {

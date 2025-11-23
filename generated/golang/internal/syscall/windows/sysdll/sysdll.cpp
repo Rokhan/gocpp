@@ -31,11 +31,11 @@ namespace golang::sysdll
     //
     // It has no associated mutex and should only be mutated serially
     // (currently: during init), and not concurrent with DLL loading.
-    gocpp::map<std::string, bool> IsSystemDLL = gocpp::map<std::string, bool> {};
+    gocpp::map<gocpp::string, bool> IsSystemDLL = gocpp::map<gocpp::string, bool> {};
     // Add notes that dll is a system32 DLL which should only be loaded
     // from the Windows SYSTEM32 directory. It returns its argument back,
     // for ease of use in generated code.
-    std::string Add(std::string dll)
+    gocpp::string Add(gocpp::string dll)
     {
         IsSystemDLL[dll] = true;
         return dll;

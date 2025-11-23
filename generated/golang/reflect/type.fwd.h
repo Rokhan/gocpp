@@ -12,7 +12,7 @@ namespace golang::reflect
     const int kindGCProg = 1 << 6;
     const int kindMask = (1 << 5) - 1;
     struct StructField;
-    using StructTag = std::string;
+    using StructTag = gocpp::string;
     struct fieldScan;
     struct gocpp_id_3;
     struct gocpp_id_10;

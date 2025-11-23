@@ -16,7 +16,7 @@ namespace golang::main
     struct SafeCounter
     {
         mocklib::Mutex mu;
-        gocpp::map<std::string, int> v;
+        gocpp::map<gocpp::string, int> v;
 
         using isGoStruct = void;
 
@@ -34,8 +34,8 @@ namespace golang::main
 
     namespace rec
     {
-        void Inc(struct SafeCounter* c, std::string key);
-        int Value(struct SafeCounter* c, std::string key);
+        void Inc(struct SafeCounter* c, gocpp::string key);
+        int Value(struct SafeCounter* c, gocpp::string key);
     }
 }
 

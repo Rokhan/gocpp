@@ -314,10 +314,10 @@ namespace golang::runtime
     // meaning of skip differs between Caller and [Callers].) The return values report the
     // program counter, file name, and line number within the file of the corresponding
     // call. The boolean ok is false if it was not possible to recover the information.
-    std::tuple<uintptr_t, std::string, int, bool> Caller(int skip)
+    std::tuple<uintptr_t, gocpp::string, int, bool> Caller(int skip)
     {
         uintptr_t pc;
-        std::string file;
+        gocpp::string file;
         int line;
         bool ok;
         auto rpc = gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), 1);
@@ -352,14 +352,14 @@ namespace golang::runtime
         return callers(skip, pc);
     }
 
-    std::string defaultGOROOT;
+    gocpp::string defaultGOROOT;
     // GOROOT returns the root of the Go tree. It uses the
     // GOROOT environment variable, if set at process start,
     // or else the root used during the Go build.
-    std::string GOROOT()
+    gocpp::string GOROOT()
     {
-        auto s = gogetenv("GOROOT"s);
-        if(s != ""s)
+        auto s = gogetenv("GOROOT"_s);
+        if(s != ""_s)
         {
             return s;
         }
@@ -374,11 +374,11 @@ namespace golang::runtime
     // This is set by the linker.
     //
     // This is accessed by "go version <binary>".
-    std::string buildVersion;
+    gocpp::string buildVersion;
     // Version returns the Go tree's version string.
     // It is either the commit hash and date at the time of the build or,
     // when possible, a release tag like "go1.3".
-    std::string Version()
+    gocpp::string Version()
     {
         return buildVersion;
     }
@@ -386,9 +386,9 @@ namespace golang::runtime
     // GOOS is the running program's operating system target:
     // one of darwin, freebsd, linux, and so on.
     // To view possible combinations of GOOS and GOARCH, run "go tool dist list".
-    std::string GOOS = goos::GOOS;
+    gocpp::string GOOS = goos::GOOS;
     // GOARCH is the running program's architecture target:
     // one of 386, amd64, arm, s390x, and so on.
-    std::string GOARCH = goarch::GOARCH;
+    gocpp::string GOARCH = goarch::GOARCH;
 }
 

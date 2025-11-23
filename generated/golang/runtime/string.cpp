@@ -61,7 +61,7 @@ namespace golang::runtime
     // If buf != nil, the compiler has determined that the result does not
     // escape the calling function, so the string data can be stored in buf
     // if small enough.
-    std::string concatstrings(golang::runtime::tmpBuf* buf, gocpp::slice<std::string> a)
+    gocpp::string concatstrings(golang::runtime::tmpBuf* buf, gocpp::slice<gocpp::string> a)
     {
         auto idx = 0;
         auto l = 0;
@@ -75,7 +75,7 @@ namespace golang::runtime
             }
             if(l + n < l)
             {
-                go_throw("string concatenation too long"s);
+                go_throw("string concatenation too long"_s);
             }
             l += n;
             count++;
@@ -83,7 +83,7 @@ namespace golang::runtime
         }
         if(count == 0)
         {
-            return ""s;
+            return ""_s;
         }
         if(count == 1 && (buf != nullptr || ! stringDataOnStack(a[idx])))
         {
@@ -98,24 +98,24 @@ namespace golang::runtime
         return s;
     }
 
-    std::string concatstring2(golang::runtime::tmpBuf* buf, std::string a0, std::string a1)
+    gocpp::string concatstring2(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1)
     {
-        return concatstrings(buf, gocpp::slice<std::string> {a0, a1});
+        return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1});
     }
 
-    std::string concatstring3(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2)
+    gocpp::string concatstring3(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1, gocpp::string a2)
     {
-        return concatstrings(buf, gocpp::slice<std::string> {a0, a1, a2});
+        return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1, a2});
     }
 
-    std::string concatstring4(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3)
+    gocpp::string concatstring4(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3)
     {
-        return concatstrings(buf, gocpp::slice<std::string> {a0, a1, a2, a3});
+        return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1, a2, a3});
     }
 
-    std::string concatstring5(golang::runtime::tmpBuf* buf, std::string a0, std::string a1, std::string a2, std::string a3, std::string a4)
+    gocpp::string concatstring5(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4)
     {
-        return concatstrings(buf, gocpp::slice<std::string> {a0, a1, a2, a3, a4});
+        return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1, a2, a3, a4});
     }
 
     // slicebytetostring converts a byte slice to a string.
@@ -124,11 +124,11 @@ namespace golang::runtime
     // n is the length of the slice.
     // Buf is a fixed-size buffer for the result,
     // it is not nil if the result does not escape.
-    std::string slicebytetostring(golang::runtime::tmpBuf* buf, unsigned char* ptr, int n)
+    gocpp::string slicebytetostring(golang::runtime::tmpBuf* buf, unsigned char* ptr, int n)
     {
         if(n == 0)
         {
-            return ""s;
+            return ""_s;
         }
         if(raceenabled)
         {
@@ -166,16 +166,16 @@ namespace golang::runtime
 
     // stringDataOnStack reports whether the string's data is
     // stored on the current goroutine's stack.
-    bool stringDataOnStack(std::string s)
+    bool stringDataOnStack(gocpp::string s)
     {
         auto ptr = uintptr_t(unsafe::Pointer(unsafe::StringData(s)));
         auto stk = getg()->stack;
         return stk.lo <= ptr && ptr < stk.hi;
     }
 
-    std::tuple<std::string, gocpp::slice<unsigned char>> rawstringtmp(golang::runtime::tmpBuf* buf, int l)
+    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(golang::runtime::tmpBuf* buf, int l)
     {
-        std::string s;
+        gocpp::string s;
         gocpp::slice<unsigned char> b;
         if(buf != nullptr && l <= len(buf))
         {
@@ -203,7 +203,7 @@ namespace golang::runtime
     //     where k is []byte, T1 to Tn is a nesting of struct and array literals.
     //   - Used for "<"+string(b)+">" concatenation where b is []byte.
     //   - Used for string(b)=="foo" comparison where b is []byte.
-    std::string slicebytetostringtmp(unsigned char* ptr, int n)
+    gocpp::string slicebytetostringtmp(unsigned char* ptr, int n)
     {
         if(raceenabled && n > 0)
         {
@@ -220,7 +220,7 @@ namespace golang::runtime
         return unsafe::String(ptr, n);
     }
 
-    gocpp::slice<unsigned char> stringtoslicebyte(golang::runtime::tmpBuf* buf, std::string s)
+    gocpp::slice<unsigned char> stringtoslicebyte(golang::runtime::tmpBuf* buf, gocpp::string s)
     {
         gocpp::slice<unsigned char> b = {};
         if(buf != nullptr && len(s) <= len(buf))
@@ -236,7 +236,7 @@ namespace golang::runtime
         return b;
     }
 
-    gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array<gocpp::rune, tmpStringBufSize>* buf, std::string s)
+    gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array<gocpp::rune, tmpStringBufSize>* buf, gocpp::string s)
     {
         auto n = 0;
         for(const auto& _ : s)
@@ -262,7 +262,7 @@ namespace golang::runtime
         return a;
     }
 
-    std::string slicerunetostring(golang::runtime::tmpBuf* buf, gocpp::slice<gocpp::rune> a)
+    gocpp::string slicerunetostring(golang::runtime::tmpBuf* buf, gocpp::slice<gocpp::rune> a)
     {
         if(raceenabled && len(a) > 0)
         {
@@ -360,14 +360,14 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct stringStruct* stringStructOf(std::string* sp)
+    struct stringStruct* stringStructOf(gocpp::string* sp)
     {
         return (stringStruct*)(unsafe::Pointer(sp));
     }
 
-    std::string intstring(gocpp::array<unsigned char, 4>* buf, int64_t v)
+    gocpp::string intstring(gocpp::array<unsigned char, 4>* buf, int64_t v)
     {
-        std::string s;
+        gocpp::string s;
         gocpp::slice<unsigned char> b = {};
         if(buf != nullptr)
         {
@@ -390,9 +390,9 @@ namespace golang::runtime
     // string and byte slice both refer to the same storage.
     // The storage is not zeroed. Callers should use
     // b to set the string contents and then drop b.
-    std::tuple<std::string, gocpp::slice<unsigned char>> rawstring(int size)
+    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstring(int size)
     {
-        std::string s;
+        gocpp::string s;
         gocpp::slice<unsigned char> b;
         auto p = mallocgc(uintptr_t(size), nullptr, false);
         return {unsafe::String((unsigned char*)(p), size), unsafe::Slice((unsigned char*)(p), size)};
@@ -418,7 +418,7 @@ namespace golang::runtime
         gocpp::slice<gocpp::rune> b;
         if(uintptr_t(size) > maxAlloc / 4)
         {
-            go_throw("out of memory"s);
+            go_throw("out of memory"_s);
         }
         auto mem = roundupsize(uintptr_t(size) * 4, true);
         auto p = mallocgc(mem, nullptr, false);
@@ -440,7 +440,7 @@ namespace golang::runtime
         }
         if(n < 0 || uintptr_t(n) > maxAlloc)
         {
-            gocpp::panic(errorString("gobytes: length out of range"s));
+            gocpp::panic(errorString("gobytes: length out of range"_s));
         }
         auto bp = mallocgc(uintptr_t(n), nullptr, false);
         memmove(bp, unsafe::Pointer(p), uintptr_t(n));
@@ -451,12 +451,12 @@ namespace golang::runtime
     // This is exported via linkname to assembly in syscall (for Plan9).
     //
     //go:linkname gostring
-    std::string gostring(unsigned char* p)
+    gocpp::string gostring(unsigned char* p)
     {
         auto l = findnull(p);
         if(l == 0)
         {
-            return ""s;
+            return ""_s;
         }
         auto [s, b] = rawstring(l);
         memmove(unsafe::Pointer(& b[0]), unsafe::Pointer(p), uintptr_t(l));
@@ -466,28 +466,28 @@ namespace golang::runtime
     // internal_syscall_gostring is a version of gostring for internal/syscall/unix.
     //
     //go:linkname internal_syscall_gostring internal/syscall/unix.gostring
-    std::string internal_syscall_gostring(unsigned char* p)
+    gocpp::string internal_syscall_gostring(unsigned char* p)
     {
         return gostring(p);
     }
 
-    std::string gostringn(unsigned char* p, int l)
+    gocpp::string gostringn(unsigned char* p, int l)
     {
         if(l == 0)
         {
-            return ""s;
+            return ""_s;
         }
         auto [s, b] = rawstring(l);
         memmove(unsafe::Pointer(& b[0]), unsafe::Pointer(p), uintptr_t(l));
         return s;
     }
 
-    bool hasPrefix(std::string s, std::string prefix)
+    bool hasPrefix(gocpp::string s, gocpp::string prefix)
     {
         return len(s) >= len(prefix) && s.make_slice(0, len(prefix)) == prefix;
     }
 
-    bool hasSuffix(std::string s, std::string suffix)
+    bool hasSuffix(gocpp::string s, gocpp::string suffix)
     {
         return len(s) >= len(suffix) && s.make_slice(len(s) - len(suffix)) == suffix;
     }
@@ -495,9 +495,9 @@ namespace golang::runtime
     // atoi64 parses an int64 from a string s.
     // The bool result reports whether s is a number
     // representable by a value of type int64.
-    std::tuple<int64_t, bool> atoi64(std::string s)
+    std::tuple<int64_t, bool> atoi64(gocpp::string s)
     {
-        if(s == ""s)
+        if(s == ""_s)
         {
             return {0, false};
         }
@@ -545,7 +545,7 @@ namespace golang::runtime
 
     // atoi is like atoi64 but for integers
     // that fit into an int.
-    std::tuple<int, bool> atoi(std::string s)
+    std::tuple<int, bool> atoi(gocpp::string s)
     {
         if(auto [n, ok] = atoi64(s); n == int64_t(int(n)))
         {
@@ -556,7 +556,7 @@ namespace golang::runtime
 
     // atoi32 is like atoi but for integers
     // that fit into an int32.
-    std::tuple<int32_t, bool> atoi32(std::string s)
+    std::tuple<int32_t, bool> atoi32(gocpp::string s)
     {
         if(auto [n, ok] = atoi64(s); n == int64_t(int32_t(n)))
         {
@@ -578,9 +578,9 @@ namespace golang::runtime
     //
     // Returns an int64 because that's what its callers want and receive,
     // but the result is always non-negative.
-    std::tuple<int64_t, bool> parseByteCount(std::string s)
+    std::tuple<int64_t, bool> parseByteCount(gocpp::string s)
     {
-        if(s == ""s)
+        if(s == ""_s)
         {
             return {0, false};
         }
@@ -674,7 +674,7 @@ namespace golang::runtime
         {
             return 0;
         }
-        if(GOOS == "plan9"s)
+        if(GOOS == "plan9"_s)
         {
             auto p = (gocpp::array<unsigned char, maxAlloc / 2 - 1>*)(unsafe::Pointer(s));
             auto l = 0;
@@ -694,7 +694,7 @@ namespace golang::runtime
         auto safeLen = int(pageSize - uintptr_t(ptr) % pageSize);
         for(; ; )
         {
-            auto t = *(std::string*)(unsafe::Pointer(new stringStruct {ptr, safeLen}));
+            auto t = *(gocpp::string*)(unsafe::Pointer(new stringStruct {ptr, safeLen}));
             if(auto i = bytealg::IndexByteString(t, 0); i != - 1)
             {
                 return offset + i;
@@ -721,17 +721,17 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    std::string gostringnocopy(unsigned char* str)
+    gocpp::string gostringnocopy(unsigned char* str)
     {
         auto ss = gocpp::Init<stringStruct>([=](auto& x) {
             x.str = unsafe::Pointer(str);
             x.len = findnull(str);
         });
-        auto s = *(std::string*)(unsafe::Pointer(& ss));
+        auto s = *(gocpp::string*)(unsafe::Pointer(& ss));
         return s;
     }
 
-    std::string gostringw(uint16_t* strw)
+    gocpp::string gostringw(uint16_t* strw)
     {
         gocpp::array<unsigned char, 8> buf = {};
         auto str = (gocpp::array<uint16_t, maxAlloc / 2 / 2 - 1>*)(unsafe::Pointer(strw));

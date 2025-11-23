@@ -74,7 +74,7 @@ namespace golang::runtime
     {
         if(workbufAlloc % pageSize != 0 || workbufAlloc % _WorkbufSize != 0)
         {
-            go_throw("bad workbufAlloc"s);
+            go_throw("bad workbufAlloc"_s);
         }
     }
 
@@ -440,7 +440,7 @@ namespace golang::runtime
     {
         if(b->nobj == 0)
         {
-            go_throw("workbuf is empty"s);
+            go_throw("workbuf is empty"_s);
         }
     }
 
@@ -448,7 +448,7 @@ namespace golang::runtime
     {
         if(b->nobj != 0)
         {
-            go_throw("workbuf is not empty"s);
+            go_throw("workbuf is not empty"_s);
         }
     }
 
@@ -492,7 +492,7 @@ namespace golang::runtime
                 });
                 if(s == nullptr)
                 {
-                    go_throw("out of memory"s);
+                    go_throw("out of memory"_s);
                 }
                 lock(& work.wbufSpans.lock);
                 rec::insert(gocpp::recv(work.wbufSpans.busy), s);
@@ -572,7 +572,7 @@ namespace golang::runtime
         lock(& work.wbufSpans.lock);
         if(work.full != 0)
         {
-            go_throw("cannot free workbufs when work.full != 0"s);
+            go_throw("cannot free workbufs when work.full != 0"_s);
         }
         work.empty = 0;
         rec::takeAll(gocpp::recv(work.wbufSpans.free), & work.wbufSpans.busy);

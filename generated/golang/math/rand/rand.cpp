@@ -288,7 +288,7 @@ namespace golang::rand
     {
         if(n <= 0)
         {
-            gocpp::panic("invalid argument to Int63n"s);
+            gocpp::panic("invalid argument to Int63n"_s);
         }
         if(n & (n - 1) == 0)
         {
@@ -309,7 +309,7 @@ namespace golang::rand
     {
         if(n <= 0)
         {
-            gocpp::panic("invalid argument to Int31n"s);
+            gocpp::panic("invalid argument to Int31n"_s);
         }
         if(n & (n - 1) == 0)
         {
@@ -357,7 +357,7 @@ namespace golang::rand
     {
         if(n <= 0)
         {
-            gocpp::panic("invalid argument to Intn"s);
+            gocpp::panic("invalid argument to Intn"_s);
         }
         if(n <= (1 << 31) - 1)
         {
@@ -411,7 +411,7 @@ namespace golang::rand
     {
         if(n < 0)
         {
-            gocpp::panic("invalid argument to Shuffle"s);
+            gocpp::panic("invalid argument to Shuffle"_s);
         }
         auto i = n - 1;
         for(; i > (1 << 31) - 1 - 1; i--)
@@ -493,7 +493,7 @@ namespace golang::rand
     // function to avoid locking. This is not possible if the user called Seed,
     // either explicitly or implicitly via GODEBUG=randautoseed=0.
     atomic::Pointer<Rand> globalRandGenerator;
-    godebug::Setting* randautoseed = godebug::New("randautoseed"s);
+    godebug::Setting* randautoseed = godebug::New("randautoseed"_s);
     // globalRand returns the generator to use for the top-level convenience
     // functions.
     struct Rand* globalRand()
@@ -504,7 +504,7 @@ namespace golang::rand
         }
         // This is the first call. Initialize based on GODEBUG.
         Rand* r = {};
-        if(rec::Value(gocpp::recv(randautoseed)) == "0"s)
+        if(rec::Value(gocpp::recv(randautoseed)) == "0"_s)
         {
             rec::IncNonDefault(gocpp::recv(randautoseed));
             r = New(new(lockedSource));
@@ -566,7 +566,7 @@ namespace golang::rand
 
     void rec::Seed(runtimeSource*, int64_t)
     {
-        gocpp::panic("internal error: call to runtimeSource.Seed"s);
+        gocpp::panic("internal error: call to runtimeSource.Seed"_s);
     }
 
     uint64_t rec::Uint64(runtimeSource*)

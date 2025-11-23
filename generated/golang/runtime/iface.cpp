@@ -116,7 +116,7 @@ namespace golang::runtime
     {
         if(len(inter->Methods) == 0)
         {
-            go_throw("internal error - misuse of itab"s);
+            go_throw("internal error - misuse of itab"_s);
         }
         if(typ->TFlag & abi::TFlagUncommon == 0)
         {
@@ -191,7 +191,7 @@ namespace golang::runtime
     {
         if(getg()->m->mallocing != 0)
         {
-            go_throw("malloc deadlock"s);
+            go_throw("malloc deadlock"_s);
         }
         auto t = itabTable;
         if(t->count >= 3 * (t->size / 4))
@@ -201,7 +201,7 @@ namespace golang::runtime
             iterate_itabs(t2->add);
             if(t2->count != t->count)
             {
-                go_throw("mismatched count during itab table copy"s);
+                go_throw("mismatched count during itab table copy"_s);
             }
             atomicstorep(unsafe::Pointer(& itabTable), unsafe::Pointer(t2));
             t = itabTable;
@@ -238,7 +238,7 @@ namespace golang::runtime
     // the m.inter/m._type pair. If the type does not implement the interface,
     // it sets m.fun[0] to 0 and returns the name of an interface function that is missing.
     // It is ok to call this multiple times on the same m, even concurrently.
-    std::string rec::init(struct itab* m)
+    gocpp::string rec::init(struct itab* m)
     {
         auto inter = m->inter;
         auto typ = m->_type;
@@ -257,7 +257,7 @@ namespace golang::runtime
             auto name = rec::nameOff(gocpp::recv(toRType(& inter->Type)), i->Name);
             auto iname = rec::Name(gocpp::recv(name));
             auto ipkg = pkgPath(name);
-            if(ipkg == ""s)
+            if(ipkg == ""_s)
             {
                 ipkg = rec::Name(gocpp::recv(inter->PkgPath));
             }
@@ -270,7 +270,7 @@ namespace golang::runtime
                 {
                     auto pkgPath_tmp = pkgPath(tname);
                     auto& pkgPath = pkgPath_tmp;
-                    if(pkgPath == ""s)
+                    if(pkgPath == ""_s)
                     {
                         pkgPath = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(rtyp), x->PkgPath)));
                     }
@@ -299,7 +299,7 @@ namespace golang::runtime
             }
         }
         m->fun[0] = uintptr_t(fun0);
-        return ""s;
+        return ""_s;
     }
 
     void itabsinit()
@@ -322,7 +322,7 @@ namespace golang::runtime
     // iface = the static type we're converting from.
     void panicdottypeE(golang::runtime::_type* have, golang::runtime::_type* want, golang::runtime::_type* iface)
     {
-        gocpp::panic(new TypeAssertionError {iface, have, want, ""s});
+        gocpp::panic(new TypeAssertionError {iface, have, want, ""_s});
     }
 
     // panicdottypeI is called when doing an i.(T) conversion and the conversion fails.
@@ -341,7 +341,7 @@ namespace golang::runtime
     // want = the static type we're trying to convert to.
     void panicnildottype(golang::runtime::_type* want)
     {
-        gocpp::panic(new TypeAssertionError {nullptr, nullptr, want, ""s});
+        gocpp::panic(new TypeAssertionError {nullptr, nullptr, want, ""_s});
     }
 
     // The specialized convTx routines need a type descriptor to use when calling mallocgc.
@@ -353,7 +353,7 @@ namespace golang::runtime
     go_any uint16Eface = uint16InterfacePtr(0);
     go_any uint32Eface = uint32InterfacePtr(0);
     go_any uint64Eface = uint64InterfacePtr(0);
-    go_any stringEface = stringInterfacePtr(""s);
+    go_any stringEface = stringInterfacePtr(""_s);
     go_any sliceEface = sliceInterfacePtr(nullptr);
     runtime::_type* uint16Type = efaceOf(& uint16Eface)->_type;
     runtime::_type* uint32Type = efaceOf(& uint32Eface)->_type;
@@ -453,17 +453,17 @@ namespace golang::runtime
         return x;
     }
 
-    unsafe::Pointer convTstring(std::string val)
+    unsafe::Pointer convTstring(gocpp::string val)
     {
         unsafe::Pointer x;
-        if(val == ""s)
+        if(val == ""_s)
         {
             x = unsafe::Pointer(& zeroVal[0]);
         }
         else
         {
-            x = mallocgc(gocpp::Sizeof<std::string>(), stringType, true);
-            *(std::string*)(x) = val;
+            x = mallocgc(gocpp::Sizeof<gocpp::string>(), stringType, true);
+            *(gocpp::string*)(x) = val;
         }
         return x;
     }
@@ -487,7 +487,7 @@ namespace golang::runtime
     {
         if(t == nullptr)
         {
-            gocpp::panic(new TypeAssertionError {nullptr, nullptr, & inter->Type, ""s});
+            gocpp::panic(new TypeAssertionError {nullptr, nullptr, & inter->Type, ""_s});
         }
         return getitab(inter, t, false);
     }
@@ -511,7 +511,7 @@ namespace golang::runtime
         {
             if(! s->CanFail)
             {
-                gocpp::panic(new TypeAssertionError {nullptr, nullptr, & s->Inter->Type, ""s});
+                gocpp::panic(new TypeAssertionError {nullptr, nullptr, & s->Inter->Type, ""_s});
             }
         }
         else
@@ -703,7 +703,7 @@ namespace golang::runtime
     // ever called.
     void unreachableMethod()
     {
-        go_throw("unreachable method called. linker bug?"s);
+        go_throw("unreachable method called. linker bug?"_s);
     }
 
 }

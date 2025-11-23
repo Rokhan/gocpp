@@ -12,10 +12,10 @@
 
 namespace golang::safefilepath
 {
-    std::tuple<std::string, struct gocpp::error> fromFS(std::string path);
-    bool IsReservedName(std::string name);
-    bool isReservedBaseName(std::string name);
-    bool equalFold(std::string a, std::string b);
+    std::tuple<gocpp::string, struct gocpp::error> fromFS(gocpp::string path);
+    bool IsReservedName(gocpp::string name);
+    bool isReservedBaseName(gocpp::string name);
+    bool equalFold(gocpp::string a, gocpp::string b);
     unsigned char toUpper(unsigned char c);
 
     namespace rec

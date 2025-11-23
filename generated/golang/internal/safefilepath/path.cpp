@@ -22,13 +22,13 @@ namespace golang::safefilepath
         using namespace mocklib::rec;
     }
 
-    gocpp::error errInvalidPath = errors::New("invalid path"s);
+    gocpp::error errInvalidPath = errors::New("invalid path"_s);
     // FromFS converts a slash-separated path into an operating-system path.
     //
     // FromFS returns an error if the path cannot be represented by the operating
     // system. For example, paths containing '\' and ':' characters are rejected
     // on Windows.
-    std::tuple<std::string, struct gocpp::error> FromFS(std::string path)
+    std::tuple<gocpp::string, struct gocpp::error> FromFS(gocpp::string path)
     {
         return fromFS(path);
     }

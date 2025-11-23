@@ -27,25 +27,25 @@ namespace golang::main
             const auto& gocpp_id_0 = gocpp::type_info(i);
             int conditionId = -1;
             if(gocpp_id_0 == typeid(int)) { conditionId = 0; }
-            else if(gocpp_id_0 == typeid(std::string)) { conditionId = 1; }
+            else if(gocpp_id_0 == typeid(gocpp::string)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
                 {
                     int v = gocpp::any_cast<int>(i);
-                    mocklib::Printf("Twice %v is %v\n"s, v, v * 2);
+                    mocklib::Printf("Twice %v is %v\n"_s, v, v * 2);
                     break;
                 }
                 case 1:
                 {
-                    std::string v = gocpp::any_cast<std::string>(i);
-                    mocklib::Printf("%q is %v bytes long\n"s, v, len(v));
+                    gocpp::string v = gocpp::any_cast<gocpp::string>(i);
+                    mocklib::Printf("%q is %v bytes long\n"_s, v, len(v));
                     break;
                 }
                 default:
                 {
                     auto v = i;
-                    mocklib::Printf("I don't know about type %T!\n"s, v);
+                    mocklib::Printf("I don't know about type %T!\n"_s, v);
                     break;
                 }
             }
@@ -55,7 +55,7 @@ namespace golang::main
     void main()
     {
         go_do(21);
-        go_do("hello"s);
+        go_do("hello"_s);
         go_do(true);
     }
 

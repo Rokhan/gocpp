@@ -240,7 +240,9 @@ namespace golang::bytes
             auto r = gocpp::rune(s[0]);
             if(r >= utf8::RuneSelf)
             {
-                for(std::tie(std::ignored, r) : chars)
+                auto it_0 = std::begin(chars);
+                std::tie(std::ignore, r) = *it_0;
+                for(; it_0 != std::end(chars); std::tie(std::ignore, r) = *++it_0)
                 {
                     if(r == utf8::RuneError)
                     {
@@ -351,7 +353,9 @@ namespace golang::bytes
             auto r = gocpp::rune(s[0]);
             if(r >= utf8::RuneSelf)
             {
-                for(std::tie(std::ignored, r) : chars)
+                auto it_0 = std::begin(chars);
+                std::tie(std::ignore, r) = *it_0;
+                for(; it_0 != std::end(chars); std::tie(std::ignore, r) = *++it_0)
                 {
                     if(r == utf8::RuneError)
                     {

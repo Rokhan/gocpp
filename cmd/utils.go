@@ -367,11 +367,19 @@ type stmtEnv struct {
 	varNames *[]string // maybe use map for perfs
 
 	toBeDeclared []string // list of variables to be declared at start of scope
+
+	idCount *int
 }
 
 func (env *stmtEnv) startVarScope() {
 	//clear already declared var names at start of scope
 	env.varNames = &[]string{}
+}
+
+func (env *stmtEnv) generateId(prefix string) (id string) {
+	id = fmt.Sprintf("%s%d", prefix, *env.idCount)
+	*env.idCount++
+	return id
 }
 
 func (env *stmtEnv) localVarScope(todo func()) {
@@ -384,7 +392,7 @@ func (env *stmtEnv) localVarScope(todo func()) {
 
 func makeStmtEnv(outNames []string, outTypes []outType, paramNames []string) stmtEnv {
 	varNames := append(append([]string{}, outNames...), paramNames...)
-	return stmtEnv{outNames, outTypes, &varNames, outNames}
+	return stmtEnv{outNames, outTypes, &varNames, outNames, Ptr(0)}
 }
 
 type blockEnv struct {

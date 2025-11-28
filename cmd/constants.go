@@ -53,6 +53,7 @@ var cppKeyWordsMapping = map[string]string{
 	// avoid C++ keywords conflicts
 	"any":       "go_any",       // just to avoid confusion with std::any used in support lib
 	"class":     "go_class",     // keyword
+	"char":      "go_char",      // keyword
 	"do":        "go_do",        // keyword
 	"delete":    "go_delete",    // keyword
 	"enum":      "go_enum",      // keyword

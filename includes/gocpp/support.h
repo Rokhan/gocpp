@@ -232,6 +232,42 @@ namespace gocpp
     inline static complex128 operator-(int i, complex128 c) { return double(i) - c.base(); };
     inline static complex128 operator-(complex128 c, int i) { return c.base() - double(i); };
 
+    template<class It, class TargetType>
+    class transform_iterator 
+    {
+        It it;
+
+    public:
+        using iterator_category = typename std::iterator_traits<It>::iterator_category;
+        using value_type        = TargetType;
+        using difference_type   = typename std::iterator_traits<It>::difference_type;
+
+        transform_iterator() = default;
+        transform_iterator(It it) : it(it) {}
+
+        value_type operator*() const { return TargetType(*it); }
+
+        transform_iterator& operator++() { ++it; return *this; }
+
+        transform_iterator operator++(int) { auto t = *this; ++*this; return t; }
+
+        friend bool operator==(const transform_iterator& a, const transform_iterator& b) 
+        {
+            return a.it == b.it;
+        }
+
+        transform_iterator operator+(difference_type n) const
+        {
+            return transform_iterator(it + n);
+        }
+
+        difference_type operator-(const transform_iterator& other) const
+        {
+            return it - other.it;
+        }
+    };
+
+
     struct string : std::string
     {
         using std::string::string;
@@ -285,6 +321,23 @@ namespace gocpp
             std::string::operator=(mocklib::RuneToString(r));
             return *this;
         }
+
+        using string_iterator = typename std::string::iterator;
+
+        // (index, value) iterator
+        struct range_iterator
+        {
+            size_t index;
+            transform_iterator<string_iterator, int> iter;
+
+            bool operator != (const range_iterator& other) const { return iter != other.iter; }
+            range_iterator operator ++ () { ++index; ++iter; return *this; }
+            range_iterator operator + (int n) { return { index + n, iter + n }; }
+            auto operator * () const { return std::make_tuple(index, *iter); }
+        };
+
+        range_iterator begin() { return { 0, std::string::begin() }; }
+        range_iterator end() { return { std::string::size(), std::string::end() }; }
     };
 
     inline size_t len(const std::string& input)
@@ -796,7 +849,7 @@ namespace gocpp
             vect_iterator iter;
 
             bool operator != (const range_iterator& other) const { return iter != other.iter; }
-            void operator ++ () { ++index; ++iter; }
+            range_iterator operator ++ () { ++index; ++iter; return *this; }
             range_iterator operator + (int n) { return { index + n, iter + n }; }
             auto operator * () const { return std::tie(index, *iter); }
         };
@@ -939,6 +992,13 @@ namespace gocpp
         slice(R range)
         {
             this->mArray = std::make_shared<store_type>(range.begin(), range.end());
+            mStart = 0;
+            mEnd = this->size();
+        }
+
+        slice(const std::string& str)
+        {
+            this->mArray = std::make_shared<store_type>(str.begin(), str.end());
             mStart = 0;
             mEnd = this->size();
         }

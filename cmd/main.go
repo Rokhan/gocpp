@@ -1735,10 +1735,26 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			}
 		} else if s.Key != nil && s.Value != nil && s.Tok == token.ASSIGN {
 			if ident, ok := s.Key.(*ast.Ident); ok && ident.Name == "_" {
-				cv.WritterExprPrintf(cppOut, "%sfor(std::tie(std::ignored, %s) : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Value), cv.convertExpr(s.X))
+				var itName = env.generateId("it_")
+				cv.WritterExprPrintf(cppOut, "%sauto %s = std::begin(%s);\n", cv.cpp.Indent(), itName, cv.convertExpr(s.X))
+				cv.WritterExprPrintf(cppOut, "%sstd::tie(std::ignore, %s) = *%s;\n", cv.cpp.Indent(), cv.convertExpr(s.Value), itName)
+				cv.WritterExprPrintf(cppOut, "%sfor(; %[2]s != std::end(%[4]s); std::tie(std::ignore, %[3]s) = *++%[2]s)\n", cv.cpp.Indent(), itName, cv.convertExpr(s.Value), cv.convertExpr(s.X))
+			} else if ident, ok := s.Value.(*ast.Ident); ok && ident.Name == "_" {
+				var itName = env.generateId("it_")
+				cv.WritterExprPrintf(cppOut, "%sauto %s = std::begin(%s);\n", cv.cpp.Indent(), itName, cv.convertExpr(s.X))
+				cv.WritterExprPrintf(cppOut, "%sstd::tie(%s, std::ignore) = *%s;\n", cv.cpp.Indent(), cv.convertExpr(s.Key), itName)
+				cv.WritterExprPrintf(cppOut, "%sfor(; %[2]s != std::end(%[4]s); std::tie(%[3]s, std::ignore) = *++%[2]s)\n", cv.cpp.Indent(), itName, cv.convertExpr(s.Key), cv.convertExpr(s.X))
 			} else {
-				cv.WritterExprPrintf(cppOut, "%sfor(std::tie(%s, %s) : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.Value), cv.convertExpr(s.X))
+				var itName = env.generateId("it_")
+				cv.WritterExprPrintf(cppOut, "%sauto %s = std::begin(%s);\n", cv.cpp.Indent(), itName, cv.convertExpr(s.X))
+				cv.WritterExprPrintf(cppOut, "%sstd::tie(%s, %s) = *%s;\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.Value), itName)
+				cv.WritterExprPrintf(cppOut, "%sfor(; %[2]s != std::end(%[5]s); std::tie(%[3]s, %[4]s) = *++%[2]s)\n", cv.cpp.Indent(), itName, cv.convertExpr(s.Key), cv.convertExpr(s.Value), cv.convertExpr(s.X))
 			}
+		} else if s.Key != nil && s.Value == nil && s.Tok == token.ASSIGN {
+			var itName = env.generateId("it_")
+			cv.WritterExprPrintf(cppOut, "%sauto %s = std::begin(%s);\n", cv.cpp.Indent(), itName, cv.convertExpr(s.X))
+			cv.WritterExprPrintf(cppOut, "%sstd::tie(%s, std::ignore) = *%s;\n", cv.cpp.Indent(), cv.convertExpr(s.Key), itName)
+			cv.WritterExprPrintf(cppOut, "%sfor(; %[2]s != std::end(%[4]s); std::tie(%[3]s, std::ignore) = *++%[2]s)\n", cv.cpp.Indent(), itName, cv.convertExpr(s.Key), cv.convertExpr(s.X))
 		} else if s.Key != nil && s.Value == nil && s.Tok == token.DEFINE {
 			cv.WritterExprPrintf(cppOut, "%sfor(auto [%s, gocpp_ignored] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Key), cv.convertExpr(s.X))
 		} else if s.Key == nil && s.Value != nil && s.Tok == token.DEFINE {

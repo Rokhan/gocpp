@@ -261,7 +261,7 @@ namespace golang::runtime
     void badunlockosthread();
     int32_t gcount();
     int32_t mcount();
-    extern gocpp_id_11 prof;
+    extern gocpp_id_8 prof;
     void _System();
     void _ExternalCode();
     void _LostExternalCode();

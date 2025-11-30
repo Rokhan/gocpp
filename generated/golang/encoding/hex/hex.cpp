@@ -403,7 +403,7 @@ namespace golang::hex
                 Encode(h->buf.make_slice(4), h->buf.make_slice(0, 4));
                 h->buf[12] = ' ';
                 h->buf[13] = ' ';
-                std::tie(gocpp_id_0, err) = rec::Write(gocpp::recv(h->w), h->buf.make_slice(4));
+                std::tie(std::ignore, err) = rec::Write(gocpp::recv(h->w), h->buf.make_slice(4));
                 if(err != nullptr)
                 {
                     return {n, err};
@@ -424,7 +424,7 @@ namespace golang::hex
                 h->buf[4] = '|';
                 l = 5;
             }
-            std::tie(gocpp_id_1, err) = rec::Write(gocpp::recv(h->w), h->buf.make_slice(0, l));
+            std::tie(std::ignore, err) = rec::Write(gocpp::recv(h->w), h->buf.make_slice(0, l));
             if(err != nullptr)
             {
                 return {n, err};
@@ -437,7 +437,7 @@ namespace golang::hex
             {
                 h->rightChars[16] = '|';
                 h->rightChars[17] = '\n';
-                std::tie(gocpp_id_2, err) = rec::Write(gocpp::recv(h->w), h->rightChars.make_slice(0));
+                std::tie(std::ignore, err) = rec::Write(gocpp::recv(h->w), h->rightChars.make_slice(0));
                 if(err != nullptr)
                 {
                     return {n, err};
@@ -478,7 +478,7 @@ namespace golang::hex
             {
                 l = 5;
             }
-            std::tie(gocpp_id_3, err) = rec::Write(gocpp::recv(h->w), h->buf.make_slice(0, l));
+            std::tie(std::ignore, err) = rec::Write(gocpp::recv(h->w), h->buf.make_slice(0, l));
             if(err != nullptr)
             {
                 return err;
@@ -487,7 +487,7 @@ namespace golang::hex
         }
         h->rightChars[nBytes] = '|';
         h->rightChars[nBytes + 1] = '\n';
-        std::tie(gocpp_id_4, err) = rec::Write(gocpp::recv(h->w), h->rightChars.make_slice(0, nBytes + 2));
+        std::tie(std::ignore, err) = rec::Write(gocpp::recv(h->w), h->rightChars.make_slice(0, nBytes + 2));
         return err;
     }
 

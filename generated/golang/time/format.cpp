@@ -1340,10 +1340,10 @@ namespace golang::time
                         }
                         break;
                     case 6:
-                        std::tie(gocpp_id_2, value, err) = lookup(shortDayNames, value);
+                        std::tie(std::ignore, value, err) = lookup(shortDayNames, value);
                         break;
                     case 7:
-                        std::tie(gocpp_id_3, value, err) = lookup(longDayNames, value);
+                        std::tie(std::ignore, value, err) = lookup(longDayNames, value);
                         break;
                     case 8:
                     case 9:
@@ -1402,7 +1402,7 @@ namespace golang::time
                         }
                         if(len(value) >= 2 && commaOrPeriod(value[0]) && isDigit(value, 1))
                         {
-                            std::tie(gocpp_id_4, std, gocpp_id_5) = nextStdChunk(layout);
+                            std::tie(std::ignore, std, std::ignore) = nextStdChunk(layout);
                             std &= stdMask;
                             if(std == stdFracSecond0 || std == stdFracSecond9)
                             {
@@ -1551,14 +1551,14 @@ namespace golang::time
                         int hr = {};
                         int mm = {};
                         int ss = {};
-                        std::tie(hr, gocpp_id_6, err) = getnum(hour, true);
+                        std::tie(hr, std::ignore, err) = getnum(hour, true);
                         if(err == nullptr)
                         {
-                            std::tie(mm, gocpp_id_7, err) = getnum(min, true);
+                            std::tie(mm, std::ignore, err) = getnum(min, true);
                         }
                         if(err == nullptr)
                         {
-                            std::tie(ss, gocpp_id_8, err) = getnum(seconds, true);
+                            std::tie(ss, std::ignore, err) = getnum(seconds, true);
                         }
                         zoneOffset = (hr * 60 + mm) * 60 + ss;
                         //Go switch emulation
@@ -1702,7 +1702,7 @@ namespace golang::time
         {
             auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
             rec::addSec(gocpp::recv(t), - int64_t(zoneOffset));
-            auto [name, offset, gocpp_id_9, gocpp_id_10, gocpp_id_11] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t)));
+            auto [name, offset, gocpp_id_2, gocpp_id_3, gocpp_id_4] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t)));
             if(offset == zoneOffset && (zoneName == ""_s || name == zoneName))
             {
                 rec::setLoc(gocpp::recv(t), local);
@@ -1724,7 +1724,7 @@ namespace golang::time
             }
             if(len(zoneName) > 3 && zoneName.make_slice(0, 3) == "GMT"_s)
             {
-                std::tie(offset, gocpp_id_12) = atoi(zoneName.make_slice(3));
+                std::tie(offset, std::ignore) = atoi(zoneName.make_slice(3));
                 offset *= 3600;
             }
             auto zoneNameCopy = cloneString(zoneName);

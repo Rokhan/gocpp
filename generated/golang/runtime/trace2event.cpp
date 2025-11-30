@@ -160,7 +160,7 @@ namespace golang::runtime
     // traceEventWrite is the part of traceEvent that actually writes the event.
     struct traceWriter rec::event(struct traceWriter w, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
     {
-        std::tie(w, gocpp_id_0) = rec::ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
+        std::tie(w, std::ignore) = rec::ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
         auto ts = traceClockNow();
         if(ts <= w.traceBuf->lastTime)
         {

@@ -384,7 +384,7 @@ namespace golang::os
         for(; ; )
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
-            std::tie(n, gocpp_id_0) = getTempPath(uint32_t(len(b)), & b[0]);
+            std::tie(n, std::ignore) = getTempPath(uint32_t(len(b)), & b[0]);
             if(n > uint32_t(len(b)))
             {
                 continue;

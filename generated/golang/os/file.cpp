@@ -1167,7 +1167,7 @@ namespace golang::os
         {
             return err;
         }
-        std::tie(gocpp_id_0, err) = rec::Write(gocpp::recv(f), data);
+        std::tie(std::ignore, err) = rec::Write(gocpp::recv(f), data);
         if(auto err1 = rec::Close(gocpp::recv(f)); err1 != nullptr && err == nullptr)
         {
             err = err1;

@@ -446,7 +446,7 @@ namespace golang::time
             }
             else
             {
-                std::tie(name, offset, gocpp_id_4, gocpp_id_5, gocpp_id_6) = rec::lookup(gocpp::recv(l), sec);
+                std::tie(name, offset, std::ignore, std::ignore, std::ignore) = rec::lookup(gocpp::recv(l), sec);
             }
             sec += int64_t(offset);
         }
@@ -464,28 +464,28 @@ namespace golang::time
         int year;
         time::Month month;
         int day;
-        std::tie(year, month, day, gocpp_id_7) = rec::date(gocpp::recv(t), true);
+        std::tie(year, month, day, std::ignore) = rec::date(gocpp::recv(t), true);
         return {year, month, day};
     }
 
     // Year returns the year in which t occurs.
     int rec::Year(struct Time t)
     {
-        auto [year, gocpp_id_8, gocpp_id_9, gocpp_id_10] = rec::date(gocpp::recv(t), false);
+        auto [year, gocpp_id_4, gocpp_id_5, gocpp_id_6] = rec::date(gocpp::recv(t), false);
         return year;
     }
 
     // Month returns the month of the year specified by t.
     time::Month rec::Month(struct Time t)
     {
-        auto [gocpp_id_11, month, gocpp_id_12, gocpp_id_13] = rec::date(gocpp::recv(t), true);
+        auto [gocpp_id_7, month, gocpp_id_8, gocpp_id_9] = rec::date(gocpp::recv(t), true);
         return month;
     }
 
     // Day returns the day of the month specified by t.
     int rec::Day(struct Time t)
     {
-        auto [gocpp_id_14, gocpp_id_15, day, gocpp_id_16] = rec::date(gocpp::recv(t), true);
+        auto [gocpp_id_10, gocpp_id_11, day, gocpp_id_12] = rec::date(gocpp::recv(t), true);
         return day;
     }
 
@@ -518,7 +518,7 @@ namespace golang::time
         }
         abs += uint64_t(d) * secondsPerDay;
         int yday;
-        std::tie(year, gocpp_id_17, gocpp_id_18, yday) = absDate(abs, false);
+        std::tie(year, std::ignore, std::ignore, yday) = absDate(abs, false);
         return {year, yday / 7 + 1};
     }
 
@@ -574,7 +574,7 @@ namespace golang::time
     // and [1,366] in leap years.
     int rec::YearDay(struct Time t)
     {
-        auto [gocpp_id_19, gocpp_id_20, gocpp_id_21, yday] = rec::date(gocpp::recv(t), false);
+        auto [gocpp_id_15, gocpp_id_16, gocpp_id_17, yday] = rec::date(gocpp::recv(t), false);
         return yday + 1;
     }
 
@@ -1171,7 +1171,7 @@ namespace golang::time
     {
         gocpp::string name;
         int offset;
-        std::tie(name, offset, gocpp_id_22, gocpp_id_23, gocpp_id_24) = rec::lookup(gocpp::recv(t.loc), rec::unixSec(gocpp::recv(t)));
+        std::tie(name, offset, std::ignore, std::ignore, std::ignore) = rec::lookup(gocpp::recv(t.loc), rec::unixSec(gocpp::recv(t)));
         return {name, offset};
     }
 
@@ -1184,7 +1184,7 @@ namespace golang::time
     {
         struct Time start;
         struct Time end;
-        auto [gocpp_id_25, gocpp_id_26, startSec, endSec, gocpp_id_27] = rec::lookup(gocpp::recv(t.loc), rec::unixSec(gocpp::recv(t)));
+        auto [gocpp_id_18, gocpp_id_19, startSec, endSec, gocpp_id_20] = rec::lookup(gocpp::recv(t.loc), rec::unixSec(gocpp::recv(t)));
         if(startSec != alpha)
         {
             start = unixTime(startSec, 0);
@@ -1252,7 +1252,7 @@ namespace golang::time
         }
         else
         {
-            auto [gocpp_id_28, offset] = rec::Zone(gocpp::recv(t));
+            auto [gocpp_id_21, offset] = rec::Zone(gocpp::recv(t));
             if(offset % 60 != 0)
             {
                 version = timeBinaryVersionV2;
@@ -1315,7 +1315,7 @@ namespace golang::time
             rec::setLoc(gocpp::recv(t), & utcLoc);
         }
         else
-        if(auto [gocpp_id_29, localoff, gocpp_id_30, gocpp_id_31, gocpp_id_32] = rec::lookup(gocpp::recv(Local), rec::unixSec(gocpp::recv(t))); offset == localoff)
+        if(auto [gocpp_id_22, localoff, gocpp_id_23, gocpp_id_24, gocpp_id_25] = rec::lookup(gocpp::recv(Local), rec::unixSec(gocpp::recv(t))); offset == localoff)
         {
             rec::setLoc(gocpp::recv(t), Local);
         }
@@ -1437,7 +1437,7 @@ namespace golang::time
     // IsDST reports whether the time in the configured location is in Daylight Savings Time.
     bool rec::IsDST(struct Time t)
     {
-        auto [gocpp_id_33, gocpp_id_34, gocpp_id_35, gocpp_id_36, isDST] = rec::lookup(gocpp::recv(t.loc), rec::Unix(gocpp::recv(t)));
+        auto [gocpp_id_26, gocpp_id_27, gocpp_id_28, gocpp_id_29, isDST] = rec::lookup(gocpp::recv(t.loc), rec::Unix(gocpp::recv(t)));
         return isDST;
     }
 
@@ -1510,13 +1510,13 @@ namespace golang::time
         auto abs = d * secondsPerDay;
         abs += uint64_t(hour * secondsPerHour + min * secondsPerMinute + sec);
         auto unix = int64_t(abs) + (absoluteToInternal + internalToUnix);
-        auto [gocpp_id_37, offset, start, end, gocpp_id_38] = rec::lookup(gocpp::recv(loc), unix);
+        auto [gocpp_id_30, offset, start, end, gocpp_id_31] = rec::lookup(gocpp::recv(loc), unix);
         if(offset != 0)
         {
             auto utc = unix - int64_t(offset);
             if(utc < start || utc >= end)
             {
-                std::tie(gocpp_id_39, offset, gocpp_id_40, gocpp_id_41, gocpp_id_42) = rec::lookup(gocpp::recv(loc), utc);
+                std::tie(std::ignore, offset, std::ignore, std::ignore, std::ignore) = rec::lookup(gocpp::recv(loc), utc);
             }
             unix -= int64_t(offset);
         }
@@ -1539,7 +1539,7 @@ namespace golang::time
         {
             return t;
         }
-        auto [gocpp_id_43, r] = div(t, d);
+        auto [gocpp_id_32, r] = div(t, d);
         return rec::Add(gocpp::recv(t), - r);
     }
 
@@ -1558,7 +1558,7 @@ namespace golang::time
         {
             return t;
         }
-        auto [gocpp_id_44, r] = div(t, d);
+        auto [gocpp_id_33, r] = div(t, d);
         if(lessThanHalf(r, d))
         {
             return rec::Add(gocpp::recv(t), - r);

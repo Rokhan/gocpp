@@ -140,7 +140,7 @@ namespace golang::time
             for(; n < len(s) && isDigit(s, n); n++)
             {
             }
-            std::tie(nsec, gocpp_id_2, gocpp_id_3) = parseNanoseconds(s, n);
+            std::tie(nsec, std::ignore, std::ignore) = parseNanoseconds(s, n);
             s = s.make_slice(n);
         }
         auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
@@ -162,7 +162,7 @@ namespace golang::time
                 zoneOffset *= - 1;
             }
             rec::addSec(gocpp::recv(t), - int64_t(zoneOffset));
-            if(auto [gocpp_id_4, offset, gocpp_id_5, gocpp_id_6, gocpp_id_7] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t))); offset == zoneOffset)
+            if(auto [gocpp_id_2, offset, gocpp_id_3, gocpp_id_4, gocpp_id_5] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t))); offset == zoneOffset)
             {
                 rec::setLoc(gocpp::recv(t), local);
             }

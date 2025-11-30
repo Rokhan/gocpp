@@ -376,7 +376,7 @@ namespace golang::unicode
     // To maps the rune to the specified case: [UpperCase], [LowerCase], or [TitleCase].
     gocpp::rune To(int _case, gocpp::rune r)
     {
-        std::tie(r, gocpp_id_0) = to(_case, r, CaseRanges);
+        std::tie(r, std::ignore) = to(_case, r, CaseRanges);
         return r;
     }
 

@@ -410,7 +410,7 @@ namespace golang::runtime
     // any call of findObject.
     void rec::buildIndex(struct stackScanState* s)
     {
-        std::tie(s->root, gocpp_id_0, gocpp_id_1) = binarySearchTree(s->head, 0, s->nobjs);
+        std::tie(s->root, std::ignore, std::ignore) = binarySearchTree(s->head, 0, s->nobjs);
     }
 
     // Build a binary search tree with the n objects in the list

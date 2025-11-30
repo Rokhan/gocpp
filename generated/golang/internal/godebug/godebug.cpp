@@ -392,7 +392,7 @@ namespace golang::godebug
                             if(arg[j] == '#')
                             {
                                 v->text = arg.make_slice(0, j);
-                                std::tie(v->bisect, gocpp_id_0) = bisect::New(arg.make_slice(j + 1));
+                                std::tie(v->bisect, std::ignore) = bisect::New(arg.make_slice(j + 1));
                                 break;
                             }
                         }

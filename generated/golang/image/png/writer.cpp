@@ -320,17 +320,17 @@ namespace golang::png
         rec::Write(gocpp::recv(crc), e->header.make_slice(4, 8));
         rec::Write(gocpp::recv(crc), b);
         rec::PutUint32(gocpp::recv(binary::BigEndian), e->footer.make_slice(0, 4), rec::Sum32(gocpp::recv(crc)));
-        std::tie(gocpp_id_3, e->err) = rec::Write(gocpp::recv(e->w), e->header.make_slice(0, 8));
+        std::tie(std::ignore, e->err) = rec::Write(gocpp::recv(e->w), e->header.make_slice(0, 8));
         if(e->err != nullptr)
         {
             return;
         }
-        std::tie(gocpp_id_4, e->err) = rec::Write(gocpp::recv(e->w), b);
+        std::tie(std::ignore, e->err) = rec::Write(gocpp::recv(e->w), b);
         if(e->err != nullptr)
         {
             return;
         }
-        std::tie(gocpp_id_5, e->err) = rec::Write(gocpp::recv(e->w), e->footer.make_slice(0, 4));
+        std::tie(std::ignore, e->err) = rec::Write(gocpp::recv(e->w), e->footer.make_slice(0, 4));
     }
 
     void rec::writeIHDR(struct encoder* e)
@@ -642,10 +642,10 @@ namespace golang::png
                 zeroMemory(e->pr);
             }
             auto pr = e->pr;
-            auto [gray, gocpp_id_6] = gocpp::getValue<image::Gray*>(m);
-            auto [rgba, gocpp_id_7] = gocpp::getValue<image::RGBA*>(m);
-            auto [paletted, gocpp_id_8] = gocpp::getValue<image::Paletted*>(m);
-            auto [nrgba, gocpp_id_9] = gocpp::getValue<image::NRGBA*>(m);
+            auto [gray, gocpp_id_3] = gocpp::getValue<image::Gray*>(m);
+            auto [rgba, gocpp_id_4] = gocpp::getValue<image::RGBA*>(m);
+            auto [paletted, gocpp_id_5] = gocpp::getValue<image::Paletted*>(m);
+            auto [nrgba, gocpp_id_6] = gocpp::getValue<image::NRGBA*>(m);
             for(auto y = b.Min.Y; y < b.Max.Y; y++)
             {
                 auto i = 1;
@@ -709,7 +709,7 @@ namespace golang::png
                             {
                                 for(auto x = b.Min.X; x < b.Max.X; x++)
                                 {
-                                    auto [r, g, b, gocpp_id_10] = rec::RGBA(gocpp::recv(rec::At(gocpp::recv(m), x, y)));
+                                    auto [r, g, b, gocpp_id_7] = rec::RGBA(gocpp::recv(rec::At(gocpp::recv(m), x, y)));
                                     cr0[i + 0] = uint8_t(r >> 8);
                                     cr0[i + 1] = uint8_t(g >> 8);
                                     cr0[i + 2] = uint8_t(b >> 8);
@@ -833,7 +833,7 @@ namespace golang::png
                         case 8:
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
-                                auto [r, g, b, gocpp_id_11] = rec::RGBA(gocpp::recv(rec::At(gocpp::recv(m), x, y)));
+                                auto [r, g, b, gocpp_id_8] = rec::RGBA(gocpp::recv(rec::At(gocpp::recv(m), x, y)));
                                 cr[0][i + 0] = uint8_t(r >> 8);
                                 cr[0][i + 1] = uint8_t(r);
                                 cr[0][i + 2] = uint8_t(g >> 8);
@@ -866,7 +866,7 @@ namespace golang::png
                     auto bpp = bitsPerPixel / 8;
                     f = filter(& cr, pr, bpp);
                 }
-                if(auto [gocpp_id_12, err] = rec::Write(gocpp::recv(e->zw), cr[f]); err != nullptr)
+                if(auto [gocpp_id_9, err] = rec::Write(gocpp::recv(e->zw), cr[f]); err != nullptr)
                 {
                     return err;
                 }
@@ -978,9 +978,9 @@ namespace golang::png
             e->w = w;
             e->m = m;
             color::Palette pal = {};
-            if(auto [gocpp_id_13, ok] = gocpp::getValue<image::PalettedImage>(m); ok)
+            if(auto [gocpp_id_10, ok] = gocpp::getValue<image::PalettedImage>(m); ok)
             {
-                std::tie(pal, gocpp_id_14) = gocpp::getValue<color::Palette>(rec::ColorModel(gocpp::recv(m)));
+                std::tie(pal, std::ignore) = gocpp::getValue<color::Palette>(rec::ColorModel(gocpp::recv(m)));
             }
             if(pal != nullptr)
             {
@@ -1047,7 +1047,7 @@ namespace golang::png
                     }
                 }
             }
-            std::tie(gocpp_id_15, e->err) = io::WriteString(w, pngHeader);
+            std::tie(std::ignore, e->err) = io::WriteString(w, pngHeader);
             rec::writeIHDR(gocpp::recv(e));
             if(pal != nullptr)
             {

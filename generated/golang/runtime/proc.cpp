@@ -2756,7 +2756,7 @@ namespace golang::runtime
             {
                 go_throw("startm: P required for spinning=true"_s);
             }
-            std::tie(pp, gocpp_id_2) = pidleget(0);
+            std::tie(pp, std::ignore) = pidleget(0);
             if(pp == nullptr)
             {
                 if(! lockheld)
@@ -2888,7 +2888,7 @@ namespace golang::runtime
         auto mp = acquirem();
         p* pp = {};
         lock(& sched.lock);
-        std::tie(pp, gocpp_id_3) = pidlegetSpinning(0);
+        std::tie(pp, std::ignore) = pidlegetSpinning(0);
         if(pp == nullptr)
         {
             if(rec::Add(gocpp::recv(sched.nmspinning), - 1) < 0)
@@ -3047,7 +3047,7 @@ namespace golang::runtime
         {
             runSafePointFn();
         }
-        auto [now, pollUntil, gocpp_id_4] = checkTimers(pp, 0);
+        auto [now, pollUntil, gocpp_id_2] = checkTimers(pp, 0);
         if(traceEnabled() || traceShuttingDown())
         {
             auto gp = traceReader();
@@ -3218,7 +3218,7 @@ namespace golang::runtime
             lock(& sched.lock);
             if(sched.runqsize != 0)
             {
-                auto [pp, gocpp_id_5] = pidlegetSpinning(0);
+                auto [pp, gocpp_id_3] = pidlegetSpinning(0);
                 if(pp != nullptr)
                 {
                     auto gp = globrunqget(pp, 0);
@@ -3296,7 +3296,7 @@ namespace golang::runtime
                 goto top;
             }
             lock(& sched.lock);
-            auto [pp, gocpp_id_6] = pidleget(now);
+            auto [pp, gocpp_id_4] = pidleget(now);
             unlock(& sched.lock);
             if(pp == nullptr)
             {
@@ -3438,7 +3438,7 @@ namespace golang::runtime
             if(! rec::read(gocpp::recv(idlepMaskSnapshot), uint32_t(id)) && ! runqempty(p2))
             {
                 lock(& sched.lock);
-                auto [pp, gocpp_id_7] = pidlegetSpinning(0);
+                auto [pp, gocpp_id_5] = pidlegetSpinning(0);
                 if(pp == nullptr)
                 {
                     unlock(& sched.lock);
@@ -3590,7 +3590,7 @@ namespace golang::runtime
             {
                 auto mp = acquirem();
                 lock(& sched.lock);
-                auto [pp, gocpp_id_8] = pidlegetSpinning(0);
+                auto [pp, gocpp_id_6] = pidlegetSpinning(0);
                 if(pp == nullptr)
                 {
                     unlock(& sched.lock);
@@ -4405,7 +4405,7 @@ namespace golang::runtime
     bool exitsyscallfast_pidle()
     {
         lock(& sched.lock);
-        auto [pp, gocpp_id_9] = pidleget(0);
+        auto [pp, gocpp_id_7] = pidleget(0);
         if(pp != nullptr && rec::Load(gocpp::recv(sched.sysmonwait)))
         {
             rec::Store(gocpp::recv(sched.sysmonwait), false);
@@ -4449,7 +4449,7 @@ namespace golang::runtime
         p* pp = {};
         if(schedEnabled(gp))
         {
-            std::tie(pp, gocpp_id_10) = pidleget(0);
+            std::tie(pp, std::ignore) = pidleget(0);
         }
         bool locked = {};
         if(pp == nullptr)
@@ -5004,7 +5004,7 @@ namespace golang::runtime
         return int32_t(sched.mnext - sched.nmfreed);
     }
 
-    struct gocpp_id_11
+    struct gocpp_id_8
     {
         atomic::Uint32 signalLock;
         atomic::Int32 hz;
@@ -5038,13 +5038,13 @@ namespace golang::runtime
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_11& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_11 prof;
+    gocpp_id_8 prof;
     void _System()
     {
         _System();
@@ -5662,7 +5662,7 @@ namespace golang::runtime
             if(auto when = timeSleepUntil(); when < maxWhen)
             {
                 faketime = when;
-                auto [pp, gocpp_id_12] = pidleget(faketime);
+                auto [pp, gocpp_id_9] = pidleget(faketime);
                 if(pp == nullptr)
                 {
                     unlock(& sched.lock);

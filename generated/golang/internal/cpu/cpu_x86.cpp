@@ -115,8 +115,8 @@ namespace golang::cpu
         {
             return;
         }
-        std::tie(maxExtendedFunctionInformation, gocpp_id_3, gocpp_id_4, gocpp_id_5) = cpuid(0x80000000, 0);
-        auto [gocpp_id_6, gocpp_id_7, ecx1, gocpp_id_8] = cpuid(1, 0);
+        std::tie(maxExtendedFunctionInformation, std::ignore, std::ignore, std::ignore) = cpuid(0x80000000, 0);
+        auto [gocpp_id_3, gocpp_id_4, ecx1, gocpp_id_5] = cpuid(1, 0);
         X86.HasSSE3 = isSet(ecx1, cpuid_SSE3);
         X86.HasPCLMULQDQ = isSet(ecx1, cpuid_PCLMULQDQ);
         X86.HasSSSE3 = isSet(ecx1, cpuid_SSSE3);
@@ -130,7 +130,7 @@ namespace golang::cpu
         auto osSupportsAVX512 = false;
         if(X86.HasOSXSAVE)
         {
-            auto [eax, gocpp_id_9] = xgetbv();
+            auto [eax, gocpp_id_6] = xgetbv();
             osSupportsAVX = isSet(eax, 1 << 1) && isSet(eax, 1 << 2);
             osSupportsAVX512 = osSupportsAVX && isSet(eax, 1 << 5) && isSet(eax, 1 << 6) && isSet(eax, 1 << 7);
         }
@@ -139,7 +139,7 @@ namespace golang::cpu
         {
             return;
         }
-        auto [gocpp_id_10, ebx7, gocpp_id_11, gocpp_id_12] = cpuid(7, 0);
+        auto [gocpp_id_7, ebx7, gocpp_id_8, gocpp_id_9] = cpuid(7, 0);
         X86.HasBMI1 = isSet(ebx7, cpuid_BMI1);
         X86.HasAVX2 = isSet(ebx7, cpuid_AVX2) && osSupportsAVX;
         X86.HasBMI2 = isSet(ebx7, cpuid_BMI2);
@@ -153,12 +153,12 @@ namespace golang::cpu
             X86.HasAVX512VL = isSet(ebx7, cpuid_AVX512VL);
         }
         uint32_t maxExtendedInformation = {};
-        std::tie(maxExtendedInformation, gocpp_id_13, gocpp_id_14, gocpp_id_15) = cpuid(0x80000000, 0);
+        std::tie(maxExtendedInformation, std::ignore, std::ignore, std::ignore) = cpuid(0x80000000, 0);
         if(maxExtendedInformation < 0x80000001)
         {
             return;
         }
-        auto [gocpp_id_16, gocpp_id_17, gocpp_id_18, edxExt1] = cpuid(0x80000001, 0);
+        auto [gocpp_id_10, gocpp_id_11, gocpp_id_12, edxExt1] = cpuid(0x80000001, 0);
         X86.HasRDTSCP = isSet(edxExt1, cpuid_RDTSCP);
     }
 

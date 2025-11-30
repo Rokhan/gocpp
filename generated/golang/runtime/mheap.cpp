@@ -1345,7 +1345,7 @@ namespace golang::runtime
         if(needPhysPageAlign)
         {
             auto extraPages = physPageSize / pageSize;
-            std::tie(base, gocpp_id_3) = rec::find(gocpp::recv(h->pages), npages + extraPages);
+            std::tie(base, std::ignore) = rec::find(gocpp::recv(h->pages), npages + extraPages);
             if(base == 0)
             {
                 bool ok = {};
@@ -1355,7 +1355,7 @@ namespace golang::runtime
                     unlock(& h->lock);
                     return nullptr;
                 }
-                std::tie(base, gocpp_id_4) = rec::find(gocpp::recv(h->pages), npages + extraPages);
+                std::tie(base, std::ignore) = rec::find(gocpp::recv(h->pages), npages + extraPages);
                 if(base == 0)
                 {
                     go_throw("grew heap, but no adequate free space found"_s);
@@ -2079,7 +2079,7 @@ namespace golang::runtime
         {
             if(gcphase != _GCoff)
             {
-                auto [base, span, gocpp_id_5] = findObject(uintptr_t(p), 0, 0);
+                auto [base, span, gocpp_id_3] = findObject(uintptr_t(p), 0, 0);
                 auto mp = acquirem();
                 auto gcw = & rec::ptr(gocpp::recv(mp->p))->gcw;
                 if(! rec::noscan(gocpp::recv(span->spanclass)))
@@ -2452,7 +2452,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_6
+    struct gocpp_id_4
     {
         mutex lock;
         gcBitsArena* free;
@@ -2498,13 +2498,13 @@ namespace golang::runtime
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_6 gcBitsArenas;
+    gocpp_id_4 gcBitsArenas;
     // tryAlloc allocates from b or returns nil if b does not have enough room.
     // This is safe to call concurrently.
     struct gcBits* rec::tryAlloc(struct gcBitsArena* b, uintptr_t bytes)

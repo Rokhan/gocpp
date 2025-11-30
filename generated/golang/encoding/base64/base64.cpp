@@ -313,7 +313,7 @@ namespace golang::base64
                 return {n, err};
             }
             rec::Encode(gocpp::recv(e->enc), e->out.make_slice(0), e->buf.make_slice(0));
-            if(std::tie(gocpp_id_0, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, 4)); e->err != nullptr)
+            if(std::tie(std::ignore, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, 4)); e->err != nullptr)
             {
                 return {n, e->err};
             }
@@ -328,7 +328,7 @@ namespace golang::base64
                 nn -= nn % 3;
             }
             rec::Encode(gocpp::recv(e->enc), e->out.make_slice(0), p.make_slice(0, nn));
-            if(std::tie(gocpp_id_1, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, nn / 3 * 4)); e->err != nullptr)
+            if(std::tie(std::ignore, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, nn / 3 * 4)); e->err != nullptr)
             {
                 return {n, e->err};
             }
@@ -348,7 +348,7 @@ namespace golang::base64
         if(e->err == nullptr && e->nbuf > 0)
         {
             rec::Encode(gocpp::recv(e->enc), e->out.make_slice(0), e->buf.make_slice(0, e->nbuf));
-            std::tie(gocpp_id_2, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, rec::EncodedLen(gocpp::recv(e->enc), e->nbuf)));
+            std::tie(std::ignore, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, rec::EncodedLen(gocpp::recv(e->enc), e->nbuf)));
             e->nbuf = 0;
         }
         return e->err;

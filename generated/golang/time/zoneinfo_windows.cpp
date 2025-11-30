@@ -58,11 +58,11 @@ namespace golang::time
             }
             if(err != nullptr)
             {
-                if(std::tie(std, gocpp_id_0, err) = rec::GetStringValue(gocpp::recv(k), "Std"_s); err != nullptr)
+                if(std::tie(std, std::ignore, err) = rec::GetStringValue(gocpp::recv(k), "Std"_s); err != nullptr)
                 {
                     return {false, err};
                 }
-                if(std::tie(dlt, gocpp_id_1, err) = rec::GetStringValue(gocpp::recv(k), "Dlt"_s); err != nullptr)
+                if(std::tie(dlt, std::ignore, err) = rec::GetStringValue(gocpp::recv(k), "Dlt"_s); err != nullptr)
                 {
                     return {false, err};
                 }
@@ -274,7 +274,7 @@ namespace golang::time
     void initLocal()
     {
         syscall::Timezoneinformation i = {};
-        if(auto [gocpp_id_2, err] = syscall::GetTimeZoneInformation(& i); err != nullptr)
+        if(auto [gocpp_id_0, err] = syscall::GetTimeZoneInformation(& i); err != nullptr)
         {
             localLoc.name = "UTC"_s;
             return;

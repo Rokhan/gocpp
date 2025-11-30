@@ -1550,22 +1550,24 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 			tmpNames := map[string]string{}
 			// first step, just check if there is already declared names
 			for _, varName := range exprList {
+				leftVarName := varName.str
 				if varName.str == "_" {
 					varName.str = cv.GenerateId()
+					leftVarName = "std::ignore"
 				}
 				if !slices.Contains(*env.varNames, varName.str) {
 					if isIdentifierUsed(varName.str, stmt.Rhs[0]) {
 						toDeclare = append(toDeclare, varName.str+"_tmp")
-						leftVarList = append(leftVarList, varName.str+"_tmp")
+						leftVarList = append(leftVarList, leftVarName+"_tmp")
 						*env.varNames = append(*env.varNames, varName.str+"_tmp")
 						tmpNames[varName.str] = varName.str + "_tmp"
 					} else {
 						toDeclare = append(toDeclare, varName.str)
-						leftVarList = append(leftVarList, varName.str)
+						leftVarList = append(leftVarList, leftVarName)
 						*env.varNames = append(*env.varNames, varName.str)
 					}
 				} else {
-					leftVarList = append(leftVarList, varName.str)
+					leftVarList = append(leftVarList, leftVarName)
 					allNew = false
 				}
 			}
@@ -1605,7 +1607,7 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 		case 1:
 			return []cppExpr{ExprPrintf("%s = %s", cv.convertExpr(stmt.Lhs[0]), cv.convertAssignRightExprs(stmt.Rhs))}
 		default:
-			return []cppExpr{ExprPrintf("std::tie(%s) = %s", cv.convertExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))}
+			return []cppExpr{ExprPrintf("std::tie(%s) = %s", cv.convertAssignExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))}
 		}
 
 	case token.ADD_ASSIGN, token.SUB_ASSIGN, token.MUL_ASSIGN,
@@ -3876,6 +3878,14 @@ func (cv *cppConverter) convertExprList(exprs []ast.Expr) (strs []cppExpr) {
 }
 
 func (cv *cppConverter) convertExprs(exprs []ast.Expr) cppExpr {
+	return cv.convertExprsImpl(exprs, false)
+}
+
+func (cv *cppConverter) convertAssignExprs(exprs []ast.Expr) cppExpr {
+	return cv.convertExprsImpl(exprs, true)
+}
+
+func (cv *cppConverter) convertExprsImpl(exprs []ast.Expr, useIgnore bool) cppExpr {
 	cppExprs := cv.convertExprList(exprs)
 	defs := []place{}
 	strs := []string{}
@@ -3883,7 +3893,11 @@ func (cv *cppConverter) convertExprs(exprs []ast.Expr) cppExpr {
 	for _, expr := range cppExprs {
 		defs = append(defs, expr.defs...)
 		if expr.str == "_" {
-			expr.str = cv.GenerateId()
+			if useIgnore {
+				expr.str = "std::ignore"
+			} else {
+				expr.str = cv.GenerateId()
+			}
 		}
 		strs = append(strs, expr.str)
 		tns = append(tns, expr.typenames...)

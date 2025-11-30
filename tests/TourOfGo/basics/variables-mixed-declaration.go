@@ -18,8 +18,26 @@ func main() {
 	s2, i2 := "string3", 3
 	fmt.Println(s2, i2)
 
+	_, i3 := "string2A", 2
+	fmt.Println("_", i3)
+
+	s3, _ := "string3B", 3
+	fmt.Println(s3, "_")
+
+	_, i3, b1 := "string2C", 2, true
+	fmt.Println("_", i3, b1)
+
+	s3, _, b2 := "string3D", 3, true
+	fmt.Println(s3, "_", b2)
+
 	s2, i2 = "string4", 4
 	fmt.Println(s2, i2)
+
+	_, i2 = "string5", 4
+	fmt.Println("_", i2)
+
+	s2, _ = "string6", 4
+	fmt.Println(s2, "_")
 
 	s2, i2, a1 := f1()
 	fmt.Println(s2, i2, a1)

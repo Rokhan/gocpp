@@ -73,7 +73,8 @@
         "format": "cpp",
         "locale": "cpp",
         "xlocbuf": "cpp",
-        "xlocmes": "cpp"
+        "xlocmes": "cpp",
+        "span": "cpp"
     },
     "C_Cpp.vcFormat.newLine.closeBraceSameLine.emptyFunction": true,
     "C_Cpp.vcFormat.space.afterKeywordsInControlFlowStatements": false,

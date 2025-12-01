@@ -13,6 +13,7 @@
 namespace golang::main
 {
     void main();
+    int arrayLen(gocpp::array<unsigned char, 32>* buf);
 
     namespace rec
     {

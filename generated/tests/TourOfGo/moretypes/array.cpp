@@ -116,6 +116,17 @@ namespace golang::main
         auto hw2 = "Hello, World!"_s;
         auto hwBytes2 = gocpp::slice<unsigned char>(hw2);
         mocklib::Println(hwBytes2);
+        gocpp::array<unsigned char, 32> buf = {};
+        auto n = len(buf);
+        mocklib::Println("Length of buf:"_s, n);
+        auto w = arrayLen(& buf);
+        mocklib::Println("Length of buf from arrayLen:"_s, w);
+    }
+
+    int arrayLen(gocpp::array<unsigned char, 32>* buf)
+    {
+        auto w = len(buf);
+        return w;
     }
 
 }

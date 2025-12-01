@@ -318,50 +318,30 @@ namespace golang::runtime
         }
         traceFrequency(gen);
         // Collect all the untraced Gs.
-        
-        template<typename T> requires gocpp::GoStruct<T>
-        untracedG::operator T()
+        struct untracedG
         {
-            T result;
-            result.gp = this->gp;
-            result.goid = this->goid;
-            result.mid = this->mid;
-            result.status = this->status;
-            result.waitreason = this->waitreason;
-            result.inMarkAssist = this->inMarkAssist;
-            return result;
-        }
+            g* gp;
+            uint64_t goid;
+            int64_t mid;
+            uint32_t status;
+            golang::runtime::waitReason waitreason;
+            bool inMarkAssist;
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool untracedG::operator==(const T& ref) const
-        {
-            if (gp != ref.gp) return false;
-            if (goid != ref.goid) return false;
-            if (mid != ref.mid) return false;
-            if (status != ref.status) return false;
-            if (waitreason != ref.waitreason) return false;
-            if (inMarkAssist != ref.inMarkAssist) return false;
-            return true;
-        }
+            using isGoStruct = void;
 
-        std::ostream& untracedG::PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << gp;
-            os << " " << goid;
-            os << " " << mid;
-            os << " " << status;
-            os << " " << waitreason;
-            os << " " << inMarkAssist;
-            os << '}';
-            return os;
-        }
-
-        std::ostream& operator<<(std::ostream& os, const struct untracedG& value)
-        {
-            return value.PrintTo(os);
-        }
-
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << gp;
+                os << " " << goid;
+                os << " " << mid;
+                os << " " << status;
+                os << " " << waitreason;
+                os << " " << inMarkAssist;
+                os << '}';
+                return os;
+            }
+        };
         gocpp::slice<untracedG> untracedGs = {};
         forEachGRace([=](struct g* gp) mutable -> void
         {

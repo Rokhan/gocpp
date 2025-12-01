@@ -491,38 +491,22 @@ namespace golang::strings
     {
         // A span is used to record a slice of s of the form s[start:end].
         // The start index is inclusive and the end index is exclusive.
-        
-        template<typename T> requires gocpp::GoStruct<T>
-        span::operator T()
+        struct span
         {
-            T result;
-            result.start = this->start;
-            result.end = this->end;
-            return result;
-        }
+            int start;
+            int end;
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool span::operator==(const T& ref) const
-        {
-            if (start != ref.start) return false;
-            if (end != ref.end) return false;
-            return true;
-        }
+            using isGoStruct = void;
 
-        std::ostream& span::PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << start;
-            os << " " << end;
-            os << '}';
-            return os;
-        }
-
-        std::ostream& operator<<(std::ostream& os, const struct span& value)
-        {
-            return value.PrintTo(os);
-        }
-
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << start;
+                os << " " << end;
+                os << '}';
+                return os;
+            }
+        };
         auto spans = gocpp::make(gocpp::Tag<gocpp::slice<span>>(), 0, 32);
         auto start = - 1;
         for(auto [end, rune] : s)

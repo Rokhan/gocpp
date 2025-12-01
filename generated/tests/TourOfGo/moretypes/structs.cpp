@@ -239,6 +239,40 @@ namespace golang::main
 
     void inlineStructDef(gocpp_id_1 dummy)
     {
+        mocklib::Println("inlineStructDef"_s, dummy.a);
+    }
+
+    void embededStructDef()
+    {
+        auto s = gocpp::slice<unsigned char>("hello world"_s);
+        struct span
+        {
+            int start;
+            int end;
+
+            using isGoStruct = void;
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << start;
+                os << " " << end;
+                os << '}';
+                return os;
+            }
+        };
+        auto spans = gocpp::make(gocpp::Tag<gocpp::slice<span>>(), 0, 32);
+        spans = append(spans, span {0, 5});
+        spans = append(spans, span {6, 11});
+        auto a = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<unsigned char>>>(), len(spans));
+        for(auto [i, span] : spans)
+        {
+            a[i] = s.make_slice(span.start, span.end, span.end);
+        }
+        for(auto [i, part] : a)
+        {
+            mocklib::Println("part "_s, i, ":"_s, gocpp::string(part));
+        }
     }
 
     struct gocpp_id_2
@@ -413,6 +447,42 @@ namespace golang::main
         }
 
 
+    struct gocpp_id_7
+        {
+            int a;
+
+            using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                result.a = this->a;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                if (a != ref.a) return false;
+                return true;
+            }
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << a;
+                os << '}';
+                return os;
+            }
+        };
+
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
+        {
+            return value.PrintTo(os);
+        }
+
+
     void main()
     {
         mocklib::Println(Vertex {1, 2});
@@ -434,6 +504,8 @@ namespace golang::main
         mocklib::Println(p1);
         auto dd = Dummy2 {d, Vertex {}, 3};
         mocklib::Println(dd);
+        inlineStructDef(gocpp_id_7 {42});
+        embededStructDef();
     }
 
 }

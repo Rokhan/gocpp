@@ -962,44 +962,26 @@ namespace golang::runtime
             return;
         }
         // Prepare read state for all logs.
-        
-        template<typename T> requires gocpp::GoStruct<T>
-        readState::operator T()
+        struct readState
         {
-            T result;
-            result.debugLogReader = this->debugLogReader;
-            result.first = this->first;
-            result.lost = this->lost;
-            result.nextTick = this->nextTick;
-            return result;
-        }
+            debugLogReader debugLogReader;
+            bool first;
+            uint64_t lost;
+            uint64_t nextTick;
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool readState::operator==(const T& ref) const
-        {
-            if (debugLogReader != ref.debugLogReader) return false;
-            if (first != ref.first) return false;
-            if (lost != ref.lost) return false;
-            if (nextTick != ref.nextTick) return false;
-            return true;
-        }
+            using isGoStruct = void;
 
-        std::ostream& readState::PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << debugLogReader;
-            os << " " << first;
-            os << " " << lost;
-            os << " " << nextTick;
-            os << '}';
-            return os;
-        }
-
-        std::ostream& operator<<(std::ostream& os, const struct readState& value)
-        {
-            return value.PrintTo(os);
-        }
-
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << debugLogReader;
+                os << " " << first;
+                os << " " << lost;
+                os << " " << nextTick;
+                os << '}';
+                return os;
+            }
+        };
         auto state1 = sysAllocOS(gocpp::Sizeof<readState>() * uintptr_t(n));
         if(state1 == nullptr)
         {

@@ -215,67 +215,36 @@ namespace golang::runtime
         unsafe::Pointer k = {};
         uint16_t* l = {};
         gocpp::array<unsigned char, 4> m = {};
-        
-        template<typename T> requires gocpp::GoStruct<T>
-        x1t::operator T()
+        struct x1t
         {
-            T result;
-            result.x = this->x;
-            return result;
-        }
+            uint8_t x;
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool x1t::operator==(const T& ref) const
+            using isGoStruct = void;
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << x;
+                os << '}';
+                return os;
+            }
+        };
+        struct y1t
         {
-            if (x != ref.x) return false;
-            return true;
-        }
+            x1t x1;
+            uint8_t y;
 
-        std::ostream& x1t::PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << x;
-            os << '}';
-            return os;
-        }
+            using isGoStruct = void;
 
-        std::ostream& operator<<(std::ostream& os, const struct x1t& value)
-        {
-            return value.PrintTo(os);
-        }
-
-        
-        template<typename T> requires gocpp::GoStruct<T>
-        y1t::operator T()
-        {
-            T result;
-            result.x1 = this->x1;
-            result.y = this->y;
-            return result;
-        }
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool y1t::operator==(const T& ref) const
-        {
-            if (x1 != ref.x1) return false;
-            if (y != ref.y) return false;
-            return true;
-        }
-
-        std::ostream& y1t::PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << x1;
-            os << " " << y;
-            os << '}';
-            return os;
-        }
-
-        std::ostream& operator<<(std::ostream& os, const struct y1t& value)
-        {
-            return value.PrintTo(os);
-        }
-
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << x1;
+                os << " " << y;
+                os << '}';
+                return os;
+            }
+        };
         x1t x1 = {};
         y1t y1 = {};
         if(gocpp::Sizeof<int8_t>() != 1)

@@ -327,38 +327,22 @@ namespace golang::runtime
     void monitorSuspendResume()
     {
         auto _DEVICE_NOTIFY_CALLBACK = 2;
-        
-        template<typename T> requires gocpp::GoStruct<T>
-        _DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS::operator T()
+        struct _DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS
         {
-            T result;
-            result.callback = this->callback;
-            result.context = this->context;
-            return result;
-        }
+            uintptr_t callback;
+            uintptr_t context;
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool _DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS::operator==(const T& ref) const
-        {
-            if (callback != ref.callback) return false;
-            if (context != ref.context) return false;
-            return true;
-        }
+            using isGoStruct = void;
 
-        std::ostream& _DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS::PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << callback;
-            os << " " << context;
-            os << '}';
-            return os;
-        }
-
-        std::ostream& operator<<(std::ostream& os, const struct _DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS& value)
-        {
-            return value.PrintTo(os);
-        }
-
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << "" << callback;
+                os << " " << context;
+                os << '}';
+                return os;
+            }
+        };
         auto powrprof = windowsLoadSystemLib(powrprofdll.make_slice(0));
         if(powrprof == 0)
         {

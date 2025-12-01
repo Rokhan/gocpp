@@ -111,6 +111,7 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     void inlineStructDef(gocpp_id_1 dummy);
+    void embededStructDef();
     void main();
     struct Dummy2
     {

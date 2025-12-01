@@ -16,4 +16,5 @@ namespace golang::main
     struct gocpp_id_4;
     struct gocpp_id_5;
     struct gocpp_id_6;
+    struct gocpp_id_7;
 }

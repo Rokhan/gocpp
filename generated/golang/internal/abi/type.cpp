@@ -498,283 +498,155 @@ namespace golang::abi
                     return & (structTypeUncommon*)(unsafe::Pointer(t))->u;
                     break;
                 case 1:
-                    
-                    template<typename T> requires gocpp::GoStruct<T>
-                    u::operator T()
+                    struct u
                     {
-                        T result;
-                        result.PtrType = this->PtrType;
-                        result.u = this->u;
-                        return result;
-                    }
+                        PtrType PtrType;
+                        UncommonType u;
 
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool u::operator==(const T& ref) const
-                    {
-                        if (PtrType != ref.PtrType) return false;
-                        if (u != ref.u) return false;
-                        return true;
-                    }
+                        using isGoStruct = void;
 
-                    std::ostream& u::PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << "" << PtrType;
-                        os << " " << u;
-                        os << '}';
-                        return os;
-                    }
-
-                    std::ostream& operator<<(std::ostream& os, const struct u& value)
-                    {
-                        return value.PrintTo(os);
-                    }
-
+                        std::ostream& PrintTo(std::ostream& os) const
+                        {
+                            os << '{';
+                            os << "" << PtrType;
+                            os << " " << u;
+                            os << '}';
+                            return os;
+                        }
+                    };
                     return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 2:
-                    
-                    template<typename T> requires gocpp::GoStruct<T>
-                    u::operator T()
+                    struct u
                     {
-                        T result;
-                        result.FuncType = this->FuncType;
-                        result.u = this->u;
-                        return result;
-                    }
+                        FuncType FuncType;
+                        UncommonType u;
 
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool u::operator==(const T& ref) const
-                    {
-                        if (FuncType != ref.FuncType) return false;
-                        if (u != ref.u) return false;
-                        return true;
-                    }
+                        using isGoStruct = void;
 
-                    std::ostream& u::PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << "" << FuncType;
-                        os << " " << u;
-                        os << '}';
-                        return os;
-                    }
-
-                    std::ostream& operator<<(std::ostream& os, const struct u& value)
-                    {
-                        return value.PrintTo(os);
-                    }
-
+                        std::ostream& PrintTo(std::ostream& os) const
+                        {
+                            os << '{';
+                            os << "" << FuncType;
+                            os << " " << u;
+                            os << '}';
+                            return os;
+                        }
+                    };
                     return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 3:
-                    
-                    template<typename T> requires gocpp::GoStruct<T>
-                    u::operator T()
+                    struct u
                     {
-                        T result;
-                        result.SliceType = this->SliceType;
-                        result.u = this->u;
-                        return result;
-                    }
+                        SliceType SliceType;
+                        UncommonType u;
 
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool u::operator==(const T& ref) const
-                    {
-                        if (SliceType != ref.SliceType) return false;
-                        if (u != ref.u) return false;
-                        return true;
-                    }
+                        using isGoStruct = void;
 
-                    std::ostream& u::PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << "" << SliceType;
-                        os << " " << u;
-                        os << '}';
-                        return os;
-                    }
-
-                    std::ostream& operator<<(std::ostream& os, const struct u& value)
-                    {
-                        return value.PrintTo(os);
-                    }
-
+                        std::ostream& PrintTo(std::ostream& os) const
+                        {
+                            os << '{';
+                            os << "" << SliceType;
+                            os << " " << u;
+                            os << '}';
+                            return os;
+                        }
+                    };
                     return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 4:
-                    
-                    template<typename T> requires gocpp::GoStruct<T>
-                    u::operator T()
+                    struct u
                     {
-                        T result;
-                        result.ArrayType = this->ArrayType;
-                        result.u = this->u;
-                        return result;
-                    }
+                        ArrayType ArrayType;
+                        UncommonType u;
 
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool u::operator==(const T& ref) const
-                    {
-                        if (ArrayType != ref.ArrayType) return false;
-                        if (u != ref.u) return false;
-                        return true;
-                    }
+                        using isGoStruct = void;
 
-                    std::ostream& u::PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << "" << ArrayType;
-                        os << " " << u;
-                        os << '}';
-                        return os;
-                    }
-
-                    std::ostream& operator<<(std::ostream& os, const struct u& value)
-                    {
-                        return value.PrintTo(os);
-                    }
-
+                        std::ostream& PrintTo(std::ostream& os) const
+                        {
+                            os << '{';
+                            os << "" << ArrayType;
+                            os << " " << u;
+                            os << '}';
+                            return os;
+                        }
+                    };
                     return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 5:
-                    
-                    template<typename T> requires gocpp::GoStruct<T>
-                    u::operator T()
+                    struct u
                     {
-                        T result;
-                        result.ChanType = this->ChanType;
-                        result.u = this->u;
-                        return result;
-                    }
+                        ChanType ChanType;
+                        UncommonType u;
 
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool u::operator==(const T& ref) const
-                    {
-                        if (ChanType != ref.ChanType) return false;
-                        if (u != ref.u) return false;
-                        return true;
-                    }
+                        using isGoStruct = void;
 
-                    std::ostream& u::PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << "" << ChanType;
-                        os << " " << u;
-                        os << '}';
-                        return os;
-                    }
-
-                    std::ostream& operator<<(std::ostream& os, const struct u& value)
-                    {
-                        return value.PrintTo(os);
-                    }
-
+                        std::ostream& PrintTo(std::ostream& os) const
+                        {
+                            os << '{';
+                            os << "" << ChanType;
+                            os << " " << u;
+                            os << '}';
+                            return os;
+                        }
+                    };
                     return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 6:
-                    
-                    template<typename T> requires gocpp::GoStruct<T>
-                    u::operator T()
+                    struct u
                     {
-                        T result;
-                        result.MapType = this->MapType;
-                        result.u = this->u;
-                        return result;
-                    }
+                        MapType MapType;
+                        UncommonType u;
 
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool u::operator==(const T& ref) const
-                    {
-                        if (MapType != ref.MapType) return false;
-                        if (u != ref.u) return false;
-                        return true;
-                    }
+                        using isGoStruct = void;
 
-                    std::ostream& u::PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << "" << MapType;
-                        os << " " << u;
-                        os << '}';
-                        return os;
-                    }
-
-                    std::ostream& operator<<(std::ostream& os, const struct u& value)
-                    {
-                        return value.PrintTo(os);
-                    }
-
+                        std::ostream& PrintTo(std::ostream& os) const
+                        {
+                            os << '{';
+                            os << "" << MapType;
+                            os << " " << u;
+                            os << '}';
+                            return os;
+                        }
+                    };
                     return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 case 7:
-                    
-                    template<typename T> requires gocpp::GoStruct<T>
-                    u::operator T()
+                    struct u
                     {
-                        T result;
-                        result.InterfaceType = this->InterfaceType;
-                        result.u = this->u;
-                        return result;
-                    }
+                        InterfaceType InterfaceType;
+                        UncommonType u;
 
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool u::operator==(const T& ref) const
-                    {
-                        if (InterfaceType != ref.InterfaceType) return false;
-                        if (u != ref.u) return false;
-                        return true;
-                    }
+                        using isGoStruct = void;
 
-                    std::ostream& u::PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << "" << InterfaceType;
-                        os << " " << u;
-                        os << '}';
-                        return os;
-                    }
-
-                    std::ostream& operator<<(std::ostream& os, const struct u& value)
-                    {
-                        return value.PrintTo(os);
-                    }
-
+                        std::ostream& PrintTo(std::ostream& os) const
+                        {
+                            os << '{';
+                            os << "" << InterfaceType;
+                            os << " " << u;
+                            os << '}';
+                            return os;
+                        }
+                    };
                     return & (u*)(unsafe::Pointer(t))->u;
                     break;
                 default:
-                    
-                    template<typename T> requires gocpp::GoStruct<T>
-                    u::operator T()
+                    struct u
                     {
-                        T result;
-                        result.Type = this->Type;
-                        result.u = this->u;
-                        return result;
-                    }
+                        Type Type;
+                        UncommonType u;
 
-                    template<typename T> requires gocpp::GoStruct<T>
-                    bool u::operator==(const T& ref) const
-                    {
-                        if (Type != ref.Type) return false;
-                        if (u != ref.u) return false;
-                        return true;
-                    }
+                        using isGoStruct = void;
 
-                    std::ostream& u::PrintTo(std::ostream& os) const
-                    {
-                        os << '{';
-                        os << "" << Type;
-                        os << " " << u;
-                        os << '}';
-                        return os;
-                    }
-
-                    std::ostream& operator<<(std::ostream& os, const struct u& value)
-                    {
-                        return value.PrintTo(os);
-                    }
-
+                        std::ostream& PrintTo(std::ostream& os) const
+                        {
+                            os << '{';
+                            os << "" << Type;
+                            os << " " << u;
+                            os << '}';
+                            return os;
+                        }
+                    };
                     return & (u*)(unsafe::Pointer(t))->u;
                     break;
             }

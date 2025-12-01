@@ -132,7 +132,7 @@
 | $(ImportDir)/compress/flate/huffman_bit_writer.go | ✔️ ([cpp](generated/golang/compress/flate/huffman_bit_writer.cpp), [h](generated/golang/compress/flate/huffman_bit_writer.h))| ❌ |
 | $(ImportDir)/compress/flate/huffman_code.go | ✔️ ([cpp](generated/golang/compress/flate/huffman_code.cpp), [h](generated/golang/compress/flate/huffman_code.h))| ❌ |
 | $(ImportDir)/compress/flate/inflate.go | ✔️ ([cpp](generated/golang/compress/flate/inflate.cpp), [h](generated/golang/compress/flate/inflate.h))| ❌ |
-| $(ImportDir)/compress/flate/token.go | ✔️ ([cpp](generated/golang/compress/flate/token.cpp), [h](generated/golang/compress/flate/token.h))| ❌ |
+| $(ImportDir)/compress/flate/token.go | ✔️ ([cpp](generated/golang/compress/flate/token.cpp), [h](generated/golang/compress/flate/token.h))| ✔️ |
 | $(ImportDir)/compress/zlib/reader.go | ✔️ ([cpp](generated/golang/compress/zlib/reader.cpp), [h](generated/golang/compress/zlib/reader.h))| ❌ |
 | $(ImportDir)/compress/zlib/writer.go | ✔️ ([cpp](generated/golang/compress/zlib/writer.cpp), [h](generated/golang/compress/zlib/writer.h))| ❌ |
 | $(ImportDir)/encoding/base64/base64.go | ✔️ ([cpp](generated/golang/encoding/base64/base64.cpp), [h](generated/golang/encoding/base64/base64.h))| ❌ |
@@ -191,7 +191,7 @@
 | $(ImportDir)/internal/goexperiment/exp_exectracer2_on.go | ✔️ ([cpp](generated/golang/internal/goexperiment/exp_exectracer2_on.cpp), [h](generated/golang/internal/goexperiment/exp_exectracer2_on.h))| ✔️ |
 | $(ImportDir)/internal/goexperiment/exp_heapminimum512kib_off.go | ✔️ ([cpp](generated/golang/internal/goexperiment/exp_heapminimum512kib_off.cpp), [h](generated/golang/internal/goexperiment/exp_heapminimum512kib_off.h))| ✔️ |
 | $(ImportDir)/internal/goos/zgoos_windows.go | ✔️ ([cpp](generated/golang/internal/goos/zgoos_windows.cpp), [h](generated/golang/internal/goos/zgoos_windows.h))| ✔️ |
-| $(ImportDir)/internal/itoa/itoa.go | ✔️ ([cpp](generated/golang/internal/itoa/itoa.cpp), [h](generated/golang/internal/itoa/itoa.h))| ❌ |
+| $(ImportDir)/internal/itoa/itoa.go | ✔️ ([cpp](generated/golang/internal/itoa/itoa.cpp), [h](generated/golang/internal/itoa/itoa.h))| ✔️ |
 | $(ImportDir)/internal/poll/errno_windows.go | ✔️ ([cpp](generated/golang/internal/poll/errno_windows.cpp), [h](generated/golang/internal/poll/errno_windows.h))| ✔️ |
 | $(ImportDir)/internal/poll/fd.go | ✔️ ([cpp](generated/golang/internal/poll/fd.cpp), [h](generated/golang/internal/poll/fd.h))| ✔️ |
 | $(ImportDir)/internal/poll/fd_fsync_windows.go | ✔️ ([cpp](generated/golang/internal/poll/fd_fsync_windows.cpp), [h](generated/golang/internal/poll/fd_fsync_windows.h))| ❌ |
@@ -418,7 +418,7 @@
 | $(ImportDir)/sort/zsortinterface.go | ✔️ ([cpp](generated/golang/sort/zsortinterface.cpp), [h](generated/golang/sort/zsortinterface.h))| ✔️ |
 | $(ImportDir)/strconv/atoi.go | ✔️ ([cpp](generated/golang/strconv/atoi.cpp), [h](generated/golang/strconv/atoi.h))| ❌ |
 | $(ImportDir)/strconv/bytealg.go | ✔️ ([cpp](generated/golang/strconv/bytealg.cpp), [h](generated/golang/strconv/bytealg.h))| ✔️ |
-| $(ImportDir)/strconv/decimal.go | ✔️ ([cpp](generated/golang/strconv/decimal.cpp), [h](generated/golang/strconv/decimal.h))| ❌ |
+| $(ImportDir)/strconv/decimal.go | ✔️ ([cpp](generated/golang/strconv/decimal.cpp), [h](generated/golang/strconv/decimal.h))| ✔️ |
 | $(ImportDir)/strconv/eisel_lemire.go | ✔️ ([cpp](generated/golang/strconv/eisel_lemire.cpp), [h](generated/golang/strconv/eisel_lemire.h))| ✔️ |
 | $(ImportDir)/strconv/ftoa.go | ✔️ ([cpp](generated/golang/strconv/ftoa.cpp), [h](generated/golang/strconv/ftoa.h))| ❌ |
 | $(ImportDir)/strconv/ftoaryu.go | ✔️ ([cpp](generated/golang/strconv/ftoaryu.cpp), [h](generated/golang/strconv/ftoaryu.h))| ❌ |

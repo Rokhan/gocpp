@@ -340,7 +340,7 @@ namespace gocpp
         range_iterator end() { return { std::string::size(), std::string::end() }; }
     };
 
-    inline size_t len(const std::string& input)
+    inline long len(const std::string& input)
     {
         return input.length();
     }
@@ -954,6 +954,16 @@ namespace gocpp
         }
 
         // TODO : other constructors
+
+        friend constexpr long len(const array<T, N>& input)
+        {
+            return N;
+        }
+
+        friend constexpr long len(const array<T, N>* input)
+        {
+            return N;
+        }
     };
 
     template<typename T>
@@ -1138,12 +1148,12 @@ namespace gocpp
             return len;
         }
 
-        friend inline size_t len(const slice<T>& input)
+        friend inline long len(const slice<T>& input)
         {
             return input.mEnd - input.mStart;
         }
 
-        friend inline size_t cap(const slice<T>& input)
+        friend inline long cap(const slice<T>& input)
         {
             if(input.mArray)
             {

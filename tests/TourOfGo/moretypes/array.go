@@ -45,4 +45,16 @@ func main() {
 	var hw2 = "Hello, World!"
 	var hwBytes2 = []byte(hw2)
 	fmt.Println(hwBytes2)
+
+	var buf [32]byte
+	n := len(buf)
+	fmt.Println("Length of buf:", n)
+
+	w := arrayLen(&buf)
+	fmt.Println("Length of buf from arrayLen:", w)
+}
+
+func arrayLen(buf *[32]byte) int {
+	w := len(buf)
+	return w
 }

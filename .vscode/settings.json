@@ -74,7 +74,8 @@
         "locale": "cpp",
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "array": "cpp"
     },
     "C_Cpp.vcFormat.newLine.closeBraceSameLine.emptyFunction": true,
     "C_Cpp.vcFormat.space.afterKeywordsInControlFlowStatements": false,

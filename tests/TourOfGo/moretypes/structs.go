@@ -27,7 +27,31 @@ type Person struct {
 	age int
 }
 
-func inlineStructDef(dummy struct{ a int }) {}
+func inlineStructDef(dummy struct{ a int }) {
+	fmt.Println("inlineStructDef", dummy.a)
+}
+
+func embededStructDef() {
+	s := []byte("hello world")
+
+	type span struct {
+		start int
+		end   int
+	}
+
+	spans := make([]span, 0, 32)
+	spans = append(spans, span{0, 5})
+	spans = append(spans, span{6, 11})
+
+	a := make([][]byte, len(spans))
+	for i, span := range spans {
+		a[i] = s[span.start:span.end:span.end]
+	}
+
+	for i, part := range a {
+		fmt.Println("part ", i, ":", string(part))
+	}
+}
 
 func main() {
 	fmt.Println(Vertex{1, 2})
@@ -56,6 +80,9 @@ func main() {
 
 	dd := Dummy2{d, Vertex{}, 3}
 	fmt.Println(dd)
+
+	inlineStructDef(struct{ a int }{42})
+	embededStructDef()
 
 	//var p2 *Dummy = &v1
 	//fmt.Println(p2)

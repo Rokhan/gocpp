@@ -2454,14 +2454,19 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 			structFwdDecl := fmt.Sprintf("%sstruct %s;\n", templateDec, name)
 			defs = append(defs, fwdHeaderStr(structFwdDecl, node, cv.getTypeDepInfo(node)))
 
-			structDecl, places := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, decl, with})
+			structDecl, places := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, decl, with, false})
 			defs = append(defs, places...)
 			if templateDec != "" {
 				structDecl = fmt.Sprintf("%s\n%s%s", templateDec, cv.hpp.Indent(), structDecl)
 			}
 			defs = append(defs, headerStr(structDecl, node))
+
+			structDecl, places = cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, implem, with, false})
+			defs = append(defs, places...)
+			return mkCppType(structDecl, defs)
 		}
-		structDecl, places := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, implem, with})
+
+		structDecl, places := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, all, without, true})
 		defs = append(defs, places...)
 		return mkCppType(structDecl, defs)
 
@@ -2473,14 +2478,14 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 			structFwdDecl := fmt.Sprintf("%sstruct %s;\n", templateDec, name)
 			defs = append(defs, fwdHeaderStr(structFwdDecl, node, cv.getTypeDepInfo(node)))
 
-			structDecl := cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, decl, with})
+			structDecl := cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, decl, with, false})
 			if templateDec != "" {
 				structDecl = fmt.Sprintf("%s\n%s%s", templateDec, cv.hpp.Indent(), structDecl)
 			}
 			defs = append(defs, headerStr(structDecl, node))
 		}
 
-		return mkCppType(cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, implem, with}), defs)
+		return mkCppType(cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, implem, with, false}), defs)
 
 	default:
 		cv.Panicf("convertTypeSpec, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
@@ -2753,14 +2758,14 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 			// if we want to use "inlineStr" we have to know if we are inside function or not to disable
 			// stream operator generation.
 			if ctx.inDeclaration {
-				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, decl, with})
+				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, decl, with, false})
 				defs = append(defs, headerStr(structDef, node))
 
-				structImpl, _ := cv.convertStructTypeExpr(n, nil, genStructParam{name, implem, with})
+				structImpl, _ := cv.convertStructTypeExpr(n, nil, genStructParam{name, implem, with, false})
 				defs = append(defs, outlineStr(structImpl, node))
 				return mkCppType(name, defs)
 			} else {
-				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, all, with})
+				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, all, with, false})
 				//defs = append(defs, inlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{}))
 
 				defs = append(defs, outlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{}))
@@ -2779,10 +2784,10 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 			defs := []place{}
 
 			if first {
-				structDecl := cv.convertInterfaceTypeExpr(n, nil, genStructParam{name, decl, with})
+				structDecl := cv.convertInterfaceTypeExpr(n, nil, genStructParam{name, decl, with, false})
 				defs = append(defs, headerStr(structDecl, node))
 
-				structDef := cv.convertInterfaceTypeExpr(n, nil, genStructParam{name, implem, with})
+				structDef := cv.convertInterfaceTypeExpr(n, nil, genStructParam{name, implem, with, false})
 				defs = append(defs, outlineStr(structDef, node))
 			}
 
@@ -2887,6 +2892,7 @@ type genStructParam struct {
 	name     string
 	output   GenOutputType
 	streamOp StreamOp
+	isLocal  bool
 }
 
 type genStructData struct {
@@ -2993,41 +2999,43 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 	// 	fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 	// }
 
-	fmt.Fprintf(buf, "\n")
-	if param.output == implem {
-		PrintTemplatePrefix(buf, data, templatePrms)
-	}
-
-	fmt.Fprintf(buf, "%stemplate<typename %s> requires gocpp::GoStruct<%s>\n", data.out.Indent(), newTemplateParamName, newTemplateParamName)
-	fmt.Fprintf(buf, "%s%soperator %s()%s\n", data.out.Indent(), data.namePrefix, newTemplateParamName, data.declEnd)
-	if data.needBody {
-		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-		fmt.Fprintf(buf, "%s    %s result;\n", data.out.Indent(), newTemplateParamName)
-		for _, field := range fields {
-			for _, name := range field.names {
-				fmt.Fprintf(buf, "%s    result.%s = this->%s;\n", data.out.Indent(), name, name)
-			}
+	if !param.isLocal {
+		fmt.Fprintf(buf, "\n")
+		if param.output == implem {
+			PrintTemplatePrefix(buf, data, templatePrms)
 		}
-		fmt.Fprintf(buf, "%s    return result;\n", data.out.Indent())
-		fmt.Fprintf(buf, "%s}\n", data.out.Indent())
-	}
 
-	fmt.Fprintf(buf, "\n")
-	if param.output == implem {
-		PrintTemplatePrefix(buf, data, templatePrms)
-	}
-
-	fmt.Fprintf(buf, "%stemplate<typename %s> requires gocpp::GoStruct<%s>\n", data.out.Indent(), newTemplateParamName, newTemplateParamName)
-	fmt.Fprintf(buf, "%sbool %soperator==(const %s& ref) const%s\n", data.out.Indent(), data.namePrefix, newTemplateParamName, data.declEnd)
-	if data.needBody {
-		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-		for _, field := range fields {
-			for _, name := range field.names {
-				fmt.Fprintf(buf, "%s    if (%s != ref.%s) return false;\n", data.out.Indent(), name, name)
+		fmt.Fprintf(buf, "%stemplate<typename %s> requires gocpp::GoStruct<%s>\n", data.out.Indent(), newTemplateParamName, newTemplateParamName)
+		fmt.Fprintf(buf, "%s%soperator %s()%s\n", data.out.Indent(), data.namePrefix, newTemplateParamName, data.declEnd)
+		if data.needBody {
+			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+			fmt.Fprintf(buf, "%s    %s result;\n", data.out.Indent(), newTemplateParamName)
+			for _, field := range fields {
+				for _, name := range field.names {
+					fmt.Fprintf(buf, "%s    result.%s = this->%s;\n", data.out.Indent(), name, name)
+				}
 			}
+			fmt.Fprintf(buf, "%s    return result;\n", data.out.Indent())
+			fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 		}
-		fmt.Fprintf(buf, "%s    return true;\n", data.out.Indent())
-		fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+
+		fmt.Fprintf(buf, "\n")
+		if param.output == implem {
+			PrintTemplatePrefix(buf, data, templatePrms)
+		}
+
+		fmt.Fprintf(buf, "%stemplate<typename %s> requires gocpp::GoStruct<%s>\n", data.out.Indent(), newTemplateParamName, newTemplateParamName)
+		fmt.Fprintf(buf, "%sbool %soperator==(const %s& ref) const%s\n", data.out.Indent(), data.namePrefix, newTemplateParamName, data.declEnd)
+		if data.needBody {
+			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+			for _, field := range fields {
+				for _, name := range field.names {
+					fmt.Fprintf(buf, "%s    if (%s != ref.%s) return false;\n", data.out.Indent(), name, name)
+				}
+			}
+			fmt.Fprintf(buf, "%s    return true;\n", data.out.Indent())
+			fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+		}
 	}
 
 	fmt.Fprintf(buf, "\n")

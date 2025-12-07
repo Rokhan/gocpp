@@ -32,6 +32,7 @@ type cppConverterSharedData struct {
 	exeDate          time.Time
 	verbose          bool
 	strictMode       bool
+	debugMode        bool
 	tryRecover       bool
 	alwaysRegenerate bool
 	ignoreDeps       bool
@@ -2693,6 +2694,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 			}
 		} else if cv.isAmbiguousName(identType.str) {
 			identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
+			identType.dbg = cv.DbgSprintf("/* is ambiguous */")
 		} else {
 			cv.checkStructType(n, &identType)
 		}
@@ -2703,6 +2705,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		if deps, ok := ctx.typeParams[identType.str]; ok && len(deps) != 0 {
 			identType.str = fmt.Sprintf("%s<%s>", identType.str, strings.Join(deps, ", "))
 		}
+		identType.str = fmt.Sprintf("%s%s", identType.dbg, identType.str)
 		return identType
 
 	case *ast.ArrayType:
@@ -2791,7 +2794,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 				defs = append(defs, outlineStr(structDef, node))
 			}
 
-			return cppType{cppExpr: cppExpr{name, defs, nil}, isPtr: true, canFwd: true}
+			return cppType{cppExpr: cppExpr{str: name, defs: defs}, isPtr: true, canFwd: true}
 		}
 
 	case *ast.Ellipsis:
@@ -3562,7 +3565,7 @@ func extractParamDefs(srcParams ...any) ([]place, []any, []string) {
 // Sprintf formats according to a format specifier and returns the resulting string.
 func ExprPrintf(format string, srcParams ...any) cppExpr {
 	defs, params, typeNames := extractParamDefs(srcParams...)
-	return cppExpr{fmt.Sprintf(format, params...), defs, typeNames}
+	return cppExpr{fmt.Sprintf(format, params...), "", defs, typeNames}
 }
 
 // Sprintf formats according to a format specifier and returns the resulting string.
@@ -3799,6 +3802,13 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 	panic("convertExprImpl, bug, unreacheable code reached !")
 }
 
+func (cv *cppConverter) DbgSprintf(format string, params ...any) string {
+	if cv.shared.debugMode {
+		return fmt.Sprintf(format, params...)
+	}
+	return ""
+}
+
 func (cv *cppConverter) getCaptureExpr() string {
 	var captureExpr = "[=]"
 	if cv.scopes.Len() <= 1 {
@@ -3911,7 +3921,7 @@ func (cv *cppConverter) convertExprsImpl(exprs []ast.Expr, useIgnore bool) cppEx
 		tns = append(tns, expr.typenames...)
 	}
 
-	return cppExpr{strings.Join(strs, ", "), defs, tns}
+	return cppExpr{strings.Join(strs, ", "), "", defs, tns}
 }
 
 func (cv *cppConverter) Position(expr ast.Node) token.Position {
@@ -4133,6 +4143,7 @@ func main() {
 	binOutDir := flag.String("binOutDir", "log", "gcc output dir in Makefile")
 	genMakeFile := flag.Bool("genMakeFile", false, "generate Makefile")
 	strictMode := flag.Bool("strictMode", true, "panic on every error")
+	debugMode := flag.Bool("debugMode", false, "add debug info in generated code")
 	tryRecover := flag.Bool("tryRecover", false, "try to recover on error (only if strictMode is false)")
 	ignoreDeps := flag.Bool("ignoreDependencies", false, "only generate target file")
 	verbose := flag.Bool("verbose", false, "verbose logs")
@@ -4157,6 +4168,7 @@ func main() {
 	shared.exeDate = fileInfo.ModTime()
 	shared.verbose = *verbose
 	shared.strictMode = *strictMode
+	shared.debugMode = *debugMode
 	shared.tryRecover = *tryRecover
 	shared.alwaysRegenerate = *alwaysRegenerate
 	shared.ignoreDeps = *ignoreDeps

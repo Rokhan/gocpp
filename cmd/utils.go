@@ -92,7 +92,7 @@ func GetCppExprFunc(funcName cppExpr) cppExpr {
 	funcName.str = GetCppName(funcName.str)
 	val, ok := stdFuncMapping[funcName.str]
 	if ok {
-		return cppExpr{val, funcName.defs, funcName.typenames}
+		return cppExpr{val, "", funcName.defs, funcName.typenames}
 	} else {
 		return funcName
 	}
@@ -744,7 +744,8 @@ func appendHeaderEndStrf(places *[]place, format string, params ...any) {
 }
 
 type cppExpr struct {
-	str       string  // cpp type as a string
+	str       string // cpp type as a string
+	dbg       string
 	defs      []place // inline def used by type
 	typenames []string
 
@@ -756,7 +757,7 @@ func (expr cppExpr) toCppType() cppType {
 }
 
 func mkCppExpr(str string) cppExpr {
-	return cppExpr{str, nil, nil}
+	return cppExpr{str: str}
 }
 
 type cppType struct {
@@ -779,7 +780,7 @@ func (ct cppType) getTypeBasedName() string {
 }
 
 func mkCppType(str string, defs []place) cppType {
-	return cppType{cppExpr{str, defs, nil}, false, false, false, nil, true}
+	return cppType{cppExpr{str: str, defs: defs}, false, false, false, nil, true}
 }
 
 // func mkCppPtrType(expr cppExpr) cppType {
@@ -812,7 +813,7 @@ func mkCppBuffer() *cppExprBuffer {
 // }
 
 func (buff *cppExprBuffer) Expr() cppExpr {
-	return cppExpr{buff.buff.String(), *buff.defs, nil}
+	return cppExpr{str: buff.buff.String(), defs: *buff.defs}
 }
 
 func mkTemplateParameter(name string, deps []string) string {

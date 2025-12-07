@@ -142,7 +142,7 @@ namespace golang::runtime
     // of stack.
     //
     //go:nowritebarrierrec
-    void rec::add(struct cpuProfile* p, unsafe::Pointer* tagPtr, gocpp::slice<uintptr_t> stk)
+    void rec::add(golang::runtime::cpuProfile* p, unsafe::Pointer* tagPtr, gocpp::slice<uintptr_t> stk)
     {
         for(; ! rec::CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
         {
@@ -170,7 +170,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrierrec
-    void rec::addNonGo(struct cpuProfile* p, gocpp::slice<uintptr_t> stk)
+    void rec::addNonGo(golang::runtime::cpuProfile* p, gocpp::slice<uintptr_t> stk)
     {
         for(; ! rec::CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
         {
@@ -195,7 +195,7 @@ namespace golang::runtime
     // addExtra is called either from a signal handler on a Go thread
     // or from an ordinary goroutine; either way it can use stack
     // and has a g. The world may be stopped, though.
-    void rec::addExtra(struct cpuProfile* p)
+    void rec::addExtra(golang::runtime::cpuProfile* p)
     {
         auto hdr = gocpp::array<uint64_t, 1> {1};
         for(auto i = 0; i < p->numExtra; )

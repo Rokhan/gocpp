@@ -78,18 +78,18 @@ namespace golang::png
     {
         gocpp::string Error(golang::png::FormatError e);
         gocpp::string Error(golang::png::UnsupportedError e);
-        struct gocpp::error parseIHDR(struct decoder* d, uint32_t length);
-        struct gocpp::error parsePLTE(struct decoder* d, uint32_t length);
-        struct gocpp::error parsetRNS(struct decoder* d, uint32_t length);
-        std::tuple<int, struct gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p);
-        std::tuple<image::Image, struct gocpp::error> decode(struct decoder* d);
-        std::tuple<image::Image, struct gocpp::error> readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly);
-        void mergePassInto(struct decoder* d, image::Image dst, image::Image src, int pass);
-        struct gocpp::error parseIDAT(struct decoder* d, uint32_t length);
-        struct gocpp::error parseIEND(struct decoder* d, uint32_t length);
-        struct gocpp::error parseChunk(struct decoder* d, bool configOnly);
-        struct gocpp::error verifyChecksum(struct decoder* d);
-        struct gocpp::error checkHeader(struct decoder* d);
+        struct gocpp::error parseIHDR(golang::png::decoder* d, uint32_t length);
+        struct gocpp::error parsePLTE(golang::png::decoder* d, uint32_t length);
+        struct gocpp::error parsetRNS(golang::png::decoder* d, uint32_t length);
+        std::tuple<int, struct gocpp::error> Read(golang::png::decoder* d, gocpp::slice<unsigned char> p);
+        std::tuple<image::Image, struct gocpp::error> decode(golang::png::decoder* d);
+        std::tuple<image::Image, struct gocpp::error> readImagePass(golang::png::decoder* d, io::Reader r, int pass, bool allocateOnly);
+        void mergePassInto(golang::png::decoder* d, image::Image dst, image::Image src, int pass);
+        struct gocpp::error parseIDAT(golang::png::decoder* d, uint32_t length);
+        struct gocpp::error parseIEND(golang::png::decoder* d, uint32_t length);
+        struct gocpp::error parseChunk(golang::png::decoder* d, bool configOnly);
+        struct gocpp::error verifyChecksum(golang::png::decoder* d);
+        struct gocpp::error checkHeader(golang::png::decoder* d);
     }
 }
 

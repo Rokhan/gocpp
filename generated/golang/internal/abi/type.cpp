@@ -161,34 +161,34 @@ namespace golang::abi
         x[Struct] = "struct"_s;
         x[UnsafePointer] = "unsafe.Pointer"_s;
     });
-    abi::Kind rec::Kind(struct Type* t)
+    abi::Kind rec::Kind(golang::abi::Type* t)
     {
         return Kind(t->Kind_ & KindMask);
     }
 
-    bool rec::HasName(struct Type* t)
+    bool rec::HasName(golang::abi::Type* t)
     {
         return t->TFlag & TFlagNamed != 0;
     }
 
-    bool rec::Pointers(struct Type* t)
+    bool rec::Pointers(golang::abi::Type* t)
     {
         return t->PtrBytes != 0;
     }
 
     // IfaceIndir reports whether t is stored indirectly in an interface value.
-    bool rec::IfaceIndir(struct Type* t)
+    bool rec::IfaceIndir(golang::abi::Type* t)
     {
         return t->Kind_ & KindDirectIface == 0;
     }
 
     // isDirectIface reports whether t is stored directly in an interface value.
-    bool rec::IsDirectIface(struct Type* t)
+    bool rec::IsDirectIface(golang::abi::Type* t)
     {
         return t->Kind_ & KindDirectIface != 0;
     }
 
-    gocpp::slice<unsigned char> rec::GcSlice(struct Type* t, uintptr_t begin, uintptr_t end)
+    gocpp::slice<unsigned char> rec::GcSlice(golang::abi::Type* t, uintptr_t begin, uintptr_t end)
     {
         return unsafe::Slice(t->GCData, int(end)).make_slice(begin);
     }
@@ -277,7 +277,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    gocpp::slice<Method> rec::Methods(struct UncommonType* t)
+    gocpp::slice<Method> rec::Methods(golang::abi::UncommonType* t)
     {
         if(t->Mcount == 0)
         {
@@ -286,7 +286,7 @@ namespace golang::abi
         return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.mcount > 0"_s)).make_slice(0, t->Mcount, t->Mcount);
     }
 
-    gocpp::slice<Method> rec::ExportedMethods(struct UncommonType* t)
+    gocpp::slice<Method> rec::ExportedMethods(golang::abi::UncommonType* t)
     {
         if(t->Xcount == 0)
         {
@@ -380,7 +380,7 @@ namespace golang::abi
     }
 
     // Len returns the length of t if t is an array type, otherwise 0
-    int rec::Len(struct Type* t)
+    int rec::Len(golang::abi::Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Array)
         {
@@ -389,7 +389,7 @@ namespace golang::abi
         return 0;
     }
 
-    struct Type* rec::Common(struct Type* t)
+    struct Type* rec::Common(golang::abi::Type* t)
     {
         return t;
     }
@@ -463,7 +463,7 @@ namespace golang::abi
     }
 
     // ChanDir returns the direction of t if t is a channel type, otherwise InvalidDir (0).
-    abi::ChanDir rec::ChanDir(struct Type* t)
+    abi::ChanDir rec::ChanDir(golang::abi::Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Chan)
         {
@@ -474,7 +474,7 @@ namespace golang::abi
     }
 
     // Uncommon returns a pointer to T's "uncommon" data if there is any, otherwise nil
-    struct UncommonType* rec::Uncommon(struct Type* t)
+    struct UncommonType* rec::Uncommon(golang::abi::Type* t)
     {
         if(t->TFlag & TFlagUncommon == 0)
         {
@@ -654,7 +654,7 @@ namespace golang::abi
     }
 
     // Elem returns the element type for t if t is an array, channel, map, pointer, or slice, otherwise nil.
-    struct Type* rec::Elem(struct Type* t)
+    struct Type* rec::Elem(golang::abi::Type* t)
     {
         //Go switch emulation
         {
@@ -693,7 +693,7 @@ namespace golang::abi
     }
 
     // StructType returns t cast to a *StructType, or nil if its tag does not match.
-    struct StructType* rec::StructType(struct Type* t)
+    struct StructType* rec::StructType(golang::abi::Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
@@ -703,7 +703,7 @@ namespace golang::abi
     }
 
     // MapType returns t cast to a *MapType, or nil if its tag does not match.
-    struct MapType* rec::MapType(struct Type* t)
+    struct MapType* rec::MapType(golang::abi::Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Map)
         {
@@ -713,7 +713,7 @@ namespace golang::abi
     }
 
     // ArrayType returns t cast to a *ArrayType, or nil if its tag does not match.
-    struct ArrayType* rec::ArrayType(struct Type* t)
+    struct ArrayType* rec::ArrayType(golang::abi::Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Array)
         {
@@ -723,7 +723,7 @@ namespace golang::abi
     }
 
     // FuncType returns t cast to a *FuncType, or nil if its tag does not match.
-    struct FuncType* rec::FuncType(struct Type* t)
+    struct FuncType* rec::FuncType(golang::abi::Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -733,7 +733,7 @@ namespace golang::abi
     }
 
     // InterfaceType returns t cast to a *InterfaceType, or nil if its tag does not match.
-    struct InterfaceType* rec::InterfaceType(struct Type* t)
+    struct InterfaceType* rec::InterfaceType(golang::abi::Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Interface)
         {
@@ -743,18 +743,18 @@ namespace golang::abi
     }
 
     // Size returns the size of data with type t.
-    uintptr_t rec::Size(struct Type* t)
+    uintptr_t rec::Size(golang::abi::Type* t)
     {
         return t->Size_;
     }
 
     // Align returns the alignment of data with type t.
-    int rec::Align(struct Type* t)
+    int rec::Align(golang::abi::Type* t)
     {
         return int(t->Align_);
     }
 
-    int rec::FieldAlign(struct Type* t)
+    int rec::FieldAlign(golang::abi::Type* t)
     {
         return int(t->FieldAlign_);
     }
@@ -794,7 +794,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    gocpp::slice<Method> rec::ExportedMethods(struct Type* t)
+    gocpp::slice<Method> rec::ExportedMethods(golang::abi::Type* t)
     {
         auto ut = rec::Uncommon(gocpp::recv(t));
         if(ut == nullptr)
@@ -804,7 +804,7 @@ namespace golang::abi
         return rec::ExportedMethods(gocpp::recv(ut));
     }
 
-    int rec::NumMethod(struct Type* t)
+    int rec::NumMethod(golang::abi::Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Interface)
         {
@@ -815,7 +815,7 @@ namespace golang::abi
     }
 
     // NumMethod returns the number of interface methods in the type's method set.
-    int rec::NumMethod(struct InterfaceType* t)
+    int rec::NumMethod(golang::abi::InterfaceType* t)
     {
         return len(t->Methods);
     }
@@ -875,32 +875,32 @@ namespace golang::abi
 
     // Note: flag values must match those used in the TMAP case
     // in ../cmd/compile/internal/reflectdata/reflect.go:writeType.
-    bool rec::IndirectKey(struct MapType* mt)
+    bool rec::IndirectKey(golang::abi::MapType* mt)
     {
         return mt->Flags & 1 != 0;
     }
 
-    bool rec::IndirectElem(struct MapType* mt)
+    bool rec::IndirectElem(golang::abi::MapType* mt)
     {
         return mt->Flags & 2 != 0;
     }
 
-    bool rec::ReflexiveKey(struct MapType* mt)
+    bool rec::ReflexiveKey(golang::abi::MapType* mt)
     {
         return mt->Flags & 4 != 0;
     }
 
-    bool rec::NeedKeyUpdate(struct MapType* mt)
+    bool rec::NeedKeyUpdate(golang::abi::MapType* mt)
     {
         return mt->Flags & 8 != 0;
     }
 
-    bool rec::HashMightPanic(struct MapType* mt)
+    bool rec::HashMightPanic(golang::abi::MapType* mt)
     {
         return mt->Flags & 16 != 0;
     }
 
-    struct Type* rec::Key(struct Type* t)
+    struct Type* rec::Key(golang::abi::Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Map)
         {
@@ -987,27 +987,27 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    struct Type* rec::In(struct FuncType* t, int i)
+    struct Type* rec::In(golang::abi::FuncType* t, int i)
     {
         return rec::InSlice(gocpp::recv(t))[i];
     }
 
-    int rec::NumIn(struct FuncType* t)
+    int rec::NumIn(golang::abi::FuncType* t)
     {
         return int(t->InCount);
     }
 
-    int rec::NumOut(struct FuncType* t)
+    int rec::NumOut(golang::abi::FuncType* t)
     {
         return int(t->OutCount & ((1 << 15) - 1));
     }
 
-    struct Type* rec::Out(struct FuncType* t, int i)
+    struct Type* rec::Out(golang::abi::FuncType* t, int i)
     {
         return (rec::OutSlice(gocpp::recv(t))[i]);
     }
 
-    gocpp::slice<Type*> rec::InSlice(struct FuncType* t)
+    gocpp::slice<Type*> rec::InSlice(golang::abi::FuncType* t)
     {
         auto uadd = gocpp::Sizeof<FuncType>();
         if(t->TFlag & TFlagUncommon != 0)
@@ -1021,7 +1021,7 @@ namespace golang::abi
         return (gocpp::array<Type*, 1 << 16>*)(addChecked(unsafe::Pointer(t), uadd, "t.inCount > 0"_s)).make_slice(0, t->InCount, t->InCount);
     }
 
-    gocpp::slice<Type*> rec::OutSlice(struct FuncType* t)
+    gocpp::slice<Type*> rec::OutSlice(golang::abi::FuncType* t)
     {
         auto outCount = uint16_t(rec::NumOut(gocpp::recv(t)));
         if(outCount == 0)
@@ -1036,7 +1036,7 @@ namespace golang::abi
         return (gocpp::array<Type*, 1 << 17>*)(addChecked(unsafe::Pointer(t), uadd, "outCount > 0"_s)).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }
 
-    bool rec::IsVariadic(struct FuncType* t)
+    bool rec::IsVariadic(golang::abi::FuncType* t)
     {
         return t->OutCount & (1 << 15) != 0;
     }
@@ -1108,7 +1108,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    bool rec::Embedded(struct StructField* f)
+    bool rec::Embedded(golang::abi::StructField* f)
     {
         return rec::IsEmbedded(gocpp::recv(f->Name));
     }
@@ -1179,39 +1179,39 @@ namespace golang::abi
 
     // DataChecked does pointer arithmetic on n's Bytes, and that arithmetic is asserted to
     // be safe for the reason in whySafe (which can appear in a backtrace, etc.)
-    unsigned char* rec::DataChecked(struct Name n, int off, gocpp::string whySafe)
+    unsigned char* rec::DataChecked(golang::abi::Name n, int off, gocpp::string whySafe)
     {
         return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), whySafe));
     }
 
     // Data does pointer arithmetic on n's Bytes, and that arithmetic is asserted to
     // be safe because the runtime made the call (other packages use DataChecked)
-    unsigned char* rec::Data(struct Name n, int off)
+    unsigned char* rec::Data(golang::abi::Name n, int off)
     {
         return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), "the runtime doesn't need to give you a reason"_s));
     }
 
     // IsExported returns "is n exported?"
-    bool rec::IsExported(struct Name n)
+    bool rec::IsExported(golang::abi::Name n)
     {
         return (*n.Bytes) & (1 << 0) != 0;
     }
 
     // HasTag returns true iff there is tag data following this name
-    bool rec::HasTag(struct Name n)
+    bool rec::HasTag(golang::abi::Name n)
     {
         return (*n.Bytes) & (1 << 1) != 0;
     }
 
     // IsEmbedded returns true iff n is embedded (an anonymous field).
-    bool rec::IsEmbedded(struct Name n)
+    bool rec::IsEmbedded(golang::abi::Name n)
     {
         return (*n.Bytes) & (1 << 3) != 0;
     }
 
     // ReadVarint parses a varint as encoded by encoding/binary.
     // It returns the number of encoded bytes and the encoded value.
-    std::tuple<int, int> rec::ReadVarint(struct Name n, int off)
+    std::tuple<int, int> rec::ReadVarint(golang::abi::Name n, int off)
     {
         auto v = 0;
         for(auto i = 0; ; i++)
@@ -1226,7 +1226,7 @@ namespace golang::abi
     }
 
     // IsBlank indicates whether n is "_".
-    bool rec::IsBlank(struct Name n)
+    bool rec::IsBlank(golang::abi::Name n)
     {
         if(n.Bytes == nullptr)
         {
@@ -1255,7 +1255,7 @@ namespace golang::abi
     }
 
     // Name returns the tag string for n, or empty if there is none.
-    gocpp::string rec::Name(struct Name n)
+    gocpp::string rec::Name(golang::abi::Name n)
     {
         if(n.Bytes == nullptr)
         {
@@ -1266,7 +1266,7 @@ namespace golang::abi
     }
 
     // Tag returns the tag string for n, or empty if there is none.
-    gocpp::string rec::Tag(struct Name n)
+    gocpp::string rec::Tag(golang::abi::Name n)
     {
         if(! rec::HasTag(gocpp::recv(n)))
         {

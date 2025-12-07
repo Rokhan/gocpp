@@ -21,8 +21,8 @@ namespace golang::time
 
     namespace rec
     {
-        gocpp::slice<unsigned char> appendFormatRFC3339(struct Time t, gocpp::slice<unsigned char> b, bool nanos);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> appendStrictRFC3339(struct Time t, gocpp::slice<unsigned char> b);
+        gocpp::slice<unsigned char> appendFormatRFC3339(golang::time::Time t, gocpp::slice<unsigned char> b, bool nanos);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> appendStrictRFC3339(golang::time::Time t, gocpp::slice<unsigned char> b);
     }
 }
 

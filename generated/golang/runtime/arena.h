@@ -83,15 +83,15 @@ namespace golang::runtime
 
     namespace rec
     {
-        unsafe::Pointer go_new(struct userArena* a, golang::runtime::_type* typ);
-        void slice(struct userArena* a, go_any sl, int cap);
-        void free(struct userArena* a);
-        unsafe::Pointer alloc(struct userArena* a, golang::runtime::_type* typ, int cap);
-        struct mspan* refill(struct userArena* a);
-        unsafe::Pointer userArenaNextFree(struct mspan* s, golang::runtime::_type* typ, int cap);
-        bool isUnusedUserArenaChunk(struct mspan* s);
-        void setUserArenaChunkToFault(struct mspan* s);
-        struct mspan* allocUserArenaChunk(struct mheap* h);
+        unsafe::Pointer go_new(golang::runtime::userArena* a, golang::runtime::_type* typ);
+        void slice(golang::runtime::userArena* a, go_any sl, int cap);
+        void free(golang::runtime::userArena* a);
+        unsafe::Pointer alloc(golang::runtime::userArena* a, golang::runtime::_type* typ, int cap);
+        struct mspan* refill(golang::runtime::userArena* a);
+        unsafe::Pointer userArenaNextFree(golang::runtime::mspan* s, golang::runtime::_type* typ, int cap);
+        bool isUnusedUserArenaChunk(golang::runtime::mspan* s);
+        void setUserArenaChunkToFault(golang::runtime::mspan* s);
+        struct mspan* allocUserArenaChunk(golang::runtime::mheap* h);
     }
 }
 

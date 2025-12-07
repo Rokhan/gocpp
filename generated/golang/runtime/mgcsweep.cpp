@@ -158,7 +158,7 @@ namespace golang::runtime
     // nextSpanForSweep finds and pops the next span for sweeping from the
     // central sweep buffers. It returns ownership of the span to the caller.
     // Returns nil if no such span exists.
-    struct mspan* rec::nextSpanForSweep(struct mheap* h)
+    struct mspan* rec::nextSpanForSweep(golang::runtime::mheap* h)
     {
         auto sg = h->sweepgen;
         for(auto sc = rec::load(gocpp::recv(sweep.centralIndex)); sc < numSweepClasses; sc++)
@@ -228,7 +228,7 @@ namespace golang::runtime
     // this does not indicate that all sweeping has completed.
     //
     // Even if the sweepLocker is invalid, its sweepGen is always valid.
-    struct sweepLocker rec::begin(struct activeSweep* a)
+    struct sweepLocker rec::begin(golang::runtime::activeSweep* a)
     {
         for(; ; )
         {
@@ -246,7 +246,7 @@ namespace golang::runtime
 
     // end deregisters a sweeper. Must be called once for each time
     // begin is called if the sweepLocker is valid.
-    void rec::end(struct activeSweep* a, struct sweepLocker sl)
+    void rec::end(golang::runtime::activeSweep* a, struct sweepLocker sl)
     {
         if(sl.sweepGen != mheap_.sweepgen)
         {
@@ -281,7 +281,7 @@ namespace golang::runtime
     //
     // Returns true if this call was the one that actually performed
     // the mark.
-    bool rec::markDrained(struct activeSweep* a)
+    bool rec::markDrained(golang::runtime::activeSweep* a)
     {
         for(; ; )
         {
@@ -298,7 +298,7 @@ namespace golang::runtime
     }
 
     // sweepers returns the current number of active sweepers.
-    uint32_t rec::sweepers(struct activeSweep* a)
+    uint32_t rec::sweepers(golang::runtime::activeSweep* a)
     {
         return rec::Load(gocpp::recv(a->state)) &^ sweepDrainedMask;
     }
@@ -306,7 +306,7 @@ namespace golang::runtime
     // isDone returns true if all sweep work has been drained and no more
     // outstanding sweepers exist. That is, when the sweep phase is
     // completely done.
-    bool rec::isDone(struct activeSweep* a)
+    bool rec::isDone(golang::runtime::activeSweep* a)
     {
         return rec::Load(gocpp::recv(a->state)) == sweepDrainedMask;
     }
@@ -314,7 +314,7 @@ namespace golang::runtime
     // reset sets up the activeSweep for the next sweep cycle.
     //
     // The world must be stopped.
-    void rec::reset(struct activeSweep* a)
+    void rec::reset(golang::runtime::activeSweep* a)
     {
         assertWorldStopped();
         rec::Store(gocpp::recv(a->state), 0);
@@ -463,7 +463,7 @@ namespace golang::runtime
 
     // tryAcquire attempts to acquire sweep ownership of span s. If it
     // successfully acquires ownership, it blocks sweep completion.
-    std::tuple<struct sweepLocked, bool> rec::tryAcquire(struct sweepLocker* l, struct mspan* s)
+    std::tuple<struct sweepLocked, bool> rec::tryAcquire(golang::runtime::sweepLocker* l, struct mspan* s)
     {
         if(! l->valid)
         {
@@ -515,7 +515,7 @@ namespace golang::runtime
                 auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
                 if(auto& s = s_tmp; ok)
                 {
-                    npages = s->npages;
+                    npages = s.npages;
                     if(rec::sweep(gocpp::recv(s), false))
                     {
                         rec::Add(gocpp::recv(mheap_.reclaimCredit), npages);
@@ -564,7 +564,7 @@ namespace golang::runtime
     // Returns only when span s has been swept.
     //
     //go:nowritebarrier
-    void rec::ensureSwept(struct mspan* s)
+    void rec::ensureSwept(golang::runtime::mspan* s)
     {
         auto gp = getg();
         if(gp->m->locks == 0 && gp->m->mallocing == 0 && gp != gp->m->g0)
@@ -601,7 +601,7 @@ namespace golang::runtime
     // Returns true if the span was returned to heap.
     // If preserve=true, don't return it to heap nor relink in mcentral lists;
     // caller takes care of it.
-    bool rec::sweep(struct sweepLocked* sl, bool preserve)
+    bool rec::sweep(golang::runtime::sweepLocked* sl, bool preserve)
     {
         auto gp = getg();
         if(gp->m->locks == 0 && gp->m->mallocing == 0 && gp != gp->m->g0)
@@ -864,7 +864,7 @@ namespace golang::runtime
     // 3. The GC two cycles ago missed a pointer and freed a live object,
     // but it was still live in the last cycle, so this GC cycle found a
     // pointer to that object and marked it.
-    void rec::reportZombies(struct mspan* s)
+    void rec::reportZombies(golang::runtime::mspan* s)
     {
         printlock();
         print("runtime: marked free object in span "_s, s, ", elemsize="_s, s->elemsize, " freeindex="_s, s->freeindex, " (bad use of unsafe.Pointer? try -d=checkptr)\n"_s);

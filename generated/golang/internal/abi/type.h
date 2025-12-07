@@ -117,8 +117,8 @@ namespace golang::abi
     struct ArrayType
     {
         Type Type;
-        abi::Type* Elem;
-        abi::Type* Slice;
+        golang::abi::Type* Elem;
+        golang::abi::Type* Slice;
         uintptr_t Len;
 
         using isGoStruct = void;
@@ -136,7 +136,7 @@ namespace golang::abi
     struct ChanType
     {
         Type Type;
-        abi::Type* Elem;
+        golang::abi::Type* Elem;
         golang::abi::ChanDir Dir;
 
         using isGoStruct = void;
@@ -172,9 +172,9 @@ namespace golang::abi
     struct MapType
     {
         Type Type;
-        abi::Type* Key;
-        abi::Type* Elem;
-        abi::Type* Bucket;
+        golang::abi::Type* Key;
+        golang::abi::Type* Elem;
+        golang::abi::Type* Bucket;
         std::function<uintptr_t (unsafe::Pointer _1, uintptr_t _2)> Hasher;
         uint8_t KeySize;
         uint8_t ValueSize;
@@ -196,7 +196,7 @@ namespace golang::abi
     struct SliceType
     {
         Type Type;
-        abi::Type* Elem;
+        golang::abi::Type* Elem;
 
         using isGoStruct = void;
 
@@ -231,7 +231,7 @@ namespace golang::abi
     struct PtrType
     {
         Type Type;
-        abi::Type* Elem;
+        golang::abi::Type* Elem;
 
         using isGoStruct = void;
 
@@ -302,53 +302,53 @@ namespace golang::abi
     namespace rec
     {
         gocpp::string String(golang::abi::Kind k);
-        abi::Kind Kind(struct Type* t);
-        bool HasName(struct Type* t);
-        bool Pointers(struct Type* t);
-        bool IfaceIndir(struct Type* t);
-        bool IsDirectIface(struct Type* t);
-        gocpp::slice<unsigned char> GcSlice(struct Type* t, uintptr_t begin, uintptr_t end);
-        gocpp::slice<Method> Methods(struct UncommonType* t);
-        gocpp::slice<Method> ExportedMethods(struct UncommonType* t);
-        int Len(struct Type* t);
-        struct Type* Common(struct Type* t);
-        abi::ChanDir ChanDir(struct Type* t);
-        struct UncommonType* Uncommon(struct Type* t);
-        struct Type* Elem(struct Type* t);
-        struct StructType* StructType(struct Type* t);
-        struct MapType* MapType(struct Type* t);
-        struct ArrayType* ArrayType(struct Type* t);
-        struct FuncType* FuncType(struct Type* t);
-        struct InterfaceType* InterfaceType(struct Type* t);
-        uintptr_t Size(struct Type* t);
-        int Align(struct Type* t);
-        int FieldAlign(struct Type* t);
-        gocpp::slice<Method> ExportedMethods(struct Type* t);
-        int NumMethod(struct Type* t);
-        int NumMethod(struct InterfaceType* t);
-        bool IndirectKey(struct MapType* mt);
-        bool IndirectElem(struct MapType* mt);
-        bool ReflexiveKey(struct MapType* mt);
-        bool NeedKeyUpdate(struct MapType* mt);
-        bool HashMightPanic(struct MapType* mt);
-        struct Type* Key(struct Type* t);
-        struct Type* In(struct FuncType* t, int i);
-        int NumIn(struct FuncType* t);
-        int NumOut(struct FuncType* t);
-        struct Type* Out(struct FuncType* t, int i);
-        gocpp::slice<Type*> InSlice(struct FuncType* t);
-        gocpp::slice<Type*> OutSlice(struct FuncType* t);
-        bool IsVariadic(struct FuncType* t);
-        bool Embedded(struct StructField* f);
-        unsigned char* DataChecked(struct Name n, int off, gocpp::string whySafe);
-        unsigned char* Data(struct Name n, int off);
-        bool IsExported(struct Name n);
-        bool HasTag(struct Name n);
-        bool IsEmbedded(struct Name n);
-        std::tuple<int, int> ReadVarint(struct Name n, int off);
-        bool IsBlank(struct Name n);
-        gocpp::string Name(struct Name n);
-        gocpp::string Tag(struct Name n);
+        abi::Kind Kind(golang::abi::Type* t);
+        bool HasName(golang::abi::Type* t);
+        bool Pointers(golang::abi::Type* t);
+        bool IfaceIndir(golang::abi::Type* t);
+        bool IsDirectIface(golang::abi::Type* t);
+        gocpp::slice<unsigned char> GcSlice(golang::abi::Type* t, uintptr_t begin, uintptr_t end);
+        gocpp::slice<Method> Methods(golang::abi::UncommonType* t);
+        gocpp::slice<Method> ExportedMethods(golang::abi::UncommonType* t);
+        int Len(golang::abi::Type* t);
+        struct Type* Common(golang::abi::Type* t);
+        abi::ChanDir ChanDir(golang::abi::Type* t);
+        struct UncommonType* Uncommon(golang::abi::Type* t);
+        struct Type* Elem(golang::abi::Type* t);
+        struct StructType* StructType(golang::abi::Type* t);
+        struct MapType* MapType(golang::abi::Type* t);
+        struct ArrayType* ArrayType(golang::abi::Type* t);
+        struct FuncType* FuncType(golang::abi::Type* t);
+        struct InterfaceType* InterfaceType(golang::abi::Type* t);
+        uintptr_t Size(golang::abi::Type* t);
+        int Align(golang::abi::Type* t);
+        int FieldAlign(golang::abi::Type* t);
+        gocpp::slice<Method> ExportedMethods(golang::abi::Type* t);
+        int NumMethod(golang::abi::Type* t);
+        int NumMethod(golang::abi::InterfaceType* t);
+        bool IndirectKey(golang::abi::MapType* mt);
+        bool IndirectElem(golang::abi::MapType* mt);
+        bool ReflexiveKey(golang::abi::MapType* mt);
+        bool NeedKeyUpdate(golang::abi::MapType* mt);
+        bool HashMightPanic(golang::abi::MapType* mt);
+        struct Type* Key(golang::abi::Type* t);
+        struct Type* In(golang::abi::FuncType* t, int i);
+        int NumIn(golang::abi::FuncType* t);
+        int NumOut(golang::abi::FuncType* t);
+        struct Type* Out(golang::abi::FuncType* t, int i);
+        gocpp::slice<Type*> InSlice(golang::abi::FuncType* t);
+        gocpp::slice<Type*> OutSlice(golang::abi::FuncType* t);
+        bool IsVariadic(golang::abi::FuncType* t);
+        bool Embedded(golang::abi::StructField* f);
+        unsigned char* DataChecked(golang::abi::Name n, int off, gocpp::string whySafe);
+        unsigned char* Data(golang::abi::Name n, int off);
+        bool IsExported(golang::abi::Name n);
+        bool HasTag(golang::abi::Name n);
+        bool IsEmbedded(golang::abi::Name n);
+        std::tuple<int, int> ReadVarint(golang::abi::Name n, int off);
+        bool IsBlank(golang::abi::Name n);
+        gocpp::string Name(golang::abi::Name n);
+        gocpp::string Tag(golang::abi::Name n);
     }
 }
 

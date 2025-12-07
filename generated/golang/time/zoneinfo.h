@@ -96,7 +96,7 @@ namespace golang::time
         gocpp::string extend;
         int64_t cacheStart;
         int64_t cacheEnd;
-        time::zone* cacheZone;
+        golang::time::zone* cacheZone;
 
         using isGoStruct = void;
 
@@ -118,12 +118,12 @@ namespace golang::time
 
     namespace rec
     {
-        struct Location* get(struct Location* l);
-        gocpp::string String(struct Location* l);
-        std::tuple<gocpp::string, int, int64_t, int64_t, bool> lookup(struct Location* l, int64_t sec);
-        int lookupFirstZone(struct Location* l);
-        bool firstZoneUsed(struct Location* l);
-        std::tuple<int, bool> lookupName(struct Location* l, gocpp::string name, int64_t unix);
+        struct Location* get(golang::time::Location* l);
+        gocpp::string String(golang::time::Location* l);
+        std::tuple<gocpp::string, int, int64_t, int64_t, bool> lookup(golang::time::Location* l, int64_t sec);
+        int lookupFirstZone(golang::time::Location* l);
+        bool firstZoneUsed(golang::time::Location* l);
+        std::tuple<int, bool> lookupName(golang::time::Location* l, gocpp::string name, int64_t unix);
     }
 }
 

@@ -213,7 +213,7 @@ namespace golang::hex
         });
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(struct encoder* e, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(golang::hex::encoder* e, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -280,7 +280,7 @@ namespace golang::hex
         });
     }
 
-    std::tuple<int, struct gocpp::error> rec::Read(struct decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Read(golang::hex::decoder* d, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -384,7 +384,7 @@ namespace golang::hex
         return b;
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(struct dumper* h, gocpp::slice<unsigned char> data)
+    std::tuple<int, struct gocpp::error> rec::Write(golang::hex::dumper* h, gocpp::slice<unsigned char> data)
     {
         int n;
         struct gocpp::error err;
@@ -448,7 +448,7 @@ namespace golang::hex
         return {n, err};
     }
 
-    struct gocpp::error rec::Close(struct dumper* h)
+    struct gocpp::error rec::Close(golang::hex::dumper* h)
     {
         struct gocpp::error err;
         if(h->closed)

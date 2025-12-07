@@ -195,7 +195,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
-    uint32_t rec::Size(struct TOKEN_MANDATORY_LABEL* tml)
+    uint32_t rec::Size(golang::windows::TOKEN_MANDATORY_LABEL* tml)
     {
         return uint32_t(gocpp::Sizeof<TOKEN_MANDATORY_LABEL>()) + syscall::GetLengthSid(tml->Label.Sid);
     }

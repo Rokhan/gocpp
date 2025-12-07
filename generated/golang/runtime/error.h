@@ -182,17 +182,17 @@ namespace golang::runtime
 
     namespace rec
     {
-        void RuntimeError(TypeAssertionError*);
-        gocpp::string Error(struct TypeAssertionError* e);
+        void RuntimeError(golang::runtime::TypeAssertionError*);
+        gocpp::string Error(golang::runtime::TypeAssertionError* e);
         void RuntimeError(golang::runtime::errorString e);
         gocpp::string Error(golang::runtime::errorString e);
-        void RuntimeError(struct errorAddressString e);
-        gocpp::string Error(struct errorAddressString e);
-        uintptr_t Addr(struct errorAddressString e);
+        void RuntimeError(golang::runtime::errorAddressString e);
+        gocpp::string Error(golang::runtime::errorAddressString e);
+        uintptr_t Addr(golang::runtime::errorAddressString e);
         void RuntimeError(golang::runtime::plainError e);
         gocpp::string Error(golang::runtime::plainError e);
-        void RuntimeError(struct boundsError e);
-        gocpp::string Error(struct boundsError e);
+        void RuntimeError(golang::runtime::boundsError e);
+        gocpp::string Error(golang::runtime::boundsError e);
     }
 }
 

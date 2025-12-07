@@ -200,7 +200,7 @@ namespace golang::syscall
 
     // String converts sid to a string format
     // suitable for display, storage, or transmission.
-    std::tuple<gocpp::string, struct gocpp::error> rec::String(struct SID* sid)
+    std::tuple<gocpp::string, struct gocpp::error> rec::String(golang::syscall::SID* sid)
     {
         gocpp::Defer defer;
         try
@@ -221,13 +221,13 @@ namespace golang::syscall
     }
 
     // Len returns the length, in bytes, of a valid security identifier sid.
-    int rec::Len(struct SID* sid)
+    int rec::Len(golang::syscall::SID* sid)
     {
         return int(GetLengthSid(sid));
     }
 
     // Copy creates a duplicate of security identifier sid.
-    std::tuple<struct SID*, struct gocpp::error> rec::Copy(struct SID* sid)
+    std::tuple<struct SID*, struct gocpp::error> rec::Copy(golang::syscall::SID* sid)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::Len(gocpp::recv(sid)));
         auto sid2 = (SID*)(unsafe::Pointer(& b[0]));
@@ -242,7 +242,7 @@ namespace golang::syscall
     // LookupAccount retrieves the name of the account for this sid
     // and the name of the first domain on which this sid is found.
     // System specify target computer to search for.
-    std::tuple<gocpp::string, gocpp::string, uint32_t, struct gocpp::error> rec::LookupAccount(struct SID* sid, gocpp::string system)
+    std::tuple<gocpp::string, gocpp::string, uint32_t, struct gocpp::error> rec::LookupAccount(golang::syscall::SID* sid, gocpp::string system)
     {
         gocpp::string account;
         gocpp::string domain;

@@ -107,23 +107,23 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct typePointers typePointersOf(struct mspan* span, uintptr_t addr, uintptr_t size);
-        struct typePointers typePointersOfUnchecked(struct mspan* span, uintptr_t addr);
-        struct typePointers typePointersOfType(struct mspan* span, abi::Type* typ, uintptr_t addr);
-        std::tuple<struct typePointers, uintptr_t> nextFast(struct typePointers tp);
-        std::tuple<struct typePointers, uintptr_t> next(struct typePointers tp, uintptr_t limit);
-        struct typePointers fastForward(struct typePointers tp, uintptr_t n, uintptr_t limit);
-        uintptr_t objBase(struct mspan* span, uintptr_t addr);
-        void initHeapBits(struct mspan* s, bool forceClear);
-        struct writeUserArenaHeapBits writeUserArenaHeapBits(struct mspan* s, uintptr_t addr);
-        struct writeUserArenaHeapBits write(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t bits, uintptr_t valid);
-        struct writeUserArenaHeapBits pad(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t size);
-        void flush(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t addr, uintptr_t size);
-        gocpp::slice<uintptr_t> heapBits(struct mspan* span);
-        uintptr_t heapBitsSmallForAddr(struct mspan* span, uintptr_t addr);
-        uintptr_t writeHeapBitsSmall(struct mspan* span, uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ);
-        std::tuple<struct heapBits, uintptr_t> next(struct heapBits h);
-        std::tuple<struct heapBits, uintptr_t> nextFast(struct heapBits h);
+        struct typePointers typePointersOf(golang::runtime::mspan* span, uintptr_t addr, uintptr_t size);
+        struct typePointers typePointersOfUnchecked(golang::runtime::mspan* span, uintptr_t addr);
+        struct typePointers typePointersOfType(golang::runtime::mspan* span, abi::Type* typ, uintptr_t addr);
+        std::tuple<struct typePointers, uintptr_t> nextFast(golang::runtime::typePointers tp);
+        std::tuple<struct typePointers, uintptr_t> next(golang::runtime::typePointers tp, uintptr_t limit);
+        struct typePointers fastForward(golang::runtime::typePointers tp, uintptr_t n, uintptr_t limit);
+        uintptr_t objBase(golang::runtime::mspan* span, uintptr_t addr);
+        void initHeapBits(golang::runtime::mspan* s, bool forceClear);
+        struct writeUserArenaHeapBits writeUserArenaHeapBits(golang::runtime::mspan* s, uintptr_t addr);
+        struct writeUserArenaHeapBits write(golang::runtime::writeUserArenaHeapBits h, struct mspan* s, uintptr_t bits, uintptr_t valid);
+        struct writeUserArenaHeapBits pad(golang::runtime::writeUserArenaHeapBits h, struct mspan* s, uintptr_t size);
+        void flush(golang::runtime::writeUserArenaHeapBits h, struct mspan* s, uintptr_t addr, uintptr_t size);
+        gocpp::slice<uintptr_t> heapBits(golang::runtime::mspan* span);
+        uintptr_t heapBitsSmallForAddr(golang::runtime::mspan* span, uintptr_t addr);
+        uintptr_t writeHeapBitsSmall(golang::runtime::mspan* span, uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ);
+        std::tuple<struct heapBits, uintptr_t> next(golang::runtime::heapBits h);
+        std::tuple<struct heapBits, uintptr_t> nextFast(golang::runtime::heapBits h);
     }
 }
 

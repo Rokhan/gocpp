@@ -119,12 +119,12 @@ namespace golang::runtime
         bool eventErr(golang::runtime::pollInfo i);
         bool expiredReadDeadline(golang::runtime::pollInfo i);
         bool expiredWriteDeadline(golang::runtime::pollInfo i);
-        runtime::pollInfo info(struct pollDesc* pd);
-        void publishInfo(struct pollDesc* pd);
-        void setEventErr(struct pollDesc* pd, bool b, uintptr_t seq);
-        void free(struct pollCache* c, struct pollDesc* pd);
-        struct pollDesc* alloc(struct pollCache* c);
-        go_any makeArg(struct pollDesc* pd);
+        runtime::pollInfo info(golang::runtime::pollDesc* pd);
+        void publishInfo(golang::runtime::pollDesc* pd);
+        void setEventErr(golang::runtime::pollDesc* pd, bool b, uintptr_t seq);
+        void free(golang::runtime::pollCache* c, struct pollDesc* pd);
+        struct pollDesc* alloc(golang::runtime::pollCache* c);
+        go_any makeArg(golang::runtime::pollDesc* pd);
     }
 }
 

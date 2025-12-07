@@ -952,14 +952,14 @@ namespace golang::runtime
         }
     }
 
-    void rec::becomeSpinning(struct m* mp)
+    void rec::becomeSpinning(golang::runtime::m* mp)
     {
         mp->spinning = true;
         rec::Add(gocpp::recv(sched.nmspinning), 1);
         rec::Store(gocpp::recv(sched.needspinning), 0);
     }
 
-    bool rec::hasCgoOnStack(struct m* mp)
+    bool rec::hasCgoOnStack(golang::runtime::m* mp)
     {
         return mp->ncgo > 0 || mp->isextra;
     }
@@ -5226,7 +5226,7 @@ namespace golang::runtime
 
     // init initializes pp, which may be a freshly allocated p or a
     // previously destroyed p, and transitions it to status _Pgcstop.
-    void rec::init(struct p* pp, int32_t id)
+    void rec::init(golang::runtime::p* pp, int32_t id)
     {
         pp->id = id;
         pp->status = _Pgcstop;
@@ -5269,7 +5269,7 @@ namespace golang::runtime
     // transitions it to status _Pdead.
     //
     // sched.lock must be held and the world must be stopped.
-    void rec::destroy(struct p* pp)
+    void rec::destroy(golang::runtime::p* pp)
     {
         assertLockHeld(& sched.lock);
         assertWorldStopped();
@@ -6296,7 +6296,7 @@ namespace golang::runtime
     //
     // TODO(prattmic): Additional targeted updates may improve the above cases.
     // e.g., updating the mask when stealing a timer.
-    void updateTimerPMask(runtime::p* pp)
+    void updateTimerPMask(struct p* pp)
     {
         if(rec::Load(gocpp::recv(pp->numTimers)) > 0)
         {
@@ -6321,7 +6321,7 @@ namespace golang::runtime
     // May run during STW, so write barriers are not allowed.
     //
     //go:nowritebarrierrec
-    int64_t pidleput(runtime::p* pp, int64_t now)
+    int64_t pidleput(struct p* pp, int64_t now)
     {
         assertLockHeld(& sched.lock);
         if(! runqempty(pp))
@@ -6351,7 +6351,7 @@ namespace golang::runtime
     // May run during STW, so write barriers are not allowed.
     //
     //go:nowritebarrierrec
-    std::tuple<runtime::p*, int64_t> pidleget(int64_t now)
+    std::tuple<struct p*, int64_t> pidleget(int64_t now)
     {
         assertLockHeld(& sched.lock);
         auto pp = rec::ptr(gocpp::recv(sched.pidle));
@@ -6380,7 +6380,7 @@ namespace golang::runtime
     // May run during STW, so write barriers are not allowed.
     //
     //go:nowritebarrierrec
-    std::tuple<runtime::p*, int64_t> pidlegetSpinning(int64_t now)
+    std::tuple<struct p*, int64_t> pidlegetSpinning(int64_t now)
     {
         assertLockHeld(& sched.lock);
         auto [pp, now_tmp] = pidleget(now);
@@ -6395,7 +6395,7 @@ namespace golang::runtime
 
     // runqempty reports whether pp has no Gs on its local run queue.
     // It never returns true spuriously.
-    bool runqempty(runtime::p* pp)
+    bool runqempty(struct p* pp)
     {
         for(; ; )
         {
@@ -6423,7 +6423,7 @@ namespace golang::runtime
     // If next is true, runqput puts g in the pp.runnext slot.
     // If the run queue is full, runnext puts g on the global queue.
     // Executed only by the owner P.
-    void runqput(runtime::p* pp, struct g* gp, bool next)
+    void runqput(struct p* pp, struct g* gp, bool next)
     {
         if(randomizeScheduler && next && randn(2) == 0)
         {
@@ -6461,7 +6461,7 @@ namespace golang::runtime
 
     // Put g and a batch of work from local runnable queue on global queue.
     // Executed only by the owner P.
-    bool runqputslow(runtime::p* pp, struct g* gp, uint32_t h, uint32_t t)
+    bool runqputslow(struct p* pp, struct g* gp, uint32_t h, uint32_t t)
     {
         gocpp::array<g*, len(pp->runq) / 2 + 1> batch = {};
         auto n = t - h;
@@ -6504,7 +6504,7 @@ namespace golang::runtime
     // If the queue is full, they are put on the global queue; in that case
     // this will temporarily acquire the scheduler lock.
     // Executed only by the owner P.
-    void runqputbatch(runtime::p* pp, struct gQueue* q, int qsize)
+    void runqputbatch(struct p* pp, struct gQueue* q, int qsize)
     {
         auto h = atomic::LoadAcq(& pp->runqhead);
         auto t = pp->runqtail;
@@ -6542,7 +6542,7 @@ namespace golang::runtime
     // If inheritTime is true, gp should inherit the remaining time in the
     // current time slice. Otherwise, it should start a new time slice.
     // Executed only by the owner P.
-    std::tuple<struct g*, bool> runqget(runtime::p* pp)
+    std::tuple<struct g*, bool> runqget(struct p* pp)
     {
         struct g* gp;
         bool inheritTime;
@@ -6569,7 +6569,7 @@ namespace golang::runtime
 
     // runqdrain drains the local runnable queue of pp and returns all goroutines in it.
     // Executed only by the owner P.
-    std::tuple<struct gQueue, uint32_t> runqdrain(runtime::p* pp)
+    std::tuple<struct gQueue, uint32_t> runqdrain(struct p* pp)
     {
         struct gQueue drainQ;
         uint32_t n;
@@ -6608,7 +6608,7 @@ namespace golang::runtime
     // Batch is a ring buffer starting at batchHead.
     // Returns number of grabbed goroutines.
     // Can be executed by any P.
-    uint32_t runqgrab(runtime::p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG)
+    uint32_t runqgrab(struct p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG)
     {
         for(; ; )
         {
@@ -6662,7 +6662,7 @@ namespace golang::runtime
     // Steal half of elements from local runnable queue of p2
     // and put onto local runnable queue of p.
     // Returns one of the stolen elements (or nil if failed).
-    struct g* runqsteal(runtime::p* pp, runtime::p* p2, bool stealRunNextG)
+    struct g* runqsteal(struct p* pp, struct p* p2, bool stealRunNextG)
     {
         auto t = pp->runqtail;
         auto n = runqgrab(p2, & pp->runq, t, stealRunNextG);
@@ -6720,13 +6720,13 @@ namespace golang::runtime
     }
 
     // empty reports whether q is empty.
-    bool rec::empty(struct gQueue* q)
+    bool rec::empty(golang::runtime::gQueue* q)
     {
         return q->head == 0;
     }
 
     // push adds gp to the head of q.
-    void rec::push(struct gQueue* q, struct g* gp)
+    void rec::push(golang::runtime::gQueue* q, struct g* gp)
     {
         gp->schedlink = q->head;
         rec::set(gocpp::recv(q->head), gp);
@@ -6737,7 +6737,7 @@ namespace golang::runtime
     }
 
     // pushBack adds gp to the tail of q.
-    void rec::pushBack(struct gQueue* q, struct g* gp)
+    void rec::pushBack(golang::runtime::gQueue* q, struct g* gp)
     {
         gp->schedlink = 0;
         if(q->tail != 0)
@@ -6753,7 +6753,7 @@ namespace golang::runtime
 
     // pushBackAll adds all Gs in q2 to the tail of q. After this q2 must
     // not be used.
-    void rec::pushBackAll(struct gQueue* q, struct gQueue q2)
+    void rec::pushBackAll(golang::runtime::gQueue* q, struct gQueue q2)
     {
         if(q2.tail == 0)
         {
@@ -6773,7 +6773,7 @@ namespace golang::runtime
 
     // pop removes and returns the head of queue q. It returns nil if
     // q is empty.
-    struct g* rec::pop(struct gQueue* q)
+    struct g* rec::pop(golang::runtime::gQueue* q)
     {
         auto gp = rec::ptr(gocpp::recv(q->head));
         if(gp != nullptr)
@@ -6788,7 +6788,7 @@ namespace golang::runtime
     }
 
     // popList takes all Gs in q and returns them as a gList.
-    struct gList rec::popList(struct gQueue* q)
+    struct gList rec::popList(golang::runtime::gQueue* q)
     {
         auto stack = gList {q->head};
         *q = gQueue {};
@@ -6827,20 +6827,20 @@ namespace golang::runtime
     }
 
     // empty reports whether l is empty.
-    bool rec::empty(struct gList* l)
+    bool rec::empty(golang::runtime::gList* l)
     {
         return l->head == 0;
     }
 
     // push adds gp to the head of l.
-    void rec::push(struct gList* l, struct g* gp)
+    void rec::push(golang::runtime::gList* l, struct g* gp)
     {
         gp->schedlink = l->head;
         rec::set(gocpp::recv(l->head), gp);
     }
 
     // pushAll prepends all Gs in q to l.
-    void rec::pushAll(struct gList* l, struct gQueue q)
+    void rec::pushAll(golang::runtime::gList* l, struct gQueue q)
     {
         if(! rec::empty(gocpp::recv(q)))
         {
@@ -6850,7 +6850,7 @@ namespace golang::runtime
     }
 
     // pop removes and returns the head of l. If l is empty, it returns nil.
-    struct g* rec::pop(struct gList* l)
+    struct g* rec::pop(golang::runtime::gList* l)
     {
         auto gp = rec::ptr(gocpp::recv(l->head));
         if(gp != nullptr)
@@ -7022,7 +7022,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::reset(struct randomOrder* ord, uint32_t count)
+    void rec::reset(golang::runtime::randomOrder* ord, uint32_t count)
     {
         ord->count = count;
         ord->coprimes = ord->coprimes.make_slice(0, 0);
@@ -7035,7 +7035,7 @@ namespace golang::runtime
         }
     }
 
-    struct randomEnum rec::start(struct randomOrder* ord, uint32_t i)
+    struct randomEnum rec::start(golang::runtime::randomOrder* ord, uint32_t i)
     {
         return gocpp::Init<randomEnum>([=](auto& x) {
             x.count = ord->count;
@@ -7044,18 +7044,18 @@ namespace golang::runtime
         });
     }
 
-    bool rec::done(struct randomEnum* go_enum)
+    bool rec::done(golang::runtime::randomEnum* go_enum)
     {
         return go_enum->i == go_enum->count;
     }
 
-    void rec::next(struct randomEnum* go_enum)
+    void rec::next(golang::runtime::randomEnum* go_enum)
     {
         go_enum->i++;
         go_enum->pos = (go_enum->pos + go_enum->inc) % go_enum->count;
     }
 
-    uint32_t rec::position(struct randomEnum* go_enum)
+    uint32_t rec::position(golang::runtime::randomEnum* go_enum)
     {
         return go_enum->pos;
     }

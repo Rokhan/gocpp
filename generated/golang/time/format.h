@@ -103,12 +103,12 @@ namespace golang::time
 
     namespace rec
     {
-        gocpp::string String(struct Time t);
-        gocpp::string GoString(struct Time t);
-        gocpp::string Format(struct Time t, gocpp::string layout);
-        gocpp::slice<unsigned char> AppendFormat(struct Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
-        gocpp::slice<unsigned char> appendFormat(struct Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
-        gocpp::string Error(struct ParseError* e);
+        gocpp::string String(golang::time::Time t);
+        gocpp::string GoString(golang::time::Time t);
+        gocpp::string Format(golang::time::Time t, gocpp::string layout);
+        gocpp::slice<unsigned char> AppendFormat(golang::time::Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
+        gocpp::slice<unsigned char> appendFormat(golang::time::Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
+        gocpp::string Error(golang::time::ParseError* e);
     }
 }
 

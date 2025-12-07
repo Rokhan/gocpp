@@ -543,7 +543,7 @@ namespace golang::time
     // The returned string is meant for debugging; for a stable serialized
     // representation, use t.MarshalText, t.MarshalBinary, or t.Format
     // with an explicit format string.
-    gocpp::string rec::String(struct Time t)
+    gocpp::string rec::String(golang::time::Time t)
     {
         auto s = rec::Format(gocpp::recv(t), "2006-01-02 15:04:05.999999999 -0700 MST"_s);
         if(t.wall & hasMonotonic != 0)
@@ -578,7 +578,7 @@ namespace golang::time
 
     // GoString implements fmt.GoStringer and formats t to be printed in Go source
     // code.
-    gocpp::string rec::GoString(struct Time t)
+    gocpp::string rec::GoString(golang::time::Time t)
     {
         auto abs = rec::abs(gocpp::recv(t));
         auto [year, month, day, gocpp_id_1] = absDate(abs, true);
@@ -640,7 +640,7 @@ namespace golang::time
     //
     // The executable example for Time.Format demonstrates the working
     // of the layout string in detail and is a good reference.
-    gocpp::string rec::Format(struct Time t, gocpp::string layout)
+    gocpp::string rec::Format(golang::time::Time t, gocpp::string layout)
     {
         auto bufSize = 64;
         gocpp::slice<unsigned char> b = {};
@@ -660,7 +660,7 @@ namespace golang::time
 
     // AppendFormat is like Format but appends the textual
     // representation to b and returns the extended buffer.
-    gocpp::slice<unsigned char> rec::AppendFormat(struct Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
+    gocpp::slice<unsigned char> rec::AppendFormat(golang::time::Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
     {
         //Go switch emulation
         {
@@ -683,7 +683,7 @@ namespace golang::time
         }
     }
 
-    gocpp::slice<unsigned char> rec::appendFormat(struct Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
+    gocpp::slice<unsigned char> rec::appendFormat(golang::time::Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
     {
         auto [name, offset, abs] = rec::locabs(gocpp::recv(t));
         int year = - 1;
@@ -1048,7 +1048,7 @@ namespace golang::time
     }
 
     // Error returns the string representation of a ParseError.
-    gocpp::string rec::Error(struct ParseError* e)
+    gocpp::string rec::Error(golang::time::ParseError* e)
     {
         if(e->Message == ""_s)
         {

@@ -39,7 +39,7 @@ namespace golang::os
 
     // Stat returns the FileInfo structure describing file.
     // If there is an error, it will be of type *PathError.
-    std::tuple<os::FileInfo, struct gocpp::error> rec::Stat(struct File* file)
+    std::tuple<os::FileInfo, struct gocpp::error> rec::Stat(golang::os::File* file)
     {
         if(file == nullptr)
         {

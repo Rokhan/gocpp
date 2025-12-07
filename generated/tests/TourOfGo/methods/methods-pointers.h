@@ -33,8 +33,8 @@ namespace golang::main
 
     namespace rec
     {
-        double Abs(struct Vertex v);
-        void Scale(struct Vertex* v, double f);
+        double Abs(golang::main::Vertex v);
+        void Scale(golang::main::Vertex* v, double f);
     }
 }
 

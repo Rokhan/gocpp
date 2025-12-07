@@ -34,7 +34,7 @@ namespace golang::main
 
     namespace rec
     {
-        void Scale(struct Vertex* v, double f);
+        void Scale(golang::main::Vertex* v, double f);
     }
 }
 

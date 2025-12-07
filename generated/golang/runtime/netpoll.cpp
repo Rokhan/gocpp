@@ -177,7 +177,7 @@ namespace golang::runtime
     }
 
     // info returns the pollInfo corresponding to pd.
-    runtime::pollInfo rec::info(struct pollDesc* pd)
+    runtime::pollInfo rec::info(golang::runtime::pollDesc* pd)
     {
         return pollInfo(rec::Load(gocpp::recv(pd->atomicInfo)));
     }
@@ -189,7 +189,7 @@ namespace golang::runtime
     // that might affect the info bits.
     // In practice this means after changing closing
     // or changing rd or wd from < 0 to >= 0.
-    void rec::publishInfo(struct pollDesc* pd)
+    void rec::publishInfo(golang::runtime::pollDesc* pd)
     {
         uint32_t info = {};
         if(pd->closing)
@@ -215,7 +215,7 @@ namespace golang::runtime
     // setEventErr sets the result of pd.info().eventErr() to b.
     // We only change the error bit if seq == 0 or if seq matches pollFDSeq
     // (issue #59545).
-    void rec::setEventErr(struct pollDesc* pd, bool b, uintptr_t seq)
+    void rec::setEventErr(golang::runtime::pollDesc* pd, bool b, uintptr_t seq)
     {
         auto mSeq = uint32_t(seq & pollFDSeqMask);
         auto x = rec::Load(gocpp::recv(pd->atomicInfo));
@@ -365,7 +365,7 @@ namespace golang::runtime
         rec::free(gocpp::recv(pollcache), pd);
     }
 
-    void rec::free(struct pollCache* c, struct pollDesc* pd)
+    void rec::free(golang::runtime::pollCache* c, struct pollDesc* pd)
     {
         lock(& pd->lock);
         auto fdseq = rec::Load(gocpp::recv(pd->fdseq));
@@ -812,7 +812,7 @@ namespace golang::runtime
         }
     }
 
-    struct pollDesc* rec::alloc(struct pollCache* c)
+    struct pollDesc* rec::alloc(golang::runtime::pollCache* c)
     {
         lock(& c->lock);
         if(c->first == nullptr)
@@ -843,7 +843,7 @@ namespace golang::runtime
     // a conversion requires an allocation because pointers to
     // types which embed runtime/internal/sys.NotInHeap (which pollDesc is)
     // must be stored in interfaces indirectly. See issue 42076.
-    go_any rec::makeArg(struct pollDesc* pd)
+    go_any rec::makeArg(golang::runtime::pollDesc* pd)
     {
         go_any i;
         auto x = (eface*)(unsafe::Pointer(& i));

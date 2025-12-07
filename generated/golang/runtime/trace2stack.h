@@ -84,8 +84,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        uint64_t put(struct traceStackTable* t, gocpp::slice<uintptr_t> pcs);
-        void dump(struct traceStackTable* t, uintptr_t gen);
+        uint64_t put(golang::runtime::traceStackTable* t, gocpp::slice<uintptr_t> pcs);
+        void dump(golang::runtime::traceStackTable* t, uintptr_t gen);
     }
 }
 

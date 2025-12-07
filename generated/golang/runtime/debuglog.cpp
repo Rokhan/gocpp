@@ -202,7 +202,7 @@ namespace golang::runtime
     // so it doesn't need to protect against ABA races.
     dlogger* allDloggers;
     //go:nosplit
-    void rec::end(struct dlogger* l)
+    void rec::end(golang::runtime::dlogger* l)
     {
         if(! dlogEnabled)
         {
@@ -222,7 +222,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct dlogger* rec::b(struct dlogger* l, bool x)
+    struct dlogger* rec::b(golang::runtime::dlogger* l, bool x)
     {
         if(! dlogEnabled)
         {
@@ -240,31 +240,31 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct dlogger* rec::i(struct dlogger* l, int x)
+    struct dlogger* rec::i(golang::runtime::dlogger* l, int x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
     //go:nosplit
-    struct dlogger* rec::i8(struct dlogger* l, int8_t x)
+    struct dlogger* rec::i8(golang::runtime::dlogger* l, int8_t x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
     //go:nosplit
-    struct dlogger* rec::i16(struct dlogger* l, int16_t x)
+    struct dlogger* rec::i16(golang::runtime::dlogger* l, int16_t x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
     //go:nosplit
-    struct dlogger* rec::i32(struct dlogger* l, int32_t x)
+    struct dlogger* rec::i32(golang::runtime::dlogger* l, int32_t x)
     {
         return rec::i64(gocpp::recv(l), int64_t(x));
     }
 
     //go:nosplit
-    struct dlogger* rec::i64(struct dlogger* l, int64_t x)
+    struct dlogger* rec::i64(golang::runtime::dlogger* l, int64_t x)
     {
         if(! dlogEnabled)
         {
@@ -276,37 +276,37 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct dlogger* rec::u(struct dlogger* l, unsigned int x)
+    struct dlogger* rec::u(golang::runtime::dlogger* l, unsigned int x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
     //go:nosplit
-    struct dlogger* rec::uptr(struct dlogger* l, uintptr_t x)
+    struct dlogger* rec::uptr(golang::runtime::dlogger* l, uintptr_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
     //go:nosplit
-    struct dlogger* rec::u8(struct dlogger* l, uint8_t x)
+    struct dlogger* rec::u8(golang::runtime::dlogger* l, uint8_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
     //go:nosplit
-    struct dlogger* rec::u16(struct dlogger* l, uint16_t x)
+    struct dlogger* rec::u16(golang::runtime::dlogger* l, uint16_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
     //go:nosplit
-    struct dlogger* rec::u32(struct dlogger* l, uint32_t x)
+    struct dlogger* rec::u32(golang::runtime::dlogger* l, uint32_t x)
     {
         return rec::u64(gocpp::recv(l), uint64_t(x));
     }
 
     //go:nosplit
-    struct dlogger* rec::u64(struct dlogger* l, uint64_t x)
+    struct dlogger* rec::u64(golang::runtime::dlogger* l, uint64_t x)
     {
         if(! dlogEnabled)
         {
@@ -318,7 +318,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct dlogger* rec::hex(struct dlogger* l, uint64_t x)
+    struct dlogger* rec::hex(golang::runtime::dlogger* l, uint64_t x)
     {
         if(! dlogEnabled)
         {
@@ -330,7 +330,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct dlogger* rec::p(struct dlogger* l, go_any x)
+    struct dlogger* rec::p(golang::runtime::dlogger* l, go_any x)
     {
         if(! dlogEnabled)
         {
@@ -372,7 +372,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct dlogger* rec::s(struct dlogger* l, gocpp::string x)
+    struct dlogger* rec::s(golang::runtime::dlogger* l, gocpp::string x)
     {
         if(! dlogEnabled)
         {
@@ -411,7 +411,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct dlogger* rec::pc(struct dlogger* l, uintptr_t x)
+    struct dlogger* rec::pc(golang::runtime::dlogger* l, uintptr_t x)
     {
         if(! dlogEnabled)
         {
@@ -423,7 +423,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct dlogger* rec::traceback(struct dlogger* l, gocpp::slice<uintptr_t> x)
+    struct dlogger* rec::traceback(golang::runtime::dlogger* l, gocpp::slice<uintptr_t> x)
     {
         if(! dlogEnabled)
         {
@@ -534,7 +534,7 @@ namespace golang::runtime
     // header of every dlog record.
     // debugLogSyncSize is the number of bytes in a sync record.
     //go:nosplit
-    void rec::ensure(struct debugLogWriter* l, uint64_t n)
+    void rec::ensure(golang::runtime::debugLogWriter* l, uint64_t n)
     {
         for(; l->write + n >= l->r.begin + uint64_t(len(l->data.b)); )
         {
@@ -546,7 +546,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    bool rec::writeFrameAt(struct debugLogWriter* l, uint64_t pos, uint64_t size)
+    bool rec::writeFrameAt(golang::runtime::debugLogWriter* l, uint64_t pos, uint64_t size)
     {
         l->data.b[pos % uint64_t(len(l->data.b))] = uint8_t(size);
         l->data.b[(pos + 1) % uint64_t(len(l->data.b))] = uint8_t(size >> 8);
@@ -554,7 +554,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void rec::writeSync(struct debugLogWriter* l, uint64_t tick, uint64_t nano)
+    void rec::writeSync(golang::runtime::debugLogWriter* l, uint64_t tick, uint64_t nano)
     {
         std::tie(l->tick, l->nano) = std::tuple{tick, nano};
         rec::ensure(gocpp::recv(l), debugLogHeaderSize);
@@ -566,7 +566,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void rec::writeUint64LE(struct debugLogWriter* l, uint64_t x)
+    void rec::writeUint64LE(golang::runtime::debugLogWriter* l, uint64_t x)
     {
         gocpp::array<unsigned char, 8> b = {};
         b[0] = (unsigned char)(x);
@@ -581,7 +581,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void rec::byte(struct debugLogWriter* l, unsigned char x)
+    void rec::byte(golang::runtime::debugLogWriter* l, unsigned char x)
     {
         rec::ensure(gocpp::recv(l), 1);
         auto pos = l->write;
@@ -590,7 +590,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void rec::bytes(struct debugLogWriter* l, gocpp::slice<unsigned char> x)
+    void rec::bytes(golang::runtime::debugLogWriter* l, gocpp::slice<unsigned char> x)
     {
         rec::ensure(gocpp::recv(l), uint64_t(len(x)));
         auto pos = l->write;
@@ -604,7 +604,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void rec::varint(struct debugLogWriter* l, int64_t x)
+    void rec::varint(golang::runtime::debugLogWriter* l, int64_t x)
     {
         uint64_t u = {};
         if(x < 0)
@@ -619,7 +619,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void rec::uvarint(struct debugLogWriter* l, uint64_t u)
+    void rec::uvarint(golang::runtime::debugLogWriter* l, uint64_t u)
     {
         auto i = 0;
         for(; u >= 0x80; )
@@ -675,7 +675,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    uint64_t rec::skip(struct debugLogReader* r)
+    uint64_t rec::skip(golang::runtime::debugLogReader* r)
     {
         if(r->begin + debugLogHeaderSize > r->end)
         {
@@ -697,13 +697,13 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    uint16_t rec::readUint16LEAt(struct debugLogReader* r, uint64_t pos)
+    uint16_t rec::readUint16LEAt(golang::runtime::debugLogReader* r, uint64_t pos)
     {
         return uint16_t(r->data->b[pos % uint64_t(len(r->data->b))]) | (uint16_t(r->data->b[(pos + 1) % uint64_t(len(r->data->b))]) << 8);
     }
 
     //go:nosplit
-    uint64_t rec::readUint64LEAt(struct debugLogReader* r, uint64_t pos)
+    uint64_t rec::readUint64LEAt(golang::runtime::debugLogReader* r, uint64_t pos)
     {
         gocpp::array<unsigned char, 8> b = {};
         for(auto [i, gocpp_ignored] : b)
@@ -714,7 +714,7 @@ namespace golang::runtime
         return uint64_t(b[0]) | (uint64_t(b[1]) << 8) | (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) | (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) | (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
     }
 
-    uint64_t rec::peek(struct debugLogReader* r)
+    uint64_t rec::peek(golang::runtime::debugLogReader* r)
     {
         uint64_t tick;
         auto size = uint64_t(0);
@@ -760,7 +760,7 @@ namespace golang::runtime
         return r->tick + u;
     }
 
-    std::tuple<uint64_t, uint64_t, uint64_t, int> rec::header(struct debugLogReader* r)
+    std::tuple<uint64_t, uint64_t, uint64_t, int> rec::header(golang::runtime::debugLogReader* r)
     {
         uint64_t end;
         uint64_t tick;
@@ -775,7 +775,7 @@ namespace golang::runtime
         return {end, tick, nano, p};
     }
 
-    uint64_t rec::uvarint(struct debugLogReader* r)
+    uint64_t rec::uvarint(golang::runtime::debugLogReader* r)
     {
         uint64_t u = {};
         for(auto i = (unsigned int)(0); ; i += 7)
@@ -791,7 +791,7 @@ namespace golang::runtime
         return u;
     }
 
-    int64_t rec::varint(struct debugLogReader* r)
+    int64_t rec::varint(golang::runtime::debugLogReader* r)
     {
         auto u = rec::uvarint(gocpp::recv(r));
         int64_t v = {};
@@ -806,7 +806,7 @@ namespace golang::runtime
         return v;
     }
 
-    bool rec::printVal(struct debugLogReader* r)
+    bool rec::printVal(golang::runtime::debugLogReader* r)
     {
         auto typ = r->data->b[r->begin % uint64_t(len(r->data->b))];
         r->begin++;

@@ -128,7 +128,7 @@ namespace golang::runtime
     // may run in sensitive locations.
     //
     //go:nosplit
-    void rec::record(struct timeHistogram* h, int64_t duration)
+    void rec::record(golang::runtime::timeHistogram* h, int64_t duration)
     {
         if(duration < 0)
         {
@@ -164,7 +164,7 @@ namespace golang::runtime
     }
 
     // write dumps the histogram to the passed metricValue as a float64 histogram.
-    void rec::write(struct timeHistogram* h, struct metricValue* out)
+    void rec::write(golang::runtime::timeHistogram* h, struct metricValue* out)
     {
         auto hist = rec::float64HistOrInit(gocpp::recv(out), timeHistBuckets);
         hist->counts[0] = rec::Load(gocpp::recv(h->underflow));

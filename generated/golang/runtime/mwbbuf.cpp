@@ -115,7 +115,7 @@ namespace golang::runtime
     // Maximum number of entries that we need to ask from the
     // buffer in a single call.
     // reset empties b by resetting its next and end pointers.
-    void rec::reset(struct wbBuf* b)
+    void rec::reset(golang::runtime::wbBuf* b)
     {
         auto start = uintptr_t(unsafe::Pointer(& b->buf[0]));
         b->next = start;
@@ -138,13 +138,13 @@ namespace golang::runtime
     // This must be nosplit because it's called by wbBufFlush.
     //
     //go:nosplit
-    void rec::discard(struct wbBuf* b)
+    void rec::discard(golang::runtime::wbBuf* b)
     {
         b->next = uintptr_t(unsafe::Pointer(& b->buf[0]));
     }
 
     // empty reports whether b contains no pointers.
-    bool rec::empty(struct wbBuf* b)
+    bool rec::empty(golang::runtime::wbBuf* b)
     {
         return b->next == uintptr_t(unsafe::Pointer(& b->buf[0]));
     }
@@ -171,7 +171,7 @@ namespace golang::runtime
     //
     //go:nowritebarrierrec
     //go:nosplit
-    gocpp::array<uintptr_t, 1>* rec::get1(struct wbBuf* b)
+    gocpp::array<uintptr_t, 1>* rec::get1(golang::runtime::wbBuf* b)
     {
         if(b->next + goarch::PtrSize > b->end)
         {
@@ -184,7 +184,7 @@ namespace golang::runtime
 
     //go:nowritebarrierrec
     //go:nosplit
-    gocpp::array<uintptr_t, 2>* rec::get2(struct wbBuf* b)
+    gocpp::array<uintptr_t, 2>* rec::get2(golang::runtime::wbBuf* b)
     {
         if(b->next + 2 * goarch::PtrSize > b->end)
         {

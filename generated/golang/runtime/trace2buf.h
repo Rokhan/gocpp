@@ -91,7 +91,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         traceBufHeader traceBufHeader;
-        gocpp::array<unsigned char, (64 << 10) - gocpp::Sizeof<runtime::traceBufHeader>()> arr;
+        gocpp::array<unsigned char, (64 << 10) - gocpp::Sizeof<golang::runtime::traceBufHeader>()> arr;
 
         using isGoStruct = void;
 
@@ -108,20 +108,20 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct traceWriter writer(struct traceLocker tl);
-        void end(struct traceWriter w);
-        std::tuple<struct traceWriter, bool> ensure(struct traceWriter w, int maxSize);
-        struct traceWriter flush(struct traceWriter w);
-        struct traceWriter refill(struct traceWriter w);
-        void push(struct traceBufQueue* q, struct traceBuf* buf);
-        struct traceBuf* pop(struct traceBufQueue* q);
-        bool empty(struct traceBufQueue* q);
-        void byte(struct traceBuf* buf, unsigned char v);
-        void varint(struct traceBuf* buf, uint64_t v);
-        int varintReserve(struct traceBuf* buf);
-        void stringData(struct traceBuf* buf, gocpp::string s);
-        bool available(struct traceBuf* buf, int size);
-        void varintAt(struct traceBuf* buf, int pos, uint64_t v);
+        struct traceWriter writer(golang::runtime::traceLocker tl);
+        void end(golang::runtime::traceWriter w);
+        std::tuple<struct traceWriter, bool> ensure(golang::runtime::traceWriter w, int maxSize);
+        struct traceWriter flush(golang::runtime::traceWriter w);
+        struct traceWriter refill(golang::runtime::traceWriter w);
+        void push(golang::runtime::traceBufQueue* q, struct traceBuf* buf);
+        struct traceBuf* pop(golang::runtime::traceBufQueue* q);
+        bool empty(golang::runtime::traceBufQueue* q);
+        void byte(golang::runtime::traceBuf* buf, unsigned char v);
+        void varint(golang::runtime::traceBuf* buf, uint64_t v);
+        int varintReserve(golang::runtime::traceBuf* buf);
+        void stringData(golang::runtime::traceBuf* buf, gocpp::string s);
+        bool available(golang::runtime::traceBuf* buf, int size);
+        void varintAt(golang::runtime::traceBuf* buf, int pos, uint64_t v);
     }
 }
 

@@ -131,17 +131,17 @@ namespace golang::runtime
         void update(golang::runtime::sweepClass* s, golang::runtime::sweepClass sNew);
         void clear(golang::runtime::sweepClass* s);
         std::tuple<runtime::spanClass, bool> split(golang::runtime::sweepClass s);
-        struct mspan* nextSpanForSweep(struct mheap* h);
-        struct sweepLocker begin(struct activeSweep* a);
-        void end(struct activeSweep* a, struct sweepLocker sl);
-        bool markDrained(struct activeSweep* a);
-        uint32_t sweepers(struct activeSweep* a);
-        bool isDone(struct activeSweep* a);
-        void reset(struct activeSweep* a);
-        std::tuple<struct sweepLocked, bool> tryAcquire(struct sweepLocker* l, struct mspan* s);
-        void ensureSwept(struct mspan* s);
-        bool sweep(struct sweepLocked* sl, bool preserve);
-        void reportZombies(struct mspan* s);
+        struct mspan* nextSpanForSweep(golang::runtime::mheap* h);
+        struct sweepLocker begin(golang::runtime::activeSweep* a);
+        void end(golang::runtime::activeSweep* a, struct sweepLocker sl);
+        bool markDrained(golang::runtime::activeSweep* a);
+        uint32_t sweepers(golang::runtime::activeSweep* a);
+        bool isDone(golang::runtime::activeSweep* a);
+        void reset(golang::runtime::activeSweep* a);
+        std::tuple<struct sweepLocked, bool> tryAcquire(golang::runtime::sweepLocker* l, struct mspan* s);
+        void ensureSwept(golang::runtime::mspan* s);
+        bool sweep(golang::runtime::sweepLocked* sl, bool preserve);
+        void reportZombies(golang::runtime::mspan* s);
     }
 }
 

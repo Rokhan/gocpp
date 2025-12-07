@@ -46,9 +46,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        void add(struct cpuProfile* p, unsafe::Pointer* tagPtr, gocpp::slice<uintptr_t> stk);
-        void addNonGo(struct cpuProfile* p, gocpp::slice<uintptr_t> stk);
-        void addExtra(struct cpuProfile* p);
+        void add(golang::runtime::cpuProfile* p, unsafe::Pointer* tagPtr, gocpp::slice<uintptr_t> stk);
+        void addNonGo(golang::runtime::cpuProfile* p, gocpp::slice<uintptr_t> stk);
+        void addExtra(golang::runtime::cpuProfile* p);
     }
 }
 

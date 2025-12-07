@@ -216,37 +216,37 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uintptr_t rec::ip(struct context* c)
+    uintptr_t rec::ip(golang::runtime::context* c)
     {
         return uintptr_t(c->rip);
     }
 
-    uintptr_t rec::sp(struct context* c)
+    uintptr_t rec::sp(golang::runtime::context* c)
     {
         return uintptr_t(c->rsp);
     }
 
     // AMD64 does not have link register, so this returns 0.
-    uintptr_t rec::lr(struct context* c)
+    uintptr_t rec::lr(golang::runtime::context* c)
     {
         return 0;
     }
 
-    void rec::set_lr(struct context* c, uintptr_t x)
+    void rec::set_lr(golang::runtime::context* c, uintptr_t x)
     {
     }
 
-    void rec::set_ip(struct context* c, uintptr_t x)
+    void rec::set_ip(golang::runtime::context* c, uintptr_t x)
     {
         c->rip = uint64_t(x);
     }
 
-    void rec::set_sp(struct context* c, uintptr_t x)
+    void rec::set_sp(golang::runtime::context* c, uintptr_t x)
     {
         c->rsp = uint64_t(x);
     }
 
-    void rec::set_fp(struct context* c, uintptr_t x)
+    void rec::set_fp(golang::runtime::context* c, uintptr_t x)
     {
         c->rbp = uint64_t(x);
     }
@@ -332,7 +332,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct context* rec::ctx(struct _DISPATCHER_CONTEXT* c)
+    struct context* rec::ctx(golang::runtime::_DISPATCHER_CONTEXT* c)
     {
         return c->context;
     }

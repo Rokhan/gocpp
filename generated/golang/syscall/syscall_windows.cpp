@@ -1050,7 +1050,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> rec::sockaddr(struct SockaddrInet4* sa)
+    std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> rec::sockaddr(golang::syscall::SockaddrInet4* sa)
     {
         if(sa->Port < 0 || sa->Port > 0xFFFF)
         {
@@ -1102,7 +1102,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> rec::sockaddr(struct SockaddrInet6* sa)
+    std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> rec::sockaddr(golang::syscall::SockaddrInet6* sa)
     {
         if(sa->Port < 0 || sa->Port > 0xFFFF)
         {
@@ -1181,7 +1181,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> rec::sockaddr(struct SockaddrUnix* sa)
+    std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> rec::sockaddr(golang::syscall::SockaddrUnix* sa)
     {
         auto name = sa->Name;
         auto n = len(name);
@@ -1211,7 +1211,7 @@ namespace golang::syscall
         return {unsafe::Pointer(& sa->raw), sl, nullptr};
     }
 
-    std::tuple<struct Sockaddr, struct gocpp::error> rec::Sockaddr(struct RawSockaddrAny* rsa)
+    std::tuple<struct Sockaddr, struct gocpp::error> rec::Sockaddr(golang::syscall::RawSockaddrAny* rsa)
     {
         //Go switch emulation
         {
@@ -1597,47 +1597,47 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    bool rec::Exited(struct WaitStatus w)
+    bool rec::Exited(golang::syscall::WaitStatus w)
     {
         return true;
     }
 
-    int rec::ExitStatus(struct WaitStatus w)
+    int rec::ExitStatus(golang::syscall::WaitStatus w)
     {
         return int(w.ExitCode);
     }
 
-    syscall::Signal rec::Signal(struct WaitStatus w)
+    syscall::Signal rec::Signal(golang::syscall::WaitStatus w)
     {
         return - 1;
     }
 
-    bool rec::CoreDump(struct WaitStatus w)
+    bool rec::CoreDump(golang::syscall::WaitStatus w)
     {
         return false;
     }
 
-    bool rec::Stopped(struct WaitStatus w)
+    bool rec::Stopped(golang::syscall::WaitStatus w)
     {
         return false;
     }
 
-    bool rec::Continued(struct WaitStatus w)
+    bool rec::Continued(golang::syscall::WaitStatus w)
     {
         return false;
     }
 
-    syscall::Signal rec::StopSignal(struct WaitStatus w)
+    syscall::Signal rec::StopSignal(golang::syscall::WaitStatus w)
     {
         return - 1;
     }
 
-    bool rec::Signaled(struct WaitStatus w)
+    bool rec::Signaled(golang::syscall::WaitStatus w)
     {
         return false;
     }
 
-    int rec::TrapCause(struct WaitStatus w)
+    int rec::TrapCause(golang::syscall::WaitStatus w)
     {
         return - 1;
     }

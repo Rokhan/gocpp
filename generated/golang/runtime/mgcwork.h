@@ -63,7 +63,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         workbufhdr workbufhdr;
-        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<runtime::workbufhdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
+        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::workbufhdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
 
         using isGoStruct = void;
 
@@ -80,17 +80,17 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(struct gcWork* w);
-        void put(struct gcWork* w, uintptr_t obj);
-        bool putFast(struct gcWork* w, uintptr_t obj);
-        void putBatch(struct gcWork* w, gocpp::slice<uintptr_t> obj);
-        uintptr_t tryGet(struct gcWork* w);
-        uintptr_t tryGetFast(struct gcWork* w);
-        void dispose(struct gcWork* w);
-        void balance(struct gcWork* w);
-        bool empty(struct gcWork* w);
-        void checknonempty(struct workbuf* b);
-        void checkempty(struct workbuf* b);
+        void init(golang::runtime::gcWork* w);
+        void put(golang::runtime::gcWork* w, uintptr_t obj);
+        bool putFast(golang::runtime::gcWork* w, uintptr_t obj);
+        void putBatch(golang::runtime::gcWork* w, gocpp::slice<uintptr_t> obj);
+        uintptr_t tryGet(golang::runtime::gcWork* w);
+        uintptr_t tryGetFast(golang::runtime::gcWork* w);
+        void dispose(golang::runtime::gcWork* w);
+        void balance(golang::runtime::gcWork* w);
+        bool empty(golang::runtime::gcWork* w);
+        void checknonempty(golang::runtime::workbuf* b);
+        void checkempty(golang::runtime::workbuf* b);
     }
 }
 

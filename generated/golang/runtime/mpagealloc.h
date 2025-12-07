@@ -79,17 +79,17 @@ namespace golang::runtime
     {
         unsigned int l1(golang::runtime::chunkIdx i);
         unsigned int l2(golang::runtime::chunkIdx i);
-        void init(struct pageAlloc* p, struct mutex* mheapLock, golang::runtime::sysMemStat* sysStat, bool test);
-        struct pallocData* tryChunkOf(struct pageAlloc* p, golang::runtime::chunkIdx ci);
-        struct pallocData* chunkOf(struct pageAlloc* p, golang::runtime::chunkIdx ci);
-        void grow(struct pageAlloc* p, uintptr_t base, uintptr_t size);
-        void enableChunkHugePages(struct pageAlloc* p);
-        void update(struct pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc);
-        uintptr_t allocRange(struct pageAlloc* p, uintptr_t base, uintptr_t npages);
-        struct offAddr findMappedAddr(struct pageAlloc* p, struct offAddr addr);
-        std::tuple<uintptr_t, struct offAddr> find(struct pageAlloc* p, uintptr_t npages);
-        std::tuple<uintptr_t, uintptr_t> alloc(struct pageAlloc* p, uintptr_t npages);
-        void free(struct pageAlloc* p, uintptr_t base, uintptr_t npages);
+        void init(golang::runtime::pageAlloc* p, struct mutex* mheapLock, golang::runtime::sysMemStat* sysStat, bool test);
+        struct pallocData* tryChunkOf(golang::runtime::pageAlloc* p, golang::runtime::chunkIdx ci);
+        struct pallocData* chunkOf(golang::runtime::pageAlloc* p, golang::runtime::chunkIdx ci);
+        void grow(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t size);
+        void enableChunkHugePages(golang::runtime::pageAlloc* p);
+        void update(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc);
+        uintptr_t allocRange(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages);
+        struct offAddr findMappedAddr(golang::runtime::pageAlloc* p, struct offAddr addr);
+        std::tuple<uintptr_t, struct offAddr> find(golang::runtime::pageAlloc* p, uintptr_t npages);
+        std::tuple<uintptr_t, uintptr_t> alloc(golang::runtime::pageAlloc* p, uintptr_t npages);
+        void free(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages);
         unsigned int start(golang::runtime::pallocSum p);
         unsigned int max(golang::runtime::pallocSum p);
         unsigned int end(golang::runtime::pallocSum p);

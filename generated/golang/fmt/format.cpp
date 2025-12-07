@@ -122,19 +122,19 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    void rec::clearflags(struct fmt* f)
+    void rec::clearflags(golang::fmt::fmt* f)
     {
         f->fmtFlags = fmtFlags {};
     }
 
-    void rec::init(struct fmt* f, buffer* buf)
+    void rec::init(golang::fmt::fmt* f, buffer* buf)
     {
         f->buf = buf;
         rec::clearflags(gocpp::recv(f));
     }
 
     // writePadding generates n bytes of padding.
-    void rec::writePadding(struct fmt* f, int n)
+    void rec::writePadding(golang::fmt::fmt* f, int n)
     {
         if(n <= 0)
         {
@@ -162,7 +162,7 @@ namespace golang::fmt
     }
 
     // pad appends b to f.buf, padded on left (!f.minus) or right (f.minus).
-    void rec::pad(struct fmt* f, gocpp::slice<unsigned char> b)
+    void rec::pad(golang::fmt::fmt* f, gocpp::slice<unsigned char> b)
     {
         if(! f->widPresent || f->wid == 0)
         {
@@ -183,7 +183,7 @@ namespace golang::fmt
     }
 
     // padString appends s to f.buf, padded on left (!f.minus) or right (f.minus).
-    void rec::padString(struct fmt* f, gocpp::string s)
+    void rec::padString(golang::fmt::fmt* f, gocpp::string s)
     {
         if(! f->widPresent || f->wid == 0)
         {
@@ -204,7 +204,7 @@ namespace golang::fmt
     }
 
     // fmtBoolean formats a boolean.
-    void rec::fmtBoolean(struct fmt* f, bool v)
+    void rec::fmtBoolean(golang::fmt::fmt* f, bool v)
     {
         if(v)
         {
@@ -217,7 +217,7 @@ namespace golang::fmt
     }
 
     // fmtUnicode formats a uint64 as "U+0078" or with f.sharp set as "U+0078 'x'".
-    void rec::fmtUnicode(struct fmt* f, uint64_t u)
+    void rec::fmtUnicode(golang::fmt::fmt* f, uint64_t u)
     {
         auto buf = f->intbuf.make_slice(0);
         auto prec = 4;
@@ -269,7 +269,7 @@ namespace golang::fmt
     }
 
     // fmtInteger formats signed and unsigned integers.
-    void rec::fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, gocpp::string digits)
+    void rec::fmtInteger(golang::fmt::fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, gocpp::string digits)
     {
         auto negative = isSigned && int64_t(u) < 0;
         if(negative)
@@ -427,7 +427,7 @@ namespace golang::fmt
     }
 
     // truncateString truncates the string s to the specified precision, if present.
-    gocpp::string rec::truncateString(struct fmt* f, gocpp::string s)
+    gocpp::string rec::truncateString(golang::fmt::fmt* f, gocpp::string s)
     {
         if(f->precPresent)
         {
@@ -445,7 +445,7 @@ namespace golang::fmt
     }
 
     // truncate truncates the byte slice b as a string of the specified precision, if present.
-    gocpp::slice<unsigned char> rec::truncate(struct fmt* f, gocpp::slice<unsigned char> b)
+    gocpp::slice<unsigned char> rec::truncate(golang::fmt::fmt* f, gocpp::slice<unsigned char> b)
     {
         if(f->precPresent)
         {
@@ -469,21 +469,21 @@ namespace golang::fmt
     }
 
     // fmtS formats a string.
-    void rec::fmtS(struct fmt* f, gocpp::string s)
+    void rec::fmtS(golang::fmt::fmt* f, gocpp::string s)
     {
         s = rec::truncateString(gocpp::recv(f), s);
         rec::padString(gocpp::recv(f), s);
     }
 
     // fmtBs formats the byte slice b as if it was formatted as string with fmtS.
-    void rec::fmtBs(struct fmt* f, gocpp::slice<unsigned char> b)
+    void rec::fmtBs(golang::fmt::fmt* f, gocpp::slice<unsigned char> b)
     {
         b = rec::truncate(gocpp::recv(f), b);
         rec::pad(gocpp::recv(f), b);
     }
 
     // fmtSbx formats a string or byte slice as a hexadecimal encoding of its bytes.
-    void rec::fmtSbx(struct fmt* f, gocpp::string s, gocpp::slice<unsigned char> b, gocpp::string digits)
+    void rec::fmtSbx(golang::fmt::fmt* f, gocpp::string s, gocpp::slice<unsigned char> b, gocpp::string digits)
     {
         auto length = len(b);
         if(b == nullptr)
@@ -557,13 +557,13 @@ namespace golang::fmt
     }
 
     // fmtSx formats a string as a hexadecimal encoding of its bytes.
-    void rec::fmtSx(struct fmt* f, gocpp::string s, gocpp::string digits)
+    void rec::fmtSx(golang::fmt::fmt* f, gocpp::string s, gocpp::string digits)
     {
         rec::fmtSbx(gocpp::recv(f), s, nullptr, digits);
     }
 
     // fmtBx formats a byte slice as a hexadecimal encoding of its bytes.
-    void rec::fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, gocpp::string digits)
+    void rec::fmtBx(golang::fmt::fmt* f, gocpp::slice<unsigned char> b, gocpp::string digits)
     {
         rec::fmtSbx(gocpp::recv(f), ""_s, b, digits);
     }
@@ -571,7 +571,7 @@ namespace golang::fmt
     // fmtQ formats a string as a double-quoted, escaped Go string constant.
     // If f.sharp is set a raw (backquoted) string may be returned instead
     // if the string does not contain any control characters other than tab.
-    void rec::fmtQ(struct fmt* f, gocpp::string s)
+    void rec::fmtQ(golang::fmt::fmt* f, gocpp::string s)
     {
         s = rec::truncateString(gocpp::recv(f), s);
         if(f->sharp && strconv::CanBackquote(s))
@@ -592,7 +592,7 @@ namespace golang::fmt
 
     // fmtC formats an integer as a Unicode character.
     // If the character is not valid Unicode, it will print '\ufffd'.
-    void rec::fmtC(struct fmt* f, uint64_t c)
+    void rec::fmtC(golang::fmt::fmt* f, uint64_t c)
     {
         auto r = gocpp::rune(c);
         if(c > utf8::MaxRune)
@@ -605,7 +605,7 @@ namespace golang::fmt
 
     // fmtQc formats an integer as a single-quoted, escaped Go character constant.
     // If the character is not valid Unicode, it will print '\ufffd'.
-    void rec::fmtQc(struct fmt* f, uint64_t c)
+    void rec::fmtQc(golang::fmt::fmt* f, uint64_t c)
     {
         auto r = gocpp::rune(c);
         if(c > utf8::MaxRune)
@@ -625,7 +625,7 @@ namespace golang::fmt
 
     // fmtFloat formats a float64. It assumes that verb is a valid format specifier
     // for strconv.AppendFloat and therefore fits into a byte.
-    void rec::fmtFloat(struct fmt* f, double v, int size, gocpp::rune verb, int prec)
+    void rec::fmtFloat(golang::fmt::fmt* f, double v, int size, gocpp::rune verb, int prec)
     {
         if(f->precPresent)
         {

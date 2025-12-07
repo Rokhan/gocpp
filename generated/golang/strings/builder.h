@@ -33,17 +33,17 @@ namespace golang::strings
 
     namespace rec
     {
-        void copyCheck(struct Builder* b);
-        gocpp::string String(struct Builder* b);
-        int Len(struct Builder* b);
-        int Cap(struct Builder* b);
-        void Reset(struct Builder* b);
-        void grow(struct Builder* b, int n);
-        void Grow(struct Builder* b, int n);
-        std::tuple<int, struct gocpp::error> Write(struct Builder* b, gocpp::slice<unsigned char> p);
-        struct gocpp::error WriteByte(struct Builder* b, unsigned char c);
-        std::tuple<int, struct gocpp::error> WriteRune(struct Builder* b, gocpp::rune r);
-        std::tuple<int, struct gocpp::error> WriteString(struct Builder* b, gocpp::string s);
+        void copyCheck(golang::strings::Builder* b);
+        gocpp::string String(golang::strings::Builder* b);
+        int Len(golang::strings::Builder* b);
+        int Cap(golang::strings::Builder* b);
+        void Reset(golang::strings::Builder* b);
+        void grow(golang::strings::Builder* b, int n);
+        void Grow(golang::strings::Builder* b, int n);
+        std::tuple<int, struct gocpp::error> Write(golang::strings::Builder* b, gocpp::slice<unsigned char> p);
+        struct gocpp::error WriteByte(golang::strings::Builder* b, unsigned char c);
+        std::tuple<int, struct gocpp::error> WriteRune(golang::strings::Builder* b, gocpp::rune r);
+        std::tuple<int, struct gocpp::error> WriteString(golang::strings::Builder* b, gocpp::string s);
     }
 }
 

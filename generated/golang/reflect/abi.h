@@ -91,15 +91,15 @@ namespace golang::reflect
 
     namespace rec
     {
-        void dump(struct abiSeq* a);
-        gocpp::slice<abiStep> stepsForValue(struct abiSeq* a, int i);
-        struct abiStep* addArg(struct abiSeq* a, abi::Type* t);
-        std::tuple<struct abiStep*, bool> addRcvr(struct abiSeq* a, abi::Type* rcvr);
-        bool regAssign(struct abiSeq* a, abi::Type* t, uintptr_t offset);
-        bool assignIntN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap);
-        bool assignFloatN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n);
-        void stackAssign(struct abiSeq* a, uintptr_t size, uintptr_t alignment);
-        void dump(struct abiDesc* a);
+        void dump(golang::reflect::abiSeq* a);
+        gocpp::slice<abiStep> stepsForValue(golang::reflect::abiSeq* a, int i);
+        struct abiStep* addArg(golang::reflect::abiSeq* a, abi::Type* t);
+        std::tuple<struct abiStep*, bool> addRcvr(golang::reflect::abiSeq* a, abi::Type* rcvr);
+        bool regAssign(golang::reflect::abiSeq* a, abi::Type* t, uintptr_t offset);
+        bool assignIntN(golang::reflect::abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap);
+        bool assignFloatN(golang::reflect::abiSeq* a, uintptr_t offset, uintptr_t size, int n);
+        void stackAssign(golang::reflect::abiSeq* a, uintptr_t size, uintptr_t alignment);
+        void dump(golang::reflect::abiDesc* a);
     }
 }
 

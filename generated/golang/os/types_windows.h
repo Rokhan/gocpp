@@ -58,14 +58,14 @@ namespace golang::os
 
     namespace rec
     {
-        bool isReparseTagNameSurrogate(struct fileStat* fs);
-        bool isSymlink(struct fileStat* fs);
-        int64_t Size(struct fileStat* fs);
-        os::FileMode Mode(struct fileStat* fs);
-        mocklib::Date ModTime(struct fileStat* fs);
-        go_any Sys(struct fileStat* fs);
-        struct gocpp::error loadFileId(struct fileStat* fs);
-        struct gocpp::error saveInfoFromPath(struct fileStat* fs, gocpp::string path);
+        bool isReparseTagNameSurrogate(golang::os::fileStat* fs);
+        bool isSymlink(golang::os::fileStat* fs);
+        int64_t Size(golang::os::fileStat* fs);
+        os::FileMode Mode(golang::os::fileStat* fs);
+        mocklib::Date ModTime(golang::os::fileStat* fs);
+        go_any Sys(golang::os::fileStat* fs);
+        struct gocpp::error loadFileId(golang::os::fileStat* fs);
+        struct gocpp::error saveInfoFromPath(golang::os::fileStat* fs, gocpp::string path);
     }
 }
 

@@ -49,17 +49,17 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    color::Model rec::ColorModel(Image)
+    color::Model rec::ColorModel(golang::main::Image)
     {
         gocpp::panic("not implemented"_s);
     }
 
-    image::Rectangle rec::Bounds(Image)
+    image::Rectangle rec::Bounds(golang::main::Image)
     {
         gocpp::panic("not implemented"_s);
     }
 
-    color::Color rec::At(Image, int x, int y)
+    color::Color rec::At(golang::main::Image, int x, int y)
     {
         gocpp::panic("not implemented"_s);
     }

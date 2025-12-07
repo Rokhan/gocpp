@@ -33,7 +33,7 @@ namespace golang::main
 
     namespace rec
     {
-        gocpp::string String(struct Person p);
+        gocpp::string String(golang::main::Person p);
     }
 }
 

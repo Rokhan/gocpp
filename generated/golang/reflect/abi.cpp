@@ -151,7 +151,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    void rec::dump(struct abiSeq* a)
+    void rec::dump(golang::reflect::abiSeq* a)
     {
         for(auto [i, p] : a->steps)
         {
@@ -171,7 +171,7 @@ namespace golang::reflect
     // stepsForValue returns the ABI instructions for translating
     // the i'th Go argument or return value represented by this
     // abiSeq to the Go ABI.
-    gocpp::slice<abiStep> rec::stepsForValue(struct abiSeq* a, int i)
+    gocpp::slice<abiStep> rec::stepsForValue(golang::reflect::abiSeq* a, int i)
     {
         auto s = a->valueStart[i];
         int e = {};
@@ -190,7 +190,7 @@ namespace golang::reflect
     //
     // If the value was stack-assigned, returns the single
     // abiStep describing that translation, and nil otherwise.
-    struct abiStep* rec::addArg(struct abiSeq* a, abi::Type* t)
+    struct abiStep* rec::addArg(golang::reflect::abiSeq* a, abi::Type* t)
     {
         auto pStart = len(a->steps);
         a->valueStart = append(a->valueStart, pStart);
@@ -215,7 +215,7 @@ namespace golang::reflect
     // If the receiver was stack-assigned, returns the single
     // abiStep describing that translation, and nil otherwise.
     // Returns true if the receiver is a pointer.
-    std::tuple<struct abiStep*, bool> rec::addRcvr(struct abiSeq* a, abi::Type* rcvr)
+    std::tuple<struct abiStep*, bool> rec::addRcvr(golang::reflect::abiSeq* a, abi::Type* rcvr)
     {
         a->valueStart = append(a->valueStart, len(a->steps));
         bool ok = {};
@@ -247,7 +247,7 @@ namespace golang::reflect
     //
     // This method along with the assign* methods represent the
     // complete register-assignment algorithm for the Go ABI.
-    bool rec::regAssign(struct abiSeq* a, abi::Type* t, uintptr_t offset)
+    bool rec::regAssign(golang::reflect::abiSeq* a, abi::Type* t, uintptr_t offset)
     {
         //Go switch emulation
         {
@@ -390,7 +390,7 @@ namespace golang::reflect
     // n must be <= 8.
     //
     // Returns whether assignment succeeded.
-    bool rec::assignIntN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap)
+    bool rec::assignIntN(golang::reflect::abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap)
     {
         if(n > 8 || n < 0)
         {
@@ -428,7 +428,7 @@ namespace golang::reflect
     // next n floating-point registers.
     //
     // Returns whether assignment succeeded.
-    bool rec::assignFloatN(struct abiSeq* a, uintptr_t offset, uintptr_t size, int n)
+    bool rec::assignFloatN(golang::reflect::abiSeq* a, uintptr_t offset, uintptr_t size, int n)
     {
         if(n < 0)
         {
@@ -455,7 +455,7 @@ namespace golang::reflect
     // large with alignment "alignment" to the stack.
     //
     // Should not be called directly; use addArg instead.
-    void rec::stackAssign(struct abiSeq* a, uintptr_t size, uintptr_t alignment)
+    void rec::stackAssign(golang::reflect::abiSeq* a, uintptr_t size, uintptr_t alignment)
     {
         a->stackBytes = align(a->stackBytes, alignment);
         a->steps = append(a->steps, gocpp::Init<abiStep>([=](auto& x) {
@@ -518,7 +518,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    void rec::dump(struct abiDesc* a)
+    void rec::dump(golang::reflect::abiDesc* a)
     {
         println("ABI"_s);
         println("call"_s);

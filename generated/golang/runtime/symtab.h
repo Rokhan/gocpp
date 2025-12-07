@@ -375,23 +375,23 @@ namespace golang::runtime
 
     namespace rec
     {
-        std::tuple<struct Frame, bool> Next(struct Frames* ci);
-        struct _func* raw(struct Func* f);
-        struct funcInfo funcInfo(struct Func* f);
-        struct funcInfo funcInfo(struct _func* f);
-        uintptr_t textAddr(struct moduledata* md, uint32_t off32);
-        std::tuple<uint32_t, bool> textOff(struct moduledata* md, uintptr_t pc);
-        gocpp::string funcName(struct moduledata* md, int32_t nameOff);
-        gocpp::string Name(struct Func* f);
-        uintptr_t Entry(struct Func* f);
-        std::tuple<gocpp::string, int> FileLine(struct Func* f, uintptr_t pc);
-        int32_t startLine(struct Func* f);
-        bool valid(struct funcInfo f);
-        struct Func* _Func(struct funcInfo f);
-        bool isInlined(struct _func* f);
-        uintptr_t entry(struct funcInfo f);
-        struct srcFunc srcFunc(struct funcInfo f);
-        gocpp::string name(struct srcFunc s);
+        std::tuple<struct Frame, bool> Next(golang::runtime::Frames* ci);
+        struct _func* raw(golang::runtime::Func* f);
+        struct funcInfo funcInfo(golang::runtime::Func* f);
+        struct funcInfo funcInfo(golang::runtime::_func* f);
+        uintptr_t textAddr(golang::runtime::moduledata* md, uint32_t off32);
+        std::tuple<uint32_t, bool> textOff(golang::runtime::moduledata* md, uintptr_t pc);
+        gocpp::string funcName(golang::runtime::moduledata* md, int32_t nameOff);
+        gocpp::string Name(golang::runtime::Func* f);
+        uintptr_t Entry(golang::runtime::Func* f);
+        std::tuple<gocpp::string, int> FileLine(golang::runtime::Func* f, uintptr_t pc);
+        int32_t startLine(golang::runtime::Func* f);
+        bool valid(golang::runtime::funcInfo f);
+        struct Func* _Func(golang::runtime::funcInfo f);
+        bool isInlined(golang::runtime::_func* f);
+        uintptr_t entry(golang::runtime::funcInfo f);
+        struct srcFunc srcFunc(golang::runtime::funcInfo f);
+        gocpp::string name(golang::runtime::srcFunc s);
     }
 }
 

@@ -59,9 +59,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(struct fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, golang::runtime::sysMemStat* stat);
-        unsafe::Pointer alloc(struct fixalloc* f);
-        void free(struct fixalloc* f, unsafe::Pointer p);
+        void init(golang::runtime::fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, golang::runtime::sysMemStat* stat);
+        unsafe::Pointer alloc(golang::runtime::fixalloc* f);
+        void free(golang::runtime::fixalloc* f, unsafe::Pointer p);
     }
 }
 

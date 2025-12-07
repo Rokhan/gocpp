@@ -58,7 +58,7 @@ namespace golang::os
     // On files that support SetDeadline, any pending I/O operations will
     // be canceled and return immediately with an ErrClosed error.
     // Close will return an error if it has already been called.
-    struct gocpp::error rec::Close(struct File* f)
+    struct gocpp::error rec::Close(golang::os::File* f)
     {
         if(f == nullptr)
         {
@@ -69,7 +69,7 @@ namespace golang::os
 
     // read reads up to len(b) bytes from the File.
     // It returns the number of bytes read and an error, if any.
-    std::tuple<int, struct gocpp::error> rec::read(struct File* f, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::read(golang::os::File* f, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
@@ -81,7 +81,7 @@ namespace golang::os
     // pread reads len(b) bytes from the File starting at byte offset off.
     // It returns the number of bytes read and the error, if any.
     // EOF is signaled by a zero count with err set to nil.
-    std::tuple<int, struct gocpp::error> rec::pread(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, struct gocpp::error> rec::pread(golang::os::File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         struct gocpp::error err;
@@ -92,7 +92,7 @@ namespace golang::os
 
     // write writes len(b) bytes to the File.
     // It returns the number of bytes written and an error, if any.
-    std::tuple<int, struct gocpp::error> rec::write(struct File* f, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::write(golang::os::File* f, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
@@ -103,7 +103,7 @@ namespace golang::os
 
     // pwrite writes len(b) bytes to the File starting at byte offset off.
     // It returns the number of bytes written and an error, if any.
-    std::tuple<int, struct gocpp::error> rec::pwrite(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, struct gocpp::error> rec::pwrite(golang::os::File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         struct gocpp::error err;
@@ -152,7 +152,7 @@ namespace golang::os
     }
 
     // See docs in file.go:(*File).Chmod.
-    struct gocpp::error rec::chmod(struct File* f, golang::os::FileMode mode)
+    struct gocpp::error rec::chmod(golang::os::File* f, golang::os::FileMode mode)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chmod"_s); err != nullptr)
         {
@@ -217,7 +217,7 @@ namespace golang::os
     //
     // On Windows, it always returns the syscall.EWINDOWS error, wrapped
     // in *PathError.
-    struct gocpp::error rec::Chown(struct File* f, int uid, int gid)
+    struct gocpp::error rec::Chown(golang::os::File* f, int uid, int gid)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chown"_s); err != nullptr)
         {
@@ -233,7 +233,7 @@ namespace golang::os
     // Truncate changes the size of the file.
     // It does not change the I/O offset.
     // If there is an error, it will be of type *PathError.
-    struct gocpp::error rec::Truncate(struct File* f, int64_t size)
+    struct gocpp::error rec::Truncate(golang::os::File* f, int64_t size)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "truncate"_s); err != nullptr)
         {
@@ -249,7 +249,7 @@ namespace golang::os
     // Sync commits the current contents of the file to stable storage.
     // Typically, this means flushing the file system's in-memory copy
     // of recently written data to disk.
-    struct gocpp::error rec::Sync(struct File* f)
+    struct gocpp::error rec::Sync(golang::os::File* f)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "sync"_s); err != nullptr)
         {
@@ -302,7 +302,7 @@ namespace golang::os
     // Chdir changes the current working directory to the file,
     // which must be a directory.
     // If there is an error, it will be of type *PathError.
-    struct gocpp::error rec::Chdir(struct File* f)
+    struct gocpp::error rec::Chdir(golang::os::File* f)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chdir"_s); err != nullptr)
         {
@@ -316,7 +316,7 @@ namespace golang::os
     }
 
     // setDeadline sets the read and write deadline.
-    struct gocpp::error rec::setDeadline(struct File* f, mocklib::Date t)
+    struct gocpp::error rec::setDeadline(golang::os::File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetDeadline"_s); err != nullptr)
         {
@@ -326,7 +326,7 @@ namespace golang::os
     }
 
     // setReadDeadline sets the read deadline.
-    struct gocpp::error rec::setReadDeadline(struct File* f, mocklib::Date t)
+    struct gocpp::error rec::setReadDeadline(golang::os::File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetReadDeadline"_s); err != nullptr)
         {
@@ -336,7 +336,7 @@ namespace golang::os
     }
 
     // setWriteDeadline sets the write deadline.
-    struct gocpp::error rec::setWriteDeadline(struct File* f, mocklib::Date t)
+    struct gocpp::error rec::setWriteDeadline(golang::os::File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetWriteDeadline"_s); err != nullptr)
         {
@@ -347,7 +347,7 @@ namespace golang::os
 
     // checkValid checks whether f is valid for use.
     // If not, it returns an appropriate error, perhaps incorporating the operation name op.
-    struct gocpp::error rec::checkValid(struct File* f, gocpp::string op)
+    struct gocpp::error rec::checkValid(golang::os::File* f, gocpp::string op)
     {
         if(f == nullptr)
         {

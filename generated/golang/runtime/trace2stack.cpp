@@ -152,7 +152,7 @@ namespace golang::runtime
 
     // put returns a unique id for the stack trace pcs and caches it in the table,
     // if it sees the trace for the first time.
-    uint64_t rec::put(struct traceStackTable* t, gocpp::slice<uintptr_t> pcs)
+    uint64_t rec::put(golang::runtime::traceStackTable* t, gocpp::slice<uintptr_t> pcs)
     {
         if(len(pcs) == 0)
         {
@@ -170,7 +170,7 @@ namespace golang::runtime
     // may acquire trace.lock.
     //
     //go:systemstack
-    void rec::dump(struct traceStackTable* t, uintptr_t gen)
+    void rec::dump(golang::runtime::traceStackTable* t, uintptr_t gen)
     {
         auto w = unsafeTraceWriter(gen, nullptr);
         for(auto [i, gocpp_ignored] : t->tab.tab)

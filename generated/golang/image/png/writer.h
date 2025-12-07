@@ -188,14 +188,14 @@ namespace golang::png
 
     namespace rec
     {
-        void writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, gocpp::string name);
-        void writeIHDR(struct encoder* e);
-        void writePLTEAndTRNS(struct encoder* e, color::Palette p);
-        std::tuple<int, struct gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> b);
-        struct gocpp::error writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level);
-        void writeIDATs(struct encoder* e);
-        void writeIEND(struct encoder* e);
-        struct gocpp::error Encode(struct Encoder* enc, io::Writer w, image::Image m);
+        void writeChunk(golang::png::encoder* e, gocpp::slice<unsigned char> b, gocpp::string name);
+        void writeIHDR(golang::png::encoder* e);
+        void writePLTEAndTRNS(golang::png::encoder* e, color::Palette p);
+        std::tuple<int, struct gocpp::error> Write(golang::png::encoder* e, gocpp::slice<unsigned char> b);
+        struct gocpp::error writeImage(golang::png::encoder* e, io::Writer w, image::Image m, int cb, int level);
+        void writeIDATs(golang::png::encoder* e);
+        void writeIEND(golang::png::encoder* e);
+        struct gocpp::error Encode(golang::png::Encoder* enc, io::Writer w, image::Image m);
     }
 }
 

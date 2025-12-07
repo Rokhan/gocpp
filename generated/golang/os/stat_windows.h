@@ -32,7 +32,7 @@ namespace golang::os
 
     namespace rec
     {
-        std::tuple<os::FileInfo, struct gocpp::error> Stat(struct File* file);
+        std::tuple<os::FileInfo, struct gocpp::error> Stat(golang::os::File* file);
     }
 }
 

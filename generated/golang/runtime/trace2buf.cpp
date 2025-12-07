@@ -94,7 +94,7 @@ namespace golang::runtime
     }
 
     // write returns an a traceWriter that writes into the current M's stream.
-    struct traceWriter rec::writer(struct traceLocker tl)
+    struct traceWriter rec::writer(golang::runtime::traceLocker tl)
     {
         return gocpp::Init<traceWriter>([=](auto& x) {
             x.traceLocker = tl;
@@ -120,7 +120,7 @@ namespace golang::runtime
     }
 
     // end writes the buffer back into the m.
-    void rec::end(struct traceWriter w)
+    void rec::end(golang::runtime::traceWriter w)
     {
         if(w.mp == nullptr)
         {
@@ -132,7 +132,7 @@ namespace golang::runtime
     // ensure makes sure that at least maxSize bytes are available to write.
     //
     // Returns whether the buffer was flushed.
-    std::tuple<struct traceWriter, bool> rec::ensure(struct traceWriter w, int maxSize)
+    std::tuple<struct traceWriter, bool> rec::ensure(golang::runtime::traceWriter w, int maxSize)
     {
         auto refill = w.traceBuf == nullptr || ! rec::available(gocpp::recv(w), maxSize);
         if(refill)
@@ -143,7 +143,7 @@ namespace golang::runtime
     }
 
     // flush puts w.traceBuf on the queue of full buffers.
-    struct traceWriter rec::flush(struct traceWriter w)
+    struct traceWriter rec::flush(golang::runtime::traceWriter w)
     {
         systemstack([=]() mutable -> void
         {
@@ -159,7 +159,7 @@ namespace golang::runtime
     }
 
     // refill puts w.traceBuf on the queue of full buffers and refresh's w's buffer.
-    struct traceWriter rec::refill(struct traceWriter w)
+    struct traceWriter rec::refill(golang::runtime::traceWriter w)
     {
         systemstack([=]() mutable -> void
         {
@@ -239,7 +239,7 @@ namespace golang::runtime
     }
 
     // push queues buf into queue of buffers.
-    void rec::push(struct traceBufQueue* q, struct traceBuf* buf)
+    void rec::push(golang::runtime::traceBufQueue* q, struct traceBuf* buf)
     {
         buf->link = nullptr;
         if(q->head == nullptr)
@@ -254,7 +254,7 @@ namespace golang::runtime
     }
 
     // pop dequeues from the queue of buffers.
-    struct traceBuf* rec::pop(struct traceBufQueue* q)
+    struct traceBuf* rec::pop(golang::runtime::traceBufQueue* q)
     {
         auto buf = q->head;
         if(buf == nullptr)
@@ -270,7 +270,7 @@ namespace golang::runtime
         return buf;
     }
 
-    bool rec::empty(struct traceBufQueue* q)
+    bool rec::empty(golang::runtime::traceBufQueue* q)
     {
         return q->head == nullptr;
     }
@@ -353,14 +353,14 @@ namespace golang::runtime
     }
 
     // byte appends v to buf.
-    void rec::byte(struct traceBuf* buf, unsigned char v)
+    void rec::byte(golang::runtime::traceBuf* buf, unsigned char v)
     {
         buf->arr[buf->pos] = v;
         buf->pos++;
     }
 
     // varint appends v to buf in little-endian-base-128 encoding.
-    void rec::varint(struct traceBuf* buf, uint64_t v)
+    void rec::varint(golang::runtime::traceBuf* buf, uint64_t v)
     {
         auto pos = buf->pos;
         auto arr = buf->arr.make_slice(pos, pos + traceBytesPerNumber);
@@ -381,7 +381,7 @@ namespace golang::runtime
     // varintReserve reserves enough space in buf to hold any varint.
     //
     // Space reserved this way can be filled in with the varintAt method.
-    int rec::varintReserve(struct traceBuf* buf)
+    int rec::varintReserve(golang::runtime::traceBuf* buf)
     {
         auto p = buf->pos;
         buf->pos += traceBytesPerNumber;
@@ -389,12 +389,12 @@ namespace golang::runtime
     }
 
     // stringData appends s's data directly to buf.
-    void rec::stringData(struct traceBuf* buf, gocpp::string s)
+    void rec::stringData(golang::runtime::traceBuf* buf, gocpp::string s)
     {
         buf->pos += copy(buf->arr.make_slice(buf->pos), s);
     }
 
-    bool rec::available(struct traceBuf* buf, int size)
+    bool rec::available(golang::runtime::traceBuf* buf, int size)
     {
         return len(buf->arr) - buf->pos >= size;
     }
@@ -403,7 +403,7 @@ namespace golang::runtime
     // consumes traceBytesPerNumber bytes. This is intended for when the caller
     // needs to reserve space for a varint but can't populate it until later.
     // Use varintReserve to reserve this space.
-    void rec::varintAt(struct traceBuf* buf, int pos, uint64_t v)
+    void rec::varintAt(golang::runtime::traceBuf* buf, int pos, uint64_t v)
     {
         for(auto i = 0; i < traceBytesPerNumber; i++)
         {

@@ -19,7 +19,7 @@ namespace golang::rand
 
     namespace rec
     {
-        double ExpFloat64(struct Rand* r);
+        double ExpFloat64(golang::rand::Rand* r);
     }
 }
 

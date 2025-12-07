@@ -118,7 +118,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    int64_t rec::Nanoseconds(struct Timeval* tv)
+    int64_t rec::Nanoseconds(golang::syscall::Timeval* tv)
     {
         return (int64_t(tv->Sec) * 1e6 + int64_t(tv->Usec)) * 1e3;
     }
@@ -126,8 +126,8 @@ namespace golang::syscall
     struct Timeval NsecToTimeval(int64_t nsec)
     {
         struct Timeval tv;
-        tv->Sec = int32_t(nsec / 1e9);
-        tv->Usec = int32_t(nsec % 1e9 / 1e3);
+        tv.Sec = int32_t(nsec / 1e9);
+        tv.Usec = int32_t(nsec % 1e9 / 1e3);
         return tv;
     }
 
@@ -279,7 +279,7 @@ namespace golang::syscall
 
     // Nanoseconds returns Filetime ft in nanoseconds
     // since Epoch (00:00:00 UTC, January 1, 1970).
-    int64_t rec::Nanoseconds(struct Filetime* ft)
+    int64_t rec::Nanoseconds(golang::syscall::Filetime* ft)
     {
         auto nsec = (int64_t(ft->HighDateTime) << 32) + int64_t(ft->LowDateTime);
         nsec -= 116444736000000000;
@@ -292,8 +292,8 @@ namespace golang::syscall
         struct Filetime ft;
         nsec /= 100;
         nsec += 116444736000000000;
-        ft->LowDateTime = uint32_t(nsec & 0xffffffff);
-        ft->HighDateTime = uint32_t((nsec >> 32) & 0xffffffff);
+        ft.LowDateTime = uint32_t(nsec & 0xffffffff);
+        ft.HighDateTime = uint32_t((nsec >> 32) & 0xffffffff);
         return ft;
     }
 

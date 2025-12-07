@@ -131,8 +131,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct eface& value);
     struct eface* efaceOf(go_any* ep);
-    void setGNoWB(runtime::g** gp, runtime::g* go_new);
-    void setMNoWB(runtime::m** mp, runtime::m* go_new);
+    void setGNoWB(struct g** gp, struct g* go_new);
+    void setMNoWB(struct m** mp, struct m* go_new);
     struct gobuf
     {
         uintptr_t sp;
@@ -157,7 +157,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gobuf& value);
     struct sudog
     {
-        runtime::g* g;
+        g* g;
         sudog* next;
         sudog* prev;
         unsafe::Pointer elem;
@@ -488,7 +488,7 @@ namespace golang::runtime
         uintptr_t stackguard1;
         _panic* _panic;
         _defer* _defer;
-        runtime::m* m;
+        m* m;
         gobuf sched;
         uintptr_t syscallsp;
         uintptr_t syscallpc;
@@ -552,17 +552,17 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct g& value);
     struct m
     {
-        runtime::g* g0;
+        g* g0;
         gobuf morebuf;
         uint32_t divmod;
         uint32_t _1;
         uint64_t procid;
-        runtime::g* gsignal;
+        g* gsignal;
         gsignalStack goSigStack;
         sigset sigmask;
         gocpp::array<uintptr_t, tlsSlots> tls;
         std::function<void ()> mstartfn;
-        runtime::g* curg;
+        g* curg;
         golang::runtime::guintptr caughtsig;
         golang::runtime::puintptr p;
         golang::runtime::puintptr nextp;
@@ -590,7 +590,7 @@ namespace golang::runtime
         atomic::Uint32 cgoCallersUse;
         cgoCallers* cgoCallers;
         note park;
-        runtime::m* alllink;
+        m* alllink;
         golang::runtime::muintptr schedlink;
         golang::runtime::guintptr lockedg;
         gocpp::array<uintptr_t, 32> createstack;
@@ -598,18 +598,18 @@ namespace golang::runtime
         uint32_t lockedInt;
         golang::runtime::muintptr nextwaitm;
         mLockProfile mLockProfile;
-        std::function<bool (runtime::g* _1, unsafe::Pointer _2)> waitunlockf;
+        std::function<bool (struct g* _1, unsafe::Pointer _2)> waitunlockf;
         unsafe::Pointer waitlock;
         golang::runtime::traceBlockReason waitTraceBlockReason;
         int waitTraceSkip;
         uint32_t syscalltick;
-        runtime::m* freelink;
+        m* freelink;
         mTraceState trace;
         libcall libcall;
         uintptr_t libcallpc;
         uintptr_t libcallsp;
         golang::runtime::guintptr libcallg;
-        runtime::libcall syscall;
+        golang::runtime::libcall syscall;
         uintptr_t vdsoSP;
         uintptr_t vdsoPC;
         atomic::Uint32 preemptGen;
@@ -717,7 +717,7 @@ namespace golang::runtime
     struct forcegcstate
     {
         mutex lock;
-        runtime::g* g;
+        g* g;
         atomic::Bool idle;
 
         using isGoStruct = void;
@@ -759,13 +759,13 @@ namespace golang::runtime
         sudog* sudogcache;
         mutex deferlock;
         _defer* deferpool;
-        runtime::m* freem;
+        m* freem;
         atomic::Bool gcwaiting;
         int32_t stopwait;
         note stopnote;
         atomic::Bool sysmonwait;
         note sysmonnote;
-        std::function<void (runtime::p* _1)> safePointFn;
+        std::function<void (struct p* _1)> safePointFn;
         int32_t safePointWait;
         note safePointNote;
         int32_t profilehz;
@@ -793,9 +793,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct schedt& value);
-    extern runtime::m* allm;
+    extern m* allm;
     extern forcegcstate forcegc;
-    extern gocpp::slice<runtime::p*> allp;
+    extern gocpp::slice<p*> allp;
     extern schedt sched;
 
     namespace rec
@@ -803,7 +803,7 @@ namespace golang::runtime
         struct g* ptr(golang::runtime::guintptr gp);
         void set(golang::runtime::guintptr* gp, struct g* g);
         bool cas(golang::runtime::guintptr* gp, golang::runtime::guintptr old, golang::runtime::guintptr go_new);
-        runtime::guintptr guintptr(runtime::g* gp);
+        runtime::guintptr guintptr(golang::runtime::g* gp);
         struct p* ptr(golang::runtime::puintptr pp);
         void set(golang::runtime::puintptr* pp, struct p* p);
         struct m* ptr(golang::runtime::muintptr mp);

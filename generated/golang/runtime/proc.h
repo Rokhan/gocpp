@@ -313,18 +313,18 @@ namespace golang::runtime
     void globrunqputhead(struct g* gp);
     void globrunqputbatch(struct gQueue* batch, int32_t n);
     struct g* globrunqget(struct p* pp, int32_t max);
-    void updateTimerPMask(runtime::p* pp);
-    int64_t pidleput(runtime::p* pp, int64_t now);
-    std::tuple<runtime::p*, int64_t> pidleget(int64_t now);
-    std::tuple<runtime::p*, int64_t> pidlegetSpinning(int64_t now);
-    bool runqempty(runtime::p* pp);
-    void runqput(runtime::p* pp, struct g* gp, bool next);
-    bool runqputslow(runtime::p* pp, struct g* gp, uint32_t h, uint32_t t);
-    void runqputbatch(runtime::p* pp, struct gQueue* q, int qsize);
-    std::tuple<struct g*, bool> runqget(runtime::p* pp);
-    std::tuple<struct gQueue, uint32_t> runqdrain(runtime::p* pp);
-    uint32_t runqgrab(runtime::p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG);
-    struct g* runqsteal(runtime::p* pp, runtime::p* p2, bool stealRunNextG);
+    void updateTimerPMask(struct p* pp);
+    int64_t pidleput(struct p* pp, int64_t now);
+    std::tuple<struct p*, int64_t> pidleget(int64_t now);
+    std::tuple<struct p*, int64_t> pidlegetSpinning(int64_t now);
+    bool runqempty(struct p* pp);
+    void runqput(struct p* pp, struct g* gp, bool next);
+    bool runqputslow(struct p* pp, struct g* gp, uint32_t h, uint32_t t);
+    void runqputbatch(struct p* pp, struct gQueue* q, int qsize);
+    std::tuple<struct g*, bool> runqget(struct p* pp);
+    std::tuple<struct gQueue, uint32_t> runqdrain(struct p* pp);
+    uint32_t runqgrab(struct p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG);
+    struct g* runqsteal(struct p* pp, struct p* p2, bool stealRunNextG);
     struct gQueue
     {
         golang::runtime::guintptr head;
@@ -449,30 +449,30 @@ namespace golang::runtime
 
     namespace rec
     {
-        void becomeSpinning(struct m* mp);
-        bool hasCgoOnStack(struct m* mp);
+        void becomeSpinning(golang::runtime::m* mp);
+        bool hasCgoOnStack(golang::runtime::m* mp);
         gocpp::string String(golang::runtime::stwReason r);
         bool isGC(golang::runtime::stwReason r);
-        void init(struct p* pp, int32_t id);
-        void destroy(struct p* pp);
+        void init(golang::runtime::p* pp, int32_t id);
+        void destroy(golang::runtime::p* pp);
         bool read(golang::runtime::pMask p, uint32_t id);
         void set(golang::runtime::pMask p, int32_t id);
         void clear(golang::runtime::pMask p, int32_t id);
-        bool empty(struct gQueue* q);
-        void push(struct gQueue* q, struct g* gp);
-        void pushBack(struct gQueue* q, struct g* gp);
-        void pushBackAll(struct gQueue* q, struct gQueue q2);
-        struct g* pop(struct gQueue* q);
-        struct gList popList(struct gQueue* q);
-        bool empty(struct gList* l);
-        void push(struct gList* l, struct g* gp);
-        void pushAll(struct gList* l, struct gQueue q);
-        struct g* pop(struct gList* l);
-        void reset(struct randomOrder* ord, uint32_t count);
-        struct randomEnum start(struct randomOrder* ord, uint32_t i);
-        bool done(struct randomEnum* go_enum);
-        void next(struct randomEnum* go_enum);
-        uint32_t position(struct randomEnum* go_enum);
+        bool empty(golang::runtime::gQueue* q);
+        void push(golang::runtime::gQueue* q, struct g* gp);
+        void pushBack(golang::runtime::gQueue* q, struct g* gp);
+        void pushBackAll(golang::runtime::gQueue* q, struct gQueue q2);
+        struct g* pop(golang::runtime::gQueue* q);
+        struct gList popList(golang::runtime::gQueue* q);
+        bool empty(golang::runtime::gList* l);
+        void push(golang::runtime::gList* l, struct g* gp);
+        void pushAll(golang::runtime::gList* l, struct gQueue q);
+        struct g* pop(golang::runtime::gList* l);
+        void reset(golang::runtime::randomOrder* ord, uint32_t count);
+        struct randomEnum start(golang::runtime::randomOrder* ord, uint32_t i);
+        bool done(golang::runtime::randomEnum* go_enum);
+        void next(golang::runtime::randomEnum* go_enum);
+        uint32_t position(golang::runtime::randomEnum* go_enum);
     }
 }
 

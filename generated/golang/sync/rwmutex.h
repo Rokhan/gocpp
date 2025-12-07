@@ -38,14 +38,14 @@ namespace golang::sync
 
     namespace rec
     {
-        void RLock(struct RWMutex* rw);
-        bool TryRLock(struct RWMutex* rw);
-        void RUnlock(struct RWMutex* rw);
-        void rUnlockSlow(struct RWMutex* rw, int32_t r);
-        void Lock(struct RWMutex* rw);
-        bool TryLock(struct RWMutex* rw);
-        void Unlock(struct RWMutex* rw);
-        struct Locker RLocker(struct RWMutex* rw);
+        void RLock(golang::sync::RWMutex* rw);
+        bool TryRLock(golang::sync::RWMutex* rw);
+        void RUnlock(golang::sync::RWMutex* rw);
+        void rUnlockSlow(golang::sync::RWMutex* rw, int32_t r);
+        void Lock(golang::sync::RWMutex* rw);
+        bool TryLock(golang::sync::RWMutex* rw);
+        void Unlock(golang::sync::RWMutex* rw);
+        struct Locker RLocker(golang::sync::RWMutex* rw);
         void Lock(golang::sync::rlocker* r);
         void Unlock(golang::sync::rlocker* r);
     }

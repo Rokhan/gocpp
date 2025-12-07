@@ -609,7 +609,7 @@ namespace golang::runtime
     // test reports whether the trigger condition is satisfied, meaning
     // that the exit condition for the _GCoff phase has been met. The exit
     // condition should be tested when allocating.
-    bool rec::test(struct gcTrigger t)
+    bool rec::test(golang::runtime::gcTrigger t)
     {
         if(! memstats.enablegc || rec::Load(gocpp::recv(panicking)) != 0 || gcphase != _GCoff)
         {

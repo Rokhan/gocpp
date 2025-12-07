@@ -622,12 +622,12 @@ namespace golang::fs
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(struct PathError* e)
+    gocpp::string rec::Error(golang::fs::PathError* e)
     {
         return e->Op + " "_s + e->Path + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
-    struct gocpp::error rec::Unwrap(struct PathError* e)
+    struct gocpp::error rec::Unwrap(golang::fs::PathError* e)
     {
         return e->Err;
     }
@@ -682,7 +682,7 @@ namespace golang::fs
 
 
     // Timeout reports whether this error represents a timeout.
-    bool rec::Timeout(struct PathError* e)
+    bool rec::Timeout(golang::fs::PathError* e)
     {
         auto [t, ok] = gocpp::getValue<gocpp_id_0>(e->Err);
         return ok && rec::Timeout(gocpp::recv(t));

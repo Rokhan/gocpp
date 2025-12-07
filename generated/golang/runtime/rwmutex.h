@@ -42,11 +42,11 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(struct rwmutex* rw, golang::runtime::lockRank readRank, golang::runtime::lockRank readRankInternal, golang::runtime::lockRank writeRank);
-        void rlock(struct rwmutex* rw);
-        void runlock(struct rwmutex* rw);
-        void lock(struct rwmutex* rw);
-        void unlock(struct rwmutex* rw);
+        void init(golang::runtime::rwmutex* rw, golang::runtime::lockRank readRank, golang::runtime::lockRank readRankInternal, golang::runtime::lockRank writeRank);
+        void rlock(golang::runtime::rwmutex* rw);
+        void runlock(golang::runtime::rwmutex* rw);
+        void lock(golang::runtime::rwmutex* rw);
+        void unlock(golang::runtime::rwmutex* rw);
     }
 }
 

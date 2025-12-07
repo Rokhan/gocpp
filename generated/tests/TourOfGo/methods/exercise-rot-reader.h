@@ -33,7 +33,7 @@ namespace golang::main
 
     namespace rec
     {
-        std::tuple<int, struct gocpp::error> Read(struct rot13Reader r13, gocpp::slice<unsigned char> buf);
+        std::tuple<int, struct gocpp::error> Read(golang::main::rot13Reader r13, gocpp::slice<unsigned char> buf);
     }
 }
 

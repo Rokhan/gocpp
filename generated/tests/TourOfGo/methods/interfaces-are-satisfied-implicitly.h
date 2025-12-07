@@ -84,7 +84,7 @@ namespace golang::main
 
     namespace rec
     {
-        void M(struct T t);
+        void M(golang::main::T t);
     }
 }
 

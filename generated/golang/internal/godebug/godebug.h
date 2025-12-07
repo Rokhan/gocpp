@@ -104,13 +104,13 @@ namespace golang::godebug
 
     namespace rec
     {
-        gocpp::string Name(struct Setting* s);
-        bool Undocumented(struct Setting* s);
-        gocpp::string String(struct Setting* s);
-        void IncNonDefault(struct Setting* s);
-        void go_register(struct Setting* s);
-        gocpp::string Value(struct Setting* s);
-        std::tuple<int, struct gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
+        gocpp::string Name(golang::godebug::Setting* s);
+        bool Undocumented(golang::godebug::Setting* s);
+        gocpp::string String(golang::godebug::Setting* s);
+        void IncNonDefault(golang::godebug::Setting* s);
+        void go_register(golang::godebug::Setting* s);
+        gocpp::string Value(golang::godebug::Setting* s);
+        std::tuple<int, struct gocpp::error> Write(golang::godebug::runtimeStderr*, gocpp::slice<unsigned char> b);
     }
 }
 

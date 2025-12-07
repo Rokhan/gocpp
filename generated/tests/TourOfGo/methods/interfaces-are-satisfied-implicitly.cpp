@@ -99,7 +99,7 @@ namespace golang::main
 
     // This method means type T implements the interface I,
     // but we don't need to explicitly declare that it does so.
-    void rec::M(struct T t)
+    void rec::M(golang::main::T t)
     {
         mocklib::Println(t.S);
     }

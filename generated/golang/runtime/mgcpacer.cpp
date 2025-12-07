@@ -274,7 +274,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(struct gcControllerState* c, int32_t gcPercent, int64_t memoryLimit)
+    void rec::init(golang::runtime::gcControllerState* c, int32_t gcPercent, int64_t memoryLimit)
     {
         c->heapMinimum = defaultHeapMinimum;
         c->triggered = ~ uint64_t(0);
@@ -286,7 +286,7 @@ namespace golang::runtime
     // startCycle resets the GC controller's state and computes estimates
     // for a new GC cycle. The caller must hold worldsema and the world
     // must be stopped.
-    void rec::startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger)
+    void rec::startCycle(golang::runtime::gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger)
     {
         rec::Store(gocpp::recv(c->heapScanWork), 0);
         rec::Store(gocpp::recv(c->stackScanWork), 0);
@@ -371,7 +371,7 @@ namespace golang::runtime
     // It should only be called when gcBlackenEnabled != 0 (because this
     // is when assists are enabled and the necessary statistics are
     // available).
-    void rec::revise(struct gcControllerState* c)
+    void rec::revise(golang::runtime::gcControllerState* c)
     {
         auto gcPercent = rec::Load(gocpp::recv(c->gcPercent));
         if(gcPercent < 0)
@@ -424,7 +424,7 @@ namespace golang::runtime
     // endCycle computes the consMark estimate for the next cycle.
     // userForced indicates whether the current GC cycle was forced
     // by the application.
-    void rec::endCycle(struct gcControllerState* c, int64_t now, int procs, bool userForced)
+    void rec::endCycle(golang::runtime::gcControllerState* c, int64_t now, int procs, bool userForced)
     {
         gcController.lastHeapGoal = rec::heapGoal(gocpp::recv(c));
         auto assistDuration = now - c->markStartTime;
@@ -473,7 +473,7 @@ namespace golang::runtime
     // when more work is made available.
     //
     //go:nowritebarrier
-    void rec::enlistWorker(struct gcControllerState* c)
+    void rec::enlistWorker(golang::runtime::gcControllerState* c)
     {
         if(rec::Load(gocpp::recv(c->dedicatedMarkWorkersNeeded)) <= 0)
         {
@@ -510,7 +510,7 @@ namespace golang::runtime
 
     // findRunnableGCWorker returns a background mark worker for pp if it
     // should be run. This must only be called when gcBlackenEnabled != 0.
-    std::tuple<struct g*, int64_t> rec::findRunnableGCWorker(struct gcControllerState* c, struct p* pp, int64_t now)
+    std::tuple<struct g*, int64_t> rec::findRunnableGCWorker(golang::runtime::gcControllerState* c, struct p* pp, int64_t now)
     {
         if(gcBlackenEnabled == 0)
         {
@@ -584,7 +584,7 @@ namespace golang::runtime
     // the world is started.
     //
     // The world must be stopped.
-    void rec::resetLive(struct gcControllerState* c, uint64_t bytesMarked)
+    void rec::resetLive(golang::runtime::gcControllerState* c, uint64_t bytesMarked)
     {
         c->heapMarked = bytesMarked;
         rec::Store(gocpp::recv(c->heapLive), bytesMarked);
@@ -606,7 +606,7 @@ namespace golang::runtime
     // work in nanoseconds and other bookkeeping.
     //
     // Safe to execute at any time.
-    void rec::markWorkerStop(struct gcControllerState* c, golang::runtime::gcMarkWorkerMode mode, int64_t duration)
+    void rec::markWorkerStop(golang::runtime::gcControllerState* c, golang::runtime::gcMarkWorkerMode mode, int64_t duration)
     {
         //Go switch emulation
         {
@@ -635,7 +635,7 @@ namespace golang::runtime
         }
     }
 
-    void rec::update(struct gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan)
+    void rec::update(golang::runtime::gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan)
     {
         if(dHeapLive != 0)
         {
@@ -660,7 +660,7 @@ namespace golang::runtime
         }
     }
 
-    void rec::addScannableStack(struct gcControllerState* c, struct p* pp, int64_t amount)
+    void rec::addScannableStack(golang::runtime::gcControllerState* c, struct p* pp, int64_t amount)
     {
         if(pp == nullptr)
         {
@@ -675,13 +675,13 @@ namespace golang::runtime
         }
     }
 
-    void rec::addGlobals(struct gcControllerState* c, int64_t amount)
+    void rec::addGlobals(golang::runtime::gcControllerState* c, int64_t amount)
     {
         rec::Add(gocpp::recv(c->globalsScan), amount);
     }
 
     // heapGoal returns the current heap goal.
-    uint64_t rec::heapGoal(struct gcControllerState* c)
+    uint64_t rec::heapGoal(golang::runtime::gcControllerState* c)
     {
         auto [goal, gocpp_id_0] = rec::heapGoalInternal(gocpp::recv(c));
         return goal;
@@ -691,7 +691,7 @@ namespace golang::runtime
     // information that is necessary for computing the trigger.
     //
     // The returned minTrigger is always <= goal.
-    std::tuple<uint64_t, uint64_t> rec::heapGoalInternal(struct gcControllerState* c)
+    std::tuple<uint64_t, uint64_t> rec::heapGoalInternal(golang::runtime::gcControllerState* c)
     {
         uint64_t goal;
         uint64_t minTrigger;
@@ -730,7 +730,7 @@ namespace golang::runtime
     }
 
     // memoryLimitHeapGoal returns a heap goal derived from memoryLimit.
-    uint64_t rec::memoryLimitHeapGoal(struct gcControllerState* c)
+    uint64_t rec::memoryLimitHeapGoal(golang::runtime::gcControllerState* c)
     {
         // Start by pulling out some values we'll need. Be careful about overflow.
         uint64_t heapFree = {};
@@ -799,7 +799,7 @@ namespace golang::runtime
     // the GC should trigger. Thus, the GC trigger condition should be (but may
     // not be, in the case of small movements for efficiency) checked whenever
     // the heap goal may change.
-    std::tuple<uint64_t, uint64_t> rec::trigger(struct gcControllerState* c)
+    std::tuple<uint64_t, uint64_t> rec::trigger(golang::runtime::gcControllerState* c)
     {
         auto [goal, minTrigger] = rec::heapGoalInternal(gocpp::recv(c));
         if(c->heapMarked >= goal)
@@ -860,7 +860,7 @@ namespace golang::runtime
     // function if the GC is enabled.
     //
     // mheap_.lock must be held or the world must be stopped.
-    void rec::commit(struct gcControllerState* c, bool isSweepDone)
+    void rec::commit(golang::runtime::gcControllerState* c, bool isSweepDone)
     {
         if(! c->test)
         {
@@ -891,7 +891,7 @@ namespace golang::runtime
     // Returns the old value of gcPercent.
     //
     // The world must be stopped, or mheap_.lock must be held.
-    int32_t rec::setGCPercent(struct gcControllerState* c, int32_t in)
+    int32_t rec::setGCPercent(golang::runtime::gcControllerState* c, int32_t in)
     {
         if(! c->test)
         {
@@ -943,7 +943,7 @@ namespace golang::runtime
     // Returns the old value of memoryLimit.
     //
     // The world must be stopped, or mheap_.lock must be held.
-    int64_t rec::setMemoryLimit(struct gcControllerState* c, int64_t in)
+    int64_t rec::setMemoryLimit(golang::runtime::gcControllerState* c, int64_t in)
     {
         if(! c->test)
         {
@@ -1002,7 +1002,7 @@ namespace golang::runtime
     // nosplit because it may be called without a P.
     //
     //go:nosplit
-    bool rec::addIdleMarkWorker(struct gcControllerState* c)
+    bool rec::addIdleMarkWorker(golang::runtime::gcControllerState* c)
     {
         for(; ; )
         {
@@ -1033,7 +1033,7 @@ namespace golang::runtime
     // nosplit because it may be called without a P.
     //
     //go:nosplit
-    bool rec::needIdleMarkWorker(struct gcControllerState* c)
+    bool rec::needIdleMarkWorker(golang::runtime::gcControllerState* c)
     {
         auto p = rec::Load(gocpp::recv(c->idleMarkWorkers));
         auto [n, max] = std::tuple{int32_t(p & uint64_t(~ uint32_t(0))), int32_t(p >> 32)};
@@ -1041,7 +1041,7 @@ namespace golang::runtime
     }
 
     // removeIdleMarkWorker must be called when a new idle mark worker stops executing.
-    void rec::removeIdleMarkWorker(struct gcControllerState* c)
+    void rec::removeIdleMarkWorker(golang::runtime::gcControllerState* c)
     {
         for(; ; )
         {
@@ -1065,7 +1065,7 @@ namespace golang::runtime
     // This method is optimistic in that it does not wait for the number of
     // idle mark workers to reduce to max before returning; it assumes the workers
     // will deschedule themselves.
-    void rec::setMaxIdleMarkWorkers(struct gcControllerState* c, int32_t max)
+    void rec::setMaxIdleMarkWorkers(golang::runtime::gcControllerState* c, int32_t max)
     {
         for(; ; )
         {

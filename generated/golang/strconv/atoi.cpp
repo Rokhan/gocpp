@@ -71,12 +71,12 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(struct NumError* e)
+    gocpp::string rec::Error(golang::strconv::NumError* e)
     {
         return "strconv."_s + e->Func + ": "_s + "parsing "_s + Quote(e->Num) + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
-    struct gocpp::error rec::Unwrap(struct NumError* e)
+    struct gocpp::error rec::Unwrap(golang::strconv::NumError* e)
     {
         return e->Err;
     }

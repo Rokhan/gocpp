@@ -118,14 +118,14 @@ namespace golang::runtime
 
     namespace rec
     {
-        uintptr_t ip(struct context* c);
-        uintptr_t sp(struct context* c);
-        uintptr_t lr(struct context* c);
-        void set_lr(struct context* c, uintptr_t x);
-        void set_ip(struct context* c, uintptr_t x);
-        void set_sp(struct context* c, uintptr_t x);
-        void set_fp(struct context* c, uintptr_t x);
-        struct context* ctx(struct _DISPATCHER_CONTEXT* c);
+        uintptr_t ip(golang::runtime::context* c);
+        uintptr_t sp(golang::runtime::context* c);
+        uintptr_t lr(golang::runtime::context* c);
+        void set_lr(golang::runtime::context* c, uintptr_t x);
+        void set_ip(golang::runtime::context* c, uintptr_t x);
+        void set_sp(golang::runtime::context* c, uintptr_t x);
+        void set_fp(golang::runtime::context* c, uintptr_t x);
+        struct context* ctx(golang::runtime::_DISPATCHER_CONTEXT* c);
     }
 }
 

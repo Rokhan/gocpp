@@ -57,8 +57,8 @@ namespace golang::runtime
         void freeAll(golang::runtime::pallocBits* b);
         uint64_t pages64(golang::runtime::pallocBits* b, unsigned int i);
         void allocPages64(golang::runtime::pallocBits* b, unsigned int i, uint64_t alloc);
-        void allocRange(struct pallocData* m, unsigned int i, unsigned int n);
-        void allocAll(struct pallocData* m);
+        void allocRange(golang::runtime::pallocData* m, unsigned int i, unsigned int n);
+        void allocAll(golang::runtime::pallocData* m);
     }
 }
 

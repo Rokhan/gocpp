@@ -31,10 +31,10 @@ namespace golang::main
 
     namespace rec
     {
-        double Pi(struct toto t);
-        double Pi2(struct toto t);
-        double toto(struct toto t);
-        struct toto create(struct toto t);
+        double Pi(golang::main::toto t);
+        double Pi2(golang::main::toto t);
+        double toto(golang::main::toto t);
+        struct toto create(golang::main::toto t);
     }
 }
 

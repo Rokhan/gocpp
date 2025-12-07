@@ -46,17 +46,17 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    double rec::Pi(struct toto t)
+    double rec::Pi(golang::main::toto t)
     {
         return 3.14;
     }
 
-    double rec::toto(struct toto t)
+    double rec::toto(golang::main::toto t)
     {
         return 0 + 0;
     }
 
-    main::titi rec::titi(struct toto t, golang::main::titi d)
+    main::titi rec::titi(golang::main::toto t, golang::main::titi d)
     {
         return d;
     }

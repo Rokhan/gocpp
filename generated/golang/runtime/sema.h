@@ -96,10 +96,10 @@ namespace golang::runtime
     namespace rec
     {
         struct semaRoot* rootFor(golang::runtime::semTable* t, uint32_t* addr);
-        void queue(struct semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo);
-        std::tuple<struct sudog*, int64_t, int64_t> dequeue(struct semaRoot* root, uint32_t* addr);
-        void rotateLeft(struct semaRoot* root, struct sudog* x);
-        void rotateRight(struct semaRoot* root, struct sudog* y);
+        void queue(golang::runtime::semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo);
+        std::tuple<struct sudog*, int64_t, int64_t> dequeue(golang::runtime::semaRoot* root, uint32_t* addr);
+        void rotateLeft(golang::runtime::semaRoot* root, struct sudog* x);
+        void rotateRight(golang::runtime::semaRoot* root, struct sudog* y);
     }
 }
 

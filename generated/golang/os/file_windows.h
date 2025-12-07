@@ -65,9 +65,9 @@ namespace golang::os
 
     namespace rec
     {
-        uintptr_t Fd(struct File* file);
-        struct gocpp::error close(os::file* file);
-        std::tuple<int64_t, struct gocpp::error> seek(struct File* f, int64_t offset, int whence);
+        uintptr_t Fd(golang::os::File* file);
+        struct gocpp::error close(golang::os::file* file);
+        std::tuple<int64_t, struct gocpp::error> seek(golang::os::File* f, int64_t offset, int whence);
     }
 }
 

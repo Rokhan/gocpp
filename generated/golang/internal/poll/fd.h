@@ -53,12 +53,12 @@ namespace golang::poll
 
     namespace rec
     {
-        gocpp::string Error(struct errNetClosing e);
-        bool Timeout(struct errNetClosing e);
-        bool Temporary(struct errNetClosing e);
-        gocpp::string Error(struct DeadlineExceededError* e);
-        bool Timeout(struct DeadlineExceededError* e);
-        bool Temporary(struct DeadlineExceededError* e);
+        gocpp::string Error(golang::poll::errNetClosing e);
+        bool Timeout(golang::poll::errNetClosing e);
+        bool Temporary(golang::poll::errNetClosing e);
+        gocpp::string Error(golang::poll::DeadlineExceededError* e);
+        bool Timeout(golang::poll::DeadlineExceededError* e);
+        bool Temporary(golang::poll::DeadlineExceededError* e);
     }
 }
 

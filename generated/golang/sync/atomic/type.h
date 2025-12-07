@@ -170,10 +170,10 @@ namespace golang::atomic
 
     namespace rec
     {
-        bool Load(struct Bool* x);
-        void Store(struct Bool* x, bool val);
-        bool Swap(struct Bool* x, bool go_new);
-        bool CompareAndSwap(struct Bool* x, bool old, bool go_new);
+        bool Load(golang::atomic::Bool* x);
+        void Store(golang::atomic::Bool* x, bool val);
+        bool Swap(golang::atomic::Bool* x, bool go_new);
+        bool CompareAndSwap(golang::atomic::Bool* x, bool old, bool go_new);
         
         template<typename T>
         T* Load(golang::atomic::Pointer<T>* x);
@@ -186,33 +186,33 @@ namespace golang::atomic
         
         template<typename T>
         bool CompareAndSwap(golang::atomic::Pointer<T>* x, T* old, T* go_new);
-        int32_t Load(struct Int32* x);
-        void Store(struct Int32* x, int32_t val);
-        int32_t Swap(struct Int32* x, int32_t go_new);
-        bool CompareAndSwap(struct Int32* x, int32_t old, int32_t go_new);
-        int32_t Add(struct Int32* x, int32_t delta);
-        int64_t Load(struct Int64* x);
-        void Store(struct Int64* x, int64_t val);
-        int64_t Swap(struct Int64* x, int64_t go_new);
-        bool CompareAndSwap(struct Int64* x, int64_t old, int64_t go_new);
-        int64_t Add(struct Int64* x, int64_t delta);
-        uint32_t Load(struct Uint32* x);
-        void Store(struct Uint32* x, uint32_t val);
-        uint32_t Swap(struct Uint32* x, uint32_t go_new);
-        bool CompareAndSwap(struct Uint32* x, uint32_t old, uint32_t go_new);
-        uint32_t Add(struct Uint32* x, uint32_t delta);
-        uint64_t Load(struct Uint64* x);
-        void Store(struct Uint64* x, uint64_t val);
-        uint64_t Swap(struct Uint64* x, uint64_t go_new);
-        bool CompareAndSwap(struct Uint64* x, uint64_t old, uint64_t go_new);
-        uint64_t Add(struct Uint64* x, uint64_t delta);
-        uintptr_t Load(struct Uintptr* x);
-        void Store(struct Uintptr* x, uintptr_t val);
-        uintptr_t Swap(struct Uintptr* x, uintptr_t go_new);
-        bool CompareAndSwap(struct Uintptr* x, uintptr_t old, uintptr_t go_new);
-        uintptr_t Add(struct Uintptr* x, uintptr_t delta);
-        void Lock(noCopy*);
-        void Unlock(noCopy*);
+        int32_t Load(golang::atomic::Int32* x);
+        void Store(golang::atomic::Int32* x, int32_t val);
+        int32_t Swap(golang::atomic::Int32* x, int32_t go_new);
+        bool CompareAndSwap(golang::atomic::Int32* x, int32_t old, int32_t go_new);
+        int32_t Add(golang::atomic::Int32* x, int32_t delta);
+        int64_t Load(golang::atomic::Int64* x);
+        void Store(golang::atomic::Int64* x, int64_t val);
+        int64_t Swap(golang::atomic::Int64* x, int64_t go_new);
+        bool CompareAndSwap(golang::atomic::Int64* x, int64_t old, int64_t go_new);
+        int64_t Add(golang::atomic::Int64* x, int64_t delta);
+        uint32_t Load(golang::atomic::Uint32* x);
+        void Store(golang::atomic::Uint32* x, uint32_t val);
+        uint32_t Swap(golang::atomic::Uint32* x, uint32_t go_new);
+        bool CompareAndSwap(golang::atomic::Uint32* x, uint32_t old, uint32_t go_new);
+        uint32_t Add(golang::atomic::Uint32* x, uint32_t delta);
+        uint64_t Load(golang::atomic::Uint64* x);
+        void Store(golang::atomic::Uint64* x, uint64_t val);
+        uint64_t Swap(golang::atomic::Uint64* x, uint64_t go_new);
+        bool CompareAndSwap(golang::atomic::Uint64* x, uint64_t old, uint64_t go_new);
+        uint64_t Add(golang::atomic::Uint64* x, uint64_t delta);
+        uintptr_t Load(golang::atomic::Uintptr* x);
+        void Store(golang::atomic::Uintptr* x, uintptr_t val);
+        uintptr_t Swap(golang::atomic::Uintptr* x, uintptr_t go_new);
+        bool CompareAndSwap(golang::atomic::Uintptr* x, uintptr_t old, uintptr_t go_new);
+        uintptr_t Add(golang::atomic::Uintptr* x, uintptr_t delta);
+        void Lock(golang::atomic::noCopy*);
+        void Unlock(golang::atomic::noCopy*);
     }
 }
 

@@ -79,22 +79,22 @@ namespace golang::runtime
 
     namespace rec
     {
-        void Pin(struct Pinner* p, go_any pointer);
-        void Unpin(struct Pinner* p);
-        void unpin(struct pinner* p);
-        bool isPinned(struct pinState* v);
-        bool isMultiPinned(struct pinState* v);
-        void setPinned(struct pinState* v, bool val);
-        void setMultiPinned(struct pinState* v, bool val);
-        void set(struct pinState* v, bool val, bool multipin);
+        void Pin(golang::runtime::Pinner* p, go_any pointer);
+        void Unpin(golang::runtime::Pinner* p);
+        void unpin(golang::runtime::pinner* p);
+        bool isPinned(golang::runtime::pinState* v);
+        bool isMultiPinned(golang::runtime::pinState* v);
+        void setPinned(golang::runtime::pinState* v, bool val);
+        void setMultiPinned(golang::runtime::pinState* v, bool val);
+        void set(golang::runtime::pinState* v, bool val, bool multipin);
         struct pinState ofObject(golang::runtime::pinnerBits* p, uintptr_t n);
-        uintptr_t pinnerBitSize(struct mspan* s);
-        runtime::pinnerBits* newPinnerBits(struct mspan* s);
-        runtime::pinnerBits* getPinnerBits(struct mspan* s);
-        void setPinnerBits(struct mspan* s, golang::runtime::pinnerBits* p);
-        void refreshPinnerBits(struct mspan* s);
-        void incPinCounter(struct mspan* span, uintptr_t offset);
-        bool decPinCounter(struct mspan* span, uintptr_t offset);
+        uintptr_t pinnerBitSize(golang::runtime::mspan* s);
+        runtime::pinnerBits* newPinnerBits(golang::runtime::mspan* s);
+        runtime::pinnerBits* getPinnerBits(golang::runtime::mspan* s);
+        void setPinnerBits(golang::runtime::mspan* s, golang::runtime::pinnerBits* p);
+        void refreshPinnerBits(golang::runtime::mspan* s);
+        void incPinCounter(golang::runtime::mspan* span, uintptr_t offset);
+        bool decPinCounter(golang::runtime::mspan* span, uintptr_t offset);
     }
 }
 

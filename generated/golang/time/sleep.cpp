@@ -166,7 +166,7 @@ namespace golang::time
     // Stop does not wait for f to complete before returning.
     // If the caller needs to know whether f is completed, it must coordinate
     // with f explicitly.
-    bool rec::Stop(struct Timer* t)
+    bool rec::Stop(golang::time::Timer* t)
     {
         if(t->r.f == nullptr)
         {
@@ -226,7 +226,7 @@ namespace golang::time
     // goroutine running f does not run concurrently with the prior
     // one. If the caller needs to know whether the prior execution of
     // f is completed, it must coordinate with f explicitly.
-    bool rec::Reset(struct Timer* t, golang::time::Duration d)
+    bool rec::Reset(golang::time::Timer* t, golang::time::Duration d)
     {
         if(t->r.f == nullptr)
         {

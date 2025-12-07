@@ -56,44 +56,44 @@ namespace golang::image
     }
 
     // String returns a string representation of p like "(3,4)".
-    gocpp::string rec::String(struct Point p)
+    gocpp::string rec::String(golang::image::Point p)
     {
         return "("_s + strconv::Itoa(p.X) + ","_s + strconv::Itoa(p.Y) + ")"_s;
     }
 
     // Add returns the vector p+q.
-    struct Point rec::Add(struct Point p, struct Point q)
+    struct Point rec::Add(golang::image::Point p, struct Point q)
     {
         return Point {p.X + q.X, p.Y + q.Y};
     }
 
     // Sub returns the vector p-q.
-    struct Point rec::Sub(struct Point p, struct Point q)
+    struct Point rec::Sub(golang::image::Point p, struct Point q)
     {
         return Point {p.X - q.X, p.Y - q.Y};
     }
 
     // Mul returns the vector p*k.
-    struct Point rec::Mul(struct Point p, int k)
+    struct Point rec::Mul(golang::image::Point p, int k)
     {
         return Point {p.X * k, p.Y * k};
     }
 
     // Div returns the vector p/k.
-    struct Point rec::Div(struct Point p, int k)
+    struct Point rec::Div(golang::image::Point p, int k)
     {
         return Point {p.X / k, p.Y / k};
     }
 
     // In reports whether p is in r.
-    bool rec::In(struct Point p, struct Rectangle r)
+    bool rec::In(golang::image::Point p, struct Rectangle r)
     {
         return r.Min.X <= p.X && p.X < r.Max.X && r.Min.Y <= p.Y && p.Y < r.Max.Y;
     }
 
     // Mod returns the point q in r such that p.X-q.X is a multiple of r's width
     // and p.Y-q.Y is a multiple of r's height.
-    struct Point rec::Mod(struct Point p, struct Rectangle r)
+    struct Point rec::Mod(golang::image::Point p, struct Rectangle r)
     {
         auto [w, h] = std::tuple{rec::Dx(gocpp::recv(r)), rec::Dy(gocpp::recv(r))};
         p = rec::Sub(gocpp::recv(p), r.Min);
@@ -111,7 +111,7 @@ namespace golang::image
     }
 
     // Eq reports whether p and q are equal.
-    bool rec::Eq(struct Point p, struct Point q)
+    bool rec::Eq(golang::image::Point p, struct Point q)
     {
         return p == q;
     }
@@ -167,37 +167,37 @@ namespace golang::image
     }
 
     // String returns a string representation of r like "(3,4)-(6,5)".
-    gocpp::string rec::String(struct Rectangle r)
+    gocpp::string rec::String(golang::image::Rectangle r)
     {
         return rec::String(gocpp::recv(r.Min)) + "-"_s + rec::String(gocpp::recv(r.Max));
     }
 
     // Dx returns r's width.
-    int rec::Dx(struct Rectangle r)
+    int rec::Dx(golang::image::Rectangle r)
     {
         return r.Max.X - r.Min.X;
     }
 
     // Dy returns r's height.
-    int rec::Dy(struct Rectangle r)
+    int rec::Dy(golang::image::Rectangle r)
     {
         return r.Max.Y - r.Min.Y;
     }
 
     // Size returns r's width and height.
-    struct Point rec::Size(struct Rectangle r)
+    struct Point rec::Size(golang::image::Rectangle r)
     {
         return Point {r.Max.X - r.Min.X, r.Max.Y - r.Min.Y};
     }
 
     // Add returns the rectangle r translated by p.
-    struct Rectangle rec::Add(struct Rectangle r, struct Point p)
+    struct Rectangle rec::Add(golang::image::Rectangle r, struct Point p)
     {
         return Rectangle {Point {r.Min.X + p.X, r.Min.Y + p.Y}, Point {r.Max.X + p.X, r.Max.Y + p.Y}};
     }
 
     // Sub returns the rectangle r translated by -p.
-    struct Rectangle rec::Sub(struct Rectangle r, struct Point p)
+    struct Rectangle rec::Sub(golang::image::Rectangle r, struct Point p)
     {
         return Rectangle {Point {r.Min.X - p.X, r.Min.Y - p.Y}, Point {r.Max.X - p.X, r.Max.Y - p.Y}};
     }
@@ -205,7 +205,7 @@ namespace golang::image
     // Inset returns the rectangle r inset by n, which may be negative. If either
     // of r's dimensions is less than 2*n then an empty rectangle near the center
     // of r will be returned.
-    struct Rectangle rec::Inset(struct Rectangle r, int n)
+    struct Rectangle rec::Inset(golang::image::Rectangle r, int n)
     {
         if(rec::Dx(gocpp::recv(r)) < 2 * n)
         {
@@ -232,7 +232,7 @@ namespace golang::image
 
     // Intersect returns the largest rectangle contained by both r and s. If the
     // two rectangles do not overlap then the zero rectangle will be returned.
-    struct Rectangle rec::Intersect(struct Rectangle r, struct Rectangle s)
+    struct Rectangle rec::Intersect(golang::image::Rectangle r, struct Rectangle s)
     {
         if(r.Min.X < s.Min.X)
         {
@@ -258,7 +258,7 @@ namespace golang::image
     }
 
     // Union returns the smallest rectangle that contains both r and s.
-    struct Rectangle rec::Union(struct Rectangle r, struct Rectangle s)
+    struct Rectangle rec::Union(golang::image::Rectangle r, struct Rectangle s)
     {
         if(rec::Empty(gocpp::recv(r)))
         {
@@ -288,26 +288,26 @@ namespace golang::image
     }
 
     // Empty reports whether the rectangle contains no points.
-    bool rec::Empty(struct Rectangle r)
+    bool rec::Empty(golang::image::Rectangle r)
     {
         return r.Min.X >= r.Max.X || r.Min.Y >= r.Max.Y;
     }
 
     // Eq reports whether r and s contain the same set of points. All empty
     // rectangles are considered equal.
-    bool rec::Eq(struct Rectangle r, struct Rectangle s)
+    bool rec::Eq(golang::image::Rectangle r, struct Rectangle s)
     {
         return r == s || rec::Empty(gocpp::recv(r)) && rec::Empty(gocpp::recv(s));
     }
 
     // Overlaps reports whether r and s have a non-empty intersection.
-    bool rec::Overlaps(struct Rectangle r, struct Rectangle s)
+    bool rec::Overlaps(golang::image::Rectangle r, struct Rectangle s)
     {
         return ! rec::Empty(gocpp::recv(r)) && ! rec::Empty(gocpp::recv(s)) && r.Min.X < s.Max.X && s.Min.X < r.Max.X && r.Min.Y < s.Max.Y && s.Min.Y < r.Max.Y;
     }
 
     // In reports whether every point in r is in s.
-    bool rec::In(struct Rectangle r, struct Rectangle s)
+    bool rec::In(golang::image::Rectangle r, struct Rectangle s)
     {
         if(rec::Empty(gocpp::recv(r)))
         {
@@ -318,7 +318,7 @@ namespace golang::image
 
     // Canon returns the canonical version of r. The returned rectangle has minimum
     // and maximum coordinates swapped if necessary so that it is well-formed.
-    struct Rectangle rec::Canon(struct Rectangle r)
+    struct Rectangle rec::Canon(golang::image::Rectangle r)
     {
         if(r.Max.X < r.Min.X)
         {
@@ -332,7 +332,7 @@ namespace golang::image
     }
 
     // At implements the [Image] interface.
-    color::Color rec::At(struct Rectangle r, int x, int y)
+    color::Color rec::At(golang::image::Rectangle r, int x, int y)
     {
         if(rec::In(gocpp::recv((Point {x, y})), r))
         {
@@ -342,7 +342,7 @@ namespace golang::image
     }
 
     // RGBA64At implements the [RGBA64Image] interface.
-    color::RGBA64 rec::RGBA64At(struct Rectangle r, int x, int y)
+    color::RGBA64 rec::RGBA64At(golang::image::Rectangle r, int x, int y)
     {
         if(rec::In(gocpp::recv((Point {x, y})), r))
         {
@@ -352,13 +352,13 @@ namespace golang::image
     }
 
     // Bounds implements the [Image] interface.
-    struct Rectangle rec::Bounds(struct Rectangle r)
+    struct Rectangle rec::Bounds(golang::image::Rectangle r)
     {
         return r;
     }
 
     // ColorModel implements the [Image] interface.
-    color::Model rec::ColorModel(struct Rectangle r)
+    color::Model rec::ColorModel(golang::image::Rectangle r)
     {
         return color::Alpha16Model;
     }

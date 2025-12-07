@@ -92,11 +92,11 @@ namespace golang::sync
 
     namespace rec
     {
-        void Lock(struct Mutex* m);
-        bool TryLock(struct Mutex* m);
-        void lockSlow(struct Mutex* m);
-        void Unlock(struct Mutex* m);
-        void unlockSlow(struct Mutex* m, int32_t go_new);
+        void Lock(golang::sync::Mutex* m);
+        bool TryLock(golang::sync::Mutex* m);
+        void lockSlow(golang::sync::Mutex* m);
+        void Unlock(golang::sync::Mutex* m);
+        void unlockSlow(golang::sync::Mutex* m, int32_t go_new);
     }
 }
 

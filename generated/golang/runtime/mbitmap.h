@@ -61,20 +61,20 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct markBits allocBitsForIndex(struct mspan* s, uintptr_t allocBitIndex);
-        void refillAllocCache(struct mspan* s, uint16_t whichByte);
-        uint16_t nextFreeIndex(struct mspan* s);
-        bool isFree(struct mspan* s, uintptr_t index);
-        uintptr_t divideByElemSize(struct mspan* s, uintptr_t n);
-        uintptr_t objIndex(struct mspan* s, uintptr_t p);
-        struct markBits markBitsForIndex(struct mspan* s, uintptr_t objIndex);
-        struct markBits markBitsForBase(struct mspan* s);
-        bool isMarked(struct markBits m);
-        void setMarked(struct markBits m);
-        void setMarkedNonAtomic(struct markBits m);
-        void clearMarked(struct markBits m);
-        void advance(struct markBits* m);
-        int countAlloc(struct mspan* s);
+        struct markBits allocBitsForIndex(golang::runtime::mspan* s, uintptr_t allocBitIndex);
+        void refillAllocCache(golang::runtime::mspan* s, uint16_t whichByte);
+        uint16_t nextFreeIndex(golang::runtime::mspan* s);
+        bool isFree(golang::runtime::mspan* s, uintptr_t index);
+        uintptr_t divideByElemSize(golang::runtime::mspan* s, uintptr_t n);
+        uintptr_t objIndex(golang::runtime::mspan* s, uintptr_t p);
+        struct markBits markBitsForIndex(golang::runtime::mspan* s, uintptr_t objIndex);
+        struct markBits markBitsForBase(golang::runtime::mspan* s);
+        bool isMarked(golang::runtime::markBits m);
+        void setMarked(golang::runtime::markBits m);
+        void setMarkedNonAtomic(golang::runtime::markBits m);
+        void clearMarked(golang::runtime::markBits m);
+        void advance(golang::runtime::markBits* m);
+        int countAlloc(golang::runtime::mspan* s);
     }
 }
 

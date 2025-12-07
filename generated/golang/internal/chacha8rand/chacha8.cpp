@@ -79,7 +79,7 @@ namespace golang::chacha8rand
     // Next is //go:nosplit to allow its use in the runtime
     // with per-m data without holding the per-m lock.
     //go:nosplit
-    std::tuple<uint64_t, bool> rec::Next(struct State* s)
+    std::tuple<uint64_t, bool> rec::Next(golang::chacha8rand::State* s)
     {
         auto i = s->i;
         if(i >= s->n)
@@ -91,13 +91,13 @@ namespace golang::chacha8rand
     }
 
     // Init seeds the State with the given seed value.
-    void rec::Init(struct State* s, gocpp::array<unsigned char, 32> seed)
+    void rec::Init(golang::chacha8rand::State* s, gocpp::array<unsigned char, 32> seed)
     {
         rec::Init64(gocpp::recv(s), gocpp::array<uint64_t, 4> {leUint64(seed.make_slice(0 * 8)), leUint64(seed.make_slice(1 * 8)), leUint64(seed.make_slice(2 * 8)), leUint64(seed.make_slice(3 * 8))});
     }
 
     // Init64 seeds the state with the given seed value.
-    void rec::Init64(struct State* s, gocpp::array<uint64_t, 4> seed)
+    void rec::Init64(golang::chacha8rand::State* s, gocpp::array<uint64_t, 4> seed)
     {
         s->seed = seed;
         block(& s->seed, & s->buf, 0);
@@ -109,7 +109,7 @@ namespace golang::chacha8rand
     // Refill refills the state with more random values.
     // After a call to Refill, an immediate call to Next will succeed
     // (unless multiple goroutines are incorrectly sharing a state).
-    void rec::Refill(struct State* s)
+    void rec::Refill(golang::chacha8rand::State* s)
     {
         s->c += ctrInc;
         if(s->c == ctrMax)
@@ -133,7 +133,7 @@ namespace golang::chacha8rand
     // After a call to Reseed, any previously returned random values
     // have been erased from the memory of the state and cannot be
     // recovered.
-    void rec::Reseed(struct State* s)
+    void rec::Reseed(golang::chacha8rand::State* s)
     {
         gocpp::array<uint64_t, 4> seed = {};
         for(auto [i, gocpp_ignored] : seed)
@@ -196,7 +196,7 @@ namespace golang::chacha8rand
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(errUnmarshalChaCha8*)
+    gocpp::string rec::Error(golang::chacha8rand::errUnmarshalChaCha8*)
     {
         return "invalid ChaCha8 encoding"_s;
     }

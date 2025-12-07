@@ -232,7 +232,7 @@ namespace golang::runtime
     }
 
     // add accumulates b into a. It does not zero b.
-    void rec::add(struct memRecordCycle* a, struct memRecordCycle* b)
+    void rec::add(golang::runtime::memRecordCycle* a, struct memRecordCycle* b)
     {
         a->allocs += b->allocs;
         a->frees += b->frees;
@@ -314,7 +314,7 @@ namespace golang::runtime
     }
 
     // read returns the current cycle count.
-    uint32_t rec::read(struct mProfCycleHolder* c)
+    uint32_t rec::read(golang::runtime::mProfCycleHolder* c)
     {
         uint32_t cycle;
         auto v = rec::Load(gocpp::recv(c->value));
@@ -324,7 +324,7 @@ namespace golang::runtime
 
     // setFlushed sets the flushed flag. It returns the current cycle count and the
     // previous value of the flushed flag.
-    std::tuple<uint32_t, bool> rec::setFlushed(struct mProfCycleHolder* c)
+    std::tuple<uint32_t, bool> rec::setFlushed(golang::runtime::mProfCycleHolder* c)
     {
         uint32_t cycle;
         bool alreadyFlushed;
@@ -343,7 +343,7 @@ namespace golang::runtime
 
     // increment increases the cycle count by one, wrapping the value at
     // mProfCycleWrap. It clears the flushed flag.
-    void rec::increment(struct mProfCycleHolder* c)
+    void rec::increment(golang::runtime::mProfCycleHolder* c)
     {
         for(; ; )
         {
@@ -390,7 +390,7 @@ namespace golang::runtime
     }
 
     // stk returns the slice in b holding the stack.
-    gocpp::slice<uintptr_t> rec::stk(struct bucket* b)
+    gocpp::slice<uintptr_t> rec::stk(golang::runtime::bucket* b)
     {
         auto stk = (gocpp::array<uintptr_t, maxStack>*)(add(unsafe::Pointer(b), gocpp::Sizeof<bucket>()));
         if(b->nstk > maxStack)
@@ -401,7 +401,7 @@ namespace golang::runtime
     }
 
     // mp returns the memRecord associated with the memProfile bucket b.
-    struct memRecord* rec::mp(struct bucket* b)
+    struct memRecord* rec::mp(golang::runtime::bucket* b)
     {
         if(b->typ != memProfile)
         {
@@ -412,7 +412,7 @@ namespace golang::runtime
     }
 
     // bp returns the blockRecord associated with the blockProfile bucket b.
-    struct blockRecord* rec::bp(struct bucket* b)
+    struct blockRecord* rec::bp(golang::runtime::bucket* b)
     {
         if(b->typ != blockProfile && b->typ != mutexProfile)
         {
@@ -782,7 +782,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::begin(struct lockTimer* lt)
+    void rec::begin(golang::runtime::lockTimer* lt)
     {
         auto rate = int64_t(atomic::Load64(& mutexprofilerate));
         lt->timeRate = gTrackingPeriod;
@@ -800,7 +800,7 @@ namespace golang::runtime
         }
     }
 
-    void rec::end(struct lockTimer* lt)
+    void rec::end(golang::runtime::lockTimer* lt)
     {
         auto gp = getg();
         if(lt->timeStart != 0)
@@ -859,7 +859,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::recordLock(struct mLockProfile* prof, int64_t cycles, struct mutex* l)
+    void rec::recordLock(golang::runtime::mLockProfile* prof, int64_t cycles, struct mutex* l)
     {
         if(cycles <= 0)
         {
@@ -896,7 +896,7 @@ namespace golang::runtime
     // From unlock2, we might not be holding a p in this code.
     //
     //go:nowritebarrierrec
-    void rec::recordUnlock(struct mLockProfile* prof, struct mutex* l)
+    void rec::recordUnlock(golang::runtime::mLockProfile* prof, struct mutex* l)
     {
         if(uintptr_t(unsafe::Pointer(l)) == prof->pending)
         {
@@ -908,7 +908,7 @@ namespace golang::runtime
         }
     }
 
-    void rec::captureStack(struct mLockProfile* prof)
+    void rec::captureStack(golang::runtime::mLockProfile* prof)
     {
         auto skip = 3;
         if(staticLockRanking)
@@ -938,7 +938,7 @@ namespace golang::runtime
         }
     }
 
-    void rec::store(struct mLockProfile* prof)
+    void rec::store(golang::runtime::mLockProfile* prof)
     {
         auto mp = acquirem();
         prof->disabled = true;
@@ -1053,7 +1053,7 @@ namespace golang::runtime
 
     // Stack returns the stack trace associated with the record,
     // a prefix of r.Stack0.
-    gocpp::slice<uintptr_t> rec::Stack(struct StackRecord* r)
+    gocpp::slice<uintptr_t> rec::Stack(golang::runtime::StackRecord* r)
     {
         for(auto [i, v] : r->Stack0)
         {
@@ -1128,20 +1128,20 @@ namespace golang::runtime
     }
 
     // InUseBytes returns the number of bytes in use (AllocBytes - FreeBytes).
-    int64_t rec::InUseBytes(struct MemProfileRecord* r)
+    int64_t rec::InUseBytes(golang::runtime::MemProfileRecord* r)
     {
         return r->AllocBytes - r->FreeBytes;
     }
 
     // InUseObjects returns the number of objects in use (AllocObjects - FreeObjects).
-    int64_t rec::InUseObjects(struct MemProfileRecord* r)
+    int64_t rec::InUseObjects(golang::runtime::MemProfileRecord* r)
     {
         return r->AllocObjects - r->FreeObjects;
     }
 
     // Stack returns the stack trace associated with the record,
     // a prefix of r.Stack0.
-    gocpp::slice<uintptr_t> rec::Stack(struct MemProfileRecord* r)
+    gocpp::slice<uintptr_t> rec::Stack(golang::runtime::MemProfileRecord* r)
     {
         for(auto [i, v] : r->Stack0)
         {

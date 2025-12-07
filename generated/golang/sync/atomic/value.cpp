@@ -90,7 +90,7 @@ namespace golang::atomic
 
     // Load returns the value set by the most recent Store.
     // It returns nil if there has been no call to Store for this Value.
-    go_any rec::Load(struct Value* v)
+    go_any rec::Load(golang::atomic::Value* v)
     {
         go_any val;
         auto vp = (efaceWords*)(unsafe::Pointer(v));
@@ -110,7 +110,7 @@ namespace golang::atomic
     // Store sets the value of the Value v to val.
     // All calls to Store for a given Value must use values of the same concrete type.
     // Store of an inconsistent type panics, as does Store(nil).
-    void rec::Store(struct Value* v, go_any val)
+    void rec::Store(golang::atomic::Value* v, go_any val)
     {
         if(val == nullptr)
         {
@@ -152,7 +152,7 @@ namespace golang::atomic
     //
     // All calls to Swap for a given Value must use values of the same concrete
     // type. Swap of an inconsistent type panics, as does Swap(nil).
-    go_any rec::Swap(struct Value* v, go_any go_new)
+    go_any rec::Swap(golang::atomic::Value* v, go_any go_new)
     {
         go_any old;
         if(go_new == nullptr)
@@ -196,7 +196,7 @@ namespace golang::atomic
     // All calls to CompareAndSwap for a given Value must use values of the same
     // concrete type. CompareAndSwap of an inconsistent type panics, as does
     // CompareAndSwap(old, nil).
-    bool rec::CompareAndSwap(struct Value* v, go_any old, go_any go_new)
+    bool rec::CompareAndSwap(golang::atomic::Value* v, go_any old, go_any go_new)
     {
         bool swapped;
         if(go_new == nullptr)

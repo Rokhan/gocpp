@@ -63,7 +63,7 @@ namespace golang::strings
 
     // Len returns the number of bytes of the unread portion of the
     // string.
-    int rec::Len(struct Reader* r)
+    int rec::Len(golang::strings::Reader* r)
     {
         if(r->i >= int64_t(len(r->s)))
         {
@@ -76,13 +76,13 @@ namespace golang::strings
     // Size is the number of bytes available for reading via [Reader.ReadAt].
     // The returned value is always the same and is not affected by calls
     // to any other method.
-    int64_t rec::Size(struct Reader* r)
+    int64_t rec::Size(golang::strings::Reader* r)
     {
         return int64_t(len(r->s));
     }
 
     // Read implements the [io.Reader] interface.
-    std::tuple<int, struct gocpp::error> rec::Read(struct Reader* r, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Read(golang::strings::Reader* r, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
@@ -97,7 +97,7 @@ namespace golang::strings
     }
 
     // ReadAt implements the [io.ReaderAt] interface.
-    std::tuple<int, struct gocpp::error> rec::ReadAt(struct Reader* r, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, struct gocpp::error> rec::ReadAt(golang::strings::Reader* r, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         struct gocpp::error err;
@@ -118,7 +118,7 @@ namespace golang::strings
     }
 
     // ReadByte implements the [io.ByteReader] interface.
-    std::tuple<unsigned char, struct gocpp::error> rec::ReadByte(struct Reader* r)
+    std::tuple<unsigned char, struct gocpp::error> rec::ReadByte(golang::strings::Reader* r)
     {
         r->prevRune = - 1;
         if(r->i >= int64_t(len(r->s)))
@@ -131,7 +131,7 @@ namespace golang::strings
     }
 
     // UnreadByte implements the [io.ByteScanner] interface.
-    struct gocpp::error rec::UnreadByte(struct Reader* r)
+    struct gocpp::error rec::UnreadByte(golang::strings::Reader* r)
     {
         if(r->i <= 0)
         {
@@ -143,7 +143,7 @@ namespace golang::strings
     }
 
     // ReadRune implements the [io.RuneReader] interface.
-    std::tuple<gocpp::rune, int, struct gocpp::error> rec::ReadRune(struct Reader* r)
+    std::tuple<gocpp::rune, int, struct gocpp::error> rec::ReadRune(golang::strings::Reader* r)
     {
         gocpp::rune ch;
         int size;
@@ -165,7 +165,7 @@ namespace golang::strings
     }
 
     // UnreadRune implements the [io.RuneScanner] interface.
-    struct gocpp::error rec::UnreadRune(struct Reader* r)
+    struct gocpp::error rec::UnreadRune(golang::strings::Reader* r)
     {
         if(r->i <= 0)
         {
@@ -181,7 +181,7 @@ namespace golang::strings
     }
 
     // Seek implements the [io.Seeker] interface.
-    std::tuple<int64_t, struct gocpp::error> rec::Seek(struct Reader* r, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> rec::Seek(golang::strings::Reader* r, int64_t offset, int whence)
     {
         r->prevRune = - 1;
         int64_t abs = {};
@@ -217,7 +217,7 @@ namespace golang::strings
     }
 
     // WriteTo implements the [io.WriterTo] interface.
-    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Reader* r, io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(golang::strings::Reader* r, io::Writer w)
     {
         int64_t n;
         struct gocpp::error err;
@@ -243,7 +243,7 @@ namespace golang::strings
     }
 
     // Reset resets the [Reader] to be reading from s.
-    void rec::Reset(struct Reader* r, gocpp::string s)
+    void rec::Reset(golang::strings::Reader* r, gocpp::string s)
     {
         *r = Reader {s, 0, - 1};
     }

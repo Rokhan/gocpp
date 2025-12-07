@@ -721,7 +721,7 @@ namespace golang::runtime
     // ptrbit is less efficient than iterating directly over bitvector bits,
     // and should only be used in non-performance-critical code.
     // See adjustpointers for an example of a high-efficiency walk of a bitvector.
-    uint8_t rec::ptrbit(struct bitvector* bv, uintptr_t i)
+    uint8_t rec::ptrbit(golang::runtime::bitvector* bv, uintptr_t i)
     {
         auto b = *(addb(bv->bytedata, i / 8));
         return (b >> (i % 8)) & 1;
@@ -1009,8 +1009,8 @@ namespace golang::runtime
         }
         // Compute adjustment.
         adjustinfo adjinfo = {};
-        adjinfo->old = old;
-        adjinfo->delta = go_new.hi - old.hi;
+        adjinfo.old = old;
+        adjinfo.delta = go_new.hi - old.hi;
         auto ncopy = used;
         if(! gp->activeStackChans)
         {
@@ -1022,21 +1022,21 @@ namespace golang::runtime
         }
         else
         {
-            adjinfo->sghi = findsghi(gp, old);
+            adjinfo.sghi = findsghi(gp, old);
             ncopy -= syncadjustsudogs(gp, used, & adjinfo);
         }
         memmove(unsafe::Pointer(go_new.hi - ncopy), unsafe::Pointer(old.hi - ncopy), ncopy);
         adjustctxt(gp, & adjinfo);
         adjustdefers(gp, & adjinfo);
         adjustpanics(gp, & adjinfo);
-        if(adjinfo->sghi != 0)
+        if(adjinfo.sghi != 0)
         {
-            adjinfo->sghi += adjinfo->delta;
+            adjinfo.sghi += adjinfo.delta;
         }
         gp->stack = go_new;
         gp->stackguard0 = go_new.lo + stackGuard;
         gp->sched.sp = go_new.hi - used;
-        gp->stktopsp += adjinfo->delta;
+        gp->stktopsp += adjinfo.delta;
         // Adjust pointers in the new stack.
         unwinder u = {};
         for(rec::init(gocpp::recv(u), gp, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
@@ -1357,12 +1357,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool rec::useGCProg(struct stackObjectRecord* r)
+    bool rec::useGCProg(golang::runtime::stackObjectRecord* r)
     {
         return r->_ptrdata < 0;
     }
 
-    uintptr_t rec::ptrdata(struct stackObjectRecord* r)
+    uintptr_t rec::ptrdata(golang::runtime::stackObjectRecord* r)
     {
         auto x = r->_ptrdata;
         if(x < 0)
@@ -1373,7 +1373,7 @@ namespace golang::runtime
     }
 
     // gcdata returns pointer map or GC prog of the type.
-    unsigned char* rec::gcdata(struct stackObjectRecord* r)
+    unsigned char* rec::gcdata(golang::runtime::stackObjectRecord* r)
     {
         auto ptr = uintptr_t(unsafe::Pointer(r));
         moduledata* mod = {};

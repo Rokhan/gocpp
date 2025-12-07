@@ -889,7 +889,7 @@ namespace golang::runtime
 
 
     // start starts a new traceAdvancer.
-    void rec::start(struct traceAdvancerState* s)
+    void rec::start(golang::runtime::traceAdvancerState* s)
     {
         s->done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_3>>());
         s->timer = newWakeableSleep();
@@ -905,7 +905,7 @@ namespace golang::runtime
     }
 
     // stop stops a traceAdvancer and blocks until it exits.
-    void rec::stop(struct traceAdvancerState* s)
+    void rec::stop(golang::runtime::traceAdvancerState* s)
     {
         rec::wake(gocpp::recv(s->timer));
         s->done.recv();
@@ -1034,7 +1034,7 @@ namespace golang::runtime
     //
     // Must not be called by more than one goroutine at a time and
     // must not be called concurrently with close.
-    void rec::sleep(struct wakeableSleep* s, int64_t ns)
+    void rec::sleep(golang::runtime::wakeableSleep* s, int64_t ns)
     {
         resetTimer(s->timer, nanotime() + ns);
         lock(& s->lock);
@@ -1087,7 +1087,7 @@ namespace golang::runtime
     // wake awakens any goroutine sleeping on the timer.
     //
     // Safe for concurrent use with all other methods.
-    void rec::wake(struct wakeableSleep* s)
+    void rec::wake(golang::runtime::wakeableSleep* s)
     {
         lock(& s->lock);
         if(raceenabled)
@@ -1124,7 +1124,7 @@ namespace golang::runtime
     //
     // It must only be called once no goroutine is sleeping on the
     // timer *and* nothing else will call wake concurrently.
-    void rec::close(struct wakeableSleep* s)
+    void rec::close(golang::runtime::wakeableSleep* s)
     {
         lock(& s->lock);
         if(raceenabled)

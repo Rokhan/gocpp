@@ -173,16 +173,16 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct bmap* overflow(struct bmap* b, golang::runtime::maptype* t);
-        void setoverflow(struct bmap* b, golang::runtime::maptype* t, struct bmap* ovf);
-        unsafe::Pointer keys(struct bmap* b);
-        void incrnoverflow(struct hmap* h);
-        struct bmap* newoverflow(struct hmap* h, golang::runtime::maptype* t, struct bmap* b);
-        void createOverflow(struct hmap* h);
-        bool growing(struct hmap* h);
-        bool sameSizeGrow(struct hmap* h);
-        uintptr_t noldbuckets(struct hmap* h);
-        uintptr_t oldbucketmask(struct hmap* h);
+        struct bmap* overflow(golang::runtime::bmap* b, golang::runtime::maptype* t);
+        void setoverflow(golang::runtime::bmap* b, golang::runtime::maptype* t, struct bmap* ovf);
+        unsafe::Pointer keys(golang::runtime::bmap* b);
+        void incrnoverflow(golang::runtime::hmap* h);
+        struct bmap* newoverflow(golang::runtime::hmap* h, golang::runtime::maptype* t, struct bmap* b);
+        void createOverflow(golang::runtime::hmap* h);
+        bool growing(golang::runtime::hmap* h);
+        bool sameSizeGrow(golang::runtime::hmap* h);
+        uintptr_t noldbuckets(golang::runtime::hmap* h);
+        uintptr_t oldbucketmask(golang::runtime::hmap* h);
     }
 }
 

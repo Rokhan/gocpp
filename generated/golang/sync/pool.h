@@ -69,7 +69,7 @@ namespace golang::sync
     struct poolLocal
     {
         poolLocalInternal poolLocalInternal;
-        gocpp::array<unsigned char, 128 - gocpp::Sizeof<sync::poolLocalInternal>() % 128> pad;
+        gocpp::array<unsigned char, 128 - gocpp::Sizeof<golang::sync::poolLocalInternal>() % 128> pad;
 
         using isGoStruct = void;
 
@@ -88,11 +88,11 @@ namespace golang::sync
 
     namespace rec
     {
-        void Put(struct Pool* p, go_any x);
-        go_any Get(struct Pool* p);
-        go_any getSlow(struct Pool* p, int pid);
-        std::tuple<struct poolLocal*, int> pin(struct Pool* p);
-        std::tuple<struct poolLocal*, int> pinSlow(struct Pool* p);
+        void Put(golang::sync::Pool* p, go_any x);
+        go_any Get(golang::sync::Pool* p);
+        go_any getSlow(golang::sync::Pool* p, int pid);
+        std::tuple<struct poolLocal*, int> pin(golang::sync::Pool* p);
+        std::tuple<struct poolLocal*, int> pinSlow(golang::sync::Pool* p);
     }
 }
 

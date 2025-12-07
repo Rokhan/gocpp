@@ -65,7 +65,7 @@ namespace golang::runtime
     // sysInit performs architecture-dependent initialization of fields
     // in pageAlloc. pageAlloc should be uninitialized except for sysStat
     // if any runtime statistic should be updated.
-    void rec::sysInit(struct pageAlloc* p, bool test)
+    void rec::sysInit(golang::runtime::pageAlloc* p, bool test)
     {
         for(auto [l, shift] : levelShift)
         {
@@ -91,7 +91,7 @@ namespace golang::runtime
     // Both must be aligned to pallocChunkBytes.
     //
     // The caller must update p.start and p.end after calling sysGrow.
-    void rec::sysGrow(struct pageAlloc* p, uintptr_t base, uintptr_t limit)
+    void rec::sysGrow(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t limit)
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
@@ -146,7 +146,7 @@ namespace golang::runtime
     // sysGrow increases the index's backing store in response to a heap growth.
     //
     // Returns the amount of memory added to sysStat.
-    uintptr_t rec::sysGrow(struct scavengeIndex* s, uintptr_t base, uintptr_t limit, golang::runtime::sysMemStat* sysStat)
+    uintptr_t rec::sysGrow(golang::runtime::scavengeIndex* s, uintptr_t base, uintptr_t limit, golang::runtime::sysMemStat* sysStat)
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
@@ -189,7 +189,7 @@ namespace golang::runtime
     // sysInit initializes the scavengeIndex' chunks array.
     //
     // Returns the amount of memory added to sysStat.
-    uintptr_t rec::sysInit(struct scavengeIndex* s, bool test, golang::runtime::sysMemStat* sysStat)
+    uintptr_t rec::sysInit(golang::runtime::scavengeIndex* s, bool test, golang::runtime::sysMemStat* sysStat)
     {
         auto n = uintptr_t(1 << heapAddrBits) / pallocChunkBytes;
         auto nbytes = n * gocpp::Sizeof<atomicScavChunkData>();

@@ -96,11 +96,11 @@ namespace golang::flate
 
     namespace rec
     {
-        void set(struct hcode* h, uint16_t code, uint16_t length);
-        int bitLength(struct huffmanEncoder* h, gocpp::slice<int32_t> freq);
-        gocpp::slice<int32_t> bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
-        void assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
-        void generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);
+        void set(golang::flate::hcode* h, uint16_t code, uint16_t length);
+        int bitLength(golang::flate::huffmanEncoder* h, gocpp::slice<int32_t> freq);
+        gocpp::slice<int32_t> bitCounts(golang::flate::huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
+        void assignEncodingAndSize(golang::flate::huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
+        void generate(golang::flate::huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);
         void sort(golang::flate::byLiteral* s, gocpp::slice<literalNode> a);
         int Len(golang::flate::byLiteral s);
         bool Less(golang::flate::byLiteral s, int i, int j);

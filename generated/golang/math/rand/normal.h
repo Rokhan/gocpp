@@ -20,7 +20,7 @@ namespace golang::rand
 
     namespace rec
     {
-        double NormFloat64(struct Rand* r);
+        double NormFloat64(golang::rand::Rand* r);
     }
 }
 

@@ -41,11 +41,11 @@ namespace golang::runtime
 
     namespace rec
     {
-        bool empty(struct pageCache* c);
-        std::tuple<uintptr_t, uintptr_t> alloc(struct pageCache* c, uintptr_t npages);
-        std::tuple<uintptr_t, uintptr_t> allocN(struct pageCache* c, uintptr_t npages);
-        void flush(struct pageCache* c, struct pageAlloc* p);
-        struct pageCache allocToCache(struct pageAlloc* p);
+        bool empty(golang::runtime::pageCache* c);
+        std::tuple<uintptr_t, uintptr_t> alloc(golang::runtime::pageCache* c, uintptr_t npages);
+        std::tuple<uintptr_t, uintptr_t> allocN(golang::runtime::pageCache* c, uintptr_t npages);
+        void flush(golang::runtime::pageCache* c, struct pageAlloc* p);
+        struct pageCache allocToCache(golang::runtime::pageAlloc* p);
     }
 }
 

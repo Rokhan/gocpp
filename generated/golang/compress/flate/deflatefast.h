@@ -56,10 +56,10 @@ namespace golang::flate
 
     namespace rec
     {
-        gocpp::slice<flate::token> encode(struct deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src);
-        int32_t matchLen(struct deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src);
-        void reset(struct deflateFast* e);
-        void shiftOffsets(struct deflateFast* e);
+        gocpp::slice<flate::token> encode(golang::flate::deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src);
+        int32_t matchLen(golang::flate::deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src);
+        void reset(golang::flate::deflateFast* e);
+        void shiftOffsets(golang::flate::deflateFast* e);
     }
 }
 

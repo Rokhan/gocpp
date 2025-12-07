@@ -94,42 +94,42 @@ namespace golang::poll
 
     namespace rec
     {
-        void InitBuf(struct operation* o, gocpp::slice<unsigned char> buf);
-        void InitBufs(struct operation* o, gocpp::slice<gocpp::slice<unsigned char>>* buf);
-        void ClearBufs(struct operation* o);
-        void InitMsg(struct operation* o, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob);
-        std::tuple<gocpp::string, struct gocpp::error> Init(struct FD* fd, gocpp::string net, bool pollable);
-        struct gocpp::error destroy(struct FD* fd);
-        struct gocpp::error Close(struct FD* fd);
-        std::tuple<int, struct gocpp::error> Read(struct FD* fd, gocpp::slice<unsigned char> buf);
-        std::tuple<int, struct gocpp::error> readConsole(struct FD* fd, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> Pread(struct FD* fd, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int, syscall::Sockaddr, struct gocpp::error> ReadFrom(struct FD* fd, gocpp::slice<unsigned char> buf);
-        std::tuple<int, struct gocpp::error> ReadFromInet4(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
-        std::tuple<int, struct gocpp::error> ReadFromInet6(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
-        std::tuple<int, struct gocpp::error> Write(struct FD* fd, gocpp::slice<unsigned char> buf);
-        std::tuple<int, struct gocpp::error> writeConsole(struct FD* fd, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> Pwrite(struct FD* fd, gocpp::slice<unsigned char> buf, int64_t off);
-        std::tuple<int64_t, struct gocpp::error> Writev(struct FD* fd, gocpp::slice<gocpp::slice<unsigned char>>* buf);
-        std::tuple<int, struct gocpp::error> WriteTo(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::Sockaddr sa);
-        std::tuple<int, struct gocpp::error> WriteToInet4(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
-        std::tuple<int, struct gocpp::error> WriteToInet6(struct FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
-        struct gocpp::error ConnectEx(struct FD* fd, syscall::Sockaddr ra);
-        std::tuple<gocpp::string, struct gocpp::error> acceptOne(struct FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, struct operation* o);
-        std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, gocpp::string, struct gocpp::error> Accept(struct FD* fd, std::function<std::tuple<syscall::Handle, struct gocpp::error> ()> sysSocket);
-        std::tuple<int64_t, struct gocpp::error> Seek(struct FD* fd, int64_t offset, int whence);
-        struct gocpp::error Fchmod(struct FD* fd, uint32_t mode);
-        struct gocpp::error Fchdir(struct FD* fd);
-        std::tuple<uint32_t, struct gocpp::error> GetFileType(struct FD* fd);
-        struct gocpp::error GetFileInformationByHandle(struct FD* fd, syscall::ByHandleFileInformation* data);
-        struct gocpp::error RawRead(struct FD* fd, std::function<bool (uintptr_t _1)> f);
-        struct gocpp::error RawWrite(struct FD* fd, std::function<bool (uintptr_t _1)> f);
-        std::tuple<int, int, int, syscall::Sockaddr, struct gocpp::error> ReadMsg(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags);
-        std::tuple<int, int, int, struct gocpp::error> ReadMsgInet4(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet4* sa4);
-        std::tuple<int, int, int, struct gocpp::error> ReadMsgInet6(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet6* sa6);
-        std::tuple<int, int, struct gocpp::error> WriteMsg(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::Sockaddr sa);
-        std::tuple<int, int, struct gocpp::error> WriteMsgInet4(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet4* sa);
-        std::tuple<int, int, struct gocpp::error> WriteMsgInet6(struct FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet6* sa);
+        void InitBuf(golang::poll::operation* o, gocpp::slice<unsigned char> buf);
+        void InitBufs(golang::poll::operation* o, gocpp::slice<gocpp::slice<unsigned char>>* buf);
+        void ClearBufs(golang::poll::operation* o);
+        void InitMsg(golang::poll::operation* o, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob);
+        std::tuple<gocpp::string, struct gocpp::error> Init(golang::poll::FD* fd, gocpp::string net, bool pollable);
+        struct gocpp::error destroy(golang::poll::FD* fd);
+        struct gocpp::error Close(golang::poll::FD* fd);
+        std::tuple<int, struct gocpp::error> Read(golang::poll::FD* fd, gocpp::slice<unsigned char> buf);
+        std::tuple<int, struct gocpp::error> readConsole(golang::poll::FD* fd, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> Pread(golang::poll::FD* fd, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, syscall::Sockaddr, struct gocpp::error> ReadFrom(golang::poll::FD* fd, gocpp::slice<unsigned char> buf);
+        std::tuple<int, struct gocpp::error> ReadFromInet4(golang::poll::FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
+        std::tuple<int, struct gocpp::error> ReadFromInet6(golang::poll::FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
+        std::tuple<int, struct gocpp::error> Write(golang::poll::FD* fd, gocpp::slice<unsigned char> buf);
+        std::tuple<int, struct gocpp::error> writeConsole(golang::poll::FD* fd, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> Pwrite(golang::poll::FD* fd, gocpp::slice<unsigned char> buf, int64_t off);
+        std::tuple<int64_t, struct gocpp::error> Writev(golang::poll::FD* fd, gocpp::slice<gocpp::slice<unsigned char>>* buf);
+        std::tuple<int, struct gocpp::error> WriteTo(golang::poll::FD* fd, gocpp::slice<unsigned char> buf, syscall::Sockaddr sa);
+        std::tuple<int, struct gocpp::error> WriteToInet4(golang::poll::FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet4* sa4);
+        std::tuple<int, struct gocpp::error> WriteToInet6(golang::poll::FD* fd, gocpp::slice<unsigned char> buf, syscall::SockaddrInet6* sa6);
+        struct gocpp::error ConnectEx(golang::poll::FD* fd, syscall::Sockaddr ra);
+        std::tuple<gocpp::string, struct gocpp::error> acceptOne(golang::poll::FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, struct operation* o);
+        std::tuple<syscall::Handle, gocpp::slice<syscall::RawSockaddrAny>, uint32_t, gocpp::string, struct gocpp::error> Accept(golang::poll::FD* fd, std::function<std::tuple<syscall::Handle, struct gocpp::error> ()> sysSocket);
+        std::tuple<int64_t, struct gocpp::error> Seek(golang::poll::FD* fd, int64_t offset, int whence);
+        struct gocpp::error Fchmod(golang::poll::FD* fd, uint32_t mode);
+        struct gocpp::error Fchdir(golang::poll::FD* fd);
+        std::tuple<uint32_t, struct gocpp::error> GetFileType(golang::poll::FD* fd);
+        struct gocpp::error GetFileInformationByHandle(golang::poll::FD* fd, syscall::ByHandleFileInformation* data);
+        struct gocpp::error RawRead(golang::poll::FD* fd, std::function<bool (uintptr_t _1)> f);
+        struct gocpp::error RawWrite(golang::poll::FD* fd, std::function<bool (uintptr_t _1)> f);
+        std::tuple<int, int, int, syscall::Sockaddr, struct gocpp::error> ReadMsg(golang::poll::FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags);
+        std::tuple<int, int, int, struct gocpp::error> ReadMsgInet4(golang::poll::FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet4* sa4);
+        std::tuple<int, int, int, struct gocpp::error> ReadMsgInet6(golang::poll::FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int flags, syscall::SockaddrInet6* sa6);
+        std::tuple<int, int, struct gocpp::error> WriteMsg(golang::poll::FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::Sockaddr sa);
+        std::tuple<int, int, struct gocpp::error> WriteMsgInet4(golang::poll::FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet4* sa);
+        std::tuple<int, int, struct gocpp::error> WriteMsgInet6(golang::poll::FD* fd, gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, syscall::SockaddrInet6* sa);
     }
 }
 

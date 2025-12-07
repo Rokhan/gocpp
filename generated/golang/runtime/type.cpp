@@ -73,7 +73,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::string(struct rtype t)
+    gocpp::string rec::string(golang::runtime::rtype t)
     {
         auto s = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), t.Str)));
         if(t.TFlag & abi::TFlagExtraStar != 0)
@@ -83,12 +83,12 @@ namespace golang::runtime
         return s;
     }
 
-    runtime::uncommontype* rec::uncommon(struct rtype t)
+    runtime::uncommontype* rec::uncommon(golang::runtime::rtype t)
     {
         return rec::Uncommon(gocpp::recv(t));
     }
 
-    gocpp::string rec::name(struct rtype t)
+    gocpp::string rec::name(golang::runtime::rtype t)
     {
         if(t.TFlag & abi::TFlagNamed == 0)
         {
@@ -124,7 +124,7 @@ namespace golang::runtime
     // available. This is not the same as the reflect package's PkgPath
     // method, in that it returns the package path for struct and interface
     // types, not just named types.
-    gocpp::string rec::pkgpath(struct rtype t)
+    gocpp::string rec::pkgpath(golang::runtime::rtype t)
     {
         if(auto u = rec::uncommon(gocpp::recv(t)); u != nullptr)
         {
@@ -270,7 +270,7 @@ namespace golang::runtime
         });
     }
 
-    runtime::name rec::nameOff(struct rtype t, golang::runtime::nameOff off)
+    runtime::name rec::nameOff(golang::runtime::rtype t, golang::runtime::nameOff off)
     {
         return resolveNameOff(unsafe::Pointer(t.Type), off);
     }
@@ -320,12 +320,12 @@ namespace golang::runtime
         return (runtime::_type*)(unsafe::Pointer(res));
     }
 
-    runtime::_type* rec::typeOff(struct rtype t, golang::runtime::typeOff off)
+    runtime::_type* rec::typeOff(golang::runtime::rtype t, golang::runtime::typeOff off)
     {
         return resolveTypeOff(unsafe::Pointer(t.Type), off);
     }
 
-    unsafe::Pointer rec::textOff(struct rtype t, golang::runtime::textOff off)
+    unsafe::Pointer rec::textOff(golang::runtime::rtype t, golang::runtime::textOff off)
     {
         if(off == - 1)
         {

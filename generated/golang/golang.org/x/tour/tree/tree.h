@@ -35,7 +35,7 @@ namespace golang::tree
 
     namespace rec
     {
-        gocpp::string String(struct Tree* t);
+        gocpp::string String(golang::tree::Tree* t);
     }
 }
 

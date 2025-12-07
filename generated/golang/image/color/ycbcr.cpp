@@ -130,7 +130,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct YCbCr c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::YCbCr c)
     {
         auto yy1 = int32_t(c.Y) * 0x10101;
         auto cb1 = int32_t(c.Cb) - 128;
@@ -212,7 +212,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct NYCbCrA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::NYCbCrA c)
     {
         auto yy1 = int32_t(c.Y) * 0x10101;
         auto cb1 = int32_t(c.Cb) - 128;
@@ -367,7 +367,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct CMYK c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::CMYK c)
     {
         auto w = 0xffff - uint32_t(c.K) * 0x101;
         auto r = (0xffff - uint32_t(c.C) * 0x101) * w / 0xffff;

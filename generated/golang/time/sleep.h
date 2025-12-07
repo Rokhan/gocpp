@@ -68,8 +68,8 @@ namespace golang::time
 
     namespace rec
     {
-        bool Stop(struct Timer* t);
-        bool Reset(struct Timer* t, golang::time::Duration d);
+        bool Stop(golang::time::Timer* t);
+        bool Reset(golang::time::Timer* t, golang::time::Duration d);
     }
 }
 

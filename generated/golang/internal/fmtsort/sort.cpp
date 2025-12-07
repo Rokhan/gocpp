@@ -80,17 +80,17 @@ namespace golang::fmtsort
         return value.PrintTo(os);
     }
 
-    int rec::Len(struct SortedMap* o)
+    int rec::Len(golang::fmtsort::SortedMap* o)
     {
         return len(o->Key);
     }
 
-    bool rec::Less(struct SortedMap* o, int i, int j)
+    bool rec::Less(golang::fmtsort::SortedMap* o, int i, int j)
     {
         return compare(o->Key[i], o->Key[j]) < 0;
     }
 
-    void rec::Swap(struct SortedMap* o, int i, int j)
+    void rec::Swap(golang::fmtsort::SortedMap* o, int i, int j)
     {
         std::tie(o->Key[i], o->Key[j]) = std::tuple{o->Key[j], o->Key[i]};
         std::tie(o->Value[i], o->Value[j]) = std::tuple{o->Value[j], o->Value[i]};

@@ -126,7 +126,7 @@ namespace golang::runtime
     }
 
     // argBytes returns the argument frame size for a call to frame.fn.
-    uintptr_t rec::argBytes(struct stkframe* frame)
+    uintptr_t rec::argBytes(golang::runtime::stkframe* frame)
     {
         if(frame->fn.args != abi::ArgsSizeUnknown)
         {
@@ -148,7 +148,7 @@ namespace golang::runtime
     //
     // hasReflectStackObj indicates that this frame also has a reflect
     // function stack object, which the caller must synthesize.
-    std::tuple<struct bitvector, bool> rec::argMapInternal(struct stkframe* frame)
+    std::tuple<struct bitvector, bool> rec::argMapInternal(golang::runtime::stkframe* frame)
     {
         struct bitvector argMap;
         bool hasReflectStackObj;
@@ -208,7 +208,7 @@ namespace golang::runtime
 
     // getStackMap returns the locals and arguments live pointer maps, and
     // stack object list for frame.
-    std::tuple<struct bitvector, struct bitvector, gocpp::slice<stackObjectRecord>> rec::getStackMap(struct stkframe* frame, bool debug)
+    std::tuple<struct bitvector, struct bitvector, gocpp::slice<stackObjectRecord>> rec::getStackMap(golang::runtime::stkframe* frame, bool debug)
     {
         struct bitvector locals;
         struct bitvector args;

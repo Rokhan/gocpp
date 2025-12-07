@@ -62,8 +62,8 @@ namespace golang::runtime
     std::tuple<int, struct itab*> interfaceSwitch(abi::InterfaceSwitch* s, golang::runtime::_type* t);
     abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, golang::runtime::_type* typ, int case_, struct itab* tab);
     extern abi::InterfaceSwitchCache emptyInterfaceSwitchCache;
-    void reflect_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, runtime::iface* dst);
-    void reflectlite_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, runtime::iface* dst);
+    void reflect_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst);
+    void reflectlite_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst);
     void iterate_itabs(std::function<void (struct itab* _1)> fn);
     extern gocpp::array<uint64_t, 256> staticuint64s;
     void unreachableMethod();
@@ -77,9 +77,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct itab* find(struct itabTableType* t, golang::runtime::interfacetype* inter, golang::runtime::_type* typ);
-        void add(struct itabTableType* t, struct itab* m);
-        gocpp::string init(struct itab* m);
+        struct itab* find(golang::runtime::itabTableType* t, golang::runtime::interfacetype* inter, golang::runtime::_type* typ);
+        void add(golang::runtime::itabTableType* t, struct itab* m);
+        gocpp::string init(golang::runtime::itab* m);
     }
 }
 

@@ -114,14 +114,14 @@ namespace golang::runtime
     }
 
     // next is a type-safe wrapper around link.
-    struct traceMapNode* rec::next(struct traceMapNode* n)
+    struct traceMapNode* rec::next(golang::runtime::traceMapNode* n)
     {
         return (traceMapNode*)(rec::Load(gocpp::recv(n->link)));
     }
 
     // stealID steals an ID from the table, ensuring that it will not
     // appear in the table anymore.
-    uint64_t rec::stealID(struct traceMap* tab)
+    uint64_t rec::stealID(golang::runtime::traceMap* tab)
     {
         return rec::Add(gocpp::recv(tab->seq), 1);
     }
@@ -132,7 +132,7 @@ namespace golang::runtime
     //
     // Returns a unique ID for the data and whether this is the first time
     // the data has been added to the map.
-    std::tuple<uint64_t, bool> rec::put(struct traceMap* tab, unsafe::Pointer data, uintptr_t size)
+    std::tuple<uint64_t, bool> rec::put(golang::runtime::traceMap* tab, unsafe::Pointer data, uintptr_t size)
     {
         if(size == 0)
         {
@@ -169,7 +169,7 @@ namespace golang::runtime
     // find looks up data in the table, assuming hash is a hash of data.
     //
     // Returns 0 if the data is not found, and the unique ID for it if it is.
-    uint64_t rec::find(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash)
+    uint64_t rec::find(golang::runtime::traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash)
     {
         auto part = int(hash % uintptr_t(len(tab->tab)));
         for(auto vd = rec::bucket(gocpp::recv(tab), part); vd != nullptr; vd = rec::next(gocpp::recv(vd)))
@@ -186,12 +186,12 @@ namespace golang::runtime
     }
 
     // bucket is a type-safe wrapper for looking up a value in tab.tab.
-    struct traceMapNode* rec::bucket(struct traceMap* tab, int part)
+    struct traceMapNode* rec::bucket(golang::runtime::traceMap* tab, int part)
     {
         return (traceMapNode*)(rec::Load(gocpp::recv(tab->tab[part])));
     }
 
-    struct traceMapNode* rec::newTraceMapNode(struct traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash, uint64_t id)
+    struct traceMapNode* rec::newTraceMapNode(golang::runtime::traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash, uint64_t id)
     {
         auto sl = gocpp::Init<notInHeapSlice>([=](auto& x) {
             x.array = rec::alloc(gocpp::recv(tab->mem), size);
@@ -211,7 +211,7 @@ namespace golang::runtime
     // tab.lock must be held. Must run on the system stack because of this.
     //
     //go:systemstack
-    void rec::reset(struct traceMap* tab)
+    void rec::reset(golang::runtime::traceMap* tab)
     {
         assertLockHeld(& tab->lock);
         rec::drop(gocpp::recv(tab->mem));

@@ -66,14 +66,14 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct traceWriter writeGoStatus(struct traceWriter w, uint64_t goid, int64_t mid, golang::runtime::traceGoStatus status, bool markAssist);
-        struct traceWriter writeProcStatusForP(struct traceWriter w, struct p* pp, bool inSTW);
-        struct traceWriter writeProcStatus(struct traceWriter w, uint64_t pid, golang::runtime::traceProcStatus status, bool inSweep);
-        bool acquireStatus(struct traceSchedResourceState* r, uintptr_t gen);
-        void readyNextGen(struct traceSchedResourceState* r, uintptr_t gen);
-        bool statusWasTraced(struct traceSchedResourceState* r, uintptr_t gen);
-        void setStatusTraced(struct traceSchedResourceState* r, uintptr_t gen);
-        runtime::traceArg nextSeq(struct traceSchedResourceState* r, uintptr_t gen);
+        struct traceWriter writeGoStatus(golang::runtime::traceWriter w, uint64_t goid, int64_t mid, golang::runtime::traceGoStatus status, bool markAssist);
+        struct traceWriter writeProcStatusForP(golang::runtime::traceWriter w, struct p* pp, bool inSTW);
+        struct traceWriter writeProcStatus(golang::runtime::traceWriter w, uint64_t pid, golang::runtime::traceProcStatus status, bool inSweep);
+        bool acquireStatus(golang::runtime::traceSchedResourceState* r, uintptr_t gen);
+        void readyNextGen(golang::runtime::traceSchedResourceState* r, uintptr_t gen);
+        bool statusWasTraced(golang::runtime::traceSchedResourceState* r, uintptr_t gen);
+        void setStatusTraced(golang::runtime::traceSchedResourceState* r, uintptr_t gen);
+        runtime::traceArg nextSeq(golang::runtime::traceSchedResourceState* r, uintptr_t gen);
     }
 }
 

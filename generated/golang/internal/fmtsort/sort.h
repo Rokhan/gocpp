@@ -39,9 +39,9 @@ namespace golang::fmtsort
 
     namespace rec
     {
-        int Len(struct SortedMap* o);
-        bool Less(struct SortedMap* o, int i, int j);
-        void Swap(struct SortedMap* o, int i, int j);
+        int Len(golang::fmtsort::SortedMap* o);
+        bool Less(golang::fmtsort::SortedMap* o, int i, int j);
+        void Swap(golang::fmtsort::SortedMap* o, int i, int j);
     }
 }
 

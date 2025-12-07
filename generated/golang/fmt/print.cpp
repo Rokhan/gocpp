@@ -456,7 +456,7 @@ namespace golang::fmt
     }
 
     // free saves used pp structs in ppFree; avoids an allocation per invocation.
-    void rec::free(struct pp* p)
+    void rec::free(golang::fmt::pp* p)
     {
         if(cap(p->buf) > 64 * 1024)
         {
@@ -476,21 +476,21 @@ namespace golang::fmt
         rec::Put(gocpp::recv(ppFree), p);
     }
 
-    std::tuple<int, bool> rec::Width(struct pp* p)
+    std::tuple<int, bool> rec::Width(golang::fmt::pp* p)
     {
         int wid;
         bool ok;
         return {p->fmt.wid, p->fmt.widPresent};
     }
 
-    std::tuple<int, bool> rec::Precision(struct pp* p)
+    std::tuple<int, bool> rec::Precision(golang::fmt::pp* p)
     {
         int prec;
         bool ok;
         return {p->fmt.prec, p->fmt.precPresent};
     }
 
-    bool rec::Flag(struct pp* p, int b)
+    bool rec::Flag(golang::fmt::pp* p, int b)
     {
         //Go switch emulation
         {
@@ -525,7 +525,7 @@ namespace golang::fmt
 
     // Implement Write so we can call Fprintf on a pp (through State), for
     // recursive use in custom verbs.
-    std::tuple<int, struct gocpp::error> rec::Write(struct pp* p, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Write(golang::fmt::pp* p, gocpp::slice<unsigned char> b)
     {
         int ret;
         struct gocpp::error err;
@@ -535,7 +535,7 @@ namespace golang::fmt
 
     // Implement WriteString so that we can call io.WriteString
     // on a pp (through state), for efficiency.
-    std::tuple<int, struct gocpp::error> rec::WriteString(struct pp* p, gocpp::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(golang::fmt::pp* p, gocpp::string s)
     {
         int ret;
         struct gocpp::error err;
@@ -722,7 +722,7 @@ namespace golang::fmt
         return {num, isnum, newi};
     }
 
-    void rec::unknownType(struct pp* p, reflect::Value v)
+    void rec::unknownType(golang::fmt::pp* p, reflect::Value v)
     {
         if(! rec::IsValid(gocpp::recv(v)))
         {
@@ -734,7 +734,7 @@ namespace golang::fmt
         rec::writeByte(gocpp::recv(p->buf), '?');
     }
 
-    void rec::badVerb(struct pp* p, gocpp::rune verb)
+    void rec::badVerb(golang::fmt::pp* p, gocpp::rune verb)
     {
         p->erroring = true;
         rec::writeString(gocpp::recv(p->buf), percentBangString);
@@ -766,7 +766,7 @@ namespace golang::fmt
         p->erroring = false;
     }
 
-    void rec::fmtBool(struct pp* p, bool v, gocpp::rune verb)
+    void rec::fmtBool(golang::fmt::pp* p, bool v, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -789,7 +789,7 @@ namespace golang::fmt
 
     // fmt0x64 formats a uint64 in hexadecimal and prefixes it with 0x or
     // not, as requested, by temporarily setting the sharp flag.
-    void rec::fmt0x64(struct pp* p, uint64_t v, bool leading0x)
+    void rec::fmt0x64(golang::fmt::pp* p, uint64_t v, bool leading0x)
     {
         auto sharp = p->fmt.sharp;
         p->fmt.sharp = leading0x;
@@ -798,7 +798,7 @@ namespace golang::fmt
     }
 
     // fmtInteger formats a signed or unsigned integer.
-    void rec::fmtInteger(struct pp* p, uint64_t v, bool isSigned, gocpp::rune verb)
+    void rec::fmtInteger(golang::fmt::pp* p, uint64_t v, bool isSigned, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -860,7 +860,7 @@ namespace golang::fmt
 
     // fmtFloat formats a float. The default precision for each verb
     // is specified as last argument in the call to fmt_float.
-    void rec::fmtFloat(struct pp* p, double v, int size, gocpp::rune verb)
+    void rec::fmtFloat(golang::fmt::pp* p, double v, int size, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -906,7 +906,7 @@ namespace golang::fmt
     // fmtComplex formats a complex number v with
     // r = real(v) and j = imag(v) as (r+ji) using
     // fmtFloat for r and j formatting.
-    void rec::fmtComplex(struct pp* p, struct gocpp::complex128 v, int size, gocpp::rune verb)
+    void rec::fmtComplex(golang::fmt::pp* p, struct gocpp::complex128 v, int size, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -949,7 +949,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::fmtString(struct pp* p, gocpp::string v, gocpp::rune verb)
+    void rec::fmtString(golang::fmt::pp* p, gocpp::string v, gocpp::rune verb)
     {
         //Go switch emulation
         {
@@ -991,7 +991,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::fmtBytes(struct pp* p, gocpp::slice<unsigned char> v, gocpp::rune verb, gocpp::string typeString)
+    void rec::fmtBytes(golang::fmt::pp* p, gocpp::slice<unsigned char> v, gocpp::rune verb, gocpp::string typeString)
     {
         //Go switch emulation
         {
@@ -1059,7 +1059,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::fmtPointer(struct pp* p, reflect::Value value, gocpp::rune verb)
+    void rec::fmtPointer(golang::fmt::pp* p, reflect::Value value, gocpp::rune verb)
     {
         uintptr_t u = {};
         //Go switch emulation
@@ -1146,7 +1146,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::catchPanic(struct pp* p, go_any arg, gocpp::rune verb, gocpp::string method)
+    void rec::catchPanic(golang::fmt::pp* p, go_any arg, gocpp::rune verb, gocpp::string method)
     {
         if(auto err = gocpp::recover(); err != nullptr)
         {
@@ -1174,7 +1174,7 @@ namespace golang::fmt
         }
     }
 
-    bool rec::handleMethods(struct pp* p, gocpp::rune verb)
+    bool rec::handleMethods(golang::fmt::pp* p, gocpp::rune verb)
     {
         gocpp::Defer defer;
         try
@@ -1269,7 +1269,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::printArg(struct pp* p, go_any arg, gocpp::rune verb)
+    void rec::printArg(golang::fmt::pp* p, go_any arg, gocpp::rune verb)
     {
         p->arg = arg;
         p->value = reflect::Value {};
@@ -1474,7 +1474,7 @@ namespace golang::fmt
 
     // printValue is similar to printArg but starts with a reflect value, not an interface{} value.
     // It does not handle 'p' and 'T' verbs because these should have been already handled by printArg.
-    void rec::printValue(struct pp* p, reflect::Value value, gocpp::rune verb, int depth)
+    void rec::printValue(golang::fmt::pp* p, reflect::Value value, gocpp::rune verb, int depth)
     {
         if(depth > 0 && rec::IsValid(gocpp::recv(value)) && rec::CanInterface(gocpp::recv(value)))
         {
@@ -1880,7 +1880,7 @@ namespace golang::fmt
     // argNumber returns the next argument to evaluate, which is either the value of the passed-in
     // argNum or the value of the bracketed integer that begins format[i:]. It also returns
     // the new value of i, that is, the index of the next byte of the format to process.
-    std::tuple<int, int, bool> rec::argNumber(struct pp* p, int argNum, gocpp::string format, int i, int numArgs)
+    std::tuple<int, int, bool> rec::argNumber(golang::fmt::pp* p, int argNum, gocpp::string format, int i, int numArgs)
     {
         int newArgNum;
         int newi;
@@ -1899,21 +1899,21 @@ namespace golang::fmt
         return {argNum, i + wid, ok};
     }
 
-    void rec::badArgNum(struct pp* p, gocpp::rune verb)
+    void rec::badArgNum(golang::fmt::pp* p, gocpp::rune verb)
     {
         rec::writeString(gocpp::recv(p->buf), percentBangString);
         rec::writeRune(gocpp::recv(p->buf), verb);
         rec::writeString(gocpp::recv(p->buf), badIndexString);
     }
 
-    void rec::missingArg(struct pp* p, gocpp::rune verb)
+    void rec::missingArg(golang::fmt::pp* p, gocpp::rune verb)
     {
         rec::writeString(gocpp::recv(p->buf), percentBangString);
         rec::writeRune(gocpp::recv(p->buf), verb);
         rec::writeString(gocpp::recv(p->buf), missingString);
     }
 
-    void rec::doPrintf(struct pp* p, gocpp::string format, gocpp::slice<go_any> a)
+    void rec::doPrintf(golang::fmt::pp* p, gocpp::string format, gocpp::slice<go_any> a)
     {
         auto end = len(format);
         auto argNum = 0;
@@ -2143,7 +2143,7 @@ namespace golang::fmt
         }
     }
 
-    void rec::doPrint(struct pp* p, gocpp::slice<go_any> a)
+    void rec::doPrint(golang::fmt::pp* p, gocpp::slice<go_any> a)
     {
         auto prevString = false;
         for(auto [argNum, arg] : a)
@@ -2160,7 +2160,7 @@ namespace golang::fmt
 
     // doPrintln is like doPrint but always adds a space between arguments
     // and a newline after the last argument.
-    void rec::doPrintln(struct pp* p, gocpp::slice<go_any> a)
+    void rec::doPrintln(golang::fmt::pp* p, gocpp::slice<go_any> a)
     {
         for(auto [argNum, arg] : a)
         {

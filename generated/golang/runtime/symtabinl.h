@@ -78,12 +78,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct inlineFrame resolveInternal(struct inlineUnwinder* u, uintptr_t pc);
-        bool valid(struct inlineFrame uf);
-        struct inlineFrame next(struct inlineUnwinder* u, struct inlineFrame uf);
-        bool isInlined(struct inlineUnwinder* u, struct inlineFrame uf);
-        struct srcFunc srcFunc(struct inlineUnwinder* u, struct inlineFrame uf);
-        std::tuple<gocpp::string, int> fileLine(struct inlineUnwinder* u, struct inlineFrame uf);
+        struct inlineFrame resolveInternal(golang::runtime::inlineUnwinder* u, uintptr_t pc);
+        bool valid(golang::runtime::inlineFrame uf);
+        struct inlineFrame next(golang::runtime::inlineUnwinder* u, struct inlineFrame uf);
+        bool isInlined(golang::runtime::inlineUnwinder* u, struct inlineFrame uf);
+        struct srcFunc srcFunc(golang::runtime::inlineUnwinder* u, struct inlineFrame uf);
+        std::tuple<gocpp::string, int> fileLine(golang::runtime::inlineUnwinder* u, struct inlineFrame uf);
     }
 }
 

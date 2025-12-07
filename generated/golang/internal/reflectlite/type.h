@@ -160,7 +160,7 @@ namespace golang::reflectlite
     gocpp::string pkgPath(abi::Name n);
     unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
     unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off);
-    reflectlite::rtype toRType(abi::Type* t);
+    struct rtype toRType(abi::Type* t);
     abi::Type* elem(abi::Type* t);
     unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, gocpp::string whySafe);
     struct Type TypeOf(go_any i);
@@ -197,33 +197,33 @@ namespace golang::reflectlite
 
     namespace rec
     {
-        unsigned char* data(struct name n, int off, gocpp::string whySafe);
-        bool isExported(struct name n);
-        bool hasTag(struct name n);
-        bool embedded(struct name n);
-        std::tuple<int, int> readVarint(struct name n, int off);
-        gocpp::string name(struct name n);
-        gocpp::string tag(struct name n);
-        abi::Name nameOff(reflectlite::rtype t, golang::reflectlite::nameOff off);
-        abi::Type* typeOff(reflectlite::rtype t, golang::reflectlite::typeOff off);
-        reflectlite::uncommonType* uncommon(reflectlite::rtype t);
-        gocpp::string String(reflectlite::rtype t);
-        abi::Type* common(reflectlite::rtype t);
-        gocpp::slice<abi::Method> exportedMethods(reflectlite::rtype t);
-        int NumMethod(reflectlite::rtype t);
-        gocpp::string PkgPath(reflectlite::rtype t);
-        gocpp::string Name(reflectlite::rtype t);
-        struct Type Elem(reflectlite::rtype t);
-        struct Type In(reflectlite::rtype t, int i);
-        struct Type Key(reflectlite::rtype t);
-        int Len(reflectlite::rtype t);
-        int NumField(reflectlite::rtype t);
-        int NumIn(reflectlite::rtype t);
-        int NumOut(reflectlite::rtype t);
-        struct Type Out(reflectlite::rtype t, int i);
-        bool Implements(reflectlite::rtype t, struct Type u);
-        bool AssignableTo(reflectlite::rtype t, struct Type u);
-        bool Comparable(reflectlite::rtype t);
+        unsigned char* data(golang::reflectlite::name n, int off, gocpp::string whySafe);
+        bool isExported(golang::reflectlite::name n);
+        bool hasTag(golang::reflectlite::name n);
+        bool embedded(golang::reflectlite::name n);
+        std::tuple<int, int> readVarint(golang::reflectlite::name n, int off);
+        gocpp::string name(golang::reflectlite::name n);
+        gocpp::string tag(golang::reflectlite::name n);
+        abi::Name nameOff(golang::reflectlite::rtype t, golang::reflectlite::nameOff off);
+        abi::Type* typeOff(golang::reflectlite::rtype t, golang::reflectlite::typeOff off);
+        reflectlite::uncommonType* uncommon(golang::reflectlite::rtype t);
+        gocpp::string String(golang::reflectlite::rtype t);
+        abi::Type* common(golang::reflectlite::rtype t);
+        gocpp::slice<abi::Method> exportedMethods(golang::reflectlite::rtype t);
+        int NumMethod(golang::reflectlite::rtype t);
+        gocpp::string PkgPath(golang::reflectlite::rtype t);
+        gocpp::string Name(golang::reflectlite::rtype t);
+        struct Type Elem(golang::reflectlite::rtype t);
+        struct Type In(golang::reflectlite::rtype t, int i);
+        struct Type Key(golang::reflectlite::rtype t);
+        int Len(golang::reflectlite::rtype t);
+        int NumField(golang::reflectlite::rtype t);
+        int NumIn(golang::reflectlite::rtype t);
+        int NumOut(golang::reflectlite::rtype t);
+        struct Type Out(golang::reflectlite::rtype t, int i);
+        bool Implements(golang::reflectlite::rtype t, struct Type u);
+        bool AssignableTo(golang::reflectlite::rtype t, struct Type u);
+        bool Comparable(golang::reflectlite::rtype t);
     }
 }
 

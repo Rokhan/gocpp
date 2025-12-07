@@ -29,7 +29,7 @@ namespace golang::poll
 
     // eofError returns io.EOF when fd is available for reading end of
     // file.
-    struct gocpp::error rec::eofError(struct FD* fd, int n, struct gocpp::error err)
+    struct gocpp::error rec::eofError(golang::poll::FD* fd, int n, struct gocpp::error err)
     {
         if(n == 0 && err == nullptr && fd->ZeroReadIsEOF)
         {
@@ -39,7 +39,7 @@ namespace golang::poll
     }
 
     // Shutdown wraps syscall.Shutdown.
-    struct gocpp::error rec::Shutdown(struct FD* fd, int how)
+    struct gocpp::error rec::Shutdown(golang::poll::FD* fd, int how)
     {
         gocpp::Defer defer;
         try
@@ -58,7 +58,7 @@ namespace golang::poll
     }
 
     // Fchown wraps syscall.Fchown.
-    struct gocpp::error rec::Fchown(struct FD* fd, int uid, int gid)
+    struct gocpp::error rec::Fchown(golang::poll::FD* fd, int uid, int gid)
     {
         gocpp::Defer defer;
         try
@@ -80,7 +80,7 @@ namespace golang::poll
     }
 
     // Ftruncate wraps syscall.Ftruncate.
-    struct gocpp::error rec::Ftruncate(struct FD* fd, int64_t size)
+    struct gocpp::error rec::Ftruncate(golang::poll::FD* fd, int64_t size)
     {
         gocpp::Defer defer;
         try
@@ -103,7 +103,7 @@ namespace golang::poll
 
     // RawControl invokes the user-defined function f for a non-IO
     // operation.
-    struct gocpp::error rec::RawControl(struct FD* fd, std::function<void (uintptr_t _1)> f)
+    struct gocpp::error rec::RawControl(golang::poll::FD* fd, std::function<void (uintptr_t _1)> f)
     {
         gocpp::Defer defer;
         try

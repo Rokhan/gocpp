@@ -171,7 +171,7 @@ namespace golang::runtime
     // returned one.
     //
     // See the [Frames] example for idiomatic usage.
-    std::tuple<struct Frame, bool> rec::Next(struct Frames* ci)
+    std::tuple<struct Frame, bool> rec::Next(golang::runtime::Frames* ci)
     {
         struct Frame frame;
         bool more;
@@ -404,17 +404,17 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct _func* rec::raw(struct Func* f)
+    struct _func* rec::raw(golang::runtime::Func* f)
     {
         return (_func*)(unsafe::Pointer(f));
     }
 
-    struct funcInfo rec::funcInfo(struct Func* f)
+    struct funcInfo rec::funcInfo(golang::runtime::Func* f)
     {
         return rec::funcInfo(gocpp::recv(rec::raw(gocpp::recv(f))));
     }
 
-    struct funcInfo rec::funcInfo(struct _func* f)
+    struct funcInfo rec::funcInfo(golang::runtime::_func* f)
     {
         auto ptr = uintptr_t(unsafe::Pointer(f));
         moduledata* mod = {};
@@ -975,7 +975,7 @@ namespace golang::runtime
     // It is nosplit because it is part of the findfunc implementation.
     //
     //go:nosplit
-    uintptr_t rec::textAddr(struct moduledata* md, uint32_t off32)
+    uintptr_t rec::textAddr(golang::runtime::moduledata* md, uint32_t off32)
     {
         auto off = uintptr_t(off32);
         auto res = md->text + off;
@@ -1004,7 +1004,7 @@ namespace golang::runtime
     // It is nosplit because it is part of the findfunc implementation.
     //
     //go:nosplit
-    std::tuple<uint32_t, bool> rec::textOff(struct moduledata* md, uintptr_t pc)
+    std::tuple<uint32_t, bool> rec::textOff(golang::runtime::moduledata* md, uintptr_t pc)
     {
         auto res = uint32_t(pc - md->text);
         if(len(md->textsectmap) > 1)
@@ -1031,7 +1031,7 @@ namespace golang::runtime
     }
 
     // funcName returns the string at nameOff in the function name table.
-    gocpp::string rec::funcName(struct moduledata* md, int32_t nameOff)
+    gocpp::string rec::funcName(golang::runtime::moduledata* md, int32_t nameOff)
     {
         if(nameOff == 0)
         {
@@ -1072,7 +1072,7 @@ namespace golang::runtime
     }
 
     // Name returns the name of the function.
-    gocpp::string rec::Name(struct Func* f)
+    gocpp::string rec::Name(golang::runtime::Func* f)
     {
         if(f == nullptr)
         {
@@ -1088,7 +1088,7 @@ namespace golang::runtime
     }
 
     // Entry returns the entry address of the function.
-    uintptr_t rec::Entry(struct Func* f)
+    uintptr_t rec::Entry(golang::runtime::Func* f)
     {
         auto fn = rec::raw(gocpp::recv(f));
         if(rec::isInlined(gocpp::recv(fn)))
@@ -1103,7 +1103,7 @@ namespace golang::runtime
     // source code corresponding to the program counter pc.
     // The result will not be accurate if pc is not a program
     // counter within f.
-    std::tuple<gocpp::string, int> rec::FileLine(struct Func* f, uintptr_t pc)
+    std::tuple<gocpp::string, int> rec::FileLine(golang::runtime::Func* f, uintptr_t pc)
     {
         gocpp::string file;
         int line;
@@ -1120,7 +1120,7 @@ namespace golang::runtime
 
     // startLine returns the starting line number of the function. i.e., the line
     // number of the func keyword.
-    int32_t rec::startLine(struct Func* f)
+    int32_t rec::startLine(golang::runtime::Func* f)
     {
         auto fn = rec::raw(gocpp::recv(f));
         if(rec::isInlined(gocpp::recv(fn)))
@@ -1181,24 +1181,24 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool rec::valid(struct funcInfo f)
+    bool rec::valid(golang::runtime::funcInfo f)
     {
         return f._func != nullptr;
     }
 
-    struct Func* rec::_Func(struct funcInfo f)
+    struct Func* rec::_Func(golang::runtime::funcInfo f)
     {
         return (Func*)(unsafe::Pointer(f._func));
     }
 
     // isInlined reports whether f should be re-interpreted as a *funcinl.
-    bool rec::isInlined(struct _func* f)
+    bool rec::isInlined(golang::runtime::_func* f)
     {
         return f->entryOff == ~ uint32_t(0);
     }
 
     // entry returns the entry PC for f.
-    uintptr_t rec::entry(struct funcInfo f)
+    uintptr_t rec::entry(golang::runtime::funcInfo f)
     {
         return rec::textAddr(gocpp::recv(f.datap), f.entryOff);
     }
@@ -1276,7 +1276,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct srcFunc rec::srcFunc(struct funcInfo f)
+    struct srcFunc rec::srcFunc(golang::runtime::funcInfo f)
     {
         if(! rec::valid(gocpp::recv(f)))
         {
@@ -1285,7 +1285,7 @@ namespace golang::runtime
         return srcFunc {f.datap, f.nameOff, f.startLine, f.funcID};
     }
 
-    gocpp::string rec::name(struct srcFunc s)
+    gocpp::string rec::name(golang::runtime::srcFunc s)
     {
         if(s.datap == nullptr)
         {

@@ -38,8 +38,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        void record(struct timeHistogram* h, int64_t duration);
-        void write(struct timeHistogram* h, struct metricValue* out);
+        void record(golang::runtime::timeHistogram* h, int64_t duration);
+        void write(golang::runtime::timeHistogram* h, struct metricValue* out);
     }
 }
 

@@ -34,8 +34,8 @@ namespace golang::sync
 
     namespace rec
     {
-        void Do(struct Once* o, std::function<void ()> f);
-        void doSlow(struct Once* o, std::function<void ()> f);
+        void Do(golang::sync::Once* o, std::function<void ()> f);
+        void doSlow(golang::sync::Once* o, std::function<void ()> f);
     }
 }
 

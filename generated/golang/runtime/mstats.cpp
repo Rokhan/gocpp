@@ -678,7 +678,7 @@ namespace golang::runtime
     }
 
     // merge adds in the deltas from b into a.
-    void rec::merge(struct heapStatsDelta* a, struct heapStatsDelta* b)
+    void rec::merge(golang::runtime::heapStatsDelta* a, struct heapStatsDelta* b)
     {
         a->committed += b->committed;
         a->released += b->released;
@@ -760,7 +760,7 @@ namespace golang::runtime
     // function.
     //
     //go:nosplit
-    struct heapStatsDelta* rec::acquire(struct consistentHeapStats* m)
+    struct heapStatsDelta* rec::acquire(golang::runtime::consistentHeapStats* m)
     {
         if(auto pp = rec::ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
         {
@@ -793,7 +793,7 @@ namespace golang::runtime
     // before this operation has completed.
     //
     //go:nosplit
-    void rec::release(struct consistentHeapStats* m)
+    void rec::release(golang::runtime::consistentHeapStats* m)
     {
         if(auto pp = rec::ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
         {
@@ -814,7 +814,7 @@ namespace golang::runtime
     //
     // Unsafe because it does so without any synchronization. The
     // world must be stopped.
-    void rec::unsafeRead(struct consistentHeapStats* m, struct heapStatsDelta* out)
+    void rec::unsafeRead(golang::runtime::consistentHeapStats* m, struct heapStatsDelta* out)
     {
         assertWorldStopped();
         for(auto [i, gocpp_ignored] : m->stats)
@@ -827,7 +827,7 @@ namespace golang::runtime
     //
     // Unsafe because the world must be stopped and values should
     // be donated elsewhere before clearing.
-    void rec::unsafeClear(struct consistentHeapStats* m)
+    void rec::unsafeClear(golang::runtime::consistentHeapStats* m)
     {
         assertWorldStopped();
         for(auto [i, gocpp_ignored] : m->stats)
@@ -843,7 +843,7 @@ namespace golang::runtime
     //
     // Not safe to call concurrently. The world must be stopped
     // or metricsSema must be held.
-    void rec::read(struct consistentHeapStats* m, struct heapStatsDelta* out)
+    void rec::read(golang::runtime::consistentHeapStats* m, struct heapStatsDelta* out)
     {
         auto mp = acquirem();
         auto currGen = rec::Load(gocpp::recv(m->gen));
@@ -931,7 +931,7 @@ namespace golang::runtime
     //
     // gcMarkPhase indicates that we're in the mark phase and that certain counter
     // values should be used.
-    void rec::accumulate(struct cpuStats* s, int64_t now, bool gcMarkPhase)
+    void rec::accumulate(golang::runtime::cpuStats* s, int64_t now, bool gcMarkPhase)
     {
         // N.B. Mark termination and sweep termination pauses are
         // accumulated in work.cpuStats at the end of their respective pauses.

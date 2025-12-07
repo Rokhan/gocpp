@@ -36,7 +36,7 @@ namespace golang::main
 
     namespace rec
     {
-        gocpp::string Error(struct MyError* e);
+        gocpp::string Error(golang::main::MyError* e);
     }
 }
 

@@ -69,7 +69,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    void rec::Dump(struct RegArgs* r)
+    void rec::Dump(golang::abi::RegArgs* r)
     {
         print("Ints:"_s);
         for(auto [gocpp_ignored, x] : r->Ints)
@@ -100,7 +100,7 @@ namespace golang::abi
     // architectures, since sub-word-sized arguments in big endian architectures
     // need to be "aligned" to the upper edge of the register to be interpreted
     // by the CPU correctly.
-    unsafe::Pointer rec::IntRegArgAddr(struct RegArgs* r, int reg, uintptr_t argSize)
+    unsafe::Pointer rec::IntRegArgAddr(golang::abi::RegArgs* r, int reg, uintptr_t argSize)
     {
         if(argSize > goarch::PtrSize || argSize == 0 || argSize & (argSize - 1) != 0)
         {

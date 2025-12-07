@@ -48,11 +48,11 @@ namespace golang::zlib
 
     namespace rec
     {
-        void Reset(struct Writer* z, io::Writer w);
-        struct gocpp::error writeHeader(struct Writer* z);
-        std::tuple<int, struct gocpp::error> Write(struct Writer* z, gocpp::slice<unsigned char> p);
-        struct gocpp::error Flush(struct Writer* z);
-        struct gocpp::error Close(struct Writer* z);
+        void Reset(golang::zlib::Writer* z, io::Writer w);
+        struct gocpp::error writeHeader(golang::zlib::Writer* z);
+        std::tuple<int, struct gocpp::error> Write(golang::zlib::Writer* z, gocpp::slice<unsigned char> p);
+        struct gocpp::error Flush(golang::zlib::Writer* z);
+        struct gocpp::error Close(golang::zlib::Writer* z);
     }
 }
 

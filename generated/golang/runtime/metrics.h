@@ -238,12 +238,12 @@ namespace golang::runtime
         runtime::statDepSet union(golang::runtime::statDepSet s, golang::runtime::statDepSet b);
         bool empty(golang::runtime::statDepSet* s);
         bool has(golang::runtime::statDepSet* s, golang::runtime::statDep d);
-        void compute(struct heapStatsAggregate* a);
-        void compute(struct sysStatsAggregate* a);
-        void compute(struct cpuStatsAggregate* a);
-        void compute(struct gcStatsAggregate* a);
-        void ensure(struct statAggregate* a, golang::runtime::statDepSet* deps);
-        struct metricFloat64Histogram* float64HistOrInit(struct metricValue* v, gocpp::slice<double> buckets);
+        void compute(golang::runtime::heapStatsAggregate* a);
+        void compute(golang::runtime::sysStatsAggregate* a);
+        void compute(golang::runtime::cpuStatsAggregate* a);
+        void compute(golang::runtime::gcStatsAggregate* a);
+        void ensure(golang::runtime::statAggregate* a, golang::runtime::statDepSet* deps);
+        struct metricFloat64Histogram* float64HistOrInit(golang::runtime::metricValue* v, gocpp::slice<double> buckets);
     }
 }
 

@@ -121,11 +121,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::RuntimeError(TypeAssertionError*)
+    void rec::RuntimeError(golang::runtime::TypeAssertionError*)
     {
     }
 
-    gocpp::string rec::Error(struct TypeAssertionError* e)
+    gocpp::string rec::Error(golang::runtime::TypeAssertionError* e)
     {
         auto inter = "interface"_s;
         if(e->_interface != nullptr)
@@ -217,11 +217,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::RuntimeError(struct errorAddressString e)
+    void rec::RuntimeError(golang::runtime::errorAddressString e)
     {
     }
 
-    gocpp::string rec::Error(struct errorAddressString e)
+    gocpp::string rec::Error(golang::runtime::errorAddressString e)
     {
         return "runtime error: "_s + e.msg;
     }
@@ -231,7 +231,7 @@ namespace golang::runtime
     // The veracity of the result may depend on the platform.
     // Errors providing this method will only be returned as
     // a result of using [runtime/debug.SetPanicOnFault].
-    uintptr_t rec::Addr(struct errorAddressString e)
+    uintptr_t rec::Addr(golang::runtime::errorAddressString e)
     {
         return e.addr;
     }
@@ -312,7 +312,7 @@ namespace golang::runtime
         x[boundsSlice3B] = "slice bounds out of range [:%x:]"_s;
         x[boundsSlice3C] = "slice bounds out of range [%x::]"_s;
     });
-    void rec::RuntimeError(struct boundsError e)
+    void rec::RuntimeError(golang::runtime::boundsError e)
     {
     }
 
@@ -328,7 +328,7 @@ namespace golang::runtime
         return b;
     }
 
-    gocpp::string rec::Error(struct boundsError e)
+    gocpp::string rec::Error(golang::runtime::boundsError e)
     {
         auto fmt = boundsErrorFmts[e.code];
         if(e.go_signed && e.x < 0)

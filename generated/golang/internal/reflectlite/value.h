@@ -189,21 +189,21 @@ namespace golang::reflectlite
     {
         reflectlite::Kind kind(golang::reflectlite::flag f);
         reflectlite::flag ro(golang::reflectlite::flag f);
-        abi::Type* typ(struct Value v);
-        unsafe::Pointer pointer(struct Value v);
-        gocpp::string Error(struct ValueError* e);
+        abi::Type* typ(golang::reflectlite::Value v);
+        unsafe::Pointer pointer(golang::reflectlite::Value v);
+        gocpp::string Error(golang::reflectlite::ValueError* e);
         void mustBeExported(golang::reflectlite::flag f);
         void mustBeAssignable(golang::reflectlite::flag f);
-        bool CanSet(struct Value v);
-        struct Value Elem(struct Value v);
-        bool IsNil(struct Value v);
-        bool IsValid(struct Value v);
-        reflectlite::Kind Kind(struct Value v);
-        int Len(struct Value v);
-        int numMethod(struct Value v);
-        void Set(struct Value v, struct Value x);
-        struct Type Type(struct Value v);
-        struct Value assignTo(struct Value v, gocpp::string context, abi::Type* dst, unsafe::Pointer target);
+        bool CanSet(golang::reflectlite::Value v);
+        struct Value Elem(golang::reflectlite::Value v);
+        bool IsNil(golang::reflectlite::Value v);
+        bool IsValid(golang::reflectlite::Value v);
+        reflectlite::Kind Kind(golang::reflectlite::Value v);
+        int Len(golang::reflectlite::Value v);
+        int numMethod(golang::reflectlite::Value v);
+        void Set(golang::reflectlite::Value v, struct Value x);
+        struct Type Type(golang::reflectlite::Value v);
+        struct Value assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, unsafe::Pointer target);
     }
 }
 

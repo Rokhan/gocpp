@@ -270,7 +270,7 @@ namespace golang::runtime
     //
     // Must run in a non-preemptible context since otherwise the owner of
     // c could change.
-    void rec::refill(struct mcache* c, golang::runtime::spanClass spc)
+    void rec::refill(golang::runtime::mcache* c, golang::runtime::spanClass spc)
     {
         auto s = c->alloc[spc];
         if(s->allocCount != s->nelems)
@@ -315,7 +315,7 @@ namespace golang::runtime
     }
 
     // allocLarge allocates a span for a large object.
-    struct mspan* rec::allocLarge(struct mcache* c, uintptr_t size, bool noscan)
+    struct mspan* rec::allocLarge(golang::runtime::mcache* c, uintptr_t size, bool noscan)
     {
         if(size + _PageSize < size)
         {
@@ -345,7 +345,7 @@ namespace golang::runtime
         return s;
     }
 
-    void rec::releaseAll(struct mcache* c)
+    void rec::releaseAll(golang::runtime::mcache* c)
     {
         auto scanAlloc = int64_t(c->scanAlloc);
         c->scanAlloc = 0;
@@ -382,7 +382,7 @@ namespace golang::runtime
     // prepareForSweep flushes c if the system has entered a new sweep phase
     // since c was populated. This must happen between the sweep phase
     // starting and the first allocation from c.
-    void rec::prepareForSweep(struct mcache* c)
+    void rec::prepareForSweep(golang::runtime::mcache* c)
     {
         auto sg = mheap_.sweepgen;
         auto flushGen = rec::Load(gocpp::recv(c->flushGen));

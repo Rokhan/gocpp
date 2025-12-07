@@ -112,7 +112,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct RGBA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::RGBA c)
     {
         uint32_t r;
         uint32_t g;
@@ -172,7 +172,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct RGBA64 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::RGBA64 c)
     {
         uint32_t r;
         uint32_t g;
@@ -220,7 +220,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct NRGBA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::NRGBA c)
     {
         uint32_t r;
         uint32_t g;
@@ -283,7 +283,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct NRGBA64 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::NRGBA64 c)
     {
         uint32_t r;
         uint32_t g;
@@ -332,7 +332,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct Alpha c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::Alpha c)
     {
         uint32_t r;
         uint32_t g;
@@ -373,7 +373,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct Alpha16 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::Alpha16 c)
     {
         uint32_t r;
         uint32_t g;
@@ -413,7 +413,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct Gray c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::Gray c)
     {
         uint32_t r;
         uint32_t g;
@@ -454,7 +454,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(struct Gray16 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::Gray16 c)
     {
         uint32_t r;
         uint32_t g;
@@ -549,7 +549,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    struct Color rec::Convert(struct modelFunc* m, struct Color c)
+    struct Color rec::Convert(golang::color::modelFunc* m, struct Color c)
     {
         return rec::f(gocpp::recv(m), c);
     }

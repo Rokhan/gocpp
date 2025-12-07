@@ -59,7 +59,7 @@ namespace golang::main
     }
 
     // Inc increments the counter for the given key.
-    void rec::Inc(struct SafeCounter* c, gocpp::string key)
+    void rec::Inc(golang::main::SafeCounter* c, gocpp::string key)
     {
         rec::Lock(gocpp::recv(c->mu));
         c->v[key]++;
@@ -67,7 +67,7 @@ namespace golang::main
     }
 
     // Value returns the current value of the counter for the given key.
-    int rec::Value(struct SafeCounter* c, gocpp::string key)
+    int rec::Value(golang::main::SafeCounter* c, gocpp::string key)
     {
         gocpp::Defer defer;
         try

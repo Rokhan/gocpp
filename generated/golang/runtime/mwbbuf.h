@@ -67,11 +67,11 @@ namespace golang::runtime
 
     namespace rec
     {
-        void reset(struct wbBuf* b);
-        void discard(struct wbBuf* b);
-        bool empty(struct wbBuf* b);
-        gocpp::array<uintptr_t, 1>* get1(struct wbBuf* b);
-        gocpp::array<uintptr_t, 2>* get2(struct wbBuf* b);
+        void reset(golang::runtime::wbBuf* b);
+        void discard(golang::runtime::wbBuf* b);
+        bool empty(golang::runtime::wbBuf* b);
+        gocpp::array<uintptr_t, 1>* get1(golang::runtime::wbBuf* b);
+        gocpp::array<uintptr_t, 2>* get2(golang::runtime::wbBuf* b);
     }
 }
 

@@ -23,7 +23,7 @@ namespace golang::time
         using namespace mocklib::rec;
     }
 
-    gocpp::slice<unsigned char> rec::appendFormatRFC3339(struct Time t, gocpp::slice<unsigned char> b, bool nanos)
+    gocpp::slice<unsigned char> rec::appendFormatRFC3339(golang::time::Time t, gocpp::slice<unsigned char> b, bool nanos)
     {
         auto [gocpp_id_0, offset, abs] = rec::locabs(gocpp::recv(t));
         auto [year, month, day, gocpp_id_1] = absDate(abs, true);
@@ -64,7 +64,7 @@ namespace golang::time
         return b;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::appendStrictRFC3339(struct Time t, gocpp::slice<unsigned char> b)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::appendStrictRFC3339(golang::time::Time t, gocpp::slice<unsigned char> b)
     {
         auto n0 = len(b);
         b = rec::appendFormatRFC3339(gocpp::recv(t), b, true);

@@ -172,7 +172,7 @@ namespace golang::flate
     }
 
     // set sets the code and length of an hcode.
-    void rec::set(struct hcode* h, uint16_t code, uint16_t length)
+    void rec::set(golang::flate::hcode* h, uint16_t code, uint16_t length)
     {
         h->len = length;
         h->code = code;
@@ -250,7 +250,7 @@ namespace golang::flate
 
     huffmanEncoder* fixedLiteralEncoding = generateFixedLiteralEncoding();
     huffmanEncoder* fixedOffsetEncoding = generateFixedOffsetEncoding();
-    int rec::bitLength(struct huffmanEncoder* h, gocpp::slice<int32_t> freq)
+    int rec::bitLength(golang::flate::huffmanEncoder* h, gocpp::slice<int32_t> freq)
     {
         int total = {};
         for(auto [i, f] : freq)
@@ -277,7 +277,7 @@ namespace golang::flate
     //
     // bitCounts returns an integer slice in which slice[i] indicates the number of literals
     // that should be encoded in i bits.
-    gocpp::slice<int32_t> rec::bitCounts(struct huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits)
+    gocpp::slice<int32_t> rec::bitCounts(golang::flate::huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits)
     {
         if(maxBits >= maxBitsLimit)
         {
@@ -374,7 +374,7 @@ namespace golang::flate
 
     // Look at the leaves and assign them a bit count and an encoding as specified
     // in RFC 1951 3.2.2
-    void rec::assignEncodingAndSize(struct huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list)
+    void rec::assignEncodingAndSize(golang::flate::huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list)
     {
         auto code = uint16_t(0);
         for(auto [n, bits] : bitCount)
@@ -402,7 +402,7 @@ namespace golang::flate
     //
     // freq is an array of frequencies, in which freq[i] gives the frequency of literal i.
     // maxBits  The maximum number of bits to use for any literal.
-    void rec::generate(struct huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits)
+    void rec::generate(golang::flate::huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits)
     {
         if(h->freqcache == nullptr)
         {

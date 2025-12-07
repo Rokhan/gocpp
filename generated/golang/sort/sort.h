@@ -125,7 +125,7 @@ namespace golang::sort
     namespace rec
     {
         uint64_t Next(golang::sort::xorshift* r);
-        bool Less(struct reverse r, int i, int j);
+        bool Less(golang::sort::reverse r, int i, int j);
         int Len(golang::sort::IntSlice x);
         bool Less(golang::sort::IntSlice x, int i, int j);
         void Swap(golang::sort::IntSlice x, int i, int j);

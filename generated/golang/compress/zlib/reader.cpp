@@ -178,7 +178,7 @@ namespace golang::zlib
         return {z, nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> rec::Read(struct reader* z, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Read(golang::zlib::reader* z, gocpp::slice<unsigned char> p)
     {
         if(z->err != nullptr)
         {
@@ -212,7 +212,7 @@ namespace golang::zlib
     // Calling Close does not close the wrapped [io.Reader] originally passed to [NewReader].
     // In order for the ZLIB checksum to be verified, the reader must be
     // fully consumed until the [io.EOF].
-    struct gocpp::error rec::Close(struct reader* z)
+    struct gocpp::error rec::Close(golang::zlib::reader* z)
     {
         if(z->err != nullptr && z->err != io::go_EOF)
         {
@@ -222,7 +222,7 @@ namespace golang::zlib
         return z->err;
     }
 
-    struct gocpp::error rec::Reset(struct reader* z, io::Reader r, gocpp::slice<unsigned char> dict)
+    struct gocpp::error rec::Reset(golang::zlib::reader* z, io::Reader r, gocpp::slice<unsigned char> dict)
     {
         *z = gocpp::Init<reader>([=](auto& x) {
             x.decompressor = z->decompressor;

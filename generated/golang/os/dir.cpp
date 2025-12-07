@@ -53,7 +53,7 @@ namespace golang::os
     // and a non-nil error.
     //
     // Most clients are better served by the more efficient ReadDir method.
-    std::tuple<gocpp::slice<os::FileInfo>, struct gocpp::error> rec::Readdir(struct File* f, int n)
+    std::tuple<gocpp::slice<os::FileInfo>, struct gocpp::error> rec::Readdir(golang::os::File* f, int n)
     {
         if(f == nullptr)
         {
@@ -82,7 +82,7 @@ namespace golang::os
     // nil error. If it encounters an error before the end of the
     // directory, Readdirnames returns the names read until that point and
     // a non-nil error.
-    std::tuple<gocpp::slice<gocpp::string>, struct gocpp::error> rec::Readdirnames(struct File* f, int n)
+    std::tuple<gocpp::slice<gocpp::string>, struct gocpp::error> rec::Readdirnames(golang::os::File* f, int n)
     {
         gocpp::slice<gocpp::string> names;
         struct gocpp::error err;
@@ -110,7 +110,7 @@ namespace golang::os
     //
     // If n <= 0, ReadDir returns all the DirEntry records remaining in the directory.
     // When it succeeds, it returns a nil error (not io.EOF).
-    std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> rec::ReadDir(struct File* f, int n)
+    std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> rec::ReadDir(golang::os::File* f, int n)
     {
         if(f == nullptr)
         {

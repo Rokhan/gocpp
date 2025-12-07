@@ -241,7 +241,7 @@ namespace golang::runtime
 
     namespace rec
     {
-        bool test(struct gcTrigger t);
+        bool test(golang::runtime::gcTrigger t);
     }
 }
 

@@ -102,14 +102,14 @@ namespace golang::reflectlite
         return 0;
     }
 
-    abi::Type* rec::typ(struct Value v)
+    abi::Type* rec::typ(golang::reflectlite::Value v)
     {
         return (abi::Type*)(noescape(unsafe::Pointer(v.typ_)));
     }
 
     // pointer returns the underlying pointer represented by v.
     // v.Kind() must be Pointer, Map, Chan, Func, or UnsafePointer
-    unsafe::Pointer rec::pointer(struct Value v)
+    unsafe::Pointer rec::pointer(golang::reflectlite::Value v)
     {
         if(rec::Size(gocpp::recv(rec::typ(gocpp::recv(v)))) != goarch::PtrSize || ! rec::Pointers(gocpp::recv(rec::typ(gocpp::recv(v)))))
         {
@@ -213,7 +213,7 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(struct ValueError* e)
+    gocpp::string rec::Error(golang::reflectlite::ValueError* e)
     {
         if(e->Kind == 0)
         {
@@ -306,7 +306,7 @@ namespace golang::reflectlite
     // obtained by the use of unexported struct fields.
     // If CanSet returns false, calling Set or any type-specific
     // setter (e.g., SetBool, SetInt) will panic.
-    bool rec::CanSet(struct Value v)
+    bool rec::CanSet(golang::reflectlite::Value v)
     {
         return v.flag & (flagAddr | flagRO) == flagAddr;
     }
@@ -364,7 +364,7 @@ namespace golang::reflectlite
     // or that the pointer v points to.
     // It panics if v's Kind is not Interface or Pointer.
     // It returns the zero Value if v is nil.
-    struct Value rec::Elem(struct Value v)
+    struct Value rec::Elem(golang::reflectlite::Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
@@ -486,7 +486,7 @@ namespace golang::reflectlite
     // by calling ValueOf with an uninitialized interface variable i,
     // i==nil will be true but v.IsNil will panic as v will be the zero
     // Value.
-    bool rec::IsNil(struct Value v)
+    bool rec::IsNil(golang::reflectlite::Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
@@ -528,14 +528,14 @@ namespace golang::reflectlite
     // If IsValid returns false, all other methods except String panic.
     // Most functions and methods never return an invalid Value.
     // If one does, its documentation states the conditions explicitly.
-    bool rec::IsValid(struct Value v)
+    bool rec::IsValid(golang::reflectlite::Value v)
     {
         return v.flag != 0;
     }
 
     // Kind returns v's Kind.
     // If v is the zero Value (IsValid returns false), Kind returns Invalid.
-    reflectlite::Kind rec::Kind(struct Value v)
+    reflectlite::Kind rec::Kind(golang::reflectlite::Value v)
     {
         return rec::kind(gocpp::recv(v));
     }
@@ -550,7 +550,7 @@ namespace golang::reflectlite
 
     // Len returns v's length.
     // It panics if v's Kind is not Array, Chan, Map, Slice, or String.
-    int rec::Len(struct Value v)
+    int rec::Len(golang::reflectlite::Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
@@ -586,7 +586,7 @@ namespace golang::reflectlite
     }
 
     // NumMethod returns the number of exported methods in the value's method set.
-    int rec::numMethod(struct Value v)
+    int rec::numMethod(golang::reflectlite::Value v)
     {
         if(rec::typ(gocpp::recv(v)) == nullptr)
         {
@@ -598,7 +598,7 @@ namespace golang::reflectlite
     // Set assigns x to the value v.
     // It panics if CanSet returns false.
     // As in Go, x's value must be assignable to v's type.
-    void rec::Set(struct Value v, struct Value x)
+    void rec::Set(golang::reflectlite::Value v, struct Value x)
     {
         rec::mustBeAssignable(gocpp::recv(v));
         rec::mustBeExported(gocpp::recv(x));
@@ -619,7 +619,7 @@ namespace golang::reflectlite
     }
 
     // Type returns v's type.
-    struct Type rec::Type(struct Value v)
+    struct Type rec::Type(golang::reflectlite::Value v)
     {
         auto f = v.flag;
         if(f == 0)
@@ -647,7 +647,7 @@ namespace golang::reflectlite
     // assignTo returns a value v that can be assigned directly to typ.
     // It panics if v is not assignable to typ.
     // For a conversion to an interface type, target is a suggested scratch space to use.
-    struct Value rec::assignTo(struct Value v, gocpp::string context, abi::Type* dst, unsafe::Pointer target)
+    struct Value rec::assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, unsafe::Pointer target)
     {
         //Go switch emulation
         {

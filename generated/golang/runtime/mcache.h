@@ -100,10 +100,10 @@ namespace golang::runtime
     namespace rec
     {
         struct gclink* ptr(golang::runtime::gclinkptr p);
-        void refill(struct mcache* c, golang::runtime::spanClass spc);
-        struct mspan* allocLarge(struct mcache* c, uintptr_t size, bool noscan);
-        void releaseAll(struct mcache* c);
-        void prepareForSweep(struct mcache* c);
+        void refill(golang::runtime::mcache* c, golang::runtime::spanClass spc);
+        struct mspan* allocLarge(golang::runtime::mcache* c, uintptr_t size, bool noscan);
+        void releaseAll(golang::runtime::mcache* c);
+        void prepareForSweep(golang::runtime::mcache* c);
     }
 }
 

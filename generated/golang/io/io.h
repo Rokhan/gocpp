@@ -1256,22 +1256,22 @@ namespace golang::io
 
     namespace rec
     {
-        std::tuple<int, struct gocpp::error> Read(struct LimitedReader* l, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> Read(struct SectionReader* s, gocpp::slice<unsigned char> p);
-        std::tuple<int64_t, struct gocpp::error> Seek(struct SectionReader* s, int64_t offset, int whence);
-        std::tuple<int, struct gocpp::error> ReadAt(struct SectionReader* s, gocpp::slice<unsigned char> p, int64_t off);
-        int64_t Size(struct SectionReader* s);
-        std::tuple<struct ReaderAt, int64_t, int64_t> Outer(struct SectionReader* s);
-        std::tuple<int, struct gocpp::error> Write(struct OffsetWriter* o, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> WriteAt(struct OffsetWriter* o, gocpp::slice<unsigned char> p, int64_t off);
-        std::tuple<int64_t, struct gocpp::error> Seek(struct OffsetWriter* o, int64_t offset, int whence);
-        std::tuple<int, struct gocpp::error> Read(struct teeReader* t, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> Write(discard, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> WriteString(discard, gocpp::string s);
-        std::tuple<int64_t, struct gocpp::error> ReadFrom(discard, struct Reader r);
-        struct gocpp::error Close(nopCloser);
-        struct gocpp::error Close(nopCloserWriterTo);
-        std::tuple<int64_t, struct gocpp::error> WriteTo(struct nopCloserWriterTo c, struct Writer w);
+        std::tuple<int, struct gocpp::error> Read(golang::io::LimitedReader* l, gocpp::slice<unsigned char> p);
+        std::tuple<int, struct gocpp::error> Read(golang::io::SectionReader* s, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, struct gocpp::error> Seek(golang::io::SectionReader* s, int64_t offset, int whence);
+        std::tuple<int, struct gocpp::error> ReadAt(golang::io::SectionReader* s, gocpp::slice<unsigned char> p, int64_t off);
+        int64_t Size(golang::io::SectionReader* s);
+        std::tuple<struct ReaderAt, int64_t, int64_t> Outer(golang::io::SectionReader* s);
+        std::tuple<int, struct gocpp::error> Write(golang::io::OffsetWriter* o, gocpp::slice<unsigned char> p);
+        std::tuple<int, struct gocpp::error> WriteAt(golang::io::OffsetWriter* o, gocpp::slice<unsigned char> p, int64_t off);
+        std::tuple<int64_t, struct gocpp::error> Seek(golang::io::OffsetWriter* o, int64_t offset, int whence);
+        std::tuple<int, struct gocpp::error> Read(golang::io::teeReader* t, gocpp::slice<unsigned char> p);
+        std::tuple<int, struct gocpp::error> Write(golang::io::discard, gocpp::slice<unsigned char> p);
+        std::tuple<int, struct gocpp::error> WriteString(golang::io::discard, gocpp::string s);
+        std::tuple<int64_t, struct gocpp::error> ReadFrom(golang::io::discard, struct Reader r);
+        struct gocpp::error Close(golang::io::nopCloser);
+        struct gocpp::error Close(golang::io::nopCloserWriterTo);
+        std::tuple<int64_t, struct gocpp::error> WriteTo(golang::io::nopCloserWriterTo c, struct Writer w);
     }
 }
 

@@ -480,7 +480,7 @@ namespace golang::runtime
     // be transitioned to Prepared and then Ready before use.
     //
     // h must be locked.
-    std::tuple<unsafe::Pointer, uintptr_t> rec::sysAlloc(struct mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register)
+    std::tuple<unsafe::Pointer, uintptr_t> rec::sysAlloc(golang::runtime::mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register)
     {
         unsafe::Pointer v;
         uintptr_t size;
@@ -714,7 +714,7 @@ namespace golang::runtime
     // Must be called on the system stack because it acquires the heap lock.
     //
     //go:systemstack
-    void rec::enableMetadataHugePages(struct mheap* h)
+    void rec::enableMetadataHugePages(golang::runtime::mheap* h)
     {
         rec::enableChunkHugePages(gocpp::recv(h->pages));
         lock(& h->lock);
@@ -771,7 +771,7 @@ namespace golang::runtime
     //
     // Must run in a non-preemptible context since otherwise the owner of
     // c could change.
-    std::tuple<runtime::gclinkptr, struct mspan*, bool> rec::nextFree(struct mcache* c, golang::runtime::spanClass spc)
+    std::tuple<runtime::gclinkptr, struct mspan*, bool> rec::nextFree(golang::runtime::mcache* c, golang::runtime::spanClass spc)
     {
         runtime::gclinkptr v;
         struct mspan* s;
@@ -1517,7 +1517,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(struct linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory)
+    void rec::init(golang::runtime::linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory)
     {
         if(base + size < base)
         {
@@ -1528,7 +1528,7 @@ namespace golang::runtime
         l->mapMemory = mapMemory;
     }
 
-    unsafe::Pointer rec::alloc(struct linearAlloc* l, uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
+    unsafe::Pointer rec::alloc(golang::runtime::linearAlloc* l, uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
     {
         auto p = alignUp(l->next, align);
         if(p + size > l->end)
@@ -1586,7 +1586,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct notInHeap* rec::add(struct notInHeap* p, uintptr_t bytes)
+    struct notInHeap* rec::add(golang::runtime::notInHeap* p, uintptr_t bytes)
     {
         return (notInHeap*)(unsafe::Pointer(uintptr_t(unsafe::Pointer(p)) + bytes));
     }

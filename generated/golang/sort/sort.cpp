@@ -201,7 +201,7 @@ namespace golang::sort
     }
 
     // Less returns the opposite of the embedded implementation's Less method.
-    bool rec::Less(struct reverse r, int i, int j)
+    bool rec::Less(golang::sort::reverse r, int i, int j)
     {
         return rec::Less(gocpp::recv(r.Interface), j, i);
     }

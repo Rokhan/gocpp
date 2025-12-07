@@ -57,17 +57,17 @@ namespace golang::poll
     // Keep this string consistent because of issue #4373:
     // since historically programs have not been able to detect
     // this error, they look for the string.
-    gocpp::string rec::Error(struct errNetClosing e)
+    gocpp::string rec::Error(golang::poll::errNetClosing e)
     {
         return "use of closed network connection"_s;
     }
 
-    bool rec::Timeout(struct errNetClosing e)
+    bool rec::Timeout(golang::poll::errNetClosing e)
     {
         return false;
     }
 
-    bool rec::Temporary(struct errNetClosing e)
+    bool rec::Temporary(golang::poll::errNetClosing e)
     {
         return false;
     }
@@ -125,17 +125,17 @@ namespace golang::poll
     // The string is "i/o timeout" because that is what was returned
     // by earlier Go versions. Changing it may break programs that
     // match on error strings.
-    gocpp::string rec::Error(struct DeadlineExceededError* e)
+    gocpp::string rec::Error(golang::poll::DeadlineExceededError* e)
     {
         return "i/o timeout"_s;
     }
 
-    bool rec::Timeout(struct DeadlineExceededError* e)
+    bool rec::Timeout(golang::poll::DeadlineExceededError* e)
     {
         return true;
     }
 
-    bool rec::Temporary(struct DeadlineExceededError* e)
+    bool rec::Temporary(golang::poll::DeadlineExceededError* e)
     {
         return true;
     }

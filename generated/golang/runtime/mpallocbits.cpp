@@ -493,7 +493,7 @@ namespace golang::runtime
 
     // allocRange sets bits [i, i+n) in the bitmap to 1 and
     // updates the scavenged bits appropriately.
-    void rec::allocRange(struct pallocData* m, unsigned int i, unsigned int n)
+    void rec::allocRange(golang::runtime::pallocData* m, unsigned int i, unsigned int n)
     {
         rec::allocRange(gocpp::recv(m->pallocBits), i, n);
         rec::clearRange(gocpp::recv(m->scavenged), i, n);
@@ -501,7 +501,7 @@ namespace golang::runtime
 
     // allocAll sets every bit in the bitmap to 1 and updates
     // the scavenged bits appropriately.
-    void rec::allocAll(struct pallocData* m)
+    void rec::allocAll(golang::runtime::pallocData* m)
     {
         rec::allocAll(gocpp::recv(m->pallocBits));
         rec::clearAll(gocpp::recv(m->scavenged));

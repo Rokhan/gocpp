@@ -207,7 +207,7 @@ namespace golang::runtime
     }
 
     // hasOverflow reports whether b has any overflow records pending.
-    bool rec::hasOverflow(struct profBuf* b)
+    bool rec::hasOverflow(golang::runtime::profBuf* b)
     {
         return uint32_t(rec::Load(gocpp::recv(b->overflow))) > 0;
     }
@@ -215,7 +215,7 @@ namespace golang::runtime
     // takeOverflow consumes the pending overflow records, returning the overflow count
     // and the time of the first overflow.
     // When called by the reader, it is racing against incrementOverflow.
-    std::tuple<uint32_t, uint64_t> rec::takeOverflow(struct profBuf* b)
+    std::tuple<uint32_t, uint64_t> rec::takeOverflow(golang::runtime::profBuf* b)
     {
         uint32_t count;
         uint64_t time;
@@ -241,7 +241,7 @@ namespace golang::runtime
 
     // incrementOverflow records a single overflow at time now.
     // It is racing against a possible takeOverflow in the reader.
-    void rec::incrementOverflow(struct profBuf* b, int64_t now)
+    void rec::incrementOverflow(golang::runtime::profBuf* b, int64_t now)
     {
         for(; ; )
         {
@@ -294,7 +294,7 @@ namespace golang::runtime
 
     // canWriteRecord reports whether the buffer has room
     // for a single contiguous record with a stack of length nstk.
-    bool rec::canWriteRecord(struct profBuf* b, int nstk)
+    bool rec::canWriteRecord(golang::runtime::profBuf* b, int nstk)
     {
         auto br = rec::load(gocpp::recv(b->r));
         auto bw = rec::load(gocpp::recv(b->w));
@@ -317,7 +317,7 @@ namespace golang::runtime
     // Each record must be contiguous on its own, but the two
     // records need not be contiguous (one can be at the end of the buffer
     // and the other can wrap around and start at the beginning of the buffer).
-    bool rec::canWriteTwoRecords(struct profBuf* b, int nstk1, int nstk2)
+    bool rec::canWriteTwoRecords(golang::runtime::profBuf* b, int nstk1, int nstk2)
     {
         auto br = rec::load(gocpp::recv(b->r));
         auto bw = rec::load(gocpp::recv(b->w));
@@ -349,7 +349,7 @@ namespace golang::runtime
     // length b.hdrsize, followed by a variable-sized stack
     // and a single tag pointer *tagPtr (or nil if tagPtr is nil).
     // No write barriers allowed because this might be called from a signal handler.
-    void rec::write(struct profBuf* b, unsafe::Pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk)
+    void rec::write(golang::runtime::profBuf* b, unsafe::Pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk)
     {
         if(b == nullptr)
         {
@@ -423,7 +423,7 @@ namespace golang::runtime
 
     // close signals that there will be no more writes on the buffer.
     // Once all the data has been read from the buffer, reads will return eof=true.
-    void rec::close(struct profBuf* b)
+    void rec::close(golang::runtime::profBuf* b)
     {
         if(rec::Load(gocpp::recv(b->eof)) > 0)
         {
@@ -436,7 +436,7 @@ namespace golang::runtime
     // wakeupExtra must be called after setting one of the "extra"
     // atomic fields b.overflow or b.eof.
     // It records the change in b.w and wakes up the reader if needed.
-    void rec::wakeupExtra(struct profBuf* b)
+    void rec::wakeupExtra(golang::runtime::profBuf* b)
     {
         for(; ; )
         {
@@ -456,7 +456,7 @@ namespace golang::runtime
 
     // profBufReadMode specifies whether to block when no data is available to read.
     gocpp::array<unsafe::Pointer, 1> overflowTag;
-    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> rec::read(struct profBuf* b, golang::runtime::profBufReadMode mode)
+    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> rec::read(golang::runtime::profBuf* b, golang::runtime::profBufReadMode mode)
     {
         gocpp::slice<uint64_t> data;
         gocpp::slice<unsafe::Pointer> tags;

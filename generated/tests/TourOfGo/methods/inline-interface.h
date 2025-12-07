@@ -140,7 +140,7 @@ namespace golang::main
     {
         double Abs(golang::main::MyInt i);
         double Abs(golang::main::MyFloat f);
-        double Abs(struct Vertex v);
+        double Abs(golang::main::Vertex v);
     }
 }
 

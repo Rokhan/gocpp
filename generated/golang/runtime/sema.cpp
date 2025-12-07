@@ -327,7 +327,7 @@ namespace golang::runtime
     }
 
     // queue adds s to the blocked goroutines in semaRoot.
-    void rec::queue(struct semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo)
+    void rec::queue(golang::runtime::semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo)
     {
         s->g = getg();
         s->elem = unsafe::Pointer(addr);
@@ -428,7 +428,7 @@ namespace golang::runtime
     // If there are additional entries in the wait list, dequeue
     // returns tailtime set to the last entry's acquiretime.
     // Otherwise tailtime is found.acquiretime.
-    std::tuple<struct sudog*, int64_t, int64_t> rec::dequeue(struct semaRoot* root, uint32_t* addr)
+    std::tuple<struct sudog*, int64_t, int64_t> rec::dequeue(golang::runtime::semaRoot* root, uint32_t* addr)
     {
         struct sudog* found;
         int64_t now;
@@ -531,7 +531,7 @@ namespace golang::runtime
 
     // rotateLeft rotates the tree rooted at node x.
     // turning (x a (y b c)) into (y (x a b) c).
-    void rec::rotateLeft(struct semaRoot* root, struct sudog* x)
+    void rec::rotateLeft(golang::runtime::semaRoot* root, struct sudog* x)
     {
         auto p = x->parent;
         auto y = x->next;
@@ -565,7 +565,7 @@ namespace golang::runtime
 
     // rotateRight rotates the tree rooted at node y.
     // turning (y (x a b) c) into (x a (y b c)).
-    void rec::rotateRight(struct semaRoot* root, struct sudog* y)
+    void rec::rotateRight(golang::runtime::semaRoot* root, struct sudog* y)
     {
         auto p = y->parent;
         auto x = y->prev;

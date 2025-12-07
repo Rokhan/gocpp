@@ -423,9 +423,9 @@ namespace golang::fs
         bool IsRegular(golang::fs::FileMode m);
         fs::FileMode Perm(golang::fs::FileMode m);
         fs::FileMode Type(golang::fs::FileMode m);
-        gocpp::string Error(struct PathError* e);
-        struct gocpp::error Unwrap(struct PathError* e);
-        bool Timeout(struct PathError* e);
+        gocpp::string Error(golang::fs::PathError* e);
+        struct gocpp::error Unwrap(golang::fs::PathError* e);
+        bool Timeout(golang::fs::PathError* e);
     }
 }
 

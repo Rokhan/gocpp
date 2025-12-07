@@ -139,12 +139,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        gocpp::string Error(PanicNilError*);
-        void RuntimeError(PanicNilError*);
-        void start(struct _panic* p, uintptr_t pc, unsafe::Pointer sp);
-        std::tuple<std::function<void ()>, bool> nextDefer(struct _panic* p);
-        bool nextFrame(struct _panic* p);
-        bool initOpenCodedDefers(struct _panic* p, struct funcInfo fn, unsafe::Pointer varp);
+        gocpp::string Error(golang::runtime::PanicNilError*);
+        void RuntimeError(golang::runtime::PanicNilError*);
+        void start(golang::runtime::_panic* p, uintptr_t pc, unsafe::Pointer sp);
+        std::tuple<std::function<void ()>, bool> nextDefer(golang::runtime::_panic* p);
+        bool nextFrame(golang::runtime::_panic* p);
+        bool initOpenCodedDefers(golang::runtime::_panic* p, struct funcInfo fn, unsafe::Pointer varp);
     }
 }
 

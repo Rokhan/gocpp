@@ -188,7 +188,7 @@ namespace golang::godebug
     }
 
     // Name returns the name of the setting.
-    gocpp::string rec::Name(struct Setting* s)
+    gocpp::string rec::Name(golang::godebug::Setting* s)
     {
         if(s->name != ""_s && s->name[0] == '#')
         {
@@ -198,13 +198,13 @@ namespace golang::godebug
     }
 
     // Undocumented reports whether this is an undocumented setting.
-    bool rec::Undocumented(struct Setting* s)
+    bool rec::Undocumented(golang::godebug::Setting* s)
     {
         return s->name != ""_s && s->name[0] == '#';
     }
 
     // String returns a printable form for the setting: name=value.
-    gocpp::string rec::String(struct Setting* s)
+    gocpp::string rec::String(golang::godebug::Setting* s)
     {
         return rec::Name(gocpp::recv(s)) + "="_s + rec::Value(gocpp::recv(s));
     }
@@ -215,13 +215,13 @@ namespace golang::godebug
     // /godebug/non-default-behavior/<name>:events.
     //
     // Note that Value must be called at least once before IncNonDefault.
-    void rec::IncNonDefault(struct Setting* s)
+    void rec::IncNonDefault(golang::godebug::Setting* s)
     {
         rec::Do(gocpp::recv(s->nonDefaultOnce), s->go_register);
         rec::Add(gocpp::recv(s->nonDefault), 1);
     }
 
-    void rec::go_register(struct Setting* s)
+    void rec::go_register(golang::godebug::Setting* s)
     {
         if(s->info == nullptr || s->info->Opaque)
         {
@@ -252,7 +252,7 @@ namespace golang::godebug
     // making Value efficient to call as frequently as needed.
     // Clients should therefore typically not attempt their own
     // caching of Value's result.
-    gocpp::string rec::Value(struct Setting* s)
+    gocpp::string rec::Value(golang::godebug::Setting* s)
     {
         rec::Do(gocpp::recv(s->once), [=]() mutable -> void
         {
@@ -437,7 +437,7 @@ namespace golang::godebug
     }
 
     runtimeStderr go_stderr;
-    std::tuple<int, struct gocpp::error> rec::Write(runtimeStderr*, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Write(golang::godebug::runtimeStderr*, gocpp::slice<unsigned char> b)
     {
         if(len(b) > 0)
         {

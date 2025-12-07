@@ -236,7 +236,7 @@ namespace golang::rand
 
     // Seed uses the provided seed value to initialize the generator to a deterministic state.
     // Seed should not be called concurrently with any other [Rand] method.
-    void rec::Seed(struct Rand* r, int64_t seed)
+    void rec::Seed(golang::rand::Rand* r, int64_t seed)
     {
         if(auto [lk, ok] = gocpp::getValue<lockedSource*>(r->src); ok)
         {
@@ -248,19 +248,19 @@ namespace golang::rand
     }
 
     // Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
-    int64_t rec::Int63(struct Rand* r)
+    int64_t rec::Int63(golang::rand::Rand* r)
     {
         return rec::Int63(gocpp::recv(r->src));
     }
 
     // Uint32 returns a pseudo-random 32-bit value as a uint32.
-    uint32_t rec::Uint32(struct Rand* r)
+    uint32_t rec::Uint32(golang::rand::Rand* r)
     {
         return uint32_t(rec::Int63(gocpp::recv(r)) >> 31);
     }
 
     // Uint64 returns a pseudo-random 64-bit value as a uint64.
-    uint64_t rec::Uint64(struct Rand* r)
+    uint64_t rec::Uint64(golang::rand::Rand* r)
     {
         if(r->s64 != nullptr)
         {
@@ -270,13 +270,13 @@ namespace golang::rand
     }
 
     // Int31 returns a non-negative pseudo-random 31-bit integer as an int32.
-    int32_t rec::Int31(struct Rand* r)
+    int32_t rec::Int31(golang::rand::Rand* r)
     {
         return int32_t(rec::Int63(gocpp::recv(r)) >> 32);
     }
 
     // Int returns a non-negative pseudo-random int.
-    int rec::Int(struct Rand* r)
+    int rec::Int(golang::rand::Rand* r)
     {
         auto u = (unsigned int)(rec::Int63(gocpp::recv(r)));
         return int((u << 1) >> 1);
@@ -284,7 +284,7 @@ namespace golang::rand
 
     // Int63n returns, as an int64, a non-negative pseudo-random number in the half-open interval [0,n).
     // It panics if n <= 0.
-    int64_t rec::Int63n(struct Rand* r, int64_t n)
+    int64_t rec::Int63n(golang::rand::Rand* r, int64_t n)
     {
         if(n <= 0)
         {
@@ -305,7 +305,7 @@ namespace golang::rand
 
     // Int31n returns, as an int32, a non-negative pseudo-random number in the half-open interval [0,n).
     // It panics if n <= 0.
-    int32_t rec::Int31n(struct Rand* r, int32_t n)
+    int32_t rec::Int31n(golang::rand::Rand* r, int32_t n)
     {
         if(n <= 0)
         {
@@ -333,7 +333,7 @@ namespace golang::rand
     // For implementation details, see:
     // https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction
     // https://lemire.me/blog/2016/06/30/fast-random-shuffling
-    int32_t rec::int31n(struct Rand* r, int32_t n)
+    int32_t rec::int31n(golang::rand::Rand* r, int32_t n)
     {
         auto v = rec::Uint32(gocpp::recv(r));
         auto prod = uint64_t(v) * uint64_t(n);
@@ -353,7 +353,7 @@ namespace golang::rand
 
     // Intn returns, as an int, a non-negative pseudo-random number in the half-open interval [0,n).
     // It panics if n <= 0.
-    int rec::Intn(struct Rand* r, int n)
+    int rec::Intn(golang::rand::Rand* r, int n)
     {
         if(n <= 0)
         {
@@ -367,7 +367,7 @@ namespace golang::rand
     }
 
     // Float64 returns, as a float64, a pseudo-random number in the half-open interval [0.0,1.0).
-    double rec::Float64(struct Rand* r)
+    double rec::Float64(golang::rand::Rand* r)
     {
         again:
         auto f = double(rec::Int63(gocpp::recv(r))) / (1 << 63);
@@ -379,7 +379,7 @@ namespace golang::rand
     }
 
     // Float32 returns, as a float32, a pseudo-random number in the half-open interval [0.0,1.0).
-    double rec::Float32(struct Rand* r)
+    double rec::Float32(golang::rand::Rand* r)
     {
         again:
         auto f = float(rec::Float64(gocpp::recv(r)));
@@ -392,7 +392,7 @@ namespace golang::rand
 
     // Perm returns, as a slice of n ints, a pseudo-random permutation of the integers
     // in the half-open interval [0,n).
-    gocpp::slice<int> rec::Perm(struct Rand* r, int n)
+    gocpp::slice<int> rec::Perm(golang::rand::Rand* r, int n)
     {
         auto m = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), n);
         for(auto i = 0; i < n; i++)
@@ -407,7 +407,7 @@ namespace golang::rand
     // Shuffle pseudo-randomizes the order of elements.
     // n is the number of elements. Shuffle panics if n < 0.
     // swap swaps the elements with indexes i and j.
-    void rec::Shuffle(struct Rand* r, int n, std::function<void (int i, int j)> swap)
+    void rec::Shuffle(golang::rand::Rand* r, int n, std::function<void (int i, int j)> swap)
     {
         if(n < 0)
         {
@@ -429,7 +429,7 @@ namespace golang::rand
     // Read generates len(p) random bytes and writes them into p. It
     // always returns len(p) and a nil error.
     // Read should not be called concurrently with any other Rand method.
-    std::tuple<int, struct gocpp::error> rec::Read(struct Rand* r, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Read(golang::rand::Rand* r, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -559,22 +559,22 @@ namespace golang::rand
         return value.PrintTo(os);
     }
 
-    int64_t rec::Int63(runtimeSource*)
+    int64_t rec::Int63(golang::rand::runtimeSource*)
     {
         return int64_t(runtime_rand() & rngMask);
     }
 
-    void rec::Seed(runtimeSource*, int64_t)
+    void rec::Seed(golang::rand::runtimeSource*, int64_t)
     {
         gocpp::panic("internal error: call to runtimeSource.Seed"_s);
     }
 
-    uint64_t rec::Uint64(runtimeSource*)
+    uint64_t rec::Uint64(golang::rand::runtimeSource*)
     {
         return runtime_rand();
     }
 
-    std::tuple<int, struct gocpp::error> rec::read(struct runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
+    std::tuple<int, struct gocpp::error> rec::read(golang::rand::runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
     {
         int n;
         struct gocpp::error err;
@@ -775,7 +775,7 @@ namespace golang::rand
         return value.PrintTo(os);
     }
 
-    int64_t rec::Int63(struct lockedSource* r)
+    int64_t rec::Int63(golang::rand::lockedSource* r)
     {
         int64_t n;
         rec::Lock(gocpp::recv(r->lk));
@@ -784,7 +784,7 @@ namespace golang::rand
         return n;
     }
 
-    uint64_t rec::Uint64(struct lockedSource* r)
+    uint64_t rec::Uint64(golang::rand::lockedSource* r)
     {
         uint64_t n;
         rec::Lock(gocpp::recv(r->lk));
@@ -793,7 +793,7 @@ namespace golang::rand
         return n;
     }
 
-    void rec::Seed(struct lockedSource* r, int64_t seed)
+    void rec::Seed(golang::rand::lockedSource* r, int64_t seed)
     {
         rec::Lock(gocpp::recv(r->lk));
         rec::seed(gocpp::recv(r), seed);
@@ -801,7 +801,7 @@ namespace golang::rand
     }
 
     // seedPos implements Seed for a lockedSource without a race condition.
-    void rec::seedPos(struct lockedSource* r, int64_t seed, int8_t* readPos)
+    void rec::seedPos(golang::rand::lockedSource* r, int64_t seed, int8_t* readPos)
     {
         rec::Lock(gocpp::recv(r->lk));
         rec::seed(gocpp::recv(r), seed);
@@ -811,7 +811,7 @@ namespace golang::rand
 
     // seed seeds the underlying source.
     // The caller must have locked r.lk.
-    void rec::seed(struct lockedSource* r, int64_t seed)
+    void rec::seed(golang::rand::lockedSource* r, int64_t seed)
     {
         if(r->s == nullptr)
         {
@@ -824,7 +824,7 @@ namespace golang::rand
     }
 
     // read implements Read for a lockedSource without a race condition.
-    std::tuple<int, struct gocpp::error> rec::read(struct lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
+    std::tuple<int, struct gocpp::error> rec::read(golang::rand::lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
     {
         int n;
         struct gocpp::error err;

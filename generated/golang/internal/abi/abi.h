@@ -34,8 +34,8 @@ namespace golang::abi
 
     namespace rec
     {
-        void Dump(struct RegArgs* r);
-        unsafe::Pointer IntRegArgAddr(struct RegArgs* r, int reg, uintptr_t argSize);
+        void Dump(golang::abi::RegArgs* r);
+        unsafe::Pointer IntRegArgAddr(golang::abi::RegArgs* r, int reg, uintptr_t argSize);
         void Set(golang::abi::IntArgRegBitmap* b, int i);
         bool Get(golang::abi::IntArgRegBitmap* b, int i);
     }

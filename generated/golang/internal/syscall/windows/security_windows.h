@@ -162,7 +162,7 @@ namespace golang::windows
 
     namespace rec
     {
-        uint32_t Size(struct TOKEN_MANDATORY_LABEL* tml);
+        uint32_t Size(golang::windows::TOKEN_MANDATORY_LABEL* tml);
     }
 }
 

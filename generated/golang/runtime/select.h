@@ -81,8 +81,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        uintptr_t sortkey(struct hchan* c);
-        void dequeueSudoG(struct waitq* q, struct sudog* sgp);
+        uintptr_t sortkey(golang::runtime::hchan* c);
+        void dequeueSudoG(golang::runtime::waitq* q, struct sudog* sgp);
     }
 }
 

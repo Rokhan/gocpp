@@ -48,11 +48,11 @@ namespace golang::time
     namespace rec
     {
         gocpp::string Error(golang::time::fileSizeError f);
-        gocpp::slice<unsigned char> read(struct dataIO* d, int n);
-        std::tuple<uint32_t, bool> big4(struct dataIO* d);
-        std::tuple<uint64_t, bool> big8(struct dataIO* d);
-        std::tuple<unsigned char, bool> byte(struct dataIO* d);
-        gocpp::slice<unsigned char> rest(struct dataIO* d);
+        gocpp::slice<unsigned char> read(golang::time::dataIO* d, int n);
+        std::tuple<uint32_t, bool> big4(golang::time::dataIO* d);
+        std::tuple<uint64_t, bool> big8(golang::time::dataIO* d);
+        std::tuple<unsigned char, bool> byte(golang::time::dataIO* d);
+        gocpp::slice<unsigned char> rest(golang::time::dataIO* d);
     }
 }
 

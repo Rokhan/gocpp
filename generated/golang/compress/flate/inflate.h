@@ -216,21 +216,21 @@ namespace golang::flate
     {
         gocpp::string Error(golang::flate::CorruptInputError e);
         gocpp::string Error(golang::flate::InternalError e);
-        gocpp::string Error(struct ReadError* e);
-        gocpp::string Error(struct WriteError* e);
-        bool init(struct huffmanDecoder* h, gocpp::slice<int> lengths);
-        void nextBlock(struct decompressor* f);
-        std::tuple<int, struct gocpp::error> Read(struct decompressor* f, gocpp::slice<unsigned char> b);
-        struct gocpp::error Close(struct decompressor* f);
-        struct gocpp::error readHuffman(struct decompressor* f);
-        void huffmanBlock(struct decompressor* f);
-        void dataBlock(struct decompressor* f);
-        void copyData(struct decompressor* f);
-        void finishBlock(struct decompressor* f);
-        struct gocpp::error moreBits(struct decompressor* f);
-        std::tuple<int, struct gocpp::error> huffSym(struct decompressor* f, struct huffmanDecoder* h);
-        void makeReader(struct decompressor* f, io::Reader r);
-        struct gocpp::error Reset(struct decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict);
+        gocpp::string Error(golang::flate::ReadError* e);
+        gocpp::string Error(golang::flate::WriteError* e);
+        bool init(golang::flate::huffmanDecoder* h, gocpp::slice<int> lengths);
+        void nextBlock(golang::flate::decompressor* f);
+        std::tuple<int, struct gocpp::error> Read(golang::flate::decompressor* f, gocpp::slice<unsigned char> b);
+        struct gocpp::error Close(golang::flate::decompressor* f);
+        struct gocpp::error readHuffman(golang::flate::decompressor* f);
+        void huffmanBlock(golang::flate::decompressor* f);
+        void dataBlock(golang::flate::decompressor* f);
+        void copyData(golang::flate::decompressor* f);
+        void finishBlock(golang::flate::decompressor* f);
+        struct gocpp::error moreBits(golang::flate::decompressor* f);
+        std::tuple<int, struct gocpp::error> huffSym(golang::flate::decompressor* f, struct huffmanDecoder* h);
+        void makeReader(golang::flate::decompressor* f, io::Reader r);
+        struct gocpp::error Reset(golang::flate::decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict);
     }
 }
 

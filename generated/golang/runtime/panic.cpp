@@ -938,12 +938,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(PanicNilError*)
+    gocpp::string rec::Error(golang::runtime::PanicNilError*)
     {
         return "panic called with nil argument"_s;
     }
 
-    void rec::RuntimeError(PanicNilError*)
+    void rec::RuntimeError(golang::runtime::PanicNilError*)
     {
     }
 
@@ -997,7 +997,7 @@ namespace golang::runtime
             go_throw("panic holding locks"_s);
         }
         _panic p = {};
-        p->arg = e;
+        p.arg = e;
         rec::Add(gocpp::recv(runningPanicDefers), 1);
         rec::start(gocpp::recv(p), getcallerpc(), unsafe::Pointer(getcallersp()));
         for(; ; )
@@ -1017,7 +1017,7 @@ namespace golang::runtime
     // start initializes a panic to start unwinding the stack.
     //
     // If p.goexit is true, then start may return multiple times.
-    void rec::start(struct _panic* p, uintptr_t pc, unsafe::Pointer sp)
+    void rec::start(golang::runtime::_panic* p, uintptr_t pc, unsafe::Pointer sp)
     {
         auto gp = getg();
         p->startPC = getcallerpc();
@@ -1044,7 +1044,7 @@ namespace golang::runtime
     //
     // Note: The "ok bool" result is necessary to correctly handle when
     // the deferred function itself was nil (e.g., "defer (func())(nil)").
-    std::tuple<std::function<void ()>, bool> rec::nextDefer(struct _panic* p)
+    std::tuple<std::function<void ()>, bool> rec::nextDefer(golang::runtime::_panic* p)
     {
         auto gp = getg();
         if(! p->deferreturn)
@@ -1098,7 +1098,7 @@ namespace golang::runtime
     }
 
     // nextFrame finds the next frame that contains deferred calls, if any.
-    bool rec::nextFrame(struct _panic* p)
+    bool rec::nextFrame(golang::runtime::_panic* p)
     {
         bool ok;
         if(p->lr == 0)
@@ -1140,7 +1140,7 @@ namespace golang::runtime
         return ok;
     }
 
-    bool rec::initOpenCodedDefers(struct _panic* p, struct funcInfo fn, unsafe::Pointer varp)
+    bool rec::initOpenCodedDefers(golang::runtime::_panic* p, struct funcInfo fn, unsafe::Pointer varp)
     {
         auto fd = funcdata(fn, abi::FUNCDATA_OpenCodedDeferInfo);
         if(fd == nullptr)

@@ -184,23 +184,23 @@ namespace golang::crc32
         return New(IEEETable);
     }
 
-    int rec::Size(struct digest* d)
+    int rec::Size(golang::crc32::digest* d)
     {
         return Size;
     }
 
-    int rec::BlockSize(struct digest* d)
+    int rec::BlockSize(golang::crc32::digest* d)
     {
         return 1;
     }
 
-    void rec::Reset(struct digest* d)
+    void rec::Reset(golang::crc32::digest* d)
     {
         d->crc = 0;
     }
 
     gocpp::string magic = "crc\x01"_s;
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(struct digest* d)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(golang::crc32::digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -209,7 +209,7 @@ namespace golang::crc32
         return {b, nullptr};
     }
 
-    struct gocpp::error rec::UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b)
+    struct gocpp::error rec::UnmarshalBinary(golang::crc32::digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || gocpp::string(b.make_slice(0, len(magic))) != magic)
         {
@@ -274,7 +274,7 @@ namespace golang::crc32
         return update(crc, tab, p, true);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(struct digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(golang::crc32::digest* d, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -282,12 +282,12 @@ namespace golang::crc32
         return {len(p), nullptr};
     }
 
-    uint32_t rec::Sum32(struct digest* d)
+    uint32_t rec::Sum32(golang::crc32::digest* d)
     {
         return d->crc;
     }
 
-    gocpp::slice<unsigned char> rec::Sum(struct digest* d, gocpp::slice<unsigned char> in)
+    gocpp::slice<unsigned char> rec::Sum(golang::crc32::digest* d, gocpp::slice<unsigned char> in)
     {
         auto s = rec::Sum32(gocpp::recv(d));
         return append(in, (unsigned char)(s >> 24), (unsigned char)(s >> 16), (unsigned char)(s >> 8), (unsigned char)(s));

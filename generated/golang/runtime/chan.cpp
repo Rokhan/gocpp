@@ -818,7 +818,7 @@ namespace golang::runtime
         closechan(c);
     }
 
-    void rec::enqueue(struct waitq* q, struct sudog* sgp)
+    void rec::enqueue(golang::runtime::waitq* q, struct sudog* sgp)
     {
         sgp->next = nullptr;
         auto x = q->last;
@@ -834,7 +834,7 @@ namespace golang::runtime
         q->last = sgp;
     }
 
-    struct sudog* rec::dequeue(struct waitq* q)
+    struct sudog* rec::dequeue(golang::runtime::waitq* q)
     {
         for(; ; )
         {
@@ -863,7 +863,7 @@ namespace golang::runtime
         }
     }
 
-    unsafe::Pointer rec::raceaddr(struct hchan* c)
+    unsafe::Pointer rec::raceaddr(golang::runtime::hchan* c)
     {
         return unsafe::Pointer(& c->buf);
     }

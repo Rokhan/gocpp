@@ -181,7 +181,7 @@ namespace golang::time
     // it even if a client has changed Local.
     Location localLoc;
     sync::Once localOnce;
-    struct Location* rec::get(struct Location* l)
+    struct Location* rec::get(golang::time::Location* l)
     {
         if(l == nullptr)
         {
@@ -196,7 +196,7 @@ namespace golang::time
 
     // String returns a descriptive name for the time zone information,
     // corresponding to the name argument to LoadLocation or FixedZone.
-    gocpp::string rec::String(struct Location* l)
+    gocpp::string rec::String(golang::time::Location* l)
     {
         return rec::get(gocpp::recv(l))->name;
     }
@@ -247,7 +247,7 @@ namespace golang::time
     // the start and end times bracketing sec when that zone is in effect,
     // the offset in seconds east of UTC (such as -5*60*60), and whether
     // the daylight savings is being observed at that time.
-    std::tuple<gocpp::string, int, int64_t, int64_t, bool> rec::lookup(struct Location* l, int64_t sec)
+    std::tuple<gocpp::string, int, int64_t, int64_t, bool> rec::lookup(golang::time::Location* l, int64_t sec)
     {
         gocpp::string name;
         int offset;
@@ -338,7 +338,7 @@ namespace golang::time
     //  3. Otherwise, use the first zone that is not daylight time, if
     //     there is one.
     //  4. Otherwise, use the first zone.
-    int rec::lookupFirstZone(struct Location* l)
+    int rec::lookupFirstZone(golang::time::Location* l)
     {
         if(! rec::firstZoneUsed(gocpp::recv(l)))
         {
@@ -366,7 +366,7 @@ namespace golang::time
 
     // firstZoneUsed reports whether the first zone is used by some
     // transition.
-    bool rec::firstZoneUsed(struct Location* l)
+    bool rec::firstZoneUsed(golang::time::Location* l)
     {
         for(auto [gocpp_ignored, tx] : l->tx)
         {
@@ -841,7 +841,7 @@ namespace golang::time
     // lookupName returns information about the time zone with
     // the given name (such as "EST") at the given pseudo-Unix time
     // (what the given time of day would be in UTC).
-    std::tuple<int, bool> rec::lookupName(struct Location* l, gocpp::string name, int64_t unix)
+    std::tuple<int, bool> rec::lookupName(golang::time::Location* l, gocpp::string name, int64_t unix)
     {
         int offset;
         bool ok;

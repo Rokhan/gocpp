@@ -299,7 +299,7 @@ namespace golang::png
         return 256 - int(d);
     }
 
-    void rec::writeChunk(struct encoder* e, gocpp::slice<unsigned char> b, gocpp::string name)
+    void rec::writeChunk(golang::png::encoder* e, gocpp::slice<unsigned char> b, gocpp::string name)
     {
         if(e->err != nullptr)
         {
@@ -333,7 +333,7 @@ namespace golang::png
         std::tie(std::ignore, e->err) = rec::Write(gocpp::recv(e->w), e->footer.make_slice(0, 4));
     }
 
-    void rec::writeIHDR(struct encoder* e)
+    void rec::writeIHDR(golang::png::encoder* e)
     {
         auto b = rec::Bounds(gocpp::recv(e->m));
         rec::PutUint32(gocpp::recv(binary::BigEndian), e->tmp.make_slice(0, 4), uint32_t(rec::Dx(gocpp::recv(b))));
@@ -402,7 +402,7 @@ namespace golang::png
         rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 13), "IHDR"_s);
     }
 
-    void rec::writePLTEAndTRNS(struct encoder* e, color::Palette p)
+    void rec::writePLTEAndTRNS(golang::png::encoder* e, color::Palette p)
     {
         if(len(p) < 1 || len(p) > 256)
         {
@@ -435,7 +435,7 @@ namespace golang::png
     //
     // This method should only be called from writeIDATs (via writeImage).
     // No other code should treat an encoder as an io.Writer.
-    std::tuple<int, struct gocpp::error> rec::Write(struct encoder* e, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Write(golang::png::encoder* e, gocpp::slice<unsigned char> b)
     {
         rec::writeChunk(gocpp::recv(e), b, "IDAT"_s);
         if(e->err != nullptr)
@@ -548,7 +548,7 @@ namespace golang::png
         }
     }
 
-    struct gocpp::error rec::writeImage(struct encoder* e, io::Writer w, image::Image m, int cb, int level)
+    struct gocpp::error rec::writeImage(golang::png::encoder* e, io::Writer w, image::Image m, int cb, int level)
     {
         gocpp::Defer defer;
         try
@@ -881,7 +881,7 @@ namespace golang::png
     }
 
     // Write the actual image data to one or more IDAT chunks.
-    void rec::writeIDATs(struct encoder* e)
+    void rec::writeIDATs(golang::png::encoder* e)
     {
         if(e->err != nullptr)
         {
@@ -936,7 +936,7 @@ namespace golang::png
         }
     }
 
-    void rec::writeIEND(struct encoder* e)
+    void rec::writeIEND(golang::png::encoder* e)
     {
         rec::writeChunk(gocpp::recv(e), nullptr, "IEND"_s);
     }
@@ -950,7 +950,7 @@ namespace golang::png
     }
 
     // Encode writes the Image m to w in PNG format.
-    struct gocpp::error rec::Encode(struct Encoder* enc, io::Writer w, image::Image m)
+    struct gocpp::error rec::Encode(golang::png::Encoder* enc, io::Writer w, image::Image m)
     {
         gocpp::Defer defer;
         try

@@ -63,12 +63,12 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(struct DLLError* e)
+    gocpp::string rec::Error(golang::syscall::DLLError* e)
     {
         return e->Msg;
     }
 
-    struct gocpp::error rec::Unwrap(struct DLLError* e)
+    struct gocpp::error rec::Unwrap(golang::syscall::DLLError* e)
     {
         return e->Err;
     }
@@ -195,7 +195,7 @@ namespace golang::syscall
 
     // FindProc searches DLL d for procedure named name and returns *Proc
     // if found. It returns an error if search fails.
-    std::tuple<struct Proc*, struct gocpp::error> rec::FindProc(struct DLL* d, gocpp::string name)
+    std::tuple<struct Proc*, struct gocpp::error> rec::FindProc(golang::syscall::DLL* d, gocpp::string name)
     {
         struct Proc* proc;
         struct gocpp::error err;
@@ -223,7 +223,7 @@ namespace golang::syscall
     }
 
     // MustFindProc is like FindProc but panics if search fails.
-    struct Proc* rec::MustFindProc(struct DLL* d, gocpp::string name)
+    struct Proc* rec::MustFindProc(golang::syscall::DLL* d, gocpp::string name)
     {
         auto [p, e] = rec::FindProc(gocpp::recv(d), name);
         if(e != nullptr)
@@ -234,7 +234,7 @@ namespace golang::syscall
     }
 
     // Release unloads DLL d from memory.
-    struct gocpp::error rec::Release(struct DLL* d)
+    struct gocpp::error rec::Release(golang::syscall::DLL* d)
     {
         struct gocpp::error err;
         return FreeLibrary(d->Handle);
@@ -278,7 +278,7 @@ namespace golang::syscall
 
     // Addr returns the address of the procedure represented by p.
     // The return value can be passed to Syscall to run the procedure.
-    uintptr_t rec::Addr(struct Proc* p)
+    uintptr_t rec::Addr(golang::syscall::Proc* p)
     {
         return p->addr;
     }
@@ -299,7 +299,7 @@ namespace golang::syscall
     // math.Float64frombits(uint64(r2)).
     //
     //go:uintptrescapes
-    std::tuple<uintptr_t, uintptr_t, struct gocpp::error> rec::Call(struct Proc* p, gocpp::slice<uintptr_t> a)
+    std::tuple<uintptr_t, uintptr_t, struct gocpp::error> rec::Call(golang::syscall::Proc* p, gocpp::slice<uintptr_t> a)
     {
         return SyscallN(rec::Addr(gocpp::recv(p)), a);
     }
@@ -351,7 +351,7 @@ namespace golang::syscall
 
     // Load loads DLL file d.Name into memory. It returns an error if fails.
     // Load will not try to load DLL, if it is already loaded into memory.
-    struct gocpp::error rec::Load(struct LazyDLL* d)
+    struct gocpp::error rec::Load(golang::syscall::LazyDLL* d)
     {
         gocpp::Defer defer;
         try
@@ -379,7 +379,7 @@ namespace golang::syscall
     }
 
     // mustLoad is like Load but panics if search fails.
-    void rec::mustLoad(struct LazyDLL* d)
+    void rec::mustLoad(golang::syscall::LazyDLL* d)
     {
         auto e = rec::Load(gocpp::recv(d));
         if(e != nullptr)
@@ -389,14 +389,14 @@ namespace golang::syscall
     }
 
     // Handle returns d's module handle.
-    uintptr_t rec::Handle(struct LazyDLL* d)
+    uintptr_t rec::Handle(golang::syscall::LazyDLL* d)
     {
         rec::mustLoad(gocpp::recv(d));
         return uintptr_t(d->dll->Handle);
     }
 
     // NewProc returns a LazyProc for accessing the named procedure in the DLL d.
-    struct LazyProc* rec::NewProc(struct LazyDLL* d, gocpp::string name)
+    struct LazyProc* rec::NewProc(golang::syscall::LazyDLL* d, gocpp::string name)
     {
         return gocpp::InitPtr<LazyProc>([=](auto& x) {
             x.l = d;
@@ -455,7 +455,7 @@ namespace golang::syscall
     // Find searches DLL for procedure named p.Name. It returns
     // an error if search fails. Find will not search procedure,
     // if it is already found and loaded into memory.
-    struct gocpp::error rec::Find(struct LazyProc* p)
+    struct gocpp::error rec::Find(golang::syscall::LazyProc* p)
     {
         gocpp::Defer defer;
         try
@@ -489,7 +489,7 @@ namespace golang::syscall
     }
 
     // mustFind is like Find but panics if search fails.
-    void rec::mustFind(struct LazyProc* p)
+    void rec::mustFind(golang::syscall::LazyProc* p)
     {
         auto e = rec::Find(gocpp::recv(p));
         if(e != nullptr)
@@ -500,7 +500,7 @@ namespace golang::syscall
 
     // Addr returns the address of the procedure represented by p.
     // The return value can be passed to Syscall to run the procedure.
-    uintptr_t rec::Addr(struct LazyProc* p)
+    uintptr_t rec::Addr(golang::syscall::LazyProc* p)
     {
         rec::mustFind(gocpp::recv(p));
         return rec::Addr(gocpp::recv(p->proc));
@@ -510,7 +510,7 @@ namespace golang::syscall
     // Proc.Call for more information.
     //
     //go:uintptrescapes
-    std::tuple<uintptr_t, uintptr_t, struct gocpp::error> rec::Call(struct LazyProc* p, gocpp::slice<uintptr_t> a)
+    std::tuple<uintptr_t, uintptr_t, struct gocpp::error> rec::Call(golang::syscall::LazyProc* p, gocpp::slice<uintptr_t> a)
     {
         uintptr_t r1;
         uintptr_t r2;

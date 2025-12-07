@@ -117,12 +117,12 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(struct wrapError* e)
+    gocpp::string rec::Error(golang::fmt::wrapError* e)
     {
         return e->msg;
     }
 
-    struct gocpp::error rec::Unwrap(struct wrapError* e)
+    struct gocpp::error rec::Unwrap(golang::fmt::wrapError* e)
     {
         return e->err;
     }
@@ -159,12 +159,12 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(struct wrapErrors* e)
+    gocpp::string rec::Error(golang::fmt::wrapErrors* e)
     {
         return e->msg;
     }
 
-    gocpp::slice<gocpp::error> rec::Unwrap(struct wrapErrors* e)
+    gocpp::slice<gocpp::error> rec::Unwrap(golang::fmt::wrapErrors* e)
     {
         return e->errs;
     }

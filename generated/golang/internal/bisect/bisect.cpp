@@ -466,12 +466,12 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    struct dedup* rec::Load(struct atomicPointerDedup* p)
+    struct dedup* rec::Load(golang::bisect::atomicPointerDedup* p)
     {
         return (dedup*)(atomic::LoadPointer(& p->p));
     }
 
-    bool rec::CompareAndSwap(struct atomicPointerDedup* p, struct dedup* old, struct dedup* go_new)
+    bool rec::CompareAndSwap(golang::bisect::atomicPointerDedup* p, struct dedup* old, struct dedup* go_new)
     {
         return atomic::CompareAndSwapPointer(& p->p, unsafe::Pointer(old), unsafe::Pointer(go_new));
     }
@@ -517,13 +517,13 @@ namespace golang::bisect
     // a given change, omitting the identifying information.
     // MarkerOnly returns true when bisect is using the printed reports
     // only for an intermediate search step, not for showing to users.
-    bool rec::MarkerOnly(struct Matcher* m)
+    bool rec::MarkerOnly(golang::bisect::Matcher* m)
     {
         return ! m->verbose;
     }
 
     // ShouldEnable reports whether the change with the given id should be enabled.
-    bool rec::ShouldEnable(struct Matcher* m, uint64_t id)
+    bool rec::ShouldEnable(golang::bisect::Matcher* m, uint64_t id)
     {
         if(m == nullptr)
         {
@@ -533,7 +533,7 @@ namespace golang::bisect
     }
 
     // ShouldPrint reports whether to print identifying information about the change with the given id.
-    bool rec::ShouldPrint(struct Matcher* m, uint64_t id)
+    bool rec::ShouldPrint(golang::bisect::Matcher* m, uint64_t id)
     {
         if(m == nullptr || m->quiet)
         {
@@ -543,7 +543,7 @@ namespace golang::bisect
     }
 
     // matchResult returns the result from the first condition that matches id.
-    bool rec::matchResult(struct Matcher* m, uint64_t id)
+    bool rec::matchResult(golang::bisect::Matcher* m, uint64_t id)
     {
         for(auto i = len(m->list) - 1; i >= 0; i--)
         {
@@ -558,7 +558,7 @@ namespace golang::bisect
 
     // FileLine reports whether the change identified by file and line should be enabled.
     // If the change should be printed, FileLine prints a one-line report to w.
-    bool rec::FileLine(struct Matcher* m, struct Writer w, gocpp::string file, int line)
+    bool rec::FileLine(golang::bisect::Matcher* m, struct Writer w, gocpp::string file, int line)
     {
         if(m == nullptr)
         {
@@ -569,7 +569,7 @@ namespace golang::bisect
 
     // fileLine does the real work for FileLine.
     // This lets FileLine's body handle m == nil and potentially be inlined.
-    bool rec::fileLine(struct Matcher* m, struct Writer w, gocpp::string file, int line)
+    bool rec::fileLine(golang::bisect::Matcher* m, struct Writer w, gocpp::string file, int line)
     {
         auto h = Hash(file, line);
         if(rec::ShouldPrint(gocpp::recv(m), h))
@@ -624,7 +624,7 @@ namespace golang::bisect
     // MatchStack assigns the current call stack a change ID.
     // If the stack should be printed, MatchStack prints it.
     // Then MatchStack reports whether a change at the current call stack should be enabled.
-    bool rec::Stack(struct Matcher* m, struct Writer w)
+    bool rec::Stack(golang::bisect::Matcher* m, struct Writer w)
     {
         if(m == nullptr)
         {
@@ -635,7 +635,7 @@ namespace golang::bisect
 
     // stack does the real work for Stack.
     // This lets stack's body handle m == nil and potentially be inlined.
-    bool rec::stack(struct Matcher* m, struct Writer w)
+    bool rec::stack(golang::bisect::Matcher* m, struct Writer w)
     {
         auto maxStack = 16;
         gocpp::array<uintptr_t, maxStack> stk = {};
@@ -1117,7 +1117,7 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(struct parseError* e)
+    gocpp::string rec::Error(golang::bisect::parseError* e)
     {
         return e->text;
     }
@@ -1205,7 +1205,7 @@ namespace golang::bisect
 
     // seen records that h has now been seen and reports whether it was seen before.
     // When seen returns false, the caller is expected to print a report for h.
-    bool rec::seen(struct dedup* d, uint64_t h)
+    bool rec::seen(golang::bisect::dedup* d, uint64_t h)
     {
         rec::Lock(gocpp::recv(d->mu));
         if(d->m == nullptr)
@@ -1222,7 +1222,7 @@ namespace golang::bisect
     // Each cache entry is N-way set-associative: h can appear in any of the slots.
     // If h does not appear in any of them, then it is inserted into a random slot,
     // overwriting whatever was there before.
-    bool rec::seenLossy(struct dedup* d, uint64_t h)
+    bool rec::seenLossy(golang::bisect::dedup* d, uint64_t h)
     {
         auto cache = & d->recent[(unsigned int)(h) % (unsigned int)(len(d->recent))];
         for(auto i = 0; i < len(cache); i++)

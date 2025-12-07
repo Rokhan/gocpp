@@ -34,20 +34,20 @@ namespace golang::os
 
     namespace rec
     {
-        struct gocpp::error Close(struct File* f);
-        std::tuple<int, struct gocpp::error> read(struct File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> pread(struct File* f, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int, struct gocpp::error> write(struct File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> pwrite(struct File* f, gocpp::slice<unsigned char> b, int64_t off);
-        struct gocpp::error chmod(struct File* f, golang::os::FileMode mode);
-        struct gocpp::error Chown(struct File* f, int uid, int gid);
-        struct gocpp::error Truncate(struct File* f, int64_t size);
-        struct gocpp::error Sync(struct File* f);
-        struct gocpp::error Chdir(struct File* f);
-        struct gocpp::error setDeadline(struct File* f, mocklib::Date t);
-        struct gocpp::error setReadDeadline(struct File* f, mocklib::Date t);
-        struct gocpp::error setWriteDeadline(struct File* f, mocklib::Date t);
-        struct gocpp::error checkValid(struct File* f, gocpp::string op);
+        struct gocpp::error Close(golang::os::File* f);
+        std::tuple<int, struct gocpp::error> read(golang::os::File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> pread(golang::os::File* f, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, struct gocpp::error> write(golang::os::File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> pwrite(golang::os::File* f, gocpp::slice<unsigned char> b, int64_t off);
+        struct gocpp::error chmod(golang::os::File* f, golang::os::FileMode mode);
+        struct gocpp::error Chown(golang::os::File* f, int uid, int gid);
+        struct gocpp::error Truncate(golang::os::File* f, int64_t size);
+        struct gocpp::error Sync(golang::os::File* f);
+        struct gocpp::error Chdir(golang::os::File* f);
+        struct gocpp::error setDeadline(golang::os::File* f, mocklib::Date t);
+        struct gocpp::error setReadDeadline(golang::os::File* f, mocklib::Date t);
+        struct gocpp::error setWriteDeadline(golang::os::File* f, mocklib::Date t);
+        struct gocpp::error checkValid(golang::os::File* f, gocpp::string op);
     }
 }
 

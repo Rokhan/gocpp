@@ -81,7 +81,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    gocpp::slice<unsigned char> rec::read(struct dataIO* d, int n)
+    gocpp::slice<unsigned char> rec::read(golang::time::dataIO* d, int n)
     {
         if(len(d->p) < n)
         {
@@ -94,7 +94,7 @@ namespace golang::time
         return p;
     }
 
-    std::tuple<uint32_t, bool> rec::big4(struct dataIO* d)
+    std::tuple<uint32_t, bool> rec::big4(golang::time::dataIO* d)
     {
         uint32_t n;
         bool ok;
@@ -107,7 +107,7 @@ namespace golang::time
         return {uint32_t(p[3]) | (uint32_t(p[2]) << 8) | (uint32_t(p[1]) << 16) | (uint32_t(p[0]) << 24), true};
     }
 
-    std::tuple<uint64_t, bool> rec::big8(struct dataIO* d)
+    std::tuple<uint64_t, bool> rec::big8(golang::time::dataIO* d)
     {
         uint64_t n;
         bool ok;
@@ -121,7 +121,7 @@ namespace golang::time
         return {(uint64_t(n1) << 32) | uint64_t(n2), true};
     }
 
-    std::tuple<unsigned char, bool> rec::byte(struct dataIO* d)
+    std::tuple<unsigned char, bool> rec::byte(golang::time::dataIO* d)
     {
         unsigned char n;
         bool ok;
@@ -135,7 +135,7 @@ namespace golang::time
     }
 
     // rest returns the rest of the data in the buffer.
-    gocpp::slice<unsigned char> rec::rest(struct dataIO* d)
+    gocpp::slice<unsigned char> rec::rest(golang::time::dataIO* d)
     {
         auto r = d->p;
         d->p = nullptr;
@@ -260,7 +260,7 @@ namespace golang::time
         rec::read(gocpp::recv(d), n[NLeap] * (size + 4));
         auto isstd = rec::read(gocpp::recv(d), n[NStdWall]);
         auto isutc = rec::read(gocpp::recv(d), n[NUTCLocal]);
-        if(d->error)
+        if(d.error)
         {
             return {nullptr, errBadData};
         }

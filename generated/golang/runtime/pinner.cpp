@@ -116,7 +116,7 @@ namespace golang::runtime
     //
     // The argument must be a pointer of any type or an [unsafe.Pointer].
     // It's safe to call Pin on non-Go pointers, in which case Pin will do nothing.
-    void rec::Pin(struct Pinner* p, go_any pointer)
+    void rec::Pin(golang::runtime::Pinner* p, go_any pointer)
     {
         if(p->pinner == nullptr)
         {
@@ -149,7 +149,7 @@ namespace golang::runtime
     }
 
     // Unpin unpins all pinned objects of the [Pinner].
-    void rec::Unpin(struct Pinner* p)
+    void rec::Unpin(golang::runtime::Pinner* p)
     {
         rec::unpin(gocpp::recv(p->pinner));
         auto mp = acquirem();
@@ -193,7 +193,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::unpin(struct pinner* p)
+    void rec::unpin(golang::runtime::pinner* p)
     {
         if(p == nullptr || p->refs == nullptr)
         {
@@ -361,29 +361,29 @@ namespace golang::runtime
     // nosplit, because it's called by isPinned, which is nosplit
     //
     //go:nosplit
-    bool rec::isPinned(struct pinState* v)
+    bool rec::isPinned(golang::runtime::pinState* v)
     {
         return (v->byteVal & v->mask) != 0;
     }
 
-    bool rec::isMultiPinned(struct pinState* v)
+    bool rec::isMultiPinned(golang::runtime::pinState* v)
     {
         return (v->byteVal & (v->mask << 1)) != 0;
     }
 
-    void rec::setPinned(struct pinState* v, bool val)
+    void rec::setPinned(golang::runtime::pinState* v, bool val)
     {
         rec::set(gocpp::recv(v), val, false);
     }
 
-    void rec::setMultiPinned(struct pinState* v, bool val)
+    void rec::setMultiPinned(golang::runtime::pinState* v, bool val)
     {
         rec::set(gocpp::recv(v), val, true);
     }
 
     // set sets the pin bit of the pinState to val. If multipin is true, it
     // sets/unsets the multipin bit instead.
-    void rec::set(struct pinState* v, bool val, bool multipin)
+    void rec::set(golang::runtime::pinState* v, bool val, bool multipin)
     {
         auto mask = v->mask;
         if(multipin)
@@ -412,7 +412,7 @@ namespace golang::runtime
         return pinState {bytep, byteVal, mask};
     }
 
-    uintptr_t rec::pinnerBitSize(struct mspan* s)
+    uintptr_t rec::pinnerBitSize(golang::runtime::mspan* s)
     {
         return divRoundUp(uintptr_t(s->nelems) * 2, 8);
     }
@@ -420,7 +420,7 @@ namespace golang::runtime
     // newPinnerBits returns a pointer to 8 byte aligned bytes to be used for this
     // span's pinner bits. newPinneBits is used to mark objects that are pinned.
     // They are copied when the span is swept.
-    runtime::pinnerBits* rec::newPinnerBits(struct mspan* s)
+    runtime::pinnerBits* rec::newPinnerBits(golang::runtime::mspan* s)
     {
         return (runtime::pinnerBits*)(newMarkBits(uintptr_t(s->nelems) * 2));
     }
@@ -428,12 +428,12 @@ namespace golang::runtime
     // nosplit, because it's called by isPinned, which is nosplit
     //
     //go:nosplit
-    runtime::pinnerBits* rec::getPinnerBits(struct mspan* s)
+    runtime::pinnerBits* rec::getPinnerBits(golang::runtime::mspan* s)
     {
         return (runtime::pinnerBits*)(atomic::Loadp(unsafe::Pointer(& s->pinnerBits)));
     }
 
-    void rec::setPinnerBits(struct mspan* s, golang::runtime::pinnerBits* p)
+    void rec::setPinnerBits(golang::runtime::mspan* s, golang::runtime::pinnerBits* p)
     {
         atomicstorep(unsafe::Pointer(& s->pinnerBits), unsafe::Pointer(p));
     }
@@ -441,7 +441,7 @@ namespace golang::runtime
     // refreshPinnerBits replaces pinnerBits with a fresh copy in the arenas for the
     // next GC cycle. If it does not contain any pinned objects, pinnerBits of the
     // span is set to nil.
-    void rec::refreshPinnerBits(struct mspan* s)
+    void rec::refreshPinnerBits(golang::runtime::mspan* s)
     {
         auto p = rec::getPinnerBits(gocpp::recv(s));
         if(p == nullptr)
@@ -472,7 +472,7 @@ namespace golang::runtime
 
     // incPinCounter is only called for multiple pins of the same object and records
     // the _additional_ pins.
-    void rec::incPinCounter(struct mspan* span, uintptr_t offset)
+    void rec::incPinCounter(golang::runtime::mspan* span, uintptr_t offset)
     {
         specialPinCounter* rec = {};
         auto [ref, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
@@ -496,7 +496,7 @@ namespace golang::runtime
 
     // decPinCounter decreases the counter. If the counter reaches 0, the counter
     // special is deleted and false is returned. Otherwise true is returned.
-    bool rec::decPinCounter(struct mspan* span, uintptr_t offset)
+    bool rec::decPinCounter(golang::runtime::mspan* span, uintptr_t offset)
     {
         auto [ref, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
         if(! exists)

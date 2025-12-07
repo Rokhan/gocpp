@@ -104,7 +104,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void rec::M(T*)
+    void rec::M(golang::main::T*)
     {
     }
 

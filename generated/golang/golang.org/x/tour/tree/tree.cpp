@@ -85,7 +85,7 @@ namespace golang::tree
         return t;
     }
 
-    gocpp::string rec::String(struct Tree* t)
+    gocpp::string rec::String(golang::tree::Tree* t)
     {
         if(t == nullptr)
         {

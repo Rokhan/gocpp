@@ -270,23 +270,23 @@ namespace golang::runtime
 
     namespace rec
     {
-        void add(struct memRecordCycle* a, struct memRecordCycle* b);
-        uint32_t read(struct mProfCycleHolder* c);
-        std::tuple<uint32_t, bool> setFlushed(struct mProfCycleHolder* c);
-        void increment(struct mProfCycleHolder* c);
-        gocpp::slice<uintptr_t> stk(struct bucket* b);
-        struct memRecord* mp(struct bucket* b);
-        struct blockRecord* bp(struct bucket* b);
-        void begin(struct lockTimer* lt);
-        void end(struct lockTimer* lt);
-        void recordLock(struct mLockProfile* prof, int64_t cycles, struct mutex* l);
-        void recordUnlock(struct mLockProfile* prof, struct mutex* l);
-        void captureStack(struct mLockProfile* prof);
-        void store(struct mLockProfile* prof);
-        gocpp::slice<uintptr_t> Stack(struct StackRecord* r);
-        int64_t InUseBytes(struct MemProfileRecord* r);
-        int64_t InUseObjects(struct MemProfileRecord* r);
-        gocpp::slice<uintptr_t> Stack(struct MemProfileRecord* r);
+        void add(golang::runtime::memRecordCycle* a, struct memRecordCycle* b);
+        uint32_t read(golang::runtime::mProfCycleHolder* c);
+        std::tuple<uint32_t, bool> setFlushed(golang::runtime::mProfCycleHolder* c);
+        void increment(golang::runtime::mProfCycleHolder* c);
+        gocpp::slice<uintptr_t> stk(golang::runtime::bucket* b);
+        struct memRecord* mp(golang::runtime::bucket* b);
+        struct blockRecord* bp(golang::runtime::bucket* b);
+        void begin(golang::runtime::lockTimer* lt);
+        void end(golang::runtime::lockTimer* lt);
+        void recordLock(golang::runtime::mLockProfile* prof, int64_t cycles, struct mutex* l);
+        void recordUnlock(golang::runtime::mLockProfile* prof, struct mutex* l);
+        void captureStack(golang::runtime::mLockProfile* prof);
+        void store(golang::runtime::mLockProfile* prof);
+        gocpp::slice<uintptr_t> Stack(golang::runtime::StackRecord* r);
+        int64_t InUseBytes(golang::runtime::MemProfileRecord* r);
+        int64_t InUseObjects(golang::runtime::MemProfileRecord* r);
+        gocpp::slice<uintptr_t> Stack(golang::runtime::MemProfileRecord* r);
         runtime::goroutineProfileState Load(golang::runtime::goroutineProfileStateHolder* p);
         void Store(golang::runtime::goroutineProfileStateHolder* p, golang::runtime::goroutineProfileState value);
         bool CompareAndSwap(golang::runtime::goroutineProfileStateHolder* p, golang::runtime::goroutineProfileState old, golang::runtime::goroutineProfileState go_new);

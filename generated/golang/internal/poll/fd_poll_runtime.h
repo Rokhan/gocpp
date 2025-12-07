@@ -55,20 +55,20 @@ namespace golang::poll
 
     namespace rec
     {
-        struct gocpp::error init(struct pollDesc* pd, struct FD* fd);
-        void close(struct pollDesc* pd);
-        void evict(struct pollDesc* pd);
-        struct gocpp::error prepare(struct pollDesc* pd, int mode, bool isFile);
-        struct gocpp::error prepareRead(struct pollDesc* pd, bool isFile);
-        struct gocpp::error prepareWrite(struct pollDesc* pd, bool isFile);
-        struct gocpp::error wait(struct pollDesc* pd, int mode, bool isFile);
-        struct gocpp::error waitRead(struct pollDesc* pd, bool isFile);
-        struct gocpp::error waitWrite(struct pollDesc* pd, bool isFile);
-        void waitCanceled(struct pollDesc* pd, int mode);
-        bool pollable(struct pollDesc* pd);
-        struct gocpp::error SetDeadline(struct FD* fd, mocklib::Date t);
-        struct gocpp::error SetReadDeadline(struct FD* fd, mocklib::Date t);
-        struct gocpp::error SetWriteDeadline(struct FD* fd, mocklib::Date t);
+        struct gocpp::error init(golang::poll::pollDesc* pd, struct FD* fd);
+        void close(golang::poll::pollDesc* pd);
+        void evict(golang::poll::pollDesc* pd);
+        struct gocpp::error prepare(golang::poll::pollDesc* pd, int mode, bool isFile);
+        struct gocpp::error prepareRead(golang::poll::pollDesc* pd, bool isFile);
+        struct gocpp::error prepareWrite(golang::poll::pollDesc* pd, bool isFile);
+        struct gocpp::error wait(golang::poll::pollDesc* pd, int mode, bool isFile);
+        struct gocpp::error waitRead(golang::poll::pollDesc* pd, bool isFile);
+        struct gocpp::error waitWrite(golang::poll::pollDesc* pd, bool isFile);
+        void waitCanceled(golang::poll::pollDesc* pd, int mode);
+        bool pollable(golang::poll::pollDesc* pd);
+        struct gocpp::error SetDeadline(golang::poll::FD* fd, mocklib::Date t);
+        struct gocpp::error SetReadDeadline(golang::poll::FD* fd, mocklib::Date t);
+        struct gocpp::error SetWriteDeadline(golang::poll::FD* fd, mocklib::Date t);
     }
 }
 

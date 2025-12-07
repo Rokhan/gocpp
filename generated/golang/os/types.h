@@ -46,8 +46,8 @@ namespace golang::os
 
     namespace rec
     {
-        gocpp::string Name(struct fileStat* fs);
-        bool IsDir(struct fileStat* fs);
+        gocpp::string Name(golang::os::fileStat* fs);
+        bool IsDir(golang::os::fileStat* fs);
     }
 }
 

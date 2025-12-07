@@ -157,7 +157,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct markBits rec::allocBitsForIndex(struct mspan* s, uintptr_t allocBitIndex)
+    struct markBits rec::allocBitsForIndex(golang::runtime::mspan* s, uintptr_t allocBitIndex)
     {
         auto [bytep, mask] = rec::bitp(gocpp::recv(s->allocBits), allocBitIndex);
         return markBits {bytep, mask, allocBitIndex};
@@ -167,7 +167,7 @@ namespace golang::runtime
     // and negates them so that ctz (count trailing zeros) instructions
     // can be used. It then places these 8 bytes into the cached 64 bit
     // s.allocCache.
-    void rec::refillAllocCache(struct mspan* s, uint16_t whichByte)
+    void rec::refillAllocCache(golang::runtime::mspan* s, uint16_t whichByte)
     {
         auto bytes = (gocpp::array<uint8_t, 8>*)(unsafe::Pointer(rec::bytep(gocpp::recv(s->allocBits), uintptr_t(whichByte))));
         auto aCache = uint64_t(0);
@@ -186,7 +186,7 @@ namespace golang::runtime
     // or after s.freeindex.
     // There are hardware instructions that can be used to make this
     // faster if profiling warrants it.
-    uint16_t rec::nextFreeIndex(struct mspan* s)
+    uint16_t rec::nextFreeIndex(golang::runtime::mspan* s)
     {
         auto sfreeindex = s->freeindex;
         auto snelems = s->nelems;
@@ -235,7 +235,7 @@ namespace golang::runtime
     // The caller must ensure s.state is mSpanInUse, and there must have
     // been no preemption points since ensuring this (which could allow a
     // GC transition, which would allow the state to change).
-    bool rec::isFree(struct mspan* s, uintptr_t index)
+    bool rec::isFree(golang::runtime::mspan* s, uintptr_t index)
     {
         if(index < uintptr_t(s->freeIndexForScan))
         {
@@ -253,7 +253,7 @@ namespace golang::runtime
     // nosplit, because it is called by objIndex, which is nosplit
     //
     //go:nosplit
-    uintptr_t rec::divideByElemSize(struct mspan* s, uintptr_t n)
+    uintptr_t rec::divideByElemSize(golang::runtime::mspan* s, uintptr_t n)
     {
         auto doubleCheck = false;
         auto q = uintptr_t((uint64_t(n) * uint64_t(s->divMul)) >> 32);
@@ -268,7 +268,7 @@ namespace golang::runtime
     // nosplit, because it is called by other nosplit code like findObject
     //
     //go:nosplit
-    uintptr_t rec::objIndex(struct mspan* s, uintptr_t p)
+    uintptr_t rec::objIndex(golang::runtime::mspan* s, uintptr_t p)
     {
         return rec::divideByElemSize(gocpp::recv(s), p - rec::base(gocpp::recv(s)));
     }
@@ -280,37 +280,37 @@ namespace golang::runtime
         return rec::markBitsForIndex(gocpp::recv(s), objIndex);
     }
 
-    struct markBits rec::markBitsForIndex(struct mspan* s, uintptr_t objIndex)
+    struct markBits rec::markBitsForIndex(golang::runtime::mspan* s, uintptr_t objIndex)
     {
         auto [bytep, mask] = rec::bitp(gocpp::recv(s->gcmarkBits), objIndex);
         return markBits {bytep, mask, objIndex};
     }
 
-    struct markBits rec::markBitsForBase(struct mspan* s)
+    struct markBits rec::markBitsForBase(golang::runtime::mspan* s)
     {
         return markBits {& s->gcmarkBits->x, uint8_t(1), 0};
     }
 
     // isMarked reports whether mark bit m is set.
-    bool rec::isMarked(struct markBits m)
+    bool rec::isMarked(golang::runtime::markBits m)
     {
         return *m.bytep & m.mask != 0;
     }
 
     // setMarked sets the marked bit in the markbits, atomically.
-    void rec::setMarked(struct markBits m)
+    void rec::setMarked(golang::runtime::markBits m)
     {
         atomic::Or8(m.bytep, m.mask);
     }
 
     // setMarkedNonAtomic sets the marked bit in the markbits, non-atomically.
-    void rec::setMarkedNonAtomic(struct markBits m)
+    void rec::setMarkedNonAtomic(golang::runtime::markBits m)
     {
         *m.bytep |= m.mask;
     }
 
     // clearMarked clears the marked bit in the markbits, atomically.
-    void rec::clearMarked(struct markBits m)
+    void rec::clearMarked(golang::runtime::markBits m)
     {
         atomic::And8(m.bytep, ~ m.mask);
     }
@@ -328,7 +328,7 @@ namespace golang::runtime
     }
 
     // advance advances the markBits to the next object in the span.
-    void rec::advance(struct markBits* m)
+    void rec::advance(golang::runtime::markBits* m)
     {
         if(m->mask == (1 << 7))
         {
@@ -536,7 +536,7 @@ namespace golang::runtime
 
     // countAlloc returns the number of objects allocated in span s by
     // scanning the mark bitmap.
-    int rec::countAlloc(struct mspan* s)
+    int rec::countAlloc(golang::runtime::mspan* s)
     {
         auto count = 0;
         auto bytes = divRoundUp(uintptr_t(s->nelems), 8);

@@ -127,7 +127,7 @@ namespace golang::flate
 
     // encode encodes a block given in src and appends tokens
     // to dst and returns the result.
-    gocpp::slice<flate::token> rec::encode(struct deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src)
+    gocpp::slice<flate::token> rec::encode(golang::flate::deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src)
     {
         if(e->cur >= bufferReset)
         {
@@ -233,7 +233,7 @@ namespace golang::flate
     // matchLen returns the match length between src[s:] and src[t:].
     // t can be negative to indicate the match is starting in e.prev.
     // We assume that src[s-4:s] and src[t-4:t] already match.
-    int32_t rec::matchLen(struct deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src)
+    int32_t rec::matchLen(golang::flate::deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src)
     {
         auto s1 = int(s) + maxMatchLength - 4;
         if(s1 > len(src))
@@ -292,7 +292,7 @@ namespace golang::flate
 
     // Reset resets the encoding history.
     // This ensures that no matches are made to the previous block.
-    void rec::reset(struct deflateFast* e)
+    void rec::reset(golang::flate::deflateFast* e)
     {
         e->prev = e->prev.make_slice(0, 0);
         e->cur += maxMatchOffset;
@@ -306,7 +306,7 @@ namespace golang::flate
     // This is only called in rare situations to prevent integer overflow.
     //
     // See https://golang.org/issue/18636 and https://github.com/golang/go/issues/34121.
-    void rec::shiftOffsets(struct deflateFast* e)
+    void rec::shiftOffsets(golang::flate::deflateFast* e)
     {
         if(len(e->prev) == 0)
         {

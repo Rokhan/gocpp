@@ -87,7 +87,7 @@ namespace golang::runtime
     }
 
     // put adds a string to the table, emits it, and returns a unique ID for it.
-    uint64_t rec::put(struct traceStringTable* t, uintptr_t gen, gocpp::string s)
+    uint64_t rec::put(golang::runtime::traceStringTable* t, uintptr_t gen, gocpp::string s)
     {
         auto ss = stringStructOf(& s);
         auto [id, added] = rec::put(gocpp::recv(t->tab), ss->str, uintptr_t(ss->len));
@@ -102,7 +102,7 @@ namespace golang::runtime
     }
 
     // emit emits a string and creates an ID for it, but doesn't add it to the table. Returns the ID.
-    uint64_t rec::emit(struct traceStringTable* t, uintptr_t gen, gocpp::string s)
+    uint64_t rec::emit(golang::runtime::traceStringTable* t, uintptr_t gen, gocpp::string s)
     {
         auto id = rec::stealID(gocpp::recv(t->tab));
         systemstack([=]() mutable -> void
@@ -117,7 +117,7 @@ namespace golang::runtime
     // Must run on the systemstack because it may flush buffers and thus could acquire trace.lock.
     //
     //go:systemstack
-    void rec::writeString(struct traceStringTable* t, uintptr_t gen, uint64_t id, gocpp::string s)
+    void rec::writeString(golang::runtime::traceStringTable* t, uintptr_t gen, uint64_t id, gocpp::string s)
     {
         if(len(s) > maxTraceStringLen)
         {
@@ -149,7 +149,7 @@ namespace golang::runtime
     // must run on the systemstack.
     //
     //go:systemstack
-    void rec::reset(struct traceStringTable* t, uintptr_t gen)
+    void rec::reset(golang::runtime::traceStringTable* t, uintptr_t gen)
     {
         if(t->buf != nullptr)
         {

@@ -262,7 +262,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(struct pageAlloc* p, struct mutex* mheapLock, golang::runtime::sysMemStat* sysStat, bool test)
+    void rec::init(golang::runtime::pageAlloc* p, struct mutex* mheapLock, golang::runtime::sysMemStat* sysStat, bool test)
     {
         if(levelLogPages[0] > logMaxPackedValue)
         {
@@ -282,7 +282,7 @@ namespace golang::runtime
     // tryChunkOf returns the bitmap data for the given chunk.
     //
     // Returns nil if the chunk data has not been mapped.
-    struct pallocData* rec::tryChunkOf(struct pageAlloc* p, golang::runtime::chunkIdx ci)
+    struct pallocData* rec::tryChunkOf(golang::runtime::pageAlloc* p, golang::runtime::chunkIdx ci)
     {
         auto l2 = p->chunks[rec::l1(gocpp::recv(ci))];
         if(l2 == nullptr)
@@ -295,7 +295,7 @@ namespace golang::runtime
     // chunkOf returns the chunk at the given chunk index.
     //
     // The chunk index must be valid or this method may throw.
-    struct pallocData* rec::chunkOf(struct pageAlloc* p, golang::runtime::chunkIdx ci)
+    struct pallocData* rec::chunkOf(golang::runtime::pageAlloc* p, golang::runtime::chunkIdx ci)
     {
         return & p->chunks[rec::l1(gocpp::recv(ci))][rec::l2(gocpp::recv(ci))];
     }
@@ -304,7 +304,7 @@ namespace golang::runtime
     // It may allocate metadata, in which case *p.sysStat will be updated.
     //
     // p.mheapLock must be held.
-    void rec::grow(struct pageAlloc* p, uintptr_t base, uintptr_t size)
+    void rec::grow(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t size)
     {
         assertLockHeld(p->mheapLock);
         auto limit = alignUp(base + size, pallocChunkBytes);
@@ -368,7 +368,7 @@ namespace golang::runtime
     // Must be called on the system stack because it acquires the heap lock.
     //
     //go:systemstack
-    void rec::enableChunkHugePages(struct pageAlloc* p)
+    void rec::enableChunkHugePages(golang::runtime::pageAlloc* p)
     {
         lock(& mheap_.lock);
         if(p->chunkHugePages)
@@ -398,7 +398,7 @@ namespace golang::runtime
     // whether the operation performed was an allocation or a free.
     //
     // p.mheapLock must be held.
-    void rec::update(struct pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc)
+    void rec::update(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc)
     {
         assertLockHeld(p->mheapLock);
         auto limit = base + npages * pageSize - 1;
@@ -472,7 +472,7 @@ namespace golang::runtime
     // allocated range.
     //
     // p.mheapLock must be held.
-    uintptr_t rec::allocRange(struct pageAlloc* p, uintptr_t base, uintptr_t npages)
+    uintptr_t rec::allocRange(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
         auto limit = base + npages * pageSize - 1;
@@ -514,7 +514,7 @@ namespace golang::runtime
     // it returns maxOffAddr.
     //
     // p.mheapLock must be held.
-    struct offAddr rec::findMappedAddr(struct pageAlloc* p, struct offAddr addr)
+    struct offAddr rec::findMappedAddr(golang::runtime::pageAlloc* p, struct offAddr addr)
     {
         assertLockHeld(p->mheapLock);
         auto ai = arenaIndex(rec::addr(gocpp::recv(addr)));
@@ -589,7 +589,7 @@ namespace golang::runtime
     // searchAddr returned is invalid and must be ignored.
     //
     // p.mheapLock must be held.
-    std::tuple<uintptr_t, struct offAddr> rec::find(struct pageAlloc* p, uintptr_t npages)
+    std::tuple<uintptr_t, struct offAddr> rec::find(golang::runtime::pageAlloc* p, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
         auto i = 0;
@@ -725,7 +725,7 @@ namespace golang::runtime
     // Must run on the system stack because p.mheapLock must be held.
     //
     //go:systemstack
-    std::tuple<uintptr_t, uintptr_t> rec::alloc(struct pageAlloc* p, uintptr_t npages)
+    std::tuple<uintptr_t, uintptr_t> rec::alloc(golang::runtime::pageAlloc* p, uintptr_t npages)
     {
         uintptr_t addr;
         uintptr_t scav;
@@ -777,7 +777,7 @@ namespace golang::runtime
     // Must run on the system stack because p.mheapLock must be held.
     //
     //go:systemstack
-    void rec::free(struct pageAlloc* p, uintptr_t base, uintptr_t npages)
+    void rec::free(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
         if(auto b = (offAddr {base}); rec::lessThan(gocpp::recv(b), p->searchAddr))

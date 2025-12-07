@@ -41,10 +41,10 @@ namespace golang::runtime
 
     namespace rec
     {
-        uint64_t put(struct traceStringTable* t, uintptr_t gen, gocpp::string s);
-        uint64_t emit(struct traceStringTable* t, uintptr_t gen, gocpp::string s);
-        void writeString(struct traceStringTable* t, uintptr_t gen, uint64_t id, gocpp::string s);
-        void reset(struct traceStringTable* t, uintptr_t gen);
+        uint64_t put(golang::runtime::traceStringTable* t, uintptr_t gen, gocpp::string s);
+        uint64_t emit(golang::runtime::traceStringTable* t, uintptr_t gen, gocpp::string s);
+        void writeString(golang::runtime::traceStringTable* t, uintptr_t gen, uint64_t id, gocpp::string s);
+        void reset(golang::runtime::traceStringTable* t, uintptr_t gen);
     }
 }
 

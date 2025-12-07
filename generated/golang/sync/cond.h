@@ -52,12 +52,12 @@ namespace golang::sync
 
     namespace rec
     {
-        void Wait(struct Cond* c);
-        void Signal(struct Cond* c);
-        void Broadcast(struct Cond* c);
+        void Wait(golang::sync::Cond* c);
+        void Signal(golang::sync::Cond* c);
+        void Broadcast(golang::sync::Cond* c);
         void check(golang::sync::copyChecker* c);
-        void Lock(noCopy*);
-        void Unlock(noCopy*);
+        void Lock(golang::sync::noCopy*);
+        void Unlock(golang::sync::noCopy*);
     }
 }
 

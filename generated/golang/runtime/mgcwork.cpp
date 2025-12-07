@@ -132,7 +132,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(struct gcWork* w)
+    void rec::init(golang::runtime::gcWork* w)
     {
         w->wbuf1 = getempty();
         auto wbuf2 = trygetfull();
@@ -147,7 +147,7 @@ namespace golang::runtime
     // obj must point to the beginning of a heap object or an oblet.
     //
     //go:nowritebarrierrec
-    void rec::put(struct gcWork* w, uintptr_t obj)
+    void rec::put(golang::runtime::gcWork* w, uintptr_t obj)
     {
         auto flushed = false;
         auto wbuf = w->wbuf1;
@@ -184,7 +184,7 @@ namespace golang::runtime
     // otherwise it returns false and the caller needs to call put.
     //
     //go:nowritebarrierrec
-    bool rec::putFast(struct gcWork* w, uintptr_t obj)
+    bool rec::putFast(golang::runtime::gcWork* w, uintptr_t obj)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr || wbuf->nobj == len(wbuf->obj))
@@ -200,7 +200,7 @@ namespace golang::runtime
     // constraints on these pointers.
     //
     //go:nowritebarrierrec
-    void rec::putBatch(struct gcWork* w, gocpp::slice<uintptr_t> obj)
+    void rec::putBatch(golang::runtime::gcWork* w, gocpp::slice<uintptr_t> obj)
     {
         if(len(obj) == 0)
         {
@@ -240,7 +240,7 @@ namespace golang::runtime
     // other gcWork instances or other caches.
     //
     //go:nowritebarrierrec
-    uintptr_t rec::tryGet(struct gcWork* w)
+    uintptr_t rec::tryGet(golang::runtime::gcWork* w)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr)
@@ -273,7 +273,7 @@ namespace golang::runtime
     // the caller is expected to call tryGet().
     //
     //go:nowritebarrierrec
-    uintptr_t rec::tryGetFast(struct gcWork* w)
+    uintptr_t rec::tryGetFast(golang::runtime::gcWork* w)
     {
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr || wbuf->nobj == 0)
@@ -291,7 +291,7 @@ namespace golang::runtime
     // ability to hide pointers during the concurrent mark phase.
     //
     //go:nowritebarrierrec
-    void rec::dispose(struct gcWork* w)
+    void rec::dispose(golang::runtime::gcWork* w)
     {
         if(auto wbuf = w->wbuf1; wbuf != nullptr)
         {
@@ -333,7 +333,7 @@ namespace golang::runtime
     // global queue.
     //
     //go:nowritebarrierrec
-    void rec::balance(struct gcWork* w)
+    void rec::balance(golang::runtime::gcWork* w)
     {
         if(w->wbuf1 == nullptr)
         {
@@ -364,7 +364,7 @@ namespace golang::runtime
     // empty reports whether w has no mark work available.
     //
     //go:nowritebarrierrec
-    bool rec::empty(struct gcWork* w)
+    bool rec::empty(golang::runtime::gcWork* w)
     {
         return w->wbuf1 == nullptr || (w->wbuf1->nobj == 0 && w->wbuf2->nobj == 0);
     }
@@ -436,7 +436,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::checknonempty(struct workbuf* b)
+    void rec::checknonempty(golang::runtime::workbuf* b)
     {
         if(b->nobj == 0)
         {
@@ -444,7 +444,7 @@ namespace golang::runtime
         }
     }
 
-    void rec::checkempty(struct workbuf* b)
+    void rec::checkempty(golang::runtime::workbuf* b)
     {
         if(b->nobj != 0)
         {

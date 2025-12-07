@@ -60,14 +60,14 @@ namespace golang::crc32
 
     namespace rec
     {
-        int Size(struct digest* d);
-        int BlockSize(struct digest* d);
-        void Reset(struct digest* d);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(struct digest* d);
-        struct gocpp::error UnmarshalBinary(struct digest* d, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> Write(struct digest* d, gocpp::slice<unsigned char> p);
-        uint32_t Sum32(struct digest* d);
-        gocpp::slice<unsigned char> Sum(struct digest* d, gocpp::slice<unsigned char> in);
+        int Size(golang::crc32::digest* d);
+        int BlockSize(golang::crc32::digest* d);
+        void Reset(golang::crc32::digest* d);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(golang::crc32::digest* d);
+        struct gocpp::error UnmarshalBinary(golang::crc32::digest* d, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> Write(golang::crc32::digest* d, gocpp::slice<unsigned char> p);
+        uint32_t Sum32(golang::crc32::digest* d);
+        gocpp::slice<unsigned char> Sum(golang::crc32::digest* d, gocpp::slice<unsigned char> in);
     }
 }
 

@@ -37,8 +37,8 @@ namespace golang::time
 
     namespace rec
     {
-        void Stop(struct Ticker* t);
-        void Reset(struct Ticker* t, golang::time::Duration d);
+        void Stop(golang::time::Ticker* t);
+        void Reset(golang::time::Ticker* t, golang::time::Duration d);
     }
 }
 

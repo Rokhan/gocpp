@@ -184,7 +184,7 @@ namespace golang::runtime
     // should take action to limit CPU utilization.
     //
     // It is safe to call concurrently with other operations.
-    bool rec::limiting(struct gcCPULimiterState* l)
+    bool rec::limiting(golang::runtime::gcCPULimiterState* l)
     {
         return rec::Load(gocpp::recv(l->enabled));
     }
@@ -195,7 +195,7 @@ namespace golang::runtime
     // updating the limiter. Release ownership by calling finishGCTransition.
     //
     // It is safe to call concurrently with other operations.
-    void rec::startGCTransition(struct gcCPULimiterState* l, bool enableGC, int64_t now)
+    void rec::startGCTransition(golang::runtime::gcCPULimiterState* l, bool enableGC, int64_t now)
     {
         if(! rec::tryLock(gocpp::recv(l)))
         {
@@ -213,7 +213,7 @@ namespace golang::runtime
     // finishGCTransition notifies the limiter that the GC transition is complete
     // and releases ownership of it. It also accumulates STW time in the bucket.
     // now must be the timestamp from the end of the STW pause.
-    void rec::finishGCTransition(struct gcCPULimiterState* l, int64_t now)
+    void rec::finishGCTransition(golang::runtime::gcCPULimiterState* l, int64_t now)
     {
         if(! l->transitioning)
         {
@@ -232,21 +232,21 @@ namespace golang::runtime
     // we can go before updating the limiter.
     // needUpdate returns true if the limiter's maximum update period has been
     // exceeded, and so would benefit from an update.
-    bool rec::needUpdate(struct gcCPULimiterState* l, int64_t now)
+    bool rec::needUpdate(golang::runtime::gcCPULimiterState* l, int64_t now)
     {
         return now - rec::Load(gocpp::recv(l->lastUpdate)) > gcCPULimiterUpdatePeriod;
     }
 
     // addAssistTime notifies the limiter of additional assist time. It will be
     // included in the next update.
-    void rec::addAssistTime(struct gcCPULimiterState* l, int64_t t)
+    void rec::addAssistTime(golang::runtime::gcCPULimiterState* l, int64_t t)
     {
         rec::Add(gocpp::recv(l->assistTimePool), t);
     }
 
     // addIdleTime notifies the limiter of additional time a P spent on the idle list. It will be
     // subtracted from the total CPU time in the next update.
-    void rec::addIdleTime(struct gcCPULimiterState* l, int64_t t)
+    void rec::addIdleTime(golang::runtime::gcCPULimiterState* l, int64_t t)
     {
         rec::Add(gocpp::recv(l->idleTimePool), t);
     }
@@ -255,7 +255,7 @@ namespace golang::runtime
     // current monotonic time in nanoseconds.
     //
     // This is safe to call concurrently with other operations, except *GCTransition.
-    void rec::update(struct gcCPULimiterState* l, int64_t now)
+    void rec::update(golang::runtime::gcCPULimiterState* l, int64_t now)
     {
         if(! rec::tryLock(gocpp::recv(l)))
         {
@@ -270,7 +270,7 @@ namespace golang::runtime
     }
 
     // updateLocked is the implementation of update. l.lock must be held.
-    void rec::updateLocked(struct gcCPULimiterState* l, int64_t now)
+    void rec::updateLocked(golang::runtime::gcCPULimiterState* l, int64_t now)
     {
         auto lastUpdate = rec::Load(gocpp::recv(l->lastUpdate));
         if(now < lastUpdate)
@@ -339,7 +339,7 @@ namespace golang::runtime
     //
     // This is an internal function that deals just with the bucket. Prefer update.
     // l.lock must be held.
-    void rec::accumulate(struct gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime)
+    void rec::accumulate(golang::runtime::gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime)
     {
         auto headroom = l->bucket.capacity - l->bucket.fill;
         auto enabled = headroom == 0;
@@ -370,13 +370,13 @@ namespace golang::runtime
     }
 
     // tryLock attempts to lock l. Returns true on success.
-    bool rec::tryLock(struct gcCPULimiterState* l)
+    bool rec::tryLock(golang::runtime::gcCPULimiterState* l)
     {
         return rec::CompareAndSwap(gocpp::recv(l->lock), 0, 1);
     }
 
     // unlock releases the lock on l. Must be called if tryLock returns true.
-    void rec::unlock(struct gcCPULimiterState* l)
+    void rec::unlock(golang::runtime::gcCPULimiterState* l)
     {
         auto old = rec::Swap(gocpp::recv(l->lock), 0);
         if(old != 1)
@@ -390,7 +390,7 @@ namespace golang::runtime
     // while the GC is enabled.
     //
     // It is safe to call concurrently with other operations.
-    void rec::resetCapacity(struct gcCPULimiterState* l, int64_t now, int32_t nprocs)
+    void rec::resetCapacity(golang::runtime::gcCPULimiterState* l, int64_t now, int32_t nprocs)
     {
         if(! rec::tryLock(gocpp::recv(l)))
         {
@@ -488,7 +488,7 @@ namespace golang::runtime
     // scheduled away during it can mean that whatever we're measuring isn't a reflection
     // of "on-CPU" time. The OS could deschedule us at any time, but we want to maintain as
     // close of an approximation as we can.
-    bool rec::start(struct limiterEvent* e, golang::runtime::limiterEventType typ, int64_t now)
+    bool rec::start(golang::runtime::limiterEvent* e, golang::runtime::limiterEventType typ, int64_t now)
     {
         if(rec::typ(gocpp::recv(limiterEventStamp(rec::Load(gocpp::recv(e->stamp))))) != limiterEventNone)
         {
@@ -503,7 +503,7 @@ namespace golang::runtime
     //
     // Returns the type of the in-flight event, as well as how long it's currently been
     // executing for. Returns limiterEventNone if no event is active.
-    std::tuple<runtime::limiterEventType, int64_t> rec::consume(struct limiterEvent* e, int64_t now)
+    std::tuple<runtime::limiterEventType, int64_t> rec::consume(golang::runtime::limiterEvent* e, int64_t now)
     {
         runtime::limiterEventType typ;
         int64_t duration;
@@ -532,7 +532,7 @@ namespace golang::runtime
     // stop stops the active limiter event. Throws if the
     //
     // The caller must be non-preemptible across the event. See start as to why.
-    void rec::stop(struct limiterEvent* e, golang::runtime::limiterEventType typ, int64_t now)
+    void rec::stop(golang::runtime::limiterEvent* e, golang::runtime::limiterEventType typ, int64_t now)
     {
         runtime::limiterEventStamp stamp = {};
         for(; ; )

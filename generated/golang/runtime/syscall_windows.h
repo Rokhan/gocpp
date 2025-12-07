@@ -142,10 +142,10 @@ namespace golang::runtime
 
     namespace rec
     {
-        bool tryMerge(struct abiPart* a, struct abiPart b);
-        void assignArg(struct abiDesc* p, golang::runtime::_type* t);
-        bool tryRegAssignArg(struct abiDesc* p, golang::runtime::_type* t, uintptr_t offset);
-        bool assignReg(struct abiDesc* p, uintptr_t size, uintptr_t offset);
+        bool tryMerge(golang::runtime::abiPart* a, struct abiPart b);
+        void assignArg(golang::runtime::abiDesc* p, golang::runtime::_type* t);
+        bool tryRegAssignArg(golang::runtime::abiDesc* p, golang::runtime::_type* t, uintptr_t offset);
+        bool assignReg(golang::runtime::abiDesc* p, uintptr_t size, uintptr_t offset);
     }
 }
 

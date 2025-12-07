@@ -123,7 +123,7 @@ namespace golang::main
         return double(f);
     }
 
-    double rec::Abs(struct Vertex* v)
+    double rec::Abs(golang::main::Vertex* v)
     {
         return std::sqrt(v->X * v->X + v->Y * v->Y);
     }

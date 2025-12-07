@@ -72,7 +72,7 @@ namespace golang::rand
     }
 
     // Seed uses the provided seed value to initialize the generator to a deterministic state.
-    void rec::Seed(struct rngSource* rng, int64_t seed)
+    void rec::Seed(golang::rand::rngSource* rng, int64_t seed)
     {
         rng->tap = 0;
         rng->feed = rngLen - rngTap;
@@ -104,13 +104,13 @@ namespace golang::rand
     }
 
     // Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
-    int64_t rec::Int63(struct rngSource* rng)
+    int64_t rec::Int63(golang::rand::rngSource* rng)
     {
         return int64_t(rec::Uint64(gocpp::recv(rng)) & rngMask);
     }
 
     // Uint64 returns a non-negative pseudo-random 64-bit integer as a uint64.
-    uint64_t rec::Uint64(struct rngSource* rng)
+    uint64_t rec::Uint64(golang::rand::rngSource* rng)
     {
         rng->tap--;
         if(rng->tap < 0)

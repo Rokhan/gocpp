@@ -34,8 +34,8 @@ namespace golang::main
 
     namespace rec
     {
-        void Inc(struct SafeCounter* c, gocpp::string key);
-        int Value(struct SafeCounter* c, gocpp::string key);
+        void Inc(golang::main::SafeCounter* c, gocpp::string key);
+        int Value(golang::main::SafeCounter* c, gocpp::string key);
     }
 }
 

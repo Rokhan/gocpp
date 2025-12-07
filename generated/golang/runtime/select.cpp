@@ -579,7 +579,7 @@ namespace golang::runtime
         gocpp::panic(plainError("send on closed channel"_s));
     }
 
-    uintptr_t rec::sortkey(struct hchan* c)
+    uintptr_t rec::sortkey(golang::runtime::hchan* c)
     {
         return uintptr_t(unsafe::Pointer(c));
     }
@@ -700,7 +700,7 @@ namespace golang::runtime
         return {chosen, recvOK};
     }
 
-    void rec::dequeueSudoG(struct waitq* q, struct sudog* sgp)
+    void rec::dequeueSudoG(golang::runtime::waitq* q, struct sudog* sgp)
     {
         auto x = sgp->prev;
         auto y = sgp->next;

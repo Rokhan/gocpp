@@ -135,7 +135,7 @@ namespace golang::runtime
 
     // Initialize f to allocate objects of the given size,
     // using the allocator to obtain chunks of memory.
-    void rec::init(struct fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, golang::runtime::sysMemStat* stat)
+    void rec::init(golang::runtime::fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, golang::runtime::sysMemStat* stat)
     {
         if(size > _FixAllocChunk)
         {
@@ -154,7 +154,7 @@ namespace golang::runtime
         f->zero = true;
     }
 
-    unsafe::Pointer rec::alloc(struct fixalloc* f)
+    unsafe::Pointer rec::alloc(golang::runtime::fixalloc* f)
     {
         if(f->size == 0)
         {
@@ -188,7 +188,7 @@ namespace golang::runtime
         return v;
     }
 
-    void rec::free(struct fixalloc* f, unsafe::Pointer p)
+    void rec::free(golang::runtime::fixalloc* f, unsafe::Pointer p)
     {
         f->inuse -= f->size;
         auto v = (mlink*)(p);

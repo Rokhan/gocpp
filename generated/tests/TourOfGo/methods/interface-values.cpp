@@ -98,7 +98,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void rec::M(struct T* t)
+    void rec::M(golang::main::T* t)
     {
         mocklib::Println(t->S);
     }

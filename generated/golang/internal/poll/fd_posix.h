@@ -23,11 +23,11 @@ namespace golang::poll
 
     namespace rec
     {
-        struct gocpp::error eofError(struct FD* fd, int n, struct gocpp::error err);
-        struct gocpp::error Shutdown(struct FD* fd, int how);
-        struct gocpp::error Fchown(struct FD* fd, int uid, int gid);
-        struct gocpp::error Ftruncate(struct FD* fd, int64_t size);
-        struct gocpp::error RawControl(struct FD* fd, std::function<void (uintptr_t _1)> f);
+        struct gocpp::error eofError(golang::poll::FD* fd, int n, struct gocpp::error err);
+        struct gocpp::error Shutdown(golang::poll::FD* fd, int how);
+        struct gocpp::error Fchown(golang::poll::FD* fd, int uid, int gid);
+        struct gocpp::error Ftruncate(golang::poll::FD* fd, int64_t size);
+        struct gocpp::error RawControl(golang::poll::FD* fd, std::function<void (uintptr_t _1)> f);
     }
 }
 

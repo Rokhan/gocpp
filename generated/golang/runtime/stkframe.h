@@ -66,9 +66,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        uintptr_t argBytes(struct stkframe* frame);
-        std::tuple<struct bitvector, bool> argMapInternal(struct stkframe* frame);
-        std::tuple<struct bitvector, struct bitvector, gocpp::slice<stackObjectRecord>> getStackMap(struct stkframe* frame, bool debug);
+        uintptr_t argBytes(golang::runtime::stkframe* frame);
+        std::tuple<struct bitvector, bool> argMapInternal(golang::runtime::stkframe* frame);
+        std::tuple<struct bitvector, struct bitvector, gocpp::slice<stackObjectRecord>> getStackMap(golang::runtime::stkframe* frame, bool debug);
     }
 }
 

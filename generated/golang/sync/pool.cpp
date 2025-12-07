@@ -190,7 +190,7 @@ namespace golang::sync
     }
 
     // Put adds x to the pool.
-    void rec::Put(struct Pool* p, go_any x)
+    void rec::Put(golang::sync::Pool* p, go_any x)
     {
         if(x == nullptr)
         {
@@ -229,7 +229,7 @@ namespace golang::sync
     //
     // If Get would otherwise return nil and p.New is non-nil, Get returns
     // the result of calling p.New.
-    go_any rec::Get(struct Pool* p)
+    go_any rec::Get(golang::sync::Pool* p)
     {
         if(race::Enabled)
         {
@@ -262,7 +262,7 @@ namespace golang::sync
         return x;
     }
 
-    go_any rec::getSlow(struct Pool* p, int pid)
+    go_any rec::getSlow(golang::sync::Pool* p, int pid)
     {
         auto size = runtime_LoadAcquintptr(& p->localSize);
         auto locals = p->local;
@@ -301,7 +301,7 @@ namespace golang::sync
     // pin pins the current goroutine to P, disables preemption and
     // returns poolLocal pool for the P and the P's id.
     // Caller must call runtime_procUnpin() when done with the pool.
-    std::tuple<struct poolLocal*, int> rec::pin(struct Pool* p)
+    std::tuple<struct poolLocal*, int> rec::pin(golang::sync::Pool* p)
     {
         if(p == nullptr)
         {
@@ -317,7 +317,7 @@ namespace golang::sync
         return rec::pinSlow(gocpp::recv(p));
     }
 
-    std::tuple<struct poolLocal*, int> rec::pinSlow(struct Pool* p)
+    std::tuple<struct poolLocal*, int> rec::pinSlow(golang::sync::Pool* p)
     {
         gocpp::Defer defer;
         try

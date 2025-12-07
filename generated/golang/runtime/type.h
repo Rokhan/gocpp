@@ -75,13 +75,13 @@ namespace golang::runtime
 
     namespace rec
     {
-        gocpp::string string(struct rtype t);
-        runtime::uncommontype* uncommon(struct rtype t);
-        gocpp::string name(struct rtype t);
-        gocpp::string pkgpath(struct rtype t);
-        runtime::name nameOff(struct rtype t, golang::runtime::nameOff off);
-        runtime::_type* typeOff(struct rtype t, golang::runtime::typeOff off);
-        unsafe::Pointer textOff(struct rtype t, golang::runtime::textOff off);
+        gocpp::string string(golang::runtime::rtype t);
+        runtime::uncommontype* uncommon(golang::runtime::rtype t);
+        gocpp::string name(golang::runtime::rtype t);
+        gocpp::string pkgpath(golang::runtime::rtype t);
+        runtime::name nameOff(golang::runtime::rtype t, golang::runtime::nameOff off);
+        runtime::_type* typeOff(golang::runtime::rtype t, golang::runtime::typeOff off);
+        unsafe::Pointer textOff(golang::runtime::rtype t, golang::runtime::textOff off);
     }
 }
 

@@ -182,13 +182,13 @@ namespace golang::time
     }
 
     // nsec returns the time's nanoseconds.
-    int32_t rec::nsec(struct Time* t)
+    int32_t rec::nsec(golang::time::Time* t)
     {
         return int32_t(t->wall & nsecMask);
     }
 
     // sec returns the time's seconds since Jan 1 year 1.
-    int64_t rec::sec(struct Time* t)
+    int64_t rec::sec(golang::time::Time* t)
     {
         if(t->wall & hasMonotonic != 0)
         {
@@ -198,13 +198,13 @@ namespace golang::time
     }
 
     // unixSec returns the time's seconds since Jan 1 1970 (Unix time).
-    int64_t rec::unixSec(struct Time* t)
+    int64_t rec::unixSec(golang::time::Time* t)
     {
         return rec::sec(gocpp::recv(t)) + internalToUnix;
     }
 
     // addSec adds d seconds to the time.
-    void rec::addSec(struct Time* t, int64_t d)
+    void rec::addSec(golang::time::Time* t, int64_t d)
     {
         if(t->wall & hasMonotonic != 0)
         {
@@ -234,7 +234,7 @@ namespace golang::time
     }
 
     // setLoc sets the location associated with the time.
-    void rec::setLoc(struct Time* t, struct Location* loc)
+    void rec::setLoc(golang::time::Time* t, struct Location* loc)
     {
         if(loc == & utcLoc)
         {
@@ -245,7 +245,7 @@ namespace golang::time
     }
 
     // stripMono strips the monotonic clock reading in t.
-    void rec::stripMono(struct Time* t)
+    void rec::stripMono(golang::time::Time* t)
     {
         if(t->wall & hasMonotonic != 0)
         {
@@ -258,7 +258,7 @@ namespace golang::time
     // If t cannot hold a monotonic clock reading,
     // because its wall time is too large,
     // setMono is a no-op.
-    void rec::setMono(struct Time* t, int64_t m)
+    void rec::setMono(golang::time::Time* t, int64_t m)
     {
         if(t->wall & hasMonotonic == 0)
         {
@@ -277,7 +277,7 @@ namespace golang::time
     // This function is used only for testing,
     // so it's OK that technically 0 is a valid
     // monotonic clock reading as well.
-    int64_t rec::mono(struct Time* t)
+    int64_t rec::mono(golang::time::Time* t)
     {
         if(t->wall & hasMonotonic == 0)
         {
@@ -287,7 +287,7 @@ namespace golang::time
     }
 
     // After reports whether the time instant t is after u.
-    bool rec::After(struct Time t, struct Time u)
+    bool rec::After(golang::time::Time t, struct Time u)
     {
         if(t.wall & u.wall & hasMonotonic != 0)
         {
@@ -299,7 +299,7 @@ namespace golang::time
     }
 
     // Before reports whether the time instant t is before u.
-    bool rec::Before(struct Time t, struct Time u)
+    bool rec::Before(golang::time::Time t, struct Time u)
     {
         if(t.wall & u.wall & hasMonotonic != 0)
         {
@@ -312,7 +312,7 @@ namespace golang::time
 
     // Compare compares the time instant t with u. If t is before u, it returns -1;
     // if t is after u, it returns +1; if they're the same, it returns 0.
-    int rec::Compare(struct Time t, struct Time u)
+    int rec::Compare(golang::time::Time t, struct Time u)
     {
         int64_t tc = {};
         int64_t uc = {};
@@ -351,7 +351,7 @@ namespace golang::time
     // For example, 6:00 +0200 and 4:00 UTC are Equal.
     // See the documentation on the Time type for the pitfalls of using == with
     // Time values; most code should use Equal instead.
-    bool rec::Equal(struct Time t, struct Time u)
+    bool rec::Equal(golang::time::Time t, struct Time u)
     {
         if(t.wall & u.wall & hasMonotonic != 0)
         {
@@ -394,14 +394,14 @@ namespace golang::time
     // Offsets to convert between internal and absolute or Unix times.
     // IsZero reports whether t represents the zero time instant,
     // January 1, year 1, 00:00:00 UTC.
-    bool rec::IsZero(struct Time t)
+    bool rec::IsZero(golang::time::Time t)
     {
         return rec::sec(gocpp::recv(t)) == 0 && rec::nsec(gocpp::recv(t)) == 0;
     }
 
     // abs returns the time t as an absolute time, adjusted by the zone offset.
     // It is called when computing a presentation property like Month or Hour.
-    uint64_t rec::abs(struct Time t)
+    uint64_t rec::abs(golang::time::Time t)
     {
         auto l = t.loc;
         if(l == nullptr || l == & localLoc)
@@ -426,7 +426,7 @@ namespace golang::time
 
     // locabs is a combination of the Zone and abs methods,
     // extracting both return values from a single zone lookup.
-    std::tuple<gocpp::string, int, uint64_t> rec::locabs(struct Time t)
+    std::tuple<gocpp::string, int, uint64_t> rec::locabs(golang::time::Time t)
     {
         gocpp::string name;
         int offset;
@@ -459,7 +459,7 @@ namespace golang::time
     }
 
     // Date returns the year, month, and day in which t occurs.
-    std::tuple<int, time::Month, int> rec::Date(struct Time t)
+    std::tuple<int, time::Month, int> rec::Date(golang::time::Time t)
     {
         int year;
         time::Month month;
@@ -469,28 +469,28 @@ namespace golang::time
     }
 
     // Year returns the year in which t occurs.
-    int rec::Year(struct Time t)
+    int rec::Year(golang::time::Time t)
     {
         auto [year, gocpp_id_4, gocpp_id_5, gocpp_id_6] = rec::date(gocpp::recv(t), false);
         return year;
     }
 
     // Month returns the month of the year specified by t.
-    time::Month rec::Month(struct Time t)
+    time::Month rec::Month(golang::time::Time t)
     {
         auto [gocpp_id_7, month, gocpp_id_8, gocpp_id_9] = rec::date(gocpp::recv(t), true);
         return month;
     }
 
     // Day returns the day of the month specified by t.
-    int rec::Day(struct Time t)
+    int rec::Day(golang::time::Time t)
     {
         auto [gocpp_id_10, gocpp_id_11, day, gocpp_id_12] = rec::date(gocpp::recv(t), true);
         return day;
     }
 
     // Weekday returns the day of the week specified by t.
-    time::Weekday rec::Weekday(struct Time t)
+    time::Weekday rec::Weekday(golang::time::Time t)
     {
         return absWeekday(rec::abs(gocpp::recv(t)));
     }
@@ -506,7 +506,7 @@ namespace golang::time
     // Week ranges from 1 to 53. Jan 01 to Jan 03 of year n might belong to
     // week 52 or 53 of year n-1, and Dec 29 to Dec 31 might belong to week 1
     // of year n+1.
-    std::tuple<int, int> rec::ISOWeek(struct Time t)
+    std::tuple<int, int> rec::ISOWeek(golang::time::Time t)
     {
         int year;
         int week;
@@ -523,7 +523,7 @@ namespace golang::time
     }
 
     // Clock returns the hour, minute, and second within the day specified by t.
-    std::tuple<int, int, int> rec::Clock(struct Time t)
+    std::tuple<int, int, int> rec::Clock(golang::time::Time t)
     {
         int hour;
         int min;
@@ -546,33 +546,33 @@ namespace golang::time
     }
 
     // Hour returns the hour within the day specified by t, in the range [0, 23].
-    int rec::Hour(struct Time t)
+    int rec::Hour(golang::time::Time t)
     {
         return int(rec::abs(gocpp::recv(t)) % secondsPerDay) / secondsPerHour;
     }
 
     // Minute returns the minute offset within the hour specified by t, in the range [0, 59].
-    int rec::Minute(struct Time t)
+    int rec::Minute(golang::time::Time t)
     {
         return int(rec::abs(gocpp::recv(t)) % secondsPerHour) / secondsPerMinute;
     }
 
     // Second returns the second offset within the minute specified by t, in the range [0, 59].
-    int rec::Second(struct Time t)
+    int rec::Second(golang::time::Time t)
     {
         return int(rec::abs(gocpp::recv(t)) % secondsPerMinute);
     }
 
     // Nanosecond returns the nanosecond offset within the second specified by t,
     // in the range [0, 999999999].
-    int rec::Nanosecond(struct Time t)
+    int rec::Nanosecond(golang::time::Time t)
     {
         return int(rec::nsec(gocpp::recv(t)));
     }
 
     // YearDay returns the day of the year specified by t, in the range [1,365] for non-leap years,
     // and [1,366] in leap years.
-    int rec::YearDay(struct Time t)
+    int rec::YearDay(golang::time::Time t)
     {
         auto [gocpp_id_15, gocpp_id_16, gocpp_id_17, yday] = rec::date(gocpp::recv(t), false);
         return yday + 1;
@@ -857,7 +857,7 @@ namespace golang::time
     }
 
     // Add returns the time t+d.
-    struct Time rec::Add(struct Time t, golang::time::Duration d)
+    struct Time rec::Add(golang::time::Time t, golang::time::Duration d)
     {
         auto dsec = int64_t(d / 1e9);
         auto nsec = rec::nsec(gocpp::recv(t)) + int32_t(d % 1e9);
@@ -893,7 +893,7 @@ namespace golang::time
     // value that can be stored in a Duration, the maximum (or minimum) duration
     // will be returned.
     // To compute t-d for a duration d, use t.Add(-d).
-    time::Duration rec::Sub(struct Time t, struct Time u)
+    time::Duration rec::Sub(golang::time::Time t, struct Time u)
     {
         if(t.wall & u.wall & hasMonotonic != 0)
         {
@@ -973,7 +973,7 @@ namespace golang::time
     // AddDate normalizes its result in the same way that Date does,
     // so, for example, adding one month to October 31 yields
     // December 1, the normalized form for November 31.
-    struct Time rec::AddDate(struct Time t, int years, int months, int days)
+    struct Time rec::AddDate(golang::time::Time t, int years, int months, int days)
     {
         auto [year, month, day] = rec::Date(gocpp::recv(t));
         auto [hour, min, sec] = rec::Clock(gocpp::recv(t));
@@ -982,7 +982,7 @@ namespace golang::time
 
     // date computes the year, day of year, and when full=true,
     // the month and day in which t occurs.
-    std::tuple<int, time::Month, int, int> rec::date(struct Time t, bool full)
+    std::tuple<int, time::Month, int, int> rec::date(golang::time::Time t, bool full)
     {
         int year;
         time::Month month;
@@ -1126,14 +1126,14 @@ namespace golang::time
     }
 
     // UTC returns t with the location set to UTC.
-    struct Time rec::UTC(struct Time t)
+    struct Time rec::UTC(golang::time::Time t)
     {
         rec::setLoc(gocpp::recv(t), & utcLoc);
         return t;
     }
 
     // Local returns t with the location set to local time.
-    struct Time rec::Local(struct Time t)
+    struct Time rec::Local(golang::time::Time t)
     {
         rec::setLoc(gocpp::recv(t), Local);
         return t;
@@ -1144,7 +1144,7 @@ namespace golang::time
     // purposes.
     //
     // In panics if loc is nil.
-    struct Time rec::In(struct Time t, struct Location* loc)
+    struct Time rec::In(golang::time::Time t, struct Location* loc)
     {
         if(loc == nullptr)
         {
@@ -1155,7 +1155,7 @@ namespace golang::time
     }
 
     // Location returns the time zone information associated with t.
-    struct Location* rec::Location(struct Time t)
+    struct Location* rec::Location(golang::time::Time t)
     {
         auto l = t.loc;
         if(l == nullptr)
@@ -1167,7 +1167,7 @@ namespace golang::time
 
     // Zone computes the time zone in effect at time t, returning the abbreviated
     // name of the zone (such as "CET") and its offset in seconds east of UTC.
-    std::tuple<gocpp::string, int> rec::Zone(struct Time t)
+    std::tuple<gocpp::string, int> rec::Zone(golang::time::Time t)
     {
         gocpp::string name;
         int offset;
@@ -1180,7 +1180,7 @@ namespace golang::time
     // If the zone begins at the beginning of time, start will be returned as a zero Time.
     // If the zone goes on forever, end will be returned as a zero Time.
     // The Location of the returned times will be the same as t.
-    std::tuple<struct Time, struct Time> rec::ZoneBounds(struct Time t)
+    std::tuple<struct Time, struct Time> rec::ZoneBounds(golang::time::Time t)
     {
         struct Time start;
         struct Time end;
@@ -1204,7 +1204,7 @@ namespace golang::time
     // Unix-like operating systems often record time as a 32-bit
     // count of seconds, but since the method here returns a 64-bit
     // value it is valid for billions of years into the past or future.
-    int64_t rec::Unix(struct Time t)
+    int64_t rec::Unix(golang::time::Time t)
     {
         return rec::unixSec(gocpp::recv(t));
     }
@@ -1214,7 +1214,7 @@ namespace golang::time
     // milliseconds cannot be represented by an int64 (a date more than 292 million
     // years before or after 1970). The result does not depend on the
     // location associated with t.
-    int64_t rec::UnixMilli(struct Time t)
+    int64_t rec::UnixMilli(golang::time::Time t)
     {
         return rec::unixSec(gocpp::recv(t)) * 1e3 + int64_t(rec::nsec(gocpp::recv(t))) / 1e6;
     }
@@ -1224,7 +1224,7 @@ namespace golang::time
     // microseconds cannot be represented by an int64 (a date before year -290307 or
     // after year 294246). The result does not depend on the location associated
     // with t.
-    int64_t rec::UnixMicro(struct Time t)
+    int64_t rec::UnixMicro(golang::time::Time t)
     {
         return rec::unixSec(gocpp::recv(t)) * 1e6 + int64_t(rec::nsec(gocpp::recv(t))) / 1e3;
     }
@@ -1235,13 +1235,13 @@ namespace golang::time
     // 1678 or after 2262). Note that this means the result of calling UnixNano
     // on the zero Time is undefined. The result does not depend on the
     // location associated with t.
-    int64_t rec::UnixNano(struct Time t)
+    int64_t rec::UnixNano(golang::time::Time t)
     {
         return (rec::unixSec(gocpp::recv(t))) * 1e9 + int64_t(rec::nsec(gocpp::recv(t)));
     }
 
     // MarshalBinary implements the encoding.BinaryMarshaler interface.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(golang::time::Time t)
     {
         int16_t offsetMin = {};
         int8_t offsetSec = {};
@@ -1276,7 +1276,7 @@ namespace golang::time
     }
 
     // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
-    struct gocpp::error rec::UnmarshalBinary(struct Time* t, gocpp::slice<unsigned char> data)
+    struct gocpp::error rec::UnmarshalBinary(golang::time::Time* t, gocpp::slice<unsigned char> data)
     {
         auto buf = data;
         if(len(buf) == 0)
@@ -1327,13 +1327,13 @@ namespace golang::time
     }
 
     // GobEncode implements the gob.GobEncoder interface.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::GobEncode(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::GobEncode(golang::time::Time t)
     {
         return rec::MarshalBinary(gocpp::recv(t));
     }
 
     // GobDecode implements the gob.GobDecoder interface.
-    struct gocpp::error rec::GobDecode(struct Time* t, gocpp::slice<unsigned char> data)
+    struct gocpp::error rec::GobDecode(golang::time::Time* t, gocpp::slice<unsigned char> data)
     {
         return rec::UnmarshalBinary(gocpp::recv(t), data);
     }
@@ -1342,7 +1342,7 @@ namespace golang::time
     // The time is a quoted string in the RFC 3339 format with sub-second precision.
     // If the timestamp cannot be represented as valid RFC 3339
     // (e.g., the year is out of range), then an error is reported.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalJSON(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalJSON(golang::time::Time t)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano) + len(""""_s));
         b = append(b, '"');
@@ -1358,7 +1358,7 @@ namespace golang::time
 
     // UnmarshalJSON implements the json.Unmarshaler interface.
     // The time must be a quoted string in the RFC 3339 format.
-    struct gocpp::error rec::UnmarshalJSON(struct Time* t, gocpp::slice<unsigned char> data)
+    struct gocpp::error rec::UnmarshalJSON(golang::time::Time* t, gocpp::slice<unsigned char> data)
     {
         if(gocpp::string(data) == "null"_s)
         {
@@ -1378,7 +1378,7 @@ namespace golang::time
     // The time is formatted in RFC 3339 format with sub-second precision.
     // If the timestamp cannot be represented as valid RFC 3339
     // (e.g., the year is out of range), then an error is reported.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalText(struct Time t)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalText(golang::time::Time t)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano));
         gocpp::error err;
@@ -1392,7 +1392,7 @@ namespace golang::time
 
     // UnmarshalText implements the encoding.TextUnmarshaler interface.
     // The time must be in the RFC 3339 format.
-    struct gocpp::error rec::UnmarshalText(struct Time* t, gocpp::slice<unsigned char> data)
+    struct gocpp::error rec::UnmarshalText(golang::time::Time* t, gocpp::slice<unsigned char> data)
     {
         gocpp::error err = {};
         std::tie(*t, err) = parseStrictRFC3339(data);
@@ -1435,7 +1435,7 @@ namespace golang::time
     }
 
     // IsDST reports whether the time in the configured location is in Daylight Savings Time.
-    bool rec::IsDST(struct Time t)
+    bool rec::IsDST(golang::time::Time t)
     {
         auto [gocpp_id_26, gocpp_id_27, gocpp_id_28, gocpp_id_29, isDST] = rec::lookup(gocpp::recv(t.loc), rec::Unix(gocpp::recv(t)));
         return isDST;
@@ -1532,7 +1532,7 @@ namespace golang::time
     // zero time; it does not operate on the presentation form of the
     // time. Thus, Truncate(Hour) may return a time with a non-zero
     // minute, depending on the time's Location.
-    struct Time rec::Truncate(struct Time t, golang::time::Duration d)
+    struct Time rec::Truncate(golang::time::Time t, golang::time::Duration d)
     {
         rec::stripMono(gocpp::recv(t));
         if(d <= 0)
@@ -1551,7 +1551,7 @@ namespace golang::time
     // zero time; it does not operate on the presentation form of the
     // time. Thus, Round(Hour) may return a time with a non-zero
     // minute, depending on the time's Location.
-    struct Time rec::Round(struct Time t, golang::time::Duration d)
+    struct Time rec::Round(golang::time::Time t, golang::time::Duration d)
     {
         rec::stripMono(gocpp::recv(t));
         if(d <= 0)

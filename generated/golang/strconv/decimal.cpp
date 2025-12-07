@@ -59,7 +59,7 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::String(struct decimal* a)
+    gocpp::string rec::String(golang::strconv::decimal* a)
     {
         auto n = 10 + a->nd;
         if(a->dp > 0)
@@ -131,7 +131,7 @@ namespace golang::strconv
     }
 
     // Assign v to a.
-    void rec::Assign(struct decimal* a, uint64_t v)
+    void rec::Assign(golang::strconv::decimal* a, uint64_t v)
     {
         gocpp::array<unsigned char, 24> buf = {};
         auto n = 0;
@@ -317,7 +317,7 @@ namespace golang::strconv
     }
 
     // Binary shift left (k > 0) or right (k < 0).
-    void rec::Shift(struct decimal* a, int k)
+    void rec::Shift(golang::strconv::decimal* a, int k)
     {
         //Go switch emulation
         {
@@ -371,7 +371,7 @@ namespace golang::strconv
     // If nd is zero, it means we're rounding
     // just to the left of the digits, as in
     // 0.09 -> 0.1.
-    void rec::Round(struct decimal* a, int nd)
+    void rec::Round(golang::strconv::decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -388,7 +388,7 @@ namespace golang::strconv
     }
 
     // Round a down to nd digits (or fewer).
-    void rec::RoundDown(struct decimal* a, int nd)
+    void rec::RoundDown(golang::strconv::decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -399,7 +399,7 @@ namespace golang::strconv
     }
 
     // Round a up to nd digits (or fewer).
-    void rec::RoundUp(struct decimal* a, int nd)
+    void rec::RoundUp(golang::strconv::decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -422,7 +422,7 @@ namespace golang::strconv
 
     // Extract integer part, rounded appropriately.
     // No guarantees about overflow.
-    uint64_t rec::RoundedInteger(struct decimal* a)
+    uint64_t rec::RoundedInteger(golang::strconv::decimal* a)
     {
         if(a->dp > 20)
         {

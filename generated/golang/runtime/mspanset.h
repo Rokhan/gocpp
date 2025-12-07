@@ -144,27 +144,27 @@ namespace golang::runtime
 
     namespace rec
     {
-        void push(struct spanSet* b, struct mspan* s);
-        struct mspan* pop(struct spanSet* b);
-        void reset(struct spanSet* b);
-        struct spanSetSpinePointer Load(struct atomicSpanSetSpinePointer* s);
-        void StoreNoWB(struct atomicSpanSetSpinePointer* s, struct spanSetSpinePointer p);
+        void push(golang::runtime::spanSet* b, struct mspan* s);
+        struct mspan* pop(golang::runtime::spanSet* b);
+        void reset(golang::runtime::spanSet* b);
+        struct spanSetSpinePointer Load(golang::runtime::atomicSpanSetSpinePointer* s);
+        void StoreNoWB(golang::runtime::atomicSpanSetSpinePointer* s, struct spanSetSpinePointer p);
         
         template<typename spanSetBlock>
-        atomic::Pointer<spanSetBlock>* lookup(struct spanSetSpinePointer s, uintptr_t idx);
-        struct spanSetBlock* alloc(struct spanSetBlockAlloc* p);
-        void free(struct spanSetBlockAlloc* p, struct spanSetBlock* block);
+        atomic::Pointer<spanSetBlock>* lookup(golang::runtime::spanSetSpinePointer s, uintptr_t idx);
+        struct spanSetBlock* alloc(golang::runtime::spanSetBlockAlloc* p);
+        void free(golang::runtime::spanSetBlockAlloc* p, struct spanSetBlock* block);
         uint32_t head(golang::runtime::headTailIndex h);
         uint32_t tail(golang::runtime::headTailIndex h);
         std::tuple<uint32_t, uint32_t> split(golang::runtime::headTailIndex h);
-        runtime::headTailIndex load(struct atomicHeadTailIndex* h);
-        bool cas(struct atomicHeadTailIndex* h, golang::runtime::headTailIndex old, golang::runtime::headTailIndex go_new);
-        runtime::headTailIndex incHead(struct atomicHeadTailIndex* h);
-        runtime::headTailIndex decHead(struct atomicHeadTailIndex* h);
-        runtime::headTailIndex incTail(struct atomicHeadTailIndex* h);
-        void reset(struct atomicHeadTailIndex* h);
-        struct mspan* Load(struct atomicMSpanPointer* p);
-        void StoreNoWB(struct atomicMSpanPointer* p, struct mspan* s);
+        runtime::headTailIndex load(golang::runtime::atomicHeadTailIndex* h);
+        bool cas(golang::runtime::atomicHeadTailIndex* h, golang::runtime::headTailIndex old, golang::runtime::headTailIndex go_new);
+        runtime::headTailIndex incHead(golang::runtime::atomicHeadTailIndex* h);
+        runtime::headTailIndex decHead(golang::runtime::atomicHeadTailIndex* h);
+        runtime::headTailIndex incTail(golang::runtime::atomicHeadTailIndex* h);
+        void reset(golang::runtime::atomicHeadTailIndex* h);
+        struct mspan* Load(golang::runtime::atomicMSpanPointer* p);
+        void StoreNoWB(golang::runtime::atomicMSpanPointer* p, struct mspan* s);
     }
 }
 

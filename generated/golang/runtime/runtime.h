@@ -74,8 +74,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(struct ticksType* t);
-        void IncNonDefault(struct godebugInc* g);
+        void init(golang::runtime::ticksType* t);
+        void IncNonDefault(golang::runtime::godebugInc* g);
     }
 }
 

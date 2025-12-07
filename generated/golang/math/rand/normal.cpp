@@ -38,7 +38,7 @@ namespace golang::rand
     // adjust the output using:
     //
     //	sample = NormFloat64() * desiredStdDev + desiredMean
-    double rec::NormFloat64(struct Rand* r)
+    double rec::NormFloat64(golang::rand::Rand* r)
     {
         for(; ; )
         {

@@ -77,7 +77,7 @@ namespace golang::runtime
     // init initializes ticks to maximize the chance that we have a good ticksPerSecond reference.
     //
     // Must not run concurrently with ticksPerSecond.
-    void rec::init(struct ticksType* t)
+    void rec::init(golang::runtime::ticksType* t)
     {
         lock(& ticks.lock);
         t->startTime = nanotime();
@@ -240,7 +240,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::IncNonDefault(struct godebugInc* g)
+    void rec::IncNonDefault(golang::runtime::godebugInc* g)
     {
         auto inc = rec::Load<std::function<void (void)>>(gocpp::recv(g->inc));
         if(inc == nullptr)

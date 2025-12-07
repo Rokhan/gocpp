@@ -109,7 +109,7 @@ namespace golang::sync
     //	}
     //	... make use of condition ...
     //	c.L.Unlock()
-    void rec::Wait(struct Cond* c)
+    void rec::Wait(golang::sync::Cond* c)
     {
         rec::check(gocpp::recv(c->checker));
         auto t = runtime_notifyListAdd(& c->notify);
@@ -125,7 +125,7 @@ namespace golang::sync
     //
     // Signal() does not affect goroutine scheduling priority; if other goroutines
     // are attempting to lock c.L, they may be awoken before a "waiting" goroutine.
-    void rec::Signal(struct Cond* c)
+    void rec::Signal(golang::sync::Cond* c)
     {
         rec::check(gocpp::recv(c->checker));
         runtime_notifyListNotifyOne(& c->notify);
@@ -135,7 +135,7 @@ namespace golang::sync
     //
     // It is allowed but not required for the caller to hold c.L
     // during the call.
-    void rec::Broadcast(struct Cond* c)
+    void rec::Broadcast(golang::sync::Cond* c)
     {
         rec::check(gocpp::recv(c->checker));
         runtime_notifyListNotifyAll(& c->notify);
@@ -184,11 +184,11 @@ namespace golang::sync
     }
 
     // Lock is a no-op used by -copylocks checker from `go vet`.
-    void rec::Lock(noCopy*)
+    void rec::Lock(golang::sync::noCopy*)
     {
     }
 
-    void rec::Unlock(noCopy*)
+    void rec::Unlock(golang::sync::noCopy*)
     {
     }
 

@@ -52,7 +52,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::String(struct Person p)
+    gocpp::string rec::String(golang::main::Person p)
     {
         return mocklib::Sprintf("%v (%v years)"_s, p.Name, p.Age);
     }

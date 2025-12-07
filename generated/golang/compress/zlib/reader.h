@@ -95,9 +95,9 @@ namespace golang::zlib
 
     namespace rec
     {
-        std::tuple<int, struct gocpp::error> Read(struct reader* z, gocpp::slice<unsigned char> p);
-        struct gocpp::error Close(struct reader* z);
-        struct gocpp::error Reset(struct reader* z, io::Reader r, gocpp::slice<unsigned char> dict);
+        std::tuple<int, struct gocpp::error> Read(golang::zlib::reader* z, gocpp::slice<unsigned char> p);
+        struct gocpp::error Close(golang::zlib::reader* z);
+        struct gocpp::error Reset(golang::zlib::reader* z, io::Reader r, gocpp::slice<unsigned char> dict);
     }
 }
 

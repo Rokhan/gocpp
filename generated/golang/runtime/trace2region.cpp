@@ -105,7 +105,7 @@ namespace golang::runtime
     }
 
     // alloc allocates n-byte block.
-    struct notInHeap* rec::alloc(struct traceRegionAlloc* a, uintptr_t n)
+    struct notInHeap* rec::alloc(golang::runtime::traceRegionAlloc* a, uintptr_t n)
     {
         n = alignUp(n, goarch::PtrSize);
         if(a->head == nullptr || a->off + n > uintptr_t(len(a->head->data)))
@@ -129,7 +129,7 @@ namespace golang::runtime
     }
 
     // drop frees all previously allocated memory and resets the allocator.
-    void rec::drop(struct traceRegionAlloc* a)
+    void rec::drop(golang::runtime::traceRegionAlloc* a)
     {
         for(; a->head != nullptr; )
         {

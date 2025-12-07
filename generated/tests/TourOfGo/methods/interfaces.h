@@ -138,7 +138,7 @@ namespace golang::main
     namespace rec
     {
         double Abs(golang::main::MyFloat f);
-        double Abs(struct Vertex* v);
+        double Abs(golang::main::Vertex* v);
     }
 }
 

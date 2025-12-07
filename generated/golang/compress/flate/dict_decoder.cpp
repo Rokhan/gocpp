@@ -79,7 +79,7 @@ namespace golang::flate
     // init initializes dictDecoder to have a sliding window dictionary of the given
     // size. If a preset dict is provided, it will initialize the dictionary with
     // the contents of dict.
-    void rec::init(struct dictDecoder* dd, int size, gocpp::slice<unsigned char> dict)
+    void rec::init(golang::flate::dictDecoder* dd, int size, gocpp::slice<unsigned char> dict)
     {
         *dd = gocpp::Init<dictDecoder>([=](auto& x) {
             x.hist = dd->hist;
@@ -103,7 +103,7 @@ namespace golang::flate
     }
 
     // histSize reports the total amount of historical data in the dictionary.
-    int rec::histSize(struct dictDecoder* dd)
+    int rec::histSize(golang::flate::dictDecoder* dd)
     {
         if(dd->full)
         {
@@ -113,13 +113,13 @@ namespace golang::flate
     }
 
     // availRead reports the number of bytes that can be flushed by readFlush.
-    int rec::availRead(struct dictDecoder* dd)
+    int rec::availRead(golang::flate::dictDecoder* dd)
     {
         return dd->wrPos - dd->rdPos;
     }
 
     // availWrite reports the available amount of output buffer space.
-    int rec::availWrite(struct dictDecoder* dd)
+    int rec::availWrite(golang::flate::dictDecoder* dd)
     {
         return len(dd->hist) - dd->wrPos;
     }
@@ -127,7 +127,7 @@ namespace golang::flate
     // writeSlice returns a slice of the available buffer to write data to.
     //
     // This invariant will be kept: len(s) <= availWrite()
-    gocpp::slice<unsigned char> rec::writeSlice(struct dictDecoder* dd)
+    gocpp::slice<unsigned char> rec::writeSlice(golang::flate::dictDecoder* dd)
     {
         return dd->hist.make_slice(dd->wrPos);
     }
@@ -135,7 +135,7 @@ namespace golang::flate
     // writeMark advances the writer pointer by cnt.
     //
     // This invariant must be kept: 0 <= cnt <= availWrite()
-    void rec::writeMark(struct dictDecoder* dd, int cnt)
+    void rec::writeMark(golang::flate::dictDecoder* dd, int cnt)
     {
         dd->wrPos += cnt;
     }
@@ -143,7 +143,7 @@ namespace golang::flate
     // writeByte writes a single byte to the dictionary.
     //
     // This invariant must be kept: 0 < availWrite()
-    void rec::writeByte(struct dictDecoder* dd, unsigned char c)
+    void rec::writeByte(golang::flate::dictDecoder* dd, unsigned char c)
     {
         dd->hist[dd->wrPos] = c;
         dd->wrPos++;
@@ -154,7 +154,7 @@ namespace golang::flate
     // length if the available space in the output buffer is too small.
     //
     // This invariant must be kept: 0 < dist <= histSize()
-    int rec::writeCopy(struct dictDecoder* dd, int dist, int length)
+    int rec::writeCopy(golang::flate::dictDecoder* dd, int dist, int length)
     {
         auto dstBase = dd->wrPos;
         auto dstPos = dstBase;
@@ -184,7 +184,7 @@ namespace golang::flate
     // This method is designed to be inlined for performance reasons.
     //
     // This invariant must be kept: 0 < dist <= histSize()
-    int rec::tryWriteCopy(struct dictDecoder* dd, int dist, int length)
+    int rec::tryWriteCopy(golang::flate::dictDecoder* dd, int dist, int length)
     {
         auto dstPos = dd->wrPos;
         auto endPos = dstPos + length;
@@ -205,7 +205,7 @@ namespace golang::flate
     // readFlush returns a slice of the historical buffer that is ready to be
     // emitted to the user. The data returned by readFlush must be fully consumed
     // before calling any other dictDecoder methods.
-    gocpp::slice<unsigned char> rec::readFlush(struct dictDecoder* dd)
+    gocpp::slice<unsigned char> rec::readFlush(golang::flate::dictDecoder* dd)
     {
         auto toRead = dd->hist.make_slice(dd->rdPos, dd->wrPos);
         dd->rdPos = dd->wrPos;

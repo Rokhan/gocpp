@@ -164,7 +164,7 @@ namespace golang::runtime
 
     // find finds the given interface/type pair in t.
     // Returns nil if the given interface/type pair isn't present.
-    struct itab* rec::find(struct itabTableType* t, golang::runtime::interfacetype* inter, golang::runtime::_type* typ)
+    struct itab* rec::find(golang::runtime::itabTableType* t, golang::runtime::interfacetype* inter, golang::runtime::_type* typ)
     {
         auto mask = t->size - 1;
         auto h = itabHashFunc(inter, typ) & mask;
@@ -211,7 +211,7 @@ namespace golang::runtime
 
     // add adds the given itab to itab table t.
     // itabLock must be held.
-    void rec::add(struct itabTableType* t, struct itab* m)
+    void rec::add(golang::runtime::itabTableType* t, struct itab* m)
     {
         auto mask = t->size - 1;
         auto h = itabHashFunc(m->inter, m->_type) & mask;
@@ -238,7 +238,7 @@ namespace golang::runtime
     // the m.inter/m._type pair. If the type does not implement the interface,
     // it sets m.fun[0] to 0 and returns the name of an interface function that is missing.
     // It is ok to call this multiple times on the same m, even concurrently.
-    gocpp::string rec::init(struct itab* m)
+    gocpp::string rec::init(golang::runtime::itab* m)
     {
         auto inter = m->inter;
         auto typ = m->_type;
@@ -672,15 +672,15 @@ namespace golang::runtime
         x.Mask = 0;
     });
     //go:linkname reflect_ifaceE2I reflect.ifaceE2I
-    void reflect_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, runtime::iface* dst)
+    void reflect_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst)
     {
-        *dst = runtime::iface {assertE2I(inter, e._type), e.data};
+        *dst = iface {assertE2I(inter, e._type), e.data};
     }
 
     //go:linkname reflectlite_ifaceE2I internal/reflectlite.ifaceE2I
-    void reflectlite_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, runtime::iface* dst)
+    void reflectlite_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst)
     {
-        *dst = runtime::iface {assertE2I(inter, e._type), e.data};
+        *dst = iface {assertE2I(inter, e._type), e.data};
     }
 
     void iterate_itabs(std::function<void (struct itab* _1)> fn)

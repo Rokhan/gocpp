@@ -366,7 +366,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    runtime::guintptr rec::guintptr(runtime::g* gp)
+    runtime::guintptr rec::guintptr(golang::runtime::g* gp)
     {
         return guintptr(unsafe::Pointer(gp));
     }
@@ -376,7 +376,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void setGNoWB(runtime::g** gp, runtime::g* go_new)
+    void setGNoWB(struct g** gp, struct g* go_new)
     {
         rec::set(gocpp::recv((runtime::guintptr*)(unsafe::Pointer(gp))), go_new);
     }
@@ -419,7 +419,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void setMNoWB(runtime::m** mp, runtime::m* go_new)
+    void setMNoWB(struct m** mp, struct m* go_new)
     {
         rec::set(gocpp::recv((runtime::muintptr*)(unsafe::Pointer(mp))), go_new);
     }
@@ -2076,14 +2076,14 @@ namespace golang::runtime
     // as they are not an external api.
     // Set on startup in asm_{386,amd64}.s
     // set by cmd/link on arm systems
-    runtime::m* allm;
+    m* allm;
     int32_t gomaxprocs;
     int32_t ncpu;
     forcegcstate forcegc;
     schedt sched;
     int32_t newprocs;
     mutex allpLock;
-    gocpp::slice<runtime::p*> allp;
+    gocpp::slice<p*> allp;
     pMask idlepMask;
     pMask timerpMask;
     runtime::lfstack gcBgMarkWorkerPool;

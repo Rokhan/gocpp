@@ -181,19 +181,19 @@ namespace golang::bisect
 
     namespace rec
     {
-        struct dedup* Load(struct atomicPointerDedup* p);
-        bool CompareAndSwap(struct atomicPointerDedup* p, struct dedup* old, struct dedup* go_new);
-        bool MarkerOnly(struct Matcher* m);
-        bool ShouldEnable(struct Matcher* m, uint64_t id);
-        bool ShouldPrint(struct Matcher* m, uint64_t id);
-        bool matchResult(struct Matcher* m, uint64_t id);
-        bool FileLine(struct Matcher* m, struct Writer w, gocpp::string file, int line);
-        bool fileLine(struct Matcher* m, struct Writer w, gocpp::string file, int line);
-        bool Stack(struct Matcher* m, struct Writer w);
-        bool stack(struct Matcher* m, struct Writer w);
-        gocpp::string Error(struct parseError* e);
-        bool seen(struct dedup* d, uint64_t h);
-        bool seenLossy(struct dedup* d, uint64_t h);
+        struct dedup* Load(golang::bisect::atomicPointerDedup* p);
+        bool CompareAndSwap(golang::bisect::atomicPointerDedup* p, struct dedup* old, struct dedup* go_new);
+        bool MarkerOnly(golang::bisect::Matcher* m);
+        bool ShouldEnable(golang::bisect::Matcher* m, uint64_t id);
+        bool ShouldPrint(golang::bisect::Matcher* m, uint64_t id);
+        bool matchResult(golang::bisect::Matcher* m, uint64_t id);
+        bool FileLine(golang::bisect::Matcher* m, struct Writer w, gocpp::string file, int line);
+        bool fileLine(golang::bisect::Matcher* m, struct Writer w, gocpp::string file, int line);
+        bool Stack(golang::bisect::Matcher* m, struct Writer w);
+        bool stack(golang::bisect::Matcher* m, struct Writer w);
+        gocpp::string Error(golang::bisect::parseError* e);
+        bool seen(golang::bisect::dedup* d, uint64_t h);
+        bool seenLossy(golang::bisect::dedup* d, uint64_t h);
     }
 }
 

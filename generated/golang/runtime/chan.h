@@ -105,9 +105,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        void enqueue(struct waitq* q, struct sudog* sgp);
-        struct sudog* dequeue(struct waitq* q);
-        unsafe::Pointer raceaddr(struct hchan* c);
+        void enqueue(golang::runtime::waitq* q, struct sudog* sgp);
+        struct sudog* dequeue(golang::runtime::waitq* q);
+        unsafe::Pointer raceaddr(golang::runtime::hchan* c);
     }
 }
 

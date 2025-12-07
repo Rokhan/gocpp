@@ -684,7 +684,7 @@ namespace golang::runtime
     }
 
     // compute populates the heapStatsAggregate with values from the runtime.
-    void rec::compute(struct heapStatsAggregate* a)
+    void rec::compute(golang::runtime::heapStatsAggregate* a)
     {
         rec::read(gocpp::recv(memstats.heapStats), & a->heapStatsDelta);
         a->totalAllocs = a->largeAllocCount;
@@ -771,7 +771,7 @@ namespace golang::runtime
     }
 
     // compute populates the sysStatsAggregate with values from the runtime.
-    void rec::compute(struct sysStatsAggregate* a)
+    void rec::compute(golang::runtime::sysStatsAggregate* a)
     {
         a->stacksSys = rec::load(gocpp::recv(memstats.stacks_sys));
         a->buckHashSys = rec::load(gocpp::recv(memstats.buckhash_sys));
@@ -823,7 +823,7 @@ namespace golang::runtime
     }
 
     // compute populates the cpuStatsAggregate with values from the runtime.
-    void rec::compute(struct cpuStatsAggregate* a)
+    void rec::compute(golang::runtime::cpuStatsAggregate* a)
     {
         a->cpuStats = work.cpuStats;
     }
@@ -869,7 +869,7 @@ namespace golang::runtime
     }
 
     // compute populates the gcStatsAggregate with values from the runtime.
-    void rec::compute(struct gcStatsAggregate* a)
+    void rec::compute(golang::runtime::gcStatsAggregate* a)
     {
         a->heapScan = rec::Load(gocpp::recv(gcController.heapScan));
         a->stackScan = rec::Load(gocpp::recv(gcController.lastStackScan));
@@ -932,7 +932,7 @@ namespace golang::runtime
 
     // ensure populates statistics aggregates determined by deps if they
     // haven't yet been populated.
-    void rec::ensure(struct statAggregate* a, golang::runtime::statDepSet* deps)
+    void rec::ensure(golang::runtime::statAggregate* a, golang::runtime::statDepSet* deps)
     {
         auto missing = rec::difference(gocpp::recv(deps), a->ensured);
         if(rec::empty(gocpp::recv(missing)))
@@ -1051,7 +1051,7 @@ namespace golang::runtime
     // float64HistOrInit tries to pull out an existing float64Histogram
     // from the value, but if none exists, then it allocates one with
     // the given buckets.
-    struct metricFloat64Histogram* rec::float64HistOrInit(struct metricValue* v, gocpp::slice<double> buckets)
+    struct metricFloat64Histogram* rec::float64HistOrInit(golang::runtime::metricValue* v, gocpp::slice<double> buckets)
     {
         metricFloat64Histogram* hist = {};
         if(v->kind == metricKindFloat64Histogram && v->pointer != nullptr)

@@ -202,7 +202,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool rec::tryMerge(struct abiPart* a, struct abiPart b)
+    bool rec::tryMerge(golang::runtime::abiPart* a, struct abiPart b)
     {
         if(a->kind != abiPartStack || b.kind != abiPartStack)
         {
@@ -265,7 +265,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::assignArg(struct abiDesc* p, golang::runtime::_type* t)
+    void rec::assignArg(golang::runtime::abiDesc* p, golang::runtime::_type* t)
     {
         if(t->Size_ > goarch::PtrSize)
         {
@@ -311,7 +311,7 @@ namespace golang::runtime
     // Assumes t.size <= goarch.PtrSize and t.size != 0.
     //
     // Returns whether the assignment succeeded.
-    bool rec::tryRegAssignArg(struct abiDesc* p, golang::runtime::_type* t, uintptr_t offset)
+    bool rec::tryRegAssignArg(golang::runtime::abiDesc* p, golang::runtime::_type* t, uintptr_t offset)
     {
         //Go switch emulation
         {
@@ -386,7 +386,7 @@ namespace golang::runtime
     // value in the C ABI space.
     //
     // Returns whether the assignment was successful.
-    bool rec::assignReg(struct abiDesc* p, uintptr_t size, uintptr_t offset)
+    bool rec::assignReg(golang::runtime::abiDesc* p, uintptr_t size, uintptr_t offset)
     {
         if(p->dstRegisters >= intArgRegs)
         {

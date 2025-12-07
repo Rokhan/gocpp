@@ -136,7 +136,7 @@ namespace golang::sync
     // dequeueNil is used in poolDequeue to represent interface{}(nil).
     // Since we use nil to represent empty slots, we need a sentinel value
     // to represent nil.
-    std::tuple<uint32_t, uint32_t> rec::unpack(struct poolDequeue* d, uint64_t ptrs)
+    std::tuple<uint32_t, uint32_t> rec::unpack(golang::sync::poolDequeue* d, uint64_t ptrs)
     {
         uint32_t head;
         uint32_t tail;
@@ -146,7 +146,7 @@ namespace golang::sync
         return {head, tail};
     }
 
-    uint64_t rec::pack(struct poolDequeue* d, uint32_t head, uint32_t tail)
+    uint64_t rec::pack(golang::sync::poolDequeue* d, uint32_t head, uint32_t tail)
     {
         auto mask = (1 << dequeueBits) - 1;
         return (uint64_t(head) << dequeueBits) | uint64_t(tail & mask);
@@ -154,7 +154,7 @@ namespace golang::sync
 
     // pushHead adds val at the head of the queue. It returns false if the
     // queue is full. It must only be called by a single producer.
-    bool rec::pushHead(struct poolDequeue* d, go_any val)
+    bool rec::pushHead(golang::sync::poolDequeue* d, go_any val)
     {
         auto ptrs = rec::Load(gocpp::recv(d->headTail));
         auto [head, tail] = rec::unpack(gocpp::recv(d), ptrs);
@@ -180,7 +180,7 @@ namespace golang::sync
     // popHead removes and returns the element at the head of the queue.
     // It returns false if the queue is empty. It must only be called by a
     // single producer.
-    std::tuple<go_any, bool> rec::popHead(struct poolDequeue* d)
+    std::tuple<go_any, bool> rec::popHead(golang::sync::poolDequeue* d)
     {
         eface* slot = {};
         for(; ; )
@@ -211,7 +211,7 @@ namespace golang::sync
     // popTail removes and returns the element at the tail of the queue.
     // It returns false if the queue is empty. It may be called by any
     // number of consumers.
-    std::tuple<go_any, bool> rec::popTail(struct poolDequeue* d)
+    std::tuple<go_any, bool> rec::popTail(golang::sync::poolDequeue* d)
     {
         eface* slot = {};
         for(; ; )
@@ -323,7 +323,7 @@ namespace golang::sync
         return (poolChainElt*)(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(pp))));
     }
 
-    void rec::pushHead(struct poolChain* c, go_any val)
+    void rec::pushHead(golang::sync::poolChain* c, go_any val)
     {
         auto d = c->head;
         if(d == nullptr)
@@ -353,7 +353,7 @@ namespace golang::sync
         rec::pushHead(gocpp::recv(d2), val);
     }
 
-    std::tuple<go_any, bool> rec::popHead(struct poolChain* c)
+    std::tuple<go_any, bool> rec::popHead(golang::sync::poolChain* c)
     {
         auto d = c->head;
         for(; d != nullptr; )
@@ -367,7 +367,7 @@ namespace golang::sync
         return {nullptr, false};
     }
 
-    std::tuple<go_any, bool> rec::popTail(struct poolChain* c)
+    std::tuple<go_any, bool> rec::popTail(golang::sync::poolChain* c)
     {
         auto d = loadPoolChainElt(& c->tail);
         if(d == nullptr)

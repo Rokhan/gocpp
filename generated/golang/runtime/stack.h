@@ -151,10 +151,10 @@ namespace golang::runtime
 
     namespace rec
     {
-        uint8_t ptrbit(struct bitvector* bv, uintptr_t i);
-        bool useGCProg(struct stackObjectRecord* r);
-        uintptr_t ptrdata(struct stackObjectRecord* r);
-        unsigned char* gcdata(struct stackObjectRecord* r);
+        uint8_t ptrbit(golang::runtime::bitvector* bv, uintptr_t i);
+        bool useGCProg(golang::runtime::stackObjectRecord* r);
+        uintptr_t ptrdata(golang::runtime::stackObjectRecord* r);
+        unsigned char* gcdata(golang::runtime::stackObjectRecord* r);
     }
 }
 

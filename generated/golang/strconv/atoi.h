@@ -45,8 +45,8 @@ namespace golang::strconv
 
     namespace rec
     {
-        gocpp::string Error(struct NumError* e);
-        struct gocpp::error Unwrap(struct NumError* e);
+        gocpp::string Error(golang::strconv::NumError* e);
+        struct gocpp::error Unwrap(golang::strconv::NumError* e);
     }
 }
 

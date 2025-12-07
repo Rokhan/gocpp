@@ -91,10 +91,10 @@ namespace golang::hex
     namespace rec
     {
         gocpp::string Error(golang::hex::InvalidByteError e);
-        std::tuple<int, struct gocpp::error> Write(struct encoder* e, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> Read(struct decoder* d, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> Write(struct dumper* h, gocpp::slice<unsigned char> data);
-        struct gocpp::error Close(struct dumper* h);
+        std::tuple<int, struct gocpp::error> Write(golang::hex::encoder* e, gocpp::slice<unsigned char> p);
+        std::tuple<int, struct gocpp::error> Read(golang::hex::decoder* d, gocpp::slice<unsigned char> p);
+        std::tuple<int, struct gocpp::error> Write(golang::hex::dumper* h, gocpp::slice<unsigned char> data);
+        struct gocpp::error Close(golang::hex::dumper* h);
     }
 }
 

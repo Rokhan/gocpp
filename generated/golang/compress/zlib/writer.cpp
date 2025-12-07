@@ -135,7 +135,7 @@ namespace golang::zlib
     // Reset clears the state of the Writer z such that it is equivalent to its
     // initial state from NewWriterLevel or NewWriterLevelDict, but instead writing
     // to w.
-    void rec::Reset(struct Writer* z, io::Writer w)
+    void rec::Reset(golang::zlib::Writer* z, io::Writer w)
     {
         z->w = w;
         if(z->compressor != nullptr)
@@ -152,7 +152,7 @@ namespace golang::zlib
     }
 
     // writeHeader writes the ZLIB header.
-    struct gocpp::error rec::writeHeader(struct Writer* z)
+    struct gocpp::error rec::writeHeader(golang::zlib::Writer* z)
     {
         struct gocpp::error err;
         z->wroteHeader = true;
@@ -232,7 +232,7 @@ namespace golang::zlib
     // Write writes a compressed form of p to the underlying io.Writer. The
     // compressed bytes are not necessarily flushed until the Writer is closed or
     // explicitly flushed.
-    std::tuple<int, struct gocpp::error> rec::Write(struct Writer* z, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(golang::zlib::Writer* z, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -259,7 +259,7 @@ namespace golang::zlib
     }
 
     // Flush flushes the Writer to its underlying io.Writer.
-    struct gocpp::error rec::Flush(struct Writer* z)
+    struct gocpp::error rec::Flush(golang::zlib::Writer* z)
     {
         if(! z->wroteHeader)
         {
@@ -275,7 +275,7 @@ namespace golang::zlib
 
     // Close closes the Writer, flushing any unwritten data to the underlying
     // io.Writer, but does not close the underlying io.Writer.
-    struct gocpp::error rec::Close(struct Writer* z)
+    struct gocpp::error rec::Close(golang::zlib::Writer* z)
     {
         if(! z->wroteHeader)
         {

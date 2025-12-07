@@ -87,14 +87,14 @@ namespace golang::sync
 
     namespace rec
     {
-        std::tuple<uint32_t, uint32_t> unpack(struct poolDequeue* d, uint64_t ptrs);
-        uint64_t pack(struct poolDequeue* d, uint32_t head, uint32_t tail);
-        bool pushHead(struct poolDequeue* d, go_any val);
-        std::tuple<go_any, bool> popHead(struct poolDequeue* d);
-        std::tuple<go_any, bool> popTail(struct poolDequeue* d);
-        void pushHead(struct poolChain* c, go_any val);
-        std::tuple<go_any, bool> popHead(struct poolChain* c);
-        std::tuple<go_any, bool> popTail(struct poolChain* c);
+        std::tuple<uint32_t, uint32_t> unpack(golang::sync::poolDequeue* d, uint64_t ptrs);
+        uint64_t pack(golang::sync::poolDequeue* d, uint32_t head, uint32_t tail);
+        bool pushHead(golang::sync::poolDequeue* d, go_any val);
+        std::tuple<go_any, bool> popHead(golang::sync::poolDequeue* d);
+        std::tuple<go_any, bool> popTail(golang::sync::poolDequeue* d);
+        void pushHead(golang::sync::poolChain* c, go_any val);
+        std::tuple<go_any, bool> popHead(golang::sync::poolChain* c);
+        std::tuple<go_any, bool> popTail(golang::sync::poolChain* c);
     }
 }
 

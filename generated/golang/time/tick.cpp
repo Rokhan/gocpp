@@ -85,7 +85,7 @@ namespace golang::time
     // Stop turns off a ticker. After Stop, no more ticks will be sent.
     // Stop does not close the channel, to prevent a concurrent goroutine
     // reading from the channel from seeing an erroneous "tick".
-    void rec::Stop(struct Ticker* t)
+    void rec::Stop(golang::time::Ticker* t)
     {
         stopTimer(& t->r);
     }
@@ -93,7 +93,7 @@ namespace golang::time
     // Reset stops a ticker and resets its period to the specified duration.
     // The next tick will arrive after the new period elapses. The duration d
     // must be greater than zero; if not, Reset will panic.
-    void rec::Reset(struct Ticker* t, golang::time::Duration d)
+    void rec::Reset(golang::time::Ticker* t, golang::time::Duration d)
     {
         if(d <= 0)
         {

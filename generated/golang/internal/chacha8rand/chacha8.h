@@ -56,12 +56,12 @@ namespace golang::chacha8rand
 
     namespace rec
     {
-        std::tuple<uint64_t, bool> Next(struct State* s);
-        void Init(struct State* s, gocpp::array<unsigned char, 32> seed);
-        void Init64(struct State* s, gocpp::array<uint64_t, 4> seed);
-        void Refill(struct State* s);
-        void Reseed(struct State* s);
-        gocpp::string Error(errUnmarshalChaCha8*);
+        std::tuple<uint64_t, bool> Next(golang::chacha8rand::State* s);
+        void Init(golang::chacha8rand::State* s, gocpp::array<unsigned char, 32> seed);
+        void Init64(golang::chacha8rand::State* s, gocpp::array<uint64_t, 4> seed);
+        void Refill(golang::chacha8rand::State* s);
+        void Reseed(golang::chacha8rand::State* s);
+        gocpp::string Error(golang::chacha8rand::errUnmarshalChaCha8*);
     }
 }
 

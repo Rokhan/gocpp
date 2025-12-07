@@ -215,22 +215,22 @@ namespace golang::os
     //
     // See https://learn.microsoft.com/en-us/windows/win32/api/winnt/nf-winnt-isreparsetagnamesurrogate
     // and https://learn.microsoft.com/en-us/windows/win32/fileio/reparse-point-tags.
-    bool rec::isReparseTagNameSurrogate(struct fileStat* fs)
+    bool rec::isReparseTagNameSurrogate(golang::os::fileStat* fs)
     {
         return fs->ReparseTag & 0x20000000 != 0;
     }
 
-    bool rec::isSymlink(struct fileStat* fs)
+    bool rec::isSymlink(golang::os::fileStat* fs)
     {
         return fs->ReparseTag == syscall::IO_REPARSE_TAG_SYMLINK || fs->ReparseTag == windows::IO_REPARSE_TAG_MOUNT_POINT;
     }
 
-    int64_t rec::Size(struct fileStat* fs)
+    int64_t rec::Size(golang::os::fileStat* fs)
     {
         return (int64_t(fs->FileSizeHigh) << 32) + int64_t(fs->FileSizeLow);
     }
 
-    os::FileMode rec::Mode(struct fileStat* fs)
+    os::FileMode rec::Mode(golang::os::fileStat* fs)
     {
         os::FileMode m;
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_READONLY != 0)
@@ -278,13 +278,13 @@ namespace golang::os
         return m;
     }
 
-    mocklib::Date rec::ModTime(struct fileStat* fs)
+    mocklib::Date rec::ModTime(golang::os::fileStat* fs)
     {
         return time::Unix(0, rec::Nanoseconds(gocpp::recv(fs->LastWriteTime)));
     }
 
     // Sys returns syscall.Win32FileAttributeData for file fs.
-    go_any rec::Sys(struct fileStat* fs)
+    go_any rec::Sys(golang::os::fileStat* fs)
     {
         return gocpp::InitPtr<syscall::Win32FileAttributeData>([=](auto& x) {
             x.FileAttributes = fs->FileAttributes;
@@ -296,7 +296,7 @@ namespace golang::os
         });
     }
 
-    struct gocpp::error rec::loadFileId(struct fileStat* fs)
+    struct gocpp::error rec::loadFileId(golang::os::fileStat* fs)
     {
         gocpp::Defer defer;
         try
@@ -349,7 +349,7 @@ namespace golang::os
 
     // saveInfoFromPath saves full path of the file to be used by os.SameFile later,
     // and set name from path.
-    struct gocpp::error rec::saveInfoFromPath(struct fileStat* fs, gocpp::string path)
+    struct gocpp::error rec::saveInfoFromPath(golang::os::fileStat* fs, gocpp::string path)
     {
         fs->path = path;
         if(! isAbs(fs->path))

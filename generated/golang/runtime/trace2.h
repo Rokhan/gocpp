@@ -136,11 +136,11 @@ namespace golang::runtime
 
     namespace rec
     {
-        void start(struct traceAdvancerState* s);
-        void stop(struct traceAdvancerState* s);
-        void sleep(struct wakeableSleep* s, int64_t ns);
-        void wake(struct wakeableSleep* s);
-        void close(struct wakeableSleep* s);
+        void start(golang::runtime::traceAdvancerState* s);
+        void stop(golang::runtime::traceAdvancerState* s);
+        void sleep(golang::runtime::wakeableSleep* s, int64_t ns);
+        void wake(golang::runtime::wakeableSleep* s);
+        void close(golang::runtime::wakeableSleep* s);
     }
 }
 

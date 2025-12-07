@@ -138,25 +138,25 @@ namespace golang::os
 
     namespace rec
     {
-        gocpp::string Name(struct File* f);
-        gocpp::string Error(struct LinkError* e);
-        struct gocpp::error Unwrap(struct LinkError* e);
-        std::tuple<int, struct gocpp::error> Read(struct File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> ReadAt(struct File* f, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int64_t, struct gocpp::error> ReadFrom(struct File* f, io::Reader r);
-        std::tuple<int64_t, struct gocpp::error> ReadFrom(noReadFrom, io::Reader);
-        std::tuple<int, struct gocpp::error> Write(struct File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> WriteAt(struct File* f, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int64_t, struct gocpp::error> WriteTo(struct File* f, io::Writer w);
-        std::tuple<int64_t, struct gocpp::error> WriteTo(noWriteTo, io::Writer);
-        std::tuple<int64_t, struct gocpp::error> Seek(struct File* f, int64_t offset, int whence);
-        std::tuple<int, struct gocpp::error> WriteString(struct File* f, gocpp::string s);
-        struct gocpp::error wrapErr(struct File* f, gocpp::string op, struct gocpp::error err);
-        struct gocpp::error Chmod(struct File* f, golang::os::FileMode mode);
-        struct gocpp::error SetDeadline(struct File* f, mocklib::Date t);
-        struct gocpp::error SetReadDeadline(struct File* f, mocklib::Date t);
-        struct gocpp::error SetWriteDeadline(struct File* f, mocklib::Date t);
-        std::tuple<syscall::RawConn, struct gocpp::error> SyscallConn(struct File* f);
+        gocpp::string Name(golang::os::File* f);
+        gocpp::string Error(golang::os::LinkError* e);
+        struct gocpp::error Unwrap(golang::os::LinkError* e);
+        std::tuple<int, struct gocpp::error> Read(golang::os::File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> ReadAt(golang::os::File* f, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int64_t, struct gocpp::error> ReadFrom(golang::os::File* f, io::Reader r);
+        std::tuple<int64_t, struct gocpp::error> ReadFrom(golang::os::noReadFrom, io::Reader);
+        std::tuple<int, struct gocpp::error> Write(golang::os::File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> WriteAt(golang::os::File* f, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int64_t, struct gocpp::error> WriteTo(golang::os::File* f, io::Writer w);
+        std::tuple<int64_t, struct gocpp::error> WriteTo(golang::os::noWriteTo, io::Writer);
+        std::tuple<int64_t, struct gocpp::error> Seek(golang::os::File* f, int64_t offset, int whence);
+        std::tuple<int, struct gocpp::error> WriteString(golang::os::File* f, gocpp::string s);
+        struct gocpp::error wrapErr(golang::os::File* f, gocpp::string op, struct gocpp::error err);
+        struct gocpp::error Chmod(golang::os::File* f, golang::os::FileMode mode);
+        struct gocpp::error SetDeadline(golang::os::File* f, mocklib::Date t);
+        struct gocpp::error SetReadDeadline(golang::os::File* f, mocklib::Date t);
+        struct gocpp::error SetWriteDeadline(golang::os::File* f, mocklib::Date t);
+        std::tuple<syscall::RawConn, struct gocpp::error> SyscallConn(golang::os::File* f);
         std::tuple<fs::File, struct gocpp::error> Open(golang::os::dirFS dir, gocpp::string name);
         std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadFile(golang::os::dirFS dir, gocpp::string name);
         std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> ReadDir(golang::os::dirFS dir, gocpp::string name);

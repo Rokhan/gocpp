@@ -61,7 +61,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Read(struct rot13Reader r13, gocpp::slice<unsigned char> buf)
+    std::tuple<int, struct gocpp::error> rec::Read(golang::main::rot13Reader r13, gocpp::slice<unsigned char> buf)
     {
         auto [n, err] = rec::Read(gocpp::recv(r13.r), buf);
         if(err != nullptr)

@@ -198,13 +198,13 @@ namespace golang::runtime
     {
         uint64_t load(golang::runtime::sysMemStat* s);
         void add(golang::runtime::sysMemStat* s, int64_t n);
-        void merge(struct heapStatsDelta* a, struct heapStatsDelta* b);
-        struct heapStatsDelta* acquire(struct consistentHeapStats* m);
-        void release(struct consistentHeapStats* m);
-        void unsafeRead(struct consistentHeapStats* m, struct heapStatsDelta* out);
-        void unsafeClear(struct consistentHeapStats* m);
-        void read(struct consistentHeapStats* m, struct heapStatsDelta* out);
-        void accumulate(struct cpuStats* s, int64_t now, bool gcMarkPhase);
+        void merge(golang::runtime::heapStatsDelta* a, struct heapStatsDelta* b);
+        struct heapStatsDelta* acquire(golang::runtime::consistentHeapStats* m);
+        void release(golang::runtime::consistentHeapStats* m);
+        void unsafeRead(golang::runtime::consistentHeapStats* m, struct heapStatsDelta* out);
+        void unsafeClear(golang::runtime::consistentHeapStats* m);
+        void read(golang::runtime::consistentHeapStats* m, struct heapStatsDelta* out);
+        void accumulate(golang::runtime::cpuStats* s, int64_t now, bool gcMarkPhase);
     }
 }
 

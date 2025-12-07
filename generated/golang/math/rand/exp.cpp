@@ -29,7 +29,7 @@ namespace golang::rand
     // callers can adjust the output using:
     //
     //	sample = ExpFloat64() / desiredRateParameter
-    double rec::ExpFloat64(struct Rand* r)
+    double rec::ExpFloat64(golang::rand::Rand* r)
     {
         for(; ; )
         {

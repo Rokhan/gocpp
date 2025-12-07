@@ -58,13 +58,13 @@ namespace golang::strconv
 
     namespace rec
     {
-        gocpp::string String(struct decimal* a);
-        void Assign(struct decimal* a, uint64_t v);
-        void Shift(struct decimal* a, int k);
-        void Round(struct decimal* a, int nd);
-        void RoundDown(struct decimal* a, int nd);
-        void RoundUp(struct decimal* a, int nd);
-        uint64_t RoundedInteger(struct decimal* a);
+        gocpp::string String(golang::strconv::decimal* a);
+        void Assign(golang::strconv::decimal* a, uint64_t v);
+        void Shift(golang::strconv::decimal* a, int k);
+        void Round(golang::strconv::decimal* a, int nd);
+        void RoundDown(golang::strconv::decimal* a, int nd);
+        void RoundUp(golang::strconv::decimal* a, int nd);
+        uint64_t RoundedInteger(golang::strconv::decimal* a);
     }
 }
 

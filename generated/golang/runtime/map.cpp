@@ -334,17 +334,17 @@ namespace golang::runtime
         return h > emptyOne && h < minTopHash;
     }
 
-    struct bmap* rec::overflow(struct bmap* b, golang::runtime::maptype* t)
+    struct bmap* rec::overflow(golang::runtime::bmap* b, golang::runtime::maptype* t)
     {
         return *(bmap**)(add(unsafe::Pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize));
     }
 
-    void rec::setoverflow(struct bmap* b, golang::runtime::maptype* t, struct bmap* ovf)
+    void rec::setoverflow(golang::runtime::bmap* b, golang::runtime::maptype* t, struct bmap* ovf)
     {
         *(bmap**)(add(unsafe::Pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize)) = ovf;
     }
 
-    unsafe::Pointer rec::keys(struct bmap* b)
+    unsafe::Pointer rec::keys(golang::runtime::bmap* b)
     {
         return add(unsafe::Pointer(b), dataOffset);
     }
@@ -356,7 +356,7 @@ namespace golang::runtime
     // To keep hmap small, noverflow is a uint16.
     // When there are few buckets, noverflow is an exact count.
     // When there are many buckets, noverflow is an approximate count.
-    void rec::incrnoverflow(struct hmap* h)
+    void rec::incrnoverflow(golang::runtime::hmap* h)
     {
         if(h->B < 16)
         {
@@ -370,7 +370,7 @@ namespace golang::runtime
         }
     }
 
-    struct bmap* rec::newoverflow(struct hmap* h, golang::runtime::maptype* t, struct bmap* b)
+    struct bmap* rec::newoverflow(golang::runtime::hmap* h, golang::runtime::maptype* t, struct bmap* b)
     {
         bmap* ovf = {};
         if(h->extra != nullptr && h->extra->nextOverflow != nullptr)
@@ -400,7 +400,7 @@ namespace golang::runtime
         return ovf;
     }
 
-    void rec::createOverflow(struct hmap* h)
+    void rec::createOverflow(golang::runtime::hmap* h)
     {
         if(h->extra == nullptr)
         {
@@ -1318,19 +1318,19 @@ namespace golang::runtime
     }
 
     // growing reports whether h is growing. The growth may be to the same size or bigger.
-    bool rec::growing(struct hmap* h)
+    bool rec::growing(golang::runtime::hmap* h)
     {
         return h->oldbuckets != nullptr;
     }
 
     // sameSizeGrow reports whether the current growth is to a map of the same size.
-    bool rec::sameSizeGrow(struct hmap* h)
+    bool rec::sameSizeGrow(golang::runtime::hmap* h)
     {
         return h->flags & sameSizeGrow != 0;
     }
 
     // noldbuckets calculates the number of buckets prior to the current map growth.
-    uintptr_t rec::noldbuckets(struct hmap* h)
+    uintptr_t rec::noldbuckets(golang::runtime::hmap* h)
     {
         auto oldB = h->B;
         if(! rec::sameSizeGrow(gocpp::recv(h)))
@@ -1341,7 +1341,7 @@ namespace golang::runtime
     }
 
     // oldbucketmask provides a mask that can be applied to calculate n % noldbuckets().
-    uintptr_t rec::oldbucketmask(struct hmap* h)
+    uintptr_t rec::oldbucketmask(golang::runtime::hmap* h)
     {
         return rec::noldbuckets(gocpp::recv(h)) - 1;
     }

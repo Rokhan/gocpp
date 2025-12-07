@@ -190,7 +190,7 @@ namespace golang::png
         return "png: unsupported feature: "_s + gocpp::string(e);
     }
 
-    struct gocpp::error rec::parseIHDR(struct decoder* d, uint32_t length)
+    struct gocpp::error rec::parseIHDR(golang::png::decoder* d, uint32_t length)
     {
         if(length != 13)
         {
@@ -363,7 +363,7 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error rec::parsePLTE(struct decoder* d, uint32_t length)
+    struct gocpp::error rec::parsePLTE(golang::png::decoder* d, uint32_t length)
     {
         auto np = int(length / 3);
         if(length % 3 != 0 || np <= 0 || np > 256 || np > (1 << (unsigned int)(d->depth)))
@@ -418,7 +418,7 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error rec::parsetRNS(struct decoder* d, uint32_t length)
+    struct gocpp::error rec::parsetRNS(golang::png::decoder* d, uint32_t length)
     {
         //Go switch emulation
         {
@@ -531,7 +531,7 @@ namespace golang::png
     // immediately before the first Read call is that d.r is positioned between the
     // first IDAT and xxx, and the decoder state immediately after the last Read
     // call is that d.r is positioned between yy and crc1.
-    std::tuple<int, struct gocpp::error> rec::Read(struct decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Read(golang::png::decoder* d, gocpp::slice<unsigned char> p)
     {
         if(len(p) == 0)
         {
@@ -566,7 +566,7 @@ namespace golang::png
     }
 
     // decode decodes the IDAT data into an image.
-    std::tuple<image::Image, struct gocpp::error> rec::decode(struct decoder* d)
+    std::tuple<image::Image, struct gocpp::error> rec::decode(golang::png::decoder* d)
     {
         gocpp::Defer defer;
         try
@@ -633,7 +633,7 @@ namespace golang::png
     }
 
     // readImagePass reads a single image pass, sized according to the pass number.
-    std::tuple<image::Image, struct gocpp::error> rec::readImagePass(struct decoder* d, io::Reader r, int pass, bool allocateOnly)
+    std::tuple<image::Image, struct gocpp::error> rec::readImagePass(golang::png::decoder* d, io::Reader r, int pass, bool allocateOnly)
     {
         auto bitsPerPixel = 0;
         auto pixOffset = 0;
@@ -1163,7 +1163,7 @@ namespace golang::png
     }
 
     // mergePassInto merges a single pass into a full sized image.
-    void rec::mergePassInto(struct decoder* d, image::Image dst, image::Image src, int pass)
+    void rec::mergePassInto(golang::png::decoder* d, image::Image dst, image::Image src, int pass)
     {
         auto p = interlacing[pass];
         gocpp::slice<uint8_t> srcPix = {};
@@ -1278,7 +1278,7 @@ namespace golang::png
         }
     }
 
-    struct gocpp::error rec::parseIDAT(struct decoder* d, uint32_t length)
+    struct gocpp::error rec::parseIDAT(golang::png::decoder* d, uint32_t length)
     {
         struct gocpp::error err;
         d->idatLength = length;
@@ -1290,7 +1290,7 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error rec::parseIEND(struct decoder* d, uint32_t length)
+    struct gocpp::error rec::parseIEND(golang::png::decoder* d, uint32_t length)
     {
         if(length != 0)
         {
@@ -1299,7 +1299,7 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error rec::parseChunk(struct decoder* d, bool configOnly)
+    struct gocpp::error rec::parseChunk(golang::png::decoder* d, bool configOnly)
     {
         if(auto [gocpp_id_4, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 8)); err != nullptr)
         {
@@ -1405,7 +1405,7 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error rec::verifyChecksum(struct decoder* d)
+    struct gocpp::error rec::verifyChecksum(golang::png::decoder* d)
     {
         if(auto [gocpp_id_5, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 4)); err != nullptr)
         {
@@ -1418,7 +1418,7 @@ namespace golang::png
         return nullptr;
     }
 
-    struct gocpp::error rec::checkHeader(struct decoder* d)
+    struct gocpp::error rec::checkHeader(golang::png::decoder* d)
     {
         auto [gocpp_id_6, err] = io::ReadFull(d->r, d->tmp.make_slice(0, len(pngHeader)));
         if(err != nullptr)

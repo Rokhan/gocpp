@@ -158,12 +158,12 @@ namespace golang::runtime
     // iterator on gp's innermost frame. gp must not be the current G.
     //
     // A single unwinder can be reused for multiple unwinds.
-    void rec::init(struct unwinder* u, struct g* gp, golang::runtime::unwindFlags flags)
+    void rec::init(golang::runtime::unwinder* u, struct g* gp, golang::runtime::unwindFlags flags)
     {
         rec::initAt(gocpp::recv(u), ~ uintptr_t(0), ~ uintptr_t(0), ~ uintptr_t(0), gp, flags);
     }
 
-    void rec::initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, golang::runtime::unwindFlags flags)
+    void rec::initAt(golang::runtime::unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, golang::runtime::unwindFlags flags)
     {
         if(auto ourg = getg(); ourg == gp && ourg == ourg->m->curg)
         {
@@ -242,7 +242,7 @@ namespace golang::runtime
         rec::resolveInternal(gocpp::recv(u), true, isSyscall);
     }
 
-    bool rec::valid(struct unwinder* u)
+    bool rec::valid(golang::runtime::unwinder* u)
     {
         return u->frame.pc != 0;
     }
@@ -268,7 +268,7 @@ namespace golang::runtime
     // frame state to follow that stack jump.
     //
     // This is internal to unwinder.
-    void rec::resolveInternal(struct unwinder* u, bool innermost, bool isSyscall)
+    void rec::resolveInternal(golang::runtime::unwinder* u, bool innermost, bool isSyscall)
     {
         auto frame = & u->frame;
         auto gp = rec::ptr(gocpp::recv(u->g));
@@ -389,7 +389,7 @@ namespace golang::runtime
         }
     }
 
-    void rec::next(struct unwinder* u)
+    void rec::next(golang::runtime::unwinder* u)
     {
         auto frame = & u->frame;
         auto f = frame->fn;
@@ -464,7 +464,7 @@ namespace golang::runtime
     // finishInternal is an unwinder-internal helper called after the stack has been
     // exhausted. It sets the unwinder to an invalid state and checks that it
     // successfully unwound the entire stack.
-    void rec::finishInternal(struct unwinder* u)
+    void rec::finishInternal(golang::runtime::unwinder* u)
     {
         u->frame.pc = 0;
         auto gp = rec::ptr(gocpp::recv(u->g));
@@ -486,7 +486,7 @@ namespace golang::runtime
     // frame.pc can be at function entry when the frame is initialized without
     // actually running code, like in runtime.mstart, in which case this returns
     // frame.pc because that's the best we can do.
-    uintptr_t rec::symPC(struct unwinder* u)
+    uintptr_t rec::symPC(golang::runtime::unwinder* u)
     {
         if(u->flags & unwindTrap == 0 && u->frame.pc > rec::entry(gocpp::recv(u->frame.fn)))
         {
@@ -499,7 +499,7 @@ namespace golang::runtime
     // the registered cgo unwinder. It returns the number of PCs written to pcBuf.
     // If the current frame is not a cgo frame or if there's no registered cgo
     // unwinder, it returns 0.
-    int rec::cgoCallers(struct unwinder* u, gocpp::slice<uintptr_t> pcBuf)
+    int rec::cgoCallers(golang::runtime::unwinder* u, gocpp::slice<uintptr_t> pcBuf)
     {
         if(cgoTraceback == nullptr || u->frame.fn.funcID != abi::FuncID_cgocallback || u->cgoCtxt < 0)
         {

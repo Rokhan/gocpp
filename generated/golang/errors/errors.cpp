@@ -107,7 +107,7 @@ namespace golang::errors
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(struct errorString* e)
+    gocpp::string rec::Error(golang::errors::errorString* e)
     {
         return e->s;
     }

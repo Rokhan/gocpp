@@ -121,7 +121,7 @@ namespace golang::runtime
 
     // push adds span s to buffer b. push is safe to call concurrently
     // with other push and pop operations.
-    void rec::push(struct spanSet* b, struct mspan* s)
+    void rec::push(golang::runtime::spanSet* b, struct mspan* s)
     {
         auto cursor = uintptr_t(rec::tail(gocpp::recv(rec::incTail(gocpp::recv(b->index)))) - 1);
         auto [top, bottom] = std::tuple{cursor / spanSetBlockEntries, cursor % spanSetBlockEntries};
@@ -168,7 +168,7 @@ namespace golang::runtime
 
     // pop removes and returns a span from buffer b, or nil if b is empty.
     // pop is safe to call concurrently with other pop and push operations.
-    struct mspan* rec::pop(struct spanSet* b)
+    struct mspan* rec::pop(golang::runtime::spanSet* b)
     {
         uint32_t head = {};
         uint32_t tail = {};
@@ -227,7 +227,7 @@ namespace golang::runtime
     //
     // reset may not be called concurrently with any other operations
     // on the span set.
-    void rec::reset(struct spanSet* b)
+    void rec::reset(golang::runtime::spanSet* b)
     {
         auto [head, tail] = rec::split(gocpp::recv(rec::load(gocpp::recv(b->index))));
         if(head < tail)
@@ -293,7 +293,7 @@ namespace golang::runtime
     // Loads the spanSetSpinePointer and returns it.
     //
     // It has the same semantics as atomic.UnsafePointer.
-    struct spanSetSpinePointer rec::Load(struct atomicSpanSetSpinePointer* s)
+    struct spanSetSpinePointer rec::Load(golang::runtime::atomicSpanSetSpinePointer* s)
     {
         return spanSetSpinePointer {rec::Load(gocpp::recv(s->a))};
     }
@@ -301,7 +301,7 @@ namespace golang::runtime
     // Stores the spanSetSpinePointer.
     //
     // It has the same semantics as [atomic.UnsafePointer].
-    void rec::StoreNoWB(struct atomicSpanSetSpinePointer* s, struct spanSetSpinePointer p)
+    void rec::StoreNoWB(golang::runtime::atomicSpanSetSpinePointer* s, struct spanSetSpinePointer p)
     {
         rec::StoreNoWB(gocpp::recv(s->a), p.p);
     }
@@ -338,7 +338,7 @@ namespace golang::runtime
 
     // lookup returns &s[idx].
     template<typename spanSetBlock>
-    atomic::Pointer<spanSetBlock>* rec::lookup(struct spanSetSpinePointer s, uintptr_t idx)
+    atomic::Pointer<spanSetBlock>* rec::lookup(golang::runtime::spanSetSpinePointer s, uintptr_t idx)
     {
         return (atomic::Pointer<spanSetBlock>*)(add(s.p, goarch::PtrSize * idx));
     }
@@ -377,7 +377,7 @@ namespace golang::runtime
 
     // alloc tries to grab a spanSetBlock out of the pool, and if it fails
     // persistentallocs a new one and returns it.
-    struct spanSetBlock* rec::alloc(struct spanSetBlockAlloc* p)
+    struct spanSetBlock* rec::alloc(golang::runtime::spanSetBlockAlloc* p)
     {
         if(auto s = (spanSetBlock*)(rec::pop(gocpp::recv(p->stack))); s != nullptr)
         {
@@ -387,7 +387,7 @@ namespace golang::runtime
     }
 
     // free returns a spanSetBlock back to the pool.
-    void rec::free(struct spanSetBlockAlloc* p, struct spanSetBlock* block)
+    void rec::free(golang::runtime::spanSetBlockAlloc* p, struct spanSetBlock* block)
     {
         rec::Store(gocpp::recv(block->popped), 0);
         rec::push(gocpp::recv(p->stack), & block->lfnode);
@@ -453,31 +453,31 @@ namespace golang::runtime
     }
 
     // load atomically reads a headTailIndex value.
-    runtime::headTailIndex rec::load(struct atomicHeadTailIndex* h)
+    runtime::headTailIndex rec::load(golang::runtime::atomicHeadTailIndex* h)
     {
         return headTailIndex(rec::Load(gocpp::recv(h->u)));
     }
 
     // cas atomically compares-and-swaps a headTailIndex value.
-    bool rec::cas(struct atomicHeadTailIndex* h, golang::runtime::headTailIndex old, golang::runtime::headTailIndex go_new)
+    bool rec::cas(golang::runtime::atomicHeadTailIndex* h, golang::runtime::headTailIndex old, golang::runtime::headTailIndex go_new)
     {
         return rec::CompareAndSwap(gocpp::recv(h->u), uint64_t(old), uint64_t(go_new));
     }
 
     // incHead atomically increments the head of a headTailIndex.
-    runtime::headTailIndex rec::incHead(struct atomicHeadTailIndex* h)
+    runtime::headTailIndex rec::incHead(golang::runtime::atomicHeadTailIndex* h)
     {
         return headTailIndex(rec::Add(gocpp::recv(h->u), 1 << 32));
     }
 
     // decHead atomically decrements the head of a headTailIndex.
-    runtime::headTailIndex rec::decHead(struct atomicHeadTailIndex* h)
+    runtime::headTailIndex rec::decHead(golang::runtime::atomicHeadTailIndex* h)
     {
         return headTailIndex(rec::Add(gocpp::recv(h->u), - (1 << 32)));
     }
 
     // incTail atomically increments the tail of a headTailIndex.
-    runtime::headTailIndex rec::incTail(struct atomicHeadTailIndex* h)
+    runtime::headTailIndex rec::incTail(golang::runtime::atomicHeadTailIndex* h)
     {
         auto ht = headTailIndex(rec::Add(gocpp::recv(h->u), 1));
         if(rec::tail(gocpp::recv(ht)) == 0)
@@ -489,7 +489,7 @@ namespace golang::runtime
     }
 
     // reset clears the headTailIndex to (0, 0).
-    void rec::reset(struct atomicHeadTailIndex* h)
+    void rec::reset(golang::runtime::atomicHeadTailIndex* h)
     {
         rec::Store(gocpp::recv(h->u), 0);
     }
@@ -525,13 +525,13 @@ namespace golang::runtime
     }
 
     // Load returns the *mspan.
-    struct mspan* rec::Load(struct atomicMSpanPointer* p)
+    struct mspan* rec::Load(golang::runtime::atomicMSpanPointer* p)
     {
         return (mspan*)(rec::Load(gocpp::recv(p->p)));
     }
 
     // Store stores an *mspan.
-    void rec::StoreNoWB(struct atomicMSpanPointer* p, struct mspan* s)
+    void rec::StoreNoWB(golang::runtime::atomicMSpanPointer* p, struct mspan* s)
     {
         rec::StoreNoWB(gocpp::recv(p->p), unsafe::Pointer(s));
     }

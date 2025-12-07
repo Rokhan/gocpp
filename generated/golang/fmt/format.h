@@ -62,25 +62,25 @@ namespace golang::fmt
 
     namespace rec
     {
-        void clearflags(struct fmt* f);
-        void init(struct fmt* f, buffer* buf);
-        void writePadding(struct fmt* f, int n);
-        void pad(struct fmt* f, gocpp::slice<unsigned char> b);
-        void padString(struct fmt* f, gocpp::string s);
-        void fmtBoolean(struct fmt* f, bool v);
-        void fmtUnicode(struct fmt* f, uint64_t u);
-        void fmtInteger(struct fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, gocpp::string digits);
-        gocpp::string truncateString(struct fmt* f, gocpp::string s);
-        gocpp::slice<unsigned char> truncate(struct fmt* f, gocpp::slice<unsigned char> b);
-        void fmtS(struct fmt* f, gocpp::string s);
-        void fmtBs(struct fmt* f, gocpp::slice<unsigned char> b);
-        void fmtSbx(struct fmt* f, gocpp::string s, gocpp::slice<unsigned char> b, gocpp::string digits);
-        void fmtSx(struct fmt* f, gocpp::string s, gocpp::string digits);
-        void fmtBx(struct fmt* f, gocpp::slice<unsigned char> b, gocpp::string digits);
-        void fmtQ(struct fmt* f, gocpp::string s);
-        void fmtC(struct fmt* f, uint64_t c);
-        void fmtQc(struct fmt* f, uint64_t c);
-        void fmtFloat(struct fmt* f, double v, int size, gocpp::rune verb, int prec);
+        void clearflags(golang::fmt::fmt* f);
+        void init(golang::fmt::fmt* f, buffer* buf);
+        void writePadding(golang::fmt::fmt* f, int n);
+        void pad(golang::fmt::fmt* f, gocpp::slice<unsigned char> b);
+        void padString(golang::fmt::fmt* f, gocpp::string s);
+        void fmtBoolean(golang::fmt::fmt* f, bool v);
+        void fmtUnicode(golang::fmt::fmt* f, uint64_t u);
+        void fmtInteger(golang::fmt::fmt* f, uint64_t u, int base, bool isSigned, gocpp::rune verb, gocpp::string digits);
+        gocpp::string truncateString(golang::fmt::fmt* f, gocpp::string s);
+        gocpp::slice<unsigned char> truncate(golang::fmt::fmt* f, gocpp::slice<unsigned char> b);
+        void fmtS(golang::fmt::fmt* f, gocpp::string s);
+        void fmtBs(golang::fmt::fmt* f, gocpp::slice<unsigned char> b);
+        void fmtSbx(golang::fmt::fmt* f, gocpp::string s, gocpp::slice<unsigned char> b, gocpp::string digits);
+        void fmtSx(golang::fmt::fmt* f, gocpp::string s, gocpp::string digits);
+        void fmtBx(golang::fmt::fmt* f, gocpp::slice<unsigned char> b, gocpp::string digits);
+        void fmtQ(golang::fmt::fmt* f, gocpp::string s);
+        void fmtC(golang::fmt::fmt* f, uint64_t c);
+        void fmtQc(golang::fmt::fmt* f, uint64_t c);
+        void fmtFloat(golang::fmt::fmt* f, double v, int size, gocpp::rune verb, int prec);
     }
 }
 

@@ -104,7 +104,7 @@ namespace golang::os
             return & buf;
         };
     });
-    void rec::close(struct dirInfo* d)
+    void rec::close(golang::os::dirInfo* d)
     {
         if(d->buf != nullptr)
         {
@@ -117,7 +117,7 @@ namespace golang::os
     // if the underlying file system supports it.
     // Useful for testing purposes.
     bool allowReadDirFileID = true;
-    std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<os::DirEntry>, gocpp::slice<os::FileInfo>, struct gocpp::error> rec::readdir(struct File* file, int n, golang::os::readdirMode mode)
+    std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<os::DirEntry>, gocpp::slice<os::FileInfo>, struct gocpp::error> rec::readdir(golang::os::File* file, int n, golang::os::readdirMode mode)
     {
         gocpp::slice<gocpp::string> names;
         gocpp::slice<os::DirEntry> dirents;
@@ -316,27 +316,27 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Name(struct dirEntry de)
+    gocpp::string rec::Name(golang::os::dirEntry de)
     {
         return rec::Name(gocpp::recv(de.fs));
     }
 
-    bool rec::IsDir(struct dirEntry de)
+    bool rec::IsDir(golang::os::dirEntry de)
     {
         return rec::IsDir(gocpp::recv(de.fs));
     }
 
-    os::FileMode rec::Type(struct dirEntry de)
+    os::FileMode rec::Type(golang::os::dirEntry de)
     {
         return rec::Type(gocpp::recv(rec::Mode(gocpp::recv(de.fs))));
     }
 
-    std::tuple<os::FileInfo, struct gocpp::error> rec::Info(struct dirEntry de)
+    std::tuple<os::FileInfo, struct gocpp::error> rec::Info(golang::os::dirEntry de)
     {
         return {de.fs, nullptr};
     }
 
-    gocpp::string rec::String(struct dirEntry de)
+    gocpp::string rec::String(golang::os::dirEntry de)
     {
         return fs::FormatDirEntry(de);
     }

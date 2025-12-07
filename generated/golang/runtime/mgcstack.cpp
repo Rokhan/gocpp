@@ -232,7 +232,7 @@ namespace golang::runtime
     // obj.r = r, but with no write barrier.
     //
     //go:nowritebarrier
-    void rec::setRecord(struct stackObject* obj, struct stackObjectRecord* r)
+    void rec::setRecord(golang::runtime::stackObject* obj, struct stackObjectRecord* r)
     {
         *(uintptr_t*)(unsafe::Pointer(& obj->r)) = uintptr_t(unsafe::Pointer(r));
     }
@@ -294,7 +294,7 @@ namespace golang::runtime
 
     // Add p as a potential pointer to a stack object.
     // p must be a stack address.
-    void rec::putPtr(struct stackScanState* s, uintptr_t p, bool conservative)
+    void rec::putPtr(golang::runtime::stackScanState* s, uintptr_t p, bool conservative)
     {
         if(p < s->stack.lo || p >= s->stack.hi)
         {
@@ -338,7 +338,7 @@ namespace golang::runtime
     //
     // This prefers non-conservative pointers so we scan stack objects
     // precisely if there are any non-conservative pointers to them.
-    std::tuple<uintptr_t, bool> rec::getPtr(struct stackScanState* s)
+    std::tuple<uintptr_t, bool> rec::getPtr(golang::runtime::stackScanState* s)
     {
         uintptr_t p;
         bool conservative;
@@ -375,7 +375,7 @@ namespace golang::runtime
     }
 
     // addObject adds a stack object at addr of type typ to the set of stack objects.
-    void rec::addObject(struct stackScanState* s, uintptr_t addr, struct stackObjectRecord* r)
+    void rec::addObject(golang::runtime::stackScanState* s, uintptr_t addr, struct stackObjectRecord* r)
     {
         auto x = s->tail;
         if(x == nullptr)
@@ -408,7 +408,7 @@ namespace golang::runtime
     // buildIndex initializes s.root to a binary search tree.
     // It should be called after all addObject calls but before
     // any call of findObject.
-    void rec::buildIndex(struct stackScanState* s)
+    void rec::buildIndex(golang::runtime::stackScanState* s)
     {
         std::tie(s->root, std::ignore, std::ignore) = binarySearchTree(s->head, 0, s->nobjs);
     }
@@ -445,7 +445,7 @@ namespace golang::runtime
 
     // findObject returns the stack object containing address a, if any.
     // Must have called buildIndex previously.
-    struct stackObject* rec::findObject(struct stackScanState* s, uintptr_t a)
+    struct stackObject* rec::findObject(golang::runtime::stackScanState* s, uintptr_t a)
     {
         auto off = uint32_t(a - s->stack.lo);
         auto obj = s->root;

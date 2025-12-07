@@ -150,14 +150,14 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(struct unwinder* u, struct g* gp, golang::runtime::unwindFlags flags);
-        void initAt(struct unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, golang::runtime::unwindFlags flags);
-        bool valid(struct unwinder* u);
-        void resolveInternal(struct unwinder* u, bool innermost, bool isSyscall);
-        void next(struct unwinder* u);
-        void finishInternal(struct unwinder* u);
-        uintptr_t symPC(struct unwinder* u);
-        int cgoCallers(struct unwinder* u, gocpp::slice<uintptr_t> pcBuf);
+        void init(golang::runtime::unwinder* u, struct g* gp, golang::runtime::unwindFlags flags);
+        void initAt(golang::runtime::unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, golang::runtime::unwindFlags flags);
+        bool valid(golang::runtime::unwinder* u);
+        void resolveInternal(golang::runtime::unwinder* u, bool innermost, bool isSyscall);
+        void next(golang::runtime::unwinder* u);
+        void finishInternal(golang::runtime::unwinder* u);
+        uintptr_t symPC(golang::runtime::unwinder* u);
+        int cgoCallers(golang::runtime::unwinder* u, gocpp::slice<uintptr_t> pcBuf);
     }
 }
 

@@ -77,7 +77,7 @@ namespace golang::bytes
     // only until the next call to a method like [Buffer.Read], [Buffer.Write], [Buffer.Reset], or [Buffer.Truncate]).
     // The slice aliases the buffer content at least until the next buffer modification,
     // so immediate changes to the slice will affect the result of future reads.
-    gocpp::slice<unsigned char> rec::Bytes(struct Buffer* b)
+    gocpp::slice<unsigned char> rec::Bytes(golang::bytes::Buffer* b)
     {
         return b->buf.make_slice(b->off);
     }
@@ -86,7 +86,7 @@ namespace golang::bytes
     // This buffer is intended to be appended to and
     // passed to an immediately succeeding [Buffer.Write] call.
     // The buffer is only valid until the next write operation on b.
-    gocpp::slice<unsigned char> rec::AvailableBuffer(struct Buffer* b)
+    gocpp::slice<unsigned char> rec::AvailableBuffer(golang::bytes::Buffer* b)
     {
         return b->buf.make_slice(len(b->buf));
     }
@@ -95,7 +95,7 @@ namespace golang::bytes
     // as a string. If the [Buffer] is a nil pointer, it returns "<nil>".
     //
     // To build strings more efficiently, see the strings.Builder type.
-    gocpp::string rec::String(struct Buffer* b)
+    gocpp::string rec::String(golang::bytes::Buffer* b)
     {
         if(b == nullptr)
         {
@@ -105,27 +105,27 @@ namespace golang::bytes
     }
 
     // empty reports whether the unread portion of the buffer is empty.
-    bool rec::empty(struct Buffer* b)
+    bool rec::empty(golang::bytes::Buffer* b)
     {
         return len(b->buf) <= b->off;
     }
 
     // Len returns the number of bytes of the unread portion of the buffer;
     // b.Len() == len(b.Bytes()).
-    int rec::Len(struct Buffer* b)
+    int rec::Len(golang::bytes::Buffer* b)
     {
         return len(b->buf) - b->off;
     }
 
     // Cap returns the capacity of the buffer's underlying byte slice, that is, the
     // total space allocated for the buffer's data.
-    int rec::Cap(struct Buffer* b)
+    int rec::Cap(golang::bytes::Buffer* b)
     {
         return cap(b->buf);
     }
 
     // Available returns how many bytes are unused in the buffer.
-    int rec::Available(struct Buffer* b)
+    int rec::Available(golang::bytes::Buffer* b)
     {
         return cap(b->buf) - len(b->buf);
     }
@@ -133,7 +133,7 @@ namespace golang::bytes
     // Truncate discards all but the first n unread bytes from the buffer
     // but continues to use the same allocated storage.
     // It panics if n is negative or greater than the length of the buffer.
-    void rec::Truncate(struct Buffer* b, int n)
+    void rec::Truncate(golang::bytes::Buffer* b, int n)
     {
         if(n == 0)
         {
@@ -151,7 +151,7 @@ namespace golang::bytes
     // Reset resets the buffer to be empty,
     // but it retains the underlying storage for use by future writes.
     // Reset is the same as [Buffer.Truncate](0).
-    void rec::Reset(struct Buffer* b)
+    void rec::Reset(golang::bytes::Buffer* b)
     {
         b->buf = b->buf.make_slice(0, 0);
         b->off = 0;
@@ -161,7 +161,7 @@ namespace golang::bytes
     // tryGrowByReslice is an inlineable version of grow for the fast-case where the
     // internal buffer only needs to be resliced.
     // It returns the index where bytes should be written and whether it succeeded.
-    std::tuple<int, bool> rec::tryGrowByReslice(struct Buffer* b, int n)
+    std::tuple<int, bool> rec::tryGrowByReslice(golang::bytes::Buffer* b, int n)
     {
         if(auto l = len(b->buf); n <= cap(b->buf) - l)
         {
@@ -174,7 +174,7 @@ namespace golang::bytes
     // grow grows the buffer to guarantee space for n more bytes.
     // It returns the index where bytes should be written.
     // If the buffer can't grow it will panic with ErrTooLarge.
-    int rec::grow(struct Buffer* b, int n)
+    int rec::grow(golang::bytes::Buffer* b, int n)
     {
         auto m = rec::Len(gocpp::recv(b));
         if(m == 0 && b->off != 0)
@@ -214,7 +214,7 @@ namespace golang::bytes
     // buffer without another allocation.
     // If n is negative, Grow will panic.
     // If the buffer can't grow it will panic with [ErrTooLarge].
-    void rec::Grow(struct Buffer* b, int n)
+    void rec::Grow(golang::bytes::Buffer* b, int n)
     {
         if(n < 0)
         {
@@ -227,7 +227,7 @@ namespace golang::bytes
     // Write appends the contents of p to the buffer, growing the buffer as
     // needed. The return value n is the length of p; err is always nil. If the
     // buffer becomes too large, Write will panic with [ErrTooLarge].
-    std::tuple<int, struct gocpp::error> rec::Write(struct Buffer* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(golang::bytes::Buffer* b, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -243,7 +243,7 @@ namespace golang::bytes
     // WriteString appends the contents of s to the buffer, growing the buffer as
     // needed. The return value n is the length of s; err is always nil. If the
     // buffer becomes too large, WriteString will panic with [ErrTooLarge].
-    std::tuple<int, struct gocpp::error> rec::WriteString(struct Buffer* b, gocpp::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(golang::bytes::Buffer* b, gocpp::string s)
     {
         int n;
         struct gocpp::error err;
@@ -264,7 +264,7 @@ namespace golang::bytes
     // the buffer as needed. The return value n is the number of bytes read. Any
     // error except io.EOF encountered during the read is also returned. If the
     // buffer becomes too large, ReadFrom will panic with [ErrTooLarge].
-    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(struct Buffer* b, io::Reader r)
+    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(golang::bytes::Buffer* b, io::Reader r)
     {
         int64_t n;
         struct gocpp::error err;
@@ -324,7 +324,7 @@ namespace golang::bytes
     // The return value n is the number of bytes written; it always fits into an
     // int, but it is int64 to match the io.WriterTo interface. Any error
     // encountered during the write is also returned.
-    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct Buffer* b, io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(golang::bytes::Buffer* b, io::Writer w)
     {
         int64_t n;
         struct gocpp::error err;
@@ -355,7 +355,7 @@ namespace golang::bytes
     // The returned error is always nil, but is included to match [bufio.Writer]'s
     // WriteByte. If the buffer becomes too large, WriteByte will panic with
     // [ErrTooLarge].
-    struct gocpp::error rec::WriteByte(struct Buffer* b, unsigned char c)
+    struct gocpp::error rec::WriteByte(golang::bytes::Buffer* b, unsigned char c)
     {
         b->lastRead = opInvalid;
         auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), 1);
@@ -371,7 +371,7 @@ namespace golang::bytes
     // buffer, returning its length and an error, which is always nil but is
     // included to match [bufio.Writer]'s WriteRune. The buffer is grown as needed;
     // if it becomes too large, WriteRune will panic with [ErrTooLarge].
-    std::tuple<int, struct gocpp::error> rec::WriteRune(struct Buffer* b, gocpp::rune r)
+    std::tuple<int, struct gocpp::error> rec::WriteRune(golang::bytes::Buffer* b, gocpp::rune r)
     {
         int n;
         struct gocpp::error err;
@@ -394,7 +394,7 @@ namespace golang::bytes
     // is drained. The return value n is the number of bytes read. If the
     // buffer has no data to return, err is io.EOF (unless len(p) is zero);
     // otherwise it is nil.
-    std::tuple<int, struct gocpp::error> rec::Read(struct Buffer* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Read(golang::bytes::Buffer* b, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -421,7 +421,7 @@ namespace golang::bytes
     // advancing the buffer as if the bytes had been returned by [Buffer.Read].
     // If there are fewer than n bytes in the buffer, Next returns the entire buffer.
     // The slice is only valid until the next call to a read or write method.
-    gocpp::slice<unsigned char> rec::Next(struct Buffer* b, int n)
+    gocpp::slice<unsigned char> rec::Next(golang::bytes::Buffer* b, int n)
     {
         b->lastRead = opInvalid;
         auto m = rec::Len(gocpp::recv(b));
@@ -440,7 +440,7 @@ namespace golang::bytes
 
     // ReadByte reads and returns the next byte from the buffer.
     // If no byte is available, it returns error io.EOF.
-    std::tuple<unsigned char, struct gocpp::error> rec::ReadByte(struct Buffer* b)
+    std::tuple<unsigned char, struct gocpp::error> rec::ReadByte(golang::bytes::Buffer* b)
     {
         if(rec::empty(gocpp::recv(b)))
         {
@@ -458,7 +458,7 @@ namespace golang::bytes
     // If no bytes are available, the error returned is io.EOF.
     // If the bytes are an erroneous UTF-8 encoding, it
     // consumes one byte and returns U+FFFD, 1.
-    std::tuple<gocpp::rune, int, struct gocpp::error> rec::ReadRune(struct Buffer* b)
+    std::tuple<gocpp::rune, int, struct gocpp::error> rec::ReadRune(golang::bytes::Buffer* b)
     {
         gocpp::rune r;
         int size;
@@ -487,7 +487,7 @@ namespace golang::bytes
     // not a successful [Buffer.ReadRune], UnreadRune returns an error.  (In this regard
     // it is stricter than [Buffer.UnreadByte], which will unread the last byte
     // from any read operation.)
-    struct gocpp::error rec::UnreadRune(struct Buffer* b)
+    struct gocpp::error rec::UnreadRune(golang::bytes::Buffer* b)
     {
         if(b->lastRead <= opInvalid)
         {
@@ -506,7 +506,7 @@ namespace golang::bytes
     // read operation that read at least one byte. If a write has happened since
     // the last read, if the last read returned an error, or if the read read zero
     // bytes, UnreadByte returns an error.
-    struct gocpp::error rec::UnreadByte(struct Buffer* b)
+    struct gocpp::error rec::UnreadByte(golang::bytes::Buffer* b)
     {
         if(b->lastRead == opInvalid)
         {
@@ -526,7 +526,7 @@ namespace golang::bytes
     // it returns the data read before the error and the error itself (often io.EOF).
     // ReadBytes returns err != nil if and only if the returned data does not end in
     // delim.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::ReadBytes(struct Buffer* b, unsigned char delim)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::ReadBytes(golang::bytes::Buffer* b, unsigned char delim)
     {
         gocpp::slice<unsigned char> line;
         struct gocpp::error err;
@@ -537,7 +537,7 @@ namespace golang::bytes
     }
 
     // readSlice is like ReadBytes but returns a reference to internal buffer data.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::readSlice(struct Buffer* b, unsigned char delim)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::readSlice(golang::bytes::Buffer* b, unsigned char delim)
     {
         gocpp::slice<unsigned char> line;
         struct gocpp::error err;
@@ -560,7 +560,7 @@ namespace golang::bytes
     // it returns the data read before the error and the error itself (often io.EOF).
     // ReadString returns err != nil if and only if the returned data does not end
     // in delim.
-    std::tuple<gocpp::string, struct gocpp::error> rec::ReadString(struct Buffer* b, unsigned char delim)
+    std::tuple<gocpp::string, struct gocpp::error> rec::ReadString(golang::bytes::Buffer* b, unsigned char delim)
     {
         gocpp::string line;
         struct gocpp::error err;

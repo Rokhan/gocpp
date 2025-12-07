@@ -110,28 +110,28 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(struct gcControllerState* c, int32_t gcPercent, int64_t memoryLimit);
-        void startCycle(struct gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger);
-        void revise(struct gcControllerState* c);
-        void endCycle(struct gcControllerState* c, int64_t now, int procs, bool userForced);
-        void enlistWorker(struct gcControllerState* c);
-        std::tuple<struct g*, int64_t> findRunnableGCWorker(struct gcControllerState* c, struct p* pp, int64_t now);
-        void resetLive(struct gcControllerState* c, uint64_t bytesMarked);
-        void markWorkerStop(struct gcControllerState* c, golang::runtime::gcMarkWorkerMode mode, int64_t duration);
-        void update(struct gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan);
-        void addScannableStack(struct gcControllerState* c, struct p* pp, int64_t amount);
-        void addGlobals(struct gcControllerState* c, int64_t amount);
-        uint64_t heapGoal(struct gcControllerState* c);
-        std::tuple<uint64_t, uint64_t> heapGoalInternal(struct gcControllerState* c);
-        uint64_t memoryLimitHeapGoal(struct gcControllerState* c);
-        std::tuple<uint64_t, uint64_t> trigger(struct gcControllerState* c);
-        void commit(struct gcControllerState* c, bool isSweepDone);
-        int32_t setGCPercent(struct gcControllerState* c, int32_t in);
-        int64_t setMemoryLimit(struct gcControllerState* c, int64_t in);
-        bool addIdleMarkWorker(struct gcControllerState* c);
-        bool needIdleMarkWorker(struct gcControllerState* c);
-        void removeIdleMarkWorker(struct gcControllerState* c);
-        void setMaxIdleMarkWorkers(struct gcControllerState* c, int32_t max);
+        void init(golang::runtime::gcControllerState* c, int32_t gcPercent, int64_t memoryLimit);
+        void startCycle(golang::runtime::gcControllerState* c, int64_t markStartTime, int procs, struct gcTrigger trigger);
+        void revise(golang::runtime::gcControllerState* c);
+        void endCycle(golang::runtime::gcControllerState* c, int64_t now, int procs, bool userForced);
+        void enlistWorker(golang::runtime::gcControllerState* c);
+        std::tuple<struct g*, int64_t> findRunnableGCWorker(golang::runtime::gcControllerState* c, struct p* pp, int64_t now);
+        void resetLive(golang::runtime::gcControllerState* c, uint64_t bytesMarked);
+        void markWorkerStop(golang::runtime::gcControllerState* c, golang::runtime::gcMarkWorkerMode mode, int64_t duration);
+        void update(golang::runtime::gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan);
+        void addScannableStack(golang::runtime::gcControllerState* c, struct p* pp, int64_t amount);
+        void addGlobals(golang::runtime::gcControllerState* c, int64_t amount);
+        uint64_t heapGoal(golang::runtime::gcControllerState* c);
+        std::tuple<uint64_t, uint64_t> heapGoalInternal(golang::runtime::gcControllerState* c);
+        uint64_t memoryLimitHeapGoal(golang::runtime::gcControllerState* c);
+        std::tuple<uint64_t, uint64_t> trigger(golang::runtime::gcControllerState* c);
+        void commit(golang::runtime::gcControllerState* c, bool isSweepDone);
+        int32_t setGCPercent(golang::runtime::gcControllerState* c, int32_t in);
+        int64_t setMemoryLimit(golang::runtime::gcControllerState* c, int64_t in);
+        bool addIdleMarkWorker(golang::runtime::gcControllerState* c);
+        bool needIdleMarkWorker(golang::runtime::gcControllerState* c);
+        void removeIdleMarkWorker(golang::runtime::gcControllerState* c);
+        void setMaxIdleMarkWorkers(golang::runtime::gcControllerState* c, int32_t max);
     }
 }
 

@@ -33,16 +33,16 @@ namespace golang::flate
 
     namespace rec
     {
-        void init(struct dictDecoder* dd, int size, gocpp::slice<unsigned char> dict);
-        int histSize(struct dictDecoder* dd);
-        int availRead(struct dictDecoder* dd);
-        int availWrite(struct dictDecoder* dd);
-        gocpp::slice<unsigned char> writeSlice(struct dictDecoder* dd);
-        void writeMark(struct dictDecoder* dd, int cnt);
-        void writeByte(struct dictDecoder* dd, unsigned char c);
-        int writeCopy(struct dictDecoder* dd, int dist, int length);
-        int tryWriteCopy(struct dictDecoder* dd, int dist, int length);
-        gocpp::slice<unsigned char> readFlush(struct dictDecoder* dd);
+        void init(golang::flate::dictDecoder* dd, int size, gocpp::slice<unsigned char> dict);
+        int histSize(golang::flate::dictDecoder* dd);
+        int availRead(golang::flate::dictDecoder* dd);
+        int availWrite(golang::flate::dictDecoder* dd);
+        gocpp::slice<unsigned char> writeSlice(golang::flate::dictDecoder* dd);
+        void writeMark(golang::flate::dictDecoder* dd, int cnt);
+        void writeByte(golang::flate::dictDecoder* dd, unsigned char c);
+        int writeCopy(golang::flate::dictDecoder* dd, int dist, int length);
+        int tryWriteCopy(golang::flate::dictDecoder* dd, int dist, int length);
+        gocpp::slice<unsigned char> readFlush(golang::flate::dictDecoder* dd);
     }
 }
 

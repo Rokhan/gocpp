@@ -56,32 +56,32 @@ namespace golang::image
 
     namespace rec
     {
-        gocpp::string String(struct Point p);
-        struct Point Add(struct Point p, struct Point q);
-        struct Point Sub(struct Point p, struct Point q);
-        struct Point Mul(struct Point p, int k);
-        struct Point Div(struct Point p, int k);
-        bool In(struct Point p, struct Rectangle r);
-        struct Point Mod(struct Point p, struct Rectangle r);
-        bool Eq(struct Point p, struct Point q);
-        gocpp::string String(struct Rectangle r);
-        int Dx(struct Rectangle r);
-        int Dy(struct Rectangle r);
-        struct Point Size(struct Rectangle r);
-        struct Rectangle Add(struct Rectangle r, struct Point p);
-        struct Rectangle Sub(struct Rectangle r, struct Point p);
-        struct Rectangle Inset(struct Rectangle r, int n);
-        struct Rectangle Intersect(struct Rectangle r, struct Rectangle s);
-        struct Rectangle Union(struct Rectangle r, struct Rectangle s);
-        bool Empty(struct Rectangle r);
-        bool Eq(struct Rectangle r, struct Rectangle s);
-        bool Overlaps(struct Rectangle r, struct Rectangle s);
-        bool In(struct Rectangle r, struct Rectangle s);
-        struct Rectangle Canon(struct Rectangle r);
-        color::Color At(struct Rectangle r, int x, int y);
-        color::RGBA64 RGBA64At(struct Rectangle r, int x, int y);
-        struct Rectangle Bounds(struct Rectangle r);
-        color::Model ColorModel(struct Rectangle r);
+        gocpp::string String(golang::image::Point p);
+        struct Point Add(golang::image::Point p, struct Point q);
+        struct Point Sub(golang::image::Point p, struct Point q);
+        struct Point Mul(golang::image::Point p, int k);
+        struct Point Div(golang::image::Point p, int k);
+        bool In(golang::image::Point p, struct Rectangle r);
+        struct Point Mod(golang::image::Point p, struct Rectangle r);
+        bool Eq(golang::image::Point p, struct Point q);
+        gocpp::string String(golang::image::Rectangle r);
+        int Dx(golang::image::Rectangle r);
+        int Dy(golang::image::Rectangle r);
+        struct Point Size(golang::image::Rectangle r);
+        struct Rectangle Add(golang::image::Rectangle r, struct Point p);
+        struct Rectangle Sub(golang::image::Rectangle r, struct Point p);
+        struct Rectangle Inset(golang::image::Rectangle r, int n);
+        struct Rectangle Intersect(golang::image::Rectangle r, struct Rectangle s);
+        struct Rectangle Union(golang::image::Rectangle r, struct Rectangle s);
+        bool Empty(golang::image::Rectangle r);
+        bool Eq(golang::image::Rectangle r, struct Rectangle s);
+        bool Overlaps(golang::image::Rectangle r, struct Rectangle s);
+        bool In(golang::image::Rectangle r, struct Rectangle s);
+        struct Rectangle Canon(golang::image::Rectangle r);
+        color::Color At(golang::image::Rectangle r, int x, int y);
+        color::RGBA64 RGBA64At(golang::image::Rectangle r, int x, int y);
+        struct Rectangle Bounds(golang::image::Rectangle r);
+        color::Model ColorModel(golang::image::Rectangle r);
     }
 }
 

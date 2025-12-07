@@ -103,7 +103,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         stackWorkBufHdr stackWorkBufHdr;
-        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<runtime::stackWorkBufHdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
+        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackWorkBufHdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
 
         using isGoStruct = void;
 
@@ -121,7 +121,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         stackObjectBufHdr stackObjectBufHdr;
-        gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<runtime::stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj;
+        gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj;
 
         using isGoStruct = void;
 
@@ -138,12 +138,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        void setRecord(struct stackObject* obj, struct stackObjectRecord* r);
-        void putPtr(struct stackScanState* s, uintptr_t p, bool conservative);
-        std::tuple<uintptr_t, bool> getPtr(struct stackScanState* s);
-        void addObject(struct stackScanState* s, uintptr_t addr, struct stackObjectRecord* r);
-        void buildIndex(struct stackScanState* s);
-        struct stackObject* findObject(struct stackScanState* s, uintptr_t a);
+        void setRecord(golang::runtime::stackObject* obj, struct stackObjectRecord* r);
+        void putPtr(golang::runtime::stackScanState* s, uintptr_t p, bool conservative);
+        std::tuple<uintptr_t, bool> getPtr(golang::runtime::stackScanState* s);
+        void addObject(golang::runtime::stackScanState* s, uintptr_t addr, struct stackObjectRecord* r);
+        void buildIndex(golang::runtime::stackScanState* s);
+        struct stackObject* findObject(golang::runtime::stackScanState* s, uintptr_t a);
     }
 }
 

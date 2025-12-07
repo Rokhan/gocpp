@@ -71,7 +71,7 @@ namespace golang::runtime
     }
 
     // empty reports whether the page cache has no free pages.
-    bool rec::empty(struct pageCache* c)
+    bool rec::empty(golang::runtime::pageCache* c)
     {
         return c->cache == 0;
     }
@@ -84,7 +84,7 @@ namespace golang::runtime
     //
     // Returns a base address of zero on failure, in which case the
     // amount of scavenged memory should be ignored.
-    std::tuple<uintptr_t, uintptr_t> rec::alloc(struct pageCache* c, uintptr_t npages)
+    std::tuple<uintptr_t, uintptr_t> rec::alloc(golang::runtime::pageCache* c, uintptr_t npages)
     {
         if(c->cache == 0)
         {
@@ -107,7 +107,7 @@ namespace golang::runtime
     //
     // Returns a base address and the amount of scavenged memory in the
     // allocated region in bytes.
-    std::tuple<uintptr_t, uintptr_t> rec::allocN(struct pageCache* c, uintptr_t npages)
+    std::tuple<uintptr_t, uintptr_t> rec::allocN(golang::runtime::pageCache* c, uintptr_t npages)
     {
         auto i = findBitRange64(c->cache, (unsigned int)(npages));
         if(i >= 64)
@@ -130,7 +130,7 @@ namespace golang::runtime
     // Must run on the system stack because p.mheapLock must be held.
     //
     //go:systemstack
-    void rec::flush(struct pageCache* c, struct pageAlloc* p)
+    void rec::flush(golang::runtime::pageCache* c, struct pageAlloc* p)
     {
         assertLockHeld(p->mheapLock);
         if(rec::empty(gocpp::recv(c)))
@@ -168,7 +168,7 @@ namespace golang::runtime
     // Must run on the system stack because p.mheapLock must be held.
     //
     //go:systemstack
-    struct pageCache rec::allocToCache(struct pageAlloc* p)
+    struct pageCache rec::allocToCache(golang::runtime::pageAlloc* p)
     {
         assertLockHeld(p->mheapLock);
         if(chunkIndex(rec::addr(gocpp::recv(p->searchAddr))) >= p->end)
@@ -208,12 +208,12 @@ namespace golang::runtime
                 x.scav = rec::block64(gocpp::recv(chunk->scavenged), chunkPageIndex(addr));
             });
         }
-        auto cpi = chunkPageIndex(c->base);
-        rec::allocPages64(gocpp::recv(chunk), cpi, c->cache);
-        rec::clearBlock64(gocpp::recv(chunk->scavenged), cpi, c->cache & c->scav);
-        rec::update(gocpp::recv(p), c->base, pageCachePages, false, true);
-        rec::alloc(gocpp::recv(p->scav.index), ci, (unsigned int)(sys::OnesCount64(c->cache)));
-        p->searchAddr = offAddr {c->base + pageSize * (pageCachePages - 1)};
+        auto cpi = chunkPageIndex(c.base);
+        rec::allocPages64(gocpp::recv(chunk), cpi, c.cache);
+        rec::clearBlock64(gocpp::recv(chunk->scavenged), cpi, c.cache & c.scav);
+        rec::update(gocpp::recv(p), c.base, pageCachePages, false, true);
+        rec::alloc(gocpp::recv(p->scav.index), ci, (unsigned int)(sys::OnesCount64(c.cache)));
+        p->searchAddr = offAddr {c.base + pageSize * (pageCachePages - 1)};
         return c;
     }
 

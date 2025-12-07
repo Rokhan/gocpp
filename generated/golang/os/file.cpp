@@ -90,7 +90,7 @@ namespace golang::os
     }
 
     // Name returns the name of the file as presented to Open.
-    gocpp::string rec::Name(struct File* f)
+    gocpp::string rec::Name(golang::os::File* f)
     {
         return f->name;
     }
@@ -151,12 +151,12 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(struct LinkError* e)
+    gocpp::string rec::Error(golang::os::LinkError* e)
     {
         return e->Op + " "_s + e->Old + " "_s + e->New + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
-    struct gocpp::error rec::Unwrap(struct LinkError* e)
+    struct gocpp::error rec::Unwrap(golang::os::LinkError* e)
     {
         return e->Err;
     }
@@ -164,7 +164,7 @@ namespace golang::os
     // Read reads up to len(b) bytes from the File and stores them in b.
     // It returns the number of bytes read and any error encountered.
     // At end of file, Read returns 0, io.EOF.
-    std::tuple<int, struct gocpp::error> rec::Read(struct File* f, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Read(golang::os::File* f, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
@@ -181,7 +181,7 @@ namespace golang::os
     // It returns the number of bytes read and the error, if any.
     // ReadAt always returns a non-nil error when n < len(b).
     // At end of file, that error is io.EOF.
-    std::tuple<int, struct gocpp::error> rec::ReadAt(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, struct gocpp::error> rec::ReadAt(golang::os::File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         struct gocpp::error err;
@@ -213,7 +213,7 @@ namespace golang::os
     }
 
     // ReadFrom implements io.ReaderFrom.
-    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(struct File* f, io::Reader r)
+    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(golang::os::File* f, io::Reader r)
     {
         int64_t n;
         struct gocpp::error err;
@@ -261,7 +261,7 @@ namespace golang::os
 
     // ReadFrom hides another ReadFrom method.
     // It should never be called.
-    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(noReadFrom, io::Reader)
+    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(golang::os::noReadFrom, io::Reader)
     {
         gocpp::panic("can't happen"_s);
     }
@@ -311,7 +311,7 @@ namespace golang::os
     // Write writes len(b) bytes from b to the File.
     // It returns the number of bytes written and an error, if any.
     // Write returns a non-nil error when n != len(b).
-    std::tuple<int, struct gocpp::error> rec::Write(struct File* f, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Write(golang::os::File* f, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
@@ -343,7 +343,7 @@ namespace golang::os
     // WriteAt returns a non-nil error when n != len(b).
     //
     // If file was opened with the O_APPEND flag, WriteAt returns an error.
-    std::tuple<int, struct gocpp::error> rec::WriteAt(struct File* f, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, struct gocpp::error> rec::WriteAt(golang::os::File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
         struct gocpp::error err;
@@ -379,7 +379,7 @@ namespace golang::os
     }
 
     // WriteTo implements io.WriterTo.
-    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(struct File* f, io::Writer w)
+    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(golang::os::File* f, io::Writer w)
     {
         int64_t n;
         struct gocpp::error err;
@@ -427,7 +427,7 @@ namespace golang::os
 
     // WriteTo hides another WriteTo method.
     // It should never be called.
-    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(noWriteTo, io::Writer)
+    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(golang::os::noWriteTo, io::Writer)
     {
         gocpp::panic("can't happen"_s);
     }
@@ -479,7 +479,7 @@ namespace golang::os
     // relative to the current offset, and 2 means relative to the end.
     // It returns the new offset and an error, if any.
     // The behavior of Seek on a file opened with O_APPEND is not specified.
-    std::tuple<int64_t, struct gocpp::error> rec::Seek(struct File* f, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> rec::Seek(golang::os::File* f, int64_t offset, int whence)
     {
         int64_t ret;
         struct gocpp::error err;
@@ -501,7 +501,7 @@ namespace golang::os
 
     // WriteString is like Write, but writes the contents of string s rather than
     // a slice of bytes.
-    std::tuple<int, struct gocpp::error> rec::WriteString(struct File* f, gocpp::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(golang::os::File* f, gocpp::string s)
     {
         int n;
         struct gocpp::error err;
@@ -650,7 +650,7 @@ namespace golang::os
     // wrapErr wraps an error that occurred during an operation on an open file.
     // It passes io.EOF through unchanged, otherwise converts
     // poll.ErrFileClosing to ErrClosed and wraps the error in a PathError.
-    struct gocpp::error rec::wrapErr(struct File* f, gocpp::string op, struct gocpp::error err)
+    struct gocpp::error rec::wrapErr(golang::os::File* f, gocpp::string op, struct gocpp::error err)
     {
         if(err == nullptr || err == io::go_EOF)
         {
@@ -895,7 +895,7 @@ namespace golang::os
 
     // Chmod changes the mode of the file to mode.
     // If there is an error, it will be of type *PathError.
-    struct gocpp::error rec::Chmod(struct File* f, golang::os::FileMode mode)
+    struct gocpp::error rec::Chmod(golang::os::File* f, golang::os::FileMode mode)
     {
         return rec::chmod(gocpp::recv(f), mode);
     }
@@ -924,7 +924,7 @@ namespace golang::os
     // the deadline after successful Read or Write calls.
     //
     // A zero value for t means I/O operations will not time out.
-    struct gocpp::error rec::SetDeadline(struct File* f, mocklib::Date t)
+    struct gocpp::error rec::SetDeadline(golang::os::File* f, mocklib::Date t)
     {
         return rec::setDeadline(gocpp::recv(f), t);
     }
@@ -933,7 +933,7 @@ namespace golang::os
     // currently-blocked Read call.
     // A zero value for t means Read will not time out.
     // Not all files support setting deadlines; see SetDeadline.
-    struct gocpp::error rec::SetReadDeadline(struct File* f, mocklib::Date t)
+    struct gocpp::error rec::SetReadDeadline(golang::os::File* f, mocklib::Date t)
     {
         return rec::setReadDeadline(gocpp::recv(f), t);
     }
@@ -944,14 +944,14 @@ namespace golang::os
     // some of the data was successfully written.
     // A zero value for t means Write will not time out.
     // Not all files support setting deadlines; see SetDeadline.
-    struct gocpp::error rec::SetWriteDeadline(struct File* f, mocklib::Date t)
+    struct gocpp::error rec::SetWriteDeadline(golang::os::File* f, mocklib::Date t)
     {
         return rec::setWriteDeadline(gocpp::recv(f), t);
     }
 
     // SyscallConn returns a raw file.
     // This implements the syscall.Conn interface.
-    std::tuple<syscall::RawConn, struct gocpp::error> rec::SyscallConn(struct File* f)
+    std::tuple<syscall::RawConn, struct gocpp::error> rec::SyscallConn(golang::os::File* f)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SyscallConn"_s); err != nullptr)
         {

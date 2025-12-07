@@ -101,7 +101,7 @@ namespace golang::os
     // making it invalid; see runtime.SetFinalizer for more information on when
     // a finalizer might be run. On Unix systems this will cause the SetDeadline
     // methods to stop working.
-    uintptr_t rec::Fd(struct File* file)
+    uintptr_t rec::Fd(golang::os::File* file)
     {
         if(file == nullptr)
         {
@@ -126,7 +126,7 @@ namespace golang::os
                 kind = "pipe"_s;
             }
         }
-        auto f = new File {gocpp::InitPtr<os::file>([=](auto& x) {
+        auto f = new File {gocpp::InitPtr<file>([=](auto& x) {
             x.pfd = gocpp::Init<poll::FD>([=](auto& x) {
                 x.Sysfd = h;
                 x.IsStream = true;
@@ -212,7 +212,7 @@ namespace golang::os
         return {f, nullptr};
     }
 
-    struct gocpp::error rec::close(os::file* file)
+    struct gocpp::error rec::close(golang::os::file* file)
     {
         if(file == nullptr)
         {
@@ -244,7 +244,7 @@ namespace golang::os
     // according to whence: 0 means relative to the origin of the file, 1 means
     // relative to the current offset, and 2 means relative to the end.
     // It returns the new offset and an error, if any.
-    std::tuple<int64_t, struct gocpp::error> rec::seek(struct File* f, int64_t offset, int whence)
+    std::tuple<int64_t, struct gocpp::error> rec::seek(golang::os::File* f, int64_t offset, int whence)
     {
         int64_t ret;
         struct gocpp::error err;

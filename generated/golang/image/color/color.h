@@ -296,15 +296,15 @@ namespace golang::color
 
     namespace rec
     {
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct RGBA c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct RGBA64 c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NRGBA c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct NRGBA64 c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Alpha c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Alpha16 c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Gray c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(struct Gray16 c);
-        struct Color Convert(struct modelFunc* m, struct Color c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::RGBA c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::RGBA64 c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::NRGBA c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::NRGBA64 c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::Alpha c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::Alpha16 c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::Gray c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::Gray16 c);
+        struct Color Convert(golang::color::modelFunc* m, struct Color c);
         struct Color Convert(golang::color::Palette p, struct Color c);
         int Index(golang::color::Palette p, struct Color c);
     }

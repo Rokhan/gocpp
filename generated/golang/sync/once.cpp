@@ -82,7 +82,7 @@ namespace golang::sync
     //
     // If f panics, Do considers it to have returned; future calls of Do return
     // without calling f.
-    void rec::Do(struct Once* o, std::function<void ()> f)
+    void rec::Do(golang::sync::Once* o, std::function<void ()> f)
     {
         if(rec::Load(gocpp::recv(o->done)) == 0)
         {
@@ -90,7 +90,7 @@ namespace golang::sync
         }
     }
 
-    void rec::doSlow(struct Once* o, std::function<void ()> f)
+    void rec::doSlow(golang::sync::Once* o, std::function<void ()> f)
     {
         gocpp::Defer defer;
         try

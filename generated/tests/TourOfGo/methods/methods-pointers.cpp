@@ -53,12 +53,12 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    double rec::Abs(struct Vertex v)
+    double rec::Abs(golang::main::Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
-    void rec::Scale(struct Vertex* v, double f)
+    void rec::Scale(golang::main::Vertex* v, double f)
     {
         v->X = v->X * f;
         v->Y = v->Y * f;

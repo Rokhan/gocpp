@@ -54,7 +54,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(struct MyError* e)
+    gocpp::string rec::Error(golang::main::MyError* e)
     {
         return mocklib::Sprintf("at %v, %s"_s, e->When, e->What);
     }

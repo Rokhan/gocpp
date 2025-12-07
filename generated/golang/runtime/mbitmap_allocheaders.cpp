@@ -202,7 +202,7 @@ namespace golang::runtime
     // nosplit because it is used during write barriers and must not be preempted.
     //
     //go:nosplit
-    struct typePointers rec::typePointersOf(struct mspan* span, uintptr_t addr, uintptr_t size)
+    struct typePointers rec::typePointersOf(golang::runtime::mspan* span, uintptr_t addr, uintptr_t size)
     {
         auto base = rec::objBase(gocpp::recv(span), addr);
         auto tp = rec::typePointersOfUnchecked(gocpp::recv(span), base);
@@ -221,7 +221,7 @@ namespace golang::runtime
     // nosplit because it is used during write barriers and must not be preempted.
     //
     //go:nosplit
-    struct typePointers rec::typePointersOfUnchecked(struct mspan* span, uintptr_t addr)
+    struct typePointers rec::typePointersOfUnchecked(golang::runtime::mspan* span, uintptr_t addr)
     {
         auto doubleCheck = false;
         if(doubleCheck && rec::objBase(gocpp::recv(span), addr) != addr)
@@ -272,7 +272,7 @@ namespace golang::runtime
     // nosplit because its callers are nosplit and require all their callees to be nosplit.
     //
     //go:nosplit
-    struct typePointers rec::typePointersOfType(struct mspan* span, abi::Type* typ, uintptr_t addr)
+    struct typePointers rec::typePointersOfType(golang::runtime::mspan* span, abi::Type* typ, uintptr_t addr)
     {
         auto doubleCheck = false;
         if(doubleCheck && (typ == nullptr || typ->Kind_ & kindGCProg != 0))
@@ -312,7 +312,7 @@ namespace golang::runtime
     // nosplit because it is used during write barriers and must not be preempted.
     //
     //go:nosplit
-    std::tuple<struct typePointers, uintptr_t> rec::nextFast(struct typePointers tp)
+    std::tuple<struct typePointers, uintptr_t> rec::nextFast(golang::runtime::typePointers tp)
     {
         if(tp.mask == 0)
         {
@@ -340,7 +340,7 @@ namespace golang::runtime
     // nosplit because it is used during write barriers and must not be preempted.
     //
     //go:nosplit
-    std::tuple<struct typePointers, uintptr_t> rec::next(struct typePointers tp, uintptr_t limit)
+    std::tuple<struct typePointers, uintptr_t> rec::next(golang::runtime::typePointers tp, uintptr_t limit)
     {
         for(; ; )
         {
@@ -381,7 +381,7 @@ namespace golang::runtime
     // nosplit because it is used during write barriers and must not be preempted.
     //
     //go:nosplit
-    struct typePointers rec::fastForward(struct typePointers tp, uintptr_t n, uintptr_t limit)
+    struct typePointers rec::fastForward(golang::runtime::typePointers tp, uintptr_t n, uintptr_t limit)
     {
         auto target = tp.addr + n;
         if(target >= limit)
@@ -436,7 +436,7 @@ namespace golang::runtime
     // Assumes that addr points into a valid part of span (span.base() <= addr < span.limit).
     //
     //go:nosplit
-    uintptr_t rec::objBase(struct mspan* span, uintptr_t addr)
+    uintptr_t rec::objBase(golang::runtime::mspan* span, uintptr_t addr)
     {
         return rec::base(gocpp::recv(span)) + rec::objIndex(gocpp::recv(span), addr) * span->elemsize;
     }
@@ -626,7 +626,7 @@ namespace golang::runtime
     // TODO(mknyszek): This should set the heap bits for single pointer
     // allocations eagerly to avoid calling heapSetType at allocation time,
     // just to write one bit.
-    void rec::initHeapBits(struct mspan* s, bool forceClear)
+    void rec::initHeapBits(golang::runtime::mspan* s, bool forceClear)
     {
         if((! rec::noscan(gocpp::recv(s->spanclass)) && heapBitsInSpan(s->elemsize)) || s->isUserArenaChunk)
         {
@@ -691,7 +691,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct writeUserArenaHeapBits rec::writeUserArenaHeapBits(struct mspan* s, uintptr_t addr)
+    struct writeUserArenaHeapBits rec::writeUserArenaHeapBits(golang::runtime::mspan* s, uintptr_t addr)
     {
         struct writeUserArenaHeapBits h;
         auto offset = addr - rec::base(gocpp::recv(s));
@@ -704,7 +704,7 @@ namespace golang::runtime
 
     // write appends the pointerness of the next valid pointer slots
     // using the low valid bits of bits. 1=pointer, 0=scalar.
-    struct writeUserArenaHeapBits rec::write(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t bits, uintptr_t valid)
+    struct writeUserArenaHeapBits rec::write(golang::runtime::writeUserArenaHeapBits h, struct mspan* s, uintptr_t bits, uintptr_t valid)
     {
         if(h.valid + valid <= ptrBits)
         {
@@ -725,7 +725,7 @@ namespace golang::runtime
     }
 
     // Add padding of size bytes.
-    struct writeUserArenaHeapBits rec::pad(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t size)
+    struct writeUserArenaHeapBits rec::pad(golang::runtime::writeUserArenaHeapBits h, struct mspan* s, uintptr_t size)
     {
         if(size == 0)
         {
@@ -742,7 +742,7 @@ namespace golang::runtime
 
     // Flush the bits that have been written, and add zeros as needed
     // to cover the full object [addr, addr+size).
-    void rec::flush(struct writeUserArenaHeapBits h, struct mspan* s, uintptr_t addr, uintptr_t size)
+    void rec::flush(golang::runtime::writeUserArenaHeapBits h, struct mspan* s, uintptr_t addr, uintptr_t size)
     {
         auto offset = addr - rec::base(gocpp::recv(s));
         auto zeros = (offset + size - h.offset) / goarch::PtrSize - h.valid;
@@ -806,7 +806,7 @@ namespace golang::runtime
     // heapBitsInSpan(span.elemsize) or span.isUserArenaChunk must be true.
     //
     //go:nosplit
-    gocpp::slice<uintptr_t> rec::heapBits(struct mspan* span)
+    gocpp::slice<uintptr_t> rec::heapBits(golang::runtime::mspan* span)
     {
         auto doubleCheck = false;
         if(doubleCheck && ! span->isUserArenaChunk)
@@ -845,7 +845,7 @@ namespace golang::runtime
     // must be true.
     //
     //go:nosplit
-    uintptr_t rec::heapBitsSmallForAddr(struct mspan* span, uintptr_t addr)
+    uintptr_t rec::heapBitsSmallForAddr(golang::runtime::mspan* span, uintptr_t addr)
     {
         auto spanSize = span->npages * pageSize;
         auto bitmapSize = spanSize / goarch::PtrSize / 8;
@@ -877,7 +877,7 @@ namespace golang::runtime
     // heapBitsInSpan(dataSize) must be true. dataSize must be >= typ.Size_.
     //
     //go:nosplit
-    uintptr_t rec::writeHeapBitsSmall(struct mspan* span, uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ)
+    uintptr_t rec::writeHeapBitsSmall(golang::runtime::mspan* span, uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ)
     {
         uintptr_t scanSize;
         auto src0 = readUintptr(typ->GCData);
@@ -1489,7 +1489,7 @@ namespace golang::runtime
     // For !goexperiment.AllocHeaders.
     //
     //go:nosplit
-    std::tuple<struct heapBits, uintptr_t> rec::next(struct heapBits h)
+    std::tuple<struct heapBits, uintptr_t> rec::next(golang::runtime::heapBits h)
     {
         gocpp::panic("not implemented"_s);
     }
@@ -1497,7 +1497,7 @@ namespace golang::runtime
     // For !goexperiment.AllocHeaders.
     //
     //go:nosplit
-    std::tuple<struct heapBits, uintptr_t> rec::nextFast(struct heapBits h)
+    std::tuple<struct heapBits, uintptr_t> rec::nextFast(golang::runtime::heapBits h)
     {
         gocpp::panic("not implemented"_s);
     }

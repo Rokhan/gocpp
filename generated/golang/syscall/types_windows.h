@@ -1116,8 +1116,8 @@ namespace golang::syscall
 
     namespace rec
     {
-        int64_t Nanoseconds(struct Timeval* tv);
-        int64_t Nanoseconds(struct Filetime* ft);
+        int64_t Nanoseconds(golang::syscall::Timeval* tv);
+        int64_t Nanoseconds(golang::syscall::Filetime* ft);
     }
 }
 

@@ -126,12 +126,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        std::tuple<unsafe::Pointer, uintptr_t> sysAlloc(struct mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register);
-        void enableMetadataHugePages(struct mheap* h);
-        std::tuple<runtime::gclinkptr, struct mspan*, bool> nextFree(struct mcache* c, golang::runtime::spanClass spc);
-        void init(struct linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory);
-        unsafe::Pointer alloc(struct linearAlloc* l, uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
-        struct notInHeap* add(struct notInHeap* p, uintptr_t bytes);
+        std::tuple<unsafe::Pointer, uintptr_t> sysAlloc(golang::runtime::mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register);
+        void enableMetadataHugePages(golang::runtime::mheap* h);
+        std::tuple<runtime::gclinkptr, struct mspan*, bool> nextFree(golang::runtime::mcache* c, golang::runtime::spanClass spc);
+        void init(golang::runtime::linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory);
+        unsafe::Pointer alloc(golang::runtime::linearAlloc* l, uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
+        struct notInHeap* add(golang::runtime::notInHeap* p, uintptr_t bytes);
     }
 }
 

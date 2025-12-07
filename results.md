@@ -414,7 +414,7 @@
 | $(ImportDir)/sort/slice.go | ✔️ ([cpp](generated/golang/sort/slice.cpp), [h](generated/golang/sort/slice.h))| ✔️ |
 | $(ImportDir)/sort/sort.go | ✔️ ([cpp](generated/golang/sort/sort.cpp), [h](generated/golang/sort/sort.h))| ❌ |
 | $(ImportDir)/sort/sort_impl_go121.go | ✔️ ([cpp](generated/golang/sort/sort_impl_go121.cpp), [h](generated/golang/sort/sort_impl_go121.h))| ✔️ |
-| $(ImportDir)/sort/zsortfunc.go | ✔️ ([cpp](generated/golang/sort/zsortfunc.cpp), [h](generated/golang/sort/zsortfunc.h))| ❌ |
+| $(ImportDir)/sort/zsortfunc.go | ✔️ ([cpp](generated/golang/sort/zsortfunc.cpp), [h](generated/golang/sort/zsortfunc.h))| ✔️ |
 | $(ImportDir)/sort/zsortinterface.go | ✔️ ([cpp](generated/golang/sort/zsortinterface.cpp), [h](generated/golang/sort/zsortinterface.h))| ✔️ |
 | $(ImportDir)/strconv/atoi.go | ✔️ ([cpp](generated/golang/strconv/atoi.cpp), [h](generated/golang/strconv/atoi.h))| ❌ |
 | $(ImportDir)/strconv/bytealg.go | ✔️ ([cpp](generated/golang/strconv/bytealg.cpp), [h](generated/golang/strconv/bytealg.h))| ✔️ |

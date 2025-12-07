@@ -1433,6 +1433,13 @@ namespace std
     {
         using type = bool;
     };
+
+    // Temporary mock for std::function printing, maybe we should use a custom
+    // gocpp::ostream type to avoid overloading in std namespace.
+    template<typename T>
+    inline std::ostream& operator<<(std::ostream& os, const std::function<T>& value) {
+        return os << "<function>";
+    }
 }
 
 namespace golang

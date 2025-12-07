@@ -77,7 +77,7 @@ doc:
 	echo "# Conversion of imported packages" >> results.md
 	echo "| file | cpp generate | cpp compile |" >> results.md
 	echo "| ---- | -------------| ----------- |" >> results.md
-	make md-stdlib
+	make -j4 md-stdlib
 	cat $$(find log/golang -type f -name "*.full.md" | sort) >> results.md
 	dos2unix results.md
 

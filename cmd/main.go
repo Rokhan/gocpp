@@ -360,6 +360,14 @@ func (cv *cppConverter) declareVars(params typeNames) {
 	}
 }
 
+func (cv *cppConverter) getScopeVars() (result []string) {
+	for elt := cv.scopes.Back(); elt != nil; elt = elt.Prev() {
+		scope := elt.Value.(scope)
+		result = append(result, maps.Keys(scope.vars)...)
+	}
+	return
+}
+
 // FIXME : manage composed names like A.B.C
 func (cv *cppConverter) isPtr(name string) bool {
 	for elt := cv.scopes.Back(); elt != nil; elt = elt.Prev() {
@@ -480,6 +488,41 @@ func (cv *cppConverter) IsExprPtr(expr ast.Expr) bool {
 
 	default:
 		return false
+	}
+}
+
+func (cv *cppConverter) IsSelectorExprSignature(expr *ast.SelectorExpr) (isFunc bool, hasReceiv bool, nbPrams int) {
+	exprGoType := cv.convertExprToType(expr)
+	selectorGoType := cv.typeInfo.TypeOf(expr.Sel)
+
+	switch exprType := exprGoType.(type) {
+	case *types.Signature:
+		nExpr := exprType.Params().Len()
+
+		switch selType := selectorGoType.(type) {
+		case *types.Signature:
+			nSel := selType.Params().Len()
+			return true, nSel != nExpr, nExpr
+		}
+		return true, false, nExpr
+
+	// TODO: types.Named, types.Alias ??
+
+	default:
+		return false, false, 0
+	}
+}
+
+func (cv *cppConverter) IsExprSignature(expr ast.Expr) (isFunc bool, hasReceiv bool, nbPrams int) {
+	exprGoType := cv.convertExprToType(expr)
+
+	switch exprType := exprGoType.(type) {
+	case *types.Signature:
+		nExpr := exprType.Params().Len()
+		return true, exprType.Recv() != nil, nExpr
+
+	default:
+		return false, false, 0
 	}
 }
 
@@ -1552,7 +1595,7 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 		default:
 			var decl []cppExpr
 			var allNew = true
-			var exprList = cv.convertExprList(stmt.Lhs)
+			var exprList = cv.convertExprList(stmt.Lhs, exprCtx{})
 			var toDeclare []string
 			var leftVarList []string
 			tmpNames := map[string]string{}
@@ -1613,7 +1656,7 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 		case 0:
 			panic("convertAssignStmt, len(exprs) == 0")
 		case 1:
-			return []cppExpr{ExprPrintf("%s = %s", cv.convertExpr(stmt.Lhs[0]), cv.convertAssignRightExprs(stmt.Rhs))}
+			return []cppExpr{ExprPrintf("%s = %s", cv.convertTargetExpr(stmt.Lhs[0]), cv.convertAssignRightExprs(stmt.Rhs))}
 		default:
 			return []cppExpr{ExprPrintf("std::tie(%s) = %s", cv.convertAssignExprs(stmt.Lhs), cv.convertAssignRightExprs(stmt.Rhs))}
 		}
@@ -3119,13 +3162,17 @@ func PrintTemplatePrefix(buf *bytes.Buffer, data genStructData, templatePrms map
 var defaultTemplateNames = []string{"T", "U", "V", "W"}
 
 func getAnotherTemplateParamName(excludedNames []string) string {
+	return getAnotherName(excludedNames, defaultTemplateNames)
+}
+
+func getAnotherName(excludedNames []string, defaultNames []string) string {
 	usedNames := make(map[string]bool)
 	for _, name := range excludedNames {
 		usedNames[name] = true
 	}
 
 	// Try to use one of the default template names
-	for _, defaultName := range defaultTemplateNames {
+	for _, defaultName := range defaultNames {
 		if !usedNames[defaultName] {
 			return defaultName
 		}
@@ -3133,13 +3180,19 @@ func getAnotherTemplateParamName(excludedNames []string) string {
 
 	// If all default names are used, append a suffix number
 	for i := 1; ; i++ {
-		for _, defaultName := range defaultTemplateNames {
+		for _, defaultName := range defaultNames {
 			candidate := fmt.Sprintf("%s%d", defaultName, i)
 			if !usedNames[candidate] {
 				return candidate
 			}
 		}
 	}
+}
+
+var lambdaParamNames = []string{"x", "y", "z", "t", "u", "v"}
+
+func getAnotherLambdaParamName(excludedNames []string) string {
+	return getAnotherName(excludedNames, lambdaParamNames)
 }
 
 func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms map[string][]string, param genStructParam) string {
@@ -3614,14 +3667,23 @@ func (cv *cppConverter) WritterExprPrintf(buff *cppExprWritter[*bufio.Writer], f
 
 // TODO: return typeDefs
 func (cv *cppConverter) convertExpr(node ast.Expr) cppExpr {
-	return cv.convertExprImpl(node, false)
+	return cv.convertExprCtx(node, exprCtx{})
+}
+
+func (cv *cppConverter) convertTargetExpr(node ast.Expr) cppExpr {
+	return cv.convertExprCtx(node, exprCtx{isTarget: true})
 }
 
 func (cv *cppConverter) convertSubExpr(node ast.Expr) cppExpr {
-	return cv.convertExprImpl(node, true)
+	return cv.convertExprCtx(node, exprCtx{isSubExpr: true, isTarget: true})
 }
 
-func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
+type exprCtx struct {
+	isSubExpr bool
+	isTarget  bool
+}
+
+func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 	if node == nil {
 		return mkCppExpr("")
 	}
@@ -3692,7 +3754,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 		return ExprPrintf("{ %s, %s }", cv.convertExpr(n.Key), cv.convertExpr(n.Value))
 
 	case *ast.BinaryExpr:
-		if needPriority(n.Op) && isSubExpr {
+		if needPriority(n.Op) && ctx.isSubExpr {
 			return ExprPrintf("(%s %s %s)", cv.convertSubExpr(n.X), convertToken(n.Op), cv.convertSubExpr(n.Y))
 		} else {
 			return ExprPrintf("%s %s %s", cv.convertSubExpr(n.X), convertToken(n.Op), cv.convertSubExpr(n.Y))
@@ -3722,7 +3784,7 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 				} else {
 					cv.BuffExprPrintf(buf, "%v(", funcName)
 				}
-			} else {
+			} else if isFunc, hasReceiver, _ := cv.IsExprSignature(fun.Sel); isFunc && hasReceiver {
 				generics := cv.GetCppTypeParameters(fun.X)
 				if len(generics) > 0 {
 					genericsStr := strings.Join(generics, ", ")
@@ -3732,6 +3794,12 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 				}
 				*buf.defs = append(*buf.defs, receiver(fun))
 				sep = ", "
+			} else {
+				if cv.IsExprPtr(fun.X) {
+					cv.BuffExprPrintf(buf, "%v->%v(", cv.convertExpr(fun.X), cv.convertExpr(fun.Sel))
+				} else {
+					cv.BuffExprPrintf(buf, "%v.%v(", cv.convertExpr(fun.X), cv.convertExpr(fun.Sel))
+				}
 			}
 
 		case *ast.ParenExpr:
@@ -3785,6 +3853,35 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 
 		if cv.isNameSpace(n.X) {
 			return GetCppExprFunc(ExprPrintf("%s::%s", name, cv.convertExpr(n.Sel)))
+		} else if isFunc, hasReceiv, nbParams := cv.IsSelectorExprSignature(n); isFunc && !ctx.isTarget {
+			_, pkg := cv.isTypedef(n.Sel)
+			ns := ""
+			if pkg != cv.namespace {
+				ns = fmt.Sprintf("%s::", pkg)
+			}
+
+			excludedNames := cv.getScopeVars()
+			nbScopes := cv.scopes.Len()
+
+			selector := cv.convertExpr(n.Sel)
+			lambdaVarNames := []string{}
+			for i := 0; i < nbParams; i++ {
+				varName := getAnotherLambdaParamName(excludedNames)
+				lambdaVarNames = append(lambdaVarNames, varName)
+				excludedNames = append(excludedNames, varName)
+			}
+
+			declLisStr := strings.Join(FormatStrings("auto %s", lambdaVarNames), ", ")
+
+			debugStr := cv.DbgSprintf(" /* %s -- %v */", strings.Join(excludedNames, ", "), nbScopes)
+
+			if hasReceiv {
+				varListStr := strings.Join(lambdaVarNames, ", ")
+				return GetCppExprFunc(ExprPrintf("[&](%s){ return %srec::%s(%s); }%s", declLisStr, ns, selector, varListStr, debugStr))
+			} else {
+				varListStr := JoinWithPrefix(lambdaVarNames, ", ")
+				return GetCppExprFunc(ExprPrintf("[&](%s){ return %srec::%s(%s%s); }%s", declLisStr, ns, selector, name, varListStr, debugStr))
+			}
 		} else {
 			// TODO: use only IsExprPtr ?
 			if cv.isPtr(name.str) || cv.IsExprPtr(n.X) {
@@ -3909,23 +4006,23 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 	return buf.Expr()
 }
 
-func (cv *cppConverter) convertExprList(exprs []ast.Expr) (strs []cppExpr) {
+func (cv *cppConverter) convertExprList(exprs []ast.Expr, ctx exprCtx) (strs []cppExpr) {
 	for _, expr := range exprs {
-		strs = append(strs, cv.convertExpr(expr))
+		strs = append(strs, cv.convertExprCtx(expr, ctx))
 	}
 	return strs
 }
 
 func (cv *cppConverter) convertExprs(exprs []ast.Expr) cppExpr {
-	return cv.convertExprsImpl(exprs, false)
+	return cv.convertExprsImpl(exprs, exprCtx{}, false)
 }
 
 func (cv *cppConverter) convertAssignExprs(exprs []ast.Expr) cppExpr {
-	return cv.convertExprsImpl(exprs, true)
+	return cv.convertExprsImpl(exprs, exprCtx{isTarget: true}, true)
 }
 
-func (cv *cppConverter) convertExprsImpl(exprs []ast.Expr, useIgnore bool) cppExpr {
-	cppExprs := cv.convertExprList(exprs)
+func (cv *cppConverter) convertExprsImpl(exprs []ast.Expr, ctx exprCtx, useIgnore bool) cppExpr {
+	cppExprs := cv.convertExprList(exprs, ctx)
 	defs := []place{}
 	strs := []string{}
 	tns := []string{}

@@ -173,6 +173,16 @@ func (tns typeNames) Names() []string {
 	return strs
 }
 
+// Transform a slice of strings, applying a pattern to each element
+func FormatStrings(pattern string, strs []string, params ...any) []string {
+	var result []string
+	for _, str := range strs {
+		tmpParams := append([]any{str}, params...)
+		result = append(result, fmt.Sprintf(pattern, tmpParams...))
+	}
+	return result
+}
+
 // JoinWithPrefix adds a separator at the start if the input slice is not empty
 func JoinWithPrefix(elements []string, separator string) string {
 	if len(elements) == 0 {
@@ -181,6 +191,7 @@ func JoinWithPrefix(elements []string, separator string) string {
 	return separator + strings.Join(elements, separator)
 }
 
+// JoinWithPrefix adds a separator at the end if the input slice is not empty
 func JoinWithSuffix(elements []string, separator string) string {
 	if len(elements) == 0 {
 		return ""

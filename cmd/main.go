@@ -560,6 +560,8 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.cpp.indent++
 
 	cv.namespace = cv.astFile.Name.Name
+	cv.declareVar(cv.namespace, false)
+
 	var allOutPlaces [][]place
 	var pkgInfos []*pkgInfo
 	var allCppOut, allHppOut, allFwdOut []string
@@ -1281,12 +1283,14 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		cv.ConvertDoc(d.Doc)
 
 		typeParams := cv.GetFuncTypeParameters(d)
-		ctx := ctContext{inDeclaration: true, namespace: cv.namespace, typeParams: typeParams}
+		ctx := ctContext{inDeclaration: true, namespace: cv.namespace, typeParams: typeParams, isInReceiverDecl: true}
 		params := cv.readFieldsCtx(d.Recv, ctx)
 		params.setIsRecv()
+		ctx.isInReceiverDecl = false
 		params = append(params, cv.readFieldsCtx(d.Type.Params, ctx)...)
 		outNames, outTypes := cv.getResultInfos(d.Type)
 
+		cv.startScope()
 		cv.declareVars(params)
 		usedTypeParams := []string{}
 		for _, param := range params {
@@ -1394,6 +1398,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		blockPlaces := cv.convertBlockStmt(d.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes, params.Names()), true))
 		cv.printOrKeepPlaces(blockPlaces, &outPlaces, nil)
 		fmt.Fprintf(cv.cpp.out, "\n")
+		cv.endScope()
 
 	case *ast.BadDecl:
 		cv.Panicf("convertDecls[BadDecl] Not implemented")
@@ -2669,6 +2674,7 @@ type ctContext struct {
 	ensureHasBlankName bool
 	namespace          string
 	typeParams         typeParams
+	isInReceiverDecl   bool
 }
 
 // Maybe merge this function with "convertExprToType" in future ?
@@ -2686,15 +2692,27 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		identType = mkCppType(GetCppType(n.Name), nil)
 		if isTD && !isParam {
 			if !cv.isLocalType(identType.str) {
-				if pkg != ctx.namespace {
+				identType.dbg = cv.DbgSprintf("/* is local */")
+				if pkg != ctx.namespace && !cv.isAmbiguousName(identType.str) {
 					identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
 				} else {
 					identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
 				}
 			}
-		} else if cv.isAmbiguousName(identType.str) {
-			identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
+		} else if cv.isAmbiguousName(identType.str) && !isParam {
 			identType.dbg = cv.DbgSprintf("/* is ambiguous */")
+			if cv.isAmbiguousName(pkg) {
+				identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
+			} else {
+				identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
+			}
+		} else if ctx.isInReceiverDecl && !isParam {
+			identType.dbg = cv.DbgSprintf("/* in receiver declaration */")
+			if cv.isAmbiguousName(pkg) {
+				identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
+			} else {
+				identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
+			}
 		} else {
 			cv.checkStructType(n, &identType)
 		}
@@ -3641,14 +3659,15 @@ func (cv *cppConverter) convertExprImpl(node ast.Expr, isSubExpr bool) cppExpr {
 			params := cv.readFields(n.Type.Params)
 			outNames, outTypes := cv.getResultInfos(n.Type)
 			resultType := buildOutType(outTypes, nil)
-
-			cv.declareVars(params)
-
 			captureExpr := cv.getCaptureExpr()
+
+			cv.startScope()
+			cv.declareVars(params)
 
 			fmt.Fprintf(cv.cpp.out, "%s(%s) mutable -> %s\n", captureExpr, params, resultType)
 
 			expr.defs = cv.convertInlinedBlockStmt(n.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes, params.Names()), true))
+			cv.endScope()
 		})
 		return expr
 

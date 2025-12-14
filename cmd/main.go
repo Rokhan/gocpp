@@ -13,6 +13,7 @@ import (
 	"go/types"
 	"io"
 	"os"
+	"path"
 	"reflect"
 	"runtime"
 	"runtime/debug"
@@ -63,6 +64,7 @@ type cppConverter struct {
 	baseName    string
 	srcBaseName string
 	inputName   string
+	basePkgName string
 
 	// golang tokens, parsing and types infos
 	typeInfo *types.Info
@@ -4199,20 +4201,23 @@ func main() {
 	cv.genMakeFile = *genMakeFile
 	cv.binOutDir = *binOutDir
 	cv.inputName = CleanPath(*inputName)
+	cv.InitAndParse()
+
 	// No global subdir for main target at the moment
 	if strings.HasPrefix(cv.inputName, gorootSrc) {
 		cv.baseName = JoinPath(shared.globalSubDir, strings.TrimPrefix(strings.TrimSuffix(cv.inputName, ".go"), gorootSrc))
+		cv.basePkgName = strings.TrimPrefix(path.Dir(cv.inputName), gorootSrc+"/")
 	} else {
 		cv.baseName = strings.TrimSuffix(cv.inputName, ".go")
+		cv.basePkgName = cv.astFile.Name.Name
 	}
 	cv.srcBaseName = strings.TrimSuffix(cv.inputName, ".go")
 	// Never try to recover in main file
 	cv.tryRecover = false
 
-	cv.InitAndParse()
 	cv.shared.parsedFiles[cv.inputName] = cv.astFile
 
-	pkgPath := cv.astFile.Name.Name
+	pkgPath := cv.basePkgName
 	astFiles := cv.addPkgDependencies(pkgPath, cv.astFile)
 
 	if err := cv.LoadAndCheckDefs(pkgPath, fset, astFiles...); err != nil {

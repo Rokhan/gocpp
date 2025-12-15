@@ -1769,7 +1769,7 @@ namespace golang::runtime
         {
             mstartm0();
         }
-        if(auto fn = gp->m->mstartfn; fn != nullptr)
+        if(auto fn = [&](){ return rec::mstartfn(gp->m); }; fn != nullptr)
         {
             fn();
         }
@@ -2003,7 +2003,7 @@ namespace golang::runtime
         {
             return;
         }
-        rec::safePointFn(gocpp::recv(sched), p);
+        sched.safePointFn(p);
         lock(& sched.lock);
         sched.safePointWait--;
         if(sched.safePointWait == 0)
@@ -2848,7 +2848,7 @@ namespace golang::runtime
         }
         if(pp->runSafePointFn != 0 && atomic::Cas(& pp->runSafePointFn, 1, 0))
         {
-            rec::safePointFn(gocpp::recv(sched), pp);
+            sched.safePointFn(pp);
             sched.safePointWait--;
             if(sched.safePointWait == 0)
             {
@@ -3788,7 +3788,7 @@ namespace golang::runtime
             traceRelease(trace);
         }
         dropg();
-        if(auto fn = mp->waitunlockf; fn != nullptr)
+        if(auto fn = [&](auto x, auto y){ return rec::waitunlockf(mp, x, y); }; fn != nullptr)
         {
             auto ok = fn(gp, mp->waitlock);
             mp->waitunlockf = nullptr;

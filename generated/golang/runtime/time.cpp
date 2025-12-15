@@ -578,7 +578,7 @@ namespace golang::runtime
     // Reports whether the timer was modified before it was run.
     bool resettimer(struct timer* t, int64_t when)
     {
-        return modtimer(t, when, t->period, t->f, t->arg, t->seq);
+        return modtimer(t, when, t->period, [&](auto x, auto y){ return rec::f(t, x, y); }, t->arg, t->seq);
     }
 
     // cleantimers cleans up the head of the timer queue. This speeds up
@@ -974,7 +974,7 @@ namespace golang::runtime
             }
             raceacquirectx(ppcur->timerRaceCtx, unsafe::Pointer(t));
         }
-        auto f = t->f;
+        auto f = [&](auto x, auto y){ return rec::f(t, x, y); };
         auto arg = t->arg;
         auto seq = t->seq;
         if(t->period > 0)

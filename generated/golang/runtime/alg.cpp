@@ -474,7 +474,7 @@ namespace golang::runtime
         {
             return true;
         }
-        auto eq = t->Equal;
+        auto eq = [&](auto z, auto u){ return abi::rec::Equal(t, z, u); };
         if(eq == nullptr)
         {
             gocpp::panic(errorString("comparing uncomparable type "_s + rec::string(gocpp::recv(toRType(t)))));
@@ -493,7 +493,7 @@ namespace golang::runtime
             return true;
         }
         auto t = tab->_type;
-        auto eq = t->Equal;
+        auto eq = [&](auto z, auto t){ return abi::rec::Equal(t, z, t); };
         if(eq == nullptr)
         {
             gocpp::panic(errorString("comparing uncomparable type "_s + rec::string(gocpp::recv(toRType(t)))));

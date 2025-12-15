@@ -217,7 +217,7 @@ namespace golang::godebug
     // Note that Value must be called at least once before IncNonDefault.
     void rec::IncNonDefault(golang::godebug::Setting* s)
     {
-        rec::Do(gocpp::recv(s->nonDefaultOnce), s->go_register);
+        rec::Do(gocpp::recv(s->nonDefaultOnce), [&](){ return rec::go_register(s); });
         rec::Add(gocpp::recv(s->nonDefault), 1);
     }
 
@@ -227,7 +227,7 @@ namespace golang::godebug
         {
             gocpp::panic("godebug: unexpected IncNonDefault of "_s + s->name);
         }
-        registerMetric("/godebug/non-default-behavior/"_s + rec::Name(gocpp::recv(s)) + ":events"_s, s->nonDefault.Load);
+        registerMetric("/godebug/non-default-behavior/"_s + rec::Name(gocpp::recv(s)) + ":events"_s, [&](){ return atomic::rec::Load(s->nonDefault); });
     }
 
     // cache is a cache of all the GODEBUG settings,
@@ -330,7 +330,7 @@ namespace golang::godebug
     {
         auto s = New(name);
         rec::Value(gocpp::recv(s));
-        return s->IncNonDefault;
+        return [&](){ return rec::IncNonDefault(s); };
     }
 
     mocklib::Mutex updateMu;

@@ -158,7 +158,7 @@ namespace golang::runtime
             {
                 continue;
             }
-            if(auto caughtPanic = runExitHook(h.f); caughtPanic)
+            if(auto caughtPanic = runExitHook([&](){ return rec::f(h); }); caughtPanic)
             {
                 go_throw("internal error: exit hook invoked panic"_s);
             }

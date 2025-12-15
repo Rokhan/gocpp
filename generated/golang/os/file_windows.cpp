@@ -134,7 +134,7 @@ namespace golang::os
             });
             x.name = name;
         })};
-        runtime::SetFinalizer(f->file, (*file)->close);
+        runtime::SetFinalizer(f->file, [&](auto x){ return rec::close(x); });
         rec::Init(gocpp::recv(f->pfd), kind, false);
         return f;
     }

@@ -835,21 +835,21 @@ namespace golang::strings
     // upper case using the case mapping specified by c.
     gocpp::string ToUpperSpecial(unicode::SpecialCase c, gocpp::string s)
     {
-        return Map(c.ToUpper, s);
+        return Map([&](auto x){ return unicode::rec::ToUpper(c, x); }, s);
     }
 
     // ToLowerSpecial returns a copy of the string s with all Unicode letters mapped to their
     // lower case using the case mapping specified by c.
     gocpp::string ToLowerSpecial(unicode::SpecialCase c, gocpp::string s)
     {
-        return Map(c.ToLower, s);
+        return Map([&](auto x){ return unicode::rec::ToLower(c, x); }, s);
     }
 
     // ToTitleSpecial returns a copy of the string s with all Unicode letters mapped to their
     // Unicode title case, giving priority to the special casing rules.
     gocpp::string ToTitleSpecial(unicode::SpecialCase c, gocpp::string s)
     {
-        return Map(c.ToTitle, s);
+        return Map([&](auto x){ return unicode::rec::ToTitle(c, x); }, s);
     }
 
     // ToValidUTF8 returns a copy of the string s with each run of invalid UTF-8 byte sequences

@@ -3,3 +3,14 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::main
+{
+    struct compressor;
+}
+#include "golang/unicode/letter.fwd.h"
+
+namespace golang::main
+{
+    using SpecialCase = gocpp::slice<unicode::CaseRange>;
+}

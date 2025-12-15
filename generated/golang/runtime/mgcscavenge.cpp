@@ -419,7 +419,7 @@ namespace golang::runtime
         else
         {
             unlock(& s->lock);
-            slept = rec::sleepStub(gocpp::recv(s), sleepTime);
+            slept = s->sleepStub(sleepTime);
         }
         if(s->controllerCooldown > 0)
         {
@@ -435,7 +435,7 @@ namespace golang::runtime
             return;
         }
         auto idealFraction = double(scavengePercent) / 100.0;
-        auto cpuFraction = worked / ((double(slept) + worked) * double(rec::gomaxprocs(gocpp::recv(s))));
+        auto cpuFraction = worked / ((double(slept) + worked) * double(s->gomaxprocs()));
         // Update the critSleepRatio, adjusting until we reach our ideal fraction.
         bool ok = {};
         std::tie(s->sleepRatio, ok) = rec::next(gocpp::recv(s->sleepController), cpuFraction, idealFraction, double(slept) + worked);
@@ -474,7 +474,7 @@ namespace golang::runtime
         unlock(& s->lock);
         for(; worked < minScavWorkTime; )
         {
-            if(rec::shouldStop(gocpp::recv(s)))
+            if(s->shouldStop())
             {
                 break;
             }
@@ -489,7 +489,7 @@ namespace golang::runtime
             // about 160µs for 4 KiB physical pages. The current value is biased
             // toward latency over throughput.
             auto scavengeQuantum = 64 << 10;
-            auto [r, duration] = rec::scavenge(gocpp::recv(s), scavengeQuantum);
+            auto [r, duration] = s->scavenge(scavengeQuantum);
             // On some platforms we may see end >= start if the time it takes to scavenge
             // memory is less than the minimum granularity of its clock (e.g. Windows) or
             // due to clock bugs.

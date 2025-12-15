@@ -1083,7 +1083,7 @@ namespace golang::runtime
                     gp->_defer = deferconvert(d);
                     goto Recheck;
                 }
-                auto fn = d->fn;
+                auto fn = [&](){ return rec::fn(d); };
                 d->fn = nullptr;
                 p->retpc = d->pc;
                 gp->_defer = d->link;

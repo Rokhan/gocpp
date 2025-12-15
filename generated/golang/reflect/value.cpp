@@ -45,7 +45,6 @@ namespace golang::reflect
         using abi::rec::Dump;
         using abi::rec::Elem;
         using abi::rec::Embedded;
-        using abi::rec::Equal;
         using abi::rec::ExportedMethods;
         using abi::rec::IfaceIndir;
         using abi::rec::In;
@@ -940,7 +939,7 @@ namespace golang::reflect
             runtime::GC();
         }
         auto ftyp = ctxt->ftyp;
-        auto f = ctxt->fn;
+        auto f = [&](auto x){ return rec::fn(ctxt, x); };
         auto [gocpp_id_1, gocpp_id_2, abid] = funcLayout(ftyp, nullptr);
         auto ptr = frame;
         auto in = gocpp::make(gocpp::Tag<gocpp::slice<Value>>(), 0, int(ftyp->InCount));
@@ -2130,7 +2129,7 @@ namespace golang::reflect
                     auto typ = (abi::ArrayType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
                     if(typ->Equal != nullptr && rec::Size(gocpp::recv(typ)) <= abi::ZeroValSize)
                     {
-                        return rec::Equal(gocpp::recv(typ), noescape(v.ptr), unsafe::Pointer(& zeroVal[0]));
+                        return typ->Equal(noescape(v.ptr), unsafe::Pointer(& zeroVal[0]));
                     }
                     if(typ->TFlag & abi::TFlagRegularMemory != 0)
                     {
@@ -2166,7 +2165,7 @@ namespace golang::reflect
                     auto typ = (abi::StructType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
                     if(typ->Equal != nullptr && rec::Size(gocpp::recv(typ)) <= abi::ZeroValSize)
                     {
-                        return rec::Equal(gocpp::recv(typ), noescape(v.ptr), unsafe::Pointer(& zeroVal[0]));
+                        return typ->Equal(noescape(v.ptr), unsafe::Pointer(& zeroVal[0]));
                     }
                     if(typ->TFlag & abi::TFlagRegularMemory != 0)
                     {

@@ -103,7 +103,7 @@ namespace golang::time
         {
             gocpp::panic("time: Reset called on uninitialized Ticker"_s);
         }
-        modTimer(& t->r, when(d), int64_t(d), t->r.f, t->r.arg, t->r.seq);
+        modTimer(& t->r, when(d), int64_t(d), [&](auto x, auto y){ return rec::f(t->r, x, y); }, t->r.arg, t->r.seq);
     }
 
     // Tick is a convenience wrapper for NewTicker providing access to the ticking

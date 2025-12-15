@@ -782,7 +782,7 @@ namespace golang::runtime
         {
             if(d->fn != nullptr)
             {
-                scanblock(uintptr_t(unsafe::Pointer(& d->fn)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
+                scanblock(uintptr_t(unsafe::Pointer(& [&](){ return rec::fn(d); })), goarch::PtrSize, & oneptrmask[0], gcw, & state);
             }
             if(d->link != nullptr)
             {

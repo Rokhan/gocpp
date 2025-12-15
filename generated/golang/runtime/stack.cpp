@@ -899,7 +899,7 @@ namespace golang::runtime
         adjustpointer(adjinfo, unsafe::Pointer(& gp->_defer));
         for(auto d = gp->_defer; d != nullptr; d = d->link)
         {
-            adjustpointer(adjinfo, unsafe::Pointer(& d->fn));
+            adjustpointer(adjinfo, unsafe::Pointer(& [&](){ return rec::fn(d); }));
             adjustpointer(adjinfo, unsafe::Pointer(& d->sp));
             adjustpointer(adjinfo, unsafe::Pointer(& d->link));
         }

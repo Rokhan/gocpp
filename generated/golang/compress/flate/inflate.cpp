@@ -551,7 +551,7 @@ namespace golang::flate
             {
                 return {0, f->err};
             }
-            rec::step(gocpp::recv(f), f);
+            f->step(f);
             if(f->err != nullptr && len(f->toRead) == 0)
             {
                 f->toRead = rec::readFlush(gocpp::recv(f->dict));
@@ -748,7 +748,7 @@ namespace golang::flate
                         if(rec::availWrite(gocpp::recv(f->dict)) == 0)
                         {
                             f->toRead = rec::readFlush(gocpp::recv(f->dict));
-                            f->step = (*decompressor)->huffmanBlock;
+                            f->step = [&](auto x){ return rec::huffmanBlock(x); };
                             f->stepState = stateInit;
                             return;
                         }
@@ -880,7 +880,7 @@ namespace golang::flate
             if(rec::availWrite(gocpp::recv(f->dict)) == 0 || f->copyLen > 0)
             {
                 f->toRead = rec::readFlush(gocpp::recv(f->dict));
-                f->step = (*decompressor)->huffmanBlock;
+                f->step = [&](auto x){ return rec::huffmanBlock(x); };
                 f->stepState = stateDict;
                 return;
             }
@@ -938,7 +938,7 @@ namespace golang::flate
         if(rec::availWrite(gocpp::recv(f->dict)) == 0 || f->copyLen > 0)
         {
             f->toRead = rec::readFlush(gocpp::recv(f->dict));
-            f->step = (*decompressor)->copyData;
+            f->step = [&](auto x){ return rec::copyData(x); };
             return;
         }
         rec::finishBlock(gocpp::recv(f));
@@ -954,7 +954,7 @@ namespace golang::flate
             }
             f->err = io::go_EOF;
         }
-        f->step = (*decompressor)->nextBlock;
+        f->step = [&](auto x){ return rec::nextBlock(x); };
     }
 
     // noEOF returns err, unless err == io.EOF, in which case it returns io.ErrUnexpectedEOF.
@@ -1075,7 +1075,7 @@ namespace golang::flate
             x.bits = f->bits;
             x.codebits = f->codebits;
             x.dict = f->dict;
-            x.step = (*decompressor)->nextBlock;
+            x.step = [&](auto x){ return rec::nextBlock(x); };
         });
         rec::makeReader(gocpp::recv(f), r);
         rec::init(gocpp::recv(f->dict), maxMatchOffset, dict);
@@ -1097,7 +1097,7 @@ namespace golang::flate
         rec::makeReader(gocpp::recv(f), r);
         f.bits = new(gocpp::Tag<gocpp::array<int, maxNumLit + maxNumDist>>());
         f.codebits = new(gocpp::Tag<gocpp::array<int, numCodes>>());
-        f.step = (*decompressor)->nextBlock;
+        f.step = [&](auto x){ return rec::nextBlock(x); };
         rec::init(gocpp::recv(f.dict), maxMatchOffset, nullptr);
         return & f;
     }
@@ -1116,7 +1116,7 @@ namespace golang::flate
         rec::makeReader(gocpp::recv(f), r);
         f.bits = new(gocpp::Tag<gocpp::array<int, maxNumLit + maxNumDist>>());
         f.codebits = new(gocpp::Tag<gocpp::array<int, numCodes>>());
-        f.step = (*decompressor)->nextBlock;
+        f.step = [&](auto x){ return rec::nextBlock(x); };
         rec::init(gocpp::recv(f.dict), maxMatchOffset, dict);
         return & f;
     }

@@ -198,7 +198,7 @@ namespace golang::runtime
         {
             auto t2 = (itabTableType*)(mallocgc((2 + 2 * t->size) * goarch::PtrSize, nullptr, true));
             t2->size = t->size * 2;
-            iterate_itabs(t2->add);
+            iterate_itabs([&](auto x){ return rec::add(t2, x); });
             if(t2->count != t->count)
             {
                 go_throw("mismatched count during itab table copy"_s);

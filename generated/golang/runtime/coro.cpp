@@ -120,7 +120,7 @@ namespace golang::runtime
         auto gp = getg();
         auto c = gp->coroarg;
         gp->coroarg = nullptr;
-        rec::f(gocpp::recv(c), c);
+        c->f(c);
         coroexit(c);
     }
 

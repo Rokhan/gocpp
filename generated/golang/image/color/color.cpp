@@ -551,7 +551,7 @@ namespace golang::color
 
     struct Color rec::Convert(golang::color::modelFunc* m, struct Color c)
     {
-        return rec::f(gocpp::recv(m), c);
+        return m->f(c);
     }
 
     // Models for the standard color types.

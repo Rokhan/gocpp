@@ -25,9 +25,9 @@ namespace golang::sort
     {
         for(auto i = a + 1; i < b; i++)
         {
-            for(auto j = i; j > a && rec::Less(gocpp::recv(data), j, j - 1); j--)
+            for(auto j = i; j > a && data.Less(j, j - 1); j--)
             {
-                rec::Swap(gocpp::recv(data), j, j - 1);
+                data.Swap(j, j - 1);
             }
         }
     }
@@ -44,15 +44,15 @@ namespace golang::sort
             {
                 break;
             }
-            if(child + 1 < hi && rec::Less(gocpp::recv(data), first + child, first + child + 1))
+            if(child + 1 < hi && data.Less(first + child, first + child + 1))
             {
                 child++;
             }
-            if(! rec::Less(gocpp::recv(data), first + root, first + child))
+            if(! data.Less(first + root, first + child))
             {
                 return;
             }
-            rec::Swap(gocpp::recv(data), first + root, first + child);
+            data.Swap(first + root, first + child);
             root = child;
         }
     }
@@ -68,7 +68,7 @@ namespace golang::sort
         }
         for(auto i = hi - 1; i >= 0; i--)
         {
-            rec::Swap(gocpp::recv(data), first, first + i);
+            data.Swap(first, first + i);
             siftDown_func(data, lo, i, first);
         }
     }
@@ -116,7 +116,7 @@ namespace golang::sort
                     return;
                 }
             }
-            if(a > 0 && ! rec::Less(gocpp::recv(data), a - 1, pivot))
+            if(a > 0 && ! data.Less(a - 1, pivot))
             {
                 auto mid = partitionEqual_func(data, a, b, pivot);
                 a = mid;
@@ -149,31 +149,31 @@ namespace golang::sort
     {
         int newpivot;
         bool alreadyPartitioned;
-        rec::Swap(gocpp::recv(data), a, pivot);
+        data.Swap(a, pivot);
         auto [i, j] = std::tuple{a + 1, b - 1};
-        for(; i <= j && rec::Less(gocpp::recv(data), i, a); )
+        for(; i <= j && data.Less(i, a); )
         {
             i++;
         }
-        for(; i <= j && ! rec::Less(gocpp::recv(data), j, a); )
+        for(; i <= j && ! data.Less(j, a); )
         {
             j--;
         }
         if(i > j)
         {
-            rec::Swap(gocpp::recv(data), j, a);
+            data.Swap(j, a);
             return {j, true};
         }
-        rec::Swap(gocpp::recv(data), i, j);
+        data.Swap(i, j);
         i++;
         j--;
         for(; ; )
         {
-            for(; i <= j && rec::Less(gocpp::recv(data), i, a); )
+            for(; i <= j && data.Less(i, a); )
             {
                 i++;
             }
-            for(; i <= j && ! rec::Less(gocpp::recv(data), j, a); )
+            for(; i <= j && ! data.Less(j, a); )
             {
                 j--;
             }
@@ -181,11 +181,11 @@ namespace golang::sort
             {
                 break;
             }
-            rec::Swap(gocpp::recv(data), i, j);
+            data.Swap(i, j);
             i++;
             j--;
         }
-        rec::Swap(gocpp::recv(data), j, a);
+        data.Swap(j, a);
         return {j, false};
     }
 
@@ -194,15 +194,15 @@ namespace golang::sort
     int partitionEqual_func(struct lessSwap data, int a, int b, int pivot)
     {
         int newpivot;
-        rec::Swap(gocpp::recv(data), a, pivot);
+        data.Swap(a, pivot);
         auto [i, j] = std::tuple{a + 1, b - 1};
         for(; ; )
         {
-            for(; i <= j && ! rec::Less(gocpp::recv(data), a, i); )
+            for(; i <= j && ! data.Less(a, i); )
             {
                 i++;
             }
-            for(; i <= j && rec::Less(gocpp::recv(data), a, j); )
+            for(; i <= j && data.Less(a, j); )
             {
                 j--;
             }
@@ -210,7 +210,7 @@ namespace golang::sort
             {
                 break;
             }
-            rec::Swap(gocpp::recv(data), i, j);
+            data.Swap(i, j);
             i++;
             j--;
         }
@@ -225,7 +225,7 @@ namespace golang::sort
         auto i = a + 1;
         for(auto j = 0; j < maxSteps; j++)
         {
-            for(; i < b && ! rec::Less(gocpp::recv(data), i, i - 1); )
+            for(; i < b && ! data.Less(i, i - 1); )
             {
                 i++;
             }
@@ -237,27 +237,27 @@ namespace golang::sort
             {
                 return false;
             }
-            rec::Swap(gocpp::recv(data), i, i - 1);
+            data.Swap(i, i - 1);
             if(i - a >= 2)
             {
                 for(auto j = i - 1; j >= 1; j--)
                 {
-                    if(! rec::Less(gocpp::recv(data), j, j - 1))
+                    if(! data.Less(j, j - 1))
                     {
                         break;
                     }
-                    rec::Swap(gocpp::recv(data), j, j - 1);
+                    data.Swap(j, j - 1);
                 }
             }
             if(b - i >= 2)
             {
                 for(auto j = i + 1; j < b; j++)
                 {
-                    if(! rec::Less(gocpp::recv(data), j, j - 1))
+                    if(! data.Less(j, j - 1))
                     {
                         break;
                     }
-                    rec::Swap(gocpp::recv(data), j, j - 1);
+                    data.Swap(j, j - 1);
                 }
             }
         }
@@ -280,7 +280,7 @@ namespace golang::sort
                 {
                     other -= length;
                 }
-                rec::Swap(gocpp::recv(data), idx, a + other);
+                data.Swap(idx, a + other);
             }
         }
     }
@@ -335,7 +335,7 @@ namespace golang::sort
     // order2_func returns x,y where data[x] <= data[y], where x,y=a,b or x,y=b,a.
     std::tuple<int, int> order2_func(struct lessSwap data, int a, int b, int* swaps)
     {
-        if(rec::Less(gocpp::recv(data), b, a))
+        if(data.Less(b, a))
         {
             *swaps++;
             return {b, a};
@@ -364,7 +364,7 @@ namespace golang::sort
         auto j = b - 1;
         for(; i < j; )
         {
-            rec::Swap(gocpp::recv(data), i, j);
+            data.Swap(i, j);
             i++;
             j--;
         }
@@ -374,7 +374,7 @@ namespace golang::sort
     {
         for(auto i = 0; i < n; i++)
         {
-            rec::Swap(gocpp::recv(data), a + i, b + i);
+            data.Swap(a + i, b + i);
         }
     }
 
@@ -434,7 +434,7 @@ namespace golang::sort
             for(; i < j; )
             {
                 auto h = int((unsigned int)(i + j) >> 1);
-                if(rec::Less(gocpp::recv(data), h, a))
+                if(data.Less(h, a))
                 {
                     i = h + 1;
                 }
@@ -445,7 +445,7 @@ namespace golang::sort
             }
             for(auto k = a; k < i - 1; k++)
             {
-                rec::Swap(gocpp::recv(data), k, k + 1);
+                data.Swap(k, k + 1);
             }
             return;
         }
@@ -456,7 +456,7 @@ namespace golang::sort
             for(; i < j; )
             {
                 auto h = int((unsigned int)(i + j) >> 1);
-                if(! rec::Less(gocpp::recv(data), m, h))
+                if(! data.Less(m, h))
                 {
                     i = h + 1;
                 }
@@ -467,7 +467,7 @@ namespace golang::sort
             }
             for(auto k = m; k > i; k--)
             {
-                rec::Swap(gocpp::recv(data), k, k - 1);
+                data.Swap(k, k - 1);
             }
             return;
         }
@@ -489,7 +489,7 @@ namespace golang::sort
         for(; start < r; )
         {
             auto c = int((unsigned int)(start + r) >> 1);
-            if(! rec::Less(gocpp::recv(data), p - c, c))
+            if(! data.Less(p - c, c))
             {
                 start = c + 1;
             }

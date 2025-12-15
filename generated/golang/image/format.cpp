@@ -192,7 +192,7 @@ namespace golang::image
         {
             return {nullptr, ""_s, ErrFormat};
         }
-        auto [m, err] = rec::decode(gocpp::recv(f), rr);
+        auto [m, err] = f.decode(rr);
         return {m, f.name, err};
     }
 
@@ -208,7 +208,7 @@ namespace golang::image
         {
             return {Config {}, ""_s, ErrFormat};
         }
-        auto [c, err] = rec::decodeConfig(gocpp::recv(f), rr);
+        auto [c, err] = f.decodeConfig(rr);
         return {c, f.name, err};
     }
 

@@ -283,7 +283,7 @@ namespace golang::flate
                 continue;
             }
             auto dst = d->hashMatch.make_slice(0, dstSize);
-            rec::bulkHasher(gocpp::recv(d), toCheck, dst);
+            d->bulkHasher(toCheck, dst);
             for(auto [i, val] : dst)
             {
                 auto di = i + index;
@@ -664,8 +664,8 @@ namespace golang::flate
         n = len(b);
         for(; len(b) > 0; )
         {
-            rec::step(gocpp::recv(d), d);
-            b = b.make_slice(rec::fill(gocpp::recv(d), d, b));
+            d->step(d);
+            b = b.make_slice(d->fill(d, b));
             if(d->err != nullptr)
             {
                 return {0, d->err};
@@ -681,7 +681,7 @@ namespace golang::flate
             return d->err;
         }
         d->sync = true;
-        rec::step(gocpp::recv(d), d);
+        d->step(d);
         if(d->err == nullptr)
         {
             rec::writeStoredHeader(gocpp::recv(d->w), 0, false);
@@ -708,19 +708,19 @@ namespace golang::flate
             {
                 case 0:
                     d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), maxStoreBlockSize);
-                    d->fill = (*compressor)->fillStore;
-                    d->step = (*compressor)->store;
+                    d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
+                    d->step = [&](auto x){ return rec::store(x); };
                     break;
                 case 1:
                     d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), maxStoreBlockSize);
-                    d->fill = (*compressor)->fillStore;
-                    d->step = (*compressor)->storeHuff;
+                    d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
+                    d->step = [&](auto x){ return rec::storeHuff(x); };
                     break;
                 case 2:
                     d->compressionLevel = levels[level];
                     d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), maxStoreBlockSize);
-                    d->fill = (*compressor)->fillStore;
-                    d->step = (*compressor)->encSpeed;
+                    d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
+                    d->step = [&](auto x){ return rec::encSpeed(x); };
                     d->bestSpeed = newDeflateFast();
                     d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<flate::token>>(), maxStoreBlockSize);
                     break;
@@ -729,8 +729,8 @@ namespace golang::flate
                 case 4:
                     d->compressionLevel = levels[level];
                     rec::initDeflate(gocpp::recv(d));
-                    d->fill = (*compressor)->fillDeflate;
-                    d->step = (*compressor)->deflate;
+                    d->fill = [&](auto x, auto y){ return rec::fillDeflate(x, y); };
+                    d->step = [&](auto x){ return rec::deflate(x); };
                     break;
                 default:
                     return mocklib::Errorf("flate: invalid compression level %d: want value in range [-2, 9]"_s, level);
@@ -794,7 +794,7 @@ namespace golang::flate
             return d->err;
         }
         d->sync = true;
-        rec::step(gocpp::recv(d), d);
+        d->step(d);
         if(d->err != nullptr)
         {
             return d->err;

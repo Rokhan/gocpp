@@ -9,14 +9,43 @@
 #include "tests/TourOfGo/moretypes/function-closures.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/unicode/letter.h"
 
 namespace golang::main
 {
     std::function<int (int _1)> adder();
+    gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s);
+    gocpp::rune ToUpper(gocpp::rune r);
+    gocpp::slice<unsigned char> TestLambda0(golang::main::SpecialCase c, gocpp::slice<unsigned char> s);
+    gocpp::slice<unsigned char> TestLambda1(golang::main::SpecialCase c, gocpp::slice<unsigned char> s);
+    gocpp::slice<unsigned char> TestLambda2(golang::main::SpecialCase x, gocpp::slice<unsigned char> y);
+    struct compressor
+    {
+        std::function<void (gocpp::slice<unsigned char> _1, gocpp::slice<uint32_t> _2)> bulkHasher;
+        std::function<int (struct compressor* _1, gocpp::slice<unsigned char> _2)> fill;
+        std::function<void (struct compressor* _1)> step;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct compressor& value);
     void main();
 
     namespace rec
     {
+        gocpp::rune ToUpper(golang::main::SpecialCase special, gocpp::rune r);
+        int fillStore(golang::main::compressor* d, gocpp::slice<unsigned char> b);
+        void store(golang::main::compressor* d);
+        struct gocpp::error init(golang::main::compressor* d);
+        std::tuple<int, struct gocpp::error> write(golang::main::compressor* d, gocpp::slice<unsigned char> b);
     }
 }
 

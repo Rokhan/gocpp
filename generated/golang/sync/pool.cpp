@@ -257,7 +257,7 @@ namespace golang::sync
         }
         if(x == nullptr && p->New != nullptr)
         {
-            x = rec::New(gocpp::recv(p));
+            x = p->New();
         }
         return x;
     }

@@ -31,7 +31,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using abi::rec::Hasher;
     }
 
     unsafe::Pointer mapaccess1_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string ky)
@@ -114,7 +113,7 @@ namespace golang::runtime
             return unsafe::Pointer(& zeroVal[0]);
         }
         dohash:
-        auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
+        auto hash = t->Hasher(noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
         auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
         if(auto c = h->oldbuckets; c != nullptr)
@@ -228,7 +227,7 @@ namespace golang::runtime
             return {unsafe::Pointer(& zeroVal[0]), false};
         }
         dohash:
-        auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
+        auto hash = t->Hasher(noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
         auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
         if(auto c = h->oldbuckets; c != nullptr)
@@ -278,7 +277,7 @@ namespace golang::runtime
             fatal("concurrent map writes"_s);
         }
         auto key = stringStructOf(& s);
-        auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& s)), uintptr_t(h->hash0));
+        auto hash = t->Hasher(noescape(unsafe::Pointer(& s)), uintptr_t(h->hash0));
         h->flags ^= hashWriting;
         if(h->buckets == nullptr)
         {
@@ -380,7 +379,7 @@ namespace golang::runtime
             fatal("concurrent map writes"_s);
         }
         auto key = stringStructOf(& ky);
-        auto hash = rec::Hasher(gocpp::recv(t), noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
+        auto hash = t->Hasher(noescape(unsafe::Pointer(& ky)), uintptr_t(h->hash0));
         h->flags ^= hashWriting;
         auto bucket = hash & bucketMask(h->B);
         if(rec::growing(gocpp::recv(h)))
@@ -522,7 +521,7 @@ namespace golang::runtime
                     uint8_t useY = {};
                     if(! rec::sameSizeGrow(gocpp::recv(h)))
                     {
-                        auto hash = rec::Hasher(gocpp::recv(t), k, uintptr_t(h->hash0));
+                        auto hash = t->Hasher(k, uintptr_t(h->hash0));
                         if(hash & newbit != 0)
                         {
                             useY = 1;

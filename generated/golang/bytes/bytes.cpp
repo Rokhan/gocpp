@@ -861,21 +861,21 @@ namespace golang::bytes
     // upper case, giving priority to the special casing rules.
     gocpp::slice<unsigned char> ToUpperSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s)
     {
-        return Map(c.ToUpper, s);
+        return Map([&](auto x){ return unicode::rec::ToUpper(c, x); }, s);
     }
 
     // ToLowerSpecial treats s as UTF-8-encoded bytes and returns a copy with all the Unicode letters mapped to their
     // lower case, giving priority to the special casing rules.
     gocpp::slice<unsigned char> ToLowerSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s)
     {
-        return Map(c.ToLower, s);
+        return Map([&](auto x){ return unicode::rec::ToLower(c, x); }, s);
     }
 
     // ToTitleSpecial treats s as UTF-8-encoded bytes and returns a copy with all the Unicode letters mapped to their
     // title case, giving priority to the special casing rules.
     gocpp::slice<unsigned char> ToTitleSpecial(unicode::SpecialCase c, gocpp::slice<unsigned char> s)
     {
-        return Map(c.ToTitle, s);
+        return Map([&](auto x){ return unicode::rec::ToTitle(c, x); }, s);
     }
 
     // ToValidUTF8 treats s as UTF-8-encoded bytes and returns a copy with each run of bytes

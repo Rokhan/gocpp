@@ -39,8 +39,6 @@ namespace golang::runtime
     namespace rec
     {
         using namespace mocklib::rec;
-        using abi::rec::Equal;
-        using abi::rec::Hasher;
         using abi::rec::IndirectElem;
         using abi::rec::IndirectKey;
         using abi::rec::NeedKeyUpdate;
@@ -549,7 +547,7 @@ namespace golang::runtime
         {
             fatal("concurrent map read and map write"_s);
         }
-        auto hash = rec::Hasher(gocpp::recv(t), key, uintptr_t(h->hash0));
+        auto hash = t->Hasher(key, uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
         auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
         if(auto c = h->oldbuckets; c != nullptr)
@@ -583,7 +581,7 @@ namespace golang::runtime
                 {
                     k = *((unsafe::Pointer*)(k));
                 }
-                if(rec::Equal(gocpp::recv(t->Key), key, k))
+                if(t->Key->Equal(key, k))
                 {
                     auto e = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
                     if(rec::IndirectElem(gocpp::recv(t)))
@@ -632,7 +630,7 @@ namespace golang::runtime
         {
             fatal("concurrent map read and map write"_s);
         }
-        auto hash = rec::Hasher(gocpp::recv(t), key, uintptr_t(h->hash0));
+        auto hash = t->Hasher(key, uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
         auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
         if(auto c = h->oldbuckets; c != nullptr)
@@ -666,7 +664,7 @@ namespace golang::runtime
                 {
                     k = *((unsafe::Pointer*)(k));
                 }
-                if(rec::Equal(gocpp::recv(t->Key), key, k))
+                if(t->Key->Equal(key, k))
                 {
                     auto e = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
                     if(rec::IndirectElem(gocpp::recv(t)))
@@ -693,7 +691,7 @@ namespace golang::runtime
         {
             return {nullptr, nullptr};
         }
-        auto hash = rec::Hasher(gocpp::recv(t), key, uintptr_t(h->hash0));
+        auto hash = t->Hasher(key, uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
         auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
         if(auto c = h->oldbuckets; c != nullptr)
@@ -727,7 +725,7 @@ namespace golang::runtime
                 {
                     k = *((unsafe::Pointer*)(k));
                 }
-                if(rec::Equal(gocpp::recv(t->Key), key, k))
+                if(t->Key->Equal(key, k))
                 {
                     auto e = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
                     if(rec::IndirectElem(gocpp::recv(t)))
@@ -793,7 +791,7 @@ namespace golang::runtime
         {
             fatal("concurrent map writes"_s);
         }
-        auto hash = rec::Hasher(gocpp::recv(t), key, uintptr_t(h->hash0));
+        auto hash = t->Hasher(key, uintptr_t(h->hash0));
         h->flags ^= hashWriting;
         if(h->buckets == nullptr)
         {
@@ -834,7 +832,7 @@ namespace golang::runtime
                 {
                     k = *((unsafe::Pointer*)(k));
                 }
-                if(! rec::Equal(gocpp::recv(t->Key), key, k))
+                if(! t->Key->Equal(key, k))
                 {
                     continue;
                 }
@@ -926,7 +924,7 @@ namespace golang::runtime
         {
             fatal("concurrent map writes"_s);
         }
-        auto hash = rec::Hasher(gocpp::recv(t), key, uintptr_t(h->hash0));
+        auto hash = t->Hasher(key, uintptr_t(h->hash0));
         h->flags ^= hashWriting;
         auto bucket = hash & bucketMask(h->B);
         if(rec::growing(gocpp::recv(h)))
@@ -955,7 +953,7 @@ namespace golang::runtime
                 {
                     k2 = *((unsafe::Pointer*)(k2));
                 }
-                if(! rec::Equal(gocpp::recv(t->Key), key, k2))
+                if(! t->Key->Equal(key, k2))
                 {
                     continue;
                 }
@@ -1151,9 +1149,9 @@ namespace golang::runtime
             auto e = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + uintptr_t(offi) * uintptr_t(t->ValueSize));
             if(checkBucket != noCheck && ! rec::sameSizeGrow(gocpp::recv(h)))
             {
-                if(rec::ReflexiveKey(gocpp::recv(t)) || rec::Equal(gocpp::recv(t->Key), k, k))
+                if(rec::ReflexiveKey(gocpp::recv(t)) || t->Key->Equal(k, k))
                 {
-                    auto hash = rec::Hasher(gocpp::recv(t), k, uintptr_t(h->hash0));
+                    auto hash = t->Hasher(k, uintptr_t(h->hash0));
                     if(hash & bucketMask(it->B) != checkBucket)
                     {
                         continue;
@@ -1167,7 +1165,7 @@ namespace golang::runtime
                     }
                 }
             }
-            if((b->tophash[offi] != evacuatedX && b->tophash[offi] != evacuatedY) || ! (rec::ReflexiveKey(gocpp::recv(t)) || rec::Equal(gocpp::recv(t->Key), k, k)))
+            if((b->tophash[offi] != evacuatedX && b->tophash[offi] != evacuatedY) || ! (rec::ReflexiveKey(gocpp::recv(t)) || t->Key->Equal(k, k)))
             {
                 it->key = k;
                 if(rec::IndirectElem(gocpp::recv(t)))
@@ -1443,8 +1441,8 @@ namespace golang::runtime
                     uint8_t useY = {};
                     if(! rec::sameSizeGrow(gocpp::recv(h)))
                     {
-                        auto hash = rec::Hasher(gocpp::recv(t), k2, uintptr_t(h->hash0));
-                        if(h->flags & iterator != 0 && ! rec::ReflexiveKey(gocpp::recv(t)) && ! rec::Equal(gocpp::recv(t->Key), k2, k2))
+                        auto hash = t->Hasher(k2, uintptr_t(h->hash0));
+                        if(h->flags & iterator != 0 && ! rec::ReflexiveKey(gocpp::recv(t)) && ! t->Key->Equal(k2, k2))
                         {
                             useY = top & 1;
                             top = tophash(hash);

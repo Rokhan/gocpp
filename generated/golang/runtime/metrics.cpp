@@ -569,7 +569,7 @@ namespace golang::runtime
         {
             go_throw("runtime: unexpected metric registration for "_s + name);
         }
-        d.compute = metricReader(read).compute;
+        d.compute = [&](auto x, auto y){ return rec::compute(metricReader(read), x, y); };
         metrics[name] = d;
         metricsUnlock();
     }
@@ -1194,7 +1194,7 @@ namespace golang::runtime
                 continue;
             }
             rec::ensure(gocpp::recv(agg), & data.deps);
-            rec::compute(gocpp::recv(data), & agg, & sample->value);
+            data.compute(& agg, & sample->value);
         }
     }
 

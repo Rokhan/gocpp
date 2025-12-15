@@ -180,7 +180,7 @@ namespace golang::runtime
         auto v = unsafe::Pointer(f->chunk);
         if(f->first != nullptr)
         {
-            rec::first(gocpp::recv(f), f->arg, v);
+            f->first(f->arg, v);
         }
         f->chunk = f->chunk + f->size;
         f->nchunk -= uint32_t(f->size);

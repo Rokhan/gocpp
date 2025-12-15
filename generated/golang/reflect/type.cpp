@@ -51,7 +51,6 @@ namespace golang::reflect
         using abi::rec::DataChecked;
         using abi::rec::Elem;
         using abi::rec::Embedded;
-        using abi::rec::Equal;
         using abi::rec::ExportedMethods;
         using abi::rec::FieldAlign;
         using abi::rec::GcSlice;
@@ -3610,7 +3609,7 @@ namespace golang::reflect
                     {
                         auto pi = add(p, ft.Offset, "&x.field safe"_s);
                         auto qi = add(q, ft.Offset, "&x.field safe"_s);
-                        if(! rec::Equal(gocpp::recv(ft.Typ), pi, qi))
+                        if(! ft.Typ->Equal(pi, qi))
                         {
                             return false;
                         }
@@ -3826,7 +3825,7 @@ namespace golang::reflect
         auto etyp = typ;
         auto esize = rec::Size(gocpp::recv(etyp));
         array.Equal = nullptr;
-        if(auto eequal = etyp->Equal; eequal != nullptr)
+        if(auto eequal = [&](auto x, auto y){ return abi::rec::Equal(etyp, x, y); }; eequal != nullptr)
         {
             array.Equal = [=](unsafe::Pointer p, unsafe::Pointer q) mutable -> bool
             {

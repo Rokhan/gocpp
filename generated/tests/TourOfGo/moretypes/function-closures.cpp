@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/print.h"
+#include "golang/unicode/letter.h"
 
 namespace golang::main
 {
@@ -30,6 +31,98 @@ namespace golang::main
         };
     }
 
+    gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s)
+    {
+        auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(s));
+        return b;
+    }
+
+    gocpp::rune ToUpper(gocpp::rune r)
+    {
+        return r;
+    }
+
+    gocpp::rune rec::ToUpper(golang::main::SpecialCase special, gocpp::rune r)
+    {
+        return r;
+    }
+
+    gocpp::slice<unsigned char> TestLambda0(golang::main::SpecialCase c, gocpp::slice<unsigned char> s)
+    {
+        return Map(ToUpper, s);
+    }
+
+    gocpp::slice<unsigned char> TestLambda1(golang::main::SpecialCase c, gocpp::slice<unsigned char> s)
+    {
+        return Map([&](auto x){ return rec::ToUpper(c, x); }, s);
+    }
+
+    gocpp::slice<unsigned char> TestLambda2(golang::main::SpecialCase x, gocpp::slice<unsigned char> y)
+    {
+        return Map([&](auto z){ return rec::ToUpper(x, z); }, y);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    compressor::operator T()
+    {
+        T result;
+        result.bulkHasher = this->bulkHasher;
+        result.fill = this->fill;
+        result.step = this->step;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool compressor::operator==(const T& ref) const
+    {
+        if (bulkHasher != ref.bulkHasher) return false;
+        if (fill != ref.fill) return false;
+        if (step != ref.step) return false;
+        return true;
+    }
+
+    std::ostream& compressor::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << bulkHasher;
+        os << " " << fill;
+        os << " " << step;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct compressor& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    int rec::fillStore(golang::main::compressor* d, gocpp::slice<unsigned char> b)
+    {
+        mocklib::Println("fillStore called"_s);
+        return 0;
+    }
+
+    void rec::store(golang::main::compressor* d)
+    {
+    }
+
+    struct gocpp::error rec::init(golang::main::compressor* d)
+    {
+        struct gocpp::error err;
+        d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
+        d->step = [&](auto x){ return rec::store(x); };
+        return nullptr;
+    }
+
+    std::tuple<int, struct gocpp::error> rec::write(golang::main::compressor* d, gocpp::slice<unsigned char> b)
+    {
+        int n;
+        struct gocpp::error err;
+        auto i = d->fill(d, b);
+        return {i, nullptr};
+    }
+
     void main()
     {
         auto [pos, neg] = std::tuple{adder(), adder()};
@@ -37,6 +130,9 @@ namespace golang::main
         {
             mocklib::Println(pos(i), neg(- 2 * i));
         }
+        auto writer = new compressor {};
+        rec::init(gocpp::recv(writer));
+        rec::write(gocpp::recv(writer), gocpp::slice<unsigned char>("Hello, World!"_s));
     }
 
 }

@@ -59,6 +59,7 @@ namespace golang::sync
         {
             virtual void vLock() = 0;
             virtual void vUnlock() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -72,6 +73,11 @@ namespace golang::sync
             void vLock() override;
 
             void vUnlock() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

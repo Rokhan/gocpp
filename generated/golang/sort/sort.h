@@ -41,6 +41,7 @@ namespace golang::sort
             virtual int vLen() = 0;
             virtual bool vLess(int i, int j) = 0;
             virtual void vSwap(int i, int j) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -56,6 +57,11 @@ namespace golang::sort
             bool vLess(int i, int j) override;
 
             void vSwap(int i, int j) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

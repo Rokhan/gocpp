@@ -52,6 +52,7 @@ namespace golang::png
         {
             virtual struct EncoderBuffer* vGet() = 0;
             virtual void vPut(struct EncoderBuffer* _1) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -65,6 +66,11 @@ namespace golang::png
             struct EncoderBuffer* vGet() override;
 
             void vPut(struct EncoderBuffer* _1) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -137,6 +143,7 @@ namespace golang::png
         struct Iopaquer
         {
             virtual bool vOpaque() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -148,6 +155,11 @@ namespace golang::png
             }
 
             bool vOpaque() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

@@ -78,6 +78,7 @@ namespace golang::reflect
             virtual struct Type vOut(int i) = 0;
             virtual abi::Type* vcommon() = 0;
             virtual reflect::uncommonType* vuncommon() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -149,6 +150,11 @@ namespace golang::reflect
             abi::Type* vcommon() override;
 
             reflect::uncommonType* vuncommon() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

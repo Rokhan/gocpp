@@ -37,6 +37,7 @@ namespace golang::cmp
 
         struct IOrdered
         {
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -45,6 +46,11 @@ namespace golang::cmp
             explicit OrderedImpl(T* ptr)
             {
                 value.reset(ptr);
+            }
+
+            void* getPtr() override
+            {
+                return value.get();
             }
 
             StoreT value;

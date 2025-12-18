@@ -96,6 +96,7 @@ namespace golang::reflectlite
         struct Igocpp_id_3
         {
             virtual void vM() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -107,6 +108,11 @@ namespace golang::reflectlite
             }
 
             void vM() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -149,6 +155,7 @@ namespace golang::reflectlite
         struct Igocpp_id_4
         {
             virtual void vM() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -160,6 +167,11 @@ namespace golang::reflectlite
             }
 
             void vM() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

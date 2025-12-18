@@ -8,4 +8,5 @@ namespace golang::main
 {
     struct I;
     struct T;
+    using F = double;
 }

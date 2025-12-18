@@ -62,6 +62,7 @@ namespace golang::image
             virtual color::Model vColorModel() = 0;
             virtual struct Rectangle vBounds() = 0;
             virtual color::Color vAt(int x, int y) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -77,6 +78,11 @@ namespace golang::image
             struct Rectangle vBounds() override;
 
             color::Color vAt(int x, int y) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -124,6 +130,7 @@ namespace golang::image
         struct IRGBA64Image
         {
             virtual color::RGBA64 vRGBA64At(int x, int y) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -135,6 +142,11 @@ namespace golang::image
             }
 
             color::RGBA64 vRGBA64At(int x, int y) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -176,6 +188,7 @@ namespace golang::image
         struct IPalettedImage
         {
             virtual uint8_t vColorIndexAt(int x, int y) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -187,6 +200,11 @@ namespace golang::image
             }
 
             uint8_t vColorIndexAt(int x, int y) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

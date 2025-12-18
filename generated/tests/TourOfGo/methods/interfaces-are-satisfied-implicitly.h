@@ -39,6 +39,7 @@ namespace golang::main
         struct II
         {
             virtual void vM() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -50,6 +51,11 @@ namespace golang::main
             }
 
             void vM() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -81,9 +87,11 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct T& value);
     void main();
+    void compare();
 
     namespace rec
     {
+        void M(golang::main::F f);
         void M(golang::main::T t);
     }
 }

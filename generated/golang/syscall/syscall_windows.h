@@ -143,6 +143,7 @@ namespace golang::syscall
         struct ISockaddr
         {
             virtual std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> vsockaddr() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -154,6 +155,11 @@ namespace golang::syscall
             }
 
             std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> vsockaddr() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

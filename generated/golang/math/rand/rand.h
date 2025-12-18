@@ -47,6 +47,7 @@ namespace golang::rand
         {
             virtual int64_t vInt63() = 0;
             virtual void vSeed(int64_t seed) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -60,6 +61,11 @@ namespace golang::rand
             int64_t vInt63() override;
 
             void vSeed(int64_t seed) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -104,6 +110,7 @@ namespace golang::rand
         struct ISource64
         {
             virtual uint64_t vUint64() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -115,6 +122,11 @@ namespace golang::rand
             }
 
             uint64_t vUint64() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

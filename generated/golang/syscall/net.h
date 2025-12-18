@@ -40,6 +40,7 @@ namespace golang::syscall
             virtual struct gocpp::error vControl(std::function<void (uintptr_t fd)> f) = 0;
             virtual struct gocpp::error vRead(std::function<bool (uintptr_t fd)> f) = 0;
             virtual struct gocpp::error vWrite(std::function<bool (uintptr_t fd)> f) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -55,6 +56,11 @@ namespace golang::syscall
             struct gocpp::error vRead(std::function<bool (uintptr_t fd)> f) override;
 
             struct gocpp::error vWrite(std::function<bool (uintptr_t fd)> f) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -102,6 +108,7 @@ namespace golang::syscall
         struct IConn
         {
             virtual std::tuple<struct RawConn, struct gocpp::error> vSyscallConn() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -113,6 +120,11 @@ namespace golang::syscall
             }
 
             std::tuple<struct RawConn, struct gocpp::error> vSyscallConn() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

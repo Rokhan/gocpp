@@ -41,6 +41,7 @@ namespace golang::fs
         struct IFS
         {
             virtual std::tuple<struct File, struct gocpp::error> vOpen(gocpp::string name) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -52,6 +53,11 @@ namespace golang::fs
             }
 
             std::tuple<struct File, struct gocpp::error> vOpen(gocpp::string name) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -96,6 +102,7 @@ namespace golang::fs
             virtual std::tuple<struct FileInfo, struct gocpp::error> vStat() = 0;
             virtual std::tuple<int, struct gocpp::error> vRead(gocpp::slice<unsigned char> _1) = 0;
             virtual struct gocpp::error vClose() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -111,6 +118,11 @@ namespace golang::fs
             std::tuple<int, struct gocpp::error> vRead(gocpp::slice<unsigned char> _1) override;
 
             struct gocpp::error vClose() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -161,6 +173,7 @@ namespace golang::fs
             virtual bool vIsDir() = 0;
             virtual fs::FileMode vType() = 0;
             virtual std::tuple<struct FileInfo, struct gocpp::error> vInfo() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -178,6 +191,11 @@ namespace golang::fs
             fs::FileMode vType() override;
 
             std::tuple<struct FileInfo, struct gocpp::error> vInfo() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -228,6 +246,7 @@ namespace golang::fs
         struct IReadDirFile
         {
             virtual std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> vReadDir(int n) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -239,6 +258,11 @@ namespace golang::fs
             }
 
             std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> vReadDir(int n) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -295,6 +319,7 @@ namespace golang::fs
             virtual mocklib::Date vModTime() = 0;
             virtual bool vIsDir() = 0;
             virtual go_any vSys() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -316,6 +341,11 @@ namespace golang::fs
             bool vIsDir() override;
 
             go_any vSys() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -390,6 +420,7 @@ namespace golang::fs
         struct Igocpp_id_0
         {
             virtual bool vTimeout() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -401,6 +432,11 @@ namespace golang::fs
             }
 
             bool vTimeout() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

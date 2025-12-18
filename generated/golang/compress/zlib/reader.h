@@ -65,6 +65,7 @@ namespace golang::zlib
         struct IResetter
         {
             virtual struct gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -76,6 +77,11 @@ namespace golang::zlib
             }
 
             struct gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

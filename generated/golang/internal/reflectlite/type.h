@@ -50,6 +50,7 @@ namespace golang::reflectlite
             virtual struct Type vElem() = 0;
             virtual abi::Type* vcommon() = 0;
             virtual reflectlite::uncommonType* vuncommon() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -81,6 +82,11 @@ namespace golang::reflectlite
             abi::Type* vcommon() override;
 
             reflectlite::uncommonType* vuncommon() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

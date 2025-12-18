@@ -82,6 +82,7 @@ namespace golang::runtime
         struct Igocpp_id_0
         {
             virtual void vF() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -93,6 +94,11 @@ namespace golang::runtime
             }
 
             void vF() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

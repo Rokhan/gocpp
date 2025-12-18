@@ -57,6 +57,7 @@ namespace golang::main
         struct Igocpp_id_0
         {
             virtual double vAbs() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -68,6 +69,11 @@ namespace golang::main
             }
 
             double vAbs() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -109,6 +115,7 @@ namespace golang::main
         struct Igocpp_id_1
         {
             virtual double vAbs() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -120,6 +127,11 @@ namespace golang::main
             }
 
             double vAbs() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

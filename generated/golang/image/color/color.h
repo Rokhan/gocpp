@@ -38,6 +38,7 @@ namespace golang::color
         struct IColor
         {
             virtual std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> vRGBA() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -49,6 +50,11 @@ namespace golang::color
             }
 
             std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> vRGBA() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -230,6 +236,7 @@ namespace golang::color
         struct IModel
         {
             virtual struct Color vConvert(struct Color c) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -241,6 +248,11 @@ namespace golang::color
             }
 
             struct Color vConvert(struct Color c) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

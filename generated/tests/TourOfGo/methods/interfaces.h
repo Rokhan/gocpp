@@ -39,6 +39,7 @@ namespace golang::main
         struct IAbser
         {
             virtual double vAbs() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -50,6 +51,11 @@ namespace golang::main
             }
 
             double vAbs() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -91,6 +97,7 @@ namespace golang::main
         struct Idummy
         {
             virtual bool vAs(go_any _1) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -102,6 +109,11 @@ namespace golang::main
             }
 
             bool vAs(go_any _1) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

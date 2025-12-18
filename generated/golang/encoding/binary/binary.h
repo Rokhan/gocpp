@@ -53,6 +53,7 @@ namespace golang::binary
             virtual void vPutUint32(gocpp::slice<unsigned char> _1, uint32_t _2) = 0;
             virtual void vPutUint64(gocpp::slice<unsigned char> _1, uint64_t _2) = 0;
             virtual gocpp::string vString() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -76,6 +77,11 @@ namespace golang::binary
             void vPutUint64(gocpp::slice<unsigned char> _1, uint64_t _2) override;
 
             gocpp::string vString() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -138,6 +144,7 @@ namespace golang::binary
             virtual gocpp::slice<unsigned char> vAppendUint32(gocpp::slice<unsigned char> _1, uint32_t _2) = 0;
             virtual gocpp::slice<unsigned char> vAppendUint64(gocpp::slice<unsigned char> _1, uint64_t _2) = 0;
             virtual gocpp::string vString() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -155,6 +162,11 @@ namespace golang::binary
             gocpp::slice<unsigned char> vAppendUint64(gocpp::slice<unsigned char> _1, uint64_t _2) override;
 
             gocpp::string vString() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

@@ -43,6 +43,7 @@ namespace golang::errors
         struct Igocpp_id_0
         {
             virtual struct gocpp::error vUnwrap() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -54,6 +55,11 @@ namespace golang::errors
             }
 
             struct gocpp::error vUnwrap() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -97,6 +103,7 @@ namespace golang::errors
         struct Igocpp_id_1
         {
             virtual bool vIs(struct gocpp::error _1) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -108,6 +115,11 @@ namespace golang::errors
             }
 
             bool vIs(struct gocpp::error _1) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -149,6 +161,7 @@ namespace golang::errors
         struct Igocpp_id_3
         {
             virtual struct gocpp::error vUnwrap() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -160,6 +173,11 @@ namespace golang::errors
             }
 
             struct gocpp::error vUnwrap() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -201,6 +219,7 @@ namespace golang::errors
         struct Igocpp_id_4
         {
             virtual gocpp::slice<gocpp::error> vUnwrap() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -212,6 +231,11 @@ namespace golang::errors
             }
 
             gocpp::slice<gocpp::error> vUnwrap() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -255,6 +279,7 @@ namespace golang::errors
         struct Igocpp_id_5
         {
             virtual bool vAs(go_any _1) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -266,6 +291,11 @@ namespace golang::errors
             }
 
             bool vAs(go_any _1) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -307,6 +337,7 @@ namespace golang::errors
         struct Igocpp_id_7
         {
             virtual struct gocpp::error vUnwrap() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -318,6 +349,11 @@ namespace golang::errors
             }
 
             struct gocpp::error vUnwrap() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -359,6 +395,7 @@ namespace golang::errors
         struct Igocpp_id_8
         {
             virtual gocpp::slice<gocpp::error> vUnwrap() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -370,6 +407,11 @@ namespace golang::errors
             }
 
             gocpp::slice<gocpp::error> vUnwrap() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

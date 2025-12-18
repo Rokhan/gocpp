@@ -49,6 +49,7 @@ namespace golang::os
         struct Itimeout
         {
             virtual bool vTimeout() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -60,6 +61,11 @@ namespace golang::os
             }
 
             bool vTimeout() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

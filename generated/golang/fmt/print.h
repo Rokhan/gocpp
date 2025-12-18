@@ -62,6 +62,7 @@ namespace golang::fmt
             virtual std::tuple<int, bool> vWidth() = 0;
             virtual std::tuple<int, bool> vPrecision() = 0;
             virtual bool vFlag(int c) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -79,6 +80,11 @@ namespace golang::fmt
             std::tuple<int, bool> vPrecision() override;
 
             bool vFlag(int c) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -129,6 +135,7 @@ namespace golang::fmt
         struct IFormatter
         {
             virtual void vFormat(struct State f, gocpp::rune verb) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -140,6 +147,11 @@ namespace golang::fmt
             }
 
             void vFormat(struct State f, gocpp::rune verb) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -181,6 +193,7 @@ namespace golang::fmt
         struct IStringer
         {
             virtual gocpp::string vString() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -192,6 +205,11 @@ namespace golang::fmt
             }
 
             gocpp::string vString() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -233,6 +251,7 @@ namespace golang::fmt
         struct IGoStringer
         {
             virtual gocpp::string vGoString() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -244,6 +263,11 @@ namespace golang::fmt
             }
 
             gocpp::string vGoString() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

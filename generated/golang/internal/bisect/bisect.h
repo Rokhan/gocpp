@@ -77,6 +77,7 @@ namespace golang::bisect
         struct IWriter
         {
             virtual std::tuple<int, struct gocpp::error> vWrite(gocpp::slice<unsigned char> _1) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -88,6 +89,11 @@ namespace golang::bisect
             }
 
             std::tuple<int, struct gocpp::error> vWrite(gocpp::slice<unsigned char> _1) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

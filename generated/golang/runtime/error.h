@@ -40,6 +40,7 @@ namespace golang::runtime
         struct IError
         {
             virtual void vRuntimeError() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -51,6 +52,11 @@ namespace golang::runtime
             }
 
             void vRuntimeError() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -151,6 +157,7 @@ namespace golang::runtime
         struct Istringer
         {
             virtual gocpp::string vString() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -162,6 +169,11 @@ namespace golang::runtime
             }
 
             gocpp::string vString() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

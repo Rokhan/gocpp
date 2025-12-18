@@ -47,6 +47,7 @@ namespace golang::io
         struct IReader
         {
             virtual std::tuple<int, struct gocpp::error> vRead(gocpp::slice<unsigned char> p) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -58,6 +59,11 @@ namespace golang::io
             }
 
             std::tuple<int, struct gocpp::error> vRead(gocpp::slice<unsigned char> p) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -99,6 +105,7 @@ namespace golang::io
         struct IWriter
         {
             virtual std::tuple<int, struct gocpp::error> vWrite(gocpp::slice<unsigned char> p) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -110,6 +117,11 @@ namespace golang::io
             }
 
             std::tuple<int, struct gocpp::error> vWrite(gocpp::slice<unsigned char> p) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -151,6 +163,7 @@ namespace golang::io
         struct ICloser
         {
             virtual struct gocpp::error vClose() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -162,6 +175,11 @@ namespace golang::io
             }
 
             struct gocpp::error vClose() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -203,6 +221,7 @@ namespace golang::io
         struct ISeeker
         {
             virtual std::tuple<int64_t, struct gocpp::error> vSeek(int64_t offset, int whence) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -214,6 +233,11 @@ namespace golang::io
             }
 
             std::tuple<int64_t, struct gocpp::error> vSeek(int64_t offset, int whence) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -254,6 +278,7 @@ namespace golang::io
 
         struct IReadWriter
         {
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -262,6 +287,11 @@ namespace golang::io
             explicit ReadWriterImpl(T* ptr)
             {
                 value.reset(ptr);
+            }
+
+            void* getPtr() override
+            {
+                return value.get();
             }
 
             StoreT value;
@@ -300,6 +330,7 @@ namespace golang::io
 
         struct IReadCloser
         {
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -308,6 +339,11 @@ namespace golang::io
             explicit ReadCloserImpl(T* ptr)
             {
                 value.reset(ptr);
+            }
+
+            void* getPtr() override
+            {
+                return value.get();
             }
 
             StoreT value;
@@ -346,6 +382,7 @@ namespace golang::io
 
         struct IWriteCloser
         {
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -354,6 +391,11 @@ namespace golang::io
             explicit WriteCloserImpl(T* ptr)
             {
                 value.reset(ptr);
+            }
+
+            void* getPtr() override
+            {
+                return value.get();
             }
 
             StoreT value;
@@ -392,6 +434,7 @@ namespace golang::io
 
         struct IReadWriteCloser
         {
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -400,6 +443,11 @@ namespace golang::io
             explicit ReadWriteCloserImpl(T* ptr)
             {
                 value.reset(ptr);
+            }
+
+            void* getPtr() override
+            {
+                return value.get();
             }
 
             StoreT value;
@@ -438,6 +486,7 @@ namespace golang::io
 
         struct IReadSeeker
         {
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -446,6 +495,11 @@ namespace golang::io
             explicit ReadSeekerImpl(T* ptr)
             {
                 value.reset(ptr);
+            }
+
+            void* getPtr() override
+            {
+                return value.get();
             }
 
             StoreT value;
@@ -484,6 +538,7 @@ namespace golang::io
 
         struct IReadSeekCloser
         {
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -492,6 +547,11 @@ namespace golang::io
             explicit ReadSeekCloserImpl(T* ptr)
             {
                 value.reset(ptr);
+            }
+
+            void* getPtr() override
+            {
+                return value.get();
             }
 
             StoreT value;
@@ -530,6 +590,7 @@ namespace golang::io
 
         struct IWriteSeeker
         {
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -538,6 +599,11 @@ namespace golang::io
             explicit WriteSeekerImpl(T* ptr)
             {
                 value.reset(ptr);
+            }
+
+            void* getPtr() override
+            {
+                return value.get();
             }
 
             StoreT value;
@@ -576,6 +642,7 @@ namespace golang::io
 
         struct IReadWriteSeeker
         {
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -584,6 +651,11 @@ namespace golang::io
             explicit ReadWriteSeekerImpl(T* ptr)
             {
                 value.reset(ptr);
+            }
+
+            void* getPtr() override
+            {
+                return value.get();
             }
 
             StoreT value;
@@ -623,6 +695,7 @@ namespace golang::io
         struct IReaderFrom
         {
             virtual std::tuple<int64_t, struct gocpp::error> vReadFrom(struct Reader r) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -634,6 +707,11 @@ namespace golang::io
             }
 
             std::tuple<int64_t, struct gocpp::error> vReadFrom(struct Reader r) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -675,6 +753,7 @@ namespace golang::io
         struct IWriterTo
         {
             virtual std::tuple<int64_t, struct gocpp::error> vWriteTo(struct Writer w) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -686,6 +765,11 @@ namespace golang::io
             }
 
             std::tuple<int64_t, struct gocpp::error> vWriteTo(struct Writer w) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -727,6 +811,7 @@ namespace golang::io
         struct IReaderAt
         {
             virtual std::tuple<int, struct gocpp::error> vReadAt(gocpp::slice<unsigned char> p, int64_t off) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -738,6 +823,11 @@ namespace golang::io
             }
 
             std::tuple<int, struct gocpp::error> vReadAt(gocpp::slice<unsigned char> p, int64_t off) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -779,6 +869,7 @@ namespace golang::io
         struct IWriterAt
         {
             virtual std::tuple<int, struct gocpp::error> vWriteAt(gocpp::slice<unsigned char> p, int64_t off) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -790,6 +881,11 @@ namespace golang::io
             }
 
             std::tuple<int, struct gocpp::error> vWriteAt(gocpp::slice<unsigned char> p, int64_t off) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -831,6 +927,7 @@ namespace golang::io
         struct IByteReader
         {
             virtual std::tuple<unsigned char, struct gocpp::error> vReadByte() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -842,6 +939,11 @@ namespace golang::io
             }
 
             std::tuple<unsigned char, struct gocpp::error> vReadByte() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -883,6 +985,7 @@ namespace golang::io
         struct IByteScanner
         {
             virtual struct gocpp::error vUnreadByte() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -894,6 +997,11 @@ namespace golang::io
             }
 
             struct gocpp::error vUnreadByte() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -935,6 +1043,7 @@ namespace golang::io
         struct IByteWriter
         {
             virtual struct gocpp::error vWriteByte(unsigned char c) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -946,6 +1055,11 @@ namespace golang::io
             }
 
             struct gocpp::error vWriteByte(unsigned char c) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -987,6 +1101,7 @@ namespace golang::io
         struct IRuneReader
         {
             virtual std::tuple<gocpp::rune, int, struct gocpp::error> vReadRune() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -998,6 +1113,11 @@ namespace golang::io
             }
 
             std::tuple<gocpp::rune, int, struct gocpp::error> vReadRune() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -1039,6 +1159,7 @@ namespace golang::io
         struct IRuneScanner
         {
             virtual struct gocpp::error vUnreadRune() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -1050,6 +1171,11 @@ namespace golang::io
             }
 
             struct gocpp::error vUnreadRune() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -1091,6 +1217,7 @@ namespace golang::io
         struct IStringWriter
         {
             virtual std::tuple<int, struct gocpp::error> vWriteString(gocpp::string s) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -1102,6 +1229,11 @@ namespace golang::io
             }
 
             std::tuple<int, struct gocpp::error> vWriteString(gocpp::string s) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

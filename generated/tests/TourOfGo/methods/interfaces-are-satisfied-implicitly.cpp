@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/print.h"
+#include "golang/math/const.h"
 
 namespace golang::main
 {
@@ -97,6 +98,11 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
+    void rec::M(golang::main::F f)
+    {
+        mocklib::Println(f);
+    }
+
     // This method means type T implements the interface I,
     // but we don't need to explicitly declare that it does so.
     void rec::M(golang::main::T t)
@@ -111,6 +117,31 @@ namespace golang::main
         auto t = T {"hello"_s};
         I j = t;
         rec::M(gocpp::recv(j));
+        compare();
+    }
+
+    void compare()
+    {
+        I i = {};
+        auto t1 = new T {"Hello1"_s};
+        auto t2 = new T {"Hello2"_s};
+        auto t3 = T {"Hello2"_s};
+        auto f = F(mocklib::Pi);
+        i = t1;
+        mocklib::Println(i == t1);
+        mocklib::Println(i == t2);
+        mocklib::Println(i == t3);
+        i = t2;
+        mocklib::Println(i == t1);
+        mocklib::Println(i == t2);
+        mocklib::Println(i == t3);
+        i = t3;
+        mocklib::Println(i == t1);
+        mocklib::Println(i == t2);
+        i = f;
+        mocklib::Println(i == t1);
+        mocklib::Println(i == t2);
+        mocklib::Println(i == t3);
     }
 
 }

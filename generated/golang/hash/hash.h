@@ -43,6 +43,7 @@ namespace golang::hash
             virtual void vReset() = 0;
             virtual int vSize() = 0;
             virtual int vBlockSize() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -60,6 +61,11 @@ namespace golang::hash
             int vSize() override;
 
             int vBlockSize() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -110,6 +116,7 @@ namespace golang::hash
         struct IHash32
         {
             virtual uint32_t vSum32() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -121,6 +128,11 @@ namespace golang::hash
             }
 
             uint32_t vSum32() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };
@@ -162,6 +174,7 @@ namespace golang::hash
         struct IHash64
         {
             virtual uint64_t vSum64() = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -173,6 +186,11 @@ namespace golang::hash
             }
 
             uint64_t vSum64() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

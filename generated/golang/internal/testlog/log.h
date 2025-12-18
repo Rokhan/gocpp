@@ -43,6 +43,7 @@ namespace golang::testlog
             virtual void vStat(gocpp::string file) = 0;
             virtual void vOpen(gocpp::string file) = 0;
             virtual void vChdir(gocpp::string dir) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -60,6 +61,11 @@ namespace golang::testlog
             void vOpen(gocpp::string file) override;
 
             void vChdir(gocpp::string dir) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

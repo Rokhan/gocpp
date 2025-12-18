@@ -39,6 +39,7 @@ namespace golang::main
         struct IFetcher
         {
             virtual std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> vFetch(gocpp::string url) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -50,6 +51,11 @@ namespace golang::main
             }
 
             std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> vFetch(gocpp::string url) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

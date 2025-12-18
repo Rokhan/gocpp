@@ -68,6 +68,7 @@ namespace golang::image
         struct Ireader
         {
             virtual std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> vPeek(int _1) = 0;
+            virtual void* getPtr() = 0;
         };
 
         template<typename T, typename StoreT>
@@ -79,6 +80,11 @@ namespace golang::image
             }
 
             std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> vPeek(int _1) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
 
             StoreT value;
         };

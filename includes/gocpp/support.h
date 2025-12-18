@@ -728,7 +728,7 @@ namespace gocpp
     class IsGoInterface : public std::false_type { };
 
     template <typename T>
-    class IsGoInterface<T, typename CheckType<typename T::IsGoInterface>::type> : public std::true_type { };
+    class IsGoInterface<T, typename CheckType<typename T::isGoInterface>::type> : public std::true_type { };
 
     template<typename T>
     concept GoInterface = IsGoInterface<T>::value;
@@ -1447,6 +1447,33 @@ namespace golang
     constexpr gocpp::string operator""_s(const char* src, std::size_t)
     {
         return gocpp::string(src);
+    }
+
+    template<gocpp::GoInterface T, gocpp::GoStruct U>
+    bool operator==(const T& iRef, U* uPtr)
+    {
+        if(uPtr == nullptr)
+        {
+            return false;
+        }
+
+        if(iRef.value == nullptr)
+        {
+            return false;
+        }
+
+        return static_cast<U*>(iRef.value->getPtr()) == uPtr;
+    }
+
+    template<gocpp::GoInterface T, gocpp::GoStruct U>
+    bool operator==(const T& iRef, const U& uPtr)
+    {
+        if(iRef.value == nullptr)
+        {
+            return false;
+        }
+
+        return static_cast<U*>(iRef.value->getPtr()) == &uPtr;
     }
 
     using gocpp::len;

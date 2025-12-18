@@ -122,7 +122,7 @@
 # Conversion of imported packages
 | file | cpp generate | cpp compile |
 | ---- | -------------| ----------- |
-| $(ImportDir)/bufio/bufio.go | ✔️ ([cpp](generated/golang/bufio/bufio.cpp), [h](generated/golang/bufio/bufio.h))| ❌ |
+| $(ImportDir)/bufio/bufio.go | ✔️ ([cpp](generated/golang/bufio/bufio.cpp), [h](generated/golang/bufio/bufio.h))| ✔️ |
 | $(ImportDir)/bytes/buffer.go | ✔️ ([cpp](generated/golang/bytes/buffer.cpp), [h](generated/golang/bytes/buffer.h))| ✔️ |
 | $(ImportDir)/bytes/bytes.go | ✔️ ([cpp](generated/golang/bytes/bytes.cpp), [h](generated/golang/bytes/bytes.h))| ❌ |
 | $(ImportDir)/cmp/cmp.go | ✔️ ([cpp](generated/golang/cmp/cmp.cpp), [h](generated/golang/cmp/cmp.h))| ✔️ |

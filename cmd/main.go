@@ -3273,6 +3273,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		for _, method := range methods {
 			fmt.Fprintf(buf, "%s    virtual %s v%s(%s) = 0;\n", data.out.Indent(), method.result, method.name, method.params)
 		}
+		fmt.Fprintf(buf, "%s    virtual void* getPtr() = 0;\n", data.out.Indent())
 		data.out.indent--
 		fmt.Fprintf(buf, "%s    };\n", data.out.Indent())
 
@@ -3302,6 +3303,12 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 				fmt.Fprintf(buf, "%s    }\n", data.out.Indent())
 			}
 		}
+		fmt.Fprintf(buf, "\n")
+		fmt.Fprintf(buf, "%s    void* getPtr() override\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s    {\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s        return value.get();\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s    }\n", data.out.Indent())
+
 		data.out.indent--
 		fmt.Fprintf(buf, "\n")
 		fmt.Fprintf(buf, "%s        StoreT value;\n", data.out.Indent())

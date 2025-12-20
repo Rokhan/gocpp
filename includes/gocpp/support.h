@@ -194,6 +194,22 @@ namespace gocpp
         return std::any_cast<std::string>(value);
     }
 
+    template <typename TArray>
+    struct array_ptr
+    {
+        array_ptr() { }
+        array_ptr(TArray* target) { ptr = target; }
+
+        array_ptr& operator=(TArray* target) { ptr = target; return *this; }
+
+        bool operator==(std::nullptr_t) const { return ptr == nullptr; }
+        bool operator!=(std::nullptr_t) const { return ptr != nullptr; }
+
+        TArray::element_type operator[](size_t index) { return (*ptr)[index]; }
+
+        TArray* ptr = nullptr;
+    };
+
     template <typename T>
     struct ptr
     {
@@ -806,6 +822,18 @@ namespace gocpp
         operator const T*() const { return ptr; }
     };
 
+    template <typename T, int N>
+    struct PtrRecv<array<T, N>>
+    {
+        array<T, N>* ptr;
+
+        PtrRecv(array<T, N>* t) : ptr(t) { }
+
+        operator const array<T, N>& () const { return *ptr; }
+        operator array_ptr<array<T, N>>() { return ptr; }
+        operator array_ptr<const array<T, N>>() const { return ptr; }
+    };
+
     template <typename T>
     struct ObjRecv
     {        
@@ -820,7 +848,7 @@ namespace gocpp
 
     template <typename T>
     PtrRecv<T> recv(T* t) { return PtrRecv<T>(t); }
-    
+
     template <typename T>
     ObjRecv<T> recv(const T& t) { return ObjRecv<T>(t); }
 
@@ -833,6 +861,7 @@ namespace gocpp
     template<typename T>
     struct array_base
     {
+        using element_type = T;
         using store_type = std::vector<T>;
         using vect_iterator = typename store_type::iterator;
         using const_vect_iterator = typename store_type::iterator;
@@ -960,7 +989,13 @@ namespace gocpp
             return N;
         }
 
+        // maybe not needed as we use array_ptr now
         friend constexpr long len(const array<T, N>* input)
+        {
+            return N;
+        }
+
+        friend constexpr long len(const array_ptr<array<T, N>> input)
         {
             return N;
         }

@@ -16,6 +16,35 @@ type semTable2 [ten]struct {
 	value int
 }
 
+// From bytes/bytes.go, simplified for tests
+type asciiSet [8]uint32
+
+func makeASCIISet(chars string) (as asciiSet) {
+	for i := 0; i < len(chars); i++ {
+		c := chars[i]
+		as[c/32] |= 1 << (c % 32)
+	}
+	return as
+}
+
+func (as *asciiSet) contains(c byte) bool {
+	return (as[c/32] & (1 << (c % 32))) != 0
+}
+
+func contains(as *[8]uint32, c byte) bool {
+	return (as[c/32] & (1 << (c % 32))) != 0
+}
+
+func testPtrArray() {
+	var as1 asciiSet
+	as1 = makeASCIISet("abc")
+	var as2 [8]uint32 = as1
+	fmt.Println(as1.contains('a'))
+	fmt.Println(contains(&as2, 'a'))
+	fmt.Println(as1.contains('z'))
+	fmt.Println(contains(&as2, 'z'))
+}
+
 func main() {
 	var a [2]string
 	a[0] = "Hello"
@@ -52,6 +81,8 @@ func main() {
 
 	w := arrayLen(&buf)
 	fmt.Println("Length of buf from arrayLen:", w)
+
+	testPtrArray()
 }
 
 func arrayLen(buf *[32]byte) int {

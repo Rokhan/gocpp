@@ -491,6 +491,25 @@ func (cv *cppConverter) IsExprPtr(expr ast.Expr) bool {
 	}
 }
 
+func (cv *cppConverter) IsExprArray(expr ast.Expr) bool {
+	goType := cv.convertExprToType(expr)
+
+	for {
+		switch t := goType.(type) {
+		case *types.Array:
+			return true
+
+		case *types.Named:
+			goType = t.Underlying()
+
+		// TODO: types.Named, types.Alias ??
+
+		default:
+			return false
+		}
+	}
+}
+
 func (cv *cppConverter) IsSelectorExprSignature(expr *ast.SelectorExpr) (isFunc bool, hasReceiv bool, nbPrams int) {
 	exprGoType := cv.convertExprToType(expr)
 	selectorGoType := cv.typeInfo.TypeOf(expr.Sel)
@@ -2809,6 +2828,15 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		return cppType
 
 	case *ast.StarExpr:
+		if cv.IsExprArray(n.X) {
+			typeExpr := cv.convertTypeExpr(n.X, ctx)
+			cppType := cppType{cppExpr: ExprPrintf("gocpp::array_ptr<%s>", typeExpr), canFwd: true, isPtr: true}
+			cppType.eltType = &typeExpr
+			cppType.typenames = append(cppType.typenames, typeExpr.typenames...)
+			cppType.isStruct = false
+			return cppType
+		}
+
 		typeExpr := cv.convertTypeExpr(n.X, ctx)
 		cppType := cppType{cppExpr: ExprPrintf("%s*", typeExpr), canFwd: true, isPtr: true}
 		cppType.eltType = &typeExpr

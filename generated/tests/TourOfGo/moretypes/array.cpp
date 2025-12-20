@@ -93,6 +93,39 @@ namespace golang::main
     }
 
 
+    // From bytes/bytes.go, simplified for tests
+    main::asciiSet makeASCIISet(gocpp::string chars)
+    {
+        main::asciiSet as;
+        for(auto i = 0; i < len(chars); i++)
+        {
+            auto c = chars[i];
+            as[c / 32] |= 1 << (c % 32);
+        }
+        return as;
+    }
+
+    bool rec::contains(gocpp::array_ptr<golang::main::asciiSet> as, unsigned char c)
+    {
+        return (as[c / 32] & (1 << (c % 32))) != 0;
+    }
+
+    bool contains(gocpp::array_ptr<gocpp::array<uint32_t, 8>> as, unsigned char c)
+    {
+        return (as[c / 32] & (1 << (c % 32))) != 0;
+    }
+
+    void testPtrArray()
+    {
+        main::asciiSet as1 = {};
+        as1 = makeASCIISet("abc"_s);
+        gocpp::array<uint32_t, 8> as2 = as1;
+        mocklib::Println(rec::contains(gocpp::recv(as1), 'a'));
+        mocklib::Println(contains(& as2, 'a'));
+        mocklib::Println(rec::contains(gocpp::recv(as1), 'z'));
+        mocklib::Println(contains(& as2, 'z'));
+    }
+
     void main()
     {
         gocpp::array<gocpp::string, 2> a = {};
@@ -121,9 +154,10 @@ namespace golang::main
         mocklib::Println("Length of buf:"_s, n);
         auto w = arrayLen(& buf);
         mocklib::Println("Length of buf from arrayLen:"_s, w);
+        testPtrArray();
     }
 
-    int arrayLen(gocpp::array<unsigned char, 32>* buf)
+    int arrayLen(gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf)
     {
         auto w = len(buf);
         return w;

@@ -223,7 +223,7 @@ namespace golang::runtime
                     for(auto fb = allfin; fb != nullptr; fb = fb->alllink)
                     {
                         auto cnt = uintptr_t(atomic::Load(& fb->cnt));
-                        scanblock(uintptr_t(unsafe::Pointer(& fb->fin[0])), cnt * gocpp::Sizeof<finalizer>(), & finptrmask[0], gcw, nullptr);
+                        scanblock(uintptr_t(gocpp::unsafe_pointer(& fb->fin[0])), cnt * gocpp::Sizeof<finalizer>(), & finptrmask[0], gcw, nullptr);
                     }
                     break;
                 case 3:
@@ -304,7 +304,7 @@ namespace golang::runtime
             return 0;
         }
         auto b = b0 + off;
-        auto ptrmask = (uint8_t*)(add(unsafe::Pointer(ptrmask0), uintptr_t(shard) * (rootBlockBytes / (8 * goarch::PtrSize))));
+        auto ptrmask = (uint8_t*)(add(gocpp::unsafe_pointer(ptrmask0), uintptr_t(shard) * (rootBlockBytes / (8 * goarch::PtrSize))));
         auto n = uintptr_t(rootBlockBytes);
         if(off + n > n0)
         {
@@ -383,13 +383,13 @@ namespace golang::runtime
                     {
                         continue;
                     }
-                    auto spf = (specialfinalizer*)(unsafe::Pointer(sp));
+                    auto spf = (specialfinalizer*)(gocpp::unsafe_pointer(sp));
                     auto p = rec::base(gocpp::recv(s)) + uintptr_t(spf->special.offset) / s->elemsize * s->elemsize;
                     if(! rec::noscan(gocpp::recv(s->spanclass)))
                     {
                         scanobject(p, gcw);
                     }
-                    scanblock(uintptr_t(unsafe::Pointer(& spf->fn)), goarch::PtrSize, & oneptrmask[0], gcw, nullptr);
+                    scanblock(uintptr_t(gocpp::unsafe_pointer(& spf->fn)), goarch::PtrSize, & oneptrmask[0], gcw, nullptr);
                 }
                 unlock(& s->speciallock);
             }
@@ -574,7 +574,7 @@ namespace golang::runtime
         }
         if(incnwait == work.nproc && ! gcMarkWorkAvailable(nullptr))
         {
-            gp->param = unsafe::Pointer(gp);
+            gp->param = gocpp::unsafe_pointer(gp);
         }
         auto now = nanotime();
         auto duration = now - startTime;
@@ -770,7 +770,7 @@ namespace golang::runtime
         }
         if(gp->sched.ctxt != nullptr)
         {
-            scanblock(uintptr_t(unsafe::Pointer(& gp->sched.ctxt)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
+            scanblock(uintptr_t(gocpp::unsafe_pointer(& gp->sched.ctxt)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
         }
         // Scan the stack. Accumulate a list of stack objects.
         unwinder u = {};
@@ -782,20 +782,20 @@ namespace golang::runtime
         {
             if(d->fn != nullptr)
             {
-                scanblock(uintptr_t(unsafe::Pointer(& [&](){ return rec::fn(d); })), goarch::PtrSize, & oneptrmask[0], gcw, & state);
+                scanblock(uintptr_t(gocpp::unsafe_pointer(& [&](){ return rec::fn(d); })), goarch::PtrSize, & oneptrmask[0], gcw, & state);
             }
             if(d->link != nullptr)
             {
-                scanblock(uintptr_t(unsafe::Pointer(& d->link)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
+                scanblock(uintptr_t(gocpp::unsafe_pointer(& d->link)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
             }
             if(d->heap)
             {
-                scanblock(uintptr_t(unsafe::Pointer(& d)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
+                scanblock(uintptr_t(gocpp::unsafe_pointer(& d)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
             }
         }
         if(gp->_panic != nullptr)
         {
-            rec::putPtr(gocpp::recv(state), uintptr_t(unsafe::Pointer(gp->_panic)), false);
+            rec::putPtr(gocpp::recv(state), uintptr_t(gocpp::unsafe_pointer(gp->_panic)), false);
         }
         rec::buildIndex(gocpp::recv(state));
         for(; ; )
@@ -832,7 +832,7 @@ namespace golang::runtime
             if(rec::useGCProg(gocpp::recv(r)))
             {
                 s = materializeGCProg(rec::ptrdata(gocpp::recv(r)), gcdata);
-                gcdata = (unsigned char*)(unsafe::Pointer(s->startAddr));
+                gcdata = (unsigned char*)(gocpp::unsafe_pointer(s->startAddr));
             }
             auto b = state.stack.lo + uintptr_t(obj->off);
             if(conservative)
@@ -865,7 +865,7 @@ namespace golang::runtime
                 }
             }
             x->nobj = 0;
-            putempty((workbuf*)(unsafe::Pointer(x)));
+            putempty((workbuf*)(gocpp::unsafe_pointer(x)));
         }
         if(state.buf != nullptr || state.cbuf != nullptr || state.freeBuf != nullptr)
         {
@@ -1186,7 +1186,7 @@ namespace golang::runtime
             {
                 if(bits & 1 != 0)
                 {
-                    auto p = *(uintptr_t*)(unsafe::Pointer(b + i));
+                    auto p = *(uintptr_t*)(gocpp::unsafe_pointer(b + i));
                     if(p != 0)
                     {
                         if(auto [obj, span, objIndex] = findObject(p, b, i); obj != 0)
@@ -1283,7 +1283,7 @@ namespace golang::runtime
                 }
             }
             scanSize = addr - b + goarch::PtrSize;
-            auto obj = *(uintptr_t*)(unsafe::Pointer(addr));
+            auto obj = *(uintptr_t*)(gocpp::unsafe_pointer(addr));
             if(obj != 0 && obj - b >= n)
             {
                 {
@@ -1324,7 +1324,7 @@ namespace golang::runtime
                         return '$';
                     }
                 }
-                auto val = *(uintptr_t*)(unsafe::Pointer(p));
+                auto val = *(uintptr_t*)(gocpp::unsafe_pointer(p));
                 if(state != nullptr && state->stack.lo <= val && val < state->stack.hi)
                 {
                     return '@';
@@ -1363,7 +1363,7 @@ namespace golang::runtime
                     continue;
                 }
             }
-            auto val = *(uintptr_t*)(unsafe::Pointer(b + i));
+            auto val = *(uintptr_t*)(gocpp::unsafe_pointer(b + i));
             if(state != nullptr && state->stack.lo <= val && val < state->stack.hi)
             {
                 rec::putPtr(gocpp::recv(state), val, true);
@@ -1490,7 +1490,7 @@ namespace golang::runtime
                 print(" ...\n"_s);
                 skipped = false;
             }
-            print(" *("_s, label, "+"_s, i, ") = "_s, hex(*(uintptr_t*)(unsafe::Pointer(obj + i))));
+            print(" *("_s, label, "+"_s, i, ") = "_s, hex(*(uintptr_t*)(gocpp::unsafe_pointer(obj + i))));
             if(i == off)
             {
                 print(" <=="_s);

@@ -158,27 +158,27 @@ namespace golang::runtime
     bool gcSweep(golang::runtime::gcMode mode);
     void gcResetMarkState();
     extern std::function<void ()> poolcleanup;
-    extern gocpp::slice<unsafe::Pointer> boringCaches;
+    extern gocpp::slice<gocpp::unsafe_pointer> boringCaches;
     void sync_runtime_registerPoolCleanup(std::function<void ()> f);
-    void boring_registerCache(unsafe::Pointer p);
+    void boring_registerCache(gocpp::unsafe_pointer p);
     void clearpools();
     gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int dec);
     gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns);
     void gcTestMoveStackOnNextCall();
-    uint64_t gcTestIsReachable(gocpp::slice<unsafe::Pointer> ptrs);
+    uint64_t gcTestIsReachable(gocpp::slice<gocpp::unsafe_pointer> ptrs);
     
     template<typename... Args>
     uint64_t gcTestIsReachable(Args... ptrs)
     {
-        return gcTestIsReachable(gocpp::ToSlice<unsafe::Pointer>(ptrs...));
+        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(ptrs...));
     }
     
     template<typename... Args>
-    uint64_t gcTestIsReachable(unsafe::Pointer value, Args... ptrs)
+    uint64_t gcTestIsReachable(gocpp::unsafe_pointer value, Args... ptrs)
     {
-        return gcTestIsReachable(gocpp::ToSlice<unsafe::Pointer>(value, ptrs...));
+        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(value, ptrs...));
     }
-    gocpp::string gcTestPointerClass(unsafe::Pointer p);
+    gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p);
     struct workType
     {
         golang::runtime::lfstack full;

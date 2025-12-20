@@ -107,7 +107,7 @@ namespace golang::syscall
         std::tuple<struct SID*, struct gocpp::error> Copy(golang::syscall::SID* sid);
         std::tuple<gocpp::string, gocpp::string, uint32_t, struct gocpp::error> LookupAccount(golang::syscall::SID* sid, gocpp::string system);
         struct gocpp::error Close(golang::syscall::Token t);
-        std::tuple<unsafe::Pointer, struct gocpp::error> getInfo(golang::syscall::Token t, uint32_t go_class, int initSize);
+        std::tuple<gocpp::unsafe_pointer, struct gocpp::error> getInfo(golang::syscall::Token t, uint32_t go_class, int initSize);
         std::tuple<struct Tokenuser*, struct gocpp::error> GetTokenUser(golang::syscall::Token t);
         std::tuple<struct Tokenprimarygroup*, struct gocpp::error> GetTokenPrimaryGroup(golang::syscall::Token t);
         std::tuple<gocpp::string, struct gocpp::error> GetUserProfileDirectory(golang::syscall::Token t);

@@ -655,7 +655,7 @@ namespace golang::runtime
                     if(special->kind == _KindSpecialFinalizer || ! hasFin)
                     {
                         rec::unlinkAndNext(gocpp::recv(siter));
-                        freeSpecial(special, unsafe::Pointer(p), size);
+                        freeSpecial(special, gocpp::unsafe_pointer(p), size);
                     }
                     else
                     {
@@ -668,8 +668,8 @@ namespace golang::runtime
                 if(siter.s->kind == _KindSpecialReachable)
                 {
                     auto special = rec::unlinkAndNext(gocpp::recv(siter));
-                    (specialReachable*)(unsafe::Pointer(special))->reachable = true;
-                    freeSpecial(special, unsafe::Pointer(p), size);
+                    (specialReachable*)(gocpp::unsafe_pointer(special))->reachable = true;
+                    freeSpecial(special, gocpp::unsafe_pointer(p), size);
                 }
                 else
                 {
@@ -692,23 +692,23 @@ namespace golang::runtime
                     auto x = rec::base(gocpp::recv(s)) + i * s->elemsize;
                     if(debug.allocfreetrace != 0)
                     {
-                        tracefree(unsafe::Pointer(x), size);
+                        tracefree(gocpp::unsafe_pointer(x), size);
                     }
                     if(debug.clobberfree != 0)
                     {
-                        clobberfree(unsafe::Pointer(x), size);
+                        clobberfree(gocpp::unsafe_pointer(x), size);
                     }
                     if(raceenabled && ! s->isUserArenaChunk)
                     {
-                        racefree(unsafe::Pointer(x), size);
+                        racefree(gocpp::unsafe_pointer(x), size);
                     }
                     if(msanenabled && ! s->isUserArenaChunk)
                     {
-                        msanfree(unsafe::Pointer(x), size);
+                        msanfree(gocpp::unsafe_pointer(x), size);
                     }
                     if(asanenabled && ! s->isUserArenaChunk)
                     {
-                        asanpoison(unsafe::Pointer(x), size);
+                        asanpoison(gocpp::unsafe_pointer(x), size);
                     }
                 }
                 rec::advance(gocpp::recv(mbits));
@@ -822,7 +822,7 @@ namespace golang::runtime
                 if(debug.efence > 0)
                 {
                     s->limit = 0;
-                    sysFault(unsafe::Pointer(rec::base(gocpp::recv(s))), size);
+                    sysFault(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), size);
                 }
                 else
                 {
@@ -832,11 +832,11 @@ namespace golang::runtime
                 {
                     systemstack([=]() mutable -> void
                     {
-                        auto s_tmp = spanOf(uintptr_t(unsafe::Pointer(s->largeType)));
+                        auto s_tmp = spanOf(uintptr_t(gocpp::unsafe_pointer(s->largeType)));
                         auto& s = s_tmp;
                         rec::freeManual(gocpp::recv(mheap_), s, spanAllocPtrScalarBits);
                     });
-                    *(uintptr_t*)(unsafe::Pointer(& s->largeType)) = 0;
+                    *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType)) = 0;
                 }
                 auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
                 atomic::Xadd64(& stats->largeFreeCount, 1);
@@ -973,7 +973,7 @@ namespace golang::runtime
 
     // clobberfree sets the memory content at x to bad content, for debugging
     // purposes.
-    void clobberfree(unsafe::Pointer x, uintptr_t size)
+    void clobberfree(gocpp::unsafe_pointer x, uintptr_t size)
     {
         for(auto i = uintptr_t(0); i < size; i += 4)
         {

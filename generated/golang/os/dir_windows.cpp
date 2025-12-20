@@ -179,7 +179,7 @@ namespace golang::os
         {
             if(d->bufp == 0)
             {
-                err = windows::GetFileInformationByHandleEx(file->pfd.Sysfd, d->go_class, (unsigned char*)(unsafe::Pointer(& (*d->buf)[0])), uint32_t(len(*d->buf)));
+                err = windows::GetFileInformationByHandleEx(file->pfd.Sysfd, d->go_class, (unsigned char*)(gocpp::unsafe_pointer(& (*d->buf)[0])), uint32_t(len(*d->buf)));
                 runtime::KeepAlive(file);
                 if(err != nullptr)
                 {
@@ -225,7 +225,7 @@ namespace golang::os
             {
                 uint32_t nextEntryOffset = {};
                 gocpp::slice<uint16_t> nameslice = {};
-                auto entry = unsafe::Pointer(& (*d->buf)[d->bufp]);
+                auto entry = gocpp::unsafe_pointer(& (*d->buf)[d->bufp]);
                 if(d->go_class == windows::FileIdBothDirectoryInfo)
                 {
                     auto info = (windows::FILE_ID_BOTH_DIR_INFO*)(entry);

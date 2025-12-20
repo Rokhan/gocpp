@@ -128,7 +128,7 @@ namespace golang::os
             })};
         }
         windows::FILE_ATTRIBUTE_TAG_INFO ti = {};
-        err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(unsafe::Pointer(& ti)), uint32_t(gocpp::Sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
+        err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(gocpp::unsafe_pointer(& ti)), uint32_t(gocpp::Sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
         if(err != nullptr)
         {
             if(auto [errno, ok] = gocpp::getValue<syscall::Errno>(err); ok && errno == windows::ERROR_INVALID_PARAMETER)

@@ -43,7 +43,7 @@ namespace golang::runtime
     struct inlineUnwinder
     {
         funcInfo f;
-        gocpp::array<inlinedCall, 1 << 20>* inlTree;
+        gocpp::array_ptr<gocpp::array<inlinedCall, 1 << 20>> inlTree;
 
         using isGoStruct = void;
 

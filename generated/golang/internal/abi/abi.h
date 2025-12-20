@@ -16,7 +16,7 @@ namespace golang::abi
     {
         gocpp::array<uintptr_t, IntArgRegs> Ints;
         gocpp::array<uint64_t, FloatArgRegs> Floats;
-        gocpp::array<unsafe::Pointer, IntArgRegs> Ptrs;
+        gocpp::array<gocpp::unsafe_pointer, IntArgRegs> Ptrs;
         IntArgRegBitmap ReturnIsPtr;
 
         using isGoStruct = void;
@@ -35,9 +35,9 @@ namespace golang::abi
     namespace rec
     {
         void Dump(golang::abi::RegArgs* r);
-        unsafe::Pointer IntRegArgAddr(golang::abi::RegArgs* r, int reg, uintptr_t argSize);
-        void Set(golang::abi::IntArgRegBitmap* b, int i);
-        bool Get(golang::abi::IntArgRegBitmap* b, int i);
+        gocpp::unsafe_pointer IntRegArgAddr(golang::abi::RegArgs* r, int reg, uintptr_t argSize);
+        void Set(gocpp::array_ptr<golang::abi::IntArgRegBitmap> b, int i);
+        bool Get(gocpp::array_ptr<golang::abi::IntArgRegBitmap> b, int i);
     }
 }
 

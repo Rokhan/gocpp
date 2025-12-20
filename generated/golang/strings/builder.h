@@ -29,7 +29,7 @@ namespace golang::strings
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Builder& value);
-    unsafe::Pointer noescape(unsafe::Pointer p);
+    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
 
     namespace rec
     {

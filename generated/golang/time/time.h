@@ -88,7 +88,7 @@ namespace golang::time
         int Nanosecond(golang::time::Time t);
         int YearDay(golang::time::Time t);
         gocpp::string String(golang::time::Duration d);
-        int format(golang::time::Duration d, gocpp::array<unsigned char, 32>* buf);
+        int format(golang::time::Duration d, gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
         int64_t Nanoseconds(golang::time::Duration d);
         int64_t Microseconds(golang::time::Duration d);
         int64_t Milliseconds(golang::time::Duration d);

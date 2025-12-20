@@ -441,7 +441,7 @@ namespace golang::godebug
     {
         if(len(b) > 0)
         {
-            write(2, unsafe::Pointer(& b[0]), int32_t(len(b)));
+            write(2, gocpp::unsafe_pointer(& b[0]), int32_t(len(b)));
         }
         return {len(b), nullptr};
     }
@@ -450,7 +450,7 @@ namespace golang::godebug
     // to print to standard error.
     //
     //go:linkname write runtime.write
-    int32_t write(uintptr_t fd, unsafe::Pointer p, int32_t n)
+    int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n)
     /* convertBlockStmt, nil block */;
 
 }

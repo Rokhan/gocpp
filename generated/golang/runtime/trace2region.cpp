@@ -125,7 +125,7 @@ namespace golang::runtime
         }
         auto p = & a->head->data[a->off];
         a->off += n;
-        return (notInHeap*)(unsafe::Pointer(p));
+        return (notInHeap*)(gocpp::unsafe_pointer(p));
     }
 
     // drop frees all previously allocated memory and resets the allocator.
@@ -135,7 +135,7 @@ namespace golang::runtime
         {
             auto block = a->head;
             a->head = block->next;
-            sysFree(unsafe::Pointer(block), gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys);
+            sysFree(gocpp::unsafe_pointer(block), gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys);
         }
     }
 

@@ -99,7 +99,7 @@ namespace golang::reflect
             gocpp::panic("reflect: call of MakeFunc with non-Func type"_s);
         }
         auto t = rec::common(gocpp::recv(typ));
-        auto ftyp = (reflect::funcType*)(unsafe::Pointer(t));
+        auto ftyp = (reflect::funcType*)(gocpp::unsafe_pointer(t));
         auto code = abi::FuncPCABI0(makeFuncStub);
         auto [gocpp_id_0, gocpp_id_1, abid] = funcLayout(ftyp, nullptr);
         auto impl = gocpp::InitPtr<makeFuncImpl>([=](auto& x) {
@@ -112,7 +112,7 @@ namespace golang::reflect
             x.ftyp = ftyp;
             x.fn = fn;
         });
-        return Value {t, unsafe::Pointer(impl), flag(Func)};
+        return Value {t, gocpp::unsafe_pointer(impl), flag(Func)};
     }
 
     // makeFuncStub is an assembly function that is the code half of
@@ -177,7 +177,7 @@ namespace golang::reflect
         auto fl = v.flag & (flagRO | flagAddr | flagIndir);
         fl |= flag(rec::Kind(gocpp::recv(rec::typ(gocpp::recv(v)))));
         auto rcvr = Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
-        auto ftyp = (reflect::funcType*)(unsafe::Pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
+        auto ftyp = (reflect::funcType*)(gocpp::unsafe_pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
         auto code = methodValueCallCodePtr();
         auto [gocpp_id_2, gocpp_id_3, abid] = funcLayout(ftyp, nullptr);
         auto fv = gocpp::InitPtr<methodValue>([=](auto& x) {
@@ -191,7 +191,7 @@ namespace golang::reflect
             x.rcvr = rcvr;
         });
         methodReceiver(op, fv->rcvr, fv->method);
-        return Value {rec::Common(gocpp::recv(ftyp)), unsafe::Pointer(fv), v.flag & flagRO | flag(Func)};
+        return Value {rec::Common(gocpp::recv(ftyp)), gocpp::unsafe_pointer(fv), v.flag & flagRO | flag(Func)};
     }
 
     uintptr_t methodValueCallCodePtr()
@@ -264,11 +264,11 @@ namespace golang::reflect
         {
             if(rec::Get(gocpp::recv(ctxt->regPtrs), i))
             {
-                *(uintptr_t*)(unsafe::Pointer(& args->Ptrs[i])) = arg;
+                *(uintptr_t*)(gocpp::unsafe_pointer(& args->Ptrs[i])) = arg;
             }
             else
             {
-                *(uintptr_t*)(unsafe::Pointer(& args->Ptrs[i])) = 0;
+                *(uintptr_t*)(gocpp::unsafe_pointer(& args->Ptrs[i])) = 0;
             }
         }
     }

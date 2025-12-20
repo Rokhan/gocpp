@@ -17,7 +17,7 @@ namespace golang::runtime
 {
     struct slice
     {
-        unsafe::Pointer array;
+        gocpp::unsafe_pointer array;
         int len;
         int cap;
 
@@ -53,14 +53,14 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct notInHeapSlice& value);
     void panicmakeslicelen();
     void panicmakeslicecap();
-    unsafe::Pointer makeslicecopy(golang::runtime::_type* et, int tolen, int fromlen, unsafe::Pointer from);
-    unsafe::Pointer makeslice(golang::runtime::_type* et, int len, int cap);
-    unsafe::Pointer makeslice64(golang::runtime::_type* et, int64_t len64, int64_t cap64);
-    struct slice growslice(unsafe::Pointer oldPtr, int newLen, int oldCap, int num, golang::runtime::_type* et);
+    gocpp::unsafe_pointer makeslicecopy(golang::runtime::_type* et, int tolen, int fromlen, gocpp::unsafe_pointer from);
+    gocpp::unsafe_pointer makeslice(golang::runtime::_type* et, int len, int cap);
+    gocpp::unsafe_pointer makeslice64(golang::runtime::_type* et, int64_t len64, int64_t cap64);
+    struct slice growslice(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, golang::runtime::_type* et);
     int nextslicecap(int newLen, int oldCap);
     struct slice reflect_growslice(golang::runtime::_type* et, struct slice old, int num);
     bool isPowerOfTwo(uintptr_t x);
-    int slicecopy(unsafe::Pointer toPtr, int toLen, unsafe::Pointer fromPtr, int fromLen, uintptr_t width);
+    int slicecopy(gocpp::unsafe_pointer toPtr, int toLen, gocpp::unsafe_pointer fromPtr, int fromLen, uintptr_t width);
     gocpp::slice<unsigned char> bytealg_MakeNoZero(int len);
 
     namespace rec

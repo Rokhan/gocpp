@@ -19,6 +19,6 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    using stdFunction = unsafe::Pointer;
+    using stdFunction = gocpp::unsafe_pointer;
     struct mOS;
 }

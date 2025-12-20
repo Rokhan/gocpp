@@ -145,7 +145,7 @@ namespace golang::atomic
     template<typename T>
     void rec::Store(golang::atomic::Pointer<T>* x, T* val)
     {
-        StorePointer(& x->v, unsafe::Pointer(val));
+        StorePointer(& x->v, gocpp::unsafe_pointer(val));
     }
 
     // Swap atomically stores new into x and returns the previous value.
@@ -153,7 +153,7 @@ namespace golang::atomic
     T* rec::Swap(golang::atomic::Pointer<T>* x, T* go_new)
     {
         T* old;
-        return (T*)(SwapPointer(& x->v, unsafe::Pointer(go_new)));
+        return (T*)(SwapPointer(& x->v, gocpp::unsafe_pointer(go_new)));
     }
 
     // CompareAndSwap executes the compare-and-swap operation for x.
@@ -161,7 +161,7 @@ namespace golang::atomic
     bool rec::CompareAndSwap(golang::atomic::Pointer<T>* x, T* old, T* go_new)
     {
         bool swapped;
-        return CompareAndSwapPointer(& x->v, unsafe::Pointer(old), unsafe::Pointer(go_new));
+        return CompareAndSwapPointer(& x->v, gocpp::unsafe_pointer(old), gocpp::unsafe_pointer(go_new));
     }
 
     // An Int32 is an atomic int32. The zero value is zero.

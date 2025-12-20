@@ -356,7 +356,7 @@ namespace golang::syscall
         gocpp::Defer defer;
         try
         {
-            if(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(& d->dll))) == nullptr)
+            if(atomic::LoadPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& d->dll))) == nullptr)
             {
                 rec::Lock(gocpp::recv(d->mu));
                 defer.push_back([=]{ rec::Unlock(gocpp::recv(d->mu)); });
@@ -367,7 +367,7 @@ namespace golang::syscall
                     {
                         return e;
                     }
-                    atomic::StorePointer((unsafe::Pointer*)(unsafe::Pointer(& d->dll)), unsafe::Pointer(dll));
+                    atomic::StorePointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& d->dll)), gocpp::unsafe_pointer(dll));
                 }
             }
             return nullptr;
@@ -460,7 +460,7 @@ namespace golang::syscall
         gocpp::Defer defer;
         try
         {
-            if(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(& p->proc))) == nullptr)
+            if(atomic::LoadPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& p->proc))) == nullptr)
             {
                 rec::Lock(gocpp::recv(p->mu));
                 defer.push_back([=]{ rec::Unlock(gocpp::recv(p->mu)); });
@@ -477,7 +477,7 @@ namespace golang::syscall
                     {
                         return e;
                     }
-                    atomic::StorePointer((unsafe::Pointer*)(unsafe::Pointer(& p->proc)), unsafe::Pointer(proc));
+                    atomic::StorePointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& p->proc)), gocpp::unsafe_pointer(proc));
                 }
             }
             return nullptr;

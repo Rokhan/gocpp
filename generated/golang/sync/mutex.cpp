@@ -176,7 +176,7 @@ namespace golang::sync
         {
             if(race::Enabled)
             {
-                race::Acquire(unsafe::Pointer(m));
+                race::Acquire(gocpp::unsafe_pointer(m));
             }
             return;
         }
@@ -201,7 +201,7 @@ namespace golang::sync
         }
         if(race::Enabled)
         {
-            race::Acquire(unsafe::Pointer(m));
+            race::Acquire(gocpp::unsafe_pointer(m));
         }
         return true;
     }
@@ -285,7 +285,7 @@ namespace golang::sync
         }
         if(race::Enabled)
         {
-            race::Acquire(unsafe::Pointer(m));
+            race::Acquire(gocpp::unsafe_pointer(m));
         }
     }
 
@@ -300,7 +300,7 @@ namespace golang::sync
         if(race::Enabled)
         {
             _ = m->state;
-            race::Release(unsafe::Pointer(m));
+            race::Release(gocpp::unsafe_pointer(m));
         }
         auto go_new = atomic::AddInt32(& m->state, - mutexLocked);
         if(go_new != 0)

@@ -102,7 +102,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             auto start = corostart;
-            auto startfv = *(funcval**)(unsafe::Pointer(& start));
+            auto startfv = *(funcval**)(gocpp::unsafe_pointer(& start));
             gp = newproc1(startfv, gp, pc);
         });
         gp->coroarg = c;

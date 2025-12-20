@@ -99,7 +99,7 @@ namespace golang::runtime
     void Goexit();
     void preprintpanics(struct _panic* p);
     void printpanics(struct _panic* p);
-    std::tuple<uint32_t, unsafe::Pointer> readvarintUnsafe(unsafe::Pointer fd);
+    std::tuple<uint32_t, gocpp::unsafe_pointer> readvarintUnsafe(gocpp::unsafe_pointer fd);
     struct PanicNilError
     {
         gocpp::array<PanicNilError*, 0> _1;
@@ -141,10 +141,10 @@ namespace golang::runtime
     {
         gocpp::string Error(golang::runtime::PanicNilError*);
         void RuntimeError(golang::runtime::PanicNilError*);
-        void start(golang::runtime::_panic* p, uintptr_t pc, unsafe::Pointer sp);
+        void start(golang::runtime::_panic* p, uintptr_t pc, gocpp::unsafe_pointer sp);
         std::tuple<std::function<void ()>, bool> nextDefer(golang::runtime::_panic* p);
         bool nextFrame(golang::runtime::_panic* p);
-        bool initOpenCodedDefers(golang::runtime::_panic* p, struct funcInfo fn, unsafe::Pointer varp);
+        bool initOpenCodedDefers(golang::runtime::_panic* p, struct funcInfo fn, gocpp::unsafe_pointer varp);
     }
 }
 

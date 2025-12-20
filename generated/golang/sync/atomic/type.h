@@ -65,7 +65,7 @@ namespace golang::atomic
     {
         gocpp::array<T*, 0> _1;
         noCopy _2;
-        unsafe::Pointer v;
+        gocpp::unsafe_pointer v;
 
         using isGoStruct = void;
 

@@ -106,7 +106,7 @@ namespace golang::sync
         if(race::Enabled)
         {
             race::Enable();
-            race::Acquire(unsafe::Pointer(& rw->readerSem));
+            race::Acquire(gocpp::unsafe_pointer(& rw->readerSem));
         }
     }
 
@@ -138,7 +138,7 @@ namespace golang::sync
                 if(race::Enabled)
                 {
                     race::Enable();
-                    race::Acquire(unsafe::Pointer(& rw->readerSem));
+                    race::Acquire(gocpp::unsafe_pointer(& rw->readerSem));
                 }
                 return true;
             }
@@ -154,7 +154,7 @@ namespace golang::sync
         if(race::Enabled)
         {
             _ = rw->w.state;
-            race::ReleaseMerge(unsafe::Pointer(& rw->writerSem));
+            race::ReleaseMerge(gocpp::unsafe_pointer(& rw->writerSem));
             race::Disable();
         }
         if(auto r = rec::Add(gocpp::recv(rw->readerCount), - 1); r < 0)
@@ -199,8 +199,8 @@ namespace golang::sync
         if(race::Enabled)
         {
             race::Enable();
-            race::Acquire(unsafe::Pointer(& rw->readerSem));
-            race::Acquire(unsafe::Pointer(& rw->writerSem));
+            race::Acquire(gocpp::unsafe_pointer(& rw->readerSem));
+            race::Acquire(gocpp::unsafe_pointer(& rw->writerSem));
         }
     }
 
@@ -236,8 +236,8 @@ namespace golang::sync
         if(race::Enabled)
         {
             race::Enable();
-            race::Acquire(unsafe::Pointer(& rw->readerSem));
-            race::Acquire(unsafe::Pointer(& rw->writerSem));
+            race::Acquire(gocpp::unsafe_pointer(& rw->readerSem));
+            race::Acquire(gocpp::unsafe_pointer(& rw->writerSem));
         }
         return true;
     }
@@ -253,7 +253,7 @@ namespace golang::sync
         if(race::Enabled)
         {
             _ = rw->w.state;
-            race::Release(unsafe::Pointer(& rw->readerSem));
+            race::Release(gocpp::unsafe_pointer(& rw->readerSem));
             race::Disable();
         }
         auto r = rec::Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);

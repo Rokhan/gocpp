@@ -11,7 +11,7 @@
 
 namespace golang::chacha8rand
 {
-    void block(gocpp::array<uint64_t, 4>* seed, gocpp::array<uint64_t, 32>* blocks, uint32_t counter);
+    void block(gocpp::array_ptr<gocpp::array<uint64_t, 4>> seed, gocpp::array_ptr<gocpp::array<uint64_t, 32>> blocks, uint32_t counter);
     struct State
     {
         gocpp::array<uint64_t, 32> buf;

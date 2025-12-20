@@ -17,8 +17,8 @@ namespace golang::sync
         uint32_t wait;
         uint32_t notify;
         uintptr_t lock;
-        unsafe::Pointer head;
-        unsafe::Pointer tail;
+        gocpp::unsafe_pointer head;
+        gocpp::unsafe_pointer tail;
 
         using isGoStruct = void;
 

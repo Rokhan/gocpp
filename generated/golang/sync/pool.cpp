@@ -182,11 +182,11 @@ namespace golang::sync
     // directly, for fear of conflicting with other synchronization on that address.
     // Instead, we hash the pointer to get an index into poolRaceHash.
     // See discussion on golang.org/cl/31589.
-    unsafe::Pointer poolRaceAddr(go_any x)
+    gocpp::unsafe_pointer poolRaceAddr(go_any x)
     {
-        auto ptr = uintptr_t((gocpp::array<unsafe::Pointer, 2>*)(unsafe::Pointer(& x))[1]);
+        auto ptr = uintptr_t((gocpp::array_ptr<gocpp::array<gocpp::unsafe_pointer, 2>>)(gocpp::unsafe_pointer(& x))[1]);
         auto h = uint32_t((uint64_t(uint32_t(ptr)) * 0x85ebca6b) >> 16);
-        return unsafe::Pointer(& poolRaceHash[h % uint32_t(len(poolRaceHash))]);
+        return gocpp::unsafe_pointer(& poolRaceHash[h % uint32_t(len(poolRaceHash))]);
     }
 
     // Put adds x to the pool.
@@ -338,7 +338,7 @@ namespace golang::sync
             }
             auto size = runtime::GOMAXPROCS(0);
             auto local = gocpp::make(gocpp::Tag<gocpp::slice<poolLocal>>(), size);
-            atomic::StorePointer(& p->local, unsafe::Pointer(& local[0]));
+            atomic::StorePointer(& p->local, gocpp::unsafe_pointer(& local[0]));
             runtime_StoreReluintptr(& p->localSize, uintptr_t(size));
             return {& local[pid], pid};
         }
@@ -378,9 +378,9 @@ namespace golang::sync
         runtime_registerPoolCleanup(poolCleanup);
     }
 
-    struct poolLocal* indexLocal(unsafe::Pointer l, int i)
+    struct poolLocal* indexLocal(gocpp::unsafe_pointer l, int i)
     {
-        auto lp = unsafe::Pointer(uintptr_t(l) + uintptr_t(i) * gocpp::Sizeof<poolLocal>());
+        auto lp = gocpp::unsafe_pointer(uintptr_t(l) + uintptr_t(i) * gocpp::Sizeof<poolLocal>());
         return (poolLocal*)(lp);
     }
 

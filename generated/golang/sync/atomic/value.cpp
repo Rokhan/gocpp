@@ -93,14 +93,14 @@ namespace golang::atomic
     go_any rec::Load(golang::atomic::Value* v)
     {
         go_any val;
-        auto vp = (efaceWords*)(unsafe::Pointer(v));
+        auto vp = (efaceWords*)(gocpp::unsafe_pointer(v));
         auto typ = LoadPointer(& vp->typ);
-        if(typ == nullptr || typ == unsafe::Pointer(& firstStoreInProgress))
+        if(typ == nullptr || typ == gocpp::unsafe_pointer(& firstStoreInProgress))
         {
             return nullptr;
         }
         auto data = LoadPointer(& vp->data);
-        auto vlp = (efaceWords*)(unsafe::Pointer(& val));
+        auto vlp = (efaceWords*)(gocpp::unsafe_pointer(& val));
         vlp->typ = typ;
         vlp->data = data;
         return val;
@@ -116,15 +116,15 @@ namespace golang::atomic
         {
             gocpp::panic("sync/atomic: store of nil value into Value"_s);
         }
-        auto vp = (efaceWords*)(unsafe::Pointer(v));
-        auto vlp = (efaceWords*)(unsafe::Pointer(& val));
+        auto vp = (efaceWords*)(gocpp::unsafe_pointer(v));
+        auto vlp = (efaceWords*)(gocpp::unsafe_pointer(& val));
         for(; ; )
         {
             auto typ = LoadPointer(& vp->typ);
             if(typ == nullptr)
             {
                 runtime_procPin();
-                if(! CompareAndSwapPointer(& vp->typ, nullptr, unsafe::Pointer(& firstStoreInProgress)))
+                if(! CompareAndSwapPointer(& vp->typ, nullptr, gocpp::unsafe_pointer(& firstStoreInProgress)))
                 {
                     runtime_procUnpin();
                     continue;
@@ -134,7 +134,7 @@ namespace golang::atomic
                 runtime_procUnpin();
                 return;
             }
-            if(typ == unsafe::Pointer(& firstStoreInProgress))
+            if(typ == gocpp::unsafe_pointer(& firstStoreInProgress))
             {
                 continue;
             }
@@ -159,15 +159,15 @@ namespace golang::atomic
         {
             gocpp::panic("sync/atomic: swap of nil value into Value"_s);
         }
-        auto vp = (efaceWords*)(unsafe::Pointer(v));
-        auto np = (efaceWords*)(unsafe::Pointer(& go_new));
+        auto vp = (efaceWords*)(gocpp::unsafe_pointer(v));
+        auto np = (efaceWords*)(gocpp::unsafe_pointer(& go_new));
         for(; ; )
         {
             auto typ = LoadPointer(& vp->typ);
             if(typ == nullptr)
             {
                 runtime_procPin();
-                if(! CompareAndSwapPointer(& vp->typ, nullptr, unsafe::Pointer(& firstStoreInProgress)))
+                if(! CompareAndSwapPointer(& vp->typ, nullptr, gocpp::unsafe_pointer(& firstStoreInProgress)))
                 {
                     runtime_procUnpin();
                     continue;
@@ -177,7 +177,7 @@ namespace golang::atomic
                 runtime_procUnpin();
                 return nullptr;
             }
-            if(typ == unsafe::Pointer(& firstStoreInProgress))
+            if(typ == gocpp::unsafe_pointer(& firstStoreInProgress))
             {
                 continue;
             }
@@ -185,7 +185,7 @@ namespace golang::atomic
             {
                 gocpp::panic("sync/atomic: swap of inconsistently typed value into Value"_s);
             }
-            auto op = (efaceWords*)(unsafe::Pointer(& old));
+            auto op = (efaceWords*)(gocpp::unsafe_pointer(& old));
             std::tie(op->typ, op->data) = std::tuple{np->typ, SwapPointer(& vp->data, np->data)};
             return old;
         }
@@ -203,9 +203,9 @@ namespace golang::atomic
         {
             gocpp::panic("sync/atomic: compare and swap of nil value into Value"_s);
         }
-        auto vp = (efaceWords*)(unsafe::Pointer(v));
-        auto np = (efaceWords*)(unsafe::Pointer(& go_new));
-        auto op = (efaceWords*)(unsafe::Pointer(& old));
+        auto vp = (efaceWords*)(gocpp::unsafe_pointer(v));
+        auto np = (efaceWords*)(gocpp::unsafe_pointer(& go_new));
+        auto op = (efaceWords*)(gocpp::unsafe_pointer(& old));
         if(op->typ != nullptr && np->typ != op->typ)
         {
             gocpp::panic("sync/atomic: compare and swap of inconsistently typed values"_s);
@@ -220,7 +220,7 @@ namespace golang::atomic
                     return false;
                 }
                 runtime_procPin();
-                if(! CompareAndSwapPointer(& vp->typ, nullptr, unsafe::Pointer(& firstStoreInProgress)))
+                if(! CompareAndSwapPointer(& vp->typ, nullptr, gocpp::unsafe_pointer(& firstStoreInProgress)))
                 {
                     runtime_procUnpin();
                     continue;
@@ -230,7 +230,7 @@ namespace golang::atomic
                 runtime_procUnpin();
                 return true;
             }
-            if(typ == unsafe::Pointer(& firstStoreInProgress))
+            if(typ == gocpp::unsafe_pointer(& firstStoreInProgress))
             {
                 continue;
             }
@@ -240,8 +240,8 @@ namespace golang::atomic
             }
             auto data = LoadPointer(& vp->data);
             go_any i = {};
-            (efaceWords*)(unsafe::Pointer(& i))->typ = typ;
-            (efaceWords*)(unsafe::Pointer(& i))->data = data;
+            (efaceWords*)(gocpp::unsafe_pointer(& i))->typ = typ;
+            (efaceWords*)(gocpp::unsafe_pointer(& i))->data = data;
             if(i != old)
             {
                 return false;

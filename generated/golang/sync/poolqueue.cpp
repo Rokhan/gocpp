@@ -172,7 +172,7 @@ namespace golang::sync
         {
             val = dequeueNil(nullptr);
         }
-        *(go_any*)(unsafe::Pointer(slot)) = val;
+        *(go_any*)(gocpp::unsafe_pointer(slot)) = val;
         rec::Add(gocpp::recv(d->headTail), 1 << dequeueBits);
         return true;
     }
@@ -199,7 +199,7 @@ namespace golang::sync
                 break;
             }
         }
-        auto val = *(go_any*)(unsafe::Pointer(slot));
+        auto val = *(go_any*)(gocpp::unsafe_pointer(slot));
         if(val == dequeueNil(nullptr))
         {
             val = nullptr;
@@ -229,7 +229,7 @@ namespace golang::sync
                 break;
             }
         }
-        auto val = *(go_any*)(unsafe::Pointer(slot));
+        auto val = *(go_any*)(gocpp::unsafe_pointer(slot));
         if(val == dequeueNil(nullptr))
         {
             val = nullptr;
@@ -315,12 +315,12 @@ namespace golang::sync
 
     void storePoolChainElt(struct poolChainElt** pp, struct poolChainElt* v)
     {
-        atomic::StorePointer((unsafe::Pointer*)(unsafe::Pointer(pp)), unsafe::Pointer(v));
+        atomic::StorePointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp)), gocpp::unsafe_pointer(v));
     }
 
     struct poolChainElt* loadPoolChainElt(struct poolChainElt** pp)
     {
-        return (poolChainElt*)(atomic::LoadPointer((unsafe::Pointer*)(unsafe::Pointer(pp))));
+        return (poolChainElt*)(atomic::LoadPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp))));
     }
 
     void rec::pushHead(golang::sync::poolChain* c, go_any val)
@@ -385,7 +385,7 @@ namespace golang::sync
             {
                 return {nullptr, false};
             }
-            if(atomic::CompareAndSwapPointer((unsafe::Pointer*)(unsafe::Pointer(& c->tail)), unsafe::Pointer(d), unsafe::Pointer(d2)))
+            if(atomic::CompareAndSwapPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& c->tail)), gocpp::unsafe_pointer(d), gocpp::unsafe_pointer(d2)))
             {
                 storePoolChainElt(& d2->prev, nullptr);
             }

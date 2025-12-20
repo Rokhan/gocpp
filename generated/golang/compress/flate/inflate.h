@@ -197,8 +197,8 @@ namespace golang::flate
         unsigned int nb;
         huffmanDecoder h1;
         huffmanDecoder h2;
-        gocpp::array<int, maxNumLit + maxNumDist>* bits;
-        gocpp::array<int, numCodes>* codebits;
+        gocpp::array_ptr<gocpp::array<int, maxNumLit + maxNumDist>> bits;
+        gocpp::array_ptr<gocpp::array<int, numCodes>> codebits;
         dictDecoder dict;
         gocpp::array<unsigned char, 4> buf;
         std::function<void (struct decompressor* _1)> step;

@@ -36,7 +36,7 @@ namespace golang::runtime
     struct scase
     {
         hchan* c;
-        unsafe::Pointer elem;
+        gocpp::unsafe_pointer elem;
 
         using isGoStruct = void;
 
@@ -55,15 +55,15 @@ namespace golang::runtime
     void selectsetpc(uintptr_t* pc);
     void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
     void selunlock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
-    bool selparkcommit(struct g* gp, unsafe::Pointer _1);
+    bool selparkcommit(struct g* gp, gocpp::unsafe_pointer _1);
     void block();
     std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block);
     struct runtimeSelect
     {
         golang::runtime::selectDir dir;
-        unsafe::Pointer typ;
+        gocpp::unsafe_pointer typ;
         hchan* ch;
-        unsafe::Pointer val;
+        gocpp::unsafe_pointer val;
 
         using isGoStruct = void;
 

@@ -16,7 +16,7 @@
 
 namespace golang::registry
 {
-    extern unsafe::Pointer _;
+    extern gocpp::unsafe_pointer _;
     extern gocpp::error errERROR_IO_PENDING;
     extern gocpp::error errERROR_EINVAL;
     struct gocpp::error errnoErr(syscall::Errno e);

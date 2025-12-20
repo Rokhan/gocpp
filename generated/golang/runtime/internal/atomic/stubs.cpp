@@ -25,7 +25,7 @@ namespace golang::atomic
     /* convertBlockStmt, nil block */;
 
     // NO go:noescape annotation; see atomic_pointer.go.
-    bool Casp1(unsafe::Pointer* ptr, unsafe::Pointer old, unsafe::Pointer go_new)
+    bool Casp1(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
     /* convertBlockStmt, nil block */;
 
     //go:noescape

@@ -608,7 +608,7 @@ namespace golang::time
 
     // format formats the representation of d into the end of buf and
     // returns the offset of the first character.
-    int rec::format(golang::time::Duration d, gocpp::array<unsigned char, 32>* buf)
+    int rec::format(golang::time::Duration d, gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf)
     {
         auto w = len(buf);
         auto u = uint64_t(d);

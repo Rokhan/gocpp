@@ -139,11 +139,11 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    auto st = (runtime::structtype*)(unsafe::Pointer(t.Type));
+                    auto st = (runtime::structtype*)(gocpp::unsafe_pointer(t.Type));
                     return rec::Name(gocpp::recv(st->PkgPath));
                     break;
                 case 1:
-                    auto it = (runtime::interfacetype*)(unsafe::Pointer(t.Type));
+                    auto it = (runtime::interfacetype*)(gocpp::unsafe_pointer(t.Type));
                     return rec::Name(gocpp::recv(it->PkgPath));
                     break;
             }
@@ -155,8 +155,8 @@ namespace golang::runtime
     {
         mutex lock;
         int32_t next;
-        gocpp::map<int32_t, unsafe::Pointer> m;
-        gocpp::map<unsafe::Pointer, int32_t> minv;
+        gocpp::map<int32_t, gocpp::unsafe_pointer> m;
+        gocpp::map<gocpp::unsafe_pointer, int32_t> minv;
 
         using isGoStruct = void;
 
@@ -218,7 +218,7 @@ namespace golang::runtime
         lock(& reflectOffs.lock);
         if(raceenabled)
         {
-            raceacquire(unsafe::Pointer(& reflectOffs.lock));
+            raceacquire(gocpp::unsafe_pointer(& reflectOffs.lock));
         }
     }
 
@@ -226,12 +226,12 @@ namespace golang::runtime
     {
         if(raceenabled)
         {
-            racerelease(unsafe::Pointer(& reflectOffs.lock));
+            racerelease(gocpp::unsafe_pointer(& reflectOffs.lock));
         }
         unlock(& reflectOffs.lock);
     }
 
-    runtime::name resolveNameOff(unsafe::Pointer ptrInModule, golang::runtime::nameOff off)
+    runtime::name resolveNameOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::nameOff off)
     {
         if(off == 0)
         {
@@ -249,7 +249,7 @@ namespace golang::runtime
                     go_throw("runtime: name offset out of range"_s);
                 }
                 return gocpp::Init<runtime::name>([=](auto& x) {
-                    x.Bytes = (unsigned char*)(unsafe::Pointer(res));
+                    x.Bytes = (unsigned char*)(gocpp::unsafe_pointer(res));
                 });
             }
         }
@@ -272,10 +272,10 @@ namespace golang::runtime
 
     runtime::name rec::nameOff(golang::runtime::rtype t, golang::runtime::nameOff off)
     {
-        return resolveNameOff(unsafe::Pointer(t.Type), off);
+        return resolveNameOff(gocpp::unsafe_pointer(t.Type), off);
     }
 
-    runtime::_type* resolveTypeOff(unsafe::Pointer ptrInModule, golang::runtime::typeOff off)
+    runtime::_type* resolveTypeOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::typeOff off)
     {
         if(off == 0 || off == - 1)
         {
@@ -317,21 +317,21 @@ namespace golang::runtime
             println("runtime: typeOff"_s, hex(off), "out of range"_s, hex(md->types), "-"_s, hex(md->etypes));
             go_throw("runtime: type offset out of range"_s);
         }
-        return (runtime::_type*)(unsafe::Pointer(res));
+        return (runtime::_type*)(gocpp::unsafe_pointer(res));
     }
 
     runtime::_type* rec::typeOff(golang::runtime::rtype t, golang::runtime::typeOff off)
     {
-        return resolveTypeOff(unsafe::Pointer(t.Type), off);
+        return resolveTypeOff(gocpp::unsafe_pointer(t.Type), off);
     }
 
-    unsafe::Pointer rec::textOff(golang::runtime::rtype t, golang::runtime::textOff off)
+    gocpp::unsafe_pointer rec::textOff(golang::runtime::rtype t, golang::runtime::textOff off)
     {
         if(off == - 1)
         {
-            return unsafe::Pointer(abi::FuncPCABIInternal(unreachableMethod));
+            return gocpp::unsafe_pointer(abi::FuncPCABIInternal(unreachableMethod));
         }
-        auto base = uintptr_t(unsafe::Pointer(t.Type));
+        auto base = uintptr_t(gocpp::unsafe_pointer(t.Type));
         moduledata* md = {};
         for(auto next = & firstmoduledata; next != nullptr; next = next->next)
         {
@@ -358,7 +358,7 @@ namespace golang::runtime
             return res;
         }
         auto res = rec::textAddr(gocpp::recv(md), uint32_t(off));
-        return unsafe::Pointer(res);
+        return gocpp::unsafe_pointer(res);
     }
 
     gocpp::string pkgPath(golang::runtime::name n)
@@ -375,8 +375,8 @@ namespace golang::runtime
             off += i2 + l2;
         }
         runtime::nameOff nameOff = {};
-        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::Data(gocpp::recv(n), off))).make_slice(0));
-        auto pkgPathName = resolveNameOff(unsafe::Pointer(n.Bytes), nameOff);
+        copy((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& nameOff)).make_slice(0), (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(rec::Data(gocpp::recv(n), off))).make_slice(0));
+        auto pkgPathName = resolveNameOff(gocpp::unsafe_pointer(n.Bytes), nameOff);
         return rec::Name(gocpp::recv(pkgPathName));
     }
 
@@ -431,7 +431,7 @@ namespace golang::runtime
                 runtime::_type* t = {};
                 if(prev->typemap == nullptr)
                 {
-                    t = (runtime::_type*)(unsafe::Pointer(prev->types + uintptr_t(tl)));
+                    t = (runtime::_type*)(gocpp::unsafe_pointer(prev->types + uintptr_t(tl)));
                 }
                 else
                 {
@@ -460,7 +460,7 @@ namespace golang::runtime
                 md->typemap = tm;
                 for(auto [gocpp_ignored, tl] : md->typelinks)
                 {
-                    auto t = (runtime::_type*)(unsafe::Pointer(md->types + uintptr_t(tl)));
+                    auto t = (runtime::_type*)(gocpp::unsafe_pointer(md->types + uintptr_t(tl)));
                     for(auto [gocpp_ignored, candidate] : typehash[t->Hash])
                     {
                         auto seen = gocpp::map<_typePair, gocpp_id_1> {};
@@ -647,18 +647,18 @@ namespace golang::runtime
                     return true;
                     break;
                 case 2:
-                    auto at = (runtime::arraytype*)(unsafe::Pointer(t));
-                    auto av = (runtime::arraytype*)(unsafe::Pointer(v));
+                    auto at = (runtime::arraytype*)(gocpp::unsafe_pointer(t));
+                    auto av = (runtime::arraytype*)(gocpp::unsafe_pointer(v));
                     return typesEqual(at->Elem, av->Elem, seen) && at->Len == av->Len;
                     break;
                 case 3:
-                    auto ct = (runtime::chantype*)(unsafe::Pointer(t));
-                    auto cv = (runtime::chantype*)(unsafe::Pointer(v));
+                    auto ct = (runtime::chantype*)(gocpp::unsafe_pointer(t));
+                    auto cv = (runtime::chantype*)(gocpp::unsafe_pointer(v));
                     return ct->Dir == cv->Dir && typesEqual(ct->Elem, cv->Elem, seen);
                     break;
                 case 4:
-                    auto ft = (runtime::functype*)(unsafe::Pointer(t));
-                    auto fv = (runtime::functype*)(unsafe::Pointer(v));
+                    auto ft = (runtime::functype*)(gocpp::unsafe_pointer(t));
+                    auto fv = (runtime::functype*)(gocpp::unsafe_pointer(v));
                     if(ft->OutCount != fv->OutCount || ft->InCount != fv->InCount)
                     {
                         return false;
@@ -682,8 +682,8 @@ namespace golang::runtime
                     return true;
                     break;
                 case 5:
-                    auto it = (runtime::interfacetype*)(unsafe::Pointer(t));
-                    auto iv = (runtime::interfacetype*)(unsafe::Pointer(v));
+                    auto it = (runtime::interfacetype*)(gocpp::unsafe_pointer(t));
+                    auto iv = (runtime::interfacetype*)(gocpp::unsafe_pointer(v));
                     if(rec::Name(gocpp::recv(it->PkgPath)) != rec::Name(gocpp::recv(iv->PkgPath)))
                     {
                         return false;
@@ -696,8 +696,8 @@ namespace golang::runtime
                     {
                         auto tm = & it->Methods[i];
                         auto vm = & iv->Methods[i];
-                        auto tname = resolveNameOff(unsafe::Pointer(tm), tm->Name);
-                        auto vname = resolveNameOff(unsafe::Pointer(vm), vm->Name);
+                        auto tname = resolveNameOff(gocpp::unsafe_pointer(tm), tm->Name);
+                        auto vname = resolveNameOff(gocpp::unsafe_pointer(vm), vm->Name);
                         if(rec::Name(gocpp::recv(tname)) != rec::Name(gocpp::recv(vname)))
                         {
                             return false;
@@ -706,8 +706,8 @@ namespace golang::runtime
                         {
                             return false;
                         }
-                        auto tityp = resolveTypeOff(unsafe::Pointer(tm), tm->Typ);
-                        auto vityp = resolveTypeOff(unsafe::Pointer(vm), vm->Typ);
+                        auto tityp = resolveTypeOff(gocpp::unsafe_pointer(tm), tm->Typ);
+                        auto vityp = resolveTypeOff(gocpp::unsafe_pointer(vm), vm->Typ);
                         if(! typesEqual(tityp, vityp, seen))
                         {
                             return false;
@@ -716,23 +716,23 @@ namespace golang::runtime
                     return true;
                     break;
                 case 6:
-                    auto mt = (runtime::maptype*)(unsafe::Pointer(t));
-                    auto mv = (runtime::maptype*)(unsafe::Pointer(v));
+                    auto mt = (runtime::maptype*)(gocpp::unsafe_pointer(t));
+                    auto mv = (runtime::maptype*)(gocpp::unsafe_pointer(v));
                     return typesEqual(mt->Key, mv->Key, seen) && typesEqual(mt->Elem, mv->Elem, seen);
                     break;
                 case 7:
-                    auto pt = (runtime::ptrtype*)(unsafe::Pointer(t));
-                    auto pv = (runtime::ptrtype*)(unsafe::Pointer(v));
+                    auto pt = (runtime::ptrtype*)(gocpp::unsafe_pointer(t));
+                    auto pv = (runtime::ptrtype*)(gocpp::unsafe_pointer(v));
                     return typesEqual(pt->Elem, pv->Elem, seen);
                     break;
                 case 8:
-                    auto st = (runtime::slicetype*)(unsafe::Pointer(t));
-                    auto sv = (runtime::slicetype*)(unsafe::Pointer(v));
+                    auto st = (runtime::slicetype*)(gocpp::unsafe_pointer(t));
+                    auto sv = (runtime::slicetype*)(gocpp::unsafe_pointer(v));
                     return typesEqual(st->Elem, sv->Elem, seen);
                     break;
                 case 9:
-                    auto st = (runtime::structtype*)(unsafe::Pointer(t));
-                    auto sv = (runtime::structtype*)(unsafe::Pointer(v));
+                    auto st = (runtime::structtype*)(gocpp::unsafe_pointer(t));
+                    auto sv = (runtime::structtype*)(gocpp::unsafe_pointer(v));
                     if(len(st->Fields) != len(sv->Fields))
                     {
                         return false;

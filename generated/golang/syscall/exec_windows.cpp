@@ -542,7 +542,7 @@ namespace golang::syscall
             }
             if(sys->ParentProcess != 0)
             {
-                err = updateProcThreadAttribute(si->ProcThreadAttributeList, 0, _PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, unsafe::Pointer(& sys->ParentProcess), gocpp::Sizeof<Handle>(), nullptr, nullptr);
+                err = updateProcThreadAttribute(si->ProcThreadAttributeList, 0, _PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, gocpp::unsafe_pointer(& sys->ParentProcess), gocpp::Sizeof<Handle>(), nullptr, nullptr);
                 if(err != nullptr)
                 {
                     return {0, 0, err};
@@ -565,7 +565,7 @@ namespace golang::syscall
             auto willInheritHandles = len(fd) > 0 && ! sys->NoInheritHandles;
             if(willInheritHandles)
             {
-                err = updateProcThreadAttribute(si->ProcThreadAttributeList, 0, _PROC_THREAD_ATTRIBUTE_HANDLE_LIST, unsafe::Pointer(& fd[0]), uintptr_t(len(fd)) * gocpp::Sizeof<Handle>(), nullptr, nullptr);
+                err = updateProcThreadAttribute(si->ProcThreadAttributeList, 0, _PROC_THREAD_ATTRIBUTE_HANDLE_LIST, gocpp::unsafe_pointer(& fd[0]), uintptr_t(len(fd)) * gocpp::Sizeof<Handle>(), nullptr, nullptr);
                 if(err != nullptr)
                 {
                     return {0, 0, err};

@@ -62,9 +62,9 @@ namespace golang::runtime
     // The caller should guard the call with "if writeBarrier.enabled".
     //
     //go:nosplit
-    void atomicwb(unsafe::Pointer* ptr, unsafe::Pointer go_new)
+    void atomicwb(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new)
     {
-        auto slot = (uintptr_t*)(unsafe::Pointer(ptr));
+        auto slot = (uintptr_t*)(gocpp::unsafe_pointer(ptr));
         auto buf = rec::get2(gocpp::recv(rec::ptr(gocpp::recv(getg()->m->p))->wbBuf));
         buf[0] = *slot;
         buf[1] = uintptr_t(go_new);
@@ -73,15 +73,15 @@ namespace golang::runtime
     // atomicstorep performs *ptr = new atomically and invokes a write barrier.
     //
     //go:nosplit
-    void atomicstorep(unsafe::Pointer ptr, unsafe::Pointer go_new)
+    void atomicstorep(gocpp::unsafe_pointer ptr, gocpp::unsafe_pointer go_new)
     {
         if(writeBarrier.enabled)
         {
-            atomicwb((unsafe::Pointer*)(ptr), go_new);
+            atomicwb((gocpp::unsafe_pointer*)(ptr), go_new);
         }
         if(goexperiment::CgoCheck2)
         {
-            cgoCheckPtrWrite((unsafe::Pointer*)(ptr), go_new);
+            cgoCheckPtrWrite((gocpp::unsafe_pointer*)(ptr), go_new);
         }
         atomic::StorepNoWB(noescape(ptr), go_new);
     }
@@ -91,9 +91,9 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:linkname atomic_storePointer runtime/internal/atomic.storePointer
-    void atomic_storePointer(unsafe::Pointer* ptr, unsafe::Pointer go_new)
+    void atomic_storePointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new)
     {
-        atomicstorep(unsafe::Pointer(ptr), go_new);
+        atomicstorep(gocpp::unsafe_pointer(ptr), go_new);
     }
 
     // atomic_casPointer is the implementation of runtime/internal/UnsafePointer.CompareAndSwap
@@ -101,7 +101,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:linkname atomic_casPointer runtime/internal/atomic.casPointer
-    bool atomic_casPointer(unsafe::Pointer* ptr, unsafe::Pointer old, unsafe::Pointer go_new)
+    bool atomic_casPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
     {
         if(writeBarrier.enabled)
         {
@@ -120,7 +120,7 @@ namespace golang::runtime
 
     //go:linkname sync_atomic_StorePointer sync/atomic.StorePointer
     //go:nosplit
-    void sync_atomic_StorePointer(unsafe::Pointer* ptr, unsafe::Pointer go_new)
+    void sync_atomic_StorePointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new)
     {
         if(writeBarrier.enabled)
         {
@@ -130,7 +130,7 @@ namespace golang::runtime
         {
             cgoCheckPtrWrite(ptr, go_new);
         }
-        sync_atomic_StoreUintptr((uintptr_t*)(unsafe::Pointer(ptr)), uintptr_t(go_new));
+        sync_atomic_StoreUintptr((uintptr_t*)(gocpp::unsafe_pointer(ptr)), uintptr_t(go_new));
     }
 
     //go:linkname sync_atomic_SwapUintptr sync/atomic.SwapUintptr
@@ -139,7 +139,7 @@ namespace golang::runtime
 
     //go:linkname sync_atomic_SwapPointer sync/atomic.SwapPointer
     //go:nosplit
-    unsafe::Pointer sync_atomic_SwapPointer(unsafe::Pointer* ptr, unsafe::Pointer go_new)
+    gocpp::unsafe_pointer sync_atomic_SwapPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new)
     {
         if(writeBarrier.enabled)
         {
@@ -149,7 +149,7 @@ namespace golang::runtime
         {
             cgoCheckPtrWrite(ptr, go_new);
         }
-        auto old = unsafe::Pointer(sync_atomic_SwapUintptr((uintptr_t*)(noescape(unsafe::Pointer(ptr))), uintptr_t(go_new)));
+        auto old = gocpp::unsafe_pointer(sync_atomic_SwapUintptr((uintptr_t*)(noescape(gocpp::unsafe_pointer(ptr))), uintptr_t(go_new)));
         return old;
     }
 
@@ -159,7 +159,7 @@ namespace golang::runtime
 
     //go:linkname sync_atomic_CompareAndSwapPointer sync/atomic.CompareAndSwapPointer
     //go:nosplit
-    bool sync_atomic_CompareAndSwapPointer(unsafe::Pointer* ptr, unsafe::Pointer old, unsafe::Pointer go_new)
+    bool sync_atomic_CompareAndSwapPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
     {
         if(writeBarrier.enabled)
         {
@@ -169,7 +169,7 @@ namespace golang::runtime
         {
             cgoCheckPtrWrite(ptr, go_new);
         }
-        return sync_atomic_CompareAndSwapUintptr((uintptr_t*)(noescape(unsafe::Pointer(ptr))), uintptr_t(old), uintptr_t(go_new));
+        return sync_atomic_CompareAndSwapUintptr((uintptr_t*)(noescape(gocpp::unsafe_pointer(ptr))), uintptr_t(old), uintptr_t(go_new));
     }
 
 }

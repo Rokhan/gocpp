@@ -120,7 +120,7 @@ namespace golang::runtime
     void mProf_Flush();
     void mProf_FlushLocked(uint32_t index);
     void mProf_PostSweep();
-    void mProf_Malloc(unsafe::Pointer p, uintptr_t size);
+    void mProf_Malloc(gocpp::unsafe_pointer p, uintptr_t size);
     void mProf_Free(struct bucket* b, uintptr_t size);
     extern uint64_t blockprofilerate;
     void SetBlockProfileRate(int rate);
@@ -215,19 +215,19 @@ namespace golang::runtime
     std::tuple<int, bool> BlockProfile(gocpp::slice<BlockProfileRecord> p);
     std::tuple<int, bool> MutexProfile(gocpp::slice<BlockProfileRecord> p);
     std::tuple<int, bool> ThreadCreateProfile(gocpp::slice<StackRecord> p);
-    std::tuple<int, bool> runtime_goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
-    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
-    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
+    std::tuple<int, bool> runtime_goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
     void tryRecordGoroutineProfileWB(struct g* gp1);
     void tryRecordGoroutineProfile(struct g* gp1, std::function<void ()> yield);
     void doRecordGoroutineProfile(struct g* gp1);
-    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels);
+    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
     std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p);
     void saveg(uintptr_t pc, uintptr_t sp, struct g* gp, struct StackRecord* r);
     int Stack(gocpp::slice<unsigned char> buf, bool all);
     extern mutex tracelock;
-    void tracealloc(unsafe::Pointer p, uintptr_t size, golang::runtime::_type* typ);
-    void tracefree(unsafe::Pointer p, uintptr_t size);
+    void tracealloc(gocpp::unsafe_pointer p, uintptr_t size, golang::runtime::_type* typ);
+    void tracefree(gocpp::unsafe_pointer p, uintptr_t size);
     void tracegc();
     struct memRecord
     {

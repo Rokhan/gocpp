@@ -91,7 +91,7 @@ namespace golang::atomic
 
     // SwapPointer atomically stores new into *addr and returns the previous *addr value.
     // Consider using the more ergonomic and less error-prone [Pointer.Swap] instead.
-    unsafe::Pointer SwapPointer(unsafe::Pointer* addr, unsafe::Pointer go_new)
+    gocpp::unsafe_pointer SwapPointer(gocpp::unsafe_pointer* addr, gocpp::unsafe_pointer go_new)
     /* convertBlockStmt, nil block */;
 
     // CompareAndSwapInt32 executes the compare-and-swap operation for an int32 value.
@@ -123,7 +123,7 @@ namespace golang::atomic
 
     // CompareAndSwapPointer executes the compare-and-swap operation for a unsafe.Pointer value.
     // Consider using the more ergonomic and less error-prone [Pointer.CompareAndSwap] instead.
-    bool CompareAndSwapPointer(unsafe::Pointer* addr, unsafe::Pointer old, unsafe::Pointer go_new)
+    bool CompareAndSwapPointer(gocpp::unsafe_pointer* addr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
     /* convertBlockStmt, nil block */;
 
     // AddInt32 atomically adds delta to *addr and returns the new value.
@@ -186,7 +186,7 @@ namespace golang::atomic
 
     // LoadPointer atomically loads *addr.
     // Consider using the more ergonomic and less error-prone [Pointer.Load] instead.
-    unsafe::Pointer LoadPointer(unsafe::Pointer* addr)
+    gocpp::unsafe_pointer LoadPointer(gocpp::unsafe_pointer* addr)
     /* convertBlockStmt, nil block */;
 
     // StoreInt32 atomically stores val into *addr.
@@ -218,7 +218,7 @@ namespace golang::atomic
 
     // StorePointer atomically stores val into *addr.
     // Consider using the more ergonomic and less error-prone [Pointer.Store] instead.
-    void StorePointer(unsafe::Pointer* addr, unsafe::Pointer val)
+    void StorePointer(gocpp::unsafe_pointer* addr, gocpp::unsafe_pointer val)
     /* convertBlockStmt, nil block */;
 
 }

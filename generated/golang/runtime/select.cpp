@@ -122,7 +122,7 @@ namespace golang::runtime
         }
     }
 
-    bool selparkcommit(struct g* gp, unsafe::Pointer _1)
+    bool selparkcommit(struct g* gp, gocpp::unsafe_pointer _1)
     {
         gp->activeStackChans = true;
         rec::Store(gocpp::recv(gp->parkingOnChan), false);
@@ -172,8 +172,8 @@ namespace golang::runtime
         {
             print("select: cas0="_s, cas0, "\n"_s);
         }
-        auto cas1 = (gocpp::array<scase, 1 << 16>*)(unsafe::Pointer(cas0));
-        auto order1 = (gocpp::array<uint16_t, 1 << 17>*)(unsafe::Pointer(order0));
+        auto cas1 = (gocpp::array_ptr<gocpp::array<scase, 1 << 16>>)(gocpp::unsafe_pointer(cas0));
+        auto order1 = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 17>>)(gocpp::unsafe_pointer(order0));
         auto ncases = nsends + nrecvs;
         auto scases = cas1.make_slice(0, ncases, ncases);
         auto pollorder = order1.make_slice(0, ncases, ncases);
@@ -184,7 +184,7 @@ namespace golang::runtime
         gocpp::slice<uintptr_t> pcs = {};
         if(raceenabled && pc0 != nullptr)
         {
-            auto pc1 = (gocpp::array<uintptr_t, 1 << 16>*)(unsafe::Pointer(pc0));
+            auto pc1 = (gocpp::array_ptr<gocpp::array<uintptr_t, 1 << 16>>)(gocpp::unsafe_pointer(pc0));
             pcs = pc1.make_slice(0, ncases, ncases);
         }
         auto casePC = [=](int casi) mutable -> uintptr_t
@@ -273,7 +273,7 @@ namespace golang::runtime
         scase* k = {};
         sudog* sglist = {};
         sudog* sgnext = {};
-        unsafe::Pointer qp = {};
+        gocpp::unsafe_pointer qp = {};
         sudog** nextp = {};
         // pass 1 - look for something already waiting
         int casi = {};
@@ -581,7 +581,7 @@ namespace golang::runtime
 
     uintptr_t rec::sortkey(golang::runtime::hchan* c)
     {
-        return uintptr_t(unsafe::Pointer(c));
+        return uintptr_t(gocpp::unsafe_pointer(c));
     }
 
     // A runtimeSelect is a single case passed to rselect.

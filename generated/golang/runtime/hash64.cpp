@@ -23,7 +23,7 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
-    uintptr_t memhashFallback(unsafe::Pointer p, uintptr_t seed, uintptr_t s)
+    uintptr_t memhashFallback(gocpp::unsafe_pointer p, uintptr_t seed, uintptr_t s)
     {
         uintptr_t a = {};
         uintptr_t b = {};
@@ -91,13 +91,13 @@ namespace golang::runtime
         return mix(m5 ^ s, mix(a ^ m2, b ^ seed));
     }
 
-    uintptr_t memhash32Fallback(unsafe::Pointer p, uintptr_t seed)
+    uintptr_t memhash32Fallback(gocpp::unsafe_pointer p, uintptr_t seed)
     {
         auto a = r4(p);
         return mix(m5 ^ 4, mix(a ^ m2, a ^ seed ^ hashkey[0] ^ m1));
     }
 
-    uintptr_t memhash64Fallback(unsafe::Pointer p, uintptr_t seed)
+    uintptr_t memhash64Fallback(gocpp::unsafe_pointer p, uintptr_t seed)
     {
         auto a = r8(p);
         return mix(m5 ^ 8, mix(a ^ m2, a ^ seed ^ hashkey[0] ^ m1));
@@ -109,12 +109,12 @@ namespace golang::runtime
         return uintptr_t(hi ^ lo);
     }
 
-    uintptr_t r4(unsafe::Pointer p)
+    uintptr_t r4(gocpp::unsafe_pointer p)
     {
         return uintptr_t(readUnaligned32(p));
     }
 
-    uintptr_t r8(unsafe::Pointer p)
+    uintptr_t r8(gocpp::unsafe_pointer p)
     {
         return uintptr_t(readUnaligned64(p));
     }

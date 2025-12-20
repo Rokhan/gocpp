@@ -688,7 +688,7 @@ namespace golang::runtime
     // The heap lock must be held.
     //
     //go:nowritebarrierrec
-    void recordspan(unsafe::Pointer vh, unsafe::Pointer p)
+    void recordspan(gocpp::unsafe_pointer vh, gocpp::unsafe_pointer p)
     {
         auto h = (mheap*)(vh);
         auto s = (mspan*)(p);
@@ -701,7 +701,7 @@ namespace golang::runtime
                 n = cap(h->allspans) * 3 / 2;
             }
             gocpp::slice<mspan*> go_new = {};
-            auto sp = (slice*)(unsafe::Pointer(& go_new));
+            auto sp = (slice*)(gocpp::unsafe_pointer(& go_new));
             sp->array = sysAlloc(uintptr_t(n) * goarch::PtrSize, & memstats.other_sys);
             if(sp->array == nullptr)
             {
@@ -714,10 +714,10 @@ namespace golang::runtime
                 copy(go_new, h->allspans);
             }
             auto oldAllspans = h->allspans;
-            *(notInHeapSlice*)(unsafe::Pointer(& h->allspans)) = *(notInHeapSlice*)(unsafe::Pointer(& go_new));
+            *(notInHeapSlice*)(gocpp::unsafe_pointer(& h->allspans)) = *(notInHeapSlice*)(gocpp::unsafe_pointer(& go_new));
             if(len(oldAllspans) != 0)
             {
-                sysFree(unsafe::Pointer(& oldAllspans[0]), uintptr_t(cap(oldAllspans)) * gocpp::Sizeof<mspan*>(), & memstats.other_sys);
+                sysFree(gocpp::unsafe_pointer(& oldAllspans[0]), uintptr_t(cap(oldAllspans)) * gocpp::Sizeof<mspan*>(), & memstats.other_sys);
             }
         }
         h->allspans = h->allspans.make_slice(0, len(h->allspans) + 1);
@@ -937,7 +937,7 @@ namespace golang::runtime
     {
         lockInit(& h->lock, lockRankMheap);
         lockInit(& h->speciallock, lockRankMheapSpecial);
-        rec::init(gocpp::recv(h->spanalloc), gocpp::Sizeof<mspan>(), recordspan, unsafe::Pointer(h), & memstats.mspan_sys);
+        rec::init(gocpp::recv(h->spanalloc), gocpp::Sizeof<mspan>(), recordspan, gocpp::unsafe_pointer(h), & memstats.mspan_sys);
         rec::init(gocpp::recv(h->cachealloc), gocpp::Sizeof<mcache>(), nullptr, nullptr, & memstats.mcache_sys);
         rec::init(gocpp::recv(h->specialfinalizeralloc), gocpp::Sizeof<specialfinalizer>(), nullptr, nullptr, & memstats.other_sys);
         rec::init(gocpp::recv(h->specialprofilealloc), gocpp::Sizeof<specialprofile>(), nullptr, nullptr, & memstats.other_sys);
@@ -1294,7 +1294,7 @@ namespace golang::runtime
             pp->mspancache.len++;
             return;
         }
-        rec::free(gocpp::recv(h->spanalloc), unsafe::Pointer(s));
+        rec::free(gocpp::recv(h->spanalloc), gocpp::unsafe_pointer(s));
     }
 
     // allocSpan allocates an mspan which owns npages worth of memory.
@@ -1439,7 +1439,7 @@ namespace golang::runtime
         auto nbytes = npages * pageSize;
         if(scav != 0)
         {
-            sysUsed(unsafe::Pointer(base), nbytes, scav);
+            sysUsed(gocpp::unsafe_pointer(base), nbytes, scav);
             rec::add(gocpp::recv(gcController.heapReleased), - int64_t(scav));
         }
         rec::add(gocpp::recv(gcController.heapFree), - int64_t(nbytes - scav));
@@ -1564,7 +1564,7 @@ namespace golang::runtime
             {
                 if(auto size = h->curArena.end - h->curArena.base; size != 0)
                 {
-                    sysMap(unsafe::Pointer(h->curArena.base), size, & gcController.heapReleased);
+                    sysMap(gocpp::unsafe_pointer(h->curArena.base), size, & gcController.heapReleased);
                     auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
                     atomic::Xaddint64(& stats->released, int64_t(size));
                     rec::release(gocpp::recv(memstats.heapStats));
@@ -1578,7 +1578,7 @@ namespace golang::runtime
         }
         auto v = h->curArena.base;
         h->curArena.base = nBase;
-        sysMap(unsafe::Pointer(v), nBase - v, & gcController.heapReleased);
+        sysMap(gocpp::unsafe_pointer(v), nBase - v, & gcController.heapReleased);
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xaddint64(& stats->released, int64_t(nBase - v));
         rec::release(gocpp::recv(memstats.heapStats));
@@ -1596,13 +1596,13 @@ namespace golang::runtime
             lock(& h->lock);
             if(msanenabled)
             {
-                auto base = unsafe::Pointer(rec::base(gocpp::recv(s)));
+                auto base = gocpp::unsafe_pointer(rec::base(gocpp::recv(s)));
                 auto bytes = s->npages << _PageShift;
                 msanfree(base, bytes);
             }
             if(asanenabled)
             {
-                auto base = unsafe::Pointer(rec::base(gocpp::recv(s)));
+                auto base = gocpp::unsafe_pointer(rec::base(gocpp::recv(s)));
                 auto bytes = s->npages << _PageShift;
                 asanpoison(base, bytes);
             }
@@ -1932,7 +1932,7 @@ namespace golang::runtime
     // Returns true if the special was successfully added, false otherwise.
     // (The add will fail only if a record with the same p and s->kind
     // already exists.)
-    bool addspecial(unsafe::Pointer p, struct special* s)
+    bool addspecial(gocpp::unsafe_pointer p, struct special* s)
     {
         auto span = spanOfHeap(uintptr_t(p));
         if(span == nullptr)
@@ -1960,7 +1960,7 @@ namespace golang::runtime
     // Removes the Special record of the given kind for the object p.
     // Returns the record if the record existed, nil otherwise.
     // The caller must FixAlloc_Free the result.
-    struct special* removespecial(unsafe::Pointer p, uint8_t kind)
+    struct special* removespecial(gocpp::unsafe_pointer p, uint8_t kind)
     {
         auto span = spanOfHeap(uintptr_t(p));
         if(span == nullptr)
@@ -2065,7 +2065,7 @@ namespace golang::runtime
     }
 
     // Adds a finalizer to the object p. Returns true if it succeeded.
-    bool addfinalizer(unsafe::Pointer p, struct funcval* f, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot)
+    bool addfinalizer(gocpp::unsafe_pointer p, struct funcval* f, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot)
     {
         lock(& mheap_.speciallock);
         auto s = (specialfinalizer*)(rec::alloc(gocpp::recv(mheap_.specialfinalizeralloc)));
@@ -2086,27 +2086,27 @@ namespace golang::runtime
                 {
                     scanobject(base, gcw);
                 }
-                scanblock(uintptr_t(unsafe::Pointer(& s->fn)), goarch::PtrSize, & oneptrmask[0], gcw, nullptr);
+                scanblock(uintptr_t(gocpp::unsafe_pointer(& s->fn)), goarch::PtrSize, & oneptrmask[0], gcw, nullptr);
                 releasem(mp);
             }
             return true;
         }
         lock(& mheap_.speciallock);
-        rec::free(gocpp::recv(mheap_.specialfinalizeralloc), unsafe::Pointer(s));
+        rec::free(gocpp::recv(mheap_.specialfinalizeralloc), gocpp::unsafe_pointer(s));
         unlock(& mheap_.speciallock);
         return false;
     }
 
     // Removes the finalizer (if any) from the object p.
-    void removefinalizer(unsafe::Pointer p)
+    void removefinalizer(gocpp::unsafe_pointer p)
     {
-        auto s = (specialfinalizer*)(unsafe::Pointer(removespecial(p, _KindSpecialFinalizer)));
+        auto s = (specialfinalizer*)(gocpp::unsafe_pointer(removespecial(p, _KindSpecialFinalizer)));
         if(s == nullptr)
         {
             return;
         }
         lock(& mheap_.speciallock);
-        rec::free(gocpp::recv(mheap_.specialfinalizeralloc), unsafe::Pointer(s));
+        rec::free(gocpp::recv(mheap_.specialfinalizeralloc), gocpp::unsafe_pointer(s));
         unlock(& mheap_.speciallock);
     }
 
@@ -2147,7 +2147,7 @@ namespace golang::runtime
     }
 
     // Set the heap profile bucket associated with addr to b.
-    void setprofilebucket(unsafe::Pointer p, struct bucket* b)
+    void setprofilebucket(gocpp::unsafe_pointer p, struct bucket* b)
     {
         lock(& mheap_.speciallock);
         auto s = (specialprofile*)(rec::alloc(gocpp::recv(mheap_.specialprofilealloc)));
@@ -2291,7 +2291,7 @@ namespace golang::runtime
 
     // freeSpecial performs any cleanup on special s and deallocates it.
     // s must already be unlinked from the specials list.
-    void freeSpecial(struct special* s, unsafe::Pointer p, uintptr_t size)
+    void freeSpecial(struct special* s, gocpp::unsafe_pointer p, uintptr_t size)
     {
         //Go switch emulation
         {
@@ -2304,26 +2304,26 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    auto sf = (specialfinalizer*)(unsafe::Pointer(s));
+                    auto sf = (specialfinalizer*)(gocpp::unsafe_pointer(s));
                     queuefinalizer(p, sf->fn, sf->nret, sf->fint, sf->ot);
                     lock(& mheap_.speciallock);
-                    rec::free(gocpp::recv(mheap_.specialfinalizeralloc), unsafe::Pointer(sf));
+                    rec::free(gocpp::recv(mheap_.specialfinalizeralloc), gocpp::unsafe_pointer(sf));
                     unlock(& mheap_.speciallock);
                     break;
                 case 1:
-                    auto sp = (specialprofile*)(unsafe::Pointer(s));
+                    auto sp = (specialprofile*)(gocpp::unsafe_pointer(s));
                     mProf_Free(sp->b, size);
                     lock(& mheap_.speciallock);
-                    rec::free(gocpp::recv(mheap_.specialprofilealloc), unsafe::Pointer(sp));
+                    rec::free(gocpp::recv(mheap_.specialprofilealloc), gocpp::unsafe_pointer(sp));
                     unlock(& mheap_.speciallock);
                     break;
                 case 2:
-                    auto sp = (specialReachable*)(unsafe::Pointer(s));
+                    auto sp = (specialReachable*)(gocpp::unsafe_pointer(s));
                     sp->done = true;
                     break;
                 case 3:
                     lock(& mheap_.speciallock);
-                    rec::free(gocpp::recv(mheap_.specialPinCounterAlloc), unsafe::Pointer(s));
+                    rec::free(gocpp::recv(mheap_.specialPinCounterAlloc), gocpp::unsafe_pointer(s));
                     unlock(& mheap_.speciallock);
                     break;
                 default:
@@ -2528,7 +2528,7 @@ namespace golang::runtime
     {
         auto blocksNeeded = (nelems + 63) / 64;
         auto bytesNeeded = blocksNeeded * 8;
-        auto head = (gcBitsArena*)(atomic::Loadp(unsafe::Pointer(& gcBitsArenas.next)));
+        auto head = (gcBitsArena*)(atomic::Loadp(gocpp::unsafe_pointer(& gcBitsArenas.next)));
         if(auto p = rec::tryAlloc(gocpp::recv(head), bytesNeeded); p != nullptr)
         {
             return p;
@@ -2553,7 +2553,7 @@ namespace golang::runtime
             go_throw("markBits overflow"_s);
         }
         fresh->next = gcBitsArenas.next;
-        atomic::StorepNoWB(unsafe::Pointer(& gcBitsArenas.next), unsafe::Pointer(fresh));
+        atomic::StorepNoWB(gocpp::unsafe_pointer(& gcBitsArenas.next), gocpp::unsafe_pointer(fresh));
         unlock(& gcBitsArenas.lock);
         return p;
     }
@@ -2604,7 +2604,7 @@ namespace golang::runtime
         }
         gcBitsArenas.previous = gcBitsArenas.current;
         gcBitsArenas.current = gcBitsArenas.next;
-        atomic::StorepNoWB(unsafe::Pointer(& gcBitsArenas.next), nullptr);
+        atomic::StorepNoWB(gocpp::unsafe_pointer(& gcBitsArenas.next), nullptr);
         unlock(& gcBitsArenas.lock);
     }
 
@@ -2627,7 +2627,7 @@ namespace golang::runtime
         {
             result = gcBitsArenas.free;
             gcBitsArenas.free = gcBitsArenas.free->next;
-            memclrNoHeapPointers(unsafe::Pointer(result), gcBitsChunkBytes);
+            memclrNoHeapPointers(gocpp::unsafe_pointer(result), gcBitsChunkBytes);
         }
         result->next = nullptr;
         if(unsafe::Offsetof(gcBitsArena {}.bits) & 7 == 0)
@@ -2636,7 +2636,7 @@ namespace golang::runtime
         }
         else
         {
-            result->free = 8 - (uintptr_t(unsafe::Pointer(& result->bits[0])) & 7);
+            result->free = 8 - (uintptr_t(gocpp::unsafe_pointer(& result->bits[0])) & 7);
         }
         return result;
     }

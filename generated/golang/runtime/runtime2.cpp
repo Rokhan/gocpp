@@ -323,7 +323,7 @@ namespace golang::runtime
 
     struct eface* efaceOf(go_any* ep)
     {
-        return (eface*)(unsafe::Pointer(ep));
+        return (eface*)(gocpp::unsafe_pointer(ep));
     }
 
     // A guintptr holds a goroutine pointer, but typed as a uintptr
@@ -350,25 +350,25 @@ namespace golang::runtime
     //go:nosplit
     struct g* rec::ptr(golang::runtime::guintptr gp)
     {
-        return (g*)(unsafe::Pointer(gp));
+        return (g*)(gocpp::unsafe_pointer(gp));
     }
 
     //go:nosplit
     void rec::set(golang::runtime::guintptr* gp, struct g* g)
     {
-        *gp = guintptr(unsafe::Pointer(g));
+        *gp = guintptr(gocpp::unsafe_pointer(g));
     }
 
     //go:nosplit
     bool rec::cas(golang::runtime::guintptr* gp, golang::runtime::guintptr old, golang::runtime::guintptr go_new)
     {
-        return atomic::Casuintptr((uintptr_t*)(unsafe::Pointer(gp)), uintptr_t(old), uintptr_t(go_new));
+        return atomic::Casuintptr((uintptr_t*)(gocpp::unsafe_pointer(gp)), uintptr_t(old), uintptr_t(go_new));
     }
 
     //go:nosplit
     runtime::guintptr rec::guintptr(golang::runtime::g* gp)
     {
-        return guintptr(unsafe::Pointer(gp));
+        return guintptr(gocpp::unsafe_pointer(gp));
     }
 
     // setGNoWB performs *gp = new without a write barrier.
@@ -378,19 +378,19 @@ namespace golang::runtime
     //go:nowritebarrier
     void setGNoWB(struct g** gp, struct g* go_new)
     {
-        rec::set(gocpp::recv((runtime::guintptr*)(unsafe::Pointer(gp))), go_new);
+        rec::set(gocpp::recv((runtime::guintptr*)(gocpp::unsafe_pointer(gp))), go_new);
     }
 
     //go:nosplit
     struct p* rec::ptr(golang::runtime::puintptr pp)
     {
-        return (p*)(unsafe::Pointer(pp));
+        return (p*)(gocpp::unsafe_pointer(pp));
     }
 
     //go:nosplit
     void rec::set(golang::runtime::puintptr* pp, struct p* p)
     {
-        *pp = puintptr(unsafe::Pointer(p));
+        *pp = puintptr(gocpp::unsafe_pointer(p));
     }
 
     // muintptr is a *m that is not tracked by the garbage collector.
@@ -405,13 +405,13 @@ namespace golang::runtime
     //go:nosplit
     struct m* rec::ptr(golang::runtime::muintptr mp)
     {
-        return (m*)(unsafe::Pointer(mp));
+        return (m*)(gocpp::unsafe_pointer(mp));
     }
 
     //go:nosplit
     void rec::set(golang::runtime::muintptr* mp, struct m* m)
     {
-        *mp = muintptr(unsafe::Pointer(m));
+        *mp = muintptr(gocpp::unsafe_pointer(m));
     }
 
     // setMNoWB performs *mp = new without a write barrier.
@@ -421,7 +421,7 @@ namespace golang::runtime
     //go:nowritebarrier
     void setMNoWB(struct m** mp, struct m* go_new)
     {
-        rec::set(gocpp::recv((runtime::muintptr*)(unsafe::Pointer(mp))), go_new);
+        rec::set(gocpp::recv((runtime::muintptr*)(gocpp::unsafe_pointer(mp))), go_new);
     }
 
     

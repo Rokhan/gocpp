@@ -97,7 +97,7 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    void asmcgocall_no_g(unsafe::Pointer fn, unsafe::Pointer arg)
+    void asmcgocall_no_g(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg)
     /* convertBlockStmt, nil block */;
 
     //go:systemstack

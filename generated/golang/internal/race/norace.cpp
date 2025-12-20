@@ -20,15 +20,15 @@ namespace golang::race
         using namespace mocklib::rec;
     }
 
-    void Acquire(unsafe::Pointer addr)
+    void Acquire(gocpp::unsafe_pointer addr)
     {
     }
 
-    void Release(unsafe::Pointer addr)
+    void Release(gocpp::unsafe_pointer addr)
     {
     }
 
-    void ReleaseMerge(unsafe::Pointer addr)
+    void ReleaseMerge(gocpp::unsafe_pointer addr)
     {
     }
 
@@ -40,19 +40,19 @@ namespace golang::race
     {
     }
 
-    void Read(unsafe::Pointer addr)
+    void Read(gocpp::unsafe_pointer addr)
     {
     }
 
-    void Write(unsafe::Pointer addr)
+    void Write(gocpp::unsafe_pointer addr)
     {
     }
 
-    void ReadRange(unsafe::Pointer addr, int len)
+    void ReadRange(gocpp::unsafe_pointer addr, int len)
     {
     }
 
-    void WriteRange(unsafe::Pointer addr, int len)
+    void WriteRange(gocpp::unsafe_pointer addr, int len)
     {
     }
 

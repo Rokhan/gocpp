@@ -12,8 +12,8 @@
 
 namespace golang::atomic
 {
-    void storePointer(unsafe::Pointer* ptr, unsafe::Pointer go_new);
-    bool casPointer(unsafe::Pointer* ptr, unsafe::Pointer old, unsafe::Pointer go_new);
+    void storePointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new);
+    bool casPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
     struct noCopy
     {
 
@@ -151,7 +151,7 @@ namespace golang::atomic
     struct UnsafePointer
     {
         noCopy noCopy;
-        unsafe::Pointer value;
+        gocpp::unsafe_pointer value;
 
         using isGoStruct = void;
 
@@ -258,11 +258,11 @@ namespace golang::atomic
         uintptr_t Add(golang::atomic::Uintptr* u, uintptr_t delta);
         double Load(golang::atomic::Float64* f);
         void Store(golang::atomic::Float64* f, double value);
-        unsafe::Pointer Load(golang::atomic::UnsafePointer* u);
-        void StoreNoWB(golang::atomic::UnsafePointer* u, unsafe::Pointer value);
-        void Store(golang::atomic::UnsafePointer* u, unsafe::Pointer value);
-        bool CompareAndSwapNoWB(golang::atomic::UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new);
-        bool CompareAndSwap(golang::atomic::UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new);
+        gocpp::unsafe_pointer Load(golang::atomic::UnsafePointer* u);
+        void StoreNoWB(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer value);
+        void Store(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer value);
+        bool CompareAndSwapNoWB(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
+        bool CompareAndSwap(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
         
         template<typename T>
         T* Load(golang::atomic::Pointer<T>* p);

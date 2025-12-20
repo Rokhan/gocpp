@@ -64,11 +64,11 @@ namespace golang::bytes
     gocpp::slice<unsigned char> Trim(gocpp::slice<unsigned char> s, gocpp::string cutset);
     gocpp::slice<unsigned char> TrimLeft(gocpp::slice<unsigned char> s, gocpp::string cutset);
     gocpp::slice<unsigned char> trimLeftByte(gocpp::slice<unsigned char> s, unsigned char c);
-    gocpp::slice<unsigned char> trimLeftASCII(gocpp::slice<unsigned char> s, golang::bytes::asciiSet* as);
+    gocpp::slice<unsigned char> trimLeftASCII(gocpp::slice<unsigned char> s, gocpp::array_ptr<golang::bytes::asciiSet> as);
     gocpp::slice<unsigned char> trimLeftUnicode(gocpp::slice<unsigned char> s, gocpp::string cutset);
     gocpp::slice<unsigned char> TrimRight(gocpp::slice<unsigned char> s, gocpp::string cutset);
     gocpp::slice<unsigned char> trimRightByte(gocpp::slice<unsigned char> s, unsigned char c);
-    gocpp::slice<unsigned char> trimRightASCII(gocpp::slice<unsigned char> s, golang::bytes::asciiSet* as);
+    gocpp::slice<unsigned char> trimRightASCII(gocpp::slice<unsigned char> s, gocpp::array_ptr<golang::bytes::asciiSet> as);
     gocpp::slice<unsigned char> trimRightUnicode(gocpp::slice<unsigned char> s, gocpp::string cutset);
     gocpp::slice<unsigned char> TrimSpace(gocpp::slice<unsigned char> s);
     gocpp::slice<gocpp::rune> Runes(gocpp::slice<unsigned char> s);
@@ -83,7 +83,7 @@ namespace golang::bytes
 
     namespace rec
     {
-        bool contains(golang::bytes::asciiSet* as, unsigned char c);
+        bool contains(gocpp::array_ptr<golang::bytes::asciiSet> as, unsigned char c);
     }
 }
 

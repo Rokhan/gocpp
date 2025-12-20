@@ -452,7 +452,7 @@ namespace golang::runtime
         // Small stacks are allocated with a fixed-size free-list allocator.
         // If we need a stack of a bigger size, we fall back on allocating
         // a dedicated span.
-        unsafe::Pointer v = {};
+        gocpp::unsafe_pointer v = {};
         if(n < (fixedStack << _NumStackOrders) && n < _StackCacheSize)
         {
             auto order = uint8_t(0);
@@ -481,7 +481,7 @@ namespace golang::runtime
                 c->stackcache[order].list = rec::ptr(gocpp::recv(x))->next;
                 c->stackcache[order].size -= uintptr_t(n);
             }
-            v = unsafe::Pointer(x);
+            v = gocpp::unsafe_pointer(x);
         }
         else
         {
@@ -506,7 +506,7 @@ namespace golang::runtime
                 osStackAlloc(s);
                 s->elemsize = uintptr_t(n);
             }
-            v = unsafe::Pointer(rec::base(gocpp::recv(s)));
+            v = gocpp::unsafe_pointer(rec::base(gocpp::recv(s)));
         }
         if(raceenabled)
         {
@@ -536,7 +536,7 @@ namespace golang::runtime
     void stackfree(struct stack stk)
     {
         auto gp = getg();
-        auto v = unsafe::Pointer(stk.lo);
+        auto v = gocpp::unsafe_pointer(stk.lo);
         auto n = stk.hi - stk.lo;
         if(n & (n - 1) != 0)
         {
@@ -665,7 +665,7 @@ namespace golang::runtime
 
     // adjustpointer checks whether *vpp is in the old stack described by adjinfo.
     // If so, it rewrites *vpp to point into the new stack.
-    void adjustpointer(struct adjustinfo* adjinfo, unsafe::Pointer vpp)
+    void adjustpointer(struct adjustinfo* adjinfo, gocpp::unsafe_pointer vpp)
     {
         auto pp = (uintptr_t*)(vpp);
         auto p = *pp;
@@ -729,7 +729,7 @@ namespace golang::runtime
 
     // bv describes the memory starting at address scanp.
     // Adjust any pointers contained therein.
-    void adjustpointers(unsafe::Pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f)
+    void adjustpointers(gocpp::unsafe_pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f)
     {
         auto minp = adjinfo->old.lo;
         auto maxp = adjinfo->old.hi;
@@ -767,8 +767,8 @@ namespace golang::runtime
                     }
                     if(useCAS)
                     {
-                        auto ppu = (unsafe::Pointer*)(unsafe::Pointer(pp));
-                        if(! atomic::Casp1(ppu, unsafe::Pointer(p), unsafe::Pointer(p + delta)))
+                        auto ppu = (gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp));
+                        if(! atomic::Casp1(ppu, gocpp::unsafe_pointer(p), gocpp::unsafe_pointer(p + delta)))
                         {
                             goto retry;
                         }
@@ -802,7 +802,7 @@ namespace golang::runtime
             }
             if(debugCheckBP)
             {
-                auto bp = *(uintptr_t*)(unsafe::Pointer(frame->varp));
+                auto bp = *(uintptr_t*)(gocpp::unsafe_pointer(frame->varp));
                 if(bp != 0 && (bp < adjinfo->old.lo || bp >= adjinfo->old.hi))
                 {
                     println("runtime: found invalid frame pointer"_s);
@@ -810,13 +810,13 @@ namespace golang::runtime
                     go_throw("bad frame pointer"_s);
                 }
             }
-            adjustpointer(adjinfo, unsafe::Pointer(frame->varp));
+            adjustpointer(adjinfo, gocpp::unsafe_pointer(frame->varp));
         }
         auto [locals, args, objs] = rec::getStackMap(gocpp::recv(frame), true);
         if(locals.n > 0)
         {
             auto size = uintptr_t(locals.n) * goarch::PtrSize;
-            adjustpointers(unsafe::Pointer(frame->varp - size), & locals, adjinfo, f);
+            adjustpointers(gocpp::unsafe_pointer(frame->varp - size), & locals, adjinfo, f);
         }
         if(args.n > 0)
         {
@@ -824,7 +824,7 @@ namespace golang::runtime
             {
                 print("      args\n"_s);
             }
-            adjustpointers(unsafe::Pointer(frame->argp), & args, adjinfo, funcInfo {});
+            adjustpointers(gocpp::unsafe_pointer(frame->argp), & args, adjinfo, funcInfo {});
         }
         if(frame->varp != 0)
         {
@@ -848,13 +848,13 @@ namespace golang::runtime
                 if(rec::useGCProg(gocpp::recv(obj)))
                 {
                     s = materializeGCProg(ptrdata, gcdata);
-                    gcdata = (unsigned char*)(unsafe::Pointer(s->startAddr));
+                    gcdata = (unsigned char*)(gocpp::unsafe_pointer(s->startAddr));
                 }
                 for(auto i = uintptr_t(0); i < ptrdata; i += goarch::PtrSize)
                 {
                     if((*addb(gcdata, i / (8 * goarch::PtrSize)) >> (i / goarch::PtrSize & 7)) & 1 != 0)
                     {
-                        adjustpointer(adjinfo, unsafe::Pointer(p + i));
+                        adjustpointer(adjinfo, gocpp::unsafe_pointer(p + i));
                     }
                 }
                 if(s != nullptr)
@@ -867,7 +867,7 @@ namespace golang::runtime
 
     void adjustctxt(struct g* gp, struct adjustinfo* adjinfo)
     {
-        adjustpointer(adjinfo, unsafe::Pointer(& gp->sched.ctxt));
+        adjustpointer(adjinfo, gocpp::unsafe_pointer(& gp->sched.ctxt));
         if(! framepointer_enabled)
         {
             return;
@@ -883,38 +883,38 @@ namespace golang::runtime
             }
         }
         auto oldfp = gp->sched.bp;
-        adjustpointer(adjinfo, unsafe::Pointer(& gp->sched.bp));
+        adjustpointer(adjinfo, gocpp::unsafe_pointer(& gp->sched.bp));
         if(GOARCH == "arm64"_s)
         {
             if(oldfp == gp->sched.sp - goarch::PtrSize)
             {
-                memmove(unsafe::Pointer(gp->sched.bp), unsafe::Pointer(oldfp), goarch::PtrSize);
-                adjustpointer(adjinfo, unsafe::Pointer(gp->sched.bp));
+                memmove(gocpp::unsafe_pointer(gp->sched.bp), gocpp::unsafe_pointer(oldfp), goarch::PtrSize);
+                adjustpointer(adjinfo, gocpp::unsafe_pointer(gp->sched.bp));
             }
         }
     }
 
     void adjustdefers(struct g* gp, struct adjustinfo* adjinfo)
     {
-        adjustpointer(adjinfo, unsafe::Pointer(& gp->_defer));
+        adjustpointer(adjinfo, gocpp::unsafe_pointer(& gp->_defer));
         for(auto d = gp->_defer; d != nullptr; d = d->link)
         {
-            adjustpointer(adjinfo, unsafe::Pointer(& [&](){ return rec::fn(d); }));
-            adjustpointer(adjinfo, unsafe::Pointer(& d->sp));
-            adjustpointer(adjinfo, unsafe::Pointer(& d->link));
+            adjustpointer(adjinfo, gocpp::unsafe_pointer(& [&](){ return rec::fn(d); }));
+            adjustpointer(adjinfo, gocpp::unsafe_pointer(& d->sp));
+            adjustpointer(adjinfo, gocpp::unsafe_pointer(& d->link));
         }
     }
 
     void adjustpanics(struct g* gp, struct adjustinfo* adjinfo)
     {
-        adjustpointer(adjinfo, unsafe::Pointer(& gp->_panic));
+        adjustpointer(adjinfo, gocpp::unsafe_pointer(& gp->_panic));
     }
 
     void adjustsudogs(struct g* gp, struct adjustinfo* adjinfo)
     {
         for(auto s = gp->waiting; s != nullptr; s = s->waitlink)
         {
-            adjustpointer(adjinfo, unsafe::Pointer(& s->elem));
+            adjustpointer(adjinfo, gocpp::unsafe_pointer(& s->elem));
         }
     }
 
@@ -922,7 +922,7 @@ namespace golang::runtime
     {
         for(auto p = stk.lo; p < stk.hi; p++)
         {
-            *(unsigned char*)(unsafe::Pointer(p)) = b;
+            *(unsigned char*)(gocpp::unsafe_pointer(p)) = b;
         }
     }
 
@@ -969,7 +969,7 @@ namespace golang::runtime
             auto oldBot = adjinfo->old.hi - used;
             auto newBot = oldBot + adjinfo->delta;
             sgsize = adjinfo->sghi - oldBot;
-            memmove(unsafe::Pointer(newBot), unsafe::Pointer(oldBot), sgsize);
+            memmove(gocpp::unsafe_pointer(newBot), gocpp::unsafe_pointer(oldBot), sgsize);
         }
         lastc = nullptr;
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
@@ -1025,7 +1025,7 @@ namespace golang::runtime
             adjinfo.sghi = findsghi(gp, old);
             ncopy -= syncadjustsudogs(gp, used, & adjinfo);
         }
-        memmove(unsafe::Pointer(go_new.hi - ncopy), unsafe::Pointer(old.hi - ncopy), ncopy);
+        memmove(gocpp::unsafe_pointer(go_new.hi - ncopy), gocpp::unsafe_pointer(old.hi - ncopy), ncopy);
         adjustctxt(gp, & adjinfo);
         adjustdefers(gp, & adjinfo);
         adjustpanics(gp, & adjinfo);
@@ -1209,16 +1209,16 @@ namespace golang::runtime
     // and then stopped before the first instruction in fn.
     void gostartcallfn(struct gobuf* gobuf, struct funcval* fv)
     {
-        unsafe::Pointer fn = {};
+        gocpp::unsafe_pointer fn = {};
         if(fv != nullptr)
         {
-            fn = unsafe::Pointer(fv->fn);
+            fn = gocpp::unsafe_pointer(fv->fn);
         }
         else
         {
-            fn = unsafe::Pointer(abi::FuncPCABIInternal(nilfunc));
+            fn = gocpp::unsafe_pointer(abi::FuncPCABIInternal(nilfunc));
         }
-        gostartcall(gobuf, fn, unsafe::Pointer(fv));
+        gostartcall(gobuf, fn, gocpp::unsafe_pointer(fv));
     }
 
     // isShrinkStackSafe returns whether it's safe to attempt to shrink
@@ -1375,7 +1375,7 @@ namespace golang::runtime
     // gcdata returns pointer map or GC prog of the type.
     unsigned char* rec::gcdata(golang::runtime::stackObjectRecord* r)
     {
-        auto ptr = uintptr_t(unsafe::Pointer(r));
+        auto ptr = uintptr_t(gocpp::unsafe_pointer(r));
         moduledata* mod = {};
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
         {
@@ -1386,7 +1386,7 @@ namespace golang::runtime
             }
         }
         auto res = mod->rodata + uintptr_t(r->gcdataoff);
-        return (unsigned char*)(unsafe::Pointer(res));
+        return (unsigned char*)(gocpp::unsafe_pointer(res));
     }
 
     // This is exported as ABI0 via linkname so obj can call it.

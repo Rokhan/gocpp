@@ -525,7 +525,7 @@ namespace golang::runtime
         semacquire(& trace.doneSema[gen % 2]);
         if(raceenabled)
         {
-            raceacquire(unsafe::Pointer(& trace.doneSema[gen % 2]));
+            raceacquire(gocpp::unsafe_pointer(& trace.doneSema[gen % 2]));
         }
         systemstack([=]() mutable -> void
         {
@@ -548,7 +548,7 @@ namespace golang::runtime
                 {
                     auto buf = trace.empty;
                     trace.empty = buf->link;
-                    sysFree(unsafe::Pointer(buf), gocpp::Sizeof<traceBuf>(), & memstats.other_sys);
+                    sysFree(gocpp::unsafe_pointer(buf), gocpp::Sizeof<traceBuf>(), & memstats.other_sys);
                 }
                 trace.headerWritten = false;
                 rec::Store(gocpp::recv(trace.shutdown), false);
@@ -619,7 +619,7 @@ namespace golang::runtime
         });
         if(park)
         {
-            gopark([=](struct g* gp, unsafe::Pointer _1) mutable -> bool
+            gopark([=](struct g* gp, gocpp::unsafe_pointer _1) mutable -> bool
             {
                 if(! rec::CompareAndSwapNoWB<g>(gocpp::recv(trace.reader), nullptr, gp))
                 {
@@ -705,7 +705,7 @@ namespace golang::runtime
                         unlock(& trace.lock);
                         if(raceenabled)
                         {
-                            racerelease(unsafe::Pointer(& trace.doneSema[gen % 2]));
+                            racerelease(gocpp::unsafe_pointer(& trace.doneSema[gen % 2]));
                         }
                         semrelease(& trace.doneSema[gen % 2]);
                         return {nullptr, false};
@@ -714,7 +714,7 @@ namespace golang::runtime
                     unlock(& trace.lock);
                     if(raceenabled)
                     {
-                        racerelease(unsafe::Pointer(& trace.doneSema[gen % 2]));
+                        racerelease(gocpp::unsafe_pointer(& trace.doneSema[gen % 2]));
                     }
                     semrelease(& trace.doneSema[gen % 2]);
                     lock(& trace.lock);
@@ -1040,12 +1040,12 @@ namespace golang::runtime
         lock(& s->lock);
         if(raceenabled)
         {
-            raceacquire(unsafe::Pointer(& s->lock));
+            raceacquire(gocpp::unsafe_pointer(& s->lock));
         }
         auto wakeup = s->wakeup;
         if(raceenabled)
         {
-            racerelease(unsafe::Pointer(& s->lock));
+            racerelease(gocpp::unsafe_pointer(& s->lock));
         }
         unlock(& s->lock);
         wakeup.recv();
@@ -1092,7 +1092,7 @@ namespace golang::runtime
         lock(& s->lock);
         if(raceenabled)
         {
-            raceacquire(unsafe::Pointer(& s->lock));
+            raceacquire(gocpp::unsafe_pointer(& s->lock));
         }
         if(s->wakeup != nullptr)
         {
@@ -1112,7 +1112,7 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            racerelease(unsafe::Pointer(& s->lock));
+            racerelease(gocpp::unsafe_pointer(& s->lock));
         }
         unlock(& s->lock);
     }
@@ -1129,14 +1129,14 @@ namespace golang::runtime
         lock(& s->lock);
         if(raceenabled)
         {
-            raceacquire(unsafe::Pointer(& s->lock));
+            raceacquire(gocpp::unsafe_pointer(& s->lock));
         }
         auto wakeup = s->wakeup;
         s->wakeup = nullptr;
         close(wakeup);
         if(raceenabled)
         {
-            racerelease(unsafe::Pointer(& s->lock));
+            racerelease(gocpp::unsafe_pointer(& s->lock));
         }
         unlock(& s->lock);
         return;

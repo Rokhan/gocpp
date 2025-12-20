@@ -31,10 +31,10 @@
 
 namespace golang::runtime
 {
-    unsafe::Pointer arena_newArena();
-    go_any arena_arena_New(unsafe::Pointer arena, go_any typ);
-    void arena_arena_Slice(unsafe::Pointer arena, go_any slice, int cap);
-    void arena_arena_Free(unsafe::Pointer arena);
+    gocpp::unsafe_pointer arena_newArena();
+    go_any arena_arena_New(gocpp::unsafe_pointer arena, go_any typ);
+    void arena_arena_Slice(gocpp::unsafe_pointer arena, go_any slice, int cap);
+    void arena_arena_Free(gocpp::unsafe_pointer arena);
     go_any arena_heapify(go_any s);
     void init();
     uintptr_t userArenaChunkReserveBytes();
@@ -42,7 +42,7 @@ namespace golang::runtime
     {
         mspan* fullList;
         mspan* active;
-        gocpp::slice<unsafe::Pointer> refs;
+        gocpp::slice<gocpp::unsafe_pointer> refs;
         atomic::Bool defunct;
 
         using isGoStruct = void;
@@ -61,7 +61,7 @@ namespace golang::runtime
     struct liveUserArenaChunk
     {
         mspan* mspan;
-        unsafe::Pointer x;
+        gocpp::unsafe_pointer x;
 
         using isGoStruct = void;
 
@@ -75,20 +75,20 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct liveUserArenaChunk& value);
-    void userArenaHeapBitsSetSliceType(golang::runtime::_type* typ, int n, unsafe::Pointer ptr, struct mspan* s);
-    std::tuple<unsafe::Pointer, struct mspan*> newUserArenaChunk();
+    void userArenaHeapBitsSetSliceType(golang::runtime::_type* typ, int n, gocpp::unsafe_pointer ptr, struct mspan* s);
+    std::tuple<gocpp::unsafe_pointer, struct mspan*> newUserArenaChunk();
     bool inUserArenaChunk(uintptr_t p);
-    void freeUserArenaChunk(struct mspan* s, unsafe::Pointer x);
+    void freeUserArenaChunk(struct mspan* s, gocpp::unsafe_pointer x);
     extern gocpp_id_0 userArenaState;
 
     namespace rec
     {
-        unsafe::Pointer go_new(golang::runtime::userArena* a, golang::runtime::_type* typ);
+        gocpp::unsafe_pointer go_new(golang::runtime::userArena* a, golang::runtime::_type* typ);
         void slice(golang::runtime::userArena* a, go_any sl, int cap);
         void free(golang::runtime::userArena* a);
-        unsafe::Pointer alloc(golang::runtime::userArena* a, golang::runtime::_type* typ, int cap);
+        gocpp::unsafe_pointer alloc(golang::runtime::userArena* a, golang::runtime::_type* typ, int cap);
         struct mspan* refill(golang::runtime::userArena* a);
-        unsafe::Pointer userArenaNextFree(golang::runtime::mspan* s, golang::runtime::_type* typ, int cap);
+        gocpp::unsafe_pointer userArenaNextFree(golang::runtime::mspan* s, golang::runtime::_type* typ, int cap);
         bool isUnusedUserArenaChunk(golang::runtime::mspan* s);
         void setUserArenaChunkToFault(golang::runtime::mspan* s);
         struct mspan* allocUserArenaChunk(golang::runtime::mheap* h);

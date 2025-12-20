@@ -178,13 +178,13 @@ namespace golang::runtime
     double float64Inf()
     {
         auto inf = uint64_t(fInf);
-        return *(double*)(unsafe::Pointer(& inf));
+        return *(double*)(gocpp::unsafe_pointer(& inf));
     }
 
     double float64NegInf()
     {
         auto inf = uint64_t(fNegInf);
-        return *(double*)(unsafe::Pointer(& inf));
+        return *(double*)(gocpp::unsafe_pointer(& inf));
     }
 
     // timeHistogramMetricsBuckets generates a slice of boundaries for

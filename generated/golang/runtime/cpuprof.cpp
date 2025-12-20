@@ -142,7 +142,7 @@ namespace golang::runtime
     // of stack.
     //
     //go:nowritebarrierrec
-    void rec::add(golang::runtime::cpuProfile* p, unsafe::Pointer* tagPtr, gocpp::slice<uintptr_t> stk)
+    void rec::add(golang::runtime::cpuProfile* p, gocpp::unsafe_pointer* tagPtr, gocpp::slice<uintptr_t> stk)
     {
         for(; ! rec::CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
         {
@@ -249,7 +249,7 @@ namespace golang::runtime
     // exactly one entry per record.
     //
     //go:linkname runtime_pprof_readProfile runtime/pprof.readProfile
-    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> runtime_pprof_readProfile()
+    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<gocpp::unsafe_pointer>, bool> runtime_pprof_readProfile()
     {
         lock(& cpuprof.lock);
         auto log = cpuprof.log;

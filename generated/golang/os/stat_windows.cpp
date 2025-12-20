@@ -74,7 +74,7 @@ namespace golang::os
             // Try GetFileAttributesEx first, because it is faster than CreateFile.
             // See https://golang.org/issues/19922#issuecomment-300031421 for details.
             syscall::Win32FileAttributeData fa = {};
-            err = syscall::GetFileAttributesEx(namep, syscall::GetFileExInfoStandard, (unsigned char*)(unsafe::Pointer(& fa)));
+            err = syscall::GetFileAttributesEx(namep, syscall::GetFileExInfoStandard, (unsigned char*)(gocpp::unsafe_pointer(& fa)));
             if(err == windows::ERROR_SHARING_VIOLATION)
             {
                 syscall::Win32finddata fd = {};

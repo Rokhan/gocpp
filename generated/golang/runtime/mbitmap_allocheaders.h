@@ -86,7 +86,7 @@ namespace golang::runtime
     void doubleCheckTypePointersOfType(struct mspan* s, golang::runtime::_type* typ, uintptr_t addr, uintptr_t size);
     void dumpTypePointers(struct typePointers tp);
     gocpp::slice<unsigned char> getgcmask(go_any ep);
-    void userArenaHeapBitsSetType(golang::runtime::_type* typ, unsafe::Pointer ptr, struct mspan* s);
+    void userArenaHeapBitsSetType(golang::runtime::_type* typ, gocpp::unsafe_pointer ptr, struct mspan* s);
     void writeHeapBitsForAddr();
     struct heapBits
     {

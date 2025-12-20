@@ -65,7 +65,7 @@ namespace golang::runtime
         // as WER might be enabled later with setTraceback("wer")
         // and we still want the fault reporting UI to be disabled if this happens.
         uintptr_t werflags = {};
-        stdcall2(_WerGetFlags, currentProcess, uintptr_t(unsafe::Pointer(& werflags)));
+        stdcall2(_WerGetFlags, currentProcess, uintptr_t(gocpp::unsafe_pointer(& werflags)));
         stdcall1(_WerSetFlags, werflags | _WER_FAULT_REPORTING_NO_UI);
     }
 
@@ -303,7 +303,7 @@ namespace golang::runtime
         gp->sigpc = rec::ip(gocpp::recv(r));
         if(rec::ip(gocpp::recv(r)) != 0 && rec::ip(gocpp::recv(r)) != abi::FuncPCABI0(asyncPreempt))
         {
-            auto sp = unsafe::Pointer(rec::sp(gocpp::recv(r)));
+            auto sp = gocpp::unsafe_pointer(rec::sp(gocpp::recv(r)));
             auto delta = uintptr_t(sys::StackAlign);
             sp = add(sp, - delta);
             rec::set_sp(gocpp::recv(r), uintptr_t(sp));
@@ -339,12 +339,12 @@ namespace golang::runtime
         uintptr_t sp = {};
         for(; ; )
         {
-            auto entry = stdcall3(_RtlLookupFunctionEntry, rec::ip(gocpp::recv(ctxt)), uintptr_t(unsafe::Pointer(& base)), 0);
+            auto entry = stdcall3(_RtlLookupFunctionEntry, rec::ip(gocpp::recv(ctxt)), uintptr_t(gocpp::unsafe_pointer(& base)), 0);
             if(entry == 0)
             {
                 break;
             }
-            stdcall8(_RtlVirtualUnwind, 0, base, rec::ip(gocpp::recv(ctxt)), entry, uintptr_t(unsafe::Pointer(ctxt)), 0, uintptr_t(unsafe::Pointer(& sp)), 0);
+            stdcall8(_RtlVirtualUnwind, 0, base, rec::ip(gocpp::recv(ctxt)), entry, uintptr_t(gocpp::unsafe_pointer(ctxt)), 0, uintptr_t(gocpp::unsafe_pointer(& sp)), 0);
             if(sp < gp->stack.lo || gp->stack.hi <= sp)
             {
                 break;
@@ -545,7 +545,7 @@ namespace golang::runtime
             }
         }
         auto FAIL_FAST_GENERATE_EXCEPTION_ADDRESS = 0x1;
-        stdcall3(_RaiseFailFastException, uintptr_t(unsafe::Pointer(info)), uintptr_t(unsafe::Pointer(r)), FAIL_FAST_GENERATE_EXCEPTION_ADDRESS);
+        stdcall3(_RaiseFailFastException, uintptr_t(gocpp::unsafe_pointer(info)), uintptr_t(gocpp::unsafe_pointer(r)), FAIL_FAST_GENERATE_EXCEPTION_ADDRESS);
     }
 
     // gsignalStack is unused on Windows.

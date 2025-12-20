@@ -142,7 +142,7 @@ namespace golang::syscall
 
         struct ISockaddr
         {
-            virtual std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> vsockaddr() = 0;
+            virtual std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> vsockaddr() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -154,7 +154,7 @@ namespace golang::syscall
                 value.reset(ptr);
             }
 
-            std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> vsockaddr() override;
+            std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> vsockaddr() override;
 
             void* getPtr() override
             {
@@ -169,8 +169,8 @@ namespace golang::syscall
 
     namespace rec
     {
-        std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> sockaddr(const gocpp::PtrRecv<struct Sockaddr, false>& self);
-        std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> sockaddr(const gocpp::ObjRecv<struct Sockaddr>& self);
+        std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> sockaddr(const gocpp::PtrRecv<struct Sockaddr, false>& self);
+        std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> sockaddr(const gocpp::ObjRecv<struct Sockaddr>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Sockaddr& value);
@@ -205,7 +205,7 @@ namespace golang::syscall
     struct gocpp::error LoadGetAddrInfo();
     extern gocpp_id_4 connectExFunc;
     struct gocpp::error LoadConnectEx();
-    struct gocpp::error connectEx(golang::syscall::Handle s, unsafe::Pointer name, int32_t namelen, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, struct Overlapped* overlapped);
+    struct gocpp::error connectEx(golang::syscall::Handle s, gocpp::unsafe_pointer name, int32_t namelen, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, struct Overlapped* overlapped);
     struct gocpp::error ConnectEx(golang::syscall::Handle fd, struct Sockaddr sa, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, struct Overlapped* overlapped);
     struct Rusage
     {
@@ -442,9 +442,9 @@ namespace golang::syscall
         bool Is(golang::syscall::Errno e, struct gocpp::error target);
         bool Temporary(golang::syscall::Errno e);
         bool Timeout(golang::syscall::Errno e);
-        std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> sockaddr(golang::syscall::SockaddrInet4* sa);
-        std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> sockaddr(golang::syscall::SockaddrInet6* sa);
-        std::tuple<unsafe::Pointer, int32_t, struct gocpp::error> sockaddr(golang::syscall::SockaddrUnix* sa);
+        std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> sockaddr(golang::syscall::SockaddrInet4* sa);
+        std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> sockaddr(golang::syscall::SockaddrInet6* sa);
+        std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> sockaddr(golang::syscall::SockaddrUnix* sa);
         std::tuple<struct Sockaddr, struct gocpp::error> Sockaddr(golang::syscall::RawSockaddrAny* rsa);
         bool Exited(golang::syscall::WaitStatus w);
         int ExitStatus(golang::syscall::WaitStatus w);

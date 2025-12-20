@@ -287,7 +287,7 @@ namespace golang::runtime
         auto b = new(profBuf);
         b->hdrsize = uintptr_t(hdrsize);
         b->data = gocpp::make(gocpp::Tag<gocpp::slice<uint64_t>>(), bufwords);
-        b->tags = gocpp::make(gocpp::Tag<gocpp::slice<unsafe::Pointer>>(), tags);
+        b->tags = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::unsafe_pointer>>(), tags);
         b->overflowBuf = gocpp::make(gocpp::Tag<gocpp::slice<uint64_t>>(), 2 + b->hdrsize + 1);
         return b;
     }
@@ -349,7 +349,7 @@ namespace golang::runtime
     // length b.hdrsize, followed by a variable-sized stack
     // and a single tag pointer *tagPtr (or nil if tagPtr is nil).
     // No write barriers allowed because this might be called from a signal handler.
-    void rec::write(golang::runtime::profBuf* b, unsafe::Pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk)
+    void rec::write(golang::runtime::profBuf* b, gocpp::unsafe_pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk)
     {
         if(b == nullptr)
         {
@@ -381,7 +381,7 @@ namespace golang::runtime
         auto wt = int(rec::tagCount(gocpp::recv(bw)) % uint32_t(len(b->tags)));
         if(tagPtr != nullptr)
         {
-            *(uintptr_t*)(unsafe::Pointer(& b->tags[wt])) = uintptr_t(*tagPtr);
+            *(uintptr_t*)(gocpp::unsafe_pointer(& b->tags[wt])) = uintptr_t(*tagPtr);
         }
         auto wd = int(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
         auto nd = countSub(rec::dataCount(gocpp::recv(br)), rec::dataCount(gocpp::recv(bw))) + len(b->data);
@@ -455,11 +455,11 @@ namespace golang::runtime
     }
 
     // profBufReadMode specifies whether to block when no data is available to read.
-    gocpp::array<unsafe::Pointer, 1> overflowTag;
-    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> rec::read(golang::runtime::profBuf* b, golang::runtime::profBufReadMode mode)
+    gocpp::array<gocpp::unsafe_pointer, 1> overflowTag;
+    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<gocpp::unsafe_pointer>, bool> rec::read(golang::runtime::profBuf* b, golang::runtime::profBufReadMode mode)
     {
         gocpp::slice<uint64_t> data;
-        gocpp::slice<unsafe::Pointer> tags;
+        gocpp::slice<gocpp::unsafe_pointer> tags;
         bool eof;
         if(b == nullptr)
         {
@@ -567,7 +567,7 @@ namespace golang::runtime
         b->rNext = rec::addCountsAndClearFlags(gocpp::recv(br), skip + di, ti);
         if(raceenabled)
         {
-            raceacquire(unsafe::Pointer(& labelSync));
+            raceacquire(gocpp::unsafe_pointer(& labelSync));
         }
         return {data.make_slice(0, di), tags.make_slice(0, ti), false};
     }

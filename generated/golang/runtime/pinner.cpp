@@ -203,11 +203,11 @@ namespace golang::runtime
         {
             setPinned(p->refs[i], false);
         }
-        p->refStore = gocpp::array<unsafe::Pointer, pinnerRefStoreSize> {};
+        p->refStore = gocpp::array<gocpp::unsafe_pointer, pinnerRefStoreSize> {};
         p->refs = p->refStore.make_slice(0, 0);
     }
 
-    unsafe::Pointer pinnerGetPtr(go_any* i)
+    gocpp::unsafe_pointer pinnerGetPtr(go_any* i)
     {
         auto e = efaceOf(i);
         auto etyp = e->_type;
@@ -230,7 +230,7 @@ namespace golang::runtime
     // nosplit, because it's called from nosplit code in cgocheck.
     //
     //go:nosplit
-    bool isPinned(unsafe::Pointer ptr)
+    bool isPinned(gocpp::unsafe_pointer ptr)
     {
         auto span = spanOfHeap(uintptr_t(ptr));
         if(span == nullptr)
@@ -252,7 +252,7 @@ namespace golang::runtime
     // It will be ignored while try to pin a non-Go pointer,
     // and it will be panic while try to unpin a non-Go pointer,
     // which should not happen in normal usage.
-    bool setPinned(unsafe::Pointer ptr, bool pin)
+    bool setPinned(gocpp::unsafe_pointer ptr, bool pin)
     {
         auto span = spanOfHeap(uintptr_t(ptr));
         if(span == nullptr)
@@ -430,12 +430,12 @@ namespace golang::runtime
     //go:nosplit
     runtime::pinnerBits* rec::getPinnerBits(golang::runtime::mspan* s)
     {
-        return (runtime::pinnerBits*)(atomic::Loadp(unsafe::Pointer(& s->pinnerBits)));
+        return (runtime::pinnerBits*)(atomic::Loadp(gocpp::unsafe_pointer(& s->pinnerBits)));
     }
 
     void rec::setPinnerBits(golang::runtime::mspan* s, golang::runtime::pinnerBits* p)
     {
-        atomicstorep(unsafe::Pointer(& s->pinnerBits), unsafe::Pointer(p));
+        atomicstorep(gocpp::unsafe_pointer(& s->pinnerBits), gocpp::unsafe_pointer(p));
     }
 
     // refreshPinnerBits replaces pinnerBits with a fresh copy in the arenas for the
@@ -450,7 +450,7 @@ namespace golang::runtime
         }
         auto hasPins = false;
         auto bytes = alignUp(rec::pinnerBitSize(gocpp::recv(s)), 8);
-        for(auto [gocpp_ignored, x] : unsafe::Slice((uint64_t*)(unsafe::Pointer(& p->x)), bytes / 8))
+        for(auto [gocpp_ignored, x] : unsafe::Slice((uint64_t*)(gocpp::unsafe_pointer(& p->x)), bytes / 8))
         {
             if(x != 0)
             {
@@ -461,7 +461,7 @@ namespace golang::runtime
         if(hasPins)
         {
             auto newPinnerBits = rec::newPinnerBits(gocpp::recv(s));
-            memmove(unsafe::Pointer(& newPinnerBits->x), unsafe::Pointer(& p->x), bytes);
+            memmove(gocpp::unsafe_pointer(& newPinnerBits->x), gocpp::unsafe_pointer(& p->x), bytes);
             rec::setPinnerBits(gocpp::recv(s), newPinnerBits);
         }
         else
@@ -484,12 +484,12 @@ namespace golang::runtime
             rec->special.offset = uint16_t(offset);
             rec->special.kind = _KindSpecialPinCounter;
             rec->special.next = *ref;
-            *ref = (special*)(unsafe::Pointer(rec));
+            *ref = (special*)(gocpp::unsafe_pointer(rec));
             spanHasSpecials(span);
         }
         else
         {
-            rec = (specialPinCounter*)(unsafe::Pointer(*ref));
+            rec = (specialPinCounter*)(gocpp::unsafe_pointer(*ref));
         }
         rec->counter++;
     }
@@ -503,7 +503,7 @@ namespace golang::runtime
         {
             go_throw("runtime.Pinner: decreased non-existing pin counter"_s);
         }
-        auto counter = (specialPinCounter*)(unsafe::Pointer(*ref));
+        auto counter = (specialPinCounter*)(gocpp::unsafe_pointer(*ref));
         counter->counter--;
         if(counter->counter == 0)
         {
@@ -513,7 +513,7 @@ namespace golang::runtime
                 spanHasNoSpecials(span);
             }
             lock(& mheap_.speciallock);
-            rec::free(gocpp::recv(mheap_.specialPinCounterAlloc), unsafe::Pointer(counter));
+            rec::free(gocpp::recv(mheap_.specialPinCounterAlloc), gocpp::unsafe_pointer(counter));
             unlock(& mheap_.speciallock);
             return false;
         }
@@ -521,7 +521,7 @@ namespace golang::runtime
     }
 
     // only for tests
-    uintptr_t* pinnerGetPinCounter(unsafe::Pointer addr)
+    uintptr_t* pinnerGetPinCounter(gocpp::unsafe_pointer addr)
     {
         auto [gocpp_id_0, span, objIndex] = findObject(uintptr_t(addr), 0, 0);
         auto offset = objIndex * span->elemsize;
@@ -530,7 +530,7 @@ namespace golang::runtime
         {
             return nullptr;
         }
-        auto counter = (specialPinCounter*)(unsafe::Pointer(*t));
+        auto counter = (specialPinCounter*)(gocpp::unsafe_pointer(*t));
         return & counter->counter;
     }
 

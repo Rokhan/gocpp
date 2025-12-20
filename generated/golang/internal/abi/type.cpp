@@ -283,7 +283,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.mcount > 0"_s)).make_slice(0, t->Mcount, t->Mcount);
+        return (gocpp::array_ptr<gocpp::array<Method, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uintptr_t(t->Moff), "t.mcount > 0"_s)).make_slice(0, t->Mcount, t->Mcount);
     }
 
     gocpp::slice<Method> rec::ExportedMethods(golang::abi::UncommonType* t)
@@ -292,7 +292,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Method, 1 << 16>*)(addChecked(unsafe::Pointer(t), uintptr_t(t->Moff), "t.xcount > 0"_s)).make_slice(0, t->Xcount, t->Xcount);
+        return (gocpp::array_ptr<gocpp::array<Method, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uintptr_t(t->Moff), "t.xcount > 0"_s)).make_slice(0, t->Xcount, t->Xcount);
     }
 
     // addChecked returns p+x.
@@ -302,9 +302,9 @@ namespace golang::abi
     // record why the addition is safe, which is to say why the addition
     // does not cause x to advance to the very end of p's allocation
     // and therefore point incorrectly at the next block in memory.
-    unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, gocpp::string whySafe)
+    gocpp::unsafe_pointer addChecked(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe)
     {
-        return unsafe::Pointer(uintptr_t(p) + x);
+        return gocpp::unsafe_pointer(uintptr_t(p) + x);
     }
 
     // Imethod represents a method on an interface type
@@ -384,7 +384,7 @@ namespace golang::abi
     {
         if(rec::Kind(gocpp::recv(t)) == Array)
         {
-            return int((ArrayType*)(unsafe::Pointer(t))->Len);
+            return int((ArrayType*)(gocpp::unsafe_pointer(t))->Len);
         }
         return 0;
     }
@@ -467,7 +467,7 @@ namespace golang::abi
     {
         if(rec::Kind(gocpp::recv(t)) == Chan)
         {
-            auto ch = (ChanType*)(unsafe::Pointer(t));
+            auto ch = (ChanType*)(gocpp::unsafe_pointer(t));
             return ch->Dir;
         }
         return InvalidDir;
@@ -495,7 +495,7 @@ namespace golang::abi
             switch(conditionId)
             {
                 case 0:
-                    return & (structTypeUncommon*)(unsafe::Pointer(t))->u;
+                    return & (structTypeUncommon*)(gocpp::unsafe_pointer(t))->u;
                     break;
                 case 1:
                     struct u
@@ -514,7 +514,7 @@ namespace golang::abi
                             return os;
                         }
                     };
-                    return & (u*)(unsafe::Pointer(t))->u;
+                    return & (u*)(gocpp::unsafe_pointer(t))->u;
                     break;
                 case 2:
                     struct u
@@ -533,7 +533,7 @@ namespace golang::abi
                             return os;
                         }
                     };
-                    return & (u*)(unsafe::Pointer(t))->u;
+                    return & (u*)(gocpp::unsafe_pointer(t))->u;
                     break;
                 case 3:
                     struct u
@@ -552,7 +552,7 @@ namespace golang::abi
                             return os;
                         }
                     };
-                    return & (u*)(unsafe::Pointer(t))->u;
+                    return & (u*)(gocpp::unsafe_pointer(t))->u;
                     break;
                 case 4:
                     struct u
@@ -571,7 +571,7 @@ namespace golang::abi
                             return os;
                         }
                     };
-                    return & (u*)(unsafe::Pointer(t))->u;
+                    return & (u*)(gocpp::unsafe_pointer(t))->u;
                     break;
                 case 5:
                     struct u
@@ -590,7 +590,7 @@ namespace golang::abi
                             return os;
                         }
                     };
-                    return & (u*)(unsafe::Pointer(t))->u;
+                    return & (u*)(gocpp::unsafe_pointer(t))->u;
                     break;
                 case 6:
                     struct u
@@ -609,7 +609,7 @@ namespace golang::abi
                             return os;
                         }
                     };
-                    return & (u*)(unsafe::Pointer(t))->u;
+                    return & (u*)(gocpp::unsafe_pointer(t))->u;
                     break;
                 case 7:
                     struct u
@@ -628,7 +628,7 @@ namespace golang::abi
                             return os;
                         }
                     };
-                    return & (u*)(unsafe::Pointer(t))->u;
+                    return & (u*)(gocpp::unsafe_pointer(t))->u;
                     break;
                 default:
                     struct u
@@ -647,7 +647,7 @@ namespace golang::abi
                             return os;
                         }
                     };
-                    return & (u*)(unsafe::Pointer(t))->u;
+                    return & (u*)(gocpp::unsafe_pointer(t))->u;
                     break;
             }
         }
@@ -668,23 +668,23 @@ namespace golang::abi
             switch(conditionId)
             {
                 case 0:
-                    auto tt = (ArrayType*)(unsafe::Pointer(t));
+                    auto tt = (ArrayType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 case 1:
-                    auto tt = (ChanType*)(unsafe::Pointer(t));
+                    auto tt = (ChanType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 case 2:
-                    auto tt = (MapType*)(unsafe::Pointer(t));
+                    auto tt = (MapType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 case 3:
-                    auto tt = (PtrType*)(unsafe::Pointer(t));
+                    auto tt = (PtrType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 case 4:
-                    auto tt = (SliceType*)(unsafe::Pointer(t));
+                    auto tt = (SliceType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
             }
@@ -699,7 +699,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (StructType*)(unsafe::Pointer(t));
+        return (StructType*)(gocpp::unsafe_pointer(t));
     }
 
     // MapType returns t cast to a *MapType, or nil if its tag does not match.
@@ -709,7 +709,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (MapType*)(unsafe::Pointer(t));
+        return (MapType*)(gocpp::unsafe_pointer(t));
     }
 
     // ArrayType returns t cast to a *ArrayType, or nil if its tag does not match.
@@ -719,7 +719,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (ArrayType*)(unsafe::Pointer(t));
+        return (ArrayType*)(gocpp::unsafe_pointer(t));
     }
 
     // FuncType returns t cast to a *FuncType, or nil if its tag does not match.
@@ -729,7 +729,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (FuncType*)(unsafe::Pointer(t));
+        return (FuncType*)(gocpp::unsafe_pointer(t));
     }
 
     // InterfaceType returns t cast to a *InterfaceType, or nil if its tag does not match.
@@ -739,7 +739,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (InterfaceType*)(unsafe::Pointer(t));
+        return (InterfaceType*)(gocpp::unsafe_pointer(t));
     }
 
     // Size returns the size of data with type t.
@@ -808,7 +808,7 @@ namespace golang::abi
     {
         if(rec::Kind(gocpp::recv(t)) == Interface)
         {
-            auto tt = (InterfaceType*)(unsafe::Pointer(t));
+            auto tt = (InterfaceType*)(gocpp::unsafe_pointer(t));
             return rec::NumMethod(gocpp::recv(tt));
         }
         return len(rec::ExportedMethods(gocpp::recv(t)));
@@ -904,7 +904,7 @@ namespace golang::abi
     {
         if(rec::Kind(gocpp::recv(t)) == Map)
         {
-            return (MapType*)(unsafe::Pointer(t))->Key;
+            return (MapType*)(gocpp::unsafe_pointer(t))->Key;
         }
         return nullptr;
     }
@@ -1018,7 +1018,7 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array<Type*, 1 << 16>*)(addChecked(unsafe::Pointer(t), uadd, "t.inCount > 0"_s)).make_slice(0, t->InCount, t->InCount);
+        return (gocpp::array_ptr<gocpp::array<Type*, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "t.inCount > 0"_s)).make_slice(0, t->InCount, t->InCount);
     }
 
     gocpp::slice<Type*> rec::OutSlice(golang::abi::FuncType* t)
@@ -1033,7 +1033,7 @@ namespace golang::abi
         {
             uadd += gocpp::Sizeof<UncommonType>();
         }
-        return (gocpp::array<Type*, 1 << 17>*)(addChecked(unsafe::Pointer(t), uadd, "outCount > 0"_s)).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
+        return (gocpp::array_ptr<gocpp::array<Type*, 1 << 17>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "outCount > 0"_s)).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }
 
     bool rec::IsVariadic(golang::abi::FuncType* t)
@@ -1181,14 +1181,14 @@ namespace golang::abi
     // be safe for the reason in whySafe (which can appear in a backtrace, etc.)
     unsigned char* rec::DataChecked(golang::abi::Name n, int off, gocpp::string whySafe)
     {
-        return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), whySafe));
+        return (unsigned char*)(addChecked(gocpp::unsafe_pointer(n.Bytes), uintptr_t(off), whySafe));
     }
 
     // Data does pointer arithmetic on n's Bytes, and that arithmetic is asserted to
     // be safe because the runtime made the call (other packages use DataChecked)
     unsigned char* rec::Data(golang::abi::Name n, int off)
     {
-        return (unsigned char*)(addChecked(unsafe::Pointer(n.Bytes), uintptr_t(off), "the runtime doesn't need to give you a reason"_s));
+        return (unsigned char*)(addChecked(gocpp::unsafe_pointer(n.Bytes), uintptr_t(off), "the runtime doesn't need to give you a reason"_s));
     }
 
     // IsExported returns "is n exported?"

@@ -143,7 +143,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mSpanList& value);
-    void recordspan(unsafe::Pointer vh, unsafe::Pointer p);
+    void recordspan(gocpp::unsafe_pointer vh, gocpp::unsafe_pointer p);
     runtime::spanClass makeSpanClass(uint8_t sizeclass, bool noscan);
     runtime::arenaIdx arenaIndex(uintptr_t p);
     uintptr_t arenaBase(golang::runtime::arenaIdx i);
@@ -175,11 +175,11 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct special& value);
     void spanHasSpecials(struct mspan* s);
     void spanHasNoSpecials(struct mspan* s);
-    bool addspecial(unsafe::Pointer p, struct special* s);
-    struct special* removespecial(unsafe::Pointer p, uint8_t kind);
-    bool addfinalizer(unsafe::Pointer p, struct funcval* f, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
-    void removefinalizer(unsafe::Pointer p);
-    void setprofilebucket(unsafe::Pointer p, struct bucket* b);
+    bool addspecial(gocpp::unsafe_pointer p, struct special* s);
+    struct special* removespecial(gocpp::unsafe_pointer p, uint8_t kind);
+    bool addfinalizer(gocpp::unsafe_pointer p, struct funcval* f, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
+    void removefinalizer(gocpp::unsafe_pointer p);
+    void setprofilebucket(gocpp::unsafe_pointer p, struct bucket* b);
     struct specialsIter
     {
         special** pprev;
@@ -198,7 +198,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct specialsIter& value);
     struct specialsIter newSpecialsIter(struct mspan* span);
-    void freeSpecial(struct special* s, unsafe::Pointer p, uintptr_t size);
+    void freeSpecial(struct special* s, gocpp::unsafe_pointer p, uintptr_t size);
     struct gcBits
     {
         sys::NotInHeap _1;
@@ -406,7 +406,7 @@ namespace golang::runtime
         atomic::Uint64 reclaimIndex;
         atomic::Uintptr reclaimCredit;
         cpu::CacheLinePad _2;
-        gocpp::array<gocpp::array<heapArena*, 1 << arenaL2Bits>*, 1 << arenaL1Bits> arenas;
+        gocpp::array<gocpp::array_ptr<gocpp::array<heapArena*, 1 << arenaL2Bits>>, 1 << arenaL1Bits> arenas;
         bool arenasHugePages;
         linearAlloc heapArenaAlloc;
         arenaHint* arenaHints;

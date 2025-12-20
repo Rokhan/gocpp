@@ -37,7 +37,7 @@ namespace golang::runtime
     // which prevents us from allocating more stack.
     //
     //go:nosplit
-    unsafe::Pointer sysAlloc(uintptr_t n, golang::runtime::sysMemStat* sysStat)
+    gocpp::unsafe_pointer sysAlloc(uintptr_t n, golang::runtime::sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), int64_t(n));
         rec::Add(gocpp::recv(gcController.mappedReady), int64_t(n));
@@ -49,7 +49,7 @@ namespace golang::runtime
     // longer needed and can be reused for other purposes. The contents of a
     // sysUnused memory region are considered forfeit and the region must not be
     // accessed again until sysUsed is called.
-    void sysUnused(unsafe::Pointer v, uintptr_t n)
+    void sysUnused(gocpp::unsafe_pointer v, uintptr_t n)
     {
         rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysUnusedOS(v, n);
@@ -65,7 +65,7 @@ namespace golang::runtime
     // it is safe to refer, with v and n, to a range of memory that includes both
     // Prepared and Ready memory. However, the caller must provide the exact amount
     // of Prepared memory for accounting purposes.
-    void sysUsed(unsafe::Pointer v, uintptr_t n, uintptr_t prepared)
+    void sysUsed(gocpp::unsafe_pointer v, uintptr_t n, uintptr_t prepared)
     {
         rec::Add(gocpp::recv(gcController.mappedReady), int64_t(prepared));
         sysUsedOS(v, n);
@@ -74,7 +74,7 @@ namespace golang::runtime
     // sysHugePage does not transition memory regions, but instead provides a
     // hint to the OS that it would be more efficient to back this memory region
     // with pages of a larger size transparently.
-    void sysHugePage(unsafe::Pointer v, uintptr_t n)
+    void sysHugePage(gocpp::unsafe_pointer v, uintptr_t n)
     {
         sysHugePageOS(v, n);
     }
@@ -82,14 +82,14 @@ namespace golang::runtime
     // sysNoHugePage does not transition memory regions, but instead provides a
     // hint to the OS that it would be less efficient to back this memory region
     // with pages of a larger size transparently.
-    void sysNoHugePage(unsafe::Pointer v, uintptr_t n)
+    void sysNoHugePage(gocpp::unsafe_pointer v, uintptr_t n)
     {
         sysNoHugePageOS(v, n);
     }
 
     // sysHugePageCollapse attempts to immediately back the provided memory region
     // with huge pages. It is best-effort and may fail silently.
-    void sysHugePageCollapse(unsafe::Pointer v, uintptr_t n)
+    void sysHugePageCollapse(gocpp::unsafe_pointer v, uintptr_t n)
     {
         sysHugePageCollapseOS(v, n);
     }
@@ -107,7 +107,7 @@ namespace golang::runtime
     // which prevents us from allocating more stack.
     //
     //go:nosplit
-    void sysFree(unsafe::Pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat)
+    void sysFree(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), - int64_t(n));
         rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
@@ -123,7 +123,7 @@ namespace golang::runtime
     // since on every platform the operation is much more general than that.
     // If a transition from Prepared is ever introduced, create a new function
     // that elides the Ready state accounting.
-    void sysFault(unsafe::Pointer v, uintptr_t n)
+    void sysFault(gocpp::unsafe_pointer v, uintptr_t n)
     {
         rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
         sysFaultOS(v, n);
@@ -141,7 +141,7 @@ namespace golang::runtime
     // NOTE: sysReserve returns OS-aligned memory, but the heap allocator
     // may use larger alignment, so the caller must be careful to realign the
     // memory obtained by sysReserve.
-    unsafe::Pointer sysReserve(unsafe::Pointer v, uintptr_t n)
+    gocpp::unsafe_pointer sysReserve(gocpp::unsafe_pointer v, uintptr_t n)
     {
         return sysReserveOS(v, n);
     }
@@ -150,7 +150,7 @@ namespace golang::runtime
     // memory region can be efficiently transitioned to Ready.
     //
     // sysStat must be non-nil.
-    void sysMap(unsafe::Pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat)
+    void sysMap(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), int64_t(n));
         sysMapOS(v, n);

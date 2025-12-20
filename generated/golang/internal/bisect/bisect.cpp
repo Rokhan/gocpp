@@ -473,7 +473,7 @@ namespace golang::bisect
 
     bool rec::CompareAndSwap(golang::bisect::atomicPointerDedup* p, struct dedup* old, struct dedup* go_new)
     {
-        return atomic::CompareAndSwapPointer(& p->p, unsafe::Pointer(old), unsafe::Pointer(go_new));
+        return atomic::CompareAndSwapPointer(& p->p, gocpp::unsafe_pointer(old), gocpp::unsafe_pointer(go_new));
     }
 
     // A cond is a single condition in the matcher.

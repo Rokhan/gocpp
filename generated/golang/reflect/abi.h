@@ -41,10 +41,10 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct abiStep& value);
     void dumpPtrBitMap(abi::IntArgRegBitmap b);
     struct abiDesc newAbiDesc(golang::reflect::funcType* t, abi::Type* rcvr);
-    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to);
-    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from);
-    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to);
-    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from);
+    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
+    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
+    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
+    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
     struct abiSeq
     {
         gocpp::slice<abiStep> steps;

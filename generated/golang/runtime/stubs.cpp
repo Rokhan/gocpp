@@ -49,9 +49,9 @@ namespace golang::runtime
     // Should be a built-in for unsafe.Pointer?
     //
     //go:nosplit
-    unsafe::Pointer add(unsafe::Pointer p, uintptr_t x)
+    gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x)
     {
-        return unsafe::Pointer(uintptr_t(p) + x);
+        return gocpp::unsafe_pointer(uintptr_t(p) + x);
     }
 
     // getg returns the pointer to the current g.
@@ -126,11 +126,11 @@ namespace golang::runtime
     // The (CPU-specific) implementations of this function are in memclr_*.s.
     //
     //go:noescape
-    void memclrNoHeapPointers(unsafe::Pointer ptr, uintptr_t n)
+    void memclrNoHeapPointers(gocpp::unsafe_pointer ptr, uintptr_t n)
     /* convertBlockStmt, nil block */;
 
     //go:linkname reflect_memclrNoHeapPointers reflect.memclrNoHeapPointers
-    void reflect_memclrNoHeapPointers(unsafe::Pointer ptr, uintptr_t n)
+    void reflect_memclrNoHeapPointers(gocpp::unsafe_pointer ptr, uintptr_t n)
     {
         memclrNoHeapPointers(ptr, n);
     }
@@ -148,11 +148,11 @@ namespace golang::runtime
     // Implementations are in memmove_*.s.
     //
     //go:noescape
-    void memmove(unsafe::Pointer to, unsafe::Pointer from, uintptr_t n)
+    void memmove(gocpp::unsafe_pointer to, gocpp::unsafe_pointer from, uintptr_t n)
     /* convertBlockStmt, nil block */;
 
     //go:linkname reflect_memmove reflect.memmove
-    void reflect_memmove(unsafe::Pointer to, unsafe::Pointer from, uintptr_t n)
+    void reflect_memmove(gocpp::unsafe_pointer to, gocpp::unsafe_pointer from, uintptr_t n)
     {
         memmove(to, from, n);
     }
@@ -161,7 +161,7 @@ namespace golang::runtime
     // in internal/bytealg/equal_*.s
     //
     //go:noescape
-    bool memequal(unsafe::Pointer a, unsafe::Pointer b, uintptr_t size)
+    bool memequal(gocpp::unsafe_pointer a, gocpp::unsafe_pointer b, uintptr_t size)
     /* convertBlockStmt, nil block */;
 
     // noescape hides a pointer from escape analysis.  noescape is
@@ -171,10 +171,10 @@ namespace golang::runtime
     // USE CAREFULLY!
     //
     //go:nosplit
-    unsafe::Pointer noescape(unsafe::Pointer p)
+    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p)
     {
         auto x = uintptr_t(p);
-        return unsafe::Pointer(x ^ 0);
+        return gocpp::unsafe_pointer(x ^ 0);
     }
 
     // noEscapePtr hides a pointer from escape analysis. See noescape.
@@ -184,8 +184,8 @@ namespace golang::runtime
     template<typename T>
     T* noEscapePtr(T* p)
     {
-        auto x = uintptr_t(unsafe::Pointer(p));
-        return (T*)(unsafe::Pointer(x ^ 0));
+        auto x = uintptr_t(gocpp::unsafe_pointer(p));
+        return (T*)(gocpp::unsafe_pointer(x ^ 0));
     }
 
     // Not all cgocallback frames are actually cgocallback,
@@ -256,7 +256,7 @@ namespace golang::runtime
     // regArgs is only used in the reflectcall frame.
     //
     //go:noescape
-    void reflectcall(golang::runtime::_type* stackArgsType, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void reflectcall(golang::runtime::_type* stackArgsType, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
     void procyield(uint32_t cycles)
@@ -350,7 +350,7 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    int32_t asmcgocall(unsafe::Pointer fn, unsafe::Pointer arg)
+    int32_t asmcgocall(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg)
     /* convertBlockStmt, nil block */;
 
     void morestack()
@@ -373,85 +373,85 @@ namespace golang::runtime
     // in asm_*.s
     // not called directly; definitions here supply type information for traceback.
     // These must have the same signature (arg pointer map) as reflectcall.
-    void call16(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call16(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call32(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call32(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call64(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call64(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call128(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call128(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call256(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call256(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call512(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call512(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call1024(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call1024(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call2048(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call2048(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call4096(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call4096(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call8192(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call8192(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call16384(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call16384(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call32768(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call32768(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call65536(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call65536(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call131072(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call131072(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call262144(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call262144(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call524288(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call524288(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call1048576(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call1048576(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call2097152(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call2097152(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call4194304(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call4194304(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call8388608(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call8388608(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call16777216(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call16777216(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call33554432(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call33554432(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call67108864(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call67108864(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call134217728(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call134217728(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call268435456(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call268435456(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call536870912(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call536870912(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
-    void call1073741824(unsafe::Pointer typ, unsafe::Pointer fn, unsafe::Pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void call1073741824(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
     void systemstack_switch()
@@ -483,13 +483,13 @@ namespace golang::runtime
     bool checkASM()
     /* convertBlockStmt, nil block */;
 
-    bool memequal_varlen(unsafe::Pointer a, unsafe::Pointer b)
+    bool memequal_varlen(gocpp::unsafe_pointer a, gocpp::unsafe_pointer b)
     /* convertBlockStmt, nil block */;
 
     // bool2int returns 0 if x is false or 1 if x is true.
     int bool2int(bool x)
     {
-        return int(*(uint8_t*)(unsafe::Pointer(& x)));
+        return int(*(uint8_t*)(gocpp::unsafe_pointer(& x)));
     }
 
     // abort crashes the runtime in situations where even throw might not

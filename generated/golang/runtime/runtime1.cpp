@@ -104,7 +104,7 @@ namespace golang::runtime
     //go:nosplit
     unsigned char* argv_index(unsigned char** argv, int32_t i)
     {
-        return *(unsigned char**)(add(unsafe::Pointer(argv), uintptr_t(i) * goarch::PtrSize));
+        return *(unsigned char**)(add(gocpp::unsafe_pointer(argv), uintptr_t(i) * goarch::PtrSize));
     }
 
     void args(int32_t c, unsigned char** v)
@@ -212,7 +212,7 @@ namespace golang::runtime
         float i1 = {};
         double j = {};
         double j1 = {};
-        unsafe::Pointer k = {};
+        gocpp::unsafe_pointer k = {};
         uint16_t* l = {};
         gocpp::array<unsigned char, 4> m = {};
         struct x1t
@@ -351,7 +351,7 @@ namespace golang::runtime
         {
             go_throw("atomicand8"_s);
         }
-        *(uint64_t*)(unsafe::Pointer(& j)) = ~ uint64_t(0);
+        *(uint64_t*)(gocpp::unsafe_pointer(& j)) = ~ uint64_t(0);
         if(j == j)
         {
             go_throw("float64nan"_s);
@@ -360,7 +360,7 @@ namespace golang::runtime
         {
             go_throw("float64nan1"_s);
         }
-        *(uint64_t*)(unsafe::Pointer(& j1)) = ~ uint64_t(1);
+        *(uint64_t*)(gocpp::unsafe_pointer(& j1)) = ~ uint64_t(1);
         if(j == j1)
         {
             go_throw("float64nan2"_s);
@@ -369,7 +369,7 @@ namespace golang::runtime
         {
             go_throw("float64nan3"_s);
         }
-        *(uint32_t*)(unsafe::Pointer(& i)) = ~ uint32_t(0);
+        *(uint32_t*)(gocpp::unsafe_pointer(& i)) = ~ uint32_t(0);
         if(i == i)
         {
             go_throw("float32nan"_s);
@@ -378,7 +378,7 @@ namespace golang::runtime
         {
             go_throw("float32nan1"_s);
         }
-        *(uint32_t*)(unsafe::Pointer(& i1)) = ~ uint32_t(1);
+        *(uint32_t*)(gocpp::unsafe_pointer(& i1)) = ~ uint32_t(1);
         if(i == i1)
         {
             go_throw("float32nan2"_s);
@@ -914,14 +914,14 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_typelinks reflect.typelinks
-    std::tuple<gocpp::slice<unsafe::Pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks()
+    std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks()
     {
         auto modules = activeModules();
-        auto sections = gocpp::slice<unsafe::Pointer> {unsafe::Pointer(modules[0]->types)};
+        auto sections = gocpp::slice<gocpp::unsafe_pointer> {gocpp::unsafe_pointer(modules[0]->types)};
         auto ret = gocpp::slice<gocpp::slice<int32_t>> {modules[0]->typelinks};
         for(auto [gocpp_ignored, md] : modules.make_slice(1))
         {
-            sections = append(sections, unsafe::Pointer(md->types));
+            sections = append(sections, gocpp::unsafe_pointer(md->types));
             ret = append(ret, md->typelinks);
         }
         return {sections, ret};
@@ -930,23 +930,23 @@ namespace golang::runtime
     // reflect_resolveNameOff resolves a name offset from a base pointer.
     //
     //go:linkname reflect_resolveNameOff reflect.resolveNameOff
-    unsafe::Pointer reflect_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
+    gocpp::unsafe_pointer reflect_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off)
     {
-        return unsafe::Pointer(resolveNameOff(ptrInModule, nameOff(off)).Bytes);
+        return gocpp::unsafe_pointer(resolveNameOff(ptrInModule, nameOff(off)).Bytes);
     }
 
     // reflect_resolveTypeOff resolves an *rtype offset from a base type.
     //
     //go:linkname reflect_resolveTypeOff reflect.resolveTypeOff
-    unsafe::Pointer reflect_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
+    gocpp::unsafe_pointer reflect_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off)
     {
-        return unsafe::Pointer(rec::typeOff(gocpp::recv(toRType((runtime::_type*)(rtype))), typeOff(off)));
+        return gocpp::unsafe_pointer(rec::typeOff(gocpp::recv(toRType((runtime::_type*)(rtype))), typeOff(off)));
     }
 
     // reflect_resolveTextOff resolves a function pointer offset from a base type.
     //
     //go:linkname reflect_resolveTextOff reflect.resolveTextOff
-    unsafe::Pointer reflect_resolveTextOff(unsafe::Pointer rtype, int32_t off)
+    gocpp::unsafe_pointer reflect_resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off)
     {
         return rec::textOff(gocpp::recv(toRType((runtime::_type*)(rtype))), textOff(off));
     }
@@ -954,29 +954,29 @@ namespace golang::runtime
     // reflectlite_resolveNameOff resolves a name offset from a base pointer.
     //
     //go:linkname reflectlite_resolveNameOff internal/reflectlite.resolveNameOff
-    unsafe::Pointer reflectlite_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
+    gocpp::unsafe_pointer reflectlite_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off)
     {
-        return unsafe::Pointer(resolveNameOff(ptrInModule, nameOff(off)).Bytes);
+        return gocpp::unsafe_pointer(resolveNameOff(ptrInModule, nameOff(off)).Bytes);
     }
 
     // reflectlite_resolveTypeOff resolves an *rtype offset from a base type.
     //
     //go:linkname reflectlite_resolveTypeOff internal/reflectlite.resolveTypeOff
-    unsafe::Pointer reflectlite_resolveTypeOff(unsafe::Pointer rtype, int32_t off)
+    gocpp::unsafe_pointer reflectlite_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off)
     {
-        return unsafe::Pointer(rec::typeOff(gocpp::recv(toRType((runtime::_type*)(rtype))), typeOff(off)));
+        return gocpp::unsafe_pointer(rec::typeOff(gocpp::recv(toRType((runtime::_type*)(rtype))), typeOff(off)));
     }
 
     // reflect_addReflectOff adds a pointer to the reflection offset lookup map.
     //
     //go:linkname reflect_addReflectOff reflect.addReflectOff
-    int32_t reflect_addReflectOff(unsafe::Pointer ptr)
+    int32_t reflect_addReflectOff(gocpp::unsafe_pointer ptr)
     {
         reflectOffsLock();
         if(reflectOffs.m == nullptr)
         {
-            reflectOffs.m = gocpp::make(gocpp::Tag<gocpp::map<int32_t, unsafe::Pointer>>());
-            reflectOffs.minv = gocpp::make(gocpp::Tag<gocpp::map<unsafe::Pointer, int32_t>>());
+            reflectOffs.m = gocpp::make(gocpp::Tag<gocpp::map<int32_t, gocpp::unsafe_pointer>>());
+            reflectOffs.minv = gocpp::make(gocpp::Tag<gocpp::map<gocpp::unsafe_pointer, int32_t>>());
             reflectOffs.next = - 1;
         }
         auto [id, found] = reflectOffs.minv[ptr];

@@ -39,11 +39,11 @@ namespace golang::windows
         {
             return ""_s;
         }
-        auto end = unsafe::Pointer(p);
+        auto end = gocpp::unsafe_pointer(p);
         auto n = 0;
         for(; *(uint16_t*)(end) != 0; )
         {
-            end = unsafe::Pointer(uintptr_t(end) + gocpp::Sizeof<uint16_t>());
+            end = gocpp::unsafe_pointer(uintptr_t(end) + gocpp::Sizeof<uint16_t>());
             n++;
         }
         return syscall::UTF16ToString(unsafe::Slice(p, n));
@@ -637,12 +637,12 @@ namespace golang::windows
                 }
                 defer.push_back([=]{ syscall::CloseHandle(s); });
                 uint32_t n = {};
-                sendRecvMsgFunc.err = syscall::WSAIoctl(s, syscall::SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(unsafe::Pointer(& WSAID_WSARECVMSG)), uint32_t(gocpp::Sizeof<syscall::GUID>()), (unsigned char*)(unsafe::Pointer(& sendRecvMsgFunc.recvAddr)), uint32_t(gocpp::Sizeof<uintptr_t>()), & n, nullptr, 0);
+                sendRecvMsgFunc.err = syscall::WSAIoctl(s, syscall::SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(gocpp::unsafe_pointer(& WSAID_WSARECVMSG)), uint32_t(gocpp::Sizeof<syscall::GUID>()), (unsigned char*)(gocpp::unsafe_pointer(& sendRecvMsgFunc.recvAddr)), uint32_t(gocpp::Sizeof<uintptr_t>()), & n, nullptr, 0);
                 if(sendRecvMsgFunc.err != nullptr)
                 {
                     return;
                 }
-                sendRecvMsgFunc.err = syscall::WSAIoctl(s, syscall::SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(unsafe::Pointer(& WSAID_WSASENDMSG)), uint32_t(gocpp::Sizeof<syscall::GUID>()), (unsigned char*)(unsafe::Pointer(& sendRecvMsgFunc.sendAddr)), uint32_t(gocpp::Sizeof<uintptr_t>()), & n, nullptr, 0);
+                sendRecvMsgFunc.err = syscall::WSAIoctl(s, syscall::SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(gocpp::unsafe_pointer(& WSAID_WSASENDMSG)), uint32_t(gocpp::Sizeof<syscall::GUID>()), (unsigned char*)(gocpp::unsafe_pointer(& sendRecvMsgFunc.sendAddr)), uint32_t(gocpp::Sizeof<uintptr_t>()), & n, nullptr, 0);
             }
             catch(gocpp::GoPanic& gp)
             {
@@ -659,7 +659,7 @@ namespace golang::windows
         {
             return err;
         }
-        auto [r1, gocpp_id_1, e1] = syscall::Syscall6(sendRecvMsgFunc.sendAddr, 6, uintptr_t(fd), uintptr_t(unsafe::Pointer(msg)), uintptr_t(flags), uintptr_t(unsafe::Pointer(bytesSent)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)));
+        auto [r1, gocpp_id_1, e1] = syscall::Syscall6(sendRecvMsgFunc.sendAddr, 6, uintptr_t(fd), uintptr_t(gocpp::unsafe_pointer(msg)), uintptr_t(flags), uintptr_t(gocpp::unsafe_pointer(bytesSent)), uintptr_t(gocpp::unsafe_pointer(overlapped)), uintptr_t(gocpp::unsafe_pointer(croutine)));
         if(r1 == socket_error)
         {
             if(e1 != 0)
@@ -681,7 +681,7 @@ namespace golang::windows
         {
             return err;
         }
-        auto [r1, gocpp_id_2, e1] = syscall::Syscall6(sendRecvMsgFunc.recvAddr, 5, uintptr_t(fd), uintptr_t(unsafe::Pointer(msg)), uintptr_t(unsafe::Pointer(bytesReceived)), uintptr_t(unsafe::Pointer(overlapped)), uintptr_t(unsafe::Pointer(croutine)), 0);
+        auto [r1, gocpp_id_2, e1] = syscall::Syscall6(sendRecvMsgFunc.recvAddr, 5, uintptr_t(fd), uintptr_t(gocpp::unsafe_pointer(msg)), uintptr_t(gocpp::unsafe_pointer(bytesReceived)), uintptr_t(gocpp::unsafe_pointer(overlapped)), uintptr_t(gocpp::unsafe_pointer(croutine)), 0);
         if(r1 == socket_error)
         {
             if(e1 != 0)

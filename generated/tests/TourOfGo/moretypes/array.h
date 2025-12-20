@@ -12,11 +12,15 @@
 
 namespace golang::main
 {
+    main::asciiSet makeASCIISet(gocpp::string chars);
+    bool contains(gocpp::array_ptr<gocpp::array<uint32_t, 8>> as, unsigned char c);
+    void testPtrArray();
     void main();
-    int arrayLen(gocpp::array<unsigned char, 32>* buf);
+    int arrayLen(gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
 
     namespace rec
     {
+        bool contains(gocpp::array_ptr<golang::main::asciiSet> as, unsigned char c);
     }
 }
 

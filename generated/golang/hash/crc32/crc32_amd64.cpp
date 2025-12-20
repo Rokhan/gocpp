@@ -44,8 +44,8 @@ namespace golang::crc32
     uint32_t ieeeCLMUL(uint32_t crc, gocpp::slice<unsigned char> p)
     /* convertBlockStmt, nil block */;
 
-    crc32::sse42Table* castagnoliSSE42TableK1;
-    crc32::sse42Table* castagnoliSSE42TableK2;
+    gocpp::array_ptr<crc32::sse42Table> castagnoliSSE42TableK1;
+    gocpp::array_ptr<crc32::sse42Table> castagnoliSSE42TableK2;
     bool archAvailableCastagnoli()
     {
         return cpu::X86.HasSSE42;
@@ -80,7 +80,7 @@ namespace golang::crc32
     // castagnoliShift computes the CRC32-C of K1 or K2 zeroes (depending on the
     // table given) with the given initial crc value. This corresponds to
     // CRC(crc, O) in the description in updateCastagnoli.
-    uint32_t castagnoliShift(golang::crc32::sse42Table* table, uint32_t crc)
+    uint32_t castagnoliShift(gocpp::array_ptr<golang::crc32::sse42Table> table, uint32_t crc)
     {
         return table[3][crc >> 24] ^ table[2][(crc >> 16) & 0xFF] ^ table[1][(crc >> 8) & 0xFF] ^ table[0][crc & 0xFF];
     }
@@ -94,7 +94,7 @@ namespace golang::crc32
         crc = ~ crc;
         if(len(p) >= castagnoliK1 * 3)
         {
-            auto delta = int(uintptr_t(unsafe::Pointer(& p[0])) & 7);
+            auto delta = int(uintptr_t(gocpp::unsafe_pointer(& p[0])) & 7);
             if(delta != 0)
             {
                 delta = 8 - delta;
@@ -125,7 +125,7 @@ namespace golang::crc32
         return cpu::X86.HasPCLMULQDQ && cpu::X86.HasSSE41;
     }
 
-    slicing8Table* archIeeeTable8;
+    gocpp::array_ptr<slicing8Table> archIeeeTable8;
     void archInitIEEE()
     {
         if(! cpu::X86.HasPCLMULQDQ || ! cpu::X86.HasSSE41)

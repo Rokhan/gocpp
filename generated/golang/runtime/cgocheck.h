@@ -14,13 +14,13 @@
 namespace golang::runtime
 {
     extern gocpp::string cgoWriteBarrierFail;
-    void cgoCheckPtrWrite(unsafe::Pointer* dst, unsafe::Pointer src);
-    void cgoCheckMemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src);
-    void cgoCheckMemmove2(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t off, uintptr_t size);
-    void cgoCheckSliceCopy(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, int n);
-    void cgoCheckTypedBlock(golang::runtime::_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size);
-    void cgoCheckBits(unsafe::Pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size);
-    void cgoCheckUsingType(golang::runtime::_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size);
+    void cgoCheckPtrWrite(gocpp::unsafe_pointer* dst, gocpp::unsafe_pointer src);
+    void cgoCheckMemmove(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
+    void cgoCheckMemmove2(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
+    void cgoCheckSliceCopy(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, int n);
+    void cgoCheckTypedBlock(golang::runtime::_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
+    void cgoCheckBits(gocpp::unsafe_pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size);
+    void cgoCheckUsingType(golang::runtime::_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
 
     namespace rec
     {

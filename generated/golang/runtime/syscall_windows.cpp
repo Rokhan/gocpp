@@ -110,7 +110,7 @@ namespace golang::runtime
         lock(& cbs.lock);
         if(raceenabled && mainStarted)
         {
-            raceacquire(unsafe::Pointer(& cbs.lock));
+            raceacquire(gocpp::unsafe_pointer(& cbs.lock));
         }
     }
 
@@ -118,7 +118,7 @@ namespace golang::runtime
     {
         if(raceenabled && mainStarted)
         {
-            racerelease(unsafe::Pointer(& cbs.lock));
+            racerelease(gocpp::unsafe_pointer(& cbs.lock));
         }
         unlock(& cbs.lock);
     }
@@ -358,14 +358,14 @@ namespace golang::runtime
                     }
                     break;
                 case 14:
-                    auto at = (runtime::arraytype*)(unsafe::Pointer(t));
+                    auto at = (runtime::arraytype*)(gocpp::unsafe_pointer(t));
                     if(at->Len == 1)
                     {
                         return rec::tryRegAssignArg(gocpp::recv(p), at->Elem, offset);
                     }
                     break;
                 case 15:
-                    auto st = (runtime::structtype*)(unsafe::Pointer(t));
+                    auto st = (runtime::structtype*)(gocpp::unsafe_pointer(t));
                     for(auto [i, gocpp_ignored] : st->Fields)
                     {
                         auto f = & st->Fields[i];
@@ -494,7 +494,7 @@ namespace golang::runtime
         {
             gocpp::panic("compileCallback: expected function with one uintptr-sized result"_s);
         }
-        auto ft = (runtime::functype*)(unsafe::Pointer(fn._type));
+        auto ft = (runtime::functype*)(gocpp::unsafe_pointer(fn._type));
         // Check arguments and construct ABI translation.
         abiDesc abiMap = {};
         for(auto [gocpp_ignored, t] : rec::InSlice(gocpp::recv(ft)))
@@ -603,7 +603,7 @@ namespace golang::runtime
         // Convert from C to Go ABI.
         abi::RegArgs regs = {};
         gocpp::array<unsigned char, callbackMaxFrame> frame = {};
-        auto goArgs = unsafe::Pointer(& frame);
+        auto goArgs = gocpp::unsafe_pointer(& frame);
         for(auto [gocpp_ignored, part] : c.abiMap.parts)
         {
             //Go switch emulation
@@ -618,7 +618,7 @@ namespace golang::runtime
                         memmove(add(goArgs, part.dstStackOffset), add(a->args, part.srcStackOffset), part.len);
                         break;
                     case 1:
-                        auto goReg = unsafe::Pointer(& regs.Ints[part.dstRegister]);
+                        auto goReg = gocpp::unsafe_pointer(& regs.Ints[part.dstRegister]);
                         memmove(goReg, add(a->args, part.srcStackOffset), part.len);
                         break;
                     default:
@@ -629,10 +629,10 @@ namespace golang::runtime
         }
         auto frameSize = alignUp(c.abiMap.dstStackSize, goarch::PtrSize);
         frameSize += c.abiMap.dstSpill;
-        reflectcall(nullptr, unsafe::Pointer(c.fn), noescape(goArgs), uint32_t(c.abiMap.dstStackSize), uint32_t(c.abiMap.retOffset), uint32_t(frameSize), & regs);
+        reflectcall(nullptr, gocpp::unsafe_pointer(c.fn), noescape(goArgs), uint32_t(c.abiMap.dstStackSize), uint32_t(c.abiMap.retOffset), uint32_t(frameSize), & regs);
         if(c.abiMap.dstStackSize != c.abiMap.retOffset)
         {
-            a->result = *(uintptr_t*)(unsafe::Pointer(& frame[c.abiMap.retOffset]));
+            a->result = *(uintptr_t*)(gocpp::unsafe_pointer(& frame[c.abiMap.retOffset]));
         }
         else
         {
@@ -697,8 +697,8 @@ namespace golang::runtime
         c->fn = getLoadLibraryEx();
         c->n = 3;
         auto args = gocpp_id_1 {filename, 0, _LOAD_LIBRARY_SEARCH_SYSTEM32};
-        c->args = uintptr_t(noescape(unsafe::Pointer(& args)));
-        cgocall(asmstdcallAddr, unsafe::Pointer(c));
+        c->args = uintptr_t(noescape(gocpp::unsafe_pointer(& args)));
+        cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
         KeepAlive(filename);
         handle = c->r1;
         if(handle == 0)
@@ -724,8 +724,8 @@ namespace golang::runtime
             auto c = & getg()->m->syscall;
             c->fn = getLoadLibrary();
             c->n = 1;
-            c->args = uintptr_t(noescape(unsafe::Pointer(& filename)));
-            cgocall(asmstdcallAddr, unsafe::Pointer(c));
+            c->args = uintptr_t(noescape(gocpp::unsafe_pointer(& filename)));
+            cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
             KeepAlive(filename);
             handle = c->r1;
             if(handle == 0)
@@ -755,8 +755,8 @@ namespace golang::runtime
             auto c = & getg()->m->syscall;
             c->fn = getGetProcAddress();
             c->n = 2;
-            c->args = uintptr_t(noescape(unsafe::Pointer(& handle)));
-            cgocall(asmstdcallAddr, unsafe::Pointer(c));
+            c->args = uintptr_t(noescape(gocpp::unsafe_pointer(& handle)));
+            cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
             KeepAlive(procname);
             outhandle = c->r1;
             if(outhandle == 0)
@@ -871,8 +871,8 @@ namespace golang::runtime
             auto c = & getg()->m->syscall;
             c->fn = trap;
             c->n = uintptr_t(nargs);
-            c->args = uintptr_t(noescape(unsafe::Pointer(& args[0])));
-            cgocall(asmstdcallAddr, unsafe::Pointer(c));
+            c->args = uintptr_t(noescape(gocpp::unsafe_pointer(& args[0])));
+            cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
             return {c->r1, c->r2, c->err};
         }
         catch(gocpp::GoPanic& gp)

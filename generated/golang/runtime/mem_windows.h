@@ -12,16 +12,16 @@
 
 namespace golang::runtime
 {
-    unsafe::Pointer sysAllocOS(uintptr_t n);
-    void sysUnusedOS(unsafe::Pointer v, uintptr_t n);
-    void sysUsedOS(unsafe::Pointer v, uintptr_t n);
-    void sysHugePageOS(unsafe::Pointer v, uintptr_t n);
-    void sysNoHugePageOS(unsafe::Pointer v, uintptr_t n);
-    void sysHugePageCollapseOS(unsafe::Pointer v, uintptr_t n);
-    void sysFreeOS(unsafe::Pointer v, uintptr_t n);
-    void sysFaultOS(unsafe::Pointer v, uintptr_t n);
-    unsafe::Pointer sysReserveOS(unsafe::Pointer v, uintptr_t n);
-    void sysMapOS(unsafe::Pointer v, uintptr_t n);
+    gocpp::unsafe_pointer sysAllocOS(uintptr_t n);
+    void sysUnusedOS(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysUsedOS(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysHugePageOS(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysNoHugePageOS(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysHugePageCollapseOS(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysFreeOS(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysFaultOS(gocpp::unsafe_pointer v, uintptr_t n);
+    gocpp::unsafe_pointer sysReserveOS(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysMapOS(gocpp::unsafe_pointer v, uintptr_t n);
 
     namespace rec
     {

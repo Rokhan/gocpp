@@ -447,7 +447,7 @@ namespace golang::png
 
     // Chooses the filter to use for encoding the current row, and applies it.
     // The return value is the index of the filter and also of the row in cr that has had it applied.
-    int filter(gocpp::array<gocpp::slice<unsigned char>, nFilter>* cr, gocpp::slice<unsigned char> pr, int bpp)
+    int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp)
     {
         auto cdat0 = cr[0].make_slice(1);
         auto cdat1 = cr[1].make_slice(1);
@@ -775,8 +775,8 @@ namespace golang::png
                                 auto src = rgba->Pix.make_slice(rec::PixOffset(gocpp::recv(rgba), b.Min.X, y), rec::PixOffset(gocpp::recv(rgba), b.Max.X, y));
                                 for(; len(src) >= 4; std::tie(dst, src) = std::tuple{dst.make_slice(4), src.make_slice(4)})
                                 {
-                                    auto d = (gocpp::array<unsigned char, 4>*)(dst);
-                                    auto s = (gocpp::array<unsigned char, 4>*)(src);
+                                    auto d = (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(dst);
+                                    auto s = (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(src);
                                     if(s[3] == 0x00)
                                     {
                                         d[0] = 0;

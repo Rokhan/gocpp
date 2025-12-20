@@ -98,13 +98,13 @@ namespace golang::runtime
             pcBuf[0] = uintptr_t(skip);
             if(curgp == gp)
             {
-                nstk += fpTracebackPCs(unsafe::Pointer(getfp()), pcBuf.make_slice(1));
+                nstk += fpTracebackPCs(gocpp::unsafe_pointer(getfp()), pcBuf.make_slice(1));
             }
             else
             if(curgp != nullptr)
             {
                 pcBuf[1] = curgp->sched.pc;
-                nstk += 1 + fpTracebackPCs(unsafe::Pointer(curgp->sched.bp), pcBuf.make_slice(2));
+                nstk += 1 + fpTracebackPCs(gocpp::unsafe_pointer(curgp->sched.bp), pcBuf.make_slice(2));
             }
         }
         if(nstk > 0)
@@ -158,7 +158,7 @@ namespace golang::runtime
         {
             return 0;
         }
-        auto [id, gocpp_id_0] = rec::put(gocpp::recv(t->tab), noescape(unsafe::Pointer(& pcs[0])), uintptr_t(len(pcs)) * gocpp::Sizeof<uintptr_t>());
+        auto [id, gocpp_id_0] = rec::put(gocpp::recv(t->tab), noescape(gocpp::unsafe_pointer(& pcs[0])), uintptr_t(len(pcs)) * gocpp::Sizeof<uintptr_t>());
         return id;
     }
 
@@ -178,7 +178,7 @@ namespace golang::runtime
             auto stk = rec::bucket(gocpp::recv(t->tab), i);
             for(; stk != nullptr; stk = rec::next(gocpp::recv(stk)))
             {
-                auto stack = unsafe::Slice((uintptr_t*)(unsafe::Pointer(& stk->data[0])), uintptr_t(len(stk->data)) / gocpp::Sizeof<uintptr_t>());
+                auto stack = unsafe::Slice((uintptr_t*)(gocpp::unsafe_pointer(& stk->data[0])), uintptr_t(len(stk->data)) / gocpp::Sizeof<uintptr_t>());
                 auto frames = makeTraceFrames(gen, fpunwindExpand(stack));
                 auto maxBytes = 1 + (2 + 4 * len(frames)) * traceBytesPerNumber;
                 // Estimate the size of this record. This
@@ -298,13 +298,13 @@ namespace golang::runtime
     // returns the number of PCs written to pcBuf. The returned PCs correspond to
     // "physical frames" rather than "logical frames"; that is if A is inlined into
     // B, this will return a PC for only B.
-    int fpTracebackPCs(unsafe::Pointer fp, gocpp::slice<uintptr_t> pcBuf)
+    int fpTracebackPCs(gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf)
     {
         int i;
         for(i = 0; i < len(pcBuf) && fp != nullptr; i++)
         {
-            pcBuf[i] = *(uintptr_t*)(unsafe::Pointer(uintptr_t(fp) + goarch::PtrSize));
-            fp = unsafe::Pointer(*(uintptr_t*)(fp));
+            pcBuf[i] = *(uintptr_t*)(gocpp::unsafe_pointer(uintptr_t(fp) + goarch::PtrSize));
+            fp = gocpp::unsafe_pointer(*(uintptr_t*)(fp));
         }
         return i;
     }

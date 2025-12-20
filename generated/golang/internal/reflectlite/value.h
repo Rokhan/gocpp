@@ -17,7 +17,7 @@ namespace golang::reflectlite
     struct Value
     {
         abi::Type* typ_;
-        unsafe::Pointer ptr;
+        gocpp::unsafe_pointer ptr;
         golang::reflectlite::flag flag;
 
         using isGoStruct = void;
@@ -55,7 +55,7 @@ namespace golang::reflectlite
     struct emptyInterface
     {
         abi::Type* typ;
-        unsafe::Pointer word;
+        gocpp::unsafe_pointer word;
 
         using isGoStruct = void;
 
@@ -186,23 +186,23 @@ namespace golang::reflectlite
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
-    int chanlen(unsafe::Pointer);
-    int maplen(unsafe::Pointer);
-    unsafe::Pointer unsafe_New(abi::Type*);
+    int chanlen(gocpp::unsafe_pointer);
+    int maplen(gocpp::unsafe_pointer);
+    gocpp::unsafe_pointer unsafe_New(abi::Type*);
     struct Value ValueOf(go_any i);
-    unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, gocpp::string whySafe);
-    void ifaceE2I(abi::Type* t, go_any src, unsafe::Pointer dst);
-    void typedmemmove(abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src);
+    gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int i, uintptr_t eltSize, gocpp::string whySafe);
+    void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);
+    void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     void escapes(go_any x);
     extern gocpp_id_5 dummy;
-    unsafe::Pointer noescape(unsafe::Pointer p);
+    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
 
     namespace rec
     {
         reflectlite::Kind kind(golang::reflectlite::flag f);
         reflectlite::flag ro(golang::reflectlite::flag f);
         abi::Type* typ(golang::reflectlite::Value v);
-        unsafe::Pointer pointer(golang::reflectlite::Value v);
+        gocpp::unsafe_pointer pointer(golang::reflectlite::Value v);
         gocpp::string Error(golang::reflectlite::ValueError* e);
         void mustBeExported(golang::reflectlite::flag f);
         void mustBeAssignable(golang::reflectlite::flag f);
@@ -215,7 +215,7 @@ namespace golang::reflectlite
         int numMethod(golang::reflectlite::Value v);
         void Set(golang::reflectlite::Value v, struct Value x);
         struct Type Type(golang::reflectlite::Value v);
-        struct Value assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, unsafe::Pointer target);
+        struct Value assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target);
     }
 }
 

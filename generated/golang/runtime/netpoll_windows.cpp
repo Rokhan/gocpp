@@ -147,7 +147,7 @@ namespace golang::runtime
 
     int32_t netpollopen(uintptr_t fd, struct pollDesc* pd)
     {
-        if(stdcall4(_CreateIoCompletionPort, fd, iocphandle, uintptr_t(unsafe::Pointer(pd)), 0) == 0)
+        if(stdcall4(_CreateIoCompletionPort, fd, iocphandle, uintptr_t(gocpp::unsafe_pointer(pd)), 0) == 0)
         {
             return int32_t(getlasterror());
         }
@@ -230,7 +230,7 @@ namespace golang::runtime
         {
             mp->blocked = true;
         }
-        if(stdcall6(_GetQueuedCompletionStatusEx, iocphandle, uintptr_t(unsafe::Pointer(& entries[0])), uintptr_t(n), uintptr_t(unsafe::Pointer(& n)), uintptr_t(wait), 0) == 0)
+        if(stdcall6(_GetQueuedCompletionStatusEx, iocphandle, uintptr_t(gocpp::unsafe_pointer(& entries[0])), uintptr_t(n), uintptr_t(gocpp::unsafe_pointer(& n)), uintptr_t(wait), 0) == 0)
         {
             mp->blocked = false;
             errno = int32_t(getlasterror());
@@ -250,7 +250,7 @@ namespace golang::runtime
             {
                 errno = 0;
                 qty = 0;
-                if(stdcall5(_WSAGetOverlappedResult, op->pd->fd, uintptr_t(unsafe::Pointer(op)), uintptr_t(unsafe::Pointer(& qty)), 0, uintptr_t(unsafe::Pointer(& flags))) == 0)
+                if(stdcall5(_WSAGetOverlappedResult, op->pd->fd, uintptr_t(gocpp::unsafe_pointer(op)), uintptr_t(gocpp::unsafe_pointer(& qty)), 0, uintptr_t(gocpp::unsafe_pointer(& flags))) == 0)
                 {
                     errno = int32_t(getlasterror());
                 }

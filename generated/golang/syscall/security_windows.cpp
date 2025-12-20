@@ -139,7 +139,7 @@ namespace golang::syscall
             {
                 return {nullptr, e};
             }
-            defer.push_back([=]{ LocalFree((syscall::Handle)(unsafe::Pointer(sid))); });
+            defer.push_back([=]{ LocalFree((syscall::Handle)(gocpp::unsafe_pointer(sid))); });
             return rec::Copy(gocpp::recv(sid));
         }
         catch(gocpp::GoPanic& gp)
@@ -181,7 +181,7 @@ namespace golang::syscall
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
             auto db = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), dn);
-            sid = (SID*)(unsafe::Pointer(& b[0]));
+            sid = (SID*)(gocpp::unsafe_pointer(& b[0]));
             e = LookupAccountName(sys, acc, sid, & n, & db[0], & dn, & accType);
             if(e == nullptr)
             {
@@ -211,7 +211,7 @@ namespace golang::syscall
             {
                 return {""_s, e};
             }
-            defer.push_back([=]{ LocalFree((syscall::Handle)(unsafe::Pointer(s))); });
+            defer.push_back([=]{ LocalFree((syscall::Handle)(gocpp::unsafe_pointer(s))); });
             return {utf16PtrToString(s), nullptr};
         }
         catch(gocpp::GoPanic& gp)
@@ -230,7 +230,7 @@ namespace golang::syscall
     std::tuple<struct SID*, struct gocpp::error> rec::Copy(golang::syscall::SID* sid)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::Len(gocpp::recv(sid)));
-        auto sid2 = (SID*)(unsafe::Pointer(& b[0]));
+        auto sid2 = (SID*)(gocpp::unsafe_pointer(& b[0]));
         auto e = CopySid(uint32_t(len(b)), sid2, sid);
         if(e != nullptr)
         {
@@ -403,7 +403,7 @@ namespace golang::syscall
     }
 
     // getInfo retrieves a specified type of information about an access token.
-    std::tuple<unsafe::Pointer, struct gocpp::error> rec::getInfo(golang::syscall::Token t, uint32_t go_class, int initSize)
+    std::tuple<gocpp::unsafe_pointer, struct gocpp::error> rec::getInfo(golang::syscall::Token t, uint32_t go_class, int initSize)
     {
         auto n = uint32_t(initSize);
         for(; ; )
@@ -412,7 +412,7 @@ namespace golang::syscall
             auto e = GetTokenInformation(t, go_class, & b[0], uint32_t(len(b)), & n);
             if(e == nullptr)
             {
-                return {unsafe::Pointer(& b[0]), nullptr};
+                return {gocpp::unsafe_pointer(& b[0]), nullptr};
             }
             if(e != ERROR_INSUFFICIENT_BUFFER)
             {

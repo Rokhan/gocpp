@@ -173,7 +173,7 @@ namespace golang::runtime
     // in other data structures.
     struct gclink* rec::ptr(golang::runtime::gclinkptr p)
     {
-        return (gclink*)(unsafe::Pointer(p));
+        return (gclink*)(gocpp::unsafe_pointer(p));
     }
 
     
@@ -241,7 +241,7 @@ namespace golang::runtime
             rec::releaseAll(gocpp::recv(c));
             stackcache_clear(c);
             lock(& mheap_.lock);
-            rec::free(gocpp::recv(mheap_.cachealloc), unsafe::Pointer(c));
+            rec::free(gocpp::recv(mheap_.cachealloc), gocpp::unsafe_pointer(c));
             unlock(& mheap_.lock);
         });
     }

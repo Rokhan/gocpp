@@ -117,12 +117,12 @@ namespace golang::syscall
             auto size = gocpp::Sizeof<uint16_t>();
             for(; *envp != 0; )
             {
-                auto end = unsafe::Pointer(envp);
+                auto end = gocpp::unsafe_pointer(envp);
                 for(; *(uint16_t*)(end) != 0; )
                 {
                     end = unsafe::Add(end, size);
                 }
-                auto entry = unsafe::Slice(envp, (uintptr_t(end) - uintptr_t(unsafe::Pointer(envp))) / size);
+                auto entry = unsafe::Slice(envp, (uintptr_t(end) - uintptr_t(gocpp::unsafe_pointer(envp))) / size);
                 r = append(r, UTF16ToString(entry));
                 envp = (uint16_t*)(unsafe::Add(end, size));
             }

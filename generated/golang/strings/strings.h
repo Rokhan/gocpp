@@ -58,11 +58,11 @@ namespace golang::strings
     gocpp::string Trim(gocpp::string s, gocpp::string cutset);
     gocpp::string TrimLeft(gocpp::string s, gocpp::string cutset);
     gocpp::string trimLeftByte(gocpp::string s, unsigned char c);
-    gocpp::string trimLeftASCII(gocpp::string s, golang::strings::asciiSet* as);
+    gocpp::string trimLeftASCII(gocpp::string s, gocpp::array_ptr<golang::strings::asciiSet> as);
     gocpp::string trimLeftUnicode(gocpp::string s, gocpp::string cutset);
     gocpp::string TrimRight(gocpp::string s, gocpp::string cutset);
     gocpp::string trimRightByte(gocpp::string s, unsigned char c);
-    gocpp::string trimRightASCII(gocpp::string s, golang::strings::asciiSet* as);
+    gocpp::string trimRightASCII(gocpp::string s, gocpp::array_ptr<golang::strings::asciiSet> as);
     gocpp::string trimRightUnicode(gocpp::string s, gocpp::string cutset);
     gocpp::string TrimSpace(gocpp::string s);
     gocpp::string TrimPrefix(gocpp::string s, gocpp::string prefix);
@@ -77,7 +77,7 @@ namespace golang::strings
 
     namespace rec
     {
-        bool contains(golang::strings::asciiSet* as, unsigned char c);
+        bool contains(gocpp::array_ptr<golang::strings::asciiSet> as, unsigned char c);
     }
 }
 

@@ -73,7 +73,7 @@ namespace golang::reflectlite
         {
             if(size == goarch::PtrSize)
             {
-                auto ps = *(gocpp::slice<unsafe::Pointer>*)(v.ptr);
+                auto ps = *(gocpp::slice<gocpp::unsafe_pointer>*)(v.ptr);
                 return [=](int i, int j) mutable -> void
                 {
                     std::tie(ps[i], ps[j]) = std::tuple{ps[j], ps[i]};

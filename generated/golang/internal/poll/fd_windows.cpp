@@ -518,7 +518,7 @@ namespace golang::poll
                     auto ret = uint32_t(0);
                     auto flag = uint32_t(0);
                     auto size = uint32_t(gocpp::Sizeof<uint32_t>());
-                    auto err = syscall::WSAIoctl(fd->Sysfd, syscall::SIO_UDP_CONNRESET, (unsigned char*)(unsafe::Pointer(& flag)), size, nullptr, 0, & ret, nullptr, 0);
+                    auto err = syscall::WSAIoctl(fd->Sysfd, syscall::SIO_UDP_CONNRESET, (unsigned char*)(gocpp::unsafe_pointer(& flag)), size, nullptr, 0, & ret, nullptr, 0);
                     if(err != nullptr)
                     {
                         return {"wsaioctl"_s, err};
@@ -639,7 +639,7 @@ namespace golang::poll
                 });
                 if(race::Enabled)
                 {
-                    race::Acquire(unsafe::Pointer(& ioSync));
+                    race::Acquire(gocpp::unsafe_pointer(& ioSync));
                 }
             }
             if(len(buf) != 0)
@@ -978,7 +978,7 @@ namespace golang::poll
                 {
                     if(race::Enabled)
                     {
-                        race::ReleaseMerge(unsafe::Pointer(& ioSync));
+                        race::ReleaseMerge(gocpp::unsafe_pointer(& ioSync));
                     }
                     auto o = & fd->wop;
                     rec::InitBuf(gocpp::recv(o), b);
@@ -1122,7 +1122,7 @@ namespace golang::poll
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             if(race::Enabled)
             {
-                race::ReleaseMerge(unsafe::Pointer(& ioSync));
+                race::ReleaseMerge(gocpp::unsafe_pointer(& ioSync));
             }
             auto o = & fd->wop;
             rec::InitBufs(gocpp::recv(o), buf);
@@ -1313,14 +1313,14 @@ namespace golang::poll
         o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
         auto [gocpp_id_2, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
         {
-            return AcceptFunc(o->fd->Sysfd, o->handle, (unsigned char*)(unsafe::Pointer(& rawsa[0])), 0, uint32_t(o->rsan), uint32_t(o->rsan), & o->qty, & o->o);
+            return AcceptFunc(o->fd->Sysfd, o->handle, (unsigned char*)(gocpp::unsafe_pointer(& rawsa[0])), 0, uint32_t(o->rsan), uint32_t(o->rsan), & o->qty, & o->o);
         });
         if(err != nullptr)
         {
             CloseFunc(s);
             return {"acceptex"_s, err};
         }
-        err = syscall::Setsockopt(s, syscall::SOL_SOCKET, syscall::SO_UPDATE_ACCEPT_CONTEXT, (unsigned char*)(unsafe::Pointer(& fd->Sysfd)), int32_t(gocpp::Sizeof<syscall::Handle>()));
+        err = syscall::Setsockopt(s, syscall::SOL_SOCKET, syscall::SO_UPDATE_ACCEPT_CONTEXT, (unsigned char*)(gocpp::unsafe_pointer(& fd->Sysfd)), int32_t(gocpp::Sizeof<syscall::Handle>()));
         if(err != nullptr)
         {
             CloseFunc(s);
@@ -1441,7 +1441,7 @@ namespace golang::poll
             }
             windows::FILE_BASIC_INFO du = {};
             du.FileAttributes = attrs;
-            return windows::SetFileInformationByHandle(fd->Sysfd, windows::FileBasicInfo, unsafe::Pointer(& du), uint32_t(gocpp::Sizeof<windows::FILE_BASIC_INFO>()));
+            return windows::SetFileInformationByHandle(fd->Sysfd, windows::FileBasicInfo, gocpp::unsafe_pointer(& du), uint32_t(gocpp::Sizeof<windows::FILE_BASIC_INFO>()));
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1575,9 +1575,9 @@ namespace golang::poll
     int32_t sockaddrInet4ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa)
     {
         *rsa = syscall::RawSockaddrAny {};
-        auto raw = (syscall::RawSockaddrInet4*)(unsafe::Pointer(rsa));
+        auto raw = (syscall::RawSockaddrInet4*)(gocpp::unsafe_pointer(rsa));
         raw->Family = syscall::AF_INET;
-        auto p = (gocpp::array<unsigned char, 2>*)(unsafe::Pointer(& raw->Port));
+        auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& raw->Port));
         p[0] = (unsigned char)(sa->Port >> 8);
         p[1] = (unsigned char)(sa->Port);
         raw->Addr = sa->Addr;
@@ -1587,9 +1587,9 @@ namespace golang::poll
     int32_t sockaddrInet6ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa)
     {
         *rsa = syscall::RawSockaddrAny {};
-        auto raw = (syscall::RawSockaddrInet6*)(unsafe::Pointer(rsa));
+        auto raw = (syscall::RawSockaddrInet6*)(gocpp::unsafe_pointer(rsa));
         raw->Family = syscall::AF_INET6;
-        auto p = (gocpp::array<unsigned char, 2>*)(unsafe::Pointer(& raw->Port));
+        auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& raw->Port));
         p[0] = (unsigned char)(sa->Port >> 8);
         p[1] = (unsigned char)(sa->Port);
         raw->Scope_id = sa->ZoneId;
@@ -1599,16 +1599,16 @@ namespace golang::poll
 
     void rawToSockaddrInet4(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa)
     {
-        auto pp = (syscall::RawSockaddrInet4*)(unsafe::Pointer(rsa));
-        auto p = (gocpp::array<unsigned char, 2>*)(unsafe::Pointer(& pp->Port));
+        auto pp = (syscall::RawSockaddrInet4*)(gocpp::unsafe_pointer(rsa));
+        auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& pp->Port));
         sa->Port = (int(p[0]) << 8) + int(p[1]);
         sa->Addr = pp->Addr;
     }
 
     void rawToSockaddrInet6(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa)
     {
-        auto pp = (syscall::RawSockaddrInet6*)(unsafe::Pointer(rsa));
-        auto p = (gocpp::array<unsigned char, 2>*)(unsafe::Pointer(& pp->Port));
+        auto pp = (syscall::RawSockaddrInet6*)(gocpp::unsafe_pointer(rsa));
+        auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& pp->Port));
         sa->Port = (int(p[0]) << 8) + int(p[1]);
         sa->ZoneId = pp->Scope_id;
         sa->Addr = pp->Addr;
@@ -1669,7 +1669,7 @@ namespace golang::poll
             {
                 o->rsa = new(syscall::RawSockaddrAny);
             }
-            o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));
+            o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
             o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
             o->msg.Flags = uint32_t(flags);
             auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
@@ -1711,7 +1711,7 @@ namespace golang::poll
             {
                 o->rsa = new(syscall::RawSockaddrAny);
             }
-            o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));
+            o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
             o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
             o->msg.Flags = uint32_t(flags);
             auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
@@ -1752,7 +1752,7 @@ namespace golang::poll
             {
                 o->rsa = new(syscall::RawSockaddrAny);
             }
-            o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));
+            o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
             o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
             o->msg.Flags = uint32_t(flags);
             auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
@@ -1800,7 +1800,7 @@ namespace golang::poll
                 {
                     return {0, 0, err};
                 }
-                o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));
+                o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
                 o->msg.Namelen = len;
             }
             auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
@@ -1837,7 +1837,7 @@ namespace golang::poll
                 o->rsa = new(syscall::RawSockaddrAny);
             }
             auto len = sockaddrInet4ToRaw(o->rsa, sa);
-            o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));
+            o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
             o->msg.Namelen = len;
             auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
             {
@@ -1873,7 +1873,7 @@ namespace golang::poll
                 o->rsa = new(syscall::RawSockaddrAny);
             }
             auto len = sockaddrInet6ToRaw(o->rsa, sa);
-            o->msg.Name = (syscall::Pointer)(unsafe::Pointer(o->rsa));
+            o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
             o->msg.Namelen = len;
             auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
             {

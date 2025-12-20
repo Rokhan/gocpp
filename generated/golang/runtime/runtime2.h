@@ -99,7 +99,7 @@ namespace golang::runtime
     struct iface
     {
         itab* tab;
-        unsafe::Pointer data;
+        gocpp::unsafe_pointer data;
 
         using isGoStruct = void;
 
@@ -116,7 +116,7 @@ namespace golang::runtime
     struct eface
     {
         golang::runtime::_type* _type;
-        unsafe::Pointer data;
+        gocpp::unsafe_pointer data;
 
         using isGoStruct = void;
 
@@ -138,7 +138,7 @@ namespace golang::runtime
         uintptr_t sp;
         uintptr_t pc;
         golang::runtime::guintptr g;
-        unsafe::Pointer ctxt;
+        gocpp::unsafe_pointer ctxt;
         uintptr_t ret;
         uintptr_t lr;
         uintptr_t bp;
@@ -160,7 +160,7 @@ namespace golang::runtime
         g* g;
         sudog* next;
         sudog* prev;
-        unsafe::Pointer elem;
+        gocpp::unsafe_pointer elem;
         int64_t acquiretime;
         int64_t releasetime;
         uint32_t ticket;
@@ -403,17 +403,17 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct _defer& value);
     struct _panic
     {
-        unsafe::Pointer argp;
+        gocpp::unsafe_pointer argp;
         go_any arg;
         _panic* link;
         uintptr_t startPC;
-        unsafe::Pointer startSP;
-        unsafe::Pointer sp;
+        gocpp::unsafe_pointer startSP;
+        gocpp::unsafe_pointer sp;
         uintptr_t lr;
-        unsafe::Pointer fp;
+        gocpp::unsafe_pointer fp;
         uintptr_t retpc;
         uint8_t* deferBitsPtr;
-        unsafe::Pointer slotsPtr;
+        gocpp::unsafe_pointer slotsPtr;
         bool recovered;
         bool goexit;
         bool deferreturn;
@@ -493,7 +493,7 @@ namespace golang::runtime
         uintptr_t syscallsp;
         uintptr_t syscallpc;
         uintptr_t stktopsp;
-        unsafe::Pointer param;
+        gocpp::unsafe_pointer param;
         atomic::Uint32 atomicstatus;
         uint32_t stackLock;
         uint64_t goid;
@@ -530,7 +530,7 @@ namespace golang::runtime
         uintptr_t racectx;
         sudog* waiting;
         gocpp::slice<uintptr_t> cgoCtxt;
-        unsafe::Pointer labels;
+        gocpp::unsafe_pointer labels;
         timer* timer;
         atomic::Uint32 selectDone;
         coro* coroarg;
@@ -588,7 +588,7 @@ namespace golang::runtime
         uint64_t ncgocall;
         int32_t ncgo;
         atomic::Uint32 cgoCallersUse;
-        cgoCallers* cgoCallers;
+        gocpp::array_ptr<cgoCallers> cgoCallers;
         note park;
         m* alllink;
         golang::runtime::muintptr schedlink;
@@ -598,8 +598,8 @@ namespace golang::runtime
         uint32_t lockedInt;
         golang::runtime::muintptr nextwaitm;
         mLockProfile mLockProfile;
-        std::function<bool (struct g* _1, unsafe::Pointer _2)> waitunlockf;
-        unsafe::Pointer waitlock;
+        std::function<bool (struct g* _1, gocpp::unsafe_pointer _2)> waitunlockf;
+        gocpp::unsafe_pointer waitlock;
         golang::runtime::traceBlockReason waitTraceBlockReason;
         int waitTraceSkip;
         uint32_t syscalltick;

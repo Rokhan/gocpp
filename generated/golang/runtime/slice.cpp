@@ -119,7 +119,7 @@ namespace golang::runtime
 
     // makeslicecopy allocates a slice of "tolen" elements of type "et",
     // then copies "fromlen" elements of type "et" into that new allocation from "from".
-    unsafe::Pointer makeslicecopy(golang::runtime::_type* et, int tolen, int fromlen, unsafe::Pointer from)
+    gocpp::unsafe_pointer makeslicecopy(golang::runtime::_type* et, int tolen, int fromlen, gocpp::unsafe_pointer from)
     {
         uintptr_t tomem = {};
         uintptr_t copymem = {};
@@ -138,7 +138,7 @@ namespace golang::runtime
             tomem = et->Size_ * uintptr_t(tolen);
             copymem = tomem;
         }
-        unsafe::Pointer to = {};
+        gocpp::unsafe_pointer to = {};
         if(et->PtrBytes == 0)
         {
             to = mallocgc(tomem, nullptr, false);
@@ -173,7 +173,7 @@ namespace golang::runtime
         return to;
     }
 
-    unsafe::Pointer makeslice(golang::runtime::_type* et, int len, int cap)
+    gocpp::unsafe_pointer makeslice(golang::runtime::_type* et, int len, int cap)
     {
         auto [mem, overflow] = math::MulUintptr(et->Size_, uintptr_t(cap));
         if(overflow || mem > maxAlloc || len < 0 || len > cap)
@@ -188,7 +188,7 @@ namespace golang::runtime
         return mallocgc(mem, et, true);
     }
 
-    unsafe::Pointer makeslice64(golang::runtime::_type* et, int64_t len64, int64_t cap64)
+    gocpp::unsafe_pointer makeslice64(golang::runtime::_type* et, int64_t len64, int64_t cap64)
     {
         auto len = int(len64);
         if(int64_t(len) != len64)
@@ -234,7 +234,7 @@ namespace golang::runtime
     // new length so that the old length is not live (does not need to be
     // spilled/restored) and the new length is returned (also does not need
     // to be spilled/restored).
-    struct slice growslice(unsafe::Pointer oldPtr, int newLen, int oldCap, int num, golang::runtime::_type* et)
+    struct slice growslice(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, golang::runtime::_type* et)
     {
         auto oldLen = newLen - num;
         if(raceenabled)
@@ -256,7 +256,7 @@ namespace golang::runtime
         }
         if(et->Size_ == 0)
         {
-            return slice {unsafe::Pointer(& zerobase), newLen, newLen};
+            return slice {gocpp::unsafe_pointer(& zerobase), newLen, newLen};
         }
         auto newcap = nextslicecap(newLen, oldCap);
         bool overflow = {};
@@ -317,7 +317,7 @@ namespace golang::runtime
         {
             gocpp::panic(errorString("growslice: len out of range"_s));
         }
-        unsafe::Pointer p = {};
+        gocpp::unsafe_pointer p = {};
         if(et->PtrBytes == 0)
         {
             p = mallocgc(capmem, nullptr, false);
@@ -385,7 +385,7 @@ namespace golang::runtime
     }
 
     // slicecopy is used to copy from a string or slice of pointerless elements into a slice.
-    int slicecopy(unsafe::Pointer toPtr, int toLen, unsafe::Pointer fromPtr, int fromLen, uintptr_t width)
+    int slicecopy(gocpp::unsafe_pointer toPtr, int toLen, gocpp::unsafe_pointer fromPtr, int fromLen, uintptr_t width)
     {
         if(fromLen == 0 || toLen == 0)
         {

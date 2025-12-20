@@ -392,7 +392,7 @@ namespace golang::runtime
     // stk returns the slice in b holding the stack.
     gocpp::slice<uintptr_t> rec::stk(golang::runtime::bucket* b)
     {
-        auto stk = (gocpp::array<uintptr_t, maxStack>*)(add(unsafe::Pointer(b), gocpp::Sizeof<bucket>()));
+        auto stk = (gocpp::array_ptr<gocpp::array<uintptr_t, maxStack>>)(add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>()));
         if(b->nstk > maxStack)
         {
             go_throw("bad profile stack count"_s);
@@ -407,7 +407,7 @@ namespace golang::runtime
         {
             go_throw("bad use of bucket.mp"_s);
         }
-        auto data = add(unsafe::Pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
+        auto data = add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
         return (memRecord*)(data);
     }
 
@@ -418,26 +418,26 @@ namespace golang::runtime
         {
             go_throw("bad use of bucket.bp"_s);
         }
-        auto data = add(unsafe::Pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
+        auto data = add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
         return (blockRecord*)(data);
     }
 
     // Return the bucket for stk[0:nstk], allocating new bucket if needed.
     struct bucket* stkbucket(golang::runtime::bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc)
     {
-        auto bh = (runtime::buckhashArray*)(rec::Load(gocpp::recv(buckhash)));
+        auto bh = (gocpp::array_ptr<runtime::buckhashArray>)(rec::Load(gocpp::recv(buckhash)));
         if(bh == nullptr)
         {
             lock(& profInsertLock);
-            bh = (runtime::buckhashArray*)(rec::Load(gocpp::recv(buckhash)));
+            bh = (gocpp::array_ptr<runtime::buckhashArray>)(rec::Load(gocpp::recv(buckhash)));
             if(bh == nullptr)
             {
-                bh = (runtime::buckhashArray*)(sysAlloc(gocpp::Sizeof<runtime::buckhashArray>(), & memstats.buckhash_sys));
+                bh = (gocpp::array_ptr<runtime::buckhashArray>)(sysAlloc(gocpp::Sizeof<runtime::buckhashArray>(), & memstats.buckhash_sys));
                 if(bh == nullptr)
                 {
                     go_throw("runtime: cannot allocate memory"_s);
                 }
-                rec::StoreNoWB(gocpp::recv(buckhash), unsafe::Pointer(bh));
+                rec::StoreNoWB(gocpp::recv(buckhash), gocpp::unsafe_pointer(bh));
             }
             unlock(& profInsertLock);
         }
@@ -495,8 +495,8 @@ namespace golang::runtime
         }
         b->next = (bucket*)(rec::Load(gocpp::recv(bh[i])));
         b->allnext = (bucket*)(rec::Load(gocpp::recv(allnext)));
-        rec::StoreNoWB(gocpp::recv(bh[i]), unsafe::Pointer(b));
-        rec::StoreNoWB(gocpp::recv(allnext), unsafe::Pointer(b));
+        rec::StoreNoWB(gocpp::recv(bh[i]), gocpp::unsafe_pointer(b));
+        rec::StoreNoWB(gocpp::recv(allnext), gocpp::unsafe_pointer(b));
         unlock(& profInsertLock);
         return b;
     }
@@ -586,7 +586,7 @@ namespace golang::runtime
     }
 
     // Called by malloc to record a profiled block.
-    void mProf_Malloc(unsafe::Pointer p, uintptr_t size)
+    void mProf_Malloc(gocpp::unsafe_pointer p, uintptr_t size)
     {
         gocpp::array<uintptr_t, maxStack> stk = {};
         auto nstk = callers(4, stk.make_slice(0));
@@ -870,7 +870,7 @@ namespace golang::runtime
             prof->cyclesLost += cycles;
             return;
         }
-        if(uintptr_t(unsafe::Pointer(l)) == prof->pending)
+        if(uintptr_t(gocpp::unsafe_pointer(l)) == prof->pending)
         {
             prof->cycles += cycles;
             return;
@@ -889,7 +889,7 @@ namespace golang::runtime
                 prof->cyclesLost += prev;
             }
         }
-        prof->pending = uintptr_t(unsafe::Pointer(l));
+        prof->pending = uintptr_t(gocpp::unsafe_pointer(l));
         prof->cycles = cycles;
     }
 
@@ -898,7 +898,7 @@ namespace golang::runtime
     //go:nowritebarrierrec
     void rec::recordUnlock(golang::runtime::mLockProfile* prof, struct mutex* l)
     {
-        if(uintptr_t(unsafe::Pointer(l)) == prof->pending)
+        if(uintptr_t(gocpp::unsafe_pointer(l)) == prof->pending)
         {
             rec::captureStack(gocpp::recv(prof));
         }
@@ -1245,15 +1245,15 @@ namespace golang::runtime
         r->FreeObjects = int64_t(mp->active.frees);
         if(raceenabled)
         {
-            racewriterangepc(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(MemProfile));
+            racewriterangepc(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(MemProfile));
         }
         if(msanenabled)
         {
-            msanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+            msanwrite(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
         }
         if(asanenabled)
         {
-            asanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+            asanwrite(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
         }
         copy(r->Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
         for(auto i = int(b->nstk); i < len(r->Stack0); i++)
@@ -1343,15 +1343,15 @@ namespace golang::runtime
                 r->Cycles = bp->cycles;
                 if(raceenabled)
                 {
-                    racewriterangepc(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(BlockProfile));
+                    racewriterangepc(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(BlockProfile));
                 }
                 if(msanenabled)
                 {
-                    msanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+                    msanwrite(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
                 }
                 if(asanenabled)
                 {
-                    asanwrite(unsafe::Pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+                    asanwrite(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
                 }
                 auto i = copy(r->Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
                 for(; i < len(r->Stack0); i++)
@@ -1412,7 +1412,7 @@ namespace golang::runtime
     {
         int n;
         bool ok;
-        auto first = (m*)(atomic::Loadp(unsafe::Pointer(& allm)));
+        auto first = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm)));
         for(auto mp = first; mp != nullptr; mp = mp->alllink)
         {
             n++;
@@ -1431,7 +1431,7 @@ namespace golang::runtime
     }
 
     //go:linkname runtime_goroutineProfileWithLabels runtime/pprof.runtime_goroutineProfileWithLabels
-    std::tuple<int, bool> runtime_goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels)
+    std::tuple<int, bool> runtime_goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
         int n;
         bool ok;
@@ -1439,7 +1439,7 @@ namespace golang::runtime
     }
 
     // labels may be nil. If labels is non-nil, it must have the same length as p.
-    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels)
+    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
         int n;
         bool ok;
@@ -1456,7 +1456,7 @@ namespace golang::runtime
         bool active;
         atomic::Int64 offset;
         gocpp::slice<StackRecord> records;
-        gocpp::slice<unsafe::Pointer> labels;
+        gocpp::slice<gocpp::unsafe_pointer> labels;
 
         using isGoStruct = void;
 
@@ -1531,7 +1531,7 @@ namespace golang::runtime
         return rec::CompareAndSwap(gocpp::recv((atomic::Uint32*)(p)), uint32_t(old), uint32_t(go_new));
     }
 
-    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels)
+    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
         int n;
         bool ok;
@@ -1589,7 +1589,7 @@ namespace golang::runtime
         });
         if(raceenabled)
         {
-            raceacquire(unsafe::Pointer(& labelSync));
+            raceacquire(gocpp::unsafe_pointer(& labelSync));
         }
         if(n != int(endOffset))
         {
@@ -1675,7 +1675,7 @@ namespace golang::runtime
         }
     }
 
-    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<unsafe::Pointer> labels)
+    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels)
     {
         int n;
         bool ok;
@@ -1733,7 +1733,7 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            raceacquire(unsafe::Pointer(& labelSync));
+            raceacquire(gocpp::unsafe_pointer(& labelSync));
         }
         startTheWorld(stw);
         return {n, ok};
@@ -1804,7 +1804,7 @@ namespace golang::runtime
     }
 
     mutex tracelock;
-    void tracealloc(unsafe::Pointer p, uintptr_t size, golang::runtime::_type* typ)
+    void tracealloc(gocpp::unsafe_pointer p, uintptr_t size, golang::runtime::_type* typ)
     {
         lock(& tracelock);
         auto gp = getg();
@@ -1837,7 +1837,7 @@ namespace golang::runtime
         unlock(& tracelock);
     }
 
-    void tracefree(unsafe::Pointer p, uintptr_t size)
+    void tracefree(gocpp::unsafe_pointer p, uintptr_t size)
     {
         lock(& tracelock);
         auto gp = getg();

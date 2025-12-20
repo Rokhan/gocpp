@@ -1092,7 +1092,7 @@ namespace golang::runtime
         notewakeup(& work.bgMarkReady);
         for(; ; )
         {
-            gopark([=](struct g* g, unsafe::Pointer nodep) mutable -> bool
+            gopark([=](struct g* g, gocpp::unsafe_pointer nodep) mutable -> bool
             {
                 auto node = (gcBgMarkWorkerNode*)(nodep);
                 if(auto mp = rec::ptr(gocpp::recv(node->m)); mp != nullptr)
@@ -1101,7 +1101,7 @@ namespace golang::runtime
                 }
                 rec::push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
                 return true;
-            }, unsafe::Pointer(node), waitReasonGCWorkerIdle, traceBlockSystemGoroutine, 0);
+            }, gocpp::unsafe_pointer(node), waitReasonGCWorkerIdle, traceBlockSystemGoroutine, 0);
             rec::set(gocpp::recv(node->m), acquirem());
             auto pp = rec::ptr(gocpp::recv(gp->m->p));
             if(gcBlackenEnabled == 0)
@@ -1370,7 +1370,7 @@ namespace golang::runtime
     }
 
     std::function<void ()> poolcleanup;
-    gocpp::slice<unsafe::Pointer> boringCaches;
+    gocpp::slice<gocpp::unsafe_pointer> boringCaches;
     //go:linkname sync_runtime_registerPoolCleanup sync.runtime_registerPoolCleanup
     void sync_runtime_registerPoolCleanup(std::function<void ()> f)
     {
@@ -1378,7 +1378,7 @@ namespace golang::runtime
     }
 
     //go:linkname boring_registerCache crypto/internal/boring/bcache.registerCache
-    void boring_registerCache(unsafe::Pointer p)
+    void boring_registerCache(gocpp::unsafe_pointer p)
     {
         boringCaches = append(boringCaches, p);
     }
@@ -1475,7 +1475,7 @@ namespace golang::runtime
 
     // gcTestIsReachable performs a GC and returns a bit set where bit i
     // is set if ptrs[i] is reachable.
-    uint64_t gcTestIsReachable(gocpp::slice<unsafe::Pointer> ptrs)
+    uint64_t gcTestIsReachable(gocpp::slice<gocpp::unsafe_pointer> ptrs)
     {
         uint64_t mask;
         if(len(ptrs) > 64)
@@ -1512,7 +1512,7 @@ namespace golang::runtime
                 mask |= 1 << i;
             }
             lock(& mheap_.speciallock);
-            rec::free(gocpp::recv(mheap_.specialReachableAlloc), unsafe::Pointer(s));
+            rec::free(gocpp::recv(mheap_.specialReachableAlloc), gocpp::unsafe_pointer(s));
             unlock(& mheap_.speciallock);
         }
         return mask;
@@ -1526,7 +1526,7 @@ namespace golang::runtime
     // complicate a test.
     //
     //go:nosplit
-    gocpp::string gcTestPointerClass(unsafe::Pointer p)
+    gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p)
     {
         auto p2 = uintptr_t(noescape(p));
         auto gp = getg();

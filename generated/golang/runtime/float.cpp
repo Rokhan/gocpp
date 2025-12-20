@@ -63,14 +63,14 @@ namespace golang::runtime
     // float64bits returns the IEEE 754 binary representation of f.
     uint64_t float64bits(double f)
     {
-        return *(uint64_t*)(unsafe::Pointer(& f));
+        return *(uint64_t*)(gocpp::unsafe_pointer(& f));
     }
 
     // float64frombits returns the floating point number corresponding
     // the IEEE 754 binary representation b.
     double float64frombits(uint64_t b)
     {
-        return *(double*)(unsafe::Pointer(& b));
+        return *(double*)(gocpp::unsafe_pointer(& b));
     }
 
 }

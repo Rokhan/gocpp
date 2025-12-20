@@ -17,8 +17,8 @@ namespace golang::runtime
     struct fixalloc
     {
         uintptr_t size;
-        std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first;
-        unsafe::Pointer arg;
+        std::function<void (gocpp::unsafe_pointer arg, gocpp::unsafe_pointer p)> first;
+        gocpp::unsafe_pointer arg;
         mlink* list;
         uintptr_t chunk;
         uint32_t nchunk;
@@ -59,9 +59,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(golang::runtime::fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, golang::runtime::sysMemStat* stat);
-        unsafe::Pointer alloc(golang::runtime::fixalloc* f);
-        void free(golang::runtime::fixalloc* f, unsafe::Pointer p);
+        void init(golang::runtime::fixalloc* f, uintptr_t size, std::function<void (gocpp::unsafe_pointer arg, gocpp::unsafe_pointer p)> first, gocpp::unsafe_pointer arg, golang::runtime::sysMemStat* stat);
+        gocpp::unsafe_pointer alloc(golang::runtime::fixalloc* f);
+        void free(golang::runtime::fixalloc* f, gocpp::unsafe_pointer p);
     }
 }
 

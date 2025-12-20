@@ -184,8 +184,8 @@ namespace golang::runtime
                         return {bitvector {}, false};
                     }
                     hasReflectStackObj = true;
-                    auto mv = *(reflectMethodValue**)(unsafe::Pointer(arg0));
-                    auto retValid = *(bool*)(unsafe::Pointer(arg0 + 4 * goarch::PtrSize));
+                    auto mv = *(reflectMethodValue**)(gocpp::unsafe_pointer(arg0));
+                    auto retValid = *(bool*)(gocpp::unsafe_pointer(arg0 + 4 * goarch::PtrSize));
                     if(mv->fn != rec::entry(gocpp::recv(f)))
                     {
                         print("runtime: confused by "_s, funcname(f), "\n"_s);
@@ -327,7 +327,7 @@ namespace golang::runtime
         {
             go_throw("abiRegArgsType needs GC Prog, update methodValueCallFrameObjs"_s);
         }
-        auto ptr = uintptr_t(unsafe::Pointer(& methodValueCallFrameObjs[0]));
+        auto ptr = uintptr_t(gocpp::unsafe_pointer(& methodValueCallFrameObjs[0]));
         moduledata* mod = {};
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
         {
@@ -345,7 +345,7 @@ namespace golang::runtime
             x.off = - int32_t(alignUp(abiRegArgsType->Size_, 8));
             x.size = int32_t(abiRegArgsType->Size_);
             x._ptrdata = int32_t(abiRegArgsType->PtrBytes);
-            x.gcdataoff = uint32_t(uintptr_t(unsafe::Pointer(abiRegArgsType->GCData)) - mod->rodata);
+            x.gcdataoff = uint32_t(uintptr_t(gocpp::unsafe_pointer(abiRegArgsType->GCData)) - mod->rodata);
         });
     }
 

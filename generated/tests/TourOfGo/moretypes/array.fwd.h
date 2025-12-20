@@ -11,4 +11,5 @@ namespace golang::main
     const int ten = 10;
     struct gocpp_id_1;
     using semTable2 = gocpp::array<gocpp_id_1, ten>;
+    using asciiSet = gocpp::array<uint32_t, 8>;
 }

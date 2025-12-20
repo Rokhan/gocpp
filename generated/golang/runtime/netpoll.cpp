@@ -636,9 +636,9 @@ namespace golang::runtime
         return pollNoError;
     }
 
-    bool netpollblockcommit(struct g* gp, unsafe::Pointer gpp)
+    bool netpollblockcommit(struct g* gp, gocpp::unsafe_pointer gpp)
     {
-        auto r = atomic::Casuintptr((uintptr_t*)(gpp), pdWait, uintptr_t(unsafe::Pointer(gp)));
+        auto r = atomic::Casuintptr((uintptr_t*)(gpp), pdWait, uintptr_t(gocpp::unsafe_pointer(gp)));
         if(r)
         {
             netpollAdjustWaiters(1);
@@ -679,7 +679,7 @@ namespace golang::runtime
         }
         if(waitio || netpollcheckerr(pd, mode) == pollNoError)
         {
-            gopark(netpollblockcommit, unsafe::Pointer(gpp), waitReasonIOWait, traceBlockNet, 5);
+            gopark(netpollblockcommit, gocpp::unsafe_pointer(gpp), waitReasonIOWait, traceBlockNet, 5);
         }
         auto old = rec::Swap(gocpp::recv(gpp), pdNil);
         if(old > pdWait)
@@ -729,7 +729,7 @@ namespace golang::runtime
                 {
                     *delta -= 1;
                 }
-                return (g*)(unsafe::Pointer(old));
+                return (g*)(gocpp::unsafe_pointer(old));
             }
         }
     }
@@ -846,9 +846,9 @@ namespace golang::runtime
     go_any rec::makeArg(golang::runtime::pollDesc* pd)
     {
         go_any i;
-        auto x = (eface*)(unsafe::Pointer(& i));
+        auto x = (eface*)(gocpp::unsafe_pointer(& i));
         x->_type = pdType;
-        x->data = unsafe::Pointer(& pd->self);
+        x->data = gocpp::unsafe_pointer(& pd->self);
         return i;
     }
 

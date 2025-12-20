@@ -376,19 +376,19 @@ namespace golang::reflect
     gocpp::string pkgPath(abi::Name n);
     abi::Name newName(gocpp::string n, gocpp::string tag, bool exported, bool embedded);
     extern gocpp::slice<gocpp::string> kindNames;
-    unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
-    unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off);
-    unsafe::Pointer resolveTextOff(unsafe::Pointer rtype, int32_t off);
-    int32_t addReflectOff(unsafe::Pointer ptr);
+    gocpp::unsafe_pointer resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
+    gocpp::unsafe_pointer resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
+    gocpp::unsafe_pointer resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off);
+    int32_t addReflectOff(gocpp::unsafe_pointer ptr);
     reflect::aNameOff resolveReflectName(abi::Name n);
     reflect::aTypeOff resolveReflectType(abi::Type* t);
-    reflect::aTextOff resolveReflectText(unsafe::Pointer ptr);
-    unsafe::Pointer textOffFor(abi::Type* t, golang::reflect::aTextOff off);
+    reflect::aTextOff resolveReflectText(gocpp::unsafe_pointer ptr);
+    gocpp::unsafe_pointer textOffFor(abi::Type* t, golang::reflect::aTextOff off);
     gocpp::string pkgPathFor(abi::Type* t);
     gocpp::string nameFor(abi::Type* t);
     struct rtype* toRType(abi::Type* t);
     abi::Type* elem(abi::Type* t);
-    unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, gocpp::string whySafe);
+    gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
     struct fieldScan
     {
         structType* typ;
@@ -430,8 +430,8 @@ namespace golang::reflect
     bool directlyAssignable(abi::Type* T, abi::Type* V);
     bool haveIdenticalType(abi::Type* T, abi::Type* V, bool cmpTags);
     bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
-    std::tuple<gocpp::slice<unsafe::Pointer>, gocpp::slice<gocpp::slice<int32_t>>> typelinks();
-    abi::Type* rtypeOff(unsafe::Pointer section, int32_t off);
+    std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> typelinks();
+    abi::Type* rtypeOff(gocpp::unsafe_pointer section, int32_t off);
     gocpp::slice<abi::Type*> typesByString(gocpp::string s);
     extern sync::Map lookupCache;
     struct cacheKey
@@ -610,7 +610,7 @@ namespace golang::reflect
         gocpp::string String(golang::reflect::Kind k);
         abi::Name nameOff(golang::reflect::rtype* t, golang::reflect::aNameOff off);
         abi::Type* typeOff(golang::reflect::rtype* t, golang::reflect::aTypeOff off);
-        unsafe::Pointer textOff(golang::reflect::rtype* t, golang::reflect::aTextOff off);
+        gocpp::unsafe_pointer textOff(golang::reflect::rtype* t, golang::reflect::aTextOff off);
         gocpp::string String(golang::reflect::rtype* t);
         uintptr_t Size(golang::reflect::rtype* t);
         int Bits(golang::reflect::rtype* t);

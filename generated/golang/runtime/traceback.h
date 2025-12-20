@@ -59,7 +59,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct unwinder& value);
     int tracebackPCs(struct unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
-    void printArgs(struct funcInfo f, unsafe::Pointer argp, uintptr_t pc);
+    void printArgs(struct funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc);
     std::tuple<gocpp::string, gocpp::string, gocpp::string> funcNamePiecesForPrint(gocpp::string name);
     gocpp::string funcNameForPrint(gocpp::string name);
     void printFuncName(gocpp::string name);
@@ -82,10 +82,10 @@ namespace golang::runtime
     void tracebackothers(struct g* me);
     void tracebackHexdump(struct stack stk, struct stkframe* frame, uintptr_t bad);
     bool isSystemGoroutine(struct g* gp, bool fixed);
-    void SetCgoTraceback(int version, unsafe::Pointer traceback, unsafe::Pointer context, unsafe::Pointer symbolizer);
-    extern unsafe::Pointer cgoTraceback;
-    extern unsafe::Pointer cgoContext;
-    extern unsafe::Pointer cgoSymbolizer;
+    void SetCgoTraceback(int version, gocpp::unsafe_pointer traceback, gocpp::unsafe_pointer context, gocpp::unsafe_pointer symbolizer);
+    extern gocpp::unsafe_pointer cgoTraceback;
+    extern gocpp::unsafe_pointer cgoContext;
+    extern gocpp::unsafe_pointer cgoSymbolizer;
     struct cgoTracebackArg
     {
         uintptr_t context;
@@ -143,7 +143,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cgoSymbolizerArg& value);
-    void printCgoTraceback(cgoCallers* callers);
+    void printCgoTraceback(gocpp::array_ptr<cgoCallers> callers);
     bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, struct cgoSymbolizerArg* arg);
     void callCgoSymbolizer(struct cgoSymbolizerArg* arg);
     void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf);

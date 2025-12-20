@@ -68,7 +68,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct timer& value);
     void timeSleep(int64_t ns);
-    bool resetForSleep(struct g* gp, unsafe::Pointer ut);
+    bool resetForSleep(struct g* gp, gocpp::unsafe_pointer ut);
     void startTimer(struct timer* t);
     bool stopTimer(struct timer* t);
     bool resetTimer(struct timer* t, int64_t when);

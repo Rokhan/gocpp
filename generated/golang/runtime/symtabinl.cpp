@@ -165,7 +165,7 @@ namespace golang::runtime
                 x.index = - 1;
             })};
         }
-        auto inlTree = (gocpp::array<inlinedCall, 1 << 20>*)(inldata);
+        auto inlTree = (gocpp::array_ptr<gocpp::array<inlinedCall, 1 << 20>>)(inldata);
         auto u = gocpp::Init<inlineUnwinder>([=](auto& x) {
             x.f = f;
             x.inlTree = inlTree;

@@ -121,7 +121,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct mOS& value);
     int32_t open(unsigned char* name, int32_t mode, int32_t perm);
     int32_t closefd(int32_t fd);
-    int32_t read(int32_t fd, unsafe::Pointer p, int32_t n);
+    int32_t read(int32_t fd, gocpp::unsafe_pointer p, int32_t n);
     struct sigset
     {
 
@@ -137,8 +137,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sigset& value);
-    void asmstdcall(unsafe::Pointer fn);
-    extern unsafe::Pointer asmstdcallAddr;
+    void asmstdcall(gocpp::unsafe_pointer fn);
+    extern gocpp::unsafe_pointer asmstdcallAddr;
     runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
     extern gocpp::array<unsigned char, _MAX_PATH + 1> sysDirectory;
     extern uintptr_t sysDirectoryLen;
@@ -166,16 +166,16 @@ namespace golang::runtime
     void goenvs();
     extern uint32_t exiting;
     void exit(int32_t code);
-    int32_t write1(uintptr_t fd, unsafe::Pointer buf, int32_t n);
+    int32_t write1(uintptr_t fd, gocpp::unsafe_pointer buf, int32_t n);
     extern gocpp::array<uint16_t, 1000> utf16ConsoleBack;
     extern mutex utf16ConsoleBackLock;
-    int writeConsole(uintptr_t handle, unsafe::Pointer buf, int32_t bufLen);
+    int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen);
     void writeConsoleUTF16(uintptr_t handle, gocpp::slice<uint16_t> b);
     int32_t semasleep(int64_t ns);
     void semawakeup(struct m* mp);
     void semacreate(struct m* mp);
     void newosproc(struct m* mp);
-    void newosproc0(struct m* mp, unsafe::Pointer stk);
+    void newosproc0(struct m* mp, gocpp::unsafe_pointer stk);
     void exitThread(atomic::Uint32* wait);
     void mpreinit(struct m* mp);
     void sigsave(struct sigset* p);
@@ -185,7 +185,7 @@ namespace golang::runtime
     void minit();
     void unminit();
     void mdestroy(struct m* mp);
-    void asmstdcall_trampoline(unsafe::Pointer args);
+    void asmstdcall_trampoline(gocpp::unsafe_pointer args);
     uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args);
     uintptr_t stdcall(golang::runtime::stdFunction fn);
     uintptr_t stdcall0(golang::runtime::stdFunction fn);

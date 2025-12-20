@@ -101,7 +101,7 @@ namespace golang::runtime
     uintptr_t sweepone();
     bool isSweepDone();
     void deductSweepCredit(uintptr_t spanBytes, uintptr_t callerSweepPages);
-    void clobberfree(unsafe::Pointer x, uintptr_t size);
+    void clobberfree(gocpp::unsafe_pointer x, uintptr_t size);
     void gcPaceSweeper(uint64_t trigger);
     struct sweepdata
     {

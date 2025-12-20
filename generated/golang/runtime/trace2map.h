@@ -61,10 +61,10 @@ namespace golang::runtime
     {
         struct traceMapNode* next(golang::runtime::traceMapNode* n);
         uint64_t stealID(golang::runtime::traceMap* tab);
-        std::tuple<uint64_t, bool> put(golang::runtime::traceMap* tab, unsafe::Pointer data, uintptr_t size);
-        uint64_t find(golang::runtime::traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash);
+        std::tuple<uint64_t, bool> put(golang::runtime::traceMap* tab, gocpp::unsafe_pointer data, uintptr_t size);
+        uint64_t find(golang::runtime::traceMap* tab, gocpp::unsafe_pointer data, uintptr_t size, uintptr_t hash);
         struct traceMapNode* bucket(golang::runtime::traceMap* tab, int part);
-        struct traceMapNode* newTraceMapNode(golang::runtime::traceMap* tab, unsafe::Pointer data, uintptr_t size, uintptr_t hash, uint64_t id);
+        struct traceMapNode* newTraceMapNode(golang::runtime::traceMap* tab, gocpp::unsafe_pointer data, uintptr_t size, uintptr_t hash, uint64_t id);
         void reset(golang::runtime::traceMap* tab);
     }
 }

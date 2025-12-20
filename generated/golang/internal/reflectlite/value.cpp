@@ -104,12 +104,12 @@ namespace golang::reflectlite
 
     abi::Type* rec::typ(golang::reflectlite::Value v)
     {
-        return (abi::Type*)(noescape(unsafe::Pointer(v.typ_)));
+        return (abi::Type*)(noescape(gocpp::unsafe_pointer(v.typ_)));
     }
 
     // pointer returns the underlying pointer represented by v.
     // v.Kind() must be Pointer, Map, Chan, Func, or UnsafePointer
-    unsafe::Pointer rec::pointer(golang::reflectlite::Value v)
+    gocpp::unsafe_pointer rec::pointer(golang::reflectlite::Value v)
     {
         if(rec::Size(gocpp::recv(rec::typ(gocpp::recv(v)))) != goarch::PtrSize || ! rec::Pointers(gocpp::recv(rec::typ(gocpp::recv(v)))))
         {
@@ -117,7 +117,7 @@ namespace golang::reflectlite
         }
         if(v.flag & flagIndir != 0)
         {
-            return *(unsafe::Pointer*)(v.ptr);
+            return *(gocpp::unsafe_pointer*)(v.ptr);
         }
         return v.ptr;
     }
@@ -127,7 +127,7 @@ namespace golang::reflectlite
     {
         auto t = rec::typ(gocpp::recv(v));
         go_any i = {};
-        auto e = (emptyInterface*)(unsafe::Pointer(& i));
+        auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
         //Go switch emulation
         {
             int conditionId = -1;
@@ -150,7 +150,7 @@ namespace golang::reflectlite
                     e->word = ptr;
                     break;
                 case 1:
-                    e->word = *(unsafe::Pointer*)(v.ptr);
+                    e->word = *(gocpp::unsafe_pointer*)(v.ptr);
                     break;
                 default:
                     e->word = v.ptr;
@@ -164,7 +164,7 @@ namespace golang::reflectlite
     // unpackEface converts the empty interface i to a Value.
     struct Value unpackEface(go_any i)
     {
-        auto e = (emptyInterface*)(unsafe::Pointer(& i));
+        auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
         auto t = e->typ;
         if(t == nullptr)
         {
@@ -396,13 +396,13 @@ namespace golang::reflectlite
                     auto ptr = v.ptr;
                     if(v.flag & flagIndir != 0)
                     {
-                        ptr = *(unsafe::Pointer*)(ptr);
+                        ptr = *(gocpp::unsafe_pointer*)(ptr);
                     }
                     if(ptr == nullptr)
                     {
                         return Value {};
                     }
-                    auto tt = (reflectlite::ptrType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (reflectlite::ptrType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     auto typ = tt->Elem;
                     auto fl = v.flag & flagRO | flagIndir | flagAddr;
                     fl |= flag(rec::Kind(gocpp::recv(typ)));
@@ -510,13 +510,13 @@ namespace golang::reflectlite
                     auto ptr = v.ptr;
                     if(v.flag & flagIndir != 0)
                     {
-                        ptr = *(unsafe::Pointer*)(ptr);
+                        ptr = *(gocpp::unsafe_pointer*)(ptr);
                     }
                     return ptr == nullptr;
                     break;
                 case 5:
                 case 6:
-                    return *(unsafe::Pointer*)(v.ptr) == nullptr;
+                    return *(gocpp::unsafe_pointer*)(v.ptr) == nullptr;
                     break;
             }
         }
@@ -541,11 +541,11 @@ namespace golang::reflectlite
     }
 
     //go:noescape
-    int chanlen(unsafe::Pointer)
+    int chanlen(gocpp::unsafe_pointer)
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    int maplen(unsafe::Pointer)
+    int maplen(gocpp::unsafe_pointer)
     /* convertBlockStmt, nil block */;
 
     // Len returns v's length.
@@ -565,7 +565,7 @@ namespace golang::reflectlite
             switch(conditionId)
             {
                 case 0:
-                    auto tt = (reflectlite::arrayType*)(unsafe::Pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (reflectlite::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     return int(tt->Len);
                     break;
                 case 1:
@@ -602,7 +602,7 @@ namespace golang::reflectlite
     {
         rec::mustBeAssignable(gocpp::recv(v));
         rec::mustBeExported(gocpp::recv(x));
-        unsafe::Pointer target = {};
+        gocpp::unsafe_pointer target = {};
         if(rec::kind(gocpp::recv(v)) == abi::Interface)
         {
             target = v.ptr;
@@ -614,7 +614,7 @@ namespace golang::reflectlite
         }
         else
         {
-            *(unsafe::Pointer*)(v.ptr) = x.ptr;
+            *(gocpp::unsafe_pointer*)(v.ptr) = x.ptr;
         }
     }
 
@@ -630,7 +630,7 @@ namespace golang::reflectlite
     }
 
     //go:noescape
-    unsafe::Pointer unsafe_New(abi::Type*)
+    gocpp::unsafe_pointer unsafe_New(abi::Type*)
     /* convertBlockStmt, nil block */;
 
     // ValueOf returns a new Value initialized to the concrete value
@@ -647,7 +647,7 @@ namespace golang::reflectlite
     // assignTo returns a value v that can be assigned directly to typ.
     // It panics if v is not assignable to typ.
     // For a conversion to an interface type, target is a suggested scratch space to use.
-    struct Value rec::assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, unsafe::Pointer target)
+    struct Value rec::assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target)
     {
         //Go switch emulation
         {
@@ -693,18 +693,18 @@ namespace golang::reflectlite
     // because then the result will point outside the array.
     // whySafe must explain why i < len. (Passing "i < len" is fine;
     // the benefit is to surface this assumption at the call site.)
-    unsafe::Pointer arrayAt(unsafe::Pointer p, int i, uintptr_t eltSize, gocpp::string whySafe)
+    gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int i, uintptr_t eltSize, gocpp::string whySafe)
     {
         return add(p, uintptr_t(i) * eltSize, "i < len"_s);
     }
 
-    void ifaceE2I(abi::Type* t, go_any src, unsafe::Pointer dst)
+    void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst)
     /* convertBlockStmt, nil block */;
 
     // typedmemmove copies a value of type t to dst from src.
     //
     //go:noescape
-    void typedmemmove(abi::Type* t, unsafe::Pointer dst, unsafe::Pointer src)
+    void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
     /* convertBlockStmt, nil block */;
 
     // Dummy annotation marking that the value x escapes,
@@ -760,10 +760,10 @@ namespace golang::reflectlite
 
     gocpp_id_5 dummy;
     //go:nosplit
-    unsafe::Pointer noescape(unsafe::Pointer p)
+    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p)
     {
         auto x = uintptr_t(p);
-        return unsafe::Pointer(x ^ 0);
+        return gocpp::unsafe_pointer(x ^ 0);
     }
 
 }

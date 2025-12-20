@@ -53,7 +53,7 @@ namespace golang::runtime
     // The number of bits stored in the numeric tag of a taggedPointer
     // taggedPointerPack created a taggedPointer from a pointer and a tag.
     // Tag bits that don't fit in the result are discarded.
-    runtime::taggedPointer taggedPointerPack(unsafe::Pointer ptr, uintptr_t tag)
+    runtime::taggedPointer taggedPointerPack(gocpp::unsafe_pointer ptr, uintptr_t tag)
     {
         if(GOOS == "aix"_s)
         {
@@ -71,21 +71,21 @@ namespace golang::runtime
     }
 
     // Pointer returns the pointer from a taggedPointer.
-    unsafe::Pointer rec::pointer(golang::runtime::taggedPointer tp)
+    gocpp::unsafe_pointer rec::pointer(golang::runtime::taggedPointer tp)
     {
         if(GOARCH == "amd64"_s)
         {
-            return unsafe::Pointer(uintptr_t((int64_t(tp) >> tagBits) << 3));
+            return gocpp::unsafe_pointer(uintptr_t((int64_t(tp) >> tagBits) << 3));
         }
         if(GOOS == "aix"_s)
         {
-            return unsafe::Pointer(uintptr_t(((tp >> aixTagBits) << 3) | (0xa << 56)));
+            return gocpp::unsafe_pointer(uintptr_t(((tp >> aixTagBits) << 3) | (0xa << 56)));
         }
         if(GOARCH == "riscv64"_s)
         {
-            return unsafe::Pointer(uintptr_t((tp >> riscv64TagBits) << 3));
+            return gocpp::unsafe_pointer(uintptr_t((tp >> riscv64TagBits) << 3));
         }
-        return unsafe::Pointer(uintptr_t((tp >> tagBits) << 3));
+        return gocpp::unsafe_pointer(uintptr_t((tp >> tagBits) << 3));
     }
 
     // Tag returns the tag from a taggedPointer.

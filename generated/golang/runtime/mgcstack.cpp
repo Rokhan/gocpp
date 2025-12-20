@@ -234,7 +234,7 @@ namespace golang::runtime
     //go:nowritebarrier
     void rec::setRecord(golang::runtime::stackObject* obj, struct stackObjectRecord* r)
     {
-        *(uintptr_t*)(unsafe::Pointer(& obj->r)) = uintptr_t(unsafe::Pointer(r));
+        *(uintptr_t*)(gocpp::unsafe_pointer(& obj->r)) = uintptr_t(gocpp::unsafe_pointer(r));
     }
 
     // A stackScanState keeps track of the state used during the GC walk
@@ -308,7 +308,7 @@ namespace golang::runtime
         auto buf = *head;
         if(buf == nullptr)
         {
-            buf = (stackWorkBuf*)(unsafe::Pointer(getempty()));
+            buf = (stackWorkBuf*)(gocpp::unsafe_pointer(getempty()));
             buf->nobj = 0;
             buf->next = nullptr;
             *head = buf;
@@ -323,7 +323,7 @@ namespace golang::runtime
             }
             else
             {
-                buf = (stackWorkBuf*)(unsafe::Pointer(getempty()));
+                buf = (stackWorkBuf*)(gocpp::unsafe_pointer(getempty()));
             }
             buf->nobj = 0;
             buf->next = *head;
@@ -353,7 +353,7 @@ namespace golang::runtime
             {
                 if(s->freeBuf != nullptr)
                 {
-                    putempty((workbuf*)(unsafe::Pointer(s->freeBuf)));
+                    putempty((workbuf*)(gocpp::unsafe_pointer(s->freeBuf)));
                 }
                 s->freeBuf = buf;
                 buf = buf->next;
@@ -368,7 +368,7 @@ namespace golang::runtime
         }
         if(s->freeBuf != nullptr)
         {
-            putempty((workbuf*)(unsafe::Pointer(s->freeBuf)));
+            putempty((workbuf*)(gocpp::unsafe_pointer(s->freeBuf)));
             s->freeBuf = nullptr;
         }
         return {0, false};
@@ -380,7 +380,7 @@ namespace golang::runtime
         auto x = s->tail;
         if(x == nullptr)
         {
-            x = (stackObjectBuf*)(unsafe::Pointer(getempty()));
+            x = (stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
             x->next = nullptr;
             s->head = x;
             s->tail = x;
@@ -391,7 +391,7 @@ namespace golang::runtime
         }
         if(x->nobj == len(x->obj))
         {
-            auto y = (stackObjectBuf*)(unsafe::Pointer(getempty()));
+            auto y = (stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
             y->next = nullptr;
             x->next = y;
             s->tail = y;

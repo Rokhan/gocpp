@@ -181,7 +181,7 @@ namespace golang::runtime
         lockWithRankMayAcquire(& finlock, getLockRank(& finlock));
     }
 
-    void queuefinalizer(unsafe::Pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot)
+    void queuefinalizer(gocpp::unsafe_pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot)
     {
         if(gcphase != _GCoff)
         {
@@ -224,7 +224,7 @@ namespace golang::runtime
     }
 
     //go:nowritebarrier
-    void iterate_finq(std::function<void (struct funcval* _1, unsafe::Pointer _2, uintptr_t _3, golang::runtime::_type* _4, golang::runtime::ptrtype* _5)> callback)
+    void iterate_finq(std::function<void (struct funcval* _1, gocpp::unsafe_pointer _2, uintptr_t _3, golang::runtime::_type* _4, golang::runtime::ptrtype* _5)> callback)
     {
         for(auto fb = allfin; fb != nullptr; fb = fb->alllink)
         {
@@ -253,7 +253,7 @@ namespace golang::runtime
         }
     }
 
-    bool finalizercommit(struct g* gp, unsafe::Pointer lock)
+    bool finalizercommit(struct g* gp, gocpp::unsafe_pointer lock)
     {
         unlock((mutex*)(lock));
         rec::Or(gocpp::recv(fingStatus), fingWait);
@@ -263,7 +263,7 @@ namespace golang::runtime
     // This is the goroutine that runs all of the finalizers.
     void runfinq()
     {
-        unsafe::Pointer frame = {};
+        gocpp::unsafe_pointer frame = {};
         uintptr_t framecap = {};
         int argRegs = {};
         auto gp = getg();
@@ -277,7 +277,7 @@ namespace golang::runtime
             finq = nullptr;
             if(fb == nullptr)
             {
-                gopark(finalizercommit, unsafe::Pointer(& finlock), waitReasonFinalizerWait, traceBlockSystemGoroutine, 1);
+                gopark(finalizercommit, gocpp::unsafe_pointer(& finlock), waitReasonFinalizerWait, traceBlockSystemGoroutine, 1);
                 continue;
             }
             argRegs = intArgRegs;
@@ -305,11 +305,11 @@ namespace golang::runtime
                     auto r = frame;
                     if(argRegs > 0)
                     {
-                        r = unsafe::Pointer(& regs.Ints);
+                        r = gocpp::unsafe_pointer(& regs.Ints);
                     }
                     else
                     {
-                        *(gocpp::array<uintptr_t, 2>*)(frame) = gocpp::array<uintptr_t, 2> {};
+                        *(gocpp::array_ptr<gocpp::array<uintptr_t, 2>>)(frame) = gocpp::array<uintptr_t, 2> {};
                     }
                     //Go switch emulation
                     {
@@ -320,10 +320,10 @@ namespace golang::runtime
                         switch(conditionId)
                         {
                             case 0:
-                                *(unsafe::Pointer*)(r) = f->arg;
+                                *(gocpp::unsafe_pointer*)(r) = f->arg;
                                 break;
                             case 1:
-                                auto ityp = (runtime::interfacetype*)(unsafe::Pointer(f->fint));
+                                auto ityp = (runtime::interfacetype*)(gocpp::unsafe_pointer(f->fint));
                                 (eface*)(r)->_type = & f->ot->Type;
                                 (eface*)(r)->data = f->arg;
                                 if(len(ityp->Methods) != 0)
@@ -337,7 +337,7 @@ namespace golang::runtime
                         }
                     }
                     rec::Or(gocpp::recv(fingStatus), fingRunningFinalizer);
-                    reflectcall(nullptr, unsafe::Pointer(f->fn), frame, uint32_t(framesz), uint32_t(framesz), uint32_t(framesz), & regs);
+                    reflectcall(nullptr, gocpp::unsafe_pointer(f->fn), frame, uint32_t(framesz), uint32_t(framesz), uint32_t(framesz), & regs);
                     rec::And(gocpp::recv(fingStatus), ~ fingRunningFinalizer);
                     f->fn = nullptr;
                     f->arg = nullptr;
@@ -354,9 +354,9 @@ namespace golang::runtime
         }
     }
 
-    bool isGoPointerWithoutSpan(unsafe::Pointer p)
+    bool isGoPointerWithoutSpan(gocpp::unsafe_pointer p)
     {
-        if(p == unsafe::Pointer(& zerobase))
+        if(p == gocpp::unsafe_pointer(& zerobase))
         {
             return true;
         }
@@ -494,7 +494,7 @@ namespace golang::runtime
         {
             go_throw("runtime.SetFinalizer: first argument is "_s + rec::string(gocpp::recv(toRType(etyp))) + ", not pointer"_s);
         }
-        auto ot = (runtime::ptrtype*)(unsafe::Pointer(etyp));
+        auto ot = (runtime::ptrtype*)(gocpp::unsafe_pointer(etyp));
         if(ot->Elem == nullptr)
         {
             go_throw("nil elem type!"_s);
@@ -537,7 +537,7 @@ namespace golang::runtime
         {
             go_throw("runtime.SetFinalizer: second argument is "_s + rec::string(gocpp::recv(toRType(ftyp))) + ", not a function"_s);
         }
-        auto ft = (runtime::functype*)(unsafe::Pointer(ftyp));
+        auto ft = (runtime::functype*)(gocpp::unsafe_pointer(ftyp));
         if(rec::IsVariadic(gocpp::recv(ft)))
         {
             go_throw("runtime.SetFinalizer: cannot pass "_s + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer "_s + rec::string(gocpp::recv(toRType(ftyp))) + " because dotdotdot"_s);
@@ -559,13 +559,13 @@ namespace golang::runtime
                     goto okarg;
                     break;
                 case 1:
-                    if((rec::Uncommon(gocpp::recv(fint)) == nullptr || rec::Uncommon(gocpp::recv(etyp)) == nullptr) && (runtime::ptrtype*)(unsafe::Pointer(fint))->Elem == ot->Elem)
+                    if((rec::Uncommon(gocpp::recv(fint)) == nullptr || rec::Uncommon(gocpp::recv(etyp)) == nullptr) && (runtime::ptrtype*)(gocpp::unsafe_pointer(fint))->Elem == ot->Elem)
                     {
                         goto okarg;
                     }
                     break;
                 case 2:
-                    auto ityp = (runtime::interfacetype*)(unsafe::Pointer(fint));
+                    auto ityp = (runtime::interfacetype*)(gocpp::unsafe_pointer(fint));
                     if(len(ityp->Methods) == 0)
                     {
                         goto okarg;

@@ -39,7 +39,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct atomicSpanSetSpinePointer& value);
     struct spanSetSpinePointer
     {
-        unsafe::Pointer p;
+        gocpp::unsafe_pointer p;
 
         using isGoStruct = void;
 

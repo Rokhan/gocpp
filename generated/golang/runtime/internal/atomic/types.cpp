@@ -705,7 +705,7 @@ namespace golang::atomic
     double rec::Load(golang::atomic::Float64* f)
     {
         auto r = rec::Load(gocpp::recv(f->u));
-        return *(double*)(unsafe::Pointer(& r));
+        return *(double*)(gocpp::unsafe_pointer(& r));
     }
 
     // Store updates the value atomically.
@@ -713,7 +713,7 @@ namespace golang::atomic
     //go:nosplit
     void rec::Store(golang::atomic::Float64* f, double value)
     {
-        rec::Store(gocpp::recv(f->u), *(uint64_t*)(unsafe::Pointer(& value)));
+        rec::Store(gocpp::recv(f->u), *(uint64_t*)(gocpp::unsafe_pointer(& value)));
     }
 
     // UnsafePointer is an atomically accessed unsafe.Pointer value.
@@ -760,9 +760,9 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-    unsafe::Pointer rec::Load(golang::atomic::UnsafePointer* u)
+    gocpp::unsafe_pointer rec::Load(golang::atomic::UnsafePointer* u)
     {
-        return Loadp(unsafe::Pointer(& u->value));
+        return Loadp(gocpp::unsafe_pointer(& u->value));
     }
 
     // StoreNoWB updates the value atomically.
@@ -774,13 +774,13 @@ namespace golang::atomic
     // Prefer Store instead.
     //
     //go:nosplit
-    void rec::StoreNoWB(golang::atomic::UnsafePointer* u, unsafe::Pointer value)
+    void rec::StoreNoWB(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer value)
     {
-        StorepNoWB(unsafe::Pointer(& u->value), value);
+        StorepNoWB(gocpp::unsafe_pointer(& u->value), value);
     }
 
     // Store updates the value atomically.
-    void rec::Store(golang::atomic::UnsafePointer* u, unsafe::Pointer value)
+    void rec::Store(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer value)
     {
         storePointer(& u->value, value);
     }
@@ -788,7 +788,7 @@ namespace golang::atomic
     // provided by runtime
     //
     //go:linkname storePointer
-    void storePointer(unsafe::Pointer* ptr, unsafe::Pointer go_new)
+    void storePointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new)
     /* convertBlockStmt, nil block */;
 
     // CompareAndSwapNoWB atomically (with respect to other methods)
@@ -803,7 +803,7 @@ namespace golang::atomic
     // Prefer CompareAndSwap instead.
     //
     //go:nosplit
-    bool rec::CompareAndSwapNoWB(golang::atomic::UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new)
+    bool rec::CompareAndSwapNoWB(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
     {
         return Casp1(& u->value, old, go_new);
     }
@@ -811,12 +811,12 @@ namespace golang::atomic
     // CompareAndSwap atomically compares u's value with old,
     // and if they're equal, swaps u's value with new.
     // It reports whether the swap ran.
-    bool rec::CompareAndSwap(golang::atomic::UnsafePointer* u, unsafe::Pointer old, unsafe::Pointer go_new)
+    bool rec::CompareAndSwap(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
     {
         return casPointer(& u->value, old, go_new);
     }
 
-    bool casPointer(unsafe::Pointer* ptr, unsafe::Pointer old, unsafe::Pointer go_new)
+    bool casPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
     /* convertBlockStmt, nil block */;
 
     // Pointer is an atomic pointer of type *T.
@@ -874,7 +874,7 @@ namespace golang::atomic
     template<typename T>
     void rec::StoreNoWB(golang::atomic::Pointer<T>* p, T* value)
     {
-        rec::StoreNoWB(gocpp::recv(p->u), unsafe::Pointer(value));
+        rec::StoreNoWB(gocpp::recv(p->u), gocpp::unsafe_pointer(value));
     }
 
     // Store updates the value atomically.
@@ -883,7 +883,7 @@ namespace golang::atomic
     template<typename T>
     void rec::Store(golang::atomic::Pointer<T>* p, T* value)
     {
-        rec::Store(gocpp::recv(p->u), unsafe::Pointer(value));
+        rec::Store(gocpp::recv(p->u), gocpp::unsafe_pointer(value));
     }
 
     // CompareAndSwapNoWB atomically (with respect to other methods)
@@ -901,7 +901,7 @@ namespace golang::atomic
     template<typename T>
     bool rec::CompareAndSwapNoWB(golang::atomic::Pointer<T>* p, T* old, T* go_new)
     {
-        return rec::CompareAndSwapNoWB(gocpp::recv(p->u), unsafe::Pointer(old), unsafe::Pointer(go_new));
+        return rec::CompareAndSwapNoWB(gocpp::recv(p->u), gocpp::unsafe_pointer(old), gocpp::unsafe_pointer(go_new));
     }
 
     // CompareAndSwap atomically (with respect to other methods)
@@ -911,7 +911,7 @@ namespace golang::atomic
     template<typename T>
     bool rec::CompareAndSwap(golang::atomic::Pointer<T>* p, T* old, T* go_new)
     {
-        return rec::CompareAndSwap(gocpp::recv(p->u), unsafe::Pointer(old), unsafe::Pointer(go_new));
+        return rec::CompareAndSwap(gocpp::recv(p->u), gocpp::unsafe_pointer(old), gocpp::unsafe_pointer(go_new));
     }
 
     // noCopy may be embedded into structs which must not be copied

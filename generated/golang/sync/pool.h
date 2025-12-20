@@ -19,9 +19,9 @@ namespace golang::sync
     struct Pool
     {
         noCopy noCopy;
-        unsafe::Pointer local;
+        gocpp::unsafe_pointer local;
         uintptr_t localSize;
-        unsafe::Pointer victim;
+        gocpp::unsafe_pointer victim;
         uintptr_t victimSize;
         std::function<go_any ()> New;
 
@@ -56,11 +56,11 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
     uint32_t runtime_randn(uint32_t n);
     extern gocpp::array<uint64_t, 128> poolRaceHash;
-    unsafe::Pointer poolRaceAddr(go_any x);
+    gocpp::unsafe_pointer poolRaceAddr(go_any x);
     void poolCleanup();
     extern Mutex allPoolsMu;
     void init();
-    struct poolLocal* indexLocal(unsafe::Pointer l, int i);
+    struct poolLocal* indexLocal(gocpp::unsafe_pointer l, int i);
     void runtime_registerPoolCleanup(std::function<void ()> cleanup);
     int runtime_procPin();
     void runtime_procUnpin();

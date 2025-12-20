@@ -29,9 +29,9 @@ namespace golang::atomic
 
     //go:nosplit
     //go:noinline
-    unsafe::Pointer Loadp(unsafe::Pointer ptr)
+    gocpp::unsafe_pointer Loadp(gocpp::unsafe_pointer ptr)
     {
-        return *(unsafe::Pointer*)(ptr);
+        return *(gocpp::unsafe_pointer*)(ptr);
     }
 
     //go:nosplit
@@ -169,7 +169,7 @@ namespace golang::atomic
     // barrier.
     //
     // NO go:noescape annotation; see atomic_pointer.go.
-    void StorepNoWB(unsafe::Pointer ptr, unsafe::Pointer val)
+    void StorepNoWB(gocpp::unsafe_pointer ptr, gocpp::unsafe_pointer val)
     /* convertBlockStmt, nil block */;
 
 }

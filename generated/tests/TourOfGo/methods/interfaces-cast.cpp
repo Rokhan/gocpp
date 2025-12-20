@@ -74,7 +74,7 @@ namespace golang::main
     {
         // declarartion and cast extracted from reflect/value.go, line 1230
         go_any eface = {};
-        unsafe::Pointer ptr = unsafe::Pointer(& eface);
+        gocpp::unsafe_pointer ptr = gocpp::unsafe_pointer(& eface);
         eface = *(go_any*)(ptr);
         mocklib::Println(eface);
         eface = (go_any)(*(gocpp_id_0*)(ptr));

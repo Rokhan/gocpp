@@ -106,11 +106,11 @@ namespace golang::runtime
         syms = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, go_any>>(), len(md->ptab));
         for(auto [gocpp_ignored, ptab] : md->ptab)
         {
-            auto symName = resolveNameOff(unsafe::Pointer(md->types), ptab.name);
-            auto t = rec::typeOff(gocpp::recv(toRType((runtime::_type*)(unsafe::Pointer(md->types)))), ptab.typ);
+            auto symName = resolveNameOff(gocpp::unsafe_pointer(md->types), ptab.name);
+            auto t = rec::typeOff(gocpp::recv(toRType((runtime::_type*)(gocpp::unsafe_pointer(md->types)))), ptab.typ);
             go_any val = {};
-            auto valp = (gocpp::array<unsafe::Pointer, 2>*)(unsafe::Pointer(& val));
-            (*valp)[0] = unsafe::Pointer(t);
+            auto valp = (gocpp::array_ptr<gocpp::array<gocpp::unsafe_pointer, 2>>)(gocpp::unsafe_pointer(& val));
+            (*valp)[0] = gocpp::unsafe_pointer(t);
             auto name = rec::Name(gocpp::recv(symName));
             if(t->Kind_ & kindMask == kindFunc)
             {
@@ -131,7 +131,7 @@ namespace golang::runtime
             {
                 continue;
             }
-            auto f = funcInfo {(_func*)(unsafe::Pointer(& md->pclntable[md->ftab[i].funcoff])), md};
+            auto f = funcInfo {(_func*)(gocpp::unsafe_pointer(& md->pclntable[md->ftab[i].funcoff])), md};
             auto name = funcname(f);
             auto name2 = "none"_s;
             auto entry2 = uintptr_t(0);

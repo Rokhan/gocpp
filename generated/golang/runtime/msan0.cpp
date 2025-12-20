@@ -21,27 +21,27 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
-    void msanread(unsafe::Pointer addr, uintptr_t sz)
+    void msanread(gocpp::unsafe_pointer addr, uintptr_t sz)
     {
         go_throw("msan"_s);
     }
 
-    void msanwrite(unsafe::Pointer addr, uintptr_t sz)
+    void msanwrite(gocpp::unsafe_pointer addr, uintptr_t sz)
     {
         go_throw("msan"_s);
     }
 
-    void msanmalloc(unsafe::Pointer addr, uintptr_t sz)
+    void msanmalloc(gocpp::unsafe_pointer addr, uintptr_t sz)
     {
         go_throw("msan"_s);
     }
 
-    void msanfree(unsafe::Pointer addr, uintptr_t sz)
+    void msanfree(gocpp::unsafe_pointer addr, uintptr_t sz)
     {
         go_throw("msan"_s);
     }
 
-    void msanmove(unsafe::Pointer dst, unsafe::Pointer src, uintptr_t sz)
+    void msanmove(gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t sz)
     {
         go_throw("msan"_s);
     }

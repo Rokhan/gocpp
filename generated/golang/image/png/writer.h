@@ -176,7 +176,7 @@ namespace golang::png
     std::ostream& operator<<(std::ostream& os, const struct opaquer& value);
     bool opaque(image::Image m);
     int abs8(uint8_t d);
-    int filter(gocpp::array<gocpp::slice<unsigned char>, nFilter>* cr, gocpp::slice<unsigned char> pr, int bpp);
+    int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp);
     void zeroMemory(gocpp::slice<uint8_t> v);
     int levelToZlib(golang::png::CompressionLevel l);
     struct gocpp::error Encode(io::Writer w, image::Image m);

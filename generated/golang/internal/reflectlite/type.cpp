@@ -410,7 +410,7 @@ namespace golang::reflectlite
 
     unsigned char* rec::data(golang::reflectlite::name n, int off, gocpp::string whySafe)
     {
-        return (unsigned char*)(add(unsafe::Pointer(n.bytes), uintptr_t(off), whySafe));
+        return (unsigned char*)(add(gocpp::unsafe_pointer(n.bytes), uintptr_t(off), whySafe));
     }
 
     bool rec::isExported(golang::reflectlite::name n)
@@ -479,8 +479,8 @@ namespace golang::reflectlite
             off += i2 + l2;
         }
         int32_t nameOff = {};
-        copy((gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& nameOff)).make_slice(0), (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"_s))).make_slice(0));
-        auto pkgPathName = name {(unsigned char*)(resolveTypeOff(unsafe::Pointer(n.Bytes), nameOff))};
+        copy((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& nameOff)).make_slice(0), (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"_s))).make_slice(0));
+        auto pkgPathName = name {(unsigned char*)(resolveTypeOff(gocpp::unsafe_pointer(n.Bytes), nameOff))};
         return rec::name(gocpp::recv(pkgPathName));
     }
 
@@ -489,7 +489,7 @@ namespace golang::reflectlite
     // Implemented in the runtime package.
     //
     //go:noescape
-    unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off)
+    gocpp::unsafe_pointer resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off)
     /* convertBlockStmt, nil block */;
 
     // resolveTypeOff resolves an *rtype offset from a base type.
@@ -497,19 +497,19 @@ namespace golang::reflectlite
     // Implemented in the runtime package.
     //
     //go:noescape
-    unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off)
+    gocpp::unsafe_pointer resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off)
     /* convertBlockStmt, nil block */;
 
     abi::Name rec::nameOff(golang::reflectlite::rtype t, golang::reflectlite::nameOff off)
     {
         return gocpp::Init<abi::Name>([=](auto& x) {
-            x.Bytes = (unsigned char*)(resolveNameOff(unsafe::Pointer(t.Type), int32_t(off)));
+            x.Bytes = (unsigned char*)(resolveNameOff(gocpp::unsafe_pointer(t.Type), int32_t(off)));
         });
     }
 
     abi::Type* rec::typeOff(golang::reflectlite::rtype t, golang::reflectlite::typeOff off)
     {
-        return (abi::Type*)(resolveTypeOff(unsafe::Pointer(t.Type), int32_t(off)));
+        return (abi::Type*)(resolveTypeOff(gocpp::unsafe_pointer(t.Type), int32_t(off)));
     }
 
     reflectlite::uncommonType* rec::uncommon(golang::reflectlite::rtype t)
@@ -695,17 +695,17 @@ namespace golang::reflectlite
     // record why the addition is safe, which is to say why the addition
     // does not cause x to advance to the very end of p's allocation
     // and therefore point incorrectly at the next block in memory.
-    unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, gocpp::string whySafe)
+    gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe)
     {
-        return unsafe::Pointer(uintptr_t(p) + x);
+        return gocpp::unsafe_pointer(uintptr_t(p) + x);
     }
 
     // TypeOf returns the reflection Type that represents the dynamic type of i.
     // If i is a nil interface value, TypeOf returns nil.
     struct Type TypeOf(go_any i)
     {
-        auto eface = *(emptyInterface*)(unsafe::Pointer(& i));
-        return toType((abi::Type*)(noescape(unsafe::Pointer(eface.typ))));
+        auto eface = *(emptyInterface*)(gocpp::unsafe_pointer(& i));
+        return toType((abi::Type*)(noescape(gocpp::unsafe_pointer(eface.typ))));
     }
 
     bool rec::Implements(golang::reflectlite::rtype t, struct Type u)
@@ -753,7 +753,7 @@ namespace golang::reflectlite
         auto rV = toRType(V);
         if(rec::Kind(gocpp::recv(V)) == Interface)
         {
-            auto v = (reflectlite::interfaceType*)(unsafe::Pointer(V));
+            auto v = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(V));
             auto i = 0;
             for(auto j = 0; j < len(v->Methods); j++)
             {
@@ -900,8 +900,8 @@ namespace golang::reflectlite
                     return rec::ChanDir(gocpp::recv(V)) == rec::ChanDir(gocpp::recv(T)) && haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), cmpTags);
                     break;
                 case 2:
-                    auto t = (reflectlite::funcType*)(unsafe::Pointer(T));
-                    auto v = (reflectlite::funcType*)(unsafe::Pointer(V));
+                    auto t = (reflectlite::funcType*)(gocpp::unsafe_pointer(T));
+                    auto v = (reflectlite::funcType*)(gocpp::unsafe_pointer(V));
                     if(t->OutCount != v->OutCount || t->InCount != v->InCount)
                     {
                         return false;
@@ -923,8 +923,8 @@ namespace golang::reflectlite
                     return true;
                     break;
                 case 3:
-                    auto t = (reflectlite::interfaceType*)(unsafe::Pointer(T));
-                    auto v = (reflectlite::interfaceType*)(unsafe::Pointer(V));
+                    auto t = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(T));
+                    auto v = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(V));
                     if(len(t->Methods) == 0 && len(v->Methods) == 0)
                     {
                         return true;
@@ -939,8 +939,8 @@ namespace golang::reflectlite
                     return haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), cmpTags);
                     break;
                 case 7:
-                    auto t = (reflectlite::structType*)(unsafe::Pointer(T));
-                    auto v = (reflectlite::structType*)(unsafe::Pointer(V));
+                    auto t = (reflectlite::structType*)(gocpp::unsafe_pointer(T));
+                    auto v = (reflectlite::structType*)(gocpp::unsafe_pointer(V));
                     if(len(t->Fields) != len(v->Fields))
                     {
                         return false;

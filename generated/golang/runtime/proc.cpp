@@ -367,7 +367,7 @@ namespace golang::runtime
     // Reason explains why the goroutine has been parked. It is displayed in stack
     // traces and heap dumps. Reasons should be unique and descriptive. Do not
     // re-use reasons, add new ones.
-    void gopark(std::function<bool (struct g* _1, unsafe::Pointer _2)> unlockf, unsafe::Pointer lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip)
+    void gopark(std::function<bool (struct g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip)
     {
         if(reason != waitReasonSleep)
         {
@@ -393,7 +393,7 @@ namespace golang::runtime
     // The goroutine can be made runnable again by calling goready(gp).
     void goparkunlock(struct mutex* lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip)
     {
-        gopark(parkunlock_c, unsafe::Pointer(lock), reason, traceReason, traceskip);
+        gopark(parkunlock_c, gocpp::unsafe_pointer(lock), reason, traceReason, traceskip);
     }
 
     void goready(struct g* gp, int traceskip)
@@ -626,7 +626,7 @@ namespace golang::runtime
         allgs = append(allgs, gp);
         if(& allgs[0] != allgptr)
         {
-            atomicstorep(unsafe::Pointer(& allgptr), unsafe::Pointer(& allgs[0]));
+            atomicstorep(gocpp::unsafe_pointer(& allgptr), gocpp::unsafe_pointer(& allgs[0]));
         }
         atomic::Storeuintptr(& allglen, uintptr_t(len(allgs)));
         unlock(& allglock);
@@ -645,14 +645,14 @@ namespace golang::runtime
     std::tuple<struct g**, uintptr_t> atomicAllG()
     {
         auto length = atomic::Loaduintptr(& allglen);
-        auto ptr = (g**)(atomic::Loadp(unsafe::Pointer(& allgptr)));
+        auto ptr = (g**)(atomic::Loadp(gocpp::unsafe_pointer(& allgptr)));
         return {ptr, length};
     }
 
     // atomicAllGIndex returns ptr[i] with the allgptr returned from atomicAllG.
     struct g* atomicAllGIndex(struct g** ptr, uintptr_t i)
     {
-        return *(g**)(add(unsafe::Pointer(ptr), i * goarch::PtrSize));
+        return *(g**)(add(gocpp::unsafe_pointer(ptr), i * goarch::PtrSize));
     }
 
     // forEachG calls fn on every G from allgs.
@@ -944,7 +944,7 @@ namespace golang::runtime
             mp->gsignal->stackguard1 = mp->gsignal->stack.lo + stackGuard;
         }
         mp->alllink = allm;
-        atomicstorep(unsafe::Pointer(& allm), unsafe::Pointer(mp));
+        atomicstorep(gocpp::unsafe_pointer(& allm), gocpp::unsafe_pointer(mp));
         unlock(& sched.lock);
         if(iscgo || GOOS == "solaris"_s || GOOS == "illumos"_s || GOOS == "windows"_s)
         {
@@ -1736,7 +1736,7 @@ namespace golang::runtime
             {
                 size = 16384 * sys::StackGuardMultiplier;
             }
-            gp->stack.hi = uintptr_t(noescape(unsafe::Pointer(& size)));
+            gp->stack.hi = uintptr_t(noescape(gocpp::unsafe_pointer(& size)));
             gp->stack.lo = gp->stack.hi - size + 1024;
         }
         gp->stackguard0 = gp->stack.lo + stackGuard;
@@ -1760,7 +1760,7 @@ namespace golang::runtime
         {
             go_throw("bad runtime·mstart"_s);
         }
-        gp->sched.g = guintptr(unsafe::Pointer(gp));
+        gp->sched.g = guintptr(gocpp::unsafe_pointer(gp));
         gp->sched.pc = getcallerpc();
         gp->sched.sp = getcallersp();
         asminit();
@@ -2016,7 +2016,7 @@ namespace golang::runtime
     // When running with cgo, we call _cgo_thread_start
     // to start threads for us so that we can play nicely with
     // foreign code.
-    unsafe::Pointer cgoThreadStart;
+    gocpp::unsafe_pointer cgoThreadStart;
     
     template<typename T> requires gocpp::GoStruct<T>
     cgothreadstart::operator T()
@@ -2253,7 +2253,7 @@ namespace golang::runtime
         gp->sched.sp = gp->stack.hi;
         gp->sched.sp -= 4 * goarch::PtrSize;
         gp->sched.lr = 0;
-        gp->sched.g = guintptr(unsafe::Pointer(gp));
+        gp->sched.g = guintptr(gocpp::unsafe_pointer(gp));
         gp->syscallpc = gp->sched.pc;
         gp->syscallsp = gp->sched.sp;
         gp->stktopsp = gp->sched.sp;
@@ -2396,14 +2396,14 @@ namespace golang::runtime
         }
         if(_cgo_bindm != nullptr)
         {
-            asmcgocall(_cgo_bindm, unsafe::Pointer(g));
+            asmcgocall(_cgo_bindm, gocpp::unsafe_pointer(g));
         }
     }
 
     // A helper function for EnsureDropM.
     uintptr_t getm()
     {
-        return uintptr_t(unsafe::Pointer(getg()->m));
+        return uintptr_t(gocpp::unsafe_pointer(getg()->m));
     }
 
     // Locking linked list of extra M's, via mp.schedlink. Must be accessed
@@ -2450,7 +2450,7 @@ namespace golang::runtime
             }
             if(rec::CompareAndSwap(gocpp::recv(extraM), old, locked))
             {
-                return (m*)(unsafe::Pointer(old));
+                return (m*)(gocpp::unsafe_pointer(old));
             }
             osyield_no_g();
             continue;
@@ -2461,7 +2461,7 @@ namespace golang::runtime
     void unlockextra(struct m* mp, int32_t delta)
     {
         rec::Add(gocpp::recv(extraMLength), delta);
-        rec::Store(gocpp::recv(extraM), uintptr_t(unsafe::Pointer(mp)));
+        rec::Store(gocpp::recv(extraM), uintptr_t(gocpp::unsafe_pointer(mp)));
     }
 
     // Return an M from the extra M list. Returns last == true if the list becomes
@@ -2614,18 +2614,18 @@ namespace golang::runtime
                 go_throw("_cgo_thread_start missing"_s);
             }
             rec::set(gocpp::recv(ts.g), mp->g0);
-            ts.tls = (uint64_t*)(unsafe::Pointer(& mp->tls[0]));
-            ts.fn = unsafe::Pointer(abi::FuncPCABI0(mstart));
+            ts.tls = (uint64_t*)(gocpp::unsafe_pointer(& mp->tls[0]));
+            ts.fn = gocpp::unsafe_pointer(abi::FuncPCABI0(mstart));
             if(msanenabled)
             {
-                msanwrite(unsafe::Pointer(& ts), gocpp::Sizeof<cgothreadstart>());
+                msanwrite(gocpp::unsafe_pointer(& ts), gocpp::Sizeof<cgothreadstart>());
             }
             if(asanenabled)
             {
-                asanwrite(unsafe::Pointer(& ts), gocpp::Sizeof<cgothreadstart>());
+                asanwrite(gocpp::unsafe_pointer(& ts), gocpp::Sizeof<cgothreadstart>());
             }
             rec::rlock(gocpp::recv(execLock));
-            asmcgocall(_cgo_thread_start, unsafe::Pointer(& ts));
+            asmcgocall(_cgo_thread_start, gocpp::unsafe_pointer(& ts));
             rec::runlock(gocpp::recv(execLock));
             return;
         }
@@ -3770,7 +3770,7 @@ namespace golang::runtime
         return {now, pollUntil, ran};
     }
 
-    bool parkunlock_c(struct g* gp, unsafe::Pointer lock)
+    bool parkunlock_c(struct g* gp, gocpp::unsafe_pointer lock)
     {
         unlock((mutex*)(lock));
         return true;
@@ -4565,7 +4565,7 @@ namespace golang::runtime
             });
             newg->stackguard0 = newg->stack.lo + stackGuard;
             newg->stackguard1 = ~ uintptr_t(0);
-            *(uintptr_t*)(unsafe::Pointer(newg->stack.lo)) = 0;
+            *(uintptr_t*)(gocpp::unsafe_pointer(newg->stack.lo)) = 0;
         }
         return newg;
     }
@@ -4620,18 +4620,18 @@ namespace golang::runtime
         auto sp = newg->stack.hi - totalSize;
         if(usesLR)
         {
-            *(uintptr_t*)(unsafe::Pointer(sp)) = 0;
+            *(uintptr_t*)(gocpp::unsafe_pointer(sp)) = 0;
             prepGoExitFrame(sp);
         }
         if(GOARCH == "arm64"_s)
         {
-            *(uintptr_t*)(unsafe::Pointer(sp - goarch::PtrSize)) = 0;
+            *(uintptr_t*)(gocpp::unsafe_pointer(sp - goarch::PtrSize)) = 0;
         }
-        memclrNoHeapPointers(unsafe::Pointer(& newg->sched), gocpp::Sizeof<gobuf>());
+        memclrNoHeapPointers(gocpp::unsafe_pointer(& newg->sched), gocpp::Sizeof<gobuf>());
         newg->sched.sp = sp;
         newg->stktopsp = sp;
         newg->sched.pc = abi::FuncPCABI0(goexit) + sys::PCQuantum;
-        newg->sched.g = guintptr(unsafe::Pointer(newg));
+        newg->sched.g = guintptr(gocpp::unsafe_pointer(newg));
         gostartcallfn(& newg->sched, fn);
         newg->parentGoid = callergp->goid;
         newg->gopc = callerpc;
@@ -4680,7 +4680,7 @@ namespace golang::runtime
             newg->raceignore = 0;
             if(newg->labels != nullptr)
             {
-                racereleasemergeg(newg, unsafe::Pointer(& labelSync));
+                racereleasemergeg(newg, gocpp::unsafe_pointer(& labelSync));
             }
         }
         releasem(mp);
@@ -4821,15 +4821,15 @@ namespace golang::runtime
         {
             if(raceenabled)
             {
-                racemalloc(unsafe::Pointer(gp->stack.lo), gp->stack.hi - gp->stack.lo);
+                racemalloc(gocpp::unsafe_pointer(gp->stack.lo), gp->stack.hi - gp->stack.lo);
             }
             if(msanenabled)
             {
-                msanmalloc(unsafe::Pointer(gp->stack.lo), gp->stack.hi - gp->stack.lo);
+                msanmalloc(gocpp::unsafe_pointer(gp->stack.lo), gp->stack.hi - gp->stack.lo);
             }
             if(asanenabled)
             {
-                asanunpoison(unsafe::Pointer(gp->stack.lo), gp->stack.hi - gp->stack.lo);
+                asanunpoison(gocpp::unsafe_pointer(gp->stack.lo), gp->stack.hi - gp->stack.lo);
             }
         }
         return gp;
@@ -5170,7 +5170,7 @@ namespace golang::runtime
             // Note: it can happen on Windows that we interrupted a system thread
             // with no g, so gp could nil. The other nil checks are done out of
             // caution, but not expected to be nil in practice.
-            unsafe::Pointer* tagPtr = {};
+            gocpp::unsafe_pointer* tagPtr = {};
             if(gp != nullptr && gp->m != nullptr && gp->m->curg != nullptr)
             {
                 tagPtr = & gp->m->curg->labels;
@@ -5317,7 +5317,7 @@ namespace golang::runtime
         {
             for(auto i = 0; i < pp->mspancache.len; i++)
             {
-                rec::free(gocpp::recv(mheap_.spanalloc), unsafe::Pointer(pp->mspancache.buf[i]));
+                rec::free(gocpp::recv(mheap_.spanalloc), gocpp::unsafe_pointer(pp->mspancache.buf[i]));
             }
             pp->mspancache.len = 0;
             lock(& mheap_.lock);
@@ -5413,7 +5413,7 @@ namespace golang::runtime
                 pp = new(p);
             }
             rec::init(gocpp::recv(pp), i);
-            atomicstorep(unsafe::Pointer(& allp[i]), unsafe::Pointer(pp));
+            atomicstorep(gocpp::unsafe_pointer(& allp[i]), gocpp::unsafe_pointer(pp));
         }
         auto gp = getg();
         if(gp->m->p != 0 && rec::ptr(gocpp::recv(gp->m->p))->id < nprocs)
@@ -5482,7 +5482,7 @@ namespace golang::runtime
         }
         rec::reset(gocpp::recv(stealOrder), uint32_t(nprocs));
         int32_t* int32p = & gomaxprocs;
-        atomic::Store((uint32_t*)(unsafe::Pointer(int32p)), uint32_t(nprocs));
+        atomic::Store((uint32_t*)(gocpp::unsafe_pointer(int32p)), uint32_t(nprocs));
         if(old != nprocs)
         {
             rec::resetCapacity(gocpp::recv(gcCPULimiter), now, nprocs);
@@ -6401,7 +6401,7 @@ namespace golang::runtime
         {
             auto head = atomic::Load(& pp->runqhead);
             auto tail = atomic::Load(& pp->runqtail);
-            auto runnext = atomic::Loaduintptr((uintptr_t*)(unsafe::Pointer(& pp->runnext)));
+            auto runnext = atomic::Loaduintptr((uintptr_t*)(gocpp::unsafe_pointer(& pp->runnext)));
             if(tail == atomic::Load(& pp->runqtail))
             {
                 return head == tail && runnext == 0;
@@ -6433,7 +6433,7 @@ namespace golang::runtime
         {
             retryNext:
             auto oldnext = pp->runnext;
-            if(! rec::cas(gocpp::recv(pp->runnext), oldnext, guintptr(unsafe::Pointer(gp))))
+            if(! rec::cas(gocpp::recv(pp->runnext), oldnext, guintptr(gocpp::unsafe_pointer(gp))))
             {
                 goto retryNext;
             }
@@ -6608,7 +6608,7 @@ namespace golang::runtime
     // Batch is a ring buffer starting at batchHead.
     // Returns number of grabbed goroutines.
     // Can be executed by any P.
-    uint32_t runqgrab(struct p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG)
+    uint32_t runqgrab(struct p* pp, gocpp::array_ptr<gocpp::array<golang::runtime::guintptr, 256>> batch, uint32_t batchHead, bool stealRunNextG)
     {
         for(; ; )
         {
@@ -7181,18 +7181,18 @@ namespace golang::runtime
                     {
                         go_throw("inittask with no functions"_s);
                     }
-                    auto firstFunc = add(unsafe::Pointer(t), 8);
+                    auto firstFunc = add(gocpp::unsafe_pointer(t), 8);
                     for(auto i = uint32_t(0); i < t->nfns; i++)
                     {
                         auto p = add(firstFunc, uintptr_t(i) * goarch::PtrSize);
-                        auto f = *(std::function<void ()>*)(unsafe::Pointer(& p));
+                        auto f = *(std::function<void ()>*)(gocpp::unsafe_pointer(& p));
                         f();
                     }
                     if(inittrace.active)
                     {
                         auto end = nanotime();
                         auto after = inittrace;
-                        auto f = *(std::function<void ()>*)(unsafe::Pointer(& firstFunc));
+                        auto f = *(std::function<void ()>*)(gocpp::unsafe_pointer(& firstFunc));
                         auto pkg = funcpkgpath(findfunc(abi::FuncPCABIInternal(f)));
                         gocpp::array<unsigned char, 24> sbuf = {};
                         print("init "_s, pkg, " @"_s);

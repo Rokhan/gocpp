@@ -42,12 +42,12 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
-    void raceReadObjectPC(golang::runtime::_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
+    void raceReadObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race"_s);
     }
 
-    void raceWriteObjectPC(golang::runtime::_type* t, unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
+    void raceWriteObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race"_s);
     }
@@ -74,72 +74,72 @@ namespace golang::runtime
         go_throw("race"_s);
     }
 
-    void racemapshadow(unsafe::Pointer addr, uintptr_t size)
+    void racemapshadow(gocpp::unsafe_pointer addr, uintptr_t size)
     {
         go_throw("race"_s);
     }
 
-    void racewritepc(unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
+    void racewritepc(gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race"_s);
     }
 
-    void racereadpc(unsafe::Pointer addr, uintptr_t callerpc, uintptr_t pc)
+    void racereadpc(gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race"_s);
     }
 
-    void racereadrangepc(unsafe::Pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc)
+    void racereadrangepc(gocpp::unsafe_pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race"_s);
     }
 
-    void racewriterangepc(unsafe::Pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc)
+    void racewriterangepc(gocpp::unsafe_pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race"_s);
     }
 
-    void raceacquire(unsafe::Pointer addr)
+    void raceacquire(gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
 
-    void raceacquireg(struct g* gp, unsafe::Pointer addr)
+    void raceacquireg(struct g* gp, gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
 
-    void raceacquirectx(uintptr_t racectx, unsafe::Pointer addr)
+    void raceacquirectx(uintptr_t racectx, gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
 
-    void racerelease(unsafe::Pointer addr)
+    void racerelease(gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
 
-    void racereleaseg(struct g* gp, unsafe::Pointer addr)
+    void racereleaseg(struct g* gp, gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
 
-    void racereleaseacquire(unsafe::Pointer addr)
+    void racereleaseacquire(gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
 
-    void racereleaseacquireg(struct g* gp, unsafe::Pointer addr)
+    void racereleaseacquireg(struct g* gp, gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
 
-    void racereleasemerge(unsafe::Pointer addr)
+    void racereleasemerge(gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
 
-    void racereleasemergeg(struct g* gp, unsafe::Pointer addr)
+    void racereleasemergeg(struct g* gp, gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
@@ -149,12 +149,12 @@ namespace golang::runtime
         go_throw("race"_s);
     }
 
-    void racemalloc(unsafe::Pointer p, uintptr_t sz)
+    void racemalloc(gocpp::unsafe_pointer p, uintptr_t sz)
     {
         go_throw("race"_s);
     }
 
-    void racefree(unsafe::Pointer p, uintptr_t sz)
+    void racefree(gocpp::unsafe_pointer p, uintptr_t sz)
     {
         go_throw("race"_s);
     }

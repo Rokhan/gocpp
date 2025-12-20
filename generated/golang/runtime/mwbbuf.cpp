@@ -117,11 +117,11 @@ namespace golang::runtime
     // reset empties b by resetting its next and end pointers.
     void rec::reset(golang::runtime::wbBuf* b)
     {
-        auto start = uintptr_t(unsafe::Pointer(& b->buf[0]));
+        auto start = uintptr_t(gocpp::unsafe_pointer(& b->buf[0]));
         b->next = start;
         if(testSmallBuf)
         {
-            b->end = uintptr_t(unsafe::Pointer(& b->buf[wbMaxEntriesPerCall + 1]));
+            b->end = uintptr_t(gocpp::unsafe_pointer(& b->buf[wbMaxEntriesPerCall + 1]));
         }
         else
         {
@@ -140,13 +140,13 @@ namespace golang::runtime
     //go:nosplit
     void rec::discard(golang::runtime::wbBuf* b)
     {
-        b->next = uintptr_t(unsafe::Pointer(& b->buf[0]));
+        b->next = uintptr_t(gocpp::unsafe_pointer(& b->buf[0]));
     }
 
     // empty reports whether b contains no pointers.
     bool rec::empty(golang::runtime::wbBuf* b)
     {
-        return b->next == uintptr_t(unsafe::Pointer(& b->buf[0]));
+        return b->next == uintptr_t(gocpp::unsafe_pointer(& b->buf[0]));
     }
 
     // getX returns space in the write barrier buffer to store X pointers.
@@ -171,26 +171,26 @@ namespace golang::runtime
     //
     //go:nowritebarrierrec
     //go:nosplit
-    gocpp::array<uintptr_t, 1>* rec::get1(golang::runtime::wbBuf* b)
+    gocpp::array_ptr<gocpp::array<uintptr_t, 1>> rec::get1(golang::runtime::wbBuf* b)
     {
         if(b->next + goarch::PtrSize > b->end)
         {
             wbBufFlush();
         }
-        auto p = (gocpp::array<uintptr_t, 1>*)(unsafe::Pointer(b->next));
+        auto p = (gocpp::array_ptr<gocpp::array<uintptr_t, 1>>)(gocpp::unsafe_pointer(b->next));
         b->next += goarch::PtrSize;
         return p;
     }
 
     //go:nowritebarrierrec
     //go:nosplit
-    gocpp::array<uintptr_t, 2>* rec::get2(golang::runtime::wbBuf* b)
+    gocpp::array_ptr<gocpp::array<uintptr_t, 2>> rec::get2(golang::runtime::wbBuf* b)
     {
         if(b->next + 2 * goarch::PtrSize > b->end)
         {
             wbBufFlush();
         }
-        auto p = (gocpp::array<uintptr_t, 2>*)(unsafe::Pointer(b->next));
+        auto p = (gocpp::array_ptr<gocpp::array<uintptr_t, 2>>)(gocpp::unsafe_pointer(b->next));
         b->next += 2 * goarch::PtrSize;
         return p;
     }
@@ -235,7 +235,7 @@ namespace golang::runtime
     //go:systemstack
     void wbBufFlush1(struct p* pp)
     {
-        auto start = uintptr_t(unsafe::Pointer(& pp->wbBuf.buf[0]));
+        auto start = uintptr_t(gocpp::unsafe_pointer(& pp->wbBuf.buf[0]));
         auto n = (pp->wbBuf.next - start) / gocpp::Sizeof<uintptr_t>();
         auto ptrs = pp->wbBuf.buf.make_slice(0, n);
         pp->wbBuf.next = 0;

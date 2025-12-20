@@ -24,11 +24,11 @@ namespace golang::runtime
 
     // adjust Gobuf as if it executed a call to fn with context ctxt
     // and then stopped before the first instruction in fn.
-    void gostartcall(struct gobuf* buf, unsafe::Pointer fn, unsafe::Pointer ctxt)
+    void gostartcall(struct gobuf* buf, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer ctxt)
     {
         auto sp = buf->sp;
         sp -= goarch::PtrSize;
-        *(uintptr_t*)(unsafe::Pointer(sp)) = buf->pc;
+        *(uintptr_t*)(gocpp::unsafe_pointer(sp)) = buf->pc;
         buf->sp = sp;
         buf->pc = uintptr_t(fn);
         buf->ctxt = ctxt;

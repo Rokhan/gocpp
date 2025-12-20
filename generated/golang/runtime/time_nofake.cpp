@@ -34,11 +34,11 @@ namespace golang::runtime
         return nanotime1();
     }
 
-    std::function<int32_t (uintptr_t fd, unsafe::Pointer p, int32_t n)> overrideWrite;
+    std::function<int32_t (uintptr_t fd, gocpp::unsafe_pointer p, int32_t n)> overrideWrite;
     // write must be nosplit on Windows (see write1)
     //
     //go:nosplit
-    int32_t write(uintptr_t fd, unsafe::Pointer p, int32_t n)
+    int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n)
     {
         if(overrideWrite != nullptr)
         {

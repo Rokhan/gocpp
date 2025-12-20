@@ -13,16 +13,16 @@
 
 namespace golang::runtime
 {
-    unsafe::Pointer sysAlloc(uintptr_t n, golang::runtime::sysMemStat* sysStat);
-    void sysUnused(unsafe::Pointer v, uintptr_t n);
-    void sysUsed(unsafe::Pointer v, uintptr_t n, uintptr_t prepared);
-    void sysHugePage(unsafe::Pointer v, uintptr_t n);
-    void sysNoHugePage(unsafe::Pointer v, uintptr_t n);
-    void sysHugePageCollapse(unsafe::Pointer v, uintptr_t n);
-    void sysFree(unsafe::Pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat);
-    void sysFault(unsafe::Pointer v, uintptr_t n);
-    unsafe::Pointer sysReserve(unsafe::Pointer v, uintptr_t n);
-    void sysMap(unsafe::Pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat);
+    gocpp::unsafe_pointer sysAlloc(uintptr_t n, golang::runtime::sysMemStat* sysStat);
+    void sysUnused(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysUsed(gocpp::unsafe_pointer v, uintptr_t n, uintptr_t prepared);
+    void sysHugePage(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysNoHugePage(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysHugePageCollapse(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysFree(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat);
+    void sysFault(gocpp::unsafe_pointer v, uintptr_t n);
+    gocpp::unsafe_pointer sysReserve(gocpp::unsafe_pointer v, uintptr_t n);
+    void sysMap(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat);
 
     namespace rec
     {

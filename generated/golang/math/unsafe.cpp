@@ -25,7 +25,7 @@ namespace golang::math
     // Float32bits(Float32frombits(x)) == x.
     uint32_t Float32bits(double f)
     {
-        return *(uint32_t*)(unsafe::Pointer(& f));
+        return *(uint32_t*)(gocpp::unsafe_pointer(& f));
     }
 
     // Float32frombits returns the floating-point number corresponding
@@ -34,7 +34,7 @@ namespace golang::math
     // Float32frombits(Float32bits(x)) == x.
     double Float32frombits(uint32_t b)
     {
-        return *(float*)(unsafe::Pointer(& b));
+        return *(float*)(gocpp::unsafe_pointer(& b));
     }
 
     // Float64bits returns the IEEE 754 binary representation of f,
@@ -42,7 +42,7 @@ namespace golang::math
     // and Float64bits(Float64frombits(x)) == x.
     uint64_t Float64bits(double f)
     {
-        return *(uint64_t*)(unsafe::Pointer(& f));
+        return *(uint64_t*)(gocpp::unsafe_pointer(& f));
     }
 
     // Float64frombits returns the floating-point number corresponding
@@ -51,7 +51,7 @@ namespace golang::math
     // Float64frombits(Float64bits(x)) == x.
     double Float64frombits(uint64_t b)
     {
-        return *(double*)(unsafe::Pointer(& b));
+        return *(double*)(gocpp::unsafe_pointer(& b));
     }
 
 }

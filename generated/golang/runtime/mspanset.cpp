@@ -533,7 +533,7 @@ namespace golang::runtime
     // Store stores an *mspan.
     void rec::StoreNoWB(golang::runtime::atomicMSpanPointer* p, struct mspan* s)
     {
-        rec::StoreNoWB(gocpp::recv(p->p), unsafe::Pointer(s));
+        rec::StoreNoWB(gocpp::recv(p->p), gocpp::unsafe_pointer(s));
     }
 
 }

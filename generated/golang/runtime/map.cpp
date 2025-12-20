@@ -334,17 +334,17 @@ namespace golang::runtime
 
     struct bmap* rec::overflow(golang::runtime::bmap* b, golang::runtime::maptype* t)
     {
-        return *(bmap**)(add(unsafe::Pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize));
+        return *(bmap**)(add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize));
     }
 
     void rec::setoverflow(golang::runtime::bmap* b, golang::runtime::maptype* t, struct bmap* ovf)
     {
-        *(bmap**)(add(unsafe::Pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize)) = ovf;
+        *(bmap**)(add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize)) = ovf;
     }
 
-    unsafe::Pointer rec::keys(golang::runtime::bmap* b)
+    gocpp::unsafe_pointer rec::keys(golang::runtime::bmap* b)
     {
-        return add(unsafe::Pointer(b), dataOffset);
+        return add(gocpp::unsafe_pointer(b), dataOffset);
     }
 
     // incrnoverflow increments h.noverflow.
@@ -376,7 +376,7 @@ namespace golang::runtime
             ovf = h->extra->nextOverflow;
             if(rec::overflow(gocpp::recv(ovf), t) == nullptr)
             {
-                h->extra->nextOverflow = (bmap*)(add(unsafe::Pointer(ovf), uintptr_t(t->BucketSize)));
+                h->extra->nextOverflow = (bmap*)(add(gocpp::unsafe_pointer(ovf), uintptr_t(t->BucketSize)));
             }
             else
             {
@@ -471,9 +471,9 @@ namespace golang::runtime
     // allocated by makeBucketArray with the same t and b parameters.
     // If dirtyalloc is nil a new backing array will be alloced and
     // otherwise dirtyalloc will be cleared and reused as backing array.
-    std::tuple<unsafe::Pointer, struct bmap*> makeBucketArray(golang::runtime::maptype* t, uint8_t b, unsafe::Pointer dirtyalloc)
+    std::tuple<gocpp::unsafe_pointer, struct bmap*> makeBucketArray(golang::runtime::maptype* t, uint8_t b, gocpp::unsafe_pointer dirtyalloc)
     {
-        unsafe::Pointer buckets;
+        gocpp::unsafe_pointer buckets;
         struct bmap* nextOverflow;
         auto base = bucketShift(b);
         auto nbuckets = base;
@@ -518,13 +518,13 @@ namespace golang::runtime
     // the key is not in the map.
     // NOTE: The returned pointer may keep the whole map live, so don't
     // hold onto it for very long.
-    unsafe::Pointer mapaccess1(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
+    gocpp::unsafe_pointer mapaccess1(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key)
     {
         if(raceenabled && h != nullptr)
         {
             auto callerpc = getcallerpc();
             auto pc = abi::FuncPCABIInternal(mapaccess1);
-            racereadpc(unsafe::Pointer(h), callerpc, pc);
+            racereadpc(gocpp::unsafe_pointer(h), callerpc, pc);
             raceReadObjectPC(t->Key, key, callerpc, pc);
         }
         if(msanenabled && h != nullptr)
@@ -541,7 +541,7 @@ namespace golang::runtime
             {
                 gocpp::panic(err);
             }
-            return unsafe::Pointer(& zeroVal[0]);
+            return gocpp::unsafe_pointer(& zeroVal[0]);
         }
         if(h->flags & hashWriting != 0)
         {
@@ -576,17 +576,17 @@ namespace golang::runtime
                     }
                     continue;
                 }
-                auto k = add(unsafe::Pointer(b), dataOffset + i * uintptr_t(t->KeySize));
+                auto k = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
                 if(rec::IndirectKey(gocpp::recv(t)))
                 {
-                    k = *((unsafe::Pointer*)(k));
+                    k = *((gocpp::unsafe_pointer*)(k));
                 }
                 if(t->Key->Equal(key, k))
                 {
-                    auto e = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
+                    auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
                     if(rec::IndirectElem(gocpp::recv(t)))
                     {
-                        e = *((unsafe::Pointer*)(e));
+                        e = *((gocpp::unsafe_pointer*)(e));
                     }
                     return e;
                 }
@@ -598,16 +598,16 @@ namespace golang::runtime
                 break;
             }
         }
-        return unsafe::Pointer(& zeroVal[0]);
+        return gocpp::unsafe_pointer(& zeroVal[0]);
     }
 
-    std::tuple<unsafe::Pointer, bool> mapaccess2(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
+    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key)
     {
         if(raceenabled && h != nullptr)
         {
             auto callerpc = getcallerpc();
             auto pc = abi::FuncPCABIInternal(mapaccess2);
-            racereadpc(unsafe::Pointer(h), callerpc, pc);
+            racereadpc(gocpp::unsafe_pointer(h), callerpc, pc);
             raceReadObjectPC(t->Key, key, callerpc, pc);
         }
         if(msanenabled && h != nullptr)
@@ -624,7 +624,7 @@ namespace golang::runtime
             {
                 gocpp::panic(err);
             }
-            return {unsafe::Pointer(& zeroVal[0]), false};
+            return {gocpp::unsafe_pointer(& zeroVal[0]), false};
         }
         if(h->flags & hashWriting != 0)
         {
@@ -659,17 +659,17 @@ namespace golang::runtime
                     }
                     continue;
                 }
-                auto k = add(unsafe::Pointer(b), dataOffset + i * uintptr_t(t->KeySize));
+                auto k = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
                 if(rec::IndirectKey(gocpp::recv(t)))
                 {
-                    k = *((unsafe::Pointer*)(k));
+                    k = *((gocpp::unsafe_pointer*)(k));
                 }
                 if(t->Key->Equal(key, k))
                 {
-                    auto e = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
+                    auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
                     if(rec::IndirectElem(gocpp::recv(t)))
                     {
-                        e = *((unsafe::Pointer*)(e));
+                        e = *((gocpp::unsafe_pointer*)(e));
                     }
                     return {e, true};
                 }
@@ -681,11 +681,11 @@ namespace golang::runtime
                 break;
             }
         }
-        return {unsafe::Pointer(& zeroVal[0]), false};
+        return {gocpp::unsafe_pointer(& zeroVal[0]), false};
     }
 
     // returns both key and elem. Used by map iterator.
-    std::tuple<unsafe::Pointer, unsafe::Pointer> mapaccessK(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
+    std::tuple<gocpp::unsafe_pointer, gocpp::unsafe_pointer> mapaccessK(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key)
     {
         if(h == nullptr || h->count == 0)
         {
@@ -720,17 +720,17 @@ namespace golang::runtime
                     }
                     continue;
                 }
-                auto k = add(unsafe::Pointer(b), dataOffset + i * uintptr_t(t->KeySize));
+                auto k = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
                 if(rec::IndirectKey(gocpp::recv(t)))
                 {
-                    k = *((unsafe::Pointer*)(k));
+                    k = *((gocpp::unsafe_pointer*)(k));
                 }
                 if(t->Key->Equal(key, k))
                 {
-                    auto e = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
+                    auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
                     if(rec::IndirectElem(gocpp::recv(t)))
                     {
-                        e = *((unsafe::Pointer*)(e));
+                        e = *((gocpp::unsafe_pointer*)(e));
                     }
                     return {k, e};
                 }
@@ -745,20 +745,20 @@ namespace golang::runtime
         return {nullptr, nullptr};
     }
 
-    unsafe::Pointer mapaccess1_fat(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key, unsafe::Pointer zero)
+    gocpp::unsafe_pointer mapaccess1_fat(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero)
     {
         auto e = mapaccess1(t, h, key);
-        if(e == unsafe::Pointer(& zeroVal[0]))
+        if(e == gocpp::unsafe_pointer(& zeroVal[0]))
         {
             return zero;
         }
         return e;
     }
 
-    std::tuple<unsafe::Pointer, bool> mapaccess2_fat(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key, unsafe::Pointer zero)
+    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_fat(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero)
     {
         auto e = mapaccess1(t, h, key);
-        if(e == unsafe::Pointer(& zeroVal[0]))
+        if(e == gocpp::unsafe_pointer(& zeroVal[0]))
         {
             return {zero, false};
         }
@@ -766,7 +766,7 @@ namespace golang::runtime
     }
 
     // Like mapaccess, but allocates a slot for the key if it is not present in the map.
-    unsafe::Pointer mapassign(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
+    gocpp::unsafe_pointer mapassign(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key)
     {
         if(h == nullptr)
         {
@@ -776,7 +776,7 @@ namespace golang::runtime
         {
             auto callerpc = getcallerpc();
             auto pc = abi::FuncPCABIInternal(mapassign);
-            racewritepc(unsafe::Pointer(h), callerpc, pc);
+            racewritepc(gocpp::unsafe_pointer(h), callerpc, pc);
             raceReadObjectPC(t->Key, key, callerpc, pc);
         }
         if(msanenabled)
@@ -806,8 +806,8 @@ namespace golang::runtime
         auto b = (bmap*)(add(h->buckets, bucket * uintptr_t(t->BucketSize)));
         auto top = tophash(hash);
         uint8_t* inserti = {};
-        unsafe::Pointer insertk = {};
-        unsafe::Pointer elem = {};
+        gocpp::unsafe_pointer insertk = {};
+        gocpp::unsafe_pointer elem = {};
         bucketloop:
         for(; ; )
         {
@@ -818,8 +818,8 @@ namespace golang::runtime
                     if(isEmpty(b->tophash[i]) && inserti == nullptr)
                     {
                         inserti = & b->tophash[i];
-                        insertk = add(unsafe::Pointer(b), dataOffset + i * uintptr_t(t->KeySize));
-                        elem = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
+                        insertk = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
+                        elem = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
                     }
                     if(b->tophash[i] == emptyRest)
                     {
@@ -827,10 +827,10 @@ namespace golang::runtime
                     }
                     continue;
                 }
-                auto k = add(unsafe::Pointer(b), dataOffset + i * uintptr_t(t->KeySize));
+                auto k = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
                 if(rec::IndirectKey(gocpp::recv(t)))
                 {
-                    k = *((unsafe::Pointer*)(k));
+                    k = *((gocpp::unsafe_pointer*)(k));
                 }
                 if(! t->Key->Equal(key, k))
                 {
@@ -840,7 +840,7 @@ namespace golang::runtime
                 {
                     typedmemmove(t->Key, k, key);
                 }
-                elem = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
+                elem = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
                 goto done;
             }
             auto ovf = rec::overflow(gocpp::recv(b), t);
@@ -865,19 +865,19 @@ namespace golang::runtime
         {
             auto newb = rec::newoverflow(gocpp::recv(h), t, b);
             inserti = & newb->tophash[0];
-            insertk = add(unsafe::Pointer(newb), dataOffset);
+            insertk = add(gocpp::unsafe_pointer(newb), dataOffset);
             elem = add(insertk, bucketCnt * uintptr_t(t->KeySize));
         }
         if(rec::IndirectKey(gocpp::recv(t)))
         {
             auto kmem = newobject(t->Key);
-            *(unsafe::Pointer*)(insertk) = kmem;
+            *(gocpp::unsafe_pointer*)(insertk) = kmem;
             insertk = kmem;
         }
         if(rec::IndirectElem(gocpp::recv(t)))
         {
             auto vmem = newobject(t->Elem);
-            *(unsafe::Pointer*)(elem) = vmem;
+            *(gocpp::unsafe_pointer*)(elem) = vmem;
         }
         typedmemmove(t->Key, insertk, key);
         *inserti = top;
@@ -890,18 +890,18 @@ namespace golang::runtime
         h->flags &^= hashWriting;
         if(rec::IndirectElem(gocpp::recv(t)))
         {
-            elem = *((unsafe::Pointer*)(elem));
+            elem = *((gocpp::unsafe_pointer*)(elem));
         }
         return elem;
     }
 
-    void mapdelete(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
+    void mapdelete(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key)
     {
         if(raceenabled && h != nullptr)
         {
             auto callerpc = getcallerpc();
             auto pc = abi::FuncPCABIInternal(mapdelete);
-            racewritepc(unsafe::Pointer(h), callerpc, pc);
+            racewritepc(gocpp::unsafe_pointer(h), callerpc, pc);
             raceReadObjectPC(t->Key, key, callerpc, pc);
         }
         if(msanenabled && h != nullptr)
@@ -947,11 +947,11 @@ namespace golang::runtime
                     }
                     continue;
                 }
-                auto k = add(unsafe::Pointer(b), dataOffset + i * uintptr_t(t->KeySize));
+                auto k = add(gocpp::unsafe_pointer(b), dataOffset + i * uintptr_t(t->KeySize));
                 auto k2 = k;
                 if(rec::IndirectKey(gocpp::recv(t)))
                 {
-                    k2 = *((unsafe::Pointer*)(k2));
+                    k2 = *((gocpp::unsafe_pointer*)(k2));
                 }
                 if(! t->Key->Equal(key, k2))
                 {
@@ -959,17 +959,17 @@ namespace golang::runtime
                 }
                 if(rec::IndirectKey(gocpp::recv(t)))
                 {
-                    *(unsafe::Pointer*)(k) = nullptr;
+                    *(gocpp::unsafe_pointer*)(k) = nullptr;
                 }
                 else
                 if(t->Key->PtrBytes != 0)
                 {
                     memclrHasPointers(k, t->Key->Size_);
                 }
-                auto e = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
+                auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
                 if(rec::IndirectElem(gocpp::recv(t)))
                 {
-                    *(unsafe::Pointer*)(e) = nullptr;
+                    *(gocpp::unsafe_pointer*)(e) = nullptr;
                 }
                 else
                 if(t->Elem->PtrBytes != 0)
@@ -1050,7 +1050,7 @@ namespace golang::runtime
         if(raceenabled && h != nullptr)
         {
             auto callerpc = getcallerpc();
-            racereadpc(unsafe::Pointer(h), callerpc, abi::FuncPCABIInternal(mapiterinit));
+            racereadpc(gocpp::unsafe_pointer(h), callerpc, abi::FuncPCABIInternal(mapiterinit));
         }
         it->t = t;
         if(h == nullptr || h->count == 0)
@@ -1087,7 +1087,7 @@ namespace golang::runtime
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
-            racereadpc(unsafe::Pointer(h), callerpc, abi::FuncPCABIInternal(mapiternext));
+            racereadpc(gocpp::unsafe_pointer(h), callerpc, abi::FuncPCABIInternal(mapiternext));
         }
         if(h->flags & hashWriting != 0)
         {
@@ -1141,12 +1141,12 @@ namespace golang::runtime
             {
                 continue;
             }
-            auto k = add(unsafe::Pointer(b), dataOffset + uintptr_t(offi) * uintptr_t(t->KeySize));
+            auto k = add(gocpp::unsafe_pointer(b), dataOffset + uintptr_t(offi) * uintptr_t(t->KeySize));
             if(rec::IndirectKey(gocpp::recv(t)))
             {
-                k = *((unsafe::Pointer*)(k));
+                k = *((gocpp::unsafe_pointer*)(k));
             }
-            auto e = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + uintptr_t(offi) * uintptr_t(t->ValueSize));
+            auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + uintptr_t(offi) * uintptr_t(t->ValueSize));
             if(checkBucket != noCheck && ! rec::sameSizeGrow(gocpp::recv(h)))
             {
                 if(rec::ReflexiveKey(gocpp::recv(t)) || t->Key->Equal(k, k))
@@ -1170,7 +1170,7 @@ namespace golang::runtime
                 it->key = k;
                 if(rec::IndirectElem(gocpp::recv(t)))
                 {
-                    e = *((unsafe::Pointer*)(e));
+                    e = *((gocpp::unsafe_pointer*)(e));
                 }
                 it->elem = e;
             }
@@ -1205,7 +1205,7 @@ namespace golang::runtime
         {
             auto callerpc = getcallerpc();
             auto pc = abi::FuncPCABIInternal(mapclear);
-            racewritepc(unsafe::Pointer(h), callerpc, pc);
+            racewritepc(gocpp::unsafe_pointer(h), callerpc, pc);
         }
         if(h == nullptr || h->count == 0)
         {
@@ -1216,7 +1216,7 @@ namespace golang::runtime
             fatal("concurrent map writes"_s);
         }
         h->flags ^= hashWriting;
-        auto markBucketsEmpty = [=](unsafe::Pointer bucket, uintptr_t mask) mutable -> void
+        auto markBucketsEmpty = [=](gocpp::unsafe_pointer bucket, uintptr_t mask) mutable -> void
         {
             for(auto i = uintptr_t(0); i <= mask; i++)
             {
@@ -1408,18 +1408,18 @@ namespace golang::runtime
             gocpp::array<evacDst, 2> xy = {};
             auto x = & xy[0];
             x->b = (bmap*)(add(h->buckets, oldbucket * uintptr_t(t->BucketSize)));
-            x->k = add(unsafe::Pointer(x->b), dataOffset);
+            x->k = add(gocpp::unsafe_pointer(x->b), dataOffset);
             x->e = add(x->k, bucketCnt * uintptr_t(t->KeySize));
             if(! rec::sameSizeGrow(gocpp::recv(h)))
             {
                 auto y = & xy[1];
                 y->b = (bmap*)(add(h->buckets, (oldbucket + newbit) * uintptr_t(t->BucketSize)));
-                y->k = add(unsafe::Pointer(y->b), dataOffset);
+                y->k = add(gocpp::unsafe_pointer(y->b), dataOffset);
                 y->e = add(y->k, bucketCnt * uintptr_t(t->KeySize));
             }
             for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
             {
-                auto k = add(unsafe::Pointer(b), dataOffset);
+                auto k = add(gocpp::unsafe_pointer(b), dataOffset);
                 auto e = add(k, bucketCnt * uintptr_t(t->KeySize));
                 for(auto i = 0; i < bucketCnt; std::tie(i, k, e) = std::tuple{i + 1, add(k, uintptr_t(t->KeySize)), add(e, uintptr_t(t->ValueSize))})
                 {
@@ -1436,7 +1436,7 @@ namespace golang::runtime
                     auto k2 = k;
                     if(rec::IndirectKey(gocpp::recv(t)))
                     {
-                        k2 = *((unsafe::Pointer*)(k2));
+                        k2 = *((gocpp::unsafe_pointer*)(k2));
                     }
                     uint8_t useY = {};
                     if(! rec::sameSizeGrow(gocpp::recv(h)))
@@ -1465,13 +1465,13 @@ namespace golang::runtime
                     {
                         dst->b = rec::newoverflow(gocpp::recv(h), t, dst->b);
                         dst->i = 0;
-                        dst->k = add(unsafe::Pointer(dst->b), dataOffset);
+                        dst->k = add(gocpp::unsafe_pointer(dst->b), dataOffset);
                         dst->e = add(dst->k, bucketCnt * uintptr_t(t->KeySize));
                     }
                     dst->b->tophash[dst->i & (bucketCnt - 1)] = top;
                     if(rec::IndirectKey(gocpp::recv(t)))
                     {
-                        *(unsafe::Pointer*)(dst->k) = k2;
+                        *(gocpp::unsafe_pointer*)(dst->k) = k2;
                     }
                     else
                     {
@@ -1479,7 +1479,7 @@ namespace golang::runtime
                     }
                     if(rec::IndirectElem(gocpp::recv(t)))
                     {
-                        *(unsafe::Pointer*)(dst->e) = *(unsafe::Pointer*)(e);
+                        *(gocpp::unsafe_pointer*)(dst->e) = *(gocpp::unsafe_pointer*)(e);
                     }
                     else
                     {
@@ -1574,7 +1574,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_mapaccess reflect.mapaccess
-    unsafe::Pointer reflect_mapaccess(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
+    gocpp::unsafe_pointer reflect_mapaccess(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key)
     {
         auto [elem, ok] = mapaccess2(t, h, key);
         if(! ok)
@@ -1585,7 +1585,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_mapaccess_faststr reflect.mapaccess_faststr
-    unsafe::Pointer reflect_mapaccess_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key)
+    gocpp::unsafe_pointer reflect_mapaccess_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key)
     {
         auto [elem, ok] = mapaccess2_faststr(t, h, key);
         if(! ok)
@@ -1596,21 +1596,21 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_mapassign reflect.mapassign0
-    void reflect_mapassign(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key, unsafe::Pointer elem)
+    void reflect_mapassign(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer elem)
     {
         auto p = mapassign(t, h, key);
         typedmemmove(t->Elem, p, elem);
     }
 
     //go:linkname reflect_mapassign_faststr reflect.mapassign_faststr0
-    void reflect_mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key, unsafe::Pointer elem)
+    void reflect_mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key, gocpp::unsafe_pointer elem)
     {
         auto p = mapassign_faststr(t, h, key);
         typedmemmove(t->Elem, p, elem);
     }
 
     //go:linkname reflect_mapdelete reflect.mapdelete
-    void reflect_mapdelete(golang::runtime::maptype* t, struct hmap* h, unsafe::Pointer key)
+    void reflect_mapdelete(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key)
     {
         mapdelete(t, h, key);
     }
@@ -1634,13 +1634,13 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_mapiterkey reflect.mapiterkey
-    unsafe::Pointer reflect_mapiterkey(struct hiter* it)
+    gocpp::unsafe_pointer reflect_mapiterkey(struct hiter* it)
     {
         return it->key;
     }
 
     //go:linkname reflect_mapiterelem reflect.mapiterelem
-    unsafe::Pointer reflect_mapiterelem(struct hiter* it)
+    gocpp::unsafe_pointer reflect_mapiterelem(struct hiter* it)
     {
         return it->elem;
     }
@@ -1655,7 +1655,7 @@ namespace golang::runtime
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
-            racereadpc(unsafe::Pointer(h), callerpc, abi::FuncPCABIInternal(reflect_maplen));
+            racereadpc(gocpp::unsafe_pointer(h), callerpc, abi::FuncPCABIInternal(reflect_maplen));
         }
         return h->count;
     }
@@ -1676,7 +1676,7 @@ namespace golang::runtime
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
-            racereadpc(unsafe::Pointer(h), callerpc, abi::FuncPCABIInternal(reflect_maplen));
+            racereadpc(gocpp::unsafe_pointer(h), callerpc, abi::FuncPCABIInternal(reflect_maplen));
         }
         return h->count;
     }
@@ -1696,7 +1696,7 @@ namespace golang::runtime
     go_any mapclone(go_any m)
     {
         auto e = efaceOf(& m);
-        e->data = unsafe::Pointer(mapclone2((runtime::maptype*)(unsafe::Pointer(e->_type)), (hmap*)(e->data)));
+        e->data = gocpp::unsafe_pointer(mapclone2((runtime::maptype*)(gocpp::unsafe_pointer(e->_type)), (hmap*)(e->data)));
         return m;
     }
 
@@ -1722,21 +1722,21 @@ namespace golang::runtime
                 dst = rec::newoverflow(gocpp::recv(h), t, dst);
                 pos = 0;
             }
-            auto srcK = add(unsafe::Pointer(src), dataOffset + uintptr_t(i) * uintptr_t(t->KeySize));
-            auto srcEle = add(unsafe::Pointer(src), dataOffset + bucketCnt * uintptr_t(t->KeySize) + uintptr_t(i) * uintptr_t(t->ValueSize));
-            auto dstK = add(unsafe::Pointer(dst), dataOffset + uintptr_t(pos) * uintptr_t(t->KeySize));
-            auto dstEle = add(unsafe::Pointer(dst), dataOffset + bucketCnt * uintptr_t(t->KeySize) + uintptr_t(pos) * uintptr_t(t->ValueSize));
+            auto srcK = add(gocpp::unsafe_pointer(src), dataOffset + uintptr_t(i) * uintptr_t(t->KeySize));
+            auto srcEle = add(gocpp::unsafe_pointer(src), dataOffset + bucketCnt * uintptr_t(t->KeySize) + uintptr_t(i) * uintptr_t(t->ValueSize));
+            auto dstK = add(gocpp::unsafe_pointer(dst), dataOffset + uintptr_t(pos) * uintptr_t(t->KeySize));
+            auto dstEle = add(gocpp::unsafe_pointer(dst), dataOffset + bucketCnt * uintptr_t(t->KeySize) + uintptr_t(pos) * uintptr_t(t->ValueSize));
             dst->tophash[pos] = src->tophash[i];
             if(rec::IndirectKey(gocpp::recv(t)))
             {
-                srcK = *(unsafe::Pointer*)(srcK);
+                srcK = *(gocpp::unsafe_pointer*)(srcK);
                 if(rec::NeedKeyUpdate(gocpp::recv(t)))
                 {
                     auto kStore = newobject(t->Key);
                     typedmemmove(t->Key, kStore, srcK);
                     srcK = kStore;
                 }
-                *(unsafe::Pointer*)(dstK) = srcK;
+                *(gocpp::unsafe_pointer*)(dstK) = srcK;
             }
             else
             {
@@ -1744,10 +1744,10 @@ namespace golang::runtime
             }
             if(rec::IndirectElem(gocpp::recv(t)))
             {
-                srcEle = *(unsafe::Pointer*)(srcEle);
+                srcEle = *(gocpp::unsafe_pointer*)(srcEle);
                 auto eStore = newobject(t->Elem);
                 typedmemmove(t->Elem, eStore, srcEle);
-                *(unsafe::Pointer*)(dstEle) = eStore;
+                *(gocpp::unsafe_pointer*)(dstEle) = eStore;
             }
             else
             {
@@ -1844,15 +1844,15 @@ namespace golang::runtime
                     {
                         fatal("concurrent map clone and map write"_s);
                     }
-                    auto srcK = add(unsafe::Pointer(srcBmap), dataOffset + i * uintptr_t(t->KeySize));
+                    auto srcK = add(gocpp::unsafe_pointer(srcBmap), dataOffset + i * uintptr_t(t->KeySize));
                     if(rec::IndirectKey(gocpp::recv(t)))
                     {
-                        srcK = *((unsafe::Pointer*)(srcK));
+                        srcK = *((gocpp::unsafe_pointer*)(srcK));
                     }
-                    auto srcEle = add(unsafe::Pointer(srcBmap), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
+                    auto srcEle = add(gocpp::unsafe_pointer(srcBmap), dataOffset + bucketCnt * uintptr_t(t->KeySize) + i * uintptr_t(t->ValueSize));
                     if(rec::IndirectElem(gocpp::recv(t)))
                     {
-                        srcEle = *((unsafe::Pointer*)(srcEle));
+                        srcEle = *((gocpp::unsafe_pointer*)(srcEle));
                     }
                     auto dstEle = mapassign(t, dst, srcK);
                     typedmemmove(t->Elem, dstEle, srcEle);
@@ -1866,10 +1866,10 @@ namespace golang::runtime
     // keys for implementing maps.keys
     //
     //go:linkname keys maps.keys
-    void keys(go_any m, unsafe::Pointer p)
+    void keys(go_any m, gocpp::unsafe_pointer p)
     {
         auto e = efaceOf(& m);
-        auto t = (runtime::maptype*)(unsafe::Pointer(e->_type));
+        auto t = (runtime::maptype*)(gocpp::unsafe_pointer(e->_type));
         auto h = (hmap*)(e->data);
         if(h == nullptr || h->count == 0)
         {
@@ -1923,10 +1923,10 @@ namespace golang::runtime
                 {
                     fatal("concurrent map read and map write"_s);
                 }
-                auto k = add(unsafe::Pointer(b), dataOffset + offi * uintptr_t(t->KeySize));
+                auto k = add(gocpp::unsafe_pointer(b), dataOffset + offi * uintptr_t(t->KeySize));
                 if(rec::IndirectKey(gocpp::recv(t)))
                 {
-                    k = *((unsafe::Pointer*)(k));
+                    k = *((gocpp::unsafe_pointer*)(k));
                 }
                 if(s->len >= s->cap)
                 {
@@ -1942,10 +1942,10 @@ namespace golang::runtime
     // values for implementing maps.values
     //
     //go:linkname values maps.values
-    void values(go_any m, unsafe::Pointer p)
+    void values(go_any m, gocpp::unsafe_pointer p)
     {
         auto e = efaceOf(& m);
-        auto t = (runtime::maptype*)(unsafe::Pointer(e->_type));
+        auto t = (runtime::maptype*)(gocpp::unsafe_pointer(e->_type));
         auto h = (hmap*)(e->data);
         if(h == nullptr || h->count == 0)
         {
@@ -1999,10 +1999,10 @@ namespace golang::runtime
                 {
                     fatal("concurrent map read and map write"_s);
                 }
-                auto ele = add(unsafe::Pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + offi * uintptr_t(t->ValueSize));
+                auto ele = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * uintptr_t(t->KeySize) + offi * uintptr_t(t->ValueSize));
                 if(rec::IndirectElem(gocpp::recv(t)))
                 {
-                    ele = *((unsafe::Pointer*)(ele));
+                    ele = *((gocpp::unsafe_pointer*)(ele));
                 }
                 if(s->len >= s->cap)
                 {

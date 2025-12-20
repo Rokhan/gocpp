@@ -59,7 +59,7 @@ namespace golang::registry
         unsigned char* pbuf = {};
         if(len(buf) > 0)
         {
-            pbuf = (unsigned char*)(unsafe::Pointer(& buf[0]));
+            pbuf = (unsigned char*)(gocpp::unsafe_pointer(& buf[0]));
         }
         auto l = uint32_t(len(buf));
         err = syscall::RegQueryValueEx(syscall::Handle(k), pname, nullptr, & valtype, pbuf, & l);
@@ -85,7 +85,7 @@ namespace golang::registry
         auto n = uint32_t(len(buf));
         for(; ; )
         {
-            err = syscall::RegQueryValueEx(syscall::Handle(k), p, nullptr, & t, (unsigned char*)(unsafe::Pointer(& buf[0])), & n);
+            err = syscall::RegQueryValueEx(syscall::Handle(k), p, nullptr, & t, (unsigned char*)(gocpp::unsafe_pointer(& buf[0])), & n);
             if(err == nullptr)
             {
                 return {buf.make_slice(0, n), t, nullptr};
@@ -137,7 +137,7 @@ namespace golang::registry
         {
             return {""_s, typ, nullptr};
         }
-        auto u = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(0, len(data) / 2, len(data) / 2);
+        auto u = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 29>>)(gocpp::unsafe_pointer(& data[0])).make_slice(0, len(data) / 2, len(data) / 2);
         return {syscall::UTF16ToString(u), typ, nullptr};
     }
 
@@ -240,7 +240,7 @@ namespace golang::registry
         {
             return {nullptr, typ, nullptr};
         }
-        auto p = (gocpp::array<uint16_t, 1 << 29>*)(unsafe::Pointer(& data[0])).make_slice(0, len(data) / 2, len(data) / 2);
+        auto p = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 29>>)(gocpp::unsafe_pointer(& data[0])).make_slice(0, len(data) / 2, len(data) / 2);
         if(len(p) == 0)
         {
             return {nullptr, typ, nullptr};
@@ -290,14 +290,14 @@ namespace golang::registry
                     {
                         return {0, typ, errors::New("DWORD value is not 4 bytes long"_s)};
                     }
-                    return {uint64_t(*(uint32_t*)(unsafe::Pointer(& data[0]))), DWORD, nullptr};
+                    return {uint64_t(*(uint32_t*)(gocpp::unsafe_pointer(& data[0]))), DWORD, nullptr};
                     break;
                 case 1:
                     if(len(data) != 8)
                     {
                         return {0, typ, errors::New("QWORD value is not 8 bytes long"_s)};
                     }
-                    return {*(uint64_t*)(unsafe::Pointer(& data[0])), QWORD, nullptr};
+                    return {*(uint64_t*)(gocpp::unsafe_pointer(& data[0])), QWORD, nullptr};
                     break;
                 default:
                     return {0, typ, ErrUnexpectedType};
@@ -346,14 +346,14 @@ namespace golang::registry
     // under key k to value and DWORD.
     struct gocpp::error rec::SetDWordValue(golang::registry::Key k, gocpp::string name, uint32_t value)
     {
-        return rec::setValue(gocpp::recv(k), name, DWORD, (gocpp::array<unsigned char, 4>*)(unsafe::Pointer(& value)).make_slice(0));
+        return rec::setValue(gocpp::recv(k), name, DWORD, (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& value)).make_slice(0));
     }
 
     // SetQWordValue sets the data and type of a name value
     // under key k to value and QWORD.
     struct gocpp::error rec::SetQWordValue(golang::registry::Key k, gocpp::string name, uint64_t value)
     {
-        return rec::setValue(gocpp::recv(k), name, QWORD, (gocpp::array<unsigned char, 8>*)(unsafe::Pointer(& value)).make_slice(0));
+        return rec::setValue(gocpp::recv(k), name, QWORD, (gocpp::array_ptr<gocpp::array<unsigned char, 8>>)(gocpp::unsafe_pointer(& value)).make_slice(0));
     }
 
     struct gocpp::error rec::setStringValue(golang::registry::Key k, gocpp::string name, uint32_t valtype, gocpp::string value)
@@ -363,7 +363,7 @@ namespace golang::registry
         {
             return err;
         }
-        auto buf = (gocpp::array<unsigned char, 1 << 29>*)(unsafe::Pointer(& v[0])).make_slice(0, len(v) * 2, len(v) * 2);
+        auto buf = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 29>>)(gocpp::unsafe_pointer(& v[0])).make_slice(0, len(v) * 2, len(v) * 2);
         return rec::setValue(gocpp::recv(k), name, valtype, buf);
     }
 
@@ -399,7 +399,7 @@ namespace golang::registry
             ss += s + "\x00"_s;
         }
         auto v = utf16::Encode(gocpp::slice<gocpp::rune>(ss + "\x00"_s));
-        auto buf = (gocpp::array<unsigned char, 1 << 29>*)(unsafe::Pointer(& v[0])).make_slice(0, len(v) * 2, len(v) * 2);
+        auto buf = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 29>>)(gocpp::unsafe_pointer(& v[0])).make_slice(0, len(v) * 2, len(v) * 2);
         return rec::setValue(gocpp::recv(k), name, MULTI_SZ, buf);
     }
 

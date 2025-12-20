@@ -254,7 +254,7 @@ namespace golang::runtime
             *inc = (runtime::newInc*)(g->name);
             if(raceenabled)
             {
-                racereleasemerge(unsafe::Pointer(& g->inc));
+                racereleasemerge(gocpp::unsafe_pointer(& g->inc));
             }
             if(! rec::CompareAndSwap<std::function<void (void)>>(gocpp::recv(g->inc), nullptr, inc))
             {
@@ -263,7 +263,7 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            raceacquire(unsafe::Pointer(& g->inc));
+            raceacquire(gocpp::unsafe_pointer(& g->inc));
         }
         (runtime::inc*)();
     }
@@ -315,7 +315,7 @@ namespace golang::runtime
     //go:nosplit
     void writeErrStr(gocpp::string s)
     {
-        write(2, unsafe::Pointer(unsafe::StringData(s)), int32_t(len(s)));
+        write(2, gocpp::unsafe_pointer(unsafe::StringData(s)), int32_t(len(s)));
     }
 
     // auxv is populated on relevant platforms but defined here for all platforms

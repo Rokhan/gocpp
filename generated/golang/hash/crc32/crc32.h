@@ -18,22 +18,22 @@
 
 namespace golang::crc32
 {
-    extern crc32::Table* castagnoliTable;
-    extern slicing8Table* castagnoliTable8;
+    extern gocpp::array_ptr<crc32::Table> castagnoliTable;
+    extern gocpp::array_ptr<slicing8Table> castagnoliTable8;
     extern std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
     extern sync::Once castagnoliOnce;
     extern atomic::Bool haveCastagnoli;
     void castagnoliInit();
     extern Table* IEEETable;
-    extern slicing8Table* ieeeTable8;
+    extern gocpp::array_ptr<slicing8Table> ieeeTable8;
     extern std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateIEEE;
     extern sync::Once ieeeOnce;
     void ieeeInit();
-    crc32::Table* MakeTable(uint32_t poly);
+    gocpp::array_ptr<crc32::Table> MakeTable(uint32_t poly);
     struct digest
     {
         uint32_t crc;
-        golang::crc32::Table* tab;
+        gocpp::array_ptr<golang::crc32::Table> tab;
 
         using isGoStruct = void;
 
@@ -47,16 +47,16 @@ namespace golang::crc32
     };
 
     std::ostream& operator<<(std::ostream& os, const struct digest& value);
-    hash::Hash32 New(golang::crc32::Table* tab);
+    hash::Hash32 New(gocpp::array_ptr<golang::crc32::Table> tab);
     hash::Hash32 NewIEEE();
     extern gocpp::string magic;
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
-    uint32_t update(uint32_t crc, golang::crc32::Table* tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);
-    uint32_t Update(uint32_t crc, golang::crc32::Table* tab, gocpp::slice<unsigned char> p);
-    uint32_t Checksum(gocpp::slice<unsigned char> data, golang::crc32::Table* tab);
+    uint32_t update(uint32_t crc, gocpp::array_ptr<golang::crc32::Table> tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);
+    uint32_t Update(uint32_t crc, gocpp::array_ptr<golang::crc32::Table> tab, gocpp::slice<unsigned char> p);
+    uint32_t Checksum(gocpp::slice<unsigned char> data, gocpp::array_ptr<golang::crc32::Table> tab);
     uint32_t ChecksumIEEE(gocpp::slice<unsigned char> data);
-    uint32_t tableSum(golang::crc32::Table* t);
+    uint32_t tableSum(gocpp::array_ptr<golang::crc32::Table> t);
 
     namespace rec
     {

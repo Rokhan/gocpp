@@ -20,11 +20,11 @@ namespace golang::syscall
         using namespace mocklib::rec;
     }
 
-    void asanRead(unsafe::Pointer addr, int len)
+    void asanRead(gocpp::unsafe_pointer addr, int len)
     {
     }
 
-    void asanWrite(unsafe::Pointer addr, int len)
+    void asanWrite(gocpp::unsafe_pointer addr, int len)
     {
     }
 

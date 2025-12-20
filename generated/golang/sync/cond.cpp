@@ -144,7 +144,7 @@ namespace golang::sync
     // copyChecker holds back pointer to itself to detect object copying.
     void rec::check(golang::sync::copyChecker* c)
     {
-        if(uintptr_t(*c) != uintptr_t(unsafe::Pointer(c)) && ! atomic::CompareAndSwapUintptr((uintptr_t*)(c), 0, uintptr_t(unsafe::Pointer(c))) && uintptr_t(*c) != uintptr_t(unsafe::Pointer(c)))
+        if(uintptr_t(*c) != uintptr_t(gocpp::unsafe_pointer(c)) && ! atomic::CompareAndSwapUintptr((uintptr_t*)(c), 0, uintptr_t(gocpp::unsafe_pointer(c))) && uintptr_t(*c) != uintptr_t(gocpp::unsafe_pointer(c)))
         {
             gocpp::panic("sync.Cond is copied"_s);
         }

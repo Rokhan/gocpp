@@ -23,7 +23,7 @@ namespace golang::crc32
     // simpleMakeTable allocates and constructs a Table for the specified
     // polynomial. The table is suitable for use with the simple algorithm
     // (simpleUpdate).
-    Table* simpleMakeTable(uint32_t poly)
+    gocpp::array_ptr<Table> simpleMakeTable(uint32_t poly)
     {
         auto t = new(Table);
         simplePopulateTable(poly, t);
@@ -32,7 +32,7 @@ namespace golang::crc32
 
     // simplePopulateTable constructs a Table for the specified polynomial, suitable
     // for use with simpleUpdate.
-    void simplePopulateTable(uint32_t poly, Table* t)
+    void simplePopulateTable(uint32_t poly, gocpp::array_ptr<Table> t)
     {
         for(auto i = 0; i < 256; i++)
         {
@@ -54,7 +54,7 @@ namespace golang::crc32
 
     // simpleUpdate uses the simple algorithm to update the CRC, given a table that
     // was previously computed using simpleMakeTable.
-    uint32_t simpleUpdate(uint32_t crc, Table* tab, gocpp::slice<unsigned char> p)
+    uint32_t simpleUpdate(uint32_t crc, gocpp::array_ptr<Table> tab, gocpp::slice<unsigned char> p)
     {
         crc = ~ crc;
         for(auto [gocpp_ignored, v] : p)
@@ -68,7 +68,7 @@ namespace golang::crc32
     // slicing8Table is array of 8 Tables, used by the slicing-by-8 algorithm.
     // slicingMakeTable constructs a slicing8Table for the specified polynomial. The
     // table is suitable for use with the slicing-by-8 algorithm (slicingUpdate).
-    crc32::slicing8Table* slicingMakeTable(uint32_t poly)
+    gocpp::array_ptr<crc32::slicing8Table> slicingMakeTable(uint32_t poly)
     {
         auto t = new(slicing8Table);
         simplePopulateTable(poly, & t[0]);
@@ -86,7 +86,7 @@ namespace golang::crc32
 
     // slicingUpdate uses the slicing-by-8 algorithm to update the CRC, given a
     // table that was previously computed using slicingMakeTable.
-    uint32_t slicingUpdate(uint32_t crc, golang::crc32::slicing8Table* tab, gocpp::slice<unsigned char> p)
+    uint32_t slicingUpdate(uint32_t crc, gocpp::array_ptr<golang::crc32::slicing8Table> tab, gocpp::slice<unsigned char> p)
     {
         if(len(p) >= slicing8Cutoff)
         {

@@ -74,13 +74,13 @@ namespace golang::runtime
     int32_t timediv(int64_t v, int32_t div, int32_t* rem);
     struct m* acquirem();
     void releasem(struct m* mp);
-    std::tuple<gocpp::slice<unsafe::Pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks();
-    unsafe::Pointer reflect_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
-    unsafe::Pointer reflect_resolveTypeOff(unsafe::Pointer rtype, int32_t off);
-    unsafe::Pointer reflect_resolveTextOff(unsafe::Pointer rtype, int32_t off);
-    unsafe::Pointer reflectlite_resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
-    unsafe::Pointer reflectlite_resolveTypeOff(unsafe::Pointer rtype, int32_t off);
-    int32_t reflect_addReflectOff(unsafe::Pointer ptr);
+    std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks();
+    gocpp::unsafe_pointer reflect_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
+    gocpp::unsafe_pointer reflect_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
+    gocpp::unsafe_pointer reflect_resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off);
+    gocpp::unsafe_pointer reflectlite_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
+    gocpp::unsafe_pointer reflectlite_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
+    int32_t reflect_addReflectOff(gocpp::unsafe_pointer ptr);
     extern gocpp::slice<dbgVar*> dbgvars;
 
     namespace rec

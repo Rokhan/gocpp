@@ -70,8 +70,8 @@ namespace golang::runtime
         return c;
     }
 
-    unsafe::Pointer _cgo_setenv;
-    unsafe::Pointer _cgo_unsetenv;
+    gocpp::unsafe_pointer _cgo_setenv;
+    gocpp::unsafe_pointer _cgo_unsetenv;
     // Update the C environment if cgo is loaded.
     void setenv_c(gocpp::string k, gocpp::string v)
     {
@@ -79,8 +79,8 @@ namespace golang::runtime
         {
             return;
         }
-        auto arg = gocpp::array<unsafe::Pointer, 2> {cstring(k), cstring(v)};
-        asmcgocall(_cgo_setenv, unsafe::Pointer(& arg));
+        auto arg = gocpp::array<gocpp::unsafe_pointer, 2> {cstring(k), cstring(v)};
+        asmcgocall(_cgo_setenv, gocpp::unsafe_pointer(& arg));
     }
 
     // Update the C environment if cgo is loaded.
@@ -90,15 +90,15 @@ namespace golang::runtime
         {
             return;
         }
-        auto arg = gocpp::array<unsafe::Pointer, 1> {cstring(k)};
-        asmcgocall(_cgo_unsetenv, unsafe::Pointer(& arg));
+        auto arg = gocpp::array<gocpp::unsafe_pointer, 1> {cstring(k)};
+        asmcgocall(_cgo_unsetenv, gocpp::unsafe_pointer(& arg));
     }
 
-    unsafe::Pointer cstring(gocpp::string s)
+    gocpp::unsafe_pointer cstring(gocpp::string s)
     {
         auto p = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(s) + 1);
         copy(p, s);
-        return unsafe::Pointer(& p[0]);
+        return gocpp::unsafe_pointer(& p[0]);
     }
 
 }

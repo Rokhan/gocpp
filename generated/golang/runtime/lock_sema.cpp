@@ -117,7 +117,7 @@ namespace golang::runtime
                 for(; ; )
                 {
                     gp->m->nextwaitm = muintptr(v &^ locked);
-                    if(atomic::Casuintptr(& l->key, v, uintptr_t(unsafe::Pointer(gp->m)) | locked))
+                    if(atomic::Casuintptr(& l->key, v, uintptr_t(gocpp::unsafe_pointer(gp->m)) | locked))
                     {
                         break;
                     }
@@ -216,7 +216,7 @@ namespace golang::runtime
                     go_throw("notewakeup - double wakeup"_s);
                     break;
                 default:
-                    semawakeup((m*)(unsafe::Pointer(v)));
+                    semawakeup((m*)(gocpp::unsafe_pointer(v)));
                     break;
             }
         }
@@ -230,7 +230,7 @@ namespace golang::runtime
             go_throw("notesleep not on g0"_s);
         }
         semacreate(gp->m);
-        if(! atomic::Casuintptr(& n->key, 0, uintptr_t(unsafe::Pointer(gp->m))))
+        if(! atomic::Casuintptr(& n->key, 0, uintptr_t(gocpp::unsafe_pointer(gp->m))))
         {
             if(n->key != locked)
             {
@@ -260,7 +260,7 @@ namespace golang::runtime
     bool notetsleep_internal(struct note* n, int64_t ns, struct g* gp, int64_t deadline)
     {
         gp = getg();
-        if(! atomic::Casuintptr(& n->key, 0, uintptr_t(unsafe::Pointer(gp->m))))
+        if(! atomic::Casuintptr(& n->key, 0, uintptr_t(gocpp::unsafe_pointer(gp->m))))
         {
             if(n->key != locked)
             {
@@ -318,7 +318,7 @@ namespace golang::runtime
             {
                 auto condition = v;
                 int conditionId = -1;
-                if(condition == uintptr_t(unsafe::Pointer(gp->m))) { conditionId = 0; }
+                if(condition == uintptr_t(gocpp::unsafe_pointer(gp->m))) { conditionId = 0; }
                 else if(condition == locked) { conditionId = 1; }
                 switch(conditionId)
                 {

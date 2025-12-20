@@ -128,7 +128,7 @@ namespace golang::runtime
             gocpp::panic(new TypeAssertionError {nullptr, typ, & inter->Type, rec::Name(gocpp::recv(name))});
         }
         itab* m = {};
-        auto t = (itabTableType*)(atomic::Loadp(unsafe::Pointer(& itabTable)));
+        auto t = (itabTableType*)(atomic::Loadp(gocpp::unsafe_pointer(& itabTable)));
         if(m = rec::find(gocpp::recv(t), inter, typ); m != nullptr)
         {
             goto finish;
@@ -170,8 +170,8 @@ namespace golang::runtime
         auto h = itabHashFunc(inter, typ) & mask;
         for(auto i = uintptr_t(1); ; i++)
         {
-            auto p = (itab**)(add(unsafe::Pointer(& t->entries), h * goarch::PtrSize));
-            auto m = (itab*)(atomic::Loadp(unsafe::Pointer(p)));
+            auto p = (itab**)(add(gocpp::unsafe_pointer(& t->entries), h * goarch::PtrSize));
+            auto m = (itab*)(atomic::Loadp(gocpp::unsafe_pointer(p)));
             if(m == nullptr)
             {
                 return nullptr;
@@ -203,7 +203,7 @@ namespace golang::runtime
             {
                 go_throw("mismatched count during itab table copy"_s);
             }
-            atomicstorep(unsafe::Pointer(& itabTable), unsafe::Pointer(t2));
+            atomicstorep(gocpp::unsafe_pointer(& itabTable), gocpp::unsafe_pointer(t2));
             t = itabTable;
         }
         rec::add(gocpp::recv(t), m);
@@ -217,7 +217,7 @@ namespace golang::runtime
         auto h = itabHashFunc(m->inter, m->_type) & mask;
         for(auto i = uintptr_t(1); ; i++)
         {
-            auto p = (itab**)(add(unsafe::Pointer(& t->entries), h * goarch::PtrSize));
+            auto p = (itab**)(add(gocpp::unsafe_pointer(& t->entries), h * goarch::PtrSize));
             auto m2 = *p;
             if(m2 == m)
             {
@@ -225,7 +225,7 @@ namespace golang::runtime
             }
             if(m2 == nullptr)
             {
-                atomic::StorepNoWB(unsafe::Pointer(p), unsafe::Pointer(m));
+                atomic::StorepNoWB(gocpp::unsafe_pointer(p), gocpp::unsafe_pointer(m));
                 t->count++;
                 return;
             }
@@ -245,10 +245,10 @@ namespace golang::runtime
         auto x = rec::Uncommon(gocpp::recv(typ));
         auto ni = len(inter->Methods);
         auto nt = int(x->Mcount);
-        auto xmhdr = (gocpp::array<abi::Method, 1 << 16>*)(add(unsafe::Pointer(x), uintptr_t(x->Moff))).make_slice(0, nt, nt);
+        auto xmhdr = (gocpp::array_ptr<gocpp::array<abi::Method, 1 << 16>>)(add(gocpp::unsafe_pointer(x), uintptr_t(x->Moff))).make_slice(0, nt, nt);
         auto j = 0;
-        auto methods = (gocpp::array<unsafe::Pointer, 1 << 16>*)(unsafe::Pointer(& m->fun[0])).make_slice(0, ni, ni);
-        unsafe::Pointer fun0 = {};
+        auto methods = (gocpp::array_ptr<gocpp::array<gocpp::unsafe_pointer, 1 << 16>>)(gocpp::unsafe_pointer(& m->fun[0])).make_slice(0, ni, ni);
+        gocpp::unsafe_pointer fun0 = {};
         imethods:
         for(auto k = 0; k < ni; k++)
         {
@@ -362,7 +362,7 @@ namespace golang::runtime
     runtime::_type* sliceType = efaceOf(& sliceEface)->_type;
     // convT converts a value of type t, which is pointed to by v, to a pointer that can
     // be used as the second word of an interface value.
-    unsafe::Pointer convT(golang::runtime::_type* t, unsafe::Pointer v)
+    gocpp::unsafe_pointer convT(golang::runtime::_type* t, gocpp::unsafe_pointer v)
     {
         if(raceenabled)
         {
@@ -381,7 +381,7 @@ namespace golang::runtime
         return x;
     }
 
-    unsafe::Pointer convTnoptr(golang::runtime::_type* t, unsafe::Pointer v)
+    gocpp::unsafe_pointer convTnoptr(golang::runtime::_type* t, gocpp::unsafe_pointer v)
     {
         if(raceenabled)
         {
@@ -400,12 +400,12 @@ namespace golang::runtime
         return x;
     }
 
-    unsafe::Pointer convT16(uint16_t val)
+    gocpp::unsafe_pointer convT16(uint16_t val)
     {
-        unsafe::Pointer x;
+        gocpp::unsafe_pointer x;
         if(val < uint16_t(len(staticuint64s)))
         {
-            x = unsafe::Pointer(& staticuint64s[val]);
+            x = gocpp::unsafe_pointer(& staticuint64s[val]);
             if(goarch::BigEndian)
             {
                 x = add(x, 6);
@@ -419,12 +419,12 @@ namespace golang::runtime
         return x;
     }
 
-    unsafe::Pointer convT32(uint32_t val)
+    gocpp::unsafe_pointer convT32(uint32_t val)
     {
-        unsafe::Pointer x;
+        gocpp::unsafe_pointer x;
         if(val < uint32_t(len(staticuint64s)))
         {
-            x = unsafe::Pointer(& staticuint64s[val]);
+            x = gocpp::unsafe_pointer(& staticuint64s[val]);
             if(goarch::BigEndian)
             {
                 x = add(x, 4);
@@ -438,12 +438,12 @@ namespace golang::runtime
         return x;
     }
 
-    unsafe::Pointer convT64(uint64_t val)
+    gocpp::unsafe_pointer convT64(uint64_t val)
     {
-        unsafe::Pointer x;
+        gocpp::unsafe_pointer x;
         if(val < uint64_t(len(staticuint64s)))
         {
-            x = unsafe::Pointer(& staticuint64s[val]);
+            x = gocpp::unsafe_pointer(& staticuint64s[val]);
         }
         else
         {
@@ -453,12 +453,12 @@ namespace golang::runtime
         return x;
     }
 
-    unsafe::Pointer convTstring(gocpp::string val)
+    gocpp::unsafe_pointer convTstring(gocpp::string val)
     {
-        unsafe::Pointer x;
+        gocpp::unsafe_pointer x;
         if(val == ""_s)
         {
-            x = unsafe::Pointer(& zeroVal[0]);
+            x = gocpp::unsafe_pointer(& zeroVal[0]);
         }
         else
         {
@@ -468,12 +468,12 @@ namespace golang::runtime
         return x;
     }
 
-    unsafe::Pointer convTslice(gocpp::slice<unsigned char> val)
+    gocpp::unsafe_pointer convTslice(gocpp::slice<unsigned char> val)
     {
-        unsafe::Pointer x;
-        if((slice*)(unsafe::Pointer(& val))->array == nullptr)
+        gocpp::unsafe_pointer x;
+        if((slice*)(gocpp::unsafe_pointer(& val))->array == nullptr)
         {
-            x = unsafe::Pointer(& zeroVal[0]);
+            x = gocpp::unsafe_pointer(& zeroVal[0]);
         }
         else
         {
@@ -526,13 +526,13 @@ namespace golang::runtime
         {
             return tab;
         }
-        auto oldC = (abi::TypeAssertCache*)(atomic::Loadp(unsafe::Pointer(& s->Cache)));
+        auto oldC = (abi::TypeAssertCache*)(atomic::Loadp(gocpp::unsafe_pointer(& s->Cache)));
         if(cheaprand() & uint32_t(oldC->Mask) != 0)
         {
             return tab;
         }
         auto newC = buildTypeAssertCache(oldC, t, tab);
-        atomic_casPointer((unsafe::Pointer*)(unsafe::Pointer(& s->Cache)), unsafe::Pointer(oldC), unsafe::Pointer(newC));
+        atomic_casPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& s->Cache)), gocpp::unsafe_pointer(oldC), gocpp::unsafe_pointer(newC));
         return tab;
     }
 
@@ -560,8 +560,8 @@ namespace golang::runtime
             {
                 if(newEntries[h].Typ == 0)
                 {
-                    newEntries[h].Typ = uintptr_t(unsafe::Pointer(typ));
-                    newEntries[h].Itab = uintptr_t(unsafe::Pointer(tab));
+                    newEntries[h].Typ = uintptr_t(gocpp::unsafe_pointer(typ));
+                    newEntries[h].Itab = uintptr_t(gocpp::unsafe_pointer(tab));
                     return;
                 }
                 h = (h + 1) & (newN - 1);
@@ -571,7 +571,7 @@ namespace golang::runtime
         {
             if(e.Typ != 0)
             {
-                addEntry((runtime::_type*)(unsafe::Pointer(e.Typ)), (itab*)(unsafe::Pointer(e.Itab)));
+                addEntry((runtime::_type*)(gocpp::unsafe_pointer(e.Typ)), (itab*)(gocpp::unsafe_pointer(e.Itab)));
             }
         }
         addEntry(typ, tab);
@@ -610,13 +610,13 @@ namespace golang::runtime
         {
             return {case_, tab};
         }
-        auto oldC = (abi::InterfaceSwitchCache*)(atomic::Loadp(unsafe::Pointer(& s->Cache)));
+        auto oldC = (abi::InterfaceSwitchCache*)(atomic::Loadp(gocpp::unsafe_pointer(& s->Cache)));
         if(cheaprand() & uint32_t(oldC->Mask) != 0)
         {
             return {case_, tab};
         }
         auto newC = buildInterfaceSwitchCache(oldC, t, case_, tab);
-        atomic_casPointer((unsafe::Pointer*)(unsafe::Pointer(& s->Cache)), unsafe::Pointer(oldC), unsafe::Pointer(newC));
+        atomic_casPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& s->Cache)), gocpp::unsafe_pointer(oldC), gocpp::unsafe_pointer(newC));
         return {case_, tab};
     }
 
@@ -647,9 +647,9 @@ namespace golang::runtime
             {
                 if(newEntries[h].Typ == 0)
                 {
-                    newEntries[h].Typ = uintptr_t(unsafe::Pointer(typ));
+                    newEntries[h].Typ = uintptr_t(gocpp::unsafe_pointer(typ));
                     newEntries[h].Case = case_;
-                    newEntries[h].Itab = uintptr_t(unsafe::Pointer(tab));
+                    newEntries[h].Itab = uintptr_t(gocpp::unsafe_pointer(tab));
                     return;
                 }
                 h = (h + 1) & (newN - 1);
@@ -659,7 +659,7 @@ namespace golang::runtime
         {
             if(e.Typ != 0)
             {
-                addEntry((runtime::_type*)(unsafe::Pointer(e.Typ)), e.Case, (itab*)(unsafe::Pointer(e.Itab)));
+                addEntry((runtime::_type*)(gocpp::unsafe_pointer(e.Typ)), e.Case, (itab*)(gocpp::unsafe_pointer(e.Itab)));
             }
         }
         addEntry(typ, case_, tab);
@@ -688,7 +688,7 @@ namespace golang::runtime
         auto t = itabTable;
         for(auto i = uintptr_t(0); i < t->size; i++)
         {
-            auto m = *(itab**)(add(unsafe::Pointer(& t->entries), i * goarch::PtrSize));
+            auto m = *(itab**)(add(gocpp::unsafe_pointer(& t->entries), i * goarch::PtrSize));
             if(m != nullptr)
             {
                 fn(m);

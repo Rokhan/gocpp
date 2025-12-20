@@ -339,7 +339,7 @@ namespace golang::reflect
                     return rec::assignIntN(gocpp::recv(a), offset, goarch::PtrSize, 3, 0b001);
                     break;
                 case 24:
-                    auto tt = (reflect::arrayType*)(unsafe::Pointer(t));
+                    auto tt = (reflect::arrayType*)(gocpp::unsafe_pointer(t));
                     //Go switch emulation
                     {
                         auto condition = tt->Len;
@@ -361,7 +361,7 @@ namespace golang::reflect
                     }
                     break;
                 case 25:
-                    auto st = (structType*)(unsafe::Pointer(t));
+                    auto st = (structType*)(gocpp::unsafe_pointer(t));
                     for(auto [i, gocpp_ignored] : st->Fields)
                     {
                         auto f = & st->Fields[i];
@@ -627,7 +627,7 @@ namespace golang::reflect
     // intFromReg loads an argSize sized integer from reg and places it at to.
     //
     // argSize must be non-zero, fit in a register, and a power-of-two.
-    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to)
+    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to)
     {
         memmove(to, rec::IntRegArgAddr(gocpp::recv(r), reg, argSize), argSize);
     }
@@ -635,7 +635,7 @@ namespace golang::reflect
     // intToReg loads an argSize sized integer and stores it into reg.
     //
     // argSize must be non-zero, fit in a register, and a power-of-two.
-    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from)
+    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from)
     {
         memmove(rec::IntRegArgAddr(gocpp::recv(r), reg, argSize), from, argSize);
     }
@@ -643,7 +643,7 @@ namespace golang::reflect
     // floatFromReg loads a float value from its register representation in r.
     //
     // argSize must be 4 or 8.
-    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer to)
+    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to)
     {
         //Go switch emulation
         {
@@ -657,7 +657,7 @@ namespace golang::reflect
                     *(float*)(to) = archFloat32FromReg(r->Floats[reg]);
                     break;
                 case 1:
-                    *(double*)(to) = *(double*)(unsafe::Pointer(& r->Floats[reg]));
+                    *(double*)(to) = *(double*)(gocpp::unsafe_pointer(& r->Floats[reg]));
                     break;
                 default:
                     gocpp::panic("bad argSize"_s);
@@ -669,7 +669,7 @@ namespace golang::reflect
     // floatToReg stores a float value in its register representation in r.
     //
     // argSize must be either 4 or 8.
-    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, unsafe::Pointer from)
+    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from)
     {
         //Go switch emulation
         {

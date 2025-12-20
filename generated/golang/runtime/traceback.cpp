@@ -201,12 +201,12 @@ namespace golang::runtime
         {
             if(usesLR)
             {
-                frame.pc = *(uintptr_t*)(unsafe::Pointer(frame.sp));
+                frame.pc = *(uintptr_t*)(gocpp::unsafe_pointer(frame.sp));
                 frame.lr = 0;
             }
             else
             {
-                frame.pc = *(uintptr_t*)(unsafe::Pointer(frame.sp));
+                frame.pc = *(uintptr_t*)(gocpp::unsafe_pointer(frame.sp));
                 frame.sp += goarch::PtrSize;
             }
         }
@@ -353,7 +353,7 @@ namespace golang::runtime
                 if(innermost && frame->sp < frame->fp || frame->lr == 0)
                 {
                     lrPtr = frame->sp;
-                    frame->lr = *(uintptr_t*)(unsafe::Pointer(lrPtr));
+                    frame->lr = *(uintptr_t*)(gocpp::unsafe_pointer(lrPtr));
                 }
             }
             else
@@ -361,7 +361,7 @@ namespace golang::runtime
                 if(frame->lr == 0)
                 {
                     lrPtr = frame->fp - goarch::PtrSize;
-                    frame->lr = *(uintptr_t*)(unsafe::Pointer(lrPtr));
+                    frame->lr = *(uintptr_t*)(gocpp::unsafe_pointer(lrPtr));
                 }
             }
         }
@@ -444,7 +444,7 @@ namespace golang::runtime
         frame->fp = 0;
         if(usesLR && injectedCall)
         {
-            auto x = *(uintptr_t*)(unsafe::Pointer(frame->sp));
+            auto x = *(uintptr_t*)(gocpp::unsafe_pointer(frame->sp));
             frame->sp += alignUp(sys::MinFrameSize, sys::StackAlign);
             f = findfunc(frame->pc);
             frame->fn = f;
@@ -562,7 +562,7 @@ namespace golang::runtime
     }
 
     // printArgs prints function arguments in traceback.
-    void printArgs(struct funcInfo f, unsafe::Pointer argp, uintptr_t pc)
+    void printArgs(struct funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc)
     {
         // The "instruction" of argument printing is encoded in _FUNCDATA_ArgInfo.
         // See cmd/compile/internal/ssagen.emitArgInfo for the description of the
@@ -576,7 +576,7 @@ namespace golang::runtime
         auto limit = 10;
         auto maxDepth = 5;
         auto maxLen = (maxDepth * 3 + 2) * limit + 1;
-        auto p = (gocpp::array<uint8_t, maxLen>*)(funcdata(f, abi::FUNCDATA_ArgInfo));
+        auto p = (gocpp::array_ptr<gocpp::array<uint8_t, maxLen>>)(funcdata(f, abi::FUNCDATA_ArgInfo));
         if(p == nullptr)
         {
             return;
@@ -913,7 +913,7 @@ namespace golang::runtime
                 }
                 else
                 {
-                    auto argp = unsafe::Pointer(u->frame.argp);
+                    auto argp = gocpp::unsafe_pointer(u->frame.argp);
                     printArgs(f, argp, rec::symPC(gocpp::recv(u)));
                 }
                 print(")\n"_s);
@@ -1433,7 +1433,7 @@ namespace golang::runtime
     // to Go will not show a traceback for the C portion of the call stack.
     //
     // SetCgoTraceback should be called only once, ideally from an init function.
-    void SetCgoTraceback(int version, unsafe::Pointer traceback, unsafe::Pointer context, unsafe::Pointer symbolizer)
+    void SetCgoTraceback(int version, gocpp::unsafe_pointer traceback, gocpp::unsafe_pointer context, gocpp::unsafe_pointer symbolizer)
     {
         if(version != 0)
         {
@@ -1452,9 +1452,9 @@ namespace golang::runtime
         }
     }
 
-    unsafe::Pointer cgoTraceback;
-    unsafe::Pointer cgoContext;
-    unsafe::Pointer cgoSymbolizer;
+    gocpp::unsafe_pointer cgoTraceback;
+    gocpp::unsafe_pointer cgoContext;
+    gocpp::unsafe_pointer cgoSymbolizer;
     // cgoTracebackArg is the type passed to cgoTraceback.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -1573,7 +1573,7 @@ namespace golang::runtime
     }
 
     // printCgoTraceback prints a traceback of callers.
-    void printCgoTraceback(cgoCallers* callers)
+    void printCgoTraceback(gocpp::array_ptr<cgoCallers> callers)
     {
         if(cgoSymbolizer == nullptr)
         {
@@ -1655,13 +1655,13 @@ namespace golang::runtime
         }
         if(msanenabled)
         {
-            msanwrite(unsafe::Pointer(arg), gocpp::Sizeof<cgoSymbolizerArg>());
+            msanwrite(gocpp::unsafe_pointer(arg), gocpp::Sizeof<cgoSymbolizerArg>());
         }
         if(asanenabled)
         {
-            asanwrite(unsafe::Pointer(arg), gocpp::Sizeof<cgoSymbolizerArg>());
+            asanwrite(gocpp::unsafe_pointer(arg), gocpp::Sizeof<cgoSymbolizerArg>());
         }
-        call(cgoSymbolizer, noescape(unsafe::Pointer(arg)));
+        call(cgoSymbolizer, noescape(gocpp::unsafe_pointer(arg)));
     }
 
     // cgoContextPCs gets the PC values from a cgo traceback.
@@ -1678,18 +1678,18 @@ namespace golang::runtime
         }
         auto arg = gocpp::Init<cgoTracebackArg>([=](auto& x) {
             x.context = ctxt;
-            x.buf = (uintptr_t*)(noescape(unsafe::Pointer(& buf[0])));
+            x.buf = (uintptr_t*)(noescape(gocpp::unsafe_pointer(& buf[0])));
             x.max = uintptr_t(len(buf));
         });
         if(msanenabled)
         {
-            msanwrite(unsafe::Pointer(& arg), gocpp::Sizeof<cgoTracebackArg>());
+            msanwrite(gocpp::unsafe_pointer(& arg), gocpp::Sizeof<cgoTracebackArg>());
         }
         if(asanenabled)
         {
-            asanwrite(unsafe::Pointer(& arg), gocpp::Sizeof<cgoTracebackArg>());
+            asanwrite(gocpp::unsafe_pointer(& arg), gocpp::Sizeof<cgoTracebackArg>());
         }
-        call(cgoTraceback, noescape(unsafe::Pointer(& arg)));
+        call(cgoTraceback, noescape(gocpp::unsafe_pointer(& arg)));
     }
 
 }

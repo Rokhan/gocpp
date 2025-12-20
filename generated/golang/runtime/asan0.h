@@ -12,11 +12,11 @@
 
 namespace golang::runtime
 {
-    void asanread(unsafe::Pointer addr, uintptr_t sz);
-    void asanwrite(unsafe::Pointer addr, uintptr_t sz);
-    void asanunpoison(unsafe::Pointer addr, uintptr_t sz);
-    void asanpoison(unsafe::Pointer addr, uintptr_t sz);
-    void asanregisterglobals(unsafe::Pointer addr, uintptr_t sz);
+    void asanread(gocpp::unsafe_pointer addr, uintptr_t sz);
+    void asanwrite(gocpp::unsafe_pointer addr, uintptr_t sz);
+    void asanunpoison(gocpp::unsafe_pointer addr, uintptr_t sz);
+    void asanpoison(gocpp::unsafe_pointer addr, uintptr_t sz);
+    void asanregisterglobals(gocpp::unsafe_pointer addr, uintptr_t sz);
 
     namespace rec
     {

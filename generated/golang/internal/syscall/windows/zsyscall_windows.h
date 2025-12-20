@@ -21,7 +21,7 @@
 
 namespace golang::windows
 {
-    extern unsafe::Pointer _;
+    extern gocpp::unsafe_pointer _;
     extern gocpp::error errERROR_IO_PENDING;
     extern gocpp::error errERROR_EINVAL;
     struct gocpp::error errnoErr(syscall::Errno e);
@@ -63,7 +63,7 @@ namespace golang::windows
     std::tuple<int32_t, struct gocpp::error> MultiByteToWideChar(uint32_t codePage, uint32_t dwFlags, unsigned char* str, int32_t nstr, uint16_t* wchar, int32_t nwchar);
     uintptr_t RtlLookupFunctionEntry(uintptr_t pc, uintptr_t* baseAddress, unsigned char* table);
     uintptr_t RtlVirtualUnwind(uint32_t handlerType, uintptr_t baseAddress, uintptr_t pc, uintptr_t entry, uintptr_t ctxt, uintptr_t* data, uintptr_t* frame, unsigned char* ctxptrs);
-    struct gocpp::error SetFileInformationByHandle(syscall::Handle handle, uint32_t fileInformationClass, unsafe::Pointer buf, uint32_t bufsize);
+    struct gocpp::error SetFileInformationByHandle(syscall::Handle handle, uint32_t fileInformationClass, gocpp::unsafe_pointer buf, uint32_t bufsize);
     struct gocpp::error UnlockFileEx(syscall::Handle file, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, syscall::Overlapped* overlapped);
     struct gocpp::error VirtualQuery(uintptr_t address, struct MemoryBasicInformation* buffer, uintptr_t length);
     struct gocpp::error NetShareAdd(uint16_t* serverName, uint32_t level, unsigned char* buf, uint16_t* parmErr);

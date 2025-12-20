@@ -84,9 +84,9 @@ namespace golang::runtime
     // arena_newArena is a wrapper around newUserArena.
     //
     //go:linkname arena_newArena arena.runtime_arena_newArena
-    unsafe::Pointer arena_newArena()
+    gocpp::unsafe_pointer arena_newArena()
     {
-        return unsafe::Pointer(newUserArena());
+        return gocpp::unsafe_pointer(newUserArena());
     }
 
     // arena_arena_New is a wrapper around (*userArena).new, except that typ
@@ -95,14 +95,14 @@ namespace golang::runtime
     // to allocate a T. This is necessary because this function returns a *T.
     //
     //go:linkname arena_arena_New arena.runtime_arena_arena_New
-    go_any arena_arena_New(unsafe::Pointer arena, go_any typ)
+    go_any arena_arena_New(gocpp::unsafe_pointer arena, go_any typ)
     {
         auto t = (runtime::_type*)(efaceOf(& typ)->data);
         if(t->Kind_ & kindMask != kindPtr)
         {
             go_throw("arena_New: non-pointer type"_s);
         }
-        auto te = (runtime::ptrtype*)(unsafe::Pointer(t))->Elem;
+        auto te = (runtime::ptrtype*)(gocpp::unsafe_pointer(t))->Elem;
         auto x = rec::go_new(gocpp::recv(((userArena*)(arena))), te);
         go_any result = {};
         auto e = efaceOf(& result);
@@ -114,7 +114,7 @@ namespace golang::runtime
     // arena_arena_Slice is a wrapper around (*userArena).slice.
     //
     //go:linkname arena_arena_Slice arena.runtime_arena_arena_Slice
-    void arena_arena_Slice(unsafe::Pointer arena, go_any slice, int cap)
+    void arena_arena_Slice(gocpp::unsafe_pointer arena, go_any slice, int cap)
     {
         rec::slice(gocpp::recv(((userArena*)(arena))), slice, cap);
     }
@@ -122,7 +122,7 @@ namespace golang::runtime
     // arena_arena_Free is a wrapper around (*userArena).free.
     //
     //go:linkname arena_arena_Free arena.runtime_arena_arena_Free
-    void arena_arena_Free(unsafe::Pointer arena)
+    void arena_arena_Free(gocpp::unsafe_pointer arena)
     {
         rec::free(gocpp::recv(((userArena*)(arena))));
     }
@@ -133,7 +133,7 @@ namespace golang::runtime
     //go:linkname arena_heapify arena.runtime_arena_heapify
     go_any arena_heapify(go_any s)
     {
-        unsafe::Pointer v = {};
+        gocpp::unsafe_pointer v = {};
         auto e = efaceOf(& s);
         auto t = e->_type;
         //Go switch emulation
@@ -183,15 +183,15 @@ namespace golang::runtime
                     break;
                 case 1:
                     auto len = (slice*)(e->data)->len;
-                    auto et = (runtime::slicetype*)(unsafe::Pointer(t))->Elem;
+                    auto et = (runtime::slicetype*)(gocpp::unsafe_pointer(t))->Elem;
                     auto sl = new(slice);
                     *sl = slice {makeslicecopy(et, len, len, (slice*)(e->data)->array), len, len};
                     auto xe = efaceOf(& x);
                     xe->_type = t;
-                    xe->data = unsafe::Pointer(sl);
+                    xe->data = gocpp::unsafe_pointer(sl);
                     break;
                 case 2:
-                    auto et = (runtime::ptrtype*)(unsafe::Pointer(t))->Elem;
+                    auto et = (runtime::ptrtype*)(gocpp::unsafe_pointer(t))->Elem;
                     auto e2 = newobject(et);
                     typedmemmove(et, e2, e->data);
                     auto xe = efaceOf(& x);
@@ -302,7 +302,7 @@ namespace golang::runtime
     //
     // This operation is not safe to call concurrently with other operations on the
     // same arena.
-    unsafe::Pointer rec::go_new(golang::runtime::userArena* a, golang::runtime::_type* typ)
+    gocpp::unsafe_pointer rec::go_new(golang::runtime::userArena* a, golang::runtime::_type* typ)
     {
         return rec::alloc(gocpp::recv(a), typ, - 1);
     }
@@ -326,12 +326,12 @@ namespace golang::runtime
         {
             gocpp::panic("slice result of non-ptr type"_s);
         }
-        typ = (runtime::ptrtype*)(unsafe::Pointer(typ))->Elem;
+        typ = (runtime::ptrtype*)(gocpp::unsafe_pointer(typ))->Elem;
         if(typ->Kind_ & kindMask != kindSlice)
         {
             gocpp::panic("slice of non-ptr-to-slice type"_s);
         }
-        typ = (runtime::slicetype*)(unsafe::Pointer(typ))->Elem;
+        typ = (runtime::slicetype*)(gocpp::unsafe_pointer(typ))->Elem;
         *((slice*)(i->data)) = slice {rec::alloc(gocpp::recv(a), typ, cap), cap, cap};
     }
 
@@ -385,10 +385,10 @@ namespace golang::runtime
     // in a new chunk. If cap is negative, the type will be taken literally, otherwise
     // it will be considered as an element type for a slice backing store with capacity
     // cap.
-    unsafe::Pointer rec::alloc(golang::runtime::userArena* a, golang::runtime::_type* typ, int cap)
+    gocpp::unsafe_pointer rec::alloc(golang::runtime::userArena* a, golang::runtime::_type* typ, int cap)
     {
         auto s = a->active;
-        unsafe::Pointer x = {};
+        gocpp::unsafe_pointer x = {};
         for(; ; )
         {
             x = rec::userArenaNextFree(gocpp::recv(s), typ, cap);
@@ -417,7 +417,7 @@ namespace golang::runtime
             a->active = nullptr;
             s = nullptr;
         }
-        unsafe::Pointer x = {};
+        gocpp::unsafe_pointer x = {};
         lock(& userArenaState.lock);
         if(len(userArenaState.reuse) > 0)
         {
@@ -521,7 +521,7 @@ namespace golang::runtime
     gocpp_id_0 userArenaState;
     // userArenaNextFree reserves space in the user arena for an item of the specified
     // type. If cap is not -1, this is for an array of cap elements of type t.
-    unsafe::Pointer rec::userArenaNextFree(golang::runtime::mspan* s, golang::runtime::_type* typ, int cap)
+    gocpp::unsafe_pointer rec::userArenaNextFree(golang::runtime::mspan* s, golang::runtime::_type* typ, int cap)
     {
         auto size = typ->Size_;
         if(cap > 0)
@@ -534,7 +534,7 @@ namespace golang::runtime
         }
         if(size == 0 || cap == 0)
         {
-            return unsafe::Pointer(& zerobase);
+            return gocpp::unsafe_pointer(& zerobase);
         }
         if(size > userArenaChunkMaxAllocBytes)
         {
@@ -554,13 +554,13 @@ namespace golang::runtime
             go_throw("malloc during signal"_s);
         }
         mp->mallocing = 1;
-        unsafe::Pointer ptr = {};
+        gocpp::unsafe_pointer ptr = {};
         if(typ->PtrBytes == 0)
         {
             auto [v, ok] = rec::takeFromBack(gocpp::recv(s->userArenaChunkFree), size, typ->Align_);
             if(ok)
             {
-                ptr = unsafe::Pointer(v);
+                ptr = gocpp::unsafe_pointer(v);
             }
         }
         else
@@ -568,7 +568,7 @@ namespace golang::runtime
             auto [v, ok] = rec::takeFromFront(gocpp::recv(s->userArenaChunkFree), size, typ->Align_);
             if(ok)
             {
-                ptr = unsafe::Pointer(v);
+                ptr = gocpp::unsafe_pointer(v);
             }
         }
         if(ptr == nullptr)
@@ -614,7 +614,7 @@ namespace golang::runtime
     // userArenaHeapBitsSetSliceType is the equivalent of heapBitsSetType but for
     // Go slice backing store values allocated in a user arena chunk. It sets up the
     // heap bitmap for n consecutive values with type typ allocated at address ptr.
-    void userArenaHeapBitsSetSliceType(golang::runtime::_type* typ, int n, unsafe::Pointer ptr, struct mspan* s)
+    void userArenaHeapBitsSetSliceType(golang::runtime::_type* typ, int n, gocpp::unsafe_pointer ptr, struct mspan* s)
     {
         auto [mem, overflow] = math::MulUintptr(typ->Size_, uintptr_t(n));
         if(overflow || n < 0 || mem > maxAlloc)
@@ -630,7 +630,7 @@ namespace golang::runtime
     // newUserArenaChunk allocates a user arena chunk, which maps to a single
     // heap arena and single span. Returns a pointer to the base of the chunk
     // (this is really important: we need to keep the chunk alive) and the span.
-    std::tuple<unsafe::Pointer, struct mspan*> newUserArenaChunk()
+    std::tuple<gocpp::unsafe_pointer, struct mspan*> newUserArenaChunk()
     {
         if(gcphase == _GCmarktermination)
         {
@@ -657,18 +657,18 @@ namespace golang::runtime
         {
             go_throw("out of memory"_s);
         }
-        auto x = unsafe::Pointer(rec::base(gocpp::recv(span)));
+        auto x = gocpp::unsafe_pointer(rec::base(gocpp::recv(span)));
         if(gcphase != _GCoff)
         {
             gcmarknewobject(span, rec::base(gocpp::recv(span)));
         }
         if(raceenabled)
         {
-            racemalloc(unsafe::Pointer(rec::base(gocpp::recv(span))), span->elemsize);
+            racemalloc(gocpp::unsafe_pointer(rec::base(gocpp::recv(span))), span->elemsize);
         }
         if(msanenabled)
         {
-            msanmalloc(unsafe::Pointer(rec::base(gocpp::recv(span))), span->elemsize);
+            msanmalloc(gocpp::unsafe_pointer(rec::base(gocpp::recv(span))), span->elemsize);
         }
         if(asanenabled)
         {
@@ -680,8 +680,8 @@ namespace golang::runtime
             }
             auto rzStart = rec::base(gocpp::recv(span)) + span->elemsize;
             span->userArenaChunkFree = makeAddrRange(rec::base(gocpp::recv(span)), rzStart);
-            asanpoison(unsafe::Pointer(rzStart), span->limit - rzStart);
-            asanunpoison(unsafe::Pointer(rec::base(gocpp::recv(span))), span->elemsize);
+            asanpoison(gocpp::unsafe_pointer(rzStart), span->limit - rzStart);
+            asanunpoison(gocpp::unsafe_pointer(rec::base(gocpp::recv(span))), span->elemsize);
         }
         if(auto rate = MemProfileRate; rate > 0)
         {
@@ -696,7 +696,7 @@ namespace golang::runtime
             }
             else
             {
-                profilealloc(mp, unsafe::Pointer(rec::base(gocpp::recv(span))), userArenaChunkBytes);
+                profilealloc(mp, gocpp::unsafe_pointer(rec::base(gocpp::recv(span))), userArenaChunkBytes);
             }
         }
         mp->mallocing = 0;
@@ -711,7 +711,7 @@ namespace golang::runtime
         {
             if(debug.allocfreetrace != 0)
             {
-                tracealloc(unsafe::Pointer(rec::base(gocpp::recv(span))), userArenaChunkBytes, nullptr);
+                tracealloc(gocpp::unsafe_pointer(rec::base(gocpp::recv(span))), userArenaChunkBytes, nullptr);
             }
             if(inittrace.active && inittrace.id == getg()->goid)
             {
@@ -756,7 +756,7 @@ namespace golang::runtime
             go_throw("span on userArena.faultList has invalid size"_s);
         }
         s->spanclass = makeSpanClass(0, true);
-        sysFault(unsafe::Pointer(rec::base(gocpp::recv(s))), s->npages * pageSize);
+        sysFault(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->npages * pageSize);
         rec::add(gocpp::recv(gcController.heapInUse), - int64_t(s->npages * pageSize));
         rec::Add(gocpp::recv(gcController.totalFree), int64_t(s->elemsize));
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
@@ -768,7 +768,7 @@ namespace golang::runtime
         rec::update(gocpp::recv(gcController), - int64_t(s->elemsize), 0);
         if(raceenabled)
         {
-            racefree(unsafe::Pointer(rec::base(gocpp::recv(s))), s->elemsize);
+            racefree(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->elemsize);
         }
         systemstack([=]() mutable -> void
         {
@@ -796,7 +796,7 @@ namespace golang::runtime
     // The runtime will set the user arena to fault once it's safe (the GC is no longer running)
     // and then once the user arena is no longer referenced by the application, will allow it to
     // be reused.
-    void freeUserArenaChunk(struct mspan* s, unsafe::Pointer x)
+    void freeUserArenaChunk(struct mspan* s, gocpp::unsafe_pointer x)
     {
         if(! s->isUserArenaChunk)
         {
@@ -808,15 +808,15 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            racefree(unsafe::Pointer(rec::base(gocpp::recv(s))), s->elemsize);
+            racefree(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->elemsize);
         }
         if(msanenabled)
         {
-            msanfree(unsafe::Pointer(rec::base(gocpp::recv(s))), s->elemsize);
+            msanfree(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->elemsize);
         }
         if(asanenabled)
         {
-            asanpoison(unsafe::Pointer(rec::base(gocpp::recv(s))), s->elemsize);
+            asanpoison(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->elemsize);
         }
         auto mp = acquirem();
         if(gcphase == _GCoff)
@@ -893,8 +893,8 @@ namespace golang::runtime
             s = rec::allocMSpanLocked(gocpp::recv(h));
         }
         unlock(& h->lock);
-        sysMap(unsafe::Pointer(base), userArenaChunkBytes, & gcController.heapReleased);
-        sysUsed(unsafe::Pointer(base), userArenaChunkBytes, userArenaChunkBytes);
+        sysMap(gocpp::unsafe_pointer(base), userArenaChunkBytes, & gcController.heapReleased);
+        sysUsed(gocpp::unsafe_pointer(base), userArenaChunkBytes, userArenaChunkBytes);
         auto spc = makeSpanClass(0, false);
         rec::initSpan(gocpp::recv(h), s, spanAllocHeap, spc, base, userArenaChunkPages);
         s->isUserArenaChunk = true;
@@ -913,15 +913,15 @@ namespace golang::runtime
         rec::Add(gocpp::recv(gcController.totalAlloc), int64_t(s->elemsize));
         rec::update(gocpp::recv(gcController), int64_t(s->elemsize), 0);
         rec::initHeapBits(gocpp::recv(s), true);
-        memclrNoHeapPointers(unsafe::Pointer(rec::base(gocpp::recv(s))), s->elemsize);
+        memclrNoHeapPointers(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->elemsize);
         s->needzero = 0;
         s->freeIndexForScan = 1;
         s->userArenaChunkFree = makeAddrRange(base, base + s->elemsize);
         rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(h->central[spc].mcentral), h->sweepgen)), s);
         if(goexperiment::AllocHeaders)
         {
-            *(uintptr_t*)(unsafe::Pointer(& s->largeType)) = uintptr_t(unsafe::Pointer(s->limit));
-            *(uintptr_t*)(unsafe::Pointer(& s->largeType->GCData)) = s->limit + gocpp::Sizeof<runtime::_type>();
+            *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType)) = uintptr_t(gocpp::unsafe_pointer(s->limit));
+            *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType->GCData)) = s->limit + gocpp::Sizeof<runtime::_type>();
             s->largeType->PtrBytes = 0;
             s->largeType->Size_ = s->elemsize;
         }

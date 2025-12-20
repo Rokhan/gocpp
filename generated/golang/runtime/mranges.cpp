@@ -402,7 +402,7 @@ namespace golang::runtime
 
     void rec::init(golang::runtime::addrRanges* a, golang::runtime::sysMemStat* sysStat)
     {
-        auto ranges = (notInHeapSlice*)(unsafe::Pointer(& a->ranges));
+        auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
         ranges->len = 0;
         ranges->cap = 16;
         ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, sysStat));
@@ -514,7 +514,7 @@ namespace golang::runtime
             if(len(a->ranges) + 1 > cap(a->ranges))
             {
                 auto oldRanges = a->ranges;
-                auto ranges = (notInHeapSlice*)(unsafe::Pointer(& a->ranges));
+                auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
                 ranges->len = len(oldRanges) + 1;
                 ranges->cap = cap(oldRanges) * 2;
                 ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, a->sysStat));
@@ -594,7 +594,7 @@ namespace golang::runtime
     {
         if(len(a->ranges) > cap(b->ranges))
         {
-            auto ranges = (notInHeapSlice*)(unsafe::Pointer(& b->ranges));
+            auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& b->ranges));
             ranges->len = 0;
             ranges->cap = cap(a->ranges);
             ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, b->sysStat));

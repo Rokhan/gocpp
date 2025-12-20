@@ -18,7 +18,7 @@
 
 namespace golang::syscall
 {
-    extern unsafe::Pointer _;
+    extern gocpp::unsafe_pointer _;
     extern gocpp::error errERROR_IO_PENDING;
     extern gocpp::error errERROR_EINVAL;
     struct gocpp::error errnoErr(golang::syscall::Errno e);
@@ -144,7 +144,7 @@ namespace golang::syscall
     struct gocpp::error SetHandleInformation(golang::syscall::Handle handle, uint32_t mask, uint32_t flags);
     struct gocpp::error TerminateProcess(golang::syscall::Handle handle, uint32_t exitcode);
     struct gocpp::error UnmapViewOfFile(uintptr_t addr);
-    struct gocpp::error updateProcThreadAttribute(struct _PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t flags, uintptr_t attr, unsafe::Pointer value, uintptr_t size, unsafe::Pointer prevvalue, uintptr_t* returnedsize);
+    struct gocpp::error updateProcThreadAttribute(struct _PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t flags, uintptr_t attr, gocpp::unsafe_pointer value, uintptr_t size, gocpp::unsafe_pointer prevvalue, uintptr_t* returnedsize);
     struct gocpp::error VirtualLock(uintptr_t addr, uintptr_t length);
     struct gocpp::error VirtualUnlock(uintptr_t addr, uintptr_t length);
     std::tuple<uint32_t, struct gocpp::error> WaitForSingleObject(golang::syscall::Handle handle, uint32_t waitMilliseconds);
@@ -159,7 +159,7 @@ namespace golang::syscall
     void rtlGetNtVersionNumbers(uint32_t* majorVersion, uint32_t* minorVersion, uint32_t* buildNumber);
     struct gocpp::error GetUserNameEx(uint32_t nameFormat, uint16_t* nameBuffre, uint32_t* nSize);
     struct gocpp::error TranslateName(uint16_t* accName, uint32_t accNameFormat, uint32_t desiredNameFormat, uint16_t* translatedName, uint32_t* nSize);
-    std::tuple<gocpp::array<gocpp::array<uint16_t, 8192>*, 8192>*, struct gocpp::error> CommandLineToArgv(uint16_t* cmd, int32_t* argc);
+    std::tuple<gocpp::array_ptr<gocpp::array<gocpp::array_ptr<gocpp::array<uint16_t, 8192>>, 8192>>, struct gocpp::error> CommandLineToArgv(uint16_t* cmd, int32_t* argc);
     struct gocpp::error GetUserProfileDirectory(golang::syscall::Token t, uint16_t* dir, uint32_t* dirLen);
     void FreeAddrInfoW(struct AddrinfoW* addrinfo);
     struct gocpp::error GetAddrInfoW(uint16_t* nodename, uint16_t* servicename, struct AddrinfoW* hints, struct AddrinfoW** result);
@@ -171,9 +171,9 @@ namespace golang::syscall
     struct gocpp::error WSASend(golang::syscall::Handle s, struct WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct Overlapped* overlapped, unsigned char* croutine);
     struct gocpp::error WSASendTo(golang::syscall::Handle s, struct WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct RawSockaddrAny* to, int32_t tolen, struct Overlapped* overlapped, unsigned char* croutine);
     struct gocpp::error WSAStartup(uint32_t verreq, struct WSAData* data);
-    struct gocpp::error bind(golang::syscall::Handle s, unsafe::Pointer name, int32_t namelen);
+    struct gocpp::error bind(golang::syscall::Handle s, gocpp::unsafe_pointer name, int32_t namelen);
     struct gocpp::error Closesocket(golang::syscall::Handle s);
-    struct gocpp::error connect(golang::syscall::Handle s, unsafe::Pointer name, int32_t namelen);
+    struct gocpp::error connect(golang::syscall::Handle s, gocpp::unsafe_pointer name, int32_t namelen);
     std::tuple<struct Hostent*, struct gocpp::error> GetHostByName(gocpp::string name);
     std::tuple<struct Hostent*, struct gocpp::error> _GetHostByName(unsigned char* name);
     struct gocpp::error getpeername(golang::syscall::Handle s, struct RawSockaddrAny* rsa, int32_t* addrlen);

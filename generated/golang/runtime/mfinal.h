@@ -40,7 +40,7 @@ namespace golang::runtime
     struct finalizer
     {
         funcval* fn;
-        unsafe::Pointer arg;
+        gocpp::unsafe_pointer arg;
         uintptr_t nret;
         golang::runtime::_type* fint;
         golang::runtime::ptrtype* ot;
@@ -59,13 +59,13 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct finalizer& value);
     extern gocpp::array<unsigned char, 5> finalizer1;
     void lockRankMayQueueFinalizer();
-    void queuefinalizer(unsafe::Pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
-    void iterate_finq(std::function<void (struct funcval* _1, unsafe::Pointer _2, uintptr_t _3, golang::runtime::_type* _4, golang::runtime::ptrtype* _5)> callback);
+    void queuefinalizer(gocpp::unsafe_pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
+    void iterate_finq(std::function<void (struct funcval* _1, gocpp::unsafe_pointer _2, uintptr_t _3, golang::runtime::_type* _4, golang::runtime::ptrtype* _5)> callback);
     struct g* wakefing();
     void createfing();
-    bool finalizercommit(struct g* gp, unsafe::Pointer lock);
+    bool finalizercommit(struct g* gp, gocpp::unsafe_pointer lock);
     void runfinq();
-    bool isGoPointerWithoutSpan(unsafe::Pointer p);
+    bool isGoPointerWithoutSpan(gocpp::unsafe_pointer p);
     bool blockUntilEmptyFinalizerQueue(int64_t timeout);
     void SetFinalizer(go_any obj, go_any finalizer);
     void KeepAlive(go_any x);

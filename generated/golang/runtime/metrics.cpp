@@ -124,7 +124,7 @@ namespace golang::runtime
         semacquire1(& metricsSema, true, 0, 0, waitReasonSemacquire);
         if(raceenabled)
         {
-            raceacquire(unsafe::Pointer(& metricsSema));
+            raceacquire(gocpp::unsafe_pointer(& metricsSema));
         }
     }
 
@@ -132,7 +132,7 @@ namespace golang::runtime
     {
         if(raceenabled)
         {
-            racerelease(unsafe::Pointer(& metricsSema));
+            racerelease(gocpp::unsafe_pointer(& metricsSema));
         }
         semrelease(& metricsSema);
     }
@@ -613,7 +613,7 @@ namespace golang::runtime
     }
 
     // empty returns true if there are no dependencies in the set.
-    bool rec::empty(golang::runtime::statDepSet* s)
+    bool rec::empty(gocpp::array_ptr<golang::runtime::statDepSet> s)
     {
         for(auto [gocpp_ignored, c] : s)
         {
@@ -626,7 +626,7 @@ namespace golang::runtime
     }
 
     // has returns true if the set contains a given statDep.
-    bool rec::has(golang::runtime::statDepSet* s, golang::runtime::statDep d)
+    bool rec::has(gocpp::array_ptr<golang::runtime::statDepSet> s, golang::runtime::statDep d)
     {
         return s[d / 64] & (1 << (d % 64)) != 0;
     }
@@ -932,7 +932,7 @@ namespace golang::runtime
 
     // ensure populates statistics aggregates determined by deps if they
     // haven't yet been populated.
-    void rec::ensure(golang::runtime::statAggregate* a, golang::runtime::statDepSet* deps)
+    void rec::ensure(golang::runtime::statAggregate* a, gocpp::array_ptr<golang::runtime::statDepSet> deps)
     {
         auto missing = rec::difference(gocpp::recv(deps), a->ensured);
         if(rec::empty(gocpp::recv(missing)))
@@ -1062,7 +1062,7 @@ namespace golang::runtime
         {
             v->kind = metricKindFloat64Histogram;
             hist = new(metricFloat64Histogram);
-            v->pointer = unsafe::Pointer(hist);
+            v->pointer = gocpp::unsafe_pointer(hist);
         }
         hist->buckets = buckets;
         if(len(hist->counts) != len(hist->buckets) - 1)
@@ -1167,7 +1167,7 @@ namespace golang::runtime
     // readMetrics is the implementation of runtime/metrics.Read.
     //
     //go:linkname readMetrics runtime/metrics.runtime_readMetrics
-    void readMetrics(unsafe::Pointer samplesp, int len, int cap)
+    void readMetrics(gocpp::unsafe_pointer samplesp, int len, int cap)
     {
         metricsLock();
         initMetrics();
@@ -1179,10 +1179,10 @@ namespace golang::runtime
     //
     // Broken out for more robust testing. metricsLock must be held and
     // initMetrics must have been called already.
-    void readMetricsLocked(unsafe::Pointer samplesp, int len, int cap)
+    void readMetricsLocked(gocpp::unsafe_pointer samplesp, int len, int cap)
     {
         auto sl = slice {samplesp, len, cap};
-        auto samples = *(gocpp::slice<metricSample>*)(unsafe::Pointer(& sl));
+        auto samples = *(gocpp::slice<metricSample>*)(gocpp::unsafe_pointer(& sl));
         agg = statAggregate {};
         for(auto [i, gocpp_ignored] : samples)
         {

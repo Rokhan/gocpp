@@ -213,7 +213,7 @@ namespace golang::runtime
     int32_t pcdatavalue(struct funcInfo f, uint32_t table, uintptr_t targetpc);
     int32_t pcdatavalue1(struct funcInfo f, uint32_t table, uintptr_t targetpc, bool strict);
     std::tuple<int32_t, uintptr_t> pcdatavalue2(struct funcInfo f, uint32_t table, uintptr_t targetpc);
-    unsafe::Pointer funcdata(struct funcInfo f, uint8_t i);
+    gocpp::unsafe_pointer funcdata(struct funcInfo f, uint8_t i);
     std::tuple<gocpp::slice<unsigned char>, bool> step(gocpp::slice<unsigned char> p, uintptr_t* pc, int32_t* val, bool first);
     std::tuple<uint32_t, uint32_t> readvarint(gocpp::slice<unsigned char> p);
     struct stackmap

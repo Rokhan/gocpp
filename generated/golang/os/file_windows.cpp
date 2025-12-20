@@ -186,7 +186,7 @@ namespace golang::os
                 if(e1 == nullptr)
                 {
                     syscall::Win32FileAttributeData fa = {};
-                    e1 = syscall::GetFileAttributesEx(pathp, syscall::GetFileExInfoStandard, (unsigned char*)(unsafe::Pointer(& fa)));
+                    e1 = syscall::GetFileAttributesEx(pathp, syscall::GetFileExInfoStandard, (unsigned char*)(gocpp::unsafe_pointer(& fa)));
                     if(e1 == nullptr && fa.FileAttributes & syscall::FILE_ATTRIBUTE_DIRECTORY != 0)
                     {
                         e = syscall::go_EISDIR;
@@ -588,7 +588,7 @@ namespace golang::os
             {
                 return {""_s, err};
             }
-            auto rdb = (windows::REPARSE_DATA_BUFFER*)(unsafe::Pointer(& rdbbuf[0]));
+            auto rdb = (windows::REPARSE_DATA_BUFFER*)(gocpp::unsafe_pointer(& rdbbuf[0]));
             //Go switch emulation
             {
                 auto condition = rdb->ReparseTag;
@@ -598,7 +598,7 @@ namespace golang::os
                 switch(conditionId)
                 {
                     case 0:
-                        auto rb = (windows::SymbolicLinkReparseBuffer*)(unsafe::Pointer(& rdb->DUMMYUNIONNAME));
+                        auto rb = (windows::SymbolicLinkReparseBuffer*)(gocpp::unsafe_pointer(& rdb->DUMMYUNIONNAME));
                         auto s = rec::Path(gocpp::recv(rb));
                         if(rb->Flags & windows::SYMLINK_FLAG_RELATIVE != 0)
                         {
@@ -607,7 +607,7 @@ namespace golang::os
                         return normaliseLinkPath(s);
                         break;
                     case 1:
-                        return normaliseLinkPath(rec::Path(gocpp::recv((windows::MountPointReparseBuffer*)(unsafe::Pointer(& rdb->DUMMYUNIONNAME)))));
+                        return normaliseLinkPath(rec::Path(gocpp::recv((windows::MountPointReparseBuffer*)(gocpp::unsafe_pointer(& rdb->DUMMYUNIONNAME)))));
                         break;
                     default:
                         return {""_s, syscall::go_ENOENT};

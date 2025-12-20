@@ -62,7 +62,7 @@ namespace golang::runtime
         }
     }
 
-    unsafe::Pointer rec::pop(golang::runtime::lfstack* head)
+    gocpp::unsafe_pointer rec::pop(golang::runtime::lfstack* head)
     {
         for(; ; )
         {
@@ -75,7 +75,7 @@ namespace golang::runtime
             auto next = atomic::Load64(& node->next);
             if(atomic::Cas64((uint64_t*)(head), old, next))
             {
-                return unsafe::Pointer(node);
+                return gocpp::unsafe_pointer(node);
             }
         }
     }
@@ -89,21 +89,21 @@ namespace golang::runtime
     // lfstack.push. This only needs to be called when node is allocated.
     void lfnodeValidate(struct lfnode* node)
     {
-        if(auto [base, gocpp_id_0, gocpp_id_1] = findObject(uintptr_t(unsafe::Pointer(node)), 0, 0); base != 0)
+        if(auto [base, gocpp_id_0, gocpp_id_1] = findObject(uintptr_t(gocpp::unsafe_pointer(node)), 0, 0); base != 0)
         {
             go_throw("lfstack node allocated from the heap"_s);
         }
         if(lfstackUnpack(lfstackPack(node, ~ uintptr_t(0))) != node)
         {
             printlock();
-            println("runtime: bad lfnode address"_s, hex(uintptr_t(unsafe::Pointer(node))));
+            println("runtime: bad lfnode address"_s, hex(uintptr_t(gocpp::unsafe_pointer(node))));
             go_throw("bad lfnode address"_s);
         }
     }
 
     uint64_t lfstackPack(struct lfnode* node, uintptr_t cnt)
     {
-        return uint64_t(taggedPointerPack(unsafe::Pointer(node), cnt));
+        return uint64_t(taggedPointerPack(gocpp::unsafe_pointer(node), cnt));
     }
 
     struct lfnode* lfstackUnpack(uint64_t val)

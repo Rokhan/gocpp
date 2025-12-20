@@ -14,42 +14,42 @@
 
 namespace golang::runtime
 {
-    uintptr_t memhash0(unsafe::Pointer p, uintptr_t h);
-    uintptr_t memhash8(unsafe::Pointer p, uintptr_t h);
-    uintptr_t memhash16(unsafe::Pointer p, uintptr_t h);
-    uintptr_t memhash128(unsafe::Pointer p, uintptr_t h);
-    uintptr_t memhash_varlen(unsafe::Pointer p, uintptr_t h);
+    uintptr_t memhash0(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t memhash8(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t memhash16(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t memhash128(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t memhash_varlen(gocpp::unsafe_pointer p, uintptr_t h);
     extern bool useAeshash;
-    uintptr_t memhash(unsafe::Pointer p, uintptr_t h, uintptr_t s);
-    uintptr_t memhash32(unsafe::Pointer p, uintptr_t h);
-    uintptr_t memhash64(unsafe::Pointer p, uintptr_t h);
-    uintptr_t strhash(unsafe::Pointer p, uintptr_t h);
-    uintptr_t strhashFallback(unsafe::Pointer a, uintptr_t h);
-    uintptr_t f32hash(unsafe::Pointer p, uintptr_t h);
-    uintptr_t f64hash(unsafe::Pointer p, uintptr_t h);
-    uintptr_t c64hash(unsafe::Pointer p, uintptr_t h);
-    uintptr_t c128hash(unsafe::Pointer p, uintptr_t h);
-    uintptr_t interhash(unsafe::Pointer p, uintptr_t h);
-    uintptr_t nilinterhash(unsafe::Pointer p, uintptr_t h);
-    uintptr_t typehash(golang::runtime::_type* t, unsafe::Pointer p, uintptr_t h);
-    struct gocpp::error mapKeyError(golang::runtime::maptype* t, unsafe::Pointer p);
-    struct gocpp::error mapKeyError2(golang::runtime::_type* t, unsafe::Pointer p);
-    uintptr_t reflect_typehash(golang::runtime::_type* t, unsafe::Pointer p, uintptr_t h);
-    bool memequal0(unsafe::Pointer p, unsafe::Pointer q);
-    bool memequal8(unsafe::Pointer p, unsafe::Pointer q);
-    bool memequal16(unsafe::Pointer p, unsafe::Pointer q);
-    bool memequal32(unsafe::Pointer p, unsafe::Pointer q);
-    bool memequal64(unsafe::Pointer p, unsafe::Pointer q);
-    bool memequal128(unsafe::Pointer p, unsafe::Pointer q);
-    bool f32equal(unsafe::Pointer p, unsafe::Pointer q);
-    bool f64equal(unsafe::Pointer p, unsafe::Pointer q);
-    bool c64equal(unsafe::Pointer p, unsafe::Pointer q);
-    bool c128equal(unsafe::Pointer p, unsafe::Pointer q);
-    bool strequal(unsafe::Pointer p, unsafe::Pointer q);
-    bool interequal(unsafe::Pointer p, unsafe::Pointer q);
-    bool nilinterequal(unsafe::Pointer p, unsafe::Pointer q);
-    bool efaceeq(golang::runtime::_type* t, unsafe::Pointer x, unsafe::Pointer y);
-    bool ifaceeq(struct itab* tab, unsafe::Pointer x, unsafe::Pointer y);
+    uintptr_t memhash(gocpp::unsafe_pointer p, uintptr_t h, uintptr_t s);
+    uintptr_t memhash32(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t memhash64(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t strhash(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t strhashFallback(gocpp::unsafe_pointer a, uintptr_t h);
+    uintptr_t f32hash(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t f64hash(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t c64hash(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t c128hash(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t interhash(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t nilinterhash(gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t typehash(golang::runtime::_type* t, gocpp::unsafe_pointer p, uintptr_t h);
+    struct gocpp::error mapKeyError(golang::runtime::maptype* t, gocpp::unsafe_pointer p);
+    struct gocpp::error mapKeyError2(golang::runtime::_type* t, gocpp::unsafe_pointer p);
+    uintptr_t reflect_typehash(golang::runtime::_type* t, gocpp::unsafe_pointer p, uintptr_t h);
+    bool memequal0(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool memequal8(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool memequal16(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool memequal32(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool memequal64(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool memequal128(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool f32equal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool f64equal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool c64equal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool c128equal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool strequal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool interequal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool nilinterequal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
+    bool efaceeq(golang::runtime::_type* t, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
+    bool ifaceeq(struct itab* tab, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
     uintptr_t stringHash(gocpp::string s, uintptr_t seed);
     uintptr_t bytesHash(gocpp::slice<unsigned char> b, uintptr_t seed);
     uintptr_t int32Hash(uint32_t i, uintptr_t seed);
@@ -118,8 +118,8 @@ namespace golang::runtime
     extern gocpp::array<uintptr_t, 4> hashkey;
     void alginit();
     void initAlgAES();
-    uint32_t readUnaligned32(unsafe::Pointer p);
-    uint64_t readUnaligned64(unsafe::Pointer p);
+    uint32_t readUnaligned32(gocpp::unsafe_pointer p);
+    uint64_t readUnaligned64(gocpp::unsafe_pointer p);
 
     namespace rec
     {

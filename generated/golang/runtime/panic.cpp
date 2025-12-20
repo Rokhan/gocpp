@@ -548,7 +548,7 @@ namespace golang::runtime
     // badDefer returns a fixed bad defer pointer for poisoning an atomic defer list head.
     struct _defer* badDefer()
     {
-        return (_defer*)(unsafe::Pointer(uintptr_t(1)));
+        return (_defer*)(gocpp::unsafe_pointer(uintptr_t(1)));
     }
 
     // deferprocat is like deferproc but adds to the atomic list represented by frame.
@@ -558,7 +558,7 @@ namespace golang::runtime
         auto head = gocpp::getValue<atomic::Pointer<_defer>*>(frame);
         if(raceenabled)
         {
-            racewritepc(unsafe::Pointer(head), getcallerpc(), abi::FuncPCABIInternal(deferprocat));
+            racewritepc(gocpp::unsafe_pointer(head), getcallerpc(), abi::FuncPCABIInternal(deferprocat));
         }
         auto d1 = newdefer();
         d1->fn = fn;
@@ -584,7 +584,7 @@ namespace golang::runtime
         auto head = d->head;
         if(raceenabled)
         {
-            racereadpc(unsafe::Pointer(head), getcallerpc(), abi::FuncPCABIInternal(deferconvert));
+            racereadpc(gocpp::unsafe_pointer(head), getcallerpc(), abi::FuncPCABIInternal(deferconvert));
         }
         auto tail = d->link;
         d->rangefunc = false;
@@ -633,9 +633,9 @@ namespace golang::runtime
         d->rangefunc = false;
         d->sp = getcallersp();
         d->pc = getcallerpc();
-        *(uintptr_t*)(unsafe::Pointer(& d->link)) = uintptr_t(unsafe::Pointer(gp->_defer));
-        *(uintptr_t*)(unsafe::Pointer(& d->head)) = 0;
-        *(uintptr_t*)(unsafe::Pointer(& gp->_defer)) = uintptr_t(unsafe::Pointer(d));
+        *(uintptr_t*)(gocpp::unsafe_pointer(& d->link)) = uintptr_t(gocpp::unsafe_pointer(gp->_defer));
+        *(uintptr_t*)(gocpp::unsafe_pointer(& d->head)) = 0;
+        *(uintptr_t*)(gocpp::unsafe_pointer(& gp->_defer)) = uintptr_t(gocpp::unsafe_pointer(d));
         return0();
     }
 
@@ -743,7 +743,7 @@ namespace golang::runtime
     {
         _panic p = {};
         p.deferreturn = true;
-        rec::start(gocpp::recv(p), getcallerpc(), unsafe::Pointer(getcallersp()));
+        rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
         for(; ; )
         {
             auto [fn, ok] = rec::nextDefer(gocpp::recv(p));
@@ -769,7 +769,7 @@ namespace golang::runtime
         // bypassed by a recover().
         _panic p = {};
         p.goexit = true;
-        rec::start(gocpp::recv(p), getcallerpc(), unsafe::Pointer(getcallersp()));
+        rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
         for(; ; )
         {
             auto [fn, ok] = rec::nextDefer(gocpp::recv(p));
@@ -883,7 +883,7 @@ namespace golang::runtime
     //
     // The implementation is the same with runtime.readvarint, except that this function
     // uses unsafe.Pointer for speed.
-    std::tuple<uint32_t, unsafe::Pointer> readvarintUnsafe(unsafe::Pointer fd)
+    std::tuple<uint32_t, gocpp::unsafe_pointer> readvarintUnsafe(gocpp::unsafe_pointer fd)
     {
         uint32_t r = {};
         int shift = {};
@@ -999,7 +999,7 @@ namespace golang::runtime
         _panic p = {};
         p.arg = e;
         rec::Add(gocpp::recv(runningPanicDefers), 1);
-        rec::start(gocpp::recv(p), getcallerpc(), unsafe::Pointer(getcallersp()));
+        rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
         for(; ; )
         {
             auto [fn, ok] = rec::nextDefer(gocpp::recv(p));
@@ -1017,11 +1017,11 @@ namespace golang::runtime
     // start initializes a panic to start unwinding the stack.
     //
     // If p.goexit is true, then start may return multiple times.
-    void rec::start(golang::runtime::_panic* p, uintptr_t pc, unsafe::Pointer sp)
+    void rec::start(golang::runtime::_panic* p, uintptr_t pc, gocpp::unsafe_pointer sp)
     {
         auto gp = getg();
         p->startPC = getcallerpc();
-        p->startSP = unsafe::Pointer(getcallersp());
+        p->startSP = gocpp::unsafe_pointer(getcallersp());
         if(p->deferreturn)
         {
             p->sp = sp;
@@ -1035,7 +1035,7 @@ namespace golang::runtime
             return;
         }
         p->link = gp->_panic;
-        gp->_panic = (_panic*)(noescape(unsafe::Pointer(p)));
+        gp->_panic = (_panic*)(noescape(gocpp::unsafe_pointer(p)));
         std::tie(p->lr, p->fp) = std::tuple{pc, sp};
         rec::nextFrame(gocpp::recv(p));
     }
@@ -1126,21 +1126,21 @@ namespace golang::runtime
                 {
                     break;
                 }
-                if(rec::initOpenCodedDefers(gocpp::recv(p), u.frame.fn, unsafe::Pointer(u.frame.varp)))
+                if(rec::initOpenCodedDefers(gocpp::recv(p), u.frame.fn, gocpp::unsafe_pointer(u.frame.varp)))
                 {
                     break;
                 }
                 rec::next(gocpp::recv(u));
             }
             p->lr = u.frame.lr;
-            p->sp = unsafe::Pointer(u.frame.sp);
-            p->fp = unsafe::Pointer(u.frame.fp);
+            p->sp = gocpp::unsafe_pointer(u.frame.sp);
+            p->fp = gocpp::unsafe_pointer(u.frame.fp);
             ok = true;
         });
         return ok;
     }
 
-    bool rec::initOpenCodedDefers(golang::runtime::_panic* p, struct funcInfo fn, unsafe::Pointer varp)
+    bool rec::initOpenCodedDefers(golang::runtime::_panic* p, struct funcInfo fn, gocpp::unsafe_pointer varp)
     {
         auto fd = funcdata(fn, abi::FUNCDATA_OpenCodedDeferInfo);
         if(fd == nullptr)
@@ -1272,9 +1272,9 @@ namespace golang::runtime
         }
         if(saveOpenDeferState)
         {
-            gp->param = unsafe::Pointer(gocpp::InitPtr<savedOpenDeferState>([=](auto& x) {
+            gp->param = gocpp::unsafe_pointer(gocpp::InitPtr<savedOpenDeferState>([=](auto& x) {
                 x.retpc = p0->retpc;
-                x.deferBitsOffset = uintptr_t(unsafe::Pointer(p0->deferBitsPtr)) - uintptr_t(p0->sp);
+                x.deferBitsOffset = uintptr_t(gocpp::unsafe_pointer(p0->deferBitsPtr)) - uintptr_t(p0->sp);
                 x.slotsOffset = uintptr_t(p0->slotsPtr) - uintptr_t(p0->sp);
             }));
         }

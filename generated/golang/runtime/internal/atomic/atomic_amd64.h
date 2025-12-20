@@ -13,7 +13,7 @@
 namespace golang::atomic
 {
     uint32_t Load(uint32_t* ptr);
-    unsafe::Pointer Loadp(unsafe::Pointer ptr);
+    gocpp::unsafe_pointer Loadp(gocpp::unsafe_pointer ptr);
     uint64_t Load64(uint64_t* ptr);
     uint32_t LoadAcq(uint32_t* ptr);
     uint64_t LoadAcq64(uint64_t* ptr);
@@ -43,7 +43,7 @@ namespace golang::atomic
     void StoreRel(uint32_t* ptr, uint32_t val);
     void StoreRel64(uint64_t* ptr, uint64_t val);
     void StoreReluintptr(uintptr_t* ptr, uintptr_t val);
-    void StorepNoWB(unsafe::Pointer ptr, unsafe::Pointer val);
+    void StorepNoWB(gocpp::unsafe_pointer ptr, gocpp::unsafe_pointer val);
 
     namespace rec
     {

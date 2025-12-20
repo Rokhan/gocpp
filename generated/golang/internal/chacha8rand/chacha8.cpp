@@ -22,7 +22,7 @@ namespace golang::chacha8rand
     }
 
     // block is the chacha8rand block function.
-    void block(gocpp::array<uint64_t, 4>* seed, gocpp::array<uint64_t, 32>* blocks, uint32_t counter)
+    void block(gocpp::array_ptr<gocpp::array<uint64_t, 4>> seed, gocpp::array_ptr<gocpp::array<uint64_t, 32>> blocks, uint32_t counter)
     /* convertBlockStmt, nil block */;
 
     // A State holds the state for a single random generator.

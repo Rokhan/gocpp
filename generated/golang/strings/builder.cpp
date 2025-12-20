@@ -65,17 +65,17 @@ namespace golang::strings
     //
     //go:nosplit
     //go:nocheckptr
-    unsafe::Pointer noescape(unsafe::Pointer p)
+    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p)
     {
         auto x = uintptr_t(p);
-        return unsafe::Pointer(x ^ 0);
+        return gocpp::unsafe_pointer(x ^ 0);
     }
 
     void rec::copyCheck(golang::strings::Builder* b)
     {
         if(b->addr == nullptr)
         {
-            b->addr = (Builder*)(noescape(unsafe::Pointer(b)));
+            b->addr = (Builder*)(noescape(gocpp::unsafe_pointer(b)));
         }
         else
         if(b->addr != b)

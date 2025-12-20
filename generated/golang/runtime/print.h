@@ -32,7 +32,7 @@ namespace golang::runtime
     void printint(int64_t v);
     extern long minhexdigits;
     void printhex(uint64_t v);
-    void printpointer(unsafe::Pointer p);
+    void printpointer(gocpp::unsafe_pointer p);
     void printuintptr(uintptr_t p);
     void printstring(gocpp::string s);
     void printslice(gocpp::slice<unsigned char> s);

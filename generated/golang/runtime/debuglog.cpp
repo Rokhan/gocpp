@@ -100,8 +100,8 @@ namespace golang::runtime
         auto l = getCachedDlogger();
         if(l == nullptr)
         {
-            auto allp = (uintptr_t*)(unsafe::Pointer(& allDloggers));
-            auto all = (dlogger*)(unsafe::Pointer(atomic::Loaduintptr(allp)));
+            auto allp = (uintptr_t*)(gocpp::unsafe_pointer(& allDloggers));
+            auto all = (dlogger*)(gocpp::unsafe_pointer(atomic::Loaduintptr(allp)));
             for(auto l1 = all; l1 != nullptr; l1 = l1->allLink)
             {
                 if(rec::Load(gocpp::recv(l1->owned)) == 0 && rec::CompareAndSwap(gocpp::recv(l1->owned), 0, 1))
@@ -120,12 +120,12 @@ namespace golang::runtime
             }
             l->w.r.data = & l->w.data;
             rec::Store(gocpp::recv(l->owned), 1);
-            auto headp = (uintptr_t*)(unsafe::Pointer(& allDloggers));
+            auto headp = (uintptr_t*)(gocpp::unsafe_pointer(& allDloggers));
             for(; ; )
             {
                 auto head = atomic::Loaduintptr(headp);
-                l->allLink = (dlogger*)(unsafe::Pointer(head));
-                if(atomic::Casuintptr(headp, head, uintptr_t(unsafe::Pointer(l))))
+                l->allLink = (dlogger*)(gocpp::unsafe_pointer(head));
+                if(atomic::Casuintptr(headp, head, uintptr_t(gocpp::unsafe_pointer(l))))
                 {
                     break;
                 }
@@ -380,11 +380,11 @@ namespace golang::runtime
         }
         auto strData = unsafe::StringData(x);
         auto datap = & firstmoduledata;
-        if(len(x) > 4 && datap->etext <= uintptr_t(unsafe::Pointer(strData)) && uintptr_t(unsafe::Pointer(strData)) < datap->end)
+        if(len(x) > 4 && datap->etext <= uintptr_t(gocpp::unsafe_pointer(strData)) && uintptr_t(gocpp::unsafe_pointer(strData)) < datap->end)
         {
             rec::byte(gocpp::recv(l->w), debugLogConstString);
             rec::uvarint(gocpp::recv(l->w), uint64_t(len(x)));
-            rec::uvarint(gocpp::recv(l->w), uint64_t(uintptr_t(unsafe::Pointer(strData)) - datap->etext));
+            rec::uvarint(gocpp::recv(l->w), uint64_t(uintptr_t(gocpp::unsafe_pointer(strData)) - datap->etext));
         }
         else
         {
@@ -392,8 +392,8 @@ namespace golang::runtime
             // We can't use unsafe.Slice as it may panic, which isn't safe
             // in this (potentially) nowritebarrier context.
             gocpp::slice<unsigned char> b = {};
-            auto bb = (slice*)(unsafe::Pointer(& b));
-            bb->array = unsafe::Pointer(strData);
+            auto bb = (slice*)(gocpp::unsafe_pointer(& b));
+            bb->array = gocpp::unsafe_pointer(strData);
             std::tie(bb->len, bb->cap) = std::tuple{len(x), len(x)};
             if(len(b) > debugLogStringLimit)
             {
@@ -875,11 +875,11 @@ namespace golang::runtime
                     auto [len, ptr] = std::tuple{int(rec::uvarint(gocpp::recv(r))), uintptr_t(rec::uvarint(gocpp::recv(r)))};
                     ptr += firstmoduledata.etext;
                     auto str_tmp = gocpp::Init<stringStruct>([=](auto& x) {
-                        x.str = unsafe::Pointer(ptr);
+                        x.str = gocpp::unsafe_pointer(ptr);
                         x.len = len;
                     });
                     auto& str = str_tmp;
-                    auto s = *(gocpp::string*)(unsafe::Pointer(& str));
+                    auto s = *(gocpp::string*)(gocpp::unsafe_pointer(& str));
                     print(s);
                     break;
                 case 9:
@@ -949,8 +949,8 @@ namespace golang::runtime
             return;
         }
         printlock();
-        auto allp = (uintptr_t*)(unsafe::Pointer(& allDloggers));
-        auto all = (dlogger*)(unsafe::Pointer(atomic::Loaduintptr(allp)));
+        auto allp = (uintptr_t*)(gocpp::unsafe_pointer(& allDloggers));
+        auto all = (dlogger*)(gocpp::unsafe_pointer(atomic::Loaduintptr(allp)));
         auto n = 0;
         for(auto l = all; l != nullptr; l = l->allLink)
         {
@@ -989,7 +989,7 @@ namespace golang::runtime
             printunlock();
             return;
         }
-        auto state = (gocpp::array<readState, 1 << 20>*)(state1).make_slice(0, n);
+        auto state = (gocpp::array_ptr<gocpp::array<readState, 1 << 20>>)(state1).make_slice(0, n);
         {
             auto l = all;
             for(auto [i, gocpp_ignored] : state)
@@ -1041,7 +1041,7 @@ namespace golang::runtime
                 pnano = 0;
             }
             auto pnanoBytes = itoaDiv(tmpbuf.make_slice(0), uint64_t(pnano), 9);
-            print(slicebytetostringtmp((unsigned char*)(noescape(unsafe::Pointer(& pnanoBytes[0]))), len(pnanoBytes)));
+            print(slicebytetostringtmp((unsigned char*)(noescape(gocpp::unsafe_pointer(& pnanoBytes[0]))), len(pnanoBytes)));
             print(" P "_s, p, "] "_s);
             for(auto i = 0; s->begin < s->end; i++)
             {

@@ -13,7 +13,7 @@
 namespace golang::atomic
 {
     bool Cas(uint32_t* ptr, uint32_t old, uint32_t go_new);
-    bool Casp1(unsafe::Pointer* ptr, unsafe::Pointer old, unsafe::Pointer go_new);
+    bool Casp1(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
     bool Casint32(int32_t* ptr, int32_t old, int32_t go_new);
     bool Casint64(int64_t* ptr, int64_t old, int64_t go_new);
     bool Casuintptr(uintptr_t* ptr, uintptr_t old, uintptr_t go_new);

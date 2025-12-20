@@ -14,8 +14,8 @@ namespace golang::runtime
 {
     extern int64_t faketime;
     int64_t nanotime();
-    extern std::function<int32_t (uintptr_t fd, unsafe::Pointer p, int32_t n)> overrideWrite;
-    int32_t write(uintptr_t fd, unsafe::Pointer p, int32_t n);
+    extern std::function<int32_t (uintptr_t fd, gocpp::unsafe_pointer p, int32_t n)> overrideWrite;
+    int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
 
     namespace rec
     {

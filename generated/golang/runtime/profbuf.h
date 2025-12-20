@@ -23,7 +23,7 @@ namespace golang::runtime
         atomic::Uint32 eof;
         uintptr_t hdrsize;
         gocpp::slice<uint64_t> data;
-        gocpp::slice<unsafe::Pointer> tags;
+        gocpp::slice<gocpp::unsafe_pointer> tags;
         golang::runtime::profIndex rNext;
         gocpp::slice<uint64_t> overflowBuf;
         note wait;
@@ -42,7 +42,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct profBuf& value);
     int countSub(uint32_t x, uint32_t y);
     struct profBuf* newProfBuf(int hdrsize, int bufwords, int tags);
-    extern gocpp::array<unsafe::Pointer, 1> overflowTag;
+    extern gocpp::array<gocpp::unsafe_pointer, 1> overflowTag;
 
     namespace rec
     {
@@ -57,10 +57,10 @@ namespace golang::runtime
         void incrementOverflow(golang::runtime::profBuf* b, int64_t now);
         bool canWriteRecord(golang::runtime::profBuf* b, int nstk);
         bool canWriteTwoRecords(golang::runtime::profBuf* b, int nstk1, int nstk2);
-        void write(golang::runtime::profBuf* b, unsafe::Pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk);
+        void write(golang::runtime::profBuf* b, gocpp::unsafe_pointer* tagPtr, int64_t now, gocpp::slice<uint64_t> hdr, gocpp::slice<uintptr_t> stk);
         void close(golang::runtime::profBuf* b);
         void wakeupExtra(golang::runtime::profBuf* b);
-        std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> read(golang::runtime::profBuf* b, golang::runtime::profBufReadMode mode);
+        std::tuple<gocpp::slice<uint64_t>, gocpp::slice<gocpp::unsafe_pointer>, bool> read(golang::runtime::profBuf* b, golang::runtime::profBufReadMode mode);
     }
 }
 

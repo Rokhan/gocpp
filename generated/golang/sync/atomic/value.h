@@ -30,8 +30,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
     struct efaceWords
     {
-        unsafe::Pointer typ;
-        unsafe::Pointer data;
+        gocpp::unsafe_pointer typ;
+        gocpp::unsafe_pointer data;
 
         using isGoStruct = void;
 

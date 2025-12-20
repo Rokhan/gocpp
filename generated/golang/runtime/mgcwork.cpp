@@ -500,7 +500,7 @@ namespace golang::runtime
             }
             for(auto i = uintptr_t(0); i + _WorkbufSize <= workbufAlloc; i += _WorkbufSize)
             {
-                auto newb = (workbuf*)(unsafe::Pointer(rec::base(gocpp::recv(s)) + i));
+                auto newb = (workbuf*)(gocpp::unsafe_pointer(rec::base(gocpp::recv(s)) + i));
                 newb->nobj = 0;
                 lfnodeValidate(& newb->node);
                 if(i == 0)
@@ -559,7 +559,7 @@ namespace golang::runtime
         auto n = b->nobj / 2;
         b->nobj -= n;
         b1->nobj = n;
-        memmove(unsafe::Pointer(& b1->obj[0]), unsafe::Pointer(& b->obj[b->nobj]), uintptr_t(n) * gocpp::Sizeof<uintptr_t>());
+        memmove(gocpp::unsafe_pointer(& b1->obj[0]), gocpp::unsafe_pointer(& b->obj[b->nobj]), uintptr_t(n) * gocpp::Sizeof<uintptr_t>());
         putfull(b);
         return b1;
     }

@@ -99,7 +99,7 @@ namespace golang::runtime
     void poll_runtime_pollUnblock(struct pollDesc* pd);
     int32_t netpollready(struct gList* toRun, struct pollDesc* pd, int32_t mode);
     int netpollcheckerr(struct pollDesc* pd, int32_t mode);
-    bool netpollblockcommit(struct g* gp, unsafe::Pointer gpp);
+    bool netpollblockcommit(struct g* gp, gocpp::unsafe_pointer gpp);
     void netpollgoready(struct g* gp, int traceskip);
     bool netpollblock(struct pollDesc* pd, int32_t mode, bool waitio);
     struct g* netpollunblock(struct pollDesc* pd, int32_t mode, bool ioready, int32_t* delta);

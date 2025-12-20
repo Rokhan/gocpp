@@ -41,12 +41,12 @@ namespace golang::runtime
     void SetCPUProfileRate(int hz);
     gocpp::slice<unsigned char> CPUProfile();
     int64_t runtime_pprof_runtime_cyclesPerSecond();
-    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<unsafe::Pointer>, bool> runtime_pprof_readProfile();
+    std::tuple<gocpp::slice<uint64_t>, gocpp::slice<gocpp::unsafe_pointer>, bool> runtime_pprof_readProfile();
     extern cpuProfile cpuprof;
 
     namespace rec
     {
-        void add(golang::runtime::cpuProfile* p, unsafe::Pointer* tagPtr, gocpp::slice<uintptr_t> stk);
+        void add(golang::runtime::cpuProfile* p, gocpp::unsafe_pointer* tagPtr, gocpp::slice<uintptr_t> stk);
         void addNonGo(golang::runtime::cpuProfile* p, gocpp::slice<uintptr_t> stk);
         void addExtra(golang::runtime::cpuProfile* p);
     }

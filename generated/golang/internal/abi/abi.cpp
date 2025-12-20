@@ -100,7 +100,7 @@ namespace golang::abi
     // architectures, since sub-word-sized arguments in big endian architectures
     // need to be "aligned" to the upper edge of the register to be interpreted
     // by the CPU correctly.
-    unsafe::Pointer rec::IntRegArgAddr(golang::abi::RegArgs* r, int reg, uintptr_t argSize)
+    gocpp::unsafe_pointer rec::IntRegArgAddr(golang::abi::RegArgs* r, int reg, uintptr_t argSize)
     {
         if(argSize > goarch::PtrSize || argSize == 0 || argSize & (argSize - 1) != 0)
         {
@@ -111,13 +111,13 @@ namespace golang::abi
         {
             offset = goarch::PtrSize - argSize;
         }
-        return unsafe::Pointer(uintptr_t(unsafe::Pointer(& r->Ints[reg])) + offset);
+        return gocpp::unsafe_pointer(uintptr_t(gocpp::unsafe_pointer(& r->Ints[reg])) + offset);
     }
 
     // IntArgRegBitmap is a bitmap large enough to hold one bit per
     // integer argument/return register.
     // Set sets the i'th bit of the bitmap to 1.
-    void rec::Set(golang::abi::IntArgRegBitmap* b, int i)
+    void rec::Set(gocpp::array_ptr<golang::abi::IntArgRegBitmap> b, int i)
     {
         b[i / 8] |= uint8_t(1) << (i % 8);
     }
@@ -128,7 +128,7 @@ namespace golang::abi
     // on the reflectcall return path.
     //
     //go:nosplit
-    bool rec::Get(golang::abi::IntArgRegBitmap* b, int i)
+    bool rec::Get(gocpp::array_ptr<golang::abi::IntArgRegBitmap> b, int i)
     {
         return b[i / 8] & (uint8_t(1) << (i % 8)) != 0;
     }

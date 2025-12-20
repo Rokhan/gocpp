@@ -89,7 +89,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct adjustinfo& value);
-    void adjustpointer(struct adjustinfo* adjinfo, unsafe::Pointer vpp);
+    void adjustpointer(struct adjustinfo* adjinfo, gocpp::unsafe_pointer vpp);
     struct bitvector
     {
         int32_t n;
@@ -107,7 +107,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct bitvector& value);
-    void adjustpointers(unsafe::Pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f);
+    void adjustpointers(gocpp::unsafe_pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f);
     void adjustframe(struct stkframe* frame, struct adjustinfo* adjinfo);
     void adjustctxt(struct g* gp, struct adjustinfo* adjinfo);
     void adjustdefers(struct g* gp, struct adjustinfo* adjinfo);

@@ -50,7 +50,7 @@ namespace golang::runtime
     struct pageAlloc
     {
         gocpp::array<gocpp::slice<golang::runtime::pallocSum>, summaryLevels> summary;
-        gocpp::array<gocpp::array<pallocData, 1 << pallocChunksL2Bits>*, 1 << pallocChunksL1Bits> chunks;
+        gocpp::array<gocpp::array_ptr<gocpp::array<pallocData, 1 << pallocChunksL2Bits>>, 1 << pallocChunksL1Bits> chunks;
         offAddr searchAddr;
         golang::runtime::chunkIdx start;
         golang::runtime::chunkIdx end;

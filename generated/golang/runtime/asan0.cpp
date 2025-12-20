@@ -21,27 +21,27 @@ namespace golang::runtime
         using namespace mocklib::rec;
     }
 
-    void asanread(unsafe::Pointer addr, uintptr_t sz)
+    void asanread(gocpp::unsafe_pointer addr, uintptr_t sz)
     {
         go_throw("asan"_s);
     }
 
-    void asanwrite(unsafe::Pointer addr, uintptr_t sz)
+    void asanwrite(gocpp::unsafe_pointer addr, uintptr_t sz)
     {
         go_throw("asan"_s);
     }
 
-    void asanunpoison(unsafe::Pointer addr, uintptr_t sz)
+    void asanunpoison(gocpp::unsafe_pointer addr, uintptr_t sz)
     {
         go_throw("asan"_s);
     }
 
-    void asanpoison(unsafe::Pointer addr, uintptr_t sz)
+    void asanpoison(gocpp::unsafe_pointer addr, uintptr_t sz)
     {
         go_throw("asan"_s);
     }
 
-    void asanregisterglobals(unsafe::Pointer addr, uintptr_t sz)
+    void asanregisterglobals(gocpp::unsafe_pointer addr, uintptr_t sz)
     {
         go_throw("asan"_s);
     }

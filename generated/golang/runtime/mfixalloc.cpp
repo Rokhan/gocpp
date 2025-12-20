@@ -135,7 +135,7 @@ namespace golang::runtime
 
     // Initialize f to allocate objects of the given size,
     // using the allocator to obtain chunks of memory.
-    void rec::init(golang::runtime::fixalloc* f, uintptr_t size, std::function<void (unsafe::Pointer arg, unsafe::Pointer p)> first, unsafe::Pointer arg, golang::runtime::sysMemStat* stat)
+    void rec::init(golang::runtime::fixalloc* f, uintptr_t size, std::function<void (gocpp::unsafe_pointer arg, gocpp::unsafe_pointer p)> first, gocpp::unsafe_pointer arg, golang::runtime::sysMemStat* stat)
     {
         if(size > _FixAllocChunk)
         {
@@ -154,7 +154,7 @@ namespace golang::runtime
         f->zero = true;
     }
 
-    unsafe::Pointer rec::alloc(golang::runtime::fixalloc* f)
+    gocpp::unsafe_pointer rec::alloc(golang::runtime::fixalloc* f)
     {
         if(f->size == 0)
         {
@@ -163,7 +163,7 @@ namespace golang::runtime
         }
         if(f->list != nullptr)
         {
-            auto v = unsafe::Pointer(f->list);
+            auto v = gocpp::unsafe_pointer(f->list);
             f->list = f->list->next;
             f->inuse += f->size;
             if(f->zero)
@@ -177,7 +177,7 @@ namespace golang::runtime
             f->chunk = uintptr_t(persistentalloc(uintptr_t(f->nalloc), 0, f->stat));
             f->nchunk = f->nalloc;
         }
-        auto v = unsafe::Pointer(f->chunk);
+        auto v = gocpp::unsafe_pointer(f->chunk);
         if(f->first != nullptr)
         {
             f->first(f->arg, v);
@@ -188,7 +188,7 @@ namespace golang::runtime
         return v;
     }
 
-    void rec::free(golang::runtime::fixalloc* f, unsafe::Pointer p)
+    void rec::free(golang::runtime::fixalloc* f, gocpp::unsafe_pointer p)
     {
         f->inuse -= f->size;
         auto v = (mlink*)(p);

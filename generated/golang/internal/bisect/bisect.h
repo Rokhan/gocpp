@@ -16,7 +16,7 @@ namespace golang::bisect
     std::tuple<struct Matcher*, struct gocpp::error> New(gocpp::string pattern);
     struct atomicPointerDedup
     {
-        unsafe::Pointer p;
+        gocpp::unsafe_pointer p;
 
         using isGoStruct = void;
 

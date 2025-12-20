@@ -21,7 +21,7 @@ namespace golang::abi
         uint8_t Align_;
         uint8_t FieldAlign_;
         uint8_t Kind_;
-        std::function<bool (unsafe::Pointer _1, unsafe::Pointer _2)> Equal;
+        std::function<bool (gocpp::unsafe_pointer _1, gocpp::unsafe_pointer _2)> Equal;
         unsigned char* GCData;
         golang::abi::NameOff Str;
         golang::abi::TypeOff PtrToThis;
@@ -78,7 +78,7 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UncommonType& value);
-    unsafe::Pointer addChecked(unsafe::Pointer p, uintptr_t x, gocpp::string whySafe);
+    gocpp::unsafe_pointer addChecked(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
     struct Imethod
     {
         golang::abi::NameOff Name;
@@ -175,7 +175,7 @@ namespace golang::abi
         golang::abi::Type* Key;
         golang::abi::Type* Elem;
         golang::abi::Type* Bucket;
-        std::function<uintptr_t (unsafe::Pointer _1, uintptr_t _2)> Hasher;
+        std::function<uintptr_t (gocpp::unsafe_pointer _1, uintptr_t _2)> Hasher;
         uint8_t KeySize;
         uint8_t ValueSize;
         uint16_t BucketSize;

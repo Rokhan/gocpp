@@ -12,12 +12,12 @@
 
 namespace golang::runtime
 {
-    uintptr_t memhashFallback(unsafe::Pointer p, uintptr_t seed, uintptr_t s);
-    uintptr_t memhash32Fallback(unsafe::Pointer p, uintptr_t seed);
-    uintptr_t memhash64Fallback(unsafe::Pointer p, uintptr_t seed);
+    uintptr_t memhashFallback(gocpp::unsafe_pointer p, uintptr_t seed, uintptr_t s);
+    uintptr_t memhash32Fallback(gocpp::unsafe_pointer p, uintptr_t seed);
+    uintptr_t memhash64Fallback(gocpp::unsafe_pointer p, uintptr_t seed);
     uintptr_t mix(uintptr_t a, uintptr_t b);
-    uintptr_t r4(unsafe::Pointer p);
-    uintptr_t r8(unsafe::Pointer p);
+    uintptr_t r4(gocpp::unsafe_pointer p);
+    uintptr_t r8(gocpp::unsafe_pointer p);
 
     namespace rec
     {

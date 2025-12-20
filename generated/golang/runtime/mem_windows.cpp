@@ -27,12 +27,12 @@ namespace golang::runtime
     // which prevents us from allocating more stack.
     //
     //go:nosplit
-    unsafe::Pointer sysAllocOS(uintptr_t n)
+    gocpp::unsafe_pointer sysAllocOS(uintptr_t n)
     {
-        return unsafe::Pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_COMMIT | _MEM_RESERVE, _PAGE_READWRITE));
+        return gocpp::unsafe_pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_COMMIT | _MEM_RESERVE, _PAGE_READWRITE));
     }
 
-    void sysUnusedOS(unsafe::Pointer v, uintptr_t n)
+    void sysUnusedOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
         auto r = stdcall3(_VirtualFree, uintptr_t(v), n, _MEM_DECOMMIT);
         if(r != 0)
@@ -57,7 +57,7 @@ namespace golang::runtime
         }
     }
 
-    void sysUsedOS(unsafe::Pointer v, uintptr_t n)
+    void sysUsedOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
         auto p = stdcall4(_VirtualAlloc, uintptr_t(v), n, _MEM_COMMIT, _PAGE_READWRITE);
         if(p == uintptr_t(v))
@@ -101,15 +101,15 @@ namespace golang::runtime
         }
     }
 
-    void sysHugePageOS(unsafe::Pointer v, uintptr_t n)
+    void sysHugePageOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
     }
 
-    void sysNoHugePageOS(unsafe::Pointer v, uintptr_t n)
+    void sysNoHugePageOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
     }
 
-    void sysHugePageCollapseOS(unsafe::Pointer v, uintptr_t n)
+    void sysHugePageCollapseOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
     }
 
@@ -117,7 +117,7 @@ namespace golang::runtime
     // which prevents us from allocating more stack.
     //
     //go:nosplit
-    void sysFreeOS(unsafe::Pointer v, uintptr_t n)
+    void sysFreeOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
         auto r = stdcall3(_VirtualFree, uintptr_t(v), 0, _MEM_RELEASE);
         if(r == 0)
@@ -127,22 +127,22 @@ namespace golang::runtime
         }
     }
 
-    void sysFaultOS(unsafe::Pointer v, uintptr_t n)
+    void sysFaultOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
         sysUnusedOS(v, n);
     }
 
-    unsafe::Pointer sysReserveOS(unsafe::Pointer v, uintptr_t n)
+    gocpp::unsafe_pointer sysReserveOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
-        v = unsafe::Pointer(stdcall4(_VirtualAlloc, uintptr_t(v), n, _MEM_RESERVE, _PAGE_READWRITE));
+        v = gocpp::unsafe_pointer(stdcall4(_VirtualAlloc, uintptr_t(v), n, _MEM_RESERVE, _PAGE_READWRITE));
         if(v != nullptr)
         {
             return v;
         }
-        return unsafe::Pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_RESERVE, _PAGE_READWRITE));
+        return gocpp::unsafe_pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_RESERVE, _PAGE_READWRITE));
     }
 
-    void sysMapOS(unsafe::Pointer v, uintptr_t n)
+    void sysMapOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
     }
 

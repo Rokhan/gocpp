@@ -144,7 +144,7 @@ namespace golang::windows
     {
         auto n1 = rb->SubstituteNameOffset / 2;
         auto n2 = (rb->SubstituteNameOffset + rb->SubstituteNameLength) / 2;
-        return syscall::UTF16ToString((gocpp::array<uint16_t, 0xffff>*)(unsafe::Pointer(& rb->PathBuffer[0])).make_slice(n1, n2, n2));
+        return syscall::UTF16ToString((gocpp::array_ptr<gocpp::array<uint16_t, 0xffff>>)(gocpp::unsafe_pointer(& rb->PathBuffer[0])).make_slice(n1, n2, n2));
     }
 
     
@@ -193,7 +193,7 @@ namespace golang::windows
     {
         auto n1 = rb->SubstituteNameOffset / 2;
         auto n2 = (rb->SubstituteNameOffset + rb->SubstituteNameLength) / 2;
-        return syscall::UTF16ToString((gocpp::array<uint16_t, 0xffff>*)(unsafe::Pointer(& rb->PathBuffer[0])).make_slice(n1, n2, n2));
+        return syscall::UTF16ToString((gocpp::array_ptr<gocpp::array<uint16_t, 0xffff>>)(gocpp::unsafe_pointer(& rb->PathBuffer[0])).make_slice(n1, n2, n2));
     }
 
 }

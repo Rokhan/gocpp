@@ -98,7 +98,7 @@ namespace golang::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeStderr& value);
-    int32_t write(uintptr_t fd, unsafe::Pointer p, int32_t n);
+    int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
     extern value empty;
     extern runtimeStderr go_stderr;
 

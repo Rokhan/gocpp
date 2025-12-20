@@ -38,8 +38,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct Pinner& value);
     struct pinner
     {
-        gocpp::slice<unsafe::Pointer> refs;
-        gocpp::array<unsafe::Pointer, pinnerRefStoreSize> refStore;
+        gocpp::slice<gocpp::unsafe_pointer> refs;
+        gocpp::array<gocpp::unsafe_pointer, pinnerRefStoreSize> refStore;
 
         using isGoStruct = void;
 
@@ -53,9 +53,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pinner& value);
-    unsafe::Pointer pinnerGetPtr(go_any* i);
-    bool isPinned(unsafe::Pointer ptr);
-    bool setPinned(unsafe::Pointer ptr, bool pin);
+    gocpp::unsafe_pointer pinnerGetPtr(go_any* i);
+    bool isPinned(gocpp::unsafe_pointer ptr);
+    bool setPinned(gocpp::unsafe_pointer ptr, bool pin);
     struct pinState
     {
         uint8_t* bytep;
@@ -74,7 +74,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pinState& value);
-    uintptr_t* pinnerGetPinCounter(unsafe::Pointer addr);
+    uintptr_t* pinnerGetPinCounter(gocpp::unsafe_pointer addr);
     extern std::function<void (void)> pinnerLeakPanic;
 
     namespace rec

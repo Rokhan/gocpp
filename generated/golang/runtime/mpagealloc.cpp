@@ -348,7 +348,7 @@ namespace golang::runtime
                         sysNoHugePage(r, l2Size);
                     }
                 }
-                *(uintptr_t*)(unsafe::Pointer(& p->chunks[rec::l1(gocpp::recv(c))])) = uintptr_t(r);
+                *(uintptr_t*)(gocpp::unsafe_pointer(& p->chunks[rec::l1(gocpp::recv(c))])) = uintptr_t(r);
             }
             rec::setRange(gocpp::recv(rec::chunkOf(gocpp::recv(p), c)->scavenged), 0, pallocChunkPages);
         }
@@ -385,7 +385,7 @@ namespace golang::runtime
         {
             for(auto i = rec::l1(gocpp::recv(chunkIndex(rec::addr(gocpp::recv(r.base))))); i < rec::l1(gocpp::recv(chunkIndex(rec::addr(gocpp::recv(r.limit)) - 1))); i++)
             {
-                sysHugePage(unsafe::Pointer(p->chunks[i]), gocpp::Sizeof<gocpp::array<runtime::pallocData, 8192>>());
+                sysHugePage(gocpp::unsafe_pointer(p->chunks[i]), gocpp::Sizeof<gocpp::array<runtime::pallocData, 8192>>());
             }
         }
     }

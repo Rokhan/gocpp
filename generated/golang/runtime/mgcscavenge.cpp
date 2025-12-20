@@ -641,7 +641,7 @@ namespace golang::runtime
                 if(! p->test)
                 {
                     pageTraceScav(rec::ptr(gocpp::recv(getg()->m->p)), 0, addr, uintptr_t(npages));
-                    sysUnused(unsafe::Pointer(addr), uintptr_t(npages) * pageSize);
+                    sysUnused(gocpp::unsafe_pointer(addr), uintptr_t(npages) * pageSize);
                     auto nbytes = int64_t(npages * pageSize);
                     rec::add(gocpp::recv(gcController.heapReleased), nbytes);
                     rec::add(gocpp::recv(gcController.heapFree), - nbytes);

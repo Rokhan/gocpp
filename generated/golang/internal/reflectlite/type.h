@@ -164,11 +164,11 @@ namespace golang::reflectlite
 
     std::ostream& operator<<(std::ostream& os, const struct name& value);
     gocpp::string pkgPath(abi::Name n);
-    unsafe::Pointer resolveNameOff(unsafe::Pointer ptrInModule, int32_t off);
-    unsafe::Pointer resolveTypeOff(unsafe::Pointer rtype, int32_t off);
+    gocpp::unsafe_pointer resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
+    gocpp::unsafe_pointer resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
     struct rtype toRType(abi::Type* t);
     abi::Type* elem(abi::Type* t);
-    unsafe::Pointer add(unsafe::Pointer p, uintptr_t x, gocpp::string whySafe);
+    gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
     struct Type TypeOf(go_any i);
     bool implements(abi::Type* T, abi::Type* V);
     bool directlyAssignable(abi::Type* T, abi::Type* V);
@@ -182,7 +182,7 @@ namespace golang::reflectlite
         abi::Type* Key;
         abi::Type* Elem;
         abi::Type* Bucket;
-        std::function<uintptr_t (unsafe::Pointer _1, uintptr_t _2)> Hasher;
+        std::function<uintptr_t (gocpp::unsafe_pointer _1, uintptr_t _2)> Hasher;
         uint8_t KeySize;
         uint8_t ValueSize;
         uint16_t BucketSize;

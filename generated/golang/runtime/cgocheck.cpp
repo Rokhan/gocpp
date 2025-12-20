@@ -66,7 +66,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void cgoCheckPtrWrite(unsafe::Pointer* dst, unsafe::Pointer src)
+    void cgoCheckPtrWrite(gocpp::unsafe_pointer* dst, gocpp::unsafe_pointer src)
     {
         if(! mainStarted)
         {
@@ -76,7 +76,7 @@ namespace golang::runtime
         {
             return;
         }
-        if(cgoIsGoPointer(unsafe::Pointer(dst)))
+        if(cgoIsGoPointer(gocpp::unsafe_pointer(dst)))
         {
             return;
         }
@@ -93,13 +93,13 @@ namespace golang::runtime
         {
             return;
         }
-        if(inPersistentAlloc(uintptr_t(unsafe::Pointer(dst))))
+        if(inPersistentAlloc(uintptr_t(gocpp::unsafe_pointer(dst))))
         {
             return;
         }
         systemstack([=]() mutable -> void
         {
-            println("write of unpinned Go pointer"_s, hex(uintptr_t(src)), "to non-Go memory"_s, hex(uintptr_t(unsafe::Pointer(dst))));
+            println("write of unpinned Go pointer"_s, hex(uintptr_t(src)), "to non-Go memory"_s, hex(uintptr_t(gocpp::unsafe_pointer(dst))));
             go_throw(cgoWriteBarrierFail);
         });
     }
@@ -112,7 +112,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void cgoCheckMemmove(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src)
+    void cgoCheckMemmove(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
     {
         cgoCheckMemmove2(typ, dst, src, 0, typ->Size_);
     }
@@ -125,7 +125,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void cgoCheckMemmove2(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, uintptr_t off, uintptr_t size)
+    void cgoCheckMemmove2(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes == 0)
         {
@@ -150,7 +150,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void cgoCheckSliceCopy(golang::runtime::_type* typ, unsafe::Pointer dst, unsafe::Pointer src, int n)
+    void cgoCheckSliceCopy(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, int n)
     {
         if(typ->PtrBytes == 0)
         {
@@ -178,7 +178,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void cgoCheckTypedBlock(golang::runtime::_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
+    void cgoCheckTypedBlock(golang::runtime::_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes <= off)
         {
@@ -227,7 +227,7 @@ namespace golang::runtime
                 {
                     break;
                 }
-                auto v = *(unsafe::Pointer*)(unsafe::Pointer(addr));
+                auto v = *(gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(addr));
                 if(cgoIsGoPointer(v) && ! isPinned(v))
                 {
                     go_throw(cgoWriteBarrierFail);
@@ -244,7 +244,7 @@ namespace golang::runtime
                 {
                     break;
                 }
-                auto v = *(unsafe::Pointer*)(unsafe::Pointer(addr));
+                auto v = *(gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(addr));
                 if(cgoIsGoPointer(v) && ! isPinned(v))
                 {
                     go_throw(cgoWriteBarrierFail);
@@ -259,7 +259,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void cgoCheckBits(unsafe::Pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size)
+    void cgoCheckBits(gocpp::unsafe_pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size)
     {
         auto skipMask = off / goarch::PtrSize / 8;
         auto skipBytes = skipMask * goarch::PtrSize * 8;
@@ -287,7 +287,7 @@ namespace golang::runtime
             {
                 if(bits & 1 != 0)
                 {
-                    auto v = *(unsafe::Pointer*)(add(src, i));
+                    auto v = *(gocpp::unsafe_pointer*)(add(src, i));
                     if(cgoIsGoPointer(v) && ! isPinned(v))
                     {
                         go_throw(cgoWriteBarrierFail);
@@ -305,7 +305,7 @@ namespace golang::runtime
     //
     //go:nowritebarrier
     //go:systemstack
-    void cgoCheckUsingType(golang::runtime::_type* typ, unsafe::Pointer src, uintptr_t off, uintptr_t size)
+    void cgoCheckUsingType(golang::runtime::_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size)
     {
         if(typ->PtrBytes == 0)
         {
@@ -336,7 +336,7 @@ namespace golang::runtime
                     go_throw("can't happen"_s);
                     break;
                 case 0:
-                    auto at = (runtime::arraytype*)(unsafe::Pointer(typ));
+                    auto at = (runtime::arraytype*)(gocpp::unsafe_pointer(typ));
                     for(auto i = uintptr_t(0); i < at->Len; i++)
                     {
                         if(off < at->Elem->Size_)
@@ -359,7 +359,7 @@ namespace golang::runtime
                     }
                     break;
                 case 1:
-                    auto st = (runtime::structtype*)(unsafe::Pointer(typ));
+                    auto st = (runtime::structtype*)(gocpp::unsafe_pointer(typ));
                     for(auto [gocpp_ignored, f] : st->Fields)
                     {
                         if(off < f.Typ->Size_)

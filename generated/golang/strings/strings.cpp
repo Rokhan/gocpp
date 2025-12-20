@@ -1072,7 +1072,7 @@ namespace golang::strings
     }
 
     // contains reports whether c is inside the set.
-    bool rec::contains(golang::strings::asciiSet* as, unsigned char c)
+    bool rec::contains(gocpp::array_ptr<golang::strings::asciiSet> as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
@@ -1126,7 +1126,7 @@ namespace golang::strings
         return s;
     }
 
-    gocpp::string trimLeftASCII(gocpp::string s, golang::strings::asciiSet* as)
+    gocpp::string trimLeftASCII(gocpp::string s, gocpp::array_ptr<golang::strings::asciiSet> as)
     {
         for(; len(s) > 0; )
         {
@@ -1187,7 +1187,7 @@ namespace golang::strings
         return s;
     }
 
-    gocpp::string trimRightASCII(gocpp::string s, golang::strings::asciiSet* as)
+    gocpp::string trimRightASCII(gocpp::string s, gocpp::array_ptr<golang::strings::asciiSet> as)
     {
         for(; len(s) > 0; )
         {

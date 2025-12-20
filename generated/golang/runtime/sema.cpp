@@ -139,9 +139,9 @@ namespace golang::runtime
     }
 
 
-    struct semaRoot* rec::rootFor(golang::runtime::semTable* t, uint32_t* addr)
+    struct semaRoot* rec::rootFor(gocpp::array_ptr<golang::runtime::semTable> t, uint32_t* addr)
     {
-        return & t[(uintptr_t(unsafe::Pointer(addr)) >> 3) % semTabSize].root;
+        return & t[(uintptr_t(gocpp::unsafe_pointer(addr)) >> 3) % semTabSize].root;
     }
 
     //go:linkname sync_runtime_Semacquire sync.runtime_Semacquire
@@ -330,7 +330,7 @@ namespace golang::runtime
     void rec::queue(golang::runtime::semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo)
     {
         s->g = getg();
-        s->elem = unsafe::Pointer(addr);
+        s->elem = gocpp::unsafe_pointer(addr);
         s->next = nullptr;
         s->prev = nullptr;
         s->waiters = 0;
@@ -338,7 +338,7 @@ namespace golang::runtime
         auto pt = & root->treap;
         for(auto t = *pt; t != nullptr; t = *pt)
         {
-            if(t->elem == unsafe::Pointer(addr))
+            if(t->elem == gocpp::unsafe_pointer(addr))
             {
                 if(lifo)
                 {
@@ -392,7 +392,7 @@ namespace golang::runtime
                 return;
             }
             last = t;
-            if(uintptr_t(unsafe::Pointer(addr)) < uintptr_t(t->elem))
+            if(uintptr_t(gocpp::unsafe_pointer(addr)) < uintptr_t(t->elem))
             {
                 pt = & t->prev;
             }
@@ -437,11 +437,11 @@ namespace golang::runtime
         auto s = *ps;
         for(; s != nullptr; s = *ps)
         {
-            if(s->elem == unsafe::Pointer(addr))
+            if(s->elem == gocpp::unsafe_pointer(addr))
             {
                 goto Found;
             }
-            if(uintptr_t(unsafe::Pointer(addr)) < uintptr_t(s->elem))
+            if(uintptr_t(gocpp::unsafe_pointer(addr)) < uintptr_t(s->elem))
             {
                 ps = & s->prev;
             }

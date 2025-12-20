@@ -63,7 +63,7 @@ namespace golang::runtime
     void Gosched();
     void goschedguarded();
     void goschedIfBusy();
-    void gopark(std::function<bool (struct g* _1, unsafe::Pointer _2)> unlockf, unsafe::Pointer lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip);
+    void gopark(std::function<bool (struct g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip);
     void goparkunlock(struct mutex* lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip);
     void goready(struct g* gp, int traceskip);
     struct sudog* acquireSudog();
@@ -147,12 +147,12 @@ namespace golang::runtime
     void forEachP(golang::runtime::waitReason reason, std::function<void (struct p* _1)> fn);
     void forEachPInternal(std::function<void (struct p* _1)> fn);
     void runSafePointFn();
-    extern unsafe::Pointer cgoThreadStart;
+    extern gocpp::unsafe_pointer cgoThreadStart;
     struct cgothreadstart
     {
         golang::runtime::guintptr g;
         uint64_t* tls;
-        unsafe::Pointer fn;
+        gocpp::unsafe_pointer fn;
 
         using isGoStruct = void;
 
@@ -213,7 +213,7 @@ namespace golang::runtime
     void schedule();
     void dropg();
     std::tuple<int64_t, int64_t, bool> checkTimers(struct p* pp, int64_t now);
-    bool parkunlock_c(struct g* gp, unsafe::Pointer lock);
+    bool parkunlock_c(struct g* gp, gocpp::unsafe_pointer lock);
     void park_m(struct g* gp);
     void goschedImpl(struct g* gp, bool preempted);
     void gosched_m(struct g* gp);
@@ -323,7 +323,7 @@ namespace golang::runtime
     void runqputbatch(struct p* pp, struct gQueue* q, int qsize);
     std::tuple<struct g*, bool> runqget(struct p* pp);
     std::tuple<struct gQueue, uint32_t> runqdrain(struct p* pp);
-    uint32_t runqgrab(struct p* pp, gocpp::array<golang::runtime::guintptr, 256>* batch, uint32_t batchHead, bool stealRunNextG);
+    uint32_t runqgrab(struct p* pp, gocpp::array_ptr<gocpp::array<golang::runtime::guintptr, 256>> batch, uint32_t batchHead, bool stealRunNextG);
     struct g* runqsteal(struct p* pp, struct p* p2, bool stealRunNextG);
     struct gQueue
     {

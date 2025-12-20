@@ -60,7 +60,7 @@ namespace golang::runtime
     struct callbackArgs
     {
         uintptr_t index;
-        unsafe::Pointer args;
+        gocpp::unsafe_pointer args;
         uintptr_t result;
         uintptr_t retPop;
 

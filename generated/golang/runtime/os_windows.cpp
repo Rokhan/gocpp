@@ -214,7 +214,7 @@ namespace golang::runtime
         return - 1;
     }
 
-    int32_t read(int32_t fd, unsafe::Pointer p, int32_t n)
+    int32_t read(int32_t fd, gocpp::unsafe_pointer p, int32_t n)
     {
         go_throw("unimplemented"_s);
         return - 1;
@@ -248,25 +248,25 @@ namespace golang::runtime
 
     // Call a Windows function with stdcall conventions,
     // and switch to os stack during the call.
-    void asmstdcall(unsafe::Pointer fn)
+    void asmstdcall(gocpp::unsafe_pointer fn)
     /* convertBlockStmt, nil block */;
 
-    unsafe::Pointer asmstdcallAddr;
+    gocpp::unsafe_pointer asmstdcallAddr;
     runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name)
     {
         if(name[len(name) - 1] != 0)
         {
             go_throw("usage"_s);
         }
-        auto f = stdcall2(_GetProcAddress, lib, uintptr_t(unsafe::Pointer(& name[0])));
-        return stdFunction(unsafe::Pointer(f));
+        auto f = stdcall2(_GetProcAddress, lib, uintptr_t(gocpp::unsafe_pointer(& name[0])));
+        return stdFunction(gocpp::unsafe_pointer(f));
     }
 
     gocpp::array<unsigned char, _MAX_PATH + 1> sysDirectory;
     uintptr_t sysDirectoryLen;
     void initSysDirectory()
     {
-        auto l = stdcall2(_GetSystemDirectoryA, uintptr_t(unsafe::Pointer(& sysDirectory[0])), uintptr_t(len(sysDirectory) - 1));
+        auto l = stdcall2(_GetSystemDirectoryA, uintptr_t(gocpp::unsafe_pointer(& sysDirectory[0])), uintptr_t(len(sysDirectory) - 1));
         if(l == 0 || l > uintptr_t(len(sysDirectory) - 1))
         {
             go_throw("Unable to determine system directory"_s);
@@ -283,7 +283,7 @@ namespace golang::runtime
 
     uintptr_t windowsLoadSystemLib(gocpp::slice<uint16_t> name)
     {
-        return stdcall3(_LoadLibraryExW, uintptr_t(unsafe::Pointer(& name[0])), 0, _LOAD_LIBRARY_SEARCH_SYSTEM32);
+        return stdcall3(_LoadLibraryExW, uintptr_t(gocpp::unsafe_pointer(& name[0])), 0, _LOAD_LIBRARY_SEARCH_SYSTEM32);
     }
 
     void loadOptionalSyscalls()
@@ -355,7 +355,7 @@ namespace golang::runtime
         }
         go_any fn = [=](uintptr_t context, uint32_t changeType, uintptr_t setting) mutable -> uintptr_t
         {
-            for(auto mp = (m*)(atomic::Loadp(unsafe::Pointer(& allm))); mp != nullptr; mp = mp->alllink)
+            for(auto mp = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm))); mp != nullptr; mp = mp->alllink)
             {
                 if(mp->resumesema != 0)
                 {
@@ -368,32 +368,32 @@ namespace golang::runtime
             x.callback = compileCallback(*efaceOf(& fn), true);
         });
         auto handle = uintptr_t(0);
-        stdcall3(powerRegisterSuspendResumeNotification, _DEVICE_NOTIFY_CALLBACK, uintptr_t(unsafe::Pointer(& params)), uintptr_t(unsafe::Pointer(& handle)));
+        stdcall3(powerRegisterSuspendResumeNotification, _DEVICE_NOTIFY_CALLBACK, uintptr_t(gocpp::unsafe_pointer(& params)), uintptr_t(gocpp::unsafe_pointer(& handle)));
     }
 
     //go:nosplit
     uintptr_t getLoadLibrary()
     {
-        return uintptr_t(unsafe::Pointer(_LoadLibraryW));
+        return uintptr_t(gocpp::unsafe_pointer(_LoadLibraryW));
     }
 
     //go:nosplit
     uintptr_t getLoadLibraryEx()
     {
-        return uintptr_t(unsafe::Pointer(_LoadLibraryExW));
+        return uintptr_t(gocpp::unsafe_pointer(_LoadLibraryExW));
     }
 
     //go:nosplit
     uintptr_t getGetProcAddress()
     {
-        return uintptr_t(unsafe::Pointer(_GetProcAddress));
+        return uintptr_t(gocpp::unsafe_pointer(_GetProcAddress));
     }
 
     int32_t getproccount()
     {
         uintptr_t mask = {};
         uintptr_t sysmask = {};
-        auto ret = stdcall3(_GetProcessAffinityMask, currentProcess, uintptr_t(unsafe::Pointer(& mask)), uintptr_t(unsafe::Pointer(& sysmask)));
+        auto ret = stdcall3(_GetProcessAffinityMask, currentProcess, uintptr_t(gocpp::unsafe_pointer(& mask)), uintptr_t(gocpp::unsafe_pointer(& sysmask)));
         if(ret != 0)
         {
             auto n = 0;
@@ -412,14 +412,14 @@ namespace golang::runtime
         }
         // use GetSystemInfo if GetProcessAffinityMask fails
         systeminfo info = {};
-        stdcall1(_GetSystemInfo, uintptr_t(unsafe::Pointer(& info)));
+        stdcall1(_GetSystemInfo, uintptr_t(gocpp::unsafe_pointer(& info)));
         return int32_t(info.dwnumberofprocessors);
     }
 
     uintptr_t getPageSize()
     {
         systeminfo info = {};
-        stdcall1(_GetSystemInfo, uintptr_t(unsafe::Pointer(& info)));
+        stdcall1(_GetSystemInfo, uintptr_t(gocpp::unsafe_pointer(& info)));
         return uintptr_t(info.dwpagesize);
     }
 
@@ -511,12 +511,12 @@ namespace golang::runtime
         uint32_t maj = {};
         uint32_t min = {};
         uint32_t build = {};
-        stdcall3(_RtlGetNtVersionNumbers, uintptr_t(unsafe::Pointer(& maj)), uintptr_t(unsafe::Pointer(& min)), uintptr_t(unsafe::Pointer(& build)));
+        stdcall3(_RtlGetNtVersionNumbers, uintptr_t(gocpp::unsafe_pointer(& maj)), uintptr_t(gocpp::unsafe_pointer(& min)), uintptr_t(gocpp::unsafe_pointer(& build)));
         if(maj < 10 || (maj == 10 && min == 0 && build & 0xffff < 15063))
         {
             return;
         }
-        auto bitField = (unsigned char*)(unsafe::Pointer(stdcall0(_RtlGetCurrentPeb) + PebBitFieldOffset));
+        auto bitField = (unsigned char*)(gocpp::unsafe_pointer(stdcall0(_RtlGetCurrentPeb) + PebBitFieldOffset));
         auto originalBitField = *bitField;
         *bitField |= IsLongPathAwareProcess;
         auto targ = longFileName.make_slice(len(longFileName) - 33, len(longFileName) - 1);
@@ -536,7 +536,7 @@ namespace golang::runtime
         {
             longFileName[i] = 'A';
         }
-        stdcall7(_CreateFileA, uintptr_t(unsafe::Pointer(& longFileName[0])), 0, 0, 0, OPEN_EXISTING, 0, 0);
+        stdcall7(_CreateFileA, uintptr_t(gocpp::unsafe_pointer(& longFileName[0])), 0, 0, 0, OPEN_EXISTING, 0, 0);
         if(getlasterror() == ERROR_PATH_NOT_FOUND)
         {
             *bitField = originalBitField;
@@ -548,7 +548,7 @@ namespace golang::runtime
 
     void osinit()
     {
-        asmstdcallAddr = unsafe::Pointer(abi::FuncPCABI0(asmstdcall));
+        asmstdcallAddr = gocpp::unsafe_pointer(abi::FuncPCABI0(asmstdcall));
         loadOptionalSyscalls();
         preventErrorDialogs();
         initExceptionHandler();
@@ -565,7 +565,7 @@ namespace golang::runtime
     int readRandom(gocpp::slice<unsigned char> r)
     {
         auto n = 0;
-        if(stdcall2(_ProcessPrng, uintptr_t(unsafe::Pointer(& r[0])), uintptr_t(len(r))) & 0xff != 0)
+        if(stdcall2(_ProcessPrng, uintptr_t(gocpp::unsafe_pointer(& r[0])), uintptr_t(len(r))) & 0xff != 0)
         {
             n = len(r);
         }
@@ -574,8 +574,8 @@ namespace golang::runtime
 
     void goenvs()
     {
-        auto strings = unsafe::Pointer(stdcall0(_GetEnvironmentStringsW));
-        auto p = (gocpp::array<uint16_t, 1 << 24>*)(strings).make_slice(0);
+        auto strings = gocpp::unsafe_pointer(stdcall0(_GetEnvironmentStringsW));
+        auto p = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 24>>)(strings).make_slice(0);
         auto n = 0;
         for(auto [from, i] = std::tuple{0, 0}; true; i++)
         {
@@ -623,7 +623,7 @@ namespace golang::runtime
     // ASCII path.
     //
     //go:nosplit
-    int32_t write1(uintptr_t fd, unsafe::Pointer buf, int32_t n)
+    int32_t write1(uintptr_t fd, gocpp::unsafe_pointer buf, int32_t n)
     {
         auto _STD_OUTPUT_HANDLE = ~ uintptr_t(10);
         auto _STD_ERROR_HANDLE = ~ uintptr_t(11);
@@ -648,7 +648,7 @@ namespace golang::runtime
             }
         }
         auto isASCII = true;
-        auto b = (gocpp::array<unsigned char, 1 << 30>*)(buf).make_slice(0, n);
+        auto b = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(buf).make_slice(0, n);
         for(auto [gocpp_ignored, x] : b)
         {
             if(x >= 0x80)
@@ -660,14 +660,14 @@ namespace golang::runtime
         if(! isASCII)
         {
             uint32_t m = {};
-            auto isConsole = stdcall2(_GetConsoleMode, handle, uintptr_t(unsafe::Pointer(& m))) != 0;
+            auto isConsole = stdcall2(_GetConsoleMode, handle, uintptr_t(gocpp::unsafe_pointer(& m))) != 0;
             if(isConsole)
             {
                 return int32_t(writeConsole(handle, buf, n));
             }
         }
         uint32_t written = {};
-        stdcall5(_WriteFile, handle, uintptr_t(buf), uintptr_t(n), uintptr_t(unsafe::Pointer(& written)), 0);
+        stdcall5(_WriteFile, handle, uintptr_t(buf), uintptr_t(n), uintptr_t(gocpp::unsafe_pointer(& written)), 0);
         return int32_t(written);
     }
 
@@ -675,12 +675,12 @@ namespace golang::runtime
     mutex utf16ConsoleBackLock;
     // writeConsole writes bufLen bytes from buf to the console File.
     // It returns the number of bytes written.
-    int writeConsole(uintptr_t handle, unsafe::Pointer buf, int32_t bufLen)
+    int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen)
     {
         auto surr2 = (surrogateMin + surrogateMax + 1) / 2;
         lock(& utf16ConsoleBackLock);
-        auto b = (gocpp::array<unsigned char, 1 << 30>*)(buf).make_slice(0, bufLen);
-        auto s = *(gocpp::string*)(unsafe::Pointer(& b));
+        auto b = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(buf).make_slice(0, bufLen);
+        auto s = *(gocpp::string*)(gocpp::unsafe_pointer(& b));
         auto utf16tmp = utf16ConsoleBack.make_slice(0);
         auto total = len(s);
         auto w = 0;
@@ -720,7 +720,7 @@ namespace golang::runtime
             return;
         }
         uint32_t written = {};
-        stdcall5(_WriteConsoleW, handle, uintptr_t(unsafe::Pointer(& b[0])), uintptr_t(l), uintptr_t(unsafe::Pointer(& written)), 0);
+        stdcall5(_WriteConsoleW, handle, uintptr_t(gocpp::unsafe_pointer(& b[0])), uintptr_t(l), uintptr_t(gocpp::unsafe_pointer(& written)), 0);
         return;
     }
 
@@ -747,7 +747,7 @@ namespace golang::runtime
                 {
                     ms = 1;
                 }
-                result = stdcall4(_WaitForMultipleObjects, 2, uintptr_t(unsafe::Pointer(new gocpp::array<uintptr_t, 2> {getg()->m->waitsema, getg()->m->resumesema})), 0, uintptr_t(ms));
+                result = stdcall4(_WaitForMultipleObjects, 2, uintptr_t(gocpp::unsafe_pointer(new gocpp::array<uintptr_t, 2> {getg()->m->waitsema, getg()->m->resumesema})), 0, uintptr_t(ms));
                 if(result != _WAIT_OBJECT_0 + 1)
                 {
                     break;
@@ -850,7 +850,7 @@ namespace golang::runtime
     //go:nosplit
     void newosproc(struct m* mp)
     {
-        auto thandle = stdcall6(_CreateThread, 0, 0, abi::FuncPCABI0(tstart_stdcall), uintptr_t(unsafe::Pointer(mp)), 0, 0);
+        auto thandle = stdcall6(_CreateThread, 0, 0, abi::FuncPCABI0(tstart_stdcall), uintptr_t(gocpp::unsafe_pointer(mp)), 0, 0);
         if(thandle == 0)
         {
             if(atomic::Load(& exiting) != 0)
@@ -870,7 +870,7 @@ namespace golang::runtime
     //
     //go:nowritebarrierrec
     //go:nosplit
-    void newosproc0(struct m* mp, unsafe::Pointer stk)
+    void newosproc0(struct m* mp, gocpp::unsafe_pointer stk)
     {
         go_throw("bad newosproc0"_s);
     }
@@ -912,7 +912,7 @@ namespace golang::runtime
     void minit()
     {
         uintptr_t thandle = {};
-        if(stdcall7(_DuplicateHandle, currentProcess, currentThread, currentProcess, uintptr_t(unsafe::Pointer(& thandle)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
+        if(stdcall7(_DuplicateHandle, currentProcess, currentThread, currentProcess, uintptr_t(gocpp::unsafe_pointer(& thandle)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
         {
             print("runtime.minit: duplicatehandle failed; errno="_s, getlasterror(), "\n"_s);
             go_throw("runtime.minit: duplicatehandle failed"_s);
@@ -934,7 +934,7 @@ namespace golang::runtime
         // Query the true stack base from the OS. Currently we're
         // running on a small assumed stack.
         memoryBasicInformation mbi = {};
-        auto res = stdcall3(_VirtualQuery, uintptr_t(unsafe::Pointer(& mbi)), uintptr_t(unsafe::Pointer(& mbi)), gocpp::Sizeof<memoryBasicInformation>());
+        auto res = stdcall3(_VirtualQuery, uintptr_t(gocpp::unsafe_pointer(& mbi)), uintptr_t(gocpp::unsafe_pointer(& mbi)), gocpp::Sizeof<memoryBasicInformation>());
         if(res == 0)
         {
             print("runtime: VirtualQuery failed; errno="_s, getlasterror(), "\n"_s);
@@ -993,7 +993,7 @@ namespace golang::runtime
     }
 
     // asmstdcall_trampoline calls asmstdcall converting from Go to C calling convention.
-    void asmstdcall_trampoline(unsafe::Pointer args)
+    void asmstdcall_trampoline(gocpp::unsafe_pointer args)
     /* convertBlockStmt, nil block */;
 
     // stdcall_no_g calls asmstdcall on os stack without using g.
@@ -1002,12 +1002,12 @@ namespace golang::runtime
     uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args)
     {
         auto libcall_tmp = gocpp::Init<libcall>([=](auto& x) {
-            x.fn = uintptr_t(unsafe::Pointer(fn));
+            x.fn = uintptr_t(gocpp::unsafe_pointer(fn));
             x.n = uintptr_t(n);
             x.args = args;
         });
         auto& libcall = libcall_tmp;
-        asmstdcall_trampoline(noescape(unsafe::Pointer(& libcall)));
+        asmstdcall_trampoline(noescape(gocpp::unsafe_pointer(& libcall)));
         return libcall.r1;
     }
 
@@ -1020,7 +1020,7 @@ namespace golang::runtime
     {
         auto gp = getg();
         auto mp = gp->m;
-        mp->libcall.fn = uintptr_t(unsafe::Pointer(fn));
+        mp->libcall.fn = uintptr_t(gocpp::unsafe_pointer(fn));
         auto resetLibcall = false;
         if(mp->profilehz != 0 && mp->libcallsp == 0)
         {
@@ -1029,7 +1029,7 @@ namespace golang::runtime
             mp->libcallsp = getcallersp();
             resetLibcall = true;
         }
-        asmcgocall(asmstdcallAddr, unsafe::Pointer(& mp->libcall));
+        asmcgocall(asmstdcallAddr, gocpp::unsafe_pointer(& mp->libcall));
         if(resetLibcall)
         {
             mp->libcallsp = 0;
@@ -1052,7 +1052,7 @@ namespace golang::runtime
     {
         auto mp = getg()->m;
         mp->libcall.n = 1;
-        mp->libcall.args = uintptr_t(noescape(unsafe::Pointer(& a0)));
+        mp->libcall.args = uintptr_t(noescape(gocpp::unsafe_pointer(& a0)));
         return stdcall(fn);
     }
 
@@ -1062,7 +1062,7 @@ namespace golang::runtime
     {
         auto mp = getg()->m;
         mp->libcall.n = 2;
-        mp->libcall.args = uintptr_t(noescape(unsafe::Pointer(& a0)));
+        mp->libcall.args = uintptr_t(noescape(gocpp::unsafe_pointer(& a0)));
         return stdcall(fn);
     }
 
@@ -1072,7 +1072,7 @@ namespace golang::runtime
     {
         auto mp = getg()->m;
         mp->libcall.n = 3;
-        mp->libcall.args = uintptr_t(noescape(unsafe::Pointer(& a0)));
+        mp->libcall.args = uintptr_t(noescape(gocpp::unsafe_pointer(& a0)));
         return stdcall(fn);
     }
 
@@ -1082,7 +1082,7 @@ namespace golang::runtime
     {
         auto mp = getg()->m;
         mp->libcall.n = 4;
-        mp->libcall.args = uintptr_t(noescape(unsafe::Pointer(& a0)));
+        mp->libcall.args = uintptr_t(noescape(gocpp::unsafe_pointer(& a0)));
         return stdcall(fn);
     }
 
@@ -1092,7 +1092,7 @@ namespace golang::runtime
     {
         auto mp = getg()->m;
         mp->libcall.n = 5;
-        mp->libcall.args = uintptr_t(noescape(unsafe::Pointer(& a0)));
+        mp->libcall.args = uintptr_t(noescape(gocpp::unsafe_pointer(& a0)));
         return stdcall(fn);
     }
 
@@ -1102,7 +1102,7 @@ namespace golang::runtime
     {
         auto mp = getg()->m;
         mp->libcall.n = 6;
-        mp->libcall.args = uintptr_t(noescape(unsafe::Pointer(& a0)));
+        mp->libcall.args = uintptr_t(noescape(gocpp::unsafe_pointer(& a0)));
         return stdcall(fn);
     }
 
@@ -1112,7 +1112,7 @@ namespace golang::runtime
     {
         auto mp = getg()->m;
         mp->libcall.n = 7;
-        mp->libcall.args = uintptr_t(noescape(unsafe::Pointer(& a0)));
+        mp->libcall.args = uintptr_t(noescape(gocpp::unsafe_pointer(& a0)));
         return stdcall(fn);
     }
 
@@ -1122,7 +1122,7 @@ namespace golang::runtime
     {
         auto mp = getg()->m;
         mp->libcall.n = 8;
-        mp->libcall.args = uintptr_t(noescape(unsafe::Pointer(& a0)));
+        mp->libcall.args = uintptr_t(noescape(gocpp::unsafe_pointer(& a0)));
         return stdcall(fn);
     }
 
@@ -1146,7 +1146,7 @@ namespace golang::runtime
     {
         auto timeout = uintptr_t(us) / 1000;
         auto args = gocpp::array<uintptr_t, 2> {_INVALID_HANDLE_VALUE, timeout};
-        stdcall_no_g(_WaitForSingleObject, len(args), uintptr_t(noescape(unsafe::Pointer(& args[0]))));
+        stdcall_no_g(_WaitForSingleObject, len(args), uintptr_t(noescape(gocpp::unsafe_pointer(& args[0]))));
     }
 
     //go:nosplit
@@ -1160,7 +1160,7 @@ namespace golang::runtime
             {
                 h = getg()->m->highResTimer;
                 auto dt = - 10 * int64_t(us);
-                stdcall6(_SetWaitableTimer, h, uintptr_t(unsafe::Pointer(& dt)), 0, 0, 0, 0);
+                stdcall6(_SetWaitableTimer, h, uintptr_t(gocpp::unsafe_pointer(& dt)), 0, 0, 0, 0);
                 timeout = _INFINITE;
             }
             else
@@ -1221,9 +1221,9 @@ namespace golang::runtime
         // Align Context to 16 bytes.
         context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
-        c = (context*)(unsafe::Pointer((uintptr_t(unsafe::Pointer(& cbuf[15]))) &^ 15));
+        c = (context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
         c->contextflags = _CONTEXT_CONTROL;
-        stdcall2(_GetThreadContext, thread, uintptr_t(unsafe::Pointer(c)));
+        stdcall2(_GetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));
         auto gp = gFromSP(mp, rec::sp(gocpp::recv(c)));
         sigprof(rec::ip(gocpp::recv(c)), rec::sp(gocpp::recv(c)), rec::lr(gocpp::recv(c)), gp, mp);
     }
@@ -1251,7 +1251,7 @@ namespace golang::runtime
         for(; ; )
         {
             stdcall2(_WaitForSingleObject, profiletimer, _INFINITE);
-            auto first = (m*)(atomic::Loadp(unsafe::Pointer(& allm)));
+            auto first = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm)));
             for(auto mp = first; mp != nullptr; mp = mp->alllink)
             {
                 if(mp == getg()->m)
@@ -1266,7 +1266,7 @@ namespace golang::runtime
                 }
                 // Acquire our own handle to the thread.
                 uintptr_t thread = {};
-                if(stdcall7(_DuplicateHandle, currentProcess, mp->thread, currentProcess, uintptr_t(unsafe::Pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
+                if(stdcall7(_DuplicateHandle, currentProcess, mp->thread, currentProcess, uintptr_t(gocpp::unsafe_pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
                 {
                     print("runtime: duplicatehandle failed; errno="_s, getlasterror(), "\n"_s);
                     go_throw("duplicatehandle failed"_s);
@@ -1318,8 +1318,8 @@ namespace golang::runtime
             }
             due = int64_t(ms) * - 10000;
         }
-        stdcall6(_SetWaitableTimer, profiletimer, uintptr_t(unsafe::Pointer(& due)), uintptr_t(ms), 0, 0, 0);
-        atomic::Store((uint32_t*)(unsafe::Pointer(& getg()->m->profilehz)), uint32_t(hz));
+        stdcall6(_SetWaitableTimer, profiletimer, uintptr_t(gocpp::unsafe_pointer(& due)), uintptr_t(ms), 0, 0, 0);
+        atomic::Store((uint32_t*)(gocpp::unsafe_pointer(& getg()->m->profilehz)), uint32_t(hz));
     }
 
     // suspendLock protects simultaneous SuspendThread operations from
@@ -1345,7 +1345,7 @@ namespace golang::runtime
             return;
         }
         uintptr_t thread = {};
-        if(stdcall7(_DuplicateHandle, currentProcess, mp->thread, currentProcess, uintptr_t(unsafe::Pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
+        if(stdcall7(_DuplicateHandle, currentProcess, mp->thread, currentProcess, uintptr_t(gocpp::unsafe_pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
         {
             print("runtime.preemptM: duplicatehandle failed; errno="_s, getlasterror(), "\n"_s);
             go_throw("runtime.preemptM: duplicatehandle failed"_s);
@@ -1354,7 +1354,7 @@ namespace golang::runtime
         // Prepare thread context buffer. This must be aligned to 16 bytes.
         context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
-        c = (context*)(unsafe::Pointer((uintptr_t(unsafe::Pointer(& cbuf[15]))) &^ 15));
+        c = (context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
         c->contextflags = _CONTEXT_CONTROL;
         lock(& suspendLock);
         if(int32_t(stdcall1(_SuspendThread, thread)) == - 1)
@@ -1365,7 +1365,7 @@ namespace golang::runtime
             rec::Add(gocpp::recv(mp->preemptGen), 1);
             return;
         }
-        stdcall2(_GetThreadContext, thread, uintptr_t(unsafe::Pointer(c)));
+        stdcall2(_GetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));
         unlock(& suspendLock);
         auto gp = gFromSP(mp, rec::sp(gocpp::recv(c)));
         if(gp != nullptr && wantAsyncPreempt(gp))
@@ -1390,7 +1390,7 @@ namespace golang::runtime
                         case 1:
                             auto sp = rec::sp(gocpp::recv(c));
                             sp -= goarch::PtrSize;
-                            *(uintptr_t*)(unsafe::Pointer(sp)) = newpc;
+                            *(uintptr_t*)(gocpp::unsafe_pointer(sp)) = newpc;
                             rec::set_sp(gocpp::recv(c), sp);
                             rec::set_ip(gocpp::recv(c), targetPC);
                             break;
@@ -1398,20 +1398,20 @@ namespace golang::runtime
                             auto sp = rec::sp(gocpp::recv(c));
                             sp -= goarch::PtrSize;
                             rec::set_sp(gocpp::recv(c), sp);
-                            *(uint32_t*)(unsafe::Pointer(sp)) = uint32_t(rec::lr(gocpp::recv(c)));
+                            *(uint32_t*)(gocpp::unsafe_pointer(sp)) = uint32_t(rec::lr(gocpp::recv(c)));
                             rec::set_lr(gocpp::recv(c), newpc - 1);
                             rec::set_ip(gocpp::recv(c), targetPC);
                             break;
                         case 3:
                             auto sp = rec::sp(gocpp::recv(c)) - 16;
                             rec::set_sp(gocpp::recv(c), sp);
-                            *(uint64_t*)(unsafe::Pointer(sp)) = uint64_t(rec::lr(gocpp::recv(c)));
+                            *(uint64_t*)(gocpp::unsafe_pointer(sp)) = uint64_t(rec::lr(gocpp::recv(c)));
                             rec::set_lr(gocpp::recv(c), newpc);
                             rec::set_ip(gocpp::recv(c), targetPC);
                             break;
                     }
                 }
-                stdcall2(_SetThreadContext, thread, uintptr_t(unsafe::Pointer(c)));
+                stdcall2(_SetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));
             }
         }
         atomic::Store(& mp->preemptExtLock, 0);

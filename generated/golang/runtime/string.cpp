@@ -61,7 +61,7 @@ namespace golang::runtime
     // If buf != nil, the compiler has determined that the result does not
     // escape the calling function, so the string data can be stored in buf
     // if small enough.
-    gocpp::string concatstrings(golang::runtime::tmpBuf* buf, gocpp::slice<gocpp::string> a)
+    gocpp::string concatstrings(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::slice<gocpp::string> a)
     {
         auto idx = 0;
         auto l = 0;
@@ -98,22 +98,22 @@ namespace golang::runtime
         return s;
     }
 
-    gocpp::string concatstring2(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1)
+    gocpp::string concatstring2(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1)
     {
         return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1});
     }
 
-    gocpp::string concatstring3(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1, gocpp::string a2)
+    gocpp::string concatstring3(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2)
     {
         return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1, a2});
     }
 
-    gocpp::string concatstring4(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3)
+    gocpp::string concatstring4(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3)
     {
         return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1, a2, a3});
     }
 
-    gocpp::string concatstring5(golang::runtime::tmpBuf* buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4)
+    gocpp::string concatstring5(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4)
     {
         return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1, a2, a3, a4});
     }
@@ -124,7 +124,7 @@ namespace golang::runtime
     // n is the length of the slice.
     // Buf is a fixed-size buffer for the result,
     // it is not nil if the result does not escape.
-    gocpp::string slicebytetostring(golang::runtime::tmpBuf* buf, unsigned char* ptr, int n)
+    gocpp::string slicebytetostring(gocpp::array_ptr<golang::runtime::tmpBuf> buf, unsigned char* ptr, int n)
     {
         if(n == 0)
         {
@@ -132,35 +132,35 @@ namespace golang::runtime
         }
         if(raceenabled)
         {
-            racereadrangepc(unsafe::Pointer(ptr), uintptr_t(n), getcallerpc(), abi::FuncPCABIInternal(slicebytetostring));
+            racereadrangepc(gocpp::unsafe_pointer(ptr), uintptr_t(n), getcallerpc(), abi::FuncPCABIInternal(slicebytetostring));
         }
         if(msanenabled)
         {
-            msanread(unsafe::Pointer(ptr), uintptr_t(n));
+            msanread(gocpp::unsafe_pointer(ptr), uintptr_t(n));
         }
         if(asanenabled)
         {
-            asanread(unsafe::Pointer(ptr), uintptr_t(n));
+            asanread(gocpp::unsafe_pointer(ptr), uintptr_t(n));
         }
         if(n == 1)
         {
-            auto p = unsafe::Pointer(& staticuint64s[*ptr]);
+            auto p = gocpp::unsafe_pointer(& staticuint64s[*ptr]);
             if(goarch::BigEndian)
             {
                 p = add(p, 7);
             }
             return unsafe::String((unsigned char*)(p), 1);
         }
-        unsafe::Pointer p = {};
+        gocpp::unsafe_pointer p = {};
         if(buf != nullptr && n <= len(buf))
         {
-            p = unsafe::Pointer(buf);
+            p = gocpp::unsafe_pointer(buf);
         }
         else
         {
             p = mallocgc(uintptr_t(n), nullptr, false);
         }
-        memmove(p, unsafe::Pointer(ptr), uintptr_t(n));
+        memmove(p, gocpp::unsafe_pointer(ptr), uintptr_t(n));
         return unsafe::String((unsigned char*)(p), n);
     }
 
@@ -168,12 +168,12 @@ namespace golang::runtime
     // stored on the current goroutine's stack.
     bool stringDataOnStack(gocpp::string s)
     {
-        auto ptr = uintptr_t(unsafe::Pointer(unsafe::StringData(s)));
+        auto ptr = uintptr_t(gocpp::unsafe_pointer(unsafe::StringData(s)));
         auto stk = getg()->stack;
         return stk.lo <= ptr && ptr < stk.hi;
     }
 
-    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(golang::runtime::tmpBuf* buf, int l)
+    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<golang::runtime::tmpBuf> buf, int l)
     {
         gocpp::string s;
         gocpp::slice<unsigned char> b;
@@ -207,20 +207,20 @@ namespace golang::runtime
     {
         if(raceenabled && n > 0)
         {
-            racereadrangepc(unsafe::Pointer(ptr), uintptr_t(n), getcallerpc(), abi::FuncPCABIInternal(slicebytetostringtmp));
+            racereadrangepc(gocpp::unsafe_pointer(ptr), uintptr_t(n), getcallerpc(), abi::FuncPCABIInternal(slicebytetostringtmp));
         }
         if(msanenabled && n > 0)
         {
-            msanread(unsafe::Pointer(ptr), uintptr_t(n));
+            msanread(gocpp::unsafe_pointer(ptr), uintptr_t(n));
         }
         if(asanenabled && n > 0)
         {
-            asanread(unsafe::Pointer(ptr), uintptr_t(n));
+            asanread(gocpp::unsafe_pointer(ptr), uintptr_t(n));
         }
         return unsafe::String(ptr, n);
     }
 
-    gocpp::slice<unsigned char> stringtoslicebyte(golang::runtime::tmpBuf* buf, gocpp::string s)
+    gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string s)
     {
         gocpp::slice<unsigned char> b = {};
         if(buf != nullptr && len(s) <= len(buf))
@@ -236,7 +236,7 @@ namespace golang::runtime
         return b;
     }
 
-    gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array<gocpp::rune, tmpStringBufSize>* buf, gocpp::string s)
+    gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array_ptr<gocpp::array<gocpp::rune, tmpStringBufSize>> buf, gocpp::string s)
     {
         auto n = 0;
         for(const auto& _ : s)
@@ -262,19 +262,19 @@ namespace golang::runtime
         return a;
     }
 
-    gocpp::string slicerunetostring(golang::runtime::tmpBuf* buf, gocpp::slice<gocpp::rune> a)
+    gocpp::string slicerunetostring(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::slice<gocpp::rune> a)
     {
         if(raceenabled && len(a) > 0)
         {
-            racereadrangepc(unsafe::Pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>(), getcallerpc(), abi::FuncPCABIInternal(slicerunetostring));
+            racereadrangepc(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>(), getcallerpc(), abi::FuncPCABIInternal(slicerunetostring));
         }
         if(msanenabled && len(a) > 0)
         {
-            msanread(unsafe::Pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>());
+            msanread(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>());
         }
         if(asanenabled && len(a) > 0)
         {
-            asanread(unsafe::Pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>());
+            asanread(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>());
         }
         gocpp::array<unsigned char, 4> dum = {};
         auto size1 = 0;
@@ -362,10 +362,10 @@ namespace golang::runtime
 
     struct stringStruct* stringStructOf(gocpp::string* sp)
     {
-        return (stringStruct*)(unsafe::Pointer(sp));
+        return (stringStruct*)(gocpp::unsafe_pointer(sp));
     }
 
-    gocpp::string intstring(gocpp::array<unsigned char, 4>* buf, int64_t v)
+    gocpp::string intstring(gocpp::array_ptr<gocpp::array<unsigned char, 4>> buf, int64_t v)
     {
         gocpp::string s;
         gocpp::slice<unsigned char> b = {};
@@ -408,7 +408,7 @@ namespace golang::runtime
         {
             memclrNoHeapPointers(add(p, uintptr_t(size)), cap - uintptr_t(size));
         }
-        *(slice*)(unsafe::Pointer(& b)) = slice {p, size, int(cap)};
+        *(slice*)(gocpp::unsafe_pointer(& b)) = slice {p, size, int(cap)};
         return b;
     }
 
@@ -426,7 +426,7 @@ namespace golang::runtime
         {
             memclrNoHeapPointers(add(p, uintptr_t(size) * 4), mem - uintptr_t(size) * 4);
         }
-        *(slice*)(unsafe::Pointer(& b)) = slice {p, size, int(mem / 4)};
+        *(slice*)(gocpp::unsafe_pointer(& b)) = slice {p, size, int(mem / 4)};
         return b;
     }
 
@@ -443,8 +443,8 @@ namespace golang::runtime
             gocpp::panic(errorString("gobytes: length out of range"_s));
         }
         auto bp = mallocgc(uintptr_t(n), nullptr, false);
-        memmove(bp, unsafe::Pointer(p), uintptr_t(n));
-        *(slice*)(unsafe::Pointer(& b)) = slice {bp, n, n};
+        memmove(bp, gocpp::unsafe_pointer(p), uintptr_t(n));
+        *(slice*)(gocpp::unsafe_pointer(& b)) = slice {bp, n, n};
         return b;
     }
 
@@ -459,7 +459,7 @@ namespace golang::runtime
             return ""_s;
         }
         auto [s, b] = rawstring(l);
-        memmove(unsafe::Pointer(& b[0]), unsafe::Pointer(p), uintptr_t(l));
+        memmove(gocpp::unsafe_pointer(& b[0]), gocpp::unsafe_pointer(p), uintptr_t(l));
         return s;
     }
 
@@ -478,7 +478,7 @@ namespace golang::runtime
             return ""_s;
         }
         auto [s, b] = rawstring(l);
-        memmove(unsafe::Pointer(& b[0]), unsafe::Pointer(p), uintptr_t(l));
+        memmove(gocpp::unsafe_pointer(& b[0]), gocpp::unsafe_pointer(p), uintptr_t(l));
         return s;
     }
 
@@ -676,7 +676,7 @@ namespace golang::runtime
         }
         if(GOOS == "plan9"_s)
         {
-            auto p = (gocpp::array<unsigned char, maxAlloc / 2 - 1>*)(unsafe::Pointer(s));
+            auto p = (gocpp::array_ptr<gocpp::array<unsigned char, maxAlloc / 2 - 1>>)(gocpp::unsafe_pointer(s));
             auto l = 0;
             for(; p[l] != 0; )
             {
@@ -690,16 +690,16 @@ namespace golang::runtime
         // actual system page size is larger than this value.
         auto pageSize = 4096;
         auto offset = 0;
-        auto ptr = unsafe::Pointer(s);
+        auto ptr = gocpp::unsafe_pointer(s);
         auto safeLen = int(pageSize - uintptr_t(ptr) % pageSize);
         for(; ; )
         {
-            auto t = *(gocpp::string*)(unsafe::Pointer(new stringStruct {ptr, safeLen}));
+            auto t = *(gocpp::string*)(gocpp::unsafe_pointer(new stringStruct {ptr, safeLen}));
             if(auto i = bytealg::IndexByteString(t, 0); i != - 1)
             {
                 return offset + i;
             }
-            ptr = unsafe::Pointer(uintptr_t(ptr) + uintptr_t(safeLen));
+            ptr = gocpp::unsafe_pointer(uintptr_t(ptr) + uintptr_t(safeLen));
             offset += safeLen;
             safeLen = pageSize;
         }
@@ -711,7 +711,7 @@ namespace golang::runtime
         {
             return 0;
         }
-        auto p = (gocpp::array<uint16_t, maxAlloc / 2 / 2 - 1>*)(unsafe::Pointer(s));
+        auto p = (gocpp::array_ptr<gocpp::array<uint16_t, maxAlloc / 2 / 2 - 1>>)(gocpp::unsafe_pointer(s));
         auto l = 0;
         for(; p[l] != 0; )
         {
@@ -724,17 +724,17 @@ namespace golang::runtime
     gocpp::string gostringnocopy(unsigned char* str)
     {
         auto ss = gocpp::Init<stringStruct>([=](auto& x) {
-            x.str = unsafe::Pointer(str);
+            x.str = gocpp::unsafe_pointer(str);
             x.len = findnull(str);
         });
-        auto s = *(gocpp::string*)(unsafe::Pointer(& ss));
+        auto s = *(gocpp::string*)(gocpp::unsafe_pointer(& ss));
         return s;
     }
 
     gocpp::string gostringw(uint16_t* strw)
     {
         gocpp::array<unsigned char, 8> buf = {};
-        auto str = (gocpp::array<uint16_t, maxAlloc / 2 / 2 - 1>*)(unsafe::Pointer(strw));
+        auto str = (gocpp::array_ptr<gocpp::array<uint16_t, maxAlloc / 2 / 2 - 1>>)(gocpp::unsafe_pointer(strw));
         auto n1 = 0;
         for(auto i = 0; str[i] != 0; i++)
         {

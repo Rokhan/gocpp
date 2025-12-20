@@ -164,14 +164,14 @@ namespace golang::runtime
         {
             t->nextwhen = maxWhen;
         }
-        gopark(resetForSleep, unsafe::Pointer(t), waitReasonSleep, traceBlockSleep, 1);
+        gopark(resetForSleep, gocpp::unsafe_pointer(t), waitReasonSleep, traceBlockSleep, 1);
     }
 
     // resetForSleep is called after the goroutine is parked for timeSleep.
     // We can't call resettimer in timeSleep itself because if this is a short
     // sleep and there are many goroutines then the P can wind up running the
     // timer function, goroutineReady, before the goroutine has been parked.
-    bool resetForSleep(struct g* gp, unsafe::Pointer ut)
+    bool resetForSleep(struct g* gp, gocpp::unsafe_pointer ut)
     {
         auto t = (timer*)(ut);
         resettimer(t, t->nextwhen);
@@ -185,7 +185,7 @@ namespace golang::runtime
     {
         if(raceenabled)
         {
-            racerelease(unsafe::Pointer(t));
+            racerelease(gocpp::unsafe_pointer(t));
         }
         addtimer(t);
     }
@@ -208,7 +208,7 @@ namespace golang::runtime
     {
         if(raceenabled)
         {
-            racerelease(unsafe::Pointer(t));
+            racerelease(gocpp::unsafe_pointer(t));
         }
         return resettimer(t, when);
     }
@@ -972,7 +972,7 @@ namespace golang::runtime
             {
                 ppcur->timerRaceCtx = racegostart(abi::FuncPCABIInternal(runtimer) + sys::PCQuantum);
             }
-            raceacquirectx(ppcur->timerRaceCtx, unsafe::Pointer(t));
+            raceacquirectx(ppcur->timerRaceCtx, gocpp::unsafe_pointer(t));
         }
         auto f = [&](auto x, auto y){ return rec::f(t, x, y); };
         auto arg = t->arg;

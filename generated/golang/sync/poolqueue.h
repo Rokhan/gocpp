@@ -15,8 +15,8 @@ namespace golang::sync
 {
     struct eface
     {
-        unsafe::Pointer typ;
-        unsafe::Pointer val;
+        gocpp::unsafe_pointer typ;
+        gocpp::unsafe_pointer val;
 
         using isGoStruct = void;
 

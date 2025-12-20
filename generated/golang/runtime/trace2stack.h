@@ -78,7 +78,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct traceFrame& value);
     struct traceFrame makeTraceFrame(uintptr_t gen, struct Frame f);
     bool tracefpunwindoff();
-    int fpTracebackPCs(unsafe::Pointer fp, gocpp::slice<uintptr_t> pcBuf);
+    int fpTracebackPCs(gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf);
     gocpp::slice<uintptr_t> fpunwindExpand(gocpp::slice<uintptr_t> pcBuf);
     uintptr_t startPCForTrace(uintptr_t pc);
 

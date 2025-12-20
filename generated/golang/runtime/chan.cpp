@@ -197,7 +197,7 @@ namespace golang::runtime
                     break;
                 case 1:
                     c = (hchan*)(mallocgc(hchanSize + mem, nullptr, true));
-                    c->buf = add(unsafe::Pointer(c), hchanSize);
+                    c->buf = add(gocpp::unsafe_pointer(c), hchanSize);
                     break;
                 default:
                     c = new(hchan);
@@ -217,7 +217,7 @@ namespace golang::runtime
     }
 
     // chanbuf(c, i) is pointer to the i'th slot in the buffer.
-    unsafe::Pointer chanbuf(struct hchan* c, unsigned int i)
+    gocpp::unsafe_pointer chanbuf(struct hchan* c, unsigned int i)
     {
         return add(c->buf, uintptr_t(i) * uintptr_t(c->elemsize));
     }
@@ -238,7 +238,7 @@ namespace golang::runtime
     // entry point for c <- x from compiled code.
     //
     //go:nosplit
-    void chansend1(struct hchan* c, unsafe::Pointer elem)
+    void chansend1(struct hchan* c, gocpp::unsafe_pointer elem)
     {
         chansend(c, elem, true, getcallerpc());
     }
@@ -255,7 +255,7 @@ namespace golang::runtime
  * been closed.  it is easiest to loop and re-run
  * the operation; we'll see that it's now closed.
  */
-    bool chansend(struct hchan* c, unsafe::Pointer ep, bool block, uintptr_t callerpc)
+    bool chansend(struct hchan* c, gocpp::unsafe_pointer ep, bool block, uintptr_t callerpc)
     {
         if(c == nullptr)
         {
@@ -335,7 +335,7 @@ namespace golang::runtime
         gp->param = nullptr;
         rec::enqueue(gocpp::recv(c->sendq), mysg);
         rec::Store(gocpp::recv(gp->parkingOnChan), true);
-        gopark(chanparkcommit, unsafe::Pointer(& c->lock), waitReasonChanSend, traceBlockChanSend, 2);
+        gopark(chanparkcommit, gocpp::unsafe_pointer(& c->lock), waitReasonChanSend, traceBlockChanSend, 2);
         KeepAlive(ep);
         if(mysg != gp->waiting)
         {
@@ -368,7 +368,7 @@ namespace golang::runtime
     // Channel c must be empty and locked.  send unlocks c with unlockf.
     // sg must already be dequeued from c.
     // ep must be non-nil and point to the heap or the caller's stack.
-    void send(struct hchan* c, struct sudog* sg, unsafe::Pointer ep, std::function<void ()> unlockf, int skip)
+    void send(struct hchan* c, struct sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int skip)
     {
         if(raceenabled)
         {
@@ -395,7 +395,7 @@ namespace golang::runtime
         }
         auto gp = sg->g;
         unlockf();
-        gp->param = unsafe::Pointer(sg);
+        gp->param = gocpp::unsafe_pointer(sg);
         sg->success = true;
         if(sg->releasetime != 0)
         {
@@ -404,14 +404,14 @@ namespace golang::runtime
         goready(gp, skip + 1);
     }
 
-    void sendDirect(golang::runtime::_type* t, struct sudog* sg, unsafe::Pointer src)
+    void sendDirect(golang::runtime::_type* t, struct sudog* sg, gocpp::unsafe_pointer src)
     {
         auto dst = sg->elem;
         typeBitsBulkBarrier(t, uintptr_t(dst), uintptr_t(src), t->Size_);
         memmove(dst, src, t->Size_);
     }
 
-    void recvDirect(golang::runtime::_type* t, struct sudog* sg, unsafe::Pointer dst)
+    void recvDirect(golang::runtime::_type* t, struct sudog* sg, gocpp::unsafe_pointer dst)
     {
         auto src = sg->elem;
         typeBitsBulkBarrier(t, uintptr_t(dst), uintptr_t(src), t->Size_);
@@ -455,7 +455,7 @@ namespace golang::runtime
                 sg->releasetime = cputicks();
             }
             auto gp = sg->g;
-            gp->param = unsafe::Pointer(sg);
+            gp->param = gocpp::unsafe_pointer(sg);
             sg->success = false;
             if(raceenabled)
             {
@@ -476,7 +476,7 @@ namespace golang::runtime
                 sg->releasetime = cputicks();
             }
             auto gp = sg->g;
-            gp->param = unsafe::Pointer(sg);
+            gp->param = gocpp::unsafe_pointer(sg);
             sg->success = false;
             if(raceenabled)
             {
@@ -499,7 +499,7 @@ namespace golang::runtime
     {
         if(c->dataqsiz == 0)
         {
-            return atomic::Loadp(unsafe::Pointer(& c->sendq.first)) == nullptr;
+            return atomic::Loadp(gocpp::unsafe_pointer(& c->sendq.first)) == nullptr;
         }
         return atomic::Loaduint(& c->qcount) == 0;
     }
@@ -507,13 +507,13 @@ namespace golang::runtime
     // entry points for <- c from compiled code.
     //
     //go:nosplit
-    void chanrecv1(struct hchan* c, unsafe::Pointer elem)
+    void chanrecv1(struct hchan* c, gocpp::unsafe_pointer elem)
     {
         chanrecv(c, elem, true);
     }
 
     //go:nosplit
-    bool chanrecv2(struct hchan* c, unsafe::Pointer elem)
+    bool chanrecv2(struct hchan* c, gocpp::unsafe_pointer elem)
     {
         bool received;
         std::tie(std::ignore, received) = chanrecv(c, elem, true);
@@ -526,7 +526,7 @@ namespace golang::runtime
     // Otherwise, if c is closed, zeros *ep and returns (true, false).
     // Otherwise, fills in *ep with an element and returns (true, true).
     // A non-nil ep must point to the heap or the caller's stack.
-    std::tuple<bool, bool> chanrecv(struct hchan* c, unsafe::Pointer ep, bool block)
+    std::tuple<bool, bool> chanrecv(struct hchan* c, gocpp::unsafe_pointer ep, bool block)
     {
         bool selected;
         bool received;
@@ -637,7 +637,7 @@ namespace golang::runtime
         gp->param = nullptr;
         rec::enqueue(gocpp::recv(c->recvq), mysg);
         rec::Store(gocpp::recv(gp->parkingOnChan), true);
-        gopark(chanparkcommit, unsafe::Pointer(& c->lock), waitReasonChanReceive, traceBlockChanRecv, 2);
+        gopark(chanparkcommit, gocpp::unsafe_pointer(& c->lock), waitReasonChanReceive, traceBlockChanRecv, 2);
         if(mysg != gp->waiting)
         {
             go_throw("G waiting list is corrupted"_s);
@@ -669,7 +669,7 @@ namespace golang::runtime
     // Channel c must be full and locked. recv unlocks c with unlockf.
     // sg must already be dequeued from c.
     // A non-nil ep must point to the heap or the caller's stack.
-    void recv(struct hchan* c, struct sudog* sg, unsafe::Pointer ep, std::function<void ()> unlockf, int skip)
+    void recv(struct hchan* c, struct sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int skip)
     {
         if(c->dataqsiz == 0)
         {
@@ -705,7 +705,7 @@ namespace golang::runtime
         sg->elem = nullptr;
         auto gp = sg->g;
         unlockf();
-        gp->param = unsafe::Pointer(sg);
+        gp->param = gocpp::unsafe_pointer(sg);
         sg->success = true;
         if(sg->releasetime != 0)
         {
@@ -714,7 +714,7 @@ namespace golang::runtime
         goready(gp, skip + 1);
     }
 
-    bool chanparkcommit(struct g* gp, unsafe::Pointer chanLock)
+    bool chanparkcommit(struct g* gp, gocpp::unsafe_pointer chanLock)
     {
         gp->activeStackChans = true;
         rec::Store(gocpp::recv(gp->parkingOnChan), false);
@@ -738,7 +738,7 @@ namespace golang::runtime
     //	} else {
     //		... bar
     //	}
-    bool selectnbsend(struct hchan* c, unsafe::Pointer elem)
+    bool selectnbsend(struct hchan* c, gocpp::unsafe_pointer elem)
     {
         bool selected;
         return chansend(c, elem, false, getcallerpc());
@@ -760,7 +760,7 @@ namespace golang::runtime
     //	} else {
     //		... bar
     //	}
-    std::tuple<bool, bool> selectnbrecv(unsafe::Pointer elem, struct hchan* c)
+    std::tuple<bool, bool> selectnbrecv(gocpp::unsafe_pointer elem, struct hchan* c)
     {
         bool selected;
         bool received;
@@ -768,14 +768,14 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_chansend reflect.chansend0
-    bool reflect_chansend(struct hchan* c, unsafe::Pointer elem, bool nb)
+    bool reflect_chansend(struct hchan* c, gocpp::unsafe_pointer elem, bool nb)
     {
         bool selected;
         return chansend(c, elem, ! nb, getcallerpc());
     }
 
     //go:linkname reflect_chanrecv reflect.chanrecv
-    std::tuple<bool, bool> reflect_chanrecv(struct hchan* c, bool nb, unsafe::Pointer elem)
+    std::tuple<bool, bool> reflect_chanrecv(struct hchan* c, bool nb, gocpp::unsafe_pointer elem)
     {
         bool selected;
         bool received;
@@ -863,9 +863,9 @@ namespace golang::runtime
         }
     }
 
-    unsafe::Pointer rec::raceaddr(golang::runtime::hchan* c)
+    gocpp::unsafe_pointer rec::raceaddr(golang::runtime::hchan* c)
     {
-        return unsafe::Pointer(& c->buf);
+        return gocpp::unsafe_pointer(& c->buf);
     }
 
     void racesync(struct hchan* c, struct sudog* sg)

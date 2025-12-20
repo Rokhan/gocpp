@@ -52,24 +52,24 @@ namespace golang::runtime
     struct hchan* reflect_makechan(golang::runtime::chantype* t, int size);
     struct hchan* makechan64(golang::runtime::chantype* t, int64_t size);
     struct hchan* makechan(golang::runtime::chantype* t, int size);
-    unsafe::Pointer chanbuf(struct hchan* c, unsigned int i);
+    gocpp::unsafe_pointer chanbuf(struct hchan* c, unsigned int i);
     bool full(struct hchan* c);
-    void chansend1(struct hchan* c, unsafe::Pointer elem);
-    bool chansend(struct hchan* c, unsafe::Pointer ep, bool block, uintptr_t callerpc);
-    void send(struct hchan* c, struct sudog* sg, unsafe::Pointer ep, std::function<void ()> unlockf, int skip);
-    void sendDirect(golang::runtime::_type* t, struct sudog* sg, unsafe::Pointer src);
-    void recvDirect(golang::runtime::_type* t, struct sudog* sg, unsafe::Pointer dst);
+    void chansend1(struct hchan* c, gocpp::unsafe_pointer elem);
+    bool chansend(struct hchan* c, gocpp::unsafe_pointer ep, bool block, uintptr_t callerpc);
+    void send(struct hchan* c, struct sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int skip);
+    void sendDirect(golang::runtime::_type* t, struct sudog* sg, gocpp::unsafe_pointer src);
+    void recvDirect(golang::runtime::_type* t, struct sudog* sg, gocpp::unsafe_pointer dst);
     void closechan(struct hchan* c);
     bool empty(struct hchan* c);
-    void chanrecv1(struct hchan* c, unsafe::Pointer elem);
-    bool chanrecv2(struct hchan* c, unsafe::Pointer elem);
-    std::tuple<bool, bool> chanrecv(struct hchan* c, unsafe::Pointer ep, bool block);
-    void recv(struct hchan* c, struct sudog* sg, unsafe::Pointer ep, std::function<void ()> unlockf, int skip);
-    bool chanparkcommit(struct g* gp, unsafe::Pointer chanLock);
-    bool selectnbsend(struct hchan* c, unsafe::Pointer elem);
-    std::tuple<bool, bool> selectnbrecv(unsafe::Pointer elem, struct hchan* c);
-    bool reflect_chansend(struct hchan* c, unsafe::Pointer elem, bool nb);
-    std::tuple<bool, bool> reflect_chanrecv(struct hchan* c, bool nb, unsafe::Pointer elem);
+    void chanrecv1(struct hchan* c, gocpp::unsafe_pointer elem);
+    bool chanrecv2(struct hchan* c, gocpp::unsafe_pointer elem);
+    std::tuple<bool, bool> chanrecv(struct hchan* c, gocpp::unsafe_pointer ep, bool block);
+    void recv(struct hchan* c, struct sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int skip);
+    bool chanparkcommit(struct g* gp, gocpp::unsafe_pointer chanLock);
+    bool selectnbsend(struct hchan* c, gocpp::unsafe_pointer elem);
+    std::tuple<bool, bool> selectnbrecv(gocpp::unsafe_pointer elem, struct hchan* c);
+    bool reflect_chansend(struct hchan* c, gocpp::unsafe_pointer elem, bool nb);
+    std::tuple<bool, bool> reflect_chanrecv(struct hchan* c, bool nb, gocpp::unsafe_pointer elem);
     int reflect_chanlen(struct hchan* c);
     int reflectlite_chanlen(struct hchan* c);
     int reflect_chancap(struct hchan* c);
@@ -80,7 +80,7 @@ namespace golang::runtime
     {
         unsigned int qcount;
         unsigned int dataqsiz;
-        unsafe::Pointer buf;
+        gocpp::unsafe_pointer buf;
         uint16_t elemsize;
         uint32_t closed;
         golang::runtime::_type* elemtype;
@@ -107,7 +107,7 @@ namespace golang::runtime
     {
         void enqueue(golang::runtime::waitq* q, struct sudog* sgp);
         struct sudog* dequeue(golang::runtime::waitq* q);
-        unsafe::Pointer raceaddr(golang::runtime::hchan* c);
+        gocpp::unsafe_pointer raceaddr(golang::runtime::hchan* c);
     }
 }
 

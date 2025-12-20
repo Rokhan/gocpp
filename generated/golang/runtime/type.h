@@ -34,8 +34,8 @@ namespace golang::runtime
     extern gocpp_id_0 reflectOffs;
     void reflectOffsLock();
     void reflectOffsUnlock();
-    runtime::name resolveNameOff(unsafe::Pointer ptrInModule, golang::runtime::nameOff off);
-    runtime::_type* resolveTypeOff(unsafe::Pointer ptrInModule, golang::runtime::typeOff off);
+    runtime::name resolveNameOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::nameOff off);
+    runtime::_type* resolveTypeOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::typeOff off);
     gocpp::string pkgPath(golang::runtime::name n);
     void typelinksinit();
     struct _typePair
@@ -81,7 +81,7 @@ namespace golang::runtime
         gocpp::string pkgpath(golang::runtime::rtype t);
         runtime::name nameOff(golang::runtime::rtype t, golang::runtime::nameOff off);
         runtime::_type* typeOff(golang::runtime::rtype t, golang::runtime::typeOff off);
-        unsafe::Pointer textOff(golang::runtime::rtype t, golang::runtime::textOff off);
+        gocpp::unsafe_pointer textOff(golang::runtime::rtype t, golang::runtime::textOff off);
     }
 }
 

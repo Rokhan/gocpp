@@ -199,7 +199,7 @@
 | $(ImportDir)/internal/poll/fd_poll_runtime.go | ✔️ ([cpp](generated/golang/internal/poll/fd_poll_runtime.cpp), [h](generated/golang/internal/poll/fd_poll_runtime.h))| ❌ |
 | $(ImportDir)/internal/poll/fd_posix.go | ✔️ ([cpp](generated/golang/internal/poll/fd_posix.cpp), [h](generated/golang/internal/poll/fd_posix.h))| ❌ |
 | $(ImportDir)/internal/poll/fd_windows.go | ✔️ ([cpp](generated/golang/internal/poll/fd_windows.cpp), [h](generated/golang/internal/poll/fd_windows.h))| ❌ |
-| $(ImportDir)/internal/race/norace.go | ✔️ ([cpp](generated/golang/internal/race/norace.cpp), [h](generated/golang/internal/race/norace.h))| ❌ |
+| $(ImportDir)/internal/race/norace.go | ✔️ ([cpp](generated/golang/internal/race/norace.cpp), [h](generated/golang/internal/race/norace.h))| ✔️ |
 | $(ImportDir)/internal/reflectlite/swapper.go | ✔️ ([cpp](generated/golang/internal/reflectlite/swapper.cpp), [h](generated/golang/internal/reflectlite/swapper.h))| ❌ |
 | $(ImportDir)/internal/reflectlite/type.go | ✔️ ([cpp](generated/golang/internal/reflectlite/type.cpp), [h](generated/golang/internal/reflectlite/type.h))| ❌ |
 | $(ImportDir)/internal/reflectlite/value.go | ✔️ ([cpp](generated/golang/internal/reflectlite/value.cpp), [h](generated/golang/internal/reflectlite/value.h))| ❌ |
@@ -299,8 +299,8 @@
 | $(ImportDir)/runtime/hash64.go | ✔️ ([cpp](generated/golang/runtime/hash64.cpp), [h](generated/golang/runtime/hash64.h))| ❌ |
 | $(ImportDir)/runtime/histogram.go | ✔️ ([cpp](generated/golang/runtime/histogram.cpp), [h](generated/golang/runtime/histogram.h))| ❌ |
 | $(ImportDir)/runtime/iface.go | ✔️ ([cpp](generated/golang/runtime/iface.cpp), [h](generated/golang/runtime/iface.h))| ❌ |
-| $(ImportDir)/runtime/internal/atomic/atomic_amd64.go | ✔️ ([cpp](generated/golang/runtime/internal/atomic/atomic_amd64.cpp), [h](generated/golang/runtime/internal/atomic/atomic_amd64.h))| ❌ |
-| $(ImportDir)/runtime/internal/atomic/stubs.go | ✔️ ([cpp](generated/golang/runtime/internal/atomic/stubs.cpp), [h](generated/golang/runtime/internal/atomic/stubs.h))| ❌ |
+| $(ImportDir)/runtime/internal/atomic/atomic_amd64.go | ✔️ ([cpp](generated/golang/runtime/internal/atomic/atomic_amd64.cpp), [h](generated/golang/runtime/internal/atomic/atomic_amd64.h))| ✔️ |
+| $(ImportDir)/runtime/internal/atomic/stubs.go | ✔️ ([cpp](generated/golang/runtime/internal/atomic/stubs.cpp), [h](generated/golang/runtime/internal/atomic/stubs.h))| ✔️ |
 | $(ImportDir)/runtime/internal/atomic/types.go | ✔️ ([cpp](generated/golang/runtime/internal/atomic/types.cpp), [h](generated/golang/runtime/internal/atomic/types.h))| ❌ |
 | $(ImportDir)/runtime/internal/math/math.go | ✔️ ([cpp](generated/golang/runtime/internal/math/math.cpp), [h](generated/golang/runtime/internal/math/math.h))| ❌ |
 | $(ImportDir)/runtime/internal/sys/consts.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/consts.cpp), [h](generated/golang/runtime/internal/sys/consts.h))| ✔️ |
@@ -376,7 +376,7 @@
 | $(ImportDir)/runtime/string.go | ✔️ ([cpp](generated/golang/runtime/string.cpp), [h](generated/golang/runtime/string.h))| ❌ |
 | $(ImportDir)/runtime/stubs.go | ✔️ ([cpp](generated/golang/runtime/stubs.cpp), [h](generated/golang/runtime/stubs.h))| ❌ |
 | $(ImportDir)/runtime/stubs3.go | ✔️ ([cpp](generated/golang/runtime/stubs3.cpp), [h](generated/golang/runtime/stubs3.h))| ✔️ |
-| $(ImportDir)/runtime/stubs_amd64.go | ✔️ ([cpp](generated/golang/runtime/stubs_amd64.cpp), [h](generated/golang/runtime/stubs_amd64.h))| ❌ |
+| $(ImportDir)/runtime/stubs_amd64.go | ✔️ ([cpp](generated/golang/runtime/stubs_amd64.cpp), [h](generated/golang/runtime/stubs_amd64.h))| ✔️ |
 | $(ImportDir)/runtime/stubs_nonlinux.go | ✔️ ([cpp](generated/golang/runtime/stubs_nonlinux.cpp), [h](generated/golang/runtime/stubs_nonlinux.h))| ✔️ |
 | $(ImportDir)/runtime/symtab.go | ✔️ ([cpp](generated/golang/runtime/symtab.cpp), [h](generated/golang/runtime/symtab.h))| ❌ |
 | $(ImportDir)/runtime/symtabinl.go | ✔️ ([cpp](generated/golang/runtime/symtabinl.cpp), [h](generated/golang/runtime/symtabinl.h))| ❌ |
@@ -405,7 +405,7 @@
 | $(ImportDir)/runtime/typekind.go | ✔️ ([cpp](generated/golang/runtime/typekind.cpp), [h](generated/golang/runtime/typekind.h))| ❌ |
 | $(ImportDir)/runtime/utf8.go | ✔️ ([cpp](generated/golang/runtime/utf8.cpp), [h](generated/golang/runtime/utf8.h))| ❌ |
 | $(ImportDir)/runtime/vdso_in_none.go | ✔️ ([cpp](generated/golang/runtime/vdso_in_none.cpp), [h](generated/golang/runtime/vdso_in_none.h))| ✔️ |
-| $(ImportDir)/runtime/write_err.go | ✔️ ([cpp](generated/golang/runtime/write_err.cpp), [h](generated/golang/runtime/write_err.h))| ❌ |
+| $(ImportDir)/runtime/write_err.go | ✔️ ([cpp](generated/golang/runtime/write_err.cpp), [h](generated/golang/runtime/write_err.h))| ✔️ |
 | $(ImportDir)/runtime/zcallback_windows.go | ✔️ ([cpp](generated/golang/runtime/zcallback_windows.cpp), [h](generated/golang/runtime/zcallback_windows.h))| ✔️ |
 | $(ImportDir)/slices/slices.go | ✔️ ([cpp](generated/golang/slices/slices.cpp), [h](generated/golang/slices/slices.h))| ❌ |
 | $(ImportDir)/slices/sort.go | ✔️ ([cpp](generated/golang/slices/sort.cpp), [h](generated/golang/slices/sort.h))| ✔️ |
@@ -427,7 +427,7 @@
 | $(ImportDir)/strings/builder.go | ✔️ ([cpp](generated/golang/strings/builder.cpp), [h](generated/golang/strings/builder.h))| ❌ |
 | $(ImportDir)/strings/reader.go | ✔️ ([cpp](generated/golang/strings/reader.cpp), [h](generated/golang/strings/reader.h))| ✔️ |
 | $(ImportDir)/strings/strings.go | ✔️ ([cpp](generated/golang/strings/strings.cpp), [h](generated/golang/strings/strings.h))| ❌ |
-| $(ImportDir)/sync/atomic/doc.go | ✔️ ([cpp](generated/golang/sync/atomic/doc.cpp), [h](generated/golang/sync/atomic/doc.h))| ❌ |
+| $(ImportDir)/sync/atomic/doc.go | ✔️ ([cpp](generated/golang/sync/atomic/doc.cpp), [h](generated/golang/sync/atomic/doc.h))| ✔️ |
 | $(ImportDir)/sync/atomic/type.go | ✔️ ([cpp](generated/golang/sync/atomic/type.cpp), [h](generated/golang/sync/atomic/type.h))| ✔️ |
 | $(ImportDir)/sync/atomic/value.go | ✔️ ([cpp](generated/golang/sync/atomic/value.cpp), [h](generated/golang/sync/atomic/value.h))| ❌ |
 | $(ImportDir)/sync/cond.go | ✔️ ([cpp](generated/golang/sync/cond.cpp), [h](generated/golang/sync/cond.h))| ✔️ |
@@ -440,11 +440,11 @@
 | $(ImportDir)/sync/runtime.go | ✔️ ([cpp](generated/golang/sync/runtime.cpp), [h](generated/golang/sync/runtime.h))| ✔️ |
 | $(ImportDir)/sync/runtime2.go | ✔️ ([cpp](generated/golang/sync/runtime2.cpp), [h](generated/golang/sync/runtime2.h))| ✔️ |
 | $(ImportDir)/sync/rwmutex.go | ✔️ ([cpp](generated/golang/sync/rwmutex.cpp), [h](generated/golang/sync/rwmutex.h))| ❌ |
-| $(ImportDir)/syscall/asan0.go | ✔️ ([cpp](generated/golang/syscall/asan0.cpp), [h](generated/golang/syscall/asan0.h))| ❌ |
+| $(ImportDir)/syscall/asan0.go | ✔️ ([cpp](generated/golang/syscall/asan0.cpp), [h](generated/golang/syscall/asan0.h))| ✔️ |
 | $(ImportDir)/syscall/dll_windows.go | ✔️ ([cpp](generated/golang/syscall/dll_windows.cpp), [h](generated/golang/syscall/dll_windows.h))| ❌ |
 | $(ImportDir)/syscall/env_windows.go | ✔️ ([cpp](generated/golang/syscall/env_windows.cpp), [h](generated/golang/syscall/env_windows.h))| ❌ |
 | $(ImportDir)/syscall/exec_windows.go | ✔️ ([cpp](generated/golang/syscall/exec_windows.cpp), [h](generated/golang/syscall/exec_windows.h))| ❌ |
-| $(ImportDir)/syscall/msan0.go | ✔️ ([cpp](generated/golang/syscall/msan0.cpp), [h](generated/golang/syscall/msan0.h))| ❌ |
+| $(ImportDir)/syscall/msan0.go | ✔️ ([cpp](generated/golang/syscall/msan0.cpp), [h](generated/golang/syscall/msan0.h))| ✔️ |
 | $(ImportDir)/syscall/net.go | ✔️ ([cpp](generated/golang/syscall/net.cpp), [h](generated/golang/syscall/net.h))| ✔️ |
 | $(ImportDir)/syscall/security_windows.go | ✔️ ([cpp](generated/golang/syscall/security_windows.cpp), [h](generated/golang/syscall/security_windows.h))| ❌ |
 | $(ImportDir)/syscall/syscall.go | ✔️ ([cpp](generated/golang/syscall/syscall.cpp), [h](generated/golang/syscall/syscall.h))| ✔️ |

@@ -218,6 +218,26 @@ namespace gocpp
         T* ptr = nullptr;
     };
 
+    struct unsafe_pointer
+    {
+        void* ptr = nullptr;
+
+        unsafe_pointer() = default;
+        unsafe_pointer(void* p) : ptr(p) { }
+        unsafe_pointer(uintptr_t p) : ptr(reinterpret_cast<void*>(p)) { }
+
+        operator void*() const { return ptr; }
+        operator uintptr_t() const { return reinterpret_cast<uintptr_t>(ptr); }
+        template<typename T>
+        operator T*() const { return reinterpret_cast<T*>(ptr); }
+    };
+
+    std::ostream& operator<<(std::ostream& os, const unsafe_pointer& ptr)
+    {
+        os << "unsafe_pointer(" << reinterpret_cast<uintptr_t>(ptr.ptr) << ")";
+        return os;
+    }
+
     struct complex64 : std::complex<float>
     {
         using std::complex<float>::complex;

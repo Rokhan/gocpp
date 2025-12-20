@@ -306,6 +306,8 @@ var stdFuncMapping = map[string]string{
 	"uint32":     "uint32_t",
 	"uint64":     "uint64_t",
 	"uintptr":    "uintptr_t",
+
+	"unsafe::Pointer": "gocpp::unsafe_pointer",
 }
 
 var knownCompilationErrors = []*errorFilter{}

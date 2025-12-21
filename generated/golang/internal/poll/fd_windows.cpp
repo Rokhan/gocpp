@@ -539,7 +539,7 @@ namespace golang::poll
     {
         if(fd->Sysfd == syscall::InvalidHandle)
         {
-            return syscall::go_EINVAL;
+            return gocpp::error(syscall::go_EINVAL);
         }
         rec::close(gocpp::recv(fd->pd));
         gocpp::error err = {};
@@ -745,7 +745,7 @@ namespace golang::poll
         {
             if(fd->kind == kindPipe)
             {
-                return {0, syscall::go_ESPIPE};
+                return {0, gocpp::error(syscall::go_ESPIPE)};
             }
             if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
@@ -1060,7 +1060,7 @@ namespace golang::poll
         {
             if(fd->kind == kindPipe)
             {
-                return {0, syscall::go_ESPIPE};
+                return {0, gocpp::error(syscall::go_ESPIPE)};
             }
             if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
@@ -1393,7 +1393,7 @@ namespace golang::poll
         {
             if(fd->kind == kindPipe)
             {
-                return {0, syscall::go_ESPIPE};
+                return {0, gocpp::error(syscall::go_ESPIPE)};
             }
             if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
@@ -1564,7 +1564,7 @@ namespace golang::poll
             {
                 return nullptr;
             }
-            return syscall::go_EWINDOWS;
+            return gocpp::error(syscall::go_EWINDOWS);
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1641,7 +1641,7 @@ namespace golang::poll
                 default:
                 {
                     auto sa = sa;
-                    return {0, syscall::go_EWINDOWS};
+                    return {0, gocpp::error(syscall::go_EWINDOWS)};
                     break;
                 }
             }

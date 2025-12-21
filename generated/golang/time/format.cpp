@@ -1239,13 +1239,13 @@ namespace golang::time
             std::tie(value, err) = skip(value, prefix);
             if(err != nullptr)
             {
-                return {Time {}, newParseError(alayout, avalue, prefix, value, ""_s)};
+                return {Time {}, gocpp::error(newParseError(alayout, avalue, prefix, value, ""_s))};
             }
             if(std == 0)
             {
                 if(len(value) != 0)
                 {
-                    return {Time {}, newParseError(alayout, avalue, ""_s, value, ": extra text: "_s + quote(value))};
+                    return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": extra text: "_s + quote(value)))};
                 }
                 break;
             }
@@ -1622,11 +1622,11 @@ namespace golang::time
             }
             if(rangeErrString != ""_s)
             {
-                return {Time {}, newParseError(alayout, avalue, stdstr, value, ": "_s + rangeErrString + " out of range"_s)};
+                return {Time {}, gocpp::error(newParseError(alayout, avalue, stdstr, value, ": "_s + rangeErrString + " out of range"_s))};
             }
             if(err != nullptr)
             {
-                return {Time {}, newParseError(alayout, avalue, stdstr, hold, ""_s)};
+                return {Time {}, gocpp::error(newParseError(alayout, avalue, stdstr, hold, ""_s))};
             }
         }
         if(pmSet && hour < 12)
@@ -1657,7 +1657,7 @@ namespace golang::time
             }
             if(yday < 1 || yday > 365)
             {
-                return {Time {}, newParseError(alayout, avalue, ""_s, value, ": day-of-year out of range"_s)};
+                return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day-of-year out of range"_s))};
             }
             if(m == 0)
             {
@@ -1670,12 +1670,12 @@ namespace golang::time
             }
             if(month >= 0 && month != m)
             {
-                return {Time {}, newParseError(alayout, avalue, ""_s, value, ": day-of-year does not match month"_s)};
+                return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day-of-year does not match month"_s))};
             }
             month = m;
             if(day >= 0 && day != d)
             {
-                return {Time {}, newParseError(alayout, avalue, ""_s, value, ": day-of-year does not match day"_s)};
+                return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day-of-year does not match day"_s))};
             }
             day = d;
         }
@@ -1692,7 +1692,7 @@ namespace golang::time
         }
         if(day < 1 || day > daysIn(Month(month), year))
         {
-            return {Time {}, newParseError(alayout, avalue, ""_s, value, ": day out of range"_s)};
+            return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day out of range"_s))};
         }
         if(z != nullptr)
         {

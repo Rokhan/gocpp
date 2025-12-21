@@ -129,7 +129,7 @@ namespace golang::strconv
         auto fnParseUint = "ParseUint"_s;
         if(s == ""_s)
         {
-            return {0, syntaxError(fnParseUint, s)};
+            return {0, gocpp::error(syntaxError(fnParseUint, s))};
         }
         auto base0 = base == 0;
         auto s0 = s;
@@ -175,7 +175,7 @@ namespace golang::strconv
                     }
                     break;
                 default:
-                    return {0, baseError(fnParseUint, s0, base)};
+                    return {0, gocpp::error(baseError(fnParseUint, s0, base))};
                     break;
             }
         }
@@ -186,7 +186,7 @@ namespace golang::strconv
         else
         if(bitSize < 0 || bitSize > 64)
         {
-            return {0, bitSizeError(fnParseUint, s0, bitSize)};
+            return {0, gocpp::error(bitSizeError(fnParseUint, s0, bitSize))};
         }
         // Cutoff is the smallest number such that cutoff*base > maxUint64.
         // Use compile-time constants for common cases.
@@ -235,29 +235,29 @@ namespace golang::strconv
                         d = lower(c) - 'a' + 10;
                         break;
                     default:
-                        return {0, syntaxError(fnParseUint, s0)};
+                        return {0, gocpp::error(syntaxError(fnParseUint, s0))};
                         break;
                 }
             }
             if(d >= (unsigned char)(base))
             {
-                return {0, syntaxError(fnParseUint, s0)};
+                return {0, gocpp::error(syntaxError(fnParseUint, s0))};
             }
             if(n >= cutoff)
             {
-                return {maxVal, rangeError(fnParseUint, s0)};
+                return {maxVal, gocpp::error(rangeError(fnParseUint, s0))};
             }
             n *= uint64_t(base);
             auto n1 = n + uint64_t(d);
             if(n1 < n || n1 > maxVal)
             {
-                return {maxVal, rangeError(fnParseUint, s0)};
+                return {maxVal, gocpp::error(rangeError(fnParseUint, s0))};
             }
             n = n1;
         }
         if(underscores && ! underscoreOK(s0))
         {
-            return {0, syntaxError(fnParseUint, s0)};
+            return {0, gocpp::error(syntaxError(fnParseUint, s0))};
         }
         return {n, nullptr};
     }
@@ -294,7 +294,7 @@ namespace golang::strconv
         auto fnParseInt = "ParseInt"_s;
         if(s == ""_s)
         {
-            return {0, syntaxError(fnParseInt, s)};
+            return {0, gocpp::error(syntaxError(fnParseInt, s))};
         }
         auto s0 = s;
         auto neg = false;
@@ -324,11 +324,11 @@ namespace golang::strconv
         auto cutoff = uint64_t(1 << (unsigned int)(bitSize - 1));
         if(! neg && un >= cutoff)
         {
-            return {int64_t(cutoff - 1), rangeError(fnParseInt, s0)};
+            return {int64_t(cutoff - 1), gocpp::error(rangeError(fnParseInt, s0))};
         }
         if(neg && un > cutoff)
         {
-            return {- int64_t(cutoff), rangeError(fnParseInt, s0)};
+            return {- int64_t(cutoff), gocpp::error(rangeError(fnParseInt, s0))};
         }
         auto n = int64_t(un);
         if(neg)
@@ -351,7 +351,7 @@ namespace golang::strconv
                 s = s.make_slice(1);
                 if(len(s) < 1)
                 {
-                    return {0, syntaxError(fnAtoi, s0)};
+                    return {0, gocpp::error(syntaxError(fnAtoi, s0))};
                 }
             }
             auto n = 0;
@@ -360,7 +360,7 @@ namespace golang::strconv
                 ch -= '0';
                 if(ch > 9)
                 {
-                    return {0, syntaxError(fnAtoi, s0)};
+                    return {0, gocpp::error(syntaxError(fnAtoi, s0))};
                 }
                 n = n * 10 + int(ch);
             }

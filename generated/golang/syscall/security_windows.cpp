@@ -159,7 +159,7 @@ namespace golang::syscall
         struct gocpp::error err;
         if(len(account) == 0)
         {
-            return {nullptr, ""_s, 0, go_EINVAL};
+            return {nullptr, ""_s, 0, gocpp::error(go_EINVAL)};
         }
         auto [acc, e] = UTF16PtrFromString(account);
         if(e != nullptr)

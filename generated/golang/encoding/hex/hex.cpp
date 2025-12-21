@@ -100,11 +100,11 @@ namespace golang::hex
             auto b = reverseHexTable[q];
             if(a > 0x0f)
             {
-                return {i, InvalidByteError(p)};
+                return {i, gocpp::error(InvalidByteError(p))};
             }
             if(b > 0x0f)
             {
-                return {i, InvalidByteError(q)};
+                return {i, gocpp::error(InvalidByteError(q))};
             }
             dst[i] = (a << 4) | b;
             i++;
@@ -113,7 +113,7 @@ namespace golang::hex
         {
             if(reverseHexTable[src[j - 1]] > 0x0f)
             {
-                return {i, InvalidByteError(src[j - 1])};
+                return {i, gocpp::error(InvalidByteError(src[j - 1]))};
             }
             return {i, ErrLength};
         }

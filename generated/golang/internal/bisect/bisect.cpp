@@ -229,7 +229,7 @@ namespace golang::bisect
             p = p.make_slice(1);
             if(p == ""_s)
             {
-                return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
+                return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
             }
         }
         for(; len(p) > 0 && p[0] == 'v'; )
@@ -239,7 +239,7 @@ namespace golang::bisect
             p = p.make_slice(1);
             if(p == ""_s)
             {
-                return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
+                return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
             }
         }
         m->enable = true;
@@ -249,7 +249,7 @@ namespace golang::bisect
             p = p.make_slice(1);
             if(p == ""_s)
             {
-                return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
+                return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
             }
         }
         if(p == "n"_s)
@@ -306,7 +306,7 @@ namespace golang::bisect
                 switch(conditionId)
                 {
                     default:
-                        return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
+                        return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
                         break;
                     case 0:
                     case 1:
@@ -318,7 +318,7 @@ namespace golang::bisect
                     case 7:
                         if(wid != 4)
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
+                            return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
                         }
                     case 8:
                     case 9:
@@ -339,7 +339,7 @@ namespace golang::bisect
                     case 21:
                         if(wid != 4)
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
+                            return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
                         }
                         bits <<= 4;
                         bits |= uint64_t(c &^ 0x20 - 'A' + 10);
@@ -347,7 +347,7 @@ namespace golang::bisect
                     case 22:
                         if(i + 1 < len(p) && (p[i + 1] == '0' || p[i + 1] == '1'))
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
+                            return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
                         }
                         bits = 0;
                         break;
@@ -355,18 +355,18 @@ namespace golang::bisect
                     case 24:
                         if(c == '+' && result == false)
                         {
-                            return {nullptr, new parseError {"invalid pattern syntax (+ after -): "_s + pattern}};
+                            return {nullptr, gocpp::error(new parseError {"invalid pattern syntax (+ after -): "_s + pattern})};
                         }
                         if(i > 0)
                         {
                             auto n = (i - start) * wid;
                             if(n > 64)
                             {
-                                return {nullptr, new parseError {"pattern bits too long: "_s + pattern}};
+                                return {nullptr, gocpp::error(new parseError {"pattern bits too long: "_s + pattern})};
                             }
                             if(n <= 0)
                             {
-                                return {nullptr, new parseError {"invalid pattern syntax: "_s + pattern}};
+                                return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
                             }
                             if(p[start] == 'y')
                             {

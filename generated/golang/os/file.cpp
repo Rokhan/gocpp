@@ -191,11 +191,11 @@ namespace golang::os
         }
         if(off < 0)
         {
-            return {0, gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return {0, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "readat"_s;
                 x.Path = f->name;
                 x.Err = errors::New("negative offset"_s);
-            })};
+            }))};
         }
         for(; len(b) > 0; )
         {
@@ -357,11 +357,11 @@ namespace golang::os
         }
         if(off < 0)
         {
-            return {0, gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return {0, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "writeat"_s;
                 x.Path = f->name;
                 x.Err = errors::New("negative offset"_s);
-            })};
+            }))};
         }
         for(; len(b) > 0; )
         {
@@ -521,11 +521,11 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "mkdir"_s;
                 x.Path = name;
                 x.Err = e;
-            });
+            }));
         }
         if(! supportsCreateWithStickyBit && perm & ModeSticky != 0)
         {
@@ -557,11 +557,11 @@ namespace golang::os
         if(auto e = syscall::Chdir(dir); e != nullptr)
         {
             testlog::Open(dir);
-            return gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "chdir"_s;
                 x.Path = dir;
                 x.Err = e;
-            });
+            }));
         }
         if(auto log = testlog::Logger(); log != nullptr)
         {
@@ -665,11 +665,11 @@ namespace golang::os
         {
             gocpp::panic("unexpected error wrapping poll.ErrFileClosing: "_s + rec::Error(gocpp::recv(err)));
         }
-        return gocpp::InitPtr<os::PathError>([=](auto& x) {
+        return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
             x.Op = op;
             x.Path = f->name;
             x.Err = err;
-        });
+        }));
     }
 
     // TempDir returns the default directory to use for temporary files.
@@ -985,11 +985,11 @@ namespace golang::os
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "open"_s;
                 x.Path = name;
                 x.Err = err;
-            })};
+            }))};
         }
         File* f;
         std::tie(f, err) = Open(fullname);
@@ -1010,11 +1010,11 @@ namespace golang::os
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "readfile"_s;
                 x.Path = name;
                 x.Err = err;
-            })};
+            }))};
         }
         gocpp::slice<unsigned char> b;
         std::tie(b, err) = ReadFile(fullname);
@@ -1036,11 +1036,11 @@ namespace golang::os
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "readdir"_s;
                 x.Path = name;
                 x.Err = err;
-            })};
+            }))};
         }
         fs::DirEntry> entries;
         std::tie(entries, err) = ReadDir(fullname);
@@ -1060,11 +1060,11 @@ namespace golang::os
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "stat"_s;
                 x.Path = name;
                 x.Err = err;
-            })};
+            }))};
         }
         fs::FileInfo f;
         std::tie(f, err) = Stat(fullname);

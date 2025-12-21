@@ -251,7 +251,7 @@ namespace golang::runtime
     {
         if(traceEnabled() || traceShuttingDown())
         {
-            return errorString("tracing is already enabled"_s);
+            return gocpp::error(errorString("tracing is already enabled"_s));
         }
         semacquire(& traceShutdownSema);
         semrelease(& traceShutdownSema);

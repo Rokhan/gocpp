@@ -53,7 +53,7 @@ namespace golang::registry
                     break;
             }
         }
-        return e;
+        return gocpp::error(e);
     }
 
     syscall::LazyDLL* modadvapi32 = syscall::NewLazyDLL(sysdll::Add("advapi32.dll"_s));

@@ -169,11 +169,11 @@ namespace golang::syscall
         }
         if(e != 0)
         {
-            return {nullptr, gocpp::InitPtr<DLLError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<DLLError>([=](auto& x) {
                 x.Err = e;
                 x.ObjName = name;
                 x.Msg = "Failed to load "_s + name + ": "_s + rec::Error(gocpp::recv(e));
-            })};
+            }))};
         }
         auto d = gocpp::InitPtr<DLL>([=](auto& x) {
             x.Name = name;
@@ -208,11 +208,11 @@ namespace golang::syscall
         auto [a, e] = getprocaddress(uintptr_t(d->Handle), namep);
         if(e != 0)
         {
-            return {nullptr, gocpp::InitPtr<DLLError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<DLLError>([=](auto& x) {
                 x.Err = e;
                 x.ObjName = name;
                 x.Msg = "Failed to find "_s + name + " procedure in "_s + d->Name + ": "_s + rec::Error(gocpp::recv(e));
-            })};
+            }))};
         }
         auto p = gocpp::InitPtr<Proc>([=](auto& x) {
             x.Dll = d;

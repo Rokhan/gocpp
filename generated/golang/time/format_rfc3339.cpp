@@ -201,10 +201,10 @@ namespace golang::time
                         return {t, nullptr};
                         break;
                     case 1:
-                        return {Time {}, new ParseError {RFC3339, gocpp::string(b), "15"_s, gocpp::string(b.make_slice(len("2006-01-02T"_s)).make_slice(0, 1)), ""_s}};
+                        return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), "15"_s, gocpp::string(b.make_slice(len("2006-01-02T"_s)).make_slice(0, 1)), ""_s})};
                         break;
                     case 2:
-                        return {Time {}, new ParseError {RFC3339, gocpp::string(b), "."_s, ","_s, ""_s}};
+                        return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), "."_s, ","_s, ""_s})};
                         break;
                     case 3:
                         //Go switch emulation
@@ -215,16 +215,16 @@ namespace golang::time
                             switch(conditionId)
                             {
                                 case 0:
-                                    return {Time {}, new ParseError {RFC3339, gocpp::string(b), "Z07:00"_s, gocpp::string(b.make_slice(len(b) - len("Z07:00"_s))), ": timezone hour out of range"_s}};
+                                    return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), "Z07:00"_s, gocpp::string(b.make_slice(len(b) - len("Z07:00"_s))), ": timezone hour out of range"_s})};
                                     break;
                                 case 1:
-                                    return {Time {}, new ParseError {RFC3339, gocpp::string(b), "Z07:00"_s, gocpp::string(b.make_slice(len(b) - len("Z07:00"_s))), ": timezone minute out of range"_s}};
+                                    return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), "Z07:00"_s, gocpp::string(b.make_slice(len(b) - len("Z07:00"_s))), ": timezone minute out of range"_s})};
                                     break;
                             }
                         }
                         break;
                     default:
-                        return {Time {}, new ParseError {RFC3339, gocpp::string(b), RFC3339, gocpp::string(b), ""_s}};
+                        return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), RFC3339, gocpp::string(b), ""_s})};
                         break;
                 }
             }

@@ -142,11 +142,11 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "chmod"_s;
                 x.Path = name;
                 x.Err = e;
-            });
+            }));
         }
         return nullptr;
     }
@@ -180,11 +180,11 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "chown"_s;
                 x.Path = name;
                 x.Err = e;
-            });
+            }));
         }
         return nullptr;
     }
@@ -203,11 +203,11 @@ namespace golang::os
         });
         if(e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "lchown"_s;
                 x.Path = name;
                 x.Err = e;
-            });
+            }));
         }
         return nullptr;
     }
@@ -290,11 +290,11 @@ namespace golang::os
         set(1, mtime);
         if(auto e = syscall::UtimesNano(fixLongPath(name), utimes.make_slice(0)); e != nullptr)
         {
-            return gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "chtimes"_s;
                 x.Path = name;
                 x.Err = e;
-            });
+            }));
         }
         return nullptr;
     }

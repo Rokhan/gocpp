@@ -349,7 +349,7 @@ namespace golang::runtime
                     }
                     if(t->Equal == nullptr)
                     {
-                        return errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t))));
+                        return gocpp::error(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
                     }
                     if(isDirectIface(t))
                     {
@@ -387,7 +387,7 @@ namespace golang::runtime
                     return nullptr;
                     break;
                 default:
-                    return errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t))));
+                    return gocpp::error(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
                     break;
             }
         }

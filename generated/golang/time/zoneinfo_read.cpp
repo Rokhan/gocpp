@@ -514,7 +514,7 @@ namespace golang::time
                 }
                 return {buf, nullptr};
             }
-            return {nullptr, syscall::go_ENOENT};
+            return {nullptr, gocpp::error(syscall::go_ENOENT)};
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -630,7 +630,7 @@ namespace golang::time
                 }
                 if(len(ret) > maxFileSize)
                 {
-                    return {nullptr, fileSizeError(name)};
+                    return {nullptr, gocpp::error(fileSizeError(name))};
                 }
             }
             return {ret, err};

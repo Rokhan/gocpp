@@ -581,13 +581,13 @@ namespace golang::flate
         auto nlit = int(f->b & 0x1F) + 257;
         if(nlit > maxNumLit)
         {
-            return CorruptInputError(f->roffset);
+            return gocpp::error(CorruptInputError(f->roffset));
         }
         f->b >>= 5;
         auto ndist = int(f->b & 0x1F) + 1;
         if(ndist > maxNumDist)
         {
-            return CorruptInputError(f->roffset);
+            return gocpp::error(CorruptInputError(f->roffset));
         }
         f->b >>= 5;
         auto nclen = int(f->b & 0xF) + 4;
@@ -612,7 +612,7 @@ namespace golang::flate
         }
         if(! rec::init(gocpp::recv(f->h1), f->codebits.make_slice(0)))
         {
-            return CorruptInputError(f->roffset);
+            return gocpp::error(CorruptInputError(f->roffset));
         }
         for(auto [i, n] = std::tuple{0, nlit + ndist}; i < n; )
         {
@@ -641,14 +641,14 @@ namespace golang::flate
                 switch(conditionId)
                 {
                     default:
-                        return InternalError("unexpected length code"_s);
+                        return gocpp::error(InternalError("unexpected length code"_s));
                         break;
                     case 0:
                         rep = 3;
                         nb = 2;
                         if(i == 0)
                         {
-                            return CorruptInputError(f->roffset);
+                            return gocpp::error(CorruptInputError(f->roffset));
                         }
                         b = f->bits[i - 1];
                         break;
@@ -676,7 +676,7 @@ namespace golang::flate
             f->nb -= nb;
             if(i + rep > n)
             {
-                return CorruptInputError(f->roffset);
+                return gocpp::error(CorruptInputError(f->roffset));
             }
             for(auto j = 0; j < rep; j++)
             {
@@ -686,7 +686,7 @@ namespace golang::flate
         }
         if(! rec::init(gocpp::recv(f->h1), f->bits.make_slice(0, nlit)) || ! rec::init(gocpp::recv(f->h2), f->bits.make_slice(nlit, nlit + ndist)))
         {
-            return CorruptInputError(f->roffset);
+            return gocpp::error(CorruptInputError(f->roffset));
         }
         if(f->h1.min < f->bits[endBlockMarker])
         {

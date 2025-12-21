@@ -162,7 +162,7 @@ namespace golang::os
         {
             return nullptr;
         }
-        return new SyscallError {syscall, err};
+        return gocpp::error(new SyscallError {syscall, err});
     }
 
     // IsExist returns a boolean indicating whether the error is known to report

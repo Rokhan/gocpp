@@ -59,7 +59,7 @@ namespace golang::syscall
     {
         if(bytealg::IndexByteString(s, 0) != - 1)
         {
-            return {nullptr, go_EINVAL};
+            return {nullptr, gocpp::error(go_EINVAL)};
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 0, len(s) + 1);
         buf = encodeWTF16(s, buf);
@@ -272,7 +272,7 @@ namespace golang::syscall
         struct gocpp::error err;
         if(len(path) == 0)
         {
-            return {InvalidHandle, ERROR_FILE_NOT_FOUND};
+            return {InvalidHandle, gocpp::error(ERROR_FILE_NOT_FOUND)};
         }
         uint16_t* pathp;
         std::tie(pathp, err) = UTF16PtrFromString(path);
@@ -685,7 +685,7 @@ namespace golang::syscall
         struct gocpp::error err;
         if(len(p) != 2)
         {
-            return go_EINVAL;
+            return gocpp::error(go_EINVAL);
         }
         syscall::Handle r = {};
         syscall::Handle w = {};
@@ -707,7 +707,7 @@ namespace golang::syscall
             struct gocpp::error err;
             if(len(tv) != 2)
             {
-                return go_EINVAL;
+                return gocpp::error(go_EINVAL);
             }
             auto [pathp, e] = UTF16PtrFromString(path);
             if(e != nullptr)
@@ -748,7 +748,7 @@ namespace golang::syscall
             struct gocpp::error err;
             if(len(ts) != 2)
             {
-                return go_EINVAL;
+                return gocpp::error(go_EINVAL);
             }
             auto [pathp, e] = UTF16PtrFromString(path);
             if(e != nullptr)
@@ -1054,7 +1054,7 @@ namespace golang::syscall
     {
         if(sa->Port < 0 || sa->Port > 0xFFFF)
         {
-            return {nullptr, 0, go_EINVAL};
+            return {nullptr, 0, gocpp::error(go_EINVAL)};
         }
         sa->raw.Family = AF_INET;
         auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& sa->raw.Port));
@@ -1106,7 +1106,7 @@ namespace golang::syscall
     {
         if(sa->Port < 0 || sa->Port > 0xFFFF)
         {
-            return {nullptr, 0, go_EINVAL};
+            return {nullptr, 0, gocpp::error(go_EINVAL)};
         }
         sa->raw.Family = AF_INET6;
         auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& sa->raw.Port));
@@ -1187,11 +1187,11 @@ namespace golang::syscall
         auto n = len(name);
         if(n > len(sa->raw.Path))
         {
-            return {nullptr, 0, go_EINVAL};
+            return {nullptr, 0, gocpp::error(go_EINVAL)};
         }
         if(n == len(sa->raw.Path) && name[0] != '@')
         {
-            return {nullptr, 0, go_EINVAL};
+            return {nullptr, 0, gocpp::error(go_EINVAL)};
         }
         sa->raw.Family = AF_UNIX;
         for(auto i = 0; i < n; i++)
@@ -1256,7 +1256,7 @@ namespace golang::syscall
                     break;
             }
         }
-        return {nullptr, go_EAFNOSUPPORT};
+        return {nullptr, gocpp::error(go_EAFNOSUPPORT)};
     }
 
     std::tuple<syscall::Handle, struct gocpp::error> Socket(int domain, int typ, int proto)
@@ -1265,7 +1265,7 @@ namespace golang::syscall
         struct gocpp::error err;
         if(domain == AF_INET6 && SocketDisableIPv6)
         {
-            return {InvalidHandle, go_EAFNOSUPPORT};
+            return {InvalidHandle, gocpp::error(go_EAFNOSUPPORT)};
         }
         return socket(int32_t(domain), int32_t(typ), int32_t(proto));
     }
@@ -1694,7 +1694,7 @@ namespace golang::syscall
         syscall::Handle nfd;
         struct Sockaddr sa;
         struct gocpp::error err;
-        return {0, nullptr, go_EWINDOWS};
+        return {0, nullptr, gocpp::error(go_EWINDOWS)};
     }
 
     std::tuple<int, struct Sockaddr, struct gocpp::error> Recvfrom(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, int flags)
@@ -1702,19 +1702,19 @@ namespace golang::syscall
         int n;
         struct Sockaddr from;
         struct gocpp::error err;
-        return {0, nullptr, go_EWINDOWS};
+        return {0, nullptr, gocpp::error(go_EWINDOWS)};
     }
 
     struct gocpp::error Sendto(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, int flags, struct Sockaddr to)
     {
         struct gocpp::error err;
-        return go_EWINDOWS;
+        return gocpp::error(go_EWINDOWS);
     }
 
     struct gocpp::error SetsockoptTimeval(golang::syscall::Handle fd, int level, int opt, struct Timeval* tv)
     {
         struct gocpp::error err;
-        return go_EWINDOWS;
+        return gocpp::error(go_EWINDOWS);
     }
 
     
@@ -1847,7 +1847,7 @@ namespace golang::syscall
 
     std::tuple<int, struct gocpp::error> GetsockoptInt(golang::syscall::Handle fd, int level, int opt)
     {
-        return {- 1, go_EWINDOWS};
+        return {- 1, gocpp::error(go_EWINDOWS)};
     }
 
     struct gocpp::error SetsockoptLinger(golang::syscall::Handle fd, int level, int opt, struct Linger* l)
@@ -1875,7 +1875,7 @@ namespace golang::syscall
     struct gocpp::error SetsockoptIPv6Mreq(golang::syscall::Handle fd, int level, int opt, struct IPv6Mreq* mreq)
     {
         struct gocpp::error err;
-        return go_EWINDOWS;
+        return gocpp::error(go_EWINDOWS);
     }
 
     int Getpid()
@@ -2006,37 +2006,37 @@ namespace golang::syscall
     struct gocpp::error Link(gocpp::string oldpath, gocpp::string newpath)
     {
         struct gocpp::error err;
-        return go_EWINDOWS;
+        return gocpp::error(go_EWINDOWS);
     }
 
     struct gocpp::error Symlink(gocpp::string path, gocpp::string link)
     {
         struct gocpp::error err;
-        return go_EWINDOWS;
+        return gocpp::error(go_EWINDOWS);
     }
 
     struct gocpp::error Fchmod(golang::syscall::Handle fd, uint32_t mode)
     {
         struct gocpp::error err;
-        return go_EWINDOWS;
+        return gocpp::error(go_EWINDOWS);
     }
 
     struct gocpp::error Chown(gocpp::string path, int uid, int gid)
     {
         struct gocpp::error err;
-        return go_EWINDOWS;
+        return gocpp::error(go_EWINDOWS);
     }
 
     struct gocpp::error Lchown(gocpp::string path, int uid, int gid)
     {
         struct gocpp::error err;
-        return go_EWINDOWS;
+        return gocpp::error(go_EWINDOWS);
     }
 
     struct gocpp::error Fchown(golang::syscall::Handle fd, int uid, int gid)
     {
         struct gocpp::error err;
-        return go_EWINDOWS;
+        return gocpp::error(go_EWINDOWS);
     }
 
     int Getuid()
@@ -2067,7 +2067,7 @@ namespace golang::syscall
     {
         gocpp::slice<int> gids;
         struct gocpp::error err;
-        return {nullptr, go_EWINDOWS};
+        return {nullptr, gocpp::error(go_EWINDOWS)};
     }
 
     void rec::Signal(golang::syscall::Signal s)
@@ -2168,7 +2168,7 @@ namespace golang::syscall
                         }
                         break;
                     default:
-                        return {- 1, go_ENOENT};
+                        return {- 1, gocpp::error(go_ENOENT)};
                         break;
                 }
             }

@@ -193,7 +193,7 @@ namespace golang::syscall
         {
             if(bytealg::IndexByteString(s, 0) != - 1)
             {
-                return {nullptr, go_EINVAL};
+                return {nullptr, gocpp::error(go_EINVAL)};
             }
             length += len(s) + 1;
         }
@@ -266,7 +266,7 @@ namespace golang::syscall
         }
         if(len(ndir) > 2 && isSlash(ndir[0]) && isSlash(ndir[1]))
         {
-            return {""_s, go_EINVAL};
+            return {""_s, gocpp::error(go_EINVAL)};
         }
         return {ndir, nullptr};
     }
@@ -286,7 +286,7 @@ namespace golang::syscall
         struct gocpp::error err;
         if(len(p) == 0)
         {
-            return {""_s, go_EINVAL};
+            return {""_s, gocpp::error(go_EINVAL)};
         }
         if(len(p) > 2 && isSlash(p[0]) && isSlash(p[1]))
         {
@@ -296,7 +296,7 @@ namespace golang::syscall
         {
             if(len(p) == 2)
             {
-                return {""_s, go_EINVAL};
+                return {""_s, gocpp::error(go_EINVAL)};
             }
             if(isSlash(p[2]))
             {
@@ -440,7 +440,7 @@ namespace golang::syscall
             struct gocpp::error err;
             if(len(argv0) == 0)
             {
-                return {0, 0, go_EWINDOWS};
+                return {0, 0, gocpp::error(go_EWINDOWS)};
             }
             if(attr == nullptr)
             {
@@ -453,11 +453,11 @@ namespace golang::syscall
             }
             if(len(attr->Files) > 3)
             {
-                return {0, 0, go_EWINDOWS};
+                return {0, 0, gocpp::error(go_EWINDOWS)};
             }
             if(len(attr->Files) < 3)
             {
-                return {0, 0, go_EINVAL};
+                return {0, 0, gocpp::error(go_EINVAL)};
             }
             if(len(attr->Dir) != 0)
             {
@@ -605,7 +605,7 @@ namespace golang::syscall
     struct gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv)
     {
         struct gocpp::error err;
-        return go_EWINDOWS;
+        return gocpp::error(go_EWINDOWS);
     }
 
 }

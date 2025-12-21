@@ -121,11 +121,11 @@ namespace golang::os
         err = syscall::GetFileInformationByHandle(h, & d);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "GetFileInformationByHandle"_s;
                 x.Path = path;
                 x.Err = err;
-            })};
+            }))};
         }
         windows::FILE_ATTRIBUTE_TAG_INFO ti = {};
         err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(gocpp::unsafe_pointer(& ti)), uint32_t(gocpp::Sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
@@ -137,11 +137,11 @@ namespace golang::os
             }
             else
             {
-                return {nullptr, gocpp::InitPtr<os::PathError>([=](auto& x) {
+                return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = "GetFileInformationByHandleEx"_s;
                     x.Path = path;
                     x.Err = err;
-                })};
+                }))};
             }
         }
         return {gocpp::InitPtr<fileStat>([=](auto& x) {
@@ -358,11 +358,11 @@ namespace golang::os
             std::tie(fs->path, err) = syscall::FullPath(fs->path);
             if(err != nullptr)
             {
-                return gocpp::InitPtr<os::PathError>([=](auto& x) {
+                return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = "FullPath"_s;
                     x.Path = path;
                     x.Err = err;
-                });
+                }));
             }
         }
         fs->name = basename(path);

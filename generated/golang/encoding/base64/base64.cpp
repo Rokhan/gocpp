@@ -414,7 +414,7 @@ namespace golang::base64
                             break;
                         case 1:
                         case 2:
-                            return {si, 0, CorruptInputError(si - j)};
+                            return {si, 0, gocpp::error(CorruptInputError(si - j))};
                             break;
                     }
                 }
@@ -436,7 +436,7 @@ namespace golang::base64
             }
             if(gocpp::rune(in) != enc->padChar)
             {
-                return {si, 0, CorruptInputError(si - 1)};
+                return {si, 0, gocpp::error(CorruptInputError(si - 1))};
             }
             //Go switch emulation
             {
@@ -449,7 +449,7 @@ namespace golang::base64
                 {
                     case 0:
                     case 1:
-                        return {si, 0, CorruptInputError(si - 1)};
+                        return {si, 0, gocpp::error(CorruptInputError(si - 1))};
                         break;
                     case 2:
                         for(; si < len(src) && (src[si] == '\n' || src[si] == '\r'); )
@@ -458,11 +458,11 @@ namespace golang::base64
                         }
                         if(si == len(src))
                         {
-                            return {si, 0, CorruptInputError(len(src))};
+                            return {si, 0, gocpp::error(CorruptInputError(len(src)))};
                         }
                         if(gocpp::rune(src[si]) != enc->padChar)
                         {
-                            return {si, 0, CorruptInputError(si - 1)};
+                            return {si, 0, gocpp::error(CorruptInputError(si - 1))};
                         }
                         si++;
                         break;
@@ -497,14 +497,14 @@ namespace golang::base64
                     dst[1] = dbuf[1];
                     if(enc->strict && dbuf[2] != 0)
                     {
-                        return {si, 0, CorruptInputError(si - 1)};
+                        return {si, 0, gocpp::error(CorruptInputError(si - 1))};
                     }
                     dbuf[1] = 0;
                 case 2:
                     dst[0] = dbuf[0];
                     if(enc->strict && (dbuf[1] != 0 || dbuf[2] != 0))
                     {
-                        return {si, 0, CorruptInputError(si - 2)};
+                        return {si, 0, gocpp::error(CorruptInputError(si - 2))};
                     }
                     break;
             }

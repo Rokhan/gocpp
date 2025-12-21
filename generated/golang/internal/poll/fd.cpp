@@ -88,7 +88,7 @@ namespace golang::poll
         {
             return ErrFileClosing;
         }
-        return ErrNetClosing;
+        return gocpp::error(ErrNetClosing);
     }
 
     // ErrDeadlineExceeded is returned for an expired deadline.

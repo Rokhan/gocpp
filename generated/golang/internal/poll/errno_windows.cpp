@@ -42,7 +42,7 @@ namespace golang::poll
                     break;
             }
         }
-        return e;
+        return gocpp::error(e);
     }
 
 }

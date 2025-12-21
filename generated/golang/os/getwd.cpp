@@ -150,7 +150,7 @@ namespace golang::os
         {
             if(len(parent) >= 1024)
             {
-                return {""_s, syscall::go_ENAMETOOLONG};
+                return {""_s, gocpp::error(syscall::go_ENAMETOOLONG)};
             }
             auto [fd, err] = openFileNolog(parent, O_RDONLY, 0);
             if(err != nullptr)

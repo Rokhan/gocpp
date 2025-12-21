@@ -958,7 +958,7 @@ namespace golang::png
             auto [mw, mh] = std::tuple{int64_t(rec::Dx(gocpp::recv(rec::Bounds(gocpp::recv(m))))), int64_t(rec::Dy(gocpp::recv(rec::Bounds(gocpp::recv(m)))))};
             if(mw <= 0 || mh <= 0 || mw >= (1 << 32) || mh >= (1 << 32))
             {
-                return FormatError("invalid image size: "_s + strconv::FormatInt(mw, 10) + "x"_s + strconv::FormatInt(mh, 10));
+                return gocpp::error(FormatError("invalid image size: "_s + strconv::FormatInt(mw, 10) + "x"_s + strconv::FormatInt(mh, 10)));
             }
             encoder* e = {};
             if(enc->BufferPool != nullptr)

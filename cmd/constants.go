@@ -5,6 +5,12 @@ var baseIndent string = "    "
 // receiver namespace
 var recNs = "rec"
 
+var mocklibReceiverElts = []string{
+	// "Date",
+	// "Error",
+	// "Mutex",
+}
+
 const cpp_str_lit = "_s"
 const cpp_string_type = "gocpp::string"
 const cpp_cplx64_type = "gocpp::complex64"

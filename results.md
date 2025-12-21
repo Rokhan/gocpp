@@ -140,7 +140,7 @@
 | $(ImportDir)/encoding/binary/native_endian_little.go | ✔️ ([cpp](generated/golang/encoding/binary/native_endian_little.cpp), [h](generated/golang/encoding/binary/native_endian_little.h))| ❌ |
 | $(ImportDir)/encoding/hex/hex.go | ✔️ ([cpp](generated/golang/encoding/hex/hex.cpp), [h](generated/golang/encoding/hex/hex.h))| ❌ |
 | $(ImportDir)/errors/errors.go | ✔️ ([cpp](generated/golang/errors/errors.cpp), [h](generated/golang/errors/errors.h))| ✔️ |
-| $(ImportDir)/errors/wrap.go | ✔️ ([cpp](generated/golang/errors/wrap.cpp), [h](generated/golang/errors/wrap.h))| ❌ |
+| $(ImportDir)/errors/wrap.go | ✔️ ([cpp](generated/golang/errors/wrap.cpp), [h](generated/golang/errors/wrap.h))| ✔️ |
 | $(ImportDir)/fmt/errors.go | ✔️ ([cpp](generated/golang/fmt/errors.cpp), [h](generated/golang/fmt/errors.h))| ❌ |
 | $(ImportDir)/fmt/format.go | ✔️ ([cpp](generated/golang/fmt/format.cpp), [h](generated/golang/fmt/format.h))| ❌ |
 | $(ImportDir)/fmt/print.go | ✔️ ([cpp](generated/golang/fmt/print.cpp), [h](generated/golang/fmt/print.h))| ❌ |

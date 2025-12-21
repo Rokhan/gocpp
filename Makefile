@@ -206,3 +206,6 @@ unix2dos:
 
 dos2unix:
 	dos2unix -q $$(find generated -type f -name "*.cpp" -o -name "*.h")
+
+ccache-stats:
+	$(CCACHE) -s

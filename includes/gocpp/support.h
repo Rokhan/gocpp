@@ -71,6 +71,8 @@ namespace golang
     }
     namespace poll
     {
+        struct DeadlineExceededError;
+
         namespace rec
         {
             gocpp::string Error(struct errNetClosing e);
@@ -96,6 +98,8 @@ namespace golang
 
 namespace mocklib
 {
+    struct Date;
+
     std::string Sprint(const std::any& value);
     std::string Sprint(const gocpp::go_any& value);
     inline std::string RuneToString(gocpp::rune r);
@@ -106,6 +110,9 @@ namespace mocklib
     template<typename T>
     std::ostream& PrintSliceTo(std::true_type, std::ostream& os, gocpp::slice<T> const& slice);
 
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const gocpp::array_base<T>& array);
+
     namespace rec
     {
     }
@@ -114,8 +121,34 @@ namespace mocklib
 // Support types implementations
 namespace gocpp
 {
+    template<typename T>
+    struct CheckType
+    {
+        using type = void;
+    };
+
+    template <typename T, typename = void>
+    class IsGoStruct : public std::false_type { };
+
+    template <typename T>
+    class IsGoStruct<T, typename CheckType<typename T::isGoStruct>::type> : public std::true_type { };
+
+    template<typename T>
+    concept GoStruct = IsGoStruct<T>::value;
+
+
+    template <typename T, typename = void>
+    class IsGoInterface : public std::false_type { };
+
+    template <typename T>
+    class IsGoInterface<T, typename CheckType<typename T::isGoInterface>::type> : public std::true_type { };
+
+    template<typename T>
+    concept GoInterface = IsGoInterface<T>::value;
+    
 
     [[noreturn]] void panic(const gocpp::string& message);
+    [[noreturn]] void panic(const char* const message);
 
     inline dp::thread_pool<>& global_pool()
     {
@@ -205,10 +238,45 @@ namespace gocpp
         bool operator==(std::nullptr_t) const { return ptr == nullptr; }
         bool operator!=(std::nullptr_t) const { return ptr != nullptr; }
 
-        TArray::element_type operator[](size_t index) { return (*ptr)[index]; }
+        TArray::element_type& operator[](size_t index) { return (*ptr)[index]; }
+        const TArray::element_type& operator[](size_t index) const { return (*ptr)[index]; }
+
+        inline slice<typename TArray::element_type> make_slice(size_t low) const
+        {
+            check_not_null();
+            return ptr->make_slice(low);
+        }
+
+        inline slice<typename TArray::element_type> make_slice(size_t low, size_t high) const
+        {
+            check_not_null();
+            return ptr->make_slice(low, high);
+        }
+
+        void check_not_null() const
+        {
+            if(ptr == nullptr)
+            {
+                panic("runtime error: slice of nil array pointer");
+            }
+        }
 
         TArray* ptr = nullptr;
     };
+
+    template<typename TArray>
+    inline std::ostream& operator<<(std::ostream& os, const array_ptr<TArray>& value)
+    {
+        if(value.ptr == nullptr)
+        {
+            os << "nil";
+        }
+        else
+        {
+            os << *(value.ptr);
+        }
+        return os;
+    }
 
     template <typename T>
     struct ptr
@@ -232,7 +300,7 @@ namespace gocpp
         operator T*() const { return reinterpret_cast<T*>(ptr); }
     };
 
-    std::ostream& operator<<(std::ostream& os, const unsafe_pointer& ptr)
+    inline std::ostream& operator<<(std::ostream& os, const unsafe_pointer& ptr)
     {
         os << "unsafe_pointer(" << reinterpret_cast<uintptr_t>(ptr.ptr) << ")";
         return os;
@@ -667,12 +735,12 @@ namespace gocpp
 
     template <typename T>
     concept IsRefError = requires(const T& t) {
-        { Error(t) } -> std::convertible_to<gocpp::string>;
+        { Error(t) } -> std::same_as<gocpp::string>;
     };
     
     template <typename T>
     concept IsPtrError = requires(const T *t) {
-        { Error(t) } -> std::convertible_to<gocpp::string>;
+        { Error(t) } -> std::same_as<gocpp::string>;
     };
     
     template <typename T>
@@ -690,15 +758,18 @@ namespace gocpp
         
         // Temporary mock, we lose the original type
         template<typename T> requires IsRefError<T>
-        error(const T& t) : optional(Error(t)) {}
+        explicit error(const T& t) : optional(Error(t)) {}
         
         // Temporary mock, we lose the original type
         template<typename T> requires IsPtrError<T>
-        error(const T* t) : optional(Error(t)) {}
+        explicit error(const T* t) : optional(Error(t)) {}
 
         // Temporary mock, we lose the original type
         // Why the "requires IsRefError<T>" constraint does not work here ? 
         error(golang::hex::InvalidByteError t) : optional(golang::hex::rec::Error(t)) {}
+
+        // Temporary mock, need to find a more generic solution
+        error(golang::poll::DeadlineExceededError* t) : optional(golang::poll::rec::Error(t)) {}
 
         error& operator=(const std::string& msg)
         {
@@ -735,7 +806,7 @@ namespace gocpp
         }
     };
 
-    std::string Error(const error& e)
+    std::string Error(const std::type_identity_t<error>& e)
     {
         if(e.has_value())
         {
@@ -744,30 +815,28 @@ namespace gocpp
         return "Undefined error";
     }
 
-    template<typename T>
-    struct CheckType
+    inline std::ostream& operator<<(std::ostream& os, const std::type_identity_t<error>& err)
     {
-        using type = void;
-    };
+        os << Error(err);
+        return os;
+    }
 
-    template <typename T, typename = void>
-    class IsGoStruct : public std::false_type { };
+    [[noreturn]] void panic(const std::type_identity_t<error>& err)
+    {
+        panic(err);
+    }
 
-    template <typename T>
-    class IsGoStruct<T, typename CheckType<typename T::isGoStruct>::type> : public std::true_type { };
+    template<typename T> requires IsRefError<T>
+    [[noreturn]] void panic(const T& err)
+    {
+        panic(Error(err));
+    }
 
-    template<typename T>
-    concept GoStruct = IsGoStruct<T>::value;
-
-
-    template <typename T, typename = void>
-    class IsGoInterface : public std::false_type { };
-
-    template <typename T>
-    class IsGoInterface<T, typename CheckType<typename T::isGoInterface>::type> : public std::true_type { };
-
-    template<typename T>
-    concept GoInterface = IsGoInterface<T>::value;
+    template<typename T> requires IsPtrError<T>
+    [[noreturn]] void panic(const T* err)
+    {
+        panic(Error(err));
+    }
 
     template<typename T, typename Func>
     T Init(Func init)
@@ -800,12 +869,22 @@ namespace gocpp
         }
     };
 
-    [[noreturn]] void panic(const gocpp::string& message)
+    [[noreturn]] inline void panic(const std::string& message)
     {
         throw GoPanic(message);
     }
 
-    template<typename ErrorType> requires IsError<ErrorType>    
+    [[noreturn]] inline void panic(const gocpp::string& message)
+    {
+        throw GoPanic(message);
+    }
+
+    [[noreturn]] inline void panic(const char* const message)
+    {
+        panic(gocpp::string(message));
+    }
+
+    template<typename ErrorType> requires IsError<ErrorType>
     [[noreturn]] void panic(const ErrorType& error)
     {
         throw GoPanic(Error(error));
@@ -865,6 +944,8 @@ namespace gocpp
         operator T*() { return &obj; }
         operator const T*() const { return &obj; }
     };
+
+    inline error recv(const error& err) { return err; }
 
     template <typename T>
     PtrRecv<T> recv(T* t) { return PtrRecv<T>(t); }
@@ -1020,6 +1101,12 @@ namespace gocpp
             return N;
         }
     };
+
+    template<typename T, int N>
+    inline std::ostream& operator<<(std::ostream& os, const array<T, N>& arr)
+    {
+        return mocklib::operator<<(os, arr);
+    }
 
     template<typename T>
     struct slice : array_base<T>
@@ -1614,6 +1701,14 @@ namespace mocklib
     // mock "runtime" types and functions
     inline const char *const GOOS = "undefined";
 
+    namespace rec
+    {
+        inline std::string Error(const std::type_identity_t<gocpp::error>& e)
+        {
+            return gocpp::Error(e);
+        }
+    }
+
     // mock "math" types and functions
     inline const double Sqrt2 = std::sqrt(2.0);
     inline const double Pi = std::numbers::pi;
@@ -1880,6 +1975,13 @@ namespace mocklib
     std::ostream& PrintTo(std::ostream& os, const gocpp::map_value<V>& value)
     {
         return os << std::get<0>(value);
+    }
+
+    template<typename T, int N>
+    std::ostream& PrintTo(std::ostream& os, const gocpp::array<T, N>& value)
+    {
+        os << value;
+        return os;
     }
 
     template<typename T>

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"golang.org/x/exp/maps"
+	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -206,6 +207,9 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo, receiversElts set[stri
 	fmt.Fprintf(out, "    namespace %s\n", recNs)
 	fmt.Fprintf(out, "    {\n")
 	fmt.Fprintf(out, "        using namespace mocklib::%s;\n", recNs)
+	for _, elt := range mocklibReceiverElts {
+		fmt.Fprintf(out, "        using mocklib::%s::%s;\n", recNs, elt)
+	}
 	for _, elt := range toSortedList(receiversElts) {
 		fmt.Fprintf(out, "        using %s;\n", elt)
 	}
@@ -564,6 +568,89 @@ func (cv *cppConverter) IsTypeMap(goType types.Type) bool {
 	default:
 		return false
 	}
+}
+
+// Take a node in the ast and return the return type of the function in which it is located
+func (cv *cppConverter) getReturnType(node ast.Node) *types.Tuple {
+	funcNode := cv.getReturnFunc(node)
+	if funcNode == nil {
+		return nil
+	}
+	return getFunctionReturnType(cv.typeInfo, funcNode)
+}
+
+// Take a node in the ast get the containing function
+func (cv *cppConverter) getReturnFunc(node ast.Node) ast.Node {
+	if cv.typeInfo == nil || node == nil || cv.astFile == nil {
+		return nil
+	}
+
+	// Find the innermost function-related node that encloses the given node.
+	var best ast.Node
+	var bestSpan token.Pos = 0
+	pos := node.Pos()
+
+	// Use AST path helper to get candidates near the position.
+	if path, _ := astutil.PathEnclosingInterval(cv.astFile, pos, pos); path != nil {
+		for _, n := range path {
+			switch n.(type) {
+			case *ast.FuncDecl, *ast.FuncLit, *ast.FuncType:
+				if n.Pos() <= pos && pos <= n.End() {
+					span := n.End() - n.Pos()
+					if best == nil || span < bestSpan {
+						best = n
+						bestSpan = span
+					}
+				}
+			}
+		}
+	}
+
+	return best
+}
+
+// Get the return type of a function node
+func getFunctionReturnType(typeInfo *types.Info, funcNode ast.Node) *types.Tuple {
+	var sig *types.Signature
+
+	switch n := funcNode.(type) {
+	case *ast.FuncDecl:
+		// Try the ast.FuncType entry first
+		if n.Type != nil {
+			if tv, ok := typeInfo.Types[n.Type]; ok {
+				if sig, ok = tv.Type.(*types.Signature); ok {
+					break
+				}
+			}
+		}
+		// Fall back to function object (named func)
+		if n.Name != nil {
+			if def := typeInfo.Defs[n.Name]; def != nil {
+				var ok bool
+				if sig, ok = def.Type().(*types.Signature); ok {
+					break
+				}
+			}
+		}
+
+	case *ast.FuncLit:
+		if n.Type != nil {
+			if tv, ok := typeInfo.Types[n.Type]; ok {
+				if sig, ok = tv.Type.(*types.Signature); ok {
+					break
+				}
+			}
+		}
+
+	case *ast.FuncType:
+		if tv, ok := typeInfo.Types[n]; ok {
+			if sig, ok = tv.Type.(*types.Signature); ok {
+				break
+			}
+		}
+	}
+
+	return sig.Results()
 }
 
 // func (cv *cppConverter) cppPrintf(format string, a ...interface{}) (n int, err error) {
@@ -1558,7 +1645,8 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 	return
 }
 
-func (cv *cppConverter) convertReturnExprs(exprs []ast.Expr, outNames []string) cppExpr {
+func (cv *cppConverter) convertReturnStmt(retStmt *ast.ReturnStmt, outNames []string) cppExpr {
+	exprs := retStmt.Results
 	switch len(exprs) {
 	case 0:
 		if outNames != nil {
@@ -1574,9 +1662,9 @@ func (cv *cppConverter) convertReturnExprs(exprs []ast.Expr, outNames []string) 
 			return mkCppExpr("return")
 		}
 	case 1:
-		return ExprPrintf("return %s", cv.convertExprs(exprs))
+		return ExprPrintf("return %s", cv.convertReturnExprs(exprs))
 	default:
-		return ExprPrintf("return {%s}", cv.convertExprs(exprs))
+		return ExprPrintf("return {%s}", cv.convertReturnExprs(exprs))
 	}
 
 	panic("convertReturnExprs, Unreachable code reached")
@@ -1739,7 +1827,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		cv.WritterExprPrintf(cppOut, "%s%s%s;\n", cv.cpp.Indent(), cv.convertExpr(s.X), s.Tok)
 
 	case *ast.ReturnStmt:
-		cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), cv.convertReturnExprs(s.Results, env.outNames))
+		cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), cv.convertReturnStmt(s, env.outNames))
 
 	case *ast.AssignStmt:
 		stmts := cv.convertAssignStmt(s, env)
@@ -3714,8 +3802,9 @@ func (cv *cppConverter) convertSubExpr(node ast.Expr) cppExpr {
 }
 
 type exprCtx struct {
-	isSubExpr bool
-	isTarget  bool
+	isSubExpr     bool
+	isTarget      bool
+	explicitError bool
 }
 
 func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
@@ -4041,15 +4130,41 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 	return buf.Expr()
 }
 
-func (cv *cppConverter) convertExprList(exprs []ast.Expr, ctx exprCtx) (strs []cppExpr) {
-	for _, expr := range exprs {
-		strs = append(strs, cv.convertExprCtx(expr, ctx))
+func (cv *cppConverter) convertExprList(exprs []ast.Expr, ctx exprCtx) (cppExprs []cppExpr) {
+	var explicitError bool = ctx.explicitError
+	ctx.explicitError = false
+
+	if len(exprs) == 0 {
+		return nil
 	}
-	return strs
+
+	var retTypes *types.Tuple
+	if explicitError {
+		retTypes = cv.getReturnType(exprs[0])
+	}
+
+	i := 0
+	for _, expr := range exprs {
+		cppExpr := cv.convertExprCtx(expr, ctx)
+		if explicitError && retTypes != nil && retTypes.At(i) != nil && retTypes.At(i).Type() != nil {
+			exprType := cv.convertExprToType(expr)
+			targetType := retTypes.At(i).Type()
+			if exprType != targetType && targetType.String() == "error" && exprType != types.Typ[types.UntypedNil] {
+				cppExpr.str = fmt.Sprintf("gocpp::error(%s)", cppExpr.str)
+			}
+		}
+		cppExprs = append(cppExprs, cppExpr)
+		i++
+	}
+	return cppExprs
 }
 
 func (cv *cppConverter) convertExprs(exprs []ast.Expr) cppExpr {
 	return cv.convertExprsImpl(exprs, exprCtx{}, false)
+}
+
+func (cv *cppConverter) convertReturnExprs(exprs []ast.Expr) cppExpr {
+	return cv.convertExprsImpl(exprs, exprCtx{explicitError: true}, false)
 }
 
 func (cv *cppConverter) convertAssignExprs(exprs []ast.Expr) cppExpr {

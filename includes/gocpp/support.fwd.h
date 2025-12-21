@@ -31,9 +31,11 @@ namespace gocpp
 {
     template<typename T> struct slice;
     template<typename T> struct array_base;
-    template<typename T, int N> struct array;
-    template<typename K, typename V> struct map;
-    
+    template<typename T, int N> struct array;    
+    template<typename V> struct map_value;
+    template<typename K, typename V> struct map;    
+    template<typename T, typename E> struct result_or_error;
+
     struct complex128;
     struct Defer;
     struct GoPanic;

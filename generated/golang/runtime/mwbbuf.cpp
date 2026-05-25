@@ -50,7 +50,6 @@
 #include "golang/runtime/trace2runtime.h"
 #include "golang/runtime/trace2status.h"
 #include "golang/runtime/trace2time.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

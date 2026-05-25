@@ -15,7 +15,6 @@
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/runtime.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::sync
 {

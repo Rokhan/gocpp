@@ -24,9 +24,11 @@ namespace golang::runtime
     const int _Pdead = 4;
     struct note;
     struct funcval;
+    struct iface;
     using guintptr = uintptr_t;
     using puintptr = uintptr_t;
     using muintptr = uintptr_t;
+    struct gobuf;
     struct libcall;
     struct stack;
     const long gTrackingPeriod = 8;
@@ -45,6 +47,7 @@ namespace golang::runtime
     const int _SigIgn = 1 << 8;
     struct funcinl;
     struct lfnode;
+    struct _panic;
     struct savedOpenDeferState;
     struct ancestorInfo;
     using waitReason = uint8_t;
@@ -122,14 +125,11 @@ namespace golang::runtime
 #include "golang/runtime/time.fwd.h"
 #include "golang/runtime/trace2runtime.fwd.h"
 #include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
     struct mutex;
-    struct iface;
     struct eface;
-    struct gobuf;
     struct sudog;
     struct heldLockInfo;
     struct g;
@@ -141,5 +141,4 @@ namespace golang::runtime
     struct itab;
     struct forcegcstate;
     struct _defer;
-    struct _panic;
 }

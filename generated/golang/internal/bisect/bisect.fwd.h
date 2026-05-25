@@ -7,6 +7,7 @@
 namespace golang::bisect
 {
     struct Matcher;
+    struct atomicPointerDedup;
     struct cond;
     struct Writer;
     struct parseError;
@@ -14,10 +15,8 @@ namespace golang::bisect
     const uint64_t prime64 = 1099511628211;
 }
 #include "golang/sync/mutex.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::bisect
 {
-    struct atomicPointerDedup;
     struct dedup;
 }

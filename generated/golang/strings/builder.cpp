@@ -13,7 +13,6 @@
 
 #include "golang/internal/bytealg/bytealg.h"
 #include "golang/unicode/utf8/utf8.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::strings
 {

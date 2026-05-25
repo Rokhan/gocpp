@@ -24,7 +24,6 @@
 #include "golang/runtime/string.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/type.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

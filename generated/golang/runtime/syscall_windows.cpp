@@ -44,7 +44,6 @@
 #include "golang/runtime/type.h"
 #include "golang/runtime/typekind.h"
 #include "golang/runtime/zcallback_windows.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

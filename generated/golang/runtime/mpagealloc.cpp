@@ -35,7 +35,6 @@
 #include "golang/runtime/print.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stubs.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

@@ -7,10 +7,5 @@
 namespace golang::runtime
 {
     using cgoCallers = gocpp::array<uintptr_t, 32>;
-}
-#include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::runtime
-{
     struct argset;
 }

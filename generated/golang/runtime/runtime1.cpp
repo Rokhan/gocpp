@@ -46,7 +46,6 @@
 #include "golang/runtime/trace2status.h"
 #include "golang/runtime/trace2time.h"
 #include "golang/runtime/type.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {
@@ -299,7 +298,7 @@ namespace golang::runtime
         {
             go_throw("bad unsafe.Sizeof x1"_s);
         }
-        if(unsafe::Offsetof(y1.y) != 1)
+        if(gocpp::Offsetof<y1t>(&y1t::y) != 1)
         {
             go_throw("bad offsetof y1.y"_s);
         }

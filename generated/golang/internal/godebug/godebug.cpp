@@ -17,7 +17,6 @@
 #include "golang/sync/map.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
-#include "golang/unsafe/unsafe.h"
 
 // Package godebug makes the settings in the $GODEBUG environment variable
 // available to other packages. These settings are often used for compatibility

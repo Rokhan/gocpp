@@ -8,6 +8,7 @@ namespace golang::syscall
 {
     using Handle = uintptr_t;
     using Errno = uintptr_t;
+    const uintptr_t ptrSize = gocpp::Sizeof<uintptr_t>();
     const bool ImplementsGetwd = true;
     const long _UTIME_OMIT = - 1;
     const uintptr_t socket_error = uintptr_t(~ uint32_t(0));
@@ -15,6 +16,7 @@ namespace golang::syscall
     struct RawSockaddrInet6;
     struct RawSockaddr;
     struct RawSockaddrAny;
+    struct Sockaddr;
     struct SockaddrInet4;
     struct SockaddrInet6;
     struct SockaddrUnix;
@@ -33,12 +35,9 @@ namespace golang::syscall
     const Errno _ERROR_CALL_NOT_IMPLEMENTED = Errno(120);
 }
 #include "golang/syscall/types_windows.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::syscall
 {
-    const uintptr_t ptrSize = gocpp::Sizeof<uintptr_t>();
-    struct Sockaddr;
     struct RawSockaddrUnix;
     struct Rusage;
 }

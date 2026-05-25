@@ -6,6 +6,7 @@
 
 namespace golang::abi
 {
+    struct Type;
     using Kind = unsigned int;
     const int KindDirectIface = 1 << 5;
     const int KindGCProg = 1 << 6;
@@ -22,6 +23,7 @@ namespace golang::abi
     struct ChanType;
     struct structTypeUncommon;
     struct InterfaceType;
+    struct MapType;
     struct SliceType;
     struct FuncType;
     struct PtrType;
@@ -63,12 +65,5 @@ namespace golang::abi
     const abi::ChanDir RecvDir = 1 << 0;
     const abi::ChanDir SendDir = 1 << 1;
     const abi::ChanDir InvalidDir = 0;
-}
-#include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::abi
-{
-    struct Type;
-    struct MapType;
     const ChanDir BothDir = RecvDir | SendDir;
 }

@@ -22,7 +22,6 @@
 #include "golang/runtime/symtab.h"
 #include "golang/sync/atomic/doc.h"
 #include "golang/sync/mutex.h"
-#include "golang/unsafe/unsafe.h"
 
 // Package bisect can be used by compilers and other programs
 // to serve as a target for the bisect debugging tool.

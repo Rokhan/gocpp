@@ -5,7 +5,6 @@
 
 #include "golang/runtime/internal/sys/nih.fwd.h"
 #include "golang/runtime/mstats.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {

@@ -12,7 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/panic.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

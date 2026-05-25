@@ -9,7 +9,6 @@
 #include "golang/runtime/internal/atomic/atomic_amd64.fwd.h"
 #include "gocpp/support.h"
 
-
 namespace golang::atomic
 {
     uint32_t Load(uint32_t* ptr);

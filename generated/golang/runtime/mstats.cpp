@@ -318,7 +318,7 @@ namespace golang::runtime
 
     void init()
     {
-        if(auto offset = unsafe::Offsetof(memstats.heapStats); offset % 8 != 0)
+        if(auto offset = gocpp::Offsetof<mstats>(&mstats::heapStats); offset % 8 != 0)
         {
             println(offset);
             go_throw("memstats.heapStats not aligned to 8 bytes"_s);

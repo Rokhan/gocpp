@@ -170,6 +170,7 @@ namespace golang::runtime
     void copyKeys(golang::runtime::maptype* t, struct hmap* h, struct bmap* b, struct slice* s, uint8_t offset);
     void values(go_any m, gocpp::unsafe_pointer p);
     void copyValues(golang::runtime::maptype* t, struct hmap* h, struct bmap* b, struct slice* s, uint8_t offset);
+    extern uintptr_t dataOffset;
 
     namespace rec
     {

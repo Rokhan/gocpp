@@ -11,8 +11,6 @@
 #include "golang/internal/abi/type.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
-
 namespace golang::abi
 {
     namespace rec

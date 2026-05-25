@@ -8,19 +8,18 @@ namespace golang::runtime
 {
     const long spanSetBlockEntries = 512;
     const long spanSetInitSpineCap = 256;
+    struct spanSetSpinePointer;
     using headTailIndex = uint64_t;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/lfstack.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
     struct spanSet;
     struct spanSetBlock;
     struct atomicSpanSetSpinePointer;
-    struct spanSetSpinePointer;
     struct spanSetBlockAlloc;
     struct atomicHeadTailIndex;
     struct atomicMSpanPointer;

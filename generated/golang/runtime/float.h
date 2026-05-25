@@ -9,7 +9,6 @@
 #include "golang/runtime/float.fwd.h"
 #include "gocpp/support.h"
 
-
 namespace golang::runtime
 {
     extern double inf;

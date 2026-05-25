@@ -37,7 +37,6 @@
 #include "golang/syscall/zsyscall_windows.h"
 #include "golang/time/time.h"
 #include "golang/time/zoneinfo.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::os
 {

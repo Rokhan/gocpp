@@ -23,7 +23,6 @@
 #include "golang/runtime/runtime.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/time_nofake.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

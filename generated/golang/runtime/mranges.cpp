@@ -21,7 +21,6 @@
 #include "golang/runtime/slice.h"
 #include "golang/runtime/stack.h"
 #include "golang/runtime/stubs.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

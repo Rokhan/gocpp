@@ -17,7 +17,6 @@
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zerrors_windows.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::registry
 {

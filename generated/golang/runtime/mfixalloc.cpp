@@ -16,7 +16,6 @@
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/stubs.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

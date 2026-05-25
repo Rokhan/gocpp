@@ -9,7 +9,6 @@
 #include "golang/syscall/asan0.fwd.h"
 #include "gocpp/support.h"
 
-
 namespace golang::syscall
 {
     void asanRead(gocpp::unsafe_pointer addr, int len);

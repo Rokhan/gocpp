@@ -10,6 +10,7 @@ namespace golang::runtime
     using abiPartKind = int;
     struct abiPart;
     struct abiDesc;
+    struct callbackArgs;
     const long _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
     struct gocpp_id_1;
     const long maxArgs = 42;
@@ -19,12 +20,10 @@ namespace golang::runtime
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
     struct winCallback;
     struct winCallbackKey;
     const int callbackMaxFrame = 64 * goarch::PtrSize;
-    struct callbackArgs;
 }

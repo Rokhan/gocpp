@@ -14,7 +14,6 @@ namespace golang::runtime
     const runtime::selectDir selectDefault = 3;
 }
 #include "golang/runtime/chan.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {

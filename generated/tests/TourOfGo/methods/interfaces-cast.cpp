@@ -12,7 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/print.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::main
 {

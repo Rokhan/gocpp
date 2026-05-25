@@ -20,7 +20,6 @@
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/types_windows_amd64.h"
 #include "golang/syscall/zerrors_windows.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::syscall
 {

@@ -65,7 +65,6 @@
 #include "golang/runtime/trace2status.h"
 #include "golang/runtime/trace2time.h"
 #include "golang/runtime/utf8.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

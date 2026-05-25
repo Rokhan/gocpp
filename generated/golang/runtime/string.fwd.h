@@ -8,13 +8,8 @@ namespace golang::runtime
 {
     const long tmpStringBufSize = 32;
     using tmpBuf = gocpp::array<unsigned char, tmpStringBufSize>;
+    struct stringStruct;
     struct stringStructDWARF;
     const uint64_t maxUint64 = ~ uint64_t(0);
     const int64_t maxInt64 = int64_t(maxUint64 >> 1);
-}
-#include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::runtime
-{
-    struct stringStruct;
 }

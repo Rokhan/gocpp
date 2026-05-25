@@ -15,6 +15,7 @@ namespace golang::runtime
     struct statAggregate;
     using metricKind = int;
     struct metricSample;
+    struct metricValue;
     struct metricFloat64Histogram;
     struct metricName;
     const runtime::statDep heapStatsDep = 0;
@@ -28,11 +29,9 @@ namespace golang::runtime
     const runtime::metricKind metricKindFloat64Histogram = 3;
 }
 #include "golang/runtime/mstats.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
     struct heapStatsAggregate;
     struct cpuStatsAggregate;
-    struct metricValue;
 }

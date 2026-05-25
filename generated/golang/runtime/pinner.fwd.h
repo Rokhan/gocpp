@@ -8,14 +8,12 @@ namespace golang::runtime
 {
     struct Pinner;
     const long pinnerSize = 64;
+    struct pinner;
     struct pinState;
 }
 #include "golang/runtime/mheap.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    const uintptr_t pinnerRefStoreSize = (pinnerSize - gocpp::Sizeof<gocpp::slice<gocpp::unsafe_pointer>>()) / gocpp::Sizeof<unsafe::Pointer>();
-    struct pinner;
     using pinnerBits = gcBits;
 }

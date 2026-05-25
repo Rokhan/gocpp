@@ -12,7 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/cmp/cmp.h"
-#include "golang/unsafe/unsafe.h"
 
 // Package slices defines various functions useful with slices of any type.
 namespace golang::slices

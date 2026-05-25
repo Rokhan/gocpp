@@ -7,6 +7,7 @@
 namespace golang::runtime
 {
     const long _NSIG = 65;
+    using stdFunction = gocpp::unsafe_pointer;
     struct sigset;
     const long _MAX_PATH = 260;
     const uintptr_t currentProcess = ~ uintptr_t(0);
@@ -15,10 +16,8 @@ namespace golang::runtime
     const bool preemptMSupported = true;
 }
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
-    using stdFunction = gocpp::unsafe_pointer;
     struct mOS;
 }

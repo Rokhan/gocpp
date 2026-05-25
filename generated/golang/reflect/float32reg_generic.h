@@ -9,7 +9,6 @@
 #include "golang/reflect/float32reg_generic.fwd.h"
 #include "gocpp/support.h"
 
-
 namespace golang::reflect
 {
     double archFloat32FromReg(uint64_t reg);

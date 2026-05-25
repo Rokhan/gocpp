@@ -13,7 +13,6 @@ namespace golang::runtime
 #include "golang/runtime/mgcwork.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/stack.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {

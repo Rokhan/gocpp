@@ -13,7 +13,6 @@ namespace golang::runtime
 #include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {

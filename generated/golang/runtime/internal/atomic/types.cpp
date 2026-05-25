@@ -13,7 +13,6 @@
 
 #include "golang/runtime/internal/atomic/atomic_amd64.h"
 #include "golang/runtime/internal/atomic/stubs.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::atomic
 {

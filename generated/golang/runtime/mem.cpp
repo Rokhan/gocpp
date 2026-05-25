@@ -16,7 +16,6 @@
 #include "golang/runtime/mem_windows.h"
 #include "golang/runtime/mgcpacer.h"
 #include "golang/runtime/mstats.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

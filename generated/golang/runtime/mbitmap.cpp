@@ -65,7 +65,6 @@
 #include "golang/runtime/trace2time.h"
 #include "golang/runtime/type.h"
 #include "golang/runtime/typekind.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

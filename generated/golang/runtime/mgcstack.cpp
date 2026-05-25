@@ -17,7 +17,6 @@
 #include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

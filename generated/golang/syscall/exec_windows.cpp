@@ -22,7 +22,6 @@
 #include "golang/syscall/zerrors_windows.h"
 #include "golang/syscall/zsyscall_windows.h"
 #include "golang/unicode/utf16/utf16.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::syscall
 {

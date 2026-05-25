@@ -11,8 +11,6 @@
 #include "golang/math/unsafe.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
-
 namespace golang::math
 {
     namespace rec

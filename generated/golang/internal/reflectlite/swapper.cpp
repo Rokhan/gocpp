@@ -16,7 +16,6 @@
 #include "golang/internal/reflectlite/type.h"
 #include "golang/internal/reflectlite/value.h"
 #include "golang/internal/unsafeheader/unsafeheader.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::reflectlite
 {

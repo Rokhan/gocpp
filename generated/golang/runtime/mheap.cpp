@@ -77,7 +77,6 @@
 #include "golang/runtime/trace2status.h"
 #include "golang/runtime/trace2time.h"
 #include "golang/runtime/type.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {
@@ -2630,7 +2629,7 @@ namespace golang::runtime
             memclrNoHeapPointers(gocpp::unsafe_pointer(result), gcBitsChunkBytes);
         }
         result->next = nullptr;
-        if(unsafe::Offsetof(gcBitsArena {}.bits) & 7 == 0)
+        if(gocpp::Offsetof<gcBitsArena>(&gcBitsArena::bits) & 7 == 0)
         {
             result->free = 0;
         }

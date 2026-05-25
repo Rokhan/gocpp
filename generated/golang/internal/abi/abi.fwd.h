@@ -4,7 +4,6 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/internal/abi/abi_amd64.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::abi
 {

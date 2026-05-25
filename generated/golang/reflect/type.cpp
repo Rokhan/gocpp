@@ -28,7 +28,6 @@
 #include "golang/unicode/digit.h"
 #include "golang/unicode/graphic.h"
 #include "golang/unicode/utf8/utf8.h"
-#include "golang/unsafe/unsafe.h"
 
 // Package reflect implements run-time reflection, allowing a program to
 // manipulate objects with arbitrary types. The typical use is to take a value

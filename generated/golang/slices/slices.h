@@ -9,6 +9,7 @@
 #include "golang/slices/slices.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/cmp/cmp.h"
 
 namespace golang::slices
 {

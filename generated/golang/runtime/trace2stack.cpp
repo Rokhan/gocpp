@@ -49,7 +49,6 @@
 #include "golang/runtime/trace2string.h"
 #include "golang/runtime/trace2time.h"
 #include "golang/runtime/traceback.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

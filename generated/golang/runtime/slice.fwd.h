@@ -3,11 +3,14 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
     struct slice;
+}
+#include "golang/runtime/malloc.fwd.h"
+
+namespace golang::runtime
+{
     struct notInHeapSlice;
 }

@@ -16,7 +16,6 @@
 #include "golang/runtime/extern.h"
 #include "golang/runtime/panic.h"
 #include "golang/runtime/tagptr.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

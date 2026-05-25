@@ -14,7 +14,6 @@
 #include "golang/internal/race/norace.h"
 #include "golang/sync/atomic/doc.h"
 #include "golang/sync/runtime.h"
-#include "golang/unsafe/unsafe.h"
 
 // Package sync provides basic synchronization primitives such as mutual
 // exclusion locks. Other than the Once and WaitGroup types, most are intended

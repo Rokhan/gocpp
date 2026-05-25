@@ -14,8 +14,8 @@ namespace golang::main
 {
     struct Vertex
     {
-        int X;
-        int Y;
+        int32_t X;
+        int32_t Y;
 
         using isGoStruct = void;
 
@@ -29,6 +29,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
+    extern gocpp_id_0 AnonymousStruct;
     struct Empty
     {
 
@@ -60,7 +61,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Dummy& value);
-    struct gocpp_id_0
+    struct gocpp_id_1
     {
         gocpp::string firstName;
         gocpp::string lastName;
@@ -76,10 +77,10 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     struct Person
     {
-        gocpp_id_0* identity;
+        gocpp_id_1* identity;
         int age;
 
         using isGoStruct = void;
@@ -94,7 +95,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Person& value);
-    struct gocpp_id_1
+    struct gocpp_id_2
     {
         int a;
 
@@ -109,8 +110,8 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
-    void inlineStructDef(gocpp_id_1 dummy);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    void inlineStructDef(gocpp_id_2 dummy);
     void embededStructDef();
     void main();
     struct Dummy2

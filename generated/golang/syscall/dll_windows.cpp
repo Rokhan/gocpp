@@ -16,7 +16,6 @@
 #include "golang/syscall/syscall.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/zsyscall_windows.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::syscall
 {

@@ -9,7 +9,6 @@
 #include "golang/internal/abi/type.fwd.h"
 #include "gocpp/support.h"
 
-
 namespace golang::abi
 {
     struct Type

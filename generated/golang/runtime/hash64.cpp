@@ -14,7 +14,6 @@
 #include "golang/runtime/alg.h"
 #include "golang/runtime/internal/math/math.h"
 #include "golang/runtime/stubs.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

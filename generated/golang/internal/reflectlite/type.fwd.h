@@ -9,7 +9,6 @@ namespace golang::reflectlite
     struct name;
 }
 #include "golang/internal/abi/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::reflectlite
 {

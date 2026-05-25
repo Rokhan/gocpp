@@ -11,8 +11,6 @@
 #include "golang/runtime/float.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
-
 namespace golang::runtime
 {
     namespace rec

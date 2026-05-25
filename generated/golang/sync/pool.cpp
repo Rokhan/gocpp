@@ -18,7 +18,6 @@
 #include "golang/sync/cond.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/poolqueue.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::sync
 {

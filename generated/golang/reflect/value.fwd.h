@@ -10,6 +10,7 @@ namespace golang::reflect
     const long flagKindWidth = 5;
     const long flagMethodShift = 10;
     const bool debugReflectCall = false;
+    struct hiter;
     struct MapIter;
     struct StringHeader;
     struct SliceHeader;
@@ -29,7 +30,6 @@ namespace golang::reflect
 }
 #include "golang/internal/abi/type.fwd.h"
 #include "golang/reflect/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::reflect
 {
@@ -37,7 +37,6 @@ namespace golang::reflect
     struct ValueError;
     struct emptyInterface;
     struct nonEmptyInterface;
-    struct hiter;
     struct runtimeSelect;
     const reflect::flag flagRO = flagStickyRO | flagEmbedRO;
 }

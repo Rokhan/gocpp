@@ -11,8 +11,6 @@
 #include "golang/internal/race/norace.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
-
 namespace golang::race
 {
     namespace rec

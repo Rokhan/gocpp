@@ -14,7 +14,6 @@
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/stubs3.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

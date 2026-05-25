@@ -14,13 +14,8 @@ namespace golang::atomic
     struct Uint64;
     struct Uintptr;
     struct Float64;
+    struct UnsafePointer;
     template<typename T> struct Pointer;
     struct noCopy;
     struct align64;
-}
-#include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::atomic
-{
-    struct UnsafePointer;
 }

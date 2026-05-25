@@ -56,7 +56,6 @@
 #include "golang/runtime/trace2time.h"
 #include "golang/runtime/type.h"
 #include "golang/runtime/typekind.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {
@@ -197,7 +196,7 @@ namespace golang::runtime
                 allfin = finc;
                 if(finptrmask[0] == 0)
                 {
-                    if((gocpp::Sizeof<finalizer>() != 5 * goarch::PtrSize || unsafe::Offsetof(finalizer {}.fn) != 0 || unsafe::Offsetof(finalizer {}.arg) != goarch::PtrSize || unsafe::Offsetof(finalizer {}.nret) != 2 * goarch::PtrSize || unsafe::Offsetof(finalizer {}.fint) != 3 * goarch::PtrSize || unsafe::Offsetof(finalizer {}.ot) != 4 * goarch::PtrSize))
+                    if((gocpp::Sizeof<finalizer>() != 5 * goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::fn) != 0 || gocpp::Offsetof<finalizer>(&finalizer::arg) != goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::nret) != 2 * goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::fint) != 3 * goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::ot) != 4 * goarch::PtrSize))
                     {
                         go_throw("finalizer out of sync"_s);
                     }

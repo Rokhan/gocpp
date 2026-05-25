@@ -40,7 +40,6 @@ namespace golang::runtime
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 #include "golang/runtime/race0.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {

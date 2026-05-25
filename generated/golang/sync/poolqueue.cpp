@@ -13,7 +13,6 @@
 
 #include "golang/sync/atomic/doc.h"
 #include "golang/sync/atomic/type.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::sync
 {

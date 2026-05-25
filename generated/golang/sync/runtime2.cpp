@@ -11,8 +11,6 @@
 #include "golang/sync/runtime2.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
-
 namespace golang::sync
 {
     namespace rec

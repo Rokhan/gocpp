@@ -12,7 +12,6 @@ namespace golang::runtime
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {

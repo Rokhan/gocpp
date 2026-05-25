@@ -11,8 +11,6 @@
 #include "golang/runtime/internal/atomic/stubs.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
-
 namespace golang::atomic
 {
     namespace rec

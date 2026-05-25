@@ -18,13 +18,14 @@ namespace golang::runtime
     const long oldIterator = 2;
     const long hashWriting = 4;
     const long sameSizeGrow = 8;
+    struct hmap;
     struct mapextra;
     struct bmap;
+    struct evacDst;
 }
 #include "golang/internal/abi/map.fwd.h"
 #include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
@@ -32,10 +33,7 @@ namespace golang::runtime
     const int bucketCnt = abi::MapBucketCount;
     const int maxKeySize = abi::MapMaxKeyBytes;
     const int maxElemSize = abi::MapMaxElemBytes;
-    const uintptr_t dataOffset = unsafe::Offsetof(gocpp_id_0 {}.v);
     const int noCheck = (1 << (8 * goarch::PtrSize)) - 1;
-    struct hmap;
     struct hiter;
-    struct evacDst;
     const int loadFactorNum = loadFactorDen * bucketCnt * 13 / 16;
 }

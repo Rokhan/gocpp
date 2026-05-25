@@ -13,7 +13,6 @@
 
 #include "golang/internal/abi/abi_amd64.h"
 #include "golang/internal/goarch/goarch.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::abi
 {

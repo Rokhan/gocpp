@@ -3,7 +3,6 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::sync
 {

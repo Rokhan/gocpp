@@ -9,7 +9,6 @@
 #include "golang/internal/race/norace.fwd.h"
 #include "gocpp/support.h"
 
-
 namespace golang::race
 {
     void Acquire(gocpp::unsafe_pointer addr);

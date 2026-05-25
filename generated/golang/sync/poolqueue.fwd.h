@@ -6,6 +6,7 @@
 
 namespace golang::sync
 {
+    struct eface;
     const long dequeueBits = 32;
     struct gocpp_id_0;
     using dequeueNil = gocpp_id_0*;
@@ -14,10 +15,8 @@ namespace golang::sync
     const int dequeueLimit = (1 << dequeueBits) / 4;
 }
 #include "golang/sync/atomic/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::sync
 {
     struct poolDequeue;
-    struct eface;
 }

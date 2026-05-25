@@ -7,6 +7,7 @@
 namespace golang::atomic
 {
     struct Bool;
+    template<typename T> struct Pointer;
     struct Int32;
     struct Int64;
     struct Uint32;
@@ -14,10 +15,4 @@ namespace golang::atomic
     struct Uintptr;
     struct noCopy;
     struct align64;
-}
-#include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::atomic
-{
-    template<typename T> struct Pointer;
 }

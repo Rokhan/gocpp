@@ -11,8 +11,6 @@
 #include "golang/syscall/msan0.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
-
 namespace golang::syscall
 {
     namespace rec

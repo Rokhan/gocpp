@@ -7,10 +7,5 @@
 namespace golang::atomic
 {
     struct Value;
-}
-#include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::atomic
-{
     struct efaceWords;
 }

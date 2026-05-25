@@ -12,6 +12,11 @@
 
 namespace golang::bytealg
 {
+    extern uintptr_t offsetX86HasSSE42;
+    extern uintptr_t offsetX86HasAVX2;
+    extern uintptr_t offsetX86HasPOPCNT;
+    extern uintptr_t offsetS390xHasVX;
+    extern uintptr_t offsetPPC64HasPOWER9;
     extern int MaxLen;
     
     template<typename T>

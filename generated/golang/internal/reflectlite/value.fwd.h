@@ -19,7 +19,6 @@ namespace golang::reflectlite
 }
 #include "golang/internal/abi/type.fwd.h"
 #include "golang/internal/reflectlite/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::reflectlite
 {

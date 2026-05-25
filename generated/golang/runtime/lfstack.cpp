@@ -25,7 +25,6 @@
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/tagptr.h"
 #include "golang/runtime/tagptr_64bit.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::runtime
 {

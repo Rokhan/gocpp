@@ -17,7 +17,6 @@
 #include "golang/internal/unsafeheader/unsafeheader.h"
 #include "golang/runtime/extern.h"
 #include "golang/runtime/symtab.h"
-#include "golang/unsafe/unsafe.h"
 
 namespace golang::reflectlite
 {

@@ -17,7 +17,6 @@ namespace golang::runtime
 #include "golang/runtime/mgc.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {

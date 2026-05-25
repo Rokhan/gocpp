@@ -15,7 +15,6 @@ namespace golang::runtime
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {

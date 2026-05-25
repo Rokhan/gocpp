@@ -9,7 +9,6 @@
 #include "golang/runtime/stubs_amd64.fwd.h"
 #include "gocpp/support.h"
 
-
 namespace golang::runtime
 {
     void gcWriteBarrierCX();

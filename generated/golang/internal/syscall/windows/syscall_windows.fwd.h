@@ -91,10 +91,5 @@ namespace golang::windows
     struct WSAMsg;
     struct FILE_ID_BOTH_DIR_INFO;
     struct FILE_FULL_DIR_INFO;
-}
-#include "golang/unsafe/unsafe.fwd.h"
-
-namespace golang::windows
-{
     const uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<ModuleEntry32>();
 }

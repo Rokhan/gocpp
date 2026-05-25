@@ -36,6 +36,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Pinner& value);
+    extern uintptr_t pinnerRefStoreSize;
     struct pinner
     {
         gocpp::slice<gocpp::unsafe_pointer> refs;

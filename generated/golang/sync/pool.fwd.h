@@ -3,13 +3,16 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::sync
+{
+    struct poolLocal;
+}
 #include "golang/sync/cond.fwd.h"
 #include "golang/sync/poolqueue.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::sync
 {
     struct Pool;
     struct poolLocalInternal;
-    struct poolLocal;
 }

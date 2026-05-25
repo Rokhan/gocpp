@@ -11,8 +11,6 @@
 #include "golang/sync/atomic/doc.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
-
 // Package atomic provides low-level atomic memory primitives
 // useful for implementing synchronization algorithms.
 //

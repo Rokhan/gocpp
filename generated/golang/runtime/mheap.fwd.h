@@ -30,6 +30,7 @@ namespace golang::runtime
     const runtime::spanAllocType spanAllocStack = 1;
     const runtime::spanAllocType spanAllocPtrScalarBits = 2;
     const runtime::spanAllocType spanAllocWorkBuf = 3;
+    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<gcBitsHeader>() [known mising deps] */;
 }
 #include "golang/internal/cpu/cpu.fwd.h"
 #include "golang/internal/cpu/cpu_x86.fwd.h"
@@ -47,7 +48,6 @@ namespace golang::runtime
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/sizeclasses.fwd.h"
 #include "golang/runtime/type.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
@@ -64,6 +64,5 @@ namespace golang::runtime
     struct specialfinalizer;
     struct specialprofile;
     struct gcBits;
-    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<gcBitsHeader>() [known mising deps] */;
     struct gcBitsArena;
 }

@@ -13,7 +13,6 @@
 
 #include "golang/internal/abi/type.h"
 #include "golang/internal/reflectlite/value.h"
-#include "golang/unsafe/unsafe.h"
 
 // Package reflectlite implements lightweight version of reflect, not using
 // any package except for "runtime", "unsafe", and "internal/abi"

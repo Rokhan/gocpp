@@ -12,6 +12,7 @@ namespace golang::runtime
     struct gocpp_id_1;
     using pallocSum = uint64_t;
     const int pallocChunkPages = 1 << logPallocChunkPages;
+    /*const uintptr_t pallocSumBytes = gocpp::Sizeof<pallocSum>() [known mising deps] */;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
@@ -21,13 +22,11 @@ namespace golang::runtime
 #include "golang/runtime/mranges.fwd.h"
 #include "golang/runtime/mstats.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/unsafe/unsafe.fwd.h"
 
 namespace golang::runtime
 {
     const int logPallocChunkBytes = logPallocChunkPages + pageShift;
     struct pageAlloc;
-    /*const uintptr_t pallocSumBytes = gocpp::Sizeof<pallocSum>() [known mising deps] */;
     const int logMaxPackedValue = logPallocChunkPages + (summaryLevels - 1) * summaryLevelBits;
     const int pallocChunkBytes = pallocChunkPages * pageSize;
     const int summaryL0Bits = heapAddrBits - logPallocChunkBytes - (summaryLevels - 1) * summaryLevelBits;

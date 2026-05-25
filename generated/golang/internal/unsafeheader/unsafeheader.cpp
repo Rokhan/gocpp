@@ -11,8 +11,6 @@
 #include "golang/internal/unsafeheader/unsafeheader.h"
 #include "gocpp/support.h"
 
-#include "golang/unsafe/unsafe.h"
-
 // Package unsafeheader contains header declarations for the Go runtime's slice
 // and string implementations.
 //

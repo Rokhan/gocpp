@@ -3,11 +3,20 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"unsafe"
+)
 
 type Vertex struct {
-	X int
-	Y int
+	X int32
+	Y int32
+}
+
+// Similar to ARM64 and X86 structs in cpu package (internal\cpu\cpu.go)
+var AnonymousStruct struct {
+	first  int32
+	second int16
 }
 
 type Empty struct{}
@@ -83,6 +92,17 @@ func main() {
 
 	inlineStructDef(struct{ a int }{42})
 	embededStructDef()
+
+	vv := Vertex{3, 4}
+	offsetX := unsafe.Offsetof(vv.X)
+	offsetY := unsafe.Offsetof(vv.Y)
+	fmt.Println("Offset of X in Vertex:", offsetX)
+	fmt.Println("Offset of Y in Vertex:", offsetY)
+	fmt.Println("Size of Vertex:", unsafe.Sizeof(vv))
+
+	fmt.Println("Offset of a in Anonymous struct:", unsafe.Offsetof(AnonymousStruct.first))
+	fmt.Println("Offset of b in Anonymous struct:", unsafe.Offsetof(AnonymousStruct.second))
+	fmt.Println("Size of Anonymous struct:", unsafe.Sizeof(AnonymousStruct))
 
 	//var p2 *Dummy = &v1
 	//fmt.Println(p2)

@@ -49,5 +49,20 @@ namespace gocpp
     {
         return sizeof(T);
     }
-}
 
+    inline constexpr long len(const std::string& input)
+    {
+        return input.length();
+    }
+
+    // sadly not a constexpr because of the use of reinterpret_cast
+    // Todo one day with c++26 static reflection ?
+    //  -> constexpr std::size_t off = std::meta::offset_of(^^Foo::y); 
+    template <typename T, typename M>
+    std::size_t Offsetof(M T::* member)
+    {
+        char buf[sizeof(T)];
+        T* obj = reinterpret_cast<T*>(buf);
+        return reinterpret_cast<char*>(&(obj->*member)) - reinterpret_cast<char*>(obj);
+    }
+}

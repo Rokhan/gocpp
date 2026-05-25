@@ -51,6 +51,16 @@ var stdTypeMapping = map[string]string{
 	"error": "gocpp::error",
 }
 
+type fullName struct {
+	namespace string
+	name      string
+}
+
+var knownForwardableFunctions = map[fullName]bool{
+	{"", "len"}:          true,
+	{"unsafe", "Sizeof"}: true,
+}
+
 // TODO, make a dynamic mapping
 var cppKeyWordsMapping = map[string]string{
 	// map go keywords to C++ keywords
@@ -286,12 +296,13 @@ var stdFuncMapping = map[string]string{
 	"go_delete": "remove", // if already renamed by keyword mapping
 
 	// Predefined functions
-	"make":           "gocpp::make",
-	"max":            "gocpp::max",
-	"min":            "gocpp::min",
-	"panic":          "gocpp::panic",
-	"recover":        "gocpp::recover",
-	"unsafe::Sizeof": "gocpp::Sizeof",
+	"make":             "gocpp::make",
+	"max":              "gocpp::max",
+	"min":              "gocpp::min",
+	"panic":            "gocpp::panic",
+	"recover":          "gocpp::recover",
+	"unsafe::Sizeof":   "gocpp::Sizeof",
+	"unsafe::Offsetof": "gocpp::Offsetof",
 
 	// type conversions
 	"byte":       "(unsigned char)",

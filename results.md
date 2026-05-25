@@ -124,7 +124,7 @@
 | ---- | -------------| ----------- |
 | $(ImportDir)/bufio/bufio.go | ✔️ ([cpp](generated/golang/bufio/bufio.cpp), [h](generated/golang/bufio/bufio.h))| ✔️ |
 | $(ImportDir)/bytes/buffer.go | ✔️ ([cpp](generated/golang/bytes/buffer.cpp), [h](generated/golang/bytes/buffer.h))| ✔️ |
-| $(ImportDir)/bytes/bytes.go | ✔️ ([cpp](generated/golang/bytes/bytes.cpp), [h](generated/golang/bytes/bytes.h))| ❌ |
+| $(ImportDir)/bytes/bytes.go | ✔️ ([cpp](generated/golang/bytes/bytes.cpp), [h](generated/golang/bytes/bytes.h))| ✔️ |
 | $(ImportDir)/cmp/cmp.go | ✔️ ([cpp](generated/golang/cmp/cmp.cpp), [h](generated/golang/cmp/cmp.h))| ✔️ |
 | $(ImportDir)/compress/flate/deflate.go | ✔️ ([cpp](generated/golang/compress/flate/deflate.cpp), [h](generated/golang/compress/flate/deflate.h))| ❌ |
 | $(ImportDir)/compress/flate/deflatefast.go | ✔️ ([cpp](generated/golang/compress/flate/deflatefast.cpp), [h](generated/golang/compress/flate/deflatefast.h))| ❌ |
@@ -471,4 +471,3 @@
 | $(ImportDir)/unicode/tables.go | ✔️ ([cpp](generated/golang/unicode/tables.cpp), [h](generated/golang/unicode/tables.h))| ❌ |
 | $(ImportDir)/unicode/utf16/utf16.go | ✔️ ([cpp](generated/golang/unicode/utf16/utf16.cpp), [h](generated/golang/unicode/utf16/utf16.h))| ❌ |
 | $(ImportDir)/unicode/utf8/utf8.go | ✔️ ([cpp](generated/golang/unicode/utf8/utf8.cpp), [h](generated/golang/unicode/utf8/utf8.h))| ❌ |
-| $(ImportDir)/unsafe/unsafe.go | ✔️ ([cpp](generated/golang/unsafe/unsafe.cpp), [h](generated/golang/unsafe/unsafe.h))| ✔️ |

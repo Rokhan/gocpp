@@ -330,6 +330,14 @@ func internalGetObjectsOfType(t types.Type, seen map[types.Object]bool) {
 		for i := 0; i < typ.Len(); i++ {
 			internalGetObjectsOfType(typ.At(i).Type(), seen)
 		}
+	case *types.TypeParam:
+		internalGetObjectsOfType(typ.Constraint(), seen)
+	case *types.Union:
+		for i := 0; i < typ.Len(); i++ {
+			internalGetObjectsOfType(typ.Term(i).Type(), seen)
+		}
+	default:
+		Panicf("internalGetObjectsOfType: unhandled type %T", typ)
 	}
 }
 
@@ -486,6 +494,37 @@ type CanForward struct {
 
 func (visitor *CanForward) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
+	case *ast.CallExpr:
+		// special case we know they can be used in forward declaration header.
+		switch fun := n.Fun.(type) {
+		case *ast.Ident:
+			if knownForwardableFunctions[fullName{"", fun.Name}] {
+				return visitor
+			}
+
+			if obj := visitor.cv.typeInfo.Uses[fun]; obj != nil {
+				//visitor.cv.Logf("CanForward::Visit, call expr with ident fun %v, obj %v, type %T\n", fun.Name, obj, obj)
+				if tname, ok := obj.(*types.TypeName); ok {
+					visitor.cv.Logf("CanForward::Visit, call expr with ident fun %v, obj %v, type %T, underlying type %T\n", fun.Name, obj, obj, tname.Type().Underlying())
+					if _, ok := tname.Type().Underlying().(*types.Basic); ok {
+						return visitor
+					}
+				}
+			}
+
+		case *ast.SelectorExpr:
+			// known forwardable functions
+			ns, ok := fun.X.(*ast.Ident)
+			if ok {
+				if knownForwardableFunctions[fullName{ns.Name, fun.Sel.Name}] {
+					return visitor
+				}
+			}
+		}
+		// TODO: we could be more precise here by checking if the function called can be made constexpr,
+		// but for now we just assume that any call makes the expression not acceptable for forward declaration.
+		visitor.value = false
+		return nil
 	case ast.Expr:
 		exprType := visitor.cv.typeInfo.Types[n].Type
 		switch t := exprType.(type) {

@@ -444,11 +444,6 @@ namespace gocpp
         range_iterator end() { return { std::string::size(), std::string::end() }; }
     };
 
-    inline long len(const std::string& input)
-    {
-        return input.length();
-    }
-
     template<typename T>
     inline T max(T a)
     {

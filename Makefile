@@ -152,6 +152,7 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
 	if head -1 $< | grep -q -E "no-run|no-diff"; then \
 		echo    "| ➖ | " >> $(LOGDIR)/$*.md; \
 	else \
+		diff $(LOGDIR)/$*.cpp.out.txt $(LOGDIR)/$*.go.out.txt; \
 		(diff -q $(LOGDIR)/$*.cpp.out.txt $(LOGDIR)/$*.go.out.txt) \
 			&&  echo    "| ✔️ |" >> $(LOGDIR)/$*.md \
 			|| (echo    "| ❌ |" >> $(LOGDIR)/$*.md && $(ON_DIFF_ERROR)); \

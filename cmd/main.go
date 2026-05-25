@@ -772,16 +772,6 @@ func (cv *cppConverter) getPackageFromType(usedType types.Object, tag tagType) *
 
 	var file = cv.pcShared.fileSet.Position(usedType.Pos()).Filename
 
-	// Hack for "unsafe.Pointer" in "unsafe" package
-	// Maybe we should load it manually somewhere in cv.fileset ?
-	if file == "" {
-		for pkgFile, path := range cv.shared.packagePaths {
-			if path == "unsafe" {
-				file = pkgFile
-			}
-		}
-	}
-
 	if file == "" || file == cv.inputName {
 		pkgName := "<pkgName>"
 		pkgPath := "<pkgPath>"
@@ -803,7 +793,7 @@ func (cv *cppConverter) getPackageFromType(usedType types.Object, tag tagType) *
 		if ok {
 			return &pkgInfo{pkg.Name(), CleanPath(pkgPath), file, tag, GoFiles}
 		} else {
-			cv.Logf("  -> pkgPath is null, file: %v\n", file)
+			cv.Logf("  -> pkgPath is null, pkhName: %s, file: %v\n", pkg.Name(), file)
 			return &pkgInfo{pkg.Name(), CleanPath(pkg.Path()), file, tag, GoFiles}
 		}
 	} else {
@@ -826,8 +816,20 @@ func (cv *cppConverter) getReferencedTypesFor(file string) (usedTypes map[types.
 	cv.filterUsedObjects(uses, file, usedTypes, UsesTag)
 	defs := cv.typeInfo.Defs
 	cv.filterUsedObjects(defs, file, usedTypes, DefsTag)
+	// selections := cv.typeInfo.Selections
+	// cv.filterSelections(selections, file, usedTypes, UsesTag)
 	return
 }
+
+// func (cv *cppConverter) filterSelections(srcSelections map[*ast.SelectorExpr]*types.Selection, file string, usedTypes map[types.Object]tagType, tag tagType) {
+// 	for sel, selection := range srcSelections {
+// 		var filePos = cv.Position(sel)
+// 		if file != filePos.Filename {
+// 			continue
+// 		}
+// 		usedTypes[selection.Obj()] |= tag
+// 	}
+// }
 
 func (cv *cppConverter) filterTypes(srcTypes map[ast.Expr]types.TypeAndValue, file string, usedTypes map[types.Object]tagType, tag tagType) {
 	for expr, typeAndValue := range srcTypes {
@@ -1113,7 +1115,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		if ok && last.Type.isEllipsis {
 
 			if len(last.names) != 1 {
-				cv.Panicf("convertDecls, multiple ellipsis parameters not managed, declararation: [%v], input: %v", d, cv.Position(d))
+				cv.Panicf("convertDecls, multiple ellipsis parameters not managed, declaration: [%v], input: %v", d, cv.Position(d))
 			}
 
 			variadicParams := params[:len(params)-1]
@@ -2418,6 +2420,7 @@ func (cv *cppConverter) checkCanFwd(cppType *cppType) {
 
 // put this in cppConverter ?
 var exprToId map[ast.Expr]string = map[ast.Expr]string{}
+var typeToId map[types.Type]string = map[types.Type]string{}
 
 func (cv *cppConverter) GenerateExprId(expr ast.Expr) (string, bool) {
 	id, ok := exprToId[expr]
@@ -2427,6 +2430,15 @@ func (cv *cppConverter) GenerateExprId(expr ast.Expr) (string, bool) {
 
 	id = cv.GenerateId()
 	exprToId[expr] = id
+
+	// TODO: doesn't work for types that are not defined in the current file.
+	cv.Logf("GenerateExprId, expr: %v, id: %s\n", types.ExprString(expr), id)
+	tv, exist := cv.typeInfo.Types[expr]
+	if exist {
+		typeToId[tv.Type] = id
+		cv.Logf("GenerateExprId, expr: %v, type: %v, id: %s\n", types.ExprString(expr), tv.Type, id)
+	}
+
 	return id, true
 }
 
@@ -3274,6 +3286,18 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 	case *types.Slice:
 		return fmt.Sprintf("gocpp::slice<%s>", GetCppGoType(subType.Elem()))
 
+	case *types.Struct:
+		fmt.Printf("convertGoToCppType, struct type [%v], position[%v]\n", subType, position)
+		id, ok := typeToId[subType]
+		if !ok {
+			for id, t := range typeToId {
+				fmt.Printf("convertGoToCppType, id %d, type %v\n", id, t)
+			}
+			//panic(fmt.Sprintf("Unknown struct type in convertGoToCppType, type [%v], position[%v]", subType, position))
+			id = "UnknownStructType"
+		}
+		return fmt.Sprintf("%s", id)
+
 	case *types.TypeParam:
 		return fmt.Sprintf("%s", subType)
 
@@ -3478,16 +3502,23 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		buf := mkCppBuffer()
 		var sep = ""
 		var isSizeOf bool = false
+		var isOffsetOf bool = false
+		var closeStr string = ")"
 		switch fun := n.Fun.(type) {
 		case *ast.SelectorExpr:
 			if cv.isNameSpace(fun.X) {
 				funcName := ExprPrintf("%s::%s", cv.convertExpr(fun.X), cv.convertExpr(fun.Sel))
 				funcName = GetCppExprFunc(funcName)
 				// Need a special case for unsafe::Sizeof to avoid difficulties with constexpr
-				if funcName.str == "gocpp::Sizeof" {
+				switch funcName.str {
+				case "gocpp::Sizeof":
 					isSizeOf = true
 					cv.BuffExprPrintf(buf, "%v<", funcName)
-				} else {
+					closeStr = ">()"
+				case "gocpp::Offsetof":
+					isOffsetOf = true
+					cv.BuffExprPrintf(buf, "%v<", funcName)
+				default:
 					cv.BuffExprPrintf(buf, "%v(", funcName)
 				}
 			} else if isFunc, hasReceiver, _ := cv.IsExprSignature(fun.Sel); isFunc && hasReceiver {
@@ -3525,19 +3556,31 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			cv.BuffExprPrintf(buf, "%v(", cv.convertExpr(n.Fun))
 		}
 
-		for _, arg := range n.Args {
-			if isSizeOf {
-				cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExprCppType(arg))
-			} else {
-				cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExpr(arg))
+		if !isOffsetOf {
+			for _, arg := range n.Args {
+				if isSizeOf {
+					cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExprCppType(arg))
+				} else {
+					cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExpr(arg))
+				}
+				sep = ", "
 			}
-			sep = ", "
-		}
-		if isSizeOf {
-			cv.BuffExprPrintf(buf, ">()")
 		} else {
-			cv.BuffExprPrintf(buf, ")")
+			if len(n.Args) != 1 {
+				cv.Panicf("Offsetof should have exactly one argument, found %d, position %v", len(n.Args), cv.Position(n))
+			}
+			switch sel := n.Args[0].(type) {
+			case *ast.SelectorExpr:
+				var typeName = cv.convertExprCppType(sel.X)
+				var fieldName = cv.convertExpr(sel.Sel)
+				cv.BuffExprPrintf(buf, "%s>(&%s::%s)", typeName, typeName.str, fieldName)
+				closeStr = ""
+			default:
+				cv.Panicf("Offsetof argument should be a selector expression, found %T, position %v", n.Args[0], cv.Position(n.Args[0]))
+			}
 		}
+
+		cv.BuffExprPrintf(buf, "%s", closeStr)
 		return buf.Expr()
 
 	case *ast.Ident:
@@ -3779,10 +3822,11 @@ func (cv *cppConverter) LoadAndCheckDefs(pkgPath string, fset *token.FileSet, fi
 	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
 	if cv.typeInfo == nil {
 		cv.typeInfo = &types.Info{
-			Defs:      make(map[*ast.Ident]types.Object),
-			Implicits: make(map[ast.Node]types.Object),
-			Types:     make(map[ast.Expr]types.TypeAndValue),
-			Uses:      make(map[*ast.Ident]types.Object),
+			Defs:       make(map[*ast.Ident]types.Object),
+			Implicits:  make(map[ast.Node]types.Object),
+			Selections: make(map[*ast.SelectorExpr]*types.Selection),
+			Types:      make(map[ast.Expr]types.TypeAndValue),
+			Uses:       make(map[*ast.Ident]types.Object),
 		}
 	}
 
@@ -3799,7 +3843,10 @@ func (cv *cppConverter) addPkgDependencies(pkgPath string, files ...*ast.File) [
 		return files
 	}
 
-	cfg := &packages.Config{Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedCompiledGoFiles}
+	cfg := &packages.Config{
+		Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedCompiledGoFiles | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedTypesSizes,
+		Fset: cv.pcShared.fileSet,
+	}
 
 	pkgFiles := [](*ast.File){}
 	pkgs, err := packages.Load(cfg, pkgPath)

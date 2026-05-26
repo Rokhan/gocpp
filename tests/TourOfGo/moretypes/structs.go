@@ -20,12 +20,17 @@ var AnonymousStruct struct {
 }
 
 type Empty struct{}
-type Dummy struct{ i int }
+type Dummy struct{ i, j int }
 
 type Dummy2 struct {
 	Dummy
 	Vertex
 	i int
+}
+
+type Dummy3 struct {
+	Dummy2
+	zzz int
 }
 
 type Person struct {
@@ -72,12 +77,12 @@ func main() {
 	e := Empty{}
 	fmt.Println(e == j)
 
-	v1 := struct{ i int }{1}
-	v2 := struct{ i int }{1}
+	v1 := struct{ i, j int }{1, 2}
+	v2 := struct{ i, j int }{1, 2}
 	fmt.Println(v1 == v2)
 
-	d := Dummy{1}
-	d = struct{ i int }{1}
+	d := Dummy{1, 2}
+	d = struct{ i, j int }{1, 2}
 	fmt.Println(d == v2)
 	fmt.Println(d == v1)
 
@@ -103,6 +108,21 @@ func main() {
 	fmt.Println("Offset of a in Anonymous struct:", unsafe.Offsetof(AnonymousStruct.first))
 	fmt.Println("Offset of b in Anonymous struct:", unsafe.Offsetof(AnonymousStruct.second))
 	fmt.Println("Size of Anonymous struct:", unsafe.Sizeof(AnonymousStruct))
+
+	// test field access
+	var d3 Dummy3 = Dummy3{Dummy2{Dummy{1, 2}, Vertex{3, 4}, 5}, 6}
+	fmt.Println(d3.Dummy2.Dummy.i)  // should print 1
+	fmt.Println(d3.Dummy2.Dummy.j)  // should print 2
+	fmt.Println(d3.Dummy2.Vertex.X) // should print 3
+	fmt.Println(d3.Dummy2.Vertex.Y) // should print 4
+	fmt.Println(d3.Dummy.i)         // should print 1
+	fmt.Println(d3.Dummy.j)         // should print 2
+	fmt.Println(d3.Vertex.X)        // should print 3
+	fmt.Println(d3.Vertex.Y)        // should print 4
+	fmt.Println(d3.i)               // should print 5
+	fmt.Println(d3.j)               // should print 2
+	fmt.Println(d3.X)               // should print 3
+	fmt.Println(d3.Y)               // should print 4
 
 	//var p2 *Dummy = &v1
 	//fmt.Println(p2)

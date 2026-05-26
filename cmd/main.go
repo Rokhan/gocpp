@@ -3632,11 +3632,43 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 				return GetCppExprFunc(ExprPrintf("[&](%s){ return %srec::%s(%s%s); }%s", declLisStr, ns, selector, name, varListStr, debugStr))
 			}
 		} else {
+			var fieldPath string
+			selection := cv.typeInfo.Selections[n]
+			if selection != nil && selection.Kind() == types.FieldVal {
+				recvType := selection.Recv()
+				index := selection.Index()
+				for i := 0; i < len(index)-1; i++ {
+					switch u := recvType.Underlying().(type) {
+					case *types.Struct:
+						f := u.Field(index[i])
+						fieldPath += f.Name()
+						recvType = f.Type()
+					case *types.Pointer:
+						elem := u.Elem()
+						switch v := elem.Underlying().(type) {
+						case *types.Struct:
+							f := v.Field(index[i])
+							fieldPath += f.Name()
+							recvType = f.Type()
+						default:
+							cv.Panicf("Unsupported pointer element receiver type in convertExpr, type %v, position %v", elem, cv.Position(n))
+						}
+					default:
+						cv.Panicf("Unsupported selection receiver type in convertExpr, type %v, position %v", recvType, cv.Position(n))
+					}
+
+					if len(fieldPath) > 0 {
+						fieldPath += "."
+					}
+				}
+
+			}
+
 			// TODO: use only IsExprPtr ?
 			if cv.isPtr(name.str) || cv.IsExprPtr(n.X) {
-				return GetCppExprFunc(ExprPrintf("%s->%s", name, cv.convertExpr(n.Sel)))
+				return GetCppExprFunc(ExprPrintf("%s->%s%s", name, fieldPath, cv.convertExpr(n.Sel)))
 			} else {
-				return GetCppExprFunc(ExprPrintf("%s.%s", name, cv.convertExpr(n.Sel)))
+				return GetCppExprFunc(ExprPrintf("%s.%s%s", name, fieldPath, cv.convertExpr(n.Sel)))
 			}
 		}
 

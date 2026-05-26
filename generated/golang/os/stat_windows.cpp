@@ -44,7 +44,7 @@ namespace golang::os
         {
             return {nullptr, ErrInvalid};
         }
-        return statHandle(file->name, file->pfd.Sysfd);
+        return statHandle(file->file.name, file->file.pfd.Sysfd);
     }
 
     // stat implements both Stat and Lstat of a file.

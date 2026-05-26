@@ -71,7 +71,7 @@ namespace golang::os
         {
             return err;
         }
-        auto err = rec::RawControl(gocpp::recv(c->file->pfd), f);
+        auto err = rec::RawControl(gocpp::recv(c->file->file.pfd), f);
         runtime::KeepAlive(c->file);
         return err;
     }
@@ -82,7 +82,7 @@ namespace golang::os
         {
             return err;
         }
-        auto err = rec::RawRead(gocpp::recv(c->file->pfd), f);
+        auto err = rec::RawRead(gocpp::recv(c->file->file.pfd), f);
         runtime::KeepAlive(c->file);
         return err;
     }
@@ -93,7 +93,7 @@ namespace golang::os
         {
             return err;
         }
-        auto err = rec::RawWrite(gocpp::recv(c->file->pfd), f);
+        auto err = rec::RawWrite(gocpp::recv(c->file->file.pfd), f);
         runtime::KeepAlive(c->file);
         return err;
     }

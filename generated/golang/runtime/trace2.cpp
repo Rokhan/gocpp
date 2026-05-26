@@ -546,7 +546,7 @@ namespace golang::runtime
                 for(; trace.empty != nullptr; )
                 {
                     auto buf = trace.empty;
-                    trace.empty = buf->link;
+                    trace.empty = buf->traceBufHeader.link;
                     sysFree(gocpp::unsafe_pointer(buf), gocpp::Sizeof<traceBuf>(), & memstats.other_sys);
                 }
                 trace.headerWritten = false;
@@ -674,7 +674,7 @@ namespace golang::runtime
             }
             if(auto buf = trace.reading; buf != nullptr)
             {
-                buf->link = trace.empty;
+                buf->traceBufHeader.link = trace.empty;
                 trace.empty = buf;
                 trace.reading = nullptr;
             }
@@ -726,7 +726,7 @@ namespace golang::runtime
             auto tbuf = rec::pop(gocpp::recv(trace.full[gen % 2]));
             trace.reading = tbuf;
             unlock(& trace.lock);
-            return {tbuf->arr.make_slice(0, tbuf->pos), false};
+            return {tbuf->arr.make_slice(0, tbuf->traceBufHeader.pos), false};
         }
         catch(gocpp::GoPanic& gp)
         {

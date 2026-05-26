@@ -1066,7 +1066,7 @@ namespace golang::runtime
                             auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
                             if(auto& s = s_tmp; ok)
                             {
-                                auto npages = s.npages;
+                                auto npages = s.mspan.npages;
                                 unlock(& h->lock);
                                 if(rec::sweep(gocpp::recv(s), false))
                                 {

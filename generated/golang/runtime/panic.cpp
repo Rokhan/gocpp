@@ -1146,7 +1146,7 @@ namespace golang::runtime
         {
             return false;
         }
-        if(fn.deferreturn == 0)
+        if(fn._func.deferreturn == 0)
         {
             go_throw("missing deferreturn"_s);
         }
@@ -1159,7 +1159,7 @@ namespace golang::runtime
         }
         uint32_t slotsOffset;
         std::tie(slotsOffset, fd) = readvarintUnsafe(fd);
-        p->retpc = rec::entry(gocpp::recv(fn)) + uintptr_t(fn.deferreturn);
+        p->retpc = rec::entry(gocpp::recv(fn)) + uintptr_t(fn._func.deferreturn);
         p->deferBitsPtr = deferBitsPtr;
         p->slotsPtr = add(varp, - uintptr_t(slotsOffset));
         return true;
@@ -1550,7 +1550,7 @@ namespace golang::runtime
         {
             return false;
         }
-        return f.funcID == abi::FuncID_abort;
+        return f._func.funcID == abi::FuncID_abort;
     }
 
 }

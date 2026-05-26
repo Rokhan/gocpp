@@ -74,8 +74,8 @@ namespace golang::runtime
 
     gocpp::string rec::string(golang::runtime::rtype t)
     {
-        auto s = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), t.Str)));
-        if(t.TFlag & abi::TFlagExtraStar != 0)
+        auto s = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), t.Type.Str)));
+        if(t.Type.TFlag & abi::TFlagExtraStar != 0)
         {
             return s.make_slice(1);
         }
@@ -89,7 +89,7 @@ namespace golang::runtime
 
     gocpp::string rec::name(golang::runtime::rtype t)
     {
-        if(t.TFlag & abi::TFlagNamed == 0)
+        if(t.Type.TFlag & abi::TFlagNamed == 0)
         {
             return ""_s;
         }
@@ -131,7 +131,7 @@ namespace golang::runtime
         }
         //Go switch emulation
         {
-            auto condition = t.Kind_ & kindMask;
+            auto condition = t.Type.Kind_ & kindMask;
             int conditionId = -1;
             if(condition == kindStruct) { conditionId = 0; }
             else if(condition == kindInterface) { conditionId = 1; }

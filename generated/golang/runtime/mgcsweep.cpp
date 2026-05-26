@@ -514,7 +514,7 @@ namespace golang::runtime
                 auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
                 if(auto& s = s_tmp; ok)
                 {
-                    npages = s.npages;
+                    npages = s.mspan.npages;
                     if(rec::sweep(gocpp::recv(s), false))
                     {
                         rec::Add(gocpp::recv(mheap_.reclaimCredit), npages);

@@ -1127,7 +1127,7 @@ namespace golang::runtime
             auto fi = (funcinl*)(gocpp::unsafe_pointer(fn));
             return fi->startLine;
         }
-        return rec::funcInfo(gocpp::recv(fn)).startLine;
+        return rec::funcInfo(gocpp::recv(fn))._func.startLine;
     }
 
     // findmoduledatap looks up the moduledata for a PC.
@@ -1199,7 +1199,7 @@ namespace golang::runtime
     // entry returns the entry PC for f.
     uintptr_t rec::entry(golang::runtime::funcInfo f)
     {
-        return rec::textAddr(gocpp::recv(f.datap), f.entryOff);
+        return rec::textAddr(gocpp::recv(f.datap), f._func.entryOff);
     }
 
     // findfunc looks up function metadata for a PC.
@@ -1281,7 +1281,7 @@ namespace golang::runtime
         {
             return srcFunc {};
         }
-        return srcFunc {f.datap, f.nameOff, f.startLine, f.funcID};
+        return srcFunc {f.datap, f._func.nameOff, f._func.startLine, f._func.funcID};
     }
 
     gocpp::string rec::name(golang::runtime::srcFunc s)
@@ -1506,7 +1506,7 @@ namespace golang::runtime
         {
             return ""_s;
         }
-        return rec::funcName(gocpp::recv(f.datap), f.nameOff);
+        return rec::funcName(gocpp::recv(f.datap), f._func.nameOff);
     }
 
     gocpp::string funcpkgpath(struct funcInfo f)
@@ -1537,7 +1537,7 @@ namespace golang::runtime
         {
             return "?"_s;
         }
-        if(auto fileoff = datap->cutab[f.cuOffset + uint32_t(fileno)]; fileoff != ~ uint32_t(0))
+        if(auto fileoff = datap->cutab[f._func.cuOffset + uint32_t(fileno)]; fileoff != ~ uint32_t(0))
         {
             return gostringnocopy(& datap->filetab[fileoff]);
         }
@@ -1553,8 +1553,8 @@ namespace golang::runtime
         {
             return {"?"_s, 0};
         }
-        auto [fileno, gocpp_id_1] = pcvalue(f, f.pcfile, targetpc, strict);
-        std::tie(line, std::ignore) = pcvalue(f, f.pcln, targetpc, strict);
+        auto [fileno, gocpp_id_1] = pcvalue(f, f._func.pcfile, targetpc, strict);
+        std::tie(line, std::ignore) = pcvalue(f, f._func.pcln, targetpc, strict);
         if(fileno == - 1 || line == - 1 || int(fileno) >= len(datap->filetab))
         {
             return {"?"_s, 0};
@@ -1572,10 +1572,10 @@ namespace golang::runtime
 
     int32_t funcspdelta(struct funcInfo f, uintptr_t targetpc)
     {
-        auto [x, gocpp_id_2] = pcvalue(f, f.pcsp, targetpc, true);
+        auto [x, gocpp_id_2] = pcvalue(f, f._func.pcsp, targetpc, true);
         if(debugPcln && x & (goarch::PtrSize - 1) != 0)
         {
-            print("invalid spdelta "_s, funcname(f), " "_s, hex(rec::entry(gocpp::recv(f))), " "_s, hex(targetpc), " "_s, hex(f.pcsp), " "_s, x, "\n"_s);
+            print("invalid spdelta "_s, funcname(f), " "_s, hex(rec::entry(gocpp::recv(f))), " "_s, hex(targetpc), " "_s, hex(f._func.pcsp), " "_s, x, "\n"_s);
             go_throw("bad spdelta"_s);
         }
         return x;
@@ -1585,7 +1585,7 @@ namespace golang::runtime
     int32_t funcMaxSPDelta(struct funcInfo f)
     {
         auto datap = f.datap;
-        auto p = datap->pctab.make_slice(f.pcsp);
+        auto p = datap->pctab.make_slice(f._func.pcsp);
         auto pc = rec::entry(gocpp::recv(f));
         auto val = int32_t(- 1);
         auto most = int32_t(0);
@@ -1603,12 +1603,12 @@ namespace golang::runtime
 
     uint32_t pcdatastart(struct funcInfo f, uint32_t table)
     {
-        return *(uint32_t*)(add(gocpp::unsafe_pointer(& f.nfuncdata), gocpp::Sizeof<uint8_t>() + uintptr_t(table) * 4));
+        return *(uint32_t*)(add(gocpp::unsafe_pointer(& f._func.nfuncdata), gocpp::Sizeof<uint8_t>() + uintptr_t(table) * 4));
     }
 
     int32_t pcdatavalue(struct funcInfo f, uint32_t table, uintptr_t targetpc)
     {
-        if(table >= f.npcdata)
+        if(table >= f._func.npcdata)
         {
             return - 1;
         }
@@ -1618,7 +1618,7 @@ namespace golang::runtime
 
     int32_t pcdatavalue1(struct funcInfo f, uint32_t table, uintptr_t targetpc, bool strict)
     {
-        if(table >= f.npcdata)
+        if(table >= f._func.npcdata)
         {
             return - 1;
         }
@@ -1629,7 +1629,7 @@ namespace golang::runtime
     // Like pcdatavalue, but also return the start PC of this PCData value.
     std::tuple<int32_t, uintptr_t> pcdatavalue2(struct funcInfo f, uint32_t table, uintptr_t targetpc)
     {
-        if(table >= f.npcdata)
+        if(table >= f._func.npcdata)
         {
             return {- 1, 0};
         }
@@ -1640,12 +1640,12 @@ namespace golang::runtime
     // funcdata should be kept in sync with cmd/link:writeFuncs.
     gocpp::unsafe_pointer funcdata(struct funcInfo f, uint8_t i)
     {
-        if(i < 0 || i >= f.nfuncdata)
+        if(i < 0 || i >= f._func.nfuncdata)
         {
             return nullptr;
         }
         auto base = f.datap->gofunc;
-        auto p = uintptr_t(gocpp::unsafe_pointer(& f.nfuncdata)) + gocpp::Sizeof<uint8_t>() + uintptr_t(f.npcdata) * 4 + uintptr_t(i) * 4;
+        auto p = uintptr_t(gocpp::unsafe_pointer(& f._func.nfuncdata)) + gocpp::Sizeof<uint8_t>() + uintptr_t(f._func.npcdata) * 4 + uintptr_t(i) * 4;
         auto off = *(uint32_t*)(gocpp::unsafe_pointer(p));
         // Return off == ^uint32(0) ? 0 : f.datap.gofunc + uintptr(off), but without branches.
         // The compiler calculates mask on most architectures using conditional assignment.

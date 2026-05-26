@@ -92,7 +92,7 @@ namespace golang::os
     // Name returns the name of the file as presented to Open.
     gocpp::string rec::Name(golang::os::File* f)
     {
-        return f->name;
+        return f->file.name;
     }
 
     // Stdin, Stdout, and Stderr are open Files pointing to the standard input,
@@ -193,7 +193,7 @@ namespace golang::os
         {
             return {0, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "readat"_s;
-                x.Path = f->name;
+                x.Path = f->file.name;
                 x.Err = errors::New("negative offset"_s);
             }))};
         }
@@ -351,7 +351,7 @@ namespace golang::os
         {
             return {0, err};
         }
-        if(f->appendMode)
+        if(f->file.appendMode)
         {
             return {0, errWriteAtInAppendMode};
         }
@@ -359,7 +359,7 @@ namespace golang::os
         {
             return {0, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "writeat"_s;
-                x.Path = f->name;
+                x.Path = f->file.name;
                 x.Err = errors::New("negative offset"_s);
             }))};
         }
@@ -488,7 +488,7 @@ namespace golang::os
             return {0, err};
         }
         auto [r, e] = rec::seek(gocpp::recv(f), offset, whence);
-        if(e == nullptr && f->dirinfo != nullptr && r != 0)
+        if(e == nullptr && f->file.dirinfo != nullptr && r != 0)
         {
             e = syscall::go_EISDIR;
         }
@@ -607,7 +607,7 @@ namespace golang::os
         {
             return {nullptr, err};
         }
-        f->appendMode = flag & O_APPEND != 0;
+        f->file.appendMode = flag & O_APPEND != 0;
         return {f, nullptr};
     }
 
@@ -667,7 +667,7 @@ namespace golang::os
         }
         return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
             x.Op = op;
-            x.Path = f->name;
+            x.Path = f->file.name;
             x.Err = err;
         }));
     }

@@ -380,7 +380,7 @@ namespace golang::runtime
         {
             return {false, 0};
         }
-        if(auto fd = funcdata(f, abi::FUNCDATA_LocalsPointerMaps); fd == nullptr || f.flag & abi::FuncFlagAsm != 0)
+        if(auto fd = funcdata(f, abi::FUNCDATA_LocalsPointerMaps); fd == nullptr || f._func.flag & abi::FuncFlagAsm != 0)
         {
             return {false, 0};
         }

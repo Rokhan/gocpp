@@ -1342,20 +1342,20 @@ namespace golang::runtime
                 r->Cycles = bp->cycles;
                 if(raceenabled)
                 {
-                    racewriterangepc(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(BlockProfile));
+                    racewriterangepc(gocpp::unsafe_pointer(& r->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), getcallerpc(), abi::FuncPCABIInternal(BlockProfile));
                 }
                 if(msanenabled)
                 {
-                    msanwrite(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+                    msanwrite(gocpp::unsafe_pointer(& r->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
                 }
                 if(asanenabled)
                 {
-                    asanwrite(gocpp::unsafe_pointer(& r->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+                    asanwrite(gocpp::unsafe_pointer(& r->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
                 }
-                auto i = copy(r->Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
-                for(; i < len(r->Stack0); i++)
+                auto i = copy(r->StackRecord.Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
+                for(; i < len(r->StackRecord.Stack0); i++)
                 {
-                    r->Stack0[i] = 0;
+                    r->StackRecord.Stack0[i] = 0;
                 }
                 p = p.make_slice(1);
             }
@@ -1389,10 +1389,10 @@ namespace golang::runtime
                 auto r = & p[0];
                 r->Count = int64_t(bp->count);
                 r->Cycles = bp->cycles;
-                auto i = copy(r->Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
-                for(; i < len(r->Stack0); i++)
+                auto i = copy(r->StackRecord.Stack0.make_slice(0), rec::stk(gocpp::recv(b)));
+                for(; i < len(r->StackRecord.Stack0); i++)
                 {
-                    r->Stack0[i] = 0;
+                    r->StackRecord.Stack0[i] = 0;
                 }
                 p = p.make_slice(1);
             }

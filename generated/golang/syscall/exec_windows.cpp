@@ -532,12 +532,12 @@ namespace golang::syscall
                 return {0, 0, err};
             }
             defer.push_back([=]{ deleteProcThreadAttributeList(si->ProcThreadAttributeList); });
-            si->Cb = uint32_t(gocpp::Sizeof<_STARTUPINFOEXW>());
-            si->Flags = STARTF_USESTDHANDLES;
+            si->StartupInfo.Cb = uint32_t(gocpp::Sizeof<_STARTUPINFOEXW>());
+            si->StartupInfo.Flags = STARTF_USESTDHANDLES;
             if(sys->HideWindow)
             {
-                si->Flags |= STARTF_USESHOWWINDOW;
-                si->ShowWindow = SW_HIDE;
+                si->StartupInfo.Flags |= STARTF_USESHOWWINDOW;
+                si->StartupInfo.ShowWindow = SW_HIDE;
             }
             if(sys->ParentProcess != 0)
             {
@@ -547,9 +547,9 @@ namespace golang::syscall
                     return {0, 0, err};
                 }
             }
-            si->StdInput = fd[0];
-            si->StdOutput = fd[1];
-            si->StdErr = fd[2];
+            si->StartupInfo.StdInput = fd[0];
+            si->StartupInfo.StdOutput = fd[1];
+            si->StartupInfo.StdErr = fd[2];
             fd = append(fd, sys->AdditionalInheritedHandles);
             auto j = 0;
             for(auto [i, gocpp_ignored] : fd)

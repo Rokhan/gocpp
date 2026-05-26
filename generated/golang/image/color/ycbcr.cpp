@@ -214,9 +214,9 @@ namespace golang::color
 
     std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::NYCbCrA c)
     {
-        auto yy1 = int32_t(c.Y) * 0x10101;
-        auto cb1 = int32_t(c.Cb) - 128;
-        auto cr1 = int32_t(c.Cr) - 128;
+        auto yy1 = int32_t(c.YCbCr.Y) * 0x10101;
+        auto cb1 = int32_t(c.YCbCr.Cb) - 128;
+        auto cr1 = int32_t(c.YCbCr.Cr) - 128;
         auto r = yy1 + 91881 * cr1;
         if(uint32_t(r) & 0xff000000 == 0)
         {

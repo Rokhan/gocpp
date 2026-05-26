@@ -127,9 +127,9 @@ namespace golang::runtime
     // argBytes returns the argument frame size for a call to frame.fn.
     uintptr_t rec::argBytes(golang::runtime::stkframe* frame)
     {
-        if(frame->fn.args != abi::ArgsSizeUnknown)
+        if(frame->fn._func.args != abi::ArgsSizeUnknown)
         {
-            return uintptr_t(frame->fn.args);
+            return uintptr_t(frame->fn._func.args);
         }
         auto [argMap, gocpp_id_0] = rec::argMapInternal(gocpp::recv(frame));
         return uintptr_t(argMap.n) * goarch::PtrSize;
@@ -152,9 +152,9 @@ namespace golang::runtime
         struct bitvector argMap;
         bool hasReflectStackObj;
         auto f = frame->fn;
-        if(f.args != abi::ArgsSizeUnknown)
+        if(f._func.args != abi::ArgsSizeUnknown)
         {
-            argMap.n = f.args / goarch::PtrSize;
+            argMap.n = f._func.args / goarch::PtrSize;
             return {argMap, hasReflectStackObj};
         }
         //Go switch emulation

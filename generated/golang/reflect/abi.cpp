@@ -361,9 +361,9 @@ namespace golang::reflect
                     break;
                 case 25:
                     auto st = (structType*)(gocpp::unsafe_pointer(t));
-                    for(auto [i, gocpp_ignored] : st->Fields)
+                    for(auto [i, gocpp_ignored] : st->StructType.Fields)
                     {
-                        auto f = & st->Fields[i];
+                        auto f = & st->StructType.Fields[i];
                         if(! rec::regAssign(gocpp::recv(a), f->Typ, offset + f->Offset))
                         {
                             return false;

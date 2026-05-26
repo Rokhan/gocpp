@@ -1008,7 +1008,7 @@ namespace golang::abi
     gocpp::slice<Type*> rec::InSlice(golang::abi::FuncType* t)
     {
         auto uadd = gocpp::Sizeof<FuncType>();
-        if(t->TFlag & TFlagUncommon != 0)
+        if(t->Type.TFlag & TFlagUncommon != 0)
         {
             uadd += gocpp::Sizeof<UncommonType>();
         }
@@ -1027,7 +1027,7 @@ namespace golang::abi
             return nullptr;
         }
         auto uadd = gocpp::Sizeof<FuncType>();
-        if(t->TFlag & TFlagUncommon != 0)
+        if(t->Type.TFlag & TFlagUncommon != 0)
         {
             uadd += gocpp::Sizeof<UncommonType>();
         }

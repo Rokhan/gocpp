@@ -356,9 +356,9 @@ namespace golang::runtime
         {
             for(auto mp = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm))); mp != nullptr; mp = mp->alllink)
             {
-                if(mp->resumesema != 0)
+                if(mp->mOS.resumesema != 0)
                 {
-                    stdcall1(_SetEvent, mp->resumesema);
+                    stdcall1(_SetEvent, mp->mOS.resumesema);
                 }
             }
             return 0;
@@ -733,7 +733,7 @@ namespace golang::runtime
         uintptr_t result = {};
         if(ns < 0)
         {
-            result = stdcall2(_WaitForSingleObject, getg()->m->waitsema, uintptr_t(_INFINITE));
+            result = stdcall2(_WaitForSingleObject, getg()->m->mOS.waitsema, uintptr_t(_INFINITE));
         }
         else
         {
@@ -746,7 +746,7 @@ namespace golang::runtime
                 {
                     ms = 1;
                 }
-                result = stdcall4(_WaitForMultipleObjects, 2, uintptr_t(gocpp::unsafe_pointer(new gocpp::array<uintptr_t, 2> {getg()->m->waitsema, getg()->m->resumesema})), 0, uintptr_t(ms));
+                result = stdcall4(_WaitForMultipleObjects, 2, uintptr_t(gocpp::unsafe_pointer(new gocpp::array<uintptr_t, 2> {getg()->m->mOS.waitsema, getg()->m->mOS.resumesema})), 0, uintptr_t(ms));
                 if(result != _WAIT_OBJECT_0 + 1)
                 {
                     break;
@@ -802,7 +802,7 @@ namespace golang::runtime
     //go:nosplit
     void semawakeup(struct m* mp)
     {
-        if(stdcall1(_SetEvent, mp->waitsema) == 0)
+        if(stdcall1(_SetEvent, mp->mOS.waitsema) == 0)
         {
             systemstack([=]() mutable -> void
             {
@@ -815,12 +815,12 @@ namespace golang::runtime
     //go:nosplit
     void semacreate(struct m* mp)
     {
-        if(mp->waitsema != 0)
+        if(mp->mOS.waitsema != 0)
         {
             return;
         }
-        mp->waitsema = stdcall4(_CreateEventA, 0, 0, 0, 0);
-        if(mp->waitsema == 0)
+        mp->mOS.waitsema = stdcall4(_CreateEventA, 0, 0, 0, 0);
+        if(mp->mOS.waitsema == 0)
         {
             systemstack([=]() mutable -> void
             {
@@ -828,16 +828,16 @@ namespace golang::runtime
                 go_throw("runtime.semacreate"_s);
             });
         }
-        mp->resumesema = stdcall4(_CreateEventA, 0, 0, 0, 0);
-        if(mp->resumesema == 0)
+        mp->mOS.resumesema = stdcall4(_CreateEventA, 0, 0, 0, 0);
+        if(mp->mOS.resumesema == 0)
         {
             systemstack([=]() mutable -> void
             {
                 print("runtime: createevent failed; errno="_s, getlasterror(), "\n"_s);
                 go_throw("runtime.semacreate"_s);
             });
-            stdcall1(_CloseHandle, mp->waitsema);
-            mp->waitsema = 0;
+            stdcall1(_CloseHandle, mp->mOS.waitsema);
+            mp->mOS.waitsema = 0;
         }
     }
 
@@ -917,19 +917,19 @@ namespace golang::runtime
             go_throw("runtime.minit: duplicatehandle failed"_s);
         }
         auto mp = getg()->m;
-        lock(& mp->threadLock);
-        mp->thread = thandle;
+        lock(& mp->mOS.threadLock);
+        mp->mOS.thread = thandle;
         mp->procid = uint64_t(stdcall0(_GetCurrentThreadId));
-        if(mp->highResTimer == 0 && haveHighResTimer)
+        if(mp->mOS.highResTimer == 0 && haveHighResTimer)
         {
-            mp->highResTimer = createHighResTimer();
-            if(mp->highResTimer == 0)
+            mp->mOS.highResTimer = createHighResTimer();
+            if(mp->mOS.highResTimer == 0)
             {
                 print("runtime: CreateWaitableTimerEx failed; errno="_s, getlasterror(), "\n"_s);
                 go_throw("CreateWaitableTimerEx when creating timer failed"_s);
             }
         }
-        unlock(& mp->threadLock);
+        unlock(& mp->mOS.threadLock);
         // Query the true stack base from the OS. Currently we're
         // running on a small assumed stack.
         memoryBasicInformation mbi = {};
@@ -958,13 +958,13 @@ namespace golang::runtime
     void unminit()
     {
         auto mp = getg()->m;
-        lock(& mp->threadLock);
-        if(mp->thread != 0)
+        lock(& mp->mOS.threadLock);
+        if(mp->mOS.thread != 0)
         {
-            stdcall1(_CloseHandle, mp->thread);
-            mp->thread = 0;
+            stdcall1(_CloseHandle, mp->mOS.thread);
+            mp->mOS.thread = 0;
         }
-        unlock(& mp->threadLock);
+        unlock(& mp->mOS.threadLock);
         mp->procid = 0;
     }
 
@@ -974,20 +974,20 @@ namespace golang::runtime
     //go:nosplit
     void mdestroy(struct m* mp)
     {
-        if(mp->highResTimer != 0)
+        if(mp->mOS.highResTimer != 0)
         {
-            stdcall1(_CloseHandle, mp->highResTimer);
-            mp->highResTimer = 0;
+            stdcall1(_CloseHandle, mp->mOS.highResTimer);
+            mp->mOS.highResTimer = 0;
         }
-        if(mp->waitsema != 0)
+        if(mp->mOS.waitsema != 0)
         {
-            stdcall1(_CloseHandle, mp->waitsema);
-            mp->waitsema = 0;
+            stdcall1(_CloseHandle, mp->mOS.waitsema);
+            mp->mOS.waitsema = 0;
         }
-        if(mp->resumesema != 0)
+        if(mp->mOS.resumesema != 0)
         {
-            stdcall1(_CloseHandle, mp->resumesema);
-            mp->resumesema = 0;
+            stdcall1(_CloseHandle, mp->mOS.resumesema);
+            mp->mOS.resumesema = 0;
         }
     }
 
@@ -1155,9 +1155,9 @@ namespace golang::runtime
         {
             uintptr_t h = {};
             uintptr_t timeout = {};
-            if(haveHighResTimer && getg()->m->highResTimer != 0)
+            if(haveHighResTimer && getg()->m->mOS.highResTimer != 0)
             {
-                h = getg()->m->highResTimer;
+                h = getg()->m->mOS.highResTimer;
                 auto dt = - 10 * int64_t(us);
                 stdcall6(_SetWaitableTimer, h, uintptr_t(gocpp::unsafe_pointer(& dt)), 0, 0, 0, 0);
                 timeout = _INFINITE;
@@ -1257,20 +1257,20 @@ namespace golang::runtime
                 {
                     continue;
                 }
-                lock(& mp->threadLock);
-                if(mp->thread == 0 || mp->profilehz == 0 || mp->blocked)
+                lock(& mp->mOS.threadLock);
+                if(mp->mOS.thread == 0 || mp->profilehz == 0 || mp->blocked)
                 {
-                    unlock(& mp->threadLock);
+                    unlock(& mp->mOS.threadLock);
                     continue;
                 }
                 // Acquire our own handle to the thread.
                 uintptr_t thread = {};
-                if(stdcall7(_DuplicateHandle, currentProcess, mp->thread, currentProcess, uintptr_t(gocpp::unsafe_pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
+                if(stdcall7(_DuplicateHandle, currentProcess, mp->mOS.thread, currentProcess, uintptr_t(gocpp::unsafe_pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
                 {
                     print("runtime: duplicatehandle failed; errno="_s, getlasterror(), "\n"_s);
                     go_throw("duplicatehandle failed"_s);
                 }
-                unlock(& mp->threadLock);
+                unlock(& mp->mOS.threadLock);
                 if(int32_t(stdcall1(_SuspendThread, thread)) == - 1)
                 {
                     stdcall1(_CloseHandle, thread);
@@ -1330,26 +1330,26 @@ namespace golang::runtime
         {
             go_throw("self-preempt"_s);
         }
-        if(! atomic::Cas(& mp->preemptExtLock, 0, 1))
+        if(! atomic::Cas(& mp->mOS.preemptExtLock, 0, 1))
         {
             rec::Add(gocpp::recv(mp->preemptGen), 1);
             return;
         }
-        lock(& mp->threadLock);
-        if(mp->thread == 0)
+        lock(& mp->mOS.threadLock);
+        if(mp->mOS.thread == 0)
         {
-            unlock(& mp->threadLock);
-            atomic::Store(& mp->preemptExtLock, 0);
+            unlock(& mp->mOS.threadLock);
+            atomic::Store(& mp->mOS.preemptExtLock, 0);
             rec::Add(gocpp::recv(mp->preemptGen), 1);
             return;
         }
         uintptr_t thread = {};
-        if(stdcall7(_DuplicateHandle, currentProcess, mp->thread, currentProcess, uintptr_t(gocpp::unsafe_pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
+        if(stdcall7(_DuplicateHandle, currentProcess, mp->mOS.thread, currentProcess, uintptr_t(gocpp::unsafe_pointer(& thread)), 0, 0, _DUPLICATE_SAME_ACCESS) == 0)
         {
             print("runtime.preemptM: duplicatehandle failed; errno="_s, getlasterror(), "\n"_s);
             go_throw("runtime.preemptM: duplicatehandle failed"_s);
         }
-        unlock(& mp->threadLock);
+        unlock(& mp->mOS.threadLock);
         // Prepare thread context buffer. This must be aligned to 16 bytes.
         context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
@@ -1360,7 +1360,7 @@ namespace golang::runtime
         {
             unlock(& suspendLock);
             stdcall1(_CloseHandle, thread);
-            atomic::Store(& mp->preemptExtLock, 0);
+            atomic::Store(& mp->mOS.preemptExtLock, 0);
             rec::Add(gocpp::recv(mp->preemptGen), 1);
             return;
         }
@@ -1413,7 +1413,7 @@ namespace golang::runtime
                 stdcall2(_SetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));
             }
         }
-        atomic::Store(& mp->preemptExtLock, 0);
+        atomic::Store(& mp->mOS.preemptExtLock, 0);
         rec::Add(gocpp::recv(mp->preemptGen), 1);
         stdcall1(_ResumeThread, thread);
         stdcall1(_CloseHandle, thread);
@@ -1428,7 +1428,7 @@ namespace golang::runtime
     //go:nosplit
     void osPreemptExtEnter(struct m* mp)
     {
-        for(; ! atomic::Cas(& mp->preemptExtLock, 0, 1); )
+        for(; ! atomic::Cas(& mp->mOS.preemptExtLock, 0, 1); )
         {
             osyield();
         }
@@ -1442,7 +1442,7 @@ namespace golang::runtime
     //go:nosplit
     void osPreemptExtExit(struct m* mp)
     {
-        atomic::Store(& mp->preemptExtLock, 0);
+        atomic::Store(& mp->mOS.preemptExtLock, 0);
     }
 
 }

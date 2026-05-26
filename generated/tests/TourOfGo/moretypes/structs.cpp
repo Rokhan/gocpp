@@ -126,6 +126,7 @@ namespace golang::main
     {
         T result;
         result.i = this->i;
+        result.j = this->j;
         return result;
     }
 
@@ -133,6 +134,7 @@ namespace golang::main
     bool Dummy::operator==(const T& ref) const
     {
         if (i != ref.i) return false;
+        if (j != ref.j) return false;
         return true;
     }
 
@@ -140,6 +142,7 @@ namespace golang::main
     {
         os << '{';
         os << "" << i;
+        os << " " << j;
         os << '}';
         return os;
     }
@@ -180,6 +183,38 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Dummy2& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    Dummy3::operator T()
+    {
+        T result;
+        result.Dummy2 = this->Dummy2;
+        result.zzz = this->zzz;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool Dummy3::operator==(const T& ref) const
+    {
+        if (Dummy2 != ref.Dummy2) return false;
+        if (zzz != ref.zzz) return false;
+        return true;
+    }
+
+    std::ostream& Dummy3::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Dummy2;
+        os << " " << zzz;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Dummy3& value)
     {
         return value.PrintTo(os);
     }
@@ -384,6 +419,7 @@ namespace golang::main
     struct gocpp_id_5
         {
             int i;
+            int j;
 
             using isGoStruct = void;
 
@@ -392,6 +428,7 @@ namespace golang::main
             {
                 T result;
                 result.i = this->i;
+                result.j = this->j;
                 return result;
             }
 
@@ -399,6 +436,7 @@ namespace golang::main
             bool operator==(const T& ref) const
             {
                 if (i != ref.i) return false;
+                if (j != ref.j) return false;
                 return true;
             }
 
@@ -406,6 +444,7 @@ namespace golang::main
             {
                 os << '{';
                 os << "" << i;
+                os << " " << j;
                 os << '}';
                 return os;
             }
@@ -420,6 +459,7 @@ namespace golang::main
     struct gocpp_id_6
         {
             int i;
+            int j;
 
             using isGoStruct = void;
 
@@ -428,6 +468,7 @@ namespace golang::main
             {
                 T result;
                 result.i = this->i;
+                result.j = this->j;
                 return result;
             }
 
@@ -435,6 +476,7 @@ namespace golang::main
             bool operator==(const T& ref) const
             {
                 if (i != ref.i) return false;
+                if (j != ref.j) return false;
                 return true;
             }
 
@@ -442,6 +484,7 @@ namespace golang::main
             {
                 os << '{';
                 os << "" << i;
+                os << " " << j;
                 os << '}';
                 return os;
             }
@@ -456,6 +499,7 @@ namespace golang::main
     struct gocpp_id_7
         {
             int i;
+            int j;
 
             using isGoStruct = void;
 
@@ -464,6 +508,7 @@ namespace golang::main
             {
                 T result;
                 result.i = this->i;
+                result.j = this->j;
                 return result;
             }
 
@@ -471,6 +516,7 @@ namespace golang::main
             bool operator==(const T& ref) const
             {
                 if (i != ref.i) return false;
+                if (j != ref.j) return false;
                 return true;
             }
 
@@ -478,6 +524,7 @@ namespace golang::main
             {
                 os << '{';
                 os << "" << i;
+                os << " " << j;
                 os << '}';
                 return os;
             }
@@ -533,11 +580,11 @@ namespace golang::main
         mocklib::Println(i == j);
         auto e = Empty {};
         mocklib::Println(e == j);
-        auto v1 = gocpp_id_5 {1};
-        auto v2 = gocpp_id_6 {1};
+        auto v1 = gocpp_id_5 {1, 2};
+        auto v2 = gocpp_id_6 {1, 2};
         mocklib::Println(v1 == v2);
-        auto d = Dummy {1};
-        d = gocpp_id_7 {1};
+        auto d = Dummy {1, 2};
+        d = gocpp_id_7 {1, 2};
         mocklib::Println(d == v2);
         mocklib::Println(d == v1);
         Dummy* p1 = & d;
@@ -557,6 +604,20 @@ namespace golang::main
         mocklib::Println("Offset of a in Anonymous struct:"_s, gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::first));
         mocklib::Println("Offset of b in Anonymous struct:"_s, gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::second));
         mocklib::Println("Size of Anonymous struct:"_s, gocpp::Sizeof<gocpp_id_0>());
+        // test field access
+        Dummy3 d3 = Dummy3 {Dummy2 {Dummy {1, 2}, Vertex {3, 4}, 5}, 6};
+        mocklib::Println(d3.Dummy2.Dummy.i);
+        mocklib::Println(d3.Dummy2.Dummy.j);
+        mocklib::Println(d3.Dummy2.Vertex.X);
+        mocklib::Println(d3.Dummy2.Vertex.Y);
+        mocklib::Println(d3.Dummy2.Dummy.i);
+        mocklib::Println(d3.Dummy2.Dummy.j);
+        mocklib::Println(d3.Dummy2.Vertex.X);
+        mocklib::Println(d3.Dummy2.Vertex.Y);
+        mocklib::Println(d3.Dummy2.i);
+        mocklib::Println(d3.Dummy2.Dummy.j);
+        mocklib::Println(d3.Dummy2.Vertex.X);
+        mocklib::Println(d3.Dummy2.Vertex.Y);
     }
 
 }

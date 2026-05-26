@@ -122,7 +122,7 @@ namespace golang::os
         gocpp::slice<os::DirEntry> dirents;
         gocpp::slice<os::FileInfo> infos;
         struct gocpp::error err;
-        if(file->dirinfo == nullptr)
+        if(file->file.dirinfo == nullptr)
         {
             // vol is used by os.SameFile.
             // It is safe to query it once and reuse the value.
@@ -131,36 +131,36 @@ namespace golang::os
             // but the reparse point should still live in the parent volume.
             uint32_t vol = {};
             uint32_t flags = {};
-            err = windows::GetVolumeInformationByHandle(file->pfd.Sysfd, nullptr, 0, & vol, nullptr, & flags, nullptr, 0);
+            err = windows::GetVolumeInformationByHandle(file->file.pfd.Sysfd, nullptr, 0, & vol, nullptr, & flags, nullptr, 0);
             runtime::KeepAlive(file);
             if(err != nullptr)
             {
                 err = gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = "readdir"_s;
-                    x.Path = file->name;
+                    x.Path = file->file.name;
                     x.Err = err;
                 });
                 return {names, dirents, infos, err};
             }
-            file->dirinfo = new(dirInfo);
-            file->dirinfo->buf = gocpp::getValue<gocpp::slice<unsigned char>*>(rec::Get(gocpp::recv(dirBufPool)));
-            file->dirinfo->vol = vol;
+            file->file.dirinfo = new(dirInfo);
+            file->file.dirinfo->buf = gocpp::getValue<gocpp::slice<unsigned char>*>(rec::Get(gocpp::recv(dirBufPool)));
+            file->file.dirinfo->vol = vol;
             if(allowReadDirFileID && flags & windows::FILE_SUPPORTS_OPEN_BY_FILE_ID != 0)
             {
-                file->dirinfo->go_class = windows::FileIdBothDirectoryRestartInfo;
+                file->file.dirinfo->go_class = windows::FileIdBothDirectoryRestartInfo;
             }
             else
             {
-                file->dirinfo->go_class = windows::FileFullDirectoryRestartInfo;
-                file->dirinfo->path = file->name;
-                if(! isAbs(file->dirinfo->path))
+                file->file.dirinfo->go_class = windows::FileFullDirectoryRestartInfo;
+                file->file.dirinfo->path = file->file.name;
+                if(! isAbs(file->file.dirinfo->path))
                 {
-                    std::tie(file->dirinfo->path, err) = syscall::FullPath(file->dirinfo->path);
+                    std::tie(file->file.dirinfo->path, err) = syscall::FullPath(file->file.dirinfo->path);
                     if(err != nullptr)
                     {
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
                             x.Op = "readdir"_s;
-                            x.Path = file->name;
+                            x.Path = file->file.name;
                             x.Err = err;
                         });
                         return {names, dirents, infos, err};
@@ -168,7 +168,7 @@ namespace golang::os
                 }
             }
         }
-        auto d = file->dirinfo;
+        auto d = file->file.dirinfo;
         auto wantAll = n <= 0;
         if(wantAll)
         {
@@ -178,7 +178,7 @@ namespace golang::os
         {
             if(d->bufp == 0)
             {
-                err = windows::GetFileInformationByHandleEx(file->pfd.Sysfd, d->go_class, (unsigned char*)(gocpp::unsafe_pointer(& (*d->buf)[0])), uint32_t(len(*d->buf)));
+                err = windows::GetFileInformationByHandleEx(file->file.pfd.Sysfd, d->go_class, (unsigned char*)(gocpp::unsafe_pointer(& (*d->buf)[0])), uint32_t(len(*d->buf)));
                 runtime::KeepAlive(file);
                 if(err != nullptr)
                 {
@@ -194,7 +194,7 @@ namespace golang::os
                     {
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
                             x.Op = "readdir"_s;
-                            x.Path = file->name;
+                            x.Path = file->file.name;
                             x.Err = syscall::go_ENOTDIR;
                         });
                     }
@@ -202,7 +202,7 @@ namespace golang::os
                     {
                         err = gocpp::InitPtr<os::PathError>([=](auto& x) {
                             x.Op = "GetFileInformationByHandleEx"_s;
-                            x.Path = file->name;
+                            x.Path = file->file.name;
                             x.Err = err;
                         });
                     }

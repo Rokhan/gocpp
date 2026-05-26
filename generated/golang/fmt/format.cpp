@@ -149,7 +149,7 @@ namespace golang::fmt
             copy(buf, *f->buf);
         }
         auto padByte = (unsigned char)(' ');
-        if(f->zero)
+        if(f->fmtFlags.zero)
         {
             padByte = (unsigned char)('0');
         }
@@ -164,13 +164,13 @@ namespace golang::fmt
     // pad appends b to f.buf, padded on left (!f.minus) or right (f.minus).
     void rec::pad(golang::fmt::fmt* f, gocpp::slice<unsigned char> b)
     {
-        if(! f->widPresent || f->wid == 0)
+        if(! f->fmtFlags.widPresent || f->wid == 0)
         {
             rec::write(gocpp::recv(f->buf), b);
             return;
         }
         auto width = f->wid - utf8::RuneCount(b);
-        if(! f->minus)
+        if(! f->fmtFlags.minus)
         {
             rec::writePadding(gocpp::recv(f), width);
             rec::write(gocpp::recv(f->buf), b);
@@ -185,13 +185,13 @@ namespace golang::fmt
     // padString appends s to f.buf, padded on left (!f.minus) or right (f.minus).
     void rec::padString(golang::fmt::fmt* f, gocpp::string s)
     {
-        if(! f->widPresent || f->wid == 0)
+        if(! f->fmtFlags.widPresent || f->wid == 0)
         {
             rec::writeString(gocpp::recv(f->buf), s);
             return;
         }
         auto width = f->wid - utf8::RuneCountInString(s);
-        if(! f->minus)
+        if(! f->fmtFlags.minus)
         {
             rec::writePadding(gocpp::recv(f), width);
             rec::writeString(gocpp::recv(f->buf), s);
@@ -221,7 +221,7 @@ namespace golang::fmt
     {
         auto buf = f->intbuf.make_slice(0);
         auto prec = 4;
-        if(f->precPresent && f->prec > 4)
+        if(f->fmtFlags.precPresent && f->prec > 4)
         {
             prec = f->prec;
             auto width = 2 + prec + 2 + utf8::UTFMax + 1;
@@ -231,7 +231,7 @@ namespace golang::fmt
             }
         }
         auto i = len(buf);
-        if(f->sharp && u <= utf8::MaxRune && strconv::IsPrint(gocpp::rune(u)))
+        if(f->fmtFlags.sharp && u <= utf8::MaxRune && strconv::IsPrint(gocpp::rune(u)))
         {
             i--;
             buf[i] = '\'';
@@ -262,10 +262,10 @@ namespace golang::fmt
         buf[i] = '+';
         i--;
         buf[i] = 'U';
-        auto oldZero = f->zero;
-        f->zero = false;
+        auto oldZero = f->fmtFlags.zero;
+        f->fmtFlags.zero = false;
         rec::pad(gocpp::recv(f), buf.make_slice(i));
-        f->zero = oldZero;
+        f->fmtFlags.zero = oldZero;
     }
 
     // fmtInteger formats signed and unsigned integers.
@@ -277,7 +277,7 @@ namespace golang::fmt
             u = - u;
         }
         auto buf = f->intbuf.make_slice(0);
-        if(f->widPresent || f->precPresent)
+        if(f->fmtFlags.widPresent || f->fmtFlags.precPresent)
         {
             auto width = 3 + f->wid + f->prec;
             if(width > len(buf))
@@ -286,23 +286,23 @@ namespace golang::fmt
             }
         }
         auto prec = 0;
-        if(f->precPresent)
+        if(f->fmtFlags.precPresent)
         {
             prec = f->prec;
             if(prec == 0 && u == 0)
             {
-                auto oldZero = f->zero;
-                f->zero = false;
+                auto oldZero = f->fmtFlags.zero;
+                f->fmtFlags.zero = false;
                 rec::writePadding(gocpp::recv(f), f->wid);
-                f->zero = oldZero;
+                f->fmtFlags.zero = oldZero;
                 return;
             }
         }
         else
-        if(f->zero && f->widPresent)
+        if(f->fmtFlags.zero && f->fmtFlags.widPresent)
         {
             prec = f->wid;
-            if(negative || f->plus || f->space)
+            if(negative || f->fmtFlags.plus || f->fmtFlags.space)
             {
                 prec--;
             }
@@ -363,7 +363,7 @@ namespace golang::fmt
             i--;
             buf[i] = '0';
         }
-        if(f->sharp)
+        if(f->fmtFlags.sharp)
         {
             //Go switch emulation
             {
@@ -409,27 +409,27 @@ namespace golang::fmt
             buf[i] = '-';
         }
         else
-        if(f->plus)
+        if(f->fmtFlags.plus)
         {
             i--;
             buf[i] = '+';
         }
         else
-        if(f->space)
+        if(f->fmtFlags.space)
         {
             i--;
             buf[i] = ' ';
         }
-        auto oldZero = f->zero;
-        f->zero = false;
+        auto oldZero = f->fmtFlags.zero;
+        f->fmtFlags.zero = false;
         rec::pad(gocpp::recv(f), buf.make_slice(i));
-        f->zero = oldZero;
+        f->fmtFlags.zero = oldZero;
     }
 
     // truncateString truncates the string s to the specified precision, if present.
     gocpp::string rec::truncateString(golang::fmt::fmt* f, gocpp::string s)
     {
-        if(f->precPresent)
+        if(f->fmtFlags.precPresent)
         {
             auto n = f->prec;
             for(auto [i, gocpp_ignored] : s)
@@ -447,7 +447,7 @@ namespace golang::fmt
     // truncate truncates the byte slice b as a string of the specified precision, if present.
     gocpp::slice<unsigned char> rec::truncate(golang::fmt::fmt* f, gocpp::slice<unsigned char> b)
     {
-        if(f->precPresent)
+        if(f->fmtFlags.precPresent)
         {
             auto n = f->prec;
             for(auto i = 0; i < len(b); )
@@ -490,51 +490,51 @@ namespace golang::fmt
         {
             length = len(s);
         }
-        if(f->precPresent && f->prec < length)
+        if(f->fmtFlags.precPresent && f->prec < length)
         {
             length = f->prec;
         }
         auto width = 2 * length;
         if(width > 0)
         {
-            if(f->space)
+            if(f->fmtFlags.space)
             {
-                if(f->sharp)
+                if(f->fmtFlags.sharp)
                 {
                     width *= 2;
                 }
                 width += length - 1;
             }
             else
-            if(f->sharp)
+            if(f->fmtFlags.sharp)
             {
                 width += 2;
             }
         }
         else
         {
-            if(f->widPresent)
+            if(f->fmtFlags.widPresent)
             {
                 rec::writePadding(gocpp::recv(f), f->wid);
             }
             return;
         }
-        if(f->widPresent && f->wid > width && ! f->minus)
+        if(f->fmtFlags.widPresent && f->wid > width && ! f->fmtFlags.minus)
         {
             rec::writePadding(gocpp::recv(f), f->wid - width);
         }
         auto buf = *f->buf;
-        if(f->sharp)
+        if(f->fmtFlags.sharp)
         {
             buf = append(buf, '0', digits[16]);
         }
         unsigned char c = {};
         for(auto i = 0; i < length; i++)
         {
-            if(f->space && i > 0)
+            if(f->fmtFlags.space && i > 0)
             {
                 buf = append(buf, ' ');
-                if(f->sharp)
+                if(f->fmtFlags.sharp)
                 {
                     buf = append(buf, '0', digits[16]);
                 }
@@ -550,7 +550,7 @@ namespace golang::fmt
             buf = append(buf, digits[c >> 4], digits[c & 0xF]);
         }
         *f->buf = buf;
-        if(f->widPresent && f->wid > width && f->minus)
+        if(f->fmtFlags.widPresent && f->wid > width && f->fmtFlags.minus)
         {
             rec::writePadding(gocpp::recv(f), f->wid - width);
         }
@@ -574,13 +574,13 @@ namespace golang::fmt
     void rec::fmtQ(golang::fmt::fmt* f, gocpp::string s)
     {
         s = rec::truncateString(gocpp::recv(f), s);
-        if(f->sharp && strconv::CanBackquote(s))
+        if(f->fmtFlags.sharp && strconv::CanBackquote(s))
         {
             rec::padString(gocpp::recv(f), "`"_s + s + "`"_s);
             return;
         }
         auto buf = f->intbuf.make_slice(0, 0);
-        if(f->plus)
+        if(f->fmtFlags.plus)
         {
             rec::pad(gocpp::recv(f), strconv::AppendQuoteToASCII(buf, s));
         }
@@ -613,7 +613,7 @@ namespace golang::fmt
             r = utf8::RuneError;
         }
         auto buf = f->intbuf.make_slice(0, 0);
-        if(f->plus)
+        if(f->fmtFlags.plus)
         {
             rec::pad(gocpp::recv(f), strconv::AppendQuoteRuneToASCII(buf, r));
         }
@@ -627,7 +627,7 @@ namespace golang::fmt
     // for strconv.AppendFloat and therefore fits into a byte.
     void rec::fmtFloat(golang::fmt::fmt* f, double v, int size, gocpp::rune verb, int prec)
     {
-        if(f->precPresent)
+        if(f->fmtFlags.precPresent)
         {
             prec = f->prec;
         }
@@ -640,23 +640,23 @@ namespace golang::fmt
         {
             num[0] = '+';
         }
-        if(f->space && num[0] == '+' && ! f->plus)
+        if(f->fmtFlags.space && num[0] == '+' && ! f->fmtFlags.plus)
         {
             num[0] = ' ';
         }
         if(num[1] == 'I' || num[1] == 'N')
         {
-            auto oldZero = f->zero;
-            f->zero = false;
-            if(num[1] == 'N' && ! f->space && ! f->plus)
+            auto oldZero = f->fmtFlags.zero;
+            f->fmtFlags.zero = false;
+            if(num[1] == 'N' && ! f->fmtFlags.space && ! f->fmtFlags.plus)
             {
                 num = num.make_slice(1);
             }
             rec::pad(gocpp::recv(f), num);
-            f->zero = oldZero;
+            f->fmtFlags.zero = oldZero;
             return;
         }
-        if(f->sharp && verb != 'b')
+        if(f->fmtFlags.sharp && verb != 'b')
         {
             auto digits = 0;
             //Go switch emulation
@@ -744,9 +744,9 @@ namespace golang::fmt
             }
             num = append(num, tail);
         }
-        if(f->plus || num[0] != '+')
+        if(f->fmtFlags.plus || num[0] != '+')
         {
-            if(f->zero && f->widPresent && f->wid > len(num))
+            if(f->fmtFlags.zero && f->fmtFlags.widPresent && f->wid > len(num))
             {
                 rec::writeByte(gocpp::recv(f->buf), num[0]);
                 rec::writePadding(gocpp::recv(f), f->wid - len(num));

@@ -158,11 +158,11 @@ namespace golang::runtime
             wbuf = w->wbuf1;
         }
         else
-        if(wbuf->nobj == len(wbuf->obj))
+        if(wbuf->workbufhdr.nobj == len(wbuf->obj))
         {
             std::tie(w->wbuf1, w->wbuf2) = std::tuple{w->wbuf2, w->wbuf1};
             wbuf = w->wbuf1;
-            if(wbuf->nobj == len(wbuf->obj))
+            if(wbuf->workbufhdr.nobj == len(wbuf->obj))
             {
                 putfull(wbuf);
                 w->flushedWork = true;
@@ -171,8 +171,8 @@ namespace golang::runtime
                 flushed = true;
             }
         }
-        wbuf->obj[wbuf->nobj] = obj;
-        wbuf->nobj++;
+        wbuf->obj[wbuf->workbufhdr.nobj] = obj;
+        wbuf->workbufhdr.nobj++;
         if(flushed && gcphase == _GCmark)
         {
             rec::enlistWorker(gocpp::recv(gcController));
@@ -186,12 +186,12 @@ namespace golang::runtime
     bool rec::putFast(golang::runtime::gcWork* w, uintptr_t obj)
     {
         auto wbuf = w->wbuf1;
-        if(wbuf == nullptr || wbuf->nobj == len(wbuf->obj))
+        if(wbuf == nullptr || wbuf->workbufhdr.nobj == len(wbuf->obj))
         {
             return false;
         }
-        wbuf->obj[wbuf->nobj] = obj;
-        wbuf->nobj++;
+        wbuf->obj[wbuf->workbufhdr.nobj] = obj;
+        wbuf->workbufhdr.nobj++;
         return true;
     }
 
@@ -214,7 +214,7 @@ namespace golang::runtime
         }
         for(; len(obj) > 0; )
         {
-            for(; wbuf->nobj == len(wbuf->obj); )
+            for(; wbuf->workbufhdr.nobj == len(wbuf->obj); )
             {
                 putfull(wbuf);
                 w->flushedWork = true;
@@ -222,8 +222,8 @@ namespace golang::runtime
                 wbuf = w->wbuf1;
                 flushed = true;
             }
-            auto n = copy(wbuf->obj.make_slice(wbuf->nobj), obj);
-            wbuf->nobj += n;
+            auto n = copy(wbuf->obj.make_slice(wbuf->workbufhdr.nobj), obj);
+            wbuf->workbufhdr.nobj += n;
             obj = obj.make_slice(n);
         }
         if(flushed && gcphase == _GCmark)
@@ -247,11 +247,11 @@ namespace golang::runtime
             rec::init(gocpp::recv(w));
             wbuf = w->wbuf1;
         }
-        if(wbuf->nobj == 0)
+        if(wbuf->workbufhdr.nobj == 0)
         {
             std::tie(w->wbuf1, w->wbuf2) = std::tuple{w->wbuf2, w->wbuf1};
             wbuf = w->wbuf1;
-            if(wbuf->nobj == 0)
+            if(wbuf->workbufhdr.nobj == 0)
             {
                 auto owbuf = wbuf;
                 wbuf = trygetfull();
@@ -263,8 +263,8 @@ namespace golang::runtime
                 w->wbuf1 = wbuf;
             }
         }
-        wbuf->nobj--;
-        return wbuf->obj[wbuf->nobj];
+        wbuf->workbufhdr.nobj--;
+        return wbuf->obj[wbuf->workbufhdr.nobj];
     }
 
     // tryGetFast dequeues a pointer for the garbage collector to trace
@@ -275,12 +275,12 @@ namespace golang::runtime
     uintptr_t rec::tryGetFast(golang::runtime::gcWork* w)
     {
         auto wbuf = w->wbuf1;
-        if(wbuf == nullptr || wbuf->nobj == 0)
+        if(wbuf == nullptr || wbuf->workbufhdr.nobj == 0)
         {
             return 0;
         }
-        wbuf->nobj--;
-        return wbuf->obj[wbuf->nobj];
+        wbuf->workbufhdr.nobj--;
+        return wbuf->obj[wbuf->workbufhdr.nobj];
     }
 
     // dispose returns any cached pointers to the global queue.
@@ -294,7 +294,7 @@ namespace golang::runtime
     {
         if(auto wbuf = w->wbuf1; wbuf != nullptr)
         {
-            if(wbuf->nobj == 0)
+            if(wbuf->workbufhdr.nobj == 0)
             {
                 putempty(wbuf);
             }
@@ -305,7 +305,7 @@ namespace golang::runtime
             }
             w->wbuf1 = nullptr;
             wbuf = w->wbuf2;
-            if(wbuf->nobj == 0)
+            if(wbuf->workbufhdr.nobj == 0)
             {
                 putempty(wbuf);
             }
@@ -338,14 +338,14 @@ namespace golang::runtime
         {
             return;
         }
-        if(auto wbuf = w->wbuf2; wbuf->nobj != 0)
+        if(auto wbuf = w->wbuf2; wbuf->workbufhdr.nobj != 0)
         {
             putfull(wbuf);
             w->flushedWork = true;
             w->wbuf2 = getempty();
         }
         else
-        if(auto wbuf = w->wbuf1; wbuf->nobj > 4)
+        if(auto wbuf = w->wbuf1; wbuf->workbufhdr.nobj > 4)
         {
             w->wbuf1 = handoff(wbuf);
             w->flushedWork = true;
@@ -365,7 +365,7 @@ namespace golang::runtime
     //go:nowritebarrierrec
     bool rec::empty(golang::runtime::gcWork* w)
     {
-        return w->wbuf1 == nullptr || (w->wbuf1->nobj == 0 && w->wbuf2->nobj == 0);
+        return w->wbuf1 == nullptr || (w->wbuf1->workbufhdr.nobj == 0 && w->wbuf2->workbufhdr.nobj == 0);
     }
 
     
@@ -437,7 +437,7 @@ namespace golang::runtime
 
     void rec::checknonempty(golang::runtime::workbuf* b)
     {
-        if(b->nobj == 0)
+        if(b->workbufhdr.nobj == 0)
         {
             go_throw("workbuf is empty"_s);
         }
@@ -445,7 +445,7 @@ namespace golang::runtime
 
     void rec::checkempty(golang::runtime::workbuf* b)
     {
-        if(b->nobj != 0)
+        if(b->workbufhdr.nobj != 0)
         {
             go_throw("workbuf is not empty"_s);
         }
@@ -500,8 +500,8 @@ namespace golang::runtime
             for(auto i = uintptr_t(0); i + _WorkbufSize <= workbufAlloc; i += _WorkbufSize)
             {
                 auto newb = (workbuf*)(gocpp::unsafe_pointer(rec::base(gocpp::recv(s)) + i));
-                newb->nobj = 0;
-                lfnodeValidate(& newb->node);
+                newb->workbufhdr.nobj = 0;
+                lfnodeValidate(& newb->workbufhdr.node);
                 if(i == 0)
                 {
                     b = newb;
@@ -522,7 +522,7 @@ namespace golang::runtime
     void putempty(struct workbuf* b)
     {
         rec::checkempty(gocpp::recv(b));
-        rec::push(gocpp::recv(work.empty), & b->node);
+        rec::push(gocpp::recv(work.empty), & b->workbufhdr.node);
     }
 
     // putfull puts the workbuf on the work.full list for the GC.
@@ -533,7 +533,7 @@ namespace golang::runtime
     void putfull(struct workbuf* b)
     {
         rec::checknonempty(gocpp::recv(b));
-        rec::push(gocpp::recv(work.full), & b->node);
+        rec::push(gocpp::recv(work.full), & b->workbufhdr.node);
     }
 
     // trygetfull tries to get a full or partially empty workbuffer.
@@ -555,10 +555,10 @@ namespace golang::runtime
     struct workbuf* handoff(struct workbuf* b)
     {
         auto b1 = getempty();
-        auto n = b->nobj / 2;
-        b->nobj -= n;
-        b1->nobj = n;
-        memmove(gocpp::unsafe_pointer(& b1->obj[0]), gocpp::unsafe_pointer(& b->obj[b->nobj]), uintptr_t(n) * gocpp::Sizeof<uintptr_t>());
+        auto n = b->workbufhdr.nobj / 2;
+        b->workbufhdr.nobj -= n;
+        b1->workbufhdr.nobj = n;
+        memmove(gocpp::unsafe_pointer(& b1->obj[0]), gocpp::unsafe_pointer(& b->obj[b->workbufhdr.nobj]), uintptr_t(n) * gocpp::Sizeof<uintptr_t>());
         putfull(b);
         return b1;
     }

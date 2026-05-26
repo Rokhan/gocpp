@@ -122,11 +122,11 @@ namespace golang::runtime
     // end writes the buffer back into the m.
     void rec::end(golang::runtime::traceWriter w)
     {
-        if(w.mp == nullptr)
+        if(w.traceLocker.mp == nullptr)
         {
             return;
         }
-        w.mp->trace.buf[w.gen % 2] = w.traceBuf;
+        w.traceLocker.mp->trace.buf[w.traceLocker.gen % 2] = w.traceBuf;
     }
 
     // ensure makes sure that at least maxSize bytes are available to write.
@@ -150,7 +150,7 @@ namespace golang::runtime
             lock(& trace.lock);
             if(w.traceBuf != nullptr)
             {
-                traceBufFlush(w.traceBuf, w.gen);
+                traceBufFlush(w.traceBuf, w.traceLocker.gen);
             }
             unlock(& trace.lock);
         });
@@ -166,12 +166,12 @@ namespace golang::runtime
             lock(& trace.lock);
             if(w.traceBuf != nullptr)
             {
-                traceBufFlush(w.traceBuf, w.gen);
+                traceBufFlush(w.traceBuf, w.traceLocker.gen);
             }
             if(trace.empty != nullptr)
             {
                 w.traceBuf = trace.empty;
-                trace.empty = w.traceBuf->link;
+                trace.empty = w.traceBuf->traceBufHeader.link;
                 unlock(& trace.lock);
             }
             else
@@ -185,23 +185,23 @@ namespace golang::runtime
             }
         });
         auto ts = traceClockNow();
-        if(ts <= w.traceBuf->lastTime)
+        if(ts <= w.traceBuf->traceBufHeader.lastTime)
         {
-            ts = w.traceBuf->lastTime + 1;
+            ts = w.traceBuf->traceBufHeader.lastTime + 1;
         }
-        w.traceBuf->lastTime = ts;
-        w.traceBuf->link = nullptr;
-        w.traceBuf->pos = 0;
+        w.traceBuf->traceBufHeader.lastTime = ts;
+        w.traceBuf->traceBufHeader.link = nullptr;
+        w.traceBuf->traceBufHeader.pos = 0;
         auto mID = ~ uint64_t(0);
-        if(w.mp != nullptr)
+        if(w.traceLocker.mp != nullptr)
         {
-            mID = uint64_t(w.mp->procid);
+            mID = uint64_t(w.traceLocker.mp->procid);
         }
         rec::byte(gocpp::recv(w), (unsigned char)(traceEvEventBatch));
-        rec::varint(gocpp::recv(w), uint64_t(w.gen));
+        rec::varint(gocpp::recv(w), uint64_t(w.traceLocker.gen));
         rec::varint(gocpp::recv(w), uint64_t(mID));
         rec::varint(gocpp::recv(w), uint64_t(ts));
-        w.traceBuf->lenPos = rec::varintReserve(gocpp::recv(w));
+        w.traceBuf->traceBufHeader.lenPos = rec::varintReserve(gocpp::recv(w));
         return w;
     }
 
@@ -241,14 +241,14 @@ namespace golang::runtime
     // push queues buf into queue of buffers.
     void rec::push(golang::runtime::traceBufQueue* q, struct traceBuf* buf)
     {
-        buf->link = nullptr;
+        buf->traceBufHeader.link = nullptr;
         if(q->head == nullptr)
         {
             q->head = buf;
         }
         else
         {
-            q->tail->link = buf;
+            q->tail->traceBufHeader.link = buf;
         }
         q->tail = buf;
     }
@@ -261,12 +261,12 @@ namespace golang::runtime
         {
             return nullptr;
         }
-        q->head = buf->link;
+        q->head = buf->traceBufHeader.link;
         if(q->head == nullptr)
         {
             q->tail = nullptr;
         }
-        buf->link = nullptr;
+        buf->traceBufHeader.link = nullptr;
         return buf;
     }
 
@@ -355,14 +355,14 @@ namespace golang::runtime
     // byte appends v to buf.
     void rec::byte(golang::runtime::traceBuf* buf, unsigned char v)
     {
-        buf->arr[buf->pos] = v;
-        buf->pos++;
+        buf->arr[buf->traceBufHeader.pos] = v;
+        buf->traceBufHeader.pos++;
     }
 
     // varint appends v to buf in little-endian-base-128 encoding.
     void rec::varint(golang::runtime::traceBuf* buf, uint64_t v)
     {
-        auto pos = buf->pos;
+        auto pos = buf->traceBufHeader.pos;
         auto arr = buf->arr.make_slice(pos, pos + traceBytesPerNumber);
         for(auto [i, gocpp_ignored] : arr)
         {
@@ -375,7 +375,7 @@ namespace golang::runtime
             arr[i] = 0x80 | (unsigned char)(v);
             v >>= 7;
         }
-        buf->pos = pos;
+        buf->traceBufHeader.pos = pos;
     }
 
     // varintReserve reserves enough space in buf to hold any varint.
@@ -383,20 +383,20 @@ namespace golang::runtime
     // Space reserved this way can be filled in with the varintAt method.
     int rec::varintReserve(golang::runtime::traceBuf* buf)
     {
-        auto p = buf->pos;
-        buf->pos += traceBytesPerNumber;
+        auto p = buf->traceBufHeader.pos;
+        buf->traceBufHeader.pos += traceBytesPerNumber;
         return p;
     }
 
     // stringData appends s's data directly to buf.
     void rec::stringData(golang::runtime::traceBuf* buf, gocpp::string s)
     {
-        buf->pos += copy(buf->arr.make_slice(buf->pos), s);
+        buf->traceBufHeader.pos += copy(buf->arr.make_slice(buf->traceBufHeader.pos), s);
     }
 
     bool rec::available(golang::runtime::traceBuf* buf, int size)
     {
-        return len(buf->arr) - buf->pos >= size;
+        return len(buf->arr) - buf->traceBufHeader.pos >= size;
     }
 
     // varintAt writes varint v at byte position pos in buf. This always
@@ -432,7 +432,7 @@ namespace golang::runtime
     void traceBufFlush(struct traceBuf* buf, uintptr_t gen)
     {
         assertLockHeld(& trace.lock);
-        rec::varintAt(gocpp::recv(buf), buf->lenPos, uint64_t(buf->pos - (buf->lenPos + traceBytesPerNumber)));
+        rec::varintAt(gocpp::recv(buf), buf->traceBufHeader.lenPos, uint64_t(buf->traceBufHeader.pos - (buf->traceBufHeader.lenPos + traceBytesPerNumber)));
         rec::push(gocpp::recv(trace.full[gen % 2]), buf);
         if(! rec::Load(gocpp::recv(trace.workAvailable)))
         {

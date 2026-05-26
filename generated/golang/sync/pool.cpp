@@ -205,13 +205,13 @@ namespace golang::sync
             race::Disable();
         }
         auto [l, gocpp_id_0] = rec::pin(gocpp::recv(p));
-        if(l->go_private == nullptr)
+        if(l->poolLocalInternal.go_private == nullptr)
         {
-            l->go_private = x;
+            l->poolLocalInternal.go_private = x;
         }
         else
         {
-            rec::pushHead(gocpp::recv(l->shared), x);
+            rec::pushHead(gocpp::recv(l->poolLocalInternal.shared), x);
         }
         runtime_procUnpin();
         if(race::Enabled)
@@ -235,11 +235,11 @@ namespace golang::sync
             race::Disable();
         }
         auto [l, pid] = rec::pin(gocpp::recv(p));
-        auto x = l->go_private;
-        l->go_private = nullptr;
+        auto x = l->poolLocalInternal.go_private;
+        l->poolLocalInternal.go_private = nullptr;
         if(x == nullptr)
         {
-            std::tie(x, std::ignore) = rec::popHead(gocpp::recv(l->shared));
+            std::tie(x, std::ignore) = rec::popHead(gocpp::recv(l->poolLocalInternal.shared));
             if(x == nullptr)
             {
                 x = rec::getSlow(gocpp::recv(p), pid);
@@ -268,7 +268,7 @@ namespace golang::sync
         for(auto i = 0; i < int(size); i++)
         {
             auto l = indexLocal(locals, (pid + i + 1) % int(size));
-            if(auto [x, gocpp_id_1] = rec::popTail(gocpp::recv(l->shared)); x != nullptr)
+            if(auto [x, gocpp_id_1] = rec::popTail(gocpp::recv(l->poolLocalInternal.shared)); x != nullptr)
             {
                 return x;
             }
@@ -280,15 +280,15 @@ namespace golang::sync
         }
         locals = p->victim;
         auto l = indexLocal(locals, pid);
-        if(auto x = l->go_private; x != nullptr)
+        if(auto x = l->poolLocalInternal.go_private; x != nullptr)
         {
-            l->go_private = nullptr;
+            l->poolLocalInternal.go_private = nullptr;
             return x;
         }
         for(auto i = 0; i < int(size); i++)
         {
             auto l = indexLocal(locals, (pid + i) % int(size));
-            if(auto [x, gocpp_id_2] = rec::popTail(gocpp::recv(l->shared)); x != nullptr)
+            if(auto [x, gocpp_id_2] = rec::popTail(gocpp::recv(l->poolLocalInternal.shared)); x != nullptr)
             {
                 return x;
             }

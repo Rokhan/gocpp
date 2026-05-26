@@ -216,17 +216,17 @@ namespace golang::godebug
     // Note that Value must be called at least once before IncNonDefault.
     void rec::IncNonDefault(golang::godebug::Setting* s)
     {
-        rec::Do(gocpp::recv(s->nonDefaultOnce), [&](){ return rec::go_register(s); });
-        rec::Add(gocpp::recv(s->nonDefault), 1);
+        rec::Do(gocpp::recv(s->setting.nonDefaultOnce), [&](){ return rec::go_register(s); });
+        rec::Add(gocpp::recv(s->setting.nonDefault), 1);
     }
 
     void rec::go_register(golang::godebug::Setting* s)
     {
-        if(s->info == nullptr || s->info->Opaque)
+        if(s->setting.info == nullptr || s->setting.info->Opaque)
         {
             gocpp::panic("godebug: unexpected IncNonDefault of "_s + s->name);
         }
-        registerMetric("/godebug/non-default-behavior/"_s + rec::Name(gocpp::recv(s)) + ":events"_s, [&](){ return atomic::rec::Load(s->nonDefault); });
+        registerMetric("/godebug/non-default-behavior/"_s + rec::Name(gocpp::recv(s)) + ":events"_s, [&](){ return atomic::rec::Load(s->setting.nonDefault); });
     }
 
     // cache is a cache of all the GODEBUG settings,
@@ -256,12 +256,12 @@ namespace golang::godebug
         rec::Do(gocpp::recv(s->once), [=]() mutable -> void
         {
             s->setting = lookup(rec::Name(gocpp::recv(s)));
-            if(s->info == nullptr && ! rec::Undocumented(gocpp::recv(s)))
+            if(s->setting.info == nullptr && ! rec::Undocumented(gocpp::recv(s)))
             {
                 gocpp::panic("godebug: Value of name not listed in godebugs.All: "_s + s->name);
             }
         });
-        auto v = *rec::Load<value>(gocpp::recv(s->value));
+        auto v = *rec::Load<value>(gocpp::recv(s->setting.value));
         if(v.bisect != nullptr && ! rec::Stack(gocpp::recv(v.bisect), & go_stderr))
         {
             return ""_s;

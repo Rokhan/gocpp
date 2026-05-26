@@ -48,6 +48,7 @@ namespace golang::main
     struct Dummy
     {
         int i;
+        int j;
 
         using isGoStruct = void;
 
@@ -132,6 +133,23 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Dummy2& value);
+    struct Dummy3
+    {
+        Dummy2 Dummy2;
+        int zzz;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Dummy3& value);
 
     namespace rec
     {

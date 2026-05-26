@@ -106,7 +106,7 @@ namespace golang::os
         {
             return uintptr_t(syscall::InvalidHandle);
         }
-        return uintptr_t(file->pfd.Sysfd);
+        return uintptr_t(file->file.pfd.Sysfd);
     }
 
     // newFile returns a new File with the given file handle and name.
@@ -134,7 +134,7 @@ namespace golang::os
             x.name = name;
         })};
         runtime::SetFinalizer(f->file, [&](auto x){ return rec::close(x); });
-        rec::Init(gocpp::recv(f->pfd), kind, false);
+        rec::Init(gocpp::recv(f->file.pfd), kind, false);
         return f;
     }
 
@@ -247,12 +247,12 @@ namespace golang::os
     {
         int64_t ret;
         struct gocpp::error err;
-        if(f->dirinfo != nullptr)
+        if(f->file.dirinfo != nullptr)
         {
-            rec::close(gocpp::recv(f->dirinfo));
-            f->dirinfo = nullptr;
+            rec::close(gocpp::recv(f->file.dirinfo));
+            f->file.dirinfo = nullptr;
         }
-        std::tie(ret, err) = rec::Seek(gocpp::recv(f->pfd), offset, whence);
+        std::tie(ret, err) = rec::Seek(gocpp::recv(f->file.pfd), offset, whence);
         runtime::KeepAlive(f);
         return {ret, err};
     }

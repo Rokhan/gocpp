@@ -187,9 +187,9 @@ namespace golang::runtime
                     {
                         rec::sweep(gocpp::recv(s), true);
                         auto freeIndex = rec::nextFreeIndex(gocpp::recv(s));
-                        if(freeIndex != s.nelems)
+                        if(freeIndex != s.mspan.nelems)
                         {
-                            s.freeindex = freeIndex;
+                            s.mspan.freeindex = freeIndex;
                             rec::end(gocpp::recv(sweep.active), sl);
                             goto havespan;
                         }

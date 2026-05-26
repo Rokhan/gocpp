@@ -1030,8 +1030,8 @@ namespace golang::runtime
                 s->first = false;
             }
             auto [end, gocpp_id_1, nano, p] = rec::header(gocpp::recv(s));
-            auto oldEnd = s->end;
-            s->end = end;
+            auto oldEnd = s->debugLogReader.end;
+            s->debugLogReader.end = end;
             print("["_s);
             gocpp::array<unsigned char, 21> tmpbuf = {};
             auto pnano = int64_t(nano) - runtimeInitTime;
@@ -1042,7 +1042,7 @@ namespace golang::runtime
             auto pnanoBytes = itoaDiv(tmpbuf.make_slice(0), uint64_t(pnano), 9);
             print(slicebytetostringtmp((unsigned char*)(noescape(gocpp::unsafe_pointer(& pnanoBytes[0]))), len(pnanoBytes)));
             print(" P "_s, p, "] "_s);
-            for(auto i = 0; s->begin < s->end; i++)
+            for(auto i = 0; s->debugLogReader.begin < s->debugLogReader.end; i++)
             {
                 if(i > 0)
                 {
@@ -1056,8 +1056,8 @@ namespace golang::runtime
                 }
             }
             println();
-            s->begin = end;
-            s->end = oldEnd;
+            s->debugLogReader.begin = end;
+            s->debugLogReader.end = oldEnd;
             s->nextTick = rec::peek(gocpp::recv(s));
         }
         printunlock();

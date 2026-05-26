@@ -129,7 +129,7 @@ namespace golang::runtime
             if(p->pinner == nullptr)
             {
                 p->pinner = new(pinner);
-                p->refs = p->refStore.make_slice(0, 0);
+                p->pinner.refs = p->pinner.refStore.make_slice(0, 0);
                 SetFinalizer(p->pinner, [=](struct pinner* i) mutable -> void
                 {
                     if(len(i->refs) != 0)
@@ -143,7 +143,7 @@ namespace golang::runtime
         auto ptr = pinnerGetPtr(& pointer);
         if(setPinned(ptr, true))
         {
-            p->refs = append(p->refs, ptr);
+            p->pinner.refs = append(p->pinner.refs, ptr);
         }
     }
 

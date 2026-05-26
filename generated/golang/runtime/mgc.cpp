@@ -1255,7 +1255,7 @@ namespace golang::runtime
                 }
                 else
                 {
-                    print(" wbuf1.n="_s, gcw->wbuf1->nobj);
+                    print(" wbuf1.n="_s, gcw->wbuf1->workbufhdr.nobj);
                 }
                 if(gcw->wbuf2 == nullptr)
                 {
@@ -1263,7 +1263,7 @@ namespace golang::runtime
                 }
                 else
                 {
-                    print(" wbuf2.n="_s, gcw->wbuf2->nobj);
+                    print(" wbuf2.n="_s, gcw->wbuf2->workbufhdr.nobj);
                 }
                 print("\n"_s);
                 go_throw("P has cached GC work at end of mark termination"_s);

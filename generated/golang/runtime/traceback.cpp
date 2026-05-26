@@ -272,13 +272,13 @@ namespace golang::runtime
         auto frame = & u->frame;
         auto gp = rec::ptr(gocpp::recv(u->g));
         auto f = frame->fn;
-        if(f.pcsp == 0)
+        if(f._func.pcsp == 0)
         {
             rec::finishInternal(gocpp::recv(u));
             return;
         }
-        auto flag = f.flag;
-        if(f.funcID == abi::FuncID_cgocallback)
+        auto flag = f._func.flag;
+        if(f._func.funcID == abi::FuncID_cgocallback)
         {
             flag &^= abi::FuncFlagSPWrite;
         }
@@ -292,7 +292,7 @@ namespace golang::runtime
             {
                 //Go switch emulation
                 {
-                    auto condition = f.funcID;
+                    auto condition = f._func.funcID;
                     int conditionId = -1;
                     if(condition == abi::FuncID_morestack) { conditionId = 0; }
                     else if(condition == abi::FuncID_systemstack) { conditionId = 1; }
@@ -304,7 +304,7 @@ namespace golang::runtime
                             frame->pc = gp->sched.pc;
                             frame->fn = findfunc(frame->pc);
                             f = frame->fn;
-                            flag = f.flag;
+                            flag = f._func.flag;
                             frame->lr = gp->sched.lr;
                             frame->sp = gp->sched.sp;
                             u->cgoCtxt = len(gp->cgoCtxt) - 1;
@@ -377,9 +377,9 @@ namespace golang::runtime
         frame->continpc = frame->pc;
         if(u->calleeFuncID == abi::FuncID_sigpanic)
         {
-            if(frame->fn.deferreturn != 0)
+            if(frame->fn._func.deferreturn != 0)
             {
-                frame->continpc = rec::entry(gocpp::recv(frame->fn)) + uintptr_t(frame->fn.deferreturn) + 1;
+                frame->continpc = rec::entry(gocpp::recv(frame->fn)) + uintptr_t(frame->fn._func.deferreturn) + 1;
             }
             else
             {
@@ -403,7 +403,7 @@ namespace golang::runtime
         {
             auto fail = u->flags & (unwindPrintErrors | unwindSilentErrors) == 0;
             auto doPrint = u->flags & unwindSilentErrors == 0;
-            if(doPrint && gp->m->incgo && f.funcID == abi::FuncID_sigpanic)
+            if(doPrint && gp->m->incgo && f._func.funcID == abi::FuncID_sigpanic)
             {
                 doPrint = false;
             }
@@ -426,7 +426,7 @@ namespace golang::runtime
             tracebackHexdump(gp->stack, frame, frame->sp);
             go_throw("traceback stuck"_s);
         }
-        auto injectedCall = f.funcID == abi::FuncID_sigpanic || f.funcID == abi::FuncID_asyncPreempt || f.funcID == abi::FuncID_debugCallV2;
+        auto injectedCall = f._func.funcID == abi::FuncID_sigpanic || f._func.funcID == abi::FuncID_asyncPreempt || f._func.funcID == abi::FuncID_debugCallV2;
         if(injectedCall)
         {
             u->flags |= unwindTrap;
@@ -435,7 +435,7 @@ namespace golang::runtime
         {
             u->flags &^= unwindTrap;
         }
-        u->calleeFuncID = f.funcID;
+        u->calleeFuncID = f._func.funcID;
         frame->fn = flr;
         frame->pc = frame->lr;
         frame->lr = 0;
@@ -500,7 +500,7 @@ namespace golang::runtime
     // unwinder, it returns 0.
     int rec::cgoCallers(golang::runtime::unwinder* u, gocpp::slice<uintptr_t> pcBuf)
     {
-        if(cgoTraceback == nullptr || u->frame.fn.funcID != abi::FuncID_cgocallback || u->cgoCtxt < 0)
+        if(cgoTraceback == nullptr || u->frame.fn._func.funcID != abi::FuncID_cgocallback || u->cgoCtxt < 0)
         {
             return 0;
         }
@@ -1256,11 +1256,11 @@ namespace golang::runtime
         {
             return false;
         }
-        if(f.funcID == abi::FuncID_runtime_main || f.funcID == abi::FuncID_corostart || f.funcID == abi::FuncID_handleAsyncEvent)
+        if(f._func.funcID == abi::FuncID_runtime_main || f._func.funcID == abi::FuncID_corostart || f._func.funcID == abi::FuncID_handleAsyncEvent)
         {
             return false;
         }
-        if(f.funcID == abi::FuncID_runfinq)
+        if(f._func.funcID == abi::FuncID_runfinq)
         {
             if(fixed)
             {

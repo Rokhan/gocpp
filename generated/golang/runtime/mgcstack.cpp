@@ -308,12 +308,12 @@ namespace golang::runtime
         if(buf == nullptr)
         {
             buf = (stackWorkBuf*)(gocpp::unsafe_pointer(getempty()));
-            buf->nobj = 0;
-            buf->next = nullptr;
+            buf->stackWorkBufHdr.workbufhdr.nobj = 0;
+            buf->stackWorkBufHdr.next = nullptr;
             *head = buf;
         }
         else
-        if(buf->nobj == len(buf->obj))
+        if(buf->stackWorkBufHdr.workbufhdr.nobj == len(buf->obj))
         {
             if(s->freeBuf != nullptr)
             {
@@ -324,12 +324,12 @@ namespace golang::runtime
             {
                 buf = (stackWorkBuf*)(gocpp::unsafe_pointer(getempty()));
             }
-            buf->nobj = 0;
-            buf->next = *head;
+            buf->stackWorkBufHdr.workbufhdr.nobj = 0;
+            buf->stackWorkBufHdr.next = *head;
             *head = buf;
         }
-        buf->obj[buf->nobj] = p;
-        buf->nobj++;
+        buf->obj[buf->stackWorkBufHdr.workbufhdr.nobj] = p;
+        buf->stackWorkBufHdr.workbufhdr.nobj++;
     }
 
     // Remove and return a potential pointer to a stack object.
@@ -348,22 +348,22 @@ namespace golang::runtime
             {
                 continue;
             }
-            if(buf->nobj == 0)
+            if(buf->stackWorkBufHdr.workbufhdr.nobj == 0)
             {
                 if(s->freeBuf != nullptr)
                 {
                     putempty((workbuf*)(gocpp::unsafe_pointer(s->freeBuf)));
                 }
                 s->freeBuf = buf;
-                buf = buf->next;
+                buf = buf->stackWorkBufHdr.next;
                 *head = buf;
                 if(buf == nullptr)
                 {
                     continue;
                 }
             }
-            buf->nobj--;
-            return {buf->obj[buf->nobj], head == & s->cbuf};
+            buf->stackWorkBufHdr.workbufhdr.nobj--;
+            return {buf->obj[buf->stackWorkBufHdr.workbufhdr.nobj], head == & s->cbuf};
         }
         if(s->freeBuf != nullptr)
         {
@@ -380,24 +380,24 @@ namespace golang::runtime
         if(x == nullptr)
         {
             x = (stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
-            x->next = nullptr;
+            x->stackObjectBufHdr.next = nullptr;
             s->head = x;
             s->tail = x;
         }
-        if(x->nobj > 0 && uint32_t(addr - s->stack.lo) < x->obj[x->nobj - 1].off + x->obj[x->nobj - 1].size)
+        if(x->stackObjectBufHdr.workbufhdr.nobj > 0 && uint32_t(addr - s->stack.lo) < x->obj[x->stackObjectBufHdr.workbufhdr.nobj - 1].off + x->obj[x->stackObjectBufHdr.workbufhdr.nobj - 1].size)
         {
             go_throw("objects added out of order or overlapping"_s);
         }
-        if(x->nobj == len(x->obj))
+        if(x->stackObjectBufHdr.workbufhdr.nobj == len(x->obj))
         {
             auto y = (stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
-            y->next = nullptr;
-            x->next = y;
+            y->stackObjectBufHdr.next = nullptr;
+            x->stackObjectBufHdr.next = y;
             s->tail = y;
             x = y;
         }
-        auto obj = & x->obj[x->nobj];
-        x->nobj++;
+        auto obj = & x->obj[x->stackObjectBufHdr.workbufhdr.nobj];
+        x->stackObjectBufHdr.workbufhdr.nobj++;
         obj->off = uint32_t(addr - s->stack.lo);
         obj->size = uint32_t(r->size);
         rec::setRecord(gocpp::recv(obj), r);
@@ -433,7 +433,7 @@ namespace golang::runtime
         idx++;
         if(idx == len(x->obj))
         {
-            x = x->next;
+            x = x->stackObjectBufHdr.next;
             idx = 0;
         }
         std::tie(right, x, idx) = binarySearchTree(x, idx, n - n / 2 - 1);

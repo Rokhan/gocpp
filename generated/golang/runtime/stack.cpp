@@ -1258,7 +1258,7 @@ namespace golang::runtime
             return;
         }
         auto f = findfunc(gp->startpc);
-        if(rec::valid(gocpp::recv(f)) && f.funcID == abi::FuncID_gcBgMarkWorker)
+        if(rec::valid(gocpp::recv(f)) && f._func.funcID == abi::FuncID_gcBgMarkWorker)
         {
             return;
         }

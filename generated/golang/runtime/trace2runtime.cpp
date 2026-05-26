@@ -101,7 +101,7 @@ namespace golang::runtime
     // reset resets the gTraceState for a new goroutine.
     void rec::reset(golang::runtime::gTraceState* s)
     {
-        s->seq = gocpp::array<uint64_t, 2> {};
+        s->traceSchedResourceState.seq = gocpp::array<uint64_t, 2> {};
     }
 
     // mTraceState is per-M state for the tracer.

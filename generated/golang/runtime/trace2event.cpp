@@ -162,12 +162,12 @@ namespace golang::runtime
     {
         std::tie(w, std::ignore) = rec::ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
         auto ts = traceClockNow();
-        if(ts <= w.traceBuf->lastTime)
+        if(ts <= w.traceBuf->traceBufHeader.lastTime)
         {
-            ts = w.traceBuf->lastTime + 1;
+            ts = w.traceBuf->traceBufHeader.lastTime + 1;
         }
-        auto tsDiff = uint64_t(ts - w.traceBuf->lastTime);
-        w.traceBuf->lastTime = ts;
+        auto tsDiff = uint64_t(ts - w.traceBuf->traceBufHeader.lastTime);
+        w.traceBuf->traceBufHeader.lastTime = ts;
         rec::byte(gocpp::recv(w), (unsigned char)(ev));
         rec::varint(gocpp::recv(w), tsDiff);
         for(auto [gocpp_ignored, arg] : args)

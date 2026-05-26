@@ -850,10 +850,10 @@ namespace golang::runtime
         for(; state.head != nullptr; )
         {
             auto x = state.head;
-            state.head = x->next;
+            state.head = x->stackObjectBufHdr.next;
             if(stackTraceDebug)
             {
-                for(auto i = 0; i < x->nobj; i++)
+                for(auto i = 0; i < x->stackObjectBufHdr.workbufhdr.nobj; i++)
                 {
                     auto obj = & x->obj[i];
                     if(obj->r == nullptr)
@@ -863,7 +863,7 @@ namespace golang::runtime
                     println("  dead stkobj at"_s, hex(gp->stack.lo + uintptr_t(obj->off)), "of size"_s, obj->r->size);
                 }
             }
-            x->nobj = 0;
+            x->stackObjectBufHdr.workbufhdr.nobj = 0;
             putempty((workbuf*)(gocpp::unsafe_pointer(x)));
         }
         if(state.buf != nullptr || state.cbuf != nullptr || state.freeBuf != nullptr)
@@ -882,8 +882,8 @@ namespace golang::runtime
         {
             print("scanframe "_s, funcname(frame->fn), "\n"_s);
         }
-        auto isAsyncPreempt = rec::valid(gocpp::recv(frame->fn)) && frame->fn.funcID == abi::FuncID_asyncPreempt;
-        auto isDebugCall = rec::valid(gocpp::recv(frame->fn)) && frame->fn.funcID == abi::FuncID_debugCallV2;
+        auto isAsyncPreempt = rec::valid(gocpp::recv(frame->fn)) && frame->fn._func.funcID == abi::FuncID_asyncPreempt;
+        auto isDebugCall = rec::valid(gocpp::recv(frame->fn)) && frame->fn._func.funcID == abi::FuncID_debugCallV2;
         if(state->conservative || isAsyncPreempt || isDebugCall)
         {
             if(debugScanConservative)

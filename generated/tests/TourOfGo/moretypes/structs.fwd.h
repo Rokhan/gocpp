@@ -11,6 +11,7 @@ namespace golang::main
     struct Empty;
     struct Dummy;
     struct Dummy2;
+    struct Dummy3;
     struct Person;
     struct gocpp_id_3;
     struct gocpp_id_4;

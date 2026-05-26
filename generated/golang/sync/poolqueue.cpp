@@ -330,7 +330,7 @@ namespace golang::sync
             // Initialize the chain.
             auto initSize = 8;
             d = new(poolChainElt);
-            d->vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), initSize);
+            d->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), initSize);
             c->head = d;
             storePoolChainElt(& c->tail, d);
         }
@@ -338,7 +338,7 @@ namespace golang::sync
         {
             return;
         }
-        auto newSize = len(d->vals) * 2;
+        auto newSize = len(d->poolDequeue.vals) * 2;
         if(newSize >= dequeueLimit)
         {
             newSize = dequeueLimit;
@@ -346,7 +346,7 @@ namespace golang::sync
         auto d2 = gocpp::InitPtr<poolChainElt>([=](auto& x) {
             x.prev = d;
         });
-        d2->vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), newSize);
+        d2->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), newSize);
         c->head = d2;
         storePoolChainElt(& d->next, d2);
         rec::pushHead(gocpp::recv(d2), val);

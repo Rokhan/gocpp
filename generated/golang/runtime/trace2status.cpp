@@ -94,7 +94,7 @@ namespace golang::runtime
     // called by a forEachP callback or from a STW).
     struct traceWriter rec::writeProcStatusForP(golang::runtime::traceWriter w, struct p* pp, bool inSTW)
     {
-        if(! rec::acquireStatus(gocpp::recv(pp->trace), w.gen))
+        if(! rec::acquireStatus(gocpp::recv(pp->trace), w.traceLocker.gen))
         {
             return w;
         }
@@ -119,7 +119,7 @@ namespace golang::runtime
                     break;
                 case 2:
                     status = traceProcRunning;
-                    if(rec::ptr(gocpp::recv(w.mp->p)) == pp && w.mp->curg != nullptr && readgstatus(w.mp->curg) &^ _Gscan == _Gsyscall)
+                    if(rec::ptr(gocpp::recv(w.traceLocker.mp->p)) == pp && w.traceLocker.mp->curg != nullptr && readgstatus(w.traceLocker.mp->curg) &^ _Gscan == _Gsyscall)
                     {
                         status = traceProcSyscall;
                     }

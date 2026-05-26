@@ -310,13 +310,13 @@ namespace golang::flate
         }
         auto win = d->window.make_slice(0, pos + minMatchLook);
         auto nice = len(win) - pos;
-        if(d->nice < nice)
+        if(d->compressionLevel.nice < nice)
         {
-            nice = d->nice;
+            nice = d->compressionLevel.nice;
         }
-        auto tries = d->chain;
+        auto tries = d->compressionLevel.chain;
         length = prevLength;
-        if(length >= d->good)
+        if(length >= d->compressionLevel.good)
         {
             tries >>= 2;
         }
@@ -529,7 +529,7 @@ namespace golang::flate
             {
                 minIndex = 0;
             }
-            if(d->chainHead - d->hashOffset >= minIndex && (d->fastSkipHashing != skipNever && lookahead > minMatchLength - 1 || d->fastSkipHashing == skipNever && lookahead > prevLength && prevLength < d->lazy))
+            if(d->chainHead - d->hashOffset >= minIndex && (d->compressionLevel.fastSkipHashing != skipNever && lookahead > minMatchLength - 1 || d->compressionLevel.fastSkipHashing == skipNever && lookahead > prevLength && prevLength < d->compressionLevel.lazy))
             {
                 if(auto [newLength, newOffset, ok] = rec::findMatch(gocpp::recv(d), d->index, d->chainHead - d->hashOffset, minMatchLength - 1, lookahead); ok)
                 {
@@ -537,9 +537,9 @@ namespace golang::flate
                     d->offset = newOffset;
                 }
             }
-            if(d->fastSkipHashing != skipNever && d->length >= minMatchLength || d->fastSkipHashing == skipNever && prevLength >= minMatchLength && d->length <= prevLength)
+            if(d->compressionLevel.fastSkipHashing != skipNever && d->length >= minMatchLength || d->compressionLevel.fastSkipHashing == skipNever && prevLength >= minMatchLength && d->length <= prevLength)
             {
-                if(d->fastSkipHashing != skipNever)
+                if(d->compressionLevel.fastSkipHashing != skipNever)
                 {
                     d->tokens = append(d->tokens, matchToken(uint32_t(d->length - baseMatchLength), uint32_t(d->offset - baseMatchOffset)));
                 }
@@ -547,10 +547,10 @@ namespace golang::flate
                 {
                     d->tokens = append(d->tokens, matchToken(uint32_t(prevLength - baseMatchLength), uint32_t(prevOffset - baseMatchOffset)));
                 }
-                if(d->length <= d->fastSkipHashing)
+                if(d->length <= d->compressionLevel.fastSkipHashing)
                 {
                     int newIndex = {};
-                    if(d->fastSkipHashing != skipNever)
+                    if(d->compressionLevel.fastSkipHashing != skipNever)
                     {
                         newIndex = d->index + d->length;
                     }
@@ -570,7 +570,7 @@ namespace golang::flate
                         }
                     }
                     d->index = index;
-                    if(d->fastSkipHashing == skipNever)
+                    if(d->compressionLevel.fastSkipHashing == skipNever)
                     {
                         d->byteAvailable = false;
                         d->length = minMatchLength - 1;
@@ -591,10 +591,10 @@ namespace golang::flate
             }
             else
             {
-                if(d->fastSkipHashing != skipNever || d->byteAvailable)
+                if(d->compressionLevel.fastSkipHashing != skipNever || d->byteAvailable)
                 {
                     auto i = d->index - 1;
-                    if(d->fastSkipHashing != skipNever)
+                    if(d->compressionLevel.fastSkipHashing != skipNever)
                     {
                         i = d->index;
                     }
@@ -609,7 +609,7 @@ namespace golang::flate
                     }
                 }
                 d->index++;
-                if(d->fastSkipHashing == skipNever)
+                if(d->compressionLevel.fastSkipHashing == skipNever)
                 {
                     d->byteAvailable = true;
                 }

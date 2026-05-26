@@ -3879,7 +3879,7 @@ namespace golang::runtime
             {
                 go_throw("preempt at unknown pc"_s);
             }
-            if(f.flag & abi::FuncFlagSPWrite != 0)
+            if(f._func.flag & abi::FuncFlagSPWrite != 0)
             {
                 println("runtime: unexpected SPWRITE function"_s, funcname(f), "in async preempt"_s);
                 go_throw("preempt SPWRITE"_s);

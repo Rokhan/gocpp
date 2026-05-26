@@ -73,7 +73,7 @@ namespace golang::os
     {
         int n;
         struct gocpp::error err;
-        std::tie(n, err) = rec::Read(gocpp::recv(f->pfd), b);
+        std::tie(n, err) = rec::Read(gocpp::recv(f->file.pfd), b);
         runtime::KeepAlive(f);
         return {n, err};
     }
@@ -85,7 +85,7 @@ namespace golang::os
     {
         int n;
         struct gocpp::error err;
-        std::tie(n, err) = rec::Pread(gocpp::recv(f->pfd), b, off);
+        std::tie(n, err) = rec::Pread(gocpp::recv(f->file.pfd), b, off);
         runtime::KeepAlive(f);
         return {n, err};
     }
@@ -96,7 +96,7 @@ namespace golang::os
     {
         int n;
         struct gocpp::error err;
-        std::tie(n, err) = rec::Write(gocpp::recv(f->pfd), b);
+        std::tie(n, err) = rec::Write(gocpp::recv(f->file.pfd), b);
         runtime::KeepAlive(f);
         return {n, err};
     }
@@ -107,7 +107,7 @@ namespace golang::os
     {
         int n;
         struct gocpp::error err;
-        std::tie(n, err) = rec::Pwrite(gocpp::recv(f->pfd), b, off);
+        std::tie(n, err) = rec::Pwrite(gocpp::recv(f->file.pfd), b, off);
         runtime::KeepAlive(f);
         return {n, err};
     }
@@ -158,7 +158,7 @@ namespace golang::os
         {
             return err;
         }
-        if(auto e = rec::Fchmod(gocpp::recv(f->pfd), syscallMode(mode)); e != nullptr)
+        if(auto e = rec::Fchmod(gocpp::recv(f->file.pfd), syscallMode(mode)); e != nullptr)
         {
             return rec::wrapErr(gocpp::recv(f), "chmod"_s, e);
         }
@@ -223,7 +223,7 @@ namespace golang::os
         {
             return err;
         }
-        if(auto e = rec::Fchown(gocpp::recv(f->pfd), uid, gid); e != nullptr)
+        if(auto e = rec::Fchown(gocpp::recv(f->file.pfd), uid, gid); e != nullptr)
         {
             return rec::wrapErr(gocpp::recv(f), "chown"_s, e);
         }
@@ -239,7 +239,7 @@ namespace golang::os
         {
             return err;
         }
-        if(auto e = rec::Ftruncate(gocpp::recv(f->pfd), size); e != nullptr)
+        if(auto e = rec::Ftruncate(gocpp::recv(f->file.pfd), size); e != nullptr)
         {
             return rec::wrapErr(gocpp::recv(f), "truncate"_s, e);
         }
@@ -255,7 +255,7 @@ namespace golang::os
         {
             return err;
         }
-        if(auto e = rec::Fsync(gocpp::recv(f->pfd)); e != nullptr)
+        if(auto e = rec::Fsync(gocpp::recv(f->file.pfd)); e != nullptr)
         {
             return rec::wrapErr(gocpp::recv(f), "sync"_s, e);
         }
@@ -308,7 +308,7 @@ namespace golang::os
         {
             return err;
         }
-        if(auto e = rec::Fchdir(gocpp::recv(f->pfd)); e != nullptr)
+        if(auto e = rec::Fchdir(gocpp::recv(f->file.pfd)); e != nullptr)
         {
             return rec::wrapErr(gocpp::recv(f), "chdir"_s, e);
         }
@@ -322,7 +322,7 @@ namespace golang::os
         {
             return err;
         }
-        return rec::SetDeadline(gocpp::recv(f->pfd), t);
+        return rec::SetDeadline(gocpp::recv(f->file.pfd), t);
     }
 
     // setReadDeadline sets the read deadline.
@@ -332,7 +332,7 @@ namespace golang::os
         {
             return err;
         }
-        return rec::SetReadDeadline(gocpp::recv(f->pfd), t);
+        return rec::SetReadDeadline(gocpp::recv(f->file.pfd), t);
     }
 
     // setWriteDeadline sets the write deadline.
@@ -342,7 +342,7 @@ namespace golang::os
         {
             return err;
         }
-        return rec::SetWriteDeadline(gocpp::recv(f->pfd), t);
+        return rec::SetWriteDeadline(gocpp::recv(f->file.pfd), t);
     }
 
     // checkValid checks whether f is valid for use.

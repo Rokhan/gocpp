@@ -713,7 +713,7 @@ namespace golang::reflect
 
     abi::Name rec::nameOff(golang::reflect::interfaceType* t, golang::reflect::aNameOff off)
     {
-        return rec::nameOff(gocpp::recv(toRType(& t->Type)), off);
+        return rec::nameOff(gocpp::recv(toRType(& t->InterfaceType.Type)), off);
     }
 
     abi::Name nameOffFor(abi::Type* t, golang::reflect::aNameOff off)
@@ -728,12 +728,12 @@ namespace golang::reflect
 
     abi::Type* rec::typeOff(golang::reflect::interfaceType* t, golang::reflect::aTypeOff off)
     {
-        return rec::typeOff(gocpp::recv(toRType(& t->Type)), off);
+        return rec::typeOff(gocpp::recv(toRType(& t->InterfaceType.Type)), off);
     }
 
     abi::Type* rec::common(golang::reflect::interfaceType* t)
     {
-        return & t->Type;
+        return & t->InterfaceType.Type;
     }
 
     abi::UncommonType* rec::uncommon(golang::reflect::interfaceType* t)
@@ -1322,7 +1322,7 @@ namespace golang::reflect
             gocpp::panic("reflect: Key of non-map type "_s + rec::String(gocpp::recv(t)));
         }
         auto tt = (mapType*)(gocpp::unsafe_pointer(t));
-        return toType(tt->Key);
+        return toType(tt->MapType.Key);
     }
 
     int rec::Len(golang::reflect::rtype* t)
@@ -1342,7 +1342,7 @@ namespace golang::reflect
             gocpp::panic("reflect: NumField of non-struct type "_s + rec::String(gocpp::recv(t)));
         }
         auto tt = (structType*)(gocpp::unsafe_pointer(t));
-        return len(tt->Fields);
+        return len(tt->StructType.Fields);
     }
 
     struct Type rec::In(golang::reflect::rtype* t, int i)
@@ -1436,11 +1436,11 @@ namespace golang::reflect
     struct Method rec::Method(golang::reflect::interfaceType* t, int i)
     {
         struct Method m;
-        if(i < 0 || i >= len(t->Methods))
+        if(i < 0 || i >= len(t->InterfaceType.Methods))
         {
             return m;
         }
-        auto p = & t->Methods[i];
+        auto p = & t->InterfaceType.Methods[i];
         auto pname = rec::nameOff(gocpp::recv(t), p->Name);
         m.Name = rec::Name(gocpp::recv(pname));
         if(! rec::IsExported(gocpp::recv(pname)))
@@ -1448,7 +1448,7 @@ namespace golang::reflect
             m.PkgPath = pkgPath(pname);
             if(m.PkgPath == ""_s)
             {
-                m.PkgPath = rec::Name(gocpp::recv(t->PkgPath));
+                m.PkgPath = rec::Name(gocpp::recv(t->InterfaceType.PkgPath));
             }
         }
         m.Type = toType(rec::typeOff(gocpp::recv(t), p->Typ));
@@ -1459,7 +1459,7 @@ namespace golang::reflect
     // NumMethod returns the number of interface methods in the type's method set.
     int rec::NumMethod(golang::reflect::interfaceType* t)
     {
-        return len(t->Methods);
+        return len(t->InterfaceType.Methods);
     }
 
     // MethodByName method with the given name in the type's method set.
@@ -1472,9 +1472,9 @@ namespace golang::reflect
             return {m, ok};
         }
         abi::Imethod* p = {};
-        for(auto [i, gocpp_ignored] : t->Methods)
+        for(auto [i, gocpp_ignored] : t->InterfaceType.Methods)
         {
-            p = & t->Methods[i];
+            p = & t->InterfaceType.Methods[i];
             if(rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), p->Name))) == name)
             {
                 return {rec::Method(gocpp::recv(t), i), true};
@@ -1621,17 +1621,17 @@ namespace golang::reflect
     struct StructField rec::Field(golang::reflect::structType* t, int i)
     {
         struct StructField f;
-        if(i < 0 || i >= len(t->Fields))
+        if(i < 0 || i >= len(t->StructType.Fields))
         {
             gocpp::panic("reflect: Field index out of bounds"_s);
         }
-        auto p = & t->Fields[i];
+        auto p = & t->StructType.Fields[i];
         f.Type = toType(p->Typ);
         f.Name = rec::Name(gocpp::recv(p->Name));
         f.Anonymous = rec::Embedded(gocpp::recv(p));
         if(! rec::IsExported(gocpp::recv(p->Name)))
         {
-            f.PkgPath = rec::Name(gocpp::recv(t->PkgPath));
+            f.PkgPath = rec::Name(gocpp::recv(t->StructType.PkgPath));
         }
         if(auto tag = rec::Tag(gocpp::recv(p->Name)); tag != ""_s)
         {
@@ -1646,7 +1646,7 @@ namespace golang::reflect
     struct StructField rec::FieldByIndex(golang::reflect::structType* t, gocpp::slice<int> index)
     {
         struct StructField f;
-        f.Type = toType(& t->Type);
+        f.Type = toType(& t->StructType.Type);
         for(auto [i, x] : index)
         {
             if(i > 0)
@@ -1727,9 +1727,9 @@ namespace golang::reflect
                     continue;
                 }
                 visited[t] = true;
-                for(auto [i, gocpp_ignored] : t->Fields)
+                for(auto [i, gocpp_ignored] : t->StructType.Fields)
                 {
-                    auto f = & t->Fields[i];
+                    auto f = & t->StructType.Fields[i];
                     auto fname = rec::Name(gocpp::recv(f->Name));
                     abi::Type* ntyp = {};
                     if(rec::Embedded(gocpp::recv(f)))
@@ -1795,9 +1795,9 @@ namespace golang::reflect
         auto hasEmbeds = false;
         if(name != ""_s)
         {
-            for(auto [i, gocpp_ignored] : t->Fields)
+            for(auto [i, gocpp_ignored] : t->StructType.Fields)
             {
-                auto tf = & t->Fields[i];
+                auto tf = & t->StructType.Fields[i];
                 if(rec::Name(gocpp::recv(tf->Name)) == name)
                 {
                     return {rec::Field(gocpp::recv(t), i), true};
@@ -1863,30 +1863,30 @@ namespace golang::reflect
         }
         if(auto [pi, ok] = rec::Load(gocpp::recv(ptrMap), t); ok)
         {
-            return & gocpp::getValue<ptrType*>(pi)->Type;
+            return & gocpp::getValue<ptrType*>(pi)->PtrType.Type;
         }
         auto s = "*"_s + rec::String(gocpp::recv(t));
         for(auto [gocpp_ignored, tt] : typesByString(s))
         {
             auto p = (ptrType*)(gocpp::unsafe_pointer(tt));
-            if(p->Elem != & t->t)
+            if(p->PtrType.Elem != & t->t)
             {
                 continue;
             }
             auto [pi, gocpp_id_1] = rec::LoadOrStore(gocpp::recv(ptrMap), t, p);
-            return & gocpp::getValue<ptrType*>(pi)->Type;
+            return & gocpp::getValue<ptrType*>(pi)->PtrType.Type;
         }
         // Create a new ptrType starting with the description
         // of an *unsafe.Pointer.
         go_any iptr = (gocpp::unsafe_pointer*)(nullptr);
         auto prototype = *(ptrType**)(gocpp::unsafe_pointer(& iptr));
         auto pp = *prototype;
-        pp.Str = resolveReflectName(newName(s, ""_s, false, false));
-        pp.PtrToThis = 0;
-        pp.Hash = fnv1(t->t.Hash, '*');
-        pp.Elem = at;
+        pp.PtrType.Type.Str = resolveReflectName(newName(s, ""_s, false, false));
+        pp.PtrType.Type.PtrToThis = 0;
+        pp.PtrType.Type.Hash = fnv1(t->t.Hash, '*');
+        pp.PtrType.Elem = at;
         auto [pi, gocpp_id_2] = rec::LoadOrStore(gocpp::recv(ptrMap), t, & pp);
-        return & gocpp::getValue<ptrType*>(pi)->Type;
+        return & gocpp::getValue<ptrType*>(pi)->PtrType.Type;
     }
 
     abi::Type* ptrTo(abi::Type* t)
@@ -1949,7 +1949,7 @@ namespace golang::reflect
             return false;
         }
         auto t = (interfaceType*)(gocpp::unsafe_pointer(T));
-        if(len(t->Methods) == 0)
+        if(len(t->InterfaceType.Methods) == 0)
         {
             return true;
         }
@@ -1957,11 +1957,11 @@ namespace golang::reflect
         {
             auto v = (interfaceType*)(gocpp::unsafe_pointer(V));
             auto i = 0;
-            for(auto j = 0; j < len(v->Methods); j++)
+            for(auto j = 0; j < len(v->InterfaceType.Methods); j++)
             {
-                auto tm = & t->Methods[i];
+                auto tm = & t->InterfaceType.Methods[i];
                 auto tmName = rec::nameOff(gocpp::recv(t), tm->Name);
-                auto vm = & v->Methods[j];
+                auto vm = & v->InterfaceType.Methods[j];
                 auto vmName = nameOffFor(V, vm->Name);
                 if(rec::Name(gocpp::recv(vmName)) == rec::Name(gocpp::recv(tmName)) && typeOffFor(V, vm->Typ) == rec::typeOff(gocpp::recv(t), tm->Typ))
                 {
@@ -1970,19 +1970,19 @@ namespace golang::reflect
                         auto tmPkgPath = pkgPath(tmName);
                         if(tmPkgPath == ""_s)
                         {
-                            tmPkgPath = rec::Name(gocpp::recv(t->PkgPath));
+                            tmPkgPath = rec::Name(gocpp::recv(t->InterfaceType.PkgPath));
                         }
                         auto vmPkgPath = pkgPath(vmName);
                         if(vmPkgPath == ""_s)
                         {
-                            vmPkgPath = rec::Name(gocpp::recv(v->PkgPath));
+                            vmPkgPath = rec::Name(gocpp::recv(v->InterfaceType.PkgPath));
                         }
                         if(tmPkgPath != vmPkgPath)
                         {
                             continue;
                         }
                     }
-                    if(i++; i >= len(t->Methods))
+                    if(i++; i >= len(t->InterfaceType.Methods))
                     {
                         return true;
                     }
@@ -1999,7 +1999,7 @@ namespace golang::reflect
         auto vmethods = rec::Methods(gocpp::recv(v));
         for(auto j = 0; j < int(v->Mcount); j++)
         {
-            auto tm = & t->Methods[i];
+            auto tm = & t->InterfaceType.Methods[i];
             auto tmName = rec::nameOff(gocpp::recv(t), tm->Name);
             auto vm = vmethods[j];
             auto vmName = nameOffFor(V, vm.Name);
@@ -2010,7 +2010,7 @@ namespace golang::reflect
                     auto tmPkgPath = pkgPath(tmName);
                     if(tmPkgPath == ""_s)
                     {
-                        tmPkgPath = rec::Name(gocpp::recv(t->PkgPath));
+                        tmPkgPath = rec::Name(gocpp::recv(t->InterfaceType.PkgPath));
                     }
                     auto vmPkgPath = pkgPath(vmName);
                     if(vmPkgPath == ""_s)
@@ -2022,7 +2022,7 @@ namespace golang::reflect
                         continue;
                     }
                 }
-                if(i++; i >= len(t->Methods))
+                if(i++; i >= len(t->InterfaceType.Methods))
                 {
                     return true;
                 }
@@ -2136,7 +2136,7 @@ namespace golang::reflect
                 case 3:
                     auto t = (interfaceType*)(gocpp::unsafe_pointer(T));
                     auto v = (interfaceType*)(gocpp::unsafe_pointer(V));
-                    if(len(t->Methods) == 0 && len(v->Methods) == 0)
+                    if(len(t->InterfaceType.Methods) == 0 && len(v->InterfaceType.Methods) == 0)
                     {
                         return true;
                     }
@@ -2152,18 +2152,18 @@ namespace golang::reflect
                 case 7:
                     auto t = (structType*)(gocpp::unsafe_pointer(T));
                     auto v = (structType*)(gocpp::unsafe_pointer(V));
-                    if(len(t->Fields) != len(v->Fields))
+                    if(len(t->StructType.Fields) != len(v->StructType.Fields))
                     {
                         return false;
                     }
-                    if(rec::Name(gocpp::recv(t->PkgPath)) != rec::Name(gocpp::recv(v->PkgPath)))
+                    if(rec::Name(gocpp::recv(t->StructType.PkgPath)) != rec::Name(gocpp::recv(v->StructType.PkgPath)))
                     {
                         return false;
                     }
-                    for(auto [i, gocpp_ignored] : t->Fields)
+                    for(auto [i, gocpp_ignored] : t->StructType.Fields)
                     {
-                        auto tf = & t->Fields[i];
-                        auto vf = & v->Fields[i];
+                        auto tf = & t->StructType.Fields[i];
+                        auto vf = & v->StructType.Fields[i];
                         if(rec::Name(gocpp::recv(tf->Name)) != rec::Name(gocpp::recv(vf->Name)))
                         {
                             return false;
@@ -2406,10 +2406,10 @@ namespace golang::reflect
         go_any ichan = (gocpp::channel<gocpp::unsafe_pointer>)(nullptr);
         auto prototype = *(reflect::chanType**)(gocpp::unsafe_pointer(& ichan));
         auto ch = *prototype;
-        ch.TFlag = abi::TFlagRegularMemory;
+        ch.Type.TFlag = abi::TFlagRegularMemory;
         ch.Dir = abi::ChanDir(dir);
-        ch.Str = resolveReflectName(newName(s, ""_s, false, false));
-        ch.Hash = fnv1(typ->Hash, 'c', (unsigned char)(dir));
+        ch.Type.Str = resolveReflectName(newName(s, ""_s, false, false));
+        ch.Type.Hash = fnv1(typ->Hash, 'c', (unsigned char)(dir));
         ch.Elem = typ;
         auto [ti, gocpp_id_5] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& ch.Type));
         return gocpp::getValue<Type>(ti);
@@ -2438,7 +2438,7 @@ namespace golang::reflect
         for(auto [gocpp_ignored, tt] : typesByString(s))
         {
             auto mt = (mapType*)(gocpp::unsafe_pointer(tt));
-            if(mt->Key == ktyp && mt->Elem == etyp)
+            if(mt->MapType.Key == ktyp && mt->MapType.Elem == etyp)
             {
                 auto [ti, gocpp_id_6] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
                 return gocpp::getValue<Type>(ti);
@@ -2449,50 +2449,50 @@ namespace golang::reflect
         // in ../cmd/compile/internal/reflectdata/reflect.go:writeType.
         go_any imap = (gocpp::map<gocpp::unsafe_pointer, gocpp::unsafe_pointer>)(nullptr);
         auto mt = **(mapType**)(gocpp::unsafe_pointer(& imap));
-        mt.Str = resolveReflectName(newName(s, ""_s, false, false));
-        mt.TFlag = 0;
-        mt.Hash = fnv1(etyp->Hash, 'm', (unsigned char)(ktyp->Hash >> 24), (unsigned char)(ktyp->Hash >> 16), (unsigned char)(ktyp->Hash >> 8), (unsigned char)(ktyp->Hash));
-        mt.Key = ktyp;
-        mt.Elem = etyp;
-        mt.Bucket = bucketOf(ktyp, etyp);
-        mt.Hasher = [=](gocpp::unsafe_pointer p, uintptr_t seed) mutable -> uintptr_t
+        mt.MapType.Type.Str = resolveReflectName(newName(s, ""_s, false, false));
+        mt.MapType.Type.TFlag = 0;
+        mt.MapType.Type.Hash = fnv1(etyp->Hash, 'm', (unsigned char)(ktyp->Hash >> 24), (unsigned char)(ktyp->Hash >> 16), (unsigned char)(ktyp->Hash >> 8), (unsigned char)(ktyp->Hash));
+        mt.MapType.Key = ktyp;
+        mt.MapType.Elem = etyp;
+        mt.MapType.Bucket = bucketOf(ktyp, etyp);
+        mt.MapType.Hasher = [=](gocpp::unsafe_pointer p, uintptr_t seed) mutable -> uintptr_t
         {
             return typehash(ktyp, p, seed);
         };
-        mt.Flags = 0;
+        mt.MapType.Flags = 0;
         if(ktyp->Size_ > maxKeySize)
         {
-            mt.KeySize = uint8_t(goarch::PtrSize);
-            mt.Flags |= 1;
+            mt.MapType.KeySize = uint8_t(goarch::PtrSize);
+            mt.MapType.Flags |= 1;
         }
         else
         {
-            mt.KeySize = uint8_t(ktyp->Size_);
+            mt.MapType.KeySize = uint8_t(ktyp->Size_);
         }
         if(etyp->Size_ > maxValSize)
         {
-            mt.ValueSize = uint8_t(goarch::PtrSize);
-            mt.Flags |= 2;
+            mt.MapType.ValueSize = uint8_t(goarch::PtrSize);
+            mt.MapType.Flags |= 2;
         }
         else
         {
             mt.MapType.ValueSize = uint8_t(etyp->Size_);
         }
-        mt.MapType.BucketSize = uint16_t(mt.Bucket->Size_);
+        mt.MapType.BucketSize = uint16_t(mt.MapType.Bucket->Size_);
         if(isReflexive(ktyp))
         {
-            mt.Flags |= 4;
+            mt.MapType.Flags |= 4;
         }
         if(needKeyUpdate(ktyp))
         {
-            mt.Flags |= 8;
+            mt.MapType.Flags |= 8;
         }
         if(hashMightPanic(ktyp))
         {
-            mt.Flags |= 16;
+            mt.MapType.Flags |= 16;
         }
-        mt.PtrToThis = 0;
-        auto [ti, gocpp_id_7] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& mt.Type));
+        mt.MapType.Type.PtrToThis = 0;
+        auto [ti, gocpp_id_7] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& mt.MapType.Type));
         return gocpp::getValue<Type>(ti);
     }
 
@@ -2577,8 +2577,8 @@ namespace golang::reflect
                 args = append(args, t);
                 hash = fnv1(hash, (unsigned char)(t->t.Hash >> 24), (unsigned char)(t->t.Hash >> 16), (unsigned char)(t->t.Hash >> 8), (unsigned char)(t->t.Hash));
             }
-            ft->TFlag = 0;
-            ft->Hash = hash;
+            ft->Type.TFlag = 0;
+            ft->Type.Hash = hash;
             ft->InCount = uint16_t(len(in));
             ft->OutCount = uint16_t(len(out));
             if(variadic)
@@ -2625,8 +2625,8 @@ namespace golang::reflect
                     return addToCache(tt);
                 }
             }
-            ft->Str = resolveReflectName(newName(str, ""_s, false, false));
-            ft->PtrToThis = 0;
+            ft->Type.Str = resolveReflectName(newName(str, ""_s, false, false));
+            ft->Type.PtrToThis = 0;
             return addToCache(& ft->Type);
         }
         catch(gocpp::GoPanic& gp)
@@ -2654,7 +2654,7 @@ namespace golang::reflect
             if(rec::IsVariadic(gocpp::recv(ft)) && i == int(ft->InCount) - 1)
             {
                 repr = append(repr, "..."_s);
-                repr = append(repr, stringFor((sliceType*)(gocpp::unsafe_pointer(t))->Elem));
+                repr = append(repr, stringFor((sliceType*)(gocpp::unsafe_pointer(t))->SliceType.Elem));
             }
             else
             {
@@ -2751,7 +2751,7 @@ namespace golang::reflect
                     break;
                 case 22:
                     auto tt = (structType*)(gocpp::unsafe_pointer(t));
-                    for(auto [gocpp_ignored, f] : tt->Fields)
+                    for(auto [gocpp_ignored, f] : tt->StructType.Fields)
                     {
                         if(! isReflexive(f.Typ))
                         {
@@ -2830,7 +2830,7 @@ namespace golang::reflect
                     break;
                 case 22:
                     auto tt = (structType*)(gocpp::unsafe_pointer(t));
-                    for(auto [gocpp_ignored, f] : tt->Fields)
+                    for(auto [gocpp_ignored, f] : tt->StructType.Fields)
                     {
                         if(needKeyUpdate(f.Typ))
                         {
@@ -2867,7 +2867,7 @@ namespace golang::reflect
                     break;
                 case 2:
                     auto tt = (structType*)(gocpp::unsafe_pointer(t));
-                    for(auto [gocpp_ignored, f] : tt->Fields)
+                    for(auto [gocpp_ignored, f] : tt->StructType.Fields)
                     {
                         if(hashMightPanic(f.Typ))
                         {
@@ -3013,7 +3013,7 @@ namespace golang::reflect
         for(auto [gocpp_ignored, tt] : typesByString(s))
         {
             auto slice = (sliceType*)(gocpp::unsafe_pointer(tt));
-            if(slice->Elem == typ)
+            if(slice->SliceType.Elem == typ)
             {
                 auto [ti, gocpp_id_8] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(tt));
                 return gocpp::getValue<Type>(ti);
@@ -3023,12 +3023,12 @@ namespace golang::reflect
         go_any islice = (gocpp::slice<gocpp::unsafe_pointer>)(nullptr);
         auto prototype = *(sliceType**)(gocpp::unsafe_pointer(& islice));
         auto slice = *prototype;
-        slice.TFlag = 0;
-        slice.Str = resolveReflectName(newName(s, ""_s, false, false));
-        slice.Hash = fnv1(typ->Hash, '[');
-        slice.Elem = typ;
-        slice.PtrToThis = 0;
-        auto [ti, gocpp_id_9] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& slice.Type));
+        slice.SliceType.Type.TFlag = 0;
+        slice.SliceType.Type.Str = resolveReflectName(newName(s, ""_s, false, false));
+        slice.SliceType.Type.Hash = fnv1(typ->Hash, '[');
+        slice.SliceType.Elem = typ;
+        slice.SliceType.Type.PtrToThis = 0;
+        auto [ti, gocpp_id_9] = rec::LoadOrStore(gocpp::recv(lookupCache), ckey, toRType(& slice.SliceType.Type));
         return gocpp::getValue<Type>(ti);
     }
 
@@ -3310,7 +3310,7 @@ namespace golang::reflect
                         {
                             case 0:
                                 auto ift = (interfaceType*)(gocpp::unsafe_pointer(ft));
-                                for(auto [gocpp_ignored, m] : ift->Methods)
+                                for(auto [gocpp_ignored, m] : ift->InterfaceType.Methods)
                                 {
                                     if(pkgPath(rec::nameOff(gocpp::recv(ift), m.Name)) != ""_s)
                                     {
@@ -3352,7 +3352,7 @@ namespace golang::reflect
                                         }));
                                     }
                                 }
-                                if(auto unt = rec::Uncommon(gocpp::recv(ptr->Elem)); unt != nullptr)
+                                if(auto unt = rec::Uncommon(gocpp::recv(ptr->PtrType.Elem)); unt != nullptr)
                                 {
                                     for(auto [gocpp_ignored, m] : rec::Methods(gocpp::recv(unt)))
                                     {
@@ -3363,9 +3363,9 @@ namespace golang::reflect
                                         }
                                         methods = append(methods, gocpp::Init<abi::Method>([=](auto& x) {
                                             x.Name = resolveReflectName(mname);
-                                            x.Mtyp = resolveReflectType(typeOffFor(ptr->Elem, m.Mtyp));
-                                            x.Ifn = resolveReflectText(textOffFor(ptr->Elem, m.Ifn));
-                                            x.Tfn = resolveReflectText(textOffFor(ptr->Elem, m.Tfn));
+                                            x.Mtyp = resolveReflectType(typeOffFor(ptr->PtrType.Elem, m.Mtyp));
+                                            x.Ifn = resolveReflectText(textOffFor(ptr->PtrType.Elem, m.Ifn));
+                                            x.Tfn = resolveReflectText(textOffFor(ptr->PtrType.Elem, m.Tfn));
                                         }));
                                     }
                                 }
@@ -3490,17 +3490,17 @@ namespace golang::reflect
             go_any istruct = gocpp_id_14 {};
             auto prototype = *(structType**)(gocpp::unsafe_pointer(& istruct));
             *typ = *prototype;
-            typ->Fields = fs;
+            typ->StructType.Fields = fs;
             if(pkgpath != ""_s)
             {
-                typ->PkgPath = newName(pkgpath, ""_s, false, false);
+                typ->StructType.PkgPath = newName(pkgpath, ""_s, false, false);
             }
             if(auto [ts, ok] = rec::Load(gocpp::recv(structLookupCache.m), hash); ok)
             {
                 for(auto [gocpp_ignored, st] : gocpp::getValue<gocpp::slice<Type>>(ts))
                 {
                     auto t = rec::common(gocpp::recv(st));
-                    if(haveIdenticalUnderlyingType(& typ->Type, t, true))
+                    if(haveIdenticalUnderlyingType(& typ->StructType.Type, t, true))
                     {
                         return toType(t);
                     }
@@ -3513,7 +3513,7 @@ namespace golang::reflect
                 for(auto [gocpp_ignored, st] : gocpp::getValue<gocpp::slice<Type>>(ts))
                 {
                     auto t = rec::common(gocpp::recv(st));
-                    if(haveIdenticalUnderlyingType(& typ->Type, t, true))
+                    if(haveIdenticalUnderlyingType(& typ->StructType.Type, t, true))
                     {
                         return toType(t);
                     }
@@ -3531,22 +3531,22 @@ namespace golang::reflect
             };
             for(auto [gocpp_ignored, t] : typesByString(str))
             {
-                if(haveIdenticalUnderlyingType(& typ->Type, t, true))
+                if(haveIdenticalUnderlyingType(& typ->StructType.Type, t, true))
                 {
                     return addToCache(toType(t));
                 }
             }
-            typ->Str = resolveReflectName(newName(str, ""_s, false, false));
-            typ->TFlag = 0;
-            typ->Hash = hash;
-            typ->Size_ = size;
-            typ->PtrBytes = typeptrdata(& typ->Type);
-            typ->Align_ = typalign;
-            typ->FieldAlign_ = typalign;
-            typ->PtrToThis = 0;
+            typ->StructType.Type.Str = resolveReflectName(newName(str, ""_s, false, false));
+            typ->StructType.Type.TFlag = 0;
+            typ->StructType.Type.Hash = hash;
+            typ->StructType.Type.Size_ = size;
+            typ->StructType.Type.PtrBytes = typeptrdata(& typ->StructType.Type);
+            typ->StructType.Type.Align_ = typalign;
+            typ->StructType.Type.FieldAlign_ = typalign;
+            typ->StructType.Type.PtrToThis = 0;
             if(len(methods) > 0)
             {
-                typ->TFlag |= abi::TFlagUncommon;
+                typ->StructType.Type.TFlag |= abi::TFlagUncommon;
             }
             if(hasGCProg)
             {
@@ -3586,25 +3586,25 @@ namespace golang::reflect
                 }
                 prog = append(prog, 0);
                 *(uint32_t*)(gocpp::unsafe_pointer(& prog[0])) = uint32_t(len(prog) - 4);
-                typ->Kind_ |= kindGCProg;
-                typ->GCData = & prog[0];
+                typ->StructType.Type.Kind_ |= kindGCProg;
+                typ->StructType.Type.GCData = & prog[0];
             }
             else
             {
-                typ->Kind_ &^= kindGCProg;
+                typ->StructType.Type.Kind_ &^= kindGCProg;
                 auto bv = new(bitVector);
-                addTypeBits(bv, 0, & typ->Type);
+                addTypeBits(bv, 0, & typ->StructType.Type);
                 if(len(bv->data) > 0)
                 {
-                    typ->GCData = & bv->data[0];
+                    typ->StructType.Type.GCData = & bv->data[0];
                 }
             }
-            typ->Equal = nullptr;
+            typ->StructType.Type.Equal = nullptr;
             if(comparable)
             {
-                typ->Equal = [=](gocpp::unsafe_pointer p, gocpp::unsafe_pointer q) mutable -> bool
+                typ->StructType.Type.Equal = [=](gocpp::unsafe_pointer p, gocpp::unsafe_pointer q) mutable -> bool
                 {
-                    for(auto [gocpp_ignored, ft] : typ->Fields)
+                    for(auto [gocpp_ignored, ft] : typ->StructType.Fields)
                     {
                         auto pi = add(p, ft.Offset, "&x.field safe"_s);
                         auto qi = add(q, ft.Offset, "&x.field safe"_s);
@@ -3623,14 +3623,14 @@ namespace golang::reflect
                 switch(conditionId)
                 {
                     case 0:
-                        typ->Kind_ |= kindDirectIface;
+                        typ->StructType.Type.Kind_ |= kindDirectIface;
                         break;
                     default:
-                        typ->Kind_ &^= kindDirectIface;
+                        typ->StructType.Type.Kind_ &^= kindDirectIface;
                         break;
                 }
             }
-            return addToCache(toType(& typ->Type));
+            return addToCache(toType(& typ->StructType.Type));
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -3684,9 +3684,9 @@ namespace golang::reflect
                 case 0:
                     auto st = (structType*)(gocpp::unsafe_pointer(t));
                     auto field = - 1;
-                    for(auto [i, gocpp_ignored] : st->Fields)
+                    for(auto [i, gocpp_ignored] : st->StructType.Fields)
                     {
-                        auto ft = st->Fields[i].Typ;
+                        auto ft = st->StructType.Fields[i].Typ;
                         if(rec::Pointers(gocpp::recv(ft)))
                         {
                             field = i;
@@ -3696,7 +3696,7 @@ namespace golang::reflect
                     {
                         return 0;
                     }
-                    auto f = st->Fields[field];
+                    auto f = st->StructType.Fields[field];
                     return f.Offset + f.Typ->PtrBytes;
                     break;
                 default:
@@ -3738,16 +3738,16 @@ namespace golang::reflect
         go_any iarray = gocpp::array<gocpp::unsafe_pointer, 1> {};
         auto prototype = *(reflect::arrayType**)(gocpp::unsafe_pointer(& iarray));
         auto array = *prototype;
-        array.TFlag = typ->TFlag & abi::TFlagRegularMemory;
-        array.Str = resolveReflectName(newName(s, ""_s, false, false));
-        array.Hash = fnv1(typ->Hash, '[');
+        array.Type.TFlag = typ->TFlag & abi::TFlagRegularMemory;
+        array.Type.Str = resolveReflectName(newName(s, ""_s, false, false));
+        array.Type.Hash = fnv1(typ->Hash, '[');
         for(auto n = uint32_t(length); n > 0; n >>= 8)
         {
-            array.Hash = fnv1(array.Hash, (unsigned char)(n));
+            array.Type.Hash = fnv1(array.Type.Hash, (unsigned char)(n));
         }
-        array.Hash = fnv1(array.Hash, ']');
+        array.Type.Hash = fnv1(array.Type.Hash, ']');
         array.Elem = typ;
-        array.PtrToThis = 0;
+        array.Type.PtrToThis = 0;
         if(typ->Size_ > 0)
         {
             auto max = ~ uintptr_t(0) / typ->Size_;
@@ -3756,38 +3756,38 @@ namespace golang::reflect
                 gocpp::panic("reflect.ArrayOf: array size would exceed virtual address space"_s);
             }
         }
-        array.Size_ = typ->Size_ * uintptr_t(length);
+        array.Type.Size_ = typ->Size_ * uintptr_t(length);
         if(length > 0 && typ->PtrBytes != 0)
         {
-            array.PtrBytes = typ->Size_ * uintptr_t(length - 1) + typ->PtrBytes;
+            array.Type.PtrBytes = typ->Size_ * uintptr_t(length - 1) + typ->PtrBytes;
         }
-        array.Align_ = typ->Align_;
-        array.FieldAlign_ = typ->FieldAlign_;
+        array.Type.Align_ = typ->Align_;
+        array.Type.FieldAlign_ = typ->FieldAlign_;
         array.Len = uintptr_t(length);
         array.Slice = & (gocpp::getValue<rtype*>(SliceOf(elem))->t);
         //Go switch emulation
         {
             int conditionId = -1;
-            if(typ->PtrBytes == 0 || array.Size_ == 0) { conditionId = 0; }
+            if(typ->PtrBytes == 0 || array.Type.Size_ == 0) { conditionId = 0; }
             else if(length == 1) { conditionId = 1; }
-            else if(typ->Kind_ & kindGCProg == 0 && array.Size_ <= maxPtrmaskBytes * 8 * goarch::PtrSize) { conditionId = 2; }
+            else if(typ->Kind_ & kindGCProg == 0 && array.Type.Size_ <= maxPtrmaskBytes * 8 * goarch::PtrSize) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
-                    array.GCData = nullptr;
-                    array.PtrBytes = 0;
+                    array.Type.GCData = nullptr;
+                    array.Type.PtrBytes = 0;
                     break;
                 case 1:
-                    array.Kind_ |= typ->Kind_ & kindGCProg;
-                    array.GCData = typ->GCData;
-                    array.PtrBytes = typ->PtrBytes;
+                    array.Type.Kind_ |= typ->Kind_ & kindGCProg;
+                    array.Type.GCData = typ->GCData;
+                    array.Type.PtrBytes = typ->PtrBytes;
                     break;
                 case 2:
-                    auto n = (array.PtrBytes / goarch::PtrSize + 7) / 8;
+                    auto n = (array.Type.PtrBytes / goarch::PtrSize + 7) / 8;
                     n = (n + goarch::PtrSize - 1) &^ (goarch::PtrSize - 1);
                     auto mask = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
                     emitGCMask(mask, 0, typ, array.Len);
-                    array.GCData = & mask[0];
+                    array.Type.GCData = & mask[0];
                     break;
                 default:
                     auto prog = gocpp::slice<unsigned char> {0, 0, 0, 0};
@@ -3815,18 +3815,18 @@ namespace golang::reflect
                     prog = appendVarint(prog, uintptr_t(length) - 1);
                     prog = append(prog, 0);
                     *(uint32_t*)(gocpp::unsafe_pointer(& prog[0])) = uint32_t(len(prog) - 4);
-                    array.Kind_ |= kindGCProg;
-                    array.GCData = & prog[0];
-                    array.PtrBytes = array.Size_;
+                    array.Type.Kind_ |= kindGCProg;
+                    array.Type.GCData = & prog[0];
+                    array.Type.PtrBytes = array.Type.Size_;
                     break;
             }
         }
         auto etyp = typ;
         auto esize = rec::Size(gocpp::recv(etyp));
-        array.Equal = nullptr;
+        array.Type.Equal = nullptr;
         if(auto eequal = [&](auto x, auto y){ return abi::rec::Equal(etyp, x, y); }; eequal != nullptr)
         {
-            array.Equal = [=](gocpp::unsafe_pointer p, gocpp::unsafe_pointer q) mutable -> bool
+            array.Type.Equal = [=](gocpp::unsafe_pointer p, gocpp::unsafe_pointer q) mutable -> bool
             {
                 for(auto i = 0; i < length; i++)
                 {
@@ -3847,10 +3847,10 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
-                    array.Kind_ |= kindDirectIface;
+                    array.Type.Kind_ |= kindDirectIface;
                     break;
                 default:
-                    array.Kind_ &^= kindDirectIface;
+                    array.Type.Kind_ &^= kindDirectIface;
                     break;
             }
         }
@@ -4116,9 +4116,9 @@ namespace golang::reflect
                     break;
                 case 9:
                     auto tt = (structType*)(gocpp::unsafe_pointer(t));
-                    for(auto [i, gocpp_ignored] : tt->Fields)
+                    for(auto [i, gocpp_ignored] : tt->StructType.Fields)
                     {
-                        auto f = & tt->Fields[i];
+                        auto f = & tt->StructType.Fields[i];
                         addTypeBits(bv, offset + f->Offset, f->Typ);
                     }
                     break;

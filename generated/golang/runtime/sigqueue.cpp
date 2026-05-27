@@ -141,6 +141,12 @@ namespace golang::runtime
         Send:
         for(; ; )
         {
+            if(false) {
+            Send_continue:
+                continue;
+            Send_break:
+                break;
+            }
             //Go switch emulation
             {
                 auto condition = rec::Load(gocpp::recv(sig.state));
@@ -176,12 +182,6 @@ namespace golang::runtime
                         break;
                 }
             }
-            if(false) {
-            Send_continue:
-                continue;
-            Send_break:
-                break;
-            }
         }
         rec::Add(gocpp::recv(sig.delivering), - 1);
         return true;
@@ -206,6 +206,12 @@ namespace golang::runtime
             Receive:
             for(; ; )
             {
+                if(false) {
+                Receive_continue:
+                    continue;
+                Receive_break:
+                    break;
+                }
                 //Go switch emulation
                 {
                     auto condition = rec::Load(gocpp::recv(sig.state));
@@ -237,12 +243,6 @@ namespace golang::runtime
                             }
                             break;
                     }
-                }
-                if(false) {
-                Receive_continue:
-                    continue;
-                Receive_break:
-                    break;
                 }
             }
             for(auto [i, gocpp_ignored] : sig.mask)

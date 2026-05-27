@@ -631,6 +631,12 @@ namespace golang::runtime
         Run:
         for(; ; )
         {
+            if(false) {
+            Run_continue:
+                continue;
+            Run_break:
+                break;
+            }
             for(; nbits >= 8; nbits -= 8)
             {
                 *dst = uint8_t(bits);
@@ -777,12 +783,6 @@ namespace golang::runtime
             {
                 bits |= (uintptr_t(*src) & ((1 << c) - 1)) << nbits;
                 nbits += c;
-            }
-            if(false) {
-            Run_continue:
-                continue;
-            Run_break:
-                break;
             }
         }
         auto totalBits = (uintptr_t(gocpp::unsafe_pointer(dst)) - uintptr_t(gocpp::unsafe_pointer(dstStart))) * 8 + nbits;

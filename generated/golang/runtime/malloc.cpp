@@ -580,6 +580,12 @@ namespace golang::runtime
         mapped:
         for(auto ri = arenaIndex(uintptr_t(v)); ri <= arenaIndex(uintptr_t(v) + size - 1); ri++)
         {
+            if(false) {
+            mapped_continue:
+                continue;
+            mapped_break:
+                break;
+            }
             auto l2 = h->arenas[rec::l1(gocpp::recv(ri))];
             if(l2 == nullptr)
             {
@@ -634,12 +640,6 @@ namespace golang::runtime
                 h->allArenas[len(h->allArenas) - 1] = ri;
             }
             atomic::StorepNoWB(gocpp::unsafe_pointer(& l2[rec::l2(gocpp::recv(ri))]), gocpp::unsafe_pointer(r));
-            if(false) {
-            mapped_continue:
-                continue;
-            mapped_break:
-                break;
-            }
         }
         if(raceenabled)
         {

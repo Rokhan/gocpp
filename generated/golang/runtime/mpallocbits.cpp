@@ -196,6 +196,12 @@ namespace golang::runtime
         outer:
         for(auto i = 0; i < len(b); i++)
         {
+            if(false) {
+            outer_continue:
+                continue;
+            outer_break:
+                break;
+            }
             auto x = b[i];
             x >>= sys::TrailingZeros64(x) & 63;
             if(x & (x + 1) == 0)
@@ -235,12 +241,6 @@ namespace golang::runtime
                     goto outer_continue;
                 }
                 p = j;
-            }
-            if(false) {
-            outer_continue:
-                continue;
-            outer_break:
-                break;
             }
         }
         return packPallocSum(start, most, cur);

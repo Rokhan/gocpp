@@ -427,6 +427,12 @@ namespace golang::runtime
             collect:
             for(auto [gocpp_ignored, tl] : prev->typelinks)
             {
+                if(false) {
+                collect_continue:
+                    continue;
+                collect_break:
+                    break;
+                }
                 runtime::_type* t = {};
                 if(prev->typemap == nullptr)
                 {
@@ -445,12 +451,6 @@ namespace golang::runtime
                     }
                 }
                 typehash[t->Hash] = append(tlist, t);
-                if(false) {
-                collect_continue:
-                    continue;
-                collect_break:
-                    break;
-                }
             }
             if(md->typemap == nullptr)
             {

@@ -620,6 +620,12 @@ namespace golang::cpu
         field:
         for(; env != ""_s; )
         {
+            if(false) {
+            field_continue:
+                continue;
+            field_break:
+                break;
+            }
             auto field = ""_s;
             auto i = indexByte(env, ',');
             if(i < 0)
@@ -681,12 +687,6 @@ namespace golang::cpu
                 }
             }
             print("GODEBUG: unknown cpu feature \""_s, key, "\"\n"_s);
-            if(false) {
-            field_continue:
-                continue;
-            field_break:
-                break;
-            }
         }
         for(auto [gocpp_ignored, o] : options)
         {

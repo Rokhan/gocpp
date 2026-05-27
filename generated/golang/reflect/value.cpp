@@ -750,6 +750,12 @@ namespace golang::reflect
             stepsLoop:
             for(auto [gocpp_ignored, st] : rec::stepsForValue(gocpp::recv(abid.call), i + inStart))
             {
+                if(false) {
+                stepsLoop_continue:
+                    continue;
+                stepsLoop_break:
+                    break;
+                }
                 //Go switch emulation
                 {
                     auto condition = st.kind;
@@ -804,12 +810,6 @@ namespace golang::reflect
                             gocpp::panic("unknown ABI part kind"_s);
                             break;
                     }
-                }
-                if(false) {
-                stepsLoop_continue:
-                    continue;
-                stepsLoop_break:
-                    break;
                 }
             }
         }
@@ -1046,6 +1046,12 @@ namespace golang::reflect
                 stepsLoop:
                 for(auto [gocpp_ignored, st] : rec::stepsForValue(gocpp::recv(abid.ret), i))
                 {
+                    if(false) {
+                    stepsLoop_continue:
+                        continue;
+                    stepsLoop_break:
+                        break;
+                    }
                     //Go switch emulation
                     {
                         auto condition = st.kind;
@@ -1092,12 +1098,6 @@ namespace golang::reflect
                                 gocpp::panic("unknown ABI part kind"_s);
                                 break;
                         }
-                    }
-                    if(false) {
-                    stepsLoop_continue:
-                        continue;
-                    stepsLoop_break:
-                        break;
                     }
                 }
             }

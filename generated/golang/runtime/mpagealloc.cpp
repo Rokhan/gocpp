@@ -616,6 +616,12 @@ namespace golang::runtime
         nextLevel:
         for(auto l = 0; l < len(p->summary); l++)
         {
+            if(false) {
+            nextLevel_continue:
+                continue;
+            nextLevel_break:
+                break;
+            }
             auto entriesPerBlock = 1 << levelBits[l];
             auto logMaxPages = levelLogPages[l];
             i <<= levelBits[l];
@@ -690,12 +696,6 @@ namespace golang::runtime
                 print("runtime: summary["_s, l, "]["_s, i + j, "] = ("_s, rec::start(gocpp::recv(sum)), ", "_s, rec::max(gocpp::recv(sum)), ", "_s, rec::end(gocpp::recv(sum)), ")\n"_s);
             }
             go_throw("bad summary data"_s);
-            if(false) {
-            nextLevel_continue:
-                continue;
-            nextLevel_break:
-                break;
-            }
         }
         auto ci = chunkIdx(i);
         auto [j, searchIdx] = rec::find(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), npages, 0);

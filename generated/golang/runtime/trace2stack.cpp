@@ -339,6 +339,12 @@ namespace golang::runtime
         outer:
         for(auto [gocpp_ignored, retPC] : pcBuf.make_slice(1))
         {
+            if(false) {
+            outer_continue:
+                continue;
+            outer_break:
+                break;
+            }
             auto callPC = retPC - 1;
             auto fi = findfunc(callPC);
             if(! rec::valid(gocpp::recv(fi)))
@@ -362,12 +368,6 @@ namespace golang::runtime
                     goto outer_break;
                 }
                 lastFuncID = sf.funcID;
-            }
-            if(false) {
-            outer_continue:
-                continue;
-            outer_break:
-                break;
             }
         }
         return newPCBuf;

@@ -251,6 +251,12 @@ namespace golang::runtime
         imethods:
         for(auto k = 0; k < ni; k++)
         {
+            if(false) {
+            imethods_continue:
+                continue;
+            imethods_break:
+                break;
+            }
             auto i = & inter->Methods[k];
             auto itype = rec::typeOff(gocpp::recv(toRType(& inter->Type)), i->Typ);
             auto name = rec::nameOff(gocpp::recv(toRType(& inter->Type)), i->Name);
@@ -290,12 +296,6 @@ namespace golang::runtime
             }
             m->fun[0] = 0;
             return iname;
-            if(false) {
-            imethods_continue:
-                continue;
-            imethods_break:
-                break;
-            }
         }
         m->fun[0] = uintptr_t(fun0);
         return ""_s;

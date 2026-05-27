@@ -428,6 +428,12 @@ namespace golang::registry
         loopItems:
         for(auto i = uint32_t(0); ; i++)
         {
+            if(false) {
+            loopItems_continue:
+                continue;
+            loopItems_break:
+                break;
+            }
             auto l = uint32_t(len(buf));
             for(; ; )
             {
@@ -449,12 +455,6 @@ namespace golang::registry
                 return {names, err};
             }
             names = append(names, syscall::UTF16ToString(buf.make_slice(0, l)));
-            if(false) {
-            loopItems_continue:
-                continue;
-            loopItems_break:
-                break;
-            }
         }
         return {names, nullptr};
     }

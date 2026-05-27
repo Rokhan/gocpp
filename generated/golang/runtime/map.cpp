@@ -566,6 +566,12 @@ namespace golang::runtime
         bucketloop:
         for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
         {
+            if(false) {
+            bucketloop_continue:
+                continue;
+            bucketloop_break:
+                break;
+            }
             for(auto i = uintptr_t(0); i < bucketCnt; i++)
             {
                 if(b->tophash[i] != top)
@@ -590,12 +596,6 @@ namespace golang::runtime
                     }
                     return e;
                 }
-            }
-            if(false) {
-            bucketloop_continue:
-                continue;
-            bucketloop_break:
-                break;
             }
         }
         return gocpp::unsafe_pointer(& zeroVal[0]);
@@ -649,6 +649,12 @@ namespace golang::runtime
         bucketloop:
         for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
         {
+            if(false) {
+            bucketloop_continue:
+                continue;
+            bucketloop_break:
+                break;
+            }
             for(auto i = uintptr_t(0); i < bucketCnt; i++)
             {
                 if(b->tophash[i] != top)
@@ -673,12 +679,6 @@ namespace golang::runtime
                     }
                     return {e, true};
                 }
-            }
-            if(false) {
-            bucketloop_continue:
-                continue;
-            bucketloop_break:
-                break;
             }
         }
         return {gocpp::unsafe_pointer(& zeroVal[0]), false};
@@ -710,6 +710,12 @@ namespace golang::runtime
         bucketloop:
         for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
         {
+            if(false) {
+            bucketloop_continue:
+                continue;
+            bucketloop_break:
+                break;
+            }
             for(auto i = uintptr_t(0); i < bucketCnt; i++)
             {
                 if(b->tophash[i] != top)
@@ -734,12 +740,6 @@ namespace golang::runtime
                     }
                     return {k, e};
                 }
-            }
-            if(false) {
-            bucketloop_continue:
-                continue;
-            bucketloop_break:
-                break;
             }
         }
         return {nullptr, nullptr};
@@ -811,6 +811,12 @@ namespace golang::runtime
         bucketloop:
         for(; ; )
         {
+            if(false) {
+            bucketloop_continue:
+                continue;
+            bucketloop_break:
+                break;
+            }
             for(auto i = uintptr_t(0); i < bucketCnt; i++)
             {
                 if(b->tophash[i] != top)
@@ -849,12 +855,6 @@ namespace golang::runtime
                 break;
             }
             b = ovf;
-            if(false) {
-            bucketloop_continue:
-                continue;
-            bucketloop_break:
-                break;
-            }
         }
         if(! rec::growing(gocpp::recv(h)) && (overLoadFactor(h->count + 1, h->B) || tooManyOverflowBuckets(h->noverflow, h->B)))
         {
@@ -937,6 +937,12 @@ namespace golang::runtime
         search:
         for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
         {
+            if(false) {
+            search_continue:
+                continue;
+            search_break:
+                break;
+            }
             for(auto i = uintptr_t(0); i < bucketCnt; i++)
             {
                 if(b->tophash[i] != top)
@@ -1026,12 +1032,6 @@ namespace golang::runtime
                     h->hash0 = uint32_t(rand());
                 }
                 goto search_break;
-            }
-            if(false) {
-            search_continue:
-                continue;
-            search_break:
-                break;
             }
         }
         if(h->flags & hashWriting == 0)

@@ -36,6 +36,12 @@ namespace golang::main
         loop1:
         for(auto i = 0; i < 3; i++)
         {
+            if(false) {
+            loop1_continue:
+                continue;
+            loop1_break:
+                break;
+            }
             for(auto j = 0; j < 3; j++)
             {
                 mocklib::Println("for"_s, i, j);
@@ -56,12 +62,6 @@ namespace golang::main
                     }
                 }
             }
-            if(false) {
-            loop1_continue:
-                continue;
-            loop1_break:
-                break;
-            }
         }
         mocklib::Println("end"_s);
         mocklib::Println();
@@ -72,6 +72,12 @@ namespace golang::main
         loop1:
         for(auto [i, gocpp_ignored] : gocpp::slice<int> {0, 1, 2})
         {
+            if(false) {
+            loop1_continue:
+                continue;
+            loop1_break:
+                break;
+            }
             for(auto [j, gocpp_ignored] : gocpp::slice<int> {0, 1, 2})
             {
                 mocklib::Println("range"_s, i, j);
@@ -91,12 +97,6 @@ namespace golang::main
                             break;
                     }
                 }
-            }
-            if(false) {
-            loop1_continue:
-                continue;
-            loop1_break:
-                break;
             }
         }
         mocklib::Println("end"_s);
@@ -123,6 +123,12 @@ namespace golang::main
         label3:
         for(auto j = 0; j < 10; j++)
         {
+            if(false) {
+            label3_continue:
+                continue;
+            label3_break:
+                break;
+            }
             i++;
             if(i < 15)
             {
@@ -130,12 +136,6 @@ namespace golang::main
                 goto label3;
             }
             mocklib::Printf("............ i = %v, j = %v\n"_s, i, j);
-            if(false) {
-            label3_continue:
-                continue;
-            label3_break:
-                break;
-            }
         }
     }
 

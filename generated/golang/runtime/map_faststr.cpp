@@ -296,6 +296,12 @@ namespace golang::runtime
         bucketloop:
         for(; ; )
         {
+            if(false) {
+            bucketloop_continue:
+                continue;
+            bucketloop_break:
+                break;
+            }
             for(auto i = uintptr_t(0); i < bucketCnt; i++)
             {
                 if(b->tophash[i] != top)
@@ -331,12 +337,6 @@ namespace golang::runtime
                 break;
             }
             b = ovf;
-            if(false) {
-            bucketloop_continue:
-                continue;
-            bucketloop_break:
-                break;
-            }
         }
         if(! rec::growing(gocpp::recv(h)) && (overLoadFactor(h->count + 1, h->B) || tooManyOverflowBuckets(h->noverflow, h->B)))
         {
@@ -391,6 +391,12 @@ namespace golang::runtime
         search:
         for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
         {
+            if(false) {
+            search_continue:
+                continue;
+            search_break:
+                break;
+            }
             for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
             {
                 auto k = (stringStruct*)(kptr);
@@ -458,12 +464,6 @@ namespace golang::runtime
                     h->hash0 = uint32_t(rand());
                 }
                 goto search_break;
-            }
-            if(false) {
-            search_continue:
-                continue;
-            search_break:
-                break;
             }
         }
         if(h->flags & hashWriting == 0)

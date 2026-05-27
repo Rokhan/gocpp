@@ -634,6 +634,12 @@ namespace golang::runtime
         printloop:
         for(; ; )
         {
+            if(false) {
+            printloop_continue:
+                continue;
+            printloop_break:
+                break;
+            }
             auto o = p[pi];
             pi++;
             //Go switch emulation
@@ -680,12 +686,6 @@ namespace golang::runtime
                 }
             }
             start = false;
-            if(false) {
-            printloop_continue:
-                continue;
-            printloop_break:
-                break;
-            }
         }
     }
 

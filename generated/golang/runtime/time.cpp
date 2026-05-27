@@ -457,6 +457,12 @@ namespace golang::runtime
         loop:
         for(; ; )
         {
+            if(false) {
+            loop_continue:
+                continue;
+            loop_break:
+                break;
+            }
             //Go switch emulation
             {
                 status = rec::Load(gocpp::recv(t->status));
@@ -518,12 +524,6 @@ namespace golang::runtime
                         badTimer();
                         break;
                 }
-            }
-            if(false) {
-            loop_continue:
-                continue;
-            loop_break:
-                break;
             }
         }
         t->period = period;
@@ -657,6 +657,12 @@ namespace golang::runtime
             loop:
             for(; ; )
             {
+                if(false) {
+                loop_continue:
+                    continue;
+                loop_break:
+                    break;
+                }
                 //Go switch emulation
                 {
                     auto s = rec::Load(gocpp::recv(t->status));
@@ -726,12 +732,6 @@ namespace golang::runtime
                             badTimer();
                             break;
                     }
-                }
-                if(false) {
-                loop_continue:
-                    continue;
-                loop_break:
-                    break;
                 }
             }
         }
@@ -1037,6 +1037,12 @@ namespace golang::runtime
         nextTimer:
         for(auto [gocpp_ignored, t] : timers)
         {
+            if(false) {
+            nextTimer_continue:
+                continue;
+            nextTimer_break:
+                break;
+            }
             for(; ; )
             {
                 //Go switch emulation
@@ -1111,12 +1117,6 @@ namespace golang::runtime
                             break;
                     }
                 }
-            }
-            if(false) {
-            nextTimer_continue:
-                continue;
-            nextTimer_break:
-                break;
             }
         }
         for(auto i = to; i < len(timers); i++)

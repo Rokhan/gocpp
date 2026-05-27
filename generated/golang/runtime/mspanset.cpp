@@ -174,6 +174,12 @@ namespace golang::runtime
         claimLoop:
         for(; ; )
         {
+            if(false) {
+            claimLoop_continue:
+                continue;
+            claimLoop_break:
+                break;
+            }
             auto headtail = rec::load(gocpp::recv(b->index));
             std::tie(head, tail) = rec::split(gocpp::recv(headtail));
             if(head >= tail)
@@ -194,12 +200,6 @@ namespace golang::runtime
                 }
                 headtail = rec::load(gocpp::recv(b->index));
                 std::tie(head, tail) = rec::split(gocpp::recv(headtail));
-            }
-            if(false) {
-            claimLoop_continue:
-                continue;
-            claimLoop_break:
-                break;
             }
         }
         auto [top, bottom] = std::tuple{head / spanSetBlockEntries, head % spanSetBlockEntries};

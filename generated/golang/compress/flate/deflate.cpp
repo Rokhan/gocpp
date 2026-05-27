@@ -479,6 +479,12 @@ namespace golang::flate
         Loop:
         for(; ; )
         {
+            if(false) {
+            Loop_continue:
+                continue;
+            Loop_break:
+                break;
+            }
             if(d->index > d->windowEnd)
             {
                 gocpp::panic("index > windowEnd"_s);
@@ -613,12 +619,6 @@ namespace golang::flate
                 {
                     d->byteAvailable = true;
                 }
-            }
-            if(false) {
-            Loop_continue:
-                continue;
-            Loop_break:
-                break;
             }
         }
     }

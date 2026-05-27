@@ -1922,6 +1922,12 @@ namespace golang::fmt
         formatLoop:
         for(auto i = 0; i < end; )
         {
+            if(false) {
+            formatLoop_continue:
+                continue;
+            formatLoop_break:
+                break;
+            }
             p->goodArgNum = true;
             auto lasti = i;
             for(; i < end && format[i] != '%'; )
@@ -1941,6 +1947,12 @@ namespace golang::fmt
             simpleFormat:
             for(; i < end; i++)
             {
+                if(false) {
+                simpleFormat_continue:
+                    continue;
+                simpleFormat_break:
+                    break;
+                }
                 auto c = format[i];
                 //Go switch emulation
                 {
@@ -1998,12 +2010,6 @@ namespace golang::fmt
                             goto simpleFormat_break;
                             break;
                     }
-                }
-                if(false) {
-                simpleFormat_continue:
-                    continue;
-                simpleFormat_break:
-                    break;
                 }
             }
             std::tie(argNum, i, afterIndex) = rec::argNumber(gocpp::recv(p), argNum, format, i, len(a));
@@ -2110,12 +2116,6 @@ namespace golang::fmt
                         argNum++;
                         break;
                 }
-            }
-            if(false) {
-            formatLoop_continue:
-                continue;
-            formatLoop_break:
-                break;
             }
         }
         if(! p->reordered && argNum < len(a))

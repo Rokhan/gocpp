@@ -92,6 +92,12 @@ namespace golang::runtime
         Loop:
         for(auto i = 0; ; i++)
         {
+            if(false) {
+            Loop_continue:
+                continue;
+            Loop_break:
+                break;
+            }
             auto v = atomic::Loaduintptr(& l->key);
             if(v & locked == 0)
             {
@@ -131,12 +137,6 @@ namespace golang::runtime
                     semasleep(- 1);
                     i = 0;
                 }
-            }
-            if(false) {
-            Loop_continue:
-                continue;
-            Loop_break:
-                break;
             }
         }
     }

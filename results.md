@@ -301,7 +301,7 @@
 | $(ImportDir)/runtime/iface.go | ✔️ ([cpp](generated/golang/runtime/iface.cpp), [h](generated/golang/runtime/iface.h))| ❌ |
 | $(ImportDir)/runtime/internal/atomic/atomic_amd64.go | ✔️ ([cpp](generated/golang/runtime/internal/atomic/atomic_amd64.cpp), [h](generated/golang/runtime/internal/atomic/atomic_amd64.h))| ✔️ |
 | $(ImportDir)/runtime/internal/atomic/stubs.go | ✔️ ([cpp](generated/golang/runtime/internal/atomic/stubs.cpp), [h](generated/golang/runtime/internal/atomic/stubs.h))| ✔️ |
-| $(ImportDir)/runtime/internal/atomic/types.go | ✔️ ([cpp](generated/golang/runtime/internal/atomic/types.cpp), [h](generated/golang/runtime/internal/atomic/types.h))| ❌ |
+| $(ImportDir)/runtime/internal/atomic/types.go | ✔️ ([cpp](generated/golang/runtime/internal/atomic/types.cpp), [h](generated/golang/runtime/internal/atomic/types.h))| ✔️ |
 | $(ImportDir)/runtime/internal/math/math.go | ✔️ ([cpp](generated/golang/runtime/internal/math/math.cpp), [h](generated/golang/runtime/internal/math/math.h))| ❌ |
 | $(ImportDir)/runtime/internal/sys/consts.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/consts.cpp), [h](generated/golang/runtime/internal/sys/consts.h))| ✔️ |
 | $(ImportDir)/runtime/internal/sys/consts_norace.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/consts_norace.cpp), [h](generated/golang/runtime/internal/sys/consts_norace.h))| ✔️ |

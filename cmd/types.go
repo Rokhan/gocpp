@@ -181,6 +181,15 @@ func (cv *parsingInfos) getReturnType(node ast.Node) *types.Tuple {
 	return getFunctionReturnType(cv.typeInfo, funcNode)
 }
 
+// Tell if node is used in a method or not
+func (cv *parsingInfos) IsInMethod(node ast.Node) bool {
+	funcNode := cv.getReturnFunc(node)
+	if funcNode == nil {
+		return false
+	}
+	return cv.IsMethod(funcNode)
+}
+
 // Take a node in the ast get the containing function
 func (cv *parsingInfos) getReturnFunc(node ast.Node) ast.Node {
 	if cv.typeInfo == nil || node == nil || cv.astFile == nil {
@@ -212,8 +221,7 @@ func (cv *parsingInfos) getReturnFunc(node ast.Node) ast.Node {
 }
 
 // Get the return type of a function node
-func getFunctionReturnType(typeInfo *types.Info, funcNode ast.Node) *types.Tuple {
-	var sig *types.Signature
+func getFunctionSignature(typeInfo *types.Info, funcNode ast.Node) (sig *types.Signature) {
 
 	switch n := funcNode.(type) {
 	case *ast.FuncDecl:
@@ -251,9 +259,83 @@ func getFunctionReturnType(typeInfo *types.Info, funcNode ast.Node) *types.Tuple
 			}
 		}
 	}
+	return sig
+}
 
+func getFunctionReturnType(typeInfo *types.Info, funcNode ast.Node) *types.Tuple {
+	sig := getFunctionSignature(typeInfo, funcNode)
 	return sig.Results()
 }
+
+// Tell if a function is a method (has a receiver) or not
+func (cv *parsingInfos) IsMethod(funcNode ast.Node) bool {
+	if funcNode == nil {
+		return false
+	}
+	sig := getFunctionSignature(cv.typeInfo, funcNode)
+	return sig != nil && sig.Recv() != nil
+}
+
+// Get the list of methods declared in the current package
+func (cv *parsingInfos) GetPackageMethods() []*types.Func {
+	if cv.typeInfo == nil {
+		return nil
+	}
+	var result []*types.Func
+	for _, obj := range cv.typeInfo.Defs {
+		if obj == nil {
+			continue
+		}
+		if fn, ok := obj.(*types.Func); ok {
+			if sig, ok := fn.Type().(*types.Signature); ok {
+				if sig.Recv() != nil {
+					result = append(result, fn)
+				}
+			}
+		}
+	}
+	return result
+}
+
+func (cv *parsingInfos) GetPackageMethodsNames() []string {
+	methods := cv.GetPackageMethods()
+	return getFuncNames(methods)
+}
+
+func getFuncNames(methods []*types.Func) []string {
+	var result []string
+	for _, m := range methods {
+		result = append(result, m.Name())
+	}
+	return result
+}
+
+// Not used at the moment
+//
+// // Get the list of methods declared in the current file
+// func (cv *parsingInfos) GetFileMethods() []*types.Func {
+// 	if cv.astFile == nil || cv.typeInfo == nil {
+// 		return nil
+// 	}
+// 	var result []*types.Func
+// 	for _, decl := range cv.astFile.Decls {
+// 		fn, ok := decl.(*ast.FuncDecl)
+// 		if !ok || fn.Recv == nil || fn.Name == nil {
+// 			continue
+// 		}
+// 		if def := cv.typeInfo.Defs[fn.Name]; def != nil {
+// 			if f, ok := def.(*types.Func); ok {
+// 				result = append(result, f)
+// 			}
+// 		}
+// 	}
+// 	return result
+// }
+//
+// func (cv *parsingInfos) GetFileMethodsNames() []string {
+// 	methods := cv.GetFileMethods()
+// 	return getFuncNames(methods)
+// }
 
 func (cv *parsingInfos) convertExprToType(node ast.Expr) types.Type {
 	if node == nil {

@@ -3549,7 +3549,24 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			if fun.Name == "recover" {
 				cv.BuffExprPrintf(buf, "gocpp::recover(")
 			} else {
-				cv.BuffExprPrintf(buf, "%v(", GetCppFunc(fun.Name))
+				needNamespace := false
+				// Allow to call function from current namespace in methods if there is a method with the same name
+				if obj, ok := cv.typeInfo.Uses[fun]; ok {
+					switch obj.(type) {
+					case *types.Func:
+						// TODO, maybe slow, can be optimized by caching.
+						pkgName := obj.Pkg().Name()
+						methods := cv.GetPackageMethodsNames()
+						if pkgName == cv.namespace && cv.IsInMethod(fun) && slices.Contains(methods, fun.Name) {
+							needNamespace = true
+						}
+					}
+				}
+				if needNamespace {
+					cv.BuffExprPrintf(buf, "%s::%v(", cv.namespace, GetCppFunc(fun.Name))
+				} else {
+					cv.BuffExprPrintf(buf, "%v(", GetCppFunc(fun.Name))
+				}
 			}
 
 		default:

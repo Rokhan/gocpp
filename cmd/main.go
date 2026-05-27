@@ -1219,11 +1219,6 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 		}
 		env.toBeDeclared = nil
 
-		for _, stmt := range block.List {
-			stmtOutiles, _ := cv.convertStmt(stmt, env)
-			outPlaces = append(outPlaces, stmtOutiles...)
-		}
-
 		if label != nil {
 			fmt.Fprintf(cv.cpp.out, "%sif(false) {\n", cv.cpp.Indent())
 			fmt.Fprintf(cv.cpp.out, "%s%s_continue:\n", cv.cpp.Indent(), label.Name)
@@ -1231,6 +1226,11 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 			fmt.Fprintf(cv.cpp.out, "%s%s_break:\n", cv.cpp.Indent(), label.Name)
 			fmt.Fprintf(cv.cpp.out, "%s    break;\n", cv.cpp.Indent())
 			fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
+		}
+
+		for _, stmt := range block.List {
+			stmtOutiles, _ := cv.convertStmt(stmt, env)
+			outPlaces = append(outPlaces, stmtOutiles...)
 		}
 	})
 

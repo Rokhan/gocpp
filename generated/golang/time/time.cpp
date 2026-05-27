@@ -977,7 +977,7 @@ namespace golang::time
     {
         auto [year, month, day] = rec::Date(gocpp::recv(t));
         auto [hour, min, sec] = rec::Clock(gocpp::recv(t));
-        return Date(year + years, month + Month(months), day + days, hour, min, sec, int(rec::nsec(gocpp::recv(t))), rec::Location(gocpp::recv(t)));
+        return time::Date(year + years, month + Month(months), day + days, hour, min, sec, int(rec::nsec(gocpp::recv(t))), rec::Location(gocpp::recv(t)));
     }
 
     // date computes the year, day of year, and when full=true,

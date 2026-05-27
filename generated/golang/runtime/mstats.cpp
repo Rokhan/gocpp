@@ -773,7 +773,7 @@ namespace golang::runtime
         }
         else
         {
-            lock(& m->noPLock);
+            runtime::lock(& m->noPLock);
         }
         auto gen = rec::Load(gocpp::recv(m->gen)) % 3;
         return & m->stats[gen];
@@ -806,7 +806,7 @@ namespace golang::runtime
         }
         else
         {
-            unlock(& m->noPLock);
+            runtime::unlock(& m->noPLock);
         }
     }
 
@@ -852,9 +852,9 @@ namespace golang::runtime
         {
             prevGen = 2;
         }
-        lock(& m->noPLock);
+        runtime::lock(& m->noPLock);
         rec::Swap(gocpp::recv(m->gen), (currGen + 1) % 3);
-        unlock(& m->noPLock);
+        runtime::unlock(& m->noPLock);
         for(auto [gocpp_ignored, p] : allp)
         {
             for(; rec::Load(gocpp::recv(p->statsSeq)) % 2 != 0; )

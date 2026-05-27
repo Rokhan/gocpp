@@ -248,7 +248,7 @@ namespace golang::sort
     // Sort is a convenience method: x.Sort() calls Sort(x).
     void rec::Sort(golang::sort::IntSlice x)
     {
-        Sort(x);
+        sort::Sort(x);
     }
 
     // Float64Slice implements Interface for a []float64, sorting in increasing order,
@@ -283,7 +283,7 @@ namespace golang::sort
     // Sort is a convenience method: x.Sort() calls Sort(x).
     void rec::Sort(golang::sort::Float64Slice x)
     {
-        Sort(x);
+        sort::Sort(x);
     }
 
     // StringSlice attaches the methods of Interface to []string, sorting in increasing order.
@@ -305,7 +305,7 @@ namespace golang::sort
     // Sort is a convenience method: x.Sort() calls Sort(x).
     void rec::Sort(golang::sort::StringSlice x)
     {
-        Sort(x);
+        sort::Sort(x);
     }
 
     // Ints sorts a slice of ints in increasing order.

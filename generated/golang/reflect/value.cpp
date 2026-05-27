@@ -463,7 +463,7 @@ namespace golang::reflect
             gocpp::panic("reflect.Value.Addr of unaddressable value"_s);
         }
         auto fl = v.flag & flagRO;
-        return Value {ptrTo(rec::typ(gocpp::recv(v))), v.ptr, fl | flag(Pointer)};
+        return Value {reflect::ptrTo(rec::typ(gocpp::recv(v))), v.ptr, fl | flag(Pointer)};
     }
 
     // Bool returns v's underlying value.
@@ -761,7 +761,7 @@ namespace golang::reflect
                     switch(conditionId)
                     {
                         case 0:
-                            auto addr = add(stackArgs, st.stkOff, "precomputed stack arg offset"_s);
+                            auto addr = reflect::add(stackArgs, st.stkOff, "precomputed stack arg offset"_s);
                             if(v.flag & flagIndir != 0)
                             {
                                 typedmemmove(& targ->t, addr, v.ptr);
@@ -776,7 +776,7 @@ namespace golang::reflect
                         case 2:
                             if(v.flag & flagIndir != 0)
                             {
-                                auto offset = add(v.ptr, st.offset, "precomputed value offset"_s);
+                                auto offset = reflect::add(v.ptr, st.offset, "precomputed value offset"_s);
                                 if(st.kind == abiStepPointer)
                                 {
                                     regArgs.Ptrs[st.ireg] = *(gocpp::unsafe_pointer*)(offset);
@@ -797,7 +797,7 @@ namespace golang::reflect
                             {
                                 gocpp::panic("attempted to copy pointer to FP register"_s);
                             }
-                            auto offset = add(v.ptr, st.offset, "precomputed value offset"_s);
+                            auto offset = reflect::add(v.ptr, st.offset, "precomputed value offset"_s);
                             floatToReg(& regArgs, st.freg, st.size, offset);
                             break;
                         default:
@@ -824,7 +824,7 @@ namespace golang::reflect
         {
             runtime::GC();
         }
-        call(frametype, fn, stackArgs, uint32_t(rec::Size(gocpp::recv(frametype))), uint32_t(abid.retOffset), uint32_t(frameSize), & regArgs);
+        reflect::call(frametype, fn, stackArgs, uint32_t(rec::Size(gocpp::recv(frametype))), uint32_t(abid.retOffset), uint32_t(frameSize), & regArgs);
         if(callGC)
         {
             runtime::GC();
@@ -857,7 +857,7 @@ namespace golang::reflect
                 if(auto st = steps[0]; st.kind == abiStepStack)
                 {
                     auto fl = flagIndir | flag(rec::Kind(gocpp::recv(tv)));
-                    ret[i] = Value {tv, add(stackArgs, st.stkOff, "tv.Size() != 0"_s), fl};
+                    ret[i] = Value {tv, reflect::add(stackArgs, st.stkOff, "tv.Size() != 0"_s), fl};
                     continue;
                 }
                 if(! ifaceIndir(tv))
@@ -884,16 +884,16 @@ namespace golang::reflect
                         switch(conditionId)
                         {
                             case 0:
-                                auto offset = add(s, st.offset, "precomputed value offset"_s);
+                                auto offset = reflect::add(s, st.offset, "precomputed value offset"_s);
                                 intFromReg(& regArgs, st.ireg, st.size, offset);
                                 break;
                             case 1:
-                                auto s_tmp = add(s, st.offset, "precomputed value offset"_s);
+                                auto s_tmp = reflect::add(s, st.offset, "precomputed value offset"_s);
                                 auto& s = s_tmp;
                                 *((gocpp::unsafe_pointer*)(s)) = regArgs.Ptrs[st.ireg];
                                 break;
                             case 2:
-                                auto offset = add(s, st.offset, "precomputed value offset"_s);
+                                auto offset = reflect::add(s, st.offset, "precomputed value offset"_s);
                                 floatFromReg(& regArgs, st.freg, st.size, offset);
                                 break;
                             case 3:
@@ -1636,7 +1636,7 @@ namespace golang::reflect
                 fl |= flagStickyRO;
             }
         }
-        auto ptr = add(v.ptr, field->Offset, "same as non-reflect &v.field"_s);
+        auto ptr = reflect::add(v.ptr, field->Offset, "same as non-reflect &v.field"_s);
         return Value {typ, ptr, fl};
     }
 
@@ -1791,7 +1791,7 @@ namespace golang::reflect
                     }
                     auto typ = tt->Elem;
                     auto offset = uintptr_t(i) * rec::Size(gocpp::recv(typ));
-                    auto val = add(v.ptr, offset, "same as &v[i], i < tt.len"_s);
+                    auto val = reflect::add(v.ptr, offset, "same as &v[i], i < tt.len"_s);
                     auto fl = v.flag & (flagIndir | flagAddr) | rec::ro(gocpp::recv(v.flag)) | flag(rec::Kind(gocpp::recv(typ)));
                     return Value {typ, val, fl};
                     break;

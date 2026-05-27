@@ -1131,7 +1131,7 @@ namespace golang::poll
             });
             rec::ClearBufs(gocpp::recv(o));
             TestHookDidWritev(n);
-            consume(buf, int64_t(n));
+            poll::consume(buf, int64_t(n));
             return {int64_t(n), err};
         }
         catch(gocpp::GoPanic& gp)

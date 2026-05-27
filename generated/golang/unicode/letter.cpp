@@ -428,7 +428,7 @@ namespace golang::unicode
         auto [r1, hadMapping] = to(UpperCase, r, gocpp::slice<CaseRange>(special));
         if(r1 == r && ! hadMapping)
         {
-            r1 = ToUpper(r);
+            r1 = unicode::ToUpper(r);
         }
         return r1;
     }
@@ -439,7 +439,7 @@ namespace golang::unicode
         auto [r1, hadMapping] = to(TitleCase, r, gocpp::slice<CaseRange>(special));
         if(r1 == r && ! hadMapping)
         {
-            r1 = ToTitle(r);
+            r1 = unicode::ToTitle(r);
         }
         return r1;
     }
@@ -450,7 +450,7 @@ namespace golang::unicode
         auto [r1, hadMapping] = to(LowerCase, r, gocpp::slice<CaseRange>(special));
         if(r1 == r && ! hadMapping)
         {
-            r1 = ToLower(r);
+            r1 = unicode::ToLower(r);
         }
         return r1;
     }

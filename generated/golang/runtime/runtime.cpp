@@ -78,10 +78,10 @@ namespace golang::runtime
     // Must not run concurrently with ticksPerSecond.
     void rec::init(golang::runtime::ticksType* t)
     {
-        lock(& ticks.lock);
+        runtime::lock(& ticks.lock);
         t->startTime = nanotime();
         t->startTicks = cputicks();
-        unlock(& ticks.lock);
+        runtime::unlock(& ticks.lock);
     }
 
     // minTimeForTicksPerSecond is the minimum elapsed time we require to consider our ticksPerSecond

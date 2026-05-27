@@ -327,7 +327,7 @@ namespace golang::flate
         {
             if(wEnd == win[i + length])
             {
-                auto n = matchLen(win.make_slice(i), wPos, minMatchLook);
+                auto n = flate::matchLen(win.make_slice(i), wPos, minMatchLook);
                 if(n > length && (n > minMatchLength || pos - i <= 4096))
                 {
                     length = n;

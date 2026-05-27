@@ -331,7 +331,7 @@ namespace golang::runtime
             {
                 // Create the necessary l2 entry.
                 auto l2Size = gocpp::Sizeof<gocpp::array<runtime::pallocData, 8192>>();
-                auto r = sysAlloc(l2Size, p->sysStat);
+                auto r = runtime::sysAlloc(l2Size, p->sysStat);
                 if(r == nullptr)
                 {
                     go_throw("pageAlloc: out of memory"_s);
@@ -369,17 +369,17 @@ namespace golang::runtime
     //go:systemstack
     void rec::enableChunkHugePages(golang::runtime::pageAlloc* p)
     {
-        lock(& mheap_.lock);
+        runtime::lock(& mheap_.lock);
         if(p->chunkHugePages)
         {
-            unlock(& mheap_.lock);
+            runtime::unlock(& mheap_.lock);
             return;
         }
         p->chunkHugePages = true;
         addrRanges inUse = {};
         inUse.sysStat = p->sysStat;
         rec::cloneInto(gocpp::recv(p->inUse), & inUse);
-        unlock(& mheap_.lock);
+        runtime::unlock(& mheap_.lock);
         for(auto [gocpp_ignored, r] : p->inUse.ranges)
         {
             for(auto i = rec::l1(gocpp::recv(chunkIndex(rec::addr(gocpp::recv(r.base))))); i < rec::l1(gocpp::recv(chunkIndex(rec::addr(gocpp::recv(r.limit)) - 1))); i++)

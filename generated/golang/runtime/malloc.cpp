@@ -716,14 +716,14 @@ namespace golang::runtime
     void rec::enableMetadataHugePages(golang::runtime::mheap* h)
     {
         rec::enableChunkHugePages(gocpp::recv(h->pages));
-        lock(& h->lock);
+        runtime::lock(& h->lock);
         if(h->arenasHugePages)
         {
-            unlock(& h->lock);
+            runtime::unlock(& h->lock);
             return;
         }
         h->arenasHugePages = true;
-        unlock(& h->lock);
+        runtime::unlock(& h->lock);
         for(auto [i, gocpp_ignored] : h->arenas)
         {
             auto l2 = (gocpp::array_ptr<gocpp::array<heapArena*, 1 << arenaL2Bits>>)(atomic::Loadp(gocpp::unsafe_pointer(& h->arenas[i])));

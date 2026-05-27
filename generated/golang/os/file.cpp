@@ -992,7 +992,7 @@ namespace golang::os
             }))};
         }
         File* f;
-        std::tie(f, err) = Open(fullname);
+        std::tie(f, err) = os::Open(fullname);
         if(err != nullptr)
         {
             gocpp::getValue<os::PathError*>(err)->Path = name;
@@ -1017,7 +1017,7 @@ namespace golang::os
             }))};
         }
         gocpp::slice<unsigned char> b;
-        std::tie(b, err) = ReadFile(fullname);
+        std::tie(b, err) = os::ReadFile(fullname);
         if(err != nullptr)
         {
             if(auto [e, ok] = gocpp::getValue<os::PathError*>(err); ok)
@@ -1043,7 +1043,7 @@ namespace golang::os
             }))};
         }
         fs::DirEntry> entries;
-        std::tie(entries, err) = ReadDir(fullname);
+        std::tie(entries, err) = os::ReadDir(fullname);
         if(err != nullptr)
         {
             if(auto [e, ok] = gocpp::getValue<os::PathError*>(err); ok)
@@ -1067,7 +1067,7 @@ namespace golang::os
             }))};
         }
         fs::FileInfo f;
-        std::tie(f, err) = Stat(fullname);
+        std::tie(f, err) = os::Stat(fullname);
         if(err != nullptr)
         {
             gocpp::getValue<os::PathError*>(err)->Path = name;

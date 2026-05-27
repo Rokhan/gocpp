@@ -334,17 +334,17 @@ namespace golang::runtime
 
     struct bmap* rec::overflow(golang::runtime::bmap* b, golang::runtime::maptype* t)
     {
-        return *(bmap**)(add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize));
+        return *(bmap**)(runtime::add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize));
     }
 
     void rec::setoverflow(golang::runtime::bmap* b, golang::runtime::maptype* t, struct bmap* ovf)
     {
-        *(bmap**)(add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize)) = ovf;
+        *(bmap**)(runtime::add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize)) = ovf;
     }
 
     gocpp::unsafe_pointer rec::keys(golang::runtime::bmap* b)
     {
-        return add(gocpp::unsafe_pointer(b), dataOffset);
+        return runtime::add(gocpp::unsafe_pointer(b), dataOffset);
     }
 
     // incrnoverflow increments h.noverflow.
@@ -376,7 +376,7 @@ namespace golang::runtime
             ovf = h->extra->nextOverflow;
             if(rec::overflow(gocpp::recv(ovf), t) == nullptr)
             {
-                h->extra->nextOverflow = (bmap*)(add(gocpp::unsafe_pointer(ovf), uintptr_t(t->BucketSize)));
+                h->extra->nextOverflow = (bmap*)(runtime::add(gocpp::unsafe_pointer(ovf), uintptr_t(t->BucketSize)));
             }
             else
             {

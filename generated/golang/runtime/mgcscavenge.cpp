@@ -345,7 +345,7 @@ namespace golang::runtime
     // park parks the scavenger goroutine.
     void rec::park(golang::runtime::scavengerState* s)
     {
-        lock(& s->lock);
+        runtime::lock(& s->lock);
         if(getg() != s->g)
         {
             go_throw("tried to park scavenger from another goroutine"_s);
@@ -365,7 +365,7 @@ namespace golang::runtime
     // Safe to run without a P.
     void rec::wake(golang::runtime::scavengerState* s)
     {
-        lock(& s->lock);
+        runtime::lock(& s->lock);
         if(s->parked)
         {
             rec::Store(gocpp::recv(s->sysmonWake), 0);
@@ -380,7 +380,7 @@ namespace golang::runtime
             rec::push(gocpp::recv(list), s->g);
             injectglist(& list);
         }
-        unlock(& s->lock);
+        runtime::unlock(& s->lock);
     }
 
     // sleep puts the scavenger to sleep based on the amount of time that it worked
@@ -392,7 +392,7 @@ namespace golang::runtime
     // to sleep at all if there's a pending pacing change.
     void rec::sleep(golang::runtime::scavengerState* s, double worked)
     {
-        lock(& s->lock);
+        runtime::lock(& s->lock);
         if(getg() != s->g)
         {
             go_throw("tried to sleep scavenger from another goroutine"_s);
@@ -411,13 +411,13 @@ namespace golang::runtime
             s->parked = true;
             goparkunlock(& s->lock, waitReasonSleep, traceBlockSleep, 2);
             slept = nanotime() - start;
-            lock(& s->lock);
+            runtime::lock(& s->lock);
             stopTimer(s->timer);
-            unlock(& s->lock);
+            runtime::unlock(& s->lock);
         }
         else
         {
-            unlock(& s->lock);
+            runtime::unlock(& s->lock);
             slept = s->sleepStub(sleepTime);
         }
         if(s->controllerCooldown > 0)
@@ -450,9 +450,9 @@ namespace golang::runtime
     // controller failed.
     void rec::controllerFailed(golang::runtime::scavengerState* s)
     {
-        lock(& s->lock);
+        runtime::lock(& s->lock);
         s->printControllerReset = true;
-        unlock(& s->lock);
+        runtime::unlock(& s->lock);
     }
 
     // run is the body of the main scavenging loop.
@@ -465,12 +465,12 @@ namespace golang::runtime
     {
         uintptr_t released;
         double worked;
-        lock(& s->lock);
+        runtime::lock(& s->lock);
         if(getg() != s->g)
         {
             go_throw("tried to run scavenger from another goroutine"_s);
         }
-        unlock(& s->lock);
+        runtime::unlock(& s->lock);
         for(; worked < minScavWorkTime; )
         {
             if(s->shouldStop())
@@ -627,7 +627,7 @@ namespace golang::runtime
         {
             minPages = 1;
         }
-        lock(p->mheapLock);
+        runtime::lock(p->mheapLock);
         if(rec::max(gocpp::recv(p->summary[len(p->summary) - 1][ci])) >= (unsigned int)(minPages))
         {
             auto [base, npages] = rec::findScavengeCandidate(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), searchIdx, minPages, maxPages);
@@ -636,7 +636,7 @@ namespace golang::runtime
                 auto addr = chunkBase(ci) + uintptr_t(base) * pageSize;
                 rec::allocRange(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), base, npages);
                 rec::update(gocpp::recv(p), addr, uintptr_t(npages), true, true);
-                unlock(p->mheapLock);
+                runtime::unlock(p->mheapLock);
                 if(! p->test)
                 {
                     pageTraceScav(rec::ptr(gocpp::recv(getg()->m->p)), 0, addr, uintptr_t(npages));
@@ -649,7 +649,7 @@ namespace golang::runtime
                     atomic::Xaddint64(& stats->released, nbytes);
                     rec::release(gocpp::recv(memstats.heapStats));
                 }
-                lock(p->mheapLock);
+                runtime::lock(p->mheapLock);
                 if(auto b = (offAddr {addr}); rec::lessThan(gocpp::recv(b), p->searchAddr))
                 {
                     p->searchAddr = b;
@@ -657,12 +657,12 @@ namespace golang::runtime
                 rec::free(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), base, npages);
                 rec::update(gocpp::recv(p), addr, uintptr_t(npages), true, false);
                 rec::setRange(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)->scavenged), base, npages);
-                unlock(p->mheapLock);
+                runtime::unlock(p->mheapLock);
                 return uintptr_t(npages) * pageSize;
             }
         }
         rec::setEmpty(gocpp::recv(p->scav.index), ci);
-        unlock(p->mheapLock);
+        runtime::unlock(p->mheapLock);
         return 0;
     }
 

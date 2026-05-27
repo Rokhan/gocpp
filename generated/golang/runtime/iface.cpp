@@ -169,7 +169,7 @@ namespace golang::runtime
         auto h = itabHashFunc(inter, typ) & mask;
         for(auto i = uintptr_t(1); ; i++)
         {
-            auto p = (itab**)(add(gocpp::unsafe_pointer(& t->entries), h * goarch::PtrSize));
+            auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(& t->entries), h * goarch::PtrSize));
             auto m = (itab*)(atomic::Loadp(gocpp::unsafe_pointer(p)));
             if(m == nullptr)
             {
@@ -216,7 +216,7 @@ namespace golang::runtime
         auto h = itabHashFunc(m->inter, m->_type) & mask;
         for(auto i = uintptr_t(1); ; i++)
         {
-            auto p = (itab**)(add(gocpp::unsafe_pointer(& t->entries), h * goarch::PtrSize));
+            auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(& t->entries), h * goarch::PtrSize));
             auto m2 = *p;
             if(m2 == m)
             {
@@ -244,7 +244,7 @@ namespace golang::runtime
         auto x = rec::Uncommon(gocpp::recv(typ));
         auto ni = len(inter->Methods);
         auto nt = int(x->Mcount);
-        auto xmhdr = (gocpp::array_ptr<gocpp::array<abi::Method, 1 << 16>>)(add(gocpp::unsafe_pointer(x), uintptr_t(x->Moff))).make_slice(0, nt, nt);
+        auto xmhdr = (gocpp::array_ptr<gocpp::array<abi::Method, 1 << 16>>)(runtime::add(gocpp::unsafe_pointer(x), uintptr_t(x->Moff))).make_slice(0, nt, nt);
         auto j = 0;
         auto methods = (gocpp::array_ptr<gocpp::array<gocpp::unsafe_pointer, 1 << 16>>)(gocpp::unsafe_pointer(& m->fun[0])).make_slice(0, ni, ni);
         gocpp::unsafe_pointer fun0 = {};

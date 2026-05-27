@@ -123,7 +123,7 @@ namespace golang::runtime
         {
             s = s.make_slice(0, maxTraceStringLen);
         }
-        lock(& t->lock);
+        runtime::lock(& t->lock);
         auto w = unsafeTraceWriter(gen, t->buf);
         // Ensure we have a place to write to.
         bool flushed = {};
@@ -137,7 +137,7 @@ namespace golang::runtime
         rec::varint(gocpp::recv(w), uint64_t(len(s)));
         rec::stringData(gocpp::recv(w), s);
         t->buf = w.traceBuf;
-        unlock(& t->lock);
+        runtime::unlock(& t->lock);
     }
 
     // reset clears the string table and flushes any buffers it has.
@@ -153,14 +153,14 @@ namespace golang::runtime
     {
         if(t->buf != nullptr)
         {
-            lock(& trace.lock);
+            runtime::lock(& trace.lock);
             traceBufFlush(t->buf, gen);
-            unlock(& trace.lock);
+            runtime::unlock(& trace.lock);
             t->buf = nullptr;
         }
-        lock(& t->tab.lock);
+        runtime::lock(& t->tab.lock);
         rec::reset(gocpp::recv(t->tab));
-        unlock(& t->tab.lock);
+        runtime::unlock(& t->tab.lock);
     }
 
 }

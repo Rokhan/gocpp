@@ -391,7 +391,7 @@ namespace golang::runtime
     // stk returns the slice in b holding the stack.
     gocpp::slice<uintptr_t> rec::stk(golang::runtime::bucket* b)
     {
-        auto stk = (gocpp::array_ptr<gocpp::array<uintptr_t, maxStack>>)(add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>()));
+        auto stk = (gocpp::array_ptr<gocpp::array<uintptr_t, maxStack>>)(runtime::add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>()));
         if(b->nstk > maxStack)
         {
             go_throw("bad profile stack count"_s);
@@ -406,7 +406,7 @@ namespace golang::runtime
         {
             go_throw("bad use of bucket.mp"_s);
         }
-        auto data = add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
+        auto data = runtime::add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
         return (memRecord*)(data);
     }
 
@@ -417,7 +417,7 @@ namespace golang::runtime
         {
             go_throw("bad use of bucket.bp"_s);
         }
-        auto data = add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
+        auto data = runtime::add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
         return (blockRecord*)(data);
     }
 

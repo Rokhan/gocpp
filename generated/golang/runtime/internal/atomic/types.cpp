@@ -358,7 +358,7 @@ namespace golang::atomic
     //go:nosplit
     uint32_t rec::Load(golang::atomic::Uint32* u)
     {
-        return Load(& u->value);
+        return atomic::Load(& u->value);
     }
 
     // LoadAcquire is a partially unsynchronized version
@@ -380,7 +380,7 @@ namespace golang::atomic
     //go:nosplit
     void rec::Store(golang::atomic::Uint32* u, uint32_t value)
     {
-        Store(& u->value, value);
+        atomic::Store(& u->value, value);
     }
 
     // StoreRelease is a partially unsynchronized version
@@ -440,7 +440,7 @@ namespace golang::atomic
     //go:nosplit
     void rec::And(golang::atomic::Uint32* u, uint32_t value)
     {
-        And(& u->value, value);
+        atomic::And(& u->value, value);
     }
 
     // Or takes value and performs a bit-wise
@@ -452,7 +452,7 @@ namespace golang::atomic
     //go:nosplit
     void rec::Or(golang::atomic::Uint32* u, uint32_t value)
     {
-        Or(& u->value, value);
+        atomic::Or(& u->value, value);
     }
 
     // Add adds delta to u atomically, returning

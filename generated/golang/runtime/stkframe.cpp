@@ -309,7 +309,7 @@ namespace golang::runtime
             if(p != nullptr)
             {
                 auto n = *(uintptr_t*)(p);
-                p = add(p, goarch::PtrSize);
+                p = runtime::add(p, goarch::PtrSize);
                 auto r0 = (stackObjectRecord*)(noescape(p));
                 objs = unsafe::Slice(r0, int(n));
             }

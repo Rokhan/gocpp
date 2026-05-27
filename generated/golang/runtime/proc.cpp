@@ -5286,15 +5286,15 @@ namespace golang::runtime
         if(len(pp->timers) > 0)
         {
             auto plocal = rec::ptr(gocpp::recv(getg()->m->p));
-            lock(& plocal->timersLock);
-            lock(& pp->timersLock);
+            runtime::lock(& plocal->timersLock);
+            runtime::lock(& pp->timersLock);
             moveTimers(plocal, pp->timers);
             pp->timers = nullptr;
             rec::Store(gocpp::recv(pp->numTimers), 0);
             rec::Store(gocpp::recv(pp->deletedTimers), 0);
             rec::Store(gocpp::recv(pp->timer0When), 0);
-            unlock(& pp->timersLock);
-            unlock(& plocal->timersLock);
+            runtime::unlock(& pp->timersLock);
+            runtime::unlock(& plocal->timersLock);
         }
         if(gcphase != _GCoff)
         {

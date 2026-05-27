@@ -366,16 +366,16 @@ namespace golang::runtime
 
     void rec::free(golang::runtime::pollCache* c, struct pollDesc* pd)
     {
-        lock(& pd->lock);
+        runtime::lock(& pd->lock);
         auto fdseq = rec::Load(gocpp::recv(pd->fdseq));
         fdseq = (fdseq + 1) & ((1 << taggedPointerBits) - 1);
         rec::Store(gocpp::recv(pd->fdseq), fdseq);
         rec::publishInfo(gocpp::recv(pd));
-        unlock(& pd->lock);
-        lock(& c->lock);
+        runtime::unlock(& pd->lock);
+        runtime::lock(& c->lock);
         pd->link = c->first;
         c->first = pd;
-        unlock(& c->lock);
+        runtime::unlock(& c->lock);
     }
 
     // poll_runtime_pollReset, which is internal/poll.runtime_pollReset,
@@ -813,7 +813,7 @@ namespace golang::runtime
 
     struct pollDesc* rec::alloc(golang::runtime::pollCache* c)
     {
-        lock(& c->lock);
+        runtime::lock(& c->lock);
         if(c->first == nullptr)
         {
             auto pdSize = gocpp::Sizeof<pollDesc>();
@@ -825,7 +825,7 @@ namespace golang::runtime
             auto mem = persistentalloc(n * pdSize, 0, & memstats.other_sys);
             for(auto i = uintptr_t(0); i < n; i++)
             {
-                auto pd = (pollDesc*)(add(mem, i * pdSize));
+                auto pd = (pollDesc*)(runtime::add(mem, i * pdSize));
                 pd->link = c->first;
                 c->first = pd;
             }
@@ -833,7 +833,7 @@ namespace golang::runtime
         auto pd = c->first;
         c->first = pd->link;
         lockInit(& pd->lock, lockRankPollDesc);
-        unlock(& c->lock);
+        runtime::unlock(& c->lock);
         return pd;
     }
 

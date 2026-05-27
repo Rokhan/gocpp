@@ -203,9 +203,9 @@ namespace golang::runtime
                 }
             }
         }
-        lock(& t->tab.lock);
+        runtime::lock(& t->tab.lock);
         rec::reset(gocpp::recv(t->tab));
-        unlock(& t->tab.lock);
+        runtime::unlock(& t->tab.lock);
         rec::end(gocpp::recv(rec::flush(gocpp::recv(w))));
     }
 

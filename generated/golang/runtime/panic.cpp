@@ -1028,8 +1028,8 @@ namespace golang::runtime
             {
                 gp->param = nullptr;
                 p->retpc = s->retpc;
-                p->deferBitsPtr = (unsigned char*)(add(sp, s->deferBitsOffset));
-                p->slotsPtr = add(sp, s->slotsOffset);
+                p->deferBitsPtr = (unsigned char*)(runtime::add(sp, s->deferBitsOffset));
+                p->slotsPtr = runtime::add(sp, s->slotsOffset);
             }
             return;
         }
@@ -1058,7 +1058,7 @@ namespace golang::runtime
                 go_throw("recovery failed"_s);
             }
         }
-        p->argp = add(p->startSP, sys::MinFrameSize);
+        p->argp = runtime::add(p->startSP, sys::MinFrameSize);
         for(; ; )
         {
             for(; p->deferBitsPtr != nullptr; )
@@ -1072,7 +1072,7 @@ namespace golang::runtime
                 auto i = 7 - uintptr_t(sys::LeadingZeros8(bits));
                 bits &^= 1 << i;
                 *p->deferBitsPtr = bits;
-                return {*(std::function<void ()>*)(add(p->slotsPtr, i * goarch::PtrSize)), true};
+                return {*(std::function<void ()>*)(runtime::add(p->slotsPtr, i * goarch::PtrSize)), true};
             }
             Recheck:
             if(auto d = gp->_defer; d != nullptr && d->sp == uintptr_t(p->sp))
@@ -1152,7 +1152,7 @@ namespace golang::runtime
         }
         uint32_t deferBitsOffset;
         std::tie(deferBitsOffset, fd) = readvarintUnsafe(fd);
-        auto deferBitsPtr = (uint8_t*)(add(varp, - uintptr_t(deferBitsOffset)));
+        auto deferBitsPtr = (uint8_t*)(runtime::add(varp, - uintptr_t(deferBitsOffset)));
         if(*deferBitsPtr == 0)
         {
             return false;
@@ -1161,7 +1161,7 @@ namespace golang::runtime
         std::tie(slotsOffset, fd) = readvarintUnsafe(fd);
         p->retpc = rec::entry(gocpp::recv(fn)) + uintptr_t(fn._func.deferreturn);
         p->deferBitsPtr = deferBitsPtr;
-        p->slotsPtr = add(varp, - uintptr_t(slotsOffset));
+        p->slotsPtr = runtime::add(varp, - uintptr_t(slotsOffset));
         return true;
     }
 

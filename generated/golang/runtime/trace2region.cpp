@@ -113,7 +113,7 @@ namespace golang::runtime
             {
                 go_throw("traceRegion: alloc too large"_s);
             }
-            auto block = (traceRegionAllocBlock*)(sysAlloc(gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys));
+            auto block = (traceRegionAllocBlock*)(runtime::sysAlloc(gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys));
             if(block == nullptr)
             {
                 go_throw("traceRegion: out of memory"_s);

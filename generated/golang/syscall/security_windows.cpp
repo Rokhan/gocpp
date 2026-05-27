@@ -456,7 +456,7 @@ namespace golang::syscall
         for(; ; )
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
-            auto e = GetUserProfileDirectory(t, & b[0], & n);
+            auto e = syscall::GetUserProfileDirectory(t, & b[0], & n);
             if(e == nullptr)
             {
                 return {UTF16ToString(b), nullptr};

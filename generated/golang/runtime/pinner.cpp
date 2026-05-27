@@ -141,7 +141,7 @@ namespace golang::runtime
             }
         }
         auto ptr = pinnerGetPtr(& pointer);
-        if(setPinned(ptr, true))
+        if(runtime::setPinned(ptr, true))
         {
             p->pinner.refs = append(p->pinner.refs, ptr);
         }
@@ -201,7 +201,7 @@ namespace golang::runtime
         }
         for(auto [i, gocpp_ignored] : p->refs)
         {
-            setPinned(p->refs[i], false);
+            runtime::setPinned(p->refs[i], false);
         }
         p->refStore = gocpp::array<gocpp::unsafe_pointer, pinnerRefStoreSize> {};
         p->refs = p->refStore.make_slice(0, 0);
@@ -478,9 +478,9 @@ namespace golang::runtime
         auto [ref, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
         if(! exists)
         {
-            lock(& mheap_.speciallock);
+            runtime::lock(& mheap_.speciallock);
             rec = (specialPinCounter*)(rec::alloc(gocpp::recv(mheap_.specialPinCounterAlloc)));
-            unlock(& mheap_.speciallock);
+            runtime::unlock(& mheap_.speciallock);
             rec->special.offset = uint16_t(offset);
             rec->special.kind = _KindSpecialPinCounter;
             rec->special.next = *ref;
@@ -512,9 +512,9 @@ namespace golang::runtime
             {
                 spanHasNoSpecials(span);
             }
-            lock(& mheap_.speciallock);
+            runtime::lock(& mheap_.speciallock);
             rec::free(gocpp::recv(mheap_.specialPinCounterAlloc), gocpp::unsafe_pointer(counter));
-            unlock(& mheap_.speciallock);
+            runtime::unlock(& mheap_.speciallock);
             return false;
         }
         return true;

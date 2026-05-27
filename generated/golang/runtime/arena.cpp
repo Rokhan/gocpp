@@ -371,9 +371,9 @@ namespace golang::runtime
             }
             else
             {
-                lock(& userArenaState.lock);
+                runtime::lock(& userArenaState.lock);
                 userArenaState.reuse = append(userArenaState.reuse, liveUserArenaChunk {s, a->refs[len(a->refs) - 1]});
-                unlock(& userArenaState.lock);
+                runtime::unlock(& userArenaState.lock);
             }
         }
         a->active = nullptr;
@@ -417,7 +417,7 @@ namespace golang::runtime
             s = nullptr;
         }
         gocpp::unsafe_pointer x = {};
-        lock(& userArenaState.lock);
+        runtime::lock(& userArenaState.lock);
         if(len(userArenaState.reuse) > 0)
         {
             auto n = len(userArenaState.reuse) - 1;
@@ -427,7 +427,7 @@ namespace golang::runtime
             userArenaState.reuse[n].mspan = nullptr;
             userArenaState.reuse = userArenaState.reuse.make_slice(0, n);
         }
-        unlock(& userArenaState.lock);
+        runtime::unlock(& userArenaState.lock);
         if(s == nullptr)
         {
             std::tie(x, s) = newUserArenaChunk();
@@ -854,7 +854,7 @@ namespace golang::runtime
     {
         mspan* s = {};
         uintptr_t base = {};
-        lock(& h->lock);
+        runtime::lock(& h->lock);
         if(! rec::isEmpty(gocpp::recv(h->userArena.readyList)))
         {
             s = h->userArena.readyList.first;
@@ -886,12 +886,12 @@ namespace golang::runtime
             base = uintptr_t(v);
             if(base == 0)
             {
-                unlock(& h->lock);
+                runtime::unlock(& h->lock);
                 return nullptr;
             }
             s = rec::allocMSpanLocked(gocpp::recv(h));
         }
-        unlock(& h->lock);
+        runtime::unlock(& h->lock);
         sysMap(gocpp::unsafe_pointer(base), userArenaChunkBytes, & gcController.heapReleased);
         sysUsed(gocpp::unsafe_pointer(base), userArenaChunkBytes, userArenaChunkBytes);
         auto spc = makeSpanClass(0, false);

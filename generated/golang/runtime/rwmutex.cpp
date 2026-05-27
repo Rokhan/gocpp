@@ -174,13 +174,13 @@ namespace golang::runtime
             }
             if(rec::Add(gocpp::recv(rw->readerWait), - 1) == 0)
             {
-                lock(& rw->rLock);
+                runtime::lock(& rw->rLock);
                 auto w = rec::ptr(gocpp::recv(rw->writer));
                 if(w != nullptr)
                 {
                     notewakeup(& w->park);
                 }
-                unlock(& rw->rLock);
+                runtime::unlock(& rw->rLock);
             }
         }
         releaseLockRank(rw->readRank);
@@ -190,10 +190,10 @@ namespace golang::runtime
     // lock locks rw for writing.
     void rec::lock(golang::runtime::rwmutex* rw)
     {
-        lock(& rw->wLock);
+        runtime::lock(& rw->wLock);
         auto m = getg()->m;
         auto r = rec::Add(gocpp::recv(rw->readerCount), - rwmutexMaxReaders) + rwmutexMaxReaders;
-        lock(& rw->rLock);
+        runtime::lock(& rw->rLock);
         if(r != 0 && rec::Add(gocpp::recv(rw->readerWait), r) != 0)
         {
             systemstack([=]() mutable -> void
@@ -206,7 +206,7 @@ namespace golang::runtime
         }
         else
         {
-            unlock(& rw->rLock);
+            runtime::unlock(& rw->rLock);
         }
     }
 
@@ -218,7 +218,7 @@ namespace golang::runtime
         {
             go_throw("unlock of unlocked rwmutex"_s);
         }
-        lock(& rw->rLock);
+        runtime::lock(& rw->rLock);
         for(; rec::ptr(gocpp::recv(rw->readers)) != nullptr; )
         {
             auto reader = rec::ptr(gocpp::recv(rw->readers));
@@ -228,8 +228,8 @@ namespace golang::runtime
             r -= 1;
         }
         rw->readerPass += uint32_t(r);
-        unlock(& rw->rLock);
-        unlock(& rw->wLock);
+        runtime::unlock(& rw->rLock);
+        runtime::unlock(& rw->wLock);
     }
 
 }

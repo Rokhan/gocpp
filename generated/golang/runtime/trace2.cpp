@@ -1036,7 +1036,7 @@ namespace golang::runtime
     void rec::sleep(golang::runtime::wakeableSleep* s, int64_t ns)
     {
         resetTimer(s->timer, nanotime() + ns);
-        lock(& s->lock);
+        runtime::lock(& s->lock);
         if(raceenabled)
         {
             raceacquire(gocpp::unsafe_pointer(& s->lock));
@@ -1046,7 +1046,7 @@ namespace golang::runtime
         {
             racerelease(gocpp::unsafe_pointer(& s->lock));
         }
-        unlock(& s->lock);
+        runtime::unlock(& s->lock);
         wakeup.recv();
         stopTimer(s->timer);
     }
@@ -1088,7 +1088,7 @@ namespace golang::runtime
     // Safe for concurrent use with all other methods.
     void rec::wake(golang::runtime::wakeableSleep* s)
     {
-        lock(& s->lock);
+        runtime::lock(& s->lock);
         if(raceenabled)
         {
             raceacquire(gocpp::unsafe_pointer(& s->lock));
@@ -1113,7 +1113,7 @@ namespace golang::runtime
         {
             racerelease(gocpp::unsafe_pointer(& s->lock));
         }
-        unlock(& s->lock);
+        runtime::unlock(& s->lock);
     }
 
     // close wakes any goroutine sleeping on the timer and prevents
@@ -1125,7 +1125,7 @@ namespace golang::runtime
     // timer *and* nothing else will call wake concurrently.
     void rec::close(golang::runtime::wakeableSleep* s)
     {
-        lock(& s->lock);
+        runtime::lock(& s->lock);
         if(raceenabled)
         {
             raceacquire(gocpp::unsafe_pointer(& s->lock));
@@ -1137,7 +1137,7 @@ namespace golang::runtime
         {
             racerelease(gocpp::unsafe_pointer(& s->lock));
         }
-        unlock(& s->lock);
+        runtime::unlock(& s->lock);
         return;
     }
 

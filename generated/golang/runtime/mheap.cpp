@@ -995,7 +995,7 @@ namespace golang::runtime
             }
             if(! locked)
             {
-                lock(& h->lock);
+                runtime::lock(& h->lock);
                 locked = true;
             }
             auto nfound = rec::reclaimChunk(gocpp::recv(h), arenas, idx, pagesPerReclaimerChunk);
@@ -1011,7 +1011,7 @@ namespace golang::runtime
         }
         if(locked)
         {
-            unlock(& h->lock);
+            runtime::unlock(& h->lock);
         }
         trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
@@ -1067,12 +1067,12 @@ namespace golang::runtime
                             if(auto& s = s_tmp; ok)
                             {
                                 auto npages = s.mspan.npages;
-                                unlock(& h->lock);
+                                runtime::unlock(& h->lock);
                                 if(rec::sweep(gocpp::recv(s), false))
                                 {
                                     nFreed += npages;
                                 }
-                                lock(& h->lock);
+                                runtime::lock(& h->lock);
                                 inUseUnmarked = atomic::Load8(& inUse[i]) &^ marked[i];
                             }
                         }
@@ -1086,10 +1086,10 @@ namespace golang::runtime
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
         {
-            unlock(& h->lock);
+            runtime::unlock(& h->lock);
             rec::GCSweepSpan(gocpp::recv(trace), (n0 - nFreed) * pageSize);
             traceRelease(trace);
-            lock(& h->lock);
+            runtime::lock(& h->lock);
         }
         assertLockHeld(& h->lock);
         return nFreed;
@@ -1326,9 +1326,9 @@ namespace golang::runtime
             auto c = & pp->pcache;
             if(rec::empty(gocpp::recv(c)))
             {
-                lock(& h->lock);
+                runtime::lock(& h->lock);
                 *c = rec::allocToCache(gocpp::recv(h->pages));
-                unlock(& h->lock);
+                runtime::unlock(& h->lock);
             }
             std::tie(base, scav) = rec::alloc(gocpp::recv(c), npages);
             if(base != 0)
@@ -1340,7 +1340,7 @@ namespace golang::runtime
                 }
             }
         }
-        lock(& h->lock);
+        runtime::lock(& h->lock);
         if(needPhysPageAlign)
         {
             auto extraPages = physPageSize / pageSize;
@@ -1351,7 +1351,7 @@ namespace golang::runtime
                 std::tie(growth, ok) = rec::grow(gocpp::recv(h), npages + extraPages);
                 if(! ok)
                 {
-                    unlock(& h->lock);
+                    runtime::unlock(& h->lock);
                     return nullptr;
                 }
                 std::tie(base, std::ignore) = rec::find(gocpp::recv(h->pages), npages + extraPages);
@@ -1372,7 +1372,7 @@ namespace golang::runtime
                 std::tie(growth, ok) = rec::grow(gocpp::recv(h), npages);
                 if(! ok)
                 {
-                    unlock(& h->lock);
+                    runtime::unlock(& h->lock);
                     return nullptr;
                 }
                 std::tie(base, scav) = rec::alloc(gocpp::recv(h->pages), npages);
@@ -1386,7 +1386,7 @@ namespace golang::runtime
         {
             s = rec::allocMSpanLocked(gocpp::recv(h));
         }
-        unlock(& h->lock);
+        runtime::unlock(& h->lock);
         HaveSpan:
         auto bytesToScavenge = uintptr_t(0);
         auto forceScavenge = false;
@@ -1625,9 +1625,9 @@ namespace golang::runtime
     {
         pageTraceFree(rec::ptr(gocpp::recv(getg()->m->p)), 0, rec::base(gocpp::recv(s)), s->npages);
         s->needzero = 1;
-        lock(& h->lock);
+        runtime::lock(& h->lock);
         rec::freeSpanLocked(gocpp::recv(h), s, typ);
-        unlock(& h->lock);
+        runtime::unlock(& h->lock);
     }
 
     void rec::freeSpanLocked(golang::runtime::mheap* h, struct mspan* s, golang::runtime::spanAllocType typ)

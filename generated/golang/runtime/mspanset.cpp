@@ -133,11 +133,11 @@ namespace golang::runtime
         }
         else
         {
-            lock(& b->spineLock);
+            runtime::lock(& b->spineLock);
             spineLen = rec::Load(gocpp::recv(b->spineLen));
             if(top < spineLen)
             {
-                unlock(& b->spineLock);
+                runtime::unlock(& b->spineLock);
                 goto retry;
             }
             auto spine = rec::Load(gocpp::recv(b->spine));
@@ -160,7 +160,7 @@ namespace golang::runtime
             block = rec::alloc(gocpp::recv(spanSetBlockPool));
             rec::StoreNoWB<spanSetBlock>(gocpp::recv(rec::lookup(gocpp::recv(spine), top)), block);
             rec::Store(gocpp::recv(b->spineLen), spineLen + 1);
-            unlock(& b->spineLock);
+            runtime::unlock(& b->spineLock);
         }
         rec::StoreNoWB(gocpp::recv(block->spans[bottom]), s);
     }
@@ -339,7 +339,7 @@ namespace golang::runtime
     template<typename spanSetBlock>
     atomic::Pointer<spanSetBlock>* rec::lookup(golang::runtime::spanSetSpinePointer s, uintptr_t idx)
     {
-        return (atomic::Pointer<spanSetBlock>*)(add(s.p, goarch::PtrSize * idx));
+        return (atomic::Pointer<spanSetBlock>*)(runtime::add(s.p, goarch::PtrSize * idx));
     }
 
     // spanSetBlockPool is a global pool of spanSetBlocks.

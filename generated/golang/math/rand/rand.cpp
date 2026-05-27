@@ -455,7 +455,7 @@ namespace golang::rand
                 }
             }
         }
-        return read(p, r->src, & r->readVal, & r->readPos);
+        return rand::read(p, r->src, & r->readVal, & r->readPos);
     }
 
     std::tuple<int, struct gocpp::error> read(gocpp::slice<unsigned char> p, struct Source src, int64_t* readVal, int8_t* readPos)
@@ -579,7 +579,7 @@ namespace golang::rand
         int n;
         struct gocpp::error err;
         rec::Lock(gocpp::recv(fs->mu));
-        std::tie(n, err) = read(p, fs, readVal, readPos);
+        std::tie(n, err) = rand::read(p, fs, readVal, readPos);
         rec::Unlock(gocpp::recv(fs->mu));
         return {n, err};
     }
@@ -829,7 +829,7 @@ namespace golang::rand
         int n;
         struct gocpp::error err;
         rec::Lock(gocpp::recv(r->lk));
-        std::tie(n, err) = read(p, r->s, readVal, readPos);
+        std::tie(n, err) = rand::read(p, r->s, readVal, readPos);
         rec::Unlock(gocpp::recv(r->lk));
         return {n, err};
     }

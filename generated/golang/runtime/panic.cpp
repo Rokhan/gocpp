@@ -137,11 +137,11 @@ namespace golang::runtime
     void goPanicIndex(int x, int y)
     {
         panicCheck1(getcallerpc(), "index out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = true;
-            x.y = y;
-            x.code = boundsIndex;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = true;
+            z.y = y;
+            z.code = boundsIndex;
         }));
     }
 
@@ -149,11 +149,11 @@ namespace golang::runtime
     void goPanicIndexU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "index out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = false;
-            x.y = y;
-            x.code = boundsIndex;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = false;
+            z.y = y;
+            z.code = boundsIndex;
         }));
     }
 
@@ -163,11 +163,11 @@ namespace golang::runtime
     void goPanicSliceAlen(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = true;
-            x.y = y;
-            x.code = boundsSliceAlen;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = true;
+            z.y = y;
+            z.code = boundsSliceAlen;
         }));
     }
 
@@ -175,11 +175,11 @@ namespace golang::runtime
     void goPanicSliceAlenU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = false;
-            x.y = y;
-            x.code = boundsSliceAlen;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = false;
+            z.y = y;
+            z.code = boundsSliceAlen;
         }));
     }
 
@@ -187,11 +187,11 @@ namespace golang::runtime
     void goPanicSliceAcap(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = true;
-            x.y = y;
-            x.code = boundsSliceAcap;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = true;
+            z.y = y;
+            z.code = boundsSliceAcap;
         }));
     }
 
@@ -199,11 +199,11 @@ namespace golang::runtime
     void goPanicSliceAcapU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = false;
-            x.y = y;
-            x.code = boundsSliceAcap;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = false;
+            z.y = y;
+            z.code = boundsSliceAcap;
         }));
     }
 
@@ -213,11 +213,11 @@ namespace golang::runtime
     void goPanicSliceB(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = true;
-            x.y = y;
-            x.code = boundsSliceB;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = true;
+            z.y = y;
+            z.code = boundsSliceB;
         }));
     }
 
@@ -225,11 +225,11 @@ namespace golang::runtime
     void goPanicSliceBU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = false;
-            x.y = y;
-            x.code = boundsSliceB;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = false;
+            z.y = y;
+            z.code = boundsSliceB;
         }));
     }
 
@@ -237,44 +237,44 @@ namespace golang::runtime
     void goPanicSlice3Alen(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = true;
-            x.y = y;
-            x.code = boundsSlice3Alen;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = true;
+            z.y = y;
+            z.code = boundsSlice3Alen;
         }));
     }
 
     void goPanicSlice3AlenU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = false;
-            x.y = y;
-            x.code = boundsSlice3Alen;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = false;
+            z.y = y;
+            z.code = boundsSlice3Alen;
         }));
     }
 
     void goPanicSlice3Acap(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = true;
-            x.y = y;
-            x.code = boundsSlice3Acap;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = true;
+            z.y = y;
+            z.code = boundsSlice3Acap;
         }));
     }
 
     void goPanicSlice3AcapU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = false;
-            x.y = y;
-            x.code = boundsSlice3Acap;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = false;
+            z.y = y;
+            z.code = boundsSlice3Acap;
         }));
     }
 
@@ -282,22 +282,22 @@ namespace golang::runtime
     void goPanicSlice3B(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = true;
-            x.y = y;
-            x.code = boundsSlice3B;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = true;
+            z.y = y;
+            z.code = boundsSlice3B;
         }));
     }
 
     void goPanicSlice3BU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = false;
-            x.y = y;
-            x.code = boundsSlice3B;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = false;
+            z.y = y;
+            z.code = boundsSlice3B;
         }));
     }
 
@@ -305,22 +305,22 @@ namespace golang::runtime
     void goPanicSlice3C(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = true;
-            x.y = y;
-            x.code = boundsSlice3C;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = true;
+            z.y = y;
+            z.code = boundsSlice3C;
         }));
     }
 
     void goPanicSlice3CU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = false;
-            x.y = y;
-            x.code = boundsSlice3C;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = false;
+            z.y = y;
+            z.code = boundsSlice3C;
         }));
     }
 
@@ -328,11 +328,11 @@ namespace golang::runtime
     void goPanicSliceConvert(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice length too short to convert to array or pointer to array"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& x) {
-            x.x = int64_t(x);
-            x.go_signed = true;
-            x.y = y;
-            x.code = boundsConvert;
+        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+            z.x = int64_t(x);
+            z.go_signed = true;
+            z.y = y;
+            z.code = boundsConvert;
         }));
     }
 

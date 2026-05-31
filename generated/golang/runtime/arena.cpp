@@ -700,8 +700,8 @@ namespace golang::runtime
         }
         mp->mallocing = 0;
         releasem(mp);
-        if(auto t = (gocpp::Init<gcTrigger>([=](auto& x) {
-            x.kind = gcTriggerHeap;
+        if(auto t = (gocpp::Init<gcTrigger>([=](auto& y) {
+            y.kind = gcTriggerHeap;
         })); rec::test(gocpp::recv(t)))
         {
             gcStart(t);

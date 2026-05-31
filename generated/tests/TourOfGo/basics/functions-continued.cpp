@@ -25,6 +25,19 @@ namespace golang::main
         return x + y;
     }
 
+    // Small non-regression test for name scoping.
+    // Check that the "Pointer" declaration doesn't create confusion with the "Pointer" type.
+    gocpp::unsafe_pointer toto1(int x, int y)
+    {
+        return nullptr;
+    }
+
+    int* Pointer = nullptr;
+    gocpp::unsafe_pointer toto2(int x, int y)
+    {
+        return gocpp::unsafe_pointer(Pointer);
+    }
+
     void main()
     {
         mocklib::Println(add(42, 13));

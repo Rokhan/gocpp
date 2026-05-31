@@ -3977,10 +3977,10 @@ namespace golang::reflect
             return {lt.t, lt.framePool, lt.abid};
         }
         abid = newAbiDesc(t, rcvr);
-        auto x = gocpp::InitPtr<abi::Type>([=](auto& x) {
-            x.Align_ = goarch::PtrSize;
-            x.Size_ = align(abid.retOffset + abid.ret.stackBytes, goarch::PtrSize);
-            x.PtrBytes = uintptr_t(abid.stackPtrs->n) * goarch::PtrSize;
+        auto x = gocpp::InitPtr<abi::Type>([=](auto& y) {
+            y.Align_ = goarch::PtrSize;
+            y.Size_ = align(abid.retOffset + abid.ret.stackBytes, goarch::PtrSize);
+            y.PtrBytes = uintptr_t(abid.stackPtrs->n) * goarch::PtrSize;
         });
         if(abid.stackPtrs->n > 0)
         {
@@ -3996,16 +3996,16 @@ namespace golang::reflect
             s = "funcargs("_s + stringFor(& t->Type) + ")"_s;
         }
         x->Str = resolveReflectName(newName(s, ""_s, false, false));
-        framePool = gocpp::InitPtr<sync::Pool>([=](auto& x) {
-            x.New = [=]() mutable -> go_any
+        framePool = gocpp::InitPtr<sync::Pool>([=](auto& y) {
+            y.New = [=]() mutable -> go_any
             {
                 return unsafe_New(x);
             };
         });
-        auto [lti, gocpp_id_17] = rec::LoadOrStore(gocpp::recv(layoutCache), k, gocpp::Init<layoutType>([=](auto& x) {
-            x.t = x;
-            x.framePool = framePool;
-            x.abid = abid;
+        auto [lti, gocpp_id_17] = rec::LoadOrStore(gocpp::recv(layoutCache), k, gocpp::Init<layoutType>([=](auto& y) {
+            y.t = x;
+            y.framePool = framePool;
+            y.abid = abid;
         }));
         auto lt = gocpp::getValue<layoutType>(lti);
         return {lt.t, lt.framePool, lt.abid};

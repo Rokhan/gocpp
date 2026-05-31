@@ -189,16 +189,16 @@ namespace golang::flate
                 }
                 auto x = load64(src, s - 1);
                 auto prevHash = hash(uint32_t(x));
-                e->table[prevHash & tableMask] = gocpp::Init<tableEntry>([=](auto& x) {
-                    x.offset = e->cur + s - 1;
-                    x.val = uint32_t(x);
+                e->table[prevHash & tableMask] = gocpp::Init<tableEntry>([=](auto& y) {
+                    y.offset = e->cur + s - 1;
+                    y.val = uint32_t(x);
                 });
                 x >>= 8;
                 auto currHash = hash(uint32_t(x));
                 candidate = e->table[currHash & tableMask];
-                e->table[currHash & tableMask] = gocpp::Init<tableEntry>([=](auto& x) {
-                    x.offset = e->cur + s;
-                    x.val = uint32_t(x);
+                e->table[currHash & tableMask] = gocpp::Init<tableEntry>([=](auto& y) {
+                    y.offset = e->cur + s;
+                    y.val = uint32_t(x);
                 });
                 auto offset = s - (candidate.offset - e->cur);
                 if(offset > maxMatchOffset || uint32_t(x) != candidate.val)

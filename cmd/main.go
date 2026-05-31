@@ -102,10 +102,12 @@ func (cv *cppConverter) GenerateId() (id string) {
 	return id
 }
 
-func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo, tag tagType, suffix string) []string {
+func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, pkgInfos []*pkgInfo, tag tagType, suffix string) []string {
 	if pkgInfos == nil {
 		return nil
 	}
+	var globalSubDir = convSharedData.globalSubDir
+	var debugMode = convSharedData.debugMode
 
 	var alreadyIncluded set[string] = make(set[string])
 	var nsSet set[string] = make(set[string])
@@ -126,7 +128,11 @@ func includeDependencies(out io.Writer, globalSubDir string, pkgInfos []*pkgInfo
 
 		switch pkgInfo.fileType {
 		case GoFiles, CompiledGoFiles:
-			fmt.Fprintf(out, "#include \"%v%v%v\"\n", globalSubDir, pkgInfo.basePath(), suffix)
+			dbgStr := ""
+			if debugMode {
+				dbgStr = fmt.Sprintf(" /* %s */", pkgInfo.filePath)
+			}
+			fmt.Fprintf(out, "#include \"%v%v%v\"%s\n", globalSubDir, pkgInfo.basePath(), suffix, dbgStr)
 			nsSet.add(pkgInfo.name)
 		case Ignored:
 			fmt.Fprintf(out, "// #include \"%v%v%v\"  [Ignored, known errors]\n", globalSubDir, pkgInfo.basePath(), suffix)
@@ -226,6 +232,7 @@ func (cv *cppConverter) declareVar(name string, isPtr bool) {
 
 func (cv *cppConverter) declareType(name string) {
 	scope := cv.scopes.Back().Value.(scope)
+	cv.Logf("declareType: %s\n", name)
 	scope.types[name] = true
 }
 
@@ -2200,6 +2207,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		name := GetCppName(node.Name.Name)
 		var usingDec string
 
+		cv.Logf("New typedef. Name %v, type: %v", name, cppType)
 		cv.typedefs.add(cv.typeInfo.Defs[node.Name].Type())
 
 		if cv.ignoreKnownError(name, knownMissingDeps) {
@@ -2351,6 +2359,7 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 	pkg := cv.typeInfo.Uses[id].Pkg()
 
 	if cv.typedefs.has(tv) {
+		cv.Logf("isTypedef[true], found typedef for %v, type: %v, pkg:%v\n", types.ExprString(id), tv, pkg)
 		return true, pkg.Name()
 	}
 
@@ -2358,6 +2367,7 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 	case *types.Named:
 		switch tv.Underlying().(type) {
 		case *types.Basic:
+			cv.Logf("isTypedef[true], found typedef for %v, type: %v, pkg:%v\n", types.ExprString(id), tv, pkg)
 			return true, pkg.Name()
 		}
 	}
@@ -2382,6 +2392,7 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 			if !strings.Contains(exprStr, ".") {
 				exprStr = pkg.Name() + "." + exprStr
 			}
+			nsExprStr := fmt.Sprintf("%s%s", cv.packageDir, exprStr)
 
 			cv.Logf("isTypedef, exprStr: %v, typeStr: %v\n", exprStr, typStr)
 			if typStr != exprStr {
@@ -2390,6 +2401,7 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 		}
 	}
 
+	cv.Logf("isTypedef[false], exprStr: %v, typeStr: %v\n", id.Name, pkg)
 	if pkg != nil {
 		return false, pkg.Name()
 	}
@@ -2465,8 +2477,9 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		isParam, _ := cv.isParam(n)
 		identType = mkCppType(GetCppType(n.Name), nil)
 		if isTD && !isParam {
-			if !cv.isLocalType(identType.str) {
-				identType.dbg = cv.DbgSprintf("/* is local */")
+			isLocal := cv.isLocalType(identType.str)
+			identType.dbg = cv.DbgSprintf("/* is local, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v, isLocal:%v */", ctx.namespace, pkg, isTD, isParam, identType.str, isLocal)
+			if !isLocal {
 				if pkg != ctx.namespace && !cv.isAmbiguousName(identType.str) {
 					identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
 				} else {
@@ -2489,6 +2502,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 			}
 		} else {
 			cv.checkStructType(n, &identType)
+			identType.dbg = cv.DbgSprintf("/* isStruct: %v, isTD:%v, isParam:%v*/", identType.isStruct, isTD, isParam)
 		}
 
 		cv.checkCanFwd(&identType)

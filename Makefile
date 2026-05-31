@@ -103,6 +103,7 @@ methods: $(filter $(LOGDIR)/tests/TourOfGo/methods/methods%, $(OUT_EXE_TEST_FILE
 interface: $(filter $(LOGDIR)/tests/TourOfGo/methods/interface%, $(OUT_EXE_TEST_FILES))
 
 gocpp.exe: cmd/*.go
+	go vet cmd/*.go
 	go build -o gocpp.exe cmd/*.go
 
 

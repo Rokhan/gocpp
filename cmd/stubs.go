@@ -26,7 +26,7 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo, receiversElts set[stri
 	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.shared.supportHeader)
 	fmt.Fprintf(out, "\n")
 
-	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, UsesTag, ".h")
+	includeDependencies(out, cv.shared, pkgInfos, UsesTag, ".h")
 
 	cv.ConvertDoc(cv.astFile.Doc)
 	// Put everything generated in "golang" namespace
@@ -89,7 +89,7 @@ func printHppIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	fmt.Fprintf(out, "\n")
 
 	// Can we do something with ".fwd.h" in some situations ?
-	includeDependencies(out, cv.shared.globalSubDir, pkgInfos, DefsTag, ".h")
+	includeDependencies(out, cv.shared, pkgInfos, DefsTag, ".h")
 
 	// Put everything generated in "golang" namespace
 	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)

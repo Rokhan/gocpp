@@ -3779,7 +3779,10 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 		if addPtr {
 			ptrSuffix = "Ptr"
 		}
-		cv.BuffExprPrintf(buf, "gocpp::Init%s<%s>(%s(auto& x) {\n", ptrSuffix, litType, cv.getCaptureExpr())
+
+		excludedNames := cv.getScopeVars()
+		var lambdaVar = getAnotherLambdaParamName(excludedNames)
+		cv.BuffExprPrintf(buf, "gocpp::Init%s<%s>(%s(auto& %s) {\n", ptrSuffix, litType, cv.getCaptureExpr(), lambdaVar)
 
 		// Maybe we should use a special 'indent' token  that will be replaced later
 		// instead of using cv.cpp.Indent() whhereas we have no guarantee that
@@ -3788,14 +3791,14 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 			for _, elt := range n.Elts {
 				kv := elt.(*ast.KeyValueExpr)
 				cv.cpp.indent++
-				cv.BuffExprPrintf(buf, "%sx[%s] = %s;\n", cv.cpp.Indent(), cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
+				cv.BuffExprPrintf(buf, "%s%s[%s] = %s;\n", cv.cpp.Indent(), lambdaVar, cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
 				cv.cpp.indent--
 			}
 		} else {
 			for _, elt := range n.Elts {
 				kv := elt.(*ast.KeyValueExpr)
 				cv.cpp.indent++
-				cv.BuffExprPrintf(buf, "%sx.%s = %s;\n", cv.cpp.Indent(), cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
+				cv.BuffExprPrintf(buf, "%s%s.%s = %s;\n", cv.cpp.Indent(), lambdaVar, cv.convertExpr(kv.Key), cv.convertExpr(kv.Value))
 				cv.cpp.indent--
 			}
 		}

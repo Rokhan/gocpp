@@ -60,6 +60,7 @@ type cppConverter struct {
 	baseName    string
 	inputName   string
 	basePkgName string
+	packageDir  string
 
 	// golang tokens, parsing and types infos
 	parsingInfos
@@ -2394,8 +2395,8 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 			}
 			nsExprStr := fmt.Sprintf("%s%s", cv.packageDir, exprStr)
 
-			cv.Logf("isTypedef, exprStr: %v, typeStr: %v\n", exprStr, typStr)
-			if typStr != exprStr {
+			cv.Logf("isTypedef[%v], exprStr: %v, nsExprStr:%s, typeStr: %v\n", typStr != exprStr, exprStr, nsExprStr, typStr)
+			if typStr != exprStr && typStr != nsExprStr {
 				return true, pkg.Name()
 			}
 		}
@@ -4156,6 +4157,11 @@ func main() {
 
 	pkgPath := cv.basePkgName
 	astFiles := cv.addPkgDependencies(pkgPath, cv.astFile)
+	cv.packageDir = strings.TrimSuffix(pkgPath, cv.astFile.Name.Name)
+
+	cv.Logf("pkgPath: %s\n", pkgPath)
+	cv.Logf("astPackageName: %s\n", cv.astFile.Name.Name)
+	cv.Logf("packageDir: %s\n", cv.packageDir)
 
 	if err := cv.LoadAndCheckDefs(pkgPath, fset, astFiles...); err != nil {
 		panic(err) // type error

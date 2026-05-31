@@ -1312,11 +1312,13 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 			*env.varNames = append(*env.varNames, varName.str)
 
 			if isIdentifierUsed(varName.str, stmt.Rhs[0]) {
+				cv.declareVar(varName.str+"_tmp", false)
 				return []cppExpr{
 					ExprPrintf("auto %s_tmp = %s", varName, cv.convertAssignRightExprs(stmt.Rhs)),
 					ExprPrintf("auto& %s = %s_tmp", varName, varName),
 				}
 			} else {
+				cv.declareVar(varName.str, false)
 				return []cppExpr{ExprPrintf("auto %s = %s", varName, cv.convertAssignRightExprs(stmt.Rhs))}
 			}
 		default:
@@ -1333,12 +1335,14 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 					varName.str = cv.GenerateId()
 					leftVarName = "std::ignore"
 				}
+				cv.declareVar(varName.str, false)
 				if !slices.Contains(*env.varNames, varName.str) {
 					if isIdentifierUsed(varName.str, stmt.Rhs[0]) {
 						toDeclare = append(toDeclare, varName.str+"_tmp")
 						leftVarList = append(leftVarList, leftVarName+"_tmp")
 						*env.varNames = append(*env.varNames, varName.str+"_tmp")
 						tmpNames[varName.str] = varName.str + "_tmp"
+						cv.declareVar(varName.str+"_tmp", false)
 					} else {
 						toDeclare = append(toDeclare, varName.str)
 						leftVarList = append(leftVarList, leftVarName)
@@ -2024,6 +2028,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						expr := cv.convertExpr(values[i])
 						exprType := cv.convertExprCppType(values[i])
 						name := GetCppName(s.Names[i].Name)
+
 						canFwd := exprType.canFwd && cv.canForward(values[i])
 						if name == "_" {
 							result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, cv.GenerateId(), expr, end)...)
@@ -2077,6 +2082,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 					case len(values) == 0:
 						for i := range s.Names {
 							name := GetCppName(s.Names[i].Name)
+							cv.declareVar(name, false)
 							result = append(result, inlineStrf(s, "auto %s%s", name, end)...)
 						}
 
@@ -2085,9 +2091,11 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 							goName := s.Names[i].Name
 							name := GetCppName(goName)
 							if isIdentifierUsed(goName, values[i]) {
+								cv.declareVar(name+"_tmp", false)
 								result = append(result, inlineStrf(s, "auto %s_tmp = %s%s", name, cv.convertExpr(values[i]), end)...)
 								result = append(result, inlineStrf(s, "auto& %s = %s_tmp%s", name, name, end)...)
 							} else {
+								cv.declareVar(name, false)
 								result = append(result, inlineStrf(s, "auto %s = %s%s", name, cv.convertExpr(values[i]), end)...)
 							}
 						}
@@ -2097,12 +2105,14 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						tmpNames := map[string]string{}
 						for i := range s.Names {
 							goName := s.Names[i].Name
+							cppName := GetCppName(goName)
 							if isIdentifierUsed(goName, values[0]) {
-								cppName := GetCppName(goName)
 								names = append(names, cppName+"_tmp")
 								tmpNames[cppName] = cppName + "_tmp"
+								cv.declareVar(cppName+"_tmp", false)
 							} else {
-								names = append(names, GetCppName(goName))
+								names = append(names, cppName)
+								cv.declareVar(cppName, false)
 							}
 						}
 						result = append(result, inlineStrf(s, "auto [%s] = %s%s", strings.Join(names, ", "), cv.convertExpr(values[0]), end)...)
@@ -2120,14 +2130,17 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						t := cv.convertTypeExpr(s.Type, ctContext{})
 						if len(values) == 0 {
 							result = append(result, inlineStrf(s, "%s %s = {}%s", t, name, end)...)
+							cv.declareVar(name, t.isPtr)
 						} else {
 							Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
 
 							if isIdentifierUsed(goName, values[i]) {
 								result = append(result, inlineStrf(s, "%s %s_tmp = %s%s", t, name, cv.convertExpr(values[i]), end)...)
 								result = append(result, inlineStrf(s, "%s& %s = %s_tmp%s", t, name, name, end)...)
+								cv.declareVar(name+"_tmp", t.isPtr)
 							} else {
 								result = append(result, inlineStrf(s, "%s %s = %s%s", t, name, cv.convertExpr(values[i]), end)...)
+								cv.declareVar(name, t.isPtr)
 							}
 						}
 					}

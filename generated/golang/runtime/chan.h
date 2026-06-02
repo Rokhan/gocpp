@@ -78,16 +78,21 @@ namespace golang::runtime
     void racenotify(struct hchan* c, unsigned int idx, struct sudog* sg);
     struct hchan
     {
-        unsigned int qcount;
-        unsigned int dataqsiz;
-        gocpp::unsafe_pointer buf;
+        unsigned int qcount; // total data in the queue
+        unsigned int dataqsiz; // size of the circular queue
+        gocpp::unsafe_pointer buf; // points to an array of dataqsiz elements
         uint16_t elemsize;
         uint32_t closed;
-        golang::runtime::_type* elemtype;
-        unsigned int sendx;
-        unsigned int recvx;
-        waitq recvq;
-        waitq sendq;
+        golang::runtime::_type* elemtype; // element type
+        unsigned int sendx; // send index
+        unsigned int recvx; // receive index
+        waitq recvq; // list of recv waiters
+        waitq sendq; // list of send waiters
+        // lock protects all fields in hchan, as well as several
+        // fields in sudogs blocked on this channel.
+        // Do not change another G's status while holding this lock
+        // (in particular, do not ready a G), as this can deadlock
+        // with stack shrinking.
         mutex lock;
 
         using isGoStruct = void;

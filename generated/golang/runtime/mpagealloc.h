@@ -29,8 +29,14 @@ namespace golang::runtime
     std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi);
     struct gocpp_id_0
     {
+        // index is an efficient index of chunks that have pages available to
+        // scavenge.
         scavengeIndex index;
+        // releasedBg is the amount of memory released in the background this
+        // scavenge cycle.
         atomic::Uintptr releasedBg;
+        // releasedEager is the amount of memory released eagerly this scavenge
+        // cycle.
         atomic::Uintptr releasedEager;
 
         using isGoStruct = void;
@@ -49,17 +55,89 @@ namespace golang::runtime
     runtime::pallocSum mergeSummaries(gocpp::slice<golang::runtime::pallocSum> sums, unsigned int logMaxPagesPerSum);
     struct pageAlloc
     {
+        // Radix tree of summaries.
+        // Each slice's cap represents the whole memory reservation.
+        // Each slice's len reflects the allocator's maximum known
+        // mapped heap address for that level.
+        // The backing store of each summary level is reserved in init
+        // and may or may not be committed in grow (small address spaces
+        // may commit all the memory in init).
+        // The purpose of keeping len <= cap is to enforce bounds checks
+        // on the top end of the slice so that instead of an unknown
+        // runtime segmentation fault, we get a much friendlier out-of-bounds
+        // error.
+        // To iterate over a summary level, use inUse to determine which ranges
+        // are currently available. Otherwise one might try to access
+        // memory which is only Reserved which may result in a hard fault.
+        // We may still get segmentation faults < len since some of that
+        // memory may not be committed yet.
         gocpp::array<gocpp::slice<golang::runtime::pallocSum>, summaryLevels> summary;
+        // chunks is a slice of bitmap chunks.
+        // The total size of chunks is quite large on most 64-bit platforms
+        // (O(GiB) or more) if flattened, so rather than making one large mapping
+        // (which has problems on some platforms, even when PROT_NONE) we use a
+        // two-level sparse array approach similar to the arena index in mheap.
+        // To find the chunk containing a memory address `a`, do:
+        // chunkOf(chunkIndex(a))
+        // Below is a table describing the configuration for chunks for various
+        // heapAddrBits supported by the runtime.
+        // heapAddrBits | L1 Bits | L2 Bits | L2 Entry Size
+        // ------------------------------------------------
+        // 32           | 0       | 10      | 128 KiB
+        // 33 (iOS)     | 0       | 11      | 256 KiB
+        // 48           | 13      | 13      | 1 MiB
+        // There's no reason to use the L1 part of chunks on 32-bit, the
+        // address space is small so the L2 is small. For platforms with a
+        // 48-bit address space, we pick the L1 such that the L2 is 1 MiB
+        // in size, which is a good balance between low granularity without
+        // making the impact on BSS too high (note the L1 is stored directly
+        // in pageAlloc).
+        // To iterate over the bitmap, use inUse to determine which ranges
+        // are currently available. Otherwise one might iterate over unused
+        // ranges.
+        // Protected by mheapLock.
+        // TODO(mknyszek): Consider changing the definition of the bitmap
+        // such that 1 means free and 0 means in-use so that summaries and
+        // the bitmaps align better on zero-values.
         gocpp::array<gocpp::array_ptr<gocpp::array<pallocData, 1 << pallocChunksL2Bits>>, 1 << pallocChunksL1Bits> chunks;
+        // The address to start an allocation search with. It must never
+        // point to any memory that is not contained in inUse, i.e.
+        // inUse.contains(searchAddr.addr()) must always be true. The one
+        // exception to this rule is that it may take on the value of
+        // maxOffAddr to indicate that the heap is exhausted.
+        // We guarantee that all valid heap addresses below this value
+        // are allocated and not worth searching.
         offAddr searchAddr;
+        // start and end represent the chunk indices
+        // which pageAlloc knows about. It assumes
+        // chunks in the range [start, end) are
+        // currently ready to use.
         golang::runtime::chunkIdx start;
         golang::runtime::chunkIdx end;
+        // inUse is a slice of ranges of address space which are
+        // known by the page allocator to be currently in-use (passed
+        // to grow).
+        // We care much more about having a contiguous heap in these cases
+        // and take additional measures to ensure that, so in nearly all
+        // cases this should have just 1 element.
+        // All access is protected by the mheapLock.
         addrRanges inUse;
+        // scav stores the scavenger state.
         gocpp_id_0 scav;
+        // mheap_.lock. This level of indirection makes it possible
+        // to test pageAlloc independently of the runtime allocator.
         mutex* mheapLock;
+        // sysStat is the runtime memstat to update when new system
+        // memory is committed by the pageAlloc for allocation metadata.
         golang::runtime::sysMemStat* sysStat;
+        // summaryMappedReady is the number of bytes mapped in the Ready state
+        // in the summary structure. Used only for testing currently.
+        // Protected by mheapLock.
         uintptr_t summaryMappedReady;
+        // chunkHugePages indicates whether page bitmap chunks should be backed
+        // by huge pages.
         bool chunkHugePages;
+        // Whether or not this struct is being used in tests.
         bool test;
 
         using isGoStruct = void;

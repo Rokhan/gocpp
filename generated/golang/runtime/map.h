@@ -17,15 +17,17 @@ namespace golang::runtime
     bool isEmpty(uint8_t x);
     struct hmap
     {
-        int count;
+        // Note: the format of the hmap is also encoded in cmd/compile/internal/reflectdata/reflect.go.
+        // Make sure this stays in sync with the compiler's definition.
+        int count; // # live cells == size of map.  Must be first (used by len() builtin)
         uint8_t flags;
-        uint8_t B;
-        uint16_t noverflow;
-        uint32_t hash0;
-        gocpp::unsafe_pointer buckets;
-        gocpp::unsafe_pointer oldbuckets;
-        uintptr_t nevacuate;
-        mapextra* extra;
+        uint8_t B; // log_2 of # of buckets (can hold up to loadFactor * 2^B items)
+        uint16_t noverflow; // approximate number of overflow buckets; see incrnoverflow for details
+        uint32_t hash0; // hash seed
+        gocpp::unsafe_pointer buckets; // array of 2^B Buckets. may be nil if count==0.
+        gocpp::unsafe_pointer oldbuckets; // previous bucket array of half the size, non-nil only when growing
+        uintptr_t nevacuate; // progress counter for evacuation (buckets less than this have been evacuated)
+        mapextra* extra; // optional fields
 
         using isGoStruct = void;
 
@@ -41,8 +43,17 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct hmap& value);
     struct mapextra
     {
+        // If both key and elem do not contain pointers and are inline, then we mark bucket
+        // type as containing no pointers. This avoids scanning such maps.
+        // However, bmap.overflow is a pointer. In order to keep overflow buckets
+        // alive, we store pointers to all overflow buckets in hmap.extra.overflow and hmap.extra.oldoverflow.
+        // overflow and oldoverflow are only used if key and elem do not contain pointers.
+        // overflow contains overflow buckets for hmap.buckets.
+        // oldoverflow contains overflow buckets for hmap.oldbuckets.
+        // The indirection allows to store a pointer to the slice in hiter.
         gocpp::slice<bmap*>* overflow;
         gocpp::slice<bmap*>* oldoverflow;
+        // nextOverflow holds a pointer to a free overflow bucket.
         bmap* nextOverflow;
 
         using isGoStruct = void;
@@ -59,6 +70,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct mapextra& value);
     struct bmap
     {
+        // tophash generally contains the top byte of the hash value
+        // for each key in this bucket. If tophash[0] < minTopHash,
+        // tophash[0] is a bucket evacuation state instead.
         gocpp::array<uint8_t, bucketCnt> tophash;
 
         using isGoStruct = void;
@@ -75,17 +89,17 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct bmap& value);
     struct hiter
     {
-        gocpp::unsafe_pointer key;
-        gocpp::unsafe_pointer elem;
+        gocpp::unsafe_pointer key; // Must be in first position.  Write nil to indicate iteration end (see cmd/compile/internal/walk/range.go).
+        gocpp::unsafe_pointer elem; // Must be in second position (see cmd/compile/internal/walk/range.go).
         golang::runtime::maptype* t;
         hmap* h;
-        gocpp::unsafe_pointer buckets;
-        bmap* bptr;
-        gocpp::slice<bmap*>* overflow;
-        gocpp::slice<bmap*>* oldoverflow;
-        uintptr_t startBucket;
-        uint8_t offset;
-        bool wrapped;
+        gocpp::unsafe_pointer buckets; // bucket ptr at hash_iter initialization time
+        bmap* bptr; // current bucket
+        gocpp::slice<bmap*>* overflow; // keeps overflow buckets of hmap.buckets alive
+        gocpp::slice<bmap*>* oldoverflow; // keeps overflow buckets of hmap.oldbuckets alive
+        uintptr_t startBucket; // bucket iteration started at
+        uint8_t offset; // intra-bucket offset to start from during iteration (should be big enough to hold bucketCnt-1)
+        bool wrapped; // already wrapped around from end of bucket array to beginning
         uint8_t B;
         uint8_t i;
         uintptr_t bucket;
@@ -128,10 +142,10 @@ namespace golang::runtime
     bool bucketEvacuated(golang::runtime::maptype* t, struct hmap* h, uintptr_t bucket);
     struct evacDst
     {
-        bmap* b;
-        int i;
-        gocpp::unsafe_pointer k;
-        gocpp::unsafe_pointer e;
+        bmap* b; // current destination bucket
+        int i; // key/elem index into b
+        gocpp::unsafe_pointer k; // pointer to current key storage
+        gocpp::unsafe_pointer e; // pointer to current elem storage
 
         using isGoStruct = void;
 

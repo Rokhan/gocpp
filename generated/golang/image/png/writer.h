@@ -183,6 +183,8 @@ namespace golang::png
     struct Encoder
     {
         golang::png::CompressionLevel CompressionLevel;
+        // BufferPool optionally specifies a buffer pool to get temporary
+        // EncoderBuffers when encoding an image.
         EncoderBufferPool BufferPool;
 
         using isGoStruct = void;

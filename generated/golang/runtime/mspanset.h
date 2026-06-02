@@ -105,9 +105,19 @@ namespace golang::runtime
     struct spanSet
     {
         mutex spineLock;
-        atomicSpanSetSpinePointer spine;
-        atomic::Uintptr spineLen;
-        uintptr_t spineCap;
+        atomicSpanSetSpinePointer spine; // *[N]atomic.Pointer[spanSetBlock]
+        atomic::Uintptr spineLen; // Spine array length
+        uintptr_t spineCap; // Spine array cap, accessed under spineLock
+        // index is the head and tail of the spanSet in a single field.
+        // The head and the tail both represent an index into the logical
+        // concatenation of all blocks, with the head always behind or
+        // equal to the tail (indicating an empty set). This field is
+        // always accessed atomically.
+        // The head and the tail are only 32 bits wide, which means we
+        // can only support up to 2^32 pushes before a reset. If every
+        // span in the heap were stored in this set, and each span were
+        // the minimum size (1 runtime page, 8 KiB), then roughly the
+        // smallest heap which would be unrepresentable is 32 TiB in size.
         atomicHeadTailIndex index;
 
         using isGoStruct = void;
@@ -124,8 +134,13 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct spanSet& value);
     struct spanSetBlock
     {
+        // Free spanSetBlocks are managed via a lock-free stack.
         lfnode lfnode;
+        // popped is the number of pop operations that have occurred on
+        // this block. This number is used to help determine when a block
+        // may be safely recycled.
         atomic::Uint32 popped;
+        // spans is the set of spans in this block.
         gocpp::array<atomicMSpanPointer, spanSetBlockEntries> spans;
 
         using isGoStruct = void;

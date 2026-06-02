@@ -95,6 +95,13 @@ namespace golang::windows
         int64_t LastWriteTime;
         int64_t ChangedTime;
         uint32_t FileAttributes;
+        // Pad out to 8-byte alignment.
+        // Without this padding, TestChmod fails due to an argument validation error
+        // in SetFileInformationByHandle on windows/386.
+        // https://learn.microsoft.com/en-us/cpp/build/reference/zp-struct-member-alignment?view=msvc-170
+        // says that “The C/C++ headers in the Windows SDK assume the platform's
+        // default alignment is used.” What we see here is padding rather than
+        // alignment, but maybe it is related.
         uint32_t _1;
 
         using isGoStruct = void;

@@ -179,13 +179,14 @@ namespace golang::reflectlite
     struct mapType
     {
         rtype rtype;
-        abi::Type* Key;
-        abi::Type* Elem;
-        abi::Type* Bucket;
+        abi::Type* Key; // map key type
+        abi::Type* Elem; // map element (value) type
+        abi::Type* Bucket; // internal bucket structure
+        // function for hashing keys (ptr to key, seed) -> hash
         std::function<uintptr_t (gocpp::unsafe_pointer _1, uintptr_t _2)> Hasher;
-        uint8_t KeySize;
-        uint8_t ValueSize;
-        uint16_t BucketSize;
+        uint8_t KeySize; // size of key slot
+        uint8_t ValueSize; // size of value slot
+        uint16_t BucketSize; // size of bucket
         uint32_t Flags;
 
         using isGoStruct = void;

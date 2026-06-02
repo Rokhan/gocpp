@@ -113,6 +113,8 @@ namespace golang::sort
     void Stable(struct Interface data);
     struct reverse
     {
+        // This embedded Interface permits Reverse to use the methods of
+        // another Interface implementation.
         Interface Interface;
 
         using isGoStruct = void;

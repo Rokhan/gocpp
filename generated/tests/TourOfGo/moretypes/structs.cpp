@@ -194,6 +194,7 @@ namespace golang::main
         T result;
         result.Dummy2 = this->Dummy2;
         result.zzz = this->zzz;
+        result.xxx = this->xxx;
         return result;
     }
 
@@ -202,6 +203,7 @@ namespace golang::main
     {
         if (Dummy2 != ref.Dummy2) return false;
         if (zzz != ref.zzz) return false;
+        if (xxx != ref.xxx) return false;
         return true;
     }
 
@@ -210,6 +212,7 @@ namespace golang::main
         os << '{';
         os << "" << Dummy2;
         os << " " << zzz;
+        os << " " << xxx;
         os << '}';
         return os;
     }
@@ -605,7 +608,7 @@ namespace golang::main
         mocklib::Println("Offset of b in Anonymous struct:"_s, gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::second));
         mocklib::Println("Size of Anonymous struct:"_s, gocpp::Sizeof<gocpp_id_0>());
         // test field access
-        Dummy3 d3 = Dummy3 {Dummy2 {Dummy {1, 2}, Vertex {3, 4}, 5}, 6};
+        Dummy3 d3 = Dummy3 {Dummy2 {Dummy {1, 2}, Vertex {3, 4}, 5}, 6, 7};
         mocklib::Println(d3.Dummy2.Dummy.i);
         mocklib::Println(d3.Dummy2.Dummy.j);
         mocklib::Println(d3.Dummy2.Vertex.X);

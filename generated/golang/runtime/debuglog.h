@@ -35,8 +35,11 @@ namespace golang::runtime
     struct debugLogReader
     {
         debugLogBuf* data;
+        // begin and end are the positions in the log of the beginning
+        // and end of the log data, modulo len(data).
         uint64_t begin;
         uint64_t end;
+        // tick and nano are the current time base at begin.
         uint64_t tick;
         uint64_t nano;
 
@@ -59,9 +62,16 @@ namespace golang::runtime
         sys::NotInHeap _1;
         uint64_t write;
         debugLogBuf data;
+        // tick and nano are the time bases from the most recently
+        // written sync record.
         uint64_t tick;
         uint64_t nano;
+        // r is a reader that consumes records as they get overwritten
+        // by the writer. It also acts as the initial reader state
+        // when printing the log.
         debugLogReader r;
+        // buf is a scratch buffer for encoding. This is here to
+        // reduce stack usage.
         gocpp::array<unsigned char, 10> buf;
 
         using isGoStruct = void;
@@ -80,7 +90,10 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         debugLogWriter w;
+        // allLink is the next dlogger in the allDloggers list.
         dlogger* allLink;
+        // owned indicates that this dlogger is owned by an M. This is
+        // accessed atomically.
         atomic::Uint32 owned;
 
         using isGoStruct = void;

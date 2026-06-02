@@ -19,7 +19,12 @@ namespace golang::runtime
     extern gocpp::slice<double> timeHistBuckets;
     struct metricData
     {
+        // deps is the set of runtime statistics that this metric
+        // depends on. Before compute is called, the statAggregate
+        // which will be passed must ensure() these dependencies.
         statDepSet deps;
+        // compute is a function that populates a metricValue
+        // given a populated statAggregate structure.
         std::function<void (struct statAggregate* in, struct metricValue* out)> compute;
 
         using isGoStruct = void;
@@ -55,11 +60,21 @@ namespace golang::runtime
     struct heapStatsAggregate
     {
         heapStatsDelta heapStatsDelta;
+        // inObjects is the bytes of memory occupied by objects,
         uint64_t inObjects;
+        // numObjects is the number of live objects in the heap.
         uint64_t numObjects;
+        // totalAllocated is the total bytes of heap objects allocated
+        // over the lifetime of the program.
         uint64_t totalAllocated;
+        // totalFreed is the total bytes of heap objects freed
+        // over the lifetime of the program.
         uint64_t totalFreed;
+        // totalAllocs is the number of heap objects allocated over
+        // the lifetime of the program.
         uint64_t totalAllocs;
+        // totalFrees is the number of heap objects freed over
+        // the lifetime of the program.
         uint64_t totalFrees;
 
         using isGoStruct = void;
@@ -139,8 +154,8 @@ namespace golang::runtime
     struct metricValue
     {
         golang::runtime::metricKind kind;
-        uint64_t scalar;
-        gocpp::unsafe_pointer pointer;
+        uint64_t scalar; // contains scalar values for scalar Kinds.
+        gocpp::unsafe_pointer pointer; // contains non-scalar values.
 
         using isGoStruct = void;
 

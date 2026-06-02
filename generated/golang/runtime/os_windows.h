@@ -100,11 +100,29 @@ namespace golang::runtime
     void wintls();
     struct mOS
     {
-        mutex threadLock;
-        uintptr_t thread;
-        uintptr_t waitsema;
-        uintptr_t resumesema;
-        uintptr_t highResTimer;
+        mutex threadLock; // protects "thread" and prevents closing
+        uintptr_t thread; // thread handle
+        uintptr_t waitsema; // semaphore for parking on locks
+        uintptr_t resumesema; // semaphore to indicate suspend/resume
+        uintptr_t highResTimer; // high resolution timer handle used in usleep
+        // preemptExtLock synchronizes preemptM with entry/exit from
+        // external C code.
+        // This protects against races between preemptM calling
+        // SuspendThread and external code on this thread calling
+        // ExitProcess. If these happen concurrently, it's possible to
+        // exit the suspending thread and suspend the exiting thread,
+        // leading to deadlock.
+        // 0 indicates this M is not being preempted or in external
+        // code. Entering external code CASes this from 0 to 1. If
+        // this fails, a preemption is in progress, so the thread must
+        // wait for the preemption. preemptM also CASes this from 0 to
+        // 1. If this fails, the preemption fails (as it would if the
+        // PC weren't in Go code). The value is reset to 0 when
+        // returning from external code or after a preemption is
+        // complete.
+        // TODO(austin): We may not need this if preemption were more
+        // tightly synchronized on the G/P status and preemption
+        // blocked transition into _Gsyscall/_Psyscall.
         uint32_t preemptExtLock;
 
         using isGoStruct = void;

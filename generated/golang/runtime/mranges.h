@@ -17,6 +17,8 @@ namespace golang::runtime
     struct addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
     struct offAddr
     {
+        // a is just the virtual address, but should never be used
+        // directly. Call addr() to get this value instead.
         uintptr_t a;
 
         using isGoStruct = void;
@@ -33,6 +35,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct offAddr& value);
     struct atomicOffAddr
     {
+        // a contains the offset address, unlike offAddr.
         atomic::Int64 a;
 
         using isGoStruct = void;
@@ -49,6 +52,11 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
     struct addrRange
     {
+        // base and limit together represent the region of address space
+        // [base, limit). That is, base is inclusive, limit is exclusive.
+        // These are address over an offset view of the address space on
+        // platforms with a segmented address space, that is, on platforms
+        // where arenaBaseOffset != 0.
         offAddr base;
         offAddr limit;
 
@@ -68,8 +76,12 @@ namespace golang::runtime
     extern offAddr maxOffAddr;
     struct addrRanges
     {
+        // ranges is a slice of ranges sorted by base.
         gocpp::slice<addrRange> ranges;
+        // totalBytes is the total amount of address space in bytes counted by
+        // this addrRanges.
         uintptr_t totalBytes;
+        // sysStat is the stat to track allocations by this type
         golang::runtime::sysMemStat* sysStat;
 
         using isGoStruct = void;

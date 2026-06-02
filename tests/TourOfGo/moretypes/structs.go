@@ -20,17 +20,20 @@ var AnonymousStruct struct {
 }
 
 type Empty struct{}
-type Dummy struct{ i, j int }
+type Dummy struct {
+	// before declaration
+	i, j int //after declaration
+}
 
 type Dummy2 struct {
-	Dummy
-	Vertex
-	i int
+	Dummy      // Comment 1: Dummy
+	Vertex     // Comment 2: Vertex
+	i      int // Comment 3: i
 }
 
 type Dummy3 struct {
 	Dummy2
-	zzz int
+	zzz, xxx int // Comment: yyy and zzz 2
 }
 
 type Person struct {
@@ -110,7 +113,7 @@ func main() {
 	fmt.Println("Size of Anonymous struct:", unsafe.Sizeof(AnonymousStruct))
 
 	// test field access
-	var d3 Dummy3 = Dummy3{Dummy2{Dummy{1, 2}, Vertex{3, 4}, 5}, 6}
+	var d3 Dummy3 = Dummy3{Dummy2{Dummy{1, 2}, Vertex{3, 4}, 5}, 6, 7}
 	fmt.Println(d3.Dummy2.Dummy.i)  // should print 1
 	fmt.Println(d3.Dummy2.Dummy.j)  // should print 2
 	fmt.Println(d3.Dummy2.Vertex.X) // should print 3

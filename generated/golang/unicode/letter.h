@@ -100,7 +100,7 @@ namespace golang::unicode
     {
         gocpp::slice<Range16> R16;
         gocpp::slice<Range32> R32;
-        int LatinOffset;
+        int LatinOffset; // number of entries in R16 with Hi <= MaxLatin1
 
         using isGoStruct = void;
 

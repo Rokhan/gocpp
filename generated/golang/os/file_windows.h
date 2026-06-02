@@ -28,8 +28,8 @@ namespace golang::os
     {
         poll::FD pfd;
         gocpp::string name;
-        dirInfo* dirinfo;
-        bool appendMode;
+        dirInfo* dirinfo; // nil unless directory being read
+        bool appendMode; // whether file is opened for appending
 
         using isGoStruct = void;
 

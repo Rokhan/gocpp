@@ -18,9 +18,9 @@ namespace golang::time
 {
     struct zone
     {
-        gocpp::string name;
-        int offset;
-        bool isDST;
+        gocpp::string name; // abbreviated name, "CET"
+        int offset; // seconds east of UTC
+        bool isDST; // is this zone Daylight Savings Time?
 
         using isGoStruct = void;
 
@@ -36,9 +36,9 @@ namespace golang::time
     std::ostream& operator<<(std::ostream& os, const struct zone& value);
     struct zoneTrans
     {
-        int64_t when;
-        uint8_t index;
-        bool isstd;
+        int64_t when; // transition time, in seconds since 1970 GMT
+        uint8_t index; // the index of the zone that goes into effect at that time
+        bool isstd; // ignored - no idea what these mean
         bool isutc;
 
         using isGoStruct = void;
@@ -66,7 +66,7 @@ namespace golang::time
         int day;
         int week;
         int mon;
-        int time;
+        int time; // transition time
 
         using isGoStruct = void;
 
@@ -93,7 +93,21 @@ namespace golang::time
         gocpp::string name;
         gocpp::slice<zone> zone;
         gocpp::slice<zoneTrans> tx;
+        // The tzdata information can be followed by a string that describes
+        // how to handle DST transitions not recorded in zoneTrans.
+        // The format is the TZ environment variable without a colon; see
+        // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html.
+        // Example string, for America/Los_Angeles: PST8PDT,M3.2.0,M11.1.0
         gocpp::string extend;
+        // Most lookups will be for the current time.
+        // To avoid the binary search through tx, keep a
+        // static one-element cache that gives the correct
+        // zone for the time when the Location was created.
+        // if cacheStart <= t < cacheEnd,
+        // lookup can return cacheZone.
+        // The units for cacheStart and cacheEnd are seconds
+        // since January 1, 1970 UTC, to match the argument
+        // to lookup.
         int64_t cacheStart;
         int64_t cacheEnd;
         golang::time::zone* cacheZone;

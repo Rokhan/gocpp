@@ -46,8 +46,17 @@ namespace golang::runtime
 {
     struct wbBuf
     {
+        // next points to the next slot in buf. It must not be a
+        // pointer type because it can point past the end of buf and
+        // must be updated without write barriers.
+        // This is a pointer rather than an index to optimize the
+        // write barrier assembly.
         uintptr_t next;
+        // end points to just past the end of buf. It must not be a
+        // pointer type because it points past the end of buf and must
+        // be updated without write barriers.
         uintptr_t end;
+        // buf stores a series of pointers to execute write barriers on.
         gocpp::array<uintptr_t, wbBufEntries> buf;
 
         using isGoStruct = void;

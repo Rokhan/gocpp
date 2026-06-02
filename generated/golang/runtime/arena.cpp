@@ -476,7 +476,13 @@ namespace golang::runtime
     struct gocpp_id_0
     {
         mutex lock;
+        // reuse contains a list of partially-used and already-live
+        // user arena chunks that can be quickly reused for another
+        // arena.
+        // Protected by lock.
         gocpp::slice<liveUserArenaChunk> reuse;
+        // fault contains full user arena chunks that need to be faulted.
+        // Protected by lock.
         gocpp::slice<liveUserArenaChunk> fault;
 
         using isGoStruct = void;

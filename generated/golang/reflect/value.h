@@ -21,8 +21,23 @@ namespace golang::reflect
 {
     struct Value
     {
+        // typ_ holds the type of the value represented by a Value.
+        // Access using the typ method to avoid escape of v.
         abi::Type* typ_;
+        // Pointer-valued data or, if flagIndir is set, pointer to data.
+        // Valid when either flagIndir is set or typ.pointers() is true.
         gocpp::unsafe_pointer ptr;
+        // flag holds metadata about the value.
+        // The lowest five bits give the Kind of the value, mirroring typ.Kind().
+        // The next set of bits are flag bits:
+        // - flagStickyRO: obtained via unexported not embedded field, so read-only
+        // - flagEmbedRO: obtained via unexported embedded field, so read-only
+        // - flagIndir: val holds a pointer to the data
+        // - flagAddr: v.CanAddr is true (implies flagIndir and ptr is non-nil)
+        // - flagMethod: v is a method value.
+        // If ifaceIndir(typ), code can assume that flagIndir is set.
+        // The remaining 22+ bits give a method number for method values.
+        // If flag.kind() != Func, code can assume that flagMethod is unset.
         golang::reflect::flag flag;
 
         using isGoStruct = void;
@@ -76,11 +91,11 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
     struct gocpp_id_0
     {
-        abi::Type* ityp;
-        abi::Type* typ;
-        uint32_t hash;
+        abi::Type* ityp; // static interface type
+        abi::Type* typ; // dynamic concrete type
+        uint32_t hash; // copy of typ.hash
         gocpp::array<unsigned char, 4> _1;
-        gocpp::array<gocpp::unsafe_pointer, 100000> fun;
+        gocpp::array<gocpp::unsafe_pointer, 100000> fun; // method table
 
         using isGoStruct = void;
 
@@ -96,6 +111,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct nonEmptyInterface
     {
+        // see ../runtime/iface.go:/Itab
         gocpp_id_0* itab;
         gocpp::unsafe_pointer word;
 
@@ -325,10 +341,10 @@ namespace golang::reflect
     int Copy(struct Value dst, struct Value src);
     struct runtimeSelect
     {
-        golang::reflect::SelectDir dir;
-        rtype* typ;
-        gocpp::unsafe_pointer ch;
-        gocpp::unsafe_pointer val;
+        golang::reflect::SelectDir dir; // SelectSend, SelectRecv or SelectDefault
+        rtype* typ; // channel type
+        gocpp::unsafe_pointer ch; // channel
+        gocpp::unsafe_pointer val; // ptr to data (SendDir) or ptr to receive buffer (RecvDir)
 
         using isGoStruct = void;
 
@@ -439,9 +455,9 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct MapIter& value);
     struct SelectCase
     {
-        golang::reflect::SelectDir Dir;
-        Value Chan;
-        Value Send;
+        golang::reflect::SelectDir Dir; // direction of case
+        Value Chan; // channel to use (for send or receive)
+        Value Send; // value to send (for send)
 
         using isGoStruct = void;
 

@@ -18,7 +18,7 @@ namespace golang::flate
     uint32_t hash(uint32_t u);
     struct tableEntry
     {
-        uint32_t val;
+        uint32_t val; // Value at destination
         int32_t offset;
 
         using isGoStruct = void;
@@ -38,8 +38,8 @@ namespace golang::flate
     struct deflateFast
     {
         gocpp::array<tableEntry, tableSize> table;
-        gocpp::slice<unsigned char> prev;
-        int32_t cur;
+        gocpp::slice<unsigned char> prev; // Previous block, zero length if unknown.
+        int32_t cur; // Current match offset.
 
         using isGoStruct = void;
 

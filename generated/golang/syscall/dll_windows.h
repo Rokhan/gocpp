@@ -94,7 +94,7 @@ namespace golang::syscall
     struct LazyDLL
     {
         mocklib::Mutex mu;
-        DLL* dll;
+        DLL* dll; // non nil once DLL is loaded
         gocpp::string Name;
 
         using isGoStruct = void;

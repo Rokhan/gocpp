@@ -17,6 +17,8 @@ namespace golang::abi
     {
         InterfaceSwitchCache* Cache;
         int NCases;
+        // Array of NCases elements.
+        // Each case must be a non-empty interface type.
         gocpp::array<InterfaceType*, 1> Cases;
 
         using isGoStruct = void;
@@ -33,8 +35,11 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitch& value);
     struct InterfaceSwitchCacheEntry
     {
+        // type of source value (a *Type)
         uintptr_t Typ;
+        // case # to dispatch to
         int Case;
+        // itab to use for resulting case variable (a *runtime.itab)
         uintptr_t Itab;
 
         using isGoStruct = void;
@@ -70,7 +75,10 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct TypeAssert& value);
     struct TypeAssertCacheEntry
     {
+        // type of source value (a *runtime._type)
         uintptr_t Typ;
+        // itab to use for result (a *runtime.itab)
+        // nil if CanFail is set and conversion would fail.
         uintptr_t Itab;
 
         using isGoStruct = void;
@@ -87,8 +95,8 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertCacheEntry& value);
     struct InterfaceSwitchCache
     {
-        uintptr_t Mask;
-        gocpp::array<InterfaceSwitchCacheEntry, 1> Entries;
+        uintptr_t Mask; // mask for index. Must be a power of 2 minus 1
+        gocpp::array<InterfaceSwitchCacheEntry, 1> Entries; // Mask+1 entries total
 
         using isGoStruct = void;
 

@@ -29,7 +29,7 @@ namespace golang::hex
     {
         io::Writer w;
         gocpp::error err;
-        gocpp::array<unsigned char, bufferSize> out;
+        gocpp::array<unsigned char, bufferSize> out; // output buffer
 
         using isGoStruct = void;
 
@@ -48,8 +48,8 @@ namespace golang::hex
     {
         io::Reader r;
         gocpp::error err;
-        gocpp::slice<unsigned char> in;
-        gocpp::array<unsigned char, bufferSize> arr;
+        gocpp::slice<unsigned char> in; // input buffer (encoded form)
+        gocpp::array<unsigned char, bufferSize> arr; // backing array for in
 
         using isGoStruct = void;
 
@@ -70,8 +70,8 @@ namespace golang::hex
         io::Writer w;
         gocpp::array<unsigned char, 18> rightChars;
         gocpp::array<unsigned char, 14> buf;
-        int used;
-        unsigned int n;
+        int used; // number of bytes in the current line
+        unsigned int n; // number of bytes, total
         bool closed;
 
         using isGoStruct = void;

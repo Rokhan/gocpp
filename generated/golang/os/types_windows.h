@@ -22,14 +22,18 @@ namespace golang::os
     struct fileStat
     {
         gocpp::string name;
+        // from ByHandleFileInformation, Win32FileAttributeData, Win32finddata, and GetFileInformationByHandleEx
         uint32_t FileAttributes;
         syscall::Filetime CreationTime;
         syscall::Filetime LastAccessTime;
         syscall::Filetime LastWriteTime;
         uint32_t FileSizeHigh;
         uint32_t FileSizeLow;
+        // from Win32finddata and GetFileInformationByHandleEx
         uint32_t ReparseTag;
+        // what syscall.GetFileType returns
         uint32_t filetype;
+        // used to implement SameFile
         mocklib::Mutex Mutex;
         gocpp::string path;
         uint32_t vol;

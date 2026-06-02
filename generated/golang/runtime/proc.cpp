@@ -2515,9 +2515,16 @@ namespace golang::runtime
     struct gocpp_id_1
     {
         mutex lock;
+        // newm points to a list of M structures that need new OS
+        // threads. The list is linked through m.schedlink.
         golang::runtime::muintptr newm;
+        // waiting indicates that wake needs to be notified when an m
+        // is put on the list.
         bool waiting;
         note wake;
+        // haveTemplateThread indicates that the templateThread has
+        // been started. This is not protected by lock. Use cas to set
+        // to 1.
         uint32_t haveTemplateThread;
 
         using isGoStruct = void;
@@ -5006,6 +5013,8 @@ namespace golang::runtime
     struct gocpp_id_8
     {
         atomic::Uint32 signalLock;
+        // Must hold signalLock to write. Reads may be lock-free, but
+        // signalLock should be taken to synchronize with changes.
         atomic::Int32 hz;
 
         using isGoStruct = void;

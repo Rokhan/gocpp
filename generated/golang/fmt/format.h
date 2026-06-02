@@ -24,6 +24,9 @@ namespace golang::fmt
         bool sharp;
         bool space;
         bool zero;
+        // For the formats %+v %#v, we set the plusV/sharpV flags
+        // and clear the plus/sharp flags since %+v and %#v are in effect
+        // different, flagless formats set at the top level.
         bool plusV;
         bool sharpV;
 
@@ -43,8 +46,10 @@ namespace golang::fmt
     {
         buffer* buf;
         fmtFlags fmtFlags;
-        int wid;
-        int prec;
+        int wid; // width
+        int prec; // precision
+        // intbuf is large enough to store %b of an int64 with a sign and
+        // avoids padding at the end of the struct on 32 bit architectures.
         gocpp::array<unsigned char, 68> intbuf;
 
         using isGoStruct = void;

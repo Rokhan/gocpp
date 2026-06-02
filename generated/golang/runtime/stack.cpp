@@ -206,7 +206,7 @@ namespace golang::runtime
     struct gocpp_id_1
     {
         mutex lock;
-        gocpp::array<mSpanList, heapAddrBits - pageShift> free;
+        gocpp::array<mSpanList, heapAddrBits - pageShift> free; // free lists by log_2(s.npages)
 
         using isGoStruct = void;
 

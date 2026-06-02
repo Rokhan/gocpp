@@ -26,8 +26,8 @@ namespace golang::reflect
     struct makeFuncCtxt
     {
         uintptr_t fn;
-        bitVector* stack;
-        uintptr_t argLen;
+        bitVector* stack; // ptrmap for both stack args and results
+        uintptr_t argLen; // just args
         abi::IntArgRegBitmap regPtrs;
 
         using isGoStruct = void;

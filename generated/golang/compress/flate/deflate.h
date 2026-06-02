@@ -66,24 +66,34 @@ namespace golang::flate
         compressionLevel compressionLevel;
         huffmanBitWriter* w;
         std::function<void (gocpp::slice<unsigned char> _1, gocpp::slice<uint32_t> _2)> bulkHasher;
-        std::function<int (struct compressor* _1, gocpp::slice<unsigned char> _2)> fill;
-        std::function<void (struct compressor* _1)> step;
-        bool sync;
-        deflateFast* bestSpeed;
+        // compression algorithm
+        std::function<int (struct compressor* _1, gocpp::slice<unsigned char> _2)> fill; // copy data to window
+        std::function<void (struct compressor* _1)> step; // process window
+        bool sync; // requesting flush
+        deflateFast* bestSpeed; // Encoder for BestSpeed
+        // Input hash chains
+        // hashHead[hashValue] contains the largest inputIndex with the specified hash value
+        // If hashHead[hashValue] is within the current window, then
+        // hashPrev[hashHead[hashValue] & windowMask] contains the previous index
+        // with the same hash value.
         int chainHead;
         gocpp::array<uint32_t, hashSize> hashHead;
         gocpp::array<uint32_t, windowSize> hashPrev;
         int hashOffset;
+        // input window: unprocessed data is window[index:windowEnd]
         int index;
         gocpp::slice<unsigned char> window;
         int windowEnd;
-        int blockStart;
-        bool byteAvailable;
+        int blockStart; // window index where current tokens start
+        bool byteAvailable; // if true, still need to process window[index-1].
+        // queued output tokens
         gocpp::slice<golang::flate::token> tokens;
+        // deflate state
         int length;
         int offset;
         int maxInsertIndex;
         gocpp::error err;
+        // hashMatch must be able to contain hashes for the maximum match length.
         gocpp::array<uint32_t, maxMatchLength - 1> hashMatch;
 
         using isGoStruct = void;

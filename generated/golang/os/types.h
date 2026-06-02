@@ -28,7 +28,7 @@ namespace golang::os
     int Getpagesize();
     struct File
     {
-        file* file;
+        file* file; // os specific
 
         using isGoStruct = void;
 

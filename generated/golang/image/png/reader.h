@@ -53,6 +53,8 @@ namespace golang::png
         uint32_t idatLength;
         gocpp::array<unsigned char, 3 * 256> tmp;
         int interlace;
+        // useTransparent and transparent are used for grayscale and truecolor
+        // transparency, as opposed to palette transparency.
         bool useTransparent;
         gocpp::array<unsigned char, 6> transparent;
 

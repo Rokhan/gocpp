@@ -15,6 +15,10 @@ namespace golang::runtime
 {
     struct gocpp_id_0
     {
+        // Invariants:
+        // - fill >= 0
+        // - capacity >= 0
+        // - fill <= capacity
         uint64_t fill;
         uint64_t capacity;
 
@@ -33,7 +37,7 @@ namespace golang::runtime
     runtime::limiterEventStamp makeLimiterEventStamp(golang::runtime::limiterEventType typ, int64_t now);
     struct limiterEvent
     {
-        atomic::Uint64 stamp;
+        atomic::Uint64 stamp; // Stores a limiterEventStamp.
 
         using isGoStruct = void;
 
@@ -52,15 +56,33 @@ namespace golang::runtime
         atomic::Uint32 lock;
         atomic::Bool enabled;
         gocpp_id_0 bucket;
+        // overflow is the cumulative amount of GC CPU time that we tried to fill the
+        // bucket with but exceeded its capacity.
         uint64_t overflow;
+        // gcEnabled is an internal copy of gcBlackenEnabled that determines
+        // whether the limiter tracks total assist time.
+        // gcBlackenEnabled isn't used directly so as to keep this structure
+        // unit-testable.
         bool gcEnabled;
+        // transitioning is true when the GC is in a STW and transitioning between
+        // the mark and sweep phases.
         bool transitioning;
+        // assistTimePool is the accumulated assist time since the last update.
         atomic::Int64 assistTimePool;
+        // idleMarkTimePool is the accumulated idle mark time since the last update.
         atomic::Int64 idleMarkTimePool;
+        // idleTimePool is the accumulated time Ps spent on the idle list since the last update.
         atomic::Int64 idleTimePool;
+        // lastUpdate is the nanotime timestamp of the last time update was called.
+        // Updated under lock, but may be read concurrently.
         atomic::Int64 lastUpdate;
+        // lastEnabledCycle is the GC cycle that last had the limiter enabled.
         atomic::Uint32 lastEnabledCycle;
+        // nprocs is an internal copy of gomaxprocs, used to determine total available
+        // CPU time.
+        // gomaxprocs isn't used directly so as to keep this structure unit-testable.
         int32_t nprocs;
+        // test indicates whether this instance of the struct was made for testing purposes.
         bool test;
 
         using isGoStruct = void;

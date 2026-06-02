@@ -22,7 +22,9 @@ namespace golang::runtime
 {
     struct net_op
     {
+        // used by windows
         overlapped o;
+        // used by netpoll
         pollDesc* pd;
         int32_t mode;
         int32_t errno;
@@ -43,7 +45,7 @@ namespace golang::runtime
     struct overlappedEntry
     {
         pollDesc* key;
-        net_op* op;
+        net_op* op; // In reality it's *overlapped, but we cast it to *net_op anyway.
         uintptr_t internal;
         uint32_t qty;
 

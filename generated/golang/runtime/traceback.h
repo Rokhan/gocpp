@@ -40,10 +40,21 @@ namespace golang::runtime
 {
     struct unwinder
     {
+        // frame is the current physical stack frame, or all 0s if
+        // there is no frame.
         stkframe frame;
+        // g is the G who's stack is being unwound. If the
+        // unwindJumpStack flag is set and the unwinder jumps stacks,
+        // this will be different from the initial G.
         golang::runtime::guintptr g;
+        // cgoCtxt is the index into g.cgoCtxt of the next frame on the cgo stack.
+        // The cgo stack is unwound in tandem with the Go stack as we find marker frames.
         int cgoCtxt;
+        // calleeFuncID is the function ID of the caller of the current
+        // frame.
         abi::FuncID calleeFuncID;
+        // flags are the flags to this unwind. Some of these are updated as we
+        // unwind (see the flags documentation).
         golang::runtime::unwindFlags flags;
 
         using isGoStruct = void;

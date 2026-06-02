@@ -69,10 +69,10 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct traceBufQueue& value);
     struct traceBufHeader
     {
-        traceBuf* link;
-        golang::runtime::traceTime lastTime;
-        int pos;
-        int lenPos;
+        traceBuf* link; // in trace.empty/full
+        golang::runtime::traceTime lastTime; // when we wrote the last event
+        int pos; // next write offset in arr
+        int lenPos; // position of batch length value
 
         using isGoStruct = void;
 
@@ -91,7 +91,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         traceBufHeader traceBufHeader;
-        gocpp::array<unsigned char, (64 << 10) - gocpp::Sizeof<golang::runtime::traceBufHeader>()> arr;
+        gocpp::array<unsigned char, (64 << 10) - gocpp::Sizeof<golang::runtime::traceBufHeader>()> arr; // underlying buffer for traceBufHeader.buf
 
         using isGoStruct = void;
 

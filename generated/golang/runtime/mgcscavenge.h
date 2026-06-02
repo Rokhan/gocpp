@@ -61,9 +61,19 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
     struct scavChunkData
     {
+        // inUse indicates how many pages in this chunk are currently
+        // allocated.
+        // Only the first 10 bits are used.
         uint16_t inUse;
+        // lastInUse indicates how many pages in this chunk were allocated
+        // when we transitioned from gen-1 to gen.
+        // Only the first 10 bits are used.
         uint16_t lastInUse;
+        // gen is the generation counter from a scavengeIndex from the
+        // last time this scavChunkData was updated.
         uint32_t gen;
+        // scavChunkFlags represents additional flags
+        // Note: only 6 bits are available.
         golang::runtime::scavChunkFlags scavChunkFlags;
 
         using isGoStruct = void;
@@ -81,14 +91,15 @@ namespace golang::runtime
     struct scavChunkData unpackScavChunkData(uint64_t sc);
     struct piController
     {
-        double kp;
-        double ti;
-        double tt;
-        double min;
+        double kp; // Proportional constant.
+        double ti; // Integral time constant.
+        double tt; // Reset time.
+        double min; // Output boundaries.
         double max;
-        double errIntegral;
-        bool errOverflow;
-        bool inputOverflow;
+        double errIntegral; // Integral of the error from t=0 to now.
+        // Error flags.
+        bool errOverflow; // Set if errIntegral ever overflowed.
+        bool inputOverflow; // Set if an operation with the input overflowed.
 
         using isGoStruct = void;
 
@@ -104,19 +115,59 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct piController& value);
     struct scavengerState
     {
+        // lock protects all fields below.
         mutex lock;
+        // g is the goroutine the scavenger is bound to.
         g* g;
+        // parked is whether or not the scavenger is parked.
         bool parked;
+        // timer is the timer used for the scavenger to sleep.
         timer* timer;
+        // sysmonWake signals to sysmon that it should wake the scavenger.
         atomic::Uint32 sysmonWake;
+        // targetCPUFraction is the target CPU overhead for the scavenger.
         double targetCPUFraction;
+        // sleepRatio is the ratio of time spent doing scavenging work to
+        // time spent sleeping. This is used to decide how long the scavenger
+        // should sleep for in between batches of work. It is set by
+        // critSleepController in order to maintain a CPU overhead of
+        // targetCPUFraction.
+        // Lower means more sleep, higher means more aggressive scavenging.
         double sleepRatio;
+        // sleepController controls sleepRatio.
+        // See sleepRatio for more details.
         piController sleepController;
+        // controllerCooldown is the time left in nanoseconds during which we avoid
+        // using the controller and we hold sleepRatio at a conservative
+        // value. Used if the controller's assumptions fail to hold.
         int64_t controllerCooldown;
+        // printControllerReset instructs printScavTrace to signal that
+        // the controller was reset.
         bool printControllerReset;
+        // sleepStub is a stub used for testing to avoid actually having
+        // the scavenger sleep.
+        // Unlike the other stubs, this is not populated if left nil
+        // Instead, it is called when non-nil because any valid implementation
+        // of this function basically requires closing over this scavenger
+        // state, and allocating a closure is not allowed in the runtime as
+        // a matter of policy.
         std::function<int64_t (int64_t n)> sleepStub;
+        // scavenge is a function that scavenges n bytes of memory.
+        // Returns how many bytes of memory it actually scavenged, as
+        // well as the time it took in nanoseconds. Usually mheap.pages.scavenge
+        // with nanotime called around it, but stubbed out for testing.
+        // Like mheap.pages.scavenge, if it scavenges less than n bytes of
+        // memory, the caller may assume the heap is exhausted of scavengable
+        // memory for now.
+        // If this is nil, it is populated with the real thing in init.
         std::function<std::tuple<uintptr_t, int64_t> (uintptr_t n)> scavenge;
+        // shouldStop is a callback called in the work loop and provides a
+        // point that can force the scavenger to stop early, for example because
+        // the scavenge policy dictates too much has been scavenged already.
+        // If this is nil, it is populated with the real thing in init.
         std::function<bool ()> shouldStop;
+        // gomaxprocs returns the current value of gomaxprocs. Stub for testing.
+        // If this is nil, it is populated with the real thing in init.
         std::function<int32_t ()> gomaxprocs;
 
         using isGoStruct = void;
@@ -133,14 +184,50 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct scavengerState& value);
     struct scavengeIndex
     {
+        // chunks is a scavChunkData-per-chunk structure that indicates the presence of pages
+        // available for scavenging. Updates to the index are serialized by the pageAlloc lock.
+        // It tracks chunk occupancy and a generation counter per chunk. If a chunk's occupancy
+        // never exceeds pallocChunkDensePages over the course of a single GC cycle, the chunk
+        // becomes eligible for scavenging on the next cycle. If a chunk ever hits this density
+        // threshold it immediately becomes unavailable for scavenging in the current cycle as
+        // well as the next.
+        // [min, max) represents the range of chunks that is safe to access (i.e. will not cause
+        // a fault). As an optimization minHeapIdx represents the true minimum chunk that has been
+        // mapped, since min is likely rounded down to include the system page containing minHeapIdx.
+        // For a chunk size of 4 MiB this structure will only use 2 MiB for a 1 TiB contiguous heap.
         gocpp::slice<atomicScavChunkData> chunks;
         atomic::Uintptr min;
         atomic::Uintptr max;
         atomic::Uintptr minHeapIdx;
+        // searchAddr* is the maximum address (in the offset address space, so we have a linear
+        // view of the address space; see mranges.go:offAddr) containing memory available to
+        // scavenge. It is a hint to the find operation to avoid O(n^2) behavior in repeated lookups.
+        // searchAddr* is always inclusive and should be the base address of the highest runtime
+        // page available for scavenging.
+        // searchAddrForce is managed by find and free.
+        // searchAddrBg is managed by find and nextGen.
+        // Normally, find monotonically decreases searchAddr* as it finds no more free pages to
+        // scavenge. However, mark, when marking a new chunk at an index greater than the current
+        // searchAddr, sets searchAddr to the *negative* index into chunks of that page. The trick here
+        // is that concurrent calls to find will fail to monotonically decrease searchAddr*, and so they
+        // won't barge over new memory becoming available to scavenge. Furthermore, this ensures
+        // that some future caller of find *must* observe the new high index. That caller
+        // (or any other racing with it), then makes searchAddr positive before continuing, bringing
+        // us back to our monotonically decreasing steady-state.
+        // A pageAlloc lock serializes updates between min, max, and searchAddr, so abs(searchAddr)
+        // is always guaranteed to be >= min and < max (converted to heap addresses).
+        // searchAddrBg is increased only on each new generation and is mainly used by the
+        // background scavenger and heap-growth scavenging. searchAddrForce is increased continuously
+        // as memory gets freed and is mainly used by eager memory reclaim such as debug.FreeOSMemory
+        // and scavenging to maintain the memory limit.
         atomicOffAddr searchAddrBg;
         atomicOffAddr searchAddrForce;
+        // freeHWM is the highest address (in offset address space) that was freed
+        // this generation.
         offAddr freeHWM;
+        // Generation counter. Updated by nextGen at the end of each mark phase.
         uint32_t gen;
+        // test indicates whether or not we're in a test.
         bool test;
 
         using isGoStruct = void;

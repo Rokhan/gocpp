@@ -13,11 +13,11 @@ namespace golang::strconv
 {
     struct decimal
     {
-        gocpp::array<unsigned char, 800> d;
-        int nd;
-        int dp;
-        bool neg;
-        bool trunc;
+        gocpp::array<unsigned char, 800> d; // digits, big-endian representation
+        int nd; // number of digits used
+        int dp; // decimal point
+        bool neg; // negative flag
+        bool trunc; // discarded nonzero digits beyond d[:nd]
 
         using isGoStruct = void;
 
@@ -36,8 +36,8 @@ namespace golang::strconv
     void rightShift(struct decimal* a, unsigned int k);
     struct leftCheat
     {
-        int delta;
-        gocpp::string cutoff;
+        int delta; // number of new digits
+        gocpp::string cutoff; // minus one digit if original < a.
 
         using isGoStruct = void;
 

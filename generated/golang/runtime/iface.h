@@ -19,9 +19,9 @@ namespace golang::runtime
     extern mutex itabLock;
     struct itabTableType
     {
-        uintptr_t size;
-        uintptr_t count;
-        gocpp::array<itab*, itabInitSize> entries;
+        uintptr_t size; // length of entries array. Always a power of 2.
+        uintptr_t count; // current number of filled entries.
+        gocpp::array<itab*, itabInitSize> entries; // really [size] large
 
         using isGoStruct = void;
 

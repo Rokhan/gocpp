@@ -17,6 +17,7 @@ namespace golang::runtime
 {
     struct ticksType
     {
+        // lock protects access to start* and val.
         mutex lock;
         int64_t startTicks;
         int64_t startTime;

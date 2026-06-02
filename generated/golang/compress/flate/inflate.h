@@ -21,8 +21,8 @@ namespace golang::flate
     extern sync::Once fixedOnce;
     struct ReadError
     {
-        int64_t Offset;
-        gocpp::error Err;
+        int64_t Offset; // byte offset where error occurred
+        gocpp::error Err; // error returned by underlying Read
 
         using isGoStruct = void;
 
@@ -38,8 +38,8 @@ namespace golang::flate
     std::ostream& operator<<(std::ostream& os, const struct ReadError& value);
     struct WriteError
     {
-        int64_t Offset;
-        gocpp::error Err;
+        int64_t Offset; // byte offset where error occurred
+        gocpp::error Err; // error returned by underlying Write
 
         using isGoStruct = void;
 
@@ -113,10 +113,10 @@ namespace golang::flate
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value);
     struct huffmanDecoder
     {
-        int min;
-        gocpp::array<uint32_t, huffmanNumChunks> chunks;
-        gocpp::slice<gocpp::slice<uint32_t>> links;
-        uint32_t linkMask;
+        int min; // the minimum code length
+        gocpp::array<uint32_t, huffmanNumChunks> chunks; // chunks as described above
+        gocpp::slice<gocpp::slice<uint32_t>> links; // overflow links
+        uint32_t linkMask; // mask the width of the link table
 
         using isGoStruct = void;
 
@@ -190,17 +190,25 @@ namespace golang::flate
     extern huffmanDecoder fixedHuffmanDecoder;
     struct decompressor
     {
+        // Input source.
         Reader r;
-        bufio::Reader* rBuf;
+        bufio::Reader* rBuf; // created if provided io.Reader does not implement io.ByteReader
         int64_t roffset;
+        // Input bits, in top of b.
         uint32_t b;
         unsigned int nb;
+        // Huffman decoders for literal/length, distance.
         huffmanDecoder h1;
         huffmanDecoder h2;
+        // Length arrays used to define Huffman codes.
         gocpp::array_ptr<gocpp::array<int, maxNumLit + maxNumDist>> bits;
         gocpp::array_ptr<gocpp::array<int, numCodes>> codebits;
+        // Output history, buffer.
         dictDecoder dict;
+        // Temporary buffer (avoids repeated allocation).
         gocpp::array<unsigned char, 4> buf;
+        // Next step in the decompression,
+        // and decompression state.
         std::function<void (struct decompressor* _1)> step;
         int stepState;
         bool final;

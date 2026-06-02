@@ -167,6 +167,7 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct UnsafePointer& value);
     struct Bool
     {
+        // Inherits noCopy from Uint8.
         Uint8 u;
 
         using isGoStruct = void;
@@ -183,6 +184,7 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Bool& value);
     struct Float64
     {
+        // Inherits noCopy and align64 from Uint64.
         Uint64 u;
 
         using isGoStruct = void;

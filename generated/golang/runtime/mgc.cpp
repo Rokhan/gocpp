@@ -148,9 +148,9 @@ namespace golang::runtime
     uint32_t gcphase;
     struct gocpp_id_0
     {
-        bool enabled;
-        gocpp::array<unsigned char, 3> pad;
-        uint64_t alignme;
+        bool enabled; // compiler emits a check of this before calling write barrier
+        gocpp::array<unsigned char, 3> pad; // compiler uses 32-bit load for "enabled" field
+        uint64_t alignme; // guarantee alignment so that compiler can use a 32 or 64-bit load
 
         using isGoStruct = void;
 

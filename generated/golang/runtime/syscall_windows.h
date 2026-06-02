@@ -21,8 +21,8 @@ namespace golang::runtime
     {
         golang::runtime::abiPartKind kind;
         uintptr_t srcStackOffset;
-        uintptr_t dstStackOffset;
-        int dstRegister;
+        uintptr_t dstStackOffset; // used if kind == abiPartStack
+        int dstRegister; // used if kind == abiPartReg
         uintptr_t len;
 
         using isGoStruct = void;
@@ -60,9 +60,18 @@ namespace golang::runtime
     struct callbackArgs
     {
         uintptr_t index;
+        // args points to the argument block.
+        // For cdecl and stdcall, all arguments are on the stack.
+        // For fastcall, the trampoline spills register arguments to
+        // the reserved spill slots below the stack arguments,
+        // resulting in a layout equivalent to stdcall.
+        // For arm, the trampoline stores the register arguments just
+        // below the stack arguments, so again we can treat it as one
+        // big stack arguments frame.
         gocpp::unsafe_pointer args;
+        // Below are out-args from callbackWrap
         uintptr_t result;
-        uintptr_t retPop;
+        uintptr_t retPop; // For 386 cdecl, how many bytes to pop on return
 
         using isGoStruct = void;
 
@@ -102,10 +111,12 @@ namespace golang::runtime
     struct abiDesc
     {
         gocpp::slice<abiPart> parts;
-        uintptr_t srcStackSize;
-        uintptr_t dstStackSize;
-        uintptr_t dstSpill;
-        int dstRegisters;
+        uintptr_t srcStackSize; // stdcall/fastcall stack space tracking
+        uintptr_t dstStackSize; // Go stack space used
+        uintptr_t dstSpill; // Extra stack space for argument spill slots
+        int dstRegisters; // Go ABI int argument registers used
+        // retOffset is the offset of the uintptr-sized result in the Go
+        // frame.
         uintptr_t retOffset;
 
         using isGoStruct = void;
@@ -122,8 +133,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
     struct winCallback
     {
-        funcval* fn;
-        uintptr_t retPop;
+        funcval* fn; // Go function
+        uintptr_t retPop; // For 386 cdecl, how many bytes to pop on return
         abiDesc abiMap;
 
         using isGoStruct = void;

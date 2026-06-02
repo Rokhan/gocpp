@@ -116,6 +116,7 @@ namespace golang::runtime
     struct wakeableSleep
     {
         timer* timer;
+        // lock protects access to wakeup, but not send/recv on it.
         mutex lock;
         gocpp::channel<gocpp_id_5> wakeup;
 

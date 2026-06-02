@@ -19,10 +19,13 @@ namespace golang::sync
     struct Pool
     {
         noCopy noCopy;
-        gocpp::unsafe_pointer local;
-        uintptr_t localSize;
-        gocpp::unsafe_pointer victim;
-        uintptr_t victimSize;
+        gocpp::unsafe_pointer local; // local fixed-size per-P pool, actual type is [P]poolLocal
+        uintptr_t localSize; // size of the local array
+        gocpp::unsafe_pointer victim; // local from previous cycle
+        uintptr_t victimSize; // size of victims array
+        // New optionally specifies a function to generate
+        // a value when Get would otherwise return nil.
+        // It may not be changed concurrently with calls to Get.
         std::function<go_any ()> New;
 
         using isGoStruct = void;
@@ -39,8 +42,8 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct Pool& value);
     struct poolLocalInternal
     {
-        go_any go_private;
-        poolChain shared;
+        go_any go_private; // Can be used only by the respective P.
+        poolChain shared; // Local P can pushHead/popHead; any P can popTail.
 
         using isGoStruct = void;
 
@@ -69,6 +72,8 @@ namespace golang::sync
     struct poolLocal
     {
         poolLocalInternal poolLocalInternal;
+        // Prevents false sharing on widespread platforms with
+        // 128 mod (cache line size) = 0 .
         gocpp::array<unsigned char, 128 - gocpp::Sizeof<golang::sync::poolLocalInternal>() % 128> pad;
 
         using isGoStruct = void;

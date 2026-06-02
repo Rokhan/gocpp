@@ -770,6 +770,7 @@ namespace golang::syscall
         uint32_t ReparseTag;
         uint16_t ReparseDataLength;
         uint16_t Reserved;
+        // GenericReparseBuffer
         unsigned char reparseBuffer;
 
         using isGoStruct = void;

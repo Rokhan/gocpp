@@ -40,7 +40,7 @@ namespace golang::runtime
         sys::NotInHeap _1;
         bucket* next;
         bucket* allnext;
-        golang::runtime::bucketType typ;
+        golang::runtime::bucketType typ; // memBucket or blockBucket (includes mutexProfile)
         uintptr_t hash;
         uintptr_t size;
         uintptr_t nstk;
@@ -148,12 +148,12 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct lockTimer& value);
     struct mLockProfile
     {
-        atomic::Int64 waitTime;
-        gocpp::array<uintptr_t, maxStack> stack;
-        uintptr_t pending;
-        int64_t cycles;
-        int64_t cyclesLost;
-        bool disabled;
+        atomic::Int64 waitTime; // total nanoseconds spent waiting in runtime.lockWithRank
+        gocpp::array<uintptr_t, maxStack> stack; // stack that experienced contention in runtime.lockWithRank
+        uintptr_t pending; // *mutex that experienced contention (to be traceback-ed)
+        int64_t cycles; // cycles attributable to "pending" (if set), otherwise to "stack"
+        int64_t cyclesLost; // contention for which we weren't able to record a call stack
+        bool disabled; // attribute all time to "lost"
 
         using isGoStruct = void;
 
@@ -173,7 +173,7 @@ namespace golang::runtime
     void mutexevent(int64_t cycles, int skip);
     struct StackRecord
     {
-        gocpp::array<uintptr_t, 32> Stack0;
+        gocpp::array<uintptr_t, 32> Stack0; // stack trace for this record; ends at first 0 entry
 
         using isGoStruct = void;
 
@@ -191,11 +191,11 @@ namespace golang::runtime
     extern bool disableMemoryProfiling;
     struct MemProfileRecord
     {
-        int64_t AllocBytes;
+        int64_t AllocBytes; // number of bytes allocated, freed
         int64_t FreeBytes;
-        int64_t AllocObjects;
+        int64_t AllocObjects; // number of objects allocated, freed
         int64_t FreeObjects;
-        gocpp::array<uintptr_t, 32> Stack0;
+        gocpp::array<uintptr_t, 32> Stack0; // stack trace for this record; ends at first 0 entry
 
         using isGoStruct = void;
 
@@ -231,7 +231,18 @@ namespace golang::runtime
     void tracegc();
     struct memRecord
     {
+        // active is the currently published profile. A profiling
+        // cycle can be accumulated into active once its complete.
         memRecordCycle active;
+        // future records the profile events we're counting for cycles
+        // that have not yet been published. This is ring buffer
+        // indexed by the global heap profile cycle C and stores
+        // cycles C, C+1, and C+2. Unlike active, these counts are
+        // only for a single cycle; they are not cumulative across
+        // cycles.
+        // We store cycle C here because there's a window between when
+        // C becomes the active cycle and when we've flushed it to
+        // active.
         gocpp::array<memRecordCycle, 3> future;
 
         using isGoStruct = void;

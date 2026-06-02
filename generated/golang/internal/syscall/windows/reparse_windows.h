@@ -34,6 +34,10 @@ namespace golang::windows
     struct REPARSE_DATA_BUFFER_HEADER
     {
         uint32_t ReparseTag;
+        // The size, in bytes, of the reparse data that follows
+        // the common portion of the REPARSE_DATA_BUFFER element.
+        // This value is the length of the data starting at the
+        // SubstituteNameOffset field.
         uint16_t ReparseDataLength;
         uint16_t Reserved;
 
@@ -51,10 +55,21 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct REPARSE_DATA_BUFFER_HEADER& value);
     struct SymbolicLinkReparseBuffer
     {
+        // The integer that contains the offset, in bytes,
+        // of the substitute name string in the PathBuffer array,
+        // computed as an offset from byte 0 of PathBuffer. Note that
+        // this offset must be divided by 2 to get the array index.
         uint16_t SubstituteNameOffset;
+        // The integer that contains the length, in bytes, of the
+        // substitute name string. If this string is null-terminated,
+        // SubstituteNameLength does not include the Unicode null character.
         uint16_t SubstituteNameLength;
+        // PrintNameOffset is similar to SubstituteNameOffset.
         uint16_t PrintNameOffset;
+        // PrintNameLength is similar to SubstituteNameLength.
         uint16_t PrintNameLength;
+        // Flags specifies whether the substitute name is a full path name or
+        // a path name relative to the directory containing the symbolic link.
         uint32_t Flags;
         gocpp::array<uint16_t, 1> PathBuffer;
 
@@ -72,9 +87,18 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct SymbolicLinkReparseBuffer& value);
     struct MountPointReparseBuffer
     {
+        // The integer that contains the offset, in bytes,
+        // of the substitute name string in the PathBuffer array,
+        // computed as an offset from byte 0 of PathBuffer. Note that
+        // this offset must be divided by 2 to get the array index.
         uint16_t SubstituteNameOffset;
+        // The integer that contains the length, in bytes, of the
+        // substitute name string. If this string is null-terminated,
+        // SubstituteNameLength does not include the Unicode null character.
         uint16_t SubstituteNameLength;
+        // PrintNameOffset is similar to SubstituteNameOffset.
         uint16_t PrintNameOffset;
+        // PrintNameLength is similar to SubstituteNameLength.
         uint16_t PrintNameLength;
         gocpp::array<uint16_t, 1> PathBuffer;
 

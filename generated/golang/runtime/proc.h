@@ -406,7 +406,7 @@ namespace golang::runtime
     uint32_t gcd(uint32_t a, uint32_t b);
     struct initTask
     {
-        uint32_t state;
+        uint32_t state; // 0 = uninitialized, 1 = in progress, 2 = done
         uint32_t nfns;
 
         using isGoStruct = void;
@@ -423,10 +423,10 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct initTask& value);
     struct tracestat
     {
-        bool active;
-        uint64_t id;
-        uint64_t allocs;
-        uint64_t bytes;
+        bool active; // init tracing activation status
+        uint64_t id; // init goroutine id
+        uint64_t allocs; // heap allocations
+        uint64_t bytes; // heap allocated bytes
 
         using isGoStruct = void;
 

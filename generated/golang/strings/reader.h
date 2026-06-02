@@ -16,8 +16,8 @@ namespace golang::strings
     struct Reader
     {
         gocpp::string s;
-        int64_t i;
-        int prevRune;
+        int64_t i; // current reading index
+        int prevRune; // index of previous rune; or < 0
 
         using isGoStruct = void;
 

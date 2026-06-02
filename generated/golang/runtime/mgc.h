@@ -59,7 +59,11 @@ namespace golang::runtime
     struct gocpp_id_1
     {
         mutex lock;
+        // free is a list of spans dedicated to workbufs, but
+        // that don't currently contain any workbufs.
         mSpanList free;
+        // busy is a list of all spans containing workbufs on
+        // one of the workbuf lists.
         mSpanList busy;
 
         using isGoStruct = void;
@@ -113,8 +117,8 @@ namespace golang::runtime
     struct gcTrigger
     {
         golang::runtime::gcTriggerKind kind;
-        int64_t now;
-        uint32_t n;
+        int64_t now; // gcTriggerTime: current time
+        uint32_t n; // gcTriggerCycle: cycle number to start
 
         using isGoStruct = void;
 
@@ -136,8 +140,13 @@ namespace golang::runtime
     void gcBgMarkPrepare();
     struct gcBgMarkWorkerNode
     {
+        // Unused workers are managed in a lock-free stack. This field must be first.
         lfnode node;
+        // The g of this worker.
         golang::runtime::guintptr gp;
+        // Release this m on park. This is used to communicate with the unlock
+        // function, which cannot access the G's stack. It is unused outside of
+        // gcBgMarkWorker().
         golang::runtime::muintptr m;
 
         using isGoStruct = void;
@@ -181,48 +190,100 @@ namespace golang::runtime
     gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p);
     struct workType
     {
-        golang::runtime::lfstack full;
-        cpu::CacheLinePad _1;
-        golang::runtime::lfstack empty;
-        cpu::CacheLinePad _2;
+        golang::runtime::lfstack full; // lock-free list of full blocks workbuf
+        cpu::CacheLinePad _1; // prevents false-sharing between full and empty
+        golang::runtime::lfstack empty; // lock-free list of empty blocks workbuf
+        cpu::CacheLinePad _2; // prevents false-sharing between empty and nproc/nwait
         gocpp_id_1 wbufSpans;
+        // Restore 64-bit alignment on 32-bit.
         uint32_t _3;
+        // bytesMarked is the number of bytes marked this cycle. This
+        // includes bytes blackened in scanned objects, noscan objects
+        // that go straight to black, and permagrey objects scanned by
+        // markroot during the concurrent scan phase. This is updated
+        // atomically during the cycle. Updates may be batched
+        // arbitrarily, since the value is only read at the end of the
+        // cycle.
+        // Because of benign races during marking, this number may not
+        // be the exact number of marked bytes, but it should be very
+        // close.
+        // Put this field here because it needs 64-bit atomic access
+        // (and thus 8-byte alignment even on 32-bit architectures).
         uint64_t bytesMarked;
-        uint32_t markrootNext;
-        uint32_t markrootJobs;
+        uint32_t markrootNext; // next markroot job
+        uint32_t markrootJobs; // number of markroot jobs
         uint32_t nproc;
         int64_t tstart;
         uint32_t nwait;
+        // Number of roots of various root types. Set by gcMarkRootPrepare.
+        // nStackRoots == len(stackRoots), but we have nStackRoots for
+        // consistency.
         int nDataRoots;
         int nBSSRoots;
         int nSpanRoots;
         int nStackRoots;
+        // Base indexes of each root type. Set by gcMarkRootPrepare.
         uint32_t baseData;
         uint32_t baseBSS;
         uint32_t baseSpans;
         uint32_t baseStacks;
         uint32_t baseEnd;
+        // stackRoots is a snapshot of all of the Gs that existed
+        // before the beginning of concurrent marking. The backing
+        // store of this must not be modified because it might be
+        // shared with allgs.
         gocpp::slice<g*> stackRoots;
+        // Each type of GC state transition is protected by a lock.
+        // Since multiple threads can simultaneously detect the state
+        // transition condition, any thread that detects a transition
+        // condition must acquire the appropriate transition lock,
+        // re-check the transition condition and return if it no
+        // longer holds or perform the transition if it does.
+        // Likewise, any transition must invalidate the transition
+        // condition before releasing the lock. This ensures that each
+        // transition is performed by exactly one thread and threads
+        // that need the transition to happen block until it has
+        // happened.
+        // startSema protects the transition from "off" to mark or
+        // mark termination.
         uint32_t startSema;
+        // markDoneSema protects transitions from mark to mark termination.
         uint32_t markDoneSema;
-        note bgMarkReady;
-        uint32_t bgMarkDone;
+        note bgMarkReady; // signal background mark worker has started
+        uint32_t bgMarkDone; // cas to 1 when at a background mark completion point
+        // mode is the concurrency mode of the current GC cycle.
         golang::runtime::gcMode mode;
+        // userForced indicates the current GC cycle was forced by an
+        // explicit user call.
         bool userForced;
+        // initialHeapLive is the value of gcController.heapLive at the
+        // beginning of this GC cycle.
         uint64_t initialHeapLive;
+        // assistQueue is a queue of assists that are blocked because
+        // there was neither enough credit to steal or enough work to
+        // do.
         gocpp_id_2 assistQueue;
+        // sweepWaiters is a list of blocked goroutines to wake when
+        // we transition from mark termination to sweep.
         gocpp_id_3 sweepWaiters;
+        // cycles is the number of completed GC cycles, where a GC
+        // cycle is sweep termination, mark, mark termination, and
+        // sweep. This differs from memstats.numgc, which is
+        // incremented at mark termination.
         atomic::Uint32 cycles;
+        // Timing/utilization stats for this cycle.
         int32_t stwprocs;
         int32_t maxprocs;
-        int64_t tSweepTerm;
+        int64_t tSweepTerm; // nanotime() of phase start
         int64_t tMark;
         int64_t tMarkTerm;
         int64_t tEnd;
-        int64_t pauseNS;
+        int64_t pauseNS; // total STW time this cycle
+        // debug.gctrace heap sizes for this cycle.
         uint64_t heap0;
         uint64_t heap1;
         uint64_t heap2;
+        // Cumulative estimated CPU usage.
         cpuStats cpuStats;
 
         using isGoStruct = void;

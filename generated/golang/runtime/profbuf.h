@@ -16,16 +16,19 @@ namespace golang::runtime
 {
     struct profBuf
     {
+        // accessed atomically
         golang::runtime::profAtomic r;
         golang::runtime::profAtomic w;
         atomic::Uint64 overflow;
         atomic::Uint64 overflowTime;
         atomic::Uint32 eof;
+        // immutable (excluding slice content)
         uintptr_t hdrsize;
         gocpp::slice<uint64_t> data;
         gocpp::slice<gocpp::unsafe_pointer> tags;
+        // owned by reader
         golang::runtime::profIndex rNext;
-        gocpp::slice<uint64_t> overflowBuf;
+        gocpp::slice<uint64_t> overflowBuf; // for use by reader to return overflow record
         note wait;
 
         using isGoStruct = void;

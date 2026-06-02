@@ -41,19 +41,19 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct pcHeader
     {
-        uint32_t magic;
-        uint8_t pad1;
+        uint32_t magic; // 0xFFFFFFF1
+        uint8_t pad1; // 0,0
         uint8_t pad2;
-        uint8_t minLC;
-        uint8_t ptrSize;
-        int nfunc;
-        unsigned int nfiles;
-        uintptr_t textStart;
-        uintptr_t funcnameOffset;
-        uintptr_t cuOffset;
-        uintptr_t filetabOffset;
-        uintptr_t pctabOffset;
-        uintptr_t pclnOffset;
+        uint8_t minLC; // min instruction size
+        uint8_t ptrSize; // size of a ptr in bytes
+        int nfunc; // number of functions in the module
+        unsigned int nfiles; // number of entries in the file tab
+        uintptr_t textStart; // base for function entry PC offsets in this module, equal to moduledata.text
+        uintptr_t funcnameOffset; // offset to the funcnametab variable from pcHeader
+        uintptr_t cuOffset; // offset to the cutab variable from pcHeader
+        uintptr_t filetabOffset; // offset to the filetab variable from pcHeader
+        uintptr_t pctabOffset; // offset to the pctab variable from pcHeader
+        uintptr_t pclnOffset; // offset to the pclntab variable from pcHeader
 
         using isGoStruct = void;
 
@@ -90,7 +90,7 @@ namespace golang::runtime
     void modulesinit();
     struct functab
     {
-        uint32_t entryoff;
+        uint32_t entryoff; // relative to runtime.text
         uint32_t funcoff;
 
         using isGoStruct = void;
@@ -107,9 +107,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct functab& value);
     struct textsect
     {
-        uintptr_t vaddr;
-        uintptr_t end;
-        uintptr_t baseaddr;
+        uintptr_t vaddr; // prelinked section vaddr
+        uintptr_t end; // vaddr + section length
+        uintptr_t baseaddr; // relocated section address
 
         using isGoStruct = void;
 
@@ -183,10 +183,11 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct srcFunc& value);
     struct pcvalueCacheEnt
     {
+        // targetpc and off together are the key of this cache entry.
         uintptr_t targetpc;
         uint32_t off;
-        int32_t val;
-        uintptr_t valPC;
+        int32_t val; // The value of this entry.
+        uintptr_t valPC; // The PC at which val starts
 
         using isGoStruct = void;
 
@@ -218,9 +219,9 @@ namespace golang::runtime
     std::tuple<uint32_t, uint32_t> readvarint(gocpp::slice<unsigned char> p);
     struct stackmap
     {
-        int32_t n;
-        int32_t nbit;
-        gocpp::array<unsigned char, 1> bytedata;
+        int32_t n; // number of bitmaps
+        int32_t nbit; // number of bits in each bitmap
+        gocpp::array<unsigned char, 1> bytedata; // bitmaps, each starting on a byte boundary
 
         using isGoStruct = void;
 
@@ -237,13 +238,41 @@ namespace golang::runtime
     struct bitvector stackmapdata(struct stackmap* stkmap, int32_t n);
     struct Frame
     {
+        // PC is the program counter for the location in this frame.
+        // For a frame that calls another frame, this will be the
+        // program counter of a call instruction. Because of inlining,
+        // multiple frames may have the same PC value, but different
+        // symbolic information.
         uintptr_t PC;
+        // Func is the Func value of this call frame. This may be nil
+        // for non-Go code or fully inlined functions.
         Func* Func;
+        // Function is the package path-qualified function name of
+        // this call frame. If non-empty, this string uniquely
+        // identifies a single function in the program.
+        // This may be the empty string if not known.
+        // If Func is not nil then Function == Func.Name().
         gocpp::string Function;
+        // File and Line are the file name and line number of the
+        // location in this frame. For non-leaf frames, this will be
+        // the location of a call. These may be the empty string and
+        // zero, respectively, if not known.
         gocpp::string File;
         int Line;
+        // startLine is the line number of the beginning of the function in
+        // this frame. Specifically, it is the line number of the func keyword
+        // for Go functions. Note that //line directives can change the
+        // filename and/or line number arbitrarily within a function, meaning
+        // that the Line - startLine offset is not always meaningful.
+        // This may be zero if not known.
         int startLine;
+        // Entry point program counter for the function; may be zero
+        // if not known. If Func is not nil then Entry ==
+        // Func.Entry().
         uintptr_t Entry;
+        // The runtime's internal view of the function. This field
+        // is set (funcInfo.valid() returns true) only for Go functions,
+        // not for C functions.
         funcInfo funcInfo;
 
         using isGoStruct = void;
@@ -260,7 +289,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct Frame& value);
     struct Func
     {
-        gocpp_id_0 opaque;
+        gocpp_id_0 opaque; // unexported field to disallow conversions
 
         using isGoStruct = void;
 
@@ -276,7 +305,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct Func& value);
     struct moduledata
     {
-        sys::NotInHeap NotInHeap;
+        sys::NotInHeap NotInHeap; // Only in static data
         pcHeader* pcHeader;
         gocpp::slice<unsigned char> funcnametab;
         gocpp::slice<uint32_t> cutab;
@@ -305,21 +334,23 @@ namespace golang::runtime
         uintptr_t types;
         uintptr_t etypes;
         uintptr_t rodata;
-        uintptr_t gofunc;
+        uintptr_t gofunc; // go.func.*
         gocpp::slice<textsect> textsectmap;
-        gocpp::slice<int32_t> typelinks;
+        gocpp::slice<int32_t> typelinks; // offsets from types
         gocpp::slice<itab*> itablinks;
         gocpp::slice<ptabEntry> ptab;
         gocpp::string pluginpath;
         gocpp::slice<modulehash> pkghashes;
+        // This slice records the initializing tasks that need to be
+        // done to start up the program. It is built by the linker.
         gocpp::slice<initTask*> inittasks;
         gocpp::string modulename;
         gocpp::slice<modulehash> modulehashes;
-        uint8_t hasmain;
+        uint8_t hasmain; // 1 if module contains the main function, 0 otherwise
         bitvector gcdatamask;
         bitvector gcbssmask;
-        gocpp::map<golang::runtime::typeOff, golang::runtime::_type*> typemap;
-        bool bad;
+        gocpp::map<golang::runtime::typeOff, golang::runtime::_type*> typemap; // offset to *_rtype in previous module
+        bool bad; // module failed to load and should be ignored
         moduledata* next;
 
         using isGoStruct = void;
@@ -353,7 +384,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct pcvalueCache& value);
     struct Frames
     {
+        // callers is a slice of PCs that have not yet been expanded to frames.
         gocpp::slice<uintptr_t> callers;
+        // frames is a slice of Frames that have yet to be returned.
         gocpp::slice<Frame> frames;
         gocpp::array<Frame, 2> frameStore;
 

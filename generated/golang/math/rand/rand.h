@@ -150,6 +150,7 @@ namespace golang::rand
     uint64_t runtime_rand();
     struct runtimeSource
     {
+        // The mutex is used to avoid race conditions in Read.
         mocklib::Mutex mu;
 
         using isGoStruct = void;
@@ -200,8 +201,14 @@ namespace golang::rand
     struct Rand
     {
         Source src;
-        Source64 s64;
+        Source64 s64; // non-nil if src is source64
+        // readVal contains remainder of 63-bit integer used for bytes
+        // generation during most recent Read call.
+        // It is saved so next Read call can start where the previous
+        // one finished.
         int64_t readVal;
+        // readPos indicates the number of low-order bytes of readVal
+        // that are still valid.
         int8_t readPos;
 
         using isGoStruct = void;

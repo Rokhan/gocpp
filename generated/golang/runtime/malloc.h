@@ -87,10 +87,10 @@ namespace golang::runtime
     bool inPersistentAlloc(uintptr_t p);
     struct linearAlloc
     {
-        uintptr_t next;
-        uintptr_t mapped;
-        uintptr_t end;
-        bool mapMemory;
+        uintptr_t next; // next free byte
+        uintptr_t mapped; // one byte past end of mapped space
+        uintptr_t end; // end of reserved space
+        bool mapMemory; // transition memory from Reserved to Ready if true
 
         using isGoStruct = void;
 

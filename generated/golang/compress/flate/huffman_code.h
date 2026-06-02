@@ -48,10 +48,17 @@ namespace golang::flate
     std::ostream& operator<<(std::ostream& os, const struct literalNode& value);
     struct levelInfo
     {
+        // Our level.  for better printing
         int32_t level;
+        // The frequency of the last node at this level
         int32_t lastFreq;
+        // The frequency of the next character to add to this level
         int32_t nextCharFreq;
+        // The frequency of the next pair (from level below) to add to this level.
+        // Only valid if the "needed" value of the next lower level is 0.
         int32_t nextPairFreq;
+        // The number of chains remaining to generate for this level before moving
+        // up to the next level
         int32_t needed;
 
         using isGoStruct = void;
@@ -76,8 +83,8 @@ namespace golang::flate
         gocpp::slice<hcode> codes;
         gocpp::slice<literalNode> freqcache;
         gocpp::array<int32_t, 17> bitCount;
-        byLiteral lns;
-        byFreq lfs;
+        byLiteral lns; // stored to avoid repeated allocation in generate
+        byFreq lfs; // stored to avoid repeated allocation in generate
 
         using isGoStruct = void;
 

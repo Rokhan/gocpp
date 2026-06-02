@@ -50,9 +50,9 @@ namespace golang::runtime
     struct dbgVar
     {
         gocpp::string name;
-        int32_t* value;
-        atomic::Int32* atomic;
-        int32_t def;
+        int32_t* value; // for variables that can only be set at startup
+        atomic::Int32* atomic; // for variables that can be changed during execution
+        int32_t def; // default value (ideally zero)
 
         using isGoStruct = void;
 

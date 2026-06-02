@@ -74,7 +74,8 @@ namespace golang::runtime
     struct adjustinfo
     {
         stack old;
-        uintptr_t delta;
+        uintptr_t delta; // ptr distance from old to new stack (newbase - oldbase)
+        // sghi is the highest sudog.elem on the stack.
         uintptr_t sghi;
 
         using isGoStruct = void;
@@ -92,7 +93,7 @@ namespace golang::runtime
     void adjustpointer(struct adjustinfo* adjinfo, gocpp::unsafe_pointer vpp);
     struct bitvector
     {
-        int32_t n;
+        int32_t n; // # of bits
         uint8_t* bytedata;
 
         using isGoStruct = void;
@@ -126,10 +127,13 @@ namespace golang::runtime
     void freeStackSpans();
     struct stackObjectRecord
     {
+        // offset in frame
+        // if negative, offset from varp
+        // if non-negative, offset from argp
         int32_t off;
         int32_t size;
-        int32_t _ptrdata;
-        uint32_t gcdataoff;
+        int32_t _ptrdata; // ptrdata, or -ptrdata is GC prog is used
+        uint32_t gcdataoff; // offset to gcdata from moduledata.rodata
 
         using isGoStruct = void;
 

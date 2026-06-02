@@ -76,7 +76,7 @@ namespace golang::runtime
         golang::runtime::_type* _interface;
         golang::runtime::_type* concrete;
         golang::runtime::_type* asserted;
-        gocpp::string missingMethod;
+        gocpp::string missingMethod; // one method needed by Interface, missing from Concrete
 
         using isGoStruct = void;
 
@@ -93,8 +93,8 @@ namespace golang::runtime
     gocpp::slice<unsigned char> itoa(gocpp::slice<unsigned char> buf, uint64_t val);
     struct errorAddressString
     {
-        gocpp::string msg;
-        uintptr_t addr;
+        gocpp::string msg; // error message
+        uintptr_t addr; // memory address where the error occurred
 
         using isGoStruct = void;
 
@@ -112,6 +112,10 @@ namespace golang::runtime
     {
         int64_t x;
         int y;
+        // Values in an index or slice expression can be signed or unsigned.
+        // That means we'd need 65 bits to encode all possible indexes, from -2^63 to 2^64-1.
+        // Instead, we keep track of whether x should be interpreted as signed or unsigned.
+        // y is known to be nonnegative and to fit in an int.
         bool go_signed;
         golang::runtime::boundsErrorCode code;
 

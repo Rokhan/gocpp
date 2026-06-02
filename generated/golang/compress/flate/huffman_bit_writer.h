@@ -22,7 +22,13 @@ namespace golang::flate
     extern gocpp::slice<uint32_t> codegenOrder;
     struct huffmanBitWriter
     {
+        // writer is the underlying writer.
+        // Do not use it directly; use the write method, which ensures
+        // that Write errors are sticky.
         io::Writer writer;
+        // Data waiting to be written is bytes[0:nbytes]
+        // and then the low nbits of bits.  Data is always written
+        // sequentially into the bytes array.
         uint64_t bits;
         unsigned int nbits;
         gocpp::array<unsigned char, bufferSize> bytes;

@@ -63,6 +63,9 @@ namespace golang::atomic
     template<typename T> 
     struct Pointer
     {
+        // Mention *T in a field to disallow conversion between Pointer types.
+        // See go.dev/issue/56603 for more details.
+        // Use *T, not T, to avoid spurious recursive type definition errors.
         gocpp::array<T*, 0> _1;
         noCopy _2;
         gocpp::unsafe_pointer v;

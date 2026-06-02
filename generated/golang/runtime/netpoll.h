@@ -37,22 +37,39 @@ namespace golang::runtime
     struct pollDesc
     {
         sys::NotInHeap _1;
-        pollDesc* link;
-        uintptr_t fd;
-        atomic::Uintptr fdseq;
-        atomic::Uint32 atomicInfo;
-        atomic::Uintptr rg;
-        atomic::Uintptr wg;
-        mutex lock;
+        pollDesc* link; // in pollcache, protected by pollcache.lock
+        uintptr_t fd; // constant for pollDesc usage lifetime
+        atomic::Uintptr fdseq; // protects against stale pollDesc
+        // atomicInfo holds bits from closing, rd, and wd,
+        // which are only ever written while holding the lock,
+        // summarized for use by netpollcheckerr,
+        // which cannot acquire the lock.
+        // After writing these fields under lock in a way that
+        // might change the summary, code must call publishInfo
+        // before releasing the lock.
+        // Code that changes fields and then calls netpollunblock
+        // (while still holding the lock) must call publishInfo
+        // before calling netpollunblock, because publishInfo is what
+        // stops netpollblock from blocking anew
+        // (by changing the result of netpollcheckerr).
+        // atomicInfo also holds the eventErr bit,
+        // recording whether a poll event on the fd got an error;
+        // atomicInfo is the only source of truth for that bit.
+        atomic::Uint32 atomicInfo; // atomic pollInfo
+        // rg, wg are accessed atomically and hold g pointers.
+        // (Using atomic.Uintptr here is similar to using guintptr elsewhere.)
+        atomic::Uintptr rg; // pdReady, pdWait, G waiting for read or pdNil
+        atomic::Uintptr wg; // pdReady, pdWait, G waiting for write or pdNil
+        mutex lock; // protects the following fields
         bool closing;
-        uint32_t user;
-        uintptr_t rseq;
-        timer rt;
-        int64_t rd;
-        uintptr_t wseq;
-        timer wt;
-        int64_t wd;
-        pollDesc* self;
+        uint32_t user; // user settable cookie
+        uintptr_t rseq; // protects from stale read timers
+        timer rt; // read deadline timer (set if rt.f != nil)
+        int64_t rd; // read deadline (a nanotime in the future, -1 when expired)
+        uintptr_t wseq; // protects from stale write timers
+        timer wt; // write deadline timer
+        int64_t wd; // write deadline (a nanotime in the future, -1 when expired)
+        pollDesc* self; // storage for indirect interface. See (*pollDesc).makeArg.
 
         using isGoStruct = void;
 

@@ -47,7 +47,8 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Empty& value);
     struct Dummy
     {
-        int i;
+        // before declaration
+        int i; // after declaration
         int j;
 
         using isGoStruct = void;
@@ -117,9 +118,9 @@ namespace golang::main
     void main();
     struct Dummy2
     {
-        Dummy Dummy;
-        Vertex Vertex;
-        int i;
+        Dummy Dummy; // Comment 1: Dummy
+        Vertex Vertex; // Comment 2: Vertex
+        int i; // Comment 3: i
 
         using isGoStruct = void;
 
@@ -136,7 +137,8 @@ namespace golang::main
     struct Dummy3
     {
         Dummy2 Dummy2;
-        int zzz;
+        int zzz; // Comment: yyy and zzz 2
+        int xxx;
 
         using isGoStruct = void;
 

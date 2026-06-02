@@ -35,8 +35,8 @@ namespace golang::cpu
     {
         gocpp::string Name;
         bool* Feature;
-        bool Specified;
-        bool Enable;
+        bool Specified; // whether feature value was specified in GODEBUG
+        bool Enable; // whether feature should be enabled
 
         using isGoStruct = void;
 

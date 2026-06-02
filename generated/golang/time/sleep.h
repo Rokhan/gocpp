@@ -20,7 +20,7 @@ namespace golang::time
         uintptr_t pp;
         int64_t when;
         int64_t period;
-        std::function<void (go_any _1, uintptr_t _2)> f;
+        std::function<void (go_any _1, uintptr_t _2)> f; // NOTE: must not be closure
         go_any arg;
         uintptr_t seq;
         int64_t nextwhen;

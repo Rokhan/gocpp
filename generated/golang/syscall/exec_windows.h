@@ -52,14 +52,14 @@ namespace golang::syscall
     struct SysProcAttr
     {
         bool HideWindow;
-        gocpp::string CmdLine;
+        gocpp::string CmdLine; // used if non-empty, else the windows command line is built by escaping the arguments passed to StartProcess
         uint32_t CreationFlags;
-        golang::syscall::Token Token;
-        SecurityAttributes* ProcessAttributes;
-        SecurityAttributes* ThreadAttributes;
-        bool NoInheritHandles;
-        gocpp::slice<golang::syscall::Handle> AdditionalInheritedHandles;
-        golang::syscall::Handle ParentProcess;
+        golang::syscall::Token Token; // if set, runs new process in the security context represented by the token
+        SecurityAttributes* ProcessAttributes; // if set, applies these security attributes as the descriptor for the new process
+        SecurityAttributes* ThreadAttributes; // if set, applies these security attributes as the descriptor for the main thread of the new process
+        bool NoInheritHandles; // if set, no handles are inherited by the new process, not even the standard handles, contained in ProcAttr.Files, nor the ones contained in AdditionalInheritedHandles
+        gocpp::slice<golang::syscall::Handle> AdditionalInheritedHandles; // a list of additional handles, already marked as inheritable, that will be inherited by the new process
+        golang::syscall::Handle ParentProcess; // if non-zero, the new process regards the process given by this handle as its parent process, and AdditionalInheritedHandles, if set, should exist in this parent process
 
         using isGoStruct = void;
 

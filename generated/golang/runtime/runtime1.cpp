@@ -448,7 +448,7 @@ namespace golang::runtime
         int32_t gcstoptheworld;
         int32_t gctrace;
         int32_t invalidptr;
-        int32_t madvdontneed;
+        int32_t madvdontneed; // for Linux; issue 28466
         atomic::Int32 runtimeContentionStacks;
         int32_t scavtrace;
         int32_t scheddetail;
@@ -459,6 +459,9 @@ namespace golang::runtime
         int32_t adaptivestackstart;
         int32_t tracefpunwindoff;
         int32_t traceadvanceperiod;
+        // debug.malloc is used as a combined debug check
+        // in the malloc function and should be set
+        // if any of the below debug options is != 0.
         bool malloc;
         int32_t allocfreetrace;
         int32_t inittrace;

@@ -293,7 +293,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     struct interfaceType
     {
-        abi::InterfaceType InterfaceType;
+        abi::InterfaceType InterfaceType; // can embed directly because not a public type.
 
         using isGoStruct = void;
 
@@ -480,8 +480,8 @@ namespace golang::reflect
     struct Type toType(abi::Type* t);
     struct layoutKey
     {
-        golang::reflect::funcType* ftyp;
-        abi::Type* rcvr;
+        golang::reflect::funcType* ftyp; // function signature
+        abi::Type* rcvr; // receiver type, or nil if none
 
         using isGoStruct = void;
 
@@ -518,7 +518,7 @@ namespace golang::reflect
     bool ifaceIndir(abi::Type* t);
     struct bitVector
     {
-        uint32_t n;
+        uint32_t n; // number of bits
         gocpp::slice<unsigned char> data;
 
         using isGoStruct = void;
@@ -539,11 +539,17 @@ namespace golang::reflect
     struct Type TypeFor();
     struct Method
     {
+        // Name is the method name.
         gocpp::string Name;
+        // PkgPath is the package path that qualifies a lower case (unexported)
+        // method name. It is empty for upper case (exported) method names.
+        // The combination of PkgPath and Name uniquely identifies a method
+        // in a method set.
+        // See https://golang.org/ref/spec#Uniqueness_of_identifiers
         gocpp::string PkgPath;
-        Type Type;
-        /* Value Func; [Known incomplete type] */
-        int Index;
+        Type Type; // method type
+        /* Value Func; [Known incomplete type] */ // func with receiver as first argument
+        int Index; // index for Type.Method
 
         using isGoStruct = void;
 
@@ -559,13 +565,17 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct Method& value);
     struct StructField
     {
+        // Name is the field name.
         gocpp::string Name;
+        // PkgPath is the package path that qualifies a lower case (unexported)
+        // field name. It is empty for upper case (exported) field names.
+        // See https://golang.org/ref/spec#Uniqueness_of_identifiers
         gocpp::string PkgPath;
-        Type Type;
-        golang::reflect::StructTag Tag;
-        uintptr_t Offset;
-        gocpp::slice<int> Index;
-        bool Anonymous;
+        Type Type; // field type
+        golang::reflect::StructTag Tag; // field tag string
+        uintptr_t Offset; // offset within struct, in bytes
+        gocpp::slice<int> Index; // index sequence for Type.FieldByIndex
+        bool Anonymous; // is an embedded field
 
         using isGoStruct = void;
 

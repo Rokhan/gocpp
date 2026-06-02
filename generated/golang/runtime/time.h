@@ -46,13 +46,22 @@ namespace golang::runtime
 {
     struct timer
     {
+        // If this timer is on a heap, which P's heap it is on.
+        // puintptr rather than *p to match uintptr in the versions
+        // of this struct defined in other packages.
         golang::runtime::puintptr pp;
+        // Timer wakes up at when, and then at when+period, ... (period > 0 only)
+        // each time calling f(arg, now) in the timer goroutine, so f must be
+        // a well-behaved function and not block.
+        // when must be positive on an active timer.
         int64_t when;
         int64_t period;
         std::function<void (go_any _1, uintptr_t _2)> f;
         go_any arg;
         uintptr_t seq;
+        // What to set the when field to in timerModifiedXX status.
         int64_t nextwhen;
+        // The status field holds one of the values below.
         atomic::Uint32 status;
 
         using isGoStruct = void;

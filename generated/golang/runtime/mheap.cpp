@@ -2455,7 +2455,7 @@ namespace golang::runtime
     {
         mutex lock;
         gcBitsArena* free;
-        gcBitsArena* next;
+        gcBitsArena* next; // Read atomically. Write atomically under lock.
         gcBitsArena* current;
         gcBitsArena* previous;
 

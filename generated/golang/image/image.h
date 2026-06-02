@@ -222,8 +222,12 @@ namespace golang::image
     int pixelBufferLength(int bytesPerPixel, struct Rectangle r, gocpp::string imageTypeName);
     struct RGBA
     {
+        // Pix holds the image's pixels, in R, G, B, A order. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
         gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
         int Stride;
+        // Rect is the image's bounds.
         Rectangle Rect;
 
         using isGoStruct = void;
@@ -241,8 +245,12 @@ namespace golang::image
     struct RGBA* NewRGBA(struct Rectangle r);
     struct RGBA64
     {
+        // Pix holds the image's pixels, in R, G, B, A order and big-endian format. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8].
         gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
         int Stride;
+        // Rect is the image's bounds.
         Rectangle Rect;
 
         using isGoStruct = void;
@@ -260,8 +268,12 @@ namespace golang::image
     struct RGBA64* NewRGBA64(struct Rectangle r);
     struct NRGBA
     {
+        // Pix holds the image's pixels, in R, G, B, A order. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
         gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
         int Stride;
+        // Rect is the image's bounds.
         Rectangle Rect;
 
         using isGoStruct = void;
@@ -279,8 +291,12 @@ namespace golang::image
     struct NRGBA* NewNRGBA(struct Rectangle r);
     struct NRGBA64
     {
+        // Pix holds the image's pixels, in R, G, B, A order and big-endian format. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8].
         gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
         int Stride;
+        // Rect is the image's bounds.
         Rectangle Rect;
 
         using isGoStruct = void;
@@ -298,8 +314,12 @@ namespace golang::image
     struct NRGBA64* NewNRGBA64(struct Rectangle r);
     struct Alpha
     {
+        // Pix holds the image's pixels, as alpha values. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
         gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
         int Stride;
+        // Rect is the image's bounds.
         Rectangle Rect;
 
         using isGoStruct = void;
@@ -317,8 +337,12 @@ namespace golang::image
     struct Alpha* NewAlpha(struct Rectangle r);
     struct Alpha16
     {
+        // Pix holds the image's pixels, as alpha values in big-endian format. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2].
         gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
         int Stride;
+        // Rect is the image's bounds.
         Rectangle Rect;
 
         using isGoStruct = void;
@@ -336,8 +360,12 @@ namespace golang::image
     struct Alpha16* NewAlpha16(struct Rectangle r);
     struct Gray
     {
+        // Pix holds the image's pixels, as gray values. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
         gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
         int Stride;
+        // Rect is the image's bounds.
         Rectangle Rect;
 
         using isGoStruct = void;
@@ -355,8 +383,12 @@ namespace golang::image
     struct Gray* NewGray(struct Rectangle r);
     struct Gray16
     {
+        // Pix holds the image's pixels, as gray values in big-endian format. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2].
         gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
         int Stride;
+        // Rect is the image's bounds.
         Rectangle Rect;
 
         using isGoStruct = void;
@@ -374,8 +406,12 @@ namespace golang::image
     struct Gray16* NewGray16(struct Rectangle r);
     struct CMYK
     {
+        // Pix holds the image's pixels, in C, M, Y, K order. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
         gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
         int Stride;
+        // Rect is the image's bounds.
         Rectangle Rect;
 
         using isGoStruct = void;
@@ -393,9 +429,14 @@ namespace golang::image
     struct CMYK* NewCMYK(struct Rectangle r);
     struct Paletted
     {
+        // Pix holds the image's pixels, as palette indices. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
         gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
         int Stride;
+        // Rect is the image's bounds.
         Rectangle Rect;
+        // Palette is the image's palette.
         color::Palette Palette;
 
         using isGoStruct = void;

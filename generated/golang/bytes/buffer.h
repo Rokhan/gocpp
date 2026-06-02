@@ -15,9 +15,9 @@ namespace golang::bytes
 {
     struct Buffer
     {
-        gocpp::slice<unsigned char> buf;
-        int off;
-        golang::bytes::readOp lastRead;
+        gocpp::slice<unsigned char> buf; // contents are the bytes buf[off : len(buf)]
+        int off; // read at &buf[off], write at &buf[len(buf)]
+        golang::bytes::readOp lastRead; // last read operation, so that Unread* can work correctly.
 
         using isGoStruct = void;
 

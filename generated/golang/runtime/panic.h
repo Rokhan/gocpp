@@ -102,6 +102,12 @@ namespace golang::runtime
     std::tuple<uint32_t, gocpp::unsafe_pointer> readvarintUnsafe(gocpp::unsafe_pointer fd);
     struct PanicNilError
     {
+        // This field makes PanicNilError structurally different from
+        // any other struct in this package, and the _ makes it different
+        // from any struct in other packages too.
+        // This avoids any accidental conversions being possible
+        // between this struct and some other struct sharing the same fields,
+        // like happened in go.dev/issue/56603.
         gocpp::array<PanicNilError*, 0> _1;
 
         using isGoStruct = void;

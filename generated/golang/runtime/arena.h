@@ -40,9 +40,22 @@ namespace golang::runtime
     uintptr_t userArenaChunkReserveBytes();
     struct userArena
     {
+        // full is a list of full chunks that have not enough free memory left, and
+        // that we'll free once this user arena is freed.
+        // Can't use mSpanList here because it's not-in-heap.
         mspan* fullList;
+        // active is the user arena chunk we're currently allocating into.
         mspan* active;
+        // refs is a set of references to the arena chunks so that they're kept alive.
+        // The last reference in the list always refers to active, while the rest of
+        // them correspond to fullList. Specifically, the head of fullList is the
+        // second-to-last one, fullList.next is the third-to-last, and so on.
+        // In other words, every time a new chunk becomes active, its appended to this
+        // list.
         gocpp::slice<gocpp::unsafe_pointer> refs;
+        // defunct is true if free has been called on this arena.
+        // This is just a best-effort way to discover a concurrent allocation
+        // and free. Also used to detect a double-free.
         atomic::Bool defunct;
 
         using isGoStruct = void;
@@ -60,7 +73,8 @@ namespace golang::runtime
     struct userArena* newUserArena();
     struct liveUserArenaChunk
     {
-        mspan* mspan;
+        mspan* mspan; // Must represent a user arena chunk.
+        // Reference to mspan.base() to keep the chunk alive.
         gocpp::unsafe_pointer x;
 
         using isGoStruct = void;

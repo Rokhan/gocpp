@@ -64,7 +64,7 @@ namespace golang::syscall
     {
         uint16_t Family;
         uint16_t Port;
-        gocpp::array<unsigned char, 4> Addr;
+        gocpp::array<unsigned char, 4> Addr; // in_addr
         gocpp::array<uint8_t, 8> Zero;
 
         using isGoStruct = void;
@@ -84,7 +84,7 @@ namespace golang::syscall
         uint16_t Family;
         uint16_t Port;
         uint32_t Flowinfo;
-        gocpp::array<unsigned char, 16> Addr;
+        gocpp::array<unsigned char, 16> Addr; // in6_addr
         uint32_t Scope_id;
 
         using isGoStruct = void;
@@ -301,8 +301,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct sysLinger& value);
     struct IPMreq
     {
-        gocpp::array<unsigned char, 4> Multiaddr;
-        gocpp::array<unsigned char, 4> Interface;
+        gocpp::array<unsigned char, 4> Multiaddr; // in_addr
+        gocpp::array<unsigned char, 4> Interface; // in_addr
 
         using isGoStruct = void;
 
@@ -318,7 +318,7 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct IPMreq& value);
     struct IPv6Mreq
     {
-        gocpp::array<unsigned char, 16> Multiaddr;
+        gocpp::array<unsigned char, 16> Multiaddr; // in6_addr
         uint32_t Interface;
 
         using isGoStruct = void;

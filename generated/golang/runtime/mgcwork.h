@@ -17,10 +17,34 @@ namespace golang::runtime
     void init();
     struct gcWork
     {
+        // wbuf1 and wbuf2 are the primary and secondary work buffers.
+        // This can be thought of as a stack of both work buffers'
+        // pointers concatenated. When we pop the last pointer, we
+        // shift the stack up by one work buffer by bringing in a new
+        // full buffer and discarding an empty one. When we fill both
+        // buffers, we shift the stack down by one work buffer by
+        // bringing in a new empty buffer and discarding a full one.
+        // This way we have one buffer's worth of hysteresis, which
+        // amortizes the cost of getting or putting a work buffer over
+        // at least one buffer of work and reduces contention on the
+        // global work lists.
+        // wbuf1 is always the buffer we're currently pushing to and
+        // popping from and wbuf2 is the buffer that will be discarded
+        // next.
+        // Invariant: Both wbuf1 and wbuf2 are nil or neither are.
         workbuf* wbuf1;
         workbuf* wbuf2;
+        // Bytes marked (blackened) on this gcWork. This is aggregated
+        // into work.bytesMarked by dispose.
         uint64_t bytesMarked;
+        // Heap scan work performed on this gcWork. This is aggregated into
+        // gcController by dispose and may also be flushed by callers.
+        // Other types of scan work are flushed immediately.
         int64_t heapScanWork;
+        // flushedWork indicates that a non-empty work buffer was
+        // flushed to the global work list since the last gcMarkDone
+        // termination check. Specifically, this indicates that this
+        // gcWork may have communicated work to another gcWork.
         bool flushedWork;
 
         using isGoStruct = void;
@@ -37,7 +61,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gcWork& value);
     struct workbufhdr
     {
-        lfnode node;
+        lfnode node; // must be first
         int nobj;
 
         using isGoStruct = void;
@@ -63,6 +87,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         workbufhdr workbufhdr;
+        // account for the above fields
         /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::workbufhdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
 
         using isGoStruct = void;

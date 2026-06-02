@@ -15,7 +15,7 @@ namespace golang::sync
     {
         uint32_t wait;
         uint32_t notify;
-        uintptr_t lock;
+        uintptr_t lock; // key field of the mutex
         gocpp::unsafe_pointer head;
         gocpp::unsafe_pointer tail;
 

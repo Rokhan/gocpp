@@ -17,7 +17,7 @@ namespace golang::time
 {
     struct Ticker
     {
-        gocpp::channel<Time> C;
+        gocpp::channel<Time> C; // The channel on which the ticks are delivered.
         runtimeTimer r;
 
         using isGoStruct = void;

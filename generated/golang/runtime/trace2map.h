@@ -19,10 +19,10 @@ namespace golang::runtime
 {
     struct traceMap
     {
-        mutex lock;
+        mutex lock; // Must be acquired on the system stack
         atomic::Uint64 seq;
         traceRegionAlloc mem;
-        gocpp::array<atomic::UnsafePointer, 1 << 13> tab;
+        gocpp::array<atomic::UnsafePointer, 1 << 13> tab; // *traceMapNode (can't use generics because it's notinheap)
 
         using isGoStruct = void;
 
@@ -39,7 +39,7 @@ namespace golang::runtime
     struct traceMapNode
     {
         sys::NotInHeap _1;
-        atomic::UnsafePointer link;
+        atomic::UnsafePointer link; // *traceMapNode (can't use generics because it's notinheap)
         uintptr_t hash;
         uint64_t id;
         gocpp::slice<unsigned char> data;

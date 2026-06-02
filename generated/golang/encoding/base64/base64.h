@@ -15,8 +15,8 @@ namespace golang::base64
 {
     struct Encoding
     {
-        gocpp::array<unsigned char, 64> encode;
-        gocpp::array<uint8_t, 256> decodeMap;
+        gocpp::array<unsigned char, 64> encode; // mapping of symbol index to symbol byte value
+        gocpp::array<uint8_t, 256> decodeMap; // mapping of symbol byte value to symbol index
         gocpp::rune padChar;
         bool strict;
 
@@ -41,9 +41,9 @@ namespace golang::base64
         gocpp::error err;
         Encoding* enc;
         io::Writer w;
-        gocpp::array<unsigned char, 3> buf;
-        int nbuf;
-        gocpp::array<unsigned char, 1024> out;
+        gocpp::array<unsigned char, 3> buf; // buffered data waiting to be encoded
+        int nbuf; // number of bytes in buf
+        gocpp::array<unsigned char, 1024> out; // output buffer
 
         using isGoStruct = void;
 
@@ -61,12 +61,12 @@ namespace golang::base64
     struct decoder
     {
         gocpp::error err;
-        gocpp::error readErr;
+        gocpp::error readErr; // error from r.Read
         Encoding* enc;
         io::Reader r;
-        gocpp::array<unsigned char, 1024> buf;
+        gocpp::array<unsigned char, 1024> buf; // leftover input
         int nbuf;
-        gocpp::slice<unsigned char> out;
+        gocpp::slice<unsigned char> out; // leftover decoded output
         gocpp::array<unsigned char, 1024 / 4 * 3> outbuf;
 
         using isGoStruct = void;

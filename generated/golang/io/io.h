@@ -1281,8 +1281,8 @@ namespace golang::io
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadAll(struct Reader r);
     struct LimitedReader
     {
-        Reader R;
-        int64_t N;
+        Reader R; // underlying reader
+        int64_t N; // max bytes remaining
 
         using isGoStruct = void;
 
@@ -1298,11 +1298,11 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct LimitedReader& value);
     struct SectionReader
     {
-        ReaderAt r;
-        int64_t base;
+        ReaderAt r; // constant after creation
+        int64_t base; // constant after creation
         int64_t off;
-        int64_t limit;
-        int64_t n;
+        int64_t limit; // constant after creation
+        int64_t n; // constant after creation
 
         using isGoStruct = void;
 
@@ -1319,8 +1319,8 @@ namespace golang::io
     struct OffsetWriter
     {
         WriterAt w;
-        int64_t base;
-        int64_t off;
+        int64_t base; // the original offset
+        int64_t off; // the current offset
 
         using isGoStruct = void;
 

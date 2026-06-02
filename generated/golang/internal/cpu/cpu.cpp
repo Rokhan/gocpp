@@ -322,7 +322,7 @@ namespace golang::cpu
     struct gocpp_id_3
     {
         CacheLinePad _1;
-        bool HasMSA;
+        bool HasMSA; // MIPS SIMD architecture
         CacheLinePad _2;
 
         using isGoStruct = void;
@@ -367,11 +367,11 @@ namespace golang::cpu
     struct gocpp_id_4
     {
         CacheLinePad _1;
-        bool HasDARN;
-        bool HasSCV;
-        bool IsPOWER8;
-        bool IsPOWER9;
-        bool IsPOWER10;
+        bool HasDARN; // Hardware random number generator (requires kernel enablement)
+        bool HasSCV; // Syscall vectored (requires kernel enablement)
+        bool IsPOWER8; // ISA v2.07 (POWER8)
+        bool IsPOWER9; // ISA v3.00 (POWER9)
+        bool IsPOWER10; // ISA v3.1  (POWER10)
         CacheLinePad _2;
 
         using isGoStruct = void;
@@ -433,27 +433,27 @@ namespace golang::cpu
     struct gocpp_id_5
     {
         CacheLinePad _1;
-        bool HasZARCH;
-        bool HasSTFLE;
-        bool HasLDISP;
-        bool HasEIMM;
-        bool HasDFP;
-        bool HasETF3EH;
-        bool HasMSA;
-        bool HasAES;
-        bool HasAESCBC;
-        bool HasAESCTR;
-        bool HasAESGCM;
-        bool HasGHASH;
-        bool HasSHA1;
-        bool HasSHA256;
-        bool HasSHA512;
-        bool HasSHA3;
-        bool HasVX;
-        bool HasVXE;
-        bool HasKDSA;
-        bool HasECDSA;
-        bool HasEDDSA;
+        bool HasZARCH; // z architecture mode is active [mandatory]
+        bool HasSTFLE; // store facility list extended [mandatory]
+        bool HasLDISP; // long (20-bit) displacements [mandatory]
+        bool HasEIMM; // 32-bit immediates [mandatory]
+        bool HasDFP; // decimal floating point
+        bool HasETF3EH; // ETF-3 enhanced
+        bool HasMSA; // message security assist (CPACF)
+        bool HasAES; // KM-AES{128,192,256} functions
+        bool HasAESCBC; // KMC-AES{128,192,256} functions
+        bool HasAESCTR; // KMCTR-AES{128,192,256} functions
+        bool HasAESGCM; // KMA-GCM-AES{128,192,256} functions
+        bool HasGHASH; // KIMD-GHASH function
+        bool HasSHA1; // K{I,L}MD-SHA-1 functions
+        bool HasSHA256; // K{I,L}MD-SHA-256 functions
+        bool HasSHA512; // K{I,L}MD-SHA-512 functions
+        bool HasSHA3; // K{I,L}MD-SHA3-{224,256,384,512} and K{I,L}MD-SHAKE-{128,256} functions
+        bool HasVX; // vector facility. Note: the runtime sets this when it processes auxv records.
+        bool HasVXE; // vector-enhancements facility 1
+        bool HasKDSA; // elliptic curve functions
+        bool HasECDSA; // NIST curves
+        bool HasEDDSA; // Edwards curves
         CacheLinePad _2;
 
         using isGoStruct = void;

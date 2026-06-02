@@ -21,11 +21,14 @@ namespace golang::reflect
     struct abiStep
     {
         golang::reflect::abiStepKind kind;
+        // offset and size together describe a part of a Go value
+        // in memory.
         uintptr_t offset;
-        uintptr_t size;
-        uintptr_t stkOff;
-        int ireg;
-        int freg;
+        uintptr_t size; // size in bytes of the part
+        // These fields describe the ABI side of the translation.
+        uintptr_t stkOff; // stack offset, used if kind == abiStepStack
+        int ireg; // integer register index, used if kind == abiStepIntReg or kind == abiStepPointer
+        int freg; // FP register index, used if kind == abiStepFloatReg
 
         using isGoStruct = void;
 
@@ -47,10 +50,21 @@ namespace golang::reflect
     void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
     struct abiSeq
     {
+        // steps is the set of instructions.
+        // The instructions are grouped together by whole arguments,
+        // with the starting index for the instructions
+        // of the i'th Go value available in valueStart.
+        // For instance, if this abiSeq represents 3 arguments
+        // passed to a function, then the 2nd argument's steps
+        // begin at steps[valueStart[1]].
+        // Because reflect accepts Go arguments in distinct
+        // Values and each Value is stored separately, each abiStep
+        // that begins a new argument will have its offset
+        // field == 0.
         gocpp::slice<abiStep> steps;
         gocpp::slice<int> valueStart;
-        uintptr_t stackBytes;
-        int iregs;
+        uintptr_t stackBytes; // stack space used
+        int iregs; // registers used
         int fregs;
 
         using isGoStruct = void;
@@ -67,12 +81,33 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct abiSeq& value);
     struct abiDesc
     {
+        // call and ret represent the translation steps for
+        // the call and return paths of a Go function.
         abiSeq call;
         abiSeq ret;
+        // These fields describe the stack space allocated
+        // for the call. stackCallArgsSize is the amount of space
+        // reserved for arguments but not return values. retOffset
+        // is the offset at which return values begin, and
+        // spill is the size in bytes of additional space reserved
+        // to spill argument registers into in case of preemption in
+        // reflectcall's stack frame.
         uintptr_t stackCallArgsSize;
         uintptr_t retOffset;
         uintptr_t spill;
+        // stackPtrs is a bitmap that indicates whether
+        // each word in the ABI stack space (stack-assigned
+        // args + return values) is a pointer. Used
+        // as the heap pointer bitmap for stack space
+        // passed to reflectcall.
         bitVector* stackPtrs;
+        // inRegPtrs is a bitmap whose i'th bit indicates
+        // whether the i'th integer argument register contains
+        // a pointer. Used by makeFuncStub and methodValueCall
+        // to make result pointers visible to the GC.
+        // outRegPtrs is the same, but for result values.
+        // Used by reflectcall to make result pointers visible
+        // to the GC.
         abi::IntArgRegBitmap inRegPtrs;
         abi::IntArgRegBitmap outRegPtrs;
 

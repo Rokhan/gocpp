@@ -20,7 +20,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1;
         workbufhdr workbufhdr;
-        stackWorkBuf* next;
+        stackWorkBuf* next; // linked list of workbufs
 
         using isGoStruct = void;
 
@@ -56,11 +56,11 @@ namespace golang::runtime
     struct stackObject
     {
         sys::NotInHeap _1;
-        uint32_t off;
-        uint32_t size;
-        stackObjectRecord* r;
-        stackObject* left;
-        stackObject* right;
+        uint32_t off; // offset above stack.lo
+        uint32_t size; // size of object
+        stackObjectRecord* r; // info of the object (for ptr/nonptr bits). nil if object has been scanned.
+        stackObject* left; // objects with lower addresses
+        stackObject* right; // objects with higher addresses
 
         using isGoStruct = void;
 
@@ -76,14 +76,29 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct stackObject& value);
     struct stackScanState
     {
+        // stack limits
         stack stack;
+        // conservative indicates that the next frame must be scanned conservatively.
+        // This applies only to the innermost frame at an async safe-point.
         bool conservative;
+        // buf contains the set of possible pointers to stack objects.
+        // Organized as a LIFO linked list of buffers.
+        // All buffers except possibly the head buffer are full.
         stackWorkBuf* buf;
-        stackWorkBuf* freeBuf;
+        stackWorkBuf* freeBuf; // keep around one free buffer for allocation hysteresis
+        // cbuf contains conservative pointers to stack objects. If
+        // all pointers to a stack object are obtained via
+        // conservative scanning, then the stack object may be dead
+        // and may contain dead pointers, so it must be scanned
+        // defensively.
         stackWorkBuf* cbuf;
+        // list of stack objects
+        // Objects are in increasing address order.
         stackObjectBuf* head;
         stackObjectBuf* tail;
         int nobjs;
+        // root of binary tree for fast object lookup by address
+        // Initialized by buildIndex.
         stackObject* root;
 
         using isGoStruct = void;

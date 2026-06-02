@@ -39,11 +39,11 @@ namespace golang::runtime
     extern gocpp::array<unsigned char, _FinBlockSize / goarch::PtrSize / 8> finptrmask;
     struct finalizer
     {
-        funcval* fn;
-        gocpp::unsafe_pointer arg;
-        uintptr_t nret;
-        golang::runtime::_type* fint;
-        golang::runtime::ptrtype* ot;
+        funcval* fn; // function to call (may be a heap pointer)
+        gocpp::unsafe_pointer arg; // ptr to object (may be a heap pointer)
+        uintptr_t nret; // bytes of return values from fn
+        golang::runtime::_type* fint; // type of first argument of fn
+        golang::runtime::ptrtype* ot; // type of ptr to object (may be a heap pointer)
 
         using isGoStruct = void;
 

@@ -32,7 +32,11 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct eface& value);
     struct poolChain
     {
+        // head is the poolDequeue to push to. This is only accessed
+        // by the producer, so doesn't need to be synchronized.
         poolChainElt* head;
+        // tail is the poolDequeue to popTail from. This is accessed
+        // by consumers, so reads and writes must be atomic.
         poolChainElt* tail;
 
         using isGoStruct = void;
@@ -51,7 +55,25 @@ namespace golang::sync
     struct poolChainElt* loadPoolChainElt(struct poolChainElt** pp);
     struct poolDequeue
     {
+        // headTail packs together a 32-bit head index and a 32-bit
+        // tail index. Both are indexes into vals modulo len(vals)-1.
+        // tail = index of oldest data in queue
+        // head = index of next slot to fill
+        // Slots in the range [tail, head) are owned by consumers.
+        // A consumer continues to own a slot outside this range until
+        // it nils the slot, at which point ownership passes to the
+        // producer.
+        // The head index is stored in the most-significant bits so
+        // that we can atomically add to it and the overflow is
+        // harmless.
         atomic::Uint64 headTail;
+        // vals is a ring buffer of interface{} values stored in this
+        // dequeue. The size of this must be a power of 2.
+        // vals[i].typ is nil if the slot is empty and non-nil
+        // otherwise. A slot is still in use until *both* the tail
+        // index has moved beyond it and typ has been set to nil. This
+        // is set to nil atomically by the consumer and read
+        // atomically by the producer.
         gocpp::slice<eface> vals;
 
         using isGoStruct = void;
@@ -69,6 +91,14 @@ namespace golang::sync
     struct poolChainElt
     {
         poolDequeue poolDequeue;
+        // next and prev link to the adjacent poolChainElts in this
+        // poolChain.
+        // next is written atomically by the producer and read
+        // atomically by the consumer. It only transitions from nil to
+        // non-nil.
+        // prev is written atomically by the consumer and read
+        // atomically by the producer. It only transitions from
+        // non-nil to nil.
         poolChainElt* next;
         poolChainElt* prev;
 

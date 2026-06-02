@@ -17,7 +17,14 @@ namespace golang::runtime
     struct timeHistogram
     {
         gocpp::array<atomic::Uint64, timeHistNumBuckets * timeHistNumSubBuckets> counts;
+        // underflow counts all the times we got a negative duration
+        // sample. Because of how time works on some platforms, it's
+        // possible to measure negative durations. We could ignore them,
+        // but we record them anyway because it's better to have some
+        // signal that it's happening than just missing samples.
         atomic::Uint64 underflow;
+        // overflow counts all the times we got a duration that exceeded
+        // the range counts represents.
         atomic::Uint64 overflow;
 
         using isGoStruct = void;

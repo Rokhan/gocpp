@@ -36,8 +36,8 @@ namespace golang::runtime
     struct semaRoot
     {
         mutex lock;
-        sudog* treap;
-        atomic::Uint32 nwait;
+        sudog* treap; // root of balanced tree of unique waiters.
+        atomic::Uint32 nwait; // Number of waiters. Read w/o the lock.
 
         using isGoStruct = void;
 
@@ -67,8 +67,17 @@ namespace golang::runtime
     bool cansemacquire(uint32_t* addr);
     struct notifyList
     {
+        // wait is the ticket number of the next waiter. It is atomically
+        // incremented outside the lock.
         atomic::Uint32 wait;
+        // notify is the ticket number of the next waiter to be notified. It can
+        // be read outside the lock, but is only written to with lock held.
+        // Both wait & notify can wrap around, and such cases will be correctly
+        // handled as long as their "unwrapped" difference is bounded by 2^31.
+        // For this not to be the case, we'd need to have 2^31+ goroutines
+        // blocked on the same condvar, which is currently not possible.
         uint32_t notify;
+        // List of parked waiters.
         mutex lock;
         sudog* head;
         sudog* tail;

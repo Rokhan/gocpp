@@ -17,7 +17,7 @@ namespace golang::runtime
 {
     struct rtype
     {
-        abi::Type* Type;
+        abi::Type* Type; // embedding is okay here (unlike reflect) because none of this is public
 
         using isGoStruct = void;
 

@@ -966,6 +966,7 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 			param.names = append(param.names, cppName)
 		}
 		param.doc = field.Doc
+		param.comment = field.Comment
 		param.Type = cv.convertTypeExpr(field.Type, ctx)
 		if len(field.Names) == 0 && ctx.ensureHasTypeName {
 			newName := param.Type.getTypeBasedName()
@@ -1134,7 +1135,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			}
 			strs1 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s...)", last.Type.eltType.str, last.names[0]))
 			callParams1 := strings.Join(strs1, ", ")
-			variadicParams1 := append(variadicParams, typeName{last.names, last.doc, mkCppType("Args...", nil), false})
+			variadicParams1 := append(variadicParams, typeName{last.names, last.doc, last.comment, mkCppType("Args...", nil), false})
 
 			appendStrf(&funcDef, "\n")
 			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typeParams, "Args"))
@@ -1146,7 +1147,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			paramName := "value" // TODO, chose name to avoid name conflict
 			strs2 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s, %s...)", last.Type.eltType.str, paramName, last.names[0]))
 			callParams2 := strings.Join(strs2, ", ")
-			variadicParams2 := append(variadicParams, typeName{[]string{paramName}, nil, mkCppType(last.Type.eltType.str, nil), false}, typeName{last.names, nil, mkCppType("Args...", nil), false})
+			variadicParams2 := append(variadicParams, typeName{[]string{paramName}, nil, nil, mkCppType(last.Type.eltType.str, nil), false}, typeName{last.names, nil, nil, mkCppType("Args...", nil), false})
 			appendStrf(&funcDef, "\n")
 			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typeParams, "Args"))
 			appendStrf(&funcDef, "%s %s(%s)\n", resultType, name, variadicParams2)
@@ -2763,6 +2764,22 @@ func (cv *cppConverter) computeGenStructData(param genStructParam, templatePrmLi
 	return res
 }
 
+func convertComment(comment *ast.CommentGroup, indent string) string {
+	if comment == nil {
+		return ""
+	}
+	lines := []string{}
+	for _, c := range strings.Split(comment.Text(), "\n") {
+		line := strings.TrimSpace(c)
+		if line != "" {
+			lines = append(lines, line)
+		}
+	}
+
+	sep := "\n" + indent + "// "
+	return fmt.Sprintf("// %s", strings.Join(lines, sep))
+}
+
 func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms map[string][]string, param genStructParam) (cppStruct string, places []place) {
 	buf := new(bytes.Buffer)
 	fields := cv.readFieldsCtx(node.Fields, ctContext{inDeclaration: true, ensureHasTypeName: true, namespace: cv.namespace})
@@ -2792,13 +2809,21 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 
 		data.out.indent++
 		for _, field := range fields {
+			if field.doc != nil {
+				fmt.Fprintf(buf, "%s%s\n", data.out.Indent(), convertComment(field.doc, data.out.Indent()))
+			}
+			comment := ""
+			if field.comment != nil {
+				comment = " " + convertComment(field.comment, data.out.Indent())
+			}
 			for _, name := range field.names {
 				fieldAndType := fmt.Sprintf("%s::%s", param.name, name)
 				if cv.ignoreKnownError(fieldAndType, knownIncomplete) {
-					fmt.Fprintf(buf, "%s/* %s %s; [Known incomplete type] */\n", data.out.Indent(), field.Type.str, name)
+					fmt.Fprintf(buf, "%s/* %s %s; [Known incomplete type] */%s\n", data.out.Indent(), field.Type.str, name, comment)
 				} else {
-					fmt.Fprintf(buf, "%s%s %s;\n", data.out.Indent(), field.Type.str, name)
+					fmt.Fprintf(buf, "%s%s %s;%s\n", data.out.Indent(), field.Type.str, name, comment)
 				}
+				comment = ""
 			}
 		}
 

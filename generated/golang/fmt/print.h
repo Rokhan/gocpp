@@ -58,9 +58,13 @@ namespace golang::fmt
 
         struct IState
         {
+            // Write is the function to call to emit formatted output to be printed.
             virtual std::tuple<int, struct gocpp::error> vWrite(gocpp::slice<unsigned char> b) = 0;
+            // Width returns the value of the width option and whether it has been set.
             virtual std::tuple<int, bool> vWidth() = 0;
+            // Precision returns the value of the precision option and whether it has been set.
             virtual std::tuple<int, bool> vPrecision() = 0;
+            // Flag reports whether the flag c, a character, has been set.
             virtual bool vFlag(int c) = 0;
             virtual void* getPtr() = 0;
         };

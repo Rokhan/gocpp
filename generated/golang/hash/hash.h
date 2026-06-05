@@ -39,9 +39,17 @@ namespace golang::hash
 
         struct IHash
         {
+            // Sum appends the current hash to b and returns the resulting slice.
+            // It does not change the underlying hash state.
             virtual gocpp::slice<unsigned char> vSum(gocpp::slice<unsigned char> b) = 0;
+            // Reset resets the Hash to its initial state.
             virtual void vReset() = 0;
+            // Size returns the number of bytes Sum will return.
             virtual int vSize() = 0;
+            // BlockSize returns the hash's underlying block size.
+            // The Write method must be able to accept any amount
+            // of data, but it may operate more efficiently if all writes
+            // are a multiple of the block size.
             virtual int vBlockSize() = 0;
             virtual void* getPtr() = 0;
         };

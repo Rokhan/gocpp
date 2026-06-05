@@ -37,8 +37,21 @@ namespace golang::syscall
 
         struct IRawConn
         {
+            // Control invokes f on the underlying connection's file
+            // descriptor or handle.
+            // The file descriptor fd is guaranteed to remain valid while
+            // f executes but not after f returns.
             virtual struct gocpp::error vControl(std::function<void (uintptr_t fd)> f) = 0;
+            // Read invokes f on the underlying connection's file
+            // descriptor or handle; f is expected to try to read from the
+            // file descriptor.
+            // If f returns true, Read returns. Otherwise Read blocks
+            // waiting for the connection to be ready for reading and
+            // tries again repeatedly.
+            // The file descriptor is guaranteed to remain valid while f
+            // executes but not after f returns.
             virtual struct gocpp::error vRead(std::function<bool (uintptr_t fd)> f) = 0;
+            // Write is like Read but for writing.
             virtual struct gocpp::error vWrite(std::function<bool (uintptr_t fd)> f) = 0;
             virtual void* getPtr() = 0;
         };
@@ -107,6 +120,7 @@ namespace golang::syscall
 
         struct IConn
         {
+            // SyscallConn returns a raw network connection.
             virtual std::tuple<struct RawConn, struct gocpp::error> vSyscallConn() = 0;
             virtual void* getPtr() = 0;
         };

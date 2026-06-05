@@ -64,6 +64,8 @@ namespace golang::zlib
 
         struct IResetter
         {
+            // Reset discards any buffered data and resets the Resetter as if it was
+            // newly initialized with the given reader.
             virtual struct gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) = 0;
             virtual void* getPtr() = 0;
         };

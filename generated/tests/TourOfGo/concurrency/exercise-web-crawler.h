@@ -38,6 +38,8 @@ namespace golang::main
 
         struct IFetcher
         {
+            // Fetch returns the body of URL and
+            // a slice of URLs found on that page.
             virtual std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> vFetch(gocpp::string url) = 0;
             virtual void* getPtr() = 0;
         };

@@ -59,8 +59,14 @@ namespace golang::image
 
         struct IImage
         {
+            // ColorModel returns the Image's color model.
             virtual color::Model vColorModel() = 0;
+            // Bounds returns the domain for which At can return non-zero color.
+            // The bounds do not necessarily contain the point (0, 0).
             virtual struct Rectangle vBounds() = 0;
+            // At returns the color of the pixel at (x, y).
+            // At(Bounds().Min.X, Bounds().Min.Y) returns the upper-left pixel of the grid.
+            // At(Bounds().Max.X-1, Bounds().Max.Y-1) returns the lower-right one.
             virtual color::Color vAt(int x, int y) = 0;
             virtual void* getPtr() = 0;
         };
@@ -129,6 +135,10 @@ namespace golang::image
 
         struct IRGBA64Image
         {
+            // RGBA64At returns the RGBA64 color of the pixel at (x, y). It is
+            // equivalent to calling At(x, y).RGBA() and converting the resulting
+            // 32-bit return values to a color.RGBA64, but it can avoid allocations
+            // from converting concrete color types to the color.Color interface type.
             virtual color::RGBA64 vRGBA64At(int x, int y) = 0;
             virtual void* getPtr() = 0;
         };
@@ -187,6 +197,7 @@ namespace golang::image
 
         struct IPalettedImage
         {
+            // ColorIndexAt returns the palette index of the pixel at (x, y).
             virtual uint8_t vColorIndexAt(int x, int y) = 0;
             virtual void* getPtr() = 0;
         };

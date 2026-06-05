@@ -39,14 +39,34 @@ namespace golang::reflectlite
 
         struct IType
         {
+            // Name returns the type's name within its package for a defined type.
+            // For other (non-defined) types it returns the empty string.
             virtual gocpp::string vName() = 0;
+            // PkgPath returns a defined type's package path, that is, the import path
+            // that uniquely identifies the package, such as "encoding/base64".
+            // If the type was predeclared (string, error) or not defined (*T, struct{},
+            // []int, or A where A is an alias for a non-defined type), the package path
+            // will be the empty string.
             virtual gocpp::string vPkgPath() = 0;
+            // Size returns the number of bytes needed to store
+            // a value of the given type; it is analogous to unsafe.Sizeof.
             virtual uintptr_t vSize() = 0;
+            // Kind returns the specific kind of this type.
             virtual reflectlite::Kind vKind() = 0;
+            // Implements reports whether the type implements the interface type u.
             virtual bool vImplements(struct Type u) = 0;
+            // AssignableTo reports whether a value of the type is assignable to type u.
             virtual bool vAssignableTo(struct Type u) = 0;
+            // Comparable reports whether values of this type are comparable.
             virtual bool vComparable() = 0;
+            // String returns a string representation of the type.
+            // The string representation may use shortened package names
+            // (e.g., base64 instead of "encoding/base64") and is not
+            // guaranteed to be unique among types. To test for type identity,
+            // compare the Types directly.
             virtual gocpp::string vString() = 0;
+            // Elem returns a type's element type.
+            // It panics if the type's Kind is not Ptr.
             virtual struct Type vElem() = 0;
             virtual abi::Type* vcommon() = 0;
             virtual reflectlite::uncommonType* vuncommon() = 0;

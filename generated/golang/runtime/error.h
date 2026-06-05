@@ -39,6 +39,10 @@ namespace golang::runtime
 
         struct IError
         {
+            // RuntimeError is a no-op function but
+            // serves to distinguish types that are run time
+            // errors from ordinary errors: a type is a
+            // run time error if it has a RuntimeError method.
             virtual void vRuntimeError() = 0;
             virtual void* getPtr() = 0;
         };

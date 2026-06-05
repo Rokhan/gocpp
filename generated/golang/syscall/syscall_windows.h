@@ -142,7 +142,7 @@ namespace golang::syscall
 
         struct ISockaddr
         {
-            virtual std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> vsockaddr() = 0;
+            virtual std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> vsockaddr() = 0; // lowercase; only we can define Sockaddrs
             virtual void* getPtr() = 0;
         };
 

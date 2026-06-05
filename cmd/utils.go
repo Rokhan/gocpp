@@ -98,12 +98,16 @@ func GetCppExprFunc(funcName cppExpr) cppExpr {
 	}
 }
 
-type typeName struct {
-	names   []string
+type commentInfo struct {
 	doc     *ast.CommentGroup
 	comment *ast.CommentGroup
-	Type    cppType
-	isRecv  bool
+}
+
+type typeName struct {
+	names []string
+	commentInfo
+	Type   cppType
+	isRecv bool
 }
 
 type outType struct {

@@ -1006,6 +1006,7 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 type method struct {
 	name   string
 	result string
+	commentInfo
 	params typeNames
 }
 
@@ -1017,7 +1018,7 @@ func (cv *cppConverter) readMethods(fields *ast.FieldList, ctx ctContext) (metho
 	for _, field := range fields.List {
 		for _, name := range field.Names {
 			outPrm, inPrm := cv.convertMethodExpr(field.Type, ctx)
-			methods = append(methods, method{GetCppName(name.Name), outPrm, inPrm})
+			methods = append(methods, method{GetCppName(name.Name), outPrm, commentInfo{field.Doc, field.Comment}, inPrm})
 		}
 	}
 	return
@@ -1135,7 +1136,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			}
 			strs1 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s...)", last.Type.eltType.str, last.names[0]))
 			callParams1 := strings.Join(strs1, ", ")
-			variadicParams1 := append(variadicParams, typeName{last.names, last.doc, last.comment, mkCppType("Args...", nil), false})
+			variadicParams1 := append(variadicParams, typeName{last.names, last.commentInfo, mkCppType("Args...", nil), false})
 
 			appendStrf(&funcDef, "\n")
 			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typeParams, "Args"))
@@ -1147,7 +1148,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			paramName := "value" // TODO, chose name to avoid name conflict
 			strs2 := append(strs, fmt.Sprintf("gocpp::ToSlice<%s>(%s, %s...)", last.Type.eltType.str, paramName, last.names[0]))
 			callParams2 := strings.Join(strs2, ", ")
-			variadicParams2 := append(variadicParams, typeName{[]string{paramName}, nil, nil, mkCppType(last.Type.eltType.str, nil), false}, typeName{last.names, nil, nil, mkCppType("Args...", nil), false})
+			variadicParams2 := append(variadicParams, typeName{[]string{paramName}, commentInfo{}, mkCppType(last.Type.eltType.str, nil), false}, typeName{last.names, commentInfo{}, mkCppType("Args...", nil), false})
 			appendStrf(&funcDef, "\n")
 			appendStrf(&funcDef, "%s\n", mkVariadicTemplateDec(typeParams, "Args"))
 			appendStrf(&funcDef, "%s %s(%s)\n", resultType, name, variadicParams2)
@@ -3062,7 +3063,15 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		fmt.Fprintf(buf, "%s    {\n", data.out.Indent())
 		data.out.indent++
 		for _, method := range methods {
-			fmt.Fprintf(buf, "%s    virtual %s v%s(%s) = 0;\n", data.out.Indent(), method.result, method.name, method.params)
+			if method.doc != nil {
+				subIndent := "    " + data.out.Indent()
+				fmt.Fprintf(buf, "%s%s\n", subIndent, convertComment(method.doc, subIndent))
+			}
+			comment := ""
+			if method.comment != nil {
+				comment = " " + convertComment(method.comment, data.out.Indent())
+			}
+			fmt.Fprintf(buf, "%s    virtual %s v%s(%s) = 0;%s\n", data.out.Indent(), method.result, method.name, method.params, comment)
 		}
 		fmt.Fprintf(buf, "%s    virtual void* getPtr() = 0;\n", data.out.Indent())
 		data.out.indent--

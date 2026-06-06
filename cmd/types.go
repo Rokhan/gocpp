@@ -12,8 +12,9 @@ import (
 type parsingInfos struct {
 	parsingContext
 
-	typeInfo *types.Info
-	astFile  *ast.File
+	typeInfo   *types.Info
+	astFile    *ast.File
+	commentMap ast.CommentMap
 }
 
 // Get the type parameters from an expression

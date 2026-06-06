@@ -353,6 +353,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.cpp.indent++
 
 	cv.namespace = cv.astFile.Name.Name
+	cv.commentMap = ast.NewCommentMap(cv.pcShared.fileSet, cv.astFile, cv.astFile.Comments)
 	cv.declareVar(cv.namespace, false)
 
 	var allOutPlaces [][]place
@@ -1047,7 +1048,10 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 
 	switch d := decl.(type) {
 	case *ast.GenDecl:
-		cv.ConvertDoc(d.Doc)
+		// Avoid duplicating comments in functions/methods
+		if isNameSpace {
+			cv.ConvertDoc(d.Doc)
+		}
 		for _, place := range cv.convertSpecs(d.Specs, d.Tok, isNameSpace, ";\n") {
 			cv.printOrKeepPlace(place, &outPlaces, &pkgInfos)
 		}
@@ -1216,6 +1220,11 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 		return
 	}
 
+	if cgs := cv.commentMap[block]; len(cgs) > 0 {
+		for _, cg := range cgs {
+			fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), convertComment(cg, cv.cpp.Indent()))
+		}
+	}
 	cv.startScope()
 	env.startVarScope()
 	fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
@@ -1434,6 +1443,12 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 	}
 
 	cppOut := &cppExprWritter[*bufio.Writer]{cv.cpp.out, &[]place{}}
+
+	if cgs := cv.commentMap[stmt]; len(cgs) > 0 {
+		for _, cg := range cgs {
+			cv.WritterExprPrintf(cppOut, "%s%s\n", cv.cpp.Indent(), convertComment(cg, cv.cpp.Indent()))
+		}
+	}
 
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:

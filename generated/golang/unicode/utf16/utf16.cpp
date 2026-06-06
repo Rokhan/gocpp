@@ -81,10 +81,12 @@ namespace golang::utf16
                 {
                     case 0:
                     case 1:
+                        // normal rune
                         a[n] = uint16_t(v);
                         n++;
                         break;
                     case 2:
+                        // needs surrogate sequence
                         auto [r1, r2] = EncodeRune(v);
                         a[n] = uint16_t(r1);
                         a[n + 1] = uint16_t(r2);
@@ -105,6 +107,7 @@ namespace golang::utf16
     // a valid Unicode code point, it appends the encoding of U+FFFD.
     gocpp::slice<uint16_t> AppendRune(gocpp::slice<uint16_t> a, gocpp::rune r)
     {
+        // This function is inlineable for fast handling of ASCII.
         //Go switch emulation
         {
             int conditionId = -1;
@@ -115,9 +118,11 @@ namespace golang::utf16
             {
                 case 0:
                 case 1:
+                    // normal rune
                     return append(a, uint16_t(r));
                     break;
                 case 2:
+                    // needs surrogate sequence
                     auto [r1, r2] = EncodeRune(r);
                     return append(a, uint16_t(r1), uint16_t(r2));
                     break;
@@ -130,6 +135,8 @@ namespace golang::utf16
     // by the UTF-16 encoding s.
     gocpp::slice<gocpp::rune> Decode(gocpp::slice<uint16_t> s)
     {
+        // Preallocate capacity to hold up to 64 runes.
+        // Decode inlines, so the allocation can live on the stack.
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::rune>>(), 0, 64);
         return decode(s, buf);
     }
@@ -152,13 +159,16 @@ namespace golang::utf16
                 {
                     case 0:
                     case 1:
+                        // normal rune
                         ar = gocpp::rune(r);
                         break;
                     case 2:
+                        // valid surrogate sequence
                         ar = DecodeRune(gocpp::rune(r), gocpp::rune(s[i + 1]));
                         i++;
                         break;
                     default:
+                        // invalid surrogate sequence
                         ar = replacementChar;
                         break;
                 }

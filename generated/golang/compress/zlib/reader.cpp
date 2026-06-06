@@ -189,8 +189,10 @@ namespace golang::zlib
         rec::Write(gocpp::recv(z->digest), p.make_slice(0, n));
         if(z->err != io::go_EOF)
         {
+            // In the normal case we return here.
             return {n, z->err};
         }
+        // Finished file; check checksum.
         if(auto [gocpp_id_0, err] = io::ReadFull(z->r, z->scratch.make_slice(0, 4)); err != nullptr)
         {
             if(err == io::go_EOF)
@@ -200,6 +202,7 @@ namespace golang::zlib
             z->err = err;
             return {n, z->err};
         }
+        // ZLIB (RFC 1950) is big-endian, unlike GZIP (RFC 1952).
         auto checksum = rec::Uint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0, 4));
         if(checksum != rec::Sum32(gocpp::recv(z->digest)))
         {
@@ -235,6 +238,7 @@ namespace golang::zlib
         {
             z->r = bufio::NewReader(r);
         }
+        // Read the header (RFC 1950 section 2.2.).
         std::tie(std::ignore, z->err) = io::ReadFull(z->r, z->scratch.make_slice(0, 2));
         if(z->err != nullptr)
         {

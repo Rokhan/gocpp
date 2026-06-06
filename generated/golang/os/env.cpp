@@ -27,6 +27,7 @@ namespace golang::os
     gocpp::string Expand(gocpp::string s, std::function<gocpp::string (gocpp::string _1)> mapping)
     {
         gocpp::slice<unsigned char> buf = {};
+        // ${} is all ASCII, so bytes are fine for this operation.
         auto i = 0;
         for(auto j = 0; j < len(s); j++)
         {
@@ -42,8 +43,12 @@ namespace golang::os
                 {
                 }
                 else
+                // Encountered invalid syntax; eat the
+                // characters.
                 if(name == ""_s)
                 {
+                    // Valid syntax, but $ was not followed by a
+                    // name. Leave the dollar character untouched.
                     buf = append(buf, s[j]);
                 }
                 else
@@ -138,17 +143,20 @@ namespace golang::os
             else if(isShellSpecialVar(s[0])) { conditionId = 1; }
             switch(conditionId)
             {
+                // Bad syntax; eat "${"
                 case 0:
                     if(len(s) > 2 && isShellSpecialVar(s[1]) && s[2] == '}')
                     {
                         return {s.make_slice(1, 2), 3};
                     }
+                    // Scan to closing brace
                     for(auto i = 1; i < len(s); i++)
                     {
                         if(s[i] == '}')
                         {
                             if(i == 1)
                             {
+                                // Bad syntax; eat "${}"
                                 return {""_s, 2};
                             }
                             return {s.make_slice(1, i), i + 1};

@@ -33,6 +33,11 @@ namespace golang::math
     {
         if(Abs(x) >= (1 << 53))
         {
+            // 1 << 53 is the largest exact integer in the float64 format.
+            // Any number outside this range will be truncated before the decimal point and therefore will always be
+            // an even integer.
+            // Without this check and if x overflows int64 the int64(xi) conversion below may produce incorrect results
+            // on some architectures (and does so on arm64). See issue #57465.
             return false;
         }
         auto [xi, xf] = Modf(x);
@@ -144,6 +149,7 @@ namespace golang::math
                 case 5:
                     if(IsInf(x, - 1))
                     {
+                        // Pow(-0, -y)
                         return Pow(1 / x, - y);
                     }
                     //Go switch emulation
@@ -177,6 +183,8 @@ namespace golang::math
         }
         if(yi >= (1 << 63))
         {
+            // yi is a large even int that will lead to overflow (or underflow to 0)
+            // for all x except -1 (x == 1 was handled earlier)
             //Go switch emulation
             {
                 int conditionId = -1;
@@ -196,8 +204,10 @@ namespace golang::math
                 }
             }
         }
+        // ans = a1 * 2**ae (= 1 for now).
         auto a1 = 1.0;
         auto ae = 0;
+        // ans *= x**yf
         if(yf != 0)
         {
             if(yf > 0.5)
@@ -207,11 +217,20 @@ namespace golang::math
             }
             a1 = Exp(yf * Log(x));
         }
+        // ans *= x**yi
+        // by multiplying in successive squarings
+        // of x according to bits of yi.
+        // accumulate powers of two into exp.
         auto [x1, xe] = Frexp(x);
         for(auto i = int64_t(yi); i != 0; i >>= 1)
         {
             if(xe < (- 1 << 12) || (1 << 12) < xe)
             {
+                // catch xe before it overflows the left shift below
+                // Since i !=0 it has at least one bit still set, so ae will accumulate xe
+                // on at least one more iteration, ae += xe is a lower bound on ae
+                // the lower bound on ae exceeds the size of a float64 exp
+                // so the final call to Ldexp will produce under/overflow (0/Inf)
                 ae += xe;
                 break;
             }
@@ -228,6 +247,9 @@ namespace golang::math
                 xe--;
             }
         }
+        // ans = a1*2**ae
+        // if y < 0 { ans = 1 / ans }
+        // but in the opposite order
         if(y < 0)
         {
             a1 = 1 / a1;

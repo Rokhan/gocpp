@@ -94,7 +94,9 @@ namespace golang::runtime
         {
             auto i = uintptr_t(sys::TrailingZeros64(c->cache));
             auto scav = (c->scav >> i) & 1;
+            // set bit to mark in-use
             c->cache &^= 1 << i;
+            // clear bit to mark unscavenged
             c->scav &^= 1 << i;
             return {c->base + i * pageSize, uintptr_t(scav) * pageSize};
         }
@@ -116,7 +118,9 @@ namespace golang::runtime
         }
         auto mask = ((uint64_t(1) << npages) - 1) << i;
         auto scav = sys::OnesCount64(c->scav & mask);
+        // mark in-use bits
         c->cache &^= mask;
+        // clear scavenged bits
         c->scav &^= mask;
         return {c->base + uintptr_t(i * pageSize), uintptr_t(scav) * pageSize};
     }
@@ -139,11 +143,14 @@ namespace golang::runtime
         }
         auto ci = chunkIndex(c->base);
         auto pi = chunkPageIndex(c->base);
+        // This method is called very infrequently, so just do the
+        // slower, safer thing by iterating over each bit individually.
         for(auto i = (unsigned int)(0); i < 64; i++)
         {
             if(c->cache & (1 << i) != 0)
             {
                 rec::free1(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), pi + i);
+                // Update density statistics.
                 rec::free(gocpp::recv(p->scav.index), ci, pi + i, 1);
             }
             if(c->scav & (1 << i) != 0)
@@ -151,6 +158,8 @@ namespace golang::runtime
                 rec::setRange(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)->scavenged), pi + i, 1);
             }
         }
+        // Since this is a lot like a free, we need to make sure
+        // we update the searchAddr just like free does.
         if(auto b = (offAddr {c->base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
         {
             p->searchAddr = b;
@@ -171,15 +180,19 @@ namespace golang::runtime
     struct pageCache rec::allocToCache(golang::runtime::pageAlloc* p)
     {
         assertLockHeld(p->mheapLock);
+        // If the searchAddr refers to a region which has a higher address than
+        // any known chunk, then we know we're out of memory.
         if(chunkIndex(rec::addr(gocpp::recv(p->searchAddr))) >= p->end)
         {
             return pageCache {};
         }
         auto c = pageCache {};
+        // chunk index
         auto ci = chunkIndex(rec::addr(gocpp::recv(p->searchAddr)));
         pallocData* chunk = {};
         if(p->summary[len(p->summary) - 1][ci] != 0)
         {
+            // Fast path: there's free pages at or near the searchAddr address.
             chunk = rec::chunkOf(gocpp::recv(p), ci);
             auto [j, gocpp_id_0] = rec::find(gocpp::recv(chunk), 1, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
             if(j == ~ (unsigned int)(0))
@@ -194,9 +207,13 @@ namespace golang::runtime
         }
         else
         {
+            // Slow path: the searchAddr address had nothing there, so go find
+            // the first free page the slow way.
             auto [addr, gocpp_id_1] = rec::find(gocpp::recv(p), 1);
             if(addr == 0)
             {
+                // We failed to find adequate free space, so mark the searchAddr as OoM
+                // and return an empty pageCache.
                 p->searchAddr = maxSearchAddr();
                 return pageCache {};
             }
@@ -208,11 +225,22 @@ namespace golang::runtime
                 x.scav = rec::block64(gocpp::recv(chunk->scavenged), chunkPageIndex(addr));
             });
         }
+        // Set the page bits as allocated and clear the scavenged bits, but
+        // be careful to only set and clear the relevant bits.
         auto cpi = chunkPageIndex(c.base);
         rec::allocPages64(gocpp::recv(chunk), cpi, c.cache);
         rec::clearBlock64(gocpp::recv(chunk->scavenged), cpi, c.cache & c.scav);
+        // Update as an allocation, but note that it's not contiguous.
         rec::update(gocpp::recv(p), c.base, pageCachePages, false, true);
+        // Update density statistics.
         rec::alloc(gocpp::recv(p->scav.index), ci, (unsigned int)(sys::OnesCount64(c.cache)));
+        // Set the search address to the last page represented by the cache.
+        // Since all of the pages in this block are going to the cache, and we
+        // searched for the first free page, we can confidently start at the
+        // next page.
+        // However, p.searchAddr is not allowed to point into unmapped heap memory
+        // unless it is maxSearchAddr, so make it the last page as opposed to
+        // the page after.
         p->searchAddr = offAddr {c.base + pageSize * (pageCachePages - 1)};
         return c;
     }

@@ -42,6 +42,7 @@ namespace golang::math
 
     double ldexp(double frac, int exp)
     {
+        // special cases
         //Go switch emulation
         {
             int conditionId = -1;
@@ -49,6 +50,7 @@ namespace golang::math
             else if(IsInf(frac, 0) || IsNaN(frac)) { conditionId = 1; }
             switch(conditionId)
             {
+                // correctly return -0
                 case 0:
                     return frac;
                     break;
@@ -64,10 +66,12 @@ namespace golang::math
         exp += int(x >> shift) & mask - bias;
         if(exp < - 1075)
         {
+            // underflow
             return Copysign(0, frac);
         }
         if(exp > 1023)
         {
+            // overflow
             if(frac < 0)
             {
                 return Inf(- 1);
@@ -77,7 +81,9 @@ namespace golang::math
         double m = 1;
         if(exp < - 1022)
         {
+            // denormal
             exp += 53;
+            // 2**-53
             m = 1.0 / (1 << 53);
         }
         x &^= mask << shift;

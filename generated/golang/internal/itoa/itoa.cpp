@@ -33,8 +33,10 @@ namespace golang::itoa
     {
         if(val == 0)
         {
+            // avoid string allocation
             return "0"_s;
         }
+        // big enough for 64bit value base 10
         gocpp::array<unsigned char, 20> buf = {};
         auto i = len(buf) - 1;
         for(; val >= 10; )
@@ -44,6 +46,7 @@ namespace golang::itoa
             i--;
             val = q;
         }
+        // val < 10
         buf[i] = (unsigned char)('0' + val);
         return gocpp::string(buf.make_slice(i));
     }
@@ -54,8 +57,10 @@ namespace golang::itoa
     {
         if(val == 0)
         {
+            // avoid string allocation
             return "0x0"_s;
         }
+        // big enough for 64bit value base 16 + 0x
         gocpp::array<unsigned char, 20> buf = {};
         auto i = len(buf) - 1;
         for(; val >= 16; )
@@ -65,6 +70,7 @@ namespace golang::itoa
             i--;
             val = q;
         }
+        // val < 16
         buf[i] = hex[val % 16];
         i--;
         buf[i] = 'x';

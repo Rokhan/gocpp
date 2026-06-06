@@ -41,6 +41,8 @@ namespace golang::strconv
 
     gocpp::slice<unsigned char> appendQuotedWith(gocpp::slice<unsigned char> buf, gocpp::string s, unsigned char quote, bool ASCIIonly, bool graphicOnly)
     {
+        // Often called with big strings, so preallocate. If there's quoting,
+        // this is conservative but still helps a lot.
         if(cap(buf) - len(buf) < len(s))
         {
             auto nBuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(buf), len(buf) + 1 + len(s) + 1);
@@ -85,6 +87,7 @@ namespace golang::strconv
     {
         if(r == gocpp::rune(quote) || r == '\\')
         {
+            // always backslashed
             buf = append(buf, '\\');
             buf = append(buf, (unsigned char)(r));
             return buf;
@@ -287,8 +290,10 @@ namespace golang::strconv
             {
                 if(r == '\ufeff')
                 {
+                    // BOMs are invisible and should not be quoted.
                     return false;
                 }
+                // All other multibyte runes are correctly encoded and assumed printable.
                 continue;
             }
             if(r == utf8::RuneError)
@@ -350,6 +355,7 @@ namespace golang::strconv
         bool multibyte;
         gocpp::string tail;
         struct gocpp::error err;
+        // easy cases
         if(len(s) == 0)
         {
             err = ErrSyntax;
@@ -377,6 +383,7 @@ namespace golang::strconv
                     break;
             }
         }
+        // hard case: c is backslash
         if(len(s) <= 1)
         {
             err = ErrSyntax;
@@ -475,6 +482,7 @@ namespace golang::strconv
                     s = s.make_slice(n);
                     if(c == 'x')
                     {
+                        // single-byte string, possibly not UTF-8
                         value = v;
                         break;
                     }
@@ -502,6 +510,7 @@ namespace golang::strconv
                     }
                     for(auto j = 0; j < 2; j++)
                     {
+                        // one digit already; two more
                         auto x = gocpp::rune(s[j]) - '0';
                         if(x < 0 || x > 7)
                         {
@@ -572,6 +581,7 @@ namespace golang::strconv
         gocpp::string out;
         gocpp::string rem;
         struct gocpp::error err;
+        // Determine the quote form and optimistically find the terminating quote.
         if(len(in) < 2)
         {
             return {""_s, in, ErrSyntax};
@@ -582,6 +592,7 @@ namespace golang::strconv
         {
             return {""_s, in, ErrSyntax};
         }
+        // position after terminating quote; may be wrong if escape sequences are present
         end += 2;
         //Go switch emulation
         {
@@ -600,13 +611,17 @@ namespace golang::strconv
                         else if(! contains(in.make_slice(0, end), '\r')) { conditionId = 1; }
                         switch(conditionId)
                         {
+                            // include quotes
                             case 0:
                                 out = in.make_slice(0, end);
                                 break;
+                            // exclude quotes
                             case 1:
                                 out = in.make_slice(len("`"_s), end - len("`"_s));
                                 break;
                             default:
+                                // Carriage return characters ('\r') inside raw string literals
+                                // are discarded from the raw string value.
                                 auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, end - len("`"_s) - len("\r"_s) - len("`"_s));
                                 for(auto i = len("`"_s); i < end - len("`"_s); i++)
                                 {
@@ -619,10 +634,16 @@ namespace golang::strconv
                                 break;
                         }
                     }
+                    // NOTE: Prior implementations did not verify that raw strings consist
+                    // of valid UTF-8 characters and we continue to not verify it as such.
+                    // The Go specification does not explicitly require valid UTF-8,
+                    // but only mention that it is implicitly valid for Go source code
+                    // (which must be valid UTF-8).
                     return {out, in.make_slice(end), nullptr};
                     break;
                 case 1:
                 case 2:
+                    // Handle quoted strings without any escape sequences.
                     if(! contains(in.make_slice(0, end), '\\') && ! contains(in.make_slice(0, end), '\n'))
                     {
                         bool valid = {};
@@ -648,6 +669,7 @@ namespace golang::strconv
                             out = in.make_slice(0, end);
                             if(unescape)
                             {
+                                // exclude quotes
                                 out = out.make_slice(1, end - 1);
                             }
                             return {out, in.make_slice(end), nullptr};
@@ -656,19 +678,24 @@ namespace golang::strconv
                     // Handle quoted strings with escape sequences.
                     gocpp::slice<unsigned char> buf = {};
                     auto in0 = in;
+                    // skip starting quote
                     in = in.make_slice(1);
                     if(unescape)
                     {
+                        // try to avoid more allocations
                         buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 3 * end / 2);
                     }
                     for(; len(in) > 0 && in[0] != quote; )
                     {
+                        // Process the next character,
+                        // rejecting any unescaped newline characters which are invalid.
                         auto [r, multibyte, rem, err] = UnquoteChar(in, quote);
                         if(in[0] == '\n' || err != nullptr)
                         {
                             return {""_s, in0, ErrSyntax};
                         }
                         in = rem;
+                        // Append the character if unescaping the input.
                         if(unescape)
                         {
                             if(r < utf8::RuneSelf || ! multibyte)
@@ -680,15 +707,18 @@ namespace golang::strconv
                                 buf = utf8::AppendRune(buf, r);
                             }
                         }
+                        // Single quoted strings must be a single character.
                         if(quote == '\'')
                         {
                             break;
                         }
                     }
+                    // Verify that the string ends with a terminating quote.
                     if(! (len(in) > 0 && in[0] == quote))
                     {
                         return {""_s, in0, ErrSyntax};
                     }
+                    // skip terminating quote
                     in = in.make_slice(1);
                     if(unescape)
                     {
@@ -748,18 +778,27 @@ namespace golang::strconv
     // symbols and ASCII space.
     bool IsPrint(gocpp::rune r)
     {
+        // Fast check for Latin-1
         if(r <= 0xFF)
         {
             if(0x20 <= r && r <= 0x7E)
             {
+                // All the ASCII is printable from space through DEL-1.
                 return true;
             }
             if(0xA1 <= r && r <= 0xFF)
             {
+                // Similarly for ¡ through ÿ...
+                // ...except for the bizarre soft hyphen.
                 return r != 0xAD;
             }
             return false;
         }
+        // Same algorithm, either on uint16 or uint32 value.
+        // First, find first i such that isPrint[i] >= x.
+        // This is the index of either the start or end of a pair that might span x.
+        // The start is even (isPrint[i&^1]) and the end is odd (isPrint[i|1]).
+        // If we find x in a range, make sure x is not in isNotPrint list.
         if(0 <= r && r < (1 << 16))
         {
             auto [rr, isPrint, isNotPrint] = std::tuple{uint16_t(r), isPrint16, isNotPrint16};
@@ -803,6 +842,7 @@ namespace golang::strconv
     // Should be called only if IsPrint fails.
     bool isInGraphicList(gocpp::rune r)
     {
+        // We know r must fit in 16 bits - see makeisprint.go.
         if(r > 0xFFFF)
         {
             return false;

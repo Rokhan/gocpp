@@ -95,8 +95,12 @@ namespace golang::runtime
         {
             return nullptr;
         }
+        // Get the time.
         auto [tick, nano] = std::tuple{uint64_t(cputicks()), uint64_t(nanotime())};
+        // Try to get a cached logger.
         auto l = getCachedDlogger();
+        // If we couldn't get a cached logger, try to get one from the
+        // global pool.
         if(l == nullptr)
         {
             auto allp = (uintptr_t*)(gocpp::unsafe_pointer(& allDloggers));
@@ -110,8 +114,11 @@ namespace golang::runtime
                 }
             }
         }
+        // If that failed, allocate a new logger.
         if(l == nullptr)
         {
+            // Use sysAllocOS instead of sysAlloc because we want to interfere
+            // with the runtime as little as possible, and sysAlloc updates accounting.
             l = (dlogger*)(sysAllocOS(gocpp::Sizeof<dlogger>()));
             if(l == nullptr)
             {
@@ -119,6 +126,7 @@ namespace golang::runtime
             }
             l->w.r.data = & l->w.data;
             rec::Store(gocpp::recv(l->owned), 1);
+            // Prepend to allDloggers list.
             auto headp = (uintptr_t*)(gocpp::unsafe_pointer(& allDloggers));
             for(; ; )
             {
@@ -133,13 +141,16 @@ namespace golang::runtime
         // If the time delta is getting too high, write a new sync
         // packet. We set the limit so we don't write more than 6
         // bytes of delta in the record header.
+        // ~2ms between sync packets
         auto deltaLimit = (1 << (3 * 7)) - 1;
         if(tick - l->w.tick > deltaLimit || nano - l->w.nano > deltaLimit)
         {
             rec::writeSync(gocpp::recv(l->w), tick, nano);
         }
+        // Reserve space for framing header.
         rec::ensure(gocpp::recv(l->w), debugLogHeaderSize);
         l->w.write += debugLogHeaderSize;
+        // Write record header.
         rec::uvarint(gocpp::recv(l->w), tick - l->w.tick);
         rec::uvarint(gocpp::recv(l->w), nano - l->w.nano);
         auto gp = getg();
@@ -207,16 +218,20 @@ namespace golang::runtime
         {
             return;
         }
+        // Fill in framing header.
         auto size = l->w.write - l->w.r.end;
         if(! rec::writeFrameAt(gocpp::recv(l->w), l->w.r.end, size))
         {
             go_throw("record too large"_s);
         }
+        // Commit the record.
         l->w.r.end = l->w.write;
+        // Attempt to return this logger to the cache.
         if(putCachedDlogger(l))
         {
             return;
         }
+        // Return the logger to the global pool.
         rec::Store(gocpp::recv(l->owned), 0);
     }
 
@@ -381,6 +396,9 @@ namespace golang::runtime
         auto datap = & firstmoduledata;
         if(len(x) > 4 && datap->etext <= uintptr_t(gocpp::unsafe_pointer(strData)) && uintptr_t(gocpp::unsafe_pointer(strData)) < datap->end)
         {
+            // String constants are in the rodata section, which
+            // isn't recorded in moduledata. But it has to be
+            // somewhere between etext and end.
             rec::byte(gocpp::recv(l->w), debugLogConstString);
             rec::uvarint(gocpp::recv(l->w), uint64_t(len(x)));
             rec::uvarint(gocpp::recv(l->w), uint64_t(uintptr_t(gocpp::unsafe_pointer(strData)) - datap->etext));
@@ -537,8 +555,14 @@ namespace golang::runtime
     {
         for(; l->write + n >= l->r.begin + uint64_t(len(l->data.b)); )
         {
+            // Consume record at begin.
             if(rec::skip(gocpp::recv(l->r)) == ~ uint64_t(0))
             {
+                // Wrapped around within a record.
+                // TODO(austin): It would be better to just
+                // eat the whole buffer at this point, but we
+                // have to communicate that to the reader
+                // somehow.
                 go_throw("record wrapped around"_s);
             }
         }
@@ -608,10 +632,12 @@ namespace golang::runtime
         uint64_t u = {};
         if(x < 0)
         {
+            // complement i, bit 0 is 1
             u = (~ uint64_t(x) << 1) | 1;
         }
         else
         {
+            // do not complement i, bit 0 is 0
             u = (uint64_t(x) << 1);
         }
         rec::uvarint(gocpp::recv(l), u);
@@ -676,6 +702,7 @@ namespace golang::runtime
     //go:nosplit
     uint64_t rec::skip(golang::runtime::debugLogReader* r)
     {
+        // Read size at pos.
         if(r->begin + debugLogHeaderSize > r->end)
         {
             return ~ uint64_t(0);
@@ -683,6 +710,7 @@ namespace golang::runtime
         auto size = uint64_t(rec::readUint16LEAt(gocpp::recv(r), r->begin));
         if(size == 0)
         {
+            // Sync packet.
             r->tick = rec::readUint64LEAt(gocpp::recv(r), r->begin + debugLogHeaderSize);
             r->nano = rec::readUint64LEAt(gocpp::recv(r), r->begin + debugLogHeaderSize + 8);
             size = debugLogSyncSize;
@@ -716,6 +744,7 @@ namespace golang::runtime
     uint64_t rec::peek(golang::runtime::debugLogReader* r)
     {
         uint64_t tick;
+        // Consume any sync records.
         auto size = uint64_t(0);
         for(; size == 0; )
         {
@@ -732,10 +761,12 @@ namespace golang::runtime
             {
                 return ~ uint64_t(0);
             }
+            // Sync packet.
             r->tick = rec::readUint64LEAt(gocpp::recv(r), r->begin + debugLogHeaderSize);
             r->nano = rec::readUint64LEAt(gocpp::recv(r), r->begin + debugLogHeaderSize + 8);
             r->begin += debugLogSyncSize;
         }
+        // Peek tick delta.
         if(r->begin + size > r->end)
         {
             return ~ uint64_t(0);
@@ -765,9 +796,12 @@ namespace golang::runtime
         uint64_t tick;
         uint64_t nano;
         int p;
+        // Read size. We've already skipped sync packets and checked
+        // bounds in peek.
         auto size = uint64_t(rec::readUint16LEAt(gocpp::recv(r), r->begin));
         end = r->begin + size;
         r->begin += debugLogHeaderSize;
+        // Read tick, nano, and p.
         tick = rec::uvarint(gocpp::recv(r)) + r->tick;
         nano = rec::uvarint(gocpp::recv(r)) + r->nano;
         p = int(rec::varint(gocpp::recv(r)));
@@ -873,6 +907,8 @@ namespace golang::runtime
                 case 8:
                     auto [len, ptr] = std::tuple{int(rec::uvarint(gocpp::recv(r))), uintptr_t(rec::uvarint(gocpp::recv(r)))};
                     ptr += firstmoduledata.etext;
+                    // We can't use unsafe.String as it may panic, which isn't safe
+                    // in this (potentially) nowritebarrier context.
                     auto str_tmp = gocpp::Init<stringStruct>([=](auto& x) {
                         x.str = gocpp::unsafe_pointer(ptr);
                         x.len = len;
@@ -892,6 +928,9 @@ namespace golang::runtime
                     for(auto i = 0; i < n; i++)
                     {
                         print("\n\t"_s);
+                        // gentraceback PCs are always return PCs.
+                        // Convert them to call PCs.
+                        // TODO(austin): Expand inlined frames.
                         printDebugLogPC(uintptr_t(rec::uvarint(gocpp::recv(r))), true);
                     }
                     break;
@@ -947,9 +986,13 @@ namespace golang::runtime
         {
             return;
         }
+        // This function should not panic or throw since it is used in
+        // the fatal panic path and this may deadlock.
         printlock();
+        // Get the list of all debug logs.
         auto allp = (uintptr_t*)(gocpp::unsafe_pointer(& allDloggers));
         auto all = (dlogger*)(gocpp::unsafe_pointer(atomic::Loaduintptr(allp)));
+        // Count the logs.
         auto n = 0;
         for(auto l = all; l != nullptr; l = l->allLink)
         {
@@ -981,6 +1024,8 @@ namespace golang::runtime
                 return os;
             }
         };
+        // Use sysAllocOS instead of sysAlloc because we want to interfere
+        // with the runtime as little as possible, and sysAlloc updates accounting.
         auto state1 = sysAllocOS(gocpp::Sizeof<readState>() * uintptr_t(n));
         if(state1 == nullptr)
         {
@@ -1001,6 +1046,7 @@ namespace golang::runtime
                 l = l->allLink;
             }
         }
+        // Print records.
         for(; ; )
         {
             // Find the next record.
@@ -1018,6 +1064,7 @@ namespace golang::runtime
             {
                 break;
             }
+            // Print record.
             auto s = & state[best.i];
             if(s->first)
             {
@@ -1037,6 +1084,7 @@ namespace golang::runtime
             auto pnano = int64_t(nano) - runtimeInitTime;
             if(pnano < 0)
             {
+                // Logged before runtimeInitTime was set.
                 pnano = 0;
             }
             auto pnanoBytes = itoaDiv(tmpbuf.make_slice(0), uint64_t(pnano), 9);
@@ -1050,12 +1098,14 @@ namespace golang::runtime
                 }
                 if(! rec::printVal(gocpp::recv(s)))
                 {
+                    // Abort this P log.
                     print("<aborting P log>"_s);
                     end = oldEnd;
                     break;
                 }
             }
             println();
+            // Move on to the next record.
             s->debugLogReader.begin = end;
             s->debugLogReader.end = oldEnd;
             s->nextTick = rec::peek(gocpp::recv(s));
@@ -1070,6 +1120,8 @@ namespace golang::runtime
         auto fn = findfunc(pc);
         if(returnPC && (! rec::valid(gocpp::recv(fn)) || pc > rec::entry(gocpp::recv(fn))))
         {
+            // TODO(austin): Don't back up if the previous frame
+            // was a sigpanic.
             pc--;
         }
         print(hex(pc));

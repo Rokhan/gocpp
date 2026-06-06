@@ -51,6 +51,7 @@ namespace golang::time
             defer.push_back([=]{ rec::Close(gocpp::recv(k)); });
             gocpp::string std = {};
             gocpp::string dlt = {};
+            // Try MUI_Std and MUI_Dlt first, fallback to Std and Dlt if *any* error occurs
             std::tie(std, err) = rec::GetMUIStringValue(gocpp::recv(k), "MUI_Std"_s);
             if(err == nullptr)
             {
@@ -58,6 +59,7 @@ namespace golang::time
             }
             if(err != nullptr)
             {
+                // Fallback to Std and Dlt
                 if(std::tie(std, std::ignore, err) = rec::GetStringValue(gocpp::recv(k), "Std"_s); err != nullptr)
                 {
                     return {false, err};
@@ -142,6 +144,7 @@ namespace golang::time
         if(! ok)
         {
             auto dstName = syscall::UTF16ToString(z->DaylightName.make_slice(0));
+            // Perhaps stdName is not English. Try to convert it.
             auto [englishName, err] = toEnglishName(stdName, dstName);
             if(err == nullptr)
             {
@@ -151,6 +154,7 @@ namespace golang::time
                     return {a.std, a.dst};
                 }
             }
+            // fallback to using capital letters
             return {extractCAPS(stdName), extractCAPS(dstName)};
         }
         return {a.std, a.dst};
@@ -161,6 +165,11 @@ namespace golang::time
     // It is up to the caller to convert this local time into a UTC-based time.
     int64_t pseudoUnix(int year, syscall::Systemtime* d)
     {
+        // Windows specifies daylight savings information in "day in month" format:
+        // d.Month is month number (1-12)
+        // d.DayOfWeek is appropriate weekday (Sunday=0 to Saturday=6)
+        // d.Day is week within the month (1 to 5, where 5 is last week of the month)
+        // d.Hour, d.Minute and d.Second are absolute time
         auto day = 1;
         auto t = Date(year, Month(d->Month), day, int(d->Hour), int(d->Minute), int(d->Second), 0, UTC);
         auto i = int(d->DayOfWeek) - int(rec::Weekday(gocpp::recv(t)));
@@ -175,6 +184,7 @@ namespace golang::time
         }
         else
         {
+            // "Last" instance of the day.
             day += 4 * 7;
             if(day > daysIn(Month(d->Month), year))
             {
@@ -199,6 +209,7 @@ namespace golang::time
         std->name = stdname;
         if(nzone == 1)
         {
+            // No daylight savings.
             std->offset = - int(i->Bias) * 60;
             l->cacheStart = alpha;
             l->cacheEnd = omega;
@@ -208,11 +219,16 @@ namespace golang::time
             l->tx[0].index = 0;
             return;
         }
+        // StandardBias must be ignored if StandardDate is not set,
+        // so this computation is delayed until after the nzone==1
+        // return above.
         std->offset = - int(i->Bias + i->StandardBias) * 60;
         auto dst = & l->zone[1];
         dst->name = dstname;
         dst->offset = - int(i->Bias + i->DaylightBias) * 60;
         dst->isDST = true;
+        // Arrange so that d0 is first transition date, d1 second,
+        // i0 is index of zone after first transition, i1 second.
         auto d0 = & i->StandardDate;
         auto d1 = & i->DaylightDate;
         auto i0 = 0;
@@ -222,6 +238,7 @@ namespace golang::time
             std::tie(d0, d1) = std::tuple{d1, d0};
             std::tie(i0, i1) = std::tuple{i1, i0};
         }
+        // 2 tx per year, 100 years on each side of this year
         l->tx = gocpp::make(gocpp::Tag<gocpp::slice<zoneTrans>>(), 400);
         auto t = rec::UTC(gocpp::recv(Now()));
         auto year = rec::Year(gocpp::recv(t));

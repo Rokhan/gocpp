@@ -478,6 +478,8 @@ namespace golang::reflectlite
             off += i2 + l2;
         }
         int32_t nameOff = {};
+        // Note that this field may not be aligned in memory,
+        // so we cannot use a direct int32 assignment here.
         copy((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& nameOff)).make_slice(0), (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"_s))).make_slice(0));
         auto pkgPathName = name {(unsigned char*)(resolveTypeOff(gocpp::unsafe_pointer(n.Bytes), nameOff))};
         return rec::name(gocpp::recv(pkgPathName));
@@ -704,6 +706,8 @@ namespace golang::reflectlite
     struct Type TypeOf(go_any i)
     {
         auto eface = *(emptyInterface*)(gocpp::unsafe_pointer(& i));
+        // Noescape so this doesn't make i to escape. See the comment
+        // at Value.typ for why this is safe.
         return toType((abi::Type*)(noescape(gocpp::unsafe_pointer(eface.typ))));
     }
 
@@ -750,6 +754,18 @@ namespace golang::reflectlite
         }
         auto rT = toRType(T);
         auto rV = toRType(V);
+        // The same algorithm applies in both cases, but the
+        // method tables for an interface type and a concrete type
+        // are different, so the code is duplicated.
+        // In both cases the algorithm is a linear scan over the two
+        // lists - T's methods and V's methods - simultaneously.
+        // Since method tables are stored in a unique sorted order
+        // (alphabetical, with no duplicate method names), the scan
+        // through V's methods must hit a match for each of T's
+        // methods along the way, or else V does not implement T.
+        // This lets us run the scan in overall linear time instead of
+        // the quadratic time  a naive search would require.
+        // See also ../runtime/iface.go.
         if(rec::Kind(gocpp::recv(V)) == Interface)
         {
             auto v = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(V));
@@ -835,14 +851,18 @@ namespace golang::reflectlite
     // and the ideal constant rules (no ideal constants at run time).
     bool directlyAssignable(abi::Type* T, abi::Type* V)
     {
+        // x's type V is identical to T?
         if(T == V)
         {
             return true;
         }
+        // Otherwise at least one of T and V must not be defined
+        // and they must have the same kind.
         if(rec::HasName(gocpp::recv(T)) && rec::HasName(gocpp::recv(V)) || rec::Kind(gocpp::recv(T)) != rec::Kind(gocpp::recv(V)))
         {
             return false;
         }
+        // x's type T and V must  have identical underlying types.
         return haveIdenticalUnderlyingType(T, V, true);
     }
 
@@ -870,10 +890,13 @@ namespace golang::reflectlite
         {
             return false;
         }
+        // Non-composite types of equal kind have same underlying type
+        // (the predefined instance of the type).
         if(abi::Bool <= kind && kind <= abi::Complex128 || kind == abi::String || kind == abi::UnsafePointer)
         {
             return true;
         }
+        // Composite types.
         //Go switch emulation
         {
             auto condition = kind;
@@ -892,10 +915,14 @@ namespace golang::reflectlite
                     return rec::Len(gocpp::recv(T)) == rec::Len(gocpp::recv(V)) && haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), cmpTags);
                     break;
                 case 1:
+                    // Special case:
+                    // x is a bidirectional channel value, T is a channel type,
+                    // and x's type V and T have identical element types.
                     if(rec::ChanDir(gocpp::recv(V)) == abi::BothDir && haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), cmpTags))
                     {
                         return true;
                     }
+                    // Otherwise continue test for identical underlying type.
                     return rec::ChanDir(gocpp::recv(V)) == rec::ChanDir(gocpp::recv(T)) && haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), cmpTags);
                     break;
                 case 2:
@@ -928,6 +955,8 @@ namespace golang::reflectlite
                     {
                         return true;
                     }
+                    // Might have the same methods but still
+                    // need a run time conversion.
                     return false;
                     break;
                 case 4:

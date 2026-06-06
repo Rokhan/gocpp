@@ -147,6 +147,7 @@ namespace golang::runtime
         f->list = nullptr;
         f->chunk = 0;
         f->nchunk = 0;
+        // Round _FixAllocChunk down to an exact multiple of size to eliminate tail waste
         f->nalloc = uint32_t(_FixAllocChunk / size * size);
         f->inuse = 0;
         f->stat = stat;

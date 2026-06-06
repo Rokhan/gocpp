@@ -26,6 +26,7 @@ namespace golang::main
         mocklib::Printf("Hello, world.\n"_s);
         auto hello = "Hello"_s;
         auto world = "World"_s;
+        // time.Sleep(100 * time.Millisecond)
         helloFunc(hello, world, "!"_s);
         using Yyy = color::Color;
         Yyy _ = {};

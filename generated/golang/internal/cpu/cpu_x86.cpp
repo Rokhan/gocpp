@@ -61,6 +61,8 @@ namespace golang::cpu
         auto level = getGOAMD64level();
         if(level < 2)
         {
+            // These options are required at level 2. At lower levels
+            // they can be turned off.
             options = append(options, gocpp::Init<option>([=](auto& x) {
                 x.Name = "popcnt"_s;
                 x.Feature = & X86.HasPOPCNT;
@@ -80,6 +82,8 @@ namespace golang::cpu
         }
         if(level < 3)
         {
+            // These options are required at level 3. At lower levels
+            // they can be turned off.
             options = append(options, gocpp::Init<option>([=](auto& x) {
                 x.Name = "avx"_s;
                 x.Feature = & X86.HasAVX;
@@ -99,6 +103,8 @@ namespace golang::cpu
         }
         if(level < 4)
         {
+            // These options are required at level 4. At lower levels
+            // they can be turned off.
             options = append(options, gocpp::Init<option>([=](auto& x) {
                 x.Name = "avx512f"_s;
                 x.Feature = & X86.HasAVX512F;
@@ -124,14 +130,26 @@ namespace golang::cpu
         X86.HasSSE42 = isSet(ecx1, cpuid_SSE42);
         X86.HasPOPCNT = isSet(ecx1, cpuid_POPCNT);
         X86.HasAES = isSet(ecx1, cpuid_AES);
+        // OSXSAVE can be false when using older Operating Systems
+        // or when explicitly disabled on newer Operating Systems by
+        // e.g. setting the xsavedisable boot option on Windows 10.
         X86.HasOSXSAVE = isSet(ecx1, cpuid_OSXSAVE);
+        // The FMA instruction set extension only has VEX prefixed instructions.
+        // VEX prefixed instructions require OSXSAVE to be enabled.
+        // See Intel 64 and IA-32 Architecture Software Developer’s Manual Volume 2
+        // Section 2.4 "AVX and SSE Instruction Exception Specification"
         X86.HasFMA = isSet(ecx1, cpuid_FMA) && X86.HasOSXSAVE;
         auto osSupportsAVX = false;
         auto osSupportsAVX512 = false;
+        // For XGETBV, OSXSAVE bit is required and sufficient.
         if(X86.HasOSXSAVE)
         {
             auto [eax, gocpp_id_6] = xgetbv();
+            // Check if XMM and YMM registers have OS support.
             osSupportsAVX = isSet(eax, 1 << 1) && isSet(eax, 1 << 2);
+            // AVX512 detection does not work on Darwin,
+            // see https://github.com/golang/go/issues/49233
+            // Check if opmask, ZMMhi256 and Hi16_ZMM have OS support.
             osSupportsAVX512 = osSupportsAVX && isSet(eax, 1 << 5) && isSet(eax, 1 << 6) && isSet(eax, 1 << 7);
         }
         X86.HasAVX = isSet(ecx1, cpuid_AVX) && osSupportsAVX;
@@ -187,10 +205,12 @@ namespace golang::cpu
         data = appendBytes(data, eax, ebx, ecx, edx);
         std::tie(eax, ebx, ecx, edx) = cpuid(0x80000004, 0);
         data = appendBytes(data, eax, ebx, ecx, edx);
+        // Trim leading spaces.
         for(; len(data) > 0 && data[0] == ' '; )
         {
             data = data.make_slice(1);
         }
+        // Trim tail after and including the first null byte.
         for(auto [i, c] : data)
         {
             if(c == '\x00')

@@ -157,6 +157,12 @@ namespace golang::registry
         err = regLoadMUIString(syscall::Handle(k), pname, & buf[0], uint32_t(len(buf)), & buflen, 0, pdir);
         if(err == syscall::ERROR_FILE_NOT_FOUND)
         {
+            // Try fallback path
+            // Try to resolve the string value using the system directory as
+            // a DLL search path; this assumes the string value is of the form
+            // @[path]\dllname,-strID but with no path given, e.g. @tzres.dll,-320.
+            // This approach works with tzres.dll but may have to be revised
+            // in the future to allow callers to provide custom search paths.
             gocpp::string s = {};
             std::tie(s, err) = ExpandString("%SystemRoot%\\system32\\"_s);
             if(err != nullptr)
@@ -172,8 +178,10 @@ namespace golang::registry
         }
         for(; err == syscall::ERROR_MORE_DATA; )
         {
+            // Grow buffer if needed
             if(buflen <= uint32_t(len(buf)))
             {
+                // Buffer not growing, assume race; break
                 break;
             }
             buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), buflen);
@@ -246,6 +254,7 @@ namespace golang::registry
         }
         if(p[len(p) - 1] == 0)
         {
+            // remove terminating null
             p = p.make_slice(0, len(p) - 1);
         }
         val = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, 5);
@@ -424,6 +433,7 @@ namespace golang::registry
             return {nullptr, err};
         }
         auto names = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, ki->ValueCount);
+        // extra room for terminating null character
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), ki->MaxValueNameLen + 1);
         loopItems:
         for(auto i = uint32_t(0); ; i++)
@@ -444,6 +454,7 @@ namespace golang::registry
                 }
                 if(err == syscall::ERROR_MORE_DATA)
                 {
+                    // Double buffer size and try again.
                     l = uint32_t(2 * len(buf));
                     buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), l);
                     continue;

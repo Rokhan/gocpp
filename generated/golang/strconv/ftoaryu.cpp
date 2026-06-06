@@ -34,29 +34,45 @@ namespace golang::strconv
         {
             gocpp::panic("ryuFtoaFixed32 called with prec > 9"_s);
         }
+        // Zero input.
         if(mant == 0)
         {
             std::tie(d->nd, d->dp) = std::tuple{0, 0};
             return;
         }
+        // Renormalize to a 25-bit mantissa.
         auto e2 = exp;
         if(auto b = bits::Len32(mant); b < 25)
         {
             mant <<= (unsigned int)(25 - b);
             e2 += b - 25;
         }
+        // Choose an exponent such that rounded mant*(2^e2)*(10^q) has
+        // at least prec decimal digits, i.e
+        // mant*(2^e2)*(10^q) >= 10^(prec-1)
+        // Because mant >= 2^24, it is enough to choose:
+        // 2^(e2+24) >= 10^(-q+prec-1)
+        // or q = -mulByLog2Log10(e2+24) + prec - 1
         auto q = - mulByLog2Log10(e2 + 24) + prec - 1;
+        // Now compute mant*(2^e2)*(10^q).
+        // Is it an exact computation?
+        // Only small positive powers of 10 are exact (5^28 has 66 bits).
         auto exact = q <= 27 && q >= 0;
         auto [di, dexp2, d0] = mult64bitPow10(mant, e2, q);
         if(dexp2 >= 0)
         {
             gocpp::panic("not enough significant bits after mult64bitPow10"_s);
         }
+        // As a special case, computation might still be exact, if exponent
+        // was negative and if it amounts to computing an exact division.
+        // In that case, we ignore all lower bits.
+        // Note that division by 10^11 cannot be exact as 5^11 has 26 bits.
         if(q < 0 && q >= - 10 && divisibleByPower5(uint64_t(mant), - q))
         {
             exact = true;
             d0 = true;
         }
+        // Remove extra lower bits and keep rounding info.
         auto extra = (unsigned int)(- dexp2);
         auto extraMask = uint32_t((1 << extra) - 1);
         uint32_t dfrac;
@@ -64,17 +80,23 @@ namespace golang::strconv
         auto roundUp = false;
         if(exact)
         {
+            // If we computed an exact product, d + 1/2
+            // should round to d+1 if 'd' is odd.
             roundUp = dfrac > (1 << (extra - 1)) || (dfrac == (1 << (extra - 1)) && ! d0) || (dfrac == (1 << (extra - 1)) && d0 && di & 1 == 1);
         }
         else
         {
+            // otherwise, d+1/2 always rounds up because
+            // we truncated below.
             roundUp = (dfrac >> (extra - 1)) == 1;
         }
         if(dfrac != 0)
         {
             d0 = false;
         }
+        // Proceed to the requested number of digits
         formatDecimal(d, uint64_t(di), ! d0, roundUp, prec);
+        // Adjust exponent
         d->dp -= q;
     }
 
@@ -85,29 +107,47 @@ namespace golang::strconv
         {
             gocpp::panic("ryuFtoaFixed64 called with prec > 18"_s);
         }
+        // Zero input.
         if(mant == 0)
         {
             std::tie(d->nd, d->dp) = std::tuple{0, 0};
             return;
         }
+        // Renormalize to a 55-bit mantissa.
         auto e2 = exp;
         if(auto b = bits::Len64(mant); b < 55)
         {
             mant = mant << (unsigned int)(55 - b);
             e2 += b - 55;
         }
+        // Choose an exponent such that rounded mant*(2^e2)*(10^q) has
+        // at least prec decimal digits, i.e
+        // mant*(2^e2)*(10^q) >= 10^(prec-1)
+        // Because mant >= 2^54, it is enough to choose:
+        // 2^(e2+54) >= 10^(-q+prec-1)
+        // or q = -mulByLog2Log10(e2+54) + prec - 1
+        // The minimal required exponent is -mulByLog2Log10(1025)+18 = -291
+        // The maximal required exponent is mulByLog2Log10(1074)+18 = 342
         auto q = - mulByLog2Log10(e2 + 54) + prec - 1;
+        // Now compute mant*(2^e2)*(10^q).
+        // Is it an exact computation?
+        // Only small positive powers of 10 are exact (5^55 has 128 bits).
         auto exact = q <= 55 && q >= 0;
         auto [di, dexp2, d0] = mult128bitPow10(mant, e2, q);
         if(dexp2 >= 0)
         {
             gocpp::panic("not enough significant bits after mult128bitPow10"_s);
         }
+        // As a special case, computation might still be exact, if exponent
+        // was negative and if it amounts to computing an exact division.
+        // In that case, we ignore all lower bits.
+        // Note that division by 10^23 cannot be exact as 5^23 has 54 bits.
         if(q < 0 && q >= - 22 && divisibleByPower5(mant, - q))
         {
             exact = true;
             d0 = true;
         }
+        // Remove extra lower bits and keep rounding info.
         auto extra = (unsigned int)(- dexp2);
         auto extraMask = uint64_t((1 << extra) - 1);
         uint64_t dfrac;
@@ -115,17 +155,23 @@ namespace golang::strconv
         auto roundUp = false;
         if(exact)
         {
+            // If we computed an exact product, d + 1/2
+            // should round to d+1 if 'd' is odd.
             roundUp = dfrac > (1 << (extra - 1)) || (dfrac == (1 << (extra - 1)) && ! d0) || (dfrac == (1 << (extra - 1)) && d0 && di & 1 == 1);
         }
         else
         {
+            // otherwise, d+1/2 always rounds up because
+            // we truncated below.
             roundUp = (dfrac >> (extra - 1)) == 1;
         }
         if(dfrac != 0)
         {
             d0 = false;
         }
+        // Proceed to the requested number of digits
         formatDecimal(d, di, ! d0, roundUp, prec);
+        // Adjust exponent
         d->dp -= q;
     }
 
@@ -153,6 +199,9 @@ namespace golang::strconv
             }
             else
             {
+                // b == 5
+                // round up if there are trailing digits,
+                // or if the new value of m is odd (round-to-even convention)
                 roundUp = trunc || m & 1 == 1;
             }
             if(b != 0)
@@ -166,9 +215,11 @@ namespace golang::strconv
         }
         if(m >= max)
         {
+            // Happens if di was originally 99999....xx
             m /= 10;
             trimmed++;
         }
+        // render digits (similar to formatBits)
         auto n = (unsigned int)(prec);
         d->nd = prec;
         auto v = m;
@@ -215,6 +266,8 @@ namespace golang::strconv
             std::tie(d->nd, d->dp) = std::tuple{0, 0};
             return;
         }
+        // If input is an exact integer with fewer bits than the mantissa,
+        // the previous and next integer are not admissible representations.
         if(exp <= 0 && bits::TrailingZeros64(mant) >= - exp)
         {
             mant >>= (unsigned int)(- exp);
@@ -227,6 +280,7 @@ namespace golang::strconv
             ryuDigits(d, ml, mc, mu, true, false);
             return;
         }
+        // Find 10^q *larger* than 2^-e2
         auto q = mulByLog2Log10(- e2) + 1;
         // We are going to multiply by 10^q using 128-bit arithmetic.
         // The exponent is the same for all 3 numbers.
@@ -256,12 +310,16 @@ namespace golang::strconv
         {
             gocpp::panic("not enough significant bits after mult128bitPow10"_s);
         }
+        // Is it an exact computation?
         if(q > 55)
         {
+            // Large positive powers of ten are not exact
             std::tie(dl0, dc0, du0) = std::tuple{false, false, false};
         }
         if(q < 0 && q >= - 24)
         {
+            // Division by a power of ten may be exact.
+            // (note that 5^25 is a 59-bit number so division by 5^25 is never exact).
             if(divisibleByPower5(ml, - q))
             {
                 dl0 = true;
@@ -275,14 +333,21 @@ namespace golang::strconv
                 du0 = true;
             }
         }
+        // Express the results (dl, dc, du)*2^e2 as integers.
+        // Extra bits must be removed and rounding hints computed.
         auto extra = (unsigned int)(- e2);
         auto extraMask = uint64_t((1 << extra) - 1);
+        // Now compute the floored, integral base 10 mantissas.
         auto [dl_tmp, fracl] = std::tuple{dl >> extra, dl & extraMask};
         auto& dl = dl_tmp;
         auto [dc_tmp, fracc] = std::tuple{dc >> extra, dc & extraMask};
         auto& dc = dc_tmp;
         auto [du_tmp, fracu] = std::tuple{du >> extra, du & extraMask};
         auto& du = du_tmp;
+        // Is it allowed to use 'du' as a result?
+        // It is always allowed when it is truncated, but also
+        // if it is exact and the original binary mantissa is even
+        // When disallowed, we can subtract 1.
         auto uok = ! du0 || fracu > 0;
         if(du0 && fracu == 0)
         {
@@ -292,21 +357,33 @@ namespace golang::strconv
         {
             du--;
         }
+        // Is 'dc' the correctly rounded base 10 mantissa?
+        // The correct rounding might be dc+1
+        // don't round up.
         auto cup = false;
         if(dc0)
         {
+            // If we computed an exact product, the half integer
+            // should round to next (even) integer if 'dc' is odd.
             cup = fracc > (1 << (extra - 1)) || (fracc == (1 << (extra - 1)) && dc & 1 == 1);
         }
         else
         {
+            // otherwise, the result is a lower truncation of the ideal
+            // result.
             cup = (fracc >> (extra - 1)) == 1;
         }
+        // Is 'dl' an allowed representation?
+        // Only if it is an exact value, and if the original binary mantissa
+        // was even.
         auto lok = dl0 && fracl == 0 && (mant & 1 == 0);
         if(! lok)
         {
             dl++;
         }
+        // We need to remember whether the trimmed digits of 'dc' are zero.
         auto c0 = dc0 && fracc == 0;
+        // render digits
         ryuDigits(d, dl, dc, du, c0, cup);
         d->dp -= q;
     }
@@ -318,6 +395,7 @@ namespace golang::strconv
     // slower floating point arithmetic. Correctness is verified by unit tests.
     int mulByLog2Log10(int x)
     {
+        // log(2)/log(10) ≈ 0.30102999566 ≈ 78913 / 2^18
         return (x * 78913) >> 18;
     }
 
@@ -328,6 +406,7 @@ namespace golang::strconv
     // slower floating point arithmetic. Correctness is verified by unit tests.
     int mulByLog10Log2(int x)
     {
+        // log(10)/log(2) ≈ 3.32192809489 ≈ 108853 / 2^15
         return (x * 108853) >> 15;
     }
 
@@ -342,12 +421,14 @@ namespace golang::strconv
         int e2;
         if(mant != (1 << flt->mantbits) || exp == flt->bias + 1 - int(flt->mantbits))
         {
+            // regular case (or denormals)
             std::tie(lower, central, upper) = std::tuple{2 * mant - 1, 2 * mant, 2 * mant + 1};
             e2 = exp - 1;
             return {lower, central, upper, e2};
         }
         else
         {
+            // border of an exponent
             std::tie(lower, central, upper) = std::tuple{4 * mant - 1, 4 * mant, 4 * mant + 2};
             e2 = exp - 2;
             return {lower, central, upper, e2};
@@ -361,11 +442,13 @@ namespace golang::strconv
         auto [uhi, ulo] = divmod1e9(upper);
         if(uhi == 0)
         {
+            // only low digits (for denormals)
             ryuDigits32(d, llo, clo, ulo, c0, cup, 8);
         }
         else
         if(lhi < uhi)
         {
+            // truncate 9 digits at once.
             if(llo != 0)
             {
                 lhi++;
@@ -378,6 +461,7 @@ namespace golang::strconv
         else
         {
             d->nd = 0;
+            // emit high part
             auto n = (unsigned int)(9);
             for(auto v = chi; v > 0; )
             {
@@ -388,12 +472,15 @@ namespace golang::strconv
             }
             d->d = d->d.make_slice(n);
             d->nd = int(9 - n);
+            // emit low part
             ryuDigits32(d, llo, clo, ulo, c0, cup, d->nd + 8);
         }
+        // trim trailing zeros
         for(; d->nd > 0 && d->d[d->nd - 1] == '0'; )
         {
             d->nd--;
         }
+        // trim initial zeros
         for(; d->nd > 0 && d->d[0] == '0'; )
         {
             d->nd--;
@@ -411,16 +498,34 @@ namespace golang::strconv
             return;
         }
         auto trimmed = 0;
+        // Remember last trimmed digit to check for round-up.
+        // c0 will be used to remember zeroness of following digits.
         auto cNextDigit = 0;
         for(; upper > 0; )
         {
+            // Repeatedly compute:
+            // l = Ceil(lower / 10^k)
+            // c = Round(central / 10^k)
+            // u = Floor(upper / 10^k)
+            // and stop when c goes out of the (l, u) interval.
             auto l = (lower + 9) / 10;
             auto [c, cdigit] = std::tuple{central / 10, central % 10};
             auto u = upper / 10;
             if(l > u)
             {
+                // don't trim the last digit as it is forbidden to go below l
+                // other, trim and exit now.
                 break;
             }
+            // Check that we didn't cross the lower boundary.
+            // The case where l < u but c == l-1 is essentially impossible,
+            // but may happen if:
+            // lower   = ..11
+            // central = ..19
+            // upper   = ..31
+            // and means that 'central' is very close but less than
+            // an integer ending with many zeros, and usually
+            // the "round-up" logic hides the problem.
             if(l == c + 1 && c < u)
             {
                 c++;
@@ -428,10 +533,12 @@ namespace golang::strconv
                 cup = false;
             }
             trimmed++;
+            // Remember trimmed digits of c
             c0 = c0 && cNextDigit == 0;
             cNextDigit = int(cdigit);
             std::tie(lower, central, upper) = std::tuple{l, c, u};
         }
+        // should we round up?
         if(trimmed > 0)
         {
             cup = cNextDigit > 5 || (cNextDigit == 5 && ! c0) || (cNextDigit == 5 && c0 && central & 1 == 1);
@@ -440,6 +547,7 @@ namespace golang::strconv
         {
             central++;
         }
+        // We know where the number ends, fill directly
         endindex -= trimmed;
         auto v = central;
         auto n = endindex;
@@ -476,15 +584,18 @@ namespace golang::strconv
         bool exact;
         if(q == 0)
         {
+            // P == 1<<63
             return {m << 6, e2 - 6, true};
         }
         if(q < detailedPowersOfTenMinExp10 || detailedPowersOfTenMaxExp10 < q)
         {
+            // This never happens due to the range of float32/float64 exponent
             gocpp::panic("mult64bitPow10: power of 10 is out of range"_s);
         }
         auto pow = detailedPowersOfTen[q - detailedPowersOfTenMinExp10][1];
         if(q < 0)
         {
+            // Inverse powers of ten must be rounded up.
             pow += 1;
         }
         auto [hi, lo] = bits::Mul64(uint64_t(m), pow);
@@ -509,18 +620,22 @@ namespace golang::strconv
         bool exact;
         if(q == 0)
         {
+            // P == 1<<127
             return {m << 8, e2 - 8, true};
         }
         if(q < detailedPowersOfTenMinExp10 || detailedPowersOfTenMaxExp10 < q)
         {
+            // This never happens due to the range of float32/float64 exponent
             gocpp::panic("mult128bitPow10: power of 10 is out of range"_s);
         }
         auto pow = detailedPowersOfTen[q - detailedPowersOfTenMinExp10];
         if(q < 0)
         {
+            // Inverse powers of ten must be rounded up.
             pow[0] += 1;
         }
         e2 += mulByLog10Log2(q) - 127 + 119;
+        // long multiplication
         auto [l1, l0] = bits::Mul64(m, pow[0]);
         auto [h1, h0] = bits::Mul64(m, pow[1]);
         auto [mid, carry] = bits::Add64(l1, h0, 0);
@@ -553,6 +668,8 @@ namespace golang::strconv
         {
             return {uint32_t(x / 1e9), uint32_t(x % 1e9)};
         }
+        // Use the same sequence of operations as the amd64 compiler.
+        // binary digits of 1e-9
         auto [hi, gocpp_id_0] = bits::Mul64(x >> 1, 0x89705f4136b4a598);
         auto q = hi >> 28;
         return {uint32_t(q), uint32_t(x - q * 1e9)};

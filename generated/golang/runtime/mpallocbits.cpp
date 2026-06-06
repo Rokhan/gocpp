@@ -46,9 +46,11 @@ namespace golang::runtime
         _ = b[i / 64];
         if(n == 1)
         {
+            // Fast path for the n == 1 case.
             rec::set(gocpp::recv(b), i);
             return;
         }
+        // Set bits [i, j].
         auto j = i + n - 1;
         if(i / 64 == j / 64)
         {
@@ -56,11 +58,13 @@ namespace golang::runtime
             return;
         }
         _ = b[j / 64];
+        // Set leading bits.
         b[i / 64] |= ~ uint64_t(0) << (i % 64);
         for(auto k = i / 64 + 1; k < j / 64; k++)
         {
             b[k] = ~ uint64_t(0);
         }
+        // Set trailing bits.
         b[j / 64] |= (uint64_t(1) << (j % 64 + 1)) - 1;
     }
 
@@ -92,9 +96,11 @@ namespace golang::runtime
         _ = b[i / 64];
         if(n == 1)
         {
+            // Fast path for the n == 1 case.
             rec::clear(gocpp::recv(b), i);
             return;
         }
+        // Clear bits [i, j].
         auto j = i + n - 1;
         if(i / 64 == j / 64)
         {
@@ -102,11 +108,13 @@ namespace golang::runtime
             return;
         }
         _ = b[j / 64];
+        // Clear leading bits.
         b[i / 64] &^= ~ uint64_t(0) << (i % 64);
         for(auto k = i / 64 + 1; k < j / 64; k++)
         {
             b[k] = 0;
         }
+        // Clear trailing bits.
         b[j / 64] &^= (uint64_t(1) << (j % 64 + 1)) - 1;
     }
 
@@ -162,6 +170,7 @@ namespace golang::runtime
         unsigned int start = {};
         unsigned int most = {};
         unsigned int cur = {};
+        // sentinel for start value
         auto notSetYet = ~ (unsigned int)(0);
         start = notSetYet;
         for(auto i = 0; i < len(b); i++)
@@ -174,12 +183,14 @@ namespace golang::runtime
             }
             auto t = (unsigned int)(sys::TrailingZeros64(x));
             auto l = (unsigned int)(sys::LeadingZeros64(x));
+            // Finish any region spanning the uint64s
             cur += t;
             if(start == notSetYet)
             {
                 start = cur;
             }
             most = gocpp::max(most, cur);
+            // Final region that might span to next uint64
             cur = l;
         }
         if(start == notSetYet)
@@ -191,8 +202,11 @@ namespace golang::runtime
         most = gocpp::max(most, cur);
         if(most >= 64 - 2)
         {
+            // There is no way an internal run of zeros could beat max.
             return packPallocSum(start, most, cur);
         }
+        // Now look inside each uint64 for runs of zeros.
+        // All uint64s must be nonzero, or we would have aborted above.
         outer:
         for(auto i = 0; i < len(b); i++)
         {
@@ -203,43 +217,68 @@ namespace golang::runtime
                 break;
             }
             auto x = b[i];
+            // Look inside this uint64. We have a pattern like
+            // 000000 1xxxxx1 000000
+            // We need to look inside the 1xxxxx1 for any contiguous
+            // region of zeros.
+            // We already know the trailing zeros are no larger than max. Remove them.
             x >>= sys::TrailingZeros64(x) & 63;
             if(x & (x + 1) == 0)
             {
+                // no more zeros (except at the top).
                 continue;
             }
+            // Strategy: shrink all runs of zeros by max. If any runs of zero
+            // remain, then we've identified a larger maximum zero run.
+            // number of zeros we still need to shrink by.
             auto p = most;
+            // current minimum length of runs of ones in x.
             auto k = (unsigned int)(1);
             for(; ; )
             {
+                // Shrink all runs of zeros by p places (except the top zeros).
                 for(; p > 0; )
                 {
                     if(p <= k)
                     {
+                        // Shift p ones down into the top of each run of zeros.
                         x |= x >> (p & 63);
                         if(x & (x + 1) == 0)
                         {
+                            // no more zeros (except at the top).
                             goto outer_continue;
                         }
                         break;
                     }
+                    // Shift k ones down into the top of each run of zeros.
                     x |= x >> (k & 63);
                     if(x & (x + 1) == 0)
                     {
+                        // no more zeros (except at the top).
                         goto outer_continue;
                     }
                     p -= k;
+                    // We've just doubled the minimum length of 1-runs.
+                    // This allows us to shift farther in the next iteration.
                     k *= 2;
                 }
+                // The length of the lowest-order zero run is an increment to our maximum.
+                // count contiguous trailing ones
                 auto j = (unsigned int)(sys::TrailingZeros64(~ x));
+                // remove trailing ones
                 x >>= j & 63;
+                // count contiguous trailing zeros
                 j = (unsigned int)(sys::TrailingZeros64(x));
+                // remove zeros
                 x >>= j & 63;
+                // we have a new maximum!
                 most += j;
                 if(x & (x + 1) == 0)
                 {
+                    // no more zeros (except at the top).
                     goto outer_continue;
                 }
+                // remove j more zeros from each zero run.
                 p = j;
             }
         }
@@ -276,6 +315,7 @@ namespace golang::runtime
     // See find for an explanation of the searchIdx parameter.
     unsigned int rec::find1(gocpp::array_ptr<golang::runtime::pallocBits> b, unsigned int searchIdx)
     {
+        // lift nil check out of loop
         _ = b[0];
         for(auto i = searchIdx / 64; i < (unsigned int)(len(b)); i++)
         {
@@ -310,8 +350,12 @@ namespace golang::runtime
                 end = 0;
                 continue;
             }
+            // First see if we can pack our allocation in the trailing
+            // zeros plus the end of the last 64 bits.
             if(newSearchIdx == ~ (unsigned int)(0))
             {
+                // The new searchIdx is going to be at these 64 bits after any
+                // 1s we file, so count trailing 1s.
                 newSearchIdx = i * 64 + (unsigned int)(sys::TrailingZeros64(~ bi));
             }
             auto start = (unsigned int)(sys::TrailingZeros64(bi));
@@ -319,6 +363,7 @@ namespace golang::runtime
             {
                 return {i * 64 - end, newSearchIdx};
             }
+            // Next, check the interior of the 64-bit chunk.
             auto j = findBitRange64(~ bi, (unsigned int)(npages));
             if(j < 64)
             {
@@ -352,6 +397,8 @@ namespace golang::runtime
             }
             if(newSearchIdx == ~ (unsigned int)(0))
             {
+                // The new searchIdx is going to be at these 64 bits after any
+                // 1s we file, so count trailing 1s.
                 newSearchIdx = i * 64 + (unsigned int)(sys::TrailingZeros64(~ x));
             }
             if(size == 0)
@@ -432,23 +479,35 @@ namespace golang::runtime
     // n must be > 0.
     unsigned int findBitRange64(uint64_t c, unsigned int n)
     {
+        // This implementation is based on shrinking the length of
+        // runs of contiguous 1 bits. We remove the top n-1 1 bits
+        // from each run of 1s, then look for the first remaining 1 bit.
+        // number of 1s we want to remove.
         auto p = n - 1;
+        // current minimum width of runs of 0 in c.
         auto k = (unsigned int)(1);
         for(; p > 0; )
         {
             if(p <= k)
             {
+                // Shift p 0s down into the top of each run of 1s.
                 c &= c >> (p & 63);
                 break;
             }
+            // Shift k 0s down into the top of each run of 1s.
             c &= c >> (k & 63);
             if(c == 0)
             {
                 return 64;
             }
             p -= k;
+            // We've just doubled the minimum length of 0-runs.
+            // This allows us to shift farther in the next iteration.
             k *= 2;
         }
+        // Find first remaining 1.
+        // Since we shrunk from the top down, the first 1 is in
+        // its correct original position.
         return (unsigned int)(sys::TrailingZeros64(c));
     }
 
@@ -495,6 +554,7 @@ namespace golang::runtime
     // updates the scavenged bits appropriately.
     void rec::allocRange(golang::runtime::pallocData* m, unsigned int i, unsigned int n)
     {
+        // Clear the scavenged bits when we alloc the range.
         rec::allocRange(gocpp::recv(m->pallocBits), i, n);
         rec::clearRange(gocpp::recv(m->scavenged), i, n);
     }
@@ -503,6 +563,7 @@ namespace golang::runtime
     // the scavenged bits appropriately.
     void rec::allocAll(golang::runtime::pallocData* m)
     {
+        // Clear the scavenged bits when we alloc the range.
         rec::allocAll(gocpp::recv(m->pallocBits));
         rec::clearAll(gocpp::recv(m->scavenged));
     }

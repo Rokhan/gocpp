@@ -24,10 +24,13 @@ namespace golang::main
     {
         gocpp::slice<int> s = {};
         printSlice(s);
+        // append works on nil slices.
         s = append(s, 0);
         printSlice(s);
+        // The slice grows as needed.
         s = append(s, 1);
         printSlice(s);
+        // We can add more than one element at a time.
         s = append(s, 2, 3, 4);
         printSlice(s);
         appendValue(s, 17);
@@ -36,6 +39,7 @@ namespace golang::main
 
     void printSlice(gocpp::slice<int> s)
     {
+        // fmt.Printf("-- len=%d cap=%d %v\n", len(s), cap(s), s)
         mocklib::Printf("## len=%v cap=%v %v\n"_s, len(s), cap(s), s);
     }
 

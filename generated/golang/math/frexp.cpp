@@ -47,6 +47,7 @@ namespace golang::math
     {
         double frac;
         int exp;
+        // special cases
         //Go switch emulation
         {
             int conditionId = -1;
@@ -54,6 +55,7 @@ namespace golang::math
             else if(IsInf(f, 0) || IsNaN(f)) { conditionId = 1; }
             switch(conditionId)
             {
+                // correctly return -0
                 case 0:
                     return {f, 0};
                     break;

@@ -60,6 +60,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
+                    // 0080-07FF two byte sequence
                     if(len(s) > 1 && (locb <= s[1] && s[1] <= hicb))
                     {
                         r = (gocpp::rune(s[0] & mask2) << 6) | gocpp::rune(s[1] & maskx);
@@ -71,6 +72,7 @@ namespace golang::runtime
                     }
                     break;
                 case 1:
+                    // 0800-FFFF three byte sequence
                     if(len(s) > 2 && (locb <= s[1] && s[1] <= hicb) && (locb <= s[2] && s[2] <= hicb))
                     {
                         r = (gocpp::rune(s[0] & mask3) << 12) | (gocpp::rune(s[1] & maskx) << 6) | gocpp::rune(s[2] & maskx);
@@ -82,6 +84,7 @@ namespace golang::runtime
                     }
                     break;
                 case 2:
+                    // 10000-1FFFFF four byte sequence
                     if(len(s) > 3 && (locb <= s[1] && s[1] <= hicb) && (locb <= s[2] && s[2] <= hicb) && (locb <= s[3] && s[3] <= hicb))
                     {
                         r = (gocpp::rune(s[0] & mask4) << 18) | (gocpp::rune(s[1] & maskx) << 12) | (gocpp::rune(s[2] & maskx) << 6) | gocpp::rune(s[3] & maskx);
@@ -101,6 +104,7 @@ namespace golang::runtime
     // It returns the number of bytes written.
     int encoderune(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
+        // Negative values are erroneous. Making it unsigned addresses the problem.
         //Go switch emulation
         {
             auto i = uint32_t(r);
@@ -117,6 +121,7 @@ namespace golang::runtime
                     return 1;
                     break;
                 case 1:
+                    // eliminate bounds checks
                     _ = p[1];
                     p[0] = t2 | (unsigned char)(r >> 6);
                     p[1] = tx | (unsigned char)(r) & maskx;
@@ -126,6 +131,7 @@ namespace golang::runtime
                 case 3:
                     r = runeError;
                 case 4:
+                    // eliminate bounds checks
                     _ = p[2];
                     p[0] = t3 | (unsigned char)(r >> 12);
                     p[1] = tx | (unsigned char)(r >> 6) & maskx;
@@ -133,6 +139,7 @@ namespace golang::runtime
                     return 3;
                     break;
                 default:
+                    // eliminate bounds checks
                     _ = p[3];
                     p[0] = t4 | (unsigned char)(r >> 18);
                     p[1] = tx | (unsigned char)(r >> 12) & maskx;

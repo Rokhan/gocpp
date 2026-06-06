@@ -28,6 +28,7 @@ namespace golang::main
     {
         auto tick = mocklib::Tick(100 * mocklib::Millisecond);
         auto boom = mocklib::After(500 * mocklib::Millisecond);
+        // make test output stable
         mocklib::Sleep(10 * mocklib::Millisecond);
         for(; ; )
         {

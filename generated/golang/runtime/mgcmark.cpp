@@ -116,12 +116,14 @@ namespace golang::runtime
     void gcMarkRootPrepare()
     {
         assertWorldStopped();
+        // Compute how many data and BSS root blocks there are.
         auto nBlocks = [=](uintptr_t bytes) mutable -> int
         {
             return int(divRoundUp(bytes, rootBlockBytes));
         };
         work.nDataRoots = 0;
         work.nBSSRoots = 0;
+        // Scan globals.
         for(auto [gocpp_ignored, datap] : activeModules())
         {
             auto nDataRoots = nBlocks(datap->edata - datap->data);
@@ -138,12 +140,26 @@ namespace golang::runtime
                 work.nBSSRoots = nBSSRoots;
             }
         }
+        // Scan span roots for finalizer specials.
+        // We depend on addfinalizer to mark objects that get
+        // finalizers after root marking.
+        // We're going to scan the whole heap (that was available at the time the
+        // mark phase started, i.e. markArenas) for in-use spans which have specials.
+        // Break up the work into arenas, and further into chunks.
+        // Snapshot allArenas as markArenas. This snapshot is safe because allArenas
+        // is append-only.
         mheap_.markArenas = mheap_.allArenas.make_slice(0, len(mheap_.allArenas), len(mheap_.allArenas));
         work.nSpanRoots = len(mheap_.markArenas) * (pagesPerArena / pagesPerSpanRoot);
+        // Scan stacks.
+        // Gs may be created after this point, but it's okay that we
+        // ignore them because they begin life without any roots, so
+        // there's nothing to scan, and any roots they create during
+        // the concurrent phase will be caught by the write barrier.
         work.stackRoots = allGsSnapshot();
         work.nStackRoots = len(work.stackRoots);
         work.markrootNext = 0;
         work.markrootJobs = uint32_t(fixedRootCount + work.nDataRoots + work.nBSSRoots + work.nSpanRoots + work.nStackRoots);
+        // Calculate base indexes of each root type
         work.baseData = uint32_t(fixedRootCount);
         work.baseBSS = work.baseData + uint32_t(work.nDataRoots);
         work.baseSpans = work.baseBSS + uint32_t(work.nBSSRoots);
@@ -160,6 +176,10 @@ namespace golang::runtime
             print(work.markrootNext, " of "_s, work.markrootJobs, " markroot jobs done\n"_s);
             go_throw("left over markroot jobs"_s);
         }
+        // Check that stacks have been scanned.
+        // We only check the first nStackRoots Gs that we should have scanned.
+        // Since we don't care about newer Gs (see comment in
+        // gcMarkRootPrepare), no locking is required.
         auto i = 0;
         forEachGRace([=](struct g* gp) mutable -> void
         {
@@ -226,12 +246,16 @@ namespace golang::runtime
                     }
                     break;
                 case 3:
+                    // Switch to the system stack so we can call
+                    // stackfree.
                     systemstack(markrootFreeGStacks);
                     break;
                 case 4:
+                    // mark mspan.specials
                     markrootSpans(gcw, int(i - work.baseSpans));
                     break;
                 default:
+                    // the rest is scanning goroutine stacks
                     workCounter = & gcController.stackScanWork;
                     if(i < work.baseStacks || work.baseEnd <= i)
                     {
@@ -240,19 +264,35 @@ namespace golang::runtime
                         go_throw("markroot: bad index"_s);
                     }
                     auto gp = work.stackRoots[i - work.baseStacks];
+                    // remember when we've first observed the G blocked
+                    // needed only to output in traceback
+                    // We are not in a scan state
                     auto status = readgstatus(gp);
                     if((status == _Gwaiting || status == _Gsyscall) && gp->waitsince == 0)
                     {
                         gp->waitsince = work.tstart;
                     }
+                    // scanstack must be done on the system stack in case
+                    // we're trying to scan our own stack.
                     systemstack([=]() mutable -> void
                     {
+                        // If this is a self-scan, put the user G in
+                        // _Gwaiting to prevent self-deadlock. It may
+                        // already be in _Gwaiting if this is a mark
+                        // worker or we're in mark termination.
                         auto userG = getg()->m->curg;
                         auto selfScan = gp == userG && readgstatus(userG) == _Grunning;
                         if(selfScan)
                         {
                             casGToWaiting(userG, _Grunning, waitReasonGarbageCollectionScan);
                         }
+                        // TODO: suspendG blocks (and spins) until gp
+                        // stops, which may take a while for
+                        // running goroutines. Consider doing this in
+                        // two phases where the first is non-blocking:
+                        // we scan the stacks we can and ask running
+                        // goroutines to scan themselves; and the
+                        // second blocks.
                         auto stopped = suspendG(gp);
                         if(stopped.dead)
                         {
@@ -295,8 +335,12 @@ namespace golang::runtime
     {
         if(rootBlockBytes % (8 * goarch::PtrSize) != 0)
         {
+            // This is necessary to pick byte offsets in ptrmask0.
             go_throw("rootBlockBytes must be a multiple of 8*ptrSize"_s);
         }
+        // Note that if b0 is toward the end of the address space,
+        // then b0 + rootBlockBytes might wrap around.
+        // These tests are written to avoid any possible overflow.
         auto off = uintptr_t(shard) * rootBlockBytes;
         if(off >= n0)
         {
@@ -309,6 +353,7 @@ namespace golang::runtime
         {
             n = n0 - off;
         }
+        // Scan this shard.
         scanblock(b, n, ptrmask, gcw, nullptr);
         return int64_t(n);
     }
@@ -319,6 +364,7 @@ namespace golang::runtime
     // cached stacks around isn't a problem.
     void markrootFreeGStacks()
     {
+        // Take list of dead Gs with stacks.
         lock(& sched.gFree.lock);
         auto list = sched.gFree.stack;
         sched.gFree.stack = gList {};
@@ -327,14 +373,18 @@ namespace golang::runtime
         {
             return;
         }
+        // Free stacks.
         auto q = gQueue {list.head, list.head};
         for(auto gp = rec::ptr(gocpp::recv(list.head)); gp != nullptr; gp = rec::ptr(gocpp::recv(gp->schedlink)))
         {
             stackfree(gp->stack);
             gp->stack.lo = 0;
             gp->stack.hi = 0;
+            // Manipulate the queue directly since the Gs are
+            // already all linked the right way.
             rec::set(gocpp::recv(q.tail), gp);
         }
+        // Put Gs back on the free list.
         lock(& sched.gFree.lock);
         rec::pushAll(gocpp::recv(sched.gFree.noStack), q);
         unlock(& sched.gFree.lock);
@@ -345,14 +395,24 @@ namespace golang::runtime
     //go:nowritebarrier
     void markrootSpans(struct gcWork* gcw, int shard)
     {
+        // Objects with finalizers have two GC-related invariants:
+        // 1) Everything reachable from the object must be marked.
+        // This ensures that when we pass the object to its finalizer,
+        // everything the finalizer can reach will be retained.
+        // 2) Finalizer specials (which are not in the garbage
+        // collected heap) are roots. In practice, this means the fn
+        // field must be scanned.
         auto sg = mheap_.sweepgen;
+        // Find the arena and page index into that arena for this shard.
         auto ai = mheap_.markArenas[shard / (pagesPerArena / pagesPerSpanRoot)];
         auto ha = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
         auto arenaPage = (unsigned int)(uintptr_t(shard) * pagesPerSpanRoot % pagesPerArena);
+        // Construct slice of bitmap which we'll iterate over.
         auto specialsbits = ha->pageSpecials.make_slice(arenaPage / 8);
         specialsbits = specialsbits.make_slice(0, pagesPerSpanRoot / 8);
         for(auto [i, gocpp_ignored] : specialsbits)
         {
+            // Find set bits, which correspond to spans with specials.
             auto specials = atomic::Load8(& specialsbits[i]);
             if(specials == 0)
             {
@@ -364,17 +424,28 @@ namespace golang::runtime
                 {
                     continue;
                 }
+                // Find the span for this bit.
+                // This value is guaranteed to be non-nil because having
+                // specials implies that the span is in-use, and since we're
+                // currently marking we can be sure that we don't have to worry
+                // about the span being freed and re-used.
                 auto s = ha->spans[arenaPage + (unsigned int)(i) * 8 + j];
+                // The state must be mSpanInUse if the specials bit is set, so
+                // sanity check that.
                 if(auto state = rec::get(gocpp::recv(s->state)); state != mSpanInUse)
                 {
                     print("s.state = "_s, state, "\n"_s);
                     go_throw("non in-use span found with specials bit set"_s);
                 }
+                // Check that this span was swept (it may be cached or uncached).
                 if(! useCheckmark && ! (s->sweepgen == sg || s->sweepgen == sg + 3))
                 {
+                    // sweepgen was updated (+2) during non-checkmark GC pass
                     print("sweep "_s, s->sweepgen, " "_s, sg, "\n"_s);
                     go_throw("gc: unswept span"_s);
                 }
+                // Lock the specials to prevent a special from being
+                // removed from the list while we're traversing it.
                 lock(& s->speciallock);
                 for(auto sp = s->specials; sp != nullptr; sp = sp->next)
                 {
@@ -382,12 +453,19 @@ namespace golang::runtime
                     {
                         continue;
                     }
+                    // don't mark finalized object, but scan it so we
+                    // retain everything it points to.
                     auto spf = (specialfinalizer*)(gocpp::unsafe_pointer(sp));
+                    // A finalizer can be set for an inner byte of an object, find object beginning.
                     auto p = rec::base(gocpp::recv(s)) + uintptr_t(spf->special.offset) / s->elemsize * s->elemsize;
+                    // Mark everything that can be reached from
+                    // the object (but *not* the object itself or
+                    // we'll never collect it).
                     if(! rec::noscan(gocpp::recv(s->spanclass)))
                     {
                         scanobject(p, gcw);
                     }
+                    // The special itself is a root.
                     scanblock(uintptr_t(gocpp::unsafe_pointer(& spf->fn)), goarch::PtrSize, & oneptrmask[0], gcw, nullptr);
                 }
                 unlock(& s->speciallock);
@@ -401,6 +479,8 @@ namespace golang::runtime
     // This must be called with preemption enabled.
     void gcAssistAlloc(struct g* gp)
     {
+        // Don't assist in non-preemptible contexts. These are
+        // generally fragile and won't allow the assist to block.
         if(getg() == gp->m->g0)
         {
             return;
@@ -409,26 +489,57 @@ namespace golang::runtime
         {
             return;
         }
+        // This extremely verbose boolean indicates whether we've
+        // entered mark assist from the perspective of the tracer.
+        // In the old tracer, this is just before we call gcAssistAlloc1
+        // *and* tracing is enabled. Because the old tracer doesn't
+        // do any extra tracking, we need to be careful to not emit an
+        // "end" event if there was no corresponding "begin" for the
+        // mark assist.
+        // In the new tracer, this is just before we call gcAssistAlloc1
+        // *regardless* of whether tracing is enabled. This is because
+        // the new tracer allows for tracing to begin (and advance
+        // generations) in the middle of a GC mark phase, so we need to
+        // record some state so that the tracer can pick it up to ensure
+        // a consistent trace result.
+        // TODO(mknyszek): Hide the details of inMarkAssist in tracer
+        // functions and simplify all the state tracking. This is a lot.
         auto enteredMarkAssistForTracing = false;
         retry:
         if(rec::limiting(gocpp::recv(gcCPULimiter)))
         {
+            // If the CPU limiter is enabled, intentionally don't
+            // assist to reduce the amount of CPU time spent in the GC.
             if(enteredMarkAssistForTracing)
             {
                 auto trace = traceAcquire();
                 if(rec::ok(gocpp::recv(trace)))
                 {
                     rec::GCMarkAssistDone(gocpp::recv(trace));
+                    // Set this *after* we trace the end to make sure
+                    // that we emit an in-progress event if this is
+                    // the first event for the goroutine in the trace
+                    // or trace generation. Also, do this between
+                    // acquire/release because this is part of the
+                    // goroutine's trace state, and it must be atomic
+                    // with respect to the tracer.
                     gp->inMarkAssist = false;
                     traceRelease(trace);
                 }
                 else
                 {
+                    // This state is tracked even if tracing isn't enabled.
+                    // It's only used by the new tracer.
+                    // See the comment on enteredMarkAssistForTracing.
                     gp->inMarkAssist = false;
                 }
             }
             return;
         }
+        // Compute the amount of scan work we need to do to make the
+        // balance positive. When the required amount of work is low,
+        // we over-assist to build up credit for future allocations
+        // and amortize the cost of assisting.
         auto assistWorkPerByte = rec::Load(gocpp::recv(gcController.assistWorkPerByte));
         auto assistBytesPerWork = rec::Load(gocpp::recv(gcController.assistBytesPerWork));
         auto debtBytes = - gp->gcAssistBytes;
@@ -438,6 +549,12 @@ namespace golang::runtime
             scanWork = gcOverAssistWork;
             debtBytes = int64_t(assistBytesPerWork * double(scanWork));
         }
+        // Steal as much credit as we can from the background GC's
+        // scan credit. This is racy and may drop the background
+        // credit below 0 if two mutators steal at the same time. This
+        // will just cause steals to fail until credit is accumulated
+        // again, so in the long run it doesn't really matter, but we
+        // do have to handle the negative credit case.
         auto bgScanCredit = rec::Load(gocpp::recv(gcController.bgScanCredit));
         auto stolen = int64_t(0);
         if(bgScanCredit > 0)
@@ -456,17 +573,29 @@ namespace golang::runtime
             scanWork -= stolen;
             if(scanWork == 0)
             {
+                // We were able to steal all of the credit we
+                // needed.
                 if(enteredMarkAssistForTracing)
                 {
                     auto trace = traceAcquire();
                     if(rec::ok(gocpp::recv(trace)))
                     {
                         rec::GCMarkAssistDone(gocpp::recv(trace));
+                        // Set this *after* we trace the end to make sure
+                        // that we emit an in-progress event if this is
+                        // the first event for the goroutine in the trace
+                        // or trace generation. Also, do this between
+                        // acquire/release because this is part of the
+                        // goroutine's trace state, and it must be atomic
+                        // with respect to the tracer.
                         gp->inMarkAssist = false;
                         traceRelease(trace);
                     }
                     else
                     {
+                        // This state is tracked even if tracing isn't enabled.
+                        // It's only used by the new tracer.
+                        // See the comment on enteredMarkAssistForTracing.
                         gp->inMarkAssist = false;
                     }
                 }
@@ -480,9 +609,18 @@ namespace golang::runtime
             {
                 if(! goexperiment::ExecTracer2)
                 {
+                    // In the old tracer, enter mark assist tracing only
+                    // if we actually traced an event. Otherwise a goroutine
+                    // waking up from mark assist post-GC might end up
+                    // writing a stray "end" event.
+                    // This means inMarkAssist will not be meaningful
+                    // in the old tracer; that's OK, it's unused.
+                    // See the comment on enteredMarkAssistForTracing.
                     enteredMarkAssistForTracing = true;
                 }
                 rec::GCMarkAssistStart(gocpp::recv(trace));
+                // Set this *after* we trace the start, otherwise we may
+                // emit an in-progress event for an assist we're about to start.
                 gp->inMarkAssist = true;
                 traceRelease(trace);
             }
@@ -492,11 +630,18 @@ namespace golang::runtime
             }
             if(goexperiment::ExecTracer2)
             {
+                // In the new tracer, set enter mark assist tracing if we
+                // ever pass this point, because we must manage inMarkAssist
+                // correctly.
+                // See the comment on enteredMarkAssistForTracing.
                 enteredMarkAssistForTracing = true;
             }
         }
+        // Perform assist work
         systemstack([=]() mutable -> void
         {
+            // The user stack may have moved, so this can't touch
+            // anything on it until it returns from systemstack.
             gcAssistAlloc1(gp, scanWork);
         });
         auto completed = gp->param != nullptr;
@@ -507,27 +652,53 @@ namespace golang::runtime
         }
         if(gp->gcAssistBytes < 0)
         {
+            // We were unable steal enough credit or perform
+            // enough work to pay off the assist debt. We need to
+            // do one of these before letting the mutator allocate
+            // more to prevent over-allocation.
+            // If this is because we were preempted, reschedule
+            // and try some more.
             if(gp->preempt)
             {
                 Gosched();
                 goto retry;
             }
+            // Add this G to an assist queue and park. When the GC
+            // has more background credit, it will satisfy queued
+            // assists before flushing to the global credit pool.
+            // Note that this does *not* get woken up when more
+            // work is added to the work list. The theory is that
+            // there wasn't enough work to do anyway, so we might
+            // as well let background marking take care of the
+            // work that is available.
             if(! gcParkAssist())
             {
                 goto retry;
             }
         }
+        // At this point either background GC has satisfied
+        // this G's assist debt, or the GC cycle is over.
         if(enteredMarkAssistForTracing)
         {
             auto trace = traceAcquire();
             if(rec::ok(gocpp::recv(trace)))
             {
                 rec::GCMarkAssistDone(gocpp::recv(trace));
+                // Set this *after* we trace the end to make sure
+                // that we emit an in-progress event if this is
+                // the first event for the goroutine in the trace
+                // or trace generation. Also, do this between
+                // acquire/release because this is part of the
+                // goroutine's trace state, and it must be atomic
+                // with respect to the tracer.
                 gp->inMarkAssist = false;
                 traceRelease(trace);
             }
             else
             {
+                // This state is tracked even if tracing isn't enabled.
+                // It's only used by the new tracer.
+                // See the comment on enteredMarkAssistForTracing.
                 gp->inMarkAssist = false;
             }
         }
@@ -545,12 +716,25 @@ namespace golang::runtime
     //go:systemstack
     void gcAssistAlloc1(struct g* gp, int64_t scanWork)
     {
+        // Clear the flag indicating that this assist completed the
+        // mark phase.
         gp->param = nullptr;
         if(atomic::Load(& gcBlackenEnabled) == 0)
         {
+            // The gcBlackenEnabled check in malloc races with the
+            // store that clears it but an atomic check in every malloc
+            // would be a performance hit.
+            // Instead we recheck it here on the non-preemptible system
+            // stack to determine if we should perform an assist.
+            // GC is done, so ignore any remaining debt.
             gp->gcAssistBytes = 0;
             return;
         }
+        // Track time spent in this assist. Since we're on the
+        // system stack, this is non-preemptible, so we can
+        // just measure start and end time.
+        // Limiter event tracking might be disabled if we end up here
+        // while on a mark worker.
         auto startTime = nanotime();
         auto trackLimiterEvent = rec::start(gocpp::recv(rec::ptr(gocpp::recv(gp->m->p))->limiterEvent), limiterEventMarkAssist, startTime);
         auto decnwait = atomic::Xadd(& work.nwait, - 1);
@@ -559,12 +743,22 @@ namespace golang::runtime
             println("runtime: work.nwait ="_s, decnwait, "work.nproc="_s, work.nproc);
             go_throw("nwait > work.nprocs"_s);
         }
+        // gcDrainN requires the caller to be preemptible.
         casGToWaiting(gp, _Grunning, waitReasonGCAssistMarking);
+        // drain own cached work first in the hopes that it
+        // will be more cache friendly.
         auto gcw = & rec::ptr(gocpp::recv(getg()->m->p))->gcw;
         auto workDone = gcDrainN(gcw, scanWork);
         casgstatus(gp, _Gwaiting, _Grunning);
+        // Record that we did this much scan work.
+        // Back out the number of bytes of assist credit that
+        // this scan work counts for. The "1+" is a poor man's
+        // round-up, to ensure this adds credit even if
+        // assistBytesPerWork is very low.
         auto assistBytesPerWork = rec::Load(gocpp::recv(gcController.assistBytesPerWork));
         gp->gcAssistBytes += 1 + int64_t(assistBytesPerWork * double(workDone));
+        // If this is the last worker and we ran out of work,
+        // signal a completion point.
         auto incnwait = atomic::Xadd(& work.nwait, + 1);
         if(incnwait > work.nproc)
         {
@@ -573,6 +767,10 @@ namespace golang::runtime
         }
         if(incnwait == work.nproc && ! gcMarkWorkAvailable(nullptr))
         {
+            // This has reached a background completion point. Set
+            // gp.param to a non-nil value to indicate this. It
+            // doesn't matter what we set it to (it just has to be
+            // a valid pointer).
             gp->param = gocpp::unsafe_pointer(gp);
         }
         auto now = nanotime();
@@ -609,6 +807,9 @@ namespace golang::runtime
     bool gcParkAssist()
     {
         lock(& work.assistQueue.lock);
+        // If the GC cycle finished while we were getting the lock,
+        // exit the assist. The cycle can't finish while we hold the
+        // lock.
         if(atomic::Load(& gcBlackenEnabled) == 0)
         {
             unlock(& work.assistQueue.lock);
@@ -617,6 +818,10 @@ namespace golang::runtime
         auto gp = getg();
         auto oldList = work.assistQueue.q;
         rec::pushBack(gocpp::recv(work.assistQueue.q), gp);
+        // Recheck for background credit now that this G is in
+        // the queue, but can still back out. This avoids a
+        // race in case background marking has flushed more
+        // credit since we checked above.
         if(rec::Load(gocpp::recv(gcController.bgScanCredit)) > 0)
         {
             work.assistQueue.q = oldList;
@@ -627,6 +832,7 @@ namespace golang::runtime
             unlock(& work.assistQueue.lock);
             return false;
         }
+        // Park.
         goparkunlock(& work.assistQueue.lock, waitReasonGCAssistWait, traceBlockGCMarkAssist, 2);
         return true;
     }
@@ -645,6 +851,10 @@ namespace golang::runtime
     {
         if(rec::empty(gocpp::recv(work.assistQueue.q)))
         {
+            // Fast path; there are no blocked assists. There's a
+            // small window here where an assist may add itself to
+            // the blocked queue and park. If that happens, we'll
+            // just get it on the next flush.
             rec::Add(gocpp::recv(gcController.bgScanCredit), scanWork);
             return;
         }
@@ -654,22 +864,37 @@ namespace golang::runtime
         for(; ! rec::empty(gocpp::recv(work.assistQueue.q)) && scanBytes > 0; )
         {
             auto gp = rec::pop(gocpp::recv(work.assistQueue.q));
+            // Note that gp.gcAssistBytes is negative because gp
+            // is in debt. Think carefully about the signs below.
             if(scanBytes + gp->gcAssistBytes >= 0)
             {
+                // Satisfy this entire assist debt.
                 scanBytes += gp->gcAssistBytes;
                 gp->gcAssistBytes = 0;
+                // It's important that we *not* put gp in
+                // runnext. Otherwise, it's possible for user
+                // code to exploit the GC worker's high
+                // scheduler priority to get itself always run
+                // before other goroutines and always in the
+                // fresh quantum started by GC.
                 ready(gp, 0, false);
             }
             else
             {
+                // Partially satisfy this assist.
                 gp->gcAssistBytes += scanBytes;
                 scanBytes = 0;
+                // As a heuristic, we move this assist to the
+                // back of the queue so that large assists
+                // can't clog up the assist queue and
+                // substantially delay small assists.
                 rec::pushBack(gocpp::recv(work.assistQueue.q), gp);
                 break;
             }
         }
         if(scanBytes > 0)
         {
+            // Convert from scan bytes back to work.
             auto assistWorkPerByte = rec::Load(gocpp::recv(gcController.assistWorkPerByte));
             scanWork = int64_t(double(scanBytes) * assistWorkPerByte);
             rec::Add(gocpp::recv(gcController.bgScanCredit), scanWork);
@@ -723,6 +948,7 @@ namespace golang::runtime
                     print("runtime: gp="_s, gp, ", goid="_s, gp->goid, ", gp->atomicstatus="_s, readgstatus(gp), "\n"_s);
                     go_throw("scanstack: goroutine not stopped"_s);
                     break;
+                // ok
                 case 2:
                 case 3:
                 case 4:
@@ -734,11 +960,11 @@ namespace golang::runtime
             go_throw("can't scan our own stack"_s);
         }
         // scannedSize is the amount of work we'll be reporting.
-        //
         // It is less than the allocated size (which is hi-lo).
         uintptr_t sp = {};
         if(gp->syscallsp != 0)
         {
+            // If in a system call this is the stack pointer (gp.sched.sp can be 0 in this case on Windows).
             sp = gp->syscallsp;
         }
         else
@@ -746,15 +972,19 @@ namespace golang::runtime
             sp = gp->sched.sp;
         }
         auto scannedSize = gp->stack.hi - sp;
+        // Keep statistics for initial stack size calculation.
+        // Note that this accumulates the scanned size, not the allocated size.
         auto p = rec::ptr(gocpp::recv(getg()->m->p));
         p->scannedStackSize += uint64_t(scannedSize);
         p->scannedStacks++;
         if(isShrinkStackSafe(gp))
         {
+            // Shrink the stack if not much of it is being used.
             shrinkstack(gp);
         }
         else
         {
+            // Otherwise, shrink the stack at the next sync safe point.
             gp->preemptShrink = true;
         }
         stackScanState state = {};
@@ -767,6 +997,9 @@ namespace golang::runtime
         {
             print("scanning async preempted goroutine "_s, gp->goid, " stack ["_s, hex(gp->stack.lo), ","_s, hex(gp->stack.hi), ")\n"_s);
         }
+        // Scan the saved context register. This is effectively a live
+        // register that gets moved back and forth between the
+        // register and sched.ctxt without a write barrier.
         if(gp->sched.ctxt != nullptr)
         {
             scanblock(uintptr_t(gocpp::unsafe_pointer(& gp->sched.ctxt)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
@@ -777,16 +1010,26 @@ namespace golang::runtime
         {
             scanframeworker(& u.frame, & state, gcw);
         }
+        // Find additional pointers that point into the stack from the heap.
+        // Currently this includes defers and panics. See also function copystack.
+        // Find and trace other pointers in defer records.
         for(auto d = gp->_defer; d != nullptr; d = d->link)
         {
             if(d->fn != nullptr)
             {
+                // Scan the func value, which could be a stack allocated closure.
+                // See issue 30453.
                 scanblock(uintptr_t(gocpp::unsafe_pointer(& [&](){ return rec::fn(d); })), goarch::PtrSize, & oneptrmask[0], gcw, & state);
             }
             if(d->link != nullptr)
             {
+                // The link field of a stack-allocated defer record might point
+                // to a heap-allocated defer record. Keep that heap record live.
                 scanblock(uintptr_t(gocpp::unsafe_pointer(& d->link)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
             }
+            // Retain defers records themselves.
+            // Defer records might not be reachable from the G through regular heap
+            // tracing because the defer linked list might weave between the stack and the heap.
             if(d->heap)
             {
                 scanblock(uintptr_t(gocpp::unsafe_pointer(& d)), goarch::PtrSize, & oneptrmask[0], gcw, & state);
@@ -794,8 +1037,13 @@ namespace golang::runtime
         }
         if(gp->_panic != nullptr)
         {
+            // Panics are always stack allocated.
             rec::putPtr(gocpp::recv(state), uintptr_t(gocpp::unsafe_pointer(gp->_panic)), false);
         }
+        // Find and scan all reachable stack objects.
+        // The state's pointer queue prioritizes precise pointers over
+        // conservative pointers so that we'll prefer scanning stack
+        // objects precisely.
         rec::buildIndex(gocpp::recv(state));
         for(; ; )
         {
@@ -812,8 +1060,10 @@ namespace golang::runtime
             auto r = obj->r;
             if(r == nullptr)
             {
+                // We've already scanned this object.
                 continue;
             }
+            // Don't scan it again.
             rec::setRecord(gocpp::recv(obj), nullptr);
             if(stackTraceDebug)
             {
@@ -830,6 +1080,15 @@ namespace golang::runtime
             mspan* s = {};
             if(rec::useGCProg(gocpp::recv(r)))
             {
+                // This path is pretty unlikely, an object large enough
+                // to have a GC program allocated on the stack.
+                // We need some space to unpack the program into a straight
+                // bitmask, which we allocate/free here.
+                // TODO: it would be nice if there were a way to run a GC
+                // program without having to store all its bits. We'd have
+                // to change from a Lempel-Ziv style program to something else.
+                // Or we can forbid putting objects on stacks if they require
+                // a gc program (see issue 27447).
                 s = materializeGCProg(rec::ptrdata(gocpp::recv(r)), gcdata);
                 gcdata = (unsigned char*)(gocpp::unsafe_pointer(s->startAddr));
             }
@@ -847,6 +1106,8 @@ namespace golang::runtime
                 dematerializeGCProg(s);
             }
         }
+        // Deallocate object buffers.
+        // (Pointer buffers were all deallocated in the loop above.)
         for(; state.head != nullptr; )
         {
             auto x = state.head;
@@ -858,8 +1119,10 @@ namespace golang::runtime
                     auto obj = & x->obj[i];
                     if(obj->r == nullptr)
                     {
+                        // reachable
                         continue;
                     }
+                    // Note: not necessarily really dead - only reachable-from-ptr dead.
                     println("  dead stkobj at"_s, hex(gp->stack.lo + uintptr_t(obj->off)), "of size"_s, obj->r->size);
                 }
             }
@@ -890,6 +1153,13 @@ namespace golang::runtime
             {
                 println("conservatively scanning function"_s, funcname(frame->fn), "at PC"_s, hex(frame->continpc));
             }
+            // Conservatively scan the frame. Unlike the precise
+            // case, this includes the outgoing argument space
+            // since we may have stopped while this function was
+            // setting up a call.
+            // TODO: We could narrow this down if the compiler
+            // produced a single map per function of stack slots
+            // and registers that ever contain a pointer.
             if(frame->varp != 0)
             {
                 auto size = frame->varp - frame->sp;
@@ -898,44 +1168,63 @@ namespace golang::runtime
                     scanConservative(frame->sp, size, nullptr, gcw, state);
                 }
             }
+            // Scan arguments to this frame.
             if(auto n = rec::argBytes(gocpp::recv(frame)); n != 0)
             {
+                // TODO: We could pass the entry argument map
+                // to narrow this down further.
                 scanConservative(frame->argp, n, nullptr, gcw, state);
             }
             if(isAsyncPreempt || isDebugCall)
             {
+                // This function's frame contained the
+                // registers for the asynchronously stopped
+                // parent frame. Scan the parent
+                // conservatively.
                 state->conservative = true;
             }
             else
             {
+                // We only wanted to scan those two frames
+                // conservatively. Clear the flag for future
+                // frames.
                 state->conservative = false;
             }
             return;
         }
         auto [locals, args, objs] = rec::getStackMap(gocpp::recv(frame), false);
+        // Scan local variables if stack frame has been allocated.
         if(locals.n > 0)
         {
             auto size = uintptr_t(locals.n) * goarch::PtrSize;
             scanblock(frame->varp - size, size, locals.bytedata, gcw, state);
         }
+        // Scan arguments.
         if(args.n > 0)
         {
             scanblock(frame->argp, uintptr_t(args.n) * goarch::PtrSize, args.bytedata, gcw, state);
         }
+        // Add all stack objects to the stack object list.
         if(frame->varp != 0)
         {
+            // varp is 0 for defers, where there are no locals.
+            // In that case, there can't be a pointer to its args, either.
+            // (And all args would be scanned above anyway.)
             for(auto [i, gocpp_ignored] : objs)
             {
                 auto obj = & objs[i];
                 auto off = obj->off;
+                // locals base pointer
                 auto base = frame->varp;
                 if(off >= 0)
                 {
+                    // arguments and return values base pointer
                     base = frame->argp;
                 }
                 auto ptr = base + uintptr_t(off);
                 if(ptr < frame->sp)
                 {
+                    // object hasn't been allocated in the frame yet.
                     continue;
                 }
                 if(stackTraceDebug)
@@ -1009,12 +1298,16 @@ namespace golang::runtime
         {
             go_throw("gcDrain phase incorrect"_s);
         }
+        // N.B. We must be running in a non-preemptible context, so it's
+        // safe to hold a reference to our P here.
         auto gp = getg()->m->curg;
         auto pp = rec::ptr(gocpp::recv(gp->m->p));
         auto preemptible = flags & gcDrainUntilPreempt != 0;
         auto flushBgCredit = flags & gcDrainFlushBgCredit != 0;
         auto idle = flags & gcDrainIdle != 0;
         auto initScanWork = gcw->heapScanWork;
+        // checkWork is the scan work before performing the next
+        // self-preempt check.
         auto checkWork = int64_t((1 << 63) - 1);
         std::function<bool ()> check = {};
         if(flags & (gcDrainIdle | gcDrainFractional) != 0)
@@ -1030,8 +1323,11 @@ namespace golang::runtime
                 check = pollFractionalWorkerExit;
             }
         }
+        // Drain root marking jobs.
         if(work.markrootNext < work.markrootJobs)
         {
+            // Stop if we're preemptible, if someone wants to STW, or if
+            // someone is calling forEachP.
             for(; ! (gp->preempt && (preemptible || rec::Load(gocpp::recv(sched.gcwaiting)) || pp->runSafePointFn != 0)); )
             {
                 auto job = atomic::Xadd(& work.markrootNext, + 1) - 1;
@@ -1046,8 +1342,21 @@ namespace golang::runtime
                 }
             }
         }
+        // Drain heap marking jobs.
+        // Stop if we're preemptible, if someone wants to STW, or if
+        // someone is calling forEachP.
+        // TODO(mknyszek): Consider always checking gp.preempt instead
+        // of having the preempt flag, and making an exception for certain
+        // mark workers in retake. That might be simpler than trying to
+        // enumerate all the reasons why we might want to preempt, even
+        // if we're supposed to be mostly non-preemptible.
         for(; ! (gp->preempt && (preemptible || rec::Load(gocpp::recv(sched.gcwaiting)) || pp->runSafePointFn != 0)); )
         {
+            // Try to keep work available on the global queue. We used to
+            // check if there were waiting workers, but it's better to
+            // just keep work available than to make workers wait. In the
+            // worst case, we'll do O(log(_WorkbufSize)) unnecessary
+            // balances.
             if(work.full == 0)
             {
                 rec::balance(gocpp::recv(gcw));
@@ -1058,15 +1367,22 @@ namespace golang::runtime
                 b = rec::tryGet(gocpp::recv(gcw));
                 if(b == 0)
                 {
+                    // Flush the write barrier
+                    // buffer; this may create
+                    // more work.
                     wbBufFlush();
                     b = rec::tryGet(gocpp::recv(gcw));
                 }
             }
             if(b == 0)
             {
+                // Unable to get work.
                 break;
             }
             scanobject(b, gcw);
+            // Flush background scan work credit to the global
+            // account if we've accumulated enough locally so
+            // mutator assists can draw on it.
             if(gcw->heapScanWork >= gcCreditSlack)
             {
                 rec::Add(gocpp::recv(gcController.heapScanWork), gcw->heapScanWork);
@@ -1088,6 +1404,7 @@ namespace golang::runtime
             }
         }
         done:
+        // Flush remaining scan work credit.
         if(gcw->heapScanWork > 0)
         {
             rec::Add(gocpp::recv(gcController.heapScanWork), gcw->heapScanWork);
@@ -1118,10 +1435,15 @@ namespace golang::runtime
         {
             go_throw("gcDrainN phase incorrect"_s);
         }
+        // There may already be scan work on the gcw, which we don't
+        // want to claim was done by this call.
         auto workFlushed = - gcw->heapScanWork;
+        // In addition to backing out because of a preemption, back out
+        // if the GC CPU limiter is enabled.
         auto gp = getg()->m->curg;
         for(; ! gp->preempt && ! rec::limiting(gocpp::recv(gcCPULimiter)) && workFlushed + gcw->heapScanWork < scanWork; )
         {
+            // See gcDrain comment.
             if(work.full == 0)
             {
                 rec::balance(gocpp::recv(gcw));
@@ -1132,12 +1454,15 @@ namespace golang::runtime
                 b = rec::tryGet(gocpp::recv(gcw));
                 if(b == 0)
                 {
+                    // Flush the write barrier buffer;
+                    // this may create more work.
                     wbBufFlush();
                     b = rec::tryGet(gocpp::recv(gcw));
                 }
             }
             if(b == 0)
             {
+                // Try to do a root job.
                 if(work.markrootNext < work.markrootJobs)
                 {
                     auto job = atomic::Xadd(& work.markrootNext, + 1) - 1;
@@ -1147,9 +1472,11 @@ namespace golang::runtime
                         continue;
                     }
                 }
+                // No heap or root jobs.
                 break;
             }
             scanobject(b, gcw);
+            // Flush background scan work credit.
             if(gcw->heapScanWork >= gcCreditSlack)
             {
                 rec::Add(gocpp::recv(gcController.heapScanWork), gcw->heapScanWork);
@@ -1157,6 +1484,9 @@ namespace golang::runtime
                 gcw->heapScanWork = 0;
             }
         }
+        // Unlike gcDrain, there's no need to flush remaining work
+        // here because this never flushes to bgScanCredit and
+        // gcw.dispose will flush any remaining work to scanWork.
         return workFlushed + gcw->heapScanWork;
     }
 
@@ -1171,10 +1501,14 @@ namespace golang::runtime
     //go:nowritebarrier
     void scanblock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* stk)
     {
+        // Use local copies of original parameters, so that a stack trace
+        // due to one of the throws below shows the original block
+        // base and extent.
         auto b = b0;
         auto n = n0;
         for(auto i = uintptr_t(0); i < n; )
         {
+            // Find bits for the next word.
             auto bits = uint32_t(*addb(ptrmask, i / (goarch::PtrSize * 8)));
             if(bits == 0)
             {
@@ -1185,6 +1519,7 @@ namespace golang::runtime
             {
                 if(bits & 1 != 0)
                 {
+                    // Same work as in scanobject; see comments there.
                     auto p = *(uintptr_t*)(gocpp::unsafe_pointer(b + i));
                     if(p != 0)
                     {
@@ -1213,7 +1548,14 @@ namespace golang::runtime
     //go:nowritebarrier
     void scanobject(uintptr_t b, struct gcWork* gcw)
     {
+        // Prefetch object before we scan it.
+        // This will overlap fetching the beginning of the object with initial
+        // setup before we start scanning the object.
         sys::Prefetch(b);
+        // Find the bits for b and the size of the object at b.
+        // b is either the beginning of an object, in which case this
+        // is the size of the object to scan, or it points to an
+        // oblet, in which case we compute the size to scan below.
         auto s = spanOfUnchecked(b);
         auto n = s->elemsize;
         if(n == 0)
@@ -1222,13 +1564,22 @@ namespace golang::runtime
         }
         if(rec::noscan(gocpp::recv(s->spanclass)))
         {
+            // Correctness-wise this is ok, but it's inefficient
+            // if noscan objects reach here.
             go_throw("scanobject of a noscan object"_s);
         }
         typePointers tp = {};
         if(n > maxObletBytes)
         {
+            // Large object. Break into oblets for better
+            // parallelism and lower latency.
             if(b == rec::base(gocpp::recv(s)))
             {
+                // Enqueue the other oblets to scan later.
+                // Some oblets may be in b's scalar tail, but
+                // these will be marked as "no more pointers",
+                // so we'll drop out immediately when we go to
+                // scan those.
                 for(auto oblet = b + maxObletBytes; oblet < rec::base(gocpp::recv(s)) + s->elemsize; oblet += maxObletBytes)
                 {
                     if(! rec::putFast(gocpp::recv(gcw), oblet))
@@ -1237,6 +1588,9 @@ namespace golang::runtime
                     }
                 }
             }
+            // Compute the size of the oblet. Since this object
+            // must be a large object, s.base() is the beginning
+            // of the object.
             n = rec::base(gocpp::recv(s)) + s->elemsize - b;
             n = gocpp::min(n, maxObletBytes);
             if(goexperiment::AllocHeaders)
@@ -1281,10 +1635,25 @@ namespace golang::runtime
                     }
                 }
             }
+            // Keep track of farthest pointer we found, so we can
+            // update heapScanWork. TODO: is there a better metric,
+            // now that we can skip scalar portions pretty efficiently?
             scanSize = addr - b + goarch::PtrSize;
+            // Work here is duplicated in scanblock and above.
+            // If you make changes here, make changes there too.
             auto obj = *(uintptr_t*)(gocpp::unsafe_pointer(addr));
+            // At this point we have extracted the next potential pointer.
+            // Quickly filter out nil and pointers back to the current object.
             if(obj != 0 && obj - b >= n)
             {
+                // Test if obj points into the Go heap and, if so,
+                // mark the object.
+                // Note that it's possible for findObject to
+                // fail if obj points to a just-allocated heap
+                // object because of a race with growing the
+                // heap. In this case, we know the object was
+                // just allocated and hence will be marked by
+                // allocation itself.
                 {
                     auto [obj_tmp, span, objIndex] = findObject(obj, b, addr - b);
                     if(auto& obj = obj_tmp; obj != 0)
@@ -1350,6 +1719,11 @@ namespace golang::runtime
                 auto bits = *addb(ptrmask, word / 8);
                 if(bits == 0)
                 {
+                    // Skip 8 words (the loop increment will do the 8th)
+                    // This must be the first time we've
+                    // seen this word of ptrmask, so i
+                    // must be 8-word-aligned, but check
+                    // our reasoning just in case.
                     if(i % (goarch::PtrSize * 8) != 0)
                     {
                         go_throw("misaligned mask"_s);
@@ -1363,21 +1737,33 @@ namespace golang::runtime
                 }
             }
             auto val = *(uintptr_t*)(gocpp::unsafe_pointer(b + i));
+            // Check if val points into the stack.
             if(state != nullptr && state->stack.lo <= val && val < state->stack.hi)
             {
+                // val may point to a stack object. This
+                // object may be dead from last cycle and
+                // hence may contain pointers to unallocated
+                // objects, but unlike heap objects we can't
+                // tell if it's already dead. Hence, if all
+                // pointers to this object are from
+                // conservative scanning, we have to scan it
+                // defensively, too.
                 rec::putPtr(gocpp::recv(state), val, true);
                 continue;
             }
+            // Check if val points to a heap span.
             auto span = spanOfHeap(val);
             if(span == nullptr)
             {
                 continue;
             }
+            // Check if val points to an allocated object.
             auto idx = rec::objIndex(gocpp::recv(span), val);
             if(rec::isFree(gocpp::recv(span), idx))
             {
                 continue;
             }
+            // val points to an allocated object. Mark it.
             auto obj = rec::base(gocpp::recv(span)) + idx * span->elemsize;
             greyobject(obj, b, i, span, gcw, idx);
         }
@@ -1406,6 +1792,7 @@ namespace golang::runtime
     //go:nowritebarrierrec
     void greyobject(uintptr_t obj, uintptr_t base, uintptr_t off, struct mspan* span, struct gcWork* gcw, uintptr_t objIndex)
     {
+        // obj should be start of allocation, and so must be at least pointer-aligned.
         if(obj & (goarch::PtrSize - 1) != 0)
         {
             go_throw("greyobject: obj not pointer-aligned"_s);
@@ -1415,6 +1802,7 @@ namespace golang::runtime
         {
             if(setCheckmark(obj, base, off, mbits))
             {
+                // Already marked.
                 return;
             }
         }
@@ -1428,23 +1816,32 @@ namespace golang::runtime
                 getg()->m->traceback = 2;
                 go_throw("marking free object"_s);
             }
+            // If marked we have nothing to do.
             if(rec::isMarked(gocpp::recv(mbits)))
             {
                 return;
             }
             rec::setMarked(gocpp::recv(mbits));
+            // Mark span.
             auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(span)));
             if(arena->pageMarks[pageIdx] & pageMask == 0)
             {
                 atomic::Or8(& arena->pageMarks[pageIdx], pageMask);
             }
+            // If this is a noscan object, fast-track it to black
+            // instead of greying it.
             if(rec::noscan(gocpp::recv(span->spanclass)))
             {
                 gcw->bytesMarked += uint64_t(span->elemsize);
                 return;
             }
         }
+        // We're adding obj to P's local workbuf, so it's likely
+        // this object will be processed soon by the same P.
+        // Even if the workbuf gets flushed, there will likely still be
+        // some benefit on platforms with inclusive shared caches.
         sys::Prefetch(obj);
+        // Queue the obj for scanning.
         if(! rec::putFast(gocpp::recv(gcw), obj))
         {
             rec::put(gocpp::recv(gcw), obj);
@@ -1475,10 +1872,16 @@ namespace golang::runtime
         auto size = s->elemsize;
         if(rec::get(gocpp::recv(s->state)) == mSpanManual && size == 0)
         {
+            // We're printing something from a stack frame. We
+            // don't know how big it is, so just show up to an
+            // including off.
             size = off + goarch::PtrSize;
         }
         for(auto i = uintptr_t(0); i < size; i += goarch::PtrSize)
         {
+            // For big objects, just print the beginning (because
+            // that usually hints at the object's type) and the
+            // fields around off.
             if(! (i < 128 * goarch::PtrSize || off - 16 * goarch::PtrSize < i && i < off + 16 * goarch::PtrSize))
             {
                 skipped = true;
@@ -1513,10 +1916,13 @@ namespace golang::runtime
     {
         if(useCheckmark)
         {
+            // The world should be stopped so this should not happen.
             go_throw("gcmarknewobject called while doing checkmark"_s);
         }
+        // Mark object.
         auto objIndex = rec::objIndex(gocpp::recv(span), obj);
         rec::setMarked(gocpp::recv(rec::markBitsForIndex(gocpp::recv(span), objIndex)));
+        // Mark span.
         auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(span)));
         if(arena->pageMarks[pageIdx] & pageMask == 0)
         {

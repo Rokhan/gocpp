@@ -81,6 +81,7 @@ namespace golang::bytealg
     template<typename T>
     int IndexRabinKarp(T s, T sep)
     {
+        // Rabin-Karp search
         auto [hashss, pow] = HashStr(sep);
         auto n = len(sep);
         uint32_t h = {};
@@ -111,6 +112,7 @@ namespace golang::bytealg
     template<typename T>
     int LastIndexRabinKarp(T s, T sep)
     {
+        // Rabin-Karp search from the end of the string
         auto [hashss, pow] = HashStrRev(sep);
         auto n = len(sep);
         auto last = len(s) - n;

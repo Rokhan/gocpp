@@ -146,6 +146,7 @@ namespace golang::runtime
 
     int32_t netpollopen(uintptr_t fd, struct pollDesc* pd)
     {
+        // TODO(iant): Consider using taggedPointer on 64-bit systems.
         if(stdcall4(_CreateIoCompletionPort, fd, iocphandle, uintptr_t(gocpp::unsafe_pointer(pd)), 0) == 0)
         {
             return int32_t(getlasterror());
@@ -155,6 +156,7 @@ namespace golang::runtime
 
     int32_t netpollclose(uintptr_t fd)
     {
+        // nothing to do
         return 0;
     }
 
@@ -165,6 +167,7 @@ namespace golang::runtime
 
     void netpollBreak()
     {
+        // Failing to cas indicates there is an in-flight wakeup, so we're done here.
         if(! rec::CompareAndSwap(gocpp::recv(netpollWakeSig), 0, 1))
         {
             return;
@@ -218,6 +221,8 @@ namespace golang::runtime
         }
         else
         {
+            // An arbitrary cap on how long to wait for a timer.
+            // 1e9 ms == ~11.5 days.
             wait = 1e9;
         }
         n = uint32_t(len(entries) / int(gomaxprocs));
@@ -260,6 +265,8 @@ namespace golang::runtime
                 rec::Store(gocpp::recv(netpollWakeSig), 0);
                 if(delay == 0)
                 {
+                    // Forward the notification to the
+                    // blocked poller.
                     netpollBreak();
                 }
             }

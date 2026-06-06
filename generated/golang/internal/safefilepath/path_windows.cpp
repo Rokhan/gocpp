@@ -34,6 +34,7 @@ namespace golang::safefilepath
         auto containsSlash = false;
         for(auto p = path; p != ""_s; )
         {
+            // Find the next path element.
             auto i = 0;
             for(; i < len(p) && p[i] != '/'; )
             {
@@ -72,6 +73,7 @@ namespace golang::safefilepath
         }
         if(containsSlash)
         {
+            // We can't depend on strings, so substitute \ for / manually.
             auto buf = gocpp::slice<unsigned char>(path);
             for(auto [i, b] : buf)
             {
@@ -92,6 +94,7 @@ namespace golang::safefilepath
     // https://docs.microsoft.com/en-us/windows/desktop/fileio/naming-a-file.
     bool IsReservedName(gocpp::string name)
     {
+        // Device names can have arbitrary trailing characters following a dot or colon.
         auto base = name;
         for(auto i = 0; i < len(base); i++)
         {
@@ -110,6 +113,7 @@ namespace golang::safefilepath
                 }
             }
         }
+        // Trailing spaces in the last path element are ignored.
         for(; len(base) > 0 && base[len(base) - 1] == ' '; )
         {
             base = base.make_slice(0, len(base) - 1);
@@ -122,6 +126,10 @@ namespace golang::safefilepath
         {
             return true;
         }
+        // The path element is a reserved name with an extension.
+        // Some Windows versions consider this a reserved name,
+        // while others do not. Use FullPath to see if the name is
+        // reserved.
         if(auto [p, gocpp_id_0] = syscall::FullPath(name); len(p) >= 4 && p.make_slice(0, 4) == "\\\\.\\"_s)
         {
             return true;
@@ -168,6 +176,7 @@ namespace golang::safefilepath
                         {
                             return true;
                         }
+                        // Superscript ¹, ², and ³ are considered numbers as well.
                         //Go switch emulation
                         {
                             auto condition = name.make_slice(3);
@@ -189,6 +198,10 @@ namespace golang::safefilepath
                 }
             }
         }
+        // Passing CONIN$ or CONOUT$ to CreateFile opens a console handle.
+        // https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea#consoles
+        // While CONIN$ and CONOUT$ aren't documented as being files,
+        // they behave the same as CON. For example, ./CONIN$ also opens the console input.
         if(len(name) == 6 && name[5] == '$' && equalFold(name, "CONIN$"_s))
         {
             return true;

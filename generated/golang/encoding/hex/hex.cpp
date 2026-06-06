@@ -111,6 +111,8 @@ namespace golang::hex
         }
         if(len(src) % 2 == 1)
         {
+            // Check for invalid char before reporting bad length,
+            // since the invalid char (if present) is an earlier problem.
             if(reverseHexTable[src[j - 1]] > 0x0f)
             {
                 return {i, gocpp::error(InvalidByteError(src[j - 1]))};
@@ -149,6 +151,8 @@ namespace golang::hex
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> DecodeString(gocpp::string s)
     {
         auto src = gocpp::slice<unsigned char>(s);
+        // We can use the source slice itself as the destination
+        // because the decode loop increments by one and then the 'seen' byte is not used anymore.
         auto [n, err] = Decode(src, src);
         return {src.make_slice(0, n), err};
     }
@@ -162,6 +166,9 @@ namespace golang::hex
             return ""_s;
         }
         strings::Builder buf = {};
+        // Dumper will write 79 bytes per complete 16 byte chunk, and at least
+        // 64 bytes for whatever remains. Round the allocation up, since only a
+        // maximum of 15 bytes will be wasted.
         rec::Grow(gocpp::recv(buf), (1 + ((len(data) - 1) / 16)) * 79);
         auto dumper = Dumper(& buf);
         rec::Write(gocpp::recv(dumper), data);
@@ -284,10 +291,12 @@ namespace golang::hex
     {
         int n;
         struct gocpp::error err;
+        // Fill internal buffer with sufficient bytes to decode
         if(len(d->in) < 2 && d->err == nullptr)
         {
             int numCopy = {};
             int numRead = {};
+            // Copies either 0 or 1 bytes
             numCopy = copy(d->arr.make_slice(0), d->in);
             std::tie(numRead, d->err) = rec::Read(gocpp::recv(d->r), d->arr.make_slice(numCopy));
             d->in = d->arr.make_slice(0, numCopy + numRead);
@@ -303,6 +312,7 @@ namespace golang::hex
                 }
             }
         }
+        // Decode internal buffer into output buffer
         if(auto numAvail = len(d->in) / 2; len(p) > numAvail)
         {
             p = p.make_slice(0, numAvail);
@@ -312,10 +322,12 @@ namespace golang::hex
         d->in = d->in.make_slice(2 * numDec);
         if(err != nullptr)
         {
+            // Decode error; discard input remainder
             std::tie(d->in, d->err) = std::tuple{nullptr, err};
         }
         if(len(d->in) < 2)
         {
+            // Only expose errors when buffer fully consumed
             return {numDec, d->err};
         }
         return {numDec, nullptr};
@@ -392,10 +404,15 @@ namespace golang::hex
         {
             return {0, errors::New("encoding/hex: dumper closed"_s)};
         }
+        // Output lines look like:
+        // 00000010  2e 2f 30 31 32 33 34 35  36 37 38 39 3a 3b 3c 3d  |./0123456789:;<=|
+        // ^ offset                          ^ extra space              ^ ASCII of line.
         for(auto [i, gocpp_ignored] : data)
         {
             if(h->used == 0)
             {
+                // At the beginning of a line we print the current
+                // offset in hex.
                 h->buf[0] = (unsigned char)(h->n >> 24);
                 h->buf[1] = (unsigned char)(h->n >> 16);
                 h->buf[2] = (unsigned char)(h->n >> 8);
@@ -414,12 +431,15 @@ namespace golang::hex
             auto l = 3;
             if(h->used == 7)
             {
+                // There's an additional space after the 8th byte.
                 h->buf[3] = ' ';
                 l = 4;
             }
             else
             if(h->used == 15)
             {
+                // At the end of the line there's an extra space and
+                // the bar for the right column.
                 h->buf[3] = ' ';
                 h->buf[4] = '|';
                 l = 5;
@@ -451,6 +471,7 @@ namespace golang::hex
     struct gocpp::error rec::Close(golang::hex::dumper* h)
     {
         struct gocpp::error err;
+        // See the comments in Write() for the details of this format.
         if(h->closed)
         {
             return err;

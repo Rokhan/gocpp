@@ -68,6 +68,7 @@ namespace golang::crc32
         }
         else
         {
+            // Initialize the slicing-by-8 table.
             castagnoliTable8 = slicingMakeTable(Castagnoli);
             updateCastagnoli = [=](uint32_t crc, gocpp::slice<unsigned char> p) mutable -> uint32_t
             {
@@ -92,6 +93,7 @@ namespace golang::crc32
         }
         else
         {
+            // Initialize the slicing-by-8 table.
             ieeeTable8 = slicingMakeTable(IEEE);
             updateIEEE = [=](uint32_t crc, gocpp::slice<unsigned char> p) mutable -> uint32_t
             {
@@ -271,6 +273,8 @@ namespace golang::crc32
     // Update returns the result of adding the bytes in p to the crc.
     uint32_t Update(uint32_t crc, gocpp::array_ptr<golang::crc32::Table> tab, gocpp::slice<unsigned char> p)
     {
+        // Unfortunately, because IEEETable is exported, IEEE may be used without a
+        // call to MakeTable. We have to make sure it gets initialized in that case.
         return update(crc, tab, p, true);
     }
 
@@ -278,6 +282,8 @@ namespace golang::crc32
     {
         int n;
         struct gocpp::error err;
+        // We only create digest objects through New() which takes care of
+        // initialization in this case.
         d->crc = update(d->crc, d->tab, p, false);
         return {len(p), nullptr};
     }

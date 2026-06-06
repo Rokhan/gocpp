@@ -122,8 +122,10 @@ namespace golang::runtime
     // with other push and pop operations.
     void rec::push(golang::runtime::spanSet* b, struct mspan* s)
     {
+        // Obtain our slot.
         auto cursor = uintptr_t(rec::tail(gocpp::recv(rec::incTail(gocpp::recv(b->index)))) - 1);
         auto [top, bottom] = std::tuple{cursor / spanSetBlockEntries, cursor % spanSetBlockEntries};
+        // Do we need to add a block?
         auto spineLen = rec::Load(gocpp::recv(b->spineLen));
         spanSetBlock* block = {};
         retry:
@@ -133,7 +135,11 @@ namespace golang::runtime
         }
         else
         {
+            // Add a new block to the spine, potentially growing
+            // the spine.
             runtime::lock(& b->spineLock);
+            // spineLen cannot change until we release the lock,
+            // but may have changed while we were waiting.
             spineLen = rec::Load(gocpp::recv(b->spineLen));
             if(top < spineLen)
             {
@@ -143,6 +149,7 @@ namespace golang::runtime
             auto spine = rec::Load(gocpp::recv(b->spine));
             if(spineLen == b->spineCap)
             {
+                // Grow the spine.
                 auto newCap = b->spineCap * 2;
                 if(newCap == 0)
                 {
@@ -151,17 +158,32 @@ namespace golang::runtime
                 auto newSpine = persistentalloc(newCap * goarch::PtrSize, cpu::CacheLineSize, & memstats.gcMiscSys);
                 if(b->spineCap != 0)
                 {
+                    // Blocks are allocated off-heap, so
+                    // no write barriers.
                     memmove(newSpine, spine.p, b->spineCap * goarch::PtrSize);
                 }
                 spine = spanSetSpinePointer {newSpine};
+                // Spine is allocated off-heap, so no write barrier.
                 rec::StoreNoWB(gocpp::recv(b->spine), spine);
+                // We can't immediately free the old spine
+                // since a concurrent push with a lower index
+                // could still be reading from it. We let it
+                // leak because even a 1TB heap would waste
+                // less than 2MB of memory on old spines. If
+                // this is a problem, we could free old spines
+                // during STW.
                 b->spineCap = newCap;
             }
+            // Allocate a new block from the pool.
             block = rec::alloc(gocpp::recv(spanSetBlockPool));
+            // Add it to the spine.
+            // Blocks are allocated off-heap, so no write barrier.
             rec::StoreNoWB<spanSetBlock>(gocpp::recv(rec::lookup(gocpp::recv(spine), top)), block);
             rec::Store(gocpp::recv(b->spineLen), spineLen + 1);
             runtime::unlock(& b->spineLock);
         }
+        // We have a block. Insert the span atomically, since there may be
+        // concurrent readers via the block API.
         rec::StoreNoWB(gocpp::recv(block->spans[bottom]), s);
     }
 
@@ -184,14 +206,29 @@ namespace golang::runtime
             std::tie(head, tail) = rec::split(gocpp::recv(headtail));
             if(head >= tail)
             {
+                // The buf is empty, as far as we can tell.
                 return nullptr;
             }
+            // Check if the head position we want to claim is actually
+            // backed by a block.
             auto spineLen = rec::Load(gocpp::recv(b->spineLen));
             if(spineLen <= uintptr_t(head) / spanSetBlockEntries)
             {
+                // We're racing with a spine growth and the allocation of
+                // a new block (and maybe a new spine!), and trying to grab
+                // the span at the index which is currently being pushed.
+                // Instead of spinning, let's just notify the caller that
+                // there's nothing currently here. Spinning on this is
+                // almost definitely not worth it.
                 return nullptr;
             }
+            // Try to claim the current head by CASing in an updated head.
+            // This may fail transiently due to a push which modifies the
+            // tail, so keep trying while the head isn't changing.
             auto want = head;
+            // We failed to claim the spot we were after and the head changed,
+            // meaning a popper got ahead of us. Try again from the top because
+            // the buf may not be empty.
             for(; want == head; )
             {
                 if(rec::cas(gocpp::recv(b->index), headtail, makeHeadTailIndex(want + 1, tail)))
@@ -203,17 +240,42 @@ namespace golang::runtime
             }
         }
         auto [top, bottom] = std::tuple{head / spanSetBlockEntries, head % spanSetBlockEntries};
+        // We may be reading a stale spine pointer, but because the length
+        // grows monotonically and we've already verified it, we'll definitely
+        // be reading from a valid block.
         auto blockp = rec::lookup(gocpp::recv(rec::Load(gocpp::recv(b->spine))), uintptr_t(top));
+        // Given that the spine length is correct, we know we will never
+        // see a nil block here, since the length is always updated after
+        // the block is set.
         auto block = rec::Load<spanSetBlock>(gocpp::recv(blockp));
         auto s = rec::Load(gocpp::recv(block->spans[bottom]));
         for(; s == nullptr; )
         {
+            // We raced with the span actually being set, but given that we
+            // know a block for this span exists, the race window here is
+            // extremely small. Try again.
             s = rec::Load(gocpp::recv(block->spans[bottom]));
         }
+        // Clear the pointer. This isn't strictly necessary, but defensively
+        // avoids accidentally re-using blocks which could lead to memory
+        // corruption. This way, we'll get a nil pointer access instead.
         rec::StoreNoWB(gocpp::recv(block->spans[bottom]), nullptr);
+        // Increase the popped count. If we are the last possible popper
+        // in the block (note that bottom need not equal spanSetBlockEntries-1
+        // due to races) then it's our responsibility to free the block.
+        // If we increment popped to spanSetBlockEntries, we can be sure that
+        // we're the last popper for this block, and it's thus safe to free it.
+        // Every other popper must have crossed this barrier (and thus finished
+        // popping its corresponding mspan) by the time we get here. Because
+        // we're the last popper, we also don't have to worry about concurrent
+        // pushers (there can't be any). Note that we may not be the popper
+        // which claimed the last slot in the block, we're just the last one
+        // to finish popping.
         if(rec::Add(gocpp::recv(block->popped), 1) == spanSetBlockEntries)
         {
+            // Clear the block's pointer.
             rec::StoreNoWB<spanSetBlock>(gocpp::recv(blockp), nullptr);
+            // Return the block to the block pool.
             rec::free(gocpp::recv(spanSetBlockPool), block);
         }
         return s;
@@ -237,19 +299,33 @@ namespace golang::runtime
         auto top = head / spanSetBlockEntries;
         if(uintptr_t(top) < rec::Load(gocpp::recv(b->spineLen)))
         {
+            // If the head catches up to the tail and the set is empty,
+            // we may not clean up the block containing the head and tail
+            // since it may be pushed into again. In order to avoid leaking
+            // memory since we're going to reset the head and tail, clean
+            // up such a block now, if it exists.
             auto blockp = rec::lookup(gocpp::recv(rec::Load(gocpp::recv(b->spine))), uintptr_t(top));
             auto block = rec::Load<spanSetBlock>(gocpp::recv(blockp));
             if(block != nullptr)
             {
+                // Check the popped value.
                 if(rec::Load(gocpp::recv(block->popped)) == 0)
                 {
+                    // popped should never be zero because that means we have
+                    // pushed at least one value but not yet popped if this
+                    // block pointer is not nil.
                     go_throw("span set block with unpopped elements found in reset"_s);
                 }
                 if(rec::Load(gocpp::recv(block->popped)) == spanSetBlockEntries)
                 {
+                    // popped should also never be equal to spanSetBlockEntries
+                    // because the last popper should have made the block pointer
+                    // in this slot nil.
                     go_throw("fully empty unfreed span set block found in reset"_s);
                 }
+                // Clear the pointer to the block.
                 rec::StoreNoWB<spanSetBlock>(gocpp::recv(blockp), nullptr);
+                // Return the block to the block pool.
                 rec::free(gocpp::recv(spanSetBlockPool), block);
             }
         }
@@ -479,6 +555,7 @@ namespace golang::runtime
     runtime::headTailIndex rec::incTail(golang::runtime::atomicHeadTailIndex* h)
     {
         auto ht = headTailIndex(rec::Add(gocpp::recv(h->u), 1));
+        // Check for overflow.
         if(rec::tail(gocpp::recv(ht)) == 0)
         {
             print("runtime: head = "_s, rec::head(gocpp::recv(ht)), ", tail = "_s, rec::tail(gocpp::recv(ht)), "\n"_s);

@@ -68,6 +68,9 @@ namespace golang::time
         {
             gocpp::panic("non-positive interval for NewTicker"_s);
         }
+        // Give the channel a 1-element time buffer.
+        // If the client falls behind while reading, we drop ticks
+        // on the floor until the client catches up.
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<Time>>(), 1);
         auto t = gocpp::InitPtr<Ticker>([=](auto& x) {
             x.C = c;

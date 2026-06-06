@@ -475,6 +475,8 @@ namespace golang::runtime
     // divRoundUp returns ceil(n / a).
     uintptr_t divRoundUp(uintptr_t n, uintptr_t a)
     {
+        // a is generally a power of two. This will get inlined and
+        // the compiler will optimize the division.
         return (n + a - 1) / a;
     }
 
@@ -488,6 +490,8 @@ namespace golang::runtime
     // bool2int returns 0 if x is false or 1 if x is true.
     int bool2int(bool x)
     {
+        // Avoid branches. In the SSA compiler, this compiles to
+        // exactly what you would want it to.
         return int(*(uint8_t*)(gocpp::unsafe_pointer(& x)));
     }
 

@@ -59,10 +59,10 @@ namespace golang::crc32
         castagnoliSSE42TableK1 = new(sse42Table);
         castagnoliSSE42TableK2 = new(sse42Table);
         // See description in updateCastagnoli.
-        //    t[0][i] = CRC(i000, O)
-        //    t[1][i] = CRC(0i00, O)
-        //    t[2][i] = CRC(00i0, O)
-        //    t[3][i] = CRC(000i, O)
+        // t[0][i] = CRC(i000, O)
+        // t[1][i] = CRC(0i00, O)
+        // t[2][i] = CRC(00i0, O)
+        // t[3][i] = CRC(000i, O)
         // where O is a sequence of K zeros.
         gocpp::array<unsigned char, castagnoliK2> tmp = {};
         for(auto b = 0; b < 4; b++)
@@ -90,7 +90,54 @@ namespace golang::crc32
         {
             gocpp::panic("not available"_s);
         }
+        // This method is inspired from the algorithm in Intel's white paper:
+        // "Fast CRC Computation for iSCSI Polynomial Using CRC32 Instruction"
+        // The same strategy of splitting the buffer in three is used but the
+        // combining calculation is different; the complete derivation is explained
+        // below.
+        // -- The basic idea --
+        // The CRC32 instruction (available in SSE4.2) can process 8 bytes at a
+        // time. In recent Intel architectures the instruction takes 3 cycles;
+        // however the processor can pipeline up to three instructions if they
+        // don't depend on each other.
+        // Roughly this means that we can process three buffers in about the same
+        // time we can process one buffer.
+        // The idea is then to split the buffer in three, CRC the three pieces
+        // separately and then combine the results.
+        // Combining the results requires precomputed tables, so we must choose a
+        // fixed buffer length to optimize. The longer the length, the faster; but
+        // only buffers longer than this length will use the optimization. We choose
+        // two cutoffs and compute tables for both:
+        // - one around 512: 168*3=504
+        // - one around 4KB: 1344*3=4032
+        // -- The nitty gritty --
+        // Let CRC(I, X) be the non-inverted CRC32-C of the sequence X (with
+        // initial non-inverted CRC I). This function has the following properties:
+        // (a) CRC(I, AB) = CRC(CRC(I, A), B)
+        // (b) CRC(I, A xor B) = CRC(I, A) xor CRC(0, B)
+        // Say we want to compute CRC(I, ABC) where A, B, C are three sequences of
+        // K bytes each, where K is a fixed constant. Let O be the sequence of K zero
+        // bytes.
+        // CRC(I, ABC) = CRC(I, ABO xor C)
+        // = CRC(I, ABO) xor CRC(0, C)
+        // = CRC(CRC(I, AB), O) xor CRC(0, C)
+        // = CRC(CRC(I, AO xor B), O) xor CRC(0, C)
+        // = CRC(CRC(I, AO) xor CRC(0, B), O) xor CRC(0, C)
+        // = CRC(CRC(CRC(I, A), O) xor CRC(0, B), O) xor CRC(0, C)
+        // The castagnoliSSE42Triple function can compute CRC(I, A), CRC(0, B),
+        // and CRC(0, C) efficiently.  We just need to find a way to quickly compute
+        // CRC(uvwx, O) given a 4-byte initial value uvwx. We can precompute these
+        // values; since we can't have a 32-bit table, we break it up into four
+        // 8-bit tables:
+        // CRC(uvwx, O) = CRC(u000, O) xor
+        // CRC(0v00, O) xor
+        // CRC(00w0, O) xor
+        // CRC(000x, O)
+        // We can compute tables corresponding to the four terms for all 8-bit
+        // values.
         crc = ~ crc;
+        // If a buffer is long enough to use the optimization, process the first few
+        // bytes to align the buffer to an 8 byte boundary (if necessary).
         if(len(p) >= castagnoliK1 * 3)
         {
             auto delta = int(uintptr_t(gocpp::unsafe_pointer(& p[0])) & 7);
@@ -101,20 +148,29 @@ namespace golang::crc32
                 p = p.make_slice(delta);
             }
         }
+        // Process 3*K2 at a time.
         for(; len(p) >= castagnoliK2 * 3; )
         {
+            // Compute CRC(I, A), CRC(0, B), and CRC(0, C).
             auto [crcA, crcB, crcC] = castagnoliSSE42Triple(crc, 0, 0, p, p.make_slice(castagnoliK2), p.make_slice(castagnoliK2 * 2), castagnoliK2 / 24);
+            // CRC(I, AB) = CRC(CRC(I, A), O) xor CRC(0, B)
             auto crcAB = castagnoliShift(castagnoliSSE42TableK2, crcA) ^ crcB;
+            // CRC(I, ABC) = CRC(CRC(I, AB), O) xor CRC(0, C)
             crc = castagnoliShift(castagnoliSSE42TableK2, crcAB) ^ crcC;
             p = p.make_slice(castagnoliK2 * 3);
         }
+        // Process 3*K1 at a time.
         for(; len(p) >= castagnoliK1 * 3; )
         {
+            // Compute CRC(I, A), CRC(0, B), and CRC(0, C).
             auto [crcA, crcB, crcC] = castagnoliSSE42Triple(crc, 0, 0, p, p.make_slice(castagnoliK1), p.make_slice(castagnoliK1 * 2), castagnoliK1 / 24);
+            // CRC(I, AB) = CRC(CRC(I, A), O) xor CRC(0, B)
             auto crcAB = castagnoliShift(castagnoliSSE42TableK1, crcA) ^ crcB;
+            // CRC(I, ABC) = CRC(CRC(I, AB), O) xor CRC(0, C)
             crc = castagnoliShift(castagnoliSSE42TableK1, crcAB) ^ crcC;
             p = p.make_slice(castagnoliK1 * 3);
         }
+        // Use the simple implementation for what's left.
         crc = castagnoliSSE42(crc, p);
         return ~ crc;
     }
@@ -131,6 +187,7 @@ namespace golang::crc32
         {
             gocpp::panic("not available"_s);
         }
+        // We still use slicing-by-8 for small buffers.
         archIeeeTable8 = slicingMakeTable(IEEE);
     }
 

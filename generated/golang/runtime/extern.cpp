@@ -345,6 +345,9 @@ namespace golang::runtime
     // program counter adjustment.
     int Callers(int skip, gocpp::slice<uintptr_t> pc)
     {
+        // runtime.callers uses pc.array==nil as a signal
+        // to print a stack trace. Pick off 0-length pc here
+        // so that we don't let a nil pc slice get to it.
         if(len(pc) == 0)
         {
             return 0;

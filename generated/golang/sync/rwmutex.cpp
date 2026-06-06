@@ -100,6 +100,7 @@ namespace golang::sync
         }
         if(rec::Add(gocpp::recv(rw->readerCount), 1) < 0)
         {
+            // A writer is pending, wait for it.
             runtime_SemacquireRWMutexR(& rw->readerSem, false, 0);
         }
         if(race::Enabled)
@@ -158,6 +159,7 @@ namespace golang::sync
         }
         if(auto r = rec::Add(gocpp::recv(rw->readerCount), - 1); r < 0)
         {
+            // Outlined slow-path to allow the fast-path to be inlined
             rec::rUnlockSlow(gocpp::recv(rw), r);
         }
         if(race::Enabled)
@@ -173,8 +175,10 @@ namespace golang::sync
             race::Enable();
             fatal("sync: RUnlock of unlocked RWMutex"_s);
         }
+        // A writer is pending.
         if(rec::Add(gocpp::recv(rw->readerWait), - 1) == 0)
         {
+            // The last reader unblocks the writer.
             runtime_Semrelease(& rw->writerSem, false, 1);
         }
     }
@@ -189,8 +193,11 @@ namespace golang::sync
             _ = rw->w.state;
             race::Disable();
         }
+        // First, resolve competition with other writers.
         rec::Lock(gocpp::recv(rw->w));
+        // Announce to readers there is a pending writer.
         auto r = rec::Add(gocpp::recv(rw->readerCount), - rwmutexMaxReaders) + rwmutexMaxReaders;
+        // Wait for active readers.
         if(r != 0 && rec::Add(gocpp::recv(rw->readerWait), r) != 0)
         {
             runtime_SemacquireRWMutex(& rw->writerSem, false, 0);
@@ -255,16 +262,19 @@ namespace golang::sync
             race::Release(gocpp::unsafe_pointer(& rw->readerSem));
             race::Disable();
         }
+        // Announce to readers there is no active writer.
         auto r = rec::Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);
         if(r >= rwmutexMaxReaders)
         {
             race::Enable();
             fatal("sync: Unlock of unlocked RWMutex"_s);
         }
+        // Unblock blocked readers, if any.
         for(auto i = 0; i < int(r); i++)
         {
             runtime_Semrelease(& rw->readerSem, false, 0);
         }
+        // Allow other writers to proceed.
         rec::Unlock(gocpp::recv(rw->w));
         if(race::Enabled)
         {

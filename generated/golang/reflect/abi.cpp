@@ -191,16 +191,34 @@ namespace golang::reflect
     // abiStep describing that translation, and nil otherwise.
     struct abiStep* rec::addArg(golang::reflect::abiSeq* a, abi::Type* t)
     {
+        // We'll always be adding a new value, so do that first.
         auto pStart = len(a->steps);
         a->valueStart = append(a->valueStart, pStart);
         if(rec::Size(gocpp::recv(t)) == 0)
         {
+            // If the size of the argument type is zero, then
+            // in order to degrade gracefully into ABI0, we need
+            // to stack-assign this type. The reason is that
+            // although zero-sized types take up no space on the
+            // stack, they do cause the next argument to be aligned.
+            // So just do that here, but don't bother actually
+            // generating a new ABI step for it (there's nothing to
+            // actually copy).
+            // We cannot handle this in the recursive case of
+            // regAssign because zero-sized *fields* of a
+            // non-zero-sized struct do not cause it to be
+            // stack-assigned. So we need a special case here
+            // at the top.
             a->stackBytes = align(a->stackBytes, uintptr_t(rec::Align(gocpp::recv(t))));
             return nullptr;
         }
+        // Hold a copy of "a" so that we can roll back if
+        // register assignment fails.
         auto aOld = *a;
         if(! rec::regAssign(gocpp::recv(a), t, 0))
         {
+            // Register assignment failed. Roll back any changes
+            // and stack-assign.
             *a = aOld;
             rec::stackAssign(gocpp::recv(a), rec::Size(gocpp::recv(t)), uintptr_t(rec::Align(gocpp::recv(t))));
             return & a->steps[len(a->steps) - 1];
@@ -216,6 +234,7 @@ namespace golang::reflect
     // Returns true if the receiver is a pointer.
     std::tuple<struct abiStep*, bool> rec::addRcvr(golang::reflect::abiSeq* a, abi::Type* rcvr)
     {
+        // The receiver is always one word.
         a->valueStart = append(a->valueStart, len(a->steps));
         bool ok = {};
         bool ptr = {};
@@ -226,6 +245,12 @@ namespace golang::reflect
         }
         else
         {
+            // TODO(mknyszek): Is this case even possible?
+            // The interface data work never contains a non-pointer
+            // value. This case was copied over from older code
+            // in the reflect package which only conditionally added
+            // a pointer bit to the reflect.(Value).Call stack frame's
+            // GC bitmap.
             ok = rec::assignIntN(gocpp::recv(a), 0, goarch::PtrSize, 1, 0b0);
             ptr = false;
         }
@@ -348,6 +373,9 @@ namespace golang::reflect
                         switch(conditionId)
                         {
                             case 0:
+                                // There's nothing to assign, so don't modify
+                                // a.steps but succeed so the caller doesn't
+                                // try to stack-assign this value.
                                 return true;
                                 break;
                             case 1:
@@ -550,8 +578,17 @@ namespace golang::reflect
 
     struct abiDesc newAbiDesc(golang::reflect::funcType* t, abi::Type* rcvr)
     {
+        // We need to add space for this argument to
+        // the frame so that it can spill args into it.
+        // The size of this space is just the sum of the sizes
+        // of each register-allocated type.
+        // TODO(mknyszek): Remove this when we no longer have
+        // caller reserved spill space.
         auto spill = uintptr_t(0);
+        // Compute gc program & stack bitmap for stack arguments
         auto stackPtrs = new(bitVector);
+        // Compute the stack frame pointer bitmap and register
+        // pointer bitmap for arguments.
         auto inRegPtrs = abi::IntArgRegBitmap {};
         // Compute abiSeq for input parameters.
         abiSeq in = {};
@@ -595,11 +632,20 @@ namespace golang::reflect
             }
         }
         spill = align(spill, goarch::PtrSize);
+        // From the input parameters alone, we now know
+        // the stackCallArgsSize and retOffset.
         auto stackCallArgsSize = in.stackBytes;
         auto retOffset = align(in.stackBytes, goarch::PtrSize);
+        // Compute the stack frame pointer bitmap and register
+        // pointer bitmap for return values.
         auto outRegPtrs = abi::IntArgRegBitmap {};
         // Compute abiSeq for output parameters.
         abiSeq out = {};
+        // Stack-assigned return values do not share
+        // space with arguments like they do with registers,
+        // so we need to inject a stack offset here.
+        // Fake it by artificially extending stackBytes by
+        // the return offset.
         out.stackBytes = retOffset;
         for(auto [i, res] : rec::OutSlice(gocpp::recv(t)))
         {
@@ -619,6 +665,8 @@ namespace golang::reflect
                 }
             }
         }
+        // Undo the faking from earlier so that stackBytes
+        // is accurate.
         out.stackBytes -= retOffset;
         return abiDesc {in, out, stackCallArgsSize, retOffset, spill, stackPtrs, inRegPtrs, outRegPtrs};
     }

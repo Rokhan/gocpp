@@ -95,9 +95,11 @@ namespace golang::runtime
             else if(f != f) { conditionId = 1; }
             switch(conditionId)
             {
+                // +0, -0
                 case 0:
                     return c1 * (c0 ^ h);
                     break;
+                // any kind of NaN
                 case 1:
                     return c1 * (c0 ^ h ^ uintptr_t(rand()));
                     break;
@@ -118,9 +120,11 @@ namespace golang::runtime
             else if(f != f) { conditionId = 1; }
             switch(conditionId)
             {
+                // +0, -0
                 case 0:
                     return c1 * (c0 ^ h);
                     break;
+                // any kind of NaN
                 case 1:
                     return c1 * (c0 ^ h ^ uintptr_t(rand()));
                     break;
@@ -154,6 +158,10 @@ namespace golang::runtime
         auto t = tab->_type;
         if(t->Equal == nullptr)
         {
+            // Check hashability here. We could do this check inside
+            // typehash, but we want to report the topmost type in
+            // the error text (e.g. in a struct with a field of slice type
+            // we want to report the struct, not the slice).
             gocpp::panic(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
         }
         if(isDirectIface(t))
@@ -176,6 +184,7 @@ namespace golang::runtime
         }
         if(t->Equal == nullptr)
         {
+            // See comment in interhash above.
             gocpp::panic(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
         }
         if(isDirectIface(t))
@@ -202,6 +211,7 @@ namespace golang::runtime
     {
         if(t->TFlag & abi::TFlagRegularMemory != 0)
         {
+            // Handle ptr sizes specially, see issue 37086.
             //Go switch emulation
             {
                 auto condition = t->Size_;
@@ -280,6 +290,8 @@ namespace golang::runtime
                     return h;
                     break;
                 default:
+                    // Should never happen, as typehash should only be called
+                    // with comparable types.
                     gocpp::panic(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
                     break;
             }
@@ -386,6 +398,7 @@ namespace golang::runtime
                     return nullptr;
                     break;
                 default:
+                    // Should never happen, keep this case for robustness.
                     return gocpp::error(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));
                     break;
             }
@@ -480,6 +493,9 @@ namespace golang::runtime
         }
         if(isDirectIface(t))
         {
+            // Direct interface types are ptr, chan, map, func, and single-element structs/arrays thereof.
+            // Maps and funcs are not comparable, so they can't reach here.
+            // Ptrs, chans, and single-element items can be compared directly using ==.
             return x == y;
         }
         return eq(x, y);
@@ -499,6 +515,7 @@ namespace golang::runtime
         }
         if(isDirectIface(t))
         {
+            // See comment in efaceeq.
             return x == y;
         }
         return eq(x, y);
@@ -591,8 +608,10 @@ namespace golang::runtime
     gocpp::array<uintptr_t, 4> hashkey;
     void alginit()
     {
+        // Install AES hash algorithms if the instructions needed are present.
         if((GOARCH == "386"_s || GOARCH == "amd64"_s) && cpu::X86.HasAES && cpu::X86.HasSSSE3 && cpu::X86.HasSSE41)
         {
+            // PINSR{D,Q}
             initAlgAES();
             return;
         }
@@ -603,6 +622,7 @@ namespace golang::runtime
         }
         for(auto [i, gocpp_ignored] : hashkey)
         {
+            // make sure these numbers are odd
             hashkey[i] = uintptr_t(rand()) | 1;
         }
     }
@@ -610,6 +630,7 @@ namespace golang::runtime
     void initAlgAES()
     {
         useAeshash = true;
+        // Initialize with random data so hash collisions will be hard to engineer.
         auto key = (gocpp::array_ptr<gocpp::array<uint64_t, hashRandomBytes / 8>>)(gocpp::unsafe_pointer(& aeskeysched));
         for(auto [i, gocpp_ignored] : key)
         {

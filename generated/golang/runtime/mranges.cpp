@@ -87,6 +87,8 @@ namespace golang::runtime
         {
             return 0;
         }
+        // Subtraction is safe because limit and base must be in the same
+        // segment of the address space.
         return rec::diff(gocpp::recv(a.limit), a.base);
     }
 
@@ -246,6 +248,8 @@ namespace golang::runtime
     // equal returns true if the two offAddr values are equal.
     bool rec::equal(golang::runtime::offAddr l1, struct offAddr l2)
     {
+        // No need to compare in the offset space, it
+        // means the same thing.
         return l1 == l2;
     }
 
@@ -424,17 +428,30 @@ namespace golang::runtime
             auto i = int((unsigned int)(bot + top) >> 1);
             if(rec::contains(gocpp::recv(a->ranges[i]), rec::addr(gocpp::recv(base))))
             {
+                // a.ranges[i] contains base, so
+                // its successor is the next index.
                 return i + 1;
             }
             if(rec::lessThan(gocpp::recv(base), a->ranges[i].base))
             {
+                // In this case i might actually be
+                // the successor, but we can't be sure
+                // until we check the ones before it.
                 top = i;
             }
             else
             {
+                // In this case we know base is
+                // greater than or equal to a.ranges[i].limit-1,
+                // so i is definitely not the successor.
+                // We already checked i, so pick the next
+                // one.
                 bot = i + 1;
             }
         }
+        // There are top-bot candidates left, so
+        // iterate over them and find the first that
+        // base is strictly less than.
         for(auto i = bot; i < top; i++)
         {
             if(rec::lessThan(gocpp::recv(base), a->ranges[i].base))
@@ -484,39 +501,65 @@ namespace golang::runtime
     // r must not overlap with any address range in a and r.size() must be > 0.
     void rec::add(golang::runtime::addrRanges* a, struct addrRange r)
     {
+        // The copies in this function are potentially expensive, but this data
+        // structure is meant to represent the Go heap. At worst, copying this
+        // would take ~160µs assuming a conservative copying rate of 25 GiB/s (the
+        // copy will almost never trigger a page fault) for a 1 TiB heap with 4 MiB
+        // arenas which is completely discontiguous. ~160µs is still a lot, but in
+        // practice most platforms have 64 MiB arenas (which cuts this by a factor
+        // of 16) and Go heaps are usually mostly contiguous, so the chance that
+        // an addrRanges even grows to that size is extremely low.
+        // An empty range has no effect on the set of addresses represented
+        // by a, but passing a zero-sized range is almost always a bug.
         if(rec::size(gocpp::recv(r)) == 0)
         {
             print("runtime: range = {"_s, hex(rec::addr(gocpp::recv(r.base))), ", "_s, hex(rec::addr(gocpp::recv(r.limit))), "}\n"_s);
             go_throw("attempted to add zero-sized address range"_s);
         }
+        // Because we assume r is not currently represented in a,
+        // findSucc gives us our insertion index.
         auto i = rec::findSucc(gocpp::recv(a), rec::addr(gocpp::recv(r.base)));
         auto coalescesDown = i > 0 && rec::equal(gocpp::recv(a->ranges[i - 1].limit), r.base);
         auto coalescesUp = i < len(a->ranges) && rec::equal(gocpp::recv(r.limit), a->ranges[i].base);
         if(coalescesUp && coalescesDown)
         {
+            // We have neighbors and they both border us.
+            // Merge a.ranges[i-1], r, and a.ranges[i] together into a.ranges[i-1].
             a->ranges[i - 1].limit = a->ranges[i].limit;
+            // Delete a.ranges[i].
             copy(a->ranges.make_slice(i), a->ranges.make_slice(i + 1));
             a->ranges = a->ranges.make_slice(0, len(a->ranges) - 1);
         }
         else
         if(coalescesDown)
         {
+            // We have a neighbor at a lower address only and it borders us.
+            // Merge the new space into a.ranges[i-1].
             a->ranges[i - 1].limit = r.limit;
         }
         else
         if(coalescesUp)
         {
+            // We have a neighbor at a higher address only and it borders us.
+            // Merge the new space into a.ranges[i].
             a->ranges[i].base = r.base;
         }
         else
         {
+            // We may or may not have neighbors which don't border us.
+            // Add the new range.
             if(len(a->ranges) + 1 > cap(a->ranges))
             {
+                // Grow the array. Note that this leaks the old array, but since
+                // we're doubling we have at most 2x waste. For a 1 TiB heap and
+                // 4 MiB arenas which are all discontiguous (both very conservative
+                // assumptions), this would waste at most 4 MiB of memory.
                 auto oldRanges = a->ranges;
                 auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
                 ranges->len = len(oldRanges) + 1;
                 ranges->cap = cap(oldRanges) * 2;
                 ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, a->sysStat));
+                // Copy in the old array, but make space for the new range.
                 copy(a->ranges.make_slice(0, i), oldRanges.make_slice(0, i));
                 copy(a->ranges.make_slice(i + 1), oldRanges.make_slice(i));
             }
@@ -560,6 +603,7 @@ namespace golang::runtime
         auto pivot = rec::findSucc(gocpp::recv(a), addr);
         if(pivot == 0)
         {
+            // addr is before all ranges in a.
             a->totalBytes = 0;
             a->ranges = a->ranges.make_slice(0, 0);
             return;
@@ -593,6 +637,7 @@ namespace golang::runtime
     {
         if(len(a->ranges) > cap(b->ranges))
         {
+            // Grow the array.
             auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& b->ranges));
             ranges->len = 0;
             ranges->cap = cap(a->ranges);

@@ -258,6 +258,13 @@ namespace golang::flate
             }
             count[n]++;
         }
+        // Empty tree. The decompressor.huffSym function will fail later if the tree
+        // is used. Technically, an empty tree is only valid for the HDIST tree and
+        // not the HCLEN and HLIT tree. However, a stream with an empty HCLEN tree
+        // is guaranteed to fail since it will attempt to use the tree to decode the
+        // codes for the HLIT and HDIST trees. Similarly, an empty HLIT tree is
+        // guaranteed to fail later since the compressed data section must be
+        // composed of at least one symbol (the end-of-block marker).
         if(max == 0)
         {
             return true;
@@ -270,6 +277,11 @@ namespace golang::flate
             nextcode[i] = code;
             code += count[i];
         }
+        // Check that the coding is complete (i.e., that we've
+        // assigned all 2-to-the-max possible bit sequences).
+        // Exception: To be compatible with zlib, we also need to
+        // accept degenerate single-code codings. See also
+        // TestDegenerateHuffmanCoding.
         if(code != (1 << (unsigned int)(max)) && ! (code == 1 && max == 1))
         {
             return false;
@@ -279,6 +291,7 @@ namespace golang::flate
         {
             auto numLinks = 1 << ((unsigned int)(max) - huffmanChunkBits);
             h->linkMask = uint32_t(numLinks - 1);
+            // create link tables
             auto link = nextcode[huffmanChunkBits + 1] >> 1;
             h->links = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<uint32_t>>>(), huffmanNumChunks - link);
             for(auto j = (unsigned int)(link); j < huffmanNumChunks; j++)
@@ -309,6 +322,11 @@ namespace golang::flate
             {
                 for(auto off = reverse; off < len(h->chunks); off += 1 << (unsigned int)(n))
                 {
+                    // We should never need to overwrite
+                    // an existing chunk. Also, 0 is
+                    // never a valid chunk, because the
+                    // lower 4 "count" bits should be
+                    // between 1 and 15.
                     if(sanity && h->chunks[off] != 0)
                     {
                         gocpp::panic("impossible: overwriting existing chunk"_s);
@@ -321,6 +339,8 @@ namespace golang::flate
                 auto j = reverse & (huffmanNumChunks - 1);
                 if(sanity && h->chunks[j] & huffmanCountMask != huffmanChunkBits + 1)
                 {
+                    // Longer codes should have been
+                    // associated with a link table above.
                     gocpp::panic("impossible: not an indirect chunk"_s);
                 }
                 auto value = h->chunks[j] >> huffmanValueShift;
@@ -338,10 +358,16 @@ namespace golang::flate
         }
         if(sanity)
         {
+            // Above we've sanity checked that we never overwrote
+            // an existing entry. Here we additionally check that
+            // we filled the tables completely.
             for(auto [i, chunk] : h->chunks)
             {
                 if(chunk == 0)
                 {
+                    // As an exception, in the degenerate
+                    // single-code case, we allow odd
+                    // chunks to be missing.
                     if(code == 1 && i % 2 == 1)
                     {
                         continue;
@@ -513,11 +539,13 @@ namespace golang::flate
                     rec::dataBlock(gocpp::recv(f));
                     break;
                 case 1:
+                    // compressed, fixed Huffman tables
                     f->hl = & fixedHuffmanDecoder;
                     f->hd = nullptr;
                     rec::huffmanBlock(gocpp::recv(f));
                     break;
                 case 2:
+                    // compressed, dynamic Huffman tables
                     if(f->err = rec::readHuffman(gocpp::recv(f)); f->err != nullptr)
                     {
                         break;
@@ -527,6 +555,7 @@ namespace golang::flate
                     rec::huffmanBlock(gocpp::recv(f));
                     break;
                 default:
+                    // 3 is reserved.
                     f->err = CorruptInputError(f->roffset);
                     break;
             }
@@ -554,6 +583,7 @@ namespace golang::flate
             f->step(f);
             if(f->err != nullptr && len(f->toRead) == 0)
             {
+                // Flush what's left in case of error
                 f->toRead = rec::readFlush(gocpp::recv(f->dict));
             }
         }
@@ -571,6 +601,7 @@ namespace golang::flate
     gocpp::array<int, 19> codeOrder = gocpp::array<int, 19> {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
     struct gocpp::error rec::readHuffman(golang::flate::decompressor* f)
     {
+        // HLIT[5], HDIST[5], HCLEN[4].
         for(; f->nb < 5 + 5 + 4; )
         {
             if(auto err = rec::moreBits(gocpp::recv(f)); err != nullptr)
@@ -591,8 +622,10 @@ namespace golang::flate
         }
         f->b >>= 5;
         auto nclen = int(f->b & 0xF) + 4;
+        // numCodes is 19, so nclen is always valid.
         f->b >>= 4;
         f->nb -= 5 + 5 + 4;
+        // (HCLEN+4)*3 bits: code lengths in the magic codeOrder order.
         for(auto i = 0; i < nclen; i++)
         {
             for(; f->nb < 3; )
@@ -614,6 +647,8 @@ namespace golang::flate
         {
             return gocpp::error(CorruptInputError(f->roffset));
         }
+        // HLIT + 257 code lengths, HDIST + 1 code lengths,
+        // using the code length Huffman code.
         for(auto [i, n] = std::tuple{0, nlit + ndist}; i < n; )
         {
             auto [x, err] = rec::huffSym(gocpp::recv(f), & f->h1);
@@ -623,6 +658,7 @@ namespace golang::flate
             }
             if(x < 16)
             {
+                // Actual length.
                 f->bits[i] = x;
                 i++;
                 continue;
@@ -688,6 +724,10 @@ namespace golang::flate
         {
             return gocpp::error(CorruptInputError(f->roffset));
         }
+        // As an optimization, we can initialize the min bits to read at a time
+        // for the HLIT tree to the length of the EOB marker since we know that
+        // every block must terminate with one. This preserves the property that
+        // we never read any extra bytes after the end of the DEFLATE stream.
         if(f->h1.min < f->bits[endBlockMarker])
         {
             f->h1.min = f->bits[endBlockMarker];
@@ -720,6 +760,8 @@ namespace golang::flate
             }
         }
         readLiteral:
+        // Read literal and/or (length, distance) according to RFC section 3.2.3.
+        // Read literal and/or (length, distance) according to RFC section 3.2.3.
         {
             auto [v, err] = rec::huffSym(gocpp::recv(f), f->hl);
             if(err != nullptr)
@@ -727,6 +769,7 @@ namespace golang::flate
                 f->err = err;
                 return;
             }
+            // number of bits extra
             unsigned int n = {};
             int length = {};
             //Go switch emulation
@@ -758,6 +801,7 @@ namespace golang::flate
                         rec::finishBlock(gocpp::recv(f));
                         return;
                         break;
+                    // otherwise, reference to older data
                     case 2:
                         length = v - (257 - 3);
                         n = 0;
@@ -841,6 +885,7 @@ namespace golang::flate
                         break;
                     case 1:
                         auto nb = (unsigned int)(dist - 2) >> 1;
+                        // have 1 bit in bottom of dist, need nb more.
                         auto extra = (dist & 1) << nb;
                         for(; f->nb < nb; )
                         {
@@ -861,6 +906,7 @@ namespace golang::flate
                         break;
                 }
             }
+            // No check on length; encoding can be prescient.
             if(dist > rec::histSize(gocpp::recv(f->dict)))
             {
                 f->err = CorruptInputError(f->roffset);
@@ -870,6 +916,8 @@ namespace golang::flate
             goto copyHistory;
         }
         copyHistory:
+        // Perform a backwards copy according to RFC section 3.2.3.
+        // Perform a backwards copy according to RFC section 3.2.3.
         {
             auto cnt = rec::tryWriteCopy(gocpp::recv(f->dict), f->copyDist, f->copyLen);
             if(cnt == 0)
@@ -880,6 +928,7 @@ namespace golang::flate
             if(rec::availWrite(gocpp::recv(f->dict)) == 0 || f->copyLen > 0)
             {
                 f->toRead = rec::readFlush(gocpp::recv(f->dict));
+                // We need to continue this work
                 f->step = [&](auto x){ return rec::huffmanBlock(x); };
                 f->stepState = stateDict;
                 return;
@@ -891,8 +940,11 @@ namespace golang::flate
     // Copy a single uncompressed data block from input to output.
     void rec::dataBlock(golang::flate::decompressor* f)
     {
+        // Uncompressed.
+        // Discard current half-byte.
         f->nb = 0;
         f->b = 0;
+        // Length then ones-complement of length.
         auto [nr, err] = io::ReadFull(f->r, f->buf.make_slice(0, 4));
         f->roffset += int64_t(nr);
         if(err != nullptr)
@@ -983,7 +1035,14 @@ namespace golang::flate
     // Read the next Huffman-encoded symbol from f according to h.
     std::tuple<int, struct gocpp::error> rec::huffSym(golang::flate::decompressor* f, struct huffmanDecoder* h)
     {
+        // Since a huffmanDecoder can be empty or be composed of a degenerate tree
+        // with single element, huffSym must error on these two edge cases. In both
+        // cases, the chunks slice will be 0 for the invalid sequence, leading it
+        // satisfy the n == 0 check below.
         auto n = (unsigned int)(h->min);
+        // Optimization. Compiler isn't smart enough to keep f.b,f.nb in registers,
+        // but is smart enough to keep local variables in registers, so use nb and b,
+        // inline call to moreBits and reassign b,nb back to f on return.
         auto [nb, b] = std::tuple{f->nb, f->b};
         for(; ; )
         {
@@ -1031,12 +1090,14 @@ namespace golang::flate
             f->r = rr;
             return;
         }
+        // Reuse rBuf if possible. Invariant: rBuf is always created (and owned) by decompressor.
         if(f->rBuf != nullptr)
         {
             rec::Reset(gocpp::recv(f->rBuf), r);
         }
         else
         {
+            // bufio.NewReader will not return r, as r does not implement flate.Reader, so it is not bufio.Reader.
             f->rBuf = bufio::NewReader(r);
         }
         f->r = f->rBuf;

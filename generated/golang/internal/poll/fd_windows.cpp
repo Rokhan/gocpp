@@ -237,11 +237,13 @@ namespace golang::poll
             return {0, errors::New("internal error: polling on unsupported descriptor type"_s)};
         }
         auto fd = o->fd;
+        // Notify runtime netpoll about starting IO.
         auto err = rec::prepare(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
         if(err != nullptr)
         {
             return {0, err};
         }
+        // Start IO.
         err = submit(o);
         //Go switch emulation
         {
@@ -252,12 +254,16 @@ namespace golang::poll
             switch(conditionId)
             {
                 case 0:
+                    // IO completed immediately
                     if(o->fd->skipSyncNotif)
                     {
+                        // No completion message will follow, so return immediately.
                         return {int(o->qty), nullptr};
                     }
                     break;
+                // Need to get our completion message anyway.
                 case 1:
+                    // IO started, and we have to wait for its completion.
                     err = nullptr;
                     break;
                 default:
@@ -265,12 +271,15 @@ namespace golang::poll
                     break;
             }
         }
+        // Wait for our request to complete.
         err = rec::wait(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
         if(err == nullptr)
         {
+            // All is good. Extract our IO results and return.
             if(o->errno != 0)
             {
                 err = syscall::Errno(o->errno);
+                // More data available. Return back the size of received data.
                 if(err == syscall::ERROR_MORE_DATA || err == windows::WSAEMSGSIZE)
                 {
                     return {int(o->qty), err};
@@ -279,6 +288,7 @@ namespace golang::poll
             }
             return {int(o->qty), nullptr};
         }
+        // IO is interrupted by "close" or "timeout"
         auto netpollErr = err;
         //Go switch emulation
         {
@@ -293,26 +303,35 @@ namespace golang::poll
                 case 1:
                 case 2:
                     break;
+                // will deal with those.
                 default:
                     gocpp::panic("unexpected runtime.netpoll error: "_s + rec::Error(gocpp::recv(netpollErr)));
                     break;
             }
         }
+        // Cancel our request.
         err = syscall::CancelIoEx(fd->Sysfd, & o->o);
+        // Assuming ERROR_NOT_FOUND is returned, if IO is completed.
         if(err != nullptr && err != syscall::ERROR_NOT_FOUND)
         {
+            // TODO(brainman): maybe do something else, but panic.
             gocpp::panic(err);
         }
+        // Wait for cancellation to complete.
         rec::waitCanceled(gocpp::recv(fd->pd), int(o->mode));
         if(o->errno != 0)
         {
             err = syscall::Errno(o->errno);
             if(err == syscall::ERROR_OPERATION_ABORTED)
             {
+                // IO Canceled
                 err = netpollErr;
             }
             return {0, err};
         }
+        // We issued a cancellation request. But, it seems, IO operation succeeded
+        // before the cancellation request run. We need to treat the IO operation as
+        // succeeded (the bytes are actually sent/recv from network).
         return {int(o->qty), nullptr};
     }
 
@@ -461,6 +480,16 @@ namespace golang::poll
         gocpp::error err = {};
         if(pollable)
         {
+            // Only call init for a network socket.
+            // This means that we don't add files to the runtime poller.
+            // Adding files to the runtime poller can confuse matters
+            // if the user is doing their own overlapped I/O.
+            // See issue #21172.
+            // In general the code below avoids calling the execIO
+            // function for non-network sockets. If some method does
+            // somehow call execIO, then execIO, and therefore the
+            // calling method, will return an error, because
+            // fd.pd.runtimeCtx will be 0.
             err = rec::init(gocpp::recv(fd->pd), fd);
         }
         if(logInitFD != nullptr)
@@ -473,6 +502,7 @@ namespace golang::poll
         }
         if(pollable && useSetFileCompletionNotificationModes)
         {
+            // We do not use events, so we can skip them always.
             auto flags = uint8_t(syscall::FILE_SKIP_SET_EVENT_ON_HANDLE);
             //Go switch emulation
             {
@@ -502,6 +532,8 @@ namespace golang::poll
                 fd->skipSyncNotif = true;
             }
         }
+        // Disable SIO_UDP_CONNRESET behavior.
+        // http://support.microsoft.com/kb/263823
         //Go switch emulation
         {
             auto condition = net;
@@ -540,6 +572,8 @@ namespace golang::poll
         {
             return gocpp::error(syscall::go_EINVAL);
         }
+        // Poller may want to unregister fd in readiness notification mechanism,
+        // so this must be executed before fd.CloseFunc.
         rec::close(gocpp::recv(fd->pd));
         gocpp::error err = {};
         //Go switch emulation
@@ -550,6 +584,7 @@ namespace golang::poll
             switch(conditionId)
             {
                 case 0:
+                    // The net package uses the CloseFunc variable for testing.
                     err = CloseFunc(fd->Sysfd);
                     break;
                 default:
@@ -574,8 +609,11 @@ namespace golang::poll
         {
             syscall::CancelIoEx(fd->Sysfd, nullptr);
         }
+        // unblock pending reader and writer
         rec::evict(gocpp::recv(fd->pd));
         auto err = rec::decref(gocpp::recv(fd));
+        // Wait until the descriptor is closed. If this was the only
+        // reference, it is already closed.
         runtime_Semacquire(& fd->csema);
         return err;
     }
@@ -618,6 +656,9 @@ namespace golang::poll
                             std::tie(n, err) = syscall::Read(fd->Sysfd, buf);
                             if(fd->kind == kindPipe && err == syscall::ERROR_OPERATION_ABORTED)
                             {
+                                // Close uses CancelIoEx to interrupt concurrent I/O for pipes.
+                                // If the fd is a pipe and the Read was interrupted by CancelIoEx,
+                                // we assume it is interrupted by Close.
                                 err = ErrFileClosing;
                             }
                             break;
@@ -665,6 +706,9 @@ namespace golang::poll
         }
         if(fd->readuint16 == nullptr)
         {
+            // Note: syscall.ReadConsole fails for very large buffers.
+            // The limit is somewhere around (but not exactly) 16384.
+            // Stay well below.
             fd->readuint16 = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 0, 10000);
             fd->readbyte = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 4 * cap(fd->readuint16));
         }
@@ -693,6 +737,7 @@ namespace golang::poll
                     {
                         if(nw > 0)
                         {
+                            // Save half surrogate pair for next time.
                             fd->readuint16 = fd->readuint16.make_slice(0, 1);
                             fd->readuint16[0] = uint16_t(r);
                             break;
@@ -724,6 +769,7 @@ namespace golang::poll
             auto x = src[i];
             if(x == 0x1A)
             {
+                // Ctrl-Z
                 if(i == 0)
                 {
                     fd->readbyteOffset++;
@@ -744,8 +790,11 @@ namespace golang::poll
         {
             if(fd->kind == kindPipe)
             {
+                // Pread does not work with pipes
                 return {0, gocpp::error(syscall::go_ESPIPE)};
             }
+            // Call incref, not readLock, because since pread specifies the
+            // offset it is independent from other reads.
             if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
@@ -963,6 +1012,9 @@ namespace golang::poll
                                 std::tie(n, err) = syscall::Write(fd->Sysfd, b);
                                 if(fd->kind == kindPipe && err == syscall::ERROR_OPERATION_ABORTED)
                                 {
+                                    // Close uses CancelIoEx to interrupt concurrent I/O for pipes.
+                                    // If the fd is a pipe and the Write was interrupted by CancelIoEx,
+                                    // we assume it is interrupted by Close.
                                     err = ErrFileClosing;
                                 }
                                 break;
@@ -1059,8 +1111,11 @@ namespace golang::poll
         {
             if(fd->kind == kindPipe)
             {
+                // Pwrite does not work with pipes
                 return {0, gocpp::error(syscall::go_ESPIPE)};
             }
+            // Call incref, not writeLock, because since pwrite specifies the
+            // offset it is independent from other writes.
             if(auto err = rec::incref(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, err};
@@ -1153,6 +1208,7 @@ namespace golang::poll
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             if(len(buf) == 0)
             {
+                // handle zero-byte payload
                 auto o = & fd->wop;
                 rec::InitBuf(gocpp::recv(o), buf);
                 o->sa = sa;
@@ -1205,6 +1261,7 @@ namespace golang::poll
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             if(len(buf) == 0)
             {
+                // handle zero-byte payload
                 auto o = & fd->wop;
                 rec::InitBuf(gocpp::recv(o), buf);
                 auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
@@ -1255,6 +1312,7 @@ namespace golang::poll
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
             if(len(buf) == 0)
             {
+                // handle zero-byte payload
                 auto o = & fd->wop;
                 rec::InitBuf(gocpp::recv(o), buf);
                 auto [n, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
@@ -1308,6 +1366,7 @@ namespace golang::poll
 
     std::tuple<gocpp::string, struct gocpp::error> rec::acceptOne(golang::poll::FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa, struct operation* o)
     {
+        // Submit accept request.
         o->handle = s;
         o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
         auto [gocpp_id_2, err] = execIO(o, [=](struct operation* o) mutable -> struct gocpp::error
@@ -1319,6 +1378,7 @@ namespace golang::poll
             CloseFunc(s);
             return {"acceptex"_s, err};
         }
+        // Inherit properties of the listening socket.
         err = syscall::Setsockopt(s, syscall::SOL_SOCKET, syscall::SO_UPDATE_ACCEPT_CONTEXT, (unsigned char*)(gocpp::unsafe_pointer(& fd->Sysfd)), int32_t(gocpp::Sizeof<syscall::Handle>()));
         if(err != nullptr)
         {
@@ -1355,6 +1415,11 @@ namespace golang::poll
                 {
                     return {s, rawsa.make_slice(0), uint32_t(o->rsan), ""_s, nullptr};
                 }
+                // Sometimes we see WSAECONNRESET and ERROR_NETNAME_DELETED is
+                // returned here. These happen if connection reset is received
+                // before AcceptEx could complete. These errors relate to new
+                // connection, not to AcceptEx, so ignore broken connection and
+                // try AcceptEx again for more connections.
                 auto [errno, ok] = gocpp::getValue<syscall::Errno>(err);
                 if(! ok)
                 {
@@ -1371,6 +1436,7 @@ namespace golang::poll
                         case 0:
                         case 1:
                             break;
+                        // ignore these and try again
                         default:
                             return {syscall::InvalidHandle, nullptr, 0, errcall, err};
                             break;
@@ -1522,6 +1588,8 @@ namespace golang::poll
                 {
                     return nullptr;
                 }
+                // Use a zero-byte read as a way to get notified when this
+                // socket is readable. h/t https://stackoverflow.com/a/42019668/332798
                 auto o = & fd->rop;
                 rec::InitBuf(gocpp::recv(o), nullptr);
                 if(! fd->IsStream)
@@ -1536,6 +1604,7 @@ namespace golang::poll
                 {
                 }
                 else
+                // expected with a 0-byte peek, ignore.
                 if(err != nullptr)
                 {
                     return err;
@@ -1563,6 +1632,7 @@ namespace golang::poll
             {
                 return nullptr;
             }
+            // TODO(tmm1): find a way to detect socket writability
             return gocpp::error(syscall::go_EWINDOWS);
         }
         catch(gocpp::GoPanic& gp)

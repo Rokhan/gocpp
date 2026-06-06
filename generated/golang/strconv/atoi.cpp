@@ -140,9 +140,11 @@ namespace golang::strconv
             else if(base == 0) { conditionId = 1; }
             switch(conditionId)
             {
+                // valid base; nothing to do
                 case 0:
                     break;
                 case 1:
+                    // Look for octal, hex prefix.
                     base = 10;
                     if(s[0] == '0')
                     {
@@ -245,12 +247,14 @@ namespace golang::strconv
             }
             if(n >= cutoff)
             {
+                // n*base overflows
                 return {maxVal, gocpp::error(rangeError(fnParseUint, s0))};
             }
             n *= uint64_t(base);
             auto n1 = n + uint64_t(d);
             if(n1 < n || n1 > maxVal)
             {
+                // n+d overflows
                 return {maxVal, gocpp::error(rangeError(fnParseUint, s0))};
             }
             n = n1;
@@ -296,6 +300,7 @@ namespace golang::strconv
         {
             return {0, gocpp::error(syntaxError(fnParseInt, s))};
         }
+        // Pick off leading sign.
         auto s0 = s;
         auto neg = false;
         if(s[0] == '+')
@@ -345,6 +350,7 @@ namespace golang::strconv
         auto sLen = len(s);
         if(intSize == 32 && (0 < sLen && sLen < 10) || intSize == 64 && (0 < sLen && sLen < 19))
         {
+            // Fast path for small integers that fit int type.
             auto s0 = s;
             if(s[0] == '-' || s[0] == '+')
             {
@@ -370,6 +376,7 @@ namespace golang::strconv
             }
             return {n, nullptr};
         }
+        // Slow path for invalid, big, or underscored integers.
         auto [i64, err] = ParseInt(s, 10, 0);
         if(auto [nerr, ok] = gocpp::getValue<NumError*>(err); ok)
         {
@@ -383,26 +390,37 @@ namespace golang::strconv
     // Underscore must appear only between digits or between a base prefix and a digit.
     bool underscoreOK(gocpp::string s)
     {
+        // saw tracks the last character (class) we saw:
+        // ^ for beginning of number,
+        // 0 for a digit or base prefix,
+        // _ for an underscore,
+        // ! for none of the above.
         auto saw = '^';
         auto i = 0;
+        // Optional sign.
         if(len(s) >= 1 && (s[0] == '-' || s[0] == '+'))
         {
             s = s.make_slice(1);
         }
+        // Optional base prefix.
         auto hex = false;
         if(len(s) >= 2 && s[0] == '0' && (lower(s[1]) == 'b' || lower(s[1]) == 'o' || lower(s[1]) == 'x'))
         {
             i = 2;
+            // base prefix counts as a digit for "underscore as digit separator"
             saw = '0';
             hex = lower(s[1]) == 'x';
         }
+        // Number proper.
         for(; i < len(s); i++)
         {
+            // Digits are always okay.
             if('0' <= s[i] && s[i] <= '9' || hex && 'a' <= lower(s[i]) && lower(s[i]) <= 'f')
             {
                 saw = '0';
                 continue;
             }
+            // Underscore must follow digit.
             if(s[i] == '_')
             {
                 if(saw != '0')
@@ -412,10 +430,12 @@ namespace golang::strconv
                 saw = '_';
                 continue;
             }
+            // Underscore must also be followed by digit.
             if(saw == '_')
             {
                 return false;
             }
+            // Saw non-digit, non-underscore.
             saw = '!';
         }
         return saw != '_';

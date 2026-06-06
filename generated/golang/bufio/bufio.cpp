@@ -92,6 +92,7 @@ namespace golang::bufio
     // size, it returns the underlying [Reader].
     struct Reader* NewReaderSize(io::Reader rd, int size)
     {
+        // Is it already a Reader?
         auto [b, ok] = gocpp::getValue<Reader*>(rd);
         if(ok && len(b->buf) >= size)
         {
@@ -121,6 +122,9 @@ namespace golang::bufio
     // Calling b.Reset(b) (that is, resetting a [Reader] to itself) does nothing.
     void rec::Reset(golang::bufio::Reader* b, io::Reader r)
     {
+        // If a Reader r is passed to NewReader, NewReader will return r.
+        // Different layers of code may do that, and then later pass r
+        // to Reset. Avoid infinite recursion in that case.
         if(b == r)
         {
             return;
@@ -146,6 +150,7 @@ namespace golang::bufio
     // fill reads a new chunk into the buffer.
     void rec::fill(golang::bufio::Reader* b)
     {
+        // Slide existing data to beginning.
         if(b->r > 0)
         {
             copy(b->buf, b->buf.make_slice(b->r, b->w));
@@ -156,6 +161,7 @@ namespace golang::bufio
         {
             gocpp::panic("bufio: tried to fill full buffer"_s);
         }
+        // Read new data: try a limited number of times.
         for(auto i = maxConsecutiveEmptyReads; i > 0; i--)
         {
             auto [n, err] = rec::Read(gocpp::recv(b->rd), b->buf.make_slice(b->w));
@@ -201,6 +207,7 @@ namespace golang::bufio
         b->lastRuneSize = - 1;
         for(; b->w - b->r < n && b->w - b->r < len(b->buf) && b->err == nullptr; )
         {
+            // b.w-b.r < len(b.buf) => buffer is not full
             rec::fill(gocpp::recv(b));
         }
         if(n > len(b->buf))
@@ -211,6 +218,7 @@ namespace golang::bufio
         gocpp::error err = {};
         if(auto avail = b->w - b->r; avail < n)
         {
+            // not enough data in buffer
             n = avail;
             err = rec::readErr(gocpp::recv(b));
             if(err == nullptr)
@@ -294,6 +302,8 @@ namespace golang::bufio
             }
             if(len(p) >= len(b->buf))
             {
+                // Large read, empty buffer.
+                // Read directly into p to avoid copy.
                 std::tie(n, b->err) = rec::Read(gocpp::recv(b->rd), p);
                 if(n < 0)
                 {
@@ -306,6 +316,8 @@ namespace golang::bufio
                 }
                 return {n, rec::readErr(gocpp::recv(b))};
             }
+            // One read.
+            // Do not use b.fill, which will loop.
             b->r = 0;
             b->w = 0;
             std::tie(n, b->err) = rec::Read(gocpp::recv(b->rd), b->buf);
@@ -319,6 +331,9 @@ namespace golang::bufio
             }
             b->w += n;
         }
+        // copy as much as we can
+        // Note: if the slice panics here, it is probably because
+        // the underlying reader returned a bad count. See issue 49795.
         n = copy(p, b->buf.make_slice(b->r, b->w));
         b->r += n;
         b->lastByte = int(b->buf[b->r - 1]);
@@ -337,6 +352,7 @@ namespace golang::bufio
             {
                 return {0, rec::readErr(gocpp::recv(b))};
             }
+            // buffer is empty
             rec::fill(gocpp::recv(b));
         }
         auto c = b->buf[b->r];
@@ -356,12 +372,14 @@ namespace golang::bufio
         {
             return ErrInvalidUnreadByte;
         }
+        // b.r > 0 || b.w == 0
         if(b->r > 0)
         {
             b->r--;
         }
         else
         {
+            // b.r == 0 && b.w == 0
             b->w = 1;
         }
         b->buf[b->r] = (unsigned char)(b->lastByte);
@@ -380,6 +398,7 @@ namespace golang::bufio
         struct gocpp::error err;
         for(; b->r + utf8::UTFMax > b->w && ! utf8::FullRune(b->buf.make_slice(b->r, b->w)) && b->err == nullptr && b->w - b->r < len(b->buf); )
         {
+            // b.w-b.r < len(buf) => buffer is not full
             rec::fill(gocpp::recv(b));
         }
         b->lastRuneSize = - 1;
@@ -434,9 +453,11 @@ namespace golang::bufio
     {
         gocpp::slice<unsigned char> line;
         struct gocpp::error err;
+        // search start index
         auto s = 0;
         for(; ; )
         {
+            // Search buffer.
             if(auto i = bytes::IndexByte(b->buf.make_slice(b->r + s, b->w), delim); i >= 0)
             {
                 i += s;
@@ -444,6 +465,7 @@ namespace golang::bufio
                 b->r += i + 1;
                 break;
             }
+            // Pending error?
             if(b->err != nullptr)
             {
                 line = b->buf.make_slice(b->r, b->w);
@@ -451,6 +473,7 @@ namespace golang::bufio
                 err = rec::readErr(gocpp::recv(b));
                 break;
             }
+            // Buffer full?
             if(rec::Buffered(gocpp::recv(b)) >= len(b->buf))
             {
                 b->r = b->w;
@@ -458,9 +481,12 @@ namespace golang::bufio
                 err = ErrBufferFull;
                 break;
             }
+            // do not rescan area we scanned before
             s = b->w - b->r;
+            // buffer is not full
             rec::fill(gocpp::recv(b));
         }
+        // Handle last byte, if any.
         if(auto i = len(line) - 1; i >= 0)
         {
             b->lastByte = int(line[i]);
@@ -493,10 +519,14 @@ namespace golang::bufio
         std::tie(line, err) = rec::ReadSlice(gocpp::recv(b), '\n');
         if(err == ErrBufferFull)
         {
+            // Handle the case where "\r\n" straddles the buffer.
             if(len(line) > 0 && line[len(line) - 1] == '\r')
             {
+                // Put the '\r' back on buf and drop it from line.
+                // Let the next call to ReadLine check for "\r\n".
                 if(b->r == 0)
                 {
+                    // should be unreachable
                     gocpp::panic("bufio: tried to rewind past start of buffer"_s);
                 }
                 b->r--;
@@ -539,19 +569,23 @@ namespace golang::bufio
         int totalLen;
         struct gocpp::error err;
         gocpp::slice<unsigned char> frag = {};
+        // Use ReadSlice to look for delim, accumulating full buffers.
         for(; ; )
         {
             gocpp::error e = {};
             std::tie(frag, e) = rec::ReadSlice(gocpp::recv(b), delim);
             if(e == nullptr)
             {
+                // got final fragment
                 break;
             }
             if(e != ErrBufferFull)
             {
+                // unexpected error
                 err = e;
                 break;
             }
+            // Make a copy of the buffer.
             auto buf = bytes::Clone(frag);
             fullBuffers = append(fullBuffers, buf);
             totalLen += len(buf);
@@ -570,8 +604,10 @@ namespace golang::bufio
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::ReadBytes(golang::bufio::Reader* b, unsigned char delim)
     {
         auto [full, frag, n, err] = rec::collectFragments(gocpp::recv(b), delim);
+        // Allocate new buffer to hold the full pieces and the fragment.
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
         n = 0;
+        // Copy full pieces and fragment in.
         for(auto [i, gocpp_ignored] : full)
         {
             n += copy(buf.make_slice(n), full[i]);
@@ -593,6 +629,7 @@ namespace golang::bufio
         // Allocate new buffer to hold the full pieces and the fragment.
         strings::Builder buf = {};
         rec::Grow(gocpp::recv(buf), n);
+        // Copy full pieces and fragment in.
         for(auto [gocpp_ignored, fb] : full)
         {
             rec::Write(gocpp::recv(buf), fb);
@@ -633,16 +670,19 @@ namespace golang::bufio
         }
         if(b->w - b->r < len(b->buf))
         {
+            // buffer not full
             rec::fill(gocpp::recv(b));
         }
         for(; b->r < b->w; )
         {
+            // b.r < b.w => buffer is not empty
             auto [m, err] = rec::writeBuf(gocpp::recv(b), w);
             n += m;
             if(err != nullptr)
             {
                 return {n, err};
             }
+            // buffer is empty
             rec::fill(gocpp::recv(b));
         }
         if(b->err == io::go_EOF)
@@ -714,6 +754,7 @@ namespace golang::bufio
     // size, it returns the underlying [Writer].
     struct Writer* NewWriterSize(io::Writer w, int size)
     {
+        // Is it already a Writer?
         auto [b, ok] = gocpp::getValue<Writer*>(w);
         if(ok && len(b->buf) >= size)
         {
@@ -750,6 +791,9 @@ namespace golang::bufio
     // Calling w.Reset(w) (that is, resetting a [Writer] to itself) does nothing.
     void rec::Reset(golang::bufio::Writer* b, io::Writer w)
     {
+        // If a Writer w is passed to NewWriter, NewWriter will return w.
+        // Different layers of code may do that, and then later pass w
+        // to Reset. Avoid infinite recursion in that case.
         if(b == w)
         {
             return;
@@ -827,6 +871,8 @@ namespace golang::bufio
             int n = {};
             if(rec::Buffered(gocpp::recv(b)) == 0)
             {
+                // Large write, empty buffer.
+                // Write directly from p to avoid copy.
                 std::tie(n, b->err) = rec::Write(gocpp::recv(b->wr), p);
             }
             else
@@ -870,6 +916,7 @@ namespace golang::bufio
     {
         int size;
         struct gocpp::error err;
+        // Compare as uint32 to correctly handle negative runes.
         if(uint32_t(r) < utf8::RuneSelf)
         {
             err = rec::WriteByte(gocpp::recv(b), (unsigned char)(r));
@@ -893,6 +940,7 @@ namespace golang::bufio
             n = rec::Available(gocpp::recv(b));
             if(n < utf8::UTFMax)
             {
+                // Can only happen if buffer is silly small.
                 return rec::WriteString(gocpp::recv(b), gocpp::string(r));
             }
         }
@@ -915,10 +963,14 @@ namespace golang::bufio
             int n = {};
             if(rec::Buffered(gocpp::recv(b)) == 0 && sw == nullptr && tryStringWriter)
             {
+                // Check at most once whether b.wr is a StringWriter.
                 std::tie(sw, tryStringWriter) = gocpp::getValue<io::StringWriter>(b->wr);
             }
             if(rec::Buffered(gocpp::recv(b)) == 0 && tryStringWriter)
             {
+                // Large write, empty buffer, and the underlying writer supports
+                // WriteString: forward the write to the underlying StringWriter.
+                // This avoids an extra copy.
                 std::tie(n, b->err) = rec::WriteString(gocpp::recv(sw), s);
             }
             else
@@ -993,6 +1045,7 @@ namespace golang::bufio
         }
         if(err == io::go_EOF)
         {
+            // If we filled the buffer exactly, flush preemptively.
             if(rec::Available(gocpp::recv(b)) == 0)
             {
                 err = rec::Flush(gocpp::recv(b));

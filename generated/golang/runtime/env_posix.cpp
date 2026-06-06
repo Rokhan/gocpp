@@ -46,6 +46,7 @@ namespace golang::runtime
     {
         if(GOOS == "windows"_s)
         {
+            // case insensitive
             for(auto i = 0; i < len(a); i++)
             {
                 auto [ca, cb] = std::tuple{a[i], b[i]};

@@ -165,6 +165,7 @@ namespace golang::runtime
     struct hchan* makechan(golang::runtime::chantype* t, int size)
     {
         auto elem = t->Elem;
+        // compiler checks this but be safe.
         if(elem->Size_ >= (1 << 16))
         {
             go_throw("makechan: invalid channel element type"_s);
@@ -191,14 +192,19 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
+                    // Queue or element size is zero.
                     c = (hchan*)(mallocgc(hchanSize, nullptr, true));
+                    // Race detector uses this location for synchronization.
                     c->buf = rec::raceaddr(gocpp::recv(c));
                     break;
                 case 1:
+                    // Elements do not contain pointers.
+                    // Allocate hchan and buf in one call.
                     c = (hchan*)(mallocgc(hchanSize + mem, nullptr, true));
                     c->buf = add(gocpp::unsafe_pointer(c), hchanSize);
                     break;
                 default:
+                    // Elements contain pointers.
                     c = new(hchan);
                     c->buf = mallocgc(mem, elem, true);
                     break;
@@ -227,10 +233,14 @@ namespace golang::runtime
     // by the time the calling function receives the return value.
     bool full(struct hchan* c)
     {
+        // c.dataqsiz is immutable (never written after the channel is created)
+        // so it is safe to read at any time during channel operation.
         if(c->dataqsiz == 0)
         {
+            // Assumes that a pointer read is relaxed-atomic.
             return c->recvq.first == nullptr;
         }
+        // Assumes that a uint read is relaxed-atomic.
         return c->qcount == c->dataqsiz;
     }
 
@@ -273,6 +283,20 @@ namespace golang::runtime
         {
             racereadpc(rec::raceaddr(gocpp::recv(c)), callerpc, abi::FuncPCABIInternal(chansend));
         }
+        // Fast path: check for failed non-blocking operation without acquiring the lock.
+        // After observing that the channel is not closed, we observe that the channel is
+        // not ready for sending. Each of these observations is a single word-sized read
+        // (first c.closed and second full()).
+        // Because a closed channel cannot transition from 'ready for sending' to
+        // 'not ready for sending', even if the channel is closed between the two observations,
+        // they imply a moment between the two when the channel was both not yet closed
+        // and not ready for sending. We behave as if we observed the channel at that moment,
+        // and report that the send cannot proceed.
+        // It is okay if the reads are reordered here: if we observe that the channel is not
+        // ready for sending and then observe that it is not closed, that implies that the
+        // channel wasn't closed during the first observation. However, nothing here
+        // guarantees forward progress. We rely on the side effects of lock release in
+        // chanrecv() and closechan() to update this thread's view of c.closed and full().
         if(! block && c->closed == 0 && full(c))
         {
             return false;
@@ -290,6 +314,8 @@ namespace golang::runtime
         }
         if(auto sg = rec::dequeue(gocpp::recv(c->recvq)); sg != nullptr)
         {
+            // Found a waiting receiver. We pass the value we want to send
+            // directly to the receiver, bypassing the channel buffer (if any).
             send(c, sg, ep, [=]() mutable -> void
             {
                 unlock(& c->lock);
@@ -298,6 +324,7 @@ namespace golang::runtime
         }
         if(c->qcount < c->dataqsiz)
         {
+            // Space is available in the channel buffer. Enqueue the element to send.
             auto qp = chanbuf(c, c->sendx);
             if(raceenabled)
             {
@@ -318,6 +345,7 @@ namespace golang::runtime
             unlock(& c->lock);
             return false;
         }
+        // Block on the channel. Some receiver will complete our operation for us.
         auto gp = getg();
         auto mysg = acquireSudog();
         mysg->releasetime = 0;
@@ -325,6 +353,8 @@ namespace golang::runtime
         {
             mysg->releasetime = - 1;
         }
+        // No stack splits between assigning elem and enqueuing mysg
+        // on gp.waiting where copystack can find it.
         mysg->elem = ep;
         mysg->waitlink = nullptr;
         mysg->g = gp;
@@ -333,9 +363,18 @@ namespace golang::runtime
         gp->waiting = mysg;
         gp->param = nullptr;
         rec::enqueue(gocpp::recv(c->sendq), mysg);
+        // Signal to anyone trying to shrink our stack that we're about
+        // to park on a channel. The window between when this G's status
+        // changes and when we set gp.activeStackChans is not safe for
+        // stack shrinking.
         rec::Store(gocpp::recv(gp->parkingOnChan), true);
         gopark(chanparkcommit, gocpp::unsafe_pointer(& c->lock), waitReasonChanSend, traceBlockChanSend, 2);
+        // Ensure the value being sent is kept alive until the
+        // receiver copies it out. The sudog has a pointer to the
+        // stack object, but sudogs aren't considered as roots of the
+        // stack tracer.
         KeepAlive(ep);
+        // someone woke us up.
         if(mysg != gp->waiting)
         {
             go_throw("G waiting list is corrupted"_s);
@@ -377,6 +416,9 @@ namespace golang::runtime
             }
             else
             {
+                // Pretend we go through the buffer, even though
+                // we copy directly. Note that we need to increment
+                // the head/tail locations only when raceenabled.
                 racenotify(c, c->recvx, nullptr);
                 racenotify(c, c->recvx, sg);
                 c->recvx++;
@@ -384,6 +426,7 @@ namespace golang::runtime
                 {
                     c->recvx = 0;
                 }
+                // c.sendx = (c.sendx+1) % c.dataqsiz
                 c->sendx = c->recvx;
             }
         }
@@ -405,13 +448,22 @@ namespace golang::runtime
 
     void sendDirect(golang::runtime::_type* t, struct sudog* sg, gocpp::unsafe_pointer src)
     {
+        // src is on our stack, dst is a slot on another stack.
+        // Once we read sg.elem out of sg, it will no longer
+        // be updated if the destination's stack gets copied (shrunk).
+        // So make sure that no preemption points can happen between read & use.
         auto dst = sg->elem;
         typeBitsBulkBarrier(t, uintptr_t(dst), uintptr_t(src), t->Size_);
+        // No need for cgo write barrier checks because dst is always
+        // Go memory.
         memmove(dst, src, t->Size_);
     }
 
     void recvDirect(golang::runtime::_type* t, struct sudog* sg, gocpp::unsafe_pointer dst)
     {
+        // dst is on our stack or the heap, src is on another stack.
+        // The channel is locked, so src will not move during this
+        // operation.
         auto src = sg->elem;
         typeBitsBulkBarrier(t, uintptr_t(dst), uintptr_t(src), t->Size_);
         memmove(dst, src, t->Size_);
@@ -437,6 +489,7 @@ namespace golang::runtime
         }
         c->closed = 1;
         gList glist = {};
+        // release all readers
         for(; ; )
         {
             auto sg = rec::dequeue(gocpp::recv(c->recvq));
@@ -462,6 +515,7 @@ namespace golang::runtime
             }
             rec::push(gocpp::recv(glist), gp);
         }
+        // release all writers (they will panic)
         for(; ; )
         {
             auto sg = rec::dequeue(gocpp::recv(c->sendq));
@@ -484,6 +538,7 @@ namespace golang::runtime
             rec::push(gocpp::recv(glist), gp);
         }
         unlock(& c->lock);
+        // Ready all Gs now that we've dropped the channel lock.
         for(; ! rec::empty(gocpp::recv(glist)); )
         {
             auto gp = rec::pop(gocpp::recv(glist));
@@ -496,6 +551,7 @@ namespace golang::runtime
     // empty).  It uses a single atomic read of mutable state.
     bool empty(struct hchan* c)
     {
+        // c.dataqsiz is immutable.
         if(c->dataqsiz == 0)
         {
             return atomic::Loadp(gocpp::unsafe_pointer(& c->sendq.first)) == nullptr;
@@ -529,6 +585,8 @@ namespace golang::runtime
     {
         bool selected;
         bool received;
+        // raceenabled: don't need to check ep, as it is always on the stack
+        // or is new memory allocated by reflect.
         if(debugChan)
         {
             print("chanrecv: chan="_s, c, "\n"_s);
@@ -542,14 +600,31 @@ namespace golang::runtime
             gopark(nullptr, nullptr, waitReasonChanReceiveNilChan, traceBlockForever, 2);
             go_throw("unreachable"_s);
         }
+        // Fast path: check for failed non-blocking operation without acquiring the lock.
         if(! block && empty(c))
         {
+            // After observing that the channel is not ready for receiving, we observe whether the
+            // channel is closed.
+            // Reordering of these checks could lead to incorrect behavior when racing with a close.
+            // For example, if the channel was open and not empty, was closed, and then drained,
+            // reordered reads could incorrectly indicate "open and empty". To prevent reordering,
+            // we use atomic loads for both checks, and rely on emptying and closing to happen in
+            // separate critical sections under the same lock.  This assumption fails when closing
+            // an unbuffered channel with a blocked send, but that is an error condition anyway.
             if(atomic::Load(& c->closed) == 0)
             {
+                // Because a channel cannot be reopened, the later observation of the channel
+                // being not closed implies that it was also not closed at the moment of the
+                // first observation. We behave as if we observed the channel at that moment
+                // and report that the receive cannot proceed.
                 return {selected, received};
             }
+            // The channel is irreversibly closed. Re-check whether the channel has any pending data
+            // to receive, which could have arrived between the empty and closed checks above.
+            // Sequential consistency is also required here, when racing with such a send.
             if(empty(c))
             {
+                // The channel is irreversibly closed and empty.
                 if(raceenabled)
                 {
                     raceacquire(rec::raceaddr(gocpp::recv(c)));
@@ -584,9 +659,16 @@ namespace golang::runtime
             }
         }
         else
+        // The channel has been closed, but the channel's buffer have data.
+        // The channel has been closed, but the channel's buffer have data.
         {
+            // Just found waiting sender with not closed.
             if(auto sg = rec::dequeue(gocpp::recv(c->sendq)); sg != nullptr)
             {
+                // Found a waiting sender. If buffer is size 0, receive value
+                // directly from sender. Otherwise, receive from head of queue
+                // and add sender's value to the tail of the queue (both map to
+                // the same buffer slot because the queue is full).
                 recv(c, sg, ep, [=]() mutable -> void
                 {
                     unlock(& c->lock);
@@ -596,6 +678,7 @@ namespace golang::runtime
         }
         if(c->qcount > 0)
         {
+            // Receive directly from queue
             auto qp = chanbuf(c, c->recvx);
             if(raceenabled)
             {
@@ -620,6 +703,7 @@ namespace golang::runtime
             unlock(& c->lock);
             return {false, false};
         }
+        // no sender available: block on this channel.
         auto gp = getg();
         auto mysg = acquireSudog();
         mysg->releasetime = 0;
@@ -627,6 +711,8 @@ namespace golang::runtime
         {
             mysg->releasetime = - 1;
         }
+        // No stack splits between assigning elem and enqueuing mysg
+        // on gp.waiting where copystack can find it.
         mysg->elem = ep;
         mysg->waitlink = nullptr;
         gp->waiting = mysg;
@@ -635,8 +721,13 @@ namespace golang::runtime
         mysg->c = c;
         gp->param = nullptr;
         rec::enqueue(gocpp::recv(c->recvq), mysg);
+        // Signal to anyone trying to shrink our stack that we're about
+        // to park on a channel. The window between when this G's status
+        // changes and when we set gp.activeStackChans is not safe for
+        // stack shrinking.
         rec::Store(gocpp::recv(gp->parkingOnChan), true);
         gopark(chanparkcommit, gocpp::unsafe_pointer(& c->lock), waitReasonChanReceive, traceBlockChanRecv, 2);
+        // someone woke us up
         if(mysg != gp->waiting)
         {
             go_throw("G waiting list is corrupted"_s);
@@ -678,27 +769,35 @@ namespace golang::runtime
             }
             if(ep != nullptr)
             {
+                // copy data from sender
                 recvDirect(c->elemtype, sg, ep);
             }
         }
         else
         {
+            // Queue is full. Take the item at the
+            // head of the queue. Make the sender enqueue
+            // its item at the tail of the queue. Since the
+            // queue is full, those are both the same slot.
             auto qp = chanbuf(c, c->recvx);
             if(raceenabled)
             {
                 racenotify(c, c->recvx, nullptr);
                 racenotify(c, c->recvx, sg);
             }
+            // copy data from queue to receiver
             if(ep != nullptr)
             {
                 typedmemmove(c->elemtype, ep, qp);
             }
+            // copy data from sender to queue
             typedmemmove(c->elemtype, qp, sg->elem);
             c->recvx++;
             if(c->recvx == c->dataqsiz)
             {
                 c->recvx = 0;
             }
+            // c.sendx = (c.sendx+1) % c.dataqsiz
             c->sendx = c->recvx;
         }
         sg->elem = nullptr;
@@ -715,8 +814,21 @@ namespace golang::runtime
 
     bool chanparkcommit(struct g* gp, gocpp::unsafe_pointer chanLock)
     {
+        // There are unlocked sudogs that point into gp's stack. Stack
+        // copying must lock the channels of those sudogs.
+        // Set activeStackChans here instead of before we try parking
+        // because we could self-deadlock in stack growth on the
+        // channel lock.
         gp->activeStackChans = true;
+        // Mark that it's safe for stack shrinking to occur now,
+        // because any thread acquiring this G's stack for shrinking
+        // is guaranteed to observe activeStackChans after this store.
         rec::Store(gocpp::recv(gp->parkingOnChan), false);
+        // Make sure we unlock after setting activeStackChans and
+        // unsetting parkingOnChan. The moment we unlock chanLock
+        // we risk gp getting readied by a channel operation and
+        // so gp could continue running before everything before
+        // the unlock is visible (even to gp itself).
         unlock((mutex*)(chanLock));
         return true;
     }
@@ -852,8 +964,17 @@ namespace golang::runtime
             {
                 y->prev = nullptr;
                 q->first = y;
+                // mark as removed (see dequeueSudoG)
                 sgp->next = nullptr;
             }
+            // if a goroutine was put on this queue because of a
+            // select, there is a small window between the goroutine
+            // being woken up by a different case and it grabbing the
+            // channel locks. Once it has the lock
+            // it removes itself from the queue, so we won't see it after that.
+            // We use a flag in the G struct to tell us when someone
+            // else has won the race to signal this goroutine but the goroutine
+            // hasn't removed itself from the queue yet.
             if(sgp->isSelect && ! rec::CompareAndSwap(gocpp::recv(sgp->g->selectDone), 0, 1))
             {
                 continue;
@@ -864,6 +985,11 @@ namespace golang::runtime
 
     gocpp::unsafe_pointer rec::raceaddr(golang::runtime::hchan* c)
     {
+        // Treat read-like and write-like operations on the channel to
+        // happen at this address. Avoid using the address of qcount
+        // or dataqsiz, because the len() and cap() builtins read
+        // those addresses, and we don't want them racing with
+        // operations like close().
         return gocpp::unsafe_pointer(& c->buf);
     }
 
@@ -880,7 +1006,20 @@ namespace golang::runtime
     // This function handles the special case of c.elemsize==0.
     void racenotify(struct hchan* c, unsigned int idx, struct sudog* sg)
     {
+        // We could have passed the unsafe.Pointer corresponding to entry idx
+        // instead of idx itself.  However, in a future version of this function,
+        // we can use idx to better handle the case of elemsize==0.
+        // A future improvement to the detector is to call TSan with c and idx:
+        // this way, Go will continue to not allocating buffer entries for channels
+        // of elemsize==0, yet the race detector can be made to handle multiple
+        // sync objects underneath the hood (one sync object per idx)
         auto qp = chanbuf(c, idx);
+        // When elemsize==0, we don't allocate a full buffer for the channel.
+        // Instead of individual buffer entries, the race detector uses the
+        // c.buf as the only buffer entry.  This simplification prevents us from
+        // following the memory model's happens-before rules (rules that are
+        // implemented in racereleaseacquire).  Instead, we accumulate happens-before
+        // information in the synchronization object associated with c.buf.
         if(c->elemsize == 0)
         {
             if(sg == nullptr)

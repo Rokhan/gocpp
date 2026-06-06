@@ -129,6 +129,7 @@ namespace golang::runtime
     //go:nosplit
     void rec::record(golang::runtime::timeHistogram* h, int64_t duration)
     {
+        // If the duration is negative, capture that in underflow.
         if(duration < 0)
         {
             rec::Add(gocpp::recv(h->underflow), 1);
@@ -137,7 +138,6 @@ namespace golang::runtime
         // bucketBit is the target bit for the bucket which is usually the
         // highest 1 bit, but if we're less than the minimum, is the highest
         // 1 bit of the minimum (which will be zero in the duration).
-        //
         // bucket is the bucket index, which is the bucketBit minus the
         // highest bit of the minimum, plus one to leave room for the catch-all
         // bucket for samples lower than the minimum.
@@ -146,6 +146,7 @@ namespace golang::runtime
         if(auto l = sys::Len64(uint64_t(duration)); l < timeHistMinBucketBits)
         {
             bucketBit = timeHistMinBucketBits;
+            // bucketBit - timeHistMinBucketBits
             bucket = 0;
         }
         else
@@ -153,11 +154,14 @@ namespace golang::runtime
             bucketBit = (unsigned int)(l);
             bucket = bucketBit - timeHistMinBucketBits + 1;
         }
+        // If the bucket we computed is greater than the number of buckets,
+        // count that in overflow.
         if(bucket >= timeHistNumBuckets)
         {
             rec::Add(gocpp::recv(h->overflow), 1);
             return;
         }
+        // The sub-bucket index is just next timeHistSubBucketBits after the bucketBit.
         auto subBucket = (unsigned int)(duration >> (bucketBit - 1 - timeHistSubBucketBits)) % timeHistNumSubBuckets;
         rec::Add(gocpp::recv(h->counts[bucket * timeHistNumSubBuckets + subBucket]), 1);
     }
@@ -166,6 +170,9 @@ namespace golang::runtime
     void rec::write(golang::runtime::timeHistogram* h, struct metricValue* out)
     {
         auto hist = rec::float64HistOrInit(gocpp::recv(out), timeHistBuckets);
+        // The bottom-most bucket, containing negative values, is tracked
+        // separately as underflow, so fill that in manually and then iterate
+        // over the rest.
         hist->counts[0] = rec::Load(gocpp::recv(h->underflow));
         for(auto [i, gocpp_ignored] : h->counts)
         {
@@ -192,22 +199,38 @@ namespace golang::runtime
     gocpp::slice<double> timeHistogramMetricsBuckets()
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<double>>(), timeHistTotalBuckets + 1);
+        // Underflow bucket.
         b[0] = float64NegInf();
         for(auto j = 0; j < timeHistNumSubBuckets; j++)
         {
+            // No bucket bit for the first few buckets. Just sub-bucket bits after the
+            // min bucket bit.
             auto bucketNanos = uint64_t(j) << (timeHistMinBucketBits - 1 - timeHistSubBucketBits);
+            // Convert nanoseconds to seconds via a division.
+            // These values will all be exactly representable by a float64.
             b[j + 1] = double(bucketNanos) / 1e9;
         }
+        // Generate the rest of the buckets. It's easier to reason
+        // about if we cut out the 0'th bucket.
         for(auto i = timeHistMinBucketBits; i < timeHistMaxBucketBits; i++)
         {
             for(auto j = 0; j < timeHistNumSubBuckets; j++)
             {
+                // Set the bucket bit.
                 auto bucketNanos = uint64_t(1) << (i - 1);
+                // Set the sub-bucket bits.
                 bucketNanos |= uint64_t(j) << (i - 1 - timeHistSubBucketBits);
+                // The index for this bucket is going to be the (i+1)'th bucket
+                // (note that we're starting from zero, but handled the first bucket
+                // earlier, so we need to compensate), and the j'th sub bucket.
+                // Add 1 because we left space for -Inf.
                 auto bucketIndex = (i - timeHistMinBucketBits + 1) * timeHistNumSubBuckets + j + 1;
+                // Convert nanoseconds to seconds via a division.
+                // These values will all be exactly representable by a float64.
                 b[bucketIndex] = double(bucketNanos) / 1e9;
             }
         }
+        // Overflow bucket.
         b[len(b) - 2] = double(uint64_t(1) << (timeHistMaxBucketBits - 1)) / 1e9;
         b[len(b) - 1] = float64Inf();
         return b;

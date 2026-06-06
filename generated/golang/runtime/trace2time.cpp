@@ -103,8 +103,11 @@ namespace golang::runtime
     {
         if(osHasLowResClock)
         {
+            // We're using cputicks as our clock, so we need a real estimate.
             return uint64_t(ticksPerSecond() / traceTimeDiv);
         }
+        // Our clock is nanotime, so it's just the constant time division.
+        // (trace clock units / nanoseconds) * (1e9 nanoseconds / 1 second)
         return uint64_t(1.0 / double(traceTimeDiv) * 1e9);
     }
 
@@ -114,9 +117,12 @@ namespace golang::runtime
     void traceFrequency(uintptr_t gen)
     {
         auto w = unsafeTraceWriter(gen, nullptr);
+        // Ensure we have a place to write to.
         std::tie(w, std::ignore) = rec::ensure(gocpp::recv(w), 1 + traceBytesPerNumber);
+        // Write out the string.
         rec::byte(gocpp::recv(w), (unsigned char)(traceEvFrequency));
         rec::varint(gocpp::recv(w), traceClockUnitsPerSecond());
+        // Immediately flush the buffer.
         systemstack([=]() mutable -> void
         {
             lock(& trace.lock);

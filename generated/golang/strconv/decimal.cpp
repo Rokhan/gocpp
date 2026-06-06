@@ -84,6 +84,7 @@ namespace golang::strconv
                     return "0"_s;
                     break;
                 case 1:
+                    // zeros fill space between decimal point and digits
                     buf[w] = '0';
                     w++;
                     buf[w] = '.';
@@ -92,12 +93,14 @@ namespace golang::strconv
                     w += copy(buf.make_slice(w), a->d.make_slice(0, a->nd));
                     break;
                 case 2:
+                    // decimal point in middle of digits
                     w += copy(buf.make_slice(w), a->d.make_slice(0, a->dp));
                     buf[w] = '.';
                     w++;
                     w += copy(buf.make_slice(w), a->d.make_slice(a->dp, a->nd));
                     break;
                 default:
+                    // zeros fill space between digits and decimal point
                     w += copy(buf.make_slice(w), a->d.make_slice(0, a->nd));
                     w += digitZero(buf.make_slice(w, w + a->dp - a->nd));
                     break;
@@ -134,6 +137,7 @@ namespace golang::strconv
     void rec::Assign(golang::strconv::decimal* a, uint64_t v)
     {
         gocpp::array<unsigned char, 24> buf = {};
+        // Write reversed decimal in buf.
         auto n = 0;
         for(; v > 0; )
         {
@@ -143,6 +147,7 @@ namespace golang::strconv
             n++;
             v = v1;
         }
+        // Reverse again to produce forward decimal in a.d.
         a->nd = 0;
         for(n--; n >= 0; n--)
         {
@@ -158,7 +163,9 @@ namespace golang::strconv
     // Binary shift right (/ 2) by k bits.  k <= maxShift to avoid overflow.
     void rightShift(struct decimal* a, unsigned int k)
     {
+        // read pointer
         auto r = 0;
+        // write pointer
         auto w = 0;
         // Pick up enough leading digits to cover first shift.
         unsigned int n = {};
@@ -168,6 +175,7 @@ namespace golang::strconv
             {
                 if(n == 0)
                 {
+                    // a == 0; shouldn't get here, but handle anyway.
                     a->nd = 0;
                     return;
                 }
@@ -183,6 +191,7 @@ namespace golang::strconv
         }
         a->dp -= r - 1;
         unsigned int mask = (1 << k) - 1;
+        // Pick up a digit, put down a digit.
         for(; r < a->nd; r++)
         {
             auto c = (unsigned int)(a->d[r]);
@@ -192,6 +201,7 @@ namespace golang::strconv
             w++;
             n = n * 10 + c - '0';
         }
+        // Put down extra digits.
         for(; n > 0; )
         {
             auto dig = n >> k;
@@ -270,7 +280,9 @@ namespace golang::strconv
         {
             delta--;
         }
+        // read index
         auto r = a->nd;
+        // write index
         auto w = a->nd + delta;
         // Pick up a digit, put down a digit.
         unsigned int n = {};
@@ -291,6 +303,7 @@ namespace golang::strconv
             }
             n = quo;
         }
+        // Put down extra digits.
         for(; n > 0; )
         {
             auto quo = n / 10;
@@ -329,6 +342,7 @@ namespace golang::strconv
             {
                 case 0:
                     break;
+                // nothing to do: a == 0
                 case 1:
                     for(; k > maxShift; )
                     {
@@ -358,12 +372,15 @@ namespace golang::strconv
         }
         if(a->d[nd] == '5' && nd + 1 == a->nd)
         {
+            // exactly halfway - round to even
+            // if we truncated, a little higher than what's recorded - always round up
             if(a->trunc)
             {
                 return true;
             }
             return nd > 0 && (a->d[nd - 1] - '0') % 2 != 0;
         }
+        // not halfway - digit tells all
         return a->d[nd] >= '5';
     }
 
@@ -405,16 +422,20 @@ namespace golang::strconv
         {
             return;
         }
+        // round up
         for(auto i = nd - 1; i >= 0; i--)
         {
             auto c = a->d[i];
             if(c < '9')
             {
+                // can stop after this digit
                 a->d[i]++;
                 a->nd = i + 1;
                 return;
             }
         }
+        // Number is all 9s.
+        // Change to single 1 with adjusted decimal point.
         a->d[0] = '1';
         a->nd = 1;
         a->dp++;

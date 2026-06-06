@@ -31,6 +31,7 @@ namespace golang::main
         double f;
         std::tie(f, ok) = gocpp::getValue<double>(i);
         mocklib::Println(f, ok);
+        // panic
         f = gocpp::getValue<double>(i);
         mocklib::Println(f);
     }

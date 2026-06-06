@@ -233,6 +233,8 @@ namespace golang::runtime
     //go:nowritebarrier
     void rec::setRecord(golang::runtime::stackObject* obj, struct stackObjectRecord* r)
     {
+        // Types of stack objects are always in read-only memory, not the heap.
+        // So not using a write barrier is ok.
         *(uintptr_t*)(gocpp::unsafe_pointer(& obj->r)) = uintptr_t(gocpp::unsafe_pointer(r));
     }
 
@@ -307,6 +309,7 @@ namespace golang::runtime
         auto buf = *head;
         if(buf == nullptr)
         {
+            // Initial setup.
             buf = (stackWorkBuf*)(gocpp::unsafe_pointer(getempty()));
             buf->stackWorkBufHdr.workbufhdr.nobj = 0;
             buf->stackWorkBufHdr.next = nullptr;
@@ -346,25 +349,30 @@ namespace golang::runtime
             auto buf = *head;
             if(buf == nullptr)
             {
+                // Never had any data.
                 continue;
             }
             if(buf->stackWorkBufHdr.workbufhdr.nobj == 0)
             {
                 if(s->freeBuf != nullptr)
                 {
+                    // Free old freeBuf.
                     putempty((workbuf*)(gocpp::unsafe_pointer(s->freeBuf)));
                 }
+                // Move buf to the freeBuf.
                 s->freeBuf = buf;
                 buf = buf->stackWorkBufHdr.next;
                 *head = buf;
                 if(buf == nullptr)
                 {
+                    // No more data in this list.
                     continue;
                 }
             }
             buf->stackWorkBufHdr.workbufhdr.nobj--;
             return {buf->obj[buf->stackWorkBufHdr.workbufhdr.nobj], head == & s->cbuf};
         }
+        // No more data in either list.
         if(s->freeBuf != nullptr)
         {
             putempty((workbuf*)(gocpp::unsafe_pointer(s->freeBuf)));
@@ -379,6 +387,7 @@ namespace golang::runtime
         auto x = s->tail;
         if(x == nullptr)
         {
+            // initial setup
             x = (stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
             x->stackObjectBufHdr.next = nullptr;
             s->head = x;
@@ -390,6 +399,7 @@ namespace golang::runtime
         }
         if(x->stackObjectBufHdr.workbufhdr.nobj == len(x->obj))
         {
+            // full buffer - allocate a new buffer, add to end of linked list
             auto y = (stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
             y->stackObjectBufHdr.next = nullptr;
             x->stackObjectBufHdr.next = y;
@@ -401,6 +411,7 @@ namespace golang::runtime
         obj->off = uint32_t(addr - s->stack.lo);
         obj->size = uint32_t(r->size);
         rec::setRecord(gocpp::recv(obj), r);
+        // obj.left and obj.right will be initialized by buildIndex before use.
         s->nobjs++;
     }
 

@@ -128,6 +128,8 @@ namespace golang::abi
         {
             return false;
         }
+        // We need an atomic load instruction to make the cache multithreaded-safe.
+        // (AtomicLoadPtr needs to be implemented in cmd/compile/internal/ssa/_gen/ARCH.rules.)
         //Go switch emulation
         {
             auto condition = goarch;

@@ -95,6 +95,8 @@ namespace golang::os
         {
             return syscall::Getwd();
         }
+        // Clumsy but widespread kludge:
+        // if $PWD is set and matches ".", use it.
         fs::FileInfo dot;
         std::tie(dot, err) = statNolog("."_s);
         if(err != nullptr)
@@ -110,6 +112,8 @@ namespace golang::os
                 return {dir, nullptr};
             }
         }
+        // If the operating system provides a Getwd call, use it.
+        // Otherwise, we're trying to find our way back to ".".
         if(syscall::ImplementsGetwd)
         {
             gocpp::string s = {};
@@ -124,6 +128,7 @@ namespace golang::os
             }
             return {s, NewSyscallError("getwd"_s, e)};
         }
+        // Apply same kludge but to cached dir instead of $PWD.
         rec::Lock(gocpp::recv(getwdCache));
         dir = getwdCache.dir;
         rec::Unlock(gocpp::recv(getwdCache));
@@ -135,21 +140,28 @@ namespace golang::os
                 return {dir, nullptr};
             }
         }
+        // Root is a special case because it has no parent
+        // and ends in a slash.
         fs::FileInfo root;
         std::tie(root, err) = statNolog("/"_s);
         if(err != nullptr)
         {
+            // Can't stat root - no hope.
             return {""_s, err};
         }
         if(SameFile(root, dot))
         {
             return {"/"_s, nullptr};
         }
+        // General algorithm: find name in parent
+        // and then find name of parent. Each iteration
+        // adds /name to the beginning of dir.
         dir = ""_s;
         for(auto parent = ".."_s; ; parent = "../"_s + parent)
         {
             if(len(parent) >= 1024)
             {
+                // Sanity check
                 return {""_s, gocpp::error(syscall::go_ENAMETOOLONG)};
             }
             auto [fd, err] = openFileNolog(parent, O_RDONLY, 0);
@@ -187,8 +199,10 @@ namespace golang::os
             {
                 break;
             }
+            // Set up for next round.
             dot = pd;
         }
+        // Save answer as hint to avoid the expensive path next time.
         rec::Lock(gocpp::recv(getwdCache));
         getwdCache.dir = dir;
         rec::Unlock(gocpp::recv(getwdCache));

@@ -280,6 +280,11 @@ namespace golang::runtime
         c->triggered = ~ uint64_t(0);
         rec::setGCPercent(gocpp::recv(c), gcPercent);
         rec::setMemoryLimit(gocpp::recv(c), memoryLimit);
+        // No sweep phase in the first GC cycle.
+        // N.B. Don't bother calling traceHeapGoal. Tracing is never enabled at
+        // initialization time.
+        // N.B. No need to call revise; there's no GC enabled during
+        // initialization.
         rec::commit(gocpp::recv(c), true);
     }
 
@@ -298,14 +303,24 @@ namespace golang::runtime
         rec::Store(gocpp::recv(c->idleMarkTime), 0);
         c->markStartTime = markStartTime;
         c->triggered = rec::Load(gocpp::recv(c->heapLive));
+        // Compute the background mark utilization goal. In general,
+        // this may not come out exactly. We round the number of
+        // dedicated workers so that the utilization is closest to
+        // 25%. For small GOMAXPROCS, this would introduce too much
+        // error, so we add fractional workers in that case.
         auto totalUtilizationGoal = double(procs) * gcBackgroundUtilization;
         auto dedicatedMarkWorkersNeeded = int64_t(totalUtilizationGoal + 0.5);
         auto utilError = double(dedicatedMarkWorkersNeeded) / totalUtilizationGoal - 1;
         auto maxUtilError = 0.3;
         if(utilError < - maxUtilError || utilError > maxUtilError)
         {
+            // Rounding put us more than 30% off our goal. With
+            // gcBackgroundUtilization of 25%, this happens for
+            // GOMAXPROCS<=3 or GOMAXPROCS=6. Enable fractional
+            // workers to compensate.
             if(double(dedicatedMarkWorkersNeeded) > totalUtilizationGoal)
             {
+                // Too many dedicated workers.
                 dedicatedMarkWorkersNeeded--;
             }
             c->fractionalUtilizationGoal = (totalUtilizationGoal - double(dedicatedMarkWorkersNeeded)) / double(procs);
@@ -314,11 +329,13 @@ namespace golang::runtime
         {
             c->fractionalUtilizationGoal = 0;
         }
+        // In STW mode, we just want dedicated workers.
         if(debug.gcstoptheworld > 0)
         {
             dedicatedMarkWorkersNeeded = int64_t(procs);
             c->fractionalUtilizationGoal = 0;
         }
+        // Clear per-P state
         for(auto [gocpp_ignored, p] : allp)
         {
             p->gcAssistTime = 0;
@@ -326,19 +343,31 @@ namespace golang::runtime
         }
         if(trigger.kind == gcTriggerTime)
         {
+            // During a periodic GC cycle, reduce the number of idle mark workers
+            // required. However, we need at least one dedicated mark worker or
+            // idle GC worker to ensure GC progress in some scenarios (see comment
+            // on maxIdleMarkWorkers).
             if(dedicatedMarkWorkersNeeded > 0)
             {
                 rec::setMaxIdleMarkWorkers(gocpp::recv(c), 0);
             }
             else
             {
+                // TODO(mknyszek): The fundamental reason why we need this is because
+                // we can't count on the fractional mark worker to get scheduled.
+                // Fix that by ensuring it gets scheduled according to its quota even
+                // if the rest of the application is idle.
                 rec::setMaxIdleMarkWorkers(gocpp::recv(c), 1);
             }
         }
         else
         {
+            // N.B. gomaxprocs and dedicatedMarkWorkersNeeded are guaranteed not to
+            // change during a GC cycle.
             rec::setMaxIdleMarkWorkers(gocpp::recv(c), int32_t(procs) - int32_t(dedicatedMarkWorkersNeeded));
         }
+        // Compute initial values for controls that are updated
+        // throughout the cycle.
         rec::Store(gocpp::recv(c->dedicatedMarkWorkersNeeded), dedicatedMarkWorkersNeeded);
         rec::revise(gocpp::recv(c));
         if(debug.gcpacertrace > 0)
@@ -376,19 +405,44 @@ namespace golang::runtime
         auto gcPercent = rec::Load(gocpp::recv(c->gcPercent));
         if(gcPercent < 0)
         {
+            // If GC is disabled but we're running a forced GC,
+            // act like GOGC is huge for the below calculations.
             gcPercent = 100000;
         }
         auto live = rec::Load(gocpp::recv(c->heapLive));
         auto scan = rec::Load(gocpp::recv(c->heapScan));
         auto work = rec::Load(gocpp::recv(c->heapScanWork)) + rec::Load(gocpp::recv(c->stackScanWork)) + rec::Load(gocpp::recv(c->globalsScanWork));
+        // Assume we're under the soft goal. Pace GC to complete at
+        // heapGoal assuming the heap is in steady-state.
         auto heapGoal = int64_t(rec::heapGoal(gocpp::recv(c)));
+        // The expected scan work is computed as the amount of bytes scanned last
+        // GC cycle (both heap and stack), plus our estimate of globals work for this cycle.
         auto scanWorkExpected = int64_t(c->lastHeapScan + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan)));
+        // maxScanWork is a worst-case estimate of the amount of scan work that
+        // needs to be performed in this GC cycle. Specifically, it represents
+        // the case where *all* scannable memory turns out to be live, and
+        // *all* allocated stack space is scannable.
         auto maxStackScan = rec::Load(gocpp::recv(c->maxStackScan));
         auto maxScanWork = int64_t(scan + maxStackScan + rec::Load(gocpp::recv(c->globalsScan)));
         if(work > scanWorkExpected)
         {
+            // We've already done more scan work than expected. Because our expectation
+            // is based on a steady-state scannable heap size, we assume this means our
+            // heap is growing. Compute a new heap goal that takes our existing runway
+            // computed for scanWorkExpected and extrapolates it to maxScanWork, the worst-case
+            // scan work. This keeps our assist ratio stable if the heap continues to grow.
+            // The effect of this mechanism is that assists stay flat in the face of heap
+            // growths. It's OK to use more memory this cycle to scan all the live heap,
+            // because the next GC cycle is inevitably going to use *at least* that much
+            // memory anyway.
             auto extHeapGoal = int64_t(double(heapGoal - int64_t(c->triggered)) / double(scanWorkExpected) * double(maxScanWork)) + int64_t(c->triggered);
             scanWorkExpected = maxScanWork;
+            // hardGoal is a hard limit on the amount that we're willing to push back the
+            // heap goal, and that's twice the heap goal (i.e. if GOGC=100 and the heap and/or
+            // stacks and/or globals grow to twice their size, this limits the current GC cycle's
+            // growth to 4x the original live heap's size).
+            // This maintains the invariant that we use no more memory than the next GC cycle
+            // will anyway.
             auto hardGoal = int64_t((1.0 + double(gcPercent) / 100.0) * double(heapGoal));
             if(extHeapGoal > hardGoal)
             {
@@ -403,18 +457,43 @@ namespace golang::runtime
             // finish by that point.
             auto maxOvershoot = 1.1;
             heapGoal = int64_t(double(heapGoal) * maxOvershoot);
+            // Compute the upper bound on the scan work remaining.
             scanWorkExpected = maxScanWork;
         }
+        // Compute the remaining scan work estimate.
+        // Note that we currently count allocations during GC as both
+        // scannable heap (heapScan) and scan work completed
+        // (scanWork), so allocation will change this difference
+        // slowly in the soft regime and not at all in the hard
+        // regime.
         auto scanWorkRemaining = scanWorkExpected - work;
         if(scanWorkRemaining < 1000)
         {
+            // We set a somewhat arbitrary lower bound on
+            // remaining scan work since if we aim a little high,
+            // we can miss by a little.
+            // We *do* need to enforce that this is at least 1,
+            // since marking is racy and double-scanning objects
+            // may legitimately make the remaining scan work
+            // negative, even in the hard goal regime.
             scanWorkRemaining = 1000;
         }
+        // Compute the heap distance remaining.
         auto heapRemaining = heapGoal - int64_t(live);
         if(heapRemaining <= 0)
         {
+            // This shouldn't happen, but if it does, avoid
+            // dividing by zero or setting the assist negative.
             heapRemaining = 1;
         }
+        // Compute the mutator assist ratio so by the time the mutator
+        // allocates the remaining heap bytes up to heapGoal, it will
+        // have done (or stolen) the remaining amount of scan work.
+        // Note that the assist ratio values are updated atomically
+        // but not together. This means there may be some degree of
+        // skew between the two values. This is generally OK as the
+        // values shift relatively slowly over the course of a GC
+        // cycle.
         auto assistWorkPerByte = double(scanWorkRemaining) / double(heapRemaining);
         auto assistBytesPerWork = double(heapRemaining) / double(scanWorkRemaining);
         rec::Store(gocpp::recv(c->assistWorkPerByte), assistWorkPerByte);
@@ -426,15 +505,26 @@ namespace golang::runtime
     // by the application.
     void rec::endCycle(golang::runtime::gcControllerState* c, int64_t now, int procs, bool userForced)
     {
+        // Record last heap goal for the scavenger.
+        // We'll be updating the heap goal soon.
         gcController.lastHeapGoal = rec::heapGoal(gocpp::recv(c));
+        // Compute the duration of time for which assists were turned on.
         auto assistDuration = now - c->markStartTime;
+        // Assume background mark hit its utilization goal.
         auto utilization = gcBackgroundUtilization;
+        // Add assist utilization; avoid divide by zero.
         if(assistDuration > 0)
         {
             utilization += double(rec::Load(gocpp::recv(c->assistTime))) / double(assistDuration * int64_t(procs));
         }
         if(rec::Load(gocpp::recv(c->heapLive)) <= c->triggered)
         {
+            // Shouldn't happen, but let's be very safe about this in case the
+            // GC is somehow extremely short.
+            // In this case though, the only reasonable value for c.heapLive-c.triggered
+            // would be 0, which isn't really all that useful, i.e. the GC was so short
+            // that it didn't matter.
+            // Ignore this case and don't update anything.
             return;
         }
         auto idleUtilization = 0.0;
@@ -442,8 +532,31 @@ namespace golang::runtime
         {
             idleUtilization = double(rec::Load(gocpp::recv(c->idleMarkTime))) / double(assistDuration * int64_t(procs));
         }
+        // Determine the cons/mark ratio.
+        // The units we want for the numerator and denominator are both B / cpu-ns.
+        // We get this by taking the bytes allocated or scanned, and divide by the amount of
+        // CPU time it took for those operations. For allocations, that CPU time is
+        // assistDuration * procs * (1 - utilization)
+        // Where utilization includes just background GC workers and assists. It does *not*
+        // include idle GC work time, because in theory the mutator is free to take that at
+        // any point.
+        // For scanning, that CPU time is
+        // assistDuration * procs * (utilization + idleUtilization)
+        // In this case, we *include* idle utilization, because that is additional CPU time that
+        // the GC had available to it.
+        // In effect, idle GC time is sort of double-counted here, but it's very weird compared
+        // to other kinds of GC work, because of how fluid it is. Namely, because the mutator is
+        // *always* free to take it.
+        // So this calculation is really:
+        // (heapLive-trigger) / (assistDuration * procs * (1-utilization)) /
+        // (scanWork) / (assistDuration * procs * (utilization+idleUtilization))
+        // Note that because we only care about the ratio, assistDuration and procs cancel out.
         auto scanWork = rec::Load(gocpp::recv(c->heapScanWork)) + rec::Load(gocpp::recv(c->stackScanWork)) + rec::Load(gocpp::recv(c->globalsScanWork));
         auto currentConsMark = (double(rec::Load(gocpp::recv(c->heapLive)) - c->triggered) * (utilization + idleUtilization)) / (double(scanWork) * (1 - utilization));
+        // Update our cons/mark estimate. This is the maximum of the value we just computed and the last
+        // 4 cons/mark values we measured. The reason we take the maximum here is to bias a noisy
+        // cons/mark measurement toward fewer assists at the expense of additional GC cycles (starting
+        // earlier).
         auto oldConsMark = c->consMark;
         c->consMark = currentConsMark;
         for(auto [i, gocpp_ignored] : c->lastConsMark)
@@ -475,10 +588,19 @@ namespace golang::runtime
     //go:nowritebarrier
     void rec::enlistWorker(golang::runtime::gcControllerState* c)
     {
+        // If there are idle Ps, wake one so it will run an idle worker.
+        // NOTE: This is suspected of causing deadlocks. See golang.org/issue/19112.
+        // if sched.npidle.Load() != 0 && sched.nmspinning.Load() == 0 {
+        // wakep()
+        // return
+        // }
+        // There are no idle Ps. If we need more dedicated workers,
+        // try to preempt a running P so it will switch to a worker.
         if(rec::Load(gocpp::recv(c->dedicatedMarkWorkersNeeded)) <= 0)
         {
             return;
         }
+        // Pick a random other P to preempt.
         if(gomaxprocs <= 1)
         {
             return;
@@ -516,6 +638,10 @@ namespace golang::runtime
         {
             go_throw("gcControllerState.findRunnable: blackening not enabled"_s);
         }
+        // Since we have the current time, check if the GC CPU limiter
+        // hasn't had an update in a while. This check is necessary in
+        // case the limiter is on but hasn't been checked in a while and
+        // so may have left sufficient headroom to turn off again.
         if(now == 0)
         {
             now = nanotime();
@@ -526,11 +652,26 @@ namespace golang::runtime
         }
         if(! gcMarkWorkAvailable(pp))
         {
+            // No work to be done right now. This can happen at
+            // the end of the mark phase when there are still
+            // assists tapering off. Don't bother running a worker
+            // now because it'll just return immediately.
             return {nullptr, now};
         }
+        // Grab a worker before we commit to running below.
         auto node = (gcBgMarkWorkerNode*)(rec::pop(gocpp::recv(gcBgMarkWorkerPool)));
         if(node == nullptr)
         {
+            // There is at least one worker per P, so normally there are
+            // enough workers to run on all Ps, if necessary. However, once
+            // a worker enters gcMarkDone it may park without rejoining the
+            // pool, thus freeing a P with no corresponding worker.
+            // gcMarkDone never depends on another worker doing work, so it
+            // is safe to simply do nothing here.
+            // If gcMarkDone bails out without completing the mark phase,
+            // it will always do so with queued global work. Thus, that P
+            // will be immediately eligible to re-run the worker G it was
+            // just using, ensuring work can complete.
             return {nullptr, now};
         }
         auto decIfPositive = [=](atomic::Int64* val) mutable -> bool
@@ -550,24 +691,33 @@ namespace golang::runtime
         };
         if(decIfPositive(& c->dedicatedMarkWorkersNeeded))
         {
+            // This P is now dedicated to marking until the end of
+            // the concurrent mark phase.
             pp->gcMarkWorkerMode = gcMarkWorkerDedicatedMode;
         }
         else
         if(c->fractionalUtilizationGoal == 0)
         {
+            // No need for fractional workers.
             rec::push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
             return {nullptr, now};
         }
         else
         {
+            // Is this P behind on the fractional utilization
+            // goal?
+            // This should be kept in sync with pollFractionalWorkerExit.
             auto delta = now - c->markStartTime;
             if(delta > 0 && double(pp->gcFractionalMarkTime) / double(delta) > c->fractionalUtilizationGoal)
             {
+                // Nope. No need to run a fractional worker.
                 rec::push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
                 return {nullptr, now};
             }
+            // Run a fractional worker.
             pp->gcMarkWorkerMode = gcMarkWorkerFractionalMode;
         }
+        // Run the background mark worker.
         auto gp = rec::ptr(gocpp::recv(node->gp));
         auto trace = traceAcquire();
         casgstatus(gp, _Gwaiting, _Grunnable);
@@ -591,7 +741,9 @@ namespace golang::runtime
         rec::Store(gocpp::recv(c->heapScan), uint64_t(rec::Load(gocpp::recv(c->heapScanWork))));
         c->lastHeapScan = uint64_t(rec::Load(gocpp::recv(c->heapScanWork)));
         rec::Store(gocpp::recv(c->lastStackScan), uint64_t(rec::Load(gocpp::recv(c->stackScanWork))));
+        // Reset triggered.
         c->triggered = ~ uint64_t(0);
+        // heapLive was updated, so emit a trace event.
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
         {
@@ -643,12 +795,15 @@ namespace golang::runtime
             auto live = rec::Add(gocpp::recv(gcController.heapLive), dHeapLive);
             if(rec::ok(gocpp::recv(trace)))
             {
+                // gcController.heapLive changed.
                 rec::HeapAlloc(gocpp::recv(trace), live);
                 traceRelease(trace);
             }
         }
         if(gcBlackenEnabled == 0)
         {
+            // Update heapScan when we're not in a current GC. It is fixed
+            // at the beginning of a cycle.
             if(dHeapScan != 0)
             {
                 rec::Add(gocpp::recv(gcController.heapScan), dHeapScan);
@@ -656,6 +811,7 @@ namespace golang::runtime
         }
         else
         {
+            // gcController.heapLive changed.
             rec::revise(gocpp::recv(c));
         }
     }
@@ -695,18 +851,30 @@ namespace golang::runtime
     {
         uint64_t goal;
         uint64_t minTrigger;
+        // Start with the goal calculated for gcPercent.
         goal = rec::Load(gocpp::recv(c->gcPercentHeapGoal));
+        // Check if the memory-limit-based goal is smaller, and if so, pick that.
         if(auto newGoal = rec::memoryLimitHeapGoal(gocpp::recv(c)); newGoal < goal)
         {
             goal = newGoal;
         }
         else
         {
+            // We're not limited by the memory limit goal, so perform a series of
+            // adjustments that might move the goal forward in a variety of circumstances.
             auto sweepDistTrigger = rec::Load(gocpp::recv(c->sweepDistMinTrigger));
             if(sweepDistTrigger > goal)
             {
+                // Set the goal to maintain a minimum sweep distance since
+                // the last call to commit. Note that we never want to do this
+                // if we're in the memory limit regime, because it could push
+                // the goal up.
                 goal = sweepDistTrigger;
             }
+            // Since we ignore the sweep distance trigger in the memory
+            // limit regime, we need to ensure we don't propagate it to
+            // the trigger, because it could cause a violation of the
+            // invariant that the trigger < goal.
             minTrigger = sweepDistTrigger;
             // Ensure that the heap goal is at least a little larger than
             // the point at which we triggered. This may not be the case if GC
@@ -715,7 +883,6 @@ namespace golang::runtime
             // GOGC. Assist is proportional to this distance, so enforce a
             // minimum distance, even if it means going over the GOGC goal
             // by a tiny bit.
-            //
             // Ignore this if we're in the memory limit regime: we'd prefer to
             // have the GC respond hard about how close we are to the goal than to
             // push the goal back in such a manner that it could cause us to exceed
@@ -738,15 +905,68 @@ namespace golang::runtime
         uint64_t mappedReady = {};
         for(; ; )
         {
+            // Free and unscavenged memory.
             heapFree = rec::load(gocpp::recv(c->heapFree));
+            // Heap object bytes in use.
             heapAlloc = rec::Load(gocpp::recv(c->totalAlloc)) - rec::Load(gocpp::recv(c->totalFree));
+            // Total unreleased mapped memory.
             mappedReady = rec::Load(gocpp::recv(c->mappedReady));
+            // It is impossible for total unreleased mapped memory to exceed heap memory, but
+            // because these stats are updated independently, we may observe a partial update
+            // including only some values. Thus, we appear to break the invariant. However,
+            // this condition is necessarily transient, so just try again. In the case of a
+            // persistent accounting error, we'll deadlock here.
             if(heapFree + heapAlloc <= mappedReady)
             {
                 break;
             }
         }
+        // Below we compute a goal from memoryLimit. There are a few things to be aware of.
+        // Firstly, the memoryLimit does not easily compare to the heap goal: the former
+        // is total mapped memory by the runtime that hasn't been released, while the latter is
+        // only heap object memory. Intuitively, the way we convert from one to the other is to
+        // subtract everything from memoryLimit that both contributes to the memory limit (so,
+        // ignore scavenged memory) and doesn't contain heap objects. This isn't quite what
+        // lines up with reality, but it's a good starting point.
+        // In practice this computation looks like the following:
+        // goal := memoryLimit - ((mappedReady - heapFree - heapAlloc) + max(mappedReady - memoryLimit, 0))
+        // ^1                                    ^2
+        // goal -= goal / 100 * memoryLimitHeapGoalHeadroomPercent
+        // ^3
+        // Let's break this down.
+        // The first term (marker 1) is everything that contributes to the memory limit and isn't
+        // or couldn't become heap objects. It represents, broadly speaking, non-heap overheads.
+        // One oddity you may have noticed is that we also subtract out heapFree, i.e. unscavenged
+        // memory that may contain heap objects in the future.
+        // Let's take a step back. In an ideal world, this term would look something like just
+        // the heap goal. That is, we "reserve" enough space for the heap to grow to the heap
+        // goal, and subtract out everything else. This is of course impossible; the definition
+        // is circular! However, this impossible definition contains a key insight: the amount
+        // we're *going* to use matters just as much as whatever we're currently using.
+        // Consider if the heap shrinks to 1/10th its size, leaving behind lots of free and
+        // unscavenged memory. mappedReady - heapAlloc will be quite large, because of that free
+        // and unscavenged memory, pushing the goal down significantly.
+        // heapFree is also safe to exclude from the memory limit because in the steady-state, it's
+        // just a pool of memory for future heap allocations, and making new allocations from heapFree
+        // memory doesn't increase overall memory use. In transient states, the scavenger and the
+        // allocator actively manage the pool of heapFree memory to maintain the memory limit.
+        // The second term (marker 2) is the amount of memory we've exceeded the limit by, and is
+        // intended to help recover from such a situation. By pushing the heap goal down, we also
+        // push the trigger down, triggering and finishing a GC sooner in order to make room for
+        // other memory sources. Note that since we're effectively reducing the heap goal by X bytes,
+        // we're actually giving more than X bytes of headroom back, because the heap goal is in
+        // terms of heap objects, but it takes more than X bytes (e.g. due to fragmentation) to store
+        // X bytes worth of objects.
+        // The final adjustment (marker 3) reduces the maximum possible memory limit heap goal by
+        // memoryLimitHeapGoalPercent. As the name implies, this is to provide additional headroom in
+        // the face of pacing inaccuracies, and also to leave a buffer of unscavenged memory so the
+        // allocator isn't constantly scavenging. The reduction amount also has a fixed minimum
+        // (memoryLimitMinHeapGoalHeadroom, not pictured) because the aforementioned pacing inaccuracies
+        // disproportionately affect small heaps: as heaps get smaller, the pacer's inputs get fuzzier.
+        // Shorter GC cycles and less GC work means noisy external factors like the OS scheduler have a
+        // greater impact.
         auto memoryLimit = uint64_t(rec::Load(gocpp::recv(c->memoryLimit)));
+        // Compute term 1.
         auto nonHeapMemory = mappedReady - heapFree - heapAlloc;
         // Compute term 2.
         uint64_t overage = {};
@@ -756,12 +976,22 @@ namespace golang::runtime
         }
         if(nonHeapMemory + overage >= memoryLimit)
         {
+            // We're at a point where non-heap memory exceeds the memory limit on its own.
+            // There's honestly not much we can do here but just trigger GCs continuously
+            // and let the CPU limiter reign that in. Something has to give at this point.
+            // Set it to heapMarked, the lowest possible goal.
             return c->heapMarked;
         }
+        // Compute the goal.
         auto goal = memoryLimit - (nonHeapMemory + overage);
+        // Apply some headroom to the goal to account for pacing inaccuracies and to reduce
+        // the impact of scavenging at allocation time in response to a high allocation rate
+        // when GOGC=off. See issue #57069. Also, be careful about small limits.
         auto headroom = goal / 100 * memoryLimitHeapGoalHeadroomPercent;
         if(headroom < memoryLimitMinHeapGoalHeadroom)
         {
+            // Set a fixed minimum to deal with the particularly large effect pacing inaccuracies
+            // have for smaller heaps.
             headroom = memoryLimitMinHeapGoalHeadroom;
         }
         if(goal < headroom || goal - headroom < headroom)
@@ -772,6 +1002,7 @@ namespace golang::runtime
         {
             goal = goal - headroom;
         }
+        // Don't let us go below the live heap. A heap goal below the live heap doesn't make sense.
         if(goal < c->heapMarked)
         {
             goal = c->heapMarked;
@@ -802,19 +1033,44 @@ namespace golang::runtime
     std::tuple<uint64_t, uint64_t> rec::trigger(golang::runtime::gcControllerState* c)
     {
         auto [goal, minTrigger] = rec::heapGoalInternal(gocpp::recv(c));
+        // Invariant: the trigger must always be less than the heap goal.
+        // Note that the memory limit sets a hard maximum on our heap goal,
+        // but the live heap may grow beyond it.
         if(c->heapMarked >= goal)
         {
+            // The goal should never be smaller than heapMarked, but let's be
+            // defensive about it. The only reasonable trigger here is one that
+            // causes a continuous GC cycle at heapMarked, but respect the goal
+            // if it came out as smaller than that.
             return {goal, goal};
         }
+        // Below this point, c.heapMarked < goal.
+        // heapMarked is our absolute minimum, and it's possible the trigger
+        // bound we get from heapGoalinternal is less than that.
         if(minTrigger < c->heapMarked)
         {
             minTrigger = c->heapMarked;
         }
+        // If we let the trigger go too low, then if the application
+        // is allocating very rapidly we might end up in a situation
+        // where we're allocating black during a nearly always-on GC.
+        // The result of this is a growing heap and ultimately an
+        // increase in RSS. By capping us at a point >0, we're essentially
+        // saying that we're OK using more CPU during the GC to prevent
+        // this growth in RSS.
         auto triggerLowerBound = ((goal - c->heapMarked) / triggerRatioDen) * minTriggerRatioNum + c->heapMarked;
         if(minTrigger < triggerLowerBound)
         {
             minTrigger = triggerLowerBound;
         }
+        // For small heaps, set the max trigger point at maxTriggerRatio of the way
+        // from the live heap to the heap goal. This ensures we always have *some*
+        // headroom when the GC actually starts. For larger heaps, set the max trigger
+        // point at the goal, minus the minimum heap size.
+        // This choice follows from the fact that the minimum heap size is chosen
+        // to reflect the costs of a GC with no work to do. With a large heap but
+        // very little scan work to perform, this gives us exactly as much runway
+        // as we would need, in the worst case.
         auto maxTrigger = ((goal - c->heapMarked) / triggerRatioDen) * maxTriggerRatioNum + c->heapMarked;
         if(goal > defaultHeapMinimum && goal - defaultHeapMinimum > maxTrigger)
         {
@@ -868,22 +1124,51 @@ namespace golang::runtime
         }
         if(isSweepDone)
         {
+            // The sweep is done, so there aren't any restrictions on the trigger
+            // we need to think about.
             rec::Store(gocpp::recv(c->sweepDistMinTrigger), 0);
         }
         else
         {
+            // Concurrent sweep happens in the heap growth
+            // from gcController.heapLive to trigger. Make sure we
+            // give the sweeper some runway if it doesn't have enough.
             rec::Store(gocpp::recv(c->sweepDistMinTrigger), rec::Load(gocpp::recv(c->heapLive)) + sweepMinHeapDistance);
         }
+        // Compute the next GC goal, which is when the allocated heap
+        // has grown by GOGC/100 over where it started the last cycle,
+        // plus additional runway for non-heap sources of GC work.
         auto gcPercentHeapGoal = ~ uint64_t(0);
         if(auto gcPercent = rec::Load(gocpp::recv(c->gcPercent)); gcPercent >= 0)
         {
             gcPercentHeapGoal = c->heapMarked + (c->heapMarked + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan))) * uint64_t(gcPercent) / 100;
         }
+        // Apply the minimum heap size here. It's defined in terms of gcPercent
+        // and is only updated by functions that call commit.
         if(gcPercentHeapGoal < c->heapMinimum)
         {
             gcPercentHeapGoal = c->heapMinimum;
         }
         rec::Store(gocpp::recv(c->gcPercentHeapGoal), gcPercentHeapGoal);
+        // Compute the amount of runway we want the GC to have by using our
+        // estimate of the cons/mark ratio.
+        // The idea is to take our expected scan work, and multiply it by
+        // the cons/mark ratio to determine how long it'll take to complete
+        // that scan work in terms of bytes allocated. This gives us our GC's
+        // runway.
+        // However, the cons/mark ratio is a ratio of rates per CPU-second, but
+        // here we care about the relative rates for some division of CPU
+        // resources among the mutator and the GC.
+        // To summarize, we have B / cpu-ns, and we want B / ns. We get that
+        // by multiplying by our desired division of CPU resources. We choose
+        // to express CPU resources as GOMAPROCS*fraction. Note that because
+        // we're working with a ratio here, we can omit the number of CPU cores,
+        // because they'll appear in the numerator and denominator and cancel out.
+        // As a result, this is basically just "weighing" the cons/mark ratio by
+        // our desired division of resources.
+        // Furthermore, by setting the runway so that CPU resources are divided
+        // this way, assuming that the cons/mark ratio is correct, we make that
+        // division a reality.
         rec::Store(gocpp::recv(c->runway), uint64_t((c->consMark * (1 - gcGoalUtilization) / (gcGoalUtilization)) * double(c->lastHeapScan + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan)))));
     }
 
@@ -911,6 +1196,7 @@ namespace golang::runtime
     int32_t setGCPercent(int32_t in)
     {
         int32_t out;
+        // Run on the system stack since we grab the heap lock.
         systemstack([=]() mutable -> void
         {
             lock(& mheap_.lock);
@@ -918,6 +1204,8 @@ namespace golang::runtime
             gcControllerCommit();
             unlock(& mheap_.lock);
         });
+        // If we just disabled GC, wait for any concurrent GC mark to
+        // finish so we always return with no GC running.
         if(in < 0)
         {
             gcWaitOnMark(rec::Load(gocpp::recv(work.cycles)));
@@ -961,12 +1249,15 @@ namespace golang::runtime
     int64_t setMemoryLimit(int64_t in)
     {
         int64_t out;
+        // Run on the system stack since we grab the heap lock.
         systemstack([=]() mutable -> void
         {
             lock(& mheap_.lock);
             out = rec::setMemoryLimit(gocpp::recv(gcController), in);
             if(in < 0 || out == in)
             {
+                // If we're just checking the value or not changing
+                // it, there's no point in doing the rest.
                 unlock(& mheap_.lock);
                 return;
             }
@@ -1010,6 +1301,8 @@ namespace golang::runtime
             auto [n, max] = std::tuple{int32_t(old & uint64_t(~ uint32_t(0))), int32_t(old >> 32)};
             if(n >= max)
             {
+                // See the comment on idleMarkWorkers for why
+                // n > max is tolerated.
                 return false;
             }
             if(n < 0)
@@ -1097,10 +1390,13 @@ namespace golang::runtime
     {
         assertWorldStoppedOrLockHeld(& mheap_.lock);
         rec::commit(gocpp::recv(gcController), isSweepDone());
+        // Update mark pacing.
         if(gcphase != _GCoff)
         {
             rec::revise(gocpp::recv(gcController));
         }
+        // TODO(mknyszek): This isn't really accurate any longer because the heap
+        // goal is computed dynamically. Still useful to snapshot, but not as useful.
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
         {

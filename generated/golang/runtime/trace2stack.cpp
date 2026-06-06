@@ -81,6 +81,12 @@ namespace golang::runtime
         auto nstk = 1;
         if(tracefpunwindoff() || rec::hasCgoOnStack(gocpp::recv(mp)))
         {
+            // Slow path: Unwind using default unwinder. Used when frame pointer
+            // unwinding is unavailable or disabled (tracefpunwindoff), or might
+            // produce incomplete results or crashes (hasCgoOnStack). Note that no
+            // cgo callback related crashes have been observed yet. The main
+            // motivation is to take advantage of a potentially registered cgo
+            // symbolizer.
             pcBuf[0] = logicalStackSentinel;
             if(curgp == gp)
             {
@@ -94,6 +100,7 @@ namespace golang::runtime
         }
         else
         {
+            // Fast path: Unwind using frame pointers.
             pcBuf[0] = uintptr_t(skip);
             if(curgp == gp)
             {
@@ -102,16 +109,23 @@ namespace golang::runtime
             else
             if(curgp != nullptr)
             {
+                // We're called on the g0 stack through mcall(fn) or systemstack(fn). To
+                // behave like gcallers above, we start unwinding from sched.bp, which
+                // points to the caller frame of the leaf frame on g's stack. The return
+                // address of the leaf frame is stored in sched.pc, which we manually
+                // capture here.
                 pcBuf[1] = curgp->sched.pc;
                 nstk += 1 + fpTracebackPCs(gocpp::unsafe_pointer(curgp->sched.bp), pcBuf.make_slice(2));
             }
         }
         if(nstk > 0)
         {
+            // skip runtime.goexit
             nstk--;
         }
         if(nstk > 0 && curgp->goid == 1)
         {
+            // skip runtime.main
             nstk--;
         }
         auto id = rec::put(gocpp::recv(trace.stackTab[gen % 2]), pcBuf.make_slice(0, nstk));
@@ -172,18 +186,30 @@ namespace golang::runtime
     void rec::dump(golang::runtime::traceStackTable* t, uintptr_t gen)
     {
         auto w = unsafeTraceWriter(gen, nullptr);
+        // Iterate over the table.
+        // Do not acquire t.tab.lock. There's a conceptual lock cycle between acquiring this lock
+        // here and allocation-related locks. Specifically, this lock may be acquired when an event
+        // is emitted in allocation paths. Simultaneously, we might allocate here with the lock held,
+        // creating a cycle. In practice, this cycle is never exercised. Because the table is only
+        // dumped once there are no more writers, it's not possible for the cycle to occur. However
+        // the lockrank mode is not sophisticated enough to identify this, and if it's not possible
+        // for that cycle to happen, then it's also not possible for this to race with writers to
+        // the table.
         for(auto [i, gocpp_ignored] : t->tab.tab)
         {
             auto stk = rec::bucket(gocpp::recv(t->tab), i);
             for(; stk != nullptr; stk = rec::next(gocpp::recv(stk)))
             {
                 auto stack = unsafe::Slice((uintptr_t*)(gocpp::unsafe_pointer(& stk->data[0])), uintptr_t(len(stk->data)) / gocpp::Sizeof<uintptr_t>());
+                // N.B. This might allocate, but that's OK because we're not writing to the M's buffer,
+                // but one we're about to create (with ensure).
                 auto frames = makeTraceFrames(gen, fpunwindExpand(stack));
+                // Returns the maximum number of bytes required to hold the encoded stack, given that
+                // it contains N frames.
                 auto maxBytes = 1 + (2 + 4 * len(frames)) * traceBytesPerNumber;
                 // Estimate the size of this record. This
                 // bound is pretty loose, but avoids counting
                 // lots of varint sizes.
-                //
                 // Add 1 because we might also write traceEvStacks.
                 bool flushed = {};
                 std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 1 + maxBytes);
@@ -191,6 +217,7 @@ namespace golang::runtime
                 {
                     rec::byte(gocpp::recv(w), (unsigned char)(traceEvStacks));
                 }
+                // Emit stack event.
                 rec::byte(gocpp::recv(w), (unsigned char)(traceEvStack));
                 rec::varint(gocpp::recv(w), uint64_t(stk->id));
                 rec::varint(gocpp::recv(w), uint64_t(len(frames)));
@@ -203,6 +230,8 @@ namespace golang::runtime
                 }
             }
         }
+        // Still, hold the lock over reset. The callee expects it, even though it's
+        // not strictly necessary.
         runtime::lock(& t->tab.lock);
         rec::reset(gocpp::recv(t->tab));
         runtime::unlock(& t->tab.lock);
@@ -302,7 +331,9 @@ namespace golang::runtime
         int i;
         for(i = 0; i < len(pcBuf) && fp != nullptr; i++)
         {
+            // return addr sits one word above the frame pointer
             pcBuf[i] = *(uintptr_t*)(gocpp::unsafe_pointer(uintptr_t(fp) + goarch::PtrSize));
+            // follow the frame pointer to the next one
             fp = gocpp::unsafe_pointer(*(uintptr_t*)(fp));
         }
         return i;
@@ -317,6 +348,8 @@ namespace golang::runtime
     {
         if(len(pcBuf) > 0 && pcBuf[0] == logicalStackSentinel)
         {
+            // pcBuf contains logical rather than inlined frames, skip has already been
+            // applied, just return it without the sentinel value in pcBuf[0].
             return pcBuf.make_slice(1);
         }
         // skipOrAdd skips or appends retPC to newPCBuf and returns true if more
@@ -349,6 +382,8 @@ namespace golang::runtime
             auto fi = findfunc(callPC);
             if(! rec::valid(gocpp::recv(fi)))
             {
+                // There is no funcInfo if callPC belongs to a C function. In this case
+                // we still keep the pc, but don't attempt to expand inlined frames.
                 if(auto more = skipOrAdd(retPC); ! more)
                 {
                     goto outer_break;
@@ -363,6 +398,7 @@ namespace golang::runtime
                 {
                 }
                 else
+                // ignore wrappers
                 if(auto more = skipOrAdd(uf.pc + 1); ! more)
                 {
                     goto outer_break;
@@ -381,11 +417,13 @@ namespace golang::runtime
         auto f = findfunc(pc);
         if(! rec::valid(gocpp::recv(f)))
         {
+            // may happen for locked g in extra M since its pc is 0.
             return pc;
         }
         auto w = funcdata(f, abi::FUNCDATA_WrapInfo);
         if(w == nullptr)
         {
+            // not a wrapper
             return pc;
         }
         return rec::textAddr(gocpp::recv(f.datap), *(uint32_t*)(w));

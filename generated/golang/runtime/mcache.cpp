@@ -239,6 +239,10 @@ namespace golang::runtime
         {
             rec::releaseAll(gocpp::recv(c));
             stackcache_clear(c);
+            // NOTE(rsc,rlh): If gcworkbuffree comes back, we need to coordinate
+            // with the stealing of gcworkbufs during garbage collection to avoid
+            // a race where the workbuf is double-freed.
+            // gcworkbuffree(c.gcworkbuf)
             lock(& mheap_.lock);
             rec::free(gocpp::recv(mheap_.cachealloc), gocpp::unsafe_pointer(c));
             unlock(& mheap_.lock);
@@ -251,10 +255,15 @@ namespace golang::runtime
     // P must not change, so we must be in a non-preemptible state.
     struct mcache* getMCache(struct m* mp)
     {
+        // Grab the mcache, since that's where stats live.
         auto pp = rec::ptr(gocpp::recv(mp->p));
         mcache* c = {};
         if(pp == nullptr)
         {
+            // We will be called without a P while bootstrapping,
+            // in which case we use mcache0, which is set in mallocinit.
+            // mcache0 is cleared when bootstrapping is complete,
+            // by procresize.
             c = mcache0;
         }
         else
@@ -271,6 +280,7 @@ namespace golang::runtime
     // c could change.
     void rec::refill(golang::runtime::mcache* c, golang::runtime::spanClass spc)
     {
+        // Return the current cached span to the central lists.
         auto s = c->alloc[spc];
         if(s->allocCount != s->nelems)
         {
@@ -278,24 +288,30 @@ namespace golang::runtime
         }
         if(s != & emptymspan)
         {
+            // Mark this span as no longer cached.
             if(s->sweepgen != mheap_.sweepgen + 3)
             {
                 go_throw("bad sweepgen in refill"_s);
             }
             rec::uncacheSpan(gocpp::recv(mheap_.central[spc].mcentral), s);
+            // Count up how many slots were used and record it.
             auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
             auto slotsUsed = int64_t(s->allocCount) - int64_t(s->allocCountBeforeCache);
             atomic::Xadd64(& stats->smallAllocCount[rec::sizeclass(gocpp::recv(spc))], slotsUsed);
+            // Flush tinyAllocs.
             if(spc == tinySpanClass)
             {
                 atomic::Xadd64(& stats->tinyAllocCount, int64_t(c->tinyAllocs));
                 c->tinyAllocs = 0;
             }
             rec::release(gocpp::recv(memstats.heapStats));
+            // Count the allocs in inconsistent, internal stats.
             auto bytesAllocated = slotsUsed * int64_t(s->elemsize);
             rec::Add(gocpp::recv(gcController.totalAlloc), bytesAllocated);
+            // Clear the second allocCount just to be safe.
             s->allocCountBeforeCache = 0;
         }
+        // Get a new cached span from the central lists.
         s = rec::cacheSpan(gocpp::recv(mheap_.central[spc].mcentral));
         if(s == nullptr)
         {
@@ -305,8 +321,21 @@ namespace golang::runtime
         {
             go_throw("span has no free space"_s);
         }
+        // Indicate that this span is cached and prevent asynchronous
+        // sweeping in the next sweep phase.
         s->sweepgen = mheap_.sweepgen + 3;
+        // Store the current alloc count for accounting later.
         s->allocCountBeforeCache = s->allocCount;
+        // Update heapLive and flush scanAlloc.
+        // We have not yet allocated anything new into the span, but we
+        // assume that all of its slots will get used, so this makes
+        // heapLive an overestimate.
+        // When the span gets uncached, we'll fix up this overestimate
+        // if necessary (see releaseAll).
+        // We pick an overestimate here because an underestimate leads
+        // the pacer to believe that it's in better shape than it is,
+        // which appears to lead to more memory used. See #53738 for
+        // more details.
         auto usedBytes = uintptr_t(s->allocCount) * s->elemsize;
         rec::update(gocpp::recv(gcController), int64_t(s->npages * pageSize) - int64_t(usedBytes), int64_t(c->scanAlloc));
         c->scanAlloc = 0;
@@ -325,6 +354,9 @@ namespace golang::runtime
         {
             npages++;
         }
+        // Deduct credit for this span allocation and sweep if
+        // necessary. mHeap_Alloc will also sweep npages, so this only
+        // pays the debt down to npage pages.
         deductSweepCredit(npages * _PageSize, npages);
         auto spc = makeSpanClass(0, noscan);
         auto s = rec::alloc(gocpp::recv(mheap_), npages, spc);
@@ -332,12 +364,17 @@ namespace golang::runtime
         {
             go_throw("out of memory"_s);
         }
+        // Count the alloc in consistent, external stats.
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xadd64(& stats->largeAlloc, int64_t(npages * pageSize));
         atomic::Xadd64(& stats->largeAllocCount, 1);
         rec::release(gocpp::recv(memstats.heapStats));
+        // Count the alloc in inconsistent, internal stats.
         rec::Add(gocpp::recv(gcController.totalAlloc), int64_t(npages * pageSize));
+        // Update heapLive.
         rec::update(gocpp::recv(gcController), int64_t(s->npages * pageSize), 0);
+        // Put the large span in the mcentral swept list so that it's
+        // visible to the background sweeper.
         rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(mheap_.central[spc].mcentral), mheap_.sweepgen)), s);
         s->limit = rec::base(gocpp::recv(s)) + size;
         rec::initHeapBits(gocpp::recv(s), false);
@@ -346,6 +383,7 @@ namespace golang::runtime
 
     void rec::releaseAll(golang::runtime::mcache* c)
     {
+        // Take this opportunity to flush scanAlloc.
         auto scanAlloc = int64_t(c->scanAlloc);
         c->scanAlloc = 0;
         auto sg = mheap_.sweepgen;
@@ -357,24 +395,35 @@ namespace golang::runtime
             {
                 auto slotsUsed = int64_t(s->allocCount) - int64_t(s->allocCountBeforeCache);
                 s->allocCountBeforeCache = 0;
+                // Adjust smallAllocCount for whatever was allocated.
                 auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
                 atomic::Xadd64(& stats->smallAllocCount[rec::sizeclass(gocpp::recv(spanClass(i)))], slotsUsed);
                 rec::release(gocpp::recv(memstats.heapStats));
+                // Adjust the actual allocs in inconsistent, internal stats.
+                // We assumed earlier that the full span gets allocated.
                 rec::Add(gocpp::recv(gcController.totalAlloc), slotsUsed * int64_t(s->elemsize));
                 if(s->sweepgen != sg + 1)
                 {
+                    // refill conservatively counted unallocated slots in gcController.heapLive.
+                    // Undo this.
+                    // If this span was cached before sweep, then gcController.heapLive was totally
+                    // recomputed since caching this span, so we don't do this for stale spans.
                     dHeapLive -= int64_t(s->nelems - s->allocCount) * int64_t(s->elemsize);
                 }
+                // Release the span to the mcentral.
                 rec::uncacheSpan(gocpp::recv(mheap_.central[i].mcentral), s);
                 c->alloc[i] = & emptymspan;
             }
         }
+        // Clear tinyalloc pool.
         c->tiny = 0;
         c->tinyoffset = 0;
+        // Flush tinyAllocs.
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xadd64(& stats->tinyAllocCount, int64_t(c->tinyAllocs));
         c->tinyAllocs = 0;
         rec::release(gocpp::recv(memstats.heapStats));
+        // Update heapLive and heapScan.
         rec::update(gocpp::recv(gcController), dHeapLive, scanAlloc);
     }
 
@@ -383,6 +432,13 @@ namespace golang::runtime
     // starting and the first allocation from c.
     void rec::prepareForSweep(golang::runtime::mcache* c)
     {
+        // Alternatively, instead of making sure we do this on every P
+        // between starting the world and allocating on that P, we
+        // could leave allocate-black on, allow allocation to continue
+        // as usual, use a ragged barrier at the beginning of sweep to
+        // ensure all cached spans are swept, and then disable
+        // allocate-black. However, with this approach it's difficult
+        // to avoid spilling mark bits into the *next* GC cycle.
         auto sg = mheap_.sweepgen;
         auto flushGen = rec::Load(gocpp::recv(c->flushGen));
         if(flushGen == sg)
@@ -397,6 +453,7 @@ namespace golang::runtime
         }
         rec::releaseAll(gocpp::recv(c));
         stackcache_clear(c);
+        // Synchronizes with gcStart
         rec::Store(gocpp::recv(c->flushGen), mheap_.sweepgen);
     }
 

@@ -156,6 +156,11 @@ namespace golang::runtime
     // expensive operations to the fast path.
     void coroswitch_m(struct g* gp)
     {
+        // TODO(rsc,mknyszek): add tracing support in a lightweight manner.
+        // Probably the tracer will need a global bool (set and cleared during STW)
+        // that this code can check to decide whether to use trace.gen.Load();
+        // we do not want to do the atomic load all the time, especially when
+        // tracer use is relatively rare.
         auto c = gp->coroarg;
         gp->coroarg = nullptr;
         auto exit = gp->coroexit;
@@ -168,11 +173,16 @@ namespace golang::runtime
         }
         else
         {
+            // If we can CAS ourselves directly from running to waiting, so do,
+            // keeping the control transfer as lightweight as possible.
             gp->waitreason = waitReasonCoroutine;
             if(! rec::CompareAndSwap(gocpp::recv(gp->atomicstatus), _Grunning, _Gwaiting))
             {
+                // The CAS failed: use casgstatus, which will take care of
+                // coordinating with the garbage collector about the state change.
                 casgstatus(gp, _Grunning, _Gwaiting);
             }
+            // Clear gp.m.
             setMNoWB(& gp->m, nullptr);
         }
         // The goroutine stored in c is the one to run next.
@@ -180,6 +190,16 @@ namespace golang::runtime
         g* gnext = {};
         for(; ; )
         {
+            // Note: this is a racy load, but it will eventually
+            // get the right value, and if it gets the wrong value,
+            // the c.gp.cas will fail, so no harm done other than
+            // a wasted loop iteration.
+            // The cas will also sync c.gp's
+            // memory enough that the next iteration of the racy load
+            // should see the correct value.
+            // We are avoiding the atomic load to keep this path
+            // as lightweight as absolutely possible.
+            // (The atomic load is free on x86 but not free elsewhere.)
             auto next = c->gp;
             if(rec::ptr(gocpp::recv(next)) == nullptr)
             {
@@ -193,13 +213,19 @@ namespace golang::runtime
                 break;
             }
         }
+        // Start running next, without heavy scheduling machinery.
+        // Set mp.curg and gnext.m and then update scheduling state
+        // directly if possible.
         setGNoWB(& mp->curg, gnext);
         setMNoWB(& gnext->m, mp);
         if(! rec::CompareAndSwap(gocpp::recv(gnext->atomicstatus), _Gwaiting, _Grunning))
         {
+            // The CAS failed: use casgstatus, which will take care of
+            // coordinating with the garbage collector about the state change.
             casgstatus(gnext, _Gwaiting, _Grunnable);
             casgstatus(gnext, _Grunnable, _Grunning);
         }
+        // Switch to gnext. Does not return.
         gogo(& gnext->sched);
     }
 

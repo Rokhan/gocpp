@@ -352,6 +352,7 @@ namespace golang::image
             return color::RGBA64 {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         auto r = uint16_t(s[0]);
         auto g = uint16_t(s[1]);
@@ -367,6 +368,7 @@ namespace golang::image
             return color::RGBA {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         return color::RGBA {s[0], s[1], s[2], s[3]};
     }
@@ -386,6 +388,7 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto c1 = gocpp::getValue<color::RGBA>(rec::Convert(gocpp::recv(color::RGBAModel), c));
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c1.R;
         s[1] = c1.G;
@@ -400,6 +403,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = uint8_t(c.R >> 8);
         s[1] = uint8_t(c.G >> 8);
@@ -414,6 +418,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c.R;
         s[1] = c.G;
@@ -426,6 +431,9 @@ namespace golang::image
     struct Image rec::SubImage(golang::image::RGBA* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
+        // If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
+        // either r1 or r2 if the intersection is empty. Without explicitly checking for
+        // this, the Pix[i:] expression below can panic.
         if(rec::Empty(gocpp::recv(r)))
         {
             return new RGBA {};
@@ -529,6 +537,7 @@ namespace golang::image
             return color::RGBA64 {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         return color::RGBA64 {(uint16_t(s[0]) << 8) | uint16_t(s[1]), (uint16_t(s[2]) << 8) | uint16_t(s[3]), (uint16_t(s[4]) << 8) | uint16_t(s[5]), (uint16_t(s[6]) << 8) | uint16_t(s[7])};
     }
@@ -548,6 +557,7 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto c1 = gocpp::getValue<color::RGBA64>(rec::Convert(gocpp::recv(color::RGBA64Model), c));
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         s[0] = uint8_t(c1.R >> 8);
         s[1] = uint8_t(c1.R);
@@ -566,6 +576,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         s[0] = uint8_t(c.R >> 8);
         s[1] = uint8_t(c.R);
@@ -582,6 +593,9 @@ namespace golang::image
     struct Image rec::SubImage(golang::image::RGBA64* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
+        // If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
+        // either r1 or r2 if the intersection is empty. Without explicitly checking for
+        // this, the Pix[i:] expression below can panic.
         if(rec::Empty(gocpp::recv(r)))
         {
             return new RGBA64 {};
@@ -691,6 +705,7 @@ namespace golang::image
             return color::NRGBA {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         return color::NRGBA {s[0], s[1], s[2], s[3]};
     }
@@ -710,6 +725,7 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto c1 = gocpp::getValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), c));
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c1.R;
         s[1] = c1.G;
@@ -731,6 +747,7 @@ namespace golang::image
             b = (b * 0xffff) / a;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = uint8_t(r >> 8);
         s[1] = uint8_t(g >> 8);
@@ -745,6 +762,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c.R;
         s[1] = c.G;
@@ -757,6 +775,9 @@ namespace golang::image
     struct Image rec::SubImage(golang::image::NRGBA* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
+        // If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
+        // either r1 or r2 if the intersection is empty. Without explicitly checking for
+        // this, the Pix[i:] expression below can panic.
         if(rec::Empty(gocpp::recv(r)))
         {
             return new NRGBA {};
@@ -866,6 +887,7 @@ namespace golang::image
             return color::NRGBA64 {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         return color::NRGBA64 {(uint16_t(s[0]) << 8) | uint16_t(s[1]), (uint16_t(s[2]) << 8) | uint16_t(s[3]), (uint16_t(s[4]) << 8) | uint16_t(s[5]), (uint16_t(s[6]) << 8) | uint16_t(s[7])};
     }
@@ -885,6 +907,7 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto c1 = gocpp::getValue<color::NRGBA64>(rec::Convert(gocpp::recv(color::NRGBA64Model), c));
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         s[0] = uint8_t(c1.R >> 8);
         s[1] = uint8_t(c1.R);
@@ -910,6 +933,7 @@ namespace golang::image
             b = (b * 0xffff) / a;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         s[0] = uint8_t(r >> 8);
         s[1] = uint8_t(r);
@@ -928,6 +952,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
         s[0] = uint8_t(c.R >> 8);
         s[1] = uint8_t(c.R);
@@ -944,6 +969,9 @@ namespace golang::image
     struct Image rec::SubImage(golang::image::NRGBA64* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
+        // If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
+        // either r1 or r2 if the intersection is empty. Without explicitly checking for
+        // this, the Pix[i:] expression below can panic.
         if(rec::Empty(gocpp::recv(r)))
         {
             return new NRGBA64 {};
@@ -1099,6 +1127,9 @@ namespace golang::image
     struct Image rec::SubImage(golang::image::Alpha* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
+        // If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
+        // either r1 or r2 if the intersection is empty. Without explicitly checking for
+        // this, the Pix[i:] expression below can panic.
         if(rec::Empty(gocpp::recv(r)))
         {
             return new Alpha {};
@@ -1257,6 +1288,9 @@ namespace golang::image
     struct Image rec::SubImage(golang::image::Alpha16* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
+        // If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
+        // either r1 or r2 if the intersection is empty. Without explicitly checking for
+        // this, the Pix[i:] expression below can panic.
         if(rec::Empty(gocpp::recv(r)))
         {
             return new Alpha16 {};
@@ -1393,6 +1427,7 @@ namespace golang::image
         {
             return;
         }
+        // This formula is the same as in color.grayModel.
         auto gray = (19595 * uint32_t(c.R) + 38470 * uint32_t(c.G) + 7471 * uint32_t(c.B) + (1 << 15)) >> 24;
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         p->Pix[i] = uint8_t(gray);
@@ -1413,6 +1448,9 @@ namespace golang::image
     struct Image rec::SubImage(golang::image::Gray* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
+        // If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
+        // either r1 or r2 if the intersection is empty. Without explicitly checking for
+        // this, the Pix[i:] expression below can panic.
         if(rec::Empty(gocpp::recv(r)))
         {
             return new Gray {};
@@ -1533,6 +1571,7 @@ namespace golang::image
         {
             return;
         }
+        // This formula is the same as in color.gray16Model.
         auto gray = (19595 * uint32_t(c.R) + 38470 * uint32_t(c.G) + 7471 * uint32_t(c.B) + (1 << 15)) >> 16;
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         p->Pix[i + 0] = uint8_t(gray >> 8);
@@ -1555,6 +1594,9 @@ namespace golang::image
     struct Image rec::SubImage(golang::image::Gray16* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
+        // If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
+        // either r1 or r2 if the intersection is empty. Without explicitly checking for
+        // this, the Pix[i:] expression below can panic.
         if(rec::Empty(gocpp::recv(r)))
         {
             return new Gray16 {};
@@ -1647,6 +1689,7 @@ namespace golang::image
             return color::CMYK {};
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         return color::CMYK {s[0], s[1], s[2], s[3]};
     }
@@ -1666,6 +1709,7 @@ namespace golang::image
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         auto c1 = gocpp::getValue<color::CMYK>(rec::Convert(gocpp::recv(color::CMYKModel), c));
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c1.C;
         s[1] = c1.M;
@@ -1681,6 +1725,7 @@ namespace golang::image
         }
         auto [cc, mm, yy, kk] = color::RGBToCMYK(uint8_t(c.R >> 8), uint8_t(c.G >> 8), uint8_t(c.B >> 8));
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = cc;
         s[1] = mm;
@@ -1695,6 +1740,7 @@ namespace golang::image
             return;
         }
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
+        // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 4, i + 4);
         s[0] = c.C;
         s[1] = c.M;
@@ -1707,6 +1753,9 @@ namespace golang::image
     struct Image rec::SubImage(golang::image::CMYK* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
+        // If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
+        // either r1 or r2 if the intersection is empty. Without explicitly checking for
+        // this, the Pix[i:] expression below can panic.
         if(rec::Empty(gocpp::recv(r)))
         {
             return new CMYK {};
@@ -1870,6 +1919,9 @@ namespace golang::image
     struct Image rec::SubImage(golang::image::Paletted* p, struct Rectangle r)
     {
         r = rec::Intersect(gocpp::recv(r), p->Rect);
+        // If r1 and r2 are Rectangles, r1.Intersect(r2) is not guaranteed to be inside
+        // either r1 or r2 if the intersection is empty. Without explicitly checking for
+        // this, the Pix[i:] expression below can panic.
         if(rec::Empty(gocpp::recv(r)))
         {
             return gocpp::InitPtr<Paletted>([=](auto& x) {

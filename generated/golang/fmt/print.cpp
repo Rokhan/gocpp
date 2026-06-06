@@ -338,12 +338,15 @@ namespace golang::fmt
     // directive triggering the call to Format.
     gocpp::string FormatString(struct State state, gocpp::rune verb)
     {
+        // Use a local buffer.
         gocpp::array<unsigned char, 16> tmp = {};
         auto b = append(tmp.make_slice(0, 0), '%');
         for(auto [gocpp_ignored, c] : " +-#0"_s)
         {
+            // All known flags
             if(rec::Flag(gocpp::recv(state), int(c)))
             {
+                // The argument is an int for historical reasons.
                 b = append(b, (unsigned char)(c));
             }
         }
@@ -458,6 +461,12 @@ namespace golang::fmt
     // free saves used pp structs in ppFree; avoids an allocation per invocation.
     void rec::free(golang::fmt::pp* p)
     {
+        // Proper usage of a sync.Pool requires each entry to have approximately
+        // the same memory cost. To obtain this property when the stored type
+        // contains a variably-sized buffer, we add a hard limit on the maximum
+        // buffer to place back in the pool. If the buffer is larger than the
+        // limit, we drop the buffer and recycle just the printer.
+        // See https://golang.org/issue/23199.
         if(cap(p->buf) > 64 * 1024)
         {
             p->buf = nullptr;
@@ -714,6 +723,7 @@ namespace golang::fmt
         {
             if(tooLarge(num))
             {
+                // Overflow; crazy long number most likely.
                 return {0, false, end};
             }
             num = num * 10 + int(s[newi] - '0');
@@ -908,6 +918,8 @@ namespace golang::fmt
     // fmtFloat for r and j formatting.
     void rec::fmtComplex(golang::fmt::pp* p, struct gocpp::complex128 v, int size, gocpp::rune verb)
     {
+        // Make sure any unsupported verbs are found before the
+        // calls to fmtFloat to not generate an incorrect error string.
         //Go switch emulation
         {
             auto condition = verb;
@@ -937,6 +949,7 @@ namespace golang::fmt
                     auto oldPlus = p->fmt.fmtFlags.plus;
                     rec::writeByte(gocpp::recv(p->buf), '(');
                     rec::fmtFloat(gocpp::recv(p), real(v), size / 2, verb);
+                    // Imaginary part always has a sign.
                     p->fmt.fmtFlags.plus = true;
                     rec::fmtFloat(gocpp::recv(p), imag(v), size / 2, verb);
                     rec::writeString(gocpp::recv(p->buf), "i)"_s);
@@ -1150,16 +1163,23 @@ namespace golang::fmt
     {
         if(auto err = gocpp::recover(); err != nullptr)
         {
+            // If it's a nil pointer, just say "<nil>". The likeliest causes are a
+            // Stringer that fails to guard against nil or a nil pointer for a
+            // value receiver, and in either case, "<nil>" is a nice result.
             if(auto v = reflect::ValueOf(arg); rec::Kind(gocpp::recv(v)) == reflect::Pointer && rec::IsNil(gocpp::recv(v)))
             {
                 rec::writeString(gocpp::recv(p->buf), nilAngleString);
                 return;
             }
+            // Otherwise print a concise panic message. Most of the time the panic
+            // value will print itself nicely.
             if(p->panicking)
             {
+                // Nested panics; the recursion in printArg cannot succeed.
                 gocpp::panic(err);
             }
             auto oldFlags = p->fmt.fmtFlags;
+            // For this output we want default behavior.
             rec::clearflags(gocpp::recv(p->fmt));
             rec::writeString(gocpp::recv(p->buf), percentBangString);
             rec::writeRune(gocpp::recv(p->buf), verb);
@@ -1186,14 +1206,17 @@ namespace golang::fmt
             }
             if(verb == 'w')
             {
+                // It is invalid to use %w other than with Errorf or with a non-error arg.
                 auto [gocpp_id_0, ok] = gocpp::getValue<gocpp::error>(p->arg);
                 if(! ok || ! p->wrapErrs)
                 {
                     rec::badVerb(gocpp::recv(p), verb);
                     return true;
                 }
+                // If the arg is a Formatter, pass 'v' as the verb to it.
                 verb = 'v';
             }
+            // Is it a Formatter?
             if(auto [formatter, ok] = gocpp::getValue<Formatter>(p->arg); ok)
             {
                 handled = true;
@@ -1201,18 +1224,23 @@ namespace golang::fmt
                 rec::Format(gocpp::recv(formatter), p, verb);
                 return handled;
             }
+            // If we're doing Go syntax and the argument knows how to supply it, take care of it now.
             if(p->fmt.fmtFlags.sharpV)
             {
                 if(auto [stringer, ok] = gocpp::getValue<GoStringer>(p->arg); ok)
                 {
                     handled = true;
                     defer.push_back([=]{ rec::catchPanic(gocpp::recv(p), p->arg, verb, "GoString"_s); });
+                    // Print the result of GoString unadorned.
                     rec::fmtS(gocpp::recv(p->fmt), rec::GoString(gocpp::recv(stringer)));
                     return handled;
                 }
             }
             else
             {
+                // If a string is acceptable according to the format, see if
+                // the value satisfies one of the string-valued interfaces.
+                // Println etc. set verb to %v, which is "stringable".
                 //Go switch emulation
                 {
                     auto condition = verb;
@@ -1229,6 +1257,10 @@ namespace golang::fmt
                         case 2:
                         case 3:
                         case 4:
+                            // Is it an error or Stringer?
+                            // The duplication in the bodies is necessary:
+                            // setting handled and deferring catchPanic
+                            // must happen before calling the method.
                             //Go type switch emulation
                             {
                                 const auto& gocpp_id_1 = gocpp::type_info(p->arg);
@@ -1294,6 +1326,8 @@ namespace golang::fmt
             }
             return;
         }
+        // Special processing considerations.
+        // %T (the value's type) and %p (its address) are special; we always do them first.
         //Go switch emulation
         {
             auto condition = verb;
@@ -1312,6 +1346,7 @@ namespace golang::fmt
                     break;
             }
         }
+        // Some types can be done without reflection.
         //Go type switch emulation
         {
             const auto& gocpp_id_2 = gocpp::type_info(arg);
@@ -1448,6 +1483,8 @@ namespace golang::fmt
                 case 18:
                 {
                     reflect::Value f = gocpp::any_cast<reflect::Value>(arg);
+                    // Handle extractable values with special methods
+                    // since printValue does not handle them at depth 0.
                     if(rec::IsValid(gocpp::recv(f)) && rec::CanInterface(gocpp::recv(f)))
                     {
                         p->arg = rec::Interface(gocpp::recv(f));
@@ -1462,8 +1499,11 @@ namespace golang::fmt
                 default:
                 {
                     auto f = arg;
+                    // If the type is not simple, it might have methods.
                     if(! rec::handleMethods(gocpp::recv(p), verb))
                     {
+                        // Need to use reflection, since the type had no
+                        // interface methods that could be used for formatting.
                         rec::printValue(gocpp::recv(p), reflect::ValueOf(f), verb, 0);
                     }
                     break;
@@ -1476,6 +1516,7 @@ namespace golang::fmt
     // It does not handle 'p' and 'T' verbs because these should have been already handled by printArg.
     void rec::printValue(golang::fmt::pp* p, reflect::Value value, gocpp::rune verb, int depth)
     {
+        // Handle values with special methods if not already handled by printArg (depth == 0).
         if(depth > 0 && rec::IsValid(gocpp::recv(value)) && rec::CanInterface(gocpp::recv(value)))
         {
             p->arg = rec::Interface(gocpp::recv(value));
@@ -1685,6 +1726,7 @@ namespace golang::fmt
                             case 1:
                             case 2:
                             case 3:
+                                // Handle byte and uint8 slices and arrays special for the above verbs.
                                 auto t = rec::Type(gocpp::recv(f));
                                 if(rec::Kind(gocpp::recv(rec::Elem(gocpp::recv(t)))) == reflect::Uint8)
                                 {
@@ -1695,6 +1737,9 @@ namespace golang::fmt
                                     }
                                     else
                                     {
+                                        // We have an array, but we cannot Bytes() a non-addressable array,
+                                        // so we build a slice by hand. This is a rare case but it would be nice
+                                        // if reflection could help a little more.
                                         bytes = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::Len(gocpp::recv(f)));
                                         for(auto [i, gocpp_ignored] : bytes)
                                         {
@@ -1741,6 +1786,8 @@ namespace golang::fmt
                     }
                     break;
                 case 23:
+                    // pointer to array or slice or struct? ok at top level
+                    // but not embedded (avoid loops)
                     if(depth == 0 && rec::UnsafePointer(gocpp::recv(f)) != nullptr)
                     {
                         //Go switch emulation
@@ -1786,9 +1833,11 @@ namespace golang::fmt
         newArgNum = argNum;
         if(argNum < len(a))
         {
+            // Almost always OK.
             std::tie(num, isInt) = gocpp::getValue<int>(a[argNum]);
             if(! isInt)
             {
+                // Work harder.
                 //Go switch emulation
                 {
                     auto v = reflect::ValueOf(a[argNum]);
@@ -1832,6 +1881,7 @@ namespace golang::fmt
                                 isInt = true;
                             }
                             break;
+                        // Already 0, false.
                         default:
                             break;
                     }
@@ -1858,10 +1908,12 @@ namespace golang::fmt
         int index;
         int wid;
         bool ok;
+        // There must be at least 3 bytes: [n].
         if(len(format) < 3)
         {
             return {0, 1, false};
         }
+        // Find closing bracket.
         for(auto i = 1; i < len(format); i++)
         {
             if(format[i] == ']')
@@ -1871,6 +1923,7 @@ namespace golang::fmt
                 {
                     return {0, i + 1, false};
                 }
+                // arg numbers are one-indexed and skip paren.
                 return {width - 1, i + 1, true};
             }
         }
@@ -1916,7 +1969,9 @@ namespace golang::fmt
     void rec::doPrintf(golang::fmt::pp* p, gocpp::string format, gocpp::slice<go_any> a)
     {
         auto end = len(format);
+        // we process one argument per non-trivial format
         auto argNum = 0;
+        // previous item in format was an index like [3].
         auto afterIndex = false;
         p->reordered = false;
         formatLoop:
@@ -1940,9 +1995,12 @@ namespace golang::fmt
             }
             if(i >= end)
             {
+                // done processing format string
                 break;
             }
+            // Process one verb
             i++;
+            // Do we have flags?
             rec::clearflags(gocpp::recv(p->fmt));
             simpleFormat:
             for(; i < end; i++)
@@ -1968,12 +2026,14 @@ namespace golang::fmt
                         case 0:
                             p->fmt.fmtFlags.sharp = true;
                             break;
+                        // Only allow zero padding to the left.
                         case 1:
                             p->fmt.fmtFlags.zero = ! p->fmt.fmtFlags.minus;
                             break;
                         case 2:
                             p->fmt.fmtFlags.plus = true;
                             break;
+                        // Do not pad with zeros to the right.
                         case 3:
                             p->fmt.fmtFlags.minus = true;
                             p->fmt.fmtFlags.zero = false;
@@ -1982,6 +2042,8 @@ namespace golang::fmt
                             p->fmt.fmtFlags.space = true;
                             break;
                         default:
+                            // Fast path for common case of ascii lower case simple verbs
+                            // without precision or width or argument indices.
                             if('a' <= c && c <= 'z' && argNum < len(a))
                             {
                                 //Go switch emulation
@@ -1995,8 +2057,10 @@ namespace golang::fmt
                                         case 0:
                                             p->wrappedErrs = append(p->wrappedErrs, argNum);
                                         case 1:
+                                            // Go syntax
                                             p->fmt.fmtFlags.sharpV = p->fmt.fmtFlags.sharp;
                                             p->fmt.fmtFlags.sharp = false;
+                                            // Struct-field syntax
                                             p->fmt.fmtFlags.plusV = p->fmt.fmtFlags.plus;
                                             p->fmt.fmtFlags.plus = false;
                                             break;
@@ -2007,12 +2071,15 @@ namespace golang::fmt
                                 i++;
                                 goto formatLoop_continue;
                             }
+                            // Format is more complex than simple flags and a verb or is malformed.
                             goto simpleFormat_break;
                             break;
                     }
                 }
             }
+            // Do we have an explicit argument index?
             std::tie(argNum, i, afterIndex) = rec::argNumber(gocpp::recv(p), argNum, format, i, len(a));
+            // Do we have width?
             if(i < end && format[i] == '*')
             {
                 i++;
@@ -2021,10 +2088,13 @@ namespace golang::fmt
                 {
                     rec::writeString(gocpp::recv(p->buf), badWidthString);
                 }
+                // We have a negative width, so take its value and ensure
+                // that the minus flag is set
                 if(p->fmt.wid < 0)
                 {
                     p->fmt.wid = - p->fmt.wid;
                     p->fmt.fmtFlags.minus = true;
+                    // Do not pad with zeros to the right.
                     p->fmt.fmtFlags.zero = false;
                 }
                 afterIndex = false;
@@ -2034,14 +2104,17 @@ namespace golang::fmt
                 std::tie(p->fmt.wid, p->fmt.fmtFlags.widPresent, i) = parsenum(format, i, end);
                 if(afterIndex && p->fmt.fmtFlags.widPresent)
                 {
+                    // "%[3]2d"
                     p->goodArgNum = false;
                 }
             }
+            // Do we have precision?
             if(i + 1 < end && format[i] == '.')
             {
                 i++;
                 if(afterIndex)
                 {
+                    // "%[3].2d"
                     p->goodArgNum = false;
                 }
                 std::tie(argNum, i, afterIndex) = rec::argNumber(gocpp::recv(p), argNum, format, i, len(a));
@@ -2049,6 +2122,7 @@ namespace golang::fmt
                 {
                     i++;
                     std::tie(p->fmt.prec, p->fmt.fmtFlags.precPresent, argNum) = intFromArg(a, argNum);
+                    // Negative precision arguments don't make sense
                     if(p->fmt.prec < 0)
                     {
                         p->fmt.prec = 0;
@@ -2107,8 +2181,10 @@ namespace golang::fmt
                     case 3:
                         p->wrappedErrs = append(p->wrappedErrs, argNum);
                     case 4:
+                        // Go syntax
                         p->fmt.fmtFlags.sharpV = p->fmt.fmtFlags.sharp;
                         p->fmt.fmtFlags.sharp = false;
+                        // Struct-field syntax
                         p->fmt.fmtFlags.plusV = p->fmt.fmtFlags.plus;
                         p->fmt.fmtFlags.plus = false;
                     default:
@@ -2118,6 +2194,9 @@ namespace golang::fmt
                 }
             }
         }
+        // Check for extra arguments unless the call accessed the arguments
+        // out of order, in which case it's too expensive to detect if they've all
+        // been used and arguably OK if they're not.
         if(! p->reordered && argNum < len(a))
         {
             rec::clearflags(gocpp::recv(p->fmt));
@@ -2149,6 +2228,7 @@ namespace golang::fmt
         for(auto [argNum, arg] : a)
         {
             auto isString = arg != nullptr && rec::Kind(gocpp::recv(reflect::TypeOf(arg))) == reflect::String;
+            // Add a space between two non-string arguments.
             if(argNum > 0 && ! isString && ! prevString)
             {
                 rec::writeByte(gocpp::recv(p->buf), ' ');

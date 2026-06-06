@@ -646,6 +646,7 @@ namespace golang::cpu
                 print("GODEBUG: no value specified for \""_s, field, "\"\n"_s);
                 continue;
             }
+            // e.g. "SSE2", "on"
             auto [key, value] = std::tuple{field.make_slice(4, i), field.make_slice(i + 1)};
             bool enable = {};
             //Go switch emulation

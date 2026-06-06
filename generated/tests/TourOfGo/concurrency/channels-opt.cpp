@@ -35,12 +35,15 @@ namespace golang::main
     {
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>(), 5);
         gocpp::go([&]{ fill(c); });
+        // optional result with double declaration
         auto [xx, ok] = c.recv();
         mocklib::Println(xx, ok);
+        // optional result with single declaration (2 forms)
         int zz;
         std::tie(zz, ok) = c.recv();
         mocklib::Println(zz, ok);
         close(c);
+        // optional result with single declaration (2 forms)
         bool okok;
         std::tie(zz, okok) = c.recv();
         mocklib::Println(zz, okok);

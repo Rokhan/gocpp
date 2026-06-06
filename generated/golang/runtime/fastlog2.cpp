@@ -33,6 +33,8 @@ namespace golang::runtime
         auto fastlogScaleBits = 20;
         auto fastlogScaleRatio = 1.0 / (1 << fastlogScaleBits);
         auto xBits = float64bits(x);
+        // Extract the exponent from the IEEE float64, and index a constant
+        // table with the first 10 bits from the mantissa.
         auto xExp = int64_t((xBits >> 52) & 0x7FF) - 1023;
         auto xManIndex = (xBits >> (52 - fastlogNumBits)) % (1 << fastlogNumBits);
         auto xManScale = (xBits >> (52 - fastlogNumBits - fastlogScaleBits)) % (1 << fastlogScaleBits);

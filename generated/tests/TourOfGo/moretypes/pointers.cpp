@@ -23,12 +23,19 @@ namespace golang::main
     void main()
     {
         auto [i, j] = std::tuple{42, 2701};
+        // point to i
         auto p = & i;
+        // read i through the pointer
         mocklib::Println(*p);
+        // set i through the pointer
         *p = 21;
+        // see the new value of i
         mocklib::Println(i);
+        // point to j
         p = & j;
+        // divide j through the pointer
         *p = *p / 37;
+        // see the new value of j
         mocklib::Println(j);
     }
 

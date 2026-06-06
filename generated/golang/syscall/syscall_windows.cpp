@@ -60,6 +60,12 @@ namespace golang::syscall
         {
             return {nullptr, gocpp::error(go_EINVAL)};
         }
+        // Valid UTF-8 characters between 1 and 3 bytes require one uint16.
+        // Valid UTF-8 characters of 4 bytes require two uint16.
+        // Bytes with invalid UTF-8 encoding require maximum one uint16 per byte.
+        // So the number of UTF-8 code units (len(s)) is always greater or
+        // equal than the number of UTF-16 code units.
+        // Also account for the terminating NUL character.
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 0, len(s) + 1);
         buf = encodeWTF16(s, buf);
         return {append(buf, 0), nullptr};
@@ -92,6 +98,12 @@ namespace golang::syscall
                         maxLen += 2;
                         break;
                     default:
+                        // r is a non-surrogate that decodes to 3 bytes,
+                        // or is an unpaired surrogate (also 3 bytes in WTF-8),
+                        // or is one half of a valid surrogate pair.
+                        // If it is half of a pair, we will add 3 for the second surrogate
+                        // (total of 6) and overestimate by 2 bytes for the pair,
+                        // since the resulting rune only requires 4 bytes.
                         maxLen += 3;
                         break;
                 }
@@ -169,6 +181,7 @@ namespace golang::syscall
 
     gocpp::string rec::Error(golang::syscall::Errno e)
     {
+        // deal with special go errors
         auto idx = int(e - APPLICATION_ERROR);
         if(0 <= idx && idx < len(errors))
         {
@@ -186,6 +199,7 @@ namespace golang::syscall
                 return "winapi error #"_s + itoa::Itoa(int(e));
             }
         }
+        // trim terminating \r and \n
         for(; n > 0 && (b[n - 1] == '\n' || b[n - 1] == '\r'); n--)
         {
         }
@@ -348,6 +362,14 @@ namespace golang::syscall
             attrs = FILE_ATTRIBUTE_READONLY;
             if(createmode == CREATE_ALWAYS)
             {
+                // We have been asked to create a read-only file.
+                // If the file already exists, the semantics of
+                // the Unix open system call is to preserve the
+                // existing permissions. If we pass CREATE_ALWAYS
+                // and FILE_ATTRIBUTE_READONLY to CreateFile,
+                // and the file already exists, CreateFile will
+                // change the file permissions.
+                // Avoid that to preserve the Unix semantics.
                 auto [h, e] = CreateFile(pathp, access, sharemode, sa, TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
                 //Go switch emulation
                 {
@@ -362,7 +384,11 @@ namespace golang::syscall
                         case 1:
                         case 2:
                             break;
+                        // File does not exist. These are the same
+                        // errors as Errno.Is checks for ErrNotExist.
+                        // Carry on to create the file.
                         default:
+                            // Success or some different error.
                             return {h, e};
                             break;
                     }
@@ -371,6 +397,7 @@ namespace golang::syscall
         }
         if(createmode == OPEN_EXISTING && access == GENERIC_READ)
         {
+            // Necessary for opening directory handles.
             attrs |= FILE_FLAG_BACKUP_SEMANTICS;
         }
         if(mode & O_SYNC != 0)
@@ -391,6 +418,7 @@ namespace golang::syscall
         {
             if(e == ERROR_BROKEN_PIPE)
             {
+                // NOTE(brainman): work around ERROR_BROKEN_PIPE is returned on reading EOF from stdin
                 return {0, nullptr};
             }
             return {0, e};
@@ -468,6 +496,7 @@ namespace golang::syscall
         }
         else
         {
+            // Different 32-bit systems disgaree about whether distToMove starts 8-byte aligned.
             //Go switch emulation
             {
                 auto condition = runtime::GOARCH;
@@ -480,9 +509,12 @@ namespace golang::syscall
                         gocpp::panic("unsupported 32-bit architecture"_s);
                         break;
                     case 0:
+                        // distToMove is a LARGE_INTEGER, which is 64 bits.
                         std::tie(std::ignore, std::ignore, e1) = Syscall6(rec::Addr(gocpp::recv(procSetFilePointerEx)), 5, uintptr_t(handle), uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(gocpp::unsafe_pointer(newFilePointer)), uintptr_t(whence), 0);
                         break;
                     case 1:
+                        // distToMove must be 8-byte aligned per ARM calling convention
+                        // https://docs.microsoft.com/en-us/cpp/build/overview-of-arm-abi-conventions#stage-c-assignment-of-arguments-to-registers-and-stack
                         std::tie(std::ignore, std::ignore, e1) = Syscall6(rec::Addr(gocpp::recv(procSetFilePointerEx)), 6, uintptr_t(handle), 0, uintptr_t(distToMove), uintptr_t(distToMove >> 32), uintptr_t(gocpp::unsafe_pointer(newFilePointer)), uintptr_t(whence));
                         break;
                 }
@@ -545,6 +577,11 @@ namespace golang::syscall
         gocpp::string wd;
         struct gocpp::error err;
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 300);
+        // The path of the current directory may not fit in the initial 300-word
+        // buffer when long path support is enabled. The current directory may also
+        // change between subsequent calls of GetCurrentDirectory. As a result, we
+        // need to retry the call in a loop until the current directory fits, each
+        // time with a bigger buffer.
         for(; ; )
         {
             auto [n, e] = GetCurrentDirectory(uint32_t(len(b)), & b[0]);
@@ -1197,6 +1234,7 @@ namespace golang::syscall
         {
             sa->raw.Path[i] = int8_t(name[i]);
         }
+        // length is family (uint16), name, NUL.
         auto sl = int32_t(2);
         if(n > 0)
         {
@@ -1204,7 +1242,9 @@ namespace golang::syscall
         }
         if(sa->raw.Path[0] == '@' || (sa->raw.Path[0] == 0 && sl > 3))
         {
+            // Check sl > 3 so we don't change unnamed socket behavior.
             sa->raw.Path[0] = 0;
+            // Don't count trailing NUL for abstract address.
             sl--;
         }
         return {gocpp::unsafe_pointer(& sa->raw), sl, nullptr};
@@ -1226,8 +1266,18 @@ namespace golang::syscall
                     auto sa = new(SockaddrUnix);
                     if(pp->Path[0] == 0)
                     {
+                        // "Abstract" Unix domain socket.
+                        // Rewrite leading NUL as @ for textual display.
+                        // (This is the standard convention.)
+                        // Not friendly to overwrite in place,
+                        // but the callers below don't care.
                         pp->Path[0] = '@';
                     }
+                    // Assume path ends at NUL.
+                    // This is not technically the Linux semantics for
+                    // abstract Unix domain sockets--they are supposed
+                    // to be uninterpreted fixed-size binary blobs--but
+                    // everyone uses this convention.
                     auto n = 0;
                     for(; n < len(pp->Path) && pp->Path[n] != 0; )
                     {
@@ -1994,6 +2044,15 @@ namespace golang::syscall
         {
             return err;
         }
+        // When using VOLUME_NAME_DOS, the path is always pefixed by "\\?\".
+        // That prefix tells the Windows APIs to disable all string parsing and to send
+        // the string that follows it straight to the file system.
+        // Although SetCurrentDirectory and GetCurrentDirectory do support the "\\?\" prefix,
+        // some other Windows APIs don't. If the prefix is not removed here, it will leak
+        // to Getwd, and we don't want such a general-purpose function to always return a
+        // path with the "\\?\" prefix after Fchdir is called.
+        // The downside is that APIs that do support it will parse the path and try to normalize it,
+        // when it's already normalized.
         if(len(path) >= 4 && path[0] == '\\' && path[1] == '\\' && path[2] == '?' && path[3] == '\\')
         {
             path = path.make_slice(4);
@@ -2139,11 +2198,14 @@ namespace golang::syscall
                                     else if(len(s) >= 4 && s.make_slice(0, 4) == "UNC\\"_s) { conditionId = 1; }
                                     switch(conditionId)
                                     {
+                                        // \??\C:\foo\bar
                                         case 0:
                                             break;
+                                        // do nothing
                                         case 1:
                                             s = "\\\\"_s + s.make_slice(4);
                                             break;
+                                        // unexpected; do nothing
                                         default:
                                             break;
                                     }
@@ -2154,19 +2216,24 @@ namespace golang::syscall
                             }
                         }
                         break;
+                    // unexpected; do nothing
                     case 1:
                         auto data = (mountPointReparseBuffer*)(gocpp::unsafe_pointer(& rdb->reparseBuffer));
                         auto p = (gocpp::array_ptr<gocpp::array<uint16_t, 0xffff>>)(gocpp::unsafe_pointer(& data->PathBuffer[0]));
                         s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
                         if(len(s) >= 4 && s.make_slice(0, 4) == "\\??\\"_s)
                         {
+                            // \??\C:\foo\bar
                             s = s.make_slice(4);
                         }
                         else
                         {
                         }
                         break;
+                    // unexpected; do nothing
                     default:
+                        // the path is not a symlink or junction but another type of reparse
+                        // point
                         return {- 1, gocpp::error(go_ENOENT)};
                         break;
                 }
@@ -2229,6 +2296,7 @@ namespace golang::syscall
             }
             return {nullptr, err};
         }
+        // size is guaranteed to be ≥1 by initializeProcThreadAttributeList.
         auto al = (_PROC_THREAD_ATTRIBUTE_LIST*)(gocpp::unsafe_pointer(& gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size)[0]));
         err = initializeProcThreadAttributeList(al, maxAttrCount, 0, & size);
         if(err != nullptr)

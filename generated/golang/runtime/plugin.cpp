@@ -46,6 +46,7 @@ namespace golang::runtime
         {
             if(pmd->bad)
             {
+                // we only want the last module
                 md = nullptr;
                 continue;
             }
@@ -92,6 +93,7 @@ namespace golang::runtime
                 return {""_s, nullptr, nullptr, "plugin was built with a different version of package "_s + pkghash.modulename};
             }
         }
+        // Initialize the freshly loaded module.
         modulesinit();
         typelinksinit();
         pluginftabverify(md);
@@ -102,10 +104,18 @@ namespace golang::runtime
             itabAdd(i);
         }
         unlock(& itabLock);
+        // Build a map of symbol names to symbols. Here in the runtime
+        // we fill out the first word of the interface, the type. We
+        // pass these zero value interfaces to the plugin package,
+        // where the symbol value is filled in (usually via cgo).
+        // Because functions are handled specially in the plugin package,
+        // function symbol names are prefixed here with '.' to avoid
+        // a dependency on the reflect package.
         syms = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, go_any>>(), len(md->ptab));
         for(auto [gocpp_ignored, ptab] : md->ptab)
         {
             auto symName = resolveNameOff(gocpp::unsafe_pointer(md->types), ptab.name);
+            // TODO can this stack of conversions be simpler?
             auto t = rec::typeOff(gocpp::recv(toRType((runtime::_type*)(gocpp::unsafe_pointer(md->types)))), ptab.typ);
             go_any val = {};
             auto valp = (gocpp::array_ptr<gocpp::array<gocpp::unsafe_pointer, 2>>)(gocpp::unsafe_pointer(& val));
@@ -132,6 +142,9 @@ namespace golang::runtime
             }
             auto f = funcInfo {(_func*)(gocpp::unsafe_pointer(& md->pclntable[md->ftab[i].funcoff])), md};
             auto name = funcname(f);
+            // A common bug is f.entry has a relocation to a duplicate
+            // function symbol, meaning if we search for its PC we get
+            // a valid entry with a name that is useful for debugging.
             auto name2 = "none"_s;
             auto entry2 = uintptr_t(0);
             auto f2 = findfunc(entry);

@@ -28,6 +28,7 @@ namespace golang::sys
         {
             return 32;
         }
+        // see comment in TrailingZeros64
         return int(deBruijn32tab[(x & - x) * deBruijn32 >> (32 - 5)]);
     }
 
@@ -38,6 +39,16 @@ namespace golang::sys
         {
             return 64;
         }
+        // If popcount is fast, replace code below with return popcount(^x & (x - 1)).
+        // x & -x leaves only the right-most bit set in the word. Let k be the
+        // index of that bit. Since only a single bit is set, the value is two
+        // to the power of k. Multiplying by a power of two is equivalent to
+        // left shifting, in this case by k bits. The de Bruijn (64 bit) constant
+        // is such that all six bit, consecutive substrings are distinct.
+        // Therefore, if we have a left shifted version of this constant we can
+        // find by how many bits it was shifted by looking at which six bit
+        // substring ended up at the top of the word.
+        // (Knuth, volume 4, section 7.3.1)
         return int(deBruijn64tab[(x & - x) * deBruijn64 >> (64 - 6)]);
     }
 
@@ -80,15 +91,13 @@ namespace golang::sys
         // Implementation: Parallel summing of adjacent bits.
         // See "Hacker's Delight", Chap. 5: Counting Bits.
         // The following pattern shows the general approach:
-        //
-        //   x = x>>1&(m0&m) + x&(m0&m)
-        //   x = x>>2&(m1&m) + x&(m1&m)
-        //   x = x>>4&(m2&m) + x&(m2&m)
-        //   x = x>>8&(m3&m) + x&(m3&m)
-        //   x = x>>16&(m4&m) + x&(m4&m)
-        //   x = x>>32&(m5&m) + x&(m5&m)
-        //   return int(x)
-        //
+        // x = x>>1&(m0&m) + x&(m0&m)
+        // x = x>>2&(m1&m) + x&(m1&m)
+        // x = x>>4&(m2&m) + x&(m2&m)
+        // x = x>>8&(m3&m) + x&(m3&m)
+        // x = x>>16&(m4&m) + x&(m4&m)
+        // x = x>>32&(m5&m) + x&(m5&m)
+        // return int(x)
         // Masking (& operations) can be left away when there's no
         // danger that a field's sum will carry over into the next
         // field: Since the result cannot be > 64, 8 bits is enough

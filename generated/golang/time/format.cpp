@@ -241,6 +241,7 @@ namespace golang::time
                     case 5:
                         if(len(layout) >= i + 2 && layout[i + 1] == '2')
                         {
+                            // _2006 is really a literal _, followed by stdLongYear
                             if(len(layout) >= i + 5 && layout.make_slice(i + 1, i + 5) == "2006"_s)
                             {
                                 return {layout.make_slice(0, i + 1), stdLongYear, layout.make_slice(i + 5)};
@@ -327,6 +328,7 @@ namespace golang::time
                             {
                                 j++;
                             }
+                            // String of digits must end here - only fractional second is all digits.
                             if(! isDigit(layout, j))
                             {
                                 auto code = stdFracSecond0;
@@ -359,6 +361,7 @@ namespace golang::time
             auto c2 = s2[i];
             if(c1 != c2)
             {
+                // Switch to lower-case; 'a'-'A' is known to be a single bit.
                 c1 |= 'a' - 'A';
                 c2 |= 'a' - 'A';
                 if(c1 != c2 || c1 < 'a' || c1 > 'z')
@@ -393,6 +396,7 @@ namespace golang::time
             b = append(b, '-');
             u = (unsigned int)(- x);
         }
+        // 2-digit and 4-digit fields are the most common in time formats.
         auto utod = [=](unsigned int u) mutable -> unsigned char
         {
             return '0' + (unsigned char)(u);
@@ -422,10 +426,12 @@ namespace golang::time
         {
             n++;
         }
+        // Add 0-padding.
         for(auto pad = width - n; pad > 0; pad--)
         {
             b = append(b, '0');
         }
+        // Ensure capacity.
         if(len(b) + n <= cap(b))
         {
             b = b.make_slice(0, len(b) + n);
@@ -434,6 +440,7 @@ namespace golang::time
         {
             b = append(b, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n));
         }
+        // Assemble decimal in reverse order.
         auto i = len(b) - 1;
         for(; u >= 10 && i > 0; )
         {
@@ -480,6 +487,7 @@ namespace golang::time
     // These functions pack and unpack that variable.
     int stdFracSecond(int code, int n, int c)
     {
+        // Use 0xfff to make the failure case even more absurd.
         if(c == '.')
         {
             return code | ((n & 0xfff) << stdArgShift);
@@ -546,6 +554,7 @@ namespace golang::time
     gocpp::string rec::String(golang::time::Time t)
     {
         auto s = rec::Format(gocpp::recv(t), "2006-01-02 15:04:05.999999999 -0700 MST"_s);
+        // Format monotonic clock reading as m=±ddd.nnnnnnnnn.
         if(t.wall & hasMonotonic != 0)
         {
             auto m2 = uint64_t(t.ext);
@@ -593,6 +602,8 @@ namespace golang::time
         }
         else
         {
+            // It's difficult to construct a time.Time with a date outside the
+            // standard range but we might as well try to handle the case.
             buf = appendInt(buf, int(month), 0);
         }
         buf = append(buf, ", "_s);
@@ -624,6 +635,19 @@ namespace golang::time
                     buf = append(buf, "time.Local"_s);
                     break;
                 default:
+                    // there are several options for how we could display this, none of
+                    // which are great:
+                    // - use Location(loc.name), which is not technically valid syntax
+                    // - use LoadLocation(loc.name), which will cause a syntax error when
+                    // embedded and also would require us to escape the string without
+                    // importing fmt or strconv
+                    // - try to use FixedZone, which would also require escaping the name
+                    // and would represent e.g. "America/Los_Angeles" daylight saving time
+                    // shifts inaccurately
+                    // - use the pointer format, which is no worse than you'd get with the
+                    // old fmt.Sprintf("%#v", t) format.
+                    // Of these, Location(loc.name) is the least disruptive. This is an edge
+                    // case we hope not to hit too often.
                     buf = append(buf, "time.Location("_s);
                     buf = append(buf, quote(loc->name));
                     buf = append(buf, ')');
@@ -662,6 +686,7 @@ namespace golang::time
     // representation to b and returns the extended buffer.
     gocpp::slice<unsigned char> rec::AppendFormat(golang::time::Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
     {
+        // Optimize for RFC3339 as it accounts for over half of all representations.
         //Go switch emulation
         {
             auto condition = layout;
@@ -693,6 +718,7 @@ namespace golang::time
         int hour = - 1;
         int min = - 1;
         int sec = - 1;
+        // Each iteration generates one std value.
         for(; layout != ""_s; )
         {
             auto [prefix, std, suffix] = nextStdChunk(layout);
@@ -705,11 +731,13 @@ namespace golang::time
                 break;
             }
             layout = suffix;
+            // Compute year, month, day if needed.
             if(year < 0 && std & stdNeedDate != 0)
             {
                 std::tie(year, month, day, yday) = absDate(abs, true);
                 yday++;
             }
+            // Compute hour, minute, second if needed.
             if(hour < 0 && std & stdNeedClock != 0)
             {
                 std::tie(hour, min, sec) = absClock(abs);
@@ -817,6 +845,7 @@ namespace golang::time
                         b = appendInt(b, hour, 2);
                         break;
                     case 14:
+                        // Noon is 12PM, midnight is 12AM.
                         auto hr = hour % 12;
                         if(hr == 0)
                         {
@@ -825,6 +854,7 @@ namespace golang::time
                         b = appendInt(b, hr, 0);
                         break;
                     case 15:
+                        // Noon is 12PM, midnight is 12AM.
                         auto hr = hour % 12;
                         if(hr == 0)
                         {
@@ -874,11 +904,14 @@ namespace golang::time
                     case 29:
                     case 30:
                     case 31:
+                        // Ugly special case. We cheat and take the "Z" variants
+                        // to mean "the time zone as formatted for ISO 8601".
                         if(offset == 0 && (std == stdISO8601TZ || std == stdISO8601ColonTZ || std == stdISO8601SecondsTZ || std == stdISO8601ShortTZ || std == stdISO8601ColonSecondsTZ))
                         {
                             b = append(b, 'Z');
                             break;
                         }
+                        // convert to minutes
                         auto zone = offset / 60;
                         auto absoffset = offset;
                         if(zone < 0)
@@ -900,6 +933,7 @@ namespace golang::time
                         {
                             b = appendInt(b, zone % 60, 2);
                         }
+                        // append seconds if appropriate
                         if(std == stdISO8601SecondsTZ || std == stdNumSecondsTz || std == stdNumColonSecondsTZ || std == stdISO8601ColonSecondsTZ)
                         {
                             if(std == stdNumColonSecondsTZ || std == stdISO8601ColonSecondsTZ)
@@ -915,6 +949,9 @@ namespace golang::time
                             b = append(b, name);
                             break;
                         }
+                        // No time zone known for this time, but we must print one.
+                        // Use the -0700 format.
+                        // convert to minutes
                         auto zone = offset / 60;
                         if(zone < 0)
                         {
@@ -1002,6 +1039,7 @@ namespace golang::time
     gocpp::string lowerhex = "0123456789abcdef"_s;
     gocpp::string quote(gocpp::string s)
     {
+        // slice will be at least len(s) + quotes
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 1, len(s) + 2);
         buf[0] = '"';
         for(auto [i, c] : s)
@@ -1186,6 +1224,7 @@ namespace golang::time
     // that use a numeric zone offset, or use ParseInLocation.
     std::tuple<struct Time, struct gocpp::error> Parse(gocpp::string layout, gocpp::string value)
     {
+        // Optimize for RFC3339 as it accounts for over half of all representations.
         if(layout == RFC3339 || layout == RFC3339Nano)
         {
             if(auto [t, ok] = parseRFC3339(value, Local); ok)
@@ -1203,6 +1242,7 @@ namespace golang::time
     // against the Local location; ParseInLocation uses the given location.
     std::tuple<struct Time, struct gocpp::error> ParseInLocation(gocpp::string layout, gocpp::string value, struct Location* loc)
     {
+        // Optimize for RFC3339 as it accounts for over half of all representations.
         if(layout == RFC3339 || layout == RFC3339Nano)
         {
             if(auto [t, ok] = parseRFC3339(value, loc); ok)
@@ -1216,8 +1256,11 @@ namespace golang::time
     std::tuple<struct Time, struct gocpp::error> parse(gocpp::string layout, gocpp::string value, struct Location* defaultLocation, struct Location* local)
     {
         auto [alayout, avalue] = std::tuple{layout, value};
+        // set if a value is out of range
         auto rangeErrString = ""_s;
+        // do we need to subtract 12 from the hour for midnight?
         auto amSet = false;
+        // do we need to add 12 to the hour?
         auto pmSet = false;
         // Time being constructed.
         int year = {};
@@ -1231,6 +1274,7 @@ namespace golang::time
         Location* z = - 1;
         int zoneOffset = - 1;
         gocpp::string zoneName = - 1;
+        // Each iteration processes one std value.
         for(; ; )
         {
             gocpp::error err = {};
@@ -1307,6 +1351,7 @@ namespace golang::time
                         }
                         if(year >= 69)
                         {
+                            // Unix time starts Dec 31 1969 in some time zones
                             year += 1900;
                         }
                         else
@@ -1340,6 +1385,7 @@ namespace golang::time
                         }
                         break;
                     case 6:
+                        // Ignore weekday except for error checking.
                         std::tie(std::ignore, value, err) = lookup(shortDayNames, value);
                         break;
                     case 7:
@@ -1354,6 +1400,8 @@ namespace golang::time
                         }
                         std::tie(day, value, err) = getnum(value, std == stdZeroDay);
                         break;
+                    // Note that we allow any one- or two-digit day here.
+                    // The month, day, year combination is validated after we've completed parsing.
                     case 11:
                     case 12:
                         for(auto i = 0; i < 2; i++)
@@ -1365,6 +1413,8 @@ namespace golang::time
                         }
                         std::tie(yday, value, err) = getnum3(value, std == stdZeroYearDay);
                         break;
+                    // Note that we allow any one-, two-, or three-digit year-day here.
+                    // The year-day, year combination is validated after we've completed parsing.
                     case 13:
                         std::tie(hour, value, err) = getnum(value, false);
                         if(hour < 0 || 24 <= hour)
@@ -1400,14 +1450,18 @@ namespace golang::time
                             rangeErrString = "second"_s;
                             break;
                         }
+                        // Special case: do we have a fractional second but no
+                        // fractional second in the format?
                         if(len(value) >= 2 && commaOrPeriod(value[0]) && isDigit(value, 1))
                         {
                             std::tie(std::ignore, std, std::ignore) = nextStdChunk(layout);
                             std &= stdMask;
                             if(std == stdFracSecond0 || std == stdFracSecond9)
                             {
+                                // Fractional second in the layout; proceed normally
                                 break;
                             }
+                            // No fractional second in the layout but we have one in the input.
                             auto n = 2;
                             for(; n < len(value) && isDigit(value, n); n++)
                             {
@@ -1560,6 +1614,7 @@ namespace golang::time
                         {
                             std::tie(ss, std::ignore, err) = getnum(seconds, true);
                         }
+                        // offset is in seconds
                         zoneOffset = (hr * 60 + mm) * 60 + ss;
                         //Go switch emulation
                         {
@@ -1581,6 +1636,7 @@ namespace golang::time
                         }
                         break;
                     case 32:
+                        // Does it look like a time zone?
                         if(len(value) >= 3 && value.make_slice(0, 3) == "UTC"_s)
                         {
                             z = UTC;
@@ -1596,6 +1652,8 @@ namespace golang::time
                         std::tie(zoneName, value) = std::tuple{value.make_slice(0, n), value.make_slice(n)};
                         break;
                     case 33:
+                        // stdFracSecond0 requires the exact number of digits as specified in
+                        // the layout.
                         auto ndigit = 1 + digitsLen(std);
                         if(len(value) < ndigit)
                         {
@@ -1608,8 +1666,11 @@ namespace golang::time
                     case 34:
                         if(len(value) < 2 || ! commaOrPeriod(value[0]) || value[1] < '0' || '9' < value[1])
                         {
+                            // Fractional second omitted.
                             break;
                         }
+                        // Take any number of digits, even more than asked for,
+                        // because it is what the stdSecond case would do.
                         auto i = 0;
                         for(; i + 1 < len(value) && '0' <= value[i + 1] && value[i + 1] <= '9'; )
                         {
@@ -1638,6 +1699,7 @@ namespace golang::time
         {
             hour = 0;
         }
+        // Convert yday to day, month.
         if(yday >= 0)
         {
             int d = {};
@@ -1668,6 +1730,8 @@ namespace golang::time
                 }
                 d = yday - int(daysBefore[m - 1]);
             }
+            // If month, day already seen, yday's m, d must match.
+            // Otherwise, set them from m, d.
             if(month >= 0 && month != m)
             {
                 return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day-of-year does not match month"_s))};
@@ -1690,6 +1754,7 @@ namespace golang::time
                 day = 1;
             }
         }
+        // Validate the day of the month.
         if(day < 1 || day > daysIn(Month(month), year))
         {
             return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day out of range"_s))};
@@ -1702,12 +1767,16 @@ namespace golang::time
         {
             auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
             rec::addSec(gocpp::recv(t), - int64_t(zoneOffset));
+            // Look for local zone with the given offset.
+            // If that zone was in effect at the given time, use it.
             auto [name, offset, gocpp_id_2, gocpp_id_3, gocpp_id_4] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t)));
             if(offset == zoneOffset && (zoneName == ""_s || name == zoneName))
             {
                 rec::setLoc(gocpp::recv(t), local);
                 return {t, nullptr};
             }
+            // Otherwise create fake zone to record offset.
+            // avoid leaking the input value
             auto zoneNameCopy = cloneString(zoneName);
             rec::setLoc(gocpp::recv(t), FixedZone(zoneNameCopy, zoneOffset));
             return {t, nullptr};
@@ -1715,6 +1784,8 @@ namespace golang::time
         if(zoneName != ""_s)
         {
             auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
+            // Look for local zone with the given offset.
+            // If that zone was in effect at the given time, use it.
             auto [offset, ok] = rec::lookupName(gocpp::recv(local), zoneName, rec::unixSec(gocpp::recv(t)));
             if(ok)
             {
@@ -1722,15 +1793,19 @@ namespace golang::time
                 rec::setLoc(gocpp::recv(t), local);
                 return {t, nullptr};
             }
+            // Otherwise, create fake zone with unknown offset.
             if(len(zoneName) > 3 && zoneName.make_slice(0, 3) == "GMT"_s)
             {
+                // Guaranteed OK by parseGMT.
                 std::tie(offset, std::ignore) = atoi(zoneName.make_slice(3));
                 offset *= 3600;
             }
+            // avoid leaking the input value
             auto zoneNameCopy = cloneString(zoneName);
             rec::setLoc(gocpp::recv(t), FixedZone(zoneNameCopy, offset));
             return {t, nullptr};
         }
+        // Otherwise, fall back to default.
         return {Date(year, Month(month), day, hour, min, sec, nsec, defaultLocation), nullptr};
     }
 
@@ -1752,18 +1827,22 @@ namespace golang::time
         {
             return {0, false};
         }
+        // Special case 1: ChST and MeST are the only zones with a lower-case letter.
         if(len(value) >= 4 && (value.make_slice(0, 4) == "ChST"_s || value.make_slice(0, 4) == "MeST"_s))
         {
             return {4, true};
         }
+        // Special case 2: GMT may have an hour offset; treat it specially.
         if(value.make_slice(0, 3) == "GMT"_s)
         {
             length = parseGMT(value);
             return {length, true};
         }
+        // Special Case 3: Some time zones are not named, but have +/-00 format
         if(value[0] == '+' || value[0] == '-')
         {
             length = parseSignedOffset(value);
+            // parseSignedOffset returns 0 in case of bad input
             auto ok = length > 0;
             return {length, ok};
         }
@@ -1806,6 +1885,7 @@ namespace golang::time
                     }
                     break;
                 case 5:
+                    // Must end in T, except one special case.
                     if(value[3] == 'T' || value.make_slice(0, 4) == "WITA"_s)
                     {
                         return {4, true};
@@ -1843,6 +1923,7 @@ namespace golang::time
             return 0;
         }
         auto [x, rem, err] = leadingInt(value.make_slice(1));
+        // fail if nothing consumed by leadingInt
         if(err != nullptr || value.make_slice(1) == rem)
         {
             return 0;
@@ -1884,6 +1965,8 @@ namespace golang::time
             rangeErrString = "fractional second"_s;
             return {ns, rangeErrString, err};
         }
+        // We need nanoseconds, which means scaling by the number
+        // of missing digits in the format, maximum length 10.
         auto scaleDigits = 10 - nbytes;
         for(auto i = 0; i < scaleDigits; i++)
         {
@@ -1910,11 +1993,13 @@ namespace golang::time
             }
             if(x > (1 << 63) / 10)
             {
+                // overflow
                 return {0, rem, errLeadingInt};
             }
             x = x * 10 + uint64_t(c) - '0';
             if(x > (1 << 63))
             {
+                // overflow
                 return {0, rem, errLeadingInt};
             }
         }
@@ -1945,6 +2030,7 @@ namespace golang::time
             }
             if(x > ((1 << 63) - 1) / 10)
             {
+                // It's possible for overflow to give a positive number, so take care.
                 overflow = true;
                 continue;
             }
@@ -1968,9 +2054,11 @@ namespace golang::time
     // Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
     std::tuple<time::Duration, struct gocpp::error> ParseDuration(gocpp::string s)
     {
+        // [-+]?([0-9]*(\.[0-9]*)?[a-z]+)+
         auto orig = s;
         uint64_t d = {};
         auto neg = false;
+        // Consume [-+]?
         if(s != ""_s)
         {
             auto c = s[0];
@@ -1980,6 +2068,7 @@ namespace golang::time
                 s = s.make_slice(1);
             }
         }
+        // Special case: if all that is left is "0", this is zero.
         if(s == "0"_s)
         {
             return {0, nullptr};
@@ -1994,17 +2083,21 @@ namespace golang::time
             uint64_t f = {};
             double scale = 1;
             gocpp::error err = {};
+            // The next character must be [0-9.]
             if(! (s[0] == '.' || '0' <= s[0] && s[0] <= '9'))
             {
                 return {0, errors::New("time: invalid duration "_s + quote(orig))};
             }
+            // Consume [0-9]*
             auto pl = len(s);
             std::tie(v, s, err) = leadingInt(s);
             if(err != nullptr)
             {
                 return {0, errors::New("time: invalid duration "_s + quote(orig))};
             }
+            // whether we consumed anything before a period
             auto pre = pl != len(s);
+            // Consume (\.[0-9]*)?
             auto post = false;
             if(s != ""_s && s[0] == '.')
             {
@@ -2015,8 +2108,10 @@ namespace golang::time
             }
             if(! pre && ! post)
             {
+                // no digits (e.g. ".s" or "-.s")
                 return {0, errors::New("time: invalid duration "_s + quote(orig))};
             }
+            // Consume unit.
             auto i = 0;
             for(; i < len(s); i++)
             {
@@ -2039,14 +2134,18 @@ namespace golang::time
             }
             if(v > (1 << 63) / unit)
             {
+                // overflow
                 return {0, errors::New("time: invalid duration "_s + quote(orig))};
             }
             v *= unit;
             if(f > 0)
             {
+                // float64 is needed to be nanosecond accurate for fractions of hours.
+                // v >= 0 && (f*unit/scale) <= 3.6e+12 (ns/h, h is the largest unit)
                 v += uint64_t(double(f) * (double(unit) / scale));
                 if(v > (1 << 63))
                 {
+                    // overflow
                     return {0, errors::New("time: invalid duration "_s + quote(orig))};
                 }
             }

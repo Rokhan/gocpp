@@ -517,6 +517,11 @@ namespace golang::color
     // ModelFunc returns a [Model] that invokes f to implement the conversion.
     struct Model ModelFunc(std::function<struct Color (struct Color _1)> f)
     {
+        // Note: using *modelFunc as the implementation
+        // means that callers can still use comparisons
+        // like m == RGBAModel. This is not possible if
+        // we use the func value directly, because funcs
+        // are no longer comparable.
         return new modelFunc {f};
     }
 
@@ -598,6 +603,7 @@ namespace golang::color
         {
             return NRGBA {0, 0, 0, 0};
         }
+        // Since Color.RGBA returns an alpha-premultiplied color, we should have r <= a && g <= a && b <= a.
         r = (r * 0xffff) / a;
         g = (g * 0xffff) / a;
         b = (b * 0xffff) / a;
@@ -619,6 +625,7 @@ namespace golang::color
         {
             return NRGBA64 {0, 0, 0, 0};
         }
+        // Since Color.RGBA returns an alpha-premultiplied color, we should have r <= a && g <= a && b <= a.
         r = (r * 0xffff) / a;
         g = (g * 0xffff) / a;
         b = (b * 0xffff) / a;
@@ -652,6 +659,12 @@ namespace golang::color
             return c;
         }
         auto [r, g, b, gocpp_id_13] = rec::RGBA(gocpp::recv(c));
+        // These coefficients (the fractions 0.299, 0.587 and 0.114) are the same
+        // as those given by the JFIF specification and used by func RGBToYCbCr in
+        // ycbcr.go.
+        // Note that 19595 + 38470 + 7471 equals 65536.
+        // The 24 is 16 + 8. The 16 is the same as used in RGBToYCbCr. The 8 is
+        // because the return value is 8 bit color, not 16 bit color.
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 24;
         return Gray {uint8_t(y)};
     }
@@ -663,6 +676,10 @@ namespace golang::color
             return c;
         }
         auto [r, g, b, gocpp_id_15] = rec::RGBA(gocpp::recv(c));
+        // These coefficients (the fractions 0.299, 0.587 and 0.114) are the same
+        // as those given by the JFIF specification and used by func RGBToYCbCr in
+        // ycbcr.go.
+        // Note that 19595 + 38470 + 7471 equals 65536.
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 16;
         return Gray16 {uint16_t(y)};
     }
@@ -682,6 +699,7 @@ namespace golang::color
     // R,G,B,A space.
     int rec::Index(golang::color::Palette p, struct Color c)
     {
+        // A batch version of this computation is in image/draw/draw.go.
         auto [cr, cg, cb, ca] = rec::RGBA(gocpp::recv(c));
         auto [ret, bestSum] = std::tuple{0, uint32_t((1 << 32) - 1)};
         for(auto [i, v] : p)
@@ -706,6 +724,24 @@ namespace golang::color
     // x and y are both assumed to be in the range [0, 0xffff].
     uint32_t sqDiff(uint32_t x, uint32_t y)
     {
+        // The canonical code of this function looks as follows:
+        // var d uint32
+        // if x > y {
+        // d = x - y
+        // } else {
+        // d = y - x
+        // }
+        // return (d * d) >> 2
+        // Language spec guarantees the following properties of unsigned integer
+        // values operations with respect to overflow/wrap around:
+        // > For unsigned integer values, the operations +, -, *, and << are
+        // > computed modulo 2n, where n is the bit width of the unsigned
+        // > integer's type. Loosely speaking, these unsigned integer operations
+        // > discard high bits upon overflow, and programs may rely on ``wrap
+        // > around''.
+        // Considering these properties and the fact that this function is
+        // called in the hot paths (x,y loops), it is reduced to the below code
+        // which is slightly faster. See TestSqDiff for correctness check.
         auto d = x - y;
         return (d * d) >> 2;
     }

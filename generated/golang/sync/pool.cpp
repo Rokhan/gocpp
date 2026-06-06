@@ -199,6 +199,7 @@ namespace golang::sync
         {
             if(runtime_randn(4) == 0)
             {
+                // Randomly drop x on floor.
                 return;
             }
             race::ReleaseMerge(poolRaceAddr(x));
@@ -239,6 +240,9 @@ namespace golang::sync
         l->poolLocalInternal.go_private = nullptr;
         if(x == nullptr)
         {
+            // Try to pop the head of the local shard. We prefer
+            // the head over the tail for temporal locality of
+            // reuse.
             std::tie(x, std::ignore) = rec::popHead(gocpp::recv(l->poolLocalInternal.shared));
             if(x == nullptr)
             {
@@ -263,8 +267,12 @@ namespace golang::sync
 
     go_any rec::getSlow(golang::sync::Pool* p, int pid)
     {
+        // See the comment in pin regarding ordering of the loads.
+        // load-acquire
         auto size = runtime_LoadAcquintptr(& p->localSize);
+        // load-consume
         auto locals = p->local;
+        // Try to steal one element from other procs.
         for(auto i = 0; i < int(size); i++)
         {
             auto l = indexLocal(locals, (pid + i + 1) % int(size));
@@ -273,6 +281,9 @@ namespace golang::sync
                 return x;
             }
         }
+        // Try the victim cache. We do this after attempting to steal
+        // from all primary caches because we want objects in the
+        // victim cache to age out if at all possible.
         size = atomic::LoadUintptr(& p->victimSize);
         if(uintptr_t(pid) >= size)
         {
@@ -293,6 +304,8 @@ namespace golang::sync
                 return x;
             }
         }
+        // Mark the victim cache as empty for future gets don't bother
+        // with it.
         atomic::StoreUintptr(& p->victimSize, 0);
         return nullptr;
     }
@@ -302,12 +315,21 @@ namespace golang::sync
     // Caller must call runtime_procUnpin() when done with the pool.
     std::tuple<struct poolLocal*, int> rec::pin(golang::sync::Pool* p)
     {
+        // Check whether p is nil to get a panic.
+        // Otherwise the nil dereference happens while the m is pinned,
+        // causing a fatal error rather than a panic.
         if(p == nullptr)
         {
             gocpp::panic("nil Pool"_s);
         }
         auto pid = runtime_procPin();
+        // In pinSlow we store to local and then to localSize, here we load in opposite order.
+        // Since we've disabled preemption, GC cannot happen in between.
+        // Thus here we must observe local at least as large localSize.
+        // We can observe a newer/larger local, it is fine (we must observe its zero-initialized-ness).
+        // load-acquire
         auto s = runtime_LoadAcquintptr(& p->localSize);
+        // load-consume
         auto l = p->local;
         if(uintptr_t(pid) < s)
         {
@@ -321,10 +343,13 @@ namespace golang::sync
         gocpp::Defer defer;
         try
         {
+            // Retry under the mutex.
+            // Can not lock the mutex while pinned.
             runtime_procUnpin();
             rec::Lock(gocpp::recv(allPoolsMu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(allPoolsMu)); });
             auto pid = runtime_procPin();
+            // poolCleanup won't be called while we are pinned.
             auto s = p->localSize;
             auto l = p->local;
             if(uintptr_t(pid) < s)
@@ -335,9 +360,12 @@ namespace golang::sync
             {
                 allPools = append(allPools, p);
             }
+            // If GOMAXPROCS changes between GCs, we re-allocate the array and lose the old one.
             auto size = runtime::GOMAXPROCS(0);
             auto local = gocpp::make(gocpp::Tag<gocpp::slice<poolLocal>>(), size);
+            // store-release
             atomic::StorePointer(& p->local, gocpp::unsafe_pointer(& local[0]));
+            // store-release
             runtime_StoreReluintptr(& p->localSize, uintptr_t(size));
             return {& local[pid], pid};
         }
@@ -349,11 +377,17 @@ namespace golang::sync
 
     void poolCleanup()
     {
+        // This function is called with the world stopped, at the beginning of a garbage collection.
+        // It must not allocate and probably should not call any runtime functions.
+        // Because the world is stopped, no pool user can be in a
+        // pinned section (in effect, this has all Ps pinned).
+        // Drop victim caches from all pools.
         for(auto [gocpp_ignored, p] : oldPools)
         {
             p->victim = nullptr;
             p->victimSize = 0;
         }
+        // Move primary cache to victim cache.
         for(auto [gocpp_ignored, p] : allPools)
         {
             p->victim = p->local;
@@ -361,6 +395,8 @@ namespace golang::sync
             p->local = nullptr;
             p->localSize = 0;
         }
+        // The pools with non-empty primary caches now have non-empty
+        // victim caches and no pools have primary caches.
         std::tie(oldPools, allPools) = std::tuple{allPools, nullptr};
     }
 

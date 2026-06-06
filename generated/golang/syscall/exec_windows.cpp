@@ -63,6 +63,7 @@ namespace golang::syscall
                     case 1:
                     case 2:
                     case 3:
+                        // Some escaping required.
                         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(s) + 2);
                         b = appendEscapeArg(b, s);
                         return gocpp::string(b);
@@ -108,10 +109,12 @@ namespace golang::syscall
         }
         if(! needsBackslash && ! hasSpace)
         {
+            // No special handling required; normal case.
             return append(b, s);
         }
         if(! needsBackslash)
         {
+            // hasSpace is true, so we need to quote the string.
             b = append(b, '"');
             b = append(b, s);
             return append(b, '"');
@@ -265,6 +268,7 @@ namespace golang::syscall
         }
         if(len(ndir) > 2 && isSlash(ndir[0]) && isSlash(ndir[1]))
         {
+            // dir cannot have \\server\share\path form
             return {""_s, gocpp::error(go_EINVAL)};
         }
         return {ndir, nullptr};
@@ -289,10 +293,12 @@ namespace golang::syscall
         }
         if(len(p) > 2 && isSlash(p[0]) && isSlash(p[1]))
         {
+            // \\server\share\path form
             return {p, nullptr};
         }
         if(len(p) > 1 && p[1] == ':')
         {
+            // has drive letter
             if(len(p) == 2)
             {
                 return {""_s, gocpp::error(go_EINVAL)};
@@ -320,6 +326,7 @@ namespace golang::syscall
         }
         else
         {
+            // no drive letter
             auto [d, err] = normalizeDir(dir);
             if(err != nullptr)
             {
@@ -480,6 +487,9 @@ namespace golang::syscall
                 return {0, 0, err};
             }
             gocpp::string cmdline = {};
+            // Windows CreateProcess takes the command line as a single string:
+            // use attr.CmdLine if set, else build the command line by escaping
+            // and joining each argument with spaces
             if(sys->CmdLine != ""_s)
             {
                 cmdline = sys->CmdLine;
@@ -551,6 +561,8 @@ namespace golang::syscall
             si->StartupInfo.StdOutput = fd[1];
             si->StartupInfo.StdErr = fd[2];
             fd = append(fd, sys->AdditionalInheritedHandles);
+            // The presence of a NULL handle in the list is enough to cause PROC_THREAD_ATTRIBUTE_HANDLE_LIST
+            // to treat the entire list as empty, so remove NULL handles.
             auto j = 0;
             for(auto [i, gocpp_ignored] : fd)
             {
@@ -562,6 +574,7 @@ namespace golang::syscall
             }
             fd = fd.make_slice(0, j);
             auto willInheritHandles = len(fd) > 0 && ! sys->NoInheritHandles;
+            // Do not accidentally inherit more than these handles.
             if(willInheritHandles)
             {
                 err = updateProcThreadAttribute(si->ProcThreadAttributeList, 0, _PROC_THREAD_ATTRIBUTE_HANDLE_LIST, gocpp::unsafe_pointer(& fd[0]), uintptr_t(len(fd)) * gocpp::Sizeof<Handle>(), nullptr, nullptr);

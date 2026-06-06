@@ -160,7 +160,9 @@ namespace golang::runtime
     // traceEventWrite is the part of traceEvent that actually writes the event.
     struct traceWriter rec::event(golang::runtime::traceWriter w, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
     {
+        // Make sure we have room.
         std::tie(w, std::ignore) = rec::ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
+        // Compute the timestamp diff that we'll put in the trace.
         auto ts = traceClockNow();
         if(ts <= w.traceBuf->traceBufHeader.lastTime)
         {
@@ -168,6 +170,7 @@ namespace golang::runtime
         }
         auto tsDiff = uint64_t(ts - w.traceBuf->traceBufHeader.lastTime);
         w.traceBuf->traceBufHeader.lastTime = ts;
+        // Write out event.
         rec::byte(gocpp::recv(w), (unsigned char)(ev));
         rec::varint(gocpp::recv(w), tsDiff);
         for(auto [gocpp_ignored, arg] : args)
@@ -192,6 +195,7 @@ namespace golang::runtime
     // passed to write.
     runtime::traceArg rec::startPC(golang::runtime::traceLocker tl, uintptr_t pc)
     {
+        // +PCQuantum because makeTraceFrame expects return PCs and subtracts PCQuantum.
         return traceArg(rec::put(gocpp::recv(trace.stackTab[tl.gen % 2]), gocpp::slice<uintptr_t> {logicalStackSentinel, startPCForTrace(pc) + sys::PCQuantum}));
     }
 

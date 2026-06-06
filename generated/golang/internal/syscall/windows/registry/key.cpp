@@ -87,9 +87,15 @@ namespace golang::registry
         gocpp::Defer defer;
         try
         {
+            // RegEnumKeyEx must be called repeatedly and to completion.
+            // During this time, this goroutine cannot migrate away from
+            // its current thread. See #49320.
             runtime::LockOSThread();
             defer.push_back([=]{ runtime::UnlockOSThread(); });
             auto names = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0);
+            // Registry key size limit is 255 bytes and described there:
+            // https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-element-size-limits
+            // plus extra room for terminating zero byte
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 256);
             loopItems:
             for(auto i = uint32_t(0); ; i++)
@@ -110,6 +116,7 @@ namespace golang::registry
                     }
                     if(err == syscall::ERROR_MORE_DATA)
                     {
+                        // Double buffer size and try again.
                         l = uint32_t(2 * len(buf));
                         buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), l);
                         continue;

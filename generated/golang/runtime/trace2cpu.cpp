@@ -74,8 +74,17 @@ namespace golang::runtime
         {
             go_throw("traceInitReadCPU called with trace enabled"_s);
         }
+        // Create new profBuf for CPU samples that will be emitted as events.
+        // Format: after the timestamp, header is [pp.id, gp.goid, mp.procid].
         trace.cpuLogRead[0] = newProfBuf(3, profBufWordCount, profBufTagCount);
         trace.cpuLogRead[1] = newProfBuf(3, profBufWordCount, profBufTagCount);
+        // We must not acquire trace.signalLock outside of a signal handler: a
+        // profiling signal may arrive at any time and try to acquire it, leading to
+        // deadlock. Because we can't use that lock to protect updates to
+        // trace.cpuLogWrite (only use of the structure it references), reads and
+        // writes of the pointer must be atomic. (And although this field is never
+        // the sole pointer to the profBuf value, it's best to allow a write barrier
+        // here.)
         rec::Store<profBuf>(gocpp::recv(trace.cpuLogWrite[0]), trace.cpuLogRead[0]);
         rec::Store<profBuf>(gocpp::recv(trace.cpuLogWrite[1]), trace.cpuLogRead[1]);
     }
@@ -154,16 +163,26 @@ namespace golang::runtime
         {
             go_throw("traceStartReadCPU called with trace disabled"_s);
         }
+        // Spin up the logger goroutine.
         trace.cpuSleep = newWakeableSleep();
         auto done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_0>>(), 1);
         gocpp::go([&]{ [=]() mutable -> void
         {
             for(; traceEnabled(); )
             {
+                // Sleep here because traceReadCPU is non-blocking. This mirrors
+                // how the runtime/pprof package obtains CPU profile data.
+                // We can't do a blocking read here because Darwin can't do a
+                // wakeup from a signal handler, so all CPU profiling is just
+                // non-blocking. See #61768 for more details.
+                // Like the runtime/pprof package, even if that bug didn't exist
+                // we would still want to do a goroutine-level sleep in between
+                // reads to avoid frequent wakeups.
                 rec::sleep(gocpp::recv(trace.cpuSleep), 100000000);
                 auto tl = traceAcquire();
                 if(! rec::ok(gocpp::recv(tl)))
                 {
+                    // Tracing disabled.
                     break;
                 }
                 auto keepGoing = traceReadCPU(tl.gen);
@@ -187,12 +206,20 @@ namespace golang::runtime
         {
             go_throw("traceStopReadCPU called with trace enabled"_s);
         }
+        // Once we close the profbuf, we'll be in one of two situations:
+        // - The logger goroutine has already exited because it observed
+        // that the trace is disabled.
+        // - The logger goroutine is asleep.
+        // Wake the goroutine so it can observe that their the buffer is
+        // closed an exit.
         rec::Store<profBuf>(gocpp::recv(trace.cpuLogWrite[0]), nullptr);
         rec::Store<profBuf>(gocpp::recv(trace.cpuLogWrite[1]), nullptr);
         rec::close(gocpp::recv(trace.cpuLogRead[0]));
         rec::close(gocpp::recv(trace.cpuLogRead[1]));
         rec::wake(gocpp::recv(trace.cpuSleep));
+        // Wait until the logger goroutine exits.
         trace.cpuLogDone.recv();
+        // Clear state for the next trace.
         trace.cpuLogDone = nullptr;
         trace.cpuLogRead[0] = nullptr;
         trace.cpuLogRead[1] = nullptr;
@@ -220,16 +247,20 @@ namespace golang::runtime
         {
             if(len(data) < 4 || data[0] > uint64_t(len(data)))
             {
+                // truncated profile
                 break;
             }
             if(data[0] < 4 || tags != nullptr && len(tags) < 1)
             {
+                // malformed profile
                 break;
             }
             if(len(tags) < 1)
             {
+                // mismatched profile records and tags
                 break;
             }
+            // Deserialize the data in the profile buffer.
             auto recordLen = data[0];
             auto timestamp = data[1];
             auto ppid = data[2] >> 1;
@@ -240,28 +271,42 @@ namespace golang::runtime
             auto goid = data[3];
             auto mpid = data[4];
             auto stk = data.make_slice(5, recordLen);
+            // Overflow records always have their headers contain
+            // all zeroes.
             auto isOverflowRecord = len(stk) == 1 && data[2] == 0 && data[3] == 0 && data[4] == 0;
+            // Move the data iterator forward.
             data = data.make_slice(recordLen);
+            // No support here for reporting goroutine tags at the moment; if
+            // that information is to be part of the execution trace, we'd
+            // probably want to see when the tags are applied and when they
+            // change, instead of only seeing them when we get a CPU sample.
             tags = tags.make_slice(1);
             if(isOverflowRecord)
             {
+                // Looks like an overflow record from the profBuf. Not much to
+                // do here, we only want to report full records.
                 continue;
             }
+            // Construct the stack for insertion to the stack table.
             auto nstk = 1;
             pcBuf[0] = logicalStackSentinel;
             for(; nstk < len(pcBuf) && nstk - 1 < len(stk); nstk++)
             {
                 pcBuf[nstk] = uintptr_t(stk[nstk - 1]);
             }
+            // Write out a trace event.
             auto w = unsafeTraceWriter(gen, trace.cpuBuf[gen % 2]);
             // Ensure we have a place to write to.
             bool flushed = {};
             std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 5 * traceBytesPerNumber);
             if(flushed)
             {
+                // Annotate the batch as containing strings.
                 rec::byte(gocpp::recv(w), (unsigned char)(traceEvCPUSamples));
             }
+            // Add the stack to the table.
             auto stackID = rec::put(gocpp::recv(trace.stackTab[gen % 2]), pcBuf.make_slice(0, nstk));
+            // Write out the CPU sample.
             rec::byte(gocpp::recv(w), (unsigned char)(traceEvCPUSample));
             rec::varint(gocpp::recv(w), timestamp);
             rec::varint(gocpp::recv(w), mpid);
@@ -282,6 +327,7 @@ namespace golang::runtime
     //go:systemstack
     void traceCPUFlush(uintptr_t gen)
     {
+        // Flush any remaining trace buffers containing CPU samples.
         if(auto buf = trace.cpuBuf[gen % 2]; buf != nullptr)
         {
             lock(& trace.lock);
@@ -298,12 +344,21 @@ namespace golang::runtime
     {
         if(! traceEnabled())
         {
+            // Tracing is usually turned off; don't spend time acquiring the signal
+            // lock unless it's active.
             return;
         }
         if(mp == nullptr)
         {
+            // Drop samples that don't have an identifiable thread. We can't render
+            // this in any useful way anyway.
             return;
         }
+        // We're going to conditionally write to one of two buffers based on the
+        // generation. To make sure we write to the correct one, we need to make
+        // sure this thread's trace seqlock is held. If it already is, then we're
+        // in the tracer and we can just take advantage of that. If it isn't, then
+        // we need to acquire it and read the generation.
         auto locked = false;
         if(rec::Load(gocpp::recv(mp->trace.seqlock)) % 2 == 0)
         {
@@ -313,6 +368,8 @@ namespace golang::runtime
         auto gen = rec::Load(gocpp::recv(trace.gen));
         if(gen == 0)
         {
+            // Tracing is disabled, as it turns out. Release the seqlock if necessary
+            // and exit.
             if(locked)
             {
                 rec::Add(gocpp::recv(mp->trace.seqlock), 1);
@@ -327,6 +384,8 @@ namespace golang::runtime
         gocpp::array<uint64_t, 3> hdr = {};
         if(pp != nullptr)
         {
+            // Overflow records in profBuf have all header values set to zero. Make
+            // sure that real headers have at least one bit set.
             hdr[0] = (uint64_t(pp->id) << 1) | 0b1;
         }
         else
@@ -341,15 +400,21 @@ namespace golang::runtime
         {
             hdr[2] = uint64_t(mp->procid);
         }
+        // Allow only one writer at a time
         for(; ! rec::CompareAndSwap(gocpp::recv(trace.signalLock), 0, 1); )
         {
+            // TODO: Is it safe to osyield here? https://go.dev/issue/52672
             osyield();
         }
         if(auto log = rec::Load<profBuf>(gocpp::recv(trace.cpuLogWrite[gen % 2])); log != nullptr)
         {
+            // Note: we don't pass a tag pointer here (how should profiling tags
+            // interact with the execution tracer?), but if we did we'd need to be
+            // careful about write barriers. See the long comment in profBuf.write.
             rec::write(gocpp::recv(log), nullptr, int64_t(now), hdr.make_slice(0), stk);
         }
         rec::Store(gocpp::recv(trace.signalLock), 0);
+        // Release the seqlock if we acquired it earlier.
         if(locked)
         {
             rec::Add(gocpp::recv(mp->trace.seqlock), 1);

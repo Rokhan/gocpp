@@ -31,6 +31,7 @@ namespace golang::sync
         Once once = {};
         bool valid = {};
         go_any p = {};
+        // Construct the inner closure just once to reduce costs on the fast path.
         auto g = [=]() mutable -> void
         {
             gocpp::Defer defer;
@@ -41,11 +42,15 @@ namespace golang::sync
                     p = gocpp::recover();
                     if(! valid)
                     {
+                        // Re-panic immediately so on the first call the user gets a
+                        // complete stack trace into f.
                         gocpp::panic(p);
                     }
                 }(); });
                 f();
+                // Do not keep f alive after invoking it.
                 f = nullptr;
+                // Set only if f does not panic.
                 valid = true;
             }
             catch(gocpp::GoPanic& gp)

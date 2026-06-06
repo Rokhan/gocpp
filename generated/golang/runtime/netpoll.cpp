@@ -204,6 +204,7 @@ namespace golang::runtime
             info |= pollExpiredWriteDeadline;
         }
         info |= uint32_t(rec::Load(gocpp::recv(pd->fdseq)) & pollFDSeqMask) << pollFDSeq;
+        // Set all of x except the pollEventErr bit.
         auto x = rec::Load(gocpp::recv(pd->atomicInfo));
         for(; ! rec::CompareAndSwap(gocpp::recv(pd->atomicInfo), x, (x & pollEventErr) | info); )
         {
@@ -321,6 +322,7 @@ namespace golang::runtime
         pd->fd = fd;
         if(rec::Load(gocpp::recv(pd->fdseq)) == 0)
         {
+            // The value 0 is special in setEventErr, so don't use it.
             rec::Store(gocpp::recv(pd->fdseq), 1);
         }
         pd->closing = false;
@@ -366,7 +368,11 @@ namespace golang::runtime
 
     void rec::free(golang::runtime::pollCache* c, struct pollDesc* pd)
     {
+        // pd can't be shared here, but lock anyhow because
+        // that's what publishInfo documents.
         runtime::lock(& pd->lock);
+        // Increment the fdseq field, so that any currently
+        // running netpoll calls will not mark pd as ready.
         auto fdseq = rec::Load(gocpp::recv(pd->fdseq));
         fdseq = (fdseq + 1) & ((1 << taggedPointerBits) - 1);
         rec::Store(gocpp::recv(pd->fdseq), fdseq);
@@ -415,6 +421,7 @@ namespace golang::runtime
         {
             return errcode;
         }
+        // As for now only Solaris, illumos, AIX and wasip1 use level-triggered IO.
         if(GOOS == "solaris"_s || GOOS == "illumos"_s || GOOS == "aix"_s || GOOS == "wasip1"_s)
         {
             netpollarm(pd, mode);
@@ -422,6 +429,9 @@ namespace golang::runtime
         for(; ! netpollblock(pd, int32_t(mode), false); )
         {
             errcode = netpollcheckerr(pd, int32_t(mode));
+            // Can happen if timeout has fired and unblocked us,
+            // but before we had a chance to run, timeout has been reset.
+            // Pretend it has not happened and retry.
             if(errcode != pollNoError)
             {
                 return errcode;
@@ -433,6 +443,8 @@ namespace golang::runtime
     //go:linkname poll_runtime_pollWaitCanceled internal/poll.runtime_pollWaitCanceled
     void poll_runtime_pollWaitCanceled(struct pollDesc* pd, int mode)
     {
+        // This function is used only on windows after a failed attempt to cancel
+        // a pending async IO operation. Wait for ioready, ignore closing or timeouts.
         for(; ! netpollblock(pd, int32_t(mode), true); )
         {
         }
@@ -454,6 +466,8 @@ namespace golang::runtime
             d += nanotime();
             if(d <= 0)
             {
+                // If the user has a deadline in the future, but the delay calculation
+                // overflows, then set the deadline to the maximum possible value.
                 d = (1 << 63) - 1;
             }
         }
@@ -477,6 +491,9 @@ namespace golang::runtime
             if(pd->rd > 0)
             {
                 pd->rt.f = rtf;
+                // Copy current seq into the timer arg.
+                // Timer func will check the seq against current descriptor seq,
+                // if they differ the descriptor was reused or timers were reset.
                 pd->rt.arg = rec::makeArg(gocpp::recv(pd));
                 pd->rt.seq = pd->rseq;
                 resettimer(& pd->rt, pd->rd);
@@ -485,6 +502,7 @@ namespace golang::runtime
         else
         if(pd->rd != rd0 || combo != combo0)
         {
+            // invalidate current timers
             pd->rseq++;
             if(pd->rd > 0)
             {
@@ -509,6 +527,7 @@ namespace golang::runtime
         else
         if(pd->wd != wd0 || combo != combo0)
         {
+            // invalidate current timers
             pd->wseq++;
             if(pd->wd > 0 && ! combo)
             {
@@ -520,6 +539,8 @@ namespace golang::runtime
                 pd->wt.f = nullptr;
             }
         }
+        // If we set the new deadline in the past, unblock currently pending IO if any.
+        // Note that pd.publishInfo has already been called, above, immediately after modifying rd and wd.
         auto delta = int32_t(0);
         g* rg = {};
         g* wg = {};
@@ -628,6 +649,9 @@ namespace golang::runtime
         {
             return pollErrTimeout;
         }
+        // Report an event scanning error only on a read event.
+        // An error on a write event will be captured in a subsequent
+        // write call that is able to report a more specific error.
         if(mode == 'r' && rec::eventErr(gocpp::recv(info)))
         {
             return pollErrNotPollable;
@@ -640,6 +664,9 @@ namespace golang::runtime
         auto r = atomic::Casuintptr((uintptr_t*)(gpp), pdWait, uintptr_t(gocpp::unsafe_pointer(gp)));
         if(r)
         {
+            // Bump the count of goroutines waiting for the poller.
+            // The scheduler uses this to decide whether to block
+            // waiting for the poller if there is nothing else to do.
             netpollAdjustWaiters(1);
         }
         return r;
@@ -661,8 +688,10 @@ namespace golang::runtime
         {
             gpp = & pd->wg;
         }
+        // set the gpp semaphore to pdWait
         for(; ; )
         {
+            // Consume notification if already ready.
             if(rec::CompareAndSwap(gocpp::recv(gpp), pdReady, pdNil))
             {
                 return true;
@@ -671,15 +700,21 @@ namespace golang::runtime
             {
                 break;
             }
+            // Double check that this isn't corrupt; otherwise we'd loop
+            // forever.
             if(auto v = rec::Load(gocpp::recv(gpp)); v != pdReady && v != pdNil)
             {
                 go_throw("runtime: double wait"_s);
             }
         }
+        // need to recheck error states after setting gpp to pdWait
+        // this is necessary because runtime_pollUnblock/runtime_pollSetDeadline/deadlineimpl
+        // do the opposite: store to closing/rd/wd, publishInfo, load of rg/wg
         if(waitio || netpollcheckerr(pd, mode) == pollNoError)
         {
             gopark(netpollblockcommit, gocpp::unsafe_pointer(gpp), waitReasonIOWait, traceBlockNet, 5);
         }
+        // be careful to not lose concurrent pdReady notification
         auto old = rec::Swap(gocpp::recv(gpp), pdNil);
         if(old > pdWait)
         {
@@ -710,6 +745,8 @@ namespace golang::runtime
             }
             if(old == pdNil && ! ioready)
             {
+                // Only set pdReady for ioready. runtime_pollWait
+                // will check for timeout/cancel before waiting.
                 return nullptr;
             }
             auto go_new = pdNil;
@@ -736,6 +773,8 @@ namespace golang::runtime
     void netpolldeadlineimpl(struct pollDesc* pd, uintptr_t seq, bool read, bool write)
     {
         lock(& pd->lock);
+        // Seq arg is seq when the timer was set.
+        // If it's stale, ignore the timer event.
         auto currentSeq = pd->rseq;
         if(! read)
         {
@@ -743,6 +782,7 @@ namespace golang::runtime
         }
         if(seq != currentSeq)
         {
+            // The descriptor was reused or timers were reset.
             unlock(& pd->lock);
             return;
         }
@@ -822,6 +862,8 @@ namespace golang::runtime
             {
                 n = 1;
             }
+            // Must be in non-GC memory because can be referenced
+            // only from epoll/kqueue internals.
             auto mem = persistentalloc(n * pdSize, 0, & memstats.other_sys);
             for(auto i = uintptr_t(0); i < n; i++)
             {

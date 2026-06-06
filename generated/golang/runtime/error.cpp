@@ -143,6 +143,7 @@ namespace golang::runtime
             auto msg = "interface conversion: "_s + inter + " is "_s + cs + ", not "_s + as;
             if(cs == as)
             {
+                // provide slightly clearer error message
                 if(rec::pkgpath(gocpp::recv(toRType(e->concrete))) != rec::pkgpath(gocpp::recv(toRType(e->asserted))))
                 {
                     msg += " (types from different packages)"_s;
@@ -335,6 +336,8 @@ namespace golang::runtime
         {
             fmt = boundsNegErrorFmts[e.code];
         }
+        // max message length is 99: "runtime error: slice bounds out of range [::%x] with capacity %y"
+        // x can be at most 20 characters. y can be at most 19.
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 100);
         b = append(b, "runtime error: "_s);
         for(auto i = 0; i < len(fmt); i++)
@@ -654,6 +657,9 @@ namespace golang::runtime
     {
         auto pc = getcallerpc();
         auto name = funcNameForPrint(funcname(findfunc(pc)));
+        // name is something like "main.(*T).F".
+        // We want to extract pkg ("main"), typ ("T"), and meth ("F").
+        // Do it by finding the parens.
         auto i = bytealg::IndexByteString(name, '(');
         if(i < 0)
         {

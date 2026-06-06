@@ -42,15 +42,18 @@ namespace golang::rand
     {
         for(; ; )
         {
+            // Possibly negative
             auto j = int32_t(rec::Uint32(gocpp::recv(r)));
             auto i = j & 0x7F;
             auto x = double(j) * double(wn[i]);
             if(absInt32(j) < kn[i])
             {
+                // This case should be hit better than 99% of the time.
                 return x;
             }
             if(i == 0)
             {
+                // This extra work is only required for the base strip.
                 for(; ; )
                 {
                     x = - math::Log(rec::Float64(gocpp::recv(r))) * (1.0 / rn);

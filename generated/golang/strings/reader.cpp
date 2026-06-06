@@ -101,6 +101,7 @@ namespace golang::strings
     {
         int n;
         struct gocpp::error err;
+        // cannot modify state - see io.ReaderAt
         if(off < 0)
         {
             return {0, errors::New("strings.Reader.ReadAt: negative offset"_s)};

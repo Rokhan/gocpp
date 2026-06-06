@@ -38,6 +38,15 @@ namespace golang::runtime
         {
             return;
         }
+        // Decommit failed. Usual reason is that we've merged memory from two different
+        // VirtualAlloc calls, and Windows will only let each VirtualFree handle pages from
+        // a single VirtualAlloc. It is okay to specify a subset of the pages from a single alloc,
+        // just not pages from multiple allocs. This is a rare case, arising only when we're
+        // trying to give memory back to the operating system, which happens on a time
+        // scale of minutes. It doesn't have to be terribly fast. Instead of extra bookkeeping
+        // on all our VirtualAlloc calls, try freeing successively smaller pieces until
+        // we manage to free something, and then repeat. This ends up being O(n log n)
+        // in the worst case, but that's fast enough.
         for(; n > 0; )
         {
             auto small = n;
@@ -63,6 +72,9 @@ namespace golang::runtime
         {
             return;
         }
+        // Commit failed. See SysUnused.
+        // Hold on to n here so we can give back a better error message
+        // for certain cases.
         auto k = n;
         for(; k > 0; )
         {
@@ -128,16 +140,21 @@ namespace golang::runtime
 
     void sysFaultOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
+        // SysUnused makes the memory inaccessible and prevents its reuse
         sysUnusedOS(v, n);
     }
 
     gocpp::unsafe_pointer sysReserveOS(gocpp::unsafe_pointer v, uintptr_t n)
     {
+        // v is just a hint.
+        // First try at v.
+        // This will fail if any of [v, v+n) is already reserved.
         v = gocpp::unsafe_pointer(stdcall4(_VirtualAlloc, uintptr_t(v), n, _MEM_RESERVE, _PAGE_READWRITE));
         if(v != nullptr)
         {
             return v;
         }
+        // Next let the kernel choose the address.
         return gocpp::unsafe_pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_RESERVE, _PAGE_READWRITE));
     }
 

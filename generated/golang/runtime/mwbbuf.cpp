@@ -120,6 +120,9 @@ namespace golang::runtime
         b->next = start;
         if(testSmallBuf)
         {
+            // For testing, make the buffer smaller but more than
+            // 1 write barrier's worth, so it tests both the
+            // immediate flush and delayed flush cases.
             b->end = uintptr_t(gocpp::unsafe_pointer(& b->buf[wbMaxEntriesPerCall + 1]));
         }
         else
@@ -211,11 +214,18 @@ namespace golang::runtime
     //go:nosplit
     void wbBufFlush()
     {
+        // Note: Every possible return from this function must reset
+        // the buffer's next pointer to prevent buffer overflow.
         if(getg()->m->dying > 0)
         {
+            // We're going down. Not much point in write barriers
+            // and this way we can allow write barriers in the
+            // panic path.
             rec::discard(gocpp::recv(rec::ptr(gocpp::recv(getg()->m->p))->wbBuf));
             return;
         }
+        // Switch to the system stack so we don't have to worry about
+        // safe points.
         systemstack([=]() mutable -> void
         {
             wbBufFlush1(rec::ptr(gocpp::recv(getg()->m->p)));
@@ -234,12 +244,16 @@ namespace golang::runtime
     //go:systemstack
     void wbBufFlush1(struct p* pp)
     {
+        // Get the buffered pointers.
         auto start = uintptr_t(gocpp::unsafe_pointer(& pp->wbBuf.buf[0]));
         auto n = (pp->wbBuf.next - start) / gocpp::Sizeof<uintptr_t>();
         auto ptrs = pp->wbBuf.buf.make_slice(0, n);
+        // Poison the buffer to make extra sure nothing is enqueued
+        // while we're processing the buffer.
         pp->wbBuf.next = 0;
         if(useCheckmark)
         {
+            // Slow path for checkmark mode.
             for(auto [gocpp_ignored, ptr] : ptrs)
             {
                 shade(ptr);
@@ -247,12 +261,29 @@ namespace golang::runtime
             rec::reset(gocpp::recv(pp->wbBuf));
             return;
         }
+        // Mark all of the pointers in the buffer and record only the
+        // pointers we greyed. We use the buffer itself to temporarily
+        // record greyed pointers.
+        // TODO: Should scanobject/scanblock just stuff pointers into
+        // the wbBuf? Then this would become the sole greying path.
+        // TODO: We could avoid shading any of the "new" pointers in
+        // the buffer if the stack has been shaded, or even avoid
+        // putting them in the buffer at all (which would double its
+        // capacity). This is slightly complicated with the buffer; we
+        // could track whether any un-shaded goroutine has used the
+        // buffer, or just track globally whether there are any
+        // un-shaded stacks and flush after each stack scan.
         auto gcw = & pp->gcw;
         auto pos = 0;
         for(auto [gocpp_ignored, ptr] : ptrs)
         {
             if(ptr < minLegalPointer)
             {
+                // nil pointers are very common, especially
+                // for the "old" values. Filter out these and
+                // other "obvious" non-heap pointers ASAP.
+                // TODO: Should we filter out nils in the fast
+                // path to reduce the rate of flushes?
                 continue;
             }
             auto [obj, span, objIndex] = findObject(ptr, 0, 0);
@@ -260,12 +291,15 @@ namespace golang::runtime
             {
                 continue;
             }
+            // TODO: Consider making two passes where the first
+            // just prefetches the mark bits.
             auto mbits = rec::markBitsForIndex(gocpp::recv(span), objIndex);
             if(rec::isMarked(gocpp::recv(mbits)))
             {
                 continue;
             }
             rec::setMarked(gocpp::recv(mbits));
+            // Mark span.
             auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(span)));
             if(arena->pageMarks[pageIdx] & pageMask == 0)
             {
@@ -279,6 +313,7 @@ namespace golang::runtime
             ptrs[pos] = obj;
             pos++;
         }
+        // Enqueue the greyed objects.
         rec::putBatch(gocpp::recv(gcw), ptrs.make_slice(0, pos));
         rec::reset(gocpp::recv(pp->wbBuf));
     }

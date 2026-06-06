@@ -214,11 +214,15 @@ namespace golang::os
 
     bool underlyingErrorIs(struct gocpp::error err, struct gocpp::error target)
     {
+        // Note that this function is not errors.Is:
+        // underlyingError only unwraps the specific error-wrapping types
+        // that it historically did, not all errors implementing Unwrap().
         err = underlyingError(err);
         if(err == target)
         {
             return true;
         }
+        // To preserve prior behavior, only examine syscall errors.
         auto [e, ok] = gocpp::getValue<os::syscallErrorType>(err);
         return ok && rec::Is(gocpp::recv(e), target);
     }

@@ -168,20 +168,28 @@ namespace golang::slices
     template<template<typename> class  S, typename E>
     std::tuple<int, bool> BinarySearch(S<E> x, E target)
     {
+        // Inlining is faster than calling BinarySearchFunc with a lambda.
         auto n = len(x);
+        // Define x[-1] < target and x[n] >= target.
+        // Invariant: x[i-1] < target, x[j] >= target.
         auto [i, j] = std::tuple{0, n};
         for(; i < j; )
         {
+            // avoid overflow when computing h
             auto h = int((unsigned int)(i + j) >> 1);
+            // i ≤ h < j
             if(cmp::Less(x[h], target))
             {
+                // preserves x[i-1] < target
                 i = h + 1;
             }
             else
             {
+                // preserves x[j] >= target
                 j = h;
             }
         }
+        // i == j, x[i-1] < target, and x[j] (= x[i]) >= target  =>  answer is i.
         return {i, i < n && (x[i] == target || (isNaN(x[i]) && isNaN(target)))};
     }
 
@@ -196,19 +204,26 @@ namespace golang::slices
     std::tuple<int, bool> BinarySearchFunc(S<E> x, T target, std::function<int (E _1, T _2)> cmp)
     {
         auto n = len(x);
+        // Define cmp(x[-1], target) < 0 and cmp(x[n], target) >= 0 .
+        // Invariant: cmp(x[i - 1], target) < 0, cmp(x[j], target) >= 0.
         auto [i, j] = std::tuple{0, n};
         for(; i < j; )
         {
+            // avoid overflow when computing h
             auto h = int((unsigned int)(i + j) >> 1);
+            // i ≤ h < j
             if(cmp(x[h], target) < 0)
             {
+                // preserves cmp(x[i - 1], target) < 0
                 i = h + 1;
             }
             else
             {
+                // preserves cmp(x[j], target) >= 0
                 j = h;
             }
         }
+        // i == j, cmp(x[i-1], target) < 0, and cmp(x[j], target) (= cmp(x[i], target)) >= 0  =>  answer is i.
         return {i, i < n && cmp(x[i], target) == 0};
     }
 

@@ -177,6 +177,7 @@ namespace golang::slices
     template<template<typename> class  S, typename E>
     S<E> Insert(S<E> s, int i, gocpp::slice<E> v)
     {
+        // bounds check
         _ = s.make_slice(i);
         auto m = len(v);
         if(m == 0)
@@ -190,20 +191,62 @@ namespace golang::slices
         }
         if(n + m > cap(s))
         {
+            // Use append rather than make so that we bump the size of
+            // the slice up to the next storage class.
+            // This is what Grow does but we don't call Grow because
+            // that might copy the values twice.
             auto s2 = append(s.make_slice(0, i), gocpp::make(S, n + m - i));
             copy(s2.make_slice(i), v);
             copy(s2.make_slice(i + m), s.make_slice(i));
             return s2;
         }
         s = s.make_slice(0, n + m);
+        // before:
+        // s: aaaaaaaabbbbccccccccdddd
+        // ^   ^       ^   ^
+        // i  i+m      n  n+m
+        // after:
+        // s: aaaaaaaavvvvbbbbcccccccc
+        // ^   ^       ^   ^
+        // i  i+m      n  n+m
+        // a are the values that don't move in s.
+        // v are the values copied in from v.
+        // b and c are the values from s that are shifted up in index.
+        // d are the values that get overwritten, never to be seen again.
         if(! overlaps(v, s.make_slice(i + m)))
         {
+            // Easy case - v does not overlap either the c or d regions.
+            // (It might be in some of a or b, or elsewhere entirely.)
+            // The data we copy up doesn't write to v at all, so just do it.
             copy(s.make_slice(i + m), s.make_slice(i));
+            // Now we have
+            // s: aaaaaaaabbbbbbbbcccccccc
+            // ^   ^       ^   ^
+            // i  i+m      n  n+m
+            // Note the b values are duplicated.
             copy(s.make_slice(i), v);
+            // Now we have
+            // s: aaaaaaaavvvvbbbbcccccccc
+            // ^   ^       ^   ^
+            // i  i+m      n  n+m
+            // That's the result we want.
             return s;
         }
+        // The hard case - v overlaps c or d. We can't just shift up
+        // the data because we'd move or clobber the values we're trying
+        // to insert.
+        // So instead, write v on top of d, then rotate.
         copy(s.make_slice(n), v);
+        // Now we have
+        // s: aaaaaaaabbbbccccccccvvvv
+        // ^   ^       ^   ^
+        // i  i+m      n  n+m
         rotateRight(s.make_slice(i), m);
+        // Now we have
+        // s: aaaaaaaavvvvbbbbcccccccc
+        // ^   ^       ^   ^
+        // i  i+m      n  n+m
+        // That's the result we want.
         return s;
     }
 
@@ -215,6 +258,7 @@ namespace golang::slices
     template<template<typename> class  S, typename E>
     S<E> Delete(S<E> s, int i, int j)
     {
+        // bounds check
         _ = s.make_slice(i, j, len(s));
         if(i == j)
         {
@@ -222,6 +266,7 @@ namespace golang::slices
         }
         auto oldlen = len(s);
         s = append(s.make_slice(0, i), s.make_slice(j));
+        // zero/nil out the obsolete elements, for GC
         clear(s.make_slice(len(s), oldlen));
         return s;
     }
@@ -237,6 +282,7 @@ namespace golang::slices
         {
             return s;
         }
+        // Don't start copying elements until we find one to delete.
         for(auto j = i + 1; j < len(s); j++)
         {
             if(auto v = s[j]; ! del(v))
@@ -245,6 +291,7 @@ namespace golang::slices
                 i++;
             }
         }
+        // zero/nil out the obsolete elements, for GC
         clear(s.make_slice(i));
         return s.make_slice(0, i);
     }
@@ -256,6 +303,7 @@ namespace golang::slices
     template<template<typename> class  S, typename E>
     S<E> Replace(S<E> s, int i, int j, gocpp::slice<E> v)
     {
+        // bounds check
         _ = s.make_slice(i, j);
         if(i == j)
         {
@@ -268,6 +316,8 @@ namespace golang::slices
         auto tot = len(s.make_slice(0, i)) + len(v) + len(s.make_slice(j));
         if(tot > cap(s))
         {
+            // Too big to fit, allocate and copy over.
+            // See Insert
             auto s2 = append(s.make_slice(0, i), gocpp::make(S, tot - i));
             copy(s2.make_slice(i), v);
             copy(s2.make_slice(i + len(v)), s.make_slice(j));
@@ -276,17 +326,41 @@ namespace golang::slices
         auto r = s.make_slice(0, tot);
         if(i + len(v) <= j)
         {
+            // Easy, as v fits in the deleted portion.
             copy(r.make_slice(i), v);
             copy(r.make_slice(i + len(v)), s.make_slice(j));
+            // zero/nil out the obsolete elements, for GC
             clear(s.make_slice(tot));
             return r;
         }
+        // We are expanding (v is bigger than j-i).
+        // The situation is something like this:
+        // (example has i=4,j=8,len(s)=16,len(v)=6)
+        // s: aaaaxxxxbbbbbbbbyy
+        // ^   ^       ^ ^
+        // i   j  len(s) tot
+        // a: prefix of s
+        // x: deleted range
+        // b: more of s
+        // y: area to expand into
         if(! overlaps(r.make_slice(i + len(v)), v))
         {
+            // Easy, as v is not clobbered by the first copy.
             copy(r.make_slice(i + len(v)), s.make_slice(j));
             copy(r.make_slice(i), v);
             return r;
         }
+        // This is a situation where we don't have a single place to which
+        // we can copy v. Parts of it need to go to two different places.
+        // We want to copy the prefix of v into y and the suffix into x, then
+        // rotate |y| spots to the right.
+        // v[2:]      v[:2]
+        // |           |
+        // s: aaaavvvvbbbbbbbbvv
+        // ^   ^       ^ ^
+        // i   j  len(s) tot
+        // If either of those two destinations don't alias v, then we're good.
+        // length of y portion
         auto y = len(v) - (j - i);
         if(! overlaps(r.make_slice(i, j), v))
         {
@@ -302,6 +376,11 @@ namespace golang::slices
             rotateRight(r.make_slice(i), y);
             return r;
         }
+        // Now we know that v overlaps both x and y.
+        // That means that the entirety of b is *inside* v.
+        // So we don't need to preserve b at all; instead we
+        // can copy v first, then copy the b part of v out of
+        // v to the right destination.
         auto k = startIdx(v, s.make_slice(j));
         copy(r.make_slice(i), v);
         copy(r.make_slice(i + len(v)), r.make_slice(i + k));
@@ -313,6 +392,7 @@ namespace golang::slices
     template<template<typename> class  S, typename E>
     S<E> Clone(S<E> s)
     {
+        // The s[:0:0] preserves nil in case it matters.
         return append(s.make_slice(0, 0, 0), s);
     }
 
@@ -340,6 +420,7 @@ namespace golang::slices
                 i++;
             }
         }
+        // zero/nil out the obsolete elements, for GC
         clear(s.make_slice(i));
         return s.make_slice(0, i);
     }
@@ -366,6 +447,7 @@ namespace golang::slices
                 i++;
             }
         }
+        // zero/nil out the obsolete elements, for GC
         clear(s.make_slice(i));
         return s.make_slice(0, i);
     }
@@ -444,6 +526,8 @@ namespace golang::slices
         {
             return false;
         }
+        // TODO: use a runtime/unsafe facility once one becomes available. See issue 12445.
+        // Also see crypto/internal/alias/alias.go:AnyOverlap
         return uintptr_t(gocpp::unsafe_pointer(& a[0])) <= uintptr_t(gocpp::unsafe_pointer(& b[len(b) - 1])) + (elemSize - 1) && uintptr_t(gocpp::unsafe_pointer(& b[0])) <= uintptr_t(gocpp::unsafe_pointer(& a[len(a) - 1])) + (elemSize - 1);
     }
 
@@ -460,6 +544,7 @@ namespace golang::slices
                 return i;
             }
         }
+        // TODO: what if the overlap is by a non-integral number of Es?
         gocpp::panic("needle not found"_s);
     }
 

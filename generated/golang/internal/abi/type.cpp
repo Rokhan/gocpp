@@ -875,26 +875,31 @@ namespace golang::abi
     // in ../cmd/compile/internal/reflectdata/reflect.go:writeType.
     bool rec::IndirectKey(golang::abi::MapType* mt)
     {
+        // store ptr to key instead of key itself
         return mt->Flags & 1 != 0;
     }
 
     bool rec::IndirectElem(golang::abi::MapType* mt)
     {
+        // store ptr to elem instead of elem itself
         return mt->Flags & 2 != 0;
     }
 
     bool rec::ReflexiveKey(golang::abi::MapType* mt)
     {
+        // true if k==k for all keys
         return mt->Flags & 4 != 0;
     }
 
     bool rec::NeedKeyUpdate(golang::abi::MapType* mt)
     {
+        // true if we need to update key on an overwrite
         return mt->Flags & 8 != 0;
     }
 
     bool rec::HashMightPanic(golang::abi::MapType* mt)
     {
+        // true if hash function might panic
         return mt->Flags & 16 != 0;
     }
 

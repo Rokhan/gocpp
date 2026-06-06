@@ -36,6 +36,7 @@ namespace golang::math
 
     double sqrt(double x)
     {
+        // special cases
         //Go switch emulation
         {
             int conditionId = -1;
@@ -52,9 +53,11 @@ namespace golang::math
             }
         }
         auto ix = Float64bits(x);
+        // normalize x
         auto exp = int((ix >> shift) & mask);
         if(exp == 0)
         {
+            // subnormal x
             for(; ix & (1 << shift) == 0; )
             {
                 ix <<= 1;
@@ -62,17 +65,23 @@ namespace golang::math
             }
             exp++;
         }
+        // unbias exponent
         exp -= bias;
         ix &^= mask << shift;
         ix |= 1 << shift;
         if(exp & 1 == 1)
         {
+            // odd exp, double x to make it even
             ix <<= 1;
         }
+        // exp = exp/2, exponent of square root
         exp >>= 1;
+        // generate sqrt(x) bit by bit
         ix <<= 1;
+        // q = sqrt(x)
         uint64_t q = {};
         uint64_t s = {};
+        // r = moving bit from MSB to LSB
         auto r = uint64_t(1 << (shift + 1));
         for(; r != 0; )
         {
@@ -86,10 +95,14 @@ namespace golang::math
             ix <<= 1;
             r >>= 1;
         }
+        // final rounding
         if(ix != 0)
         {
+            // remainder, result not exact
+            // round according to extra bit
             q += q & 1;
         }
+        // significand + biased exponent
         ix = (q >> 1) + (uint64_t(exp - 1 + bias) << shift);
         return Float64frombits(ix);
     }

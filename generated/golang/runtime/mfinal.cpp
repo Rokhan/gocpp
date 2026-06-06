@@ -184,6 +184,12 @@ namespace golang::runtime
     {
         if(gcphase != _GCoff)
         {
+            // Currently we assume that the finalizer queue won't
+            // grow during marking so we don't have to rescan it
+            // during mark termination. If we ever need to lift
+            // this assumption, we can do it by adding the
+            // necessary barriers to queuefinalizer (which it may
+            // have automatically).
             go_throw("queuefinalizer during GC"_s);
         }
         lock(& finlock);
@@ -196,6 +202,8 @@ namespace golang::runtime
                 allfin = finc;
                 if(finptrmask[0] == 0)
                 {
+                    // Build pointer mask for Finalizer array in block.
+                    // Check assumptions made in finalizer1 array above.
                     if((gocpp::Sizeof<finalizer>() != 5 * goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::fn) != 0 || gocpp::Offsetof<finalizer>(&finalizer::arg) != goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::nret) != 2 * goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::fint) != 3 * goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::ot) != 4 * goarch::PtrSize))
                     {
                         go_throw("finalizer out of sync"_s);
@@ -212,6 +220,7 @@ namespace golang::runtime
             finq = block;
         }
         auto f = & finq->fin[finq->cnt];
+        // Sync with markroots
         atomic::Xadd(& finq->cnt, + 1);
         f->fn = fn;
         f->nret = nret;
@@ -246,6 +255,7 @@ namespace golang::runtime
 
     void createfing()
     {
+        // start the finalizer goroutine exactly once
         if(rec::Load(gocpp::recv(fingStatus)) == fingUninitialized && rec::CompareAndSwap(gocpp::recv(fingStatus), fingUninitialized, fingCreated))
         {
             gocpp::go([&]{ runfinq(); });
@@ -255,6 +265,8 @@ namespace golang::runtime
     bool finalizercommit(struct g* gp, gocpp::unsafe_pointer lock)
     {
         unlock((mutex*)(lock));
+        // fingStatus should be modified after fing is put into a waiting state
+        // to avoid waking fing in running state, even if it is about to be parked.
         rec::Or(gocpp::recv(fingStatus), fingWait);
         return true;
     }
@@ -291,9 +303,20 @@ namespace golang::runtime
                 {
                     auto f = & fb->fin[i - 1];
                     abi::RegArgs regs = {};
+                    // The args may be passed in registers or on stack. Even for
+                    // the register case, we still need the spill slots.
+                    // TODO: revisit if we remove spill slots.
+                    // Unfortunately because we can have an arbitrary
+                    // amount of returns and it would be complex to try and
+                    // figure out how many of those can get passed in registers,
+                    // just conservatively assume none of them do.
                     auto framesz = gocpp::Sizeof<go_any>() + f->nret;
                     if(framecap < framesz)
                     {
+                        // The frame does not contain pointers interesting for GC,
+                        // all not yet finalized objects are stored in finq.
+                        // If we do not mark it as FlagNoScan,
+                        // the last finalized object is not collected.
                         frame = mallocgc(framesz, nullptr, true);
                         framecap = framesz;
                     }
@@ -308,6 +331,10 @@ namespace golang::runtime
                     }
                     else
                     {
+                        // frame is effectively uninitialized
+                        // memory. That means we have to clear
+                        // it before writing to it to avoid
+                        // confusing the write barrier.
                         *(gocpp::array_ptr<gocpp::array<uintptr_t, 2>>)(frame) = gocpp::array<uintptr_t, 2> {};
                     }
                     //Go switch emulation
@@ -319,14 +346,18 @@ namespace golang::runtime
                         switch(conditionId)
                         {
                             case 0:
+                                // direct use of pointer
                                 *(gocpp::unsafe_pointer*)(r) = f->arg;
                                 break;
                             case 1:
                                 auto ityp = (runtime::interfacetype*)(gocpp::unsafe_pointer(f->fint));
+                                // set up with empty interface
                                 (eface*)(r)->_type = & f->ot->Type;
                                 (eface*)(r)->data = f->arg;
                                 if(len(ityp->Methods) != 0)
                                 {
+                                    // convert to interface with methods
+                                    // this conversion is guaranteed to succeed - we checked in SetFinalizer
                                     (iface*)(r)->tab = assertE2I(ityp, (eface*)(r)->_type);
                                 }
                                 break;
@@ -338,6 +369,10 @@ namespace golang::runtime
                     rec::Or(gocpp::recv(fingStatus), fingRunningFinalizer);
                     reflectcall(nullptr, gocpp::unsafe_pointer(f->fn), frame, uint32_t(framesz), uint32_t(framesz), uint32_t(framesz), & regs);
                     rec::And(gocpp::recv(fingStatus), ~ fingRunningFinalizer);
+                    // Drop finalizer queue heap references
+                    // before hiding them from markroot.
+                    // This also ensures these will be
+                    // clear if we reuse the finalizer.
                     f->fn = nullptr;
                     f->arg = nullptr;
                     f->ot = nullptr;
@@ -355,10 +390,19 @@ namespace golang::runtime
 
     bool isGoPointerWithoutSpan(gocpp::unsafe_pointer p)
     {
+        // 0-length objects are okay.
         if(p == gocpp::unsafe_pointer(& zerobase))
         {
             return true;
         }
+        // Global initializers might be linker-allocated.
+        // var Foo = &Object{}
+        // func main() {
+        // runtime.SetFinalizer(Foo, nil)
+        // }
+        // The relevant segments are: noptrdata, data, bss, noptrbss.
+        // We cannot assume they are in any order or even contiguous,
+        // due to external linking.
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
         {
             if(datap->noptrdata <= uintptr_t(p) && uintptr_t(p) < datap->enoptrdata || datap->data <= uintptr_t(p) && uintptr_t(p) < datap->edata || datap->bss <= uintptr_t(p) && uintptr_t(p) < datap->ebss || datap->noptrbss <= uintptr_t(p) && uintptr_t(p) < datap->enoptrbss)
@@ -379,6 +423,8 @@ namespace golang::runtime
         for(; nanotime() - start < timeout; )
         {
             lock(& finlock);
+            // We know the queue has been drained when both finq is nil
+            // and the finalizer g has stopped executing.
             auto empty = finq == nullptr;
             empty = empty && readgstatus(fing) == _Gwaiting && fing->waitreason == waitReasonFinalizerWait;
             unlock(& finlock);
@@ -481,6 +527,8 @@ namespace golang::runtime
     {
         if(debug.sbrk != 0)
         {
+            // debug.sbrk never frees memory, so no finalizers run
+            // (and we don't have the data structures to record them).
             return;
         }
         auto e = efaceOf(& obj);
@@ -500,8 +548,10 @@ namespace golang::runtime
         }
         if(inUserArenaChunk(uintptr_t(e->data)))
         {
+            // Arena-allocated objects are not eligible for finalizers.
             go_throw("runtime.SetFinalizer: first argument was allocated into an arena"_s);
         }
+        // find the containing object
         auto [base, span, gocpp_id_0] = findObject(uintptr_t(e->data), 0, 0);
         if(base == 0)
         {
@@ -511,12 +561,15 @@ namespace golang::runtime
             }
             go_throw("runtime.SetFinalizer: pointer not in allocated block"_s);
         }
+        // Move base forward if we've got an allocation header.
         if(goexperiment::AllocHeaders && ! rec::noscan(gocpp::recv(span->spanclass)) && ! heapBitsInSpan(span->elemsize) && rec::sizeclass(gocpp::recv(span->spanclass)) != 0)
         {
             base += mallocHeaderSize;
         }
         if(uintptr_t(e->data) != base)
         {
+            // As an implementation detail we allow to set finalizers for an inner byte
+            // of an object if it could come from tiny alloc (see mallocgc for details).
             if(ot->Elem == nullptr || ot->Elem->PtrBytes != 0 || ot->Elem->Size_ >= maxTinySize)
             {
                 go_throw("runtime.SetFinalizer: pointer not at beginning of allocated block"_s);
@@ -526,6 +579,7 @@ namespace golang::runtime
         auto ftyp = f->_type;
         if(ftyp == nullptr)
         {
+            // switch to system stack and remove finalizer
             systemstack([=]() mutable -> void
             {
                 removefinalizer(e->data);
@@ -555,11 +609,14 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
+                    // ok - same type
                     goto okarg;
                     break;
                 case 1:
                     if((rec::Uncommon(gocpp::recv(fint)) == nullptr || rec::Uncommon(gocpp::recv(etyp)) == nullptr) && (runtime::ptrtype*)(gocpp::unsafe_pointer(fint))->Elem == ot->Elem)
                     {
+                        // ok - not same type, but both pointers,
+                        // one or the other is unnamed, and same element type, so assignable.
                         goto okarg;
                     }
                     break;
@@ -567,6 +624,7 @@ namespace golang::runtime
                     auto ityp = (runtime::interfacetype*)(gocpp::unsafe_pointer(fint));
                     if(len(ityp->Methods) == 0)
                     {
+                        // ok - satisfies empty interface
                         goto okarg;
                     }
                     if(auto itab = assertE2I2(ityp, efaceOf(& obj)->_type); itab != nullptr)
@@ -578,12 +636,14 @@ namespace golang::runtime
         }
         go_throw("runtime.SetFinalizer: cannot pass "_s + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer "_s + rec::string(gocpp::recv(toRType(ftyp))));
         okarg:
+        // compute size needed for return parameters
         auto nret = uintptr_t(0);
         for(auto [gocpp_ignored, t] : rec::OutSlice(gocpp::recv(ft)))
         {
             nret = alignUp(nret, uintptr_t(t->Align_)) + t->Size_;
         }
         nret = alignUp(nret, goarch::PtrSize);
+        // make sure we have a finalizer goroutine
         createfing();
         systemstack([=]() mutable -> void
         {
@@ -620,6 +680,9 @@ namespace golang::runtime
     // the rules for valid uses of unsafe.Pointer still apply.
     void KeepAlive(go_any x)
     {
+        // Introduce a use of x that the compiler can't eliminate.
+        // This makes sure x is alive on entry. We need x to be alive
+        // on entry for "defer runtime.KeepAlive(x)"; see issue 21402.
         if(cgoAlwaysFalse)
         {
             println(x);

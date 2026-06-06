@@ -96,6 +96,7 @@ namespace golang::atomic
         auto typ = LoadPointer(& vp->typ);
         if(typ == nullptr || typ == gocpp::unsafe_pointer(& firstStoreInProgress))
         {
+            // First store not yet completed.
             return nullptr;
         }
         auto data = LoadPointer(& vp->data);
@@ -122,12 +123,16 @@ namespace golang::atomic
             auto typ = LoadPointer(& vp->typ);
             if(typ == nullptr)
             {
+                // Attempt to start first store.
+                // Disable preemption so that other goroutines can use
+                // active spin wait to wait for completion.
                 runtime_procPin();
                 if(! CompareAndSwapPointer(& vp->typ, nullptr, gocpp::unsafe_pointer(& firstStoreInProgress)))
                 {
                     runtime_procUnpin();
                     continue;
                 }
+                // Complete first store.
                 StorePointer(& vp->data, vlp->data);
                 StorePointer(& vp->typ, vlp->typ);
                 runtime_procUnpin();
@@ -135,8 +140,12 @@ namespace golang::atomic
             }
             if(typ == gocpp::unsafe_pointer(& firstStoreInProgress))
             {
+                // First store in progress. Wait.
+                // Since we disable preemption around the first store,
+                // we can wait with active spinning.
                 continue;
             }
+            // First store completed. Check type and overwrite data.
             if(typ != vlp->typ)
             {
                 gocpp::panic("sync/atomic: store of inconsistently typed value into Value"_s);
@@ -165,12 +174,17 @@ namespace golang::atomic
             auto typ = LoadPointer(& vp->typ);
             if(typ == nullptr)
             {
+                // Attempt to start first store.
+                // Disable preemption so that other goroutines can use
+                // active spin wait to wait for completion; and so that
+                // GC does not see the fake type accidentally.
                 runtime_procPin();
                 if(! CompareAndSwapPointer(& vp->typ, nullptr, gocpp::unsafe_pointer(& firstStoreInProgress)))
                 {
                     runtime_procUnpin();
                     continue;
                 }
+                // Complete first store.
                 StorePointer(& vp->data, np->data);
                 StorePointer(& vp->typ, np->typ);
                 runtime_procUnpin();
@@ -178,8 +192,12 @@ namespace golang::atomic
             }
             if(typ == gocpp::unsafe_pointer(& firstStoreInProgress))
             {
+                // First store in progress. Wait.
+                // Since we disable preemption around the first store,
+                // we can wait with active spinning.
                 continue;
             }
+            // First store completed. Check type and overwrite data.
             if(typ != np->typ)
             {
                 gocpp::panic("sync/atomic: swap of inconsistently typed value into Value"_s);
@@ -218,12 +236,17 @@ namespace golang::atomic
                 {
                     return false;
                 }
+                // Attempt to start first store.
+                // Disable preemption so that other goroutines can use
+                // active spin wait to wait for completion; and so that
+                // GC does not see the fake type accidentally.
                 runtime_procPin();
                 if(! CompareAndSwapPointer(& vp->typ, nullptr, gocpp::unsafe_pointer(& firstStoreInProgress)))
                 {
                     runtime_procUnpin();
                     continue;
                 }
+                // Complete first store.
                 StorePointer(& vp->data, np->data);
                 StorePointer(& vp->typ, np->typ);
                 runtime_procUnpin();
@@ -231,12 +254,21 @@ namespace golang::atomic
             }
             if(typ == gocpp::unsafe_pointer(& firstStoreInProgress))
             {
+                // First store in progress. Wait.
+                // Since we disable preemption around the first store,
+                // we can wait with active spinning.
                 continue;
             }
+            // First store completed. Check type and overwrite data.
             if(typ != np->typ)
             {
                 gocpp::panic("sync/atomic: compare and swap of inconsistently typed value into Value"_s);
             }
+            // Compare old and current via runtime equality check.
+            // This allows value types to be compared, something
+            // not offered by the package functions.
+            // CompareAndSwapPointer below only ensures vp.data
+            // has not changed since LoadPointer.
             auto data = LoadPointer(& vp->data);
             go_any i = {};
             (efaceWords*)(gocpp::unsafe_pointer(& i))->typ = typ;

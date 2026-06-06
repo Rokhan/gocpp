@@ -27,9 +27,12 @@ namespace golang::syscall
     {
         for(auto i = 0; i < len(s); )
         {
+            // Cannot use 'for range s' because it expects valid
+            // UTF-8 runes.
             auto [r, size] = utf8::DecodeRuneInString(s.make_slice(i));
             if(r == utf8::RuneError)
             {
+                // Check if s[i:] contains a valid WTF-8 encoded surrogate.
                 if(auto sc = s.make_slice(i); len(sc) >= 3 && sc[0] == 0xED && 0xA0 <= sc[1] && sc[1] <= 0xBF && 0x80 <= sc[2] && sc[2] <= 0xBF)
                 {
                     r = (gocpp::rune(sc[0] & mask3) << 12) + (gocpp::rune(sc[1] & maskx) << 6) + gocpp::rune(sc[2] & maskx);
@@ -62,13 +65,18 @@ namespace golang::syscall
                 {
                     case 0:
                     case 1:
+                        // normal rune
                         ar = gocpp::rune(r);
                         break;
                     case 2:
+                        // valid surrogate sequence
                         ar = utf16::DecodeRune(gocpp::rune(r), gocpp::rune(s[i + 1]));
                         i++;
                         break;
                     default:
+                        // WTF-8 fallback.
+                        // This only handles the 3-byte case of utf8.AppendRune,
+                        // as surrogates always fall in that case.
                         ar = gocpp::rune(r);
                         if(ar > utf8::MaxRune)
                         {

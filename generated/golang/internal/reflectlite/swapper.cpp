@@ -40,6 +40,7 @@ namespace golang::reflectlite
                 x.Kind = rec::Kind(gocpp::recv(v));
             }));
         }
+        // Fast path for slices of size 0 and 1. Nothing to swap.
         //Go switch emulation
         {
             auto condition = rec::Len(gocpp::recv(v));
@@ -68,6 +69,7 @@ namespace golang::reflectlite
         auto typ = rec::common(gocpp::recv(rec::Elem(gocpp::recv(rec::Type(gocpp::recv(v))))));
         auto size = rec::Size(gocpp::recv(typ));
         auto hasPtr = typ->PtrBytes != 0;
+        // Some common & small cases, without using memmove:
         if(hasPtr)
         {
             if(size == goarch::PtrSize)
@@ -131,6 +133,7 @@ namespace golang::reflectlite
             }
         }
         auto s = (unsafeheader::Slice*)(v.ptr);
+        // swap scratch space
         auto tmp = unsafe_New(typ);
         return [=](int i, int j) mutable -> void
         {

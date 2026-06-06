@@ -876,6 +876,8 @@ namespace golang::reflect
             off += i2 + l2;
         }
         int32_t nameOff = {};
+        // Note that this field may not be aligned in memory,
+        // so we cannot use a direct int32 assignment here.
         copy((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& nameOff)).make_slice(0), (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"_s))).make_slice(0));
         auto pkgPathName = gocpp::Init<abi::Name>([=](auto& x) {
             x.Bytes = (unsigned char*)(resolveTypeOff(gocpp::unsafe_pointer(n.Bytes), nameOff));
@@ -1169,19 +1171,26 @@ namespace golang::reflect
             return {Method {}, false};
         }
         auto methods = rec::ExportedMethods(gocpp::recv(ut));
+        // We are looking for the first index i where the string becomes >= s.
+        // This is a copy of sort.Search, with f(h) replaced by (t.nameOff(methods[h].name).name() >= name).
         auto [i, j] = std::tuple{0, len(methods)};
         for(; i < j; )
         {
+            // avoid overflow when computing h
             auto h = int((unsigned int)(i + j) >> 1);
+            // i ≤ h < j
             if(! (rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), methods[h].Name))) >= name))
             {
+                // preserves f(i-1) == false
                 i = h + 1;
             }
             else
             {
+                // preserves f(j) == true
                 j = h;
             }
         }
+        // i == j, f(i-1) == false, and f(j) (= f(i)) == true  =>  answer is i.
         if(i < len(methods) && name == rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), methods[i].Name))))
         {
             return {rec::Method(gocpp::recv(t), i), true};
@@ -1566,8 +1575,11 @@ namespace golang::reflect
     {
         gocpp::string value;
         bool ok;
+        // When modifying this code, also update the validateStructTag code
+        // in cmd/vet/structtag.go.
         for(; tag != ""_s; )
         {
+            // Skip leading space.
             auto i = 0;
             for(; i < len(tag) && tag[i] == ' '; )
             {
@@ -1578,6 +1590,10 @@ namespace golang::reflect
             {
                 break;
             }
+            // Scan to colon. A space, a quote or a control character is a syntax error.
+            // Strictly speaking, control chars include the range [0x7f, 0x9f], not just
+            // [0x00, 0x1f], but in practice, we ignore the multi-byte control characters
+            // as it is simpler to inspect the tag's bytes than the tag's runes.
             i = 0;
             for(; i < len(tag) && tag[i] > ' ' && tag[i] != ':' && tag[i] != '"' && tag[i] != 0x7f; )
             {
@@ -1589,6 +1605,7 @@ namespace golang::reflect
             }
             auto name = gocpp::string(tag.make_slice(0, i));
             tag = tag.make_slice(i + 1);
+            // Scan quoted string to find value.
             i = 1;
             for(; i < len(tag) && tag[i] != '"'; )
             {
@@ -1638,6 +1655,13 @@ namespace golang::reflect
             f.Tag = StructTag(tag);
         }
         f.Offset = p->Offset;
+        // NOTE(rsc): This is the only allocation in the interface
+        // presented by a reflect.Type. It would be nice to avoid,
+        // at least in the common cases, but we need to make sure
+        // that misbehaving clients of reflect cannot affect other
+        // uses of reflect. One possibility is CL 5371098, but we
+        // postponed that ugliness until there is a demonstrated
+        // need for the performance. This is issue 2320.
         f.Index = gocpp::slice<int> {i};
         return f;
     }
@@ -1702,6 +1726,13 @@ namespace golang::reflect
     {
         struct StructField result;
         bool ok;
+        // This uses the same condition that the Go language does: there must be a unique instance
+        // of the match at a given depth level. If there are multiple instances of a match at the
+        // same depth, they annihilate each other and inhibit any possible match at a lower level.
+        // The algorithm is breadth first search, one depth level at a time.
+        // The current and next slices are work queues:
+        // current lists the fields to visit on this depth level,
+        // and next lists the fields on the next lower level.
         auto current = gocpp::slice<fieldScan> {};
         auto next = gocpp::slice<fieldScan> {gocpp::Init<>([=](auto& x) {
             x.typ = t;
@@ -1713,37 +1744,54 @@ namespace golang::reflect
         // then it annihilates itself and need not be considered at all when we
         // process that next depth level.
         gocpp::map<structType*, int> nextCount = {};
+        // visited records the structs that have been considered already.
+        // Embedded pointer fields can create cycles in the graph of
+        // reachable embedded types; visited avoids following those cycles.
+        // It also avoids duplicated effort: if we didn't find the field in an
+        // embedded type T at level 2, we won't find it in one at level 4 either.
         auto visited = gocpp::map<structType*, bool> {};
         for(; len(next) > 0; )
         {
             std::tie(current, next) = std::tuple{next, current.make_slice(0, 0)};
             auto count = nextCount;
             nextCount = nullptr;
+            // Process all the fields at this depth, now listed in 'current'.
+            // The loop queues embedded fields found in 'next', for processing during the next
+            // iteration. The multiplicity of the 'current' field counts is recorded
+            // in 'count'; the multiplicity of the 'next' field counts is recorded in 'nextCount'.
             for(auto [gocpp_ignored, scan] : current)
             {
                 auto t = scan.typ;
                 if(visited[t])
                 {
+                    // We've looked through this type before, at a higher level.
+                    // That higher level would shadow the lower level we're now at,
+                    // so this one can't be useful to us. Ignore it.
                     continue;
                 }
                 visited[t] = true;
                 for(auto [i, gocpp_ignored] : t->StructType.Fields)
                 {
                     auto f = & t->StructType.Fields[i];
+                    // Find name and (for embedded field) type for field f.
                     auto fname = rec::Name(gocpp::recv(f->Name));
                     abi::Type* ntyp = {};
                     if(rec::Embedded(gocpp::recv(f)))
                     {
+                        // Embedded field of type T or *T.
                         ntyp = f->Typ;
                         if(rec::Kind(gocpp::recv(ntyp)) == abi::Pointer)
                         {
                             ntyp = rec::Elem(gocpp::recv(ntyp));
                         }
                     }
+                    // Does it match?
                     if(match(fname))
                     {
+                        // Potential match
                         if(count[t] > 1 || ok)
                         {
+                            // Name appeared multiple times at this level: annihilate.
                             return {StructField {}, false};
                         }
                         result = rec::Field(gocpp::recv(t), i);
@@ -1753,6 +1801,9 @@ namespace golang::reflect
                         ok = true;
                         continue;
                     }
+                    // Queue embedded struct fields for processing with next level,
+                    // but only if we haven't seen a match yet at this level and only
+                    // if the embedded types haven't already been queued.
                     if(ok || ntyp == nullptr || rec::Kind(gocpp::recv(ntyp)) != abi::Struct)
                     {
                         continue;
@@ -1760,6 +1811,7 @@ namespace golang::reflect
                     auto styp = (structType*)(gocpp::unsafe_pointer(ntyp));
                     if(nextCount[styp] > 0)
                     {
+                        // exact multiple doesn't matter
                         nextCount[styp] = 2;
                         continue;
                     }
@@ -1770,6 +1822,7 @@ namespace golang::reflect
                     nextCount[styp] = 1;
                     if(count[t] > 1)
                     {
+                        // exact multiple doesn't matter
                         nextCount[styp] = 2;
                     }
                     gocpp::slice<int> index = {};
@@ -1792,6 +1845,7 @@ namespace golang::reflect
     {
         struct StructField f;
         bool present;
+        // Quick check for top-level name, or struct without embedded fields.
         auto hasEmbeds = false;
         if(name != ""_s)
         {
@@ -1823,6 +1877,8 @@ namespace golang::reflect
     struct Type TypeOf(go_any i)
     {
         auto eface = *(emptyInterface*)(gocpp::unsafe_pointer(& i));
+        // Noescape so this doesn't make i to escape. See the comment
+        // at Value.typ for why this is safe.
         return toType((abi::Type*)(noescape(gocpp::unsafe_pointer(eface.typ))));
     }
 
@@ -1861,10 +1917,12 @@ namespace golang::reflect
         {
             return rec::typeOff(gocpp::recv(t), at->PtrToThis);
         }
+        // Check the cache.
         if(auto [pi, ok] = rec::Load(gocpp::recv(ptrMap), t); ok)
         {
             return & gocpp::getValue<ptrType*>(pi)->PtrType.Type;
         }
+        // Look in known types.
         auto s = "*"_s + rec::String(gocpp::recv(t));
         for(auto [gocpp_ignored, tt] : typesByString(s))
         {
@@ -1883,6 +1941,11 @@ namespace golang::reflect
         auto pp = *prototype;
         pp.PtrType.Type.Str = resolveReflectName(newName(s, ""_s, false, false));
         pp.PtrType.Type.PtrToThis = 0;
+        // For the type structures linked into the binary, the
+        // compiler provides a good hash of the string.
+        // Create a good hash for the new string by using
+        // the FNV-1 hash's mixing function to combine the
+        // old hash and the new "*".
         pp.PtrType.Type.Hash = fnv1(t->t.Hash, '*');
         pp.PtrType.Elem = at;
         auto [pi, gocpp_id_2] = rec::LoadOrStore(gocpp::recv(ptrMap), t, & pp);
@@ -1953,6 +2016,18 @@ namespace golang::reflect
         {
             return true;
         }
+        // The same algorithm applies in both cases, but the
+        // method tables for an interface type and a concrete type
+        // are different, so the code is duplicated.
+        // In both cases the algorithm is a linear scan over the two
+        // lists - T's methods and V's methods - simultaneously.
+        // Since method tables are stored in a unique sorted order
+        // (alphabetical, with no duplicate method names), the scan
+        // through V's methods must hit a match for each of T's
+        // methods along the way, or else V does not implement T.
+        // This lets us run the scan in overall linear time instead of
+        // the quadratic time  a naive search would require.
+        // See also ../runtime/iface.go.
         if(rec::Kind(gocpp::recv(V)) == abi::Interface)
         {
             auto v = (interfaceType*)(gocpp::unsafe_pointer(V));
@@ -2037,6 +2112,10 @@ namespace golang::reflect
     // T and V must be both of Chan kind.
     bool specialChannelAssignability(abi::Type* T, abi::Type* V)
     {
+        // Special case:
+        // x is a bidirectional channel value, T is a channel type,
+        // x's type V and T have identical element types,
+        // and at least one of V or T is not a defined type.
         return rec::ChanDir(gocpp::recv(V)) == abi::BothDir && (nameFor(T) == ""_s || nameFor(V) == ""_s) && haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), true);
     }
 
@@ -2047,10 +2126,13 @@ namespace golang::reflect
     // and the ideal constant rules (no ideal constants at run time).
     bool directlyAssignable(abi::Type* T, abi::Type* V)
     {
+        // x's type V is identical to T?
         if(T == V)
         {
             return true;
         }
+        // Otherwise at least one of T and V must not be defined
+        // and they must have the same kind.
         if(rec::HasName(gocpp::recv(T)) && rec::HasName(gocpp::recv(V)) || rec::Kind(gocpp::recv(T)) != rec::Kind(gocpp::recv(V)))
         {
             return false;
@@ -2059,6 +2141,7 @@ namespace golang::reflect
         {
             return true;
         }
+        // x's type T and V must have identical underlying types.
         return haveIdenticalUnderlyingType(T, V, true);
     }
 
@@ -2086,10 +2169,13 @@ namespace golang::reflect
         {
             return false;
         }
+        // Non-composite types of equal kind have same underlying type
+        // (the predefined instance of the type).
         if(Bool <= kind && kind <= Complex128 || kind == String || kind == UnsafePointer)
         {
             return true;
         }
+        // Composite types.
         //Go switch emulation
         {
             auto condition = kind;
@@ -2140,6 +2226,8 @@ namespace golang::reflect
                     {
                         return true;
                     }
+                    // Might have the same methods but still
+                    // need a run time conversion.
                     return false;
                     break;
                 case 4:
@@ -2230,19 +2318,29 @@ namespace golang::reflect
         for(auto [offsI, offs] : offset)
         {
             auto section = sections[offsI];
+            // We are looking for the first index i where the string becomes >= s.
+            // This is a copy of sort.Search, with f(h) replaced by (*typ[h].String() >= s).
             auto [i, j] = std::tuple{0, len(offs)};
+            // i == j, f(i-1) == false, and f(j) (= f(i)) == true  =>  answer is i.
             for(; i < j; )
             {
+                // avoid overflow when computing h
                 auto h = int((unsigned int)(i + j) >> 1);
+                // i ≤ h < j
                 if(! (stringFor(rtypeOff(section, offs[h])) >= s))
                 {
+                    // preserves f(i-1) == false
                     i = h + 1;
                 }
                 else
                 {
+                    // preserves f(j) == true
                     j = h;
                 }
             }
+            // Having found the first, linear scan forward to find the last.
+            // We could do a second binary search, but the caller is going
+            // to do a linear scan anyway.
             for(auto j = i; j < len(offs); j++)
             {
                 auto typ = rtypeOff(section, offs[j]);
@@ -2353,11 +2451,13 @@ namespace golang::reflect
     struct Type ChanOf(golang::reflect::ChanDir dir, struct Type t)
     {
         auto typ = rec::common(gocpp::recv(t));
+        // Look in cache.
         auto ckey = cacheKey {Chan, typ, nullptr, uintptr_t(dir)};
         if(auto [ch, ok] = rec::Load(gocpp::recv(lookupCache), ckey); ok)
         {
             return gocpp::getValue<rtype*>(ch);
         }
+        // This restriction is imposed by the gc compiler and the runtime.
         if(typ->Size_ >= (1 << 16))
         {
             gocpp::panic("reflect.ChanOf: element size too large"_s);
@@ -2386,6 +2486,10 @@ namespace golang::reflect
                     auto typeStr = stringFor(typ);
                     if(typeStr[0] == '<')
                     {
+                        // typ is recv chan, need parentheses as "<-" associates with leftmost
+                        // chan possible, see:
+                        // * https://golang.org/ref/spec#Channel_types
+                        // * https://github.com/golang/go/issues/39897
                         s = "chan ("_s + typeStr + ")"_s;
                     }
                     else
@@ -2431,11 +2535,13 @@ namespace golang::reflect
         {
             gocpp::panic("reflect.MapOf: invalid key type "_s + stringFor(ktyp));
         }
+        // Look in cache.
         auto ckey = cacheKey {Map, ktyp, etyp, 0};
         if(auto [mt, ok] = rec::Load(gocpp::recv(lookupCache), ckey); ok)
         {
             return gocpp::getValue<Type>(mt);
         }
+        // Look in known types.
         auto s = "map["_s + stringFor(ktyp) + "]"_s + stringFor(etyp);
         for(auto [gocpp_ignored, tt] : typesByString(s))
         {
@@ -2465,6 +2571,7 @@ namespace golang::reflect
         if(ktyp->Size_ > maxKeySize)
         {
             mt.MapType.KeySize = uint8_t(goarch::PtrSize);
+            // indirect key
             mt.MapType.Flags |= 1;
         }
         else
@@ -2474,6 +2581,7 @@ namespace golang::reflect
         if(etyp->Size_ > maxValSize)
         {
             mt.MapType.ValueSize = uint8_t(goarch::PtrSize);
+            // indirect value
             mt.MapType.Flags |= 2;
         }
         else
@@ -2587,6 +2695,7 @@ namespace golang::reflect
             {
                 ft->OutCount |= 1 << 15;
             }
+            // Look in cache.
             if(auto [ts, ok] = rec::Load(gocpp::recv(funcLookupCache.m), hash); ok)
             {
                 for(auto [gocpp_ignored, t] : gocpp::getValue<gocpp::slice<abi::Type*>>(ts))
@@ -2597,6 +2706,7 @@ namespace golang::reflect
                     }
                 }
             }
+            // Not in cache, lock and retry.
             rec::Lock(gocpp::recv(funcLookupCache));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(funcLookupCache)); });
             if(auto [ts, ok] = rec::Load(gocpp::recv(funcLookupCache.m), hash); ok)
@@ -2619,6 +2729,7 @@ namespace golang::reflect
                 rec::Store(gocpp::recv(funcLookupCache.m), hash, append(rts, tt));
                 return toType(tt);
             };
+            // Look in known types for the same string representation.
             auto str = funcStr(ft);
             for(auto [gocpp_ignored, tt] : typesByString(str))
             {
@@ -2627,6 +2738,7 @@ namespace golang::reflect
                     return addToCache(tt);
                 }
             }
+            // Populate the remaining fields of ft and store in cache.
             ft->Type.Str = resolveReflectName(newName(str, ""_s, false, false));
             ft->Type.PtrToThis = 0;
             return addToCache(& ft->Type);
@@ -2763,6 +2875,7 @@ namespace golang::reflect
                     return true;
                     break;
                 default:
+                    // Func, Map, Slice, Invalid
                     gocpp::panic("isReflexive called on non-key type "_s + stringFor(t));
                     break;
             }
@@ -2824,6 +2937,9 @@ namespace golang::reflect
                 case 18:
                 case 19:
                 case 20:
+                    // Float keys can be updated from +0 to -0.
+                    // String keys can be updated to use a smaller backing store.
+                    // Interfaces might have floats or strings in them.
                     return true;
                     break;
                 case 21:
@@ -2842,6 +2958,7 @@ namespace golang::reflect
                     return false;
                     break;
                 default:
+                    // Func, Map, Slice, Invalid
                     gocpp::panic("needKeyUpdate called on non-key type "_s + stringFor(t));
                     break;
             }
@@ -2915,6 +3032,7 @@ namespace golang::reflect
         {
             auto nptr = (bucketSize * (1 + ktyp->Size_ + etyp->Size_) + goarch::PtrSize) / goarch::PtrSize;
             auto n = (nptr + 7) / 8;
+            // Runtime needs pointer masks to be a multiple of uintptr in size.
             n = (n + goarch::PtrSize - 1) &^ (goarch::PtrSize - 1);
             auto mask = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
             auto base = bucketSize / goarch::PtrSize;
@@ -2932,6 +3050,7 @@ namespace golang::reflect
             mask[word / 8] |= 1 << (word % 8);
             gcdata = & mask[0];
             ptrdata = (word + 1) * goarch::PtrSize;
+            // overflow word must be last
             if(ptrdata != size)
             {
                 gocpp::panic("reflect: bad layout computation in MapOf"_s);
@@ -2984,12 +3103,15 @@ namespace golang::reflect
     {
         if(typ->Kind_ & kindGCProg != 0)
         {
+            // Element has GC program; emit one element.
             auto n = uintptr_t(*(uint32_t*)(gocpp::unsafe_pointer(typ->GCData)));
             auto prog = rec::GcSlice(gocpp::recv(typ), 4, 4 + n - 1);
             return append(dst, prog);
         }
+        // Element is small with pointer mask; use as literal bits.
         auto ptrs = typ->PtrBytes / goarch::PtrSize;
         auto mask = rec::GcSlice(gocpp::recv(typ), 0, (ptrs + 7) / 8);
+        // Emit 120-bit chunks of full bytes (max is 127 but we avoid using partial bytes).
         for(; ptrs > 120; ptrs -= 120)
         {
             dst = append(dst, 120);
@@ -3006,11 +3128,13 @@ namespace golang::reflect
     struct Type SliceOf(struct Type t)
     {
         auto typ = rec::common(gocpp::recv(t));
+        // Look in cache.
         auto ckey = cacheKey {Slice, typ, nullptr, 0};
         if(auto [slice, ok] = rec::Load(gocpp::recv(lookupCache), ckey); ok)
         {
             return gocpp::getValue<Type>(slice);
         }
+        // Look in known types.
         auto s = "[]"_s + stringFor(typ);
         for(auto [gocpp_ignored, tt] : typesByString(s))
         {
@@ -3291,13 +3415,16 @@ namespace golang::reflect
                         gocpp::panic("reflect.Struct: fields with different PkgPath "_s + pkgpath + " and "_s + fpkgpath);
                     }
                 }
+                // Update string and hash
                 auto name = rec::Name(gocpp::recv(f.Name));
                 hash = fnv1(hash, gocpp::slice<unsigned char>(name));
                 repr = append(repr, (" "_s + name));
                 if(rec::Embedded(gocpp::recv(f)))
                 {
+                    // Embedded field
                     if(rec::Kind(gocpp::recv(f.Typ)) == abi::Pointer)
                     {
+                        // Embedded ** and *interface{} are illegal
                         auto elem = rec::Elem(gocpp::recv(ft));
                         if(auto k = rec::Kind(gocpp::recv(elem)); k == abi::Pointer || k == abi::Interface)
                         {
@@ -3318,6 +3445,7 @@ namespace golang::reflect
                                 {
                                     if(pkgPath(rec::nameOff(gocpp::recv(ift), m.Name)) != ""_s)
                                     {
+                                        // TODO(sbinet).  Issue 15924.
                                         gocpp::panic("reflect: embedded interface with unexported method(s) not implemented"_s);
                                     }
                                     auto fnStub = resolveReflectText(gocpp::unsafe_pointer(abi::FuncPCABIInternal(embeddedIfaceMethStub)));
@@ -3335,6 +3463,7 @@ namespace golang::reflect
                                 {
                                     if(i > 0 && unt->Mcount > 0)
                                     {
+                                        // Issue 15924.
                                         gocpp::panic("reflect: embedded type with methods not implemented if type is not first field"_s);
                                     }
                                     if(len(fields) > 1)
@@ -3346,6 +3475,8 @@ namespace golang::reflect
                                         auto mname = nameOffFor(ft, m.Name);
                                         if(pkgPath(mname) != ""_s)
                                         {
+                                            // TODO(sbinet).
+                                            // Issue 15924.
                                             gocpp::panic("reflect: embedded interface with unexported method(s) not implemented"_s);
                                         }
                                         methods = append(methods, gocpp::Init<abi::Method>([=](auto& x) {
@@ -3363,6 +3494,8 @@ namespace golang::reflect
                                         auto mname = nameOffFor(ft, m.Name);
                                         if(pkgPath(mname) != ""_s)
                                         {
+                                            // TODO(sbinet)
+                                            // Issue 15924.
                                             gocpp::panic("reflect: embedded interface with unexported method(s) not implemented"_s);
                                         }
                                         methods = append(methods, gocpp::Init<abi::Method>([=](auto& x) {
@@ -3379,6 +3512,7 @@ namespace golang::reflect
                                 {
                                     if(i > 0 && unt->Mcount > 0)
                                     {
+                                        // Issue 15924.
                                         gocpp::panic("reflect: embedded type with methods not implemented if type is not first field"_s);
                                     }
                                     if(len(fields) > 1 && ft->Kind_ & kindDirectIface != 0)
@@ -3390,6 +3524,8 @@ namespace golang::reflect
                                         auto mname = nameOffFor(ft, m.Name);
                                         if(pkgPath(mname) != ""_s)
                                         {
+                                            // TODO(sbinet)
+                                            // Issue 15924.
                                             gocpp::panic("reflect: embedded interface with unexported method(s) not implemented"_s);
                                         }
                                         methods = append(methods, gocpp::Init<abi::Method>([=](auto& x) {
@@ -3444,6 +3580,11 @@ namespace golang::reflect
             }
             if(size > 0 && lastzero == size)
             {
+                // This is a non-zero sized struct that ends in a
+                // zero-sized field. We add an extra byte of padding,
+                // to ensure that taking the address of the final
+                // zero-sized field can't manufacture a pointer to the
+                // next object in the heap. See issue 9401.
                 size++;
                 if(size == 0)
                 {
@@ -3460,6 +3601,11 @@ namespace golang::reflect
             }
             else
             {
+                // A *rtype representing a struct is followed directly in memory by an
+                // array of method objects representing the methods attached to the
+                // struct. To get the same layout for a run time generated type, we
+                // need an array directly following the uncommonType memory.
+                // A similar strategy is used for funcTypeFixed4, ...funcTypeFixedN.
                 auto tt = New(StructOf(gocpp::slice<StructField> {gocpp::Init<>([=](auto& x) {
                     x.Name = "S"_s;
                     x.Type = TypeOf(structType {});
@@ -3474,6 +3620,10 @@ namespace golang::reflect
                 ut = (reflect::uncommonType*)(rec::UnsafePointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 1))))));
                 copy(gocpp::getValue<gocpp::slice<abi::Method>>(rec::Interface(gocpp::recv(rec::Slice(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 2)), 0, len(methods))))), methods);
             }
+            // TODO(sbinet): Once we allow embedding multiple types,
+            // methods will need to be sorted like the compiler does.
+            // TODO(sbinet): Once we allow non-exported methods, we will
+            // need to compute xcount as the number of exported methods.
             ut->Mcount = uint16_t(len(methods));
             ut->Xcount = ut->Mcount;
             ut->Moff = uint32_t(gocpp::Sizeof<reflect::uncommonType>());
@@ -3484,6 +3634,7 @@ namespace golang::reflect
             repr = append(repr, '}');
             hash = fnv1(hash, '}');
             auto str = gocpp::string(repr);
+            // Round the size up to be a multiple of the alignment.
             auto s = align(size, uintptr_t(typalign));
             if(s < size)
             {
@@ -3499,6 +3650,7 @@ namespace golang::reflect
             {
                 typ->StructType.PkgPath = newName(pkgpath, ""_s, false, false);
             }
+            // Look in cache.
             if(auto [ts, ok] = rec::Load(gocpp::recv(structLookupCache.m), hash); ok)
             {
                 for(auto [gocpp_ignored, st] : gocpp::getValue<gocpp::slice<Type>>(ts))
@@ -3510,6 +3662,7 @@ namespace golang::reflect
                     }
                 }
             }
+            // Not in cache, lock and retry.
             rec::Lock(gocpp::recv(structLookupCache));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(structLookupCache)); });
             if(auto [ts, ok] = rec::Load(gocpp::recv(structLookupCache.m), hash); ok)
@@ -3533,14 +3686,19 @@ namespace golang::reflect
                 rec::Store(gocpp::recv(structLookupCache.m), hash, append(ts, t));
                 return t;
             };
+            // Look in known types.
             for(auto [gocpp_ignored, t] : typesByString(str))
             {
                 if(haveIdenticalUnderlyingType(& typ->StructType.Type, t, true))
                 {
+                    // even if 't' wasn't a structType with methods, we should be ok
+                    // as the 'u uncommonType' field won't be accessed except when
+                    // tflag&abi.TFlagUncommon is set.
                     return addToCache(toType(t));
                 }
             }
             typ->StructType.Type.Str = resolveReflectName(newName(str, ""_s, false, false));
+            // TODO: set tflagRegularMemory
             typ->StructType.Type.TFlag = 0;
             typ->StructType.Type.Hash = hash;
             typ->StructType.Type.Size_ = size;
@@ -3562,25 +3720,33 @@ namespace golang::reflect
                         lastPtrField = i;
                     }
                 }
+                // will be length of prog
                 auto prog = gocpp::slice<unsigned char> {0, 0, 0, 0};
                 uintptr_t off = {};
                 for(auto [i, ft] : fs)
                 {
                     if(i > lastPtrField)
                     {
+                        // gcprog should not include anything for any field after
+                        // the last field that contains pointer data
                         break;
                     }
                     if(! rec::Pointers(gocpp::recv(ft.Typ)))
                     {
+                        // Ignore pointerless fields.
                         continue;
                     }
+                    // Pad to start of this field with zeros.
                     if(ft.Offset > off)
                     {
                         auto n = (ft.Offset - off) / goarch::PtrSize;
+                        // emit a 0 bit
                         prog = append(prog, 0x01, 0x00);
                         if(n > 1)
                         {
+                            // repeat previous bit
                             prog = append(prog, 0x81);
+                            // n-1 times
                             prog = appendVarint(prog, n - 1);
                         }
                         off = ft.Offset;
@@ -3627,6 +3793,7 @@ namespace golang::reflect
                 switch(conditionId)
                 {
                     case 0:
+                        // structs of 1 direct iface type can be direct
                         typ->StructType.Type.Kind_ |= kindDirectIface;
                         break;
                     default:
@@ -3658,12 +3825,15 @@ namespace golang::reflect
         }
         if(rec::IsExported(gocpp::recv(field)))
         {
+            // Best-effort check for misuse.
+            // Since this field will be treated as exported, not much harm done if Unicode lowercase slips through.
             auto c = field.Name[0];
             if('a' <= c && c <= 'z' || c == '_')
             {
                 gocpp::panic("reflect.StructOf: field \""_s + field.Name + "\" is unexported but missing PkgPath"_s);
             }
         }
+        // install in runtime
         resolveReflectType(rec::common(gocpp::recv(field.Type)));
         auto f = gocpp::Init<reflect::structField>([=](auto& x) {
             x.Name = newName(field.Name, gocpp::string(field.Tag), rec::IsExported(gocpp::recv(field)), field.Anonymous);
@@ -3687,6 +3857,7 @@ namespace golang::reflect
             {
                 case 0:
                     auto st = (structType*)(gocpp::unsafe_pointer(t));
+                    // find the last field that has pointers.
                     auto field = - 1;
                     for(auto [i, gocpp_ignored] : st->StructType.Fields)
                     {
@@ -3723,11 +3894,13 @@ namespace golang::reflect
             gocpp::panic("reflect: negative length passed to ArrayOf"_s);
         }
         auto typ = rec::common(gocpp::recv(elem));
+        // Look in cache.
         auto ckey = cacheKey {Array, typ, nullptr, uintptr_t(length)};
         if(auto [array, ok] = rec::Load(gocpp::recv(lookupCache), ckey); ok)
         {
             return gocpp::getValue<Type>(array);
         }
+        // Look in known types.
         auto s = "["_s + strconv::Itoa(length) + "]"_s + stringFor(typ);
         for(auto [gocpp_ignored, tt] : typesByString(s))
         {
@@ -3778,28 +3951,40 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
+                    // No pointers.
                     array.Type.GCData = nullptr;
                     array.Type.PtrBytes = 0;
                     break;
                 case 1:
+                    // In memory, 1-element array looks just like the element.
                     array.Type.Kind_ |= typ->Kind_ & kindGCProg;
                     array.Type.GCData = typ->GCData;
                     array.Type.PtrBytes = typ->PtrBytes;
                     break;
                 case 2:
+                    // Element is small with pointer mask; array is still small.
+                    // Create direct pointer mask by turning each 1 bit in elem
+                    // into length 1 bits in larger mask.
                     auto n = (array.Type.PtrBytes / goarch::PtrSize + 7) / 8;
+                    // Runtime needs pointer masks to be a multiple of uintptr in size.
                     n = (n + goarch::PtrSize - 1) &^ (goarch::PtrSize - 1);
                     auto mask = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
                     emitGCMask(mask, 0, typ, array.Len);
                     array.Type.GCData = & mask[0];
                     break;
+                // overestimate but ok; must match program
                 default:
+                    // Create program that emits one element
+                    // and then repeats to make the array.
+                    // will be length of prog
                     auto prog = gocpp::slice<unsigned char> {0, 0, 0, 0};
                     prog = appendGCProg(prog, typ);
+                    // Pad from ptrdata to size.
                     auto elemPtrs = typ->PtrBytes / goarch::PtrSize;
                     auto elemWords = typ->Size_ / goarch::PtrSize;
                     if(elemPtrs < elemWords)
                     {
+                        // Emit literal 0 bit, then repeat as needed.
                         prog = append(prog, 0x01, 0x00);
                         if(elemPtrs + 1 < elemWords)
                         {
@@ -3807,6 +3992,7 @@ namespace golang::reflect
                             prog = appendVarint(prog, elemWords - elemPtrs - 1);
                         }
                     }
+                    // Repeat length-1 times.
                     if(elemWords < 0x80)
                     {
                         prog = append(prog, (unsigned char)(elemWords | 0x80));
@@ -3851,6 +4037,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
+                    // array of 1 direct iface type can be direct
                     array.Type.Kind_ |= kindDirectIface;
                     break;
                 default:
@@ -3980,7 +4167,9 @@ namespace golang::reflect
             auto lt = gocpp::getValue<layoutType>(lti);
             return {lt.t, lt.framePool, lt.abid};
         }
+        // Compute the ABI layout.
         abid = newAbiDesc(t, rcvr);
+        // build dummy rtype holding gc program
         auto x = gocpp::InitPtr<abi::Type>([=](auto& y) {
             y.Align_ = goarch::PtrSize;
             y.Size_ = align(abid.retOffset + abid.ret.stackBytes, goarch::PtrSize);
@@ -4000,6 +4189,7 @@ namespace golang::reflect
             s = "funcargs("_s + stringFor(& t->Type) + ")"_s;
         }
         x->Str = resolveReflectName(newName(s, ""_s, false, false));
+        // cache result for future callers
         framePool = gocpp::InitPtr<sync::Pool>([=](auto& y) {
             y.New = [=]() mutable -> go_any
             {
@@ -4059,6 +4249,9 @@ namespace golang::reflect
     {
         if(bv->n % (8 * goarch::PtrSize) == 0)
         {
+            // Runtime needs pointer masks to be a multiple of uintptr in size.
+            // Since reflect passes bv.data directly to the runtime as a pointer mask,
+            // we append a full uintptr of zeros at a time.
             for(auto i = 0; i < goarch::PtrSize; i++)
             {
                 bv->data = append(bv->data, 0);
@@ -4097,6 +4290,7 @@ namespace golang::reflect
                 case 4:
                 case 5:
                 case 6:
+                    // 1 pointer at start of representation
                     for(; bv->n < uint32_t(offset / uintptr_t(goarch::PtrSize)); )
                     {
                         rec::append(gocpp::recv(bv), 0);
@@ -4104,6 +4298,7 @@ namespace golang::reflect
                     rec::append(gocpp::recv(bv), 1);
                     break;
                 case 7:
+                    // 2 pointers
                     for(; bv->n < uint32_t(offset / uintptr_t(goarch::PtrSize)); )
                     {
                         rec::append(gocpp::recv(bv), 0);
@@ -4112,6 +4307,7 @@ namespace golang::reflect
                     rec::append(gocpp::recv(bv), 1);
                     break;
                 case 8:
+                    // repeat inner type
                     auto tt = (reflect::arrayType*)(gocpp::unsafe_pointer(t));
                     for(auto i = 0; i < int(tt->Len); i++)
                     {
@@ -4119,6 +4315,7 @@ namespace golang::reflect
                     }
                     break;
                 case 9:
+                    // apply fields
                     auto tt = (structType*)(gocpp::unsafe_pointer(t));
                     for(auto [i, gocpp_ignored] : tt->StructType.Fields)
                     {

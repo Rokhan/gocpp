@@ -64,10 +64,13 @@ namespace golang::main
                     mocklib::Println("Linux."_s);
                     break;
                 default:
+                    // freebsd, openbsd,
+                    // plan9, windows...
                     mocklib::Println(os);
                     break;
             }
         }
+        // With default first
         mocklib::Print("\nGo runs on "_s);
         //Go switch emulation
         {
@@ -93,6 +96,7 @@ namespace golang::main
                     break;
             }
         }
+        // With multiple cases first
         mocklib::Print("\nGo runs on "_s);
         //Go switch emulation
         {

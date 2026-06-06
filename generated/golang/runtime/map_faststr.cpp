@@ -50,9 +50,11 @@ namespace golang::runtime
         auto key = stringStructOf(& ky);
         if(h->B == 0)
         {
+            // One-bucket table.
             auto b = (bmap*)(h->buckets);
             if(key->len < 32)
             {
+                // short key, doing lots of comparisons is ok
                 for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
                 {
                     auto k = (stringStruct*)(kptr);
@@ -71,6 +73,7 @@ namespace golang::runtime
                 }
                 return gocpp::unsafe_pointer(& zeroVal[0]);
             }
+            // long key, try not to do more comparisons than necessary
             auto keymaybe = uintptr_t(bucketCnt);
             for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
             {
@@ -87,16 +90,19 @@ namespace golang::runtime
                 {
                     return add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * 2 * goarch::PtrSize + i * uintptr_t(t->ValueSize));
                 }
+                // check first 4 bytes
                 if(*((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(key->str)) != *((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(k->str)))
                 {
                     continue;
                 }
+                // check last 4 bytes
                 if(*((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(add(key->str, uintptr_t(key->len) - 4))) != *((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(add(k->str, uintptr_t(key->len) - 4))))
                 {
                     continue;
                 }
                 if(keymaybe != bucketCnt)
                 {
+                    // Two keys are potential matches. Use hash to distinguish them.
                     goto dohash;
                 }
                 keymaybe = i;
@@ -119,6 +125,7 @@ namespace golang::runtime
         {
             if(! rec::sameSizeGrow(gocpp::recv(h)))
             {
+                // There used to be half as many buckets; mask down one more power of two.
                 m >>= 1;
             }
             auto oldb = (bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
@@ -164,9 +171,11 @@ namespace golang::runtime
         auto key = stringStructOf(& ky);
         if(h->B == 0)
         {
+            // One-bucket table.
             auto b = (bmap*)(h->buckets);
             if(key->len < 32)
             {
+                // short key, doing lots of comparisons is ok
                 for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
                 {
                     auto k = (stringStruct*)(kptr);
@@ -185,6 +194,7 @@ namespace golang::runtime
                 }
                 return {gocpp::unsafe_pointer(& zeroVal[0]), false};
             }
+            // long key, try not to do more comparisons than necessary
             auto keymaybe = uintptr_t(bucketCnt);
             for(auto [i, kptr] = std::tuple{uintptr_t(0), rec::keys(gocpp::recv(b))}; i < bucketCnt; std::tie(i, kptr) = std::tuple{i + 1, add(kptr, 2 * goarch::PtrSize)})
             {
@@ -201,16 +211,19 @@ namespace golang::runtime
                 {
                     return {add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * 2 * goarch::PtrSize + i * uintptr_t(t->ValueSize)), true};
                 }
+                // check first 4 bytes
                 if(*((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(key->str)) != *((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(k->str)))
                 {
                     continue;
                 }
+                // check last 4 bytes
                 if(*((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(add(key->str, uintptr_t(key->len) - 4))) != *((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(add(k->str, uintptr_t(key->len) - 4))))
                 {
                     continue;
                 }
                 if(keymaybe != bucketCnt)
                 {
+                    // Two keys are potential matches. Use hash to distinguish them.
                     goto dohash;
                 }
                 keymaybe = i;
@@ -233,6 +246,7 @@ namespace golang::runtime
         {
             if(! rec::sameSizeGrow(gocpp::recv(h)))
             {
+                // There used to be half as many buckets; mask down one more power of two.
                 m >>= 1;
             }
             auto oldb = (bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
@@ -277,9 +291,11 @@ namespace golang::runtime
         }
         auto key = stringStructOf(& s);
         auto hash = t->Hasher(noescape(gocpp::unsafe_pointer(& s)), uintptr_t(h->hash0));
+        // Set hashWriting after calling t.hasher for consistency with mapassign.
         h->flags ^= hashWriting;
         if(h->buckets == nullptr)
         {
+            // newarray(t.bucket, 1)
             h->buckets = newobject(t->Bucket);
         }
         again:
@@ -326,8 +342,11 @@ namespace golang::runtime
                 {
                     continue;
                 }
+                // already have a mapping for key. Update it.
                 inserti = i;
                 insertb = b;
+                // Overwrite existing key, so it can be garbage collected.
+                // The size is already guaranteed to be set correctly.
                 k->str = key->str;
                 goto done;
             }
@@ -338,18 +357,26 @@ namespace golang::runtime
             }
             b = ovf;
         }
+        // Did not find mapping for key. Allocate new cell & add entry.
+        // If we hit the max load factor or we have too many overflow buckets,
+        // and we're not already in the middle of growing, start growing.
         if(! rec::growing(gocpp::recv(h)) && (overLoadFactor(h->count + 1, h->B) || tooManyOverflowBuckets(h->noverflow, h->B)))
         {
             hashGrow(t, h);
+            // Growing the table invalidates everything, so try again
             goto again;
         }
         if(insertb == nullptr)
         {
+            // The current bucket and all the overflow buckets connected to it are full, allocate a new one.
             insertb = rec::newoverflow(gocpp::recv(h), t, b);
+            // not necessary, but avoids needlessly spilling inserti
             inserti = 0;
         }
+        // mask inserti to avoid bounds checks
         insertb->tophash[inserti & (bucketCnt - 1)] = top;
         insertk = add(gocpp::unsafe_pointer(insertb), dataOffset + inserti * 2 * goarch::PtrSize);
+        // store new key at insert position
         *((stringStruct*)(insertk)) = *key;
         h->count++;
         done:
@@ -379,6 +406,7 @@ namespace golang::runtime
         }
         auto key = stringStructOf(& ky);
         auto hash = t->Hasher(noescape(gocpp::unsafe_pointer(& ky)), uintptr_t(h->hash0));
+        // Set hashWriting after calling t.hasher for consistency with mapdelete
         h->flags ^= hashWriting;
         auto bucket = hash & bucketMask(h->B);
         if(rec::growing(gocpp::recv(h)))
@@ -408,6 +436,7 @@ namespace golang::runtime
                 {
                     continue;
                 }
+                // Clear key's pointer.
                 k->str = nullptr;
                 auto e = add(gocpp::unsafe_pointer(b), dataOffset + bucketCnt * 2 * goarch::PtrSize + i * uintptr_t(t->ValueSize));
                 if(t->Elem->PtrBytes != 0)
@@ -419,6 +448,8 @@ namespace golang::runtime
                     memclrNoHeapPointers(e, t->Elem->Size_);
                 }
                 b->tophash[i] = emptyOne;
+                // If the bucket now ends in a bunch of emptyOne states,
+                // change those to emptyRest states.
                 if(i == bucketCnt - 1)
                 {
                     if(rec::overflow(gocpp::recv(b), t) != nullptr && rec::overflow(gocpp::recv(b), t)->tophash[0] != emptyRest)
@@ -440,8 +471,10 @@ namespace golang::runtime
                     {
                         if(b == bOrig)
                         {
+                            // beginning of initial bucket, we're done.
                             break;
                         }
+                        // Find previous bucket, continue at its last entry.
                         auto c = b;
                         for(b = bOrig; rec::overflow(gocpp::recv(b), t) != c; b = rec::overflow(gocpp::recv(b), t))
                         {
@@ -459,6 +492,8 @@ namespace golang::runtime
                 }
                 notLast:
                 h->count--;
+                // Reset the hash seed to make it more difficult for attackers to
+                // repeatedly trigger hash collisions. See issue 25237.
                 if(h->count == 0)
                 {
                     h->hash0 = uint32_t(rand());
@@ -475,7 +510,10 @@ namespace golang::runtime
 
     void growWork_faststr(golang::runtime::maptype* t, struct hmap* h, uintptr_t bucket)
     {
+        // make sure we evacuate the oldbucket corresponding
+        // to the bucket we're about to use
         evacuate_faststr(t, h, bucket & rec::oldbucketmask(gocpp::recv(h)));
+        // evacuate one more oldbucket to make progress on growing
         if(rec::growing(gocpp::recv(h)))
         {
             evacuate_faststr(t, h, h->nevacuate);
@@ -488,6 +526,8 @@ namespace golang::runtime
         auto newbit = rec::noldbuckets(gocpp::recv(h));
         if(! evacuated(b))
         {
+            // TODO: reuse overflow buckets instead of using new ones, if there
+            // is no iterator using the old buckets.  (If !oldIterator.)
             // xy contains the x and y (low and high) evacuation destinations.
             gocpp::array<evacDst, 2> xy = {};
             auto x = & xy[0];
@@ -496,6 +536,8 @@ namespace golang::runtime
             x->e = add(x->k, bucketCnt * 2 * goarch::PtrSize);
             if(! rec::sameSizeGrow(gocpp::recv(h)))
             {
+                // Only calculate y pointers if we're growing bigger.
+                // Otherwise GC can see bad pointers.
                 auto y = & xy[1];
                 y->b = (bmap*)(add(h->buckets, (oldbucket + newbit) * uintptr_t(t->BucketSize)));
                 y->k = add(gocpp::unsafe_pointer(y->b), dataOffset);
@@ -520,13 +562,17 @@ namespace golang::runtime
                     uint8_t useY = {};
                     if(! rec::sameSizeGrow(gocpp::recv(h)))
                     {
+                        // Compute hash to make our evacuation decision (whether we need
+                        // to send this key/elem to bucket x or bucket y).
                         auto hash = t->Hasher(k, uintptr_t(h->hash0));
                         if(hash & newbit != 0)
                         {
                             useY = 1;
                         }
                     }
+                    // evacuatedX + 1 == evacuatedY, enforced in makemap
                     b->tophash[i] = evacuatedX + useY;
+                    // evacuation destination
                     auto dst = & xy[useY];
                     if(dst->i == bucketCnt)
                     {
@@ -535,17 +581,26 @@ namespace golang::runtime
                         dst->k = add(gocpp::unsafe_pointer(dst->b), dataOffset);
                         dst->e = add(dst->k, bucketCnt * 2 * goarch::PtrSize);
                     }
+                    // mask dst.i as an optimization, to avoid a bounds check
                     dst->b->tophash[dst->i & (bucketCnt - 1)] = top;
+                    // Copy key.
                     *(gocpp::string*)(dst->k) = *(gocpp::string*)(k);
                     typedmemmove(t->Elem, dst->e, e);
                     dst->i++;
+                    // These updates might push these pointers past the end of the
+                    // key or elem arrays.  That's ok, as we have the overflow pointer
+                    // at the end of the bucket to protect against pointing past the
+                    // end of the bucket.
                     dst->k = add(dst->k, 2 * goarch::PtrSize);
                     dst->e = add(dst->e, uintptr_t(t->ValueSize));
                 }
             }
+            // Unlink the overflow buckets & clear key/elem to help GC.
             if(h->flags & oldIterator == 0 && t->Bucket->PtrBytes != 0)
             {
                 auto b = add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize));
+                // Preserve b.tophash because the evacuation
+                // state is maintained there.
                 auto ptr = add(b, dataOffset);
                 auto n = uintptr_t(t->BucketSize) - dataOffset;
                 memclrHasPointers(ptr, n);

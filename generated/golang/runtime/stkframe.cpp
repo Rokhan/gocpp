@@ -131,6 +131,8 @@ namespace golang::runtime
         {
             return uintptr_t(frame->fn._func.args);
         }
+        // This is an uncommon and complicated case. Fall back to fully
+        // fetching the argument map to compute its size.
         auto [argMap, gocpp_id_0] = rec::argMapInternal(gocpp::recv(frame));
         return uintptr_t(argMap.n) * goarch::PtrSize;
     }
@@ -157,6 +159,7 @@ namespace golang::runtime
             argMap.n = f._func.args / goarch::PtrSize;
             return {argMap, hasReflectStackObj};
         }
+        // Extract argument bitmaps for reflect stubs from the calls they made to reflect.
         //Go switch emulation
         {
             auto condition = funcname(f);
@@ -167,23 +170,43 @@ namespace golang::runtime
             {
                 case 0:
                 case 1:
+                    // These take a *reflect.methodValue as their
+                    // context register and immediately save it to 0(SP).
+                    // Get the methodValue from 0(SP).
                     auto arg0 = frame->sp + sys::MinFrameSize;
                     auto minSP = frame->fp;
                     if(! usesLR)
                     {
+                        // The CALL itself pushes a word.
+                        // Undo that adjustment.
                         minSP -= goarch::PtrSize;
                     }
                     if(arg0 >= minSP)
                     {
+                        // The function hasn't started yet.
+                        // This only happens if f was the
+                        // start function of a new goroutine
+                        // that hasn't run yet *and* f takes
+                        // no arguments and has no results
+                        // (otherwise it will get wrapped in a
+                        // closure). In this case, we can't
+                        // reach into its locals because it
+                        // doesn't have locals yet, but we
+                        // also know its argument map is
+                        // empty.
                         if(frame->pc != rec::entry(gocpp::recv(f)))
                         {
                             print("runtime: confused by "_s, funcname(f), ": no frame (sp="_s, hex(frame->sp), " fp="_s, hex(frame->fp), ") at entry+"_s, hex(frame->pc - rec::entry(gocpp::recv(f))), "\n"_s);
                             go_throw("reflect mismatch"_s);
                         }
+                        // No locals, so also no stack objects
                         return {bitvector {}, false};
                     }
                     hasReflectStackObj = true;
                     auto mv = *(reflectMethodValue**)(gocpp::unsafe_pointer(arg0));
+                    // Figure out whether the return values are valid.
+                    // Reflect will update this value after it copies
+                    // in the return values.
                     auto retValid = *(bool*)(gocpp::unsafe_pointer(arg0 + 4 * goarch::PtrSize));
                     if(mv->fn != rec::entry(gocpp::recv(f)))
                     {
@@ -193,6 +216,8 @@ namespace golang::runtime
                     argMap = *mv->stack;
                     if(! retValid)
                     {
+                        // argMap.n includes the results, but
+                        // those aren't valid, so drop them.
                         auto n = int32_t((mv->argLen &^ (goarch::PtrSize - 1)) / goarch::PtrSize);
                         if(n < argMap.n)
                         {
@@ -215,19 +240,28 @@ namespace golang::runtime
         auto targetpc = frame->continpc;
         if(targetpc == 0)
         {
+            // Frame is dead. Return empty bitvectors.
             return {locals, args, objs};
         }
         auto f = frame->fn;
         auto pcdata = int32_t(- 1);
         if(targetpc != rec::entry(gocpp::recv(f)))
         {
+            // Back up to the CALL. If we're at the function entry
+            // point, we want to use the entry map (-1), even if
+            // the first instruction of the function changes the
+            // stack map.
             targetpc--;
             pcdata = pcdatavalue(f, abi::PCDATA_StackMapIndex, targetpc);
         }
         if(pcdata == - 1)
         {
+            // We do not have a valid pcdata value but there might be a
+            // stackmap for this function. It is likely that we are looking
+            // at the function prologue, assume so and hope for the best.
             pcdata = 0;
         }
+        // Local variables.
         auto size = frame->varp - frame->sp;
         uintptr_t minsize = {};
         //Go switch emulation
@@ -254,10 +288,12 @@ namespace golang::runtime
                 print("runtime: frame "_s, funcname(f), " untyped locals "_s, hex(frame->varp - size), "+"_s, hex(size), "\n"_s);
                 go_throw("missing stackmap"_s);
             }
+            // If nbit == 0, there's no work to do.
             if(stkmap->nbit > 0)
             {
                 if(stackid < 0 || stackid >= stkmap->n)
                 {
+                    // don't know where we are
                     print("runtime: pcdata is "_s, stackid, " and "_s, stkmap->n, " locals stack map entries for "_s, funcname(f), " (targetpc="_s, hex(targetpc), ")\n"_s);
                     go_throw("bad symbol table"_s);
                 }
@@ -278,6 +314,8 @@ namespace golang::runtime
         std::tie(args, isReflect) = rec::argMapInternal(gocpp::recv(frame));
         if(args.n > 0 && args.bytedata == nullptr)
         {
+            // Non-empty argument frame, but not a special map.
+            // Fetch the argument map at pcdata.
             auto stackmap_tmp = (stackmap*)(funcdata(f, abi::FUNCDATA_ArgsPointerMaps));
             auto& stackmap = stackmap_tmp;
             if(stackmap == nullptr || stackmap->n <= 0)
@@ -287,6 +325,7 @@ namespace golang::runtime
             }
             if(pcdata < 0 || pcdata >= stackmap->n)
             {
+                // don't know where we are
                 print("runtime: pcdata is "_s, pcdata, " and "_s, stackmap->n, " args stack map entries for "_s, funcname(f), " (targetpc="_s, hex(targetpc), ")\n"_s);
                 go_throw("bad symbol table"_s);
             }
@@ -299,8 +338,13 @@ namespace golang::runtime
                 args = stackmapdata(stackmap, pcdata);
             }
         }
+        // stack objects.
         if((GOARCH == "amd64"_s || GOARCH == "arm64"_s || GOARCH == "loong64"_s || GOARCH == "ppc64"_s || GOARCH == "ppc64le"_s || GOARCH == "riscv64"_s) && gocpp::Sizeof<abi::RegArgs>() > 0 && isReflect)
         {
+            // For reflect.makeFuncStub and reflect.methodValueCall,
+            // we need to fake the stack object record.
+            // These frames contain an internal/abi.RegArgs at a hard-coded offset.
+            // This offset matches the assembly code on amd64 and arm64.
             objs = methodValueCallFrameObjs.make_slice(0);
         }
         else
@@ -311,6 +355,11 @@ namespace golang::runtime
                 auto n = *(uintptr_t*)(p);
                 p = runtime::add(p, goarch::PtrSize);
                 auto r0 = (stackObjectRecord*)(noescape(p));
+                // Note: the noescape above is needed to keep
+                // getStackMap from "leaking param content:
+                // frame".  That leak propagates up to getgcmask, then
+                // GCMask, then verifyGCInfo, which converts the stack
+                // gcinfo tests into heap gcinfo tests :(
                 objs = unsafe::Slice(r0, int(n));
             }
         }
@@ -326,6 +375,8 @@ namespace golang::runtime
         {
             go_throw("abiRegArgsType needs GC Prog, update methodValueCallFrameObjs"_s);
         }
+        // Set methodValueCallFrameObjs[0].gcdataoff so that
+        // stackObjectRecord.gcdata() will work correctly with it.
         auto ptr = uintptr_t(gocpp::unsafe_pointer(& methodValueCallFrameObjs[0]));
         moduledata* mod = {};
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)

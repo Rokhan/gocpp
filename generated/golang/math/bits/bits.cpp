@@ -85,6 +85,7 @@ namespace golang::bits
         {
             return 16;
         }
+        // see comment in TrailingZeros64
         return int(deBruijn32tab[uint32_t(x & - x) * deBruijn32 >> (32 - 5)]);
     }
 
@@ -95,6 +96,7 @@ namespace golang::bits
         {
             return 32;
         }
+        // see comment in TrailingZeros64
         return int(deBruijn32tab[(x & - x) * deBruijn32 >> (32 - 5)]);
     }
 
@@ -105,6 +107,16 @@ namespace golang::bits
         {
             return 64;
         }
+        // If popcount is fast, replace code below with return popcount(^x & (x - 1)).
+        // x & -x leaves only the right-most bit set in the word. Let k be the
+        // index of that bit. Since only a single bit is set, the value is two
+        // to the power of k. Multiplying by a power of two is equivalent to
+        // left shifting, in this case by k bits. The de Bruijn (64 bit) constant
+        // is such that all six bit, consecutive substrings are distinct.
+        // Therefore, if we have a left shifted version of this constant we can
+        // find by how many bits it was shifted by looking at which six bit
+        // substring ended up at the top of the word.
+        // (Knuth, volume 4, section 7.3.1)
         return int(deBruijn64tab[(x & - x) * deBruijn64 >> (64 - 6)]);
     }
 
@@ -142,15 +154,13 @@ namespace golang::bits
         // Implementation: Parallel summing of adjacent bits.
         // See "Hacker's Delight", Chap. 5: Counting Bits.
         // The following pattern shows the general approach:
-        //
-        //   x = x>>1&(m0&m) + x&(m0&m)
-        //   x = x>>2&(m1&m) + x&(m1&m)
-        //   x = x>>4&(m2&m) + x&(m2&m)
-        //   x = x>>8&(m3&m) + x&(m3&m)
-        //   x = x>>16&(m4&m) + x&(m4&m)
-        //   x = x>>32&(m5&m) + x&(m5&m)
-        //   return int(x)
-        //
+        // x = x>>1&(m0&m) + x&(m0&m)
+        // x = x>>2&(m1&m) + x&(m1&m)
+        // x = x>>4&(m2&m) + x&(m2&m)
+        // x = x>>8&(m3&m) + x&(m3&m)
+        // x = x>>16&(m4&m) + x&(m4&m)
+        // x = x>>32&(m5&m) + x&(m5&m)
+        // return int(x)
         // Masking (& operations) can be left away when there's no
         // danger that a field's sum will carry over into the next
         // field: Since the result cannot be > 64, 8 bits is enough
@@ -418,6 +428,9 @@ namespace golang::bits
         uint64_t sum;
         uint64_t carryOut;
         sum = x + y + carry;
+        // The sum will overflow if both top bits are set (x & y) or if one of them
+        // is (x | y), and a carry from the lower place happened. If such a carry
+        // happens, the top bit will be 1 + 0 + 1 = 0 (&^ sum).
         carryOut = ((x & y) | ((x | y) &^ sum)) >> 63;
         return {sum, carryOut};
     }
@@ -450,6 +463,10 @@ namespace golang::bits
         uint32_t diff;
         uint32_t borrowOut;
         diff = x - y - borrow;
+        // The difference will underflow if the top bit of x is not set and the top
+        // bit of y is set (^x & y) or if they are the same (^(x ^ y)) and a borrow
+        // from the lower place happens. If that borrow happens, the result will be
+        // 1 - 1 - 1 = 0 - 0 - 1 = 1 (& diff).
         borrowOut = ((~ x & y) | (~ (x ^ y) & diff)) >> 31;
         return {diff, borrowOut};
     }
@@ -464,6 +481,7 @@ namespace golang::bits
         uint64_t diff;
         uint64_t borrowOut;
         diff = x - y - borrow;
+        // See Sub32 for the bit logic.
         borrowOut = ((~ x & y) | (~ (x ^ y) & diff)) >> 63;
         return {diff, borrowOut};
     }
@@ -574,6 +592,7 @@ namespace golang::bits
         {
             gocpp::panic(overflowError);
         }
+        // If high part is zero, we can directly return the results.
         if(hi == 0)
         {
             return {lo / y, lo % y};
@@ -639,6 +658,12 @@ namespace golang::bits
     // on a quotient overflow.
     uint64_t Rem64(uint64_t hi, uint64_t lo, uint64_t y)
     {
+        // We scale down hi so that hi < y, then use Div64 to compute the
+        // rem with the guarantee that it won't panic on quotient overflow.
+        // Given that
+        // hi ≡ hi%y    (mod y)
+        // we have
+        // hi<<64 + lo ≡ (hi%y)<<64 + lo    (mod y)
         auto [gocpp_id_0, rem] = Div64(hi % y, lo, y);
         return rem;
     }

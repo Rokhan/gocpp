@@ -30,6 +30,7 @@ namespace golang::cmplx
     {
         if(imag(x) == 0)
         {
+            // Ensure that imag(r) has the same sign as imag(x) for imag(x) == signed zero.
             if(real(x) == 0)
             {
                 return complex(0, imag(x));
@@ -58,6 +59,7 @@ namespace golang::cmplx
         auto a = real(x);
         auto b = imag(x);
         double scale = {};
+        // Rescale to avoid internal overflow or underflow.
         if(math::Abs(a) > 4 || math::Abs(b) > 4)
         {
             a *= 0.25;
@@ -66,8 +68,10 @@ namespace golang::cmplx
         }
         else
         {
+            // 2**54
             a *= 1.8014398509481984e16;
             b *= 1.8014398509481984e16;
+            // 2**-27
             scale = 7.450580596923828125e-9;
         }
         auto r = math::Hypot(a, b);

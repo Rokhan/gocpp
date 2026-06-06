@@ -290,6 +290,8 @@ namespace golang::time
             isDST = zone->isDST;
             return {name, offset, start, end, isDST};
         }
+        // Binary search for entry with largest time <= sec.
+        // Not using sort.Search to avoid dependencies.
         auto tx = l->tx;
         end = omega;
         auto lo = 0;
@@ -312,7 +314,10 @@ namespace golang::time
         name = zone->name;
         offset = zone->offset;
         start = tx[lo].when;
+        // end = maintained during the search
         isDST = zone->isDST;
+        // If we're at the end of the known zone transitions,
+        // try the extend string.
         if(lo == len(tx) - 1 && l->extend != ""_s)
         {
             if(auto [ename, eoffset, estart, eend, eisDST, ok] = tzset(l->extend, start, sec); ok)
@@ -340,10 +345,12 @@ namespace golang::time
     //  4. Otherwise, use the first zone.
     int rec::lookupFirstZone(golang::time::Location* l)
     {
+        // Case 1.
         if(! rec::firstZoneUsed(gocpp::recv(l)))
         {
             return 0;
         }
+        // Case 2.
         if(len(l->tx) > 0 && l->zone[l->tx[0].index].isDST)
         {
             for(auto zi = int(l->tx[0].index) - 1; zi >= 0; zi--)
@@ -354,6 +361,7 @@ namespace golang::time
                 }
             }
         }
+        // Case 3.
         for(auto [zi, gocpp_ignored] : l->zone)
         {
             if(! l->zone[zi].isDST)
@@ -361,6 +369,7 @@ namespace golang::time
                 return zi;
             }
         }
+        // Case 4.
         return 0;
     }
 
@@ -405,9 +414,13 @@ namespace golang::time
         {
             return {""_s, 0, 0, 0, false, false};
         }
+        // The numbers in the tzset string are added to local time to get UTC,
+        // but our offsets are added to UTC to get local time,
+        // so we negate the number we see here.
         stdOffset = - stdOffset;
         if(len(s) == 0 || s[0] == ',')
         {
+            // No daylight savings time.
             return {stdName, stdOffset, lastTxSec, omega, false, true};
         }
         std::tie(dstName, s, ok) = tzsetName(s);
@@ -420,6 +433,7 @@ namespace golang::time
             else
             {
                 std::tie(dstOffset, s, ok) = tzsetOffset(s);
+                // as with stdOffset, above
                 dstOffset = - dstOffset;
             }
         }
@@ -429,8 +443,10 @@ namespace golang::time
         }
         if(len(s) == 0)
         {
+            // Default DST rules per tzcode.
             s = ",M3.2.0,M11.1.0"_s;
         }
+        // The TZ definition does not mention ';' here but tzcode accepts it.
         if(s[0] != ',' && s[0] != ';')
         {
             return {""_s, 0, 0, 0, false, false};
@@ -451,12 +467,16 @@ namespace golang::time
         }
         auto [year, gocpp_id_0, gocpp_id_1, yday] = absDate(uint64_t(sec + unixToInternal + internalToAbsolute), false);
         auto ysec = int64_t(yday * secondsPerDay) + sec % secondsPerDay;
+        // Compute start of year in seconds since Unix epoch.
         auto d = daysSinceEpoch(year);
         auto abs = int64_t(d * secondsPerDay);
         abs += absoluteToInternal + internalToUnix;
         auto startSec = int64_t(tzruleTime(year, startRule, stdOffset));
         auto endSec = int64_t(tzruleTime(year, endRule, dstOffset));
         auto [dstIsDST, stdIsDST] = std::tuple{true, false};
+        // Note: this is a flipping of "DST" and "STD" while retaining the labels
+        // This happens in southern hemispheres. The labelling here thus is a little
+        // inconsistent with the goal.
         if(endSec < startSec)
         {
             std::tie(startSec, endSec) = std::tuple{endSec, startSec};
@@ -464,6 +484,10 @@ namespace golang::time
             std::tie(stdOffset, dstOffset) = std::tuple{dstOffset, stdOffset};
             std::tie(stdIsDST, dstIsDST) = std::tuple{dstIsDST, stdIsDST};
         }
+        // The start and end values that we return are accurate
+        // close to a daylight savings transition, but are otherwise
+        // just the start and end of the year. That suffices for
+        // the only caller that cares, which is Date.
         if(ysec < startSec)
         {
             return {stdName, stdOffset, abs, startSec + abs, stdIsDST, true};
@@ -723,6 +747,7 @@ namespace golang::time
         }
         if(len(s) == 0 || s[0] != '/')
         {
+            // 2am is the default
             r.time = 2 * secondsPerHour;
             return {r, s, true};
         }
@@ -800,6 +825,7 @@ namespace golang::time
                     s = r.day * secondsPerDay;
                     break;
                 case 2:
+                    // Zeller's Congruence.
                     auto m1 = (r.mon + 9) % 12 + 1;
                     auto yy0 = year;
                     if(r.mon <= 2)
@@ -813,6 +839,8 @@ namespace golang::time
                     {
                         dow += 7;
                     }
+                    // Now dow is the day-of-week of the first day of r.mon.
+                    // Get the day-of-month of the first "dow" day.
                     auto d = r.day - dow;
                     if(d < 0)
                     {
@@ -846,6 +874,12 @@ namespace golang::time
         int offset;
         bool ok;
         l = rec::get(gocpp::recv(l));
+        // First try for a zone with the right name that was actually
+        // in effect at the given time. (In Sydney, Australia, both standard
+        // and daylight-savings time are abbreviated "EST". Using the
+        // offset helps us pick the right one for the given time.
+        // It's not perfect: during the backward transition we might pick
+        // either one.)
         for(auto [i, gocpp_ignored] : l->zone)
         {
             auto zone = & l->zone[i];
@@ -858,6 +892,7 @@ namespace golang::time
                 }
             }
         }
+        // Otherwise fall back to an ordinary name match.
         for(auto [i, gocpp_ignored] : l->zone)
         {
             auto zone = & l->zone[i];
@@ -866,6 +901,7 @@ namespace golang::time
                 return {zone->offset, true};
             }
         }
+        // Otherwise, give up.
         return {offset, ok};
     }
 
@@ -899,6 +935,8 @@ namespace golang::time
         }
         if(containsDotDot(name) || name[0] == '/' || name[0] == '\\')
         {
+            // No valid IANA Time Zone name contains a single dot,
+            // much less dot dot. Likewise, none begin with a slash.
             return {nullptr, errLocation};
         }
         rec::Do(gocpp::recv(zoneinfoOnce), [=]() mutable -> void

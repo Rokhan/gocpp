@@ -99,6 +99,7 @@ namespace golang::os
     sync::Pool dirBufPool = gocpp::Init<sync::Pool>([](auto& x) {
         x.New = []() mutable -> go_any
         {
+            // The buffer must be at least a block long.
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), dirBufSize);
             return & buf;
         };
@@ -122,6 +123,7 @@ namespace golang::os
         gocpp::slice<os::DirEntry> dirents;
         gocpp::slice<os::FileInfo> infos;
         struct gocpp::error err;
+        // If this file has no dirinfo, create one.
         if(file->file.dirinfo == nullptr)
         {
             // vol is used by os.SameFile.
@@ -152,9 +154,14 @@ namespace golang::os
             else
             {
                 file->file.dirinfo->go_class = windows::FileFullDirectoryRestartInfo;
+                // Set the directory path for use by os.SameFile, as it is possible that
+                // the file system supports retrieving the file ID using GetFileInformationByHandle.
                 file->file.dirinfo->path = file->file.name;
                 if(! isAbs(file->file.dirinfo->path))
                 {
+                    // If the path is relative, we need to convert it to an absolute path
+                    // in case the current directory changes between this call and a
+                    // call to os.SameFile.
                     std::tie(file->file.dirinfo->path, err) = syscall::FullPath(file->file.dirinfo->path);
                     if(err != nullptr)
                     {
@@ -176,6 +183,7 @@ namespace golang::os
         }
         for(; n != 0; )
         {
+            // Refill the buffer if necessary
             if(d->bufp == 0)
             {
                 err = windows::GetFileInformationByHandleEx(file->file.pfd.Sysfd, d->go_class, (unsigned char*)(gocpp::unsafe_pointer(& (*d->buf)[0])), uint32_t(len(*d->buf)));
@@ -188,6 +196,15 @@ namespace golang::os
                     }
                     if(err == syscall::ERROR_FILE_NOT_FOUND && (d->go_class == windows::FileIdBothDirectoryRestartInfo || d->go_class == windows::FileFullDirectoryRestartInfo))
                     {
+                        // GetFileInformationByHandleEx doesn't document the return error codes when the info class is FileIdBothDirectoryRestartInfo,
+                        // but MS-FSA 2.1.5.6.3 [1] specifies that the underlying file system driver should return STATUS_NO_SUCH_FILE when
+                        // reading an empty root directory, which is mapped to ERROR_FILE_NOT_FOUND by Windows.
+                        // Note that some file system drivers may never return this error code, as the spec allows to return the "." and ".."
+                        // entries in such cases, making the directory appear non-empty.
+                        // The chances of false positive are very low, as we know that the directory exists, else GetVolumeInformationByHandle
+                        // would have failed, and that the handle is still valid, as we haven't closed it.
+                        // See go.dev/issue/61159.
+                        // [1] https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fsa/fa8194e0-53ec-413b-8315-e8fa85396fd8
                         break;
                     }
                     if(auto [s, gocpp_id_0] = rec::Stat(gocpp::recv(file)); s != nullptr && ! rec::IsDir(gocpp::recv(s)))
@@ -245,6 +262,7 @@ namespace golang::os
                 }
                 if((len(nameslice) == 1 && nameslice[0] == '.') || (len(nameslice) == 2 && nameslice[0] == '.' && nameslice[1] == '.'))
                 {
+                    // Ignore "." and ".." and avoid allocating a string for them.
                     continue;
                 }
                 auto name = syscall::UTF16ToString(nameslice);
@@ -262,6 +280,9 @@ namespace golang::os
                     else
                     {
                         f = newFileStatFromFileFullDirInfo((windows::FILE_FULL_DIR_INFO*)(entry));
+                        // Defer appending the entry name to the parent directory path until
+                        // it is really needed, to avoid allocating a string that may not be used.
+                        // It is currently only used in os.SameFile.
                         f->appendNameToPath = true;
                         f->path = d->path;
                     }

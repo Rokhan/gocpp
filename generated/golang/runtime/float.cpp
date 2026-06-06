@@ -23,6 +23,7 @@ namespace golang::runtime
     bool isNaN(double f)
     {
         bool is;
+        // IEEE 754 says that only NaNs satisfy f != f.
         return f != f;
     }
 

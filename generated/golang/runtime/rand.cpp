@@ -131,6 +131,9 @@ namespace golang::runtime
         {
             if(readRandom(seed.make_slice(0)) != len(seed))
             {
+                // readRandom should never fail, but if it does we'd rather
+                // not make Go binaries completely unusable, so make up
+                // some random data based on the current time.
                 readRandomFailed = true;
                 readTimeRandom(seed.make_slice(0));
             }
@@ -148,6 +151,10 @@ namespace golang::runtime
     // Whatever entropy r already contained is preserved.
     void readTimeRandom(gocpp::slice<unsigned char> r)
     {
+        // Inspired by wyrand.
+        // An earlier version of this code used getg().m.procid as well,
+        // but note that this is called so early in startup that procid
+        // is not initialized yet.
         auto v = uint64_t(nanotime());
         for(; len(r) > 0; )
         {
@@ -212,15 +219,24 @@ namespace golang::runtime
     //go:linkname rand
     uint64_t rand()
     {
+        // Note: We avoid acquirem here so that in the fast path
+        // there is just a getg, an inlined c.Next, and a return.
+        // The performance difference on a 16-core AMD is
+        // 3.7ns/call this way versus 4.3ns/call with acquirem (+16%).
         auto mp = getg()->m;
         auto c = & mp->chacha8;
         for(; ; )
         {
+            // Note: c.Next is marked nosplit,
+            // so we don't need to use mp.locks
+            // on the fast path, which is that the
+            // first attempt succeeds.
             auto [x, ok] = rec::Next(gocpp::recv(c));
             if(ok)
             {
                 return x;
             }
+            // hold m even though c.Refill may do stack split checks
             mp->locks++;
             rec::Refill(gocpp::recv(c));
             mp->locks--;
@@ -235,6 +251,7 @@ namespace golang::runtime
         {
             seed[i] = bootstrapRand();
         }
+        // erase key we just extracted
         bootstrapRandReseed();
         rec::Init64(gocpp::recv(mp->chacha8), seed);
         mp->cheaprand = rand();
@@ -246,6 +263,7 @@ namespace golang::runtime
     //go:linkname randn
     uint32_t randn(uint32_t n)
     {
+        // See https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
         return uint32_t((uint64_t(uint32_t(rand())) * uint64_t(n)) >> 32);
     }
 
@@ -261,12 +279,20 @@ namespace golang::runtime
     uint32_t cheaprand()
     {
         auto mp = getg()->m;
+        // Implement wyrand: https://github.com/wangyi-fudan/wyhash
+        // Only the platform that math.Mul64 can be lowered
+        // by the compiler should be in this list.
         if(goarch::IsAmd64 | goarch::IsArm64 | goarch::IsPpc64 | goarch::IsPpc64le | goarch::IsMips64 | goarch::IsMips64le | goarch::IsS390x | goarch::IsRiscv64 | goarch::IsLoong64 == 1)
         {
             mp->cheaprand += 0xa0761d6478bd642f;
             auto [hi, lo] = math::Mul64(mp->cheaprand, mp->cheaprand ^ 0xe7037ed1a0b428db);
             return uint32_t(hi ^ lo);
         }
+        // Implement xorshift64+: 2 32-bit xorshift sequences added together.
+        // Shift triplet [17,7,16] was calculated as indicated in Marsaglia's
+        // Xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
+        // This generator passes the SmallCrush suite, part of TestU01 framework:
+        // http://simul.iro.umontreal.ca/testu01/tu01.html
         auto t = (gocpp::array_ptr<gocpp::array<uint32_t, 2>>)(gocpp::unsafe_pointer(& mp->cheaprand));
         auto [s1, s0] = std::tuple{t[0], t[1]};
         s1 ^= s1 << 17;
@@ -296,6 +322,7 @@ namespace golang::runtime
     //go:nosplit
     uint32_t cheaprandn(uint32_t n)
     {
+        // See https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
         return uint32_t((uint64_t(cheaprand()) * uint64_t(n)) >> 32);
     }
 

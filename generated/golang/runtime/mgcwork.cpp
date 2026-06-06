@@ -150,6 +150,8 @@ namespace golang::runtime
     {
         auto flushed = false;
         auto wbuf = w->wbuf1;
+        // Record that this may acquire the wbufSpans or heap lock to
+        // allocate a workbuf.
         lockWithRankMayAcquire(& work.wbufSpans.lock, lockRankWbufSpans);
         lockWithRankMayAcquire(& mheap_.lock, lockRankMheap);
         if(wbuf == nullptr)
@@ -158,6 +160,7 @@ namespace golang::runtime
             wbuf = w->wbuf1;
         }
         else
+        // wbuf is empty at this point.
         if(wbuf->workbufhdr.nobj == len(wbuf->obj))
         {
             std::tie(w->wbuf1, w->wbuf2) = std::tuple{w->wbuf2, w->wbuf1};
@@ -173,6 +176,10 @@ namespace golang::runtime
         }
         wbuf->obj[wbuf->workbufhdr.nobj] = obj;
         wbuf->workbufhdr.nobj++;
+        // If we put a buffer on full, let the GC controller know so
+        // it can encourage more workers to run. We delay this until
+        // the end of put so that w is in a consistent state, since
+        // enlistWorker may itself manipulate w.
         if(flushed && gcphase == _GCmark)
         {
             rec::enlistWorker(gocpp::recv(gcController));
@@ -245,6 +252,7 @@ namespace golang::runtime
         if(wbuf == nullptr)
         {
             rec::init(gocpp::recv(w));
+            // wbuf is empty at this point.
             wbuf = w->wbuf1;
         }
         if(wbuf->workbufhdr.nobj == 0)
@@ -318,6 +326,10 @@ namespace golang::runtime
         }
         if(w->bytesMarked != 0)
         {
+            // dispose happens relatively infrequently. If this
+            // atomic becomes a problem, we should first try to
+            // dispose less and if necessary aggregate in a per-P
+            // counter.
             atomic::Xadd64(& work.bytesMarked, int64_t(w->bytesMarked));
             w->bytesMarked = 0;
         }
@@ -348,12 +360,14 @@ namespace golang::runtime
         if(auto wbuf = w->wbuf1; wbuf->workbufhdr.nobj > 4)
         {
             w->wbuf1 = handoff(wbuf);
+            // handoff did putfull
             w->flushedWork = true;
         }
         else
         {
             return;
         }
+        // We flushed a buffer to the full list, so wake a worker.
         if(gcphase == _GCmark)
         {
             rec::enlistWorker(gocpp::recv(gcController));
@@ -466,6 +480,8 @@ namespace golang::runtime
                 rec::checkempty(gocpp::recv(b));
             }
         }
+        // Record that this may acquire the wbufSpans or heap lock to
+        // allocate a workbuf.
         lockWithRankMayAcquire(& work.wbufSpans.lock, lockRankWbufSpans);
         lockWithRankMayAcquire(& mheap_.lock, lockRankMheap);
         if(b == nullptr)
@@ -493,10 +509,13 @@ namespace golang::runtime
                 {
                     go_throw("out of memory"_s);
                 }
+                // Record the new span in the busy list.
                 lock(& work.wbufSpans.lock);
                 rec::insert(gocpp::recv(work.wbufSpans.busy), s);
                 unlock(& work.wbufSpans.lock);
             }
+            // Slice up the span into new workbufs. Return one and
+            // put the rest on the empty list.
             for(auto i = uintptr_t(0); i + _WorkbufSize <= workbufAlloc; i += _WorkbufSize)
             {
                 auto newb = (workbuf*)(gocpp::unsafe_pointer(rec::base(gocpp::recv(s)) + i));
@@ -554,11 +573,13 @@ namespace golang::runtime
     //go:nowritebarrier
     struct workbuf* handoff(struct workbuf* b)
     {
+        // Make new buffer with half of b's pointers.
         auto b1 = getempty();
         auto n = b->workbufhdr.nobj / 2;
         b->workbufhdr.nobj -= n;
         b1->workbufhdr.nobj = n;
         memmove(gocpp::unsafe_pointer(& b1->obj[0]), gocpp::unsafe_pointer(& b->obj[b->workbufhdr.nobj]), uintptr_t(n) * gocpp::Sizeof<uintptr_t>());
+        // Put b on full list - let first half of b get stolen.
         putfull(b);
         return b1;
     }
@@ -573,6 +594,9 @@ namespace golang::runtime
         {
             go_throw("cannot free workbufs when work.full != 0"_s);
         }
+        // Since all workbufs are on the empty list, we don't care
+        // which ones are in which spans. We can wipe the entire empty
+        // list and move all workbuf spans to the free list.
         work.empty = 0;
         rec::takeAll(gocpp::recv(work.wbufSpans.free), & work.wbufSpans.busy);
         unlock(& work.wbufSpans.lock);
@@ -582,6 +606,7 @@ namespace golang::runtime
     // true if it should be called again to free more.
     bool freeSomeWbufs(bool preemptible)
     {
+        // ~1–2 µs per span.
         auto batchSize = 64;
         lock(& work.wbufSpans.lock);
         if(gcphase != _GCoff || rec::isEmpty(gocpp::recv(work.wbufSpans.free)))

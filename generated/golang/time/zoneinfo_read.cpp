@@ -163,6 +163,7 @@ namespace golang::time
     std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data)
     {
         auto d = dataIO {data, false};
+        // 4-byte magic "TZif"
         if(auto magic = rec::read(gocpp::recv(d), 4); gocpp::string(magic) != "TZif"_s)
         {
             return {nullptr, errBadData};
@@ -201,12 +202,12 @@ namespace golang::time
             }
         }
         // six big-endian 32-bit integers:
-        //	number of UTC/local indicators
-        //	number of standard/wall indicators
-        //	number of leap seconds
-        //	number of transition times
-        //	number of local time zones
-        //	number of characters of time zone abbrev strings
+        // number of UTC/local indicators
+        // number of standard/wall indicators
+        // number of leap seconds
+        // number of transition times
+        // number of local time zones
+        // number of characters of time zone abbrev strings
         auto NUTCLocal = 0;
         auto NStdWall = 1;
         auto NLeap = 2;
@@ -227,13 +228,20 @@ namespace golang::time
             }
             n[i] = int(nn);
         }
+        // If we have version 2 or 3, then the data is first written out
+        // in a 32-bit format, then written out again in a 64-bit format.
+        // Skip the 32-bit format and read the 64-bit one, as it can
+        // describe a broader range of dates.
         auto is64 = false;
         if(version > 1)
         {
+            // Skip the 32-bit data.
             auto skip = n[NTime] * 4 + n[NTime] + n[NZone] * 6 + n[NChar] + n[NLeap] * 8 + n[NStdWall] + n[NUTCLocal];
+            // Skip the version 2 header that we just read.
             skip += 4 + 16;
             rec::read(gocpp::recv(d), skip);
             is64 = true;
+            // Read the counts again, they can differ.
             for(auto i = 0; i < 6; i++)
             {
                 auto [nn, ok] = rec::big4(gocpp::recv(d));
@@ -253,15 +261,25 @@ namespace golang::time
         {
             size = 8;
         }
+        // Transition times.
         auto txtimes = dataIO {rec::read(gocpp::recv(d), n[NTime] * size), false};
+        // Time zone indices for transition times.
         auto txzones = rec::read(gocpp::recv(d), n[NTime]);
+        // Zone info structures
         auto zonedata = dataIO {rec::read(gocpp::recv(d), n[NZone] * 6), false};
+        // Time zone abbreviations.
         auto abbrev = rec::read(gocpp::recv(d), n[NChar]);
+        // Leap-second time pairs
         rec::read(gocpp::recv(d), n[NLeap] * (size + 4));
+        // Whether tx times associated with local time types
+        // are specified as standard time or wall time.
         auto isstd = rec::read(gocpp::recv(d), n[NStdWall]);
+        // Whether tx times associated with local time types
+        // are specified as UTC or local time.
         auto isutc = rec::read(gocpp::recv(d), n[NUTCLocal]);
         if(d.error)
         {
+            // ran out of data
             return {nullptr, errBadData};
         }
         gocpp::string extend = {};
@@ -270,9 +288,14 @@ namespace golang::time
         {
             extend = gocpp::string(rest.make_slice(1, len(rest) - 1));
         }
+        // Now we can build up a useful data structure.
+        // First the zone information.
+        // utcoff[4] isdst[1] nameindex[1]
         auto nzone = n[NZone];
         if(nzone == 0)
         {
+            // Reject tzdata files with no zones. There's nothing useful in them.
+            // This also avoids a panic later when we add and then use a fake transition (golang.org/issue/29437).
             return {nullptr, errBadData};
         }
         auto zones = gocpp::make(gocpp::Tag<gocpp::slice<zone>>(), nzone);
@@ -302,12 +325,16 @@ namespace golang::time
             zones[i].name = byteString(abbrev.make_slice(b));
             if(mocklib::GOOS == "aix"_s && len(name) > 8 && (name.make_slice(0, 8) == "Etc/GMT+"_s || name.make_slice(0, 8) == "Etc/GMT-"_s))
             {
+                // There is a bug with AIX 7.2 TL 0 with files in Etc,
+                // GMT+1 will return GMT-1 instead of GMT+1 or -01.
                 if(name != "Etc/GMT+0"_s)
                 {
+                    // GMT+0 is OK
                     zones[i].name = name.make_slice(4);
                 }
             }
         }
+        // Now the transition time info.
         auto tx = gocpp::make(gocpp::Tag<gocpp::slice<zoneTrans>>(), n[NTime]);
         for(auto [i, gocpp_ignored] : tx)
         {
@@ -351,17 +378,22 @@ namespace golang::time
         }
         if(len(tx) == 0)
         {
+            // Build fake transition to cover all time.
+            // This happens in fixed locations like "Etc/GMT0".
             tx = append(tx, gocpp::Init<zoneTrans>([=](auto& x) {
                 x.when = alpha;
                 x.index = 0;
             }));
         }
+        // Committed to succeed.
         auto l = gocpp::InitPtr<Location>([=](auto& x) {
             x.zone = zones;
             x.tx = tx;
             x.name = name;
             x.extend = extend;
         });
+        // Fill in the cache with information about right now,
+        // since that will be the most common lookup.
         auto [sec, gocpp_id_0, gocpp_id_1] = now();
         for(auto [i, gocpp_ignored] : tx)
         {
@@ -377,10 +409,13 @@ namespace golang::time
                 else
                 if(l->extend != ""_s)
                 {
+                    // If we're at the end of the known zone transitions,
+                    // try the extend string.
                     if(auto [name, offset, estart, eend, isDST, ok] = tzset(l->extend, l->cacheStart, sec); ok)
                     {
                         l->cacheStart = estart;
                         l->cacheEnd = eend;
+                        // Find the zone that is returned by tzset to avoid allocation if possible.
                         if(auto zoneIdx = findZone(l->zone, name, offset, isDST); zoneIdx != - 1)
                         {
                             l->cacheZone = & l->zone[zoneIdx];
@@ -481,6 +516,28 @@ namespace golang::time
             }
             for(auto i = 0; i < n; i++)
             {
+                // zip entry layout:
+                // 0	magic[4]
+                // 4	madevers[1]
+                // 5	madeos[1]
+                // 6	extvers[1]
+                // 7	extos[1]
+                // 8	flags[2]
+                // 10	meth[2]
+                // 12	modtime[2]
+                // 14	moddate[2]
+                // 16	crc[4]
+                // 20	csize[4]
+                // 24	uncsize[4]
+                // 28	namelen[2]
+                // 30	xlen[2]
+                // 32	fclen[2]
+                // 34	disknum[2]
+                // 36	iattr[2]
+                // 38	eattr[4]
+                // 42	off[4]
+                // 46	name[namelen]
+                // 46+namelen+xlen+fclen - next header
                 if(get4(buf) != zcheader)
                 {
                     break;
@@ -501,6 +558,21 @@ namespace golang::time
                 {
                     return {nullptr, errors::New("unsupported compression for "_s + name + " in "_s + zipfile)};
                 }
+                // zip per-file header layout:
+                // 0	magic[4]
+                // 4	extvers[1]
+                // 5	extos[1]
+                // 6	flags[2]
+                // 8	meth[2]
+                // 10	modtime[2]
+                // 12	moddate[2]
+                // 14	crc[4]
+                // 18	csize[4]
+                // 22	uncsize[4]
+                // 26	namelen[2]
+                // 28	xlen[2]
+                // 30	name[namelen]
+                // 30+namelen+xlen - file data
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), zheadersize + namelen);
                 if(auto err = preadn(fd, buf, off); err != nullptr || get4(buf) != zheader || get2(buf.make_slice(8)) != meth || get2(buf.make_slice(26)) != namelen || gocpp::string(buf.make_slice(30, 30 + namelen)) != name)
                 {

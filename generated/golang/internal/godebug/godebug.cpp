@@ -281,6 +281,7 @@ namespace golang::godebug
         rec::Store<value>(gocpp::recv(s->value), & empty);
         if(auto [v, loaded] = rec::LoadOrStore(gocpp::recv(cache), name, s); loaded)
         {
+            // Lost race: someone else created it. Use theirs.
             return gocpp::getValue<setting*>(v);
         }
         return s;
@@ -343,9 +344,14 @@ namespace golang::godebug
         {
             rec::Lock(gocpp::recv(updateMu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(updateMu)); });
+            // Update all the cached values, creating new ones as needed.
+            // We parse the environment variable first, so that any settings it has
+            // are already locked in place (did[name] = true) before we consider
+            // the defaults.
             auto did = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
             parse(did, env);
             parse(did, def);
+            // Clear any cached values that are no longer present.
             rec::Range(gocpp::recv(cache), [=](go_any name, go_any s) mutable -> bool
             {
                 if(! did[gocpp::getValue<gocpp::string>(name)])
@@ -371,6 +377,11 @@ namespace golang::godebug
     // matching pattern, for use with golang.org/x/tools/cmd/bisect.
     void parse(gocpp::map<gocpp::string, bool> did, gocpp::string s)
     {
+        // Scan the string backward so that later settings are used
+        // and earlier settings are ignored.
+        // Note that a forward scan would cause cached values
+        // to temporarily use the ignored value before being
+        // updated to the "correct" one.
         auto end = len(s);
         auto eq = - 1;
         for(auto i = end - 1; i >= - 1; i--)

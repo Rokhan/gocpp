@@ -49,8 +49,18 @@ namespace golang::runtime
         }
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
+            // This always copies a full value of type typ so it's safe
+            // to pass typ along as an optimization. See the comment on
+            // bulkBarrierPreWrite.
             bulkBarrierPreWrite(uintptr_t(dst), uintptr_t(src), typ->PtrBytes, typ);
         }
+        // There's a race here: if some other goroutine can write to
+        // src, it may change some pointer in src after we've
+        // performed the write barrier but before we perform the
+        // memory copy. This safe because the write performed by that
+        // other goroutine must also be accompanied by a write
+        // barrier, so at worst we've unnecessarily greyed the old
+        // pointer that was in src.
         memmove(dst, src, typ->Size_);
         if(goexperiment::CgoCheck2)
         {
@@ -66,6 +76,9 @@ namespace golang::runtime
     //go:nosplit
     void wbZero(golang::runtime::_type* typ, gocpp::unsafe_pointer dst)
     {
+        // This always copies a full value of type typ so it's safe
+        // to pass typ along as an optimization. See the comment on
+        // bulkBarrierPreWrite.
         bulkBarrierPreWrite(uintptr_t(dst), 0, typ->PtrBytes, typ);
     }
 
@@ -77,6 +90,9 @@ namespace golang::runtime
     //go:nosplit
     void wbMove(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
     {
+        // This always copies a full value of type typ so it's safe to
+        // pass a type here.
+        // See the comment on bulkBarrierPreWrite.
         bulkBarrierPreWrite(uintptr_t(dst), uintptr_t(src), typ->PtrBytes, typ);
     }
 
@@ -121,9 +137,13 @@ namespace golang::runtime
     {
         if(writeBarrier.enabled && typ != nullptr && typ->PtrBytes != 0 && size >= goarch::PtrSize)
         {
+            // Pass nil for the type. dst does not point to value of type typ,
+            // but rather points into one, so applying the optimization is not
+            // safe. See the comment on this function.
             bulkBarrierPreWrite(uintptr_t(dst), uintptr_t(src), size, nullptr);
         }
         memmove(dst, src, size);
+        // Move pointers returned in registers to a place where the GC can see them.
         for(auto [i, gocpp_ignored] : regs->Ints)
         {
             if(rec::Get(gocpp::recv(regs->ReturnIsPtr), i))
@@ -145,6 +165,10 @@ namespace golang::runtime
         {
             return 0;
         }
+        // The compiler emits calls to typedslicecopy before
+        // instrumentation runs, so unlike the other copying and
+        // assignment operations, it's not instrumented in the calling
+        // code and needs its own instrumentation.
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
@@ -170,12 +194,21 @@ namespace golang::runtime
         {
             return n;
         }
+        // Note: No point in checking typ.PtrBytes here:
+        // compiler only emits calls to typedslicecopy for types with pointers,
+        // and growslice and reflect_typedslicecopy check for pointers
+        // before calling typedslicecopy.
         auto size = uintptr_t(n) * typ->Size_;
         if(writeBarrier.enabled)
         {
+            // This always copies one or more full values of type typ so
+            // it's safe to pass typ along as an optimization. See the comment on
+            // bulkBarrierPreWrite.
             auto pwsize = size - typ->Size_ + typ->PtrBytes;
             bulkBarrierPreWrite(uintptr_t(dstPtr), uintptr_t(srcPtr), pwsize, typ);
         }
+        // See typedmemmove for a discussion of the race between the
+        // barrier and memmove.
         memmove(dstPtr, srcPtr, size);
         return n;
     }
@@ -205,6 +238,9 @@ namespace golang::runtime
     {
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
+            // This always clears a whole value of type typ, so it's
+            // safe to pass a type here and apply the optimization.
+            // See the comment on bulkBarrierPreWrite.
             bulkBarrierPreWrite(uintptr_t(ptr), 0, typ->PtrBytes, typ);
         }
         memclrNoHeapPointers(ptr, typ->Size_);
@@ -221,6 +257,10 @@ namespace golang::runtime
     {
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
+            // Pass nil for the type. ptr does not point to value of type typ,
+            // but rather points into one so it's not safe to apply the optimization.
+            // See the comment on this function in the reflect package and the
+            // comment on bulkBarrierPreWrite.
             bulkBarrierPreWrite(uintptr_t(ptr), 0, size, nullptr);
         }
         memclrNoHeapPointers(ptr, size);
@@ -232,6 +272,8 @@ namespace golang::runtime
         auto size = typ->Size_ * uintptr_t(len);
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
+            // This always clears whole elements of an array, so it's
+            // safe to pass a type here. See the comment on bulkBarrierPreWrite.
             bulkBarrierPreWrite(uintptr_t(ptr), 0, size, typ);
         }
         memclrNoHeapPointers(ptr, size);
@@ -245,6 +287,7 @@ namespace golang::runtime
     //go:nosplit
     void memclrHasPointers(gocpp::unsafe_pointer ptr, uintptr_t n)
     {
+        // Pass nil for the type since we don't have one here anyway.
         bulkBarrierPreWrite(uintptr_t(ptr), 0, n, nullptr);
         memclrNoHeapPointers(ptr, n);
     }

@@ -19,6 +19,7 @@ namespace golang::runtime
     }
 
     void checkfds()
+    // Nothing to do on non-Unix platforms.
     {
     }
 

@@ -100,6 +100,7 @@ namespace golang::reflect
         auto t = rec::common(gocpp::recv(typ));
         auto ftyp = (reflect::funcType*)(gocpp::unsafe_pointer(t));
         auto code = abi::FuncPCABI0(makeFuncStub);
+        // makeFuncImpl contains a stack map for use by the runtime
         auto [gocpp_id_0, gocpp_id_1, abid] = funcLayout(ftyp, nullptr);
         auto impl = gocpp::InitPtr<makeFuncImpl>([=](auto& x) {
             x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([=](auto& x) {
@@ -173,11 +174,14 @@ namespace golang::reflect
         {
             gocpp::panic("reflect: internal error: invalid use of makeMethodValue"_s);
         }
+        // Ignoring the flagMethod bit, v describes the receiver, not the method type.
         auto fl = v.flag & (flagRO | flagAddr | flagIndir);
         fl |= flag(rec::Kind(gocpp::recv(rec::typ(gocpp::recv(v)))));
         auto rcvr = Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
+        // v.Type returns the actual type of the method value.
         auto ftyp = (reflect::funcType*)(gocpp::unsafe_pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
         auto code = methodValueCallCodePtr();
+        // methodValue contains a stack map for use by the runtime
         auto [gocpp_id_2, gocpp_id_3, abid] = funcLayout(ftyp, nullptr);
         auto fv = gocpp::InitPtr<methodValue>([=](auto& x) {
             x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([=](auto& x) {
@@ -189,6 +193,9 @@ namespace golang::reflect
             x.method = int(v.flag) >> flagMethodShift;
             x.rcvr = rcvr;
         });
+        // Cause panic if method is not appropriate.
+        // The panic would still happen during the call if we omit this,
+        // but we want Interface() and other operations to fail early.
         methodReceiver(op, fv->rcvr, fv->method);
         return Value {rec::Common(gocpp::recv(ftyp)), gocpp::unsafe_pointer(fv), v.flag & flagRO | flag(Func)};
     }
@@ -261,12 +268,17 @@ namespace golang::reflect
     {
         for(auto [i, arg] : args->Ints)
         {
+            // Avoid write barriers! Because our write barrier enqueues what
+            // was there before, we might enqueue garbage.
             if(rec::Get(gocpp::recv(ctxt->regPtrs), i))
             {
                 *(uintptr_t*)(gocpp::unsafe_pointer(& args->Ptrs[i])) = arg;
             }
             else
             {
+                // We *must* zero this space ourselves because it's defined in
+                // assembly code and the GC will scan these pointers. Otherwise,
+                // there will be garbage here.
                 *(uintptr_t*)(gocpp::unsafe_pointer(& args->Ptrs[i])) = 0;
             }
         }

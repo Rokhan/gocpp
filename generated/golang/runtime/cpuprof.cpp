@@ -100,6 +100,7 @@ namespace golang::runtime
     // SetCPUProfileRate directly.
     void SetCPUProfileRate(int hz)
     {
+        // Clamp hz to something reasonable.
         if(hz < 0)
         {
             hz = 0;
@@ -143,17 +144,24 @@ namespace golang::runtime
     //go:nowritebarrierrec
     void rec::add(golang::runtime::cpuProfile* p, gocpp::unsafe_pointer* tagPtr, gocpp::slice<uintptr_t> stk)
     {
+        // Simple cas-lock to coordinate with setcpuprofilerate.
         for(; ! rec::CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
         {
+            // TODO: Is it safe to osyield here? https://go.dev/issue/52672
             osyield();
         }
         if(rec::Load(gocpp::recv(prof.hz)) != 0)
         {
+            // implies cpuprof.log != nil
             if(p->numExtra > 0 || p->lostExtra > 0 || p->lostAtomic > 0)
             {
                 rec::addExtra(gocpp::recv(p));
             }
             auto hdr = gocpp::array<uint64_t, 1> {1};
+            // Note: write "knows" that the argument is &gp.labels,
+            // because otherwise its write barrier behavior may not
+            // be correct. See the long comment there before
+            // changing the argument here.
             rec::write(gocpp::recv(cpuprof.log), tagPtr, nanotime(), hdr.make_slice(0), stk);
         }
         rec::Store(gocpp::recv(prof.signalLock), 0);
@@ -171,8 +179,15 @@ namespace golang::runtime
     //go:nowritebarrierrec
     void rec::addNonGo(golang::runtime::cpuProfile* p, gocpp::slice<uintptr_t> stk)
     {
+        // Simple cas-lock to coordinate with SetCPUProfileRate.
+        // (Other calls to add or addNonGo should be blocked out
+        // by the fact that only one SIGPROF can be handled by the
+        // process at a time. If not, this lock will serialize those too.
+        // The use of timer_create(2) on Linux to request process-targeted
+        // signals may have changed this.)
         for(; ! rec::CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
         {
+            // TODO: Is it safe to osyield here? https://go.dev/issue/52672
             osyield();
         }
         if(cpuprof.numExtra + 1 + len(stk) < len(cpuprof.extra))
@@ -196,6 +211,7 @@ namespace golang::runtime
     // and has a g. The world may be stopped, though.
     void rec::addExtra(golang::runtime::cpuProfile* p)
     {
+        // Copy accumulated non-Go profile events.
         auto hdr = gocpp::array<uint64_t, 1> {1};
         for(auto i = 0; i < p->numExtra; )
         {
@@ -203,6 +219,7 @@ namespace golang::runtime
             i += int(p->extra[i]);
         }
         p->numExtra = 0;
+        // Report any lost events.
         if(p->lostExtra > 0)
         {
             auto hdr = gocpp::array<uint64_t, 1> {p->lostExtra};
@@ -256,6 +273,7 @@ namespace golang::runtime
         auto readMode = profBufBlocking;
         if(GOOS == "darwin"_s || GOOS == "ios"_s)
         {
+            // For #61768; on Darwin notes are not async-signal-safe.  See sigNoteSetup in os_darwin.go.
             readMode = profBufNonBlocking;
         }
         auto [data, tags, eof] = rec::read(gocpp::recv(log), readMode);

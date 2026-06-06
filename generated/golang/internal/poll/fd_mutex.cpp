@@ -107,14 +107,18 @@ namespace golang::poll
             {
                 return false;
             }
+            // Mark as closed and acquire a reference.
             auto go_new = (old | mutexClosed) + mutexRef;
             if(go_new & mutexRefMask == 0)
             {
                 gocpp::panic(overflowMsg);
             }
+            // Remove all read and write waiters.
             go_new &^= mutexRMask | mutexWMask;
             if(atomic::CompareAndSwapUint64(& mu->state, old, go_new))
             {
+                // Wake all read and write waiters,
+                // they will observe closed flag after wakeup.
                 for(; old & mutexRMask != 0; )
                 {
                     old -= mutexRWait;
@@ -181,6 +185,7 @@ namespace golang::poll
             uint64_t go_new = {};
             if(old & mutexBit == 0)
             {
+                // Lock is free, acquire it.
                 go_new = (old | mutexBit) + mutexRef;
                 if(go_new & mutexRefMask == 0)
                 {
@@ -189,6 +194,7 @@ namespace golang::poll
             }
             else
             {
+                // Wait for lock.
                 go_new = old + mutexWait;
                 if(go_new & mutexMask == 0)
                 {
@@ -201,6 +207,7 @@ namespace golang::poll
                 {
                     return true;
                 }
+                // The signaller has subtracted mutexWait.
                 runtime_Semacquire(mutexSema);
             }
         }
@@ -235,6 +242,7 @@ namespace golang::poll
             {
                 gocpp::panic("inconsistent poll.fdMutex"_s);
             }
+            // Drop lock, drop reference and wake read waiter if present.
             auto go_new = (old &^ mutexBit) - mutexRef;
             if(old & mutexMask != 0)
             {

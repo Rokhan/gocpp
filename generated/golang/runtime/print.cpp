@@ -80,6 +80,7 @@ namespace golang::runtime
         printlock();
         if(rec::Load(gocpp::recv(panicking)) == 0)
         {
+            // Not actively crashing: maintain circular buffer of print output.
             for(auto i = 0; i < len(b); )
             {
                 auto n = copy(printBacklog.make_slice(printBacklogIndex), b.make_slice(i));
@@ -95,12 +96,14 @@ namespace golang::runtime
     void printlock()
     {
         auto mp = getg()->m;
+        // do not reschedule between printlock++ and lock(&debuglock).
         mp->locks++;
         mp->printlock++;
         if(mp->printlock == 1)
         {
             lock(& debuglock);
         }
+        // now we know debuglock is held and holding up mp.locks for us.
         mp->locks--;
     }
 
@@ -124,6 +127,11 @@ namespace golang::runtime
         }
         recordForPanic(b);
         auto gp = getg();
+        // Don't use the writebuf if gp.m is dying. We want anything
+        // written through gwrite to appear in the terminal rather
+        // than be written to in some buffer, if we're in a panicking state.
+        // Note that we can't just clear writebuf in the gp.m.dying case
+        // because a panic isn't allowed to have any write barriers.
         if(gp == nullptr || gp->writebuf == nullptr || gp->m->dying > 0)
         {
             writeErr(b);
@@ -179,9 +187,11 @@ namespace golang::runtime
                     break;
             }
         }
+        // digits printed
         auto n = 7;
         gocpp::array<unsigned char, n + 7> buf = {};
         buf[0] = '+';
+        // exp
         auto e = 0;
         if(v == 0)
         {
@@ -197,6 +207,7 @@ namespace golang::runtime
                 v = - v;
                 buf[0] = '-';
             }
+            // normalize
             for(; v >= 10; )
             {
                 e++;
@@ -207,6 +218,7 @@ namespace golang::runtime
                 e--;
                 v *= 10;
             }
+            // round
             auto h = 5.0;
             for(auto i = 0; i < n; i++)
             {
@@ -219,6 +231,7 @@ namespace golang::runtime
                 v /= 10;
             }
         }
+        // format +d.dddd+edd
         for(auto i = 0; i < n; i++)
         {
             auto s = int(v);
@@ -359,6 +372,7 @@ namespace golang::runtime
             auto val = *(uintptr_t*)(gocpp::unsafe_pointer(p + i));
             print(hex(val));
             print(" "_s);
+            // Can we symbolize val?
             auto fn = findfunc(val);
             if(rec::valid(gocpp::recv(fn)))
             {

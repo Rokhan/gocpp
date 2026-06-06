@@ -107,6 +107,10 @@ namespace golang::runtime
     void cbsLock()
     {
         lock(& cbs.lock);
+        // compileCallback is used by goenvs prior to completion of schedinit.
+        // raceacquire involves a racecallback to get the proc, which is not
+        // safe prior to scheduler initialization. Thus avoid instrumentation
+        // until then.
         if(raceenabled && mainStarted)
         {
             raceacquire(gocpp::unsafe_pointer(& cbs.lock));
@@ -268,39 +272,77 @@ namespace golang::runtime
     {
         if(t->Size_ > goarch::PtrSize)
         {
+            // We don't support this right now. In
+            // stdcall/cdecl, 64-bit ints and doubles are
+            // passed as two words (little endian); and
+            // structs are pushed on the stack. In
+            // fastcall, arguments larger than the word
+            // size are passed by reference. On arm,
+            // 8-byte aligned arguments round up to the
+            // next even register and can be split across
+            // registers and the stack.
             gocpp::panic("compileCallback: argument size is larger than uintptr"_s);
         }
         if(auto k = t->Kind_ & kindMask; GOARCH != "386"_s && (k == kindFloat32 || k == kindFloat64))
         {
+            // In fastcall, floating-point arguments in
+            // the first four positions are passed in
+            // floating-point registers, which we don't
+            // currently spill. arm passes floating-point
+            // arguments in VFP registers, which we also
+            // don't support.
+            // So basically we only support 386.
             gocpp::panic("compileCallback: float arguments not supported"_s);
         }
         if(t->Size_ == 0)
         {
+            // The Go ABI aligns for zero-sized types.
             p->dstStackSize = alignUp(p->dstStackSize, uintptr_t(t->Align_));
             return;
         }
+        // In the C ABI, we're already on a word boundary.
+        // Also, sub-word-sized fastcall register arguments
+        // are stored to the least-significant bytes of the
+        // argument word and all supported Windows
+        // architectures are little endian, so srcStackOffset
+        // is already pointing to the right place for smaller
+        // arguments. The same is true on arm.
         auto oldParts = p->parts;
         if(rec::tryRegAssignArg(gocpp::recv(p), t, 0))
         {
+            // Account for spill space.
+            // TODO(mknyszek): Remove this when we no longer have
+            // caller reserved spill space.
             p->dstSpill = alignUp(p->dstSpill, uintptr_t(t->Align_));
             p->dstSpill += t->Size_;
         }
         else
         {
+            // Register assignment failed.
+            // Undo the work and stack assign.
             p->parts = oldParts;
+            // The Go ABI aligns arguments.
             p->dstStackSize = alignUp(p->dstStackSize, uintptr_t(t->Align_));
+            // Copy just the size of the argument. Note that this
+            // could be a small by-value struct, but C and Go
+            // struct layouts are compatible, so we can copy these
+            // directly, too.
             auto part = gocpp::Init<abiPart>([=](auto& x) {
                 x.kind = abiPartStack;
                 x.srcStackOffset = p->srcStackSize;
                 x.dstStackOffset = p->dstStackSize;
                 x.len = t->Size_;
             });
+            // Add this step to the adapter.
             if(len(p->parts) == 0 || ! rec::tryMerge(gocpp::recv(p->parts[len(p->parts) - 1]), part))
             {
                 p->parts = append(p->parts, part);
             }
+            // The Go ABI packs arguments.
             p->dstStackSize += t->Size_;
         }
+        // cdecl, stdcall, fastcall, and arm pad arguments to word size.
+        // TODO(rsc): On arm and arm64 do we need to skip the caller's saved LR?
         p->srcStackSize += goarch::PtrSize;
     }
 
@@ -347,10 +389,12 @@ namespace golang::runtime
                 case 9:
                 case 10:
                 case 11:
+                    // Assign a register for all these types.
                     return rec::assignReg(gocpp::recv(p), t->Size_, offset);
                     break;
                 case 12:
                 case 13:
+                    // Only register-assign if the registers are big enough.
                     if(goarch::PtrSize == 8)
                     {
                         return rec::assignReg(gocpp::recv(p), t->Size_, offset);
@@ -360,6 +404,7 @@ namespace golang::runtime
                     auto at = (runtime::arraytype*)(gocpp::unsafe_pointer(t));
                     if(at->Len == 1)
                     {
+                        // TODO fix when runtime is fully commoned up w/ abi.Type
                         return rec::tryRegAssignArg(gocpp::recv(p), at->Elem, offset);
                     }
                     break;
@@ -377,6 +422,8 @@ namespace golang::runtime
                     break;
             }
         }
+        // Pointer-sized types such as maps and channels are currently
+        // not supported.
         gocpp::panic("compileCallback: type "_s + rec::string(gocpp::recv(toRType(t))) + " is currently not supported for use in system callbacks"_s);
     }
 
@@ -467,6 +514,8 @@ namespace golang::runtime
                     break;
                 case 2:
                 case 3:
+                    // On ARM and ARM64, each entry is a MOV instruction
+                    // followed by a branch instruction
                     entrySize = 8;
                     break;
             }
@@ -487,6 +536,7 @@ namespace golang::runtime
         uintptr_t code;
         if(GOARCH != "386"_s)
         {
+            // cdecl is only meaningful on 386.
             cdecl = false;
         }
         if(fn._type == nullptr || (fn._type->Kind_ & kindMask) != kindFunc)
@@ -500,6 +550,8 @@ namespace golang::runtime
         {
             rec::assignArg(gocpp::recv(abiMap), t);
         }
+        // The Go ABI aligns the result to the word size. src is
+        // already aligned.
         abiMap.dstStackSize = alignUp(abiMap.dstStackSize, goarch::PtrSize);
         abiMap.retOffset = abiMap.dstStackSize;
         if(len(rec::OutSlice(gocpp::recv(ft))) != 1)
@@ -512,12 +564,20 @@ namespace golang::runtime
         }
         if(auto k = rec::OutSlice(gocpp::recv(ft))[0]->Kind_ & kindMask; k == kindFloat32 || k == kindFloat64)
         {
+            // In cdecl and stdcall, float results are returned in
+            // ST(0). In fastcall, they're returned in XMM0.
+            // Either way, it's not AX.
             gocpp::panic("compileCallback: float results not supported"_s);
         }
         if(intArgRegs == 0)
         {
+            // Make room for the uintptr-sized result.
+            // If there are argument registers, the return value will
+            // be passed in the first register.
             abiMap.dstStackSize += goarch::PtrSize;
         }
+        // TODO(mknyszek): Remove dstSpill from this calculation when we no longer have
+        // caller reserved spill space.
         auto frameSize = alignUp(abiMap.dstStackSize, goarch::PtrSize);
         frameSize += abiMap.dstSpill;
         if(frameSize > callbackMaxFrame)
@@ -533,11 +593,13 @@ namespace golang::runtime
         }
         auto key = winCallbackKey {(funcval*)(fn.data), cdecl};
         cbsLock();
+        // Check if this callback is already registered.
         if(auto [n, ok] = cbs.index[key]; ok)
         {
             cbsUnlock();
             return callbackasmAddr(n);
         }
+        // Register the callback.
         if(cbs.index == nullptr)
         {
             cbs.index = gocpp::make(gocpp::Tag<gocpp::map<winCallbackKey, int>>());
@@ -626,9 +688,17 @@ namespace golang::runtime
                 }
             }
         }
+        // TODO(mknyszek): Remove this when we no longer have
+        // caller reserved spill space.
         auto frameSize = alignUp(c.abiMap.dstStackSize, goarch::PtrSize);
         frameSize += c.abiMap.dstSpill;
+        // Even though this is copying back results, we can pass a nil
+        // type because those results must not require write barriers.
         reflectcall(nullptr, gocpp::unsafe_pointer(c.fn), noescape(goArgs), uint32_t(c.abiMap.dstStackSize), uint32_t(c.abiMap.retOffset), uint32_t(frameSize), & regs);
+        // Extract the result.
+        // There's always exactly one return value, one pointer in size.
+        // If it's on the stack, then we will have reserved space for it
+        // at the end of the frame, otherwise it was passed in a register.
         if(c.abiMap.dstStackSize != c.abiMap.retOffset)
         {
             a->result = *(uintptr_t*)(gocpp::unsafe_pointer(& frame[c.abiMap.retOffset]));
@@ -636,6 +706,9 @@ namespace golang::runtime
         else
         {
             int zero = {};
+            // On architectures with no registers, Ints[0] would be a compile error,
+            // so we use a dynamic index. These architectures will never take this
+            // branch, so this won't cause a runtime panic.
             a->result = regs.Ints[zero];
         }
     }
@@ -704,6 +777,7 @@ namespace golang::runtime
         {
             err = c->err;
         }
+        // not defer'd after the lockOSThread above to save stack frame size.
         unlockOSThread();
         return {handle, err};
     }

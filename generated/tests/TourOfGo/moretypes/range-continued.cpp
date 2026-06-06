@@ -25,12 +25,15 @@ namespace golang::main
         auto pow = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 10);
         for(auto [i, gocpp_ignored] : pow)
         {
+            // == 2**i
             pow[i] = 1 << (unsigned int)(i);
         }
         for(auto [gocpp_ignored, value] : pow)
         {
+            // fmt.Printf("%d\n", value)
             mocklib::Printf("%v\n"_s, value);
         }
+        // assignment versions
         auto value = 0;
         auto it_0 = std::begin(pow);
         std::tie(std::ignore, value) = *it_0;
@@ -51,6 +54,7 @@ namespace golang::main
         {
             mocklib::Printf("%v\n"_s, pow[i]);
         }
+        // strings are range
         for(auto [gocpp_ignored, go_char] : "hello"_s)
         {
             mocklib::Printf("%v\n"_s, go_char);

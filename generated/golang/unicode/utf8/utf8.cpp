@@ -84,8 +84,10 @@ namespace golang::utf8
         auto x = first[p[0]];
         if(n >= int(x & 7))
         {
+            // ASCII, invalid or valid.
             return true;
         }
+        // Must be short or invalid.
         auto accept = acceptRanges[x >> 4];
         if(n > 1 && (p[1] < accept.lo || accept.hi < p[1]))
         {
@@ -110,8 +112,10 @@ namespace golang::utf8
         auto x = first[s[0]];
         if(n >= int(x & 7))
         {
+            // ASCII, invalid, or valid.
             return true;
         }
+        // Must be short or invalid.
         auto accept = acceptRanges[x >> 4];
         if(n > 1 && (s[1] < accept.lo || accept.hi < s[1]))
         {
@@ -146,6 +150,10 @@ namespace golang::utf8
         auto x = first[p0];
         if(x >= as)
         {
+            // The following code simulates an additional check for x == xx and
+            // handling the ASCII and invalid cases accordingly. This mask-and-or
+            // approach prevents an additional branch.
+            // Create 0x0000 or 0xFFFF.
             auto mask = (gocpp::rune(x) << 31) >> 31;
             return {gocpp::rune(p[0]) &^ mask | RuneError & mask, 1};
         }
@@ -162,6 +170,7 @@ namespace golang::utf8
         }
         if(sz <= 2)
         {
+            // <= instead of == to help the compiler eliminate some bounds checks
             return {(gocpp::rune(p0 & mask2) << 6) | gocpp::rune(b1 & maskx), 2};
         }
         auto b2 = p[2];
@@ -202,6 +211,10 @@ namespace golang::utf8
         auto x = first[s0];
         if(x >= as)
         {
+            // The following code simulates an additional check for x == xx and
+            // handling the ASCII and invalid cases accordingly. This mask-and-or
+            // approach prevents an additional branch.
+            // Create 0x0000 or 0xFFFF.
             auto mask = (gocpp::rune(x) << 31) >> 31;
             return {gocpp::rune(s[0]) &^ mask | RuneError & mask, 1};
         }
@@ -218,6 +231,7 @@ namespace golang::utf8
         }
         if(sz <= 2)
         {
+            // <= instead of == to help the compiler eliminate some bounds checks
             return {(gocpp::rune(s0 & mask2) << 6) | gocpp::rune(s1 & maskx), 2};
         }
         auto s2 = s[2];
@@ -260,6 +274,9 @@ namespace golang::utf8
         {
             return {r, 1};
         }
+        // guard against O(n^2) behavior when traversing
+        // backwards through strings with long sequences of
+        // invalid UTF-8.
         auto lim = end - UTFMax;
         if(lim < 0)
         {
@@ -307,6 +324,9 @@ namespace golang::utf8
         {
             return {r, 1};
         }
+        // guard against O(n^2) behavior when traversing
+        // backwards through strings with long sequences of
+        // invalid UTF-8.
         auto lim = end - UTFMax;
         if(lim < 0)
         {
@@ -374,6 +394,7 @@ namespace golang::utf8
     // It returns the number of bytes written.
     int EncodeRune(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
+        // Negative values are erroneous. Making it unsigned addresses the problem.
         //Go switch emulation
         {
             auto i = uint32_t(r);
@@ -390,6 +411,7 @@ namespace golang::utf8
                     return 1;
                     break;
                 case 1:
+                    // eliminate bounds checks
                     _ = p[1];
                     p[0] = t2 | (unsigned char)(r >> 6);
                     p[1] = tx | (unsigned char)(r) & maskx;
@@ -399,6 +421,7 @@ namespace golang::utf8
                 case 3:
                     r = RuneError;
                 case 4:
+                    // eliminate bounds checks
                     _ = p[2];
                     p[0] = t3 | (unsigned char)(r >> 12);
                     p[1] = tx | (unsigned char)(r >> 6) & maskx;
@@ -406,6 +429,7 @@ namespace golang::utf8
                     return 3;
                     break;
                 default:
+                    // eliminate bounds checks
                     _ = p[3];
                     p[0] = t4 | (unsigned char)(r >> 18);
                     p[1] = tx | (unsigned char)(r >> 12) & maskx;
@@ -422,6 +446,7 @@ namespace golang::utf8
     // it appends the encoding of [RuneError].
     gocpp::slice<unsigned char> AppendRune(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
+        // This function is inlineable for fast handling of ASCII.
         if(uint32_t(r) <= rune1Max)
         {
             return append(p, (unsigned char)(r));
@@ -431,6 +456,7 @@ namespace golang::utf8
 
     gocpp::slice<unsigned char> appendRuneNonASCII(gocpp::slice<unsigned char> p, gocpp::rune r)
     {
+        // Negative values are erroneous. Making it unsigned addresses the problem.
         //Go switch emulation
         {
             auto i = uint32_t(r);
@@ -469,18 +495,21 @@ namespace golang::utf8
             auto c = p[i];
             if(c < RuneSelf)
             {
+                // ASCII fast path
                 i++;
                 continue;
             }
             auto x = first[c];
             if(x == xx)
             {
+                // invalid.
                 i++;
                 continue;
             }
             auto size = int(x & 7);
             if(i + size > np)
             {
+                // Short or invalid.
                 i++;
                 continue;
             }
@@ -522,18 +551,21 @@ namespace golang::utf8
             auto c = s[i];
             if(c < RuneSelf)
             {
+                // ASCII fast path
                 i++;
                 continue;
             }
             auto x = first[c];
             if(x == xx)
             {
+                // invalid.
                 i++;
                 continue;
             }
             auto size = int(x & 7);
             if(i + size > ns)
             {
+                // Short or invalid.
                 i++;
                 continue;
             }
@@ -576,13 +608,22 @@ namespace golang::utf8
     // Valid reports whether p consists entirely of valid UTF-8-encoded runes.
     bool Valid(gocpp::slice<unsigned char> p)
     {
+        // This optimization avoids the need to recompute the capacity
+        // when generating code for p[8:], bringing it to parity with
+        // ValidString, which was 20% faster on long ASCII strings.
         p = p.make_slice(0, len(p), len(p));
+        // Fast path. Check for and skip 8 bytes of ASCII characters per iteration.
         for(; len(p) >= 8; )
         {
+            // Combining two 32 bit loads allows the same code to be used
+            // for 32 and 64 bit platforms.
+            // The compiler can generate a 32bit load for first32 and second32
+            // on many platforms. See test/codegen/memcombine.go.
             auto first32 = uint32_t(p[0]) | (uint32_t(p[1]) << 8) | (uint32_t(p[2]) << 16) | (uint32_t(p[3]) << 24);
             auto second32 = uint32_t(p[4]) | (uint32_t(p[5]) << 8) | (uint32_t(p[6]) << 16) | (uint32_t(p[7]) << 24);
             if((first32 | second32) & 0x80808080 != 0)
             {
+                // Found a non ASCII byte (>= RuneSelf).
                 break;
             }
             p = p.make_slice(8);
@@ -599,11 +640,13 @@ namespace golang::utf8
             auto x = first[pi];
             if(x == xx)
             {
+                // Illegal starter byte.
                 return false;
             }
             auto size = int(x & 7);
             if(i + size > n)
             {
+                // Short or invalid.
                 return false;
             }
             auto accept = acceptRanges[x >> 4];
@@ -637,12 +680,18 @@ namespace golang::utf8
     // ValidString reports whether s consists entirely of valid UTF-8-encoded runes.
     bool ValidString(gocpp::string s)
     {
+        // Fast path. Check for and skip 8 bytes of ASCII characters per iteration.
         for(; len(s) >= 8; )
         {
+            // Combining two 32 bit loads allows the same code to be used
+            // for 32 and 64 bit platforms.
+            // The compiler can generate a 32bit load for first32 and second32
+            // on many platforms. See test/codegen/memcombine.go.
             auto first32 = uint32_t(s[0]) | (uint32_t(s[1]) << 8) | (uint32_t(s[2]) << 16) | (uint32_t(s[3]) << 24);
             auto second32 = uint32_t(s[4]) | (uint32_t(s[5]) << 8) | (uint32_t(s[6]) << 16) | (uint32_t(s[7]) << 24);
             if((first32 | second32) & 0x80808080 != 0)
             {
+                // Found a non ASCII byte (>= RuneSelf).
                 break;
             }
             s = s.make_slice(8);
@@ -659,11 +708,13 @@ namespace golang::utf8
             auto x = first[si];
             if(x == xx)
             {
+                // Illegal starter byte.
                 return false;
             }
             auto size = int(x & 7);
             if(i + size > n)
             {
+                // Short or invalid.
                 return false;
             }
             auto accept = acceptRanges[x >> 4];

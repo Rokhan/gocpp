@@ -69,6 +69,9 @@ namespace golang::runtime
     {
         if(! mainStarted)
         {
+            // Something early in startup hates this function.
+            // Don't start doing any actual checking until the
+            // runtime has set itself up.
             return;
         }
         if(! cgoIsGoPointer(src))
@@ -79,19 +82,28 @@ namespace golang::runtime
         {
             return;
         }
+        // If we are running on the system stack then dst might be an
+        // address on the stack, which is OK.
         auto gp = getg();
         if(gp == gp->m->g0 || gp == gp->m->gsignal)
         {
             return;
         }
+        // Allocating memory can write to various mfixalloc structs
+        // that look like they are non-Go memory.
         if(gp->m->mallocing != 0)
         {
             return;
         }
+        // If the object is pinned, it's safe to store it in C memory. The GC
+        // ensures it will not be moved or freed.
         if(isPinned(src))
         {
             return;
         }
+        // It's OK if writing to memory allocated by persistentalloc.
+        // Do this check last because it is more expensive and rarely true.
+        // If it is false the expense doesn't matter since we are crashing.
         if(inPersistentAlloc(uintptr_t(gocpp::unsafe_pointer(dst))))
         {
             return;
@@ -179,6 +191,7 @@ namespace golang::runtime
     //go:nowritebarrier
     void cgoCheckTypedBlock(golang::runtime::_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size)
     {
+        // Anything past typ.PtrBytes is not a pointer.
         if(typ->PtrBytes <= off)
         {
             return;
@@ -192,6 +205,7 @@ namespace golang::runtime
             cgoCheckBits(src, typ->GCData, off, size);
             return;
         }
+        // The type has a GC program. Try to find GC bits somewhere else.
         for(auto [gocpp_ignored, datap] : activeModules())
         {
             if(cgoInRange(src, datap->data, datap->edata))
@@ -210,12 +224,20 @@ namespace golang::runtime
         auto s = spanOfUnchecked(uintptr_t(src));
         if(rec::get(gocpp::recv(s->state)) == mSpanManual)
         {
+            // There are no heap bits for value stored on the stack.
+            // For a channel receive src might be on the stack of some
+            // other goroutine, so we can't unwind the stack even if
+            // we wanted to.
+            // We can't expand the GC program without extra storage
+            // space we can't easily get.
+            // Fortunately we have the type information.
             systemstack([=]() mutable -> void
             {
                 cgoCheckUsingType(typ, src, off, size);
             });
             return;
         }
+        // src must be in the regular heap.
         if(goexperiment::AllocHeaders)
         {
             auto tp = rec::typePointersOf(gocpp::recv(s), uintptr_t(src), size);
@@ -310,6 +332,7 @@ namespace golang::runtime
         {
             return;
         }
+        // Anything past typ.PtrBytes is not a pointer.
         if(typ->PtrBytes <= off)
         {
             return;

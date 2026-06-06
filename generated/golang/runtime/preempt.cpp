@@ -132,11 +132,15 @@ namespace golang::runtime
     {
         if(auto mp = getg()->m; mp->curg != nullptr && readgstatus(mp->curg) == _Grunning)
         {
+            // Since we're on the system stack of this M, the user
+            // G is stuck at an unsafe point. If another goroutine
+            // were to try to preempt m.curg, it could deadlock.
             go_throw("suspendG from non-preemptible goroutine"_s);
         }
         // See https://golang.org/cl/21503 for justification of the yield delay.
         auto yieldDelay = 10 * 1000;
         int64_t nextYield = {};
+        // Drive the goroutine to a preemption point.
         auto stopped = false;
         m* asyncM = {};
         uint32_t asyncGen = {};
@@ -160,60 +164,106 @@ namespace golang::runtime
                     default:
                         if(s & _Gscan != 0)
                         {
+                            // Someone else is suspending it. Wait
+                            // for them to finish.
+                            // TODO: It would be nicer if we could
+                            // coalesce suspends.
                             break;
                         }
                         dumpgstatus(gp);
                         go_throw("invalid g status"_s);
                         break;
                     case 0:
+                        // Nothing to suspend.
+                        // preemptStop may need to be cleared, but
+                        // doing that here could race with goroutine
+                        // reuse. Instead, goexit0 clears it.
                         return gocpp::Init<suspendGState>([=](auto& x) {
                             x.dead = true;
                         });
                         break;
+                    // The stack is being copied. We need to wait
+                    // until this is done.
                     case 1:
                         break;
                     case 2:
+                        // We (or someone else) suspended the G. Claim
+                        // ownership of it by transitioning it to
+                        // _Gwaiting.
                         if(! casGFromPreempted(gp, _Gpreempted, _Gwaiting))
                         {
                             break;
                         }
+                        // We stopped the G, so we have to ready it later.
                         stopped = true;
                         s = _Gwaiting;
                     case 3:
                     case 4:
                     case 5:
+                        // Claim goroutine by setting scan bit.
+                        // This may race with execution or readying of gp.
+                        // The scan bit keeps it from transition state.
                         if(! castogscanstatus(gp, s, s | _Gscan))
                         {
                             break;
                         }
+                        // Clear the preemption request. It's safe to
+                        // reset the stack guard because we hold the
+                        // _Gscan bit and thus own the stack.
                         gp->preemptStop = false;
                         gp->preempt = false;
                         gp->stackguard0 = gp->stack.lo + stackGuard;
+                        // The goroutine was already at a safe-point
+                        // and we've now locked that in.
+                        // TODO: It would be much better if we didn't
+                        // leave it in _Gscan, but instead gently
+                        // prevented its scheduling until resumption.
+                        // Maybe we only use this to bump a suspended
+                        // count and the scheduler skips suspended
+                        // goroutines? That wouldn't be enough for
+                        // {_Gsyscall,_Gwaiting} -> _Grunning. Maybe
+                        // for all those transitions we need to check
+                        // suspended and deschedule?
                         return gocpp::Init<suspendGState>([=](auto& x) {
                             x.g = gp;
                             x.stopped = stopped;
                         });
                         break;
                     case 6:
+                        // Optimization: if there is already a pending preemption request
+                        // (from the previous loop iteration), don't bother with the atomics.
                         if(gp->preemptStop && gp->preempt && gp->stackguard0 == stackPreempt && asyncM == gp->m && rec::Load(gocpp::recv(asyncM->preemptGen)) == asyncGen)
                         {
                             break;
                         }
+                        // Temporarily block state transitions.
                         if(! castogscanstatus(gp, _Grunning, _Gscanrunning))
                         {
                             break;
                         }
+                        // Request synchronous preemption.
                         gp->preemptStop = true;
                         gp->preempt = true;
                         gp->stackguard0 = stackPreempt;
+                        // Prepare for asynchronous preemption.
                         auto asyncM2 = gp->m;
                         auto asyncGen2 = rec::Load(gocpp::recv(asyncM2->preemptGen));
                         auto needAsync = asyncM != asyncM2 || asyncGen != asyncGen2;
                         asyncM = asyncM2;
                         asyncGen = asyncGen2;
                         casfrom_Gscanstatus(gp, _Gscanrunning, _Grunning);
+                        // Send asynchronous preemption. We do this
+                        // after CASing the G back to _Grunning
+                        // because preemptM may be synchronous and we
+                        // don't want to catch the G just spinning on
+                        // its status.
                         if(preemptMSupported && debug.asyncpreemptoff == 0 && needAsync)
                         {
+                            // Rate limit preemptM calls. This is
+                            // particularly important on Windows
+                            // where preemptM is actually
+                            // synchronous and the spin loop here
+                            // can lead to live-lock.
                             auto now = nanotime();
                             if(now >= nextPreemptM)
                             {
@@ -224,6 +274,13 @@ namespace golang::runtime
                         break;
                 }
             }
+            // TODO: Don't busy wait. This loop should really only
+            // be a simple read/decide/CAS loop that only fails if
+            // there's an active race. Once the CAS succeeds, we
+            // should queue up the preemption (which will require
+            // it to be reliable in the _Grunning case, not
+            // best-effort) and then sleep until we're notified
+            // that the goroutine is suspended.
             if(i == 0)
             {
                 nextYield = nanotime() + yieldDelay;
@@ -246,6 +303,7 @@ namespace golang::runtime
     {
         if(state.dead)
         {
+            // We didn't actually stop anything.
             return;
         }
         auto gp = state.g;
@@ -272,6 +330,7 @@ namespace golang::runtime
         }
         if(state.stopped)
         {
+            // We stopped it, so we need to re-schedule it.
             ready(gp, 0, true);
         }
     }
@@ -320,9 +379,19 @@ namespace golang::runtime
         auto total = funcMaxSPDelta(f);
         f = findfunc(abi::FuncPCABIInternal(asyncPreempt2));
         total += funcMaxSPDelta(f);
+        // Add some overhead for return PCs, etc.
         asyncPreemptStack = uintptr_t(total) + 8 * goarch::PtrSize;
         if(asyncPreemptStack > stackNosplit)
         {
+            // We need more than the nosplit limit. This isn't
+            // unsafe, but it may limit asynchronous preemption.
+            // This may be a problem if we start using more
+            // registers. In that case, we should store registers
+            // in a context object. If we pre-allocate one per P,
+            // asyncPreempt can spill just a few registers to the
+            // stack, then grab its context object and spill into
+            // it. When it enters the runtime, it would allocate a
+            // new context for the P.
             print("runtime: asyncPreemptStack="_s, asyncPreemptStack, "\n"_s);
             go_throw("async stack too large"_s);
         }
@@ -332,6 +401,7 @@ namespace golang::runtime
     // queued for gp.
     bool wantAsyncPreempt(struct g* gp)
     {
+        // Check both the G and the P.
         return (gp->preempt || gp->m->p != 0 && rec::ptr(gocpp::recv(gp->m->p))->preempt) && readgstatus(gp) &^ _Gscan == _Grunning;
     }
 
@@ -354,40 +424,74 @@ namespace golang::runtime
     std::tuple<bool, uintptr_t> isAsyncSafePoint(struct g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr)
     {
         auto mp = gp->m;
+        // Only user Gs can have safe-points. We check this first
+        // because it's extremely common that we'll catch mp in the
+        // scheduler processing this G preemption.
         if(mp->curg != gp)
         {
             return {false, 0};
         }
+        // Check M state.
         if(mp->p == 0 || ! canPreemptM(mp))
         {
             return {false, 0};
         }
+        // Check stack space.
         if(sp < gp->stack.lo || sp - gp->stack.lo < asyncPreemptStack)
         {
             return {false, 0};
         }
+        // Check if PC is an unsafe-point.
         auto f = findfunc(pc);
         if(! rec::valid(gocpp::recv(f)))
         {
+            // Not Go code.
             return {false, 0};
         }
         if((GOARCH == "mips"_s || GOARCH == "mipsle"_s || GOARCH == "mips64"_s || GOARCH == "mips64le"_s) && lr == pc + 8 && funcspdelta(f, pc) == 0)
         {
+            // We probably stopped at a half-executed CALL instruction,
+            // where the LR is updated but the PC has not. If we preempt
+            // here we'll see a seemingly self-recursive call, which is in
+            // fact not.
+            // This is normally ok, as we use the return address saved on
+            // stack for unwinding, not the LR value. But if this is a
+            // call to morestack, we haven't created the frame, and we'll
+            // use the LR for unwinding, which will be bad.
             return {false, 0};
         }
         auto [up, startpc] = pcdatavalue2(f, abi::PCDATA_UnsafePoint, pc);
         if(up == abi::UnsafePointUnsafe)
         {
+            // Unsafe-point marked by compiler. This includes
+            // atomic sequences (e.g., write barrier) and nosplit
+            // functions (except at calls).
             return {false, 0};
         }
         if(auto fd = funcdata(f, abi::FUNCDATA_LocalsPointerMaps); fd == nullptr || f._func.flag & abi::FuncFlagAsm != 0)
         {
+            // This is assembly code. Don't assume it's well-formed.
+            // TODO: Empirically we still need the fd == nil check. Why?
+            // TODO: Are there cases that are safe but don't have a
+            // locals pointer map, like empty frame functions?
+            // It might be possible to preempt any assembly functions
+            // except the ones that have funcFlag_SPWRITE set in f.flag.
             return {false, 0};
         }
+        // Check the inner-most name
         auto [u, uf] = newInlineUnwinder(f, pc);
         auto name = rec::name(gocpp::recv(rec::srcFunc(gocpp::recv(u), uf)));
         if(hasPrefix(name, "runtime."_s) || hasPrefix(name, "runtime/internal/"_s) || hasPrefix(name, "reflect."_s))
         {
+            // For now we never async preempt the runtime or
+            // anything closely tied to the runtime. Known issues
+            // include: various points in the scheduler ("don't
+            // preempt between here and here"), much of the defer
+            // implementation (untyped info on stack), bulk write
+            // barriers (write barrier check),
+            // reflect.{makeFuncStub,methodValueCall}.
+            // TODO(austin): We should improve this, or opt things
+            // in incrementally.
             return {false, 0};
         }
         //Go switch emulation
@@ -401,6 +505,8 @@ namespace golang::runtime
             {
                 case 0:
                 case 1:
+                    // Restartable instruction sequence. Back off PC to
+                    // the start PC.
                     if(startpc == 0 || startpc > pc || pc - startpc > 20)
                     {
                         go_throw("bad restart PC"_s);
@@ -408,6 +514,7 @@ namespace golang::runtime
                     return {true, startpc};
                     break;
                 case 2:
+                    // Restart from the function entry at resumption.
                     return {true, rec::entry(gocpp::recv(f))};
                     break;
             }

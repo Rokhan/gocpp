@@ -51,6 +51,7 @@ namespace golang::math
         auto L5 = 1.818357216161805012e-01;
         auto L6 = 1.531383769920937332e-01;
         auto L7 = 1.479819860511658591e-01;
+        // special cases
         //Go switch emulation
         {
             int conditionId = -1;
@@ -70,6 +71,7 @@ namespace golang::math
                     break;
             }
         }
+        // reduce
         auto [f1, ki] = Frexp(x);
         if(f1 < Sqrt2 / 2)
         {
@@ -78,6 +80,7 @@ namespace golang::math
         }
         auto f = f1 - 1;
         auto k = double(ki);
+        // compute
         auto s = f / (2 + f);
         auto s2 = s * s;
         auto s4 = s2 * s2;

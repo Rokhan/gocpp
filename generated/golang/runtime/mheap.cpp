@@ -780,6 +780,8 @@ namespace golang::runtime
     {
         if(arenaL1Bits == 0)
         {
+            // Let the compiler optimize this away if there's no
+            // L1 map.
             return 0;
         }
         else
@@ -861,9 +863,15 @@ namespace golang::runtime
     //go:nosplit
     struct mspan* spanOf(uintptr_t p)
     {
+        // This function looks big, but we use a lot of constant
+        // folding around arenaL1Bits to get it under the inlining
+        // budget. Also, many of the checks here are safety checks
+        // that Go needs to do anyway, so the generated code is quite
+        // short.
         auto ri = arenaIndex(p);
         if(arenaL1Bits == 0)
         {
+            // If there's no L1, then ri.l1() can't be out of bounds but ri.l2() can.
             if(rec::l2(gocpp::recv(ri)) >= (unsigned int)(len(mheap_.arenas[0])))
             {
                 return nullptr;
@@ -871,6 +879,7 @@ namespace golang::runtime
         }
         else
         {
+            // If there's an L1, then ri.l1() can be out of bounds but ri.l2() can't.
             if(rec::l1(gocpp::recv(ri)) >= (unsigned int)(len(mheap_.arenas)))
             {
                 return nullptr;
@@ -879,6 +888,7 @@ namespace golang::runtime
         auto l2 = mheap_.arenas[rec::l1(gocpp::recv(ri))];
         if(arenaL1Bits != 0 && l2 == nullptr)
         {
+            // Should never happen if there's no L1.
             return nullptr;
         }
         auto ha = l2[rec::l2(gocpp::recv(ri))];
@@ -910,6 +920,11 @@ namespace golang::runtime
     struct mspan* spanOfHeap(uintptr_t p)
     {
         auto s = spanOf(p);
+        // s is nil if it's never been allocated. Otherwise, we check
+        // its state first because we don't trust this pointer, so we
+        // have to synchronize with span initialization. Then, it's
+        // still possible we picked up a stale span pointer, so we
+        // have to check the span's bounds.
         if(s == nullptr || rec::get(gocpp::recv(s->state)) != mSpanInUse || p < rec::base(gocpp::recv(s)) || p >= s->limit)
         {
             return nullptr;
@@ -943,7 +958,14 @@ namespace golang::runtime
         rec::init(gocpp::recv(h->specialReachableAlloc), gocpp::Sizeof<specialReachable>(), nullptr, nullptr, & memstats.other_sys);
         rec::init(gocpp::recv(h->specialPinCounterAlloc), gocpp::Sizeof<specialPinCounter>(), nullptr, nullptr, & memstats.other_sys);
         rec::init(gocpp::recv(h->arenaHintAlloc), gocpp::Sizeof<arenaHint>(), nullptr, nullptr, & memstats.other_sys);
+        // Don't zero mspan allocations. Background sweeping can
+        // inspect a span concurrently with allocating it, so it's
+        // important that the span's sweepgen survive across freeing
+        // and re-allocating a span to prevent background sweeping
+        // from improperly cas'ing it from 0.
+        // This is safe because mspan contains no heap pointers.
         h->spanalloc.zero = false;
+        // h->mapcache needs no init
         for(auto [i, gocpp_ignored] : h->central)
         {
             rec::init(gocpp::recv(h->central[i].mcentral), spanClass(i));
@@ -959,10 +981,18 @@ namespace golang::runtime
     // h.lock must NOT be held.
     void rec::reclaim(golang::runtime::mheap* h, uintptr_t npage)
     {
+        // TODO(austin): Half of the time spent freeing spans is in
+        // locking/unlocking the heap (even with low contention). We
+        // could make the slow path here several times faster by
+        // batching heap frees.
+        // Bail early if there's no more reclaim work.
         if(rec::Load(gocpp::recv(h->reclaimIndex)) >= (1 << 63))
         {
             return;
         }
+        // Disable preemption so the GC can't start while we're
+        // sweeping, so we can read h.sweepArenas, and so
+        // traceGCSweepStart/Done pair on the P.
         auto mp = acquirem();
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
@@ -974,11 +1004,13 @@ namespace golang::runtime
         auto locked = false;
         for(; npage > 0; )
         {
+            // Pull from accumulated credit first.
             if(auto credit = rec::Load(gocpp::recv(h->reclaimCredit)); credit > 0)
             {
                 auto take = credit;
                 if(take > npage)
                 {
+                    // Take only what we need.
                     take = npage;
                 }
                 if(rec::CompareAndSwap(gocpp::recv(h->reclaimCredit), credit, credit - take))
@@ -987,17 +1019,21 @@ namespace golang::runtime
                 }
                 continue;
             }
+            // Claim a chunk of work.
             auto idx = uintptr_t(rec::Add(gocpp::recv(h->reclaimIndex), pagesPerReclaimerChunk) - pagesPerReclaimerChunk);
             if(idx / pagesPerArena >= uintptr_t(len(arenas)))
             {
+                // Page reclaiming is done.
                 rec::Store(gocpp::recv(h->reclaimIndex), 1 << 63);
                 break;
             }
             if(! locked)
             {
+                // Lock the heap for reclaimChunk.
                 runtime::lock(& h->lock);
                 locked = true;
             }
+            // Scan this chunk.
             auto nfound = rec::reclaimChunk(gocpp::recv(h), arenas, idx, pagesPerReclaimerChunk);
             if(nfound <= npage)
             {
@@ -1005,6 +1041,7 @@ namespace golang::runtime
             }
             else
             {
+                // Put spare pages toward global credit.
                 rec::Add(gocpp::recv(h->reclaimCredit), nfound - npage);
                 npage = 0;
             }
@@ -1030,6 +1067,11 @@ namespace golang::runtime
     // enabled.
     uintptr_t rec::reclaimChunk(golang::runtime::mheap* h, gocpp::slice<golang::runtime::arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n)
     {
+        // The heap lock must be held because this accesses the
+        // heapArena.spans arrays using potentially non-live pointers.
+        // In particular, if a span were freed and merged concurrently
+        // with this probing heapArena.spans, it would be possible to
+        // observe arbitrary, stale span pointers.
         assertLockHeld(& h->lock);
         auto n0 = n;
         uintptr_t nFreed = {};
@@ -1042,6 +1084,7 @@ namespace golang::runtime
         {
             auto ai = arenas[pageIdx / pagesPerArena];
             auto ha = h->arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
+            // Get a chunk of the bitmap to work on.
             auto arenaPage = (unsigned int)(pageIdx % pagesPerArena);
             auto inUse = ha->pageInUse.make_slice(arenaPage / 8);
             auto marked = ha->pageMarks.make_slice(arenaPage / 8);
@@ -1050,6 +1093,8 @@ namespace golang::runtime
                 inUse = inUse.make_slice(0, n / 8);
                 marked = marked.make_slice(0, n / 8);
             }
+            // Scan this bitmap chunk for spans that are in-use
+            // but have no marked objects on them.
             for(auto [i, gocpp_ignored] : inUse)
             {
                 auto inUseUnmarked = atomic::Load8(& inUse[i]) &^ marked[i];
@@ -1073,12 +1118,17 @@ namespace golang::runtime
                                     nFreed += npages;
                                 }
                                 runtime::lock(& h->lock);
+                                // Reload inUse. It's possible nearby
+                                // spans were freed when we dropped the
+                                // lock and we don't want to get stale
+                                // pointers from the spans array.
                                 inUseUnmarked = atomic::Load8(& inUse[i]) &^ marked[i];
                             }
                         }
                     }
                 }
             }
+            // Advance.
             pageIdx += uintptr_t(len(inUse) * 8);
             n -= uintptr_t(len(inUse) * 8);
         }
@@ -1087,10 +1137,12 @@ namespace golang::runtime
         if(rec::ok(gocpp::recv(trace)))
         {
             runtime::unlock(& h->lock);
+            // Account for pages scanned but not reclaimed.
             rec::GCSweepSpan(gocpp::recv(trace), (n0 - nFreed) * pageSize);
             traceRelease(trace);
             runtime::lock(& h->lock);
         }
+        // Must be locked on return.
         assertLockHeld(& h->lock);
         return nFreed;
     }
@@ -1117,6 +1169,8 @@ namespace golang::runtime
         mspan* s = {};
         systemstack([=]() mutable -> void
         {
+            // To prevent excessive heap growth, before allocating n pages
+            // we need to sweep and reclaim at least n pages.
             if(! isSweepDone())
             {
                 rec::reclaim(gocpp::recv(h), npages);
@@ -1190,15 +1244,29 @@ namespace golang::runtime
             auto ha = h->arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
             auto zeroedBase = atomic::Loaduintptr(& ha->zeroedBase);
             auto arenaBase = base % heapArenaBytes;
+            // We may observe arenaBase > zeroedBase if we're racing with one or more
+            // allocations which are acquiring memory directly before us in the address
+            // space. But, because we know no one else is acquiring *this* memory, it's
+            // still safe to not zero.
             if(arenaBase < zeroedBase)
             {
+                // We extended into the non-zeroed part of the
+                // arena, so this region needs to be zeroed before use.
+                // zeroedBase is monotonically increasing, so if we see this now then
+                // we can be sure we need to zero this memory region.
+                // We still need to update zeroedBase for this arena, and
+                // potentially more arenas.
                 needZero = true;
             }
+            // Compute how far into the arena we extend into, capped
+            // at heapArenaBytes.
             auto arenaLimit = arenaBase + npage * pageSize;
             if(arenaLimit > heapArenaBytes)
             {
                 arenaLimit = heapArenaBytes;
             }
+            // Increase ha.zeroedBase so it's >= arenaLimit.
+            // We may be racing with other updates.
             for(; arenaLimit > zeroedBase; )
             {
                 if(atomic::Casuintptr(& ha->zeroedBase, zeroedBase, arenaLimit))
@@ -1206,11 +1274,17 @@ namespace golang::runtime
                     break;
                 }
                 zeroedBase = atomic::Loaduintptr(& ha->zeroedBase);
+                // Double check basic conditions of zeroedBase.
                 if(zeroedBase <= arenaLimit && zeroedBase > arenaBase)
                 {
+                    // The zeroedBase moved into the space we were trying to
+                    // claim. That's very bad, and indicates someone allocated
+                    // the same region we did.
                     go_throw("potentially overlapping in-use allocations detected"_s);
                 }
             }
+            // Move base forward and subtract from npage to move into
+            // the next arena, or finish.
             base += arenaLimit - arenaBase;
             npage -= (arenaLimit - arenaBase) / pageSize;
         }
@@ -1232,10 +1306,13 @@ namespace golang::runtime
     struct mspan* rec::tryAllocMSpan(golang::runtime::mheap* h)
     {
         auto pp = rec::ptr(gocpp::recv(getg()->m->p));
+        // If we don't have a p or the cache is empty, we can't do
+        // anything here.
         if(pp == nullptr || pp->mspancache.len == 0)
         {
             return nullptr;
         }
+        // Pull off the last entry in the cache.
         auto s = pp->mspancache.buf[pp->mspancache.len - 1];
         pp->mspancache.len--;
         return s;
@@ -1257,8 +1334,10 @@ namespace golang::runtime
         auto pp = rec::ptr(gocpp::recv(getg()->m->p));
         if(pp == nullptr)
         {
+            // We don't have a p so just do the normal thing.
             return (mspan*)(rec::alloc(gocpp::recv(h->spanalloc)));
         }
+        // Refill the cache if necessary.
         if(pp->mspancache.len == 0)
         {
             auto refillCount = len(pp->mspancache.buf) / 2;
@@ -1268,6 +1347,7 @@ namespace golang::runtime
             }
             pp->mspancache.len = refillCount;
         }
+        // Pull off the last entry in the cache.
         auto s = pp->mspancache.buf[pp->mspancache.len - 1];
         pp->mspancache.len--;
         return s;
@@ -1287,12 +1367,15 @@ namespace golang::runtime
     {
         assertLockHeld(& h->lock);
         auto pp = rec::ptr(gocpp::recv(getg()->m->p));
+        // First try to free the mspan directly to the cache.
         if(pp != nullptr && pp->mspancache.len < len(pp->mspancache.buf))
         {
             pp->mspancache.buf[pp->mspancache.len] = s;
             pp->mspancache.len++;
             return;
         }
+        // Failing that (or if we don't have a p), just free it to
+        // the heap.
         rec::free(gocpp::recv(h->spanalloc), gocpp::unsafe_pointer(s));
     }
 
@@ -1316,34 +1399,55 @@ namespace golang::runtime
     struct mspan* rec::allocSpan(golang::runtime::mheap* h, uintptr_t npages, golang::runtime::spanAllocType typ, golang::runtime::spanClass spanclass)
     {
         struct mspan* s;
+        // Function-global state.
         auto gp = getg();
         auto [base, scav] = std::tuple{uintptr_t(0), uintptr_t(0)};
         auto growth = uintptr_t(0);
+        // On some platforms we need to provide physical page aligned stack
+        // allocations. Where the page size is less than the physical page
+        // size, we already manage to do this by default.
         auto needPhysPageAlign = physPageAlignedStacks && typ == spanAllocStack && pageSize < physPageSize;
+        // If the allocation is small enough, try the page cache!
+        // The page cache does not support aligned allocations, so we cannot use
+        // it if we need to provide a physical page aligned stack allocation.
         auto pp = rec::ptr(gocpp::recv(gp->m->p));
         if(! needPhysPageAlign && pp != nullptr && npages < pageCachePages / 4)
         {
             auto c = & pp->pcache;
+            // If the cache is empty, refill it.
             if(rec::empty(gocpp::recv(c)))
             {
                 runtime::lock(& h->lock);
                 *c = rec::allocToCache(gocpp::recv(h->pages));
                 runtime::unlock(& h->lock);
             }
+            // Try to allocate from the cache.
             std::tie(base, scav) = rec::alloc(gocpp::recv(c), npages);
             if(base != 0)
             {
                 s = rec::tryAllocMSpan(gocpp::recv(h));
+                // We have a base but no mspan, so we need
+                // to lock the heap.
                 if(s != nullptr)
                 {
                     goto HaveSpan;
                 }
             }
         }
+        // For one reason or another, we couldn't get the
+        // whole job done without the heap lock.
         runtime::lock(& h->lock);
         if(needPhysPageAlign)
         {
+            // Overallocate by a physical page to allow for later alignment.
             auto extraPages = physPageSize / pageSize;
+            // Find a big enough region first, but then only allocate the
+            // aligned portion. We can't just allocate and then free the
+            // edges because we need to account for scavenged memory, and
+            // that's difficult with alloc.
+            // Note that we skip updates to searchAddr here. It's OK if
+            // it's stale and higher than normal; it'll operate correctly,
+            // just come with a performance cost.
             std::tie(base, std::ignore) = rec::find(gocpp::recv(h->pages), npages + extraPages);
             if(base == 0)
             {
@@ -1365,6 +1469,7 @@ namespace golang::runtime
         }
         if(base == 0)
         {
+            // Try to acquire a base address.
             std::tie(base, scav) = rec::alloc(gocpp::recv(h->pages), npages);
             if(base == 0)
             {
@@ -1384,15 +1489,30 @@ namespace golang::runtime
         }
         if(s == nullptr)
         {
+            // We failed to get an mspan earlier, so grab
+            // one now that we have the heap lock.
             s = rec::allocMSpanLocked(gocpp::recv(h));
         }
         runtime::unlock(& h->lock);
         HaveSpan:
+        // Decide if we need to scavenge in response to what we just allocated.
+        // Specifically, we track the maximum amount of memory to scavenge of all
+        // the alternatives below, assuming that the maximum satisfies *all*
+        // conditions we check (e.g. if we need to scavenge X to satisfy the
+        // memory limit and Y to satisfy heap-growth scavenging, and Y > X, then
+        // it's fine to pick Y, because the memory limit is still satisfied).
+        // It's fine to do this after allocating because we expect any scavenged
+        // pages not to get touched until we return. Simultaneously, it's important
+        // to do this before calling sysUsed because that may commit address space.
         auto bytesToScavenge = uintptr_t(0);
         auto forceScavenge = false;
         if(auto limit = rec::Load(gocpp::recv(gcController.memoryLimit)); ! rec::limiting(gocpp::recv(gcCPULimiter)))
         {
+            // Assist with scavenging to maintain the memory limit by the amount
+            // that we expect to page in.
             auto inuse = rec::Load(gocpp::recv(gcController.mappedReady));
+            // Be careful about overflow, especially with uintptrs. Even on 32-bit platforms
+            // someone can set a really big memory limit that isn't maxInt64.
             if(uint64_t(scav) + inuse > uint64_t(limit))
             {
                 bytesToScavenge = uintptr_t(uint64_t(scav) + inuse - uint64_t(limit));
@@ -1401,8 +1521,19 @@ namespace golang::runtime
         }
         if(auto goal = rec::Load(gocpp::recv(scavenge.gcPercentGoal)); goal != ~ uint64_t(0) && growth > 0)
         {
+            // We just caused a heap growth, so scavenge down what will soon be used.
+            // By scavenging inline we deal with the failure to allocate out of
+            // memory fragments by scavenging the memory fragments that are least
+            // likely to be re-used.
+            // Only bother with this because we're not using a memory limit. We don't
+            // care about heap growths as long as we're under the memory limit, and the
+            // previous check for scaving already handles that.
             if(auto retained = heapRetained(); retained + uint64_t(growth) > goal)
             {
+                // The scavenging algorithm requires the heap lock to be dropped so it
+                // can acquire it only sparingly. This is a potentially expensive operation
+                // so it frees up other goroutines to allocate in the meanwhile. In fact,
+                // they can make use of the growth we just created.
                 auto todo = growth;
                 if(auto overage = uintptr_t(retained + uint64_t(growth) - goal); todo > overage)
                 {
@@ -1420,13 +1551,19 @@ namespace golang::runtime
         int64_t now = {};
         if(pp != nullptr && bytesToScavenge > 0)
         {
+            // Measure how long we spent scavenging and add that measurement to the assist
+            // time so we can track it for the GC CPU limiter.
+            // Limiter event tracking might be disabled if we end up here
+            // while on a mark worker.
             auto start = nanotime();
             auto track = rec::start(gocpp::recv(pp->limiterEvent), limiterEventScavengeAssist, start);
+            // Scavenge, but back out if the limiter turns on.
             auto released = rec::scavenge(gocpp::recv(h->pages), bytesToScavenge, [=]() mutable -> bool
             {
                 return rec::limiting(gocpp::recv(gcCPULimiter));
             }, forceScavenge);
             rec::Add(gocpp::recv(mheap_.pages.scav.releasedEager), released);
+            // Finish up accounting.
             now = nanotime();
             if(track)
             {
@@ -1434,18 +1571,24 @@ namespace golang::runtime
             }
             rec::Add(gocpp::recv(scavenge.assistTime), now - start);
         }
+        // Initialize the span.
         rec::initSpan(gocpp::recv(h), s, typ, spanclass, base, npages);
+        // Commit and account for any scavenged memory that the span now owns.
         auto nbytes = npages * pageSize;
         if(scav != 0)
         {
+            // sysUsed all the pages that are actually available
+            // in the span since some of them might be scavenged.
             sysUsed(gocpp::unsafe_pointer(base), nbytes, scav);
             rec::add(gocpp::recv(gcController.heapReleased), - int64_t(scav));
         }
+        // Update stats.
         rec::add(gocpp::recv(gcController.heapFree), - int64_t(nbytes - scav));
         if(typ == spanAllocHeap)
         {
             rec::add(gocpp::recv(gcController.heapInUse), int64_t(nbytes));
         }
+        // Update consistent stats.
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xaddint64(& stats->committed, int64_t(scav));
         atomic::Xaddint64(& stats->released, - int64_t(scav));
@@ -1482,6 +1625,8 @@ namespace golang::runtime
     // [base, base+npages*pageSize). typ is the type of span being allocated.
     void rec::initSpan(golang::runtime::mheap* h, struct mspan* s, golang::runtime::spanAllocType typ, golang::runtime::spanClass spanclass, uintptr_t base, uintptr_t npages)
     {
+        // At this point, both s != nil and base != 0, and the heap
+        // lock is no longer held. Initialize the span.
         rec::init(gocpp::recv(s), base, npages);
         if(rec::allocNeedsZero(gocpp::recv(h), base, npages))
         {
@@ -1497,6 +1642,8 @@ namespace golang::runtime
         }
         else
         {
+            // We must set span properties before the span is published anywhere
+            // since we're not holding the heap lock.
             s->spanclass = spanclass;
             if(auto sizeclass = rec::sizeclass(gocpp::recv(spanclass)); sizeclass == 0)
             {
@@ -1509,6 +1656,7 @@ namespace golang::runtime
                 s->elemsize = uintptr_t(class_to_size[sizeclass]);
                 if(goexperiment::AllocHeaders && ! rec::noscan(gocpp::recv(s->spanclass)) && heapBitsInSpan(s->elemsize))
                 {
+                    // In the allocheaders experiment, reserve space for the pointer/scan bitmap at the end.
                     s->nelems = uint16_t((nbytes - (nbytes / goarch::PtrSize / 8)) / s->elemsize);
                 }
                 else
@@ -1517,21 +1665,49 @@ namespace golang::runtime
                 }
                 s->divMul = class_to_divmagic[sizeclass];
             }
+            // Initialize mark and allocation structures.
             s->freeindex = 0;
             s->freeIndexForScan = 0;
+            // all 1s indicating all free.
             s->allocCache = ~ uint64_t(0);
             s->gcmarkBits = newMarkBits(uintptr_t(s->nelems));
             s->allocBits = newAllocBits(uintptr_t(s->nelems));
+            // It's safe to access h.sweepgen without the heap lock because it's
+            // only ever updated with the world stopped and we run on the
+            // systemstack which blocks a STW transition.
             atomic::Store(& s->sweepgen, h->sweepgen);
+            // Now that the span is filled in, set its state. This
+            // is a publication barrier for the other fields in
+            // the span. While valid pointers into this span
+            // should never be visible until the span is returned,
+            // if the garbage collector finds an invalid pointer,
+            // access to the span may race with initialization of
+            // the span. We resolve this race by atomically
+            // setting the state after the span is fully
+            // initialized, and atomically checking the state in
+            // any situation where a pointer is suspect.
             rec::set(gocpp::recv(s->state), mSpanInUse);
         }
+        // Publish the span in various locations.
+        // This is safe to call without the lock held because the slots
+        // related to this span will only ever be read or modified by
+        // this thread until pointers into the span are published (and
+        // we execute a publication barrier at the end of this function
+        // before that happens) or pageInUse is updated.
         rec::setSpans(gocpp::recv(h), rec::base(gocpp::recv(s)), npages, s);
         if(! rec::manual(gocpp::recv(typ)))
         {
+            // Mark in-use span in arena page bitmap.
+            // This publishes the span to the page sweeper, so
+            // it's imperative that the span be completely initialized
+            // prior to this line.
             auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(s)));
             atomic::Or8(& arena->pageInUse[pageIdx], pageMask);
+            // Update related page sweeper stats.
             rec::Add(gocpp::recv(h->pagesInUse), npages);
         }
+        // Make sure the newly allocated span will be observed
+        // by the GC before pointers into the span are published.
         publicationBarrier();
     }
 
@@ -1542,12 +1718,22 @@ namespace golang::runtime
     std::tuple<uintptr_t, bool> rec::grow(golang::runtime::mheap* h, uintptr_t npage)
     {
         assertLockHeld(& h->lock);
+        // We must grow the heap in whole palloc chunks.
+        // We call sysMap below but note that because we
+        // round up to pallocChunkPages which is on the order
+        // of MiB (generally >= to the huge page size) we
+        // won't be calling it too much.
         auto ask = alignUp(npage, pallocChunkPages) * pageSize;
         auto totalGrowth = uintptr_t(0);
+        // This may overflow because ask could be very large
+        // and is otherwise unrelated to h.curArena.base.
         auto end = h->curArena.base + ask;
         auto nBase = alignUp(end, physPageSize);
         if(nBase > h->curArena.end || end < h->curArena.base)
         {
+            // Not enough room in the current arena. Allocate more
+            // arena space. This may not be contiguous with the
+            // current arena, so we have to request the full ask.
             auto [av, asize] = rec::sysAlloc(gocpp::recv(h), ask, & h->arenaHints, true);
             if(av == nullptr)
             {
@@ -1557,30 +1743,55 @@ namespace golang::runtime
             }
             if(uintptr_t(av) == h->curArena.end)
             {
+                // The new space is contiguous with the old
+                // space, so just extend the current space.
                 h->curArena.end = uintptr_t(av) + asize;
             }
             else
             {
+                // The new space is discontiguous. Track what
+                // remains of the current space and switch to
+                // the new space. This should be rare.
                 if(auto size = h->curArena.end - h->curArena.base; size != 0)
                 {
+                    // Transition this space from Reserved to Prepared and mark it
+                    // as released since we'll be able to start using it after updating
+                    // the page allocator and releasing the lock at any time.
                     sysMap(gocpp::unsafe_pointer(h->curArena.base), size, & gcController.heapReleased);
+                    // Update stats.
                     auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
                     atomic::Xaddint64(& stats->released, int64_t(size));
                     rec::release(gocpp::recv(memstats.heapStats));
+                    // Update the page allocator's structures to make this
+                    // space ready for allocation.
                     rec::grow(gocpp::recv(h->pages), h->curArena.base, size);
                     totalGrowth += size;
                 }
+                // Switch to the new space.
                 h->curArena.base = uintptr_t(av);
                 h->curArena.end = uintptr_t(av) + asize;
             }
+            // Recalculate nBase.
+            // We know this won't overflow, because sysAlloc returned
+            // a valid region starting at h.curArena.base which is at
+            // least ask bytes in size.
             nBase = alignUp(h->curArena.base + ask, physPageSize);
         }
+        // Grow into the current arena.
         auto v = h->curArena.base;
         h->curArena.base = nBase;
+        // Transition the space we're going to use from Reserved to Prepared.
+        // The allocation is always aligned to the heap arena
+        // size which is always > physPageSize, so its safe to
+        // just add directly to heapReleased.
         sysMap(gocpp::unsafe_pointer(v), nBase - v, & gcController.heapReleased);
+        // The memory just allocated counts as both released
+        // and idle, even though it's not yet backed by spans.
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xaddint64(& stats->released, int64_t(nBase - v));
         rec::release(gocpp::recv(memstats.heapStats));
+        // Update the page allocator's structures to make this
+        // space ready for allocation.
         rec::grow(gocpp::recv(h->pages), v, nBase - v);
         totalGrowth += nBase - v;
         return {totalGrowth, true};
@@ -1595,12 +1806,14 @@ namespace golang::runtime
             lock(& h->lock);
             if(msanenabled)
             {
+                // Tell msan that this entire span is no longer in use.
                 auto base = gocpp::unsafe_pointer(rec::base(gocpp::recv(s)));
                 auto bytes = s->npages << _PageShift;
                 msanfree(base, bytes);
             }
             if(asanenabled)
             {
+                // Tell asan that this entire span is no longer in use.
                 auto base = gocpp::unsafe_pointer(rec::base(gocpp::recv(s)));
                 auto bytes = s->npages << _PageShift;
                 asanpoison(base, bytes);
@@ -1658,6 +1871,7 @@ namespace golang::runtime
                         go_throw("mheap.freeSpanLocked - invalid free"_s);
                     }
                     rec::Add(gocpp::recv(h->pagesInUse), - s->npages);
+                    // Clear in-use bit in arena page bitmap.
                     auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(s)));
                     atomic::And8(& arena->pageInUse[pageIdx], ~ pageMask);
                     break;
@@ -1666,12 +1880,15 @@ namespace golang::runtime
                     break;
             }
         }
+        // Update stats.
+        // Mirrors the code in allocSpan.
         auto nbytes = s->npages * pageSize;
         rec::add(gocpp::recv(gcController.heapFree), int64_t(nbytes));
         if(typ == spanAllocHeap)
         {
             rec::add(gocpp::recv(gcController.heapInUse), - int64_t(nbytes));
         }
+        // Update consistent stats.
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         //Go switch emulation
         {
@@ -1698,7 +1915,9 @@ namespace golang::runtime
             }
         }
         rec::release(gocpp::recv(memstats.heapStats));
+        // Mark the space as free.
         rec::free(gocpp::recv(h->pages), rec::base(gocpp::recv(s)), s->npages);
+        // Free the span structure. We no longer have a use for it.
         rec::set(gocpp::recv(s->state), mSpanDead);
         rec::freeMSpanLocked(gocpp::recv(h), s);
     }
@@ -1712,8 +1931,12 @@ namespace golang::runtime
     //go:systemstack
     void rec::scavengeAll(golang::runtime::mheap* h)
     {
+        // Disallow malloc or panic while holding the heap lock. We do
+        // this here because this is a non-mallocgc entry-point to
+        // the mheap API.
         auto gp = getg();
         gp->m->mallocing++;
+        // Force scavenge everything.
         auto released = rec::scavenge(gocpp::recv(h->pages), ~ uintptr_t(0), nullptr, true);
         gp->m->mallocing--;
         if(debug.scavtrace > 0)
@@ -1735,6 +1958,7 @@ namespace golang::runtime
     // Initialize a new span with the given start and npages.
     void rec::init(golang::runtime::mspan* span, uintptr_t base, uintptr_t npages)
     {
+        // span is *not* zeroed.
         span->next = nullptr;
         span->prev = nullptr;
         span->list = nullptr;
@@ -1810,10 +2034,13 @@ namespace golang::runtime
         span->next = list->first;
         if(list->first != nullptr)
         {
+            // The list contains at least one span; link it in.
+            // The last span in the list doesn't change.
             list->first->prev = span;
         }
         else
         {
+            // The list contains no spans, so this is also the last span.
             list->last = span;
         }
         list->first = span;
@@ -1830,10 +2057,12 @@ namespace golang::runtime
         span->prev = list->last;
         if(list->last != nullptr)
         {
+            // The list contains at least one span.
             list->last->next = span;
         }
         else
         {
+            // The list contains no spans, so this is also the first span.
             list->first = span;
         }
         list->last = span;
@@ -1848,16 +2077,19 @@ namespace golang::runtime
         {
             return;
         }
+        // Reparent everything in other to list.
         for(auto s = other->first; s != nullptr; s = s->next)
         {
             s->list = list;
         }
+        // Concatenate the lists.
         if(rec::isEmpty(gocpp::recv(list)))
         {
             *list = *other;
         }
         else
         {
+            // Neither list is empty. Put other before list.
             other->last->next = list->first;
             list->first->prev = other->last;
             list->first = other->first;
@@ -1938,14 +2170,19 @@ namespace golang::runtime
         {
             go_throw("addspecial on invalid pointer"_s);
         }
+        // Ensure that the span is swept.
+        // Sweeping accesses the specials list w/o locks, so we have
+        // to synchronize with it. And it's just much safer.
         auto mp = acquirem();
         rec::ensureSwept(gocpp::recv(span));
         auto offset = uintptr_t(p) - rec::base(gocpp::recv(span));
         auto kind = s->kind;
         lock(& span->speciallock);
+        // Find splice point, check for existing record.
         auto [iter, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, kind);
         if(! exists)
         {
+            // Splice in record, fill in offset.
             s->offset = uint16_t(offset);
             s->next = *iter;
             *iter = s;
@@ -1953,6 +2190,7 @@ namespace golang::runtime
         }
         unlock(& span->speciallock);
         releasem(mp);
+        // already exists
         return ! exists;
     }
 
@@ -1966,6 +2204,9 @@ namespace golang::runtime
         {
             go_throw("removespecial on invalid pointer"_s);
         }
+        // Ensure that the span is swept.
+        // Sweeping accesses the specials list w/o locks, so we have
+        // to synchronize with it. And it's just much safer.
         auto mp = acquirem();
         rec::ensureSwept(gocpp::recv(span));
         auto offset = uintptr_t(p) - rec::base(gocpp::recv(span));
@@ -1992,6 +2233,7 @@ namespace golang::runtime
     // Returns true, if the referenced item is an exact match.
     std::tuple<struct special**, bool> rec::specialFindSplicePoint(golang::runtime::mspan* span, uintptr_t offset, unsigned char kind)
     {
+        // Find splice point, check for existing record.
         auto iter = & span->specials;
         auto found = false;
         for(; ; )
@@ -2076,20 +2318,29 @@ namespace golang::runtime
         s->ot = ot;
         if(addspecial(p, & s->special))
         {
+            // This is responsible for maintaining the same
+            // GC-related invariants as markrootSpans in any
+            // situation where it's possible that markrootSpans
+            // has already run but mark termination hasn't yet.
             if(gcphase != _GCoff)
             {
                 auto [base, span, gocpp_id_3] = findObject(uintptr_t(p), 0, 0);
                 auto mp = acquirem();
                 auto gcw = & rec::ptr(gocpp::recv(mp->p))->gcw;
+                // Mark everything reachable from the object
+                // so it's retained for the finalizer.
                 if(! rec::noscan(gocpp::recv(span->spanclass)))
                 {
                     scanobject(base, gcw);
                 }
+                // Mark the finalizer itself, since the
+                // special isn't part of the GC'd heap.
                 scanblock(uintptr_t(gocpp::unsafe_pointer(& s->fn)), goarch::PtrSize, & oneptrmask[0], gcw, nullptr);
                 releasem(mp);
             }
             return true;
         }
+        // There was an old finalizer
         lock(& mheap_.speciallock);
         rec::free(gocpp::recv(mheap_.specialfinalizeralloc), gocpp::unsafe_pointer(s));
         unlock(& mheap_.speciallock);
@@ -2102,6 +2353,7 @@ namespace golang::runtime
         auto s = (specialfinalizer*)(gocpp::unsafe_pointer(removespecial(p, _KindSpecialFinalizer)));
         if(s == nullptr)
         {
+            // there wasn't a finalizer to remove
             return;
         }
         lock(& mheap_.speciallock);
@@ -2320,6 +2572,7 @@ namespace golang::runtime
                     auto sp = (specialReachable*)(gocpp::unsafe_pointer(s));
                     sp->done = true;
                     break;
+                // The creator frees these.
                 case 3:
                     lock(& mheap_.speciallock);
                     rec::free(gocpp::recv(mheap_.specialPinCounterAlloc), gocpp::unsafe_pointer(s));
@@ -2512,11 +2765,13 @@ namespace golang::runtime
         {
             return nullptr;
         }
+        // Try to allocate from this block.
         auto end = atomic::Xadduintptr(& b->free, bytes);
         if(end > uintptr_t(len(b->bits)))
         {
             return nullptr;
         }
+        // There was enough room.
         auto start = end - bytes;
         return & b->bits[start];
     }
@@ -2527,30 +2782,45 @@ namespace golang::runtime
     {
         auto blocksNeeded = (nelems + 63) / 64;
         auto bytesNeeded = blocksNeeded * 8;
+        // Try directly allocating from the current head arena.
         auto head = (gcBitsArena*)(atomic::Loadp(gocpp::unsafe_pointer(& gcBitsArenas.next)));
         if(auto p = rec::tryAlloc(gocpp::recv(head), bytesNeeded); p != nullptr)
         {
             return p;
         }
+        // There's not enough room in the head arena. We may need to
+        // allocate a new arena.
         lock(& gcBitsArenas.lock);
+        // Try the head arena again, since it may have changed. Now
+        // that we hold the lock, the list head can't change, but its
+        // free position still can.
         if(auto p = rec::tryAlloc(gocpp::recv(gcBitsArenas.next), bytesNeeded); p != nullptr)
         {
             unlock(& gcBitsArenas.lock);
             return p;
         }
+        // Allocate a new arena. This may temporarily drop the lock.
         auto fresh = newArenaMayUnlock();
+        // If newArenaMayUnlock dropped the lock, another thread may
+        // have put a fresh arena on the "next" list. Try allocating
+        // from next again.
         if(auto p = rec::tryAlloc(gocpp::recv(gcBitsArenas.next), bytesNeeded); p != nullptr)
         {
+            // Put fresh back on the free list.
+            // TODO: Mark it "already zeroed"
             fresh->next = gcBitsArenas.free;
             gcBitsArenas.free = fresh;
             unlock(& gcBitsArenas.lock);
             return p;
         }
+        // Allocate from the fresh arena. We haven't linked it in yet, so
+        // this cannot race and is guaranteed to succeed.
         auto p = rec::tryAlloc(gocpp::recv(fresh), bytesNeeded);
         if(p == nullptr)
         {
             go_throw("markBits overflow"_s);
         }
+        // Add the fresh arena to the "next" list.
         fresh->next = gcBitsArenas.next;
         atomic::StorepNoWB(gocpp::unsafe_pointer(& gcBitsArenas.next), gocpp::unsafe_pointer(fresh));
         unlock(& gcBitsArenas.lock);
@@ -2593,6 +2863,7 @@ namespace golang::runtime
             }
             else
             {
+                // Find end of previous arenas.
                 auto last = gcBitsArenas.previous;
                 for(last = gcBitsArenas.previous; last->next != nullptr; last = last->next)
                 {
@@ -2603,6 +2874,7 @@ namespace golang::runtime
         }
         gcBitsArenas.previous = gcBitsArenas.current;
         gcBitsArenas.current = gcBitsArenas.next;
+        // newMarkBits calls newArena when needed
         atomic::StorepNoWB(gocpp::unsafe_pointer(& gcBitsArenas.next), nullptr);
         unlock(& gcBitsArenas.lock);
     }
@@ -2629,6 +2901,8 @@ namespace golang::runtime
             memclrNoHeapPointers(gocpp::unsafe_pointer(result), gcBitsChunkBytes);
         }
         result->next = nullptr;
+        // If result.bits is not 8 byte aligned adjust index so
+        // that &result.bits[result.free] is 8 byte aligned.
         if(gocpp::Offsetof<gcBitsArena>(&gcBitsArena::bits) & 7 == 0)
         {
             result->free = 0;

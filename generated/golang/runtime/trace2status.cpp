@@ -75,12 +75,15 @@ namespace golang::runtime
     // writeGoStatus emits a GoStatus event as well as any active ranges on the goroutine.
     struct traceWriter rec::writeGoStatus(golang::runtime::traceWriter w, uint64_t goid, int64_t mid, golang::runtime::traceGoStatus status, bool markAssist)
     {
+        // The status should never be bad. Some invariant must have been violated.
         if(status == traceGoBad)
         {
             print("runtime: goid="_s, goid, "\n"_s);
             go_throw("attempted to trace a bad status for a goroutine"_s);
         }
+        // Trace the status.
         w = rec::event(gocpp::recv(w), traceEvGoStatus, traceArg(goid), traceArg(uint64_t(mid)), traceArg(status));
+        // Trace any special ranges that are in-progress.
         if(markAssist)
         {
             w = rec::event(gocpp::recv(w), traceEvGCMarkAssistActive, traceArg(goid));
@@ -114,11 +117,17 @@ namespace golang::runtime
                     status = traceProcIdle;
                     if(pp->status == _Pgcstop && inSTW)
                     {
+                        // N.B. a P that is running and currently has the world stopped will be
+                        // in _Pgcstop, but we model it as running in the tracer.
                         status = traceProcRunning;
                     }
                     break;
                 case 2:
                     status = traceProcRunning;
+                    // There's a short window wherein the goroutine may have entered _Gsyscall
+                    // but it still owns the P (it's not in _Psyscall yet). The goroutine entering
+                    // _Gsyscall is the tracer's signal that the P its bound to is also in a syscall,
+                    // so we need to emit a status that matches. See #64318.
                     if(rec::ptr(gocpp::recv(w.traceLocker.mp->p)) == pp && w.traceLocker.mp->curg != nullptr && readgstatus(w.traceLocker.mp->curg) &^ _Gscan == _Gsyscall)
                     {
                         status = traceProcSyscall;
@@ -142,12 +151,15 @@ namespace golang::runtime
     // prevented from transitioning.
     struct traceWriter rec::writeProcStatus(golang::runtime::traceWriter w, uint64_t pid, golang::runtime::traceProcStatus status, bool inSweep)
     {
+        // The status should never be bad. Some invariant must have been violated.
         if(status == traceProcBad)
         {
             print("runtime: pid="_s, pid, "\n"_s);
             go_throw("attempted to trace a bad status for a proc"_s);
         }
+        // Trace the status.
         w = rec::event(gocpp::recv(w), traceEvProcStatus, traceArg(pid), traceArg(status));
+        // Trace any special ranges that are in-progress.
         if(inSweep)
         {
             w = rec::event(gocpp::recv(w), traceEvGCSweepActive, traceArg(pid));
@@ -187,6 +199,12 @@ namespace golang::runtime
                     break;
                 case 4:
                 case 5:
+                    // There are a number of cases where a G might end up in
+                    // _Gwaiting but it's actually running in a non-preemptive
+                    // state but needs to present itself as preempted to the
+                    // garbage collector. In these cases, we're not going to
+                    // emit an event, and we want these goroutines to appear in
+                    // the final trace as if they're running, not blocked.
                     tgs = traceGoWaiting;
                     if(status == _Gwaiting && wr == waitReasonStoppingTheWorld || wr == waitReasonGCMarkTermination || wr == waitReasonGarbageCollection || wr == waitReasonTraceProcStatus || wr == waitReasonPageTraceFlush || wr == waitReasonGCWorkerActive)
                     {

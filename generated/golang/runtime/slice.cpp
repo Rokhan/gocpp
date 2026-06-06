@@ -134,6 +134,9 @@ namespace golang::runtime
         }
         else
         {
+            // fromlen is a known good length providing and equal or greater than tolen,
+            // thereby making tolen a good slice length too as from and to slices have the
+            // same element width.
             tomem = et->Size_ * uintptr_t(tolen);
             copymem = tomem;
         }
@@ -148,9 +151,15 @@ namespace golang::runtime
         }
         else
         {
+            // Note: can't use rawmem (which avoids zeroing of memory), because then GC can scan uninitialized memory.
             to = mallocgc(tomem, et, true);
             if(copymem > 0 && writeBarrier.enabled)
             {
+                // Only shade the pointers in old.array since we know the destination slice to
+                // only contains nil pointers because it has been cleared during alloc.
+                // It's safe to pass a type to this function as an optimization because
+                // from and to only ever refer to memory representing whole values of
+                // type et. See the comment on bulkBarrierPreWrite.
                 bulkBarrierPreWriteSrcOnly(uintptr_t(to), uintptr_t(from), copymem, et);
             }
         }
@@ -177,6 +186,11 @@ namespace golang::runtime
         auto [mem, overflow] = math::MulUintptr(et->Size_, uintptr_t(cap));
         if(overflow || mem > maxAlloc || len < 0 || len > cap)
         {
+            // NOTE: Produce a 'len out of range' error instead of a
+            // 'cap out of range' error when someone does make([]T, bignumber).
+            // 'cap out of range' is true too, but since the cap is only being
+            // supplied implicitly, saying len is clearer.
+            // See golang.org/issue/4085.
             auto [mem, overflow] = math::MulUintptr(et->Size_, uintptr_t(len));
             if(overflow || mem > maxAlloc || len < 0)
             {
@@ -255,6 +269,8 @@ namespace golang::runtime
         }
         if(et->Size_ == 0)
         {
+            // append should not create a slice with nil pointer but non-zero len.
+            // We assume that append doesn't need to preserve oldPtr in this case.
             return slice {gocpp::unsafe_pointer(& zerobase), newLen, newLen};
         }
         auto newcap = nextslicecap(newLen, oldCap);
@@ -262,6 +278,10 @@ namespace golang::runtime
         uintptr_t lenmem = {};
         uintptr_t newlenmem = {};
         uintptr_t capmem = {};
+        // Specialize for common values of et.Size.
+        // For 1 we don't need any division/multiplication.
+        // For goarch.PtrSize, compiler will optimize division/multiplication into a shift by a constant.
+        // For powers of 2, use a variable shift.
         auto noscan = et->PtrBytes == 0;
         //Go switch emulation
         {
@@ -289,6 +309,7 @@ namespace golang::runtime
                     uintptr_t shift = {};
                     if(goarch::PtrSize == 8)
                     {
+                        // Mask shift for better code generation.
                         shift = uintptr_t(sys::TrailingZeros64(uint64_t(et->Size_))) & 63;
                     }
                     else
@@ -312,6 +333,16 @@ namespace golang::runtime
                     break;
             }
         }
+        // The check of overflow in addition to capmem > maxAlloc is needed
+        // to prevent an overflow which can be used to trigger a segfault
+        // on 32bit architectures with this example program:
+        // type T [1<<27 + 1]int64
+        // var d T
+        // var s []T
+        // func main() {
+        // s = append(s, d, d, d, d)
+        // print(len(s), "\n")
+        // }
         if(overflow || capmem > maxAlloc)
         {
             gocpp::panic(errorString("growslice: len out of range"_s));
@@ -320,13 +351,23 @@ namespace golang::runtime
         if(et->PtrBytes == 0)
         {
             p = mallocgc(capmem, nullptr, false);
+            // The append() that calls growslice is going to overwrite from oldLen to newLen.
+            // Only clear the part that will not be overwritten.
+            // The reflect_growslice() that calls growslice will manually clear
+            // the region not cleared here.
             memclrNoHeapPointers(add(p, newlenmem), capmem - newlenmem);
         }
         else
         {
+            // Note: can't use rawmem (which avoids zeroing of memory), because then GC can scan uninitialized memory.
             p = mallocgc(capmem, et, true);
             if(lenmem > 0 && writeBarrier.enabled)
             {
+                // Only shade the pointers in oldPtr since we know the destination slice p
+                // only contains nil pointers because it has been cleared during alloc.
+                // It's safe to pass a type to this function as an optimization because
+                // from and to only ever refer to memory representing whole values of
+                // type et. See the comment on bulkBarrierPreWrite.
                 bulkBarrierPreWriteSrcOnly(uintptr_t(p), uintptr_t(oldPtr), lenmem - et->Size_ + et->PtrBytes, et);
             }
         }
@@ -350,12 +391,21 @@ namespace golang::runtime
         }
         for(; ; )
         {
+            // Transition from growing 2x for small slices
+            // to growing 1.25x for large slices. This formula
+            // gives a smooth-ish transition between the two.
             newcap += (newcap + 3 * threshold) >> 2;
+            // We need to check `newcap >= newLen` and whether `newcap` overflowed.
+            // newLen is guaranteed to be larger than zero, hence
+            // when newcap overflows then `uint(newcap) > uint(newLen)`.
+            // This allows to check for both with the same comparison.
             if((unsigned int)(newcap) >= (unsigned int)(newLen))
             {
                 break;
             }
         }
+        // Set newcap to the requested cap when
+        // the newcap calculation overflowed.
         if(newcap <= 0)
         {
             return newLen;
@@ -366,14 +416,22 @@ namespace golang::runtime
     //go:linkname reflect_growslice reflect.growslice
     struct slice reflect_growslice(golang::runtime::_type* et, struct slice old, int num)
     {
+        // Semantically equivalent to slices.Grow, except that the caller
+        // is responsible for ensuring that old.len+num > old.cap.
+        // preserve memory of old[old.len:old.cap]
         num -= old.cap - old.len;
         auto go_new = growslice(old.array, old.cap + num, old.cap, num, et);
+        // growslice does not zero out new[old.cap:new.len] since it assumes that
+        // the memory will be overwritten by an append() that called growslice.
+        // Since the caller of reflect_growslice is not append(),
+        // zero out this region before returning the slice to the reflect package.
         if(et->PtrBytes == 0)
         {
             auto oldcapmem = uintptr_t(old.cap) * et->Size_;
             auto newlenmem = uintptr_t(go_new.len) * et->Size_;
             memclrNoHeapPointers(add(go_new.array, oldcapmem), newlenmem - oldcapmem);
         }
+        // preserve the old length
         go_new.len = old.len;
         return go_new;
     }
@@ -419,6 +477,9 @@ namespace golang::runtime
         }
         if(size == 1)
         {
+            // common case worth about 2x to do here
+            // TODO: is this still worth it with new memmove impl?
+            // known to be a byte pointer
             *(unsigned char*)(toPtr) = *(unsigned char*)(fromPtr);
         }
         else

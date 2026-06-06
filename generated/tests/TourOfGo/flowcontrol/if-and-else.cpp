@@ -31,6 +31,7 @@ namespace golang::main
         {
             mocklib::Printf("%g >= %g\n"_s, v, lim);
         }
+        // can't use v here, though
         return lim;
     }
 

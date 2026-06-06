@@ -25,10 +25,14 @@ namespace golang::strconv
     {
         double f;
         bool ok;
+        // The terse comments in this function body refer to sections of the
+        // https://nigeltao.github.io/blog/2020/eisel-lemire.html blog post.
+        // Exp10 Range.
         if(man == 0)
         {
             if(neg)
             {
+                // Negative zero.
                 f = math::Float64frombits(0x8000000000000000);
             }
             return {f, true};
@@ -37,11 +41,14 @@ namespace golang::strconv
         {
             return {0, false};
         }
+        // Normalization.
         auto clz = bits::LeadingZeros64(man);
         man <<= (unsigned int)(clz);
         auto float64ExponentBias = 1023;
         auto retExp2 = uint64_t((217706 * exp10 >> 16) + 64 + float64ExponentBias) - uint64_t(clz);
+        // Multiplication.
         auto [xHi, xLo] = bits::Mul64(man, detailedPowersOfTen[exp10 - detailedPowersOfTenMinExp10][1]);
+        // Wider Approximation.
         if(xHi & 0x1FF == 0x1FF && xLo + man < man)
         {
             auto [yHi, yLo] = bits::Mul64(man, detailedPowersOfTen[exp10 - detailedPowersOfTenMinExp10][0]);
@@ -56,13 +63,16 @@ namespace golang::strconv
             }
             std::tie(xHi, xLo) = std::tuple{mergedHi, mergedLo};
         }
+        // Shifting to 54 Bits.
         auto msb = xHi >> 63;
         auto retMantissa = xHi >> (msb + 9);
         retExp2 -= 1 ^ msb;
+        // Half-way Ambiguity.
         if(xLo == 0 && xHi & 0x1FF == 0 && retMantissa & 3 == 1)
         {
             return {0, false};
         }
+        // From 54 to 53 Bits.
         retMantissa += retMantissa & 1;
         retMantissa >>= 1;
         if((retMantissa >> 53) > 0)
@@ -70,6 +80,10 @@ namespace golang::strconv
             retMantissa >>= 1;
             retExp2 += 1;
         }
+        // retExp2 is a uint64. Zero or underflow means that we're in subnormal
+        // float64 space. 0x7FF or above means that we're in Inf/NaN float64 space.
+        // The if block is equivalent to (but has fewer branches than):
+        // if retExp2 <= 0 || retExp2 >= 0x7FF { etc }
         if(retExp2 - 1 >= 0x7FF - 1)
         {
             return {0, false};
@@ -86,10 +100,19 @@ namespace golang::strconv
     {
         double f;
         bool ok;
+        // The terse comments in this function body refer to sections of the
+        // https://nigeltao.github.io/blog/2020/eisel-lemire.html blog post.
+        // That blog post discusses the float64 flavor (11 exponent bits with a
+        // -1023 bias, 52 mantissa bits) of the algorithm, but the same approach
+        // applies to the float32 flavor (8 exponent bits with a -127 bias, 23
+        // mantissa bits). The computation here happens with 64-bit values (e.g.
+        // man, xHi, retMantissa) before finally converting to a 32-bit float.
+        // Exp10 Range.
         if(man == 0)
         {
             if(neg)
             {
+                // Negative zero.
                 f = math::Float32frombits(0x80000000);
             }
             return {f, true};
@@ -98,11 +121,14 @@ namespace golang::strconv
         {
             return {0, false};
         }
+        // Normalization.
         auto clz = bits::LeadingZeros64(man);
         man <<= (unsigned int)(clz);
         auto float32ExponentBias = 127;
         auto retExp2 = uint64_t((217706 * exp10 >> 16) + 64 + float32ExponentBias) - uint64_t(clz);
+        // Multiplication.
         auto [xHi, xLo] = bits::Mul64(man, detailedPowersOfTen[exp10 - detailedPowersOfTenMinExp10][1]);
+        // Wider Approximation.
         if(xHi & 0x3FFFFFFFFF == 0x3FFFFFFFFF && xLo + man < man)
         {
             auto [yHi, yLo] = bits::Mul64(man, detailedPowersOfTen[exp10 - detailedPowersOfTenMinExp10][0]);
@@ -117,13 +143,16 @@ namespace golang::strconv
             }
             std::tie(xHi, xLo) = std::tuple{mergedHi, mergedLo};
         }
+        // Shifting to 54 Bits (and for float32, it's shifting to 25 bits).
         auto msb = xHi >> 63;
         auto retMantissa = xHi >> (msb + 38);
         retExp2 -= 1 ^ msb;
+        // Half-way Ambiguity.
         if(xLo == 0 && xHi & 0x3FFFFFFFFF == 0 && retMantissa & 3 == 1)
         {
             return {0, false};
         }
+        // From 54 to 53 Bits (and for float32, it's from 25 to 24 bits).
         retMantissa += retMantissa & 1;
         retMantissa >>= 1;
         if((retMantissa >> 24) > 0)
@@ -131,6 +160,10 @@ namespace golang::strconv
             retMantissa >>= 1;
             retExp2 += 1;
         }
+        // retExp2 is a uint64. Zero or underflow means that we're in subnormal
+        // float32 space. 0xFF or above means that we're in Inf/NaN float32 space.
+        // The if block is equivalent to (but has fewer branches than):
+        // if retExp2 <= 0 || retExp2 >= 0xFF { etc }
         if(retExp2 - 1 >= 0xFF - 1)
         {
             return {0, false};

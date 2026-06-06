@@ -103,6 +103,11 @@ namespace golang::reflectlite
 
     abi::Type* rec::typ(golang::reflectlite::Value v)
     {
+        // Types are either static (for compiler-created types) or
+        // heap-allocated but always reachable (for reflection-created
+        // types, held in the central map). So there is no need to
+        // escape types. noescape here help avoid unnecessary escape
+        // of v.
         return (abi::Type*)(noescape(gocpp::unsafe_pointer(v.typ_)));
     }
 
@@ -127,6 +132,7 @@ namespace golang::reflectlite
         auto t = rec::typ(gocpp::recv(v));
         go_any i = {};
         auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
+        // First, fill in the data portion of the interface.
         //Go switch emulation
         {
             int conditionId = -1;
@@ -139,9 +145,12 @@ namespace golang::reflectlite
                     {
                         gocpp::panic("bad indir"_s);
                     }
+                    // Value is indirect, and so is the interface we're making.
                     auto ptr = v.ptr;
                     if(v.flag & flagAddr != 0)
                     {
+                        // TODO: pass safe boolean from valueInterface so
+                        // we don't need to copy if safe==true?
                         auto c = unsafe_New(t);
                         typedmemmove(t, c, ptr);
                         ptr = c;
@@ -149,13 +158,20 @@ namespace golang::reflectlite
                     e->word = ptr;
                     break;
                 case 1:
+                    // Value is indirect, but interface is direct. We need
+                    // to load the data at v.ptr into the interface data word.
                     e->word = *(gocpp::unsafe_pointer*)(v.ptr);
                     break;
                 default:
+                    // Value is direct, and so is the interface.
                     e->word = v.ptr;
                     break;
             }
         }
+        // Now, fill in the type portion. We're very careful here not
+        // to have any operation between the e.word and e.typ assignments
+        // that would let the garbage collector observe the partially-built
+        // interface value.
         e->typ = t;
         return i;
     }
@@ -164,6 +180,7 @@ namespace golang::reflectlite
     struct Value unpackEface(go_any i)
     {
         auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
+        // NOTE: don't read e.word until we know whether it is really a pointer or not.
         auto t = e->typ;
         if(t == nullptr)
         {
@@ -290,6 +307,7 @@ namespace golang::reflectlite
         {
             gocpp::panic(new ValueError {methodName(), abi::Invalid});
         }
+        // Assignable if addressable and not read-only.
         if(f & flagRO != 0)
         {
             gocpp::panic("reflect: "_s + methodName() + " using value obtained using unexported field"_s);
@@ -397,6 +415,7 @@ namespace golang::reflectlite
                     {
                         ptr = *(gocpp::unsafe_pointer*)(ptr);
                     }
+                    // The returned value's address is v's value.
                     if(ptr == nullptr)
                     {
                         return Value {};
@@ -469,12 +488,16 @@ namespace golang::reflectlite
         }
         if(rec::kind(gocpp::recv(v)) == abi::Interface)
         {
+            // Special case: return the element inside the interface.
+            // Empty interface has one layout, all interfaces with
+            // methods have a second layout.
             if(rec::numMethod(gocpp::recv(v)) == 0)
             {
                 return *(go_any*)(v.ptr);
             }
             return *(gocpp_id_4*)(v.ptr);
         }
+        // TODO: pass safe to packEface so we don't need to copy if safe==true?
         return packEface(v);
     }
 
@@ -506,6 +529,9 @@ namespace golang::reflectlite
                 case 2:
                 case 3:
                 case 4:
+                    // if v.flag&flagMethod != 0 {
+                    // return false
+                    // }
                     auto ptr = v.ptr;
                     if(v.flag & flagIndir != 0)
                     {
@@ -515,6 +541,8 @@ namespace golang::reflectlite
                     break;
                 case 5:
                 case 6:
+                    // Both interface and slice are nil if first word is 0.
+                    // Both are always bigger than a word; assume flagIndir.
                     return *(gocpp::unsafe_pointer*)(v.ptr) == nullptr;
                     break;
             }
@@ -574,9 +602,11 @@ namespace golang::reflectlite
                     return maplen(rec::pointer(gocpp::recv(v)));
                     break;
                 case 3:
+                    // Slice is bigger than a word; assume flagIndir.
                     return (unsafeheader::Slice*)(v.ptr)->Len;
                     break;
                 case 4:
+                    // String is bigger than a word; assume flagIndir.
                     return (unsafeheader::String*)(v.ptr)->Len;
                     break;
             }
@@ -600,6 +630,7 @@ namespace golang::reflectlite
     void rec::Set(golang::reflectlite::Value v, struct Value x)
     {
         rec::mustBeAssignable(gocpp::recv(v));
+        // do not let unexported x leak
         rec::mustBeExported(gocpp::recv(x));
         gocpp::unsafe_pointer target = {};
         if(rec::kind(gocpp::recv(v)) == abi::Interface)
@@ -625,6 +656,7 @@ namespace golang::reflectlite
         {
             gocpp::panic(new ValueError {"reflectlite.Value.Type"_s, abi::Invalid});
         }
+        // Method values not supported.
         return toRType(rec::typ(gocpp::recv(v)));
     }
 
@@ -648,6 +680,9 @@ namespace golang::reflectlite
     // For a conversion to an interface type, target is a suggested scratch space to use.
     struct Value rec::assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target)
     {
+        // if v.flag&flagMethod != 0 {
+        // v = makeMethodValue(context, v)
+        // }
         //Go switch emulation
         {
             int conditionId = -1;
@@ -656,6 +691,8 @@ namespace golang::reflectlite
             switch(conditionId)
             {
                 case 0:
+                    // Overwrite type so that they match.
+                    // Same memory layout, so no harm done.
                     auto fl = v.flag & (flagAddr | flagIndir) | rec::ro(gocpp::recv(v.flag));
                     fl |= flag(rec::Kind(gocpp::recv(dst)));
                     return Value {dst, v.ptr, fl};
@@ -667,6 +704,9 @@ namespace golang::reflectlite
                     }
                     if(rec::Kind(gocpp::recv(v)) == abi::Interface && rec::IsNil(gocpp::recv(v)))
                     {
+                        // A nil ReadWriter passed to nil Reader is OK,
+                        // but using ifaceE2I below will panic.
+                        // Avoid the panic by returning a nil dst (e.g., Reader) explicitly.
                         return Value {dst, nullptr, flag(abi::Interface)};
                     }
                     auto x = valueInterface(v);
@@ -682,6 +722,7 @@ namespace golang::reflectlite
                     break;
             }
         }
+        // Failed.
         gocpp::panic(context + ": value of type "_s + rec::String(gocpp::recv(toRType(rec::typ(gocpp::recv(v))))) + " is not assignable to type "_s + rec::String(gocpp::recv(toRType(dst))));
     }
 

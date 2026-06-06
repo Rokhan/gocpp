@@ -29,6 +29,7 @@ namespace golang::main
         auto z = 1.0;
         for(auto i = 0; i < 15; i++)
         {
+            // fmt.Printf("z: %v\n", z)
             z -= (z * z - 2) / (2 * x);
             if(z > 0 && z < 0.000000001)
             {

@@ -74,6 +74,8 @@ namespace golang::runtime
     {
         if(GOARCH == "amd64"_s)
         {
+            // amd64 systems can place the stack above the VA hole, so we need to sign extend
+            // val before unpacking.
             return gocpp::unsafe_pointer(uintptr_t((int64_t(tp) >> tagBits) << 3));
         }
         if(GOOS == "aix"_s)

@@ -74,6 +74,11 @@ namespace golang::strings
     {
         if(b->addr == nullptr)
         {
+            // This hack works around a failing of Go's escape analysis
+            // that was causing b to escape and be heap allocated.
+            // See issue 23382.
+            // TODO: once issue 7921 is fixed, this should be reverted to
+            // just "b.addr = b".
             b->addr = (Builder*)(noescape(gocpp::unsafe_pointer(b)));
         }
         else

@@ -21,6 +21,7 @@ namespace golang::os
     // IsPathSeparator reports whether c is a directory separator character.
     bool IsPathSeparator(uint8_t c)
     {
+        // NOTE: Windows accepts / as path separator.
         return c == '\\' || c == '/';
     }
 
@@ -28,6 +29,7 @@ namespace golang::os
     // directory name and drive letter from path name.
     gocpp::string basename(gocpp::string name)
     {
+        // Remove drive letter
         if(len(name) == 2 && name[1] == ':')
         {
             name = "."_s;
@@ -38,10 +40,12 @@ namespace golang::os
             name = name.make_slice(2);
         }
         auto i = len(name) - 1;
+        // Remove trailing slashes
         for(; i > 0 && (name[i] == '/' || name[i] == '\\'); i--)
         {
             name = name.make_slice(0, i);
         }
+        // Remove leading directory name
         for(i--; i >= 0; i--)
         {
             if(name[i] == '/' || name[i] == '\\')
@@ -76,18 +80,23 @@ namespace golang::os
         {
             return ""_s;
         }
+        // with drive letter
         auto c = path[0];
         if(path[1] == ':' && ('0' <= c && c <= '9' || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z'))
         {
             return path.make_slice(0, 2);
         }
+        // is it UNC
         if(auto l = len(path); l >= 5 && IsPathSeparator(path[0]) && IsPathSeparator(path[1]) && ! IsPathSeparator(path[2]) && path[2] != '.')
         {
+            // first, leading `\\` and next shouldn't be `\`. its server name.
             for(auto n = 3; n < l - 1; n++)
             {
+                // second, next '\' shouldn't be repeated.
                 if(IsPathSeparator(path[n]))
                 {
                     n++;
+                    // third, following something characters. its share name.
                     if(! IsPathSeparator(path[n]))
                     {
                         if(path[n] == '.')
@@ -174,16 +183,41 @@ namespace golang::os
         {
             return path;
         }
+        // Do nothing (and don't allocate) if the path is "short".
+        // Empirically (at least on the Windows Server 2013 builder),
+        // the kernel is arbitrarily okay with < 248 bytes. That
+        // matches what the docs above say:
+        // "When using an API to create a directory, the specified
+        // path cannot be so long that you cannot append an 8.3 file
+        // name (that is, the directory name cannot exceed MAX_PATH
+        // minus 12)." Since MAX_PATH is 260, 260 - 12 = 248.
+        // The MSDN docs appear to say that a normal path that is 248 bytes long
+        // will work; empirically the path must be less then 248 bytes long.
         if(len(path) < 248)
         {
+            // Don't fix. (This is how Go 1.7 and earlier worked,
+            // not automatically generating the \\?\ form)
             return path;
         }
+        // The extended form begins with \\?\, as in
+        // \\?\c:\windows\foo.txt or \\?\UNC\server\share\foo.txt.
+        // The extended form disables evaluation of . and .. path
+        // elements and disables the interpretation of / as equivalent
+        // to \. The conversion here rewrites / to \ and elides
+        // . elements as well as trailing or duplicate separators. For
+        // simplicity it avoids the conversion entirely for relative
+        // paths or paths containing .. elements. For now,
+        // \\server\share paths are not converted to
+        // \\?\UNC\server\share paths because the rules for doing so
+        // are less well-specified.
         if(len(path) >= 2 && path.make_slice(0, 2) == "\\\\"_s)
         {
+            // Don't canonicalize UNC paths.
             return path;
         }
         if(! isAbs(path))
         {
+            // Relative path
             return path;
         }
         auto prefix = "\\\\?"_s;
@@ -202,12 +236,15 @@ namespace golang::os
                 switch(conditionId)
                 {
                     case 0:
+                        // empty block
                         r++;
                         break;
                     case 1:
+                        // /./
                         r++;
                         break;
                     case 2:
+                        // /../ is currently unhandled
                         return path;
                         break;
                     default:
@@ -222,6 +259,7 @@ namespace golang::os
                 }
             }
         }
+        // A drive's root directory needs a trailing \
         if(w == len("\\\\?\\c:"_s))
         {
             pathbuf[w] = '\\';

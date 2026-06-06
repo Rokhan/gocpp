@@ -279,6 +279,7 @@ namespace golang::rand
     int rec::Int(golang::rand::Rand* r)
     {
         auto u = (unsigned int)(rec::Int63(gocpp::recv(r)));
+        // clear sign bit if int == int32
         return int((u << 1) >> 1);
     }
 
@@ -292,6 +293,7 @@ namespace golang::rand
         }
         if(n & (n - 1) == 0)
         {
+            // n is power of two, can mask
             return rec::Int63(gocpp::recv(r)) & (n - 1);
         }
         auto max = int64_t((1 << 63) - 1 - (1 << 63) % uint64_t(n));
@@ -313,6 +315,7 @@ namespace golang::rand
         }
         if(n & (n - 1) == 0)
         {
+            // n is power of two, can mask
             return rec::Int31(gocpp::recv(r)) & (n - 1);
         }
         auto max = int32_t((1 << 31) - 1 - (1 << 31) % uint32_t(n));
@@ -369,10 +372,25 @@ namespace golang::rand
     // Float64 returns, as a float64, a pseudo-random number in the half-open interval [0.0,1.0).
     double rec::Float64(golang::rand::Rand* r)
     {
+        // A clearer, simpler implementation would be:
+        // return float64(r.Int63n(1<<53)) / (1<<53)
+        // However, Go 1 shipped with
+        // return float64(r.Int63()) / (1 << 63)
+        // and we want to preserve that value stream.
+        // There is one bug in the value stream: r.Int63() may be so close
+        // to 1<<63 that the division rounds up to 1.0, and we've guaranteed
+        // that the result is always less than 1.0.
+        // We tried to fix this by mapping 1.0 back to 0.0, but since float64
+        // values near 0 are much denser than near 1, mapping 1 to 0 caused
+        // a theoretically significant overshoot in the probability of returning 0.
+        // Instead of that, if we round up to 1, just try again.
+        // Getting 1 only happens 1/2⁵³ of the time, so most clients
+        // will not observe it anyway.
         again:
         auto f = double(rec::Int63(gocpp::recv(r))) / (1 << 63);
         if(f == 1)
         {
+            // resample; this branch is taken O(never)
             goto again;
         }
         return f;
@@ -381,10 +399,14 @@ namespace golang::rand
     // Float32 returns, as a float32, a pseudo-random number in the half-open interval [0.0,1.0).
     double rec::Float32(golang::rand::Rand* r)
     {
+        // Same rationale as in Float64: we want to preserve the Go 1 value
+        // stream except we want to fix it not to return 1.0
+        // This only happens 1/2²⁴ of the time (plus the 1/2⁵³ of the time in Float64).
         again:
         auto f = float(rec::Float64(gocpp::recv(r)));
         if(f == 1)
         {
+            // resample; this branch is taken O(very rarely)
             goto again;
         }
         return f;
@@ -395,6 +417,11 @@ namespace golang::rand
     gocpp::slice<int> rec::Perm(golang::rand::Rand* r, int n)
     {
         auto m = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), n);
+        // In the following loop, the iteration when i=0 always swaps m[0] with m[0].
+        // A change to remove this useless iteration is to assign 1 to i in the init
+        // statement. But Perm also effects r. Making this change will affect
+        // the final state of r. So this change can't be made for compatibility
+        // reasons for Go 1.
         for(auto i = 0; i < n; i++)
         {
             auto j = rec::Intn(gocpp::recv(r), i + 1);
@@ -413,6 +440,12 @@ namespace golang::rand
         {
             gocpp::panic("invalid argument to Shuffle"_s);
         }
+        // Fisher-Yates shuffle: https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+        // Shuffle really ought not be called with n that doesn't fit in 32 bits.
+        // Not only will it take a very long time, but with 2³¹! possible permutations,
+        // there's no way that any PRNG can have a big enough internal state to
+        // generate even a minuscule percentage of the possible permutations.
+        // Nevertheless, the right API signature accepts an int n, so handle it as best we can.
         auto i = n - 1;
         for(; i > (1 << 31) - 1 - 1; i--)
         {
@@ -519,6 +552,12 @@ namespace golang::rand
         }
         if(! rec::CompareAndSwap<Rand>(gocpp::recv(globalRandGenerator), nullptr, r))
         {
+            // Two different goroutines called some top-level
+            // function at the same time. While the results in
+            // that case are unpredictable, if we just use r here,
+            // and we are using a seed, we will most likely return
+            // the same value for both calls. That doesn't seem ideal.
+            // Just use the first one to get in.
             return rec::Load<Rand>(gocpp::recv(globalRandGenerator));
         }
         return r;
@@ -603,6 +642,7 @@ namespace golang::rand
     void Seed(int64_t seed)
     {
         auto orig = rec::Load<Rand>(gocpp::recv(globalRandGenerator));
+        // If we are already using a lockedSource, we can just re-seed it.
         if(orig != nullptr)
         {
             if(auto [gocpp_id_3, ok] = gocpp::getValue<lockedSource*>(orig->src); ok)
@@ -611,10 +651,17 @@ namespace golang::rand
                 return;
             }
         }
+        // Otherwise either
+        // 1) orig == nil, which is the normal case when Seed is the first
+        // top-level function to be called, or
+        // 2) orig is already a runtimeSource, in which case we need to change
+        // to a lockedSource.
+        // Either way we do the same thing.
         auto r = New(new(lockedSource));
         rec::Seed(gocpp::recv(r), seed);
         if(! rec::CompareAndSwap<Rand>(gocpp::recv(globalRandGenerator), orig, r))
         {
+            // Something changed underfoot. Retry to be safe.
             Seed(seed);
         }
     }

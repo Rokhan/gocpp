@@ -38,6 +38,7 @@ namespace golang::bytes
     // A nil argument is equivalent to an empty slice.
     bool Equal(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b)
     {
+        // Neither cmd/compile nor gccgo allocates for these string conversions.
         return gocpp::string(a) == gocpp::string(b);
     }
 
@@ -80,6 +81,7 @@ namespace golang::bytes
     // If sep is an empty slice, Count returns 1 + the number of UTF-8-encoded code points in s.
     int Count(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> sep)
     {
+        // special case
         if(len(sep) == 0)
         {
             return utf8::RuneCount(s) + 1;
@@ -233,6 +235,7 @@ namespace golang::bytes
     {
         if(chars == ""_s)
         {
+            // Avoid scanning all of s.
             return - 1;
         }
         if(len(s) == 1)
@@ -240,6 +243,7 @@ namespace golang::bytes
             auto r = gocpp::rune(s[0]);
             if(r >= utf8::RuneSelf)
             {
+                // search utf8.RuneError.
                 auto it_0 = std::begin(chars);
                 std::tie(std::ignore, r) = *it_0;
                 for(; it_0 != std::end(chars); std::tie(std::ignore, r) = *++it_0)
@@ -296,6 +300,7 @@ namespace golang::bytes
             std::tie(r, width) = utf8::DecodeRune(s.make_slice(i));
             if(r != utf8::RuneError)
             {
+                // r is 2 to 4 bytes
                 if(len(chars) == width)
                 {
                     if(chars == gocpp::string(r))
@@ -304,6 +309,7 @@ namespace golang::bytes
                     }
                     continue;
                 }
+                // Use bytealg.IndexString for performance if available.
                 if(bytealg::MaxLen >= width)
                 {
                     if(bytealg::IndexString(chars, gocpp::string(r)) >= 0)
@@ -332,6 +338,7 @@ namespace golang::bytes
     {
         if(chars == ""_s)
         {
+            // Avoid scanning all of s.
             return - 1;
         }
         if(len(s) > 8)
@@ -405,6 +412,7 @@ namespace golang::bytes
             i -= size;
             if(r != utf8::RuneError)
             {
+                // r is 2 to 4 bytes
                 if(len(chars) == size)
                 {
                     if(chars == gocpp::string(r))
@@ -413,6 +421,7 @@ namespace golang::bytes
                     }
                     continue;
                 }
+                // Use bytealg.IndexString for performance if available.
                 if(bytealg::MaxLen >= size)
                 {
                     if(bytealg::IndexString(chars, gocpp::string(r)) >= 0)
@@ -533,8 +542,11 @@ namespace golang::bytes
     // empty slice if s contains only white space.
     gocpp::slice<gocpp::slice<unsigned char>> Fields(gocpp::slice<unsigned char> s)
     {
+        // First count the fields.
+        // This is an exact count if s is ASCII, otherwise it is an approximation.
         auto n = 0;
         auto wasSpace = 1;
+        // setBits is used to track which bits are set in the bytes of s.
         auto setBits = uint8_t(0);
         for(auto i = 0; i < len(s); i++)
         {
@@ -546,12 +558,15 @@ namespace golang::bytes
         }
         if(setBits >= utf8::RuneSelf)
         {
+            // Some runes in the input slice are not ASCII.
             return FieldsFunc(s, unicode::IsSpace);
         }
+        // ASCII fast path
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<unsigned char>>>(), n);
         auto na = 0;
         auto fieldStart = 0;
         auto i = 0;
+        // Skip spaces in the front of the input.
         for(; i < len(s) && asciiSpace[s[i]] != 0; )
         {
             i++;
@@ -567,6 +582,7 @@ namespace golang::bytes
             a[na] = s.make_slice(fieldStart, i, i);
             na++;
             i++;
+            // Skip spaces in between fields.
             for(; i < len(s) && asciiSpace[s[i]] != 0; )
             {
                 i++;
@@ -575,6 +591,7 @@ namespace golang::bytes
         }
         if(fieldStart < len(s))
         {
+            // Last field might end at EOF.
             a[na] = s.make_slice(fieldStart, len(s), len(s));
         }
         return a;
@@ -608,6 +625,11 @@ namespace golang::bytes
             }
         };
         auto spans = gocpp::make(gocpp::Tag<gocpp::slice<span>>(), 0, 32);
+        // Find the field start and end indices.
+        // Doing this in a separate pass (rather than slicing the string s
+        // and collecting the result substrings right away) is significantly
+        // more efficient, possibly due to cache effects.
+        // valid span start if >= 0
         auto start = - 1;
         for(auto i = 0; i < len(s); )
         {
@@ -634,10 +656,12 @@ namespace golang::bytes
             }
             i += size;
         }
+        // Last field might end at EOF.
         if(start >= 0)
         {
             spans = append(spans, span {start, len(s)});
         }
+        // Create subslices from recorded field indices.
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<unsigned char>>>(), len(spans));
         for(auto [i, span] : spans)
         {
@@ -656,6 +680,7 @@ namespace golang::bytes
         }
         if(len(s) == 1)
         {
+            // Just return a copy.
             return append(gocpp::slice<unsigned char>(nullptr), s[0]);
         }
         int n = {};
@@ -703,6 +728,9 @@ namespace golang::bytes
     // output are interpreted as UTF-8-encoded code points.
     gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s)
     {
+        // In the worst case, the slice can grow when mapped, making
+        // things unpleasant. But it's so rare we barge in assuming it's
+        // fine. It could also shrink but that falls out naturally.
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(s));
         for(auto i = 0; i < len(s); )
         {
@@ -732,6 +760,9 @@ namespace golang::bytes
         {
             return gocpp::slice<unsigned char> {};
         }
+        // Since we cannot return an error on overflow,
+        // we should panic if the repeat will generate an overflow.
+        // See golang.org/issue/16237.
         if(count < 0)
         {
             gocpp::panic("bytes: negative Repeat count"_s);
@@ -796,8 +827,10 @@ namespace golang::bytes
         }
         if(isASCII)
         {
+            // optimize for ASCII-only byte slices.
             if(! hasLower)
             {
+                // Just return a copy.
                 return append(gocpp::slice<unsigned char>(""_s), s);
             }
             auto b = bytealg::MakeNoZero(len(s));
@@ -832,6 +865,7 @@ namespace golang::bytes
         }
         if(isASCII)
         {
+            // optimize for ASCII-only byte slices.
             if(! hasUpper)
             {
                 return append(gocpp::slice<unsigned char>(""_s), s);
@@ -883,6 +917,7 @@ namespace golang::bytes
     gocpp::slice<unsigned char> ToValidUTF8(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> replacement)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(s) + len(replacement));
+        // previous byte was from an invalid UTF-8 sequence
         auto invalid = false;
         for(auto i = 0; i < len(s); )
         {
@@ -916,6 +951,7 @@ namespace golang::bytes
     // TODO: update when package unicode captures more of the properties.
     bool isSeparator(gocpp::rune r)
     {
+        // ASCII alphanumerics and underscore are not separators
         if(r <= 0x7F)
         {
             //Go switch emulation
@@ -943,10 +979,12 @@ namespace golang::bytes
             }
             return true;
         }
+        // Letters and digits are not separators
         if(unicode::IsLetter(r) || unicode::IsDigit(r))
         {
             return false;
         }
+        // Otherwise, all we can do for now is treat spaces as separators.
         return unicode::IsSpace(r);
     }
 
@@ -957,6 +995,9 @@ namespace golang::bytes
     // punctuation properly. Use golang.org/x/text/cases instead.
     gocpp::slice<unsigned char> Title(gocpp::slice<unsigned char> s)
     {
+        // Use a closure here to remember state.
+        // Hackish but effective. Depends on Map scanning in order and calling
+        // the closure once per rune.
         auto prev = ' ';
         return Map([=](gocpp::rune r) mutable -> gocpp::rune
         {
@@ -1141,6 +1182,7 @@ namespace golang::bytes
     {
         if(len(s) == 0)
         {
+            // This is what we've historically done.
             return nullptr;
         }
         if(cutset == ""_s)
@@ -1164,6 +1206,7 @@ namespace golang::bytes
     {
         if(len(s) == 0)
         {
+            // This is what we've historically done.
             return nullptr;
         }
         if(cutset == ""_s)
@@ -1189,6 +1232,7 @@ namespace golang::bytes
         }
         if(len(s) == 0)
         {
+            // This is what we've historically done.
             return nullptr;
         }
         return s;
@@ -1206,6 +1250,7 @@ namespace golang::bytes
         }
         if(len(s) == 0)
         {
+            // This is what we've historically done.
             return nullptr;
         }
         return s;
@@ -1228,6 +1273,7 @@ namespace golang::bytes
         }
         if(len(s) == 0)
         {
+            // This is what we've historically done.
             return nullptr;
         }
         return s;
@@ -1296,12 +1342,15 @@ namespace golang::bytes
     // trailing white space, as defined by Unicode.
     gocpp::slice<unsigned char> TrimSpace(gocpp::slice<unsigned char> s)
     {
+        // Fast path for ASCII: look for the first ASCII non-space byte
         auto start = 0;
         for(; start < len(s); start++)
         {
             auto c = s[start];
             if(c >= utf8::RuneSelf)
             {
+                // If we run into a non-ASCII byte, fall back to the
+                // slower unicode-aware method on the remaining bytes
                 return TrimFunc(s.make_slice(start), unicode::IsSpace);
             }
             if(asciiSpace[c] == 0)
@@ -1309,6 +1358,7 @@ namespace golang::bytes
                 break;
             }
         }
+        // Now look for the first ASCII non-space byte from the end
         auto stop = len(s);
         for(; stop > start; stop--)
         {
@@ -1322,8 +1372,13 @@ namespace golang::bytes
                 break;
             }
         }
+        // At this point s[start:stop] starts and ends with an ASCII
+        // non-space bytes, so we're done. Non-ASCII cases have already
+        // been handled above.
         if(start == stop)
         {
+            // Special case to preserve previous TrimLeftFunc behavior,
+            // returning nil instead of empty slice if all spaces.
             return nullptr;
         }
         return s.make_slice(start, stop);
@@ -1356,16 +1411,19 @@ namespace golang::bytes
         auto m = 0;
         if(n != 0)
         {
+            // Compute number of replacements.
             m = Count(s, old);
         }
         if(m == 0)
         {
+            // Just return a copy.
             return append(gocpp::slice<unsigned char>(nullptr), s);
         }
         if(n < 0 || m < n)
         {
             n = m;
         }
+        // Apply replacements to buffer.
         auto t = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(s) + n * (len(go_new) - len(old)));
         auto w = 0;
         auto start = 0;
@@ -1407,6 +1465,7 @@ namespace golang::bytes
     // form of case-insensitivity.
     bool EqualFold(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> t)
     {
+        // ASCII fast path
         auto i = 0;
         for(; i < len(s) && i < len(t); i++)
         {
@@ -1416,20 +1475,24 @@ namespace golang::bytes
             {
                 goto hasUnicode;
             }
+            // Easy case.
             if(tr == sr)
             {
                 continue;
             }
+            // Make sr < tr to simplify what follows.
             if(tr < sr)
             {
                 std::tie(tr, sr) = std::tuple{sr, tr};
             }
+            // ASCII only, sr/tr must be upper/lower case
             if('A' <= sr && sr <= 'Z' && tr == sr + 'a' - 'A')
             {
                 continue;
             }
             return false;
         }
+        // Check if we've exhausted both strings.
         return len(s) == len(t);
         hasUnicode:
         s = s.make_slice(i);
@@ -1457,22 +1520,29 @@ namespace golang::bytes
                 auto [r, size] = utf8::DecodeRune(t);
                 std::tie(tr, t) = std::tuple{r, t.make_slice(size)};
             }
+            // If they match, keep going; if not, return false.
+            // Easy case.
             if(tr == sr)
             {
                 continue;
             }
+            // Make sr < tr to simplify what follows.
             if(tr < sr)
             {
                 std::tie(tr, sr) = std::tuple{sr, tr};
             }
+            // Fast check for ASCII.
             if(tr < utf8::RuneSelf)
             {
+                // ASCII only, sr/tr must be upper/lower case
                 if('A' <= sr && sr <= 'Z' && tr == sr + 'a' - 'A')
                 {
                     continue;
                 }
                 return false;
             }
+            // General case. SimpleFold(x) returns the next equivalent rune > x
+            // or wraps around to smaller values.
             auto r = unicode::SimpleFold(sr);
             for(; r != sr && r < tr; )
             {
@@ -1484,6 +1554,7 @@ namespace golang::bytes
             }
             return false;
         }
+        // One string is empty. Are both?
         return len(s) == len(t);
     }
 
@@ -1518,6 +1589,7 @@ namespace golang::bytes
                     return - 1;
                     break;
                 case 4:
+                    // Use brute force when s and sep both are small
                     if(len(s) <= bytealg::MaxBruteForce)
                     {
                         return bytealg::Index(s, sep);
@@ -1531,6 +1603,8 @@ namespace golang::bytes
                     {
                         if(s[i] != c0)
                         {
+                            // IndexByte is faster than bytealg.Index, so use it as long as
+                            // we're not getting lots of false positives.
                             auto o = IndexByte(s.make_slice(i + 1, t), c0);
                             if(o < 0)
                             {
@@ -1544,6 +1618,7 @@ namespace golang::bytes
                         }
                         fails++;
                         i++;
+                        // Switch to bytealg.Index when IndexByte produces too many false positives.
                         if(fails > bytealg::Cutover(i))
                         {
                             auto r = bytealg::Index(s.make_slice(i), sep);
@@ -1582,6 +1657,14 @@ namespace golang::bytes
             fails++;
             if(fails >= 4 + (i >> 4) && i < t)
             {
+                // Give up on IndexByte, it isn't skipping ahead
+                // far enough to be better than Rabin-Karp.
+                // Experiments (using IndexPeriodic) suggest
+                // the cutover is about 16 byte skips.
+                // TODO: if large prefixes of sep are matching
+                // we should cutover at even larger average skips,
+                // because Equal becomes that much more expensive.
+                // This code does not take that effect into account.
                 auto j = bytealg::IndexRabinKarp(s.make_slice(i), sep);
                 if(j < 0)
                 {

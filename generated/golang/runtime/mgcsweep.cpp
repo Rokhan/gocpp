@@ -131,7 +131,14 @@ namespace golang::runtime
 
     void rec::update(golang::runtime::sweepClass* s, golang::runtime::sweepClass sNew)
     {
+        // Only update *s if its current value is less than sNew,
+        // since *s increases monotonically.
         auto sOld = rec::load(gocpp::recv(s));
+        // TODO(mknyszek): This isn't the only place we have
+        // an atomic monotonically increasing counter. It would
+        // be nice to have an "atomic max" which is just implemented
+        // as the above on most architectures. Some architectures
+        // like RISC-V however have native support for an atomic max.
         for(; sOld < sNew && ! atomic::Cas((uint32_t*)(s), uint32_t(sOld), uint32_t(sNew)); )
         {
             sOld = rec::load(gocpp::recv(s));
@@ -175,10 +182,13 @@ namespace golang::runtime
             }
             if(s != nullptr)
             {
+                // Write down that we found something so future sweepers
+                // can start from here.
                 rec::update(gocpp::recv(sweep.centralIndex), sc);
                 return s;
             }
         }
+        // Write down that we found nothing.
         rec::update(gocpp::recv(sweep.centralIndex), sweepClassDone);
         return nullptr;
     }
@@ -328,13 +338,27 @@ namespace golang::runtime
     void finishsweep_m()
     {
         assertWorldStopped();
+        // Sweeping must be complete before marking commences, so
+        // sweep any unswept spans. If this is a concurrent GC, there
+        // shouldn't be any spans left to sweep, so this should finish
+        // instantly. If GC was forced before the concurrent sweep
+        // finished, there may be spans to sweep.
         for(; sweepone() != ~ uintptr_t(0); )
         {
         }
+        // Make sure there aren't any outstanding sweepers left.
+        // At this point, with the world stopped, it means one of two
+        // things. Either we were able to preempt a sweeper, or that
+        // a sweeper didn't call sweep.active.end when it should have.
+        // Both cases indicate a bug, so throw.
         if(rec::sweepers(gocpp::recv(sweep.active)) != 0)
         {
             go_throw("active sweepers found at start of mark phase"_s);
         }
+        // Reset all the unswept buffers, which should be empty.
+        // Do this in sweep termination as opposed to mark termination
+        // so that we can catch unswept spans and reclaim blocks as
+        // soon as possible.
         auto sg = mheap_.sweepgen;
         for(auto [i, gocpp_ignored] : mheap_.central)
         {
@@ -342,6 +366,10 @@ namespace golang::runtime
             rec::reset(gocpp::recv(rec::partialUnswept(gocpp::recv(c), sg)));
             rec::reset(gocpp::recv(rec::fullUnswept(gocpp::recv(c), sg)));
         }
+        // Sweeping is done, so there won't be any new memory to
+        // scavenge for a bit.
+        // If the scavenger isn't already awake, wake it up. There's
+        // definitely work for it to do at this point.
         rec::wake(gocpp::recv(scavenger));
         nextMarkBitArenaEpoch();
     }
@@ -360,13 +388,11 @@ namespace golang::runtime
             // yielding time. It's OK if it doesn't run, because goroutines allocating
             // memory will sweep and ensure that all spans are swept before the next
             // GC cycle. We really only want to run when we're idle.
-            //
             // However, calling Gosched after each span swept produces a tremendous
             // amount of tracing events, sometimes up to 50% of events in a trace. It's
             // also inefficient to call into the scheduler so much because sweeping a
             // single span is in general a very fast operation, taking as little as 30 ns
             // on modern hardware. (See #54767.)
-            //
             // As a result, bgsweep sweeps in batches, and only calls into the scheduler
             // at the end of every batch. Furthermore, it only yields its time if there
             // isn't spare idle time available on other cores. If there's available idle
@@ -384,11 +410,15 @@ namespace golang::runtime
             }
             for(; freeSomeWbufs(true); )
             {
+                // N.B. freeSomeWbufs is already batched internally.
                 goschedIfBusy();
             }
             lock(& sweep.lock);
             if(! isSweepDone())
             {
+                // This can happen if a GC runs between
+                // gosweepone returning ^0 above
+                // and the lock being acquired.
                 unlock(& sweep.lock);
                 continue;
             }
@@ -468,10 +498,12 @@ namespace golang::runtime
         {
             go_throw("use of invalid sweepLocker"_s);
         }
+        // Check before attempting to CAS.
         if(atomic::Load(& s->sweepgen) != l->sweepGen - 2)
         {
             return {sweepLocked {}, false};
         }
+        // Attempt to acquire sweep ownership of s.
         if(! atomic::Cas(& s->sweepgen, l->sweepGen - 2, l->sweepGen - 1))
         {
             return {sweepLocked {}, false};
@@ -484,13 +516,18 @@ namespace golang::runtime
     uintptr_t sweepone()
     {
         auto gp = getg();
+        // Increment locks to ensure that the goroutine is not preempted
+        // in the middle of sweep thus leaving the span in an inconsistent state for next GC
         gp->m->locks++;
+        // TODO(austin): sweepone is almost always called in a loop;
+        // lift the sweepLocker into its callers.
         auto sl = rec::begin(gocpp::recv(sweep.active));
         if(! sl.valid)
         {
             gp->m->locks--;
             return ~ uintptr_t(0);
         }
+        // Find a span to sweep.
         auto npages = ~ uintptr_t(0);
         bool noMoreWork = {};
         for(; ; )
@@ -503,6 +540,9 @@ namespace golang::runtime
             }
             if(auto state = rec::get(gocpp::recv(s->state)); state != mSpanInUse)
             {
+                // This can happen if direct sweeping already
+                // swept this span, but in that case the sweep
+                // generation should always be up-to-date.
                 if(! (s->sweepgen == sl.sweepGen || s->sweepgen == sl.sweepGen + 3))
                 {
                     print("runtime: bad span s.state="_s, state, " s.sweepgen="_s, s->sweepgen, " sweepgen="_s, sl.sweepGen, "\n"_s);
@@ -514,13 +554,20 @@ namespace golang::runtime
                 auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
                 if(auto& s = s_tmp; ok)
                 {
+                    // Sweep the span we found.
                     npages = s.mspan.npages;
                     if(rec::sweep(gocpp::recv(s), false))
                     {
+                        // Whole span was freed. Count it toward the
+                        // page reclaimer credit since these pages can
+                        // now be used for span allocation.
                         rec::Add(gocpp::recv(mheap_.reclaimCredit), npages);
                     }
                     else
                     {
+                        // Span is still in-use, so this returned no
+                        // pages to the heap and the span needs to
+                        // move to the swept in-use list.
                         npages = 0;
                     }
                     break;
@@ -530,14 +577,30 @@ namespace golang::runtime
         rec::end(gocpp::recv(sweep.active), sl);
         if(noMoreWork)
         {
+            // The sweep list is empty. There may still be
+            // concurrent sweeps running, but we're at least very
+            // close to done sweeping.
+            // Move the scavenge gen forward (signaling
+            // that there's new work to do) and wake the scavenger.
+            // The scavenger is signaled by the last sweeper because once
+            // sweeping is done, we will definitely have useful work for
+            // the scavenger to do, since the scavenger only runs over the
+            // heap once per GC cycle. This update is not done during sweep
+            // termination because in some cases there may be a long delay
+            // between sweep done and sweep termination (e.g. not enough
+            // allocations to trigger a GC) which would be nice to fill in
+            // with scavenging work.
             if(debug.scavtrace > 0)
             {
                 systemstack([=]() mutable -> void
                 {
                     lock(& mheap_.lock);
+                    // Get released stats.
                     auto releasedBg = rec::Load(gocpp::recv(mheap_.pages.scav.releasedBg));
                     auto releasedEager = rec::Load(gocpp::recv(mheap_.pages.scav.releasedEager));
+                    // Print the line.
                     printScavTrace(releasedBg, releasedEager, false);
+                    // Update the stats.
                     rec::Add(gocpp::recv(mheap_.pages.scav.releasedBg), - releasedBg);
                     rec::Add(gocpp::recv(mheap_.pages.scav.releasedEager), - releasedEager);
                     unlock(& mheap_.lock);
@@ -565,14 +628,21 @@ namespace golang::runtime
     //go:nowritebarrier
     void rec::ensureSwept(golang::runtime::mspan* s)
     {
+        // Caller must disable preemption.
+        // Otherwise when this function returns the span can become unswept again
+        // (if GC is triggered on another goroutine).
         auto gp = getg();
         if(gp->m->locks == 0 && gp->m->mallocing == 0 && gp != gp->m->g0)
         {
             go_throw("mspan.ensureSwept: m is not locked"_s);
         }
+        // If this operation fails, then that means that there are
+        // no more spans to be swept. In this case, either s has already
+        // been swept, or is about to be acquired for sweeping and swept.
         auto sl = rec::begin(gocpp::recv(sweep.active));
         if(sl.valid)
         {
+            // The caller must be sure that the span is a mSpanInUse span.
             {
                 auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
                 if(auto& s = s_tmp; ok)
@@ -584,6 +654,9 @@ namespace golang::runtime
             }
             rec::end(gocpp::recv(sweep.active), sl);
         }
+        // Unfortunately we can't sweep the span ourselves. Somebody else
+        // got to it first. We don't have efficient means to wait, but that's
+        // OK, it will be swept fairly soon.
         for(; ; )
         {
             auto spangen = atomic::Load(& s->sweepgen);
@@ -602,6 +675,8 @@ namespace golang::runtime
     // caller takes care of it.
     bool rec::sweep(golang::runtime::sweepLocked* sl, bool preserve)
     {
+        // It's critical that we enter this function with preemption disabled,
+        // GC must not start while we are in the middle of this function.
         auto gp = getg();
         if(gp->m->locks == 0 && gp->m->mallocing == 0 && gp != gp->m->g0)
         {
@@ -610,6 +685,8 @@ namespace golang::runtime
         auto s = sl->mspan;
         if(! preserve)
         {
+            // We'll release ownership of this span. Nil it out to
+            // prevent the caller from accidentally using it.
             sl->mspan = nullptr;
         }
         auto sweepgen = mheap_.sweepgen;
@@ -627,28 +704,50 @@ namespace golang::runtime
         rec::Add(gocpp::recv(mheap_.pagesSwept), int64_t(s->npages));
         auto spc = s->spanclass;
         auto size = s->elemsize;
+        // The allocBits indicate which unmarked objects don't need to be
+        // processed since they were free at the end of the last GC cycle
+        // and were not allocated since then.
+        // If the allocBits index is >= s.freeindex and the bit
+        // is not marked then the object remains unallocated
+        // since the last GC.
+        // This situation is analogous to being on a freelist.
+        // Unlink & free special records for any objects we're about to free.
+        // Two complications here:
+        // 1. An object can have both finalizer and profile special records.
+        // In such case we need to queue finalizer for execution,
+        // mark the object as live and preserve the profile special.
+        // 2. A tiny object can have several finalizers setup for different offsets.
+        // If such object is not marked, we need to queue all finalizers at once.
+        // Both 1 and 2 are possible at the same time.
         auto hadSpecials = s->specials != nullptr;
         auto siter = newSpecialsIter(s);
         for(; rec::valid(gocpp::recv(siter)); )
         {
+            // A finalizer can be set for an inner byte of an object, find object beginning.
             auto objIndex = uintptr_t(siter.s->offset) / size;
             auto p = rec::base(gocpp::recv(s)) + objIndex * size;
             auto mbits = rec::markBitsForIndex(gocpp::recv(s), objIndex);
             if(! rec::isMarked(gocpp::recv(mbits)))
             {
+                // This object is not marked and has at least one special record.
+                // Pass 1: see if it has at least one finalizer.
                 auto hasFin = false;
                 auto endOffset = p - rec::base(gocpp::recv(s)) + size;
                 for(auto tmp = siter.s; tmp != nullptr && uintptr_t(tmp->offset) < endOffset; tmp = tmp->next)
                 {
                     if(tmp->kind == _KindSpecialFinalizer)
                     {
+                        // Stop freeing of object if it has a finalizer.
                         rec::setMarkedNonAtomic(gocpp::recv(mbits));
                         hasFin = true;
                         break;
                     }
                 }
+                // Pass 2: queue all finalizers _or_ handle profile record.
                 for(; rec::valid(gocpp::recv(siter)) && uintptr_t(siter.s->offset) < endOffset; )
                 {
+                    // Find the exact byte for which the special was setup
+                    // (as opposed to object beginning).
                     auto special = siter.s;
                     auto p = rec::base(gocpp::recv(s)) + uintptr_t(special->offset);
                     if(special->kind == _KindSpecialFinalizer || ! hasFin)
@@ -658,12 +757,16 @@ namespace golang::runtime
                     }
                     else
                     {
+                        // The object has finalizers, so we're keeping it alive.
+                        // All other specials only apply when an object is freed,
+                        // so just keep the special record.
                         rec::next(gocpp::recv(siter));
                     }
                 }
             }
             else
             {
+                // object is still live
                 if(siter.s->kind == _KindSpecialReachable)
                 {
                     auto special = rec::unlinkAndNext(gocpp::recv(siter));
@@ -672,6 +775,7 @@ namespace golang::runtime
                 }
                 else
                 {
+                    // keep special record
                     rec::next(gocpp::recv(siter));
                 }
             }
@@ -682,6 +786,8 @@ namespace golang::runtime
         }
         if(debug.allocfreetrace != 0 || debug.clobberfree != 0 || raceenabled || msanenabled || asanenabled)
         {
+            // Find all newly freed objects. This doesn't have to
+            // efficient; allocfreetrace has massive overhead.
             auto mbits = rec::markBitsForBase(gocpp::recv(s));
             auto abits = rec::allocBitsForIndex(gocpp::recv(s), 0);
             for(auto i = uintptr_t(0); i < uintptr_t(s->nelems); i++)
@@ -697,6 +803,7 @@ namespace golang::runtime
                     {
                         clobberfree(gocpp::unsafe_pointer(x), size);
                     }
+                    // User arenas are handled on explicit free.
                     if(raceenabled && ! s->isUserArenaChunk)
                     {
                         racefree(gocpp::unsafe_pointer(x), size);
@@ -714,13 +821,19 @@ namespace golang::runtime
                 rec::advance(gocpp::recv(abits));
             }
         }
+        // Check for zombie objects.
         if(s->freeindex < s->nelems)
         {
+            // Everything < freeindex is allocated and hence
+            // cannot be zombies.
+            // Check the first bitmap byte, where we have to be
+            // careful with freeindex.
             auto obj = uintptr_t(s->freeindex);
             if(((*rec::bytep(gocpp::recv(s->gcmarkBits), obj / 8) &^ *rec::bytep(gocpp::recv(s->allocBits), obj / 8)) >> (obj % 8)) != 0)
             {
                 rec::reportZombies(gocpp::recv(s));
             }
+            // Check remaining bytes.
             for(auto i = obj / 8 + 1; i < divRoundUp(uintptr_t(s->nelems), 8); i++)
             {
                 if(*rec::bytep(gocpp::recv(s->gcmarkBits), i) &^ *rec::bytep(gocpp::recv(s->allocBits), i) != 0)
@@ -729,27 +842,37 @@ namespace golang::runtime
                 }
             }
         }
+        // Count the number of free objects in this span.
         auto nalloc = uint16_t(rec::countAlloc(gocpp::recv(s)));
         auto nfreed = s->allocCount - nalloc;
         if(nalloc > s->allocCount)
         {
+            // The zombie check above should have caught this in
+            // more detail.
             print("runtime: nelems="_s, s->nelems, " nalloc="_s, nalloc, " previous allocCount="_s, s->allocCount, " nfreed="_s, nfreed, "\n"_s);
             go_throw("sweep increased allocation count"_s);
         }
         s->allocCount = nalloc;
+        // reset allocation index to start of span.
         s->freeindex = 0;
         s->freeIndexForScan = 0;
         if(traceEnabled())
         {
             rec::ptr(gocpp::recv(getg()->m->p))->trace.reclaimed += uintptr_t(nfreed) * s->elemsize;
         }
+        // gcmarkBits becomes the allocBits.
+        // get a fresh cleared gcmarkBits in preparation for next GC
         s->allocBits = s->gcmarkBits;
         s->gcmarkBits = newMarkBits(uintptr_t(s->nelems));
+        // refresh pinnerBits if they exists
         if(s->pinnerBits != nullptr)
         {
             rec::refreshPinnerBits(gocpp::recv(s));
         }
+        // Initialize alloc bits cache.
         rec::refillAllocCache(gocpp::recv(s), 0);
+        // The span must be in our exclusive ownership until we update sweepgen,
+        // check for potential races.
         if(auto state = rec::get(gocpp::recv(s->state)); state != mSpanInUse || s->sweepgen != sweepgen - 1)
         {
             print("mspan.sweep: state="_s, state, " sweepgen="_s, s->sweepgen, " mheap.sweepgen="_s, sweepgen, "\n"_s);
@@ -759,22 +882,41 @@ namespace golang::runtime
         {
             go_throw("swept cached span"_s);
         }
+        // We need to set s.sweepgen = h.sweepgen only when all blocks are swept,
+        // because of the potential for a concurrent free/SetFinalizer.
+        // But we need to set it before we make the span available for allocation
+        // (return it to heap or mcentral), because allocation code assumes that a
+        // span is already swept if available for allocation.
+        // Serialization point.
+        // At this point the mark bits are cleared and allocation ready
+        // to go so release the span.
         atomic::Store(& s->sweepgen, sweepgen);
         if(s->isUserArenaChunk)
         {
             if(preserve)
             {
+                // This is a case that should never be handled by a sweeper that
+                // preserves the span for reuse.
                 go_throw("sweep: tried to preserve a user arena span"_s);
             }
             if(nalloc > 0)
             {
+                // There still exist pointers into the span or the span hasn't been
+                // freed yet. It's not ready to be reused. Put it back on the
+                // full swept list for the next cycle.
                 rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(mheap_.central[spc].mcentral), sweepgen)), s);
                 return false;
             }
+            // It's only at this point that the sweeper doesn't actually need to look
+            // at this arena anymore, so subtract from pagesInUse now.
             rec::Add(gocpp::recv(mheap_.pagesInUse), - s->npages);
             rec::set(gocpp::recv(s->state), mSpanDead);
+            // The arena is ready to be recycled. Remove it from the quarantine list
+            // and place it on the ready list. Don't add it back to any sweep lists.
             systemstack([=]() mutable -> void
             {
+                // It's the arena code's responsibility to get the chunk on the quarantine
+                // list by the time all references to the chunk are gone.
                 if(s->list != & mheap_.userArena.quarantineList)
                 {
                     go_throw("user arena span is on the wrong list"_s);
@@ -788,21 +930,34 @@ namespace golang::runtime
         }
         if(rec::sizeclass(gocpp::recv(spc)) != 0)
         {
+            // Handle spans for small objects.
             if(nfreed > 0)
             {
+                // Only mark the span as needing zeroing if we've freed any
+                // objects, because a fresh span that had been allocated into,
+                // wasn't totally filled, but then swept, still has all of its
+                // free slots zeroed.
                 s->needzero = 1;
                 auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
                 atomic::Xadd64(& stats->smallFreeCount[rec::sizeclass(gocpp::recv(spc))], int64_t(nfreed));
                 rec::release(gocpp::recv(memstats.heapStats));
+                // Count the frees in the inconsistent, internal stats.
                 rec::Add(gocpp::recv(gcController.totalFree), int64_t(nfreed) * int64_t(s->elemsize));
             }
             if(! preserve)
             {
+                // The caller may not have removed this span from whatever
+                // unswept set its on but taken ownership of the span for
+                // sweeping by updating sweepgen. If this span still is in
+                // an unswept set, then the mcentral will pop it off the
+                // set, check its sweepgen, and ignore it.
                 if(nalloc == 0)
                 {
+                    // Free totally free span directly back to the heap.
                     rec::freeSpan(gocpp::recv(mheap_), s);
                     return true;
                 }
+                // Return span back to the right mcentral list.
                 if(nalloc == s->nelems)
                 {
                     rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(mheap_.central[spc].mcentral), sweepgen)), s);
@@ -816,10 +971,27 @@ namespace golang::runtime
         else
         if(! preserve)
         {
+            // Handle spans for large objects.
             if(nfreed != 0)
             {
+                // Free large object span to heap.
+                // NOTE(rsc,dvyukov): The original implementation of efence
+                // in CL 22060046 used sysFree instead of sysFault, so that
+                // the operating system would eventually give the memory
+                // back to us again, so that an efence program could run
+                // longer without running out of memory. Unfortunately,
+                // calling sysFree here without any kind of adjustment of the
+                // heap data structures means that when the memory does
+                // come back to us, we have the wrong metadata for it, either in
+                // the mspan structures or in the garbage collection bitmap.
+                // Using sysFault here means that the program will run out of
+                // memory fairly quickly in efence mode, but at least it won't
+                // have mysterious crashes due to confused memory reuse.
+                // It should be possible to switch back to sysFree if we also
+                // implement and then call some kind of mheap.deleteSpan.
                 if(debug.efence > 0)
                 {
+                    // prevent mlookup from finding this span
                     s->limit = 0;
                     sysFault(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), size);
                 }
@@ -829,21 +1001,29 @@ namespace golang::runtime
                 }
                 if(goexperiment::AllocHeaders && s->largeType != nullptr && s->largeType->TFlag & abi::TFlagUnrolledBitmap != 0)
                 {
+                    // In the allocheaders experiment, the unrolled GCProg bitmap is allocated separately.
+                    // Free the space for the unrolled bitmap.
                     systemstack([=]() mutable -> void
                     {
                         auto s_tmp = spanOf(uintptr_t(gocpp::unsafe_pointer(s->largeType)));
                         auto& s = s_tmp;
                         rec::freeManual(gocpp::recv(mheap_), s, spanAllocPtrScalarBits);
                     });
+                    // Make sure to zero this pointer without putting the old
+                    // value in a write buffer, as the old value might be an
+                    // invalid pointer. See arena.go:(*mheap).allocUserArenaChunk.
                     *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType)) = 0;
                 }
+                // Count the free in the consistent, external stats.
                 auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
                 atomic::Xadd64(& stats->largeFreeCount, 1);
                 atomic::Xadd64(& stats->largeFree, int64_t(size));
                 rec::release(gocpp::recv(memstats.heapStats));
+                // Count the free in the inconsistent, internal stats.
                 rec::Add(gocpp::recv(gcController.totalFree), int64_t(size));
                 return true;
             }
+            // Add a large span directly onto the full+swept list.
             rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(mheap_.central[spc].mcentral), sweepgen)), s);
         }
         return false;
@@ -932,6 +1112,7 @@ namespace golang::runtime
     {
         if(mheap_.sweepPagesPerByte == 0)
         {
+            // Proportional sweep is done or disabled.
             return;
         }
         auto trace = traceAcquire();
@@ -940,6 +1121,7 @@ namespace golang::runtime
             rec::GCSweepStart(gocpp::recv(trace));
             traceRelease(trace);
         }
+        // Fix debt if necessary.
         retry:
         auto sweptBasis = rec::Load(gocpp::recv(mheap_.pagesSweptBasis));
         auto live = rec::Load(gocpp::recv(gcController.heapLive));
@@ -947,6 +1129,18 @@ namespace golang::runtime
         auto newHeapLive = spanBytes;
         if(liveBasis < live)
         {
+            // Only do this subtraction when we don't overflow. Otherwise, pagesTarget
+            // might be computed as something really huge, causing us to get stuck
+            // sweeping here until the next mark phase.
+            // Overflow can happen here if gcPaceSweeper is called concurrently with
+            // sweeping (i.e. not during a STW, like it usually is) because this code
+            // is intentionally racy. A concurrent call to gcPaceSweeper can happen
+            // if a GC tuning parameter is modified and we read an older value of
+            // heapLive than what was used to set the basis.
+            // This state should be transient, so it's fine to just let newHeapLive
+            // be a relatively small number. We'll probably just skip this attempt to
+            // sweep.
+            // See issue #57523.
             newHeapLive += uintptr_t(live - liveBasis);
         }
         auto pagesTarget = int64_t(mheap_.sweepPagesPerByte * double(newHeapLive)) - int64_t(callerSweepPages);
@@ -959,6 +1153,7 @@ namespace golang::runtime
             }
             if(rec::Load(gocpp::recv(mheap_.pagesSweptBasis)) != sweptBasis)
             {
+                // Sweep pacing changed. Recompute debt.
                 goto retry;
             }
         }
@@ -974,6 +1169,7 @@ namespace golang::runtime
     // purposes.
     void clobberfree(gocpp::unsafe_pointer x, uintptr_t size)
     {
+        // size (span.elemsize) is always a multiple of 4.
         for(auto i = uintptr_t(0); i < size; i += 4)
         {
             *(uint32_t*)(add(x, i)) = 0xdeadbeef;
@@ -988,17 +1184,27 @@ namespace golang::runtime
     void gcPaceSweeper(uint64_t trigger)
     {
         assertWorldStoppedOrLockHeld(& mheap_.lock);
+        // Update sweep pacing.
         if(isSweepDone())
         {
             mheap_.sweepPagesPerByte = 0;
         }
         else
         {
+            // Concurrent sweep needs to sweep all of the in-use
+            // pages by the time the allocated heap reaches the GC
+            // trigger. Compute the ratio of in-use pages to sweep
+            // per byte allocated, accounting for the fact that
+            // some might already be swept.
             auto heapLiveBasis = rec::Load(gocpp::recv(gcController.heapLive));
             auto heapDistance = int64_t(trigger) - int64_t(heapLiveBasis);
+            // Add a little margin so rounding errors and
+            // concurrent sweep are less likely to leave pages
+            // unswept when GC starts.
             heapDistance -= 1024 * 1024;
             if(heapDistance < _PageSize)
             {
+                // Avoid setting the sweep ratio extremely high
                 heapDistance = _PageSize;
             }
             auto pagesSwept = rec::Load(gocpp::recv(mheap_.pagesSwept));
@@ -1012,6 +1218,9 @@ namespace golang::runtime
             {
                 mheap_.sweepPagesPerByte = double(sweepDistancePages) / double(heapDistance);
                 mheap_.sweepHeapLiveBasis = heapLiveBasis;
+                // Write pagesSweptBasis last, since this
+                // signals concurrent sweeps to recompute
+                // their debt.
                 rec::Store(gocpp::recv(mheap_.pagesSweptBasis), pagesSwept);
             }
         }

@@ -74,6 +74,8 @@ namespace golang::os
             // See https://golang.org/issues/19922#issuecomment-300031421 for details.
             syscall::Win32FileAttributeData fa = {};
             err = syscall::GetFileAttributesEx(namep, syscall::GetFileExInfoStandard, (unsigned char*)(gocpp::unsafe_pointer(& fa)));
+            // GetFileAttributesEx fails with ERROR_SHARING_VIOLATION error for
+            // files like c:\pagefile.sys. Use FindFirstFile for such files.
             if(err == windows::ERROR_SHARING_VIOLATION)
             {
                 syscall::Win32finddata fd = {};
@@ -89,6 +91,7 @@ namespace golang::os
                 syscall::FindClose(sh);
                 if(fd.FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT == 0)
                 {
+                    // Not a surrogate for another named entity. FindFirstFile is good enough.
                     auto fs = newFileStatFromWin32finddata(& fd);
                     if(auto err = rec::saveInfoFromPath(gocpp::recv(fs), name); err != nullptr)
                     {
@@ -99,6 +102,8 @@ namespace golang::os
             }
             if(err == nullptr && fa.FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT == 0)
             {
+                // Not a surrogate for another named entity, because it isn't any kind of reparse point.
+                // The information we got from GetFileAttributesEx is good enough for now.
                 auto fs = gocpp::InitPtr<fileStat>([=](auto& x) {
                     x.FileAttributes = fa.FileAttributes;
                     x.CreationTime = fa.CreationTime;
@@ -113,10 +118,17 @@ namespace golang::os
                 }
                 return {fs, nullptr};
             }
+            // Use CreateFile to determine whether the file is a name surrogate and, if so,
+            // save information about the link target.
+            // Set FILE_FLAG_BACKUP_SEMANTICS so that CreateFile will create the handle
+            // even if name refers to a directory.
             syscall::Handle h;
             std::tie(h, err) = syscall::CreateFile(namep, 0, 0, nullptr, syscall::OPEN_EXISTING, syscall::FILE_FLAG_BACKUP_SEMANTICS | syscall::FILE_FLAG_OPEN_REPARSE_POINT, 0);
             if(err != nullptr)
             {
+                // Since CreateFile failed, we can't determine whether name refers to a
+                // name surrogate, or some other kind of reparse point. Since we can't return a
+                // FileInfo with a known-accurate Mode, we must return an error.
                 return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                     x.Op = "CreateFile"_s;
                     x.Path = name;
@@ -128,9 +140,13 @@ namespace golang::os
             syscall::CloseHandle(h);
             if(err == nullptr && followSurrogates && rec::isReparseTagNameSurrogate(gocpp::recv(gocpp::getValue<fileStat*>(fi))))
             {
+                // To obtain information about the link target, we reopen the file without
+                // FILE_FLAG_OPEN_REPARSE_POINT and examine the resulting handle.
+                // (See https://devblogs.microsoft.com/oldnewthing/20100212-00/?p=14963.)
                 std::tie(h, err) = syscall::CreateFile(namep, 0, 0, nullptr, syscall::OPEN_EXISTING, syscall::FILE_FLAG_BACKUP_SEMANTICS, 0);
                 if(err != nullptr)
                 {
+                    // name refers to a symlink, but we couldn't resolve the symlink target.
                     return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                         x.Op = "CreateFile"_s;
                         x.Path = name;
@@ -198,6 +214,11 @@ namespace golang::os
         auto followSurrogates = false;
         if(name != ""_s && IsPathSeparator(name[len(name) - 1]))
         {
+            // We try to implement POSIX semantics for Lstat path resolution
+            // (per https://pubs.opengroup.org/onlinepubs/9699919799.2013edition/basedefs/V1_chap04.html#tag_04_12):
+            // symlinks before the last separator in the path must be resolved. Since
+            // the last separator in this case follows the last path element, we should
+            // follow symlinks in the last path element.
             followSurrogates = true;
         }
         return stat("Lstat"_s, name, followSurrogates);

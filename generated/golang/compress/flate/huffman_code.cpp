@@ -209,18 +209,22 @@ namespace golang::flate
                 switch(conditionId)
                 {
                     case 0:
+                        // size 8, 000110000  .. 10111111
                         bits = ch + 48;
                         size = 8;
                         break;
                     case 1:
+                        // size 9, 110010000 .. 111111111
                         bits = ch + 400 - 144;
                         size = 9;
                         break;
                     case 2:
+                        // size 7, 0000000 .. 0010111
                         bits = ch - 256;
                         size = 7;
                         break;
                     default:
+                        // size 8, 11000000 .. 11000111
                         bits = ch + 192 - 280;
                         size = 8;
                         break;
@@ -286,6 +290,8 @@ namespace golang::flate
         auto n = int32_t(len(list));
         list = list.make_slice(0, n + 1);
         list[n] = maxNode();
+        // The tree can't have greater depth than n - 1, no matter what. This
+        // saves a little bit of work in some small cases
         if(maxBits > n - 1)
         {
             maxBits = n - 1;
@@ -302,6 +308,8 @@ namespace golang::flate
         gocpp::array<gocpp::array<int32_t, maxBitsLimit>, maxBitsLimit> leafCounts = {};
         for(auto level = int32_t(1); level <= maxBits; level++)
         {
+            // For every level, the first two items are the first two characters.
+            // We initialize the levels as if we had already figured this out.
             levels[level] = gocpp::Init<levelInfo>([=](auto& x) {
                 x.level = level;
                 x.lastFreq = list[1].freq;
@@ -314,6 +322,7 @@ namespace golang::flate
                 levels[level].nextPairFreq = math::MaxInt32;
             }
         }
+        // We need a total of 2*n - 2 items at top level and have already generated 2.
         levels[maxBits].needed = 2 * n - 4;
         auto level = maxBits;
         for(; ; )
@@ -321,6 +330,10 @@ namespace golang::flate
             auto l = & levels[level];
             if(l->nextPairFreq == math::MaxInt32 && l->nextCharFreq == math::MaxInt32)
             {
+                // We've run out of both leafs and pairs.
+                // End all calculations for this level.
+                // To make sure we never come back to this level or any lower level,
+                // set nextPairFreq impossibly large.
                 l->needed = 0;
                 levels[level + 1].nextPairFreq = math::MaxInt32;
                 level++;
@@ -329,21 +342,32 @@ namespace golang::flate
             auto prevFreq = l->lastFreq;
             if(l->nextCharFreq < l->nextPairFreq)
             {
+                // The next item on this row is a leaf node.
                 auto n = leafCounts[level][level] + 1;
                 l->lastFreq = l->nextCharFreq;
+                // Lower leafCounts are the same of the previous node.
                 leafCounts[level][level] = n;
                 l->nextCharFreq = list[n].freq;
             }
             else
             {
+                // The next item on this row is a pair from the previous row.
+                // nextPairFreq isn't valid until we generate two
+                // more values in the level below
                 l->lastFreq = l->nextPairFreq;
+                // Take leaf counts from the lower level, except counts[level] remains the same.
                 copy(leafCounts[level].make_slice(0, level), leafCounts[level - 1].make_slice(0, level));
                 levels[l->level - 1].needed = 2;
             }
             if(l->needed--; l->needed == 0)
             {
+                // We've done everything we need to do for this level.
+                // Continue calculating one level up. Fill in nextPairFreq
+                // of that level with the sum of the two nodes we've just calculated on
+                // this level.
                 if(l->level == maxBits)
                 {
+                    // All done!
                     break;
                 }
                 levels[l->level + 1].nextPairFreq = prevFreq + l->lastFreq;
@@ -351,12 +375,15 @@ namespace golang::flate
             }
             else
             {
+                // If we stole from below, move down temporarily to replenish it.
                 for(; levels[level - 1].needed > 0; )
                 {
                     level--;
                 }
             }
         }
+        // Somethings is wrong if at the end, the top level is null or hasn't used
+        // all of the leaves.
         if(leafCounts[maxBits][maxBits] != n)
         {
             gocpp::panic("leafCounts[maxBits][maxBits] != n"_s);
@@ -366,6 +393,8 @@ namespace golang::flate
         auto counts = & leafCounts[maxBits];
         for(auto level = maxBits; level > 0; level--)
         {
+            // chain.leafCount gives the number of literals requiring at least "bits"
+            // bits to encode.
             bitCount[bits] = counts[level] - counts[level - 1];
             bits++;
         }
@@ -384,6 +413,10 @@ namespace golang::flate
             {
                 continue;
             }
+            // The literals list[len(list)-bits] .. list[len(list)-bits]
+            // are encoded using "bits" bits, and get the values
+            // code, code + 1, ....  The code values are
+            // assigned in literal order (not frequency order).
             auto chunk = list.make_slice(len(list) - int(bits));
             rec::sort(gocpp::recv(h->lns), chunk);
             for(auto [gocpp_ignored, node] : chunk)
@@ -406,10 +439,15 @@ namespace golang::flate
     {
         if(h->freqcache == nullptr)
         {
+            // Allocate a reusable buffer with the longest possible frequency table.
+            // Possible lengths are codegenCodeCount, offsetCodeCount and maxNumLit.
+            // The largest of these is maxNumLit, so we allocate for that case.
             h->freqcache = gocpp::make(gocpp::Tag<gocpp::slice<literalNode>>(), maxNumLit + 1);
         }
         auto list = h->freqcache.make_slice(0, len(freq) + 1);
+        // Number of non-zero literals
         auto count = 0;
+        // Set list to be the set of all non-zero literals and their frequencies
         for(auto [i, f] : freq)
         {
             if(f != 0)
@@ -425,14 +463,19 @@ namespace golang::flate
         list = list.make_slice(0, count);
         if(count <= 2)
         {
+            // Handle the small cases here, because they are awkward for the general case code. With
+            // two or fewer literals, everything has bit length 1.
             for(auto [i, node] : list)
             {
+                // "list" is in order of increasing literal value.
                 rec::set(gocpp::recv(h->codes[node.literal]), uint16_t(i), 1);
             }
             return;
         }
         rec::sort(gocpp::recv(h->lfs), list);
+        // Get the number of literals for each bit count
         auto bitCount = rec::bitCounts(gocpp::recv(h), list, maxBits);
+        // And do the assignment
         rec::assignEncodingAndSize(gocpp::recv(h), bitCount, list);
     }
 

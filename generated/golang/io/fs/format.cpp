@@ -79,6 +79,8 @@ namespace golang::fs
     {
         auto name = rec::Name(gocpp::recv(dir));
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 5 + len(name));
+        // The Type method does not return any permission bits,
+        // so strip them from the string.
         auto mode = rec::String(gocpp::recv(rec::Type(gocpp::recv(dir))));
         mode = mode.make_slice(0, len(mode) - 9);
         b = append(b, mode);

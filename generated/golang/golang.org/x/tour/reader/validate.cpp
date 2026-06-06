@@ -38,6 +38,7 @@ namespace golang::reader
         auto [i, o] = std::tuple{0, 0};
         for(; i < (1 << 20) && o < (1 << 20); i++)
         {
+            // test 1mb
             auto [n, err] = rec::Read(gocpp::recv(r), b);
             for(auto [i, v] : b.make_slice(0, n))
             {

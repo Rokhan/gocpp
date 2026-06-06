@@ -1225,6 +1225,7 @@ namespace golang::io
         }
         if(written < n && err == nullptr)
         {
+            // src stopped early; must have been EOF.
             err = go_EOF;
         }
         return {written, err};
@@ -1273,10 +1274,13 @@ namespace golang::io
     {
         int64_t written;
         struct gocpp::error err;
+        // If the reader has a WriteTo method, use it to do the copy.
+        // Avoids an allocation and a copy.
         if(auto [wt, ok] = gocpp::getValue<WriterTo>(src); ok)
         {
             return rec::WriteTo(gocpp::recv(wt), dst);
         }
+        // Similarly, if the writer has a ReadFrom method, use it to do the copy.
         if(auto [rt, ok] = gocpp::getValue<ReaderFrom>(dst); ok)
         {
             return rec::ReadFrom(gocpp::recv(rt), src);
@@ -1408,6 +1412,8 @@ namespace golang::io
         }
         else
         {
+            // Overflow, with no way to return error.
+            // Assume we can read up to an offset of 1<<63 - 1.
             remaining = maxint64;
         }
         return new SectionReader {r, off, off, remaining, n};
@@ -1881,6 +1887,7 @@ namespace golang::io
             }
             if(len(b) == cap(b))
             {
+                // Add more capacity (let append pick how much).
                 b = append(b, 0).make_slice(0, len(b));
             }
         }

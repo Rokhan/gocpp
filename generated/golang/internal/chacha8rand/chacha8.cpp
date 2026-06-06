@@ -87,6 +87,7 @@ namespace golang::chacha8rand
             return {0, false};
         }
         s->i = i + 1;
+        // i&31 eliminates bounds check
         return {s->buf[i & 31], true};
     }
 
@@ -114,6 +115,13 @@ namespace golang::chacha8rand
         s->c += ctrInc;
         if(s->c == ctrMax)
         {
+            // Reseed with generated uint64s for forward secrecy.
+            // Normally this is done immediately after computing a block,
+            // but we do it immediately before computing the next block,
+            // to allow a much smaller serialized state (just the seed plus offset).
+            // This gives a delayed benefit for the forward secrecy
+            // (you can reconstruct the recent past given a memory dump),
+            // which we deem acceptable in exchange for the reduced size.
             s->seed[0] = s->buf[len(s->buf) - reseed + 0];
             s->seed[1] = s->buf[len(s->buf) - reseed + 1];
             s->seed[2] = s->buf[len(s->buf) - reseed + 2];
@@ -231,6 +239,7 @@ namespace golang::chacha8rand
     // binary.bigEndian.Uint64, copied to avoid dependency
     uint64_t beUint64(gocpp::slice<unsigned char> b)
     {
+        // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[7];
         return uint64_t(b[7]) | (uint64_t(b[6]) << 8) | (uint64_t(b[5]) << 16) | (uint64_t(b[4]) << 24) | (uint64_t(b[3]) << 32) | (uint64_t(b[2]) << 40) | (uint64_t(b[1]) << 48) | (uint64_t(b[0]) << 56);
     }
@@ -238,6 +247,7 @@ namespace golang::chacha8rand
     // binary.bigEndian.PutUint64, copied to avoid dependency
     void bePutUint64(gocpp::slice<unsigned char> b, uint64_t v)
     {
+        // early bounds check to guarantee safety of writes below
         _ = b[7];
         b[0] = (unsigned char)(v >> 56);
         b[1] = (unsigned char)(v >> 48);
@@ -252,6 +262,7 @@ namespace golang::chacha8rand
     // binary.littleEndian.Uint64, copied to avoid dependency
     uint64_t leUint64(gocpp::slice<unsigned char> b)
     {
+        // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[7];
         return uint64_t(b[0]) | (uint64_t(b[1]) << 8) | (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) | (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) | (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
     }
@@ -259,6 +270,7 @@ namespace golang::chacha8rand
     // binary.littleEndian.PutUint64, copied to avoid dependency
     void lePutUint64(gocpp::slice<unsigned char> b, uint64_t v)
     {
+        // early bounds check to guarantee safety of writes below
         _ = b[7];
         b[0] = (unsigned char)(v);
         b[1] = (unsigned char)(v >> 8);

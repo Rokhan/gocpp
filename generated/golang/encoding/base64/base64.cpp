@@ -92,6 +92,9 @@ namespace golang::base64
         copy(e->decodeMap.make_slice(0), decodeMapInitialize);
         for(auto i = 0; i < len(encoder); i++)
         {
+            // Note: While we document that the alphabet cannot contain
+            // the padding character, we do not enforce it since we do not know
+            // if the caller intends to switch the padding from StdPadding later.
             //Go switch emulation
             {
                 int conditionId = -1;
@@ -177,11 +180,15 @@ namespace golang::base64
         {
             return;
         }
+        // enc is a pointer receiver, so the use of enc.encode within the hot
+        // loop below means a nil check at every operation. Lift that nil check
+        // outside of the loop to speed up the encoder.
         _ = enc->encode;
         auto [di, si] = std::tuple{0, 0};
         auto n = (len(src) / 3) * 3;
         for(; si < n; )
         {
+            // Convert 3x 8bit source bytes into 4 bytes
             auto val = ((unsigned int)(src[si + 0]) << 16) | ((unsigned int)(src[si + 1]) << 8) | (unsigned int)(src[si + 2]);
             dst[di + 0] = enc->encode[(val >> 18) & 0x3F];
             dst[di + 1] = enc->encode[(val >> 12) & 0x3F];
@@ -195,6 +202,7 @@ namespace golang::base64
         {
             return;
         }
+        // Add the remaining small block
         auto val = (unsigned int)(src[si + 0]) << 16;
         if(remain == 2)
         {
@@ -298,6 +306,7 @@ namespace golang::base64
         {
             return {0, e->err};
         }
+        // Leading fringe.
         if(e->nbuf > 0)
         {
             int i = {};
@@ -319,6 +328,7 @@ namespace golang::base64
             }
             e->nbuf = 0;
         }
+        // Large interior chunks.
         for(; len(p) >= 3; )
         {
             auto nn = len(e->out) / 4 * 3;
@@ -335,6 +345,7 @@ namespace golang::base64
             n += nn;
             p = p.make_slice(nn);
         }
+        // Trailing fringe.
         copy(e->buf.make_slice(0), p);
         e->nbuf = len(p);
         n += len(p);
@@ -345,6 +356,7 @@ namespace golang::base64
     // It is an error to call Write after calling Close.
     struct gocpp::error rec::Close(golang::base64::encoder* e)
     {
+        // If there's anything left in the buffer, flush it out
         if(e->err == nullptr && e->nbuf > 0)
         {
             rec::Encode(gocpp::recv(e->enc), e->out.make_slice(0), e->buf.make_slice(0, e->nbuf));
@@ -373,8 +385,10 @@ namespace golang::base64
     {
         if(enc->padChar == NoPadding)
         {
+            // minimum # chars at 6 bits per char
             return n / 3 * 4 + (n % 3 * 8 + 5) / 6;
         }
+        // minimum # 4-char quanta, 3 bytes each
         return (n + 2) / 3 * 4;
     }
 
@@ -396,6 +410,7 @@ namespace golang::base64
         // Decode quantum using the base64 alphabet
         gocpp::array<unsigned char, 4> dbuf = {};
         auto dlen = 4;
+        // Lift the nil check outside of the loop.
         _ = enc->decodeMap;
         for(auto j = 0; j < len(dbuf); j++)
         {
@@ -438,6 +453,7 @@ namespace golang::base64
             {
                 return {si, 0, gocpp::error(CorruptInputError(si - 1))};
             }
+            // We've reached the end and there's padding
             //Go switch emulation
             {
                 auto condition = j;
@@ -449,36 +465,44 @@ namespace golang::base64
                 {
                     case 0:
                     case 1:
+                        // incorrect padding
                         return {si, 0, gocpp::error(CorruptInputError(si - 1))};
                         break;
                     case 2:
+                        // "==" is expected, the first "=" is already consumed.
+                        // skip over newlines
                         for(; si < len(src) && (src[si] == '\n' || src[si] == '\r'); )
                         {
                             si++;
                         }
                         if(si == len(src))
                         {
+                            // not enough padding
                             return {si, 0, gocpp::error(CorruptInputError(len(src)))};
                         }
                         if(gocpp::rune(src[si]) != enc->padChar)
                         {
+                            // incorrect padding
                             return {si, 0, gocpp::error(CorruptInputError(si - 1))};
                         }
                         si++;
                         break;
                 }
             }
+            // skip over newlines
             for(; si < len(src) && (src[si] == '\n' || src[si] == '\r'); )
             {
                 si++;
             }
             if(si < len(src))
             {
+                // trailing garbage
                 err = CorruptInputError(si);
             }
             dlen = j;
             break;
         }
+        // Convert 4x 6bit source bytes into 3 bytes
         auto val = ((unsigned int)(dbuf[0]) << 18) | ((unsigned int)(dbuf[1]) << 12) | ((unsigned int)(dbuf[2]) << 6) | (unsigned int)(dbuf[3]);
         std::tie(dbuf[2], dbuf[1], dbuf[0]) = std::tuple{(unsigned char)(val >> 0), (unsigned char)(val >> 8), (unsigned char)(val >> 16)};
         //Go switch emulation
@@ -517,6 +541,7 @@ namespace golang::base64
     // If the input is malformed, it returns the partially decoded src and an error.
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::AppendDecode(golang::base64::Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
+        // Compute the output size without padding to avoid over allocating.
         auto n = len(src);
         for(; n > 0 && gocpp::rune(src[n - 1]) == enc->padChar; )
         {
@@ -591,6 +616,7 @@ namespace golang::base64
     {
         int n;
         struct gocpp::error err;
+        // Use leftover decoded output from last read.
         if(len(d->out) > 0)
         {
             n = copy(p, d->out);
@@ -601,6 +627,8 @@ namespace golang::base64
         {
             return {0, d->err};
         }
+        // This code assumes that d.r strips supported whitespace ('\r' and '\n').
+        // Refill buffer.
         for(; d->nbuf < 4 && d->readErr == nullptr; )
         {
             auto nn = len(p) / 3 * 4;
@@ -642,6 +670,7 @@ namespace golang::base64
             }
             return {0, d->err};
         }
+        // Decode chunk into p, or d.out and then p if p is too small.
         auto nr = d->nbuf / 4 * 4;
         auto nw = d->nbuf / 4 * 3;
         if(nw > len(p))
@@ -673,6 +702,9 @@ namespace golang::base64
         {
             return {0, nullptr};
         }
+        // Lift the nil check outside of the loop. enc.decodeMap is directly
+        // used later in this function, to let the compiler know that the
+        // receiver can't be nil.
         _ = enc->decodeMap;
         auto si = 0;
         for(; strconv::IntSize >= 64 && len(src) - si >= 8 && len(dst) - n >= 8; )
@@ -735,6 +767,8 @@ namespace golang::base64
     {
         uint32_t dn;
         bool ok;
+        // Check that all the digits are valid. If any of them was 0xff, their
+        // bitwise OR will be 0xff.
         if(n1 | n2 | n3 | n4 == 0xff)
         {
             return {0, false};
@@ -749,6 +783,8 @@ namespace golang::base64
     {
         uint64_t dn;
         bool ok;
+        // Check that all the digits are valid. If any of them was 0xff, their
+        // bitwise OR will be 0xff.
         if(n1 | n2 | n3 | n4 | n5 | n6 | n7 | n8 == 0xff)
         {
             return {0, false};
@@ -806,6 +842,7 @@ namespace golang::base64
             {
                 return {offset, err};
             }
+            // Previous buffer entirely whitespace, read again
             std::tie(n, err) = rec::Read(gocpp::recv(r->wrapped), p);
         }
         return {n, err};
@@ -831,8 +868,10 @@ namespace golang::base64
     {
         if(padChar == NoPadding)
         {
+            // Unpadded data may end with partial block of 2-3 characters.
             return n / 4 * 3 + n % 4 * 6 / 8;
         }
+        // Padded base64 should always be a multiple of 4 characters in length.
         return n / 4 * 3;
     }
 

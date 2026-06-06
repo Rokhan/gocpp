@@ -215,8 +215,11 @@ namespace golang::time
                 t->wall = t->wall & nsecMask | (uint64_t(dsec) << nsecShift) | hasMonotonic;
                 return;
             }
+            // Wall second now out of range for packed field.
+            // Move to ext.
             rec::stripMono(gocpp::recv(t));
         }
+        // Check if the sum of t.ext and d overflows and handle it properly.
         auto sum = t->ext + d;
         if((sum > t->ext) == (d > 0))
         {
@@ -404,6 +407,7 @@ namespace golang::time
     uint64_t rec::abs(golang::time::Time t)
     {
         auto l = t.loc;
+        // Avoid function calls when possible.
         if(l == nullptr || l == & localLoc)
         {
             l = rec::get(gocpp::recv(l));
@@ -436,6 +440,7 @@ namespace golang::time
         {
             l = rec::get(gocpp::recv(l));
         }
+        // Avoid function call if we hit the local time cache.
         auto sec = rec::unixSec(gocpp::recv(t));
         if(l != & utcLoc)
         {
@@ -498,6 +503,7 @@ namespace golang::time
     // absWeekday is like Weekday but operates on an absolute time.
     time::Weekday absWeekday(uint64_t abs)
     {
+        // January 1 of the absolute year, like January 1 of 2001, was a Monday.
         auto sec = (abs + uint64_t(Monday) * secondsPerDay) % secondsPerWeek;
         return Weekday(int(sec) / secondsPerDay);
     }
@@ -510,12 +516,23 @@ namespace golang::time
     {
         int year;
         int week;
+        // According to the rule that the first calendar week of a calendar year is
+        // the week including the first Thursday of that year, and that the last one is
+        // the week immediately preceding the first calendar week of the next calendar year.
+        // See https://www.iso.org/obp/ui#iso:std:iso:8601:-1:ed-1:v1:en:term:3.1.1.23 for details.
+        // weeks start with Monday
+        // Monday Tuesday Wednesday Thursday Friday Saturday Sunday
+        // 1      2       3         4        5      6        7
+        // +3     +2      +1        0        -1     -2       -3
+        // the offset to Thursday
         auto abs = rec::abs(gocpp::recv(t));
         auto d = Thursday - absWeekday(abs);
+        // handle Sunday
         if(d == 4)
         {
             d = - 3;
         }
+        // find the Thursday of the calendar week
         abs += uint64_t(d) * secondsPerDay;
         int yday;
         std::tie(year, std::ignore, std::ignore, yday) = absDate(abs, false);
@@ -610,6 +627,7 @@ namespace golang::time
     // returns the offset of the first character.
     int rec::format(golang::time::Duration d, gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf)
     {
+        // Largest time is 2540400h10m10.000000000s
         auto w = len(buf);
         auto u = uint64_t(d);
         auto neg = d < 0;
@@ -638,15 +656,20 @@ namespace golang::time
                         return w;
                         break;
                     case 1:
+                        // print nanoseconds
                         prec = 0;
                         buf[w] = 'n';
                         break;
                     case 2:
+                        // print microseconds
                         prec = 3;
+                        // U+00B5 'µ' micro sign == 0xC2 0xB5
+                        // Need room for two bytes.
                         w--;
                         copy(buf.make_slice(w), "µ"_s);
                         break;
                     default:
+                        // print milliseconds
                         prec = 6;
                         buf[w] = 'm';
                         break;
@@ -660,14 +683,18 @@ namespace golang::time
             w--;
             buf[w] = 's';
             std::tie(w, u) = fmtFrac(buf.make_slice(0, w), u, 9);
+            // u is now integer seconds
             w = fmtInt(buf.make_slice(0, w), u % 60);
             u /= 60;
+            // u is now integer minutes
             if(u > 0)
             {
                 w--;
                 buf[w] = 'm';
                 w = fmtInt(buf.make_slice(0, w), u % 60);
                 u /= 60;
+                // u is now integer hours
+                // Stop at hours because days can be different lengths.
                 if(u > 0)
                 {
                     w--;
@@ -692,6 +719,7 @@ namespace golang::time
     {
         int nw;
         uint64_t nv;
+        // Omit trailing zeros up to and including decimal point.
         auto w = len(buf);
         auto print = false;
         for(auto i = 0; i < prec; i++)
@@ -819,6 +847,7 @@ namespace golang::time
             {
                 return d1;
             }
+            // overflow
             return minDuration;
         }
         if(lessThanHalf(r, m))
@@ -829,6 +858,7 @@ namespace golang::time
         {
             return d1;
         }
+        // overflow
         return maxDuration;
     }
 
@@ -872,6 +902,7 @@ namespace golang::time
             dsec--;
             nsec += 1e9;
         }
+        // update nsec
         t.wall = t.wall &^ nsecMask | uint64_t(nsec);
         rec::addSec(gocpp::recv(t), dsec);
         if(t.wall & hasMonotonic != 0)
@@ -879,6 +910,7 @@ namespace golang::time
             auto te = t.ext + int64_t(d);
             if(d < 0 && te > t.ext || d > 0 && te < t.ext)
             {
+                // Monotonic clock reading now out of range; degrade to wall-only.
                 rec::stripMono(gocpp::recv(t));
             }
             else
@@ -900,6 +932,7 @@ namespace golang::time
             return subMono(t.ext, u.ext);
         }
         auto d = Duration(rec::sec(gocpp::recv(t)) - rec::sec(gocpp::recv(u))) * Second + Duration(rec::nsec(gocpp::recv(t)) - rec::nsec(gocpp::recv(u)));
+        // Check for overflow or underflow.
         //Go switch emulation
         {
             int conditionId = -1;
@@ -907,12 +940,15 @@ namespace golang::time
             else if(rec::Before(gocpp::recv(t), u)) { conditionId = 1; }
             switch(conditionId)
             {
+                // d is correct
                 case 0:
                     return d;
                     break;
+                // t - u is negative out of range
                 case 1:
                     return minDuration;
                     break;
+                // t - u is positive out of range
                 default:
                     return maxDuration;
                     break;
@@ -925,10 +961,12 @@ namespace golang::time
         auto d = Duration(t - u);
         if(d < 0 && t > u)
         {
+            // t - u is positive out of range
             return maxDuration;
         }
         if(d > 0 && t < u)
         {
+            // t - u is negative out of range
             return minDuration;
         }
         return d;
@@ -940,6 +978,7 @@ namespace golang::time
     {
         if(t.wall & hasMonotonic != 0)
         {
+            // Common case optimization: if t has monotonic time, then Sub will use only it.
             return subMono(runtimeNano() - startNano, t.ext);
         }
         return rec::Sub(gocpp::recv(Now()), t);
@@ -951,6 +990,7 @@ namespace golang::time
     {
         if(t.wall & hasMonotonic != 0)
         {
+            // Common case optimization: if t has monotonic time, then Sub will use only it.
             return subMono(t.ext, runtimeNano() - startNano);
         }
         return rec::Sub(gocpp::recv(t), Now());
@@ -998,17 +1038,30 @@ namespace golang::time
         time::Month month;
         int day;
         int yday;
+        // Split into time and day.
         auto d = abs / secondsPerDay;
+        // Account for 400 year cycles.
         auto n = d / daysPer400Years;
         auto y = 400 * n;
         d -= daysPer400Years * n;
+        // Cut off 100-year cycles.
+        // The last cycle has one extra leap year, so on the last day
+        // of that year, day / daysPer100Years will be 4 instead of 3.
+        // Cut it back down to 3 by subtracting n>>2.
         n = d / daysPer100Years;
         n -= n >> 2;
         y += 100 * n;
         d -= daysPer100Years * n;
+        // Cut off 4-year cycles.
+        // The last cycle has a missing leap year, which does not
+        // affect the computation.
         n = d / daysPer4Years;
         y += 4 * n;
         d -= daysPer4Years * n;
+        // Cut off years within a 4-year cycle.
+        // The last year is a leap year, so on the last day of that year,
+        // day / 365 will be 4 instead of 3. Cut it back down to 3
+        // by subtracting n>>2.
         n = d / 365;
         n -= n >> 2;
         y += n;
@@ -1022,6 +1075,7 @@ namespace golang::time
         day = yday;
         if(isLeap(year))
         {
+            // Leap year
             //Go switch emulation
             {
                 int conditionId = -1;
@@ -1030,9 +1084,11 @@ namespace golang::time
                 switch(conditionId)
                 {
                     case 0:
+                        // After leap day; pretend it wasn't there.
                         day--;
                         break;
                     case 1:
+                        // Leap day.
                         month = February;
                         day = 29;
                         return {year, month, day, yday};
@@ -1040,6 +1096,8 @@ namespace golang::time
                 }
             }
         }
+        // Estimate month on assumption that every month has 31 days.
+        // The estimate may be too low by at most one month, so adjust.
         month = Month(day / 31);
         auto end = int(daysBefore[month + 1]);
         int begin = {};
@@ -1052,6 +1110,7 @@ namespace golang::time
         {
             begin = int(daysBefore[month]);
         }
+        // because January is 1
         month++;
         day = day - begin + 1;
         return {year, month, day, yday};
@@ -1076,15 +1135,19 @@ namespace golang::time
     uint64_t daysSinceEpoch(int year)
     {
         auto y = uint64_t(int64_t(year) - absoluteZeroYear);
+        // Add in days from 400-year cycles.
         auto n = y / 400;
         y -= 400 * n;
         auto d = daysPer400Years * n;
+        // Add in 100-year cycles.
         n = y / 100;
         y -= 100 * n;
         d += daysPer100Years * n;
+        // Add in 4-year cycles.
         n = y / 4;
         y -= 4 * n;
         d += daysPer4Years * n;
+        // Add in non-leap years.
         n = y;
         d += 365 * n;
         return d;
@@ -1115,6 +1178,9 @@ namespace golang::time
         sec += unixToInternal - minWall;
         if((uint64_t(sec) >> 33) != 0)
         {
+            // Seconds field overflowed the 33 bits available when
+            // storing a monotonic time. This will be true after
+            // March 16, 2157.
             return Time {uint64_t(nsec), sec + minWall, Local};
         }
         return Time {hasMonotonic | (uint64_t(sec) << nsecShift) | uint64_t(nsec), mono, Local};
@@ -1243,6 +1309,7 @@ namespace golang::time
     // MarshalBinary implements the encoding.BinaryMarshaler interface.
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(golang::time::Time t)
     {
+        // minutes east of UTC. -1 is UTC.
         int16_t offsetMin = {};
         int8_t offsetSec = {};
         auto version = timeBinaryVersionV1;
@@ -1364,6 +1431,7 @@ namespace golang::time
         {
             return nullptr;
         }
+        // TODO(https://go.dev/issue/47353): Properly unescape a JSON string.
         if(len(data) < 2 || data[0] != '"' || data[len(data) - 1] != '"')
         {
             return errors::New("Time.UnmarshalJSON: input is not a JSON string"_s);
@@ -1493,27 +1561,40 @@ namespace golang::time
         {
             gocpp::panic("time: missing Location in call to Date"_s);
         }
+        // Normalize month, overflowing into year.
         auto m = int(month) - 1;
         std::tie(year, m) = norm(year, m, 12);
         month = Month(m) + 1;
+        // Normalize nsec, sec, min, hour, overflowing into day.
         std::tie(sec, nsec) = norm(sec, nsec, 1e9);
         std::tie(min, sec) = norm(min, sec, 60);
         std::tie(hour, min) = norm(hour, min, 60);
         std::tie(day, hour) = norm(day, hour, 24);
+        // Compute days since the absolute epoch.
         auto d = daysSinceEpoch(year);
+        // Add in days before this month.
         d += uint64_t(daysBefore[month - 1]);
         if(isLeap(year) && month >= March)
         {
+            // February 29
             d++;
         }
+        // Add in days before today.
         d += uint64_t(day - 1);
+        // Add in time elapsed today.
         auto abs = d * secondsPerDay;
         abs += uint64_t(hour * secondsPerHour + min * secondsPerMinute + sec);
         auto unix = int64_t(abs) + (absoluteToInternal + internalToUnix);
+        // Look for zone offset for expected time, so we can adjust to UTC.
+        // The lookup function expects UTC, so first we pass unix in the
+        // hope that it will not be too close to a zone transition,
+        // and then adjust if it is.
         auto [gocpp_id_30, offset, start, end, gocpp_id_31] = rec::lookup(gocpp::recv(loc), unix);
         if(offset != 0)
         {
             auto utc = unix - int64_t(offset);
+            // If utc is valid for the time zone we found, then we have the right offset.
+            // If not, we get the correct offset by looking up utc in the location.
             if(utc < start || utc >= end)
             {
                 std::tie(std::ignore, offset, std::ignore, std::ignore, std::ignore) = rec::lookup(gocpp::recv(loc), utc);
@@ -1578,12 +1659,14 @@ namespace golang::time
         auto sec = rec::sec(gocpp::recv(t));
         if(sec < 0)
         {
+            // Operate on absolute value.
             neg = true;
             sec = - sec;
             nsec = - nsec;
             if(nsec < 0)
             {
                 nsec += 1e9;
+                // sec >= 1 before the -- so safe
                 sec--;
             }
         }
@@ -1594,16 +1677,23 @@ namespace golang::time
             else if(d % Second == 0) { conditionId = 1; }
             switch(conditionId)
             {
+                // Special case: 2d divides 1 second.
                 case 0:
                     qmod2 = int(nsec / int32_t(d)) & 1;
                     r = Duration(nsec % int32_t(d));
                     break;
+                // Special case: d is a multiple of 1 second.
                 case 1:
                     auto d1 = int64_t(d / Second);
                     qmod2 = int(sec / d1) & 1;
                     r = Duration(sec % d1) * Second + Duration(nsec);
                     break;
+                // General case.
+                // This could be faster if more cleverness were applied,
+                // but it's really only here to avoid special case restrictions in the API.
+                // No one will care about these cases.
                 default:
+                    // Compute nanoseconds as 128-bit number.
                     auto sec_tmp = uint64_t(sec);
                     auto& sec = sec_tmp;
                     auto tmp = (sec >> 32) * 1e9;
@@ -1621,6 +1711,8 @@ namespace golang::time
                     {
                         u1++;
                     }
+                    // Compute remainder by subtracting r<<k for decreasing k.
+                    // Quotient parity is whether we subtract on last round.
                     auto d1 = uint64_t(d);
                     for(; (d1 >> 63) != 1; )
                     {
@@ -1632,6 +1724,7 @@ namespace golang::time
                         qmod2 = 0;
                         if(u1 > d1 || u1 == d1 && u0 >= d0)
                         {
+                            // subtract
                             qmod2 = 1;
                             std::tie(u0x, u0) = std::tuple{u0, u0 - d0};
                             if(u0 > u0x)
@@ -1654,6 +1747,12 @@ namespace golang::time
         }
         if(neg && r != 0)
         {
+            // If input was negative and not an exact multiple of d, we computed q, r such that
+            // q*d + r = -t
+            // But the right answers are given by -(q-1), d-r:
+            // q*d + r = -t
+            // -q*d - r = t
+            // -(q-1)*d + (d - r) = t
             qmod2 ^= 1;
             r = d - r;
         }

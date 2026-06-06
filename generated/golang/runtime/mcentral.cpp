@@ -137,6 +137,7 @@ namespace golang::runtime
     // Allocate a span to use in an mcache.
     struct mspan* rec::cacheSpan(golang::runtime::mcentral* c)
     {
+        // Deduct credit for this span allocation and sweep if necessary.
         auto spanBytes = uintptr_t(class_to_allocnpages[rec::sizeclass(gocpp::recv(c->spanclass))]) * _PageSize;
         deductSweepCredit(spanBytes, 0);
         auto traceDone = false;
@@ -146,9 +147,22 @@ namespace golang::runtime
             rec::GCSweepStart(gocpp::recv(trace));
             traceRelease(trace);
         }
+        // If we sweep spanBudget spans without finding any free
+        // space, just allocate a fresh span. This limits the amount
+        // of time we can spend trying to find free space and
+        // amortizes the cost of small object sweeping over the
+        // benefit of having a full free span to allocate from. By
+        // setting this to 100, we limit the space overhead to 1%.
+        // TODO(austin,mknyszek): This still has bad worst-case
+        // throughput. For example, this could find just one free slot
+        // on the 100th swept span. That limits allocation latency, but
+        // still has very poor throughput. We could instead keep a
+        // running free-to-used budget and switch to fresh span
+        // allocation if the budget runs low.
         auto spanBudget = 100;
         mspan* s = {};
         sweepLocker sl = {};
+        // Try partial swept spans first.
         auto sg = mheap_.sweepgen;
         if(s = rec::pop(gocpp::recv(rec::partialSwept(gocpp::recv(c), sg))); s != nullptr)
         {
@@ -157,6 +171,7 @@ namespace golang::runtime
         sl = rec::begin(gocpp::recv(sweep.active));
         if(sl.valid)
         {
+            // Now try partial unswept spans.
             for(; spanBudget >= 0; spanBudget--)
             {
                 s = rec::pop(gocpp::recv(rec::partialUnswept(gocpp::recv(c), sg)));
@@ -164,16 +179,25 @@ namespace golang::runtime
                 {
                     break;
                 }
+                // We failed to get ownership of the span, which means it's being or
+                // has been swept by an asynchronous sweeper that just couldn't remove it
+                // from the unswept list. That sweeper took ownership of the span and
+                // responsibility for either freeing it to the heap or putting it on the
+                // right swept list. Either way, we should just ignore it (and it's unsafe
+                // for us to do anything else).
                 {
                     auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
                     if(auto& s = s_tmp; ok)
                     {
+                        // We got ownership of the span, so let's sweep it and use it.
                         rec::sweep(gocpp::recv(s), true);
                         rec::end(gocpp::recv(sweep.active), sl);
                         goto havespan;
                     }
                 }
             }
+            // Now try full unswept spans, sweeping them and putting them into the
+            // right list if we fail to get a span.
             for(; spanBudget >= 0; spanBudget--)
             {
                 s = rec::pop(gocpp::recv(rec::fullUnswept(gocpp::recv(c), sg)));
@@ -181,11 +205,14 @@ namespace golang::runtime
                 {
                     break;
                 }
+                // See comment for partial unswept spans.
                 {
                     auto [s_tmp, ok] = rec::tryAcquire(gocpp::recv(sl), s);
                     if(auto& s = s_tmp; ok)
                     {
+                        // We got ownership of the span, so let's sweep it.
                         rec::sweep(gocpp::recv(s), true);
+                        // Check if there's any free space.
                         auto freeIndex = rec::nextFreeIndex(gocpp::recv(s));
                         if(freeIndex != s.mspan.nelems)
                         {
@@ -193,6 +220,7 @@ namespace golang::runtime
                             rec::end(gocpp::recv(sweep.active), sl);
                             goto havespan;
                         }
+                        // Add it to the swept list, because sweeping didn't give us any free space.
                         rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(c), sg)), s.mspan);
                     }
                 }
@@ -206,11 +234,13 @@ namespace golang::runtime
             traceDone = true;
             traceRelease(trace);
         }
+        // We failed to get a span from the mcentral so get one from mheap.
         s = rec::grow(gocpp::recv(c));
         if(s == nullptr)
         {
             return nullptr;
         }
+        // At this point s is a span that should have free slots.
         havespan:
         if(! traceDone)
         {
@@ -228,7 +258,10 @@ namespace golang::runtime
         }
         auto freeByteBase = s->freeindex &^ (64 - 1);
         auto whichByte = freeByteBase / 8;
+        // Init alloc bits cache.
         rec::refillAllocCache(gocpp::recv(s), whichByte);
+        // Adjust the allocCache so that s.freeindex corresponds to the low bit in
+        // s.allocCache.
         s->allocCache >>= s->freeindex % 64;
         return s;
     }
@@ -245,16 +278,30 @@ namespace golang::runtime
         }
         auto sg = mheap_.sweepgen;
         auto stale = s->sweepgen == sg + 1;
+        // Fix up sweepgen.
         if(stale)
         {
+            // Span was cached before sweep began. It's our
+            // responsibility to sweep it.
+            // Set sweepgen to indicate it's not cached but needs
+            // sweeping and can't be allocated from. sweep will
+            // set s.sweepgen to indicate s is swept.
             atomic::Store(& s->sweepgen, sg - 1);
         }
         else
         {
+            // Indicate that s is no longer cached.
             atomic::Store(& s->sweepgen, sg);
         }
+        // Put the span in the appropriate place.
         if(stale)
         {
+            // It's stale, so just sweep it. Sweeping will put it on
+            // the right list.
+            // We don't use a sweepLocker here. Stale cached spans
+            // aren't in the global sweep lists, so mark termination
+            // itself holds up sweep completion until all mcaches
+            // have been swept.
             auto ss = sweepLocked {s};
             rec::sweep(gocpp::recv(ss), false);
         }
@@ -262,10 +309,13 @@ namespace golang::runtime
         {
             if(int(s->nelems) - int(s->allocCount) > 0)
             {
+                // Put it back on the partial swept list.
                 rec::push(gocpp::recv(rec::partialSwept(gocpp::recv(c), sg)), s);
             }
             else
             {
+                // There's no free space and it's not stale, so put it on the
+                // full swept list.
                 rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(c), sg)), s);
             }
         }
@@ -281,6 +331,8 @@ namespace golang::runtime
         {
             return nullptr;
         }
+        // Use division by multiplication and shifts to quickly compute:
+        // n := (npages << _PageShift) / size
         auto n = rec::divideByElemSize(gocpp::recv(s), npages << _PageShift);
         s->limit = rec::base(gocpp::recv(s)) + size * n;
         rec::initHeapBits(gocpp::recv(s), false);

@@ -222,6 +222,8 @@ namespace golang::bisect
         }
         auto m = new(Matcher);
         auto p = pattern;
+        // Special case for leading 'q' so that 'qn' quietly disables, e.g. fmahash=qn to disable fma
+        // Any instance of 'v' disables 'q'.
         if(len(p) > 0 && p[0] == 'q')
         {
             m->quiet = true;
@@ -231,6 +233,7 @@ namespace golang::bisect
                 return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
             }
         }
+        // Allow multiple v, so that “bisect cmd vPATTERN” can force verbose all the time.
         for(; len(p) > 0 && p[0] == 'v'; )
         {
             m->verbose = true;
@@ -241,6 +244,8 @@ namespace golang::bisect
                 return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
             }
         }
+        // Allow multiple !, each negating the last, so that “bisect cmd !PATTERN” works
+        // even when bisect chooses to add its own !.
         m->enable = true;
         for(; len(p) > 0 && p[0] == '!'; )
         {
@@ -253,15 +258,19 @@ namespace golang::bisect
         }
         if(p == "n"_s)
         {
+            // n is an alias for !y.
             m->enable = ! m->enable;
             p = "y"_s;
         }
+        // Parse actual pattern syntax.
         auto result = true;
         auto bits = uint64_t(0);
         auto start = 0;
+        // 1-bit (binary); sometimes 4-bit (hex)
         auto wid = 1;
         for(auto i = 0; i <= len(p); i++)
         {
+            // Imagine a trailing - at the end of the pattern to flush final suffix
             auto c = (unsigned char)('-');
             if(i < len(p))
             {
@@ -269,6 +278,7 @@ namespace golang::bisect
             }
             if(i == start && wid == 1 && c == 'x')
             {
+                // leading x for hex
                 start = i + 1;
                 wid = 4;
                 continue;
@@ -354,6 +364,7 @@ namespace golang::bisect
                     case 24:
                         if(c == '+' && result == false)
                         {
+                            // Have already seen a -. Should be - from here on.
                             return {nullptr, gocpp::error(new parseError {"invalid pattern syntax (+ after -): "_s + pattern})};
                         }
                         if(i > 0)
@@ -377,6 +388,7 @@ namespace golang::bisect
                         else
                         if(c == '-')
                         {
+                            // leading - subtracts from complete set
                             m->list = append(m->list, cond {0, 0, true});
                         }
                         bits = 0;
@@ -588,6 +600,7 @@ namespace golang::bisect
     // printFileLine prints a non-marker-only report for file:line to w.
     struct gocpp::error printFileLine(struct Writer w, uint64_t h, gocpp::string file, int line)
     {
+        // overestimate
         auto markerLen = 40;
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, markerLen + len(file) + 24);
         b = AppendMarker(b, h);
@@ -639,11 +652,13 @@ namespace golang::bisect
         auto maxStack = 16;
         gocpp::array<uintptr_t, maxStack> stk = {};
         auto n = runtime::Callers(2, stk.make_slice(0));
+        // caller #2 is not for printing; need it to normalize PCs if ASLR.
         if(n <= 1)
         {
             return false;
         }
         auto base = stk[0];
+        // normalize PCs
         for(auto [i, gocpp_ignored] : stk.make_slice(0, n))
         {
             stk[i] -= base;
@@ -676,6 +691,7 @@ namespace golang::bisect
             {
                 if(! rec::seen(gocpp::recv(d), h))
                 {
+                    // Restore PCs in stack for printing
                     for(auto [i, gocpp_ignored] : stk.make_slice(0, n))
                     {
                         stk[i] += base;
@@ -810,6 +826,7 @@ namespace golang::bisect
         gocpp::string short;
         uint64_t id;
         bool ok;
+        // Find first instance of prefix.
         auto prefix = "[bisect-match "_s;
         auto i = 0;
         for(; ; i++)
@@ -823,6 +840,7 @@ namespace golang::bisect
                 break;
             }
         }
+        // Scan to ].
         auto j = i + len(prefix);
         for(; j < len(line) && line[j] != ']'; )
         {
@@ -832,11 +850,14 @@ namespace golang::bisect
         {
             return {line, 0, false};
         }
+        // Parse id.
         auto idstr = line.make_slice(i + len(prefix), j);
         if(len(idstr) >= 3 && idstr.make_slice(0, 2) == "0x"_s)
         {
+            // parse hex
             if(len(idstr) > 2 + 16)
             {
+                // max 0x + 16 digits
                 return {line, 0, false};
             }
             for(auto i = 2; i < len(idstr); i++)
@@ -868,8 +889,10 @@ namespace golang::bisect
         {
             if(idstr == ""_s || len(idstr) > 64)
             {
+                // min 1 digit, max 64 digits
                 return {line, 0, false};
             }
+            // parse binary
             for(auto i = 0; i < len(idstr); i++)
             {
                 id <<= 1;
@@ -893,6 +916,10 @@ namespace golang::bisect
                 }
             }
         }
+        // Construct shortened line.
+        // Remove at most one space from around the marker,
+        // so that "foo [marker] bar" shortens to "foo bar".
+        // skip ]
         j++;
         if(i > 0 && line[i - 1] == ' ')
         {
@@ -941,6 +968,11 @@ namespace golang::bisect
                     default:
                     {
                         auto v = v;
+                        // Note: Not printing the type, because reflect.ValueOf(v)
+                        // would make the interfaces prepared by the caller escape
+                        // and therefore allocate. This way, Hash(file, line) runs
+                        // without any allocation. It should be clear from the
+                        // source code calling Hash what the bad argument was.
                         gocpp::panic("bisect.Hash: unexpected argument type"_s);
                         break;
                     }
@@ -1231,6 +1263,7 @@ namespace golang::bisect
                 return true;
             }
         }
+        // Compute index in set to evict as hash of current set.
         auto ch = offset64;
         for(auto [gocpp_ignored, x] : cache)
         {

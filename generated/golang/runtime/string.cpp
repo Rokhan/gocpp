@@ -84,6 +84,9 @@ namespace golang::runtime
         {
             return ""_s;
         }
+        // If there is just one string and either it is not on the stack
+        // or our result does not escape the calling frame (buf != nil),
+        // then we can return that string directly.
         if(count == 1 && (buf != nullptr || ! stringDataOnStack(a[idx])))
         {
             return a[idx];
@@ -127,6 +130,9 @@ namespace golang::runtime
     {
         if(n == 0)
         {
+            // Turns out to be a relatively common case.
+            // Consider that you want to parse out data between parens in "foo()bar",
+            // you find the indices and convert the subslice to string.
             return ""_s;
         }
         if(raceenabled)
@@ -237,6 +243,8 @@ namespace golang::runtime
 
     gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array_ptr<gocpp::array<gocpp::rune, tmpStringBufSize>> buf, gocpp::string s)
     {
+        // two passes.
+        // unlike slicerunetostring, no race because strings are immutable.
         auto n = 0;
         for(const auto& _ : s)
         {
@@ -285,6 +293,7 @@ namespace golang::runtime
         auto size2 = 0;
         for(auto [gocpp_ignored, r] : a)
         {
+            // check for race
             if(size2 >= size1)
             {
                 break;
@@ -516,12 +525,14 @@ namespace golang::runtime
             }
             if(un > maxUint64 / 10)
             {
+                // overflow
                 return {0, false};
             }
             un *= 10;
             auto un1 = un + uint64_t(c) - '0';
             if(un1 < un)
             {
+                // overflow
                 return {0, false};
             }
             un = un1;
@@ -579,10 +590,12 @@ namespace golang::runtime
     // but the result is always non-negative.
     std::tuple<int64_t, bool> parseByteCount(gocpp::string s)
     {
+        // The empty string is not valid.
         if(s == ""_s)
         {
             return {0, false};
         }
+        // Handle the easy non-suffix case.
         auto last = s[len(s) - 1];
         if(last >= '0' && last <= '9')
         {
@@ -593,12 +606,17 @@ namespace golang::runtime
             }
             return {n, ok};
         }
+        // Failing a trailing digit, this must always end in 'B'.
+        // Also at this point there must be at least one digit before
+        // that B.
         if(last != 'B' || len(s) < 2)
         {
             return {0, false};
         }
+        // The one before that must always be a digit or 'i'.
         if(auto c = s[len(s) - 2]; c >= '0' && c <= '9')
         {
+            // Trivial 'B' suffix.
             auto [n, ok] = atoi64(s.make_slice(0, len(s) - 1));
             if(! ok || n < 0)
             {
@@ -611,6 +629,8 @@ namespace golang::runtime
         {
             return {0, false};
         }
+        // Finally, we need at least 4 characters now, for the unit
+        // prefix and at least one digit.
         if(len(s) < 4)
         {
             return {0, false};
@@ -639,6 +659,7 @@ namespace golang::runtime
                     power = 4;
                     break;
                 default:
+                    // Invalid suffix.
                     return {0, false};
                     break;
             }
@@ -656,11 +677,13 @@ namespace golang::runtime
         auto un = uint64_t(n);
         if(un > maxUint64 / m)
         {
+            // Overflow.
             return {0, false};
         }
         un *= m;
         if(un > uint64_t(maxInt64))
         {
+            // Overflow.
             return {0, false};
         }
         return {int64_t(un), true};
@@ -673,6 +696,9 @@ namespace golang::runtime
         {
             return 0;
         }
+        // Avoid IndexByteString on Plan 9 because it uses SSE instructions
+        // on x86 machines, and those are classified as floating point instructions,
+        // which are illegal in a note handler.
         if(GOOS == "plan9"_s)
         {
             auto p = (gocpp::array_ptr<gocpp::array<unsigned char, maxAlloc / 2 - 1>>)(gocpp::unsafe_pointer(s));
@@ -690,14 +716,19 @@ namespace golang::runtime
         auto pageSize = 4096;
         auto offset = 0;
         auto ptr = gocpp::unsafe_pointer(s);
+        // IndexByteString uses wide reads, so we need to be careful
+        // with page boundaries. Call IndexByteString on
+        // [ptr, endOfPage) interval.
         auto safeLen = int(pageSize - uintptr_t(ptr) % pageSize);
         for(; ; )
         {
             auto t = *(gocpp::string*)(gocpp::unsafe_pointer(new stringStruct {ptr, safeLen}));
+            // Check one page at a time.
             if(auto i = bytealg::IndexByteString(t, 0); i != - 1)
             {
                 return offset + i;
             }
+            // Move to next page
             ptr = gocpp::unsafe_pointer(uintptr_t(ptr) + uintptr_t(safeLen));
             offset += safeLen;
             safeLen = pageSize;
@@ -743,12 +774,14 @@ namespace golang::runtime
         auto n2 = 0;
         for(auto i = 0; str[i] != 0; i++)
         {
+            // check for race
             if(n2 >= n1)
             {
                 break;
             }
             n2 += encoderune(b.make_slice(n2), gocpp::rune(str[i]));
         }
+        // for luck
         b[n2] = 0;
         return s.make_slice(0, n2);
     }

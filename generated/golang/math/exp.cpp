@@ -49,6 +49,7 @@ namespace golang::math
         auto Overflow = 7.09782712893383973096e+02;
         auto Underflow = - 7.45133219101941108420e+02;
         auto NearZero = 1.0 / (1 << 28);
+        // special cases
         //Go switch emulation
         {
             int conditionId = -1;
@@ -95,6 +96,7 @@ namespace golang::math
         }
         auto hi = x - double(k) * Ln2Hi;
         auto lo = double(k) * Ln2Lo;
+        // compute
         return expmulti(hi, lo, k);
     }
 
@@ -116,6 +118,7 @@ namespace golang::math
         auto Ln2Lo = 1.90821492927058770002e-10;
         auto Overflow = 1.0239999999999999e+03;
         auto Underflow = - 1.0740e+03;
+        // special cases
         //Go switch emulation
         {
             int conditionId = -1;
@@ -160,6 +163,7 @@ namespace golang::math
         auto t = x - double(k);
         auto hi = t * Ln2Hi;
         auto lo = - t * Ln2Lo;
+        // compute
         return expmulti(hi, lo, k);
     }
 
@@ -175,6 +179,7 @@ namespace golang::math
         auto t = r * r;
         auto c = r - t * (P1 + t * (P2 + t * (P3 + t * (P4 + t * P5))));
         auto y = 1 - ((lo - (r * c) / (2 - c)) - hi);
+        // TODO(rsc): make sure Ldexp can handle boundary k
         return Ldexp(y, k);
     }
 

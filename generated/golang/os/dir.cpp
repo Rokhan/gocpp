@@ -62,6 +62,9 @@ namespace golang::os
         auto [gocpp_id_0, gocpp_id_1, infos, err] = rec::readdir(gocpp::recv(f), n, readdirFileInfo);
         if(infos == nullptr)
         {
+            // Readdir has historically always returned a non-nil empty slice, never nil,
+            // even on error (except misuse with nil receiver above).
+            // Keep it that way to avoid breaking overly sensitive callers.
             infos = gocpp::slice<os::FileInfo> {};
         }
         return {infos, err};
@@ -93,6 +96,9 @@ namespace golang::os
         std::tie(names, std::ignore, std::ignore, err) = rec::readdir(gocpp::recv(f), n, readdirName);
         if(names == nullptr)
         {
+            // Readdirnames has historically always returned a non-nil empty slice, never nil,
+            // even on error (except misuse with nil receiver above).
+            // Keep it that way to avoid breaking overly sensitive callers.
             names = gocpp::slice<gocpp::string> {};
         }
         return {names, err};
@@ -119,6 +125,7 @@ namespace golang::os
         auto [gocpp_id_2, dirents, gocpp_id_3, err] = rec::readdir(gocpp::recv(f), n, readdirDirEntry);
         if(dirents == nullptr)
         {
+            // Match Readdir and Readdirnames: don't return nil slices.
             dirents = gocpp::slice<os::DirEntry> {};
         }
         return {dirents, err};

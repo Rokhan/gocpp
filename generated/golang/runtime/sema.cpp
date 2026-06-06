@@ -207,10 +207,17 @@ namespace golang::runtime
         {
             go_throw("semacquire not on the G stack"_s);
         }
+        // Easy case.
         if(cansemacquire(addr))
         {
             return;
         }
+        // Harder case:
+        // increment waiter count
+        // try cansemacquire one more time, return if succeeded
+        // enqueue itself as a waiter
+        // sleep
+        // (waiter descriptor is dequeued by signaler)
         auto s = acquireSudog();
         auto root = rec::rootFor(gocpp::recv(semtable), addr);
         auto t0 = int64_t(0);
@@ -233,13 +240,17 @@ namespace golang::runtime
         for(; ; )
         {
             lockWithRank(& root->lock, lockRankRoot);
+            // Add ourselves to nwait to disable "easy case" in semrelease.
             rec::Add(gocpp::recv(root->nwait), 1);
+            // Check cansemacquire to avoid missed wakeup.
             if(cansemacquire(addr))
             {
                 rec::Add(gocpp::recv(root->nwait), - 1);
                 unlock(& root->lock);
                 break;
             }
+            // Any semrelease after the cansemacquire knows we're waiting
+            // (we set nwait above), so go to sleep.
             rec::queue(gocpp::recv(root), addr, s, lifo);
             goparkunlock(& root->lock, reason, traceBlockSync, 4 + skipframes);
             if(s->ticket != 0 || cansemacquire(addr))
@@ -263,13 +274,19 @@ namespace golang::runtime
     {
         auto root = rec::rootFor(gocpp::recv(semtable), addr);
         atomic::Xadd(addr, 1);
+        // Easy case: no waiters?
+        // This check must happen after the xadd, to avoid a missed wakeup
+        // (see loop in semacquire).
         if(rec::Load(gocpp::recv(root->nwait)) == 0)
         {
             return;
         }
+        // Harder case: search for a waiter and wake it.
         lockWithRank(& root->lock, lockRankRoot);
         if(rec::Load(gocpp::recv(root->nwait)) == 0)
         {
+            // The count is already consumed by another goroutine,
+            // so no need to wake up another goroutine.
             unlock(& root->lock);
             return;
         }
@@ -281,9 +298,25 @@ namespace golang::runtime
         unlock(& root->lock);
         if(s != nullptr)
         {
+            // May be slow or even yield, so unlock first
             auto acquiretime = s->acquiretime;
             if(acquiretime != 0)
             {
+                // Charge contention that this (delayed) unlock caused.
+                // If there are N more goroutines waiting beyond the
+                // one that's waking up, charge their delay as well, so that
+                // contention holding up many goroutines shows up as
+                // more costly than contention holding up a single goroutine.
+                // It would take O(N) time to calculate how long each goroutine
+                // has been waiting, so instead we charge avg(head-wait, tail-wait)*N.
+                // head-wait is the longest wait and tail-wait is the shortest.
+                // (When we do a lifo insertion, we preserve this property by
+                // copying the old head's acquiretime into the inserted new head.
+                // In that case the overall average may be slightly high, but that's fine:
+                // the average of the ends is only an approximation to the actual
+                // average anyway.)
+                // The root.dequeue above changed the head and tail acquiretime
+                // to the current time, so the next unlock will not re-count this contention.
                 auto dt0 = t0 - acquiretime;
                 auto dt = dt0;
                 if(s->waiters != 0)
@@ -304,6 +337,22 @@ namespace golang::runtime
             readyWithTime(s, 5 + skipframes);
             if(s->ticket == 1 && getg()->m->locks == 0)
             {
+                // Direct G handoff
+                // readyWithTime has added the waiter G as runnext in the
+                // current P; we now call the scheduler so that we start running
+                // the waiter G immediately.
+                // Note that waiter inherits our time slice: this is desirable
+                // to avoid having a highly contended semaphore hog the P
+                // indefinitely. goyield is like Gosched, but it emits a
+                // "preempted" trace event instead and, more importantly, puts
+                // the current G on the local runq instead of the global one.
+                // We only do this in the starving regime (handoff=true), as in
+                // the non-starving case it is possible for a different waiter
+                // to acquire the semaphore while we are yielding/scheduling,
+                // and this would be wasteful. We wait instead to enter starving
+                // regime, and then we start to do direct handoffs of ticket and
+                // P.
+                // See issue 33747 for discussion.
                 goyield();
             }
         }
@@ -339,10 +388,13 @@ namespace golang::runtime
         {
             if(t->elem == gocpp::unsafe_pointer(addr))
             {
+                // Already have addr in list.
                 if(lifo)
                 {
+                    // Substitute s in t's place in treap.
                     *pt = s;
                     s->ticket = t->ticket;
+                    // preserve head acquiretime as oldest time
                     s->acquiretime = t->acquiretime;
                     s->parent = t->parent;
                     s->prev = t->prev;
@@ -355,6 +407,7 @@ namespace golang::runtime
                     {
                         s->next->parent = s;
                     }
+                    // Add t first in s's wait list.
                     s->waitlink = t;
                     s->waittail = t->waittail;
                     if(s->waittail == nullptr)
@@ -373,6 +426,7 @@ namespace golang::runtime
                 }
                 else
                 {
+                    // Add s to end of t's wait list.
                     if(t->waittail == nullptr)
                     {
                         t->waitlink = s;
@@ -400,9 +454,20 @@ namespace golang::runtime
                 pt = & t->next;
             }
         }
+        // Add s as new leaf in tree of unique addrs.
+        // The balanced tree is a treap using ticket as the random heap priority.
+        // That is, it is a binary tree ordered according to the elem addresses,
+        // but then among the space of possible binary trees respecting those
+        // addresses, it is kept balanced on average by maintaining a heap ordering
+        // on the ticket: s.ticket <= both s.prev.ticket and s.next.ticket.
+        // https://en.wikipedia.org/wiki/Treap
+        // https://faculty.washington.edu/aragon/pubs/rst89.pdf
+        // s.ticket compared with zero in couple of places, therefore set lowest bit.
+        // It will not affect treap's quality noticeably.
         s->ticket = cheaprand() | 1;
         s->parent = last;
         *pt = s;
+        // Rotate up into tree according to ticket (priority).
         for(; s->parent != nullptr && s->parent->ticket > s->ticket; )
         {
             if(s->parent->prev == s)
@@ -458,6 +523,7 @@ namespace golang::runtime
         }
         if(auto t = s->waitlink; t != nullptr)
         {
+            // Substitute t, also waiting on addr, for s in root tree of unique addrs.
             *ps = t;
             t->ticket = s->ticket;
             t->parent = s->parent;
@@ -484,6 +550,9 @@ namespace golang::runtime
             {
                 t->waiters--;
             }
+            // Set head and tail acquire time to 'now',
+            // because the caller will take care of charging
+            // the delays before now for all entries in the list.
             t->acquiretime = now;
             tailtime = s->waittail->acquiretime;
             s->waittail->acquiretime = now;
@@ -492,6 +561,7 @@ namespace golang::runtime
         }
         else
         {
+            // Rotate s down to be leaf of tree for removal, respecting priorities.
             for(; s->next != nullptr || s->prev != nullptr; )
             {
                 if(s->next == nullptr || s->prev != nullptr && s->prev->ticket < s->next->ticket)
@@ -503,6 +573,7 @@ namespace golang::runtime
                     rec::rotateLeft(gocpp::recv(root), s);
                 }
             }
+            // Remove s, now a leaf.
             if(s->parent != nullptr)
             {
                 if(s->parent->prev == s)
@@ -532,6 +603,7 @@ namespace golang::runtime
     // turning (x a (y b c)) into (y (x a b) c).
     void rec::rotateLeft(golang::runtime::semaRoot* root, struct sudog* x)
     {
+        // p -> (x a (y b c))
         auto p = x->parent;
         auto y = x->next;
         auto b = y->prev;
@@ -566,6 +638,7 @@ namespace golang::runtime
     // turning (y (x a b) c) into (x a (y b c)).
     void rec::rotateRight(golang::runtime::semaRoot* root, struct sudog* y)
     {
+        // p -> (y (x a b) c)
         auto p = y->parent;
         auto x = y->prev;
         auto b = x->next;
@@ -654,6 +727,8 @@ namespace golang::runtime
     //go:linkname notifyListAdd sync.runtime_notifyListAdd
     uint32_t notifyListAdd(struct notifyList* l)
     {
+        // This may be called concurrently, for example, when called from
+        // sync.Cond.Wait while holding a RWMutex in read mode.
         return rec::Add(gocpp::recv(l->wait), 1) - 1;
     }
 
@@ -664,11 +739,13 @@ namespace golang::runtime
     void notifyListWait(struct notifyList* l, uint32_t t)
     {
         lockWithRank(& l->lock, lockRankNotifyList);
+        // Return right away if this ticket has already been notified.
         if(less(t, l->notify))
         {
             unlock(& l->lock);
             return;
         }
+        // Enqueue itself.
         auto s = acquireSudog();
         s->g = getg();
         s->ticket = t;
@@ -701,16 +778,25 @@ namespace golang::runtime
     //go:linkname notifyListNotifyAll sync.runtime_notifyListNotifyAll
     void notifyListNotifyAll(struct notifyList* l)
     {
+        // Fast-path: if there are no new waiters since the last notification
+        // we don't need to acquire the lock.
         if(rec::Load(gocpp::recv(l->wait)) == atomic::Load(& l->notify))
         {
             return;
         }
+        // Pull the list out into a local variable, waiters will be readied
+        // outside the lock.
         lockWithRank(& l->lock, lockRankNotifyList);
         auto s = l->head;
         l->head = nullptr;
         l->tail = nullptr;
+        // Update the next ticket to be notified. We can set it to the current
+        // value of wait because any previous waiters are already in the list
+        // or will notice that they have already been notified when trying to
+        // add themselves to the list.
         atomic::Store(& l->notify, rec::Load(gocpp::recv(l->wait)));
         unlock(& l->lock);
+        // Go through the local list and ready all waiters.
         for(; s != nullptr; )
         {
             auto next = s->next;
@@ -725,18 +811,34 @@ namespace golang::runtime
     //go:linkname notifyListNotifyOne sync.runtime_notifyListNotifyOne
     void notifyListNotifyOne(struct notifyList* l)
     {
+        // Fast-path: if there are no new waiters since the last notification
+        // we don't need to acquire the lock at all.
         if(rec::Load(gocpp::recv(l->wait)) == atomic::Load(& l->notify))
         {
             return;
         }
         lockWithRank(& l->lock, lockRankNotifyList);
+        // Re-check under the lock if we need to do anything.
         auto t = l->notify;
         if(t == rec::Load(gocpp::recv(l->wait)))
         {
             unlock(& l->lock);
             return;
         }
+        // Update the next notify ticket number.
         atomic::Store(& l->notify, t + 1);
+        // Try to find the g that needs to be notified.
+        // If it hasn't made it to the list yet we won't find it,
+        // but it won't park itself once it sees the new notify number.
+        // This scan looks linear but essentially always stops quickly.
+        // Because g's queue separately from taking numbers,
+        // there may be minor reorderings in the list, but we
+        // expect the g we're looking for to be near the front.
+        // The g has others in front of it on the list only to the
+        // extent that it lost the race, so the iteration will not
+        // be too long. This applies even when the g is missing:
+        // it hasn't yet gotten to sleep and has lost the race to
+        // the (few) other g's that we find on the list.
         for(auto [p, s] = std::tuple{(sudog*)(nullptr), l->head}; s != nullptr; std::tie(p, s) = std::tuple{s, s->next})
         {
             if(s->ticket == t)

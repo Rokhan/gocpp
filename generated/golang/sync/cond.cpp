@@ -143,6 +143,10 @@ namespace golang::sync
     // copyChecker holds back pointer to itself to detect object copying.
     void rec::check(golang::sync::copyChecker* c)
     {
+        // Check if c has been copied in three steps:
+        // 1. The first comparison is the fast-path. If c has been initialized and not copied, this will return immediately. Otherwise, c is either not initialized, or has been copied.
+        // 2. Ensure c is initialized. If the CAS succeeds, we're done. If it fails, c was either initialized concurrently and we simply lost the race, or c has been copied.
+        // 3. Do step 1 again. Now that c is definitely initialized, if this fails, c was copied.
         if(uintptr_t(*c) != uintptr_t(gocpp::unsafe_pointer(c)) && ! atomic::CompareAndSwapUintptr((uintptr_t*)(c), 0, uintptr_t(gocpp::unsafe_pointer(c))) && uintptr_t(*c) != uintptr_t(gocpp::unsafe_pointer(c)))
         {
             gocpp::panic("sync.Cond is copied"_s);

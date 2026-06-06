@@ -125,10 +125,13 @@ namespace golang::windows
         auto [ret, err] = adjustTokenPrivileges(token, disableAllPrivileges, newstate, buflen, prevstate, returnlen);
         if(ret == 0)
         {
+            // AdjustTokenPrivileges call failed
             return err;
         }
+        // AdjustTokenPrivileges call succeeded
         if(err == syscall::go_EINVAL)
         {
+            // GetLastError returned ERROR_SUCCESS
             return nullptr;
         }
         return err;

@@ -123,11 +123,13 @@ namespace golang::runtime
     // a more sophisticated and general approach in the future.
     int64_t ticksPerSecond()
     {
+        // Get the conversion rate if we've already computed it.
         auto r = rec::Load(gocpp::recv(ticks.val));
         if(r != 0)
         {
             return r;
         }
+        // Compute the conversion rate.
         for(; ; )
         {
             lock(& ticks.lock);
@@ -137,13 +139,18 @@ namespace golang::runtime
                 unlock(& ticks.lock);
                 return r;
             }
+            // Grab the current time in both clocks.
             auto nowTime = nanotime();
             auto nowTicks = cputicks();
+            // See if we can use these times.
             if(nowTicks > ticks.startTicks && nowTime - ticks.startTime > minTimeForTicksPerSecond)
             {
+                // Perform the calculation with floats. We don't want to risk overflow.
                 r = int64_t(double(nowTicks - ticks.startTicks) * 1e9 / double(nowTime - ticks.startTime));
                 if(r == 0)
                 {
+                    // Zero is both a sentinel value and it would be bad if callers used this as
+                    // a divisor. We tried out best, so just make it 1.
                     r++;
                 }
                 rec::Store(gocpp::recv(ticks.val), r);
@@ -151,6 +158,7 @@ namespace golang::runtime
                 break;
             }
             unlock(& ticks.lock);
+            // Sleep in one millisecond increments until we have a reliable time.
             timeSleep(1000000);
         }
         return r;

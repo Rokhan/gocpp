@@ -138,6 +138,7 @@ namespace golang::zlib
     void rec::Reset(golang::zlib::Writer* z, io::Writer w)
     {
         z->w = w;
+        // z.level and z.dict left unchanged.
         if(z->compressor != nullptr)
         {
             rec::Reset(gocpp::recv(z->compressor), w);
@@ -156,7 +157,14 @@ namespace golang::zlib
     {
         struct gocpp::error err;
         z->wroteHeader = true;
+        // ZLIB has a two-byte header (as documented in RFC 1950).
+        // The first four bits is the CINFO (compression info), which is 7 for the default deflate window size.
+        // The next four bits is the CM (compression method), which is 8 for deflate.
         z->scratch[0] = 0x78;
+        // The next two bits is the FLEVEL (compression level). The four values are:
+        // 0=fastest, 1=fast, 2=default, 3=best.
+        // The next bit, FDICT, is set if a dictionary is given.
+        // The final five FCHECK bits form a mod-31 checksum.
         //Go switch emulation
         {
             auto condition = z->level;
@@ -211,6 +219,7 @@ namespace golang::zlib
         }
         if(z->dict != nullptr)
         {
+            // The next four bytes are the Adler-32 checksum of the dictionary.
             rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0), adler32::Checksum(z->dict));
             if(std::tie(std::ignore, err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4)); err != nullptr)
             {
@@ -219,6 +228,8 @@ namespace golang::zlib
         }
         if(z->compressor == nullptr)
         {
+            // Initialize deflater unless the Writer is being reused
+            // after a Reset call.
             std::tie(z->compressor, err) = flate::NewWriterDict(z->w, z->level, z->dict);
             if(err != nullptr)
             {
@@ -291,6 +302,7 @@ namespace golang::zlib
             return z->err;
         }
         auto checksum = rec::Sum32(gocpp::recv(z->digest));
+        // ZLIB (RFC 1950) is big-endian, unlike GZIP (RFC 1952).
         rec::PutUint32(gocpp::recv(binary::BigEndian), z->scratch.make_slice(0), checksum);
         std::tie(std::ignore, z->err) = rec::Write(gocpp::recv(z->w), z->scratch.make_slice(0, 4));
         return z->err;

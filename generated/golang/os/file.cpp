@@ -226,6 +226,7 @@ namespace golang::os
         std::tie(n, handled, e) = rec::readFrom(gocpp::recv(f), r);
         if(! handled)
         {
+            // without wrapping
             return genericReadFrom(f, r);
         }
         return {n, rec::wrapErr(gocpp::recv(f), "write"_s, e)};
@@ -394,6 +395,7 @@ namespace golang::os
         {
             return {n, rec::wrapErr(gocpp::recv(f), "read"_s, e)};
         }
+        // without wrapping
         return genericWriteTo(f, w);
     }
 
@@ -527,6 +529,7 @@ namespace golang::os
                 x.Err = e;
             }));
         }
+        // mkdir(2) itself won't handle the sticky bit on *BSD and Solaris
         if(! supportsCreateWithStickyBit && perm & ModeSticky != 0)
         {
             e = setStickyBit(name);
@@ -556,6 +559,7 @@ namespace golang::os
     {
         if(auto e = syscall::Chdir(dir); e != nullptr)
         {
+            // observe likely non-existent directory
             testlog::Open(dir);
             return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
                 x.Op = "chdir"_s;
@@ -737,6 +741,7 @@ namespace golang::os
                     dir += "/lib/cache"_s;
                     break;
                 default:
+                    // Unix
                     dir = Getenv("XDG_CACHE_HOME"_s);
                     if(dir == ""_s)
                     {
@@ -804,6 +809,7 @@ namespace golang::os
                     dir += "/lib"_s;
                     break;
                 default:
+                    // Unix
                     dir = Getenv("XDG_CONFIG_HOME"_s);
                     if(dir == ""_s)
                     {
@@ -851,6 +857,7 @@ namespace golang::os
         {
             return {v, nullptr};
         }
+        // On some geese the home directory is not always defined.
         //Go switch emulation
         {
             auto condition = mocklib::GOOS;
@@ -995,6 +1002,10 @@ namespace golang::os
         std::tie(f, err) = os::Open(fullname);
         if(err != nullptr)
         {
+            // DirFS takes a string appropriate for GOOS,
+            // while the name argument here is always slash separated.
+            // dir.join will have mixed the two; undo that for
+            // error reporting.
             gocpp::getValue<os::PathError*>(err)->Path = name;
             return {nullptr, err};
         }
@@ -1022,6 +1033,7 @@ namespace golang::os
         {
             if(auto [e, ok] = gocpp::getValue<os::PathError*>(err); ok)
             {
+                // See comment in dirFS.Open.
                 e->Path = name;
             }
             return {nullptr, err};
@@ -1048,6 +1060,7 @@ namespace golang::os
         {
             if(auto [e, ok] = gocpp::getValue<os::PathError*>(err); ok)
             {
+                // See comment in dirFS.Open.
                 e->Path = name;
             }
             return {nullptr, err};
@@ -1070,6 +1083,7 @@ namespace golang::os
         std::tie(f, err) = os::Stat(fullname);
         if(err != nullptr)
         {
+            // See comment in dirFS.Open.
             gocpp::getValue<os::PathError*>(err)->Path = name;
             return {nullptr, err};
         }
@@ -1124,7 +1138,12 @@ namespace golang::os
                     size = int(size64);
                 }
             }
+            // one byte for final read at EOF
             size++;
+            // If a file claims a small size, read at least 512 bytes.
+            // In particular, files in Linux's /proc claim size 0 but
+            // then do not work right if read in small pieces,
+            // so an initial read of 1 byte would not work correctly.
             if(size < 512)
             {
                 size = 512;

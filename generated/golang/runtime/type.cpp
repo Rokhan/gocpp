@@ -252,6 +252,7 @@ namespace golang::runtime
                 });
             }
         }
+        // No module found. see if it is a run time name.
         reflectOffsLock();
         auto [res, found] = reflectOffs.m[int32_t(off)];
         reflectOffsUnlock();
@@ -278,6 +279,8 @@ namespace golang::runtime
     {
         if(off == 0 || off == - 1)
         {
+            // -1 is the sentinel value for unreachable code.
+            // See cmd/link/internal/ld/data.go:relocsym.
             return nullptr;
         }
         auto base = uintptr_t(ptrInModule);
@@ -328,6 +331,8 @@ namespace golang::runtime
     {
         if(off == - 1)
         {
+            // -1 is the sentinel value for unreachable code.
+            // See cmd/link/internal/ld/data.go:relocsym.
             return gocpp::unsafe_pointer(abi::FuncPCABIInternal(unreachableMethod));
         }
         auto base = uintptr_t(gocpp::unsafe_pointer(t.Type));
@@ -424,6 +429,7 @@ namespace golang::runtime
         auto prev = modules[0];
         for(auto [gocpp_ignored, md] : modules.make_slice(1))
         {
+            // Collect types from the previous module into typehash.
             collect:
             for(auto [gocpp_ignored, tl] : prev->typelinks)
             {
@@ -442,6 +448,7 @@ namespace golang::runtime
                 {
                     t = prev->typemap[typeOff(tl)];
                 }
+                // Add to typehash if not seen before.
                 auto tlist = typehash[t->Hash];
                 for(auto [gocpp_ignored, tcur] : tlist)
                 {
@@ -454,6 +461,9 @@ namespace golang::runtime
             }
             if(md->typemap == nullptr)
             {
+                // If any of this module's typelinks match a type from a
+                // prior module, prefer that prior type by adding the offset
+                // to this module's typemap.
                 auto tm = gocpp::make(gocpp::Tag<gocpp::map<runtime::typeOff, runtime::_type*>>(), len(md->typelinks));
                 pinnedTypemaps = append(pinnedTypemaps, tm);
                 md->typemap = tm;
@@ -591,6 +601,9 @@ namespace golang::runtime
         {
             return true;
         }
+        // mark these types as seen, and thus equivalent which prevents an infinite loop if
+        // the two types are identical, but recursively defined and loaded from
+        // different modules
         seen[tp] = gocpp_id_4 {};
         if(t == v)
         {
@@ -695,6 +708,8 @@ namespace golang::runtime
                     {
                         auto tm = & it->Methods[i];
                         auto vm = & iv->Methods[i];
+                        // Note the mhdr array can be relocated from
+                        // another module. See #17724.
                         auto tname = resolveNameOff(gocpp::unsafe_pointer(tm), tm->Name);
                         auto vname = resolveNameOff(gocpp::unsafe_pointer(vm), vm->Name);
                         if(rec::Name(gocpp::recv(tname)) != rec::Name(gocpp::recv(vname)))

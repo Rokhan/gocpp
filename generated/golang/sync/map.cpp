@@ -182,11 +182,17 @@ namespace golang::sync
         if(! ok && read.amended)
         {
             rec::Lock(gocpp::recv(m->mu));
+            // Avoid reporting a spurious miss if m.dirty got promoted while we were
+            // blocked on m.mu. (If further loads of the same key will not miss, it's
+            // not worth copying the dirty map for this key.)
             read = rec::loadReadOnly(gocpp::recv(m));
             std::tie(e, ok) = read.m[key];
             if(! ok && read.amended)
             {
                 std::tie(e, ok) = m->dirty[key];
+                // Regardless of whether the entry was present, record a miss: this key
+                // will take the slow path until the dirty map is promoted to the read
+                // map.
                 rec::missLocked(gocpp::recv(m));
             }
             rec::Unlock(gocpp::recv(m->mu));
@@ -229,6 +235,9 @@ namespace golang::sync
         {
             return false;
         }
+        // Copy the interface after the first load to make this method more amenable
+        // to escape analysis: if the comparison fails from the start, we shouldn't
+        // bother heap-allocating an interface value to store.
         auto nc = go_new;
         for(; ; )
         {
@@ -269,6 +278,7 @@ namespace golang::sync
     {
         go_any actual;
         bool loaded;
+        // Avoid locking if it's a clean hit.
         auto read = rec::loadReadOnly(gocpp::recv(m));
         if(auto [e, ok] = read.m[key]; ok)
         {
@@ -298,6 +308,8 @@ namespace golang::sync
         {
             if(! read.amended)
             {
+                // We're adding the first new key to the dirty map.
+                // Make sure it is allocated and mark the read-only map as incomplete.
                 rec::dirtyLocked(gocpp::recv(m));
                 rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
                     x.m = read.m;
@@ -330,6 +342,9 @@ namespace golang::sync
         {
             return {*p, true, true};
         }
+        // Copy the interface after the first load to make this method more amenable
+        // to escape analysis: if we hit the "load" path or the entry is expunged, we
+        // shouldn't bother heap-allocating.
         auto ic = i;
         for(; ; )
         {
@@ -366,6 +381,9 @@ namespace golang::sync
             {
                 std::tie(e, ok) = m->dirty[key];
                 remove(m->dirty, key);
+                // Regardless of whether the entry was present, record a miss: this key
+                // will take the slow path until the dirty map is promoted to the read
+                // map.
                 rec::missLocked(gocpp::recv(m));
             }
             rec::Unlock(gocpp::recv(m->mu));
@@ -445,6 +463,8 @@ namespace golang::sync
         {
             if(rec::unexpungeLocked(gocpp::recv(e)))
             {
+                // The entry was previously expunged, which implies that there is a
+                // non-nil dirty map and this entry is not in it.
                 m->dirty[key] = e;
             }
             if(auto v = rec::swapLocked(gocpp::recv(e), & value); v != nullptr)
@@ -466,6 +486,8 @@ namespace golang::sync
         {
             if(! read.amended)
             {
+                // We're adding the first new key to the dirty map.
+                // Make sure it is allocated and mark the read-only map as incomplete.
                 rec::dirtyLocked(gocpp::recv(m));
                 rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
                     x.m = read.m;
@@ -494,6 +516,7 @@ namespace golang::sync
             else
             if(! read.amended)
             {
+                // No existing value for key.
                 return false;
             }
             rec::Lock(gocpp::recv(m->mu));
@@ -508,6 +531,12 @@ namespace golang::sync
             if(auto [e, ok] = m->dirty[key]; ok)
             {
                 swapped = rec::tryCompareAndSwap(gocpp::recv(e), old, go_new);
+                // We needed to lock mu in order to load the entry for key,
+                // and the operation didn't change the set of keys in the map
+                // (so it would be made more efficient by promoting the dirty
+                // map to read-only).
+                // Count it as a miss so that we will eventually switch to the
+                // more efficient steady state.
                 rec::missLocked(gocpp::recv(m));
             }
             return swapped;
@@ -536,6 +565,12 @@ namespace golang::sync
             if(! ok && read.amended)
             {
                 std::tie(e, ok) = m->dirty[key];
+                // Don't delete key from m.dirty: we still need to do the “compare” part
+                // of the operation. The entry will eventually be expunged when the
+                // dirty map is promoted to the read map.
+                // Regardless of whether the entry was present, record a miss: this key
+                // will take the slow path until the dirty map is promoted to the read
+                // map.
                 rec::missLocked(gocpp::recv(m));
             }
             rec::Unlock(gocpp::recv(m->mu));
@@ -568,9 +603,17 @@ namespace golang::sync
     // false after a constant number of calls.
     void rec::Range(golang::sync::Map* m, std::function<bool (go_any key, go_any value)> f)
     {
+        // We need to be able to iterate over all of the keys that were already
+        // present at the start of the call to Range.
+        // If read.amended is false, then read.m satisfies that property without
+        // requiring us to hold m.mu for a long time.
         auto read = rec::loadReadOnly(gocpp::recv(m));
         if(read.amended)
         {
+            // m.dirty contains keys not in read.m. Fortunately, Range is already O(N)
+            // (assuming the caller does not break out early), so a call to Range
+            // amortizes an entire copy of the map: we can promote the dirty copy
+            // immediately!
             rec::Lock(gocpp::recv(m->mu));
             read = rec::loadReadOnly(gocpp::recv(m));
             if(read.amended)

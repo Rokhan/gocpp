@@ -29,12 +29,14 @@ namespace golang::flate
     // buffer to not risk overflowing the int32.
     uint32_t load32(gocpp::slice<unsigned char> b, int32_t i)
     {
+        // Help the compiler eliminate bounds checks on the next line.
         b = b.make_slice(i, i + 4, len(b));
         return uint32_t(b[0]) | (uint32_t(b[1]) << 8) | (uint32_t(b[2]) << 16) | (uint32_t(b[3]) << 24);
     }
 
     uint64_t load64(gocpp::slice<unsigned char> b, int32_t i)
     {
+        // Help the compiler eliminate bounds checks on the next line.
         b = b.make_slice(i, i + 8, len(b));
         return uint64_t(b[0]) | (uint64_t(b[1]) << 8) | (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) | (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) | (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
     }
@@ -129,23 +131,43 @@ namespace golang::flate
     // to dst and returns the result.
     gocpp::slice<flate::token> rec::encode(golang::flate::deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src)
     {
+        // Ensure that e.cur doesn't wrap.
         if(e->cur >= bufferReset)
         {
             rec::shiftOffsets(gocpp::recv(e));
         }
+        // This check isn't in the Snappy implementation, but there, the caller
+        // instead of the callee handles this case.
         if(len(src) < minNonLiteralBlockSize)
         {
             e->cur += maxStoreBlockSize;
             e->prev = e->prev.make_slice(0, 0);
             return emitLiteral(dst, src);
         }
+        // sLimit is when to stop looking for offset/length copies. The inputMargin
+        // lets us use a fast path for emitLiteral in the main loop, while we are
+        // looking for copies.
         auto sLimit = int32_t(len(src) - inputMargin);
+        // nextEmit is where in src the next emitLiteral should start from.
         auto nextEmit = int32_t(0);
         auto s = int32_t(0);
         auto cv = load32(src, s);
         auto nextHash = hash(cv);
         for(; ; )
         {
+            // Copied from the C++ snappy implementation:
+            // Heuristic match skipping: If 32 bytes are scanned with no matches
+            // found, start looking only at every other byte. If 32 more bytes are
+            // scanned (or skipped), look at every third byte, etc.. When a match
+            // is found, immediately go back to looking at every byte. This is a
+            // small loss (~5% performance, ~0.1% density) for compressible data
+            // due to more bookkeeping, but for non-compressible data (such as
+            // JPEG) it's a huge win since the compressor quickly "realizes" the
+            // data is incompressible and doesn't bother looking for matches
+            // everywhere.
+            // The "skip" variable keeps track of how many bytes there are since
+            // the last match; dividing it by 32 (ie. right-shifting by five) gives
+            // the number of bytes to move ahead for each iteration.
             auto skip = int32_t(32);
             auto nextS = s;
             tableEntry candidate = {};
@@ -169,17 +191,32 @@ namespace golang::flate
                 auto offset = s - (candidate.offset - e->cur);
                 if(offset > maxMatchOffset || cv != candidate.val)
                 {
+                    // Out of range or not matched.
                     cv = now;
                     continue;
                 }
                 break;
             }
+            // A 4-byte match has been found. We'll later see if more than 4 bytes
+            // match. But, prior to the match, src[nextEmit:s] are unmatched. Emit
+            // them as literal bytes.
             dst = emitLiteral(dst, src.make_slice(nextEmit, s));
+            // Call emitCopy, and then see if another emitCopy could be our next
+            // move. Repeat until we find no match for the input immediately after
+            // what was consumed by the last emitCopy call.
+            // If we exit this loop normally then we need to call emitLiteral next,
+            // though we don't yet know how big the literal will be. We handle that
+            // by proceeding to the next iteration of the main loop. We also can
+            // exit this loop via goto if we get close to exhausting the input.
             for(; ; )
             {
+                // Invariant: we have a 4-byte match at s, and no need to emit any
+                // literal bytes prior to s.
+                // Extend the 4-byte match as long as possible.
                 s += 4;
                 auto t = candidate.offset - e->cur + 4;
                 auto l = rec::matchLen(gocpp::recv(e), s, t, src);
+                // matchToken is flate's equivalent of Snappy's emitCopy. (length,offset)
                 dst = append(dst, matchToken(uint32_t(l + 4 - baseMatchLength), uint32_t(s - t - baseMatchOffset)));
                 s += l;
                 nextEmit = s;
@@ -187,6 +224,12 @@ namespace golang::flate
                 {
                     goto emitRemainder;
                 }
+                // We could immediately start working at s now, but to improve
+                // compression we first update the hash table at s-1 and at s. If
+                // another emitCopy is not our next move, also calculate nextHash
+                // at s+1. At least on GOARCH=amd64, these three hash calculations
+                // are faster as one load64 call (with some shifts) instead of
+                // three load32 calls.
                 auto x = load64(src, s - 1);
                 auto prevHash = hash(uint32_t(x));
                 e->table[prevHash & tableMask] = gocpp::Init<tableEntry>([=](auto& y) {
@@ -240,11 +283,13 @@ namespace golang::flate
         {
             s1 = len(src);
         }
+        // If we are inside the current block
         if(t >= 0)
         {
             auto b = src.make_slice(t);
             auto a = src.make_slice(s, s1);
             b = b.make_slice(0, len(a));
+            // Extend the match to be as long as possible.
             for(auto [i, gocpp_ignored] : a)
             {
                 if(a[i] != b[i])
@@ -254,11 +299,13 @@ namespace golang::flate
             }
             return int32_t(len(a));
         }
+        // We found a match in the previous block.
         auto tp = int32_t(len(e->prev)) + t;
         if(tp < 0)
         {
             return 0;
         }
+        // Extend the match to be as long as possible.
         auto a = src.make_slice(s, s1);
         auto b = e->prev.make_slice(tp);
         if(len(b) > len(a))
@@ -273,11 +320,14 @@ namespace golang::flate
                 return int32_t(i);
             }
         }
+        // If we reached our limit, we matched everything we are
+        // allowed to in the previous block and we return.
         auto n = int32_t(len(b));
         if(int(s + n) == s1)
         {
             return n;
         }
+        // Continue looking for more matches in the current block.
         a = src.make_slice(s + n, s1);
         b = src.make_slice(0, len(a));
         for(auto [i, gocpp_ignored] : a)
@@ -295,7 +345,10 @@ namespace golang::flate
     void rec::reset(golang::flate::deflateFast* e)
     {
         e->prev = e->prev.make_slice(0, 0);
+        // Bump the offset, so all matches will fail distance check.
+        // Nothing should be >= e.cur in the table.
         e->cur += maxMatchOffset;
+        // Protect against e.cur wraparound.
         if(e->cur >= bufferReset)
         {
             rec::shiftOffsets(gocpp::recv(e));
@@ -310,6 +363,7 @@ namespace golang::flate
     {
         if(len(e->prev) == 0)
         {
+            // We have no history; just clear the table.
             for(auto [i, gocpp_ignored] : e->table.make_slice(0))
             {
                 e->table[i] = tableEntry {};
@@ -317,11 +371,16 @@ namespace golang::flate
             e->cur = maxMatchOffset + 1;
             return;
         }
+        // Shift down everything in the table that isn't already too far away.
         for(auto [i, gocpp_ignored] : e->table.make_slice(0))
         {
             auto v = e->table[i].offset - e->cur + maxMatchOffset + 1;
             if(v < 0)
             {
+                // We want to reset e.cur to maxMatchOffset + 1, so we need to shift
+                // all table entries down by (e.cur - (maxMatchOffset + 1)).
+                // Because we ignore matches > maxMatchOffset, we can cap
+                // any negative offsets at 0.
                 v = 0;
             }
             e->table[i].offset = v;

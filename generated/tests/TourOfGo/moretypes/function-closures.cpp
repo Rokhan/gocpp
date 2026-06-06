@@ -34,16 +34,19 @@ namespace golang::main
     gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(s));
+        // Do nothing, we just need the prototype of mapping function for the test
         return b;
     }
 
     gocpp::rune ToUpper(gocpp::rune r)
     {
+        // Do nothing, we just need the prototype of ToUpper function for the test
         return r;
     }
 
     gocpp::rune rec::ToUpper(golang::main::SpecialCase special, gocpp::rune r)
     {
+        // Do nothing, we just need the prototype of ToUpper function for the test
         return r;
     }
 

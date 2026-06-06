@@ -67,6 +67,7 @@ namespace golang::runtime
     {
         if(GOARCH == "wasm"_s && n > 1)
         {
+            // WebAssembly has no threads yet, so only one CPU is possible.
             n = 1;
         }
         lock(& sched.lock);
@@ -77,6 +78,7 @@ namespace golang::runtime
             return ret;
         }
         auto stw = stopTheWorldGC(stwGOMAXPROCS);
+        // newprocs will be processed by startTheWorld
         newprocs = int32_t(n);
         startTheWorldGC(stw);
         return ret;
@@ -149,11 +151,13 @@ namespace golang::runtime
     //go:linkname mayMoreStackPreempt
     void mayMoreStackPreempt()
     {
+        // Don't do anything on the g0 or gsignal stack.
         auto gp = getg();
         if(gp == gp->m->g0 || gp == gp->m->gsignal)
         {
             return;
         }
+        // Force a preemption, unless the stack is already poisoned.
         if(gp->stackguard0 < stackPoisonMin)
         {
             gp->stackguard0 = stackPreempt;
@@ -169,11 +173,13 @@ namespace golang::runtime
     //go:linkname mayMoreStackMove
     void mayMoreStackMove()
     {
+        // Don't do anything on the g0 or gsignal stack.
         auto gp = getg();
         if(gp == gp->m->g0 || gp == gp->m->gsignal)
         {
             return;
         }
+        // Force stack movement, unless the stack is already poisoned.
         if(gp->stackguard0 < stackPoisonMin)
         {
             gp->stackguard0 = stackForceMove;

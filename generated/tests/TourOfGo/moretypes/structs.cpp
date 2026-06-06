@@ -609,17 +609,29 @@ namespace golang::main
         mocklib::Println("Size of Anonymous struct:"_s, gocpp::Sizeof<gocpp_id_0>());
         // test field access
         Dummy3 d3 = Dummy3 {Dummy2 {Dummy {1, 2}, Vertex {3, 4}, 5}, 6, 7};
+        // should print 1
         mocklib::Println(d3.Dummy2.Dummy.i);
+        // should print 2
         mocklib::Println(d3.Dummy2.Dummy.j);
+        // should print 3
         mocklib::Println(d3.Dummy2.Vertex.X);
+        // should print 4
         mocklib::Println(d3.Dummy2.Vertex.Y);
+        // should print 1
         mocklib::Println(d3.Dummy2.Dummy.i);
+        // should print 2
         mocklib::Println(d3.Dummy2.Dummy.j);
+        // should print 3
         mocklib::Println(d3.Dummy2.Vertex.X);
+        // should print 4
         mocklib::Println(d3.Dummy2.Vertex.Y);
+        // should print 5
         mocklib::Println(d3.Dummy2.i);
+        // should print 2
         mocklib::Println(d3.Dummy2.Dummy.j);
+        // should print 3
         mocklib::Println(d3.Dummy2.Vertex.X);
+        // should print 4
         mocklib::Println(d3.Dummy2.Vertex.Y);
     }
 

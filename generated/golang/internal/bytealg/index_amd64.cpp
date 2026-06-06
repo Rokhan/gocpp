@@ -38,6 +38,7 @@ namespace golang::bytealg
     // See the bytes.Index implementation for details.
     int Cutover(int n)
     {
+        // 1 error per 8 characters, plus a few slop to start.
         return (n + 16) / 8;
     }
 

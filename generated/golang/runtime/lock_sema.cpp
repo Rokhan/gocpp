@@ -75,6 +75,7 @@ namespace golang::runtime
             go_throw("runtime·lock: lock count"_s);
         }
         gp->m->locks++;
+        // Speculative grab for lock.
         if(atomic::Casuintptr(& l->key, 0, locked))
         {
             return;
@@ -84,6 +85,8 @@ namespace golang::runtime
             x.lock = l;
         });
         rec::begin(gocpp::recv(timer));
+        // On uniprocessor's, no point spinning.
+        // On multiprocessors, spin for ACTIVE_SPIN attempts.
         auto spin = 0;
         if(ncpu > 1)
         {
@@ -101,6 +104,7 @@ namespace golang::runtime
             auto v = atomic::Loaduintptr(& l->key);
             if(v & locked == 0)
             {
+                // Unlocked. Try to lock.
                 if(atomic::Casuintptr(& l->key, v, v | locked))
                 {
                     rec::end(gocpp::recv(timer));
@@ -119,6 +123,10 @@ namespace golang::runtime
             }
             else
             {
+                // Someone else has it.
+                // l->waitm points to a linked list of M's waiting
+                // for this lock, chained through m->nextwaitm.
+                // Queue this M.
                 for(; ; )
                 {
                     gp->m->nextwaitm = muintptr(v &^ locked);
@@ -134,6 +142,7 @@ namespace golang::runtime
                 }
                 if(v & locked != 0)
                 {
+                    // Queued. Wait.
                     semasleep(- 1);
                     i = 0;
                 }
@@ -165,9 +174,12 @@ namespace golang::runtime
             }
             else
             {
+                // Other M's are waiting for the lock.
+                // Dequeue an M.
                 mp = rec::ptr(gocpp::recv(muintptr(v &^ locked)));
                 if(atomic::Casuintptr(& l->key, v, uintptr_t(mp->nextwaitm)))
                 {
+                    // Dequeued an M.  Wake it.
                     semawakeup(mp);
                     break;
                 }
@@ -181,6 +193,7 @@ namespace golang::runtime
         }
         if(gp->m->locks == 0 && gp->preempt)
         {
+            // restore the preemption request in case we've cleared it in newstack
             gp->stackguard0 = stackPreempt;
         }
     }
@@ -202,6 +215,8 @@ namespace golang::runtime
                 break;
             }
         }
+        // Successfully set waitm to locked.
+        // What was it before?
         //Go switch emulation
         {
             int conditionId = -1;
@@ -211,10 +226,13 @@ namespace golang::runtime
             {
                 case 0:
                     break;
+                // Nothing was waiting. Done.
                 case 1:
+                    // Two notewakeups! Not allowed.
                     go_throw("notewakeup - double wakeup"_s);
                     break;
                 default:
+                    // Must be the waiting m. Wake it up.
                     semawakeup((m*)(gocpp::unsafe_pointer(v)));
                     break;
             }
@@ -231,12 +249,14 @@ namespace golang::runtime
         semacreate(gp->m);
         if(! atomic::Casuintptr(& n->key, 0, uintptr_t(gocpp::unsafe_pointer(gp->m))))
         {
+            // Must be locked (got wakeup).
             if(n->key != locked)
             {
                 go_throw("notesleep - waitm out of sync"_s);
             }
             return;
         }
+        // Queued. Sleep.
         gp->m->blocked = true;
         if(*cgo_yield == nullptr)
         {
@@ -258,9 +278,15 @@ namespace golang::runtime
     //go:nosplit
     bool notetsleep_internal(struct note* n, int64_t ns, struct g* gp, int64_t deadline)
     {
+        // gp and deadline are logically local variables, but they are written
+        // as parameters so that the stack space they require is charged
+        // to the caller.
+        // This reduces the nosplit footprint of notetsleep_internal.
         gp = getg();
+        // Register for wakeup on n->waitm.
         if(! atomic::Casuintptr(& n->key, 0, uintptr_t(gocpp::unsafe_pointer(gp->m))))
         {
+            // Must be locked (got wakeup).
             if(n->key != locked)
             {
                 go_throw("notetsleep - waitm out of sync"_s);
@@ -269,6 +295,7 @@ namespace golang::runtime
         }
         if(ns < 0)
         {
+            // Queued. Sleep.
             gp->m->blocked = true;
             if(*cgo_yield == nullptr)
             {
@@ -289,6 +316,7 @@ namespace golang::runtime
         deadline = nanotime() + ns;
         for(; ; )
         {
+            // Registered. Sleep.
             gp->m->blocked = true;
             if(*cgo_yield != nullptr && ns > 10e6)
             {
@@ -297,6 +325,8 @@ namespace golang::runtime
             if(semasleep(ns) >= 0)
             {
                 gp->m->blocked = false;
+                // Acquired semaphore, semawakeup unregistered us.
+                // Done.
                 return true;
             }
             if(*cgo_yield != nullptr)
@@ -304,12 +334,18 @@ namespace golang::runtime
                 asmcgocall(*cgo_yield, nullptr);
             }
             gp->m->blocked = false;
+            // Interrupted or timed out. Still registered. Semaphore not acquired.
             ns = deadline - nanotime();
+            // Deadline hasn't arrived. Keep sleeping.
             if(ns <= 0)
             {
                 break;
             }
         }
+        // Deadline arrived. Still registered. Semaphore not acquired.
+        // Want to give up and return, but have to unregister first,
+        // so that any notewakeup racing with the return does not
+        // try to grant us the semaphore when we don't expect it.
         for(; ; )
         {
             auto v = atomic::Loaduintptr(& n->key);
@@ -322,12 +358,15 @@ namespace golang::runtime
                 switch(conditionId)
                 {
                     case 0:
+                        // No wakeup yet; unregister if possible.
                         if(atomic::Casuintptr(& n->key, v, 0))
                         {
                             return false;
                         }
                         break;
                     case 1:
+                        // Wakeup happened so semaphore is available.
+                        // Grab it to avoid getting out of sync.
                         gp->m->blocked = true;
                         if(semasleep(- 1) < 0)
                         {

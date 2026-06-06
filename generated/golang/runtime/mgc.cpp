@@ -120,7 +120,11 @@ namespace golang::runtime
         {
             go_throw("size of Workbuf is suboptimal"_s);
         }
+        // No sweep on the first cycle.
         rec::Store(gocpp::recv(sweep.active.state), sweepDrainedMask);
+        // Initialize GC pacer state.
+        // Use the environment variable GOGC for the initial gcPercent value.
+        // Use the environment variable GOMEMLIMIT for the initial memoryLimit value.
         rec::init(gocpp::recv(gcController), readGOGC(), readGOMEMLIMIT());
         work.startSema = 1;
         work.markDoneSema = 1;
@@ -135,11 +139,13 @@ namespace golang::runtime
     // scavenger goroutine, and enables GC.
     void gcenable()
     {
+        // Kick off sweeping and scavenging.
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>(), 2);
         gocpp::go([&]{ bgsweep(c); });
         gocpp::go([&]{ bgscavenge(c); });
         c.recv();
         c.recv();
+        // now that runtime is initialized, GC is okay
         memstats.enablegc = true;
     }
 
@@ -238,6 +244,8 @@ namespace golang::runtime
     // worker.
     bool pollFractionalWorkerExit()
     {
+        // This should be kept in sync with the fractional worker
+        // scheduler logic in findRunnableGCWorker.
         auto now = nanotime();
         auto delta = now - gcController.markStartTime;
         if(delta <= 0)
@@ -246,6 +254,8 @@ namespace golang::runtime
         }
         auto p = rec::ptr(gocpp::recv(getg()->m->p));
         auto selfTime = p->gcFractionalMarkTime + (now - p->gcMarkWorkerStartTime);
+        // Add some slack to the utilization goal so that the
+        // fractional worker isn't behind again the instant it exits.
         return double(selfTime) / double(delta) > 1.2 * gcController.fractionalUtilizationGoal;
     }
 
@@ -512,21 +522,59 @@ namespace golang::runtime
     // program.
     void GC()
     {
+        // We consider a cycle to be: sweep termination, mark, mark
+        // termination, and sweep. This function shouldn't return
+        // until a full cycle has been completed, from beginning to
+        // end. Hence, we always want to finish up the current cycle
+        // and start a new one. That means:
+        // 1. In sweep termination, mark, or mark termination of cycle
+        // N, wait until mark termination N completes and transitions
+        // to sweep N.
+        // 2. In sweep N, help with sweep N.
+        // At this point we can begin a full cycle N+1.
+        // 3. Trigger cycle N+1 by starting sweep termination N+1.
+        // 4. Wait for mark termination N+1 to complete.
+        // 5. Help with sweep N+1 until it's done.
+        // This all has to be written to deal with the fact that the
+        // GC may move ahead on its own. For example, when we block
+        // until mark termination N, we may wake up in cycle N+2.
+        // Wait until the current sweep termination, mark, and mark
+        // termination complete.
         auto n = rec::Load(gocpp::recv(work.cycles));
         gcWaitOnMark(n);
+        // We're now in sweep N or later. Trigger GC cycle N+1, which
+        // will first finish sweep N if necessary and then enter sweep
+        // termination N+1.
         gcStart(gocpp::Init<gcTrigger>([=](auto& x) {
             x.kind = gcTriggerCycle;
             x.n = n + 1;
         }));
+        // Wait for mark termination N+1 to complete.
         gcWaitOnMark(n + 1);
+        // Finish sweep N+1 before returning. We do this both to
+        // complete the cycle and because runtime.GC() is often used
+        // as part of tests and benchmarks to get the system into a
+        // relatively stable and isolated state.
         for(; rec::Load(gocpp::recv(work.cycles)) == n + 1 && sweepone() != ~ uintptr_t(0); )
         {
             Gosched();
         }
+        // Callers may assume that the heap profile reflects the
+        // just-completed cycle when this returns (historically this
+        // happened because this was a STW GC), but right now the
+        // profile still reflects mark termination N, not N+1.
+        // As soon as all of the sweep frees from cycle N+1 are done,
+        // we can go ahead and publish the heap profile.
+        // First, wait for sweeping to finish. (We know there are no
+        // more spans on the sweep queue, but we may be concurrently
+        // sweeping spans, so we have to wait.)
         for(; rec::Load(gocpp::recv(work.cycles)) == n + 1 && ! isSweepDone(); )
         {
             Gosched();
         }
+        // Now we're really done with sweeping, so we can publish the
+        // stable heap profile. Only do this if we haven't already hit
+        // another mark termination.
         auto mp = acquirem();
         auto cycle = rec::Load(gocpp::recv(work.cycles));
         if(cycle == n + 1 || (gcphase == _GCmark && cycle == n + 2))
@@ -542,17 +590,22 @@ namespace golang::runtime
     {
         for(; ; )
         {
+            // Disable phase transitions.
             lock(& work.sweepWaiters.lock);
             auto nMarks = rec::Load(gocpp::recv(work.cycles));
             if(gcphase != _GCmark)
             {
+                // We've already completed this cycle's mark.
                 nMarks++;
             }
             if(nMarks > n)
             {
+                // We're done.
                 unlock(& work.sweepWaiters.lock);
                 return;
             }
+            // Wait until sweep termination, mark, and mark
+            // termination of cycle N complete.
             rec::push(gocpp::recv(work.sweepWaiters.list), getg());
             goparkunlock(& work.sweepWaiters.lock, waitReasonWaitForGCCycle, traceBlockUntilGCEnds, 1);
         }
@@ -636,6 +689,7 @@ namespace golang::runtime
                     return lastgc != 0 && t.now - lastgc > forcegcperiod;
                     break;
                 case 2:
+                    // t.n > work.cycles, but accounting for wraparound.
                     return int32_t(t.n - rec::Load(gocpp::recv(work.cycles))) > 0;
                     break;
             }
@@ -651,6 +705,10 @@ namespace golang::runtime
     // such as when called on a system stack or with locks held.
     void gcStart(struct gcTrigger trigger)
     {
+        // Since this is called from malloc and malloc is called in
+        // the guts of a number of libraries that might be holding
+        // locks, don't attempt to start GC in non-preemptible or
+        // potentially unstable situations.
         auto mp = acquirem();
         if(auto gp = getg(); gp == mp->g0 || mp->locks > 1 || mp->preemptoff != ""_s)
         {
@@ -659,15 +717,30 @@ namespace golang::runtime
         }
         releasem(mp);
         mp = nullptr;
+        // Pick up the remaining unswept/not being swept spans concurrently
+        // This shouldn't happen if we're being invoked in background
+        // mode since proportional sweep should have just finished
+        // sweeping everything, but rounding errors, etc, may leave a
+        // few spans unswept. In forced mode, this is necessary since
+        // GC can be forced at any point in the sweeping cycle.
+        // We check the transition condition continuously here in case
+        // this G gets delayed in to the next GC cycle.
         for(; rec::test(gocpp::recv(trigger)) && sweepone() != ~ uintptr_t(0); )
         {
         }
+        // Perform GC initialization and the sweep termination
+        // transition.
         semacquire(& work.startSema);
+        // Re-check transition condition under transition lock.
         if(! rec::test(gocpp::recv(trigger)))
         {
             semrelease(& work.startSema);
             return;
         }
+        // In gcstoptheworld debug mode, upgrade the mode accordingly.
+        // We do this after re-checking the transition condition so
+        // that multiple goroutines that detect the heap trigger don't
+        // start multiple STW GCs.
         auto mode = gcBackgroundMode;
         if(debug.gcstoptheworld == 1)
         {
@@ -678,8 +751,11 @@ namespace golang::runtime
         {
             mode = gcForceBlockMode;
         }
+        // Ok, we're doing it! Stop everybody else
         semacquire(& gcsema);
         semacquire(& worldsema);
+        // For stats, check if this GC was forced by the user.
+        // Update it under gcsema to avoid gctrace getting wrong values.
         work.userForced = trigger.kind == gcTriggerCycle;
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
@@ -687,6 +763,7 @@ namespace golang::runtime
             rec::GCStart(gocpp::recv(trace));
             traceRelease(trace);
         }
+        // Check that all Ps have finished deferred mcache flushes.
         for(auto [gocpp_ignored, p] : allp)
         {
             if(auto fg = rec::Load(gocpp::recv(p->mcache->flushGen)); fg != mheap_.sweepgen)
@@ -700,6 +777,8 @@ namespace golang::runtime
         std::tie(work.stwprocs, work.maxprocs) = std::tuple{gomaxprocs, gomaxprocs};
         if(work.stwprocs > ncpu)
         {
+            // This is used to compute CPU time of the STW phases,
+            // so it can't be more than ncpu, even if GOMAXPROCS is.
             work.stwprocs = ncpu;
         }
         work.heap0 = rec::Load(gocpp::recv(gcController.heapLive));
@@ -712,24 +791,59 @@ namespace golang::runtime
         {
             stw = stopTheWorldWithSema(stwGCSweepTerm);
         });
+        // Finish sweep before we start concurrent scan.
         systemstack([=]() mutable -> void
         {
             finishsweep_m();
         });
+        // clearpools before we start the GC. If we wait the memory will not be
+        // reclaimed until the next GC cycle.
         clearpools();
         rec::Add(gocpp::recv(work.cycles), 1);
+        // Assists and workers can start the moment we start
+        // the world.
         rec::startCycle(gocpp::recv(gcController), now, int(gomaxprocs), trigger);
+        // Notify the CPU limiter that assists may begin.
         rec::startGCTransition(gocpp::recv(gcCPULimiter), true, now);
+        // In STW mode, disable scheduling of user Gs. This may also
+        // disable scheduling of this goroutine, so it may block as
+        // soon as we start the world again.
         if(mode != gcBackgroundMode)
         {
             schedEnableUser(false);
         }
+        // Enter concurrent mark phase and enable
+        // write barriers.
+        // Because the world is stopped, all Ps will
+        // observe that write barriers are enabled by
+        // the time we start the world and begin
+        // scanning.
+        // Write barriers must be enabled before assists are
+        // enabled because they must be enabled before
+        // any non-leaf heap objects are marked. Since
+        // allocations are blocked until assists can
+        // happen, we want to enable assists as early as
+        // possible.
         setGCPhase(_GCmark);
+        // Must happen before assists are enabled.
         gcBgMarkPrepare();
         gcMarkRootPrepare();
+        // Mark all active tinyalloc blocks. Since we're
+        // allocating from these, they need to be black like
+        // other allocations. The alternative is to blacken
+        // the tiny block on every allocation from it, which
+        // would slow down the tiny allocator.
         gcMarkTinyAllocs();
+        // At this point all Ps have enabled the write
+        // barrier, thus maintaining the no white to
+        // black invariant. Enable mutator assists to
+        // put back-pressure on fast allocating
+        // mutators.
         atomic::Store(& gcBlackenEnabled, 1);
+        // In STW mode, we could block the instant systemstack
+        // returns, so make sure we're not preemptible.
         mp = acquirem();
+        // Concurrent mark.
         systemstack([=]() mutable -> void
         {
             now = startTheWorldWithSema(0, stw);
@@ -738,10 +852,17 @@ namespace golang::runtime
             auto sweepTermCpu = int64_t(work.stwprocs) * (work.tMark - work.tSweepTerm);
             work.cpuStats.gcPauseTime += sweepTermCpu;
             work.cpuStats.gcTotalTime += sweepTermCpu;
+            // Release the CPU limiter.
             rec::finishGCTransition(gocpp::recv(gcCPULimiter), now);
         });
+        // Release the world sema before Gosched() in STW mode
+        // because we will need to reacquire it later but before
+        // this goroutine becomes runnable again, and we could
+        // self-deadlock otherwise.
         semrelease(& worldsema);
         releasem(mp);
+        // Make sure we block instead of returning to user code
+        // in STW mode.
         if(mode != gcBackgroundMode)
         {
             Gosched();
@@ -779,19 +900,36 @@ namespace golang::runtime
     // objects.
     void gcMarkDone()
     {
+        // Ensure only one thread is running the ragged barrier at a
+        // time.
         semacquire(& work.markDoneSema);
         top:
+        // Re-check transition condition under transition lock.
+        // It's critical that this checks the global work queues are
+        // empty before performing the ragged barrier. Otherwise,
+        // there could be global work that a P could take after the P
+        // has passed the ragged barrier.
         if(! (gcphase == _GCmark && work.nwait == work.nproc && ! gcMarkWorkAvailable(nullptr)))
         {
             semrelease(& work.markDoneSema);
             return;
         }
+        // forEachP needs worldsema to execute, and we'll need it to
+        // stop the world later, so acquire worldsema now.
         semacquire(& worldsema);
+        // Flush all local buffers and collect flushedWork flags.
         gcMarkDoneFlushed = 0;
         forEachP(waitReasonGCMarkTermination, [=](struct p* pp) mutable -> void
         {
+            // Flush the write barrier buffer, since this may add
+            // work to the gcWork.
             wbBufFlush1(pp);
+            // Flush the gcWork, since this may create global work
+            // and set the flushedWork flag.
+            // TODO(austin): Break up these workbufs to
+            // better distribute work.
             rec::dispose(gocpp::recv(pp->gcw));
+            // Collect the flushedWork flag.
             if(pp->gcw.flushedWork)
             {
                 atomic::Xadd(& gcMarkDoneFlushed, 1);
@@ -800,17 +938,36 @@ namespace golang::runtime
         });
         if(gcMarkDoneFlushed != 0)
         {
+            // More grey objects were discovered since the
+            // previous termination check, so there may be more
+            // work to do. Keep going. It's possible the
+            // transition condition became true again during the
+            // ragged barrier, so re-check it.
             semrelease(& worldsema);
             goto top;
         }
+        // There was no global work, no local work, and no Ps
+        // communicated work since we took markDoneSema. Therefore
+        // there are no grey objects and no more objects can be
+        // shaded. Transition to mark termination.
         auto now = nanotime();
         work.tMarkTerm = now;
         getg()->m->preemptoff = "gcing"_s;
         worldStop stw = {};
+        // The gcphase is _GCmark, it will transition to _GCmarktermination
+        // below. The important thing is that the wb remains active until
+        // all marking is complete. This includes writes made by the GC.
         systemstack([=]() mutable -> void
         {
             stw = stopTheWorldWithSema(stwGCMarkTerm);
         });
+        // There is sometimes work left over when we enter mark termination due
+        // to write barriers performed after the completion barrier above.
+        // Detect this and resume concurrent mark. This is obviously
+        // unfortunate.
+        // See issue #27993 for details.
+        // Switch to the system stack to call wbBufFlush1, though in this case
+        // it doesn't matter because we're non-preemptible anyway.
         auto restart = false;
         systemstack([=]() mutable -> void
         {
@@ -836,12 +993,26 @@ namespace golang::runtime
             goto top;
         }
         gcComputeStartingStackSize();
+        // Disable assists and background workers. We must do
+        // this before waking blocked assists.
         atomic::Store(& gcBlackenEnabled, 0);
+        // Notify the CPU limiter that GC assists will now cease.
         rec::startGCTransition(gocpp::recv(gcCPULimiter), false, now);
+        // Wake all blocked assists. These will run when we
+        // start the world again.
         gcWakeAllAssists();
+        // Likewise, release the transition lock. Blocked
+        // workers and assists will run when we start the
+        // world again.
         semrelease(& work.markDoneSema);
+        // In STW mode, re-enable user goroutines. These will be
+        // queued to run after we start the world.
         schedEnableUser(true);
+        // endCycle depends on all gcWork cache stats being flushed.
+        // The termination algorithm above ensured that up to
+        // allocations since the ragged barrier.
         rec::endCycle(gocpp::recv(gcController), now, int(gomaxprocs), work.userForced);
+        // Perform mark termination. This will restart the world.
         gcMarkTermination(stw);
     }
 
@@ -849,6 +1020,7 @@ namespace golang::runtime
     // disabled.
     void gcMarkTermination(struct worldStop stw)
     {
+        // Start marktermination (write barrier remains enabled for now).
         setGCPhase(_GCmarktermination);
         work.heap1 = rec::Load(gocpp::recv(gcController.heapLive));
         auto startTime = nanotime();
@@ -856,9 +1028,24 @@ namespace golang::runtime
         mp->preemptoff = "gcing"_s;
         mp->traceback = 2;
         auto curgp = mp->curg;
+        // N.B. The execution tracer is not aware of this status
+        // transition and handles it specially based on the
+        // wait reason.
         casGToWaiting(curgp, _Grunning, waitReasonGarbageCollection);
+        // Run gc on the g0 stack. We do this so that the g stack
+        // we're currently running on will no longer change. Cuts
+        // the root set down a bit (g0 stacks are not scanned, and
+        // we don't need to scan gc's internal state).  We also
+        // need to switch to g0 so we can shrink the stack.
         systemstack([=]() mutable -> void
         {
+            // Must return immediately.
+            // The outer function's stack may have moved
+            // during gcMark (it shrinks stacks, including the
+            // outer function's stack), so we must not refer
+            // to any of its variables. Return back to the
+            // non-system stack to pick up the new addresses
+            // before continuing.
             gcMark(startTime);
         });
         bool stwSwept = {};
@@ -867,6 +1054,10 @@ namespace golang::runtime
             work.heap2 = work.bytesMarked;
             if(debug.gccheckmark > 0)
             {
+                // Run a full non-parallel, stop-the-world
+                // mark using checkmark bits, to check that we
+                // didn't forget to mark anything during the
+                // concurrent mark process.
                 startCheckmarks();
                 gcResetMarkState();
                 auto gcw = & rec::ptr(gocpp::recv(getg()->m->p))->gcw;
@@ -875,6 +1066,7 @@ namespace golang::runtime
                 rec::dispose(gocpp::recv(gcw));
                 endCheckmarks();
             }
+            // marking is complete so we can turn the write barrier off
             setGCPhase(_GCoff);
             stwSwept = gcSweep(work.mode);
         });
@@ -886,19 +1078,26 @@ namespace golang::runtime
             rec::GCDone(gocpp::recv(trace));
             traceRelease(trace);
         }
+        // all done
         mp->preemptoff = ""_s;
         if(gcphase != _GCoff)
         {
             go_throw("gc done but gcphase != _GCoff"_s);
         }
+        // Record heapInUse for scavenger.
         memstats.lastHeapInUse = rec::load(gocpp::recv(gcController.heapInUse));
+        // Update GC trigger and pacing, as well as downstream consumers
+        // of this pacing information, for the next cycle.
         systemstack(gcControllerCommit);
+        // Update timing memstats
         auto now = nanotime();
         auto [sec, nsec, gocpp_id_5] = time_now();
         auto unixNow = sec * 1e9 + int64_t(nsec);
         work.pauseNS += now - stw.start;
         work.tEnd = now;
+        // must be Unix time to make sense to user
         atomic::Store64(& memstats.last_gc_unix, uint64_t(unixNow));
+        // monotonic time for us
         atomic::Store64(& memstats.last_gc_nanotime, uint64_t(now));
         memstats.pause_ns[memstats.numgc % uint32_t(len(memstats.pause_ns))] = uint64_t(work.pauseNS);
         memstats.pause_end[memstats.numgc % uint32_t(len(memstats.pause_end))] = uint64_t(unixNow);
@@ -906,22 +1105,48 @@ namespace golang::runtime
         auto markTermCpu = int64_t(work.stwprocs) * (work.tEnd - work.tMarkTerm);
         work.cpuStats.gcPauseTime += markTermCpu;
         work.cpuStats.gcTotalTime += markTermCpu;
+        // Accumulate CPU stats.
+        // Pass gcMarkPhase=true so we can get all the latest GC CPU stats in there too.
         rec::accumulate(gocpp::recv(work.cpuStats), now, true);
+        // Compute overall GC CPU utilization.
+        // Omit idle marking time from the overall utilization here since it's "free".
         memstats.gc_cpu_fraction = double(work.cpuStats.gcTotalTime - work.cpuStats.gcIdleTime) / double(work.cpuStats.totalTime);
+        // Reset assist time and background time stats.
+        // Do this now, instead of at the start of the next GC cycle, because
+        // these two may keep accumulating even if the GC is not active.
         rec::Store(gocpp::recv(scavenge.assistTime), 0);
         rec::Store(gocpp::recv(scavenge.backgroundTime), 0);
+        // Reset idle time stat.
         rec::Store(gocpp::recv(sched.idleTime), 0);
         if(work.userForced)
         {
             memstats.numforcedgc++;
         }
+        // Bump GC cycle count and wake goroutines waiting on sweep.
         lock(& work.sweepWaiters.lock);
         memstats.numgc++;
         injectglist(& work.sweepWaiters.list);
         unlock(& work.sweepWaiters.lock);
+        // Increment the scavenge generation now.
+        // This moment represents peak heap in use because we're
+        // about to start sweeping.
         rec::nextGen(gocpp::recv(mheap_.pages.scav.index));
+        // Release the CPU limiter.
         rec::finishGCTransition(gocpp::recv(gcCPULimiter), now);
+        // Finish the current heap profiling cycle and start a new
+        // heap profiling cycle. We do this before starting the world
+        // so events don't leak into the wrong cycle.
         mProf_NextCycle();
+        // There may be stale spans in mcaches that need to be swept.
+        // Those aren't tracked in any sweep lists, so we need to
+        // count them against sweep completion until we ensure all
+        // those spans have been forced out.
+        // If gcSweep fully swept the heap (for example if the sweep
+        // is not concurrent due to a GODEBUG setting), then we expect
+        // the sweepLocker to be invalid, since sweeping is done.
+        // N.B. Below we might duplicate some work from gcSweep; this is
+        // fine as all that work is idempotent within a GC cycle, and
+        // we're still holding worldsema so a new cycle can't start.
         auto sl = rec::begin(gocpp::recv(sweep.active));
         if(! stwSwept && ! sl.valid)
         {
@@ -934,11 +1159,35 @@ namespace golang::runtime
         }
         systemstack([=]() mutable -> void
         {
+            // The memstats updated above must be updated with the world
+            // stopped to ensure consistency of some values, such as
+            // sched.idleTime and sched.totaltime. memstats also include
+            // the pause time (work,pauseNS), forcing computation of the
+            // total pause time before the pause actually ends.
+            // Here we reuse the same now for start the world so that the
+            // time added to /sched/pauses/total/gc:seconds will be
+            // consistent with the value in memstats.
             startTheWorldWithSema(now, stw);
         });
+        // Flush the heap profile so we can start a new cycle next GC.
+        // This is relatively expensive, so we don't do it with the
+        // world stopped.
         mProf_Flush();
+        // Prepare workbufs for freeing by the sweeper. We do this
+        // asynchronously because it can take non-trivial time.
         prepareFreeWorkbufs();
+        // Free stack spans. This must be done between GC cycles.
         systemstack(freeStackSpans);
+        // Ensure all mcaches are flushed. Each P will flush its own
+        // mcache before allocating, but idle Ps may not. Since this
+        // is necessary to sweep all spans, we need to ensure all
+        // mcaches are flushed before we start the next GC cycle.
+        // While we're here, flush the page cache for idle Ps to avoid
+        // having pages get stuck on them. These pages are hidden from
+        // the scavenger, so in small idle heaps a significant amount
+        // of additional memory might be held onto.
+        // Also, flush the pinner cache, to avoid leaking that memory
+        // indefinitely.
         forEachP(waitReasonFlushProcCaches, [=](struct p* pp) mutable -> void
         {
             rec::prepareForSweep(gocpp::recv(pp->mcache));
@@ -955,8 +1204,16 @@ namespace golang::runtime
         });
         if(sl.valid)
         {
+            // Now that we've swept stale spans in mcaches, they don't
+            // count against unswept spans.
+            // Note: this sweepLocker may not be valid if sweeping had
+            // already completed during the STW. See the corresponding
+            // begin() call that produced sl.
             rec::end(gocpp::recv(sweep.active), sl);
         }
+        // Print gctrace before dropping worldsema. As soon as we drop
+        // worldsema another cycle could start and smash the stats
+        // we're trying to print.
         if(debug.gctrace > 0)
         {
             auto util = int(memstats.gc_cpu_fraction * 100);
@@ -978,6 +1235,7 @@ namespace golang::runtime
             {
                 if(i == 2 || i == 3)
                 {
+                    // Separate mark time components with /.
                     print("/"_s);
                 }
                 else
@@ -995,6 +1253,7 @@ namespace golang::runtime
             print("\n"_s);
             printunlock();
         }
+        // Set any arena chunks that were deferred to fault.
         lock(& userArenaState.lock);
         auto faultList = userArenaState.fault;
         userArenaState.fault = nullptr;
@@ -1003,6 +1262,7 @@ namespace golang::runtime
         {
             rec::setUserArenaChunkToFault(gocpp::recv(lc.mspan));
         }
+        // Enable huge pages on some metadata if we cross a heap threshold.
         if(rec::heapGoal(gocpp::recv(gcController)) > minHeapForMetadataHugePages)
         {
             systemstack([=]() mutable -> void
@@ -1011,11 +1271,14 @@ namespace golang::runtime
             });
         }
         semrelease(& worldsema);
+        // Careful: another GC cycle may start now.
         semrelease(& gcsema);
         releasem(mp);
         mp = nullptr;
+        // now that gc is done, kick off finalizer thread if needed
         if(! concurrentSweep)
         {
+            // give the queued finalizers, if any, a chance to run
             Gosched();
         }
     }
@@ -1026,10 +1289,16 @@ namespace golang::runtime
     // worldsema.
     void gcBgMarkStartWorkers()
     {
+        // Background marking is performed by per-P G's. Ensure that each P has
+        // a background GC G.
+        // Worker Gs don't exit if gomaxprocs is reduced. If it is raised
+        // again, we can reuse the old workers; no need to create new workers.
         for(; gcBgMarkWorkerCount < gomaxprocs; )
         {
             gocpp::go([&]{ gcBgMarkWorker(); });
             notetsleepg(& work.bgMarkReady, - 1);
+            // The worker is now guaranteed to be added to the pool before
+            // its P's next findRunnableGCWorker.
             noteclear(& work.bgMarkReady);
             gcBgMarkWorkerCount++;
         }
@@ -1039,6 +1308,15 @@ namespace golang::runtime
     // Mutator assists must not yet be enabled.
     void gcBgMarkPrepare()
     {
+        // Background marking will stop when the work queues are empty
+        // and there are no more workers (note that, since this is
+        // concurrent, this may be a transient state, but mark
+        // termination will clean it up). Between background workers
+        // and assists, we don't really know how many workers there
+        // will be, so we pretend to have an arbitrarily large number
+        // of workers, almost all of which are "waiting". While a
+        // worker is working it decrements nwait. If nproc == nwait,
+        // there are no workers.
         work.nproc = ~ uint32_t(0);
         work.nwait = ~ uint32_t(0);
     }
@@ -1083,25 +1361,66 @@ namespace golang::runtime
     void gcBgMarkWorker()
     {
         auto gp = getg();
+        // We pass node to a gopark unlock function, so it can't be on
+        // the stack (see gopark). Prevent deadlock from recursively
+        // starting GC by disabling preemption.
         gp->m->preemptoff = "GC worker init"_s;
         auto node = new(gcBgMarkWorkerNode);
         gp->m->preemptoff = ""_s;
         rec::set(gocpp::recv(node->gp), gp);
         rec::set(gocpp::recv(node->m), acquirem());
+        // After this point, the background mark worker is generally scheduled
+        // cooperatively by gcController.findRunnableGCWorker. While performing
+        // work on the P, preemption is disabled because we are working on
+        // P-local work buffers. When the preempt flag is set, this puts itself
+        // into _Gwaiting to be woken up by gcController.findRunnableGCWorker
+        // at the appropriate time.
+        // When preemption is enabled (e.g., while in gcMarkDone), this worker
+        // may be preempted and schedule as a _Grunnable G from a runq. That is
+        // fine; it will eventually gopark again for further scheduling via
+        // findRunnableGCWorker.
+        // Since we disable preemption before notifying bgMarkReady, we
+        // guarantee that this G will be in the worker pool for the next
+        // findRunnableGCWorker. This isn't strictly necessary, but it reduces
+        // latency between _GCmark starting and the workers starting.
         notewakeup(& work.bgMarkReady);
         for(; ; )
         {
+            // Go to sleep until woken by
+            // gcController.findRunnableGCWorker.
             gopark([=](struct g* g, gocpp::unsafe_pointer nodep) mutable -> bool
             {
                 auto node = (gcBgMarkWorkerNode*)(nodep);
                 if(auto mp = rec::ptr(gocpp::recv(node->m)); mp != nullptr)
                 {
+                    // The worker G is no longer running; release
+                    // the M.
+                    // N.B. it is _safe_ to release the M as soon
+                    // as we are no longer performing P-local mark
+                    // work.
+                    // However, since we cooperatively stop work
+                    // when gp.preempt is set, if we releasem in
+                    // the loop then the following call to gopark
+                    // would immediately preempt the G. This is
+                    // also safe, but inefficient: the G must
+                    // schedule again only to enter gopark and park
+                    // again. Thus, we defer the release until
+                    // after parking the G.
                     releasem(mp);
                 }
+                // Release this G to the pool.
                 rec::push(gocpp::recv(gcBgMarkWorkerPool), & node->node);
+                // Note that at this point, the G may immediately be
+                // rescheduled and may be running.
                 return true;
             }, gocpp::unsafe_pointer(node), waitReasonGCWorkerIdle, traceBlockSystemGoroutine, 0);
+            // Preemption must not occur here, or another G might see
+            // p.gcMarkWorkerMode.
+            // Disable preemption so we can use the gcw. If the
+            // scheduler wants to preempt us, we'll stop draining,
+            // dispose the gcw, and then preempt.
             rec::set(gocpp::recv(node->m), acquirem());
+            // P can't change with preemption disabled.
             auto pp = rec::ptr(gocpp::recv(gp->m->p));
             if(gcBlackenEnabled == 0)
             {
@@ -1127,6 +1446,16 @@ namespace golang::runtime
             }
             systemstack([=]() mutable -> void
             {
+                // Mark our goroutine preemptible so its stack
+                // can be scanned. This lets two mark workers
+                // scan each other (otherwise, they would
+                // deadlock). We must not modify anything on
+                // the G stack. However, stack shrinking is
+                // disabled for mark workers, so it is safe to
+                // read from the G stack.
+                // N.B. The execution tracer is not aware of this status
+                // transition and handles it specially based on the
+                // wait reason.
                 casGToWaiting(gp, _Grunning, waitReasonGCWorkerActive);
                 //Go switch emulation
                 {
@@ -1144,6 +1473,11 @@ namespace golang::runtime
                             gcDrainMarkWorkerDedicated(& pp->gcw, true);
                             if(gp->preempt)
                             {
+                                // We were preempted. This is
+                                // a useful signal to kick
+                                // everything out of the run
+                                // queue so it can run
+                                // somewhere else.
                                 if(auto [drainQ, n] = runqdrain(pp); n > 0)
                                 {
                                     lock(& sched.lock);
@@ -1151,6 +1485,8 @@ namespace golang::runtime
                                     unlock(& sched.lock);
                                 }
                             }
+                            // Go back to draining, this time
+                            // without preemption.
                             gcDrainMarkWorkerDedicated(& pp->gcw, false);
                             break;
                         case 1:
@@ -1163,6 +1499,7 @@ namespace golang::runtime
                 }
                 casgstatus(gp, _Gwaiting, _Grunning);
             });
+            // Account for time and mark us as stopped.
             auto now = nanotime();
             auto duration = now - startTime;
             rec::markWorkerStop(gocpp::recv(gcController), pp->gcMarkWorkerMode, duration);
@@ -1174,15 +1511,26 @@ namespace golang::runtime
             {
                 atomic::Xaddint64(& pp->gcFractionalMarkTime, duration);
             }
+            // Was this the last worker and did we run out
+            // of work?
             auto incnwait = atomic::Xadd(& work.nwait, + 1);
             if(incnwait > work.nproc)
             {
                 println("runtime: p.gcMarkWorkerMode="_s, pp->gcMarkWorkerMode, "work.nwait="_s, incnwait, "work.nproc="_s, work.nproc);
                 go_throw("work.nwait > work.nproc"_s);
             }
+            // We'll releasem after this point and thus this P may run
+            // something else. We must clear the worker mode to avoid
+            // attributing the mode to a different (non-worker) G in
+            // traceGoStart.
             pp->gcMarkWorkerMode = gcMarkWorkerNotWorker;
+            // If this worker reached a background mark completion
+            // point, signal the main GC goroutine.
             if(incnwait == work.nproc && ! gcMarkWorkAvailable(nullptr))
             {
+                // We don't need the P-local buffers here, allow
+                // preemption because we may schedule like a regular
+                // goroutine in gcMarkDone (block on locks, etc).
                 releasem(rec::ptr(gocpp::recv(node->m)));
                 rec::set(gocpp::recv(node->m), nullptr);
                 gcMarkDone();
@@ -1201,10 +1549,12 @@ namespace golang::runtime
         }
         if(! rec::empty(gocpp::recv(work.full)))
         {
+            // global work available
             return true;
         }
         if(work.markrootNext < work.markrootJobs)
         {
+            // root scan work available
             return true;
         }
         return false;
@@ -1224,6 +1574,7 @@ namespace golang::runtime
             go_throw("in gcMark expecting to see gcphase as _GCmarktermination"_s);
         }
         work.tstart = startTime;
+        // Check that there's no marking work remaining.
         if(work.full != 0 || work.markrootNext < work.markrootJobs)
         {
             print("runtime: full="_s, hex(work.full), " next="_s, work.markrootNext, " jobs="_s, work.markrootJobs, " nDataRoots="_s, work.nDataRoots, " nBSSRoots="_s, work.nBSSRoots, " nSpanRoots="_s, work.nSpanRoots, " nStackRoots="_s, work.nStackRoots, "\n"_s);
@@ -1231,13 +1582,30 @@ namespace golang::runtime
         }
         if(debug.gccheckmark > 0)
         {
+            // This is expensive when there's a large number of
+            // Gs, so only do it if checkmark is also enabled.
             gcMarkRootCheck();
         }
+        // Drop allg snapshot. allgs may have grown, in which case
+        // this is the only reference to the old backing store and
+        // there's no need to keep it around.
         work.stackRoots = nullptr;
+        // Clear out buffers and double-check that all gcWork caches
+        // are empty. This should be ensured by gcMarkDone before we
+        // enter mark termination.
+        // TODO: We could clear out buffers just before mark if this
+        // has a non-negligible impact on STW time.
         for(auto [gocpp_ignored, p] : allp)
         {
+            // The write barrier may have buffered pointers since
+            // the gcMarkDone barrier. However, since the barrier
+            // ensured all reachable objects were marked, all of
+            // these must be pointers to black objects. Hence we
+            // can just discard the write barrier buffer.
             if(debug.gccheckmark > 0)
             {
+                // For debugging, flush the buffer and make
+                // sure it really was all marked.
                 wbBufFlush1(p);
             }
             else
@@ -1268,8 +1636,17 @@ namespace golang::runtime
                 print("\n"_s);
                 go_throw("P has cached GC work at end of mark termination"_s);
             }
+            // There may still be cached empty buffers, which we
+            // need to flush since we're going to free them. Also,
+            // there may be non-zero stats because we allocated
+            // black after the gcMarkDone barrier.
             rec::dispose(gocpp::recv(gcw));
         }
+        // Flush scanAlloc from each mcache since we're about to modify
+        // heapScan directly. If we were to flush this later, then scanAlloc
+        // might have incorrect information.
+        // Note that it's not important to retain this information; we know
+        // exactly what heapScan is at this point via scanWork.
         for(auto [gocpp_ignored, p] : allp)
         {
             auto c = p->mcache;
@@ -1279,6 +1656,7 @@ namespace golang::runtime
             }
             c->scanAlloc = 0;
         }
+        // Reset controller state.
         rec::resetLive(gocpp::recv(gcController), work.bytesMarked);
     }
 
@@ -1308,24 +1686,33 @@ namespace golang::runtime
         rec::clear(gocpp::recv(sweep.centralIndex));
         if(! concurrentSweep || mode == gcForceBlockMode)
         {
+            // Special case synchronous sweep.
+            // Record that no proportional sweeping has to happen.
             lock(& mheap_.lock);
             mheap_.sweepPagesPerByte = 0;
             unlock(& mheap_.lock);
+            // Flush all mcaches.
             for(auto [gocpp_ignored, pp] : allp)
             {
                 rec::prepareForSweep(gocpp::recv(pp->mcache));
             }
+            // Sweep all spans eagerly.
             for(; sweepone() != ~ uintptr_t(0); )
             {
             }
+            // Free workbufs eagerly.
             prepareFreeWorkbufs();
             for(; freeSomeWbufs(false); )
             {
             }
+            // All "free" events for this mark/sweep cycle have
+            // now happened, so we can make this profile cycle
+            // available immediately.
             mProf_NextCycle();
             mProf_Flush();
             return true;
         }
+        // Background sweep.
         lock(& sweep.lock);
         if(sweep.parked)
         {
@@ -1348,11 +1735,16 @@ namespace golang::runtime
     //go:systemstack
     void gcResetMarkState()
     {
+        // This may be called during a concurrent phase, so lock to make sure
+        // allgs doesn't change.
         forEachG([=](struct g* gp) mutable -> void
         {
+            // set to true in gcphasework
             gp->gcscandone = false;
             gp->gcAssistBytes = 0;
         });
+        // Clear page marks. This is just 1MB per 64GB of heap, so the
+        // time here is pretty trivial.
         lock(& mheap_.lock);
         auto arenas = mheap_.allArenas;
         unlock(& mheap_.lock);
@@ -1384,14 +1776,20 @@ namespace golang::runtime
 
     void clearpools()
     {
+        // clear sync.Pools
         if(poolcleanup != nullptr)
         {
             poolcleanup();
         }
+        // clear boringcrypto caches
         for(auto [gocpp_ignored, p] : boringCaches)
         {
             atomicstorep(p, nullptr);
         }
+        // Clear central sudog cache.
+        // Leave per-P caches alone, they have strictly bounded size.
+        // Disconnect cached list before dropping it on the floor,
+        // so that a dangling ref to one entry does not pin all of them.
         lock(& sched.sudoglock);
         sudog* sg = {};
         sudog* sgnext = {};
@@ -1402,6 +1800,8 @@ namespace golang::runtime
         }
         sched.sudogcache = nullptr;
         unlock(& sched.sudoglock);
+        // Clear central defer pool.
+        // Leave per-P pools alone, they have strictly bounded size.
         lock(& sched.deferlock);
         // disconnect cached list before dropping it on the floor,
         // so that a dangling ref to one entry does not pin all of them.
@@ -1441,8 +1841,10 @@ namespace golang::runtime
     {
         if(ns >= 10e6)
         {
+            // Format as whole milliseconds.
             return itoaDiv(buf, ns / 1e6, 0);
         }
+        // Format two digits of precision, with at most three decimal places.
         auto x = ns / 1e3;
         if(x == 0)
         {
@@ -1477,11 +1879,19 @@ namespace golang::runtime
     uint64_t gcTestIsReachable(gocpp::slice<gocpp::unsafe_pointer> ptrs)
     {
         uint64_t mask;
+        // This takes the pointers as unsafe.Pointers in order to keep
+        // them live long enough for us to attach specials. After
+        // that, we drop our references to them.
         if(len(ptrs) > 64)
         {
             gocpp::panic("too many pointers for uint64 mask"_s);
         }
+        // Block GC while we attach specials and drop our references
+        // to ptrs. Otherwise, if a GC is in progress, it could mark
+        // them reachable via this function before we have a chance to
+        // drop them.
         semacquire(& gcsema);
+        // Create reachability specials for ptrs.
         auto specials = gocpp::make(gocpp::Tag<gocpp::slice<specialReachable*>>(), len(ptrs));
         for(auto [i, p] : ptrs)
         {
@@ -1494,10 +1904,13 @@ namespace golang::runtime
                 go_throw("already have a reachable special (duplicate pointer?)"_s);
             }
             specials[i] = s;
+            // Make sure we don't retain ptrs.
             ptrs[i] = nullptr;
         }
         semrelease(& gcsema);
+        // Force a full GC and sweep.
         GC();
+        // Process specials.
         for(auto [i, s] : specials)
         {
             if(! s->done)

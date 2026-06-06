@@ -244,6 +244,7 @@ namespace golang::poll
                 d = int64_t(time::Until(t));
                 if(d == 0)
                 {
+                    // don't confuse deadline right now with no deadline
                     d = - 1;
                 }
             }

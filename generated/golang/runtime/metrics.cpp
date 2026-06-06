@@ -120,6 +120,9 @@ namespace golang::runtime
 
     void metricsLock()
     {
+        // Acquire the metricsSema but with handoff. Operations are typically
+        // expensive enough that queueing up goroutines and handing off between
+        // them will be noticeably better-behaved.
         semacquire1(& metricsSema, true, 0, 0, waitReasonSemacquire);
         if(raceenabled)
         {
@@ -146,9 +149,23 @@ namespace golang::runtime
             return;
         }
         sizeClassBuckets = gocpp::make(gocpp::Tag<gocpp::slice<double>>(), _NumSizeClasses, _NumSizeClasses + 1);
+        // Skip size class 0 which is a stand-in for large objects, but large
+        // objects are tracked separately (and they actually get placed in
+        // the last bucket, not the first).
+        // The smallest allocation is 1 byte in size.
         sizeClassBuckets[0] = 1;
         for(auto i = 1; i < _NumSizeClasses; i++)
         {
+            // Size classes have an inclusive upper-bound
+            // and exclusive lower bound (e.g. 48-byte size class is
+            // (32, 48]) whereas we want and inclusive lower-bound
+            // and exclusive upper-bound (e.g. 48-byte size class is
+            // [33, 49)). We can achieve this by shifting all bucket
+            // boundaries up by 1.
+            // Also, a float64 can precisely represent integers with
+            // value up to 2^53 and size classes are relatively small
+            // (nowhere near 2^48 even) so this will give us exact
+            // boundaries.
             sizeClassBuckets[i] = double(class_to_size[i] + 1);
         }
         sizeClassBuckets = append(sizeClassBuckets, float64Inf());
@@ -291,6 +308,8 @@ namespace golang::runtime
             {
                 auto hist = rec::float64HistOrInit(gocpp::recv(out), sizeClassBuckets);
                 hist->counts[len(hist->counts) - 1] = in->heapStats.heapStatsDelta.largeAllocCount;
+                // Cut off the first index which is ostensibly for size class 0,
+                // but large objects are tracked separately so it's actually unused.
                 for(auto [i, count] : in->heapStats.heapStatsDelta.smallAllocCount.make_slice(1))
                 {
                     hist->counts[i] = count;
@@ -316,6 +335,8 @@ namespace golang::runtime
             {
                 auto hist = rec::float64HistOrInit(gocpp::recv(out), sizeClassBuckets);
                 hist->counts[len(hist->counts) - 1] = in->heapStats.heapStatsDelta.largeFreeCount;
+                // Cut off the first index which is ostensibly for size class 0,
+                // but large objects are tracked separately so it's actually unused.
                 for(auto [i, count] : in->heapStats.heapStatsDelta.smallFreeCount.make_slice(1))
                 {
                     hist->counts[i] = count;
@@ -384,6 +405,7 @@ namespace golang::runtime
         }) }, { "/gc/pauses:seconds"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
+                // N.B. this is identical to /sched/pauses/total/gc:seconds.
                 rec::write(gocpp::recv(sched.stwTotalTimeGC), out);
             };
         }) }, { "/gc/stack/starting-size:bytes"_s, gocpp::Init<>([=](auto& x) {
@@ -686,6 +708,7 @@ namespace golang::runtime
     void rec::compute(golang::runtime::heapStatsAggregate* a)
     {
         rec::read(gocpp::recv(memstats.heapStats), & a->heapStatsDelta);
+        // Calculate derived stats.
         a->totalAllocs = a->heapStatsDelta.largeAllocCount;
         a->totalFrees = a->heapStatsDelta.largeFreeCount;
         a->totalAllocated = a->heapStatsDelta.largeAlloc;
@@ -824,6 +847,10 @@ namespace golang::runtime
     // compute populates the cpuStatsAggregate with values from the runtime.
     void rec::compute(golang::runtime::cpuStatsAggregate* a)
     {
+        // TODO(mknyszek): Update the CPU stats again so that we're not
+        // just relying on the STW snapshot. The issue here is that currently
+        // this will cause non-monotonicity in the "user" CPU time metric.
+        // a.cpuStats.accumulate(nanotime(), gcphase == _GCmark)
         a->cpuStats = work.cpuStats;
     }
 
@@ -1169,7 +1196,9 @@ namespace golang::runtime
     void readMetrics(gocpp::unsafe_pointer samplesp, int len, int cap)
     {
         metricsLock();
+        // Ensure the map is initialized.
         initMetrics();
+        // Read the metrics.
         readMetricsLocked(samplesp, len, cap);
         metricsUnlock();
     }
@@ -1180,9 +1209,12 @@ namespace golang::runtime
     // initMetrics must have been called already.
     void readMetricsLocked(gocpp::unsafe_pointer samplesp, int len, int cap)
     {
+        // Construct a slice from the args.
         auto sl = slice {samplesp, len, cap};
         auto samples = *(gocpp::slice<metricSample>*)(gocpp::unsafe_pointer(& sl));
+        // Clear agg defensively.
         agg = statAggregate {};
+        // Sample.
         for(auto [i, gocpp_ignored] : samples)
         {
             auto sample = & samples[i];
@@ -1192,7 +1224,10 @@ namespace golang::runtime
                 sample->value.kind = metricKindBad;
                 continue;
             }
+            // Ensure we have all the stats we need.
+            // agg is populated lazily.
             rec::ensure(gocpp::recv(agg), & data.deps);
+            // Compute the value based on the stats we have.
             data.compute(& agg, & sample->value);
         }
     }

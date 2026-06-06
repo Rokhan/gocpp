@@ -355,6 +355,8 @@ namespace golang::syscall
         gocpp::Defer defer;
         try
         {
+            // Non-racy version of:
+            // if d.dll == nil {
             if(atomic::LoadPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& d->dll))) == nullptr)
             {
                 rec::Lock(gocpp::recv(d->mu));
@@ -366,6 +368,8 @@ namespace golang::syscall
                     {
                         return e;
                     }
+                    // Non-racy version of:
+                    // d.dll = dll
                     atomic::StorePointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& d->dll)), gocpp::unsafe_pointer(dll));
                 }
             }
@@ -459,6 +463,8 @@ namespace golang::syscall
         gocpp::Defer defer;
         try
         {
+            // Non-racy version of:
+            // if p.proc == nil {
             if(atomic::LoadPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& p->proc))) == nullptr)
             {
                 rec::Lock(gocpp::recv(p->mu));
@@ -476,6 +482,8 @@ namespace golang::syscall
                     {
                         return e;
                     }
+                    // Non-racy version of:
+                    // p.proc = proc
                     atomic::StorePointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& p->proc)), gocpp::unsafe_pointer(proc));
                 }
             }

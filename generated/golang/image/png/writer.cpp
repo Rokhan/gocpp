@@ -338,6 +338,7 @@ namespace golang::png
         auto b = rec::Bounds(gocpp::recv(e->m));
         rec::PutUint32(gocpp::recv(binary::BigEndian), e->tmp.make_slice(0, 4), uint32_t(rec::Dx(gocpp::recv(b))));
         rec::PutUint32(gocpp::recv(binary::BigEndian), e->tmp.make_slice(4, 8), uint32_t(rec::Dy(gocpp::recv(b))));
+        // Set bit depth and color type.
         //Go switch emulation
         {
             auto condition = e->cb;
@@ -396,8 +397,11 @@ namespace golang::png
                     break;
             }
         }
+        // default compression method
         e->tmp[10] = 0;
+        // default filter method
         e->tmp[11] = 0;
+        // non-interlaced
         e->tmp[12] = 0;
         rec::writeChunk(gocpp::recv(e), e->tmp.make_slice(0, 13), "IHDR"_s);
     }
@@ -449,6 +453,10 @@ namespace golang::png
     // The return value is the index of the filter and also of the row in cr that has had it applied.
     int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp)
     {
+        // We try all five filter types, and pick the one that minimizes the sum of absolute differences.
+        // This is the same heuristic that libpng uses, although the filters are attempted in order of
+        // estimated most likely to be minimal (ftUp, ftPaeth, ftNone, ftSub, ftAverage), rather than
+        // in their enumeration order (ftNone, ftSub, ftUp, ftAverage, ftPaeth).
         auto cdat0 = cr[0].make_slice(1);
         auto cdat1 = cr[1].make_slice(1);
         auto cdat2 = cr[2].make_slice(1);
@@ -456,6 +464,7 @@ namespace golang::png
         auto cdat4 = cr[4].make_slice(1);
         auto pdat = pr.make_slice(1);
         auto n = len(cdat0);
+        // The up filter.
         auto sum = 0;
         for(auto i = 0; i < n; i++)
         {
@@ -464,6 +473,7 @@ namespace golang::png
         }
         auto best = sum;
         auto filter = ftUp;
+        // The Paeth filter.
         sum = 0;
         for(auto i = 0; i < bpp; i++)
         {
@@ -484,6 +494,7 @@ namespace golang::png
             best = sum;
             filter = ftPaeth;
         }
+        // The none filter.
         sum = 0;
         for(auto i = 0; i < n; i++)
         {
@@ -498,6 +509,7 @@ namespace golang::png
             best = sum;
             filter = ftNone;
         }
+        // The sub filter.
         sum = 0;
         for(auto i = 0; i < bpp; i++)
         {
@@ -518,6 +530,7 @@ namespace golang::png
             best = sum;
             filter = ftSub;
         }
+        // The average filter.
         sum = 0;
         for(auto i = 0; i < bpp; i++)
         {
@@ -617,6 +630,11 @@ namespace golang::png
                         break;
                 }
             }
+            // cr[*] and pr are the bytes for the current and previous row.
+            // cr[0] is unfiltered (or equivalently, filtered with the ftNone filter).
+            // cr[ft], for non-zero filter types ft, are buffers for transforming cr[0] under the
+            // other PNG filter types. These buffers are allocated once and re-used for each row.
+            // The +1 is for the per-row filter type, which is at cr[*][0].
             auto b = rec::Bounds(gocpp::recv(m));
             auto sz = 1 + (bitsPerPixel * rec::Dx(gocpp::recv(b)) + 7) / 8;
             for(auto [i, gocpp_ignored] : e->cr)
@@ -648,6 +666,7 @@ namespace golang::png
             auto [nrgba, gocpp_id_6] = gocpp::getValue<image::NRGBA*>(m);
             for(auto y = b.Min.Y; y < b.Max.Y; y++)
             {
+                // Convert from colors to bytes.
                 auto i = 1;
                 //Go switch emulation
                 {
@@ -682,6 +701,7 @@ namespace golang::png
                             }
                             break;
                         case 1:
+                            // We have previously verified that the alpha value is fully opaque.
                             auto cr0 = cr[0];
                             auto [stride, pix] = std::tuple{0, gocpp::slice<unsigned char>(nullptr)};
                             if(rgba != nullptr)
@@ -794,7 +814,6 @@ namespace golang::png
                                         // This code does the same as color.NRGBAModel.Convert(
                                         // rgba.At(x, y)).(color.NRGBA) but with no extra memory
                                         // allocations or interface/function call overhead.
-                                        //
                                         // The multiplier m combines 0x101 (which converts
                                         // 8-bit color to 16-bit color) and 0xffff (which, when
                                         // combined with the division-by-a, converts from
@@ -810,6 +829,7 @@ namespace golang::png
                             }
                             else
                             {
+                                // Convert from image.Image (which is alpha-premultiplied) to PNG's non-alpha-premultiplied.
                                 for(auto x = b.Min.X; x < b.Max.X; x++)
                                 {
                                     auto c = gocpp::getValue<color::NRGBA>(rec::Convert(gocpp::recv(color::NRGBAModel), rec::At(gocpp::recv(m), x, y)));
@@ -831,6 +851,7 @@ namespace golang::png
                             }
                             break;
                         case 8:
+                            // We have previously verified that the alpha value is fully opaque.
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
                                 auto [r, g, b, gocpp_id_8] = rec::RGBA(gocpp::recv(rec::At(gocpp::recv(m), x, y)));
@@ -844,6 +865,7 @@ namespace golang::png
                             }
                             break;
                         case 9:
+                            // Convert from image.Image (which is alpha-premultiplied) to PNG's non-alpha-premultiplied.
                             for(auto x = b.Min.X; x < b.Max.X; x++)
                             {
                                 auto c = gocpp::getValue<color::NRGBA64>(rec::Convert(gocpp::recv(color::NRGBA64Model), rec::At(gocpp::recv(m), x, y)));
@@ -860,16 +882,24 @@ namespace golang::png
                             break;
                     }
                 }
+                // Apply the filter.
+                // Skip filter for NoCompression and paletted images (cbP8) as
+                // "filters are rarely useful on palette images" and will result
+                // in larger files (see http://www.libpng.org/pub/png/book/chapter09.html).
                 auto f = ftNone;
                 if(level != zlib::NoCompression && cb != cbP8 && cb != cbP4 && cb != cbP2 && cb != cbP1)
                 {
+                    // Since we skip paletted images we don't have to worry about
+                    // bitsPerPixel not being a multiple of 8
                     auto bpp = bitsPerPixel / 8;
                     f = filter(& cr, pr, bpp);
                 }
+                // Write the compressed bytes.
                 if(auto [gocpp_id_9, err] = rec::Write(gocpp::recv(e->zw), cr[f]); err != nullptr)
                 {
                     return err;
                 }
+                // The current row for y is the previous row for y+1.
                 std::tie(pr, cr[0]) = std::tuple{cr[0], pr};
             }
             return nullptr;
@@ -955,6 +985,9 @@ namespace golang::png
         gocpp::Defer defer;
         try
         {
+            // Obviously, negative widths and heights are invalid. Furthermore, the PNG
+            // spec section 11.2.2 says that zero is invalid. Excessively large images are
+            // also rejected.
             auto [mw, mh] = std::tuple{int64_t(rec::Dx(gocpp::recv(rec::Bounds(gocpp::recv(m))))), int64_t(rec::Dy(gocpp::recv(rec::Bounds(gocpp::recv(m)))))};
             if(mw <= 0 || mh <= 0 || mw >= (1 << 32) || mh >= (1 << 32))
             {
@@ -978,6 +1011,7 @@ namespace golang::png
             e->w = w;
             e->m = m;
             color::Palette pal = {};
+            // cbP8 encoding needs PalettedImage's ColorIndexAt method.
             if(auto [gocpp_id_10, ok] = gocpp::getValue<image::PalettedImage>(m); ok)
             {
                 std::tie(pal, std::ignore) = gocpp::getValue<color::Palette>(rec::ColorModel(gocpp::recv(m)));

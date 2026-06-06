@@ -89,10 +89,12 @@ namespace golang::runtime
     // put adds a string to the table, emits it, and returns a unique ID for it.
     uint64_t rec::put(golang::runtime::traceStringTable* t, uintptr_t gen, gocpp::string s)
     {
+        // Put the string in the table.
         auto ss = stringStructOf(& s);
         auto [id, added] = rec::put(gocpp::recv(t->tab), ss->str, uintptr_t(ss->len));
         if(added)
         {
+            // Write the string to the buffer.
             systemstack([=]() mutable -> void
             {
                 rec::writeString(gocpp::recv(t), gen, id, s);
@@ -104,6 +106,7 @@ namespace golang::runtime
     // emit emits a string and creates an ID for it, but doesn't add it to the table. Returns the ID.
     uint64_t rec::emit(golang::runtime::traceStringTable* t, uintptr_t gen, gocpp::string s)
     {
+        // Grab an ID and write the string to the buffer.
         auto id = rec::stealID(gocpp::recv(t->tab));
         systemstack([=]() mutable -> void
         {
@@ -119,6 +122,7 @@ namespace golang::runtime
     //go:systemstack
     void rec::writeString(golang::runtime::traceStringTable* t, uintptr_t gen, uint64_t id, gocpp::string s)
     {
+        // Truncate the string if necessary.
         if(len(s) > maxTraceStringLen)
         {
             s = s.make_slice(0, maxTraceStringLen);
@@ -130,12 +134,15 @@ namespace golang::runtime
         std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 2 * traceBytesPerNumber + len(s));
         if(flushed)
         {
+            // Annotate the batch as containing strings.
             rec::byte(gocpp::recv(w), (unsigned char)(traceEvStrings));
         }
+        // Write out the string.
         rec::byte(gocpp::recv(w), (unsigned char)(traceEvString));
         rec::varint(gocpp::recv(w), id);
         rec::varint(gocpp::recv(w), uint64_t(len(s)));
         rec::stringData(gocpp::recv(w), s);
+        // Store back buf if it was updated during ensure.
         t->buf = w.traceBuf;
         runtime::unlock(& t->lock);
     }
@@ -158,6 +165,7 @@ namespace golang::runtime
             runtime::unlock(& trace.lock);
             t->buf = nullptr;
         }
+        // Reset the table.
         runtime::lock(& t->tab.lock);
         rec::reset(gocpp::recv(t->tab));
         runtime::unlock(& t->tab.lock);

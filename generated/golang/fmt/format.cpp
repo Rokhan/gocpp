@@ -138,21 +138,25 @@ namespace golang::fmt
     {
         if(n <= 0)
         {
+            // No padding bytes needed.
             return;
         }
         auto buf = *f->buf;
         auto oldLen = len(buf);
         auto newLen = oldLen + n;
+        // Make enough room for padding.
         if(newLen > cap(buf))
         {
             buf = gocpp::make(buffer, cap(buf) * 2 + n);
             copy(buf, *f->buf);
         }
+        // Decide which byte the padding should be filled with.
         auto padByte = (unsigned char)(' ');
         if(f->fmtFlags.zero)
         {
             padByte = (unsigned char)('0');
         }
+        // Fill padding with padByte.
         auto padding = buf.make_slice(oldLen, newLen);
         for(auto [i, gocpp_ignored] : padding)
         {
@@ -172,11 +176,13 @@ namespace golang::fmt
         auto width = f->wid - utf8::RuneCount(b);
         if(! f->fmtFlags.minus)
         {
+            // left padding
             rec::writePadding(gocpp::recv(f), width);
             rec::write(gocpp::recv(f->buf), b);
         }
         else
         {
+            // right padding
             rec::write(gocpp::recv(f->buf), b);
             rec::writePadding(gocpp::recv(f), width);
         }
@@ -193,11 +199,13 @@ namespace golang::fmt
         auto width = f->wid - utf8::RuneCountInString(s);
         if(! f->fmtFlags.minus)
         {
+            // left padding
             rec::writePadding(gocpp::recv(f), width);
             rec::writeString(gocpp::recv(f->buf), s);
         }
         else
         {
+            // right padding
             rec::writeString(gocpp::recv(f->buf), s);
             rec::writePadding(gocpp::recv(f), width);
         }
@@ -220,17 +228,23 @@ namespace golang::fmt
     void rec::fmtUnicode(golang::fmt::fmt* f, uint64_t u)
     {
         auto buf = f->intbuf.make_slice(0);
+        // With default precision set the maximum needed buf length is 18
+        // for formatting -1 with %#U ("U+FFFFFFFFFFFFFFFF") which fits
+        // into the already allocated intbuf with a capacity of 68 bytes.
         auto prec = 4;
         if(f->fmtFlags.precPresent && f->prec > 4)
         {
             prec = f->prec;
+            // Compute space needed for "U+" , number, " '", character, "'".
             auto width = 2 + prec + 2 + utf8::UTFMax + 1;
             if(width > len(buf))
             {
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), width);
             }
         }
+        // Format into buf, ending at buf[i]. Formatting numbers is easier right-to-left.
         auto i = len(buf);
+        // For %#U we want to add a space and a quoted character at the end of the buffer.
         if(f->fmtFlags.sharp && u <= utf8::MaxRune && strconv::IsPrint(gocpp::rune(u)))
         {
             i--;
@@ -242,6 +256,7 @@ namespace golang::fmt
             i--;
             buf[i] = ' ';
         }
+        // Format the Unicode code point u as a hexadecimal number.
         for(; u >= 16; )
         {
             i--;
@@ -252,12 +267,14 @@ namespace golang::fmt
         i--;
         buf[i] = udigits[u];
         prec--;
+        // Add zeros in front of the number until requested precision is reached.
         for(; prec > 0; )
         {
             i--;
             buf[i] = '0';
             prec--;
         }
+        // Add a leading "U+".
         i--;
         buf[i] = '+';
         i--;
@@ -277,18 +294,27 @@ namespace golang::fmt
             u = - u;
         }
         auto buf = f->intbuf.make_slice(0);
+        // The already allocated f.intbuf with a capacity of 68 bytes
+        // is large enough for integer formatting when no precision or width is set.
         if(f->fmtFlags.widPresent || f->fmtFlags.precPresent)
         {
+            // Account 3 extra bytes for possible addition of a sign and "0x".
+            // wid and prec are always positive.
             auto width = 3 + f->wid + f->prec;
             if(width > len(buf))
             {
+                // We're going to need a bigger boat.
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), width);
             }
         }
+        // Two ways to ask for extra leading zero digits: %.3d or %03d.
+        // If both are specified the f.zero flag is ignored and
+        // padding with spaces is used instead.
         auto prec = 0;
         if(f->fmtFlags.precPresent)
         {
             prec = f->prec;
+            // Precision of 0 and value of 0 means "print nothing" but padding.
             if(prec == 0 && u == 0)
             {
                 auto oldZero = f->fmtFlags.zero;
@@ -304,10 +330,16 @@ namespace golang::fmt
             prec = f->wid;
             if(negative || f->fmtFlags.plus || f->fmtFlags.space)
             {
+                // leave room for sign
                 prec--;
             }
         }
+        // Because printing is easier right-to-left: format u into buf, ending at buf[i].
+        // We could make things marginally faster by splitting the 32-bit case out
+        // into a separate block but it's not worth the duplication, so u has 64 bits.
         auto i = len(buf);
+        // Use constants for the division and modulo for more efficient code.
+        // Switch cases ordered by popularity.
         //Go switch emulation
         {
             auto condition = base;
@@ -363,6 +395,7 @@ namespace golang::fmt
             i--;
             buf[i] = '0';
         }
+        // Various prefixes: 0x, -, etc.
         if(f->fmtFlags.sharp)
         {
             //Go switch emulation
@@ -375,6 +408,7 @@ namespace golang::fmt
                 switch(conditionId)
                 {
                     case 0:
+                        // Add a leading 0b.
                         i--;
                         buf[i] = 'b';
                         i--;
@@ -388,6 +422,7 @@ namespace golang::fmt
                         }
                         break;
                     case 2:
+                        // Add a leading 0x or 0X.
                         i--;
                         buf[i] = digits[16];
                         i--;
@@ -420,6 +455,8 @@ namespace golang::fmt
             i--;
             buf[i] = ' ';
         }
+        // Left padding with zeros has already been handled like precision earlier
+        // or the f.zero flag is ignored due to an explicitly set precision.
         auto oldZero = f->fmtFlags.zero;
         f->fmtFlags.zero = false;
         rec::pad(gocpp::recv(f), buf.make_slice(i));
@@ -488,44 +525,54 @@ namespace golang::fmt
         auto length = len(b);
         if(b == nullptr)
         {
+            // No byte slice present. Assume string s should be encoded.
             length = len(s);
         }
+        // Set length to not process more bytes than the precision demands.
         if(f->fmtFlags.precPresent && f->prec < length)
         {
             length = f->prec;
         }
+        // Compute width of the encoding taking into account the f.sharp and f.space flag.
         auto width = 2 * length;
         if(width > 0)
         {
             if(f->fmtFlags.space)
             {
+                // Each element encoded by two hexadecimals will get a leading 0x or 0X.
                 if(f->fmtFlags.sharp)
                 {
                     width *= 2;
                 }
+                // Elements will be separated by a space.
                 width += length - 1;
             }
             else
             if(f->fmtFlags.sharp)
             {
+                // Only a leading 0x or 0X will be added for the whole string.
                 width += 2;
             }
         }
         else
         {
+            // The byte slice or string that should be encoded is empty.
             if(f->fmtFlags.widPresent)
             {
                 rec::writePadding(gocpp::recv(f), f->wid);
             }
             return;
         }
+        // Handle padding to the left.
         if(f->fmtFlags.widPresent && f->wid > width && ! f->fmtFlags.minus)
         {
             rec::writePadding(gocpp::recv(f), f->wid - width);
         }
+        // Write the encoding directly into the output buffer.
         auto buf = *f->buf;
         if(f->fmtFlags.sharp)
         {
+            // Add leading 0x or 0X.
             buf = append(buf, '0', digits[16]);
         }
         unsigned char c = {};
@@ -533,23 +580,29 @@ namespace golang::fmt
         {
             if(f->fmtFlags.space && i > 0)
             {
+                // Separate elements with a space.
                 buf = append(buf, ' ');
                 if(f->fmtFlags.sharp)
                 {
+                    // Add leading 0x or 0X for each element.
                     buf = append(buf, '0', digits[16]);
                 }
             }
             if(b != nullptr)
             {
+                // Take a byte from the input byte slice.
                 c = b[i];
             }
             else
             {
+                // Take a byte from the input string.
                 c = s[i];
             }
+            // Encode each byte as two hexadecimal digits.
             buf = append(buf, digits[c >> 4], digits[c & 0xF]);
         }
         *f->buf = buf;
+        // Handle padding to the right.
         if(f->fmtFlags.widPresent && f->wid > width && f->fmtFlags.minus)
         {
             rec::writePadding(gocpp::recv(f), f->wid - width);
@@ -594,6 +647,8 @@ namespace golang::fmt
     // If the character is not valid Unicode, it will print '\ufffd'.
     void rec::fmtC(golang::fmt::fmt* f, uint64_t c)
     {
+        // Explicitly check whether c exceeds utf8.MaxRune since the conversion
+        // of a uint64 to a rune may lose precision that indicates an overflow.
         auto r = gocpp::rune(c);
         if(c > utf8::MaxRune)
         {
@@ -627,10 +682,12 @@ namespace golang::fmt
     // for strconv.AppendFloat and therefore fits into a byte.
     void rec::fmtFloat(golang::fmt::fmt* f, double v, int size, gocpp::rune verb, int prec)
     {
+        // Explicit precision in format specifier overrules default precision.
         if(f->fmtFlags.precPresent)
         {
             prec = f->prec;
         }
+        // Format number, reserving space for leading + sign if needed.
         auto num = strconv::AppendFloat(f->intbuf.make_slice(0, 1), v, (unsigned char)(verb), prec, size);
         if(num[1] == '-' || num[1] == '+')
         {
@@ -640,14 +697,19 @@ namespace golang::fmt
         {
             num[0] = '+';
         }
+        // f.space means to add a leading space instead of a "+" sign unless
+        // the sign is explicitly asked for by f.plus.
         if(f->fmtFlags.space && num[0] == '+' && ! f->fmtFlags.plus)
         {
             num[0] = ' ';
         }
+        // Special handling for infinities and NaN,
+        // which don't look like a number so shouldn't be padded with zeros.
         if(num[1] == 'I' || num[1] == 'N')
         {
             auto oldZero = f->fmtFlags.zero;
             f->fmtFlags.zero = false;
+            // Remove sign before NaN if not asked for.
             if(num[1] == 'N' && ! f->fmtFlags.space && ! f->fmtFlags.plus)
             {
                 num = num.make_slice(1);
@@ -656,6 +718,8 @@ namespace golang::fmt
             f->fmtFlags.zero = oldZero;
             return;
         }
+        // The sharp flag forces printing a decimal point for non-binary formats
+        // and retains trailing zeros, which we may need to restore.
         if(f->fmtFlags.sharp && verb != 'b')
         {
             auto digits = 0;
@@ -674,6 +738,7 @@ namespace golang::fmt
                     case 2:
                     case 3:
                         digits = prec;
+                        // If no precision is set explicitly use a precision of 6.
                         if(digits == - 1)
                         {
                             digits = 6;
@@ -687,6 +752,7 @@ namespace golang::fmt
             auto tail = tailBuf.make_slice(0, 0);
             auto hasDecimalPoint = false;
             auto sawNonzeroDigit = false;
+            // Starting from i = 1 to skip sign at num[0].
             for(auto i = 1; i < len(num); i++)
             {
                 //Go switch emulation
@@ -721,6 +787,7 @@ namespace golang::fmt
                             {
                                 sawNonzeroDigit = true;
                             }
+                            // Count significant digits after the first non-zero digit.
                             if(sawNonzeroDigit)
                             {
                                 digits--;
@@ -731,6 +798,7 @@ namespace golang::fmt
             }
             if(! hasDecimalPoint)
             {
+                // Leading digit 0 should contribute once to digits.
                 if(len(num) == 2 && num[1] == '0')
                 {
                     digits--;
@@ -744,8 +812,11 @@ namespace golang::fmt
             }
             num = append(num, tail);
         }
+        // We want a sign if asked for and if the sign is not positive.
         if(f->fmtFlags.plus || num[0] != '+')
         {
+            // If we're zero padding to the left we want the sign before the leading zeros.
+            // Achieve this by writing the sign out and then padding the unsigned number.
             if(f->fmtFlags.zero && f->fmtFlags.widPresent && f->wid > len(num))
             {
                 rec::writeByte(gocpp::recv(f->buf), num[0]);
@@ -756,6 +827,7 @@ namespace golang::fmt
             rec::pad(gocpp::recv(f), num);
             return;
         }
+        // No sign to show and the number is positive; just print the unsigned number.
         rec::pad(gocpp::recv(f), num.make_slice(1));
     }
 

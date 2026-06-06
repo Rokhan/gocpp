@@ -161,6 +161,7 @@ namespace golang::runtime
         auto span = spanOf(uintptr_t(v));
         if(span == nullptr || ! span->isUserArenaChunk)
         {
+            // Not stored in a user arena chunk.
             return s;
         }
         // Heap-allocate storage for a copy.
@@ -241,6 +242,10 @@ namespace golang::runtime
     {
         if(goexperiment::AllocHeaders)
         {
+            // In the allocation headers experiment, we reserve the end of the chunk for
+            // a pointer/scalar bitmap. We also reserve space for a dummy _type that
+            // refers to the bitmap. The PtrBytes field of the dummy _type indicates how
+            // many of those bits are valid.
             return userArenaChunkBytes / goarch::PtrSize / 8 + gocpp::Sizeof<runtime::_type>();
         }
         return 0;
@@ -290,6 +295,9 @@ namespace golang::runtime
         auto a = new(userArena);
         SetFinalizer(a, [=](struct userArena* a) mutable -> void
         {
+            // If arena handle is dropped without being freed, then call
+            // free on the arena, so the arena chunks are never reclaimed
+            // by the garbage collector.
             rec::free(gocpp::recv(a));
         });
         rec::refill(gocpp::recv(a));
@@ -330,6 +338,7 @@ namespace golang::runtime
         {
             gocpp::panic("slice of non-ptr-to-slice type"_s);
         }
+        // t is now the element type of the slice we want to allocate.
         typ = (runtime::slicetype*)(gocpp::unsafe_pointer(typ))->Elem;
         *((slice*)(i->data)) = slice {rec::alloc(gocpp::recv(a), typ, cap), cap, cap};
     }
@@ -342,12 +351,16 @@ namespace golang::runtime
     // same arena.
     void rec::free(golang::runtime::userArena* a)
     {
+        // Check for a double-free.
         if(rec::Load(gocpp::recv(a->defunct)))
         {
             gocpp::panic("arena double free"_s);
         }
+        // Mark ourselves as defunct.
         rec::Store(gocpp::recv(a->defunct), true);
         SetFinalizer(a, nullptr);
+        // Free all the full arenas.
+        // The refs on this list are in reverse order from the second-to-last.
         auto s = a->fullList;
         auto i = len(a->refs) - 2;
         for(; s != nullptr; )
@@ -360,13 +373,19 @@ namespace golang::runtime
         }
         if(a->fullList != nullptr || i >= 0)
         {
+            // There's still something left on the full list, or we
+            // failed to actually iterate over the entire refs list.
             go_throw("full list doesn't match refs list in length"_s);
         }
+        // Put the active chunk onto the reuse list.
+        // Note that active's reference is always the last reference in refs.
         s = a->active;
         if(s != nullptr)
         {
             if(raceenabled || msanenabled || asanenabled)
             {
+                // Don't reuse arenas with sanitizers enabled. We want to catch
+                // any use-after-free errors aggressively.
                 freeUserArenaChunk(s, a->refs[len(a->refs) - 1]);
             }
             else
@@ -376,6 +395,7 @@ namespace golang::runtime
                 runtime::unlock(& userArenaState.lock);
             }
         }
+        // nil out a.active so that a race with freeing will more likely cause a crash.
         a->active = nullptr;
         a->refs = nullptr;
     }
@@ -404,11 +424,16 @@ namespace golang::runtime
     // one, either from the partial list or allocating a new one, both from mheap.
     struct mspan* rec::refill(golang::runtime::userArena* a)
     {
+        // If there's an active chunk, assume it's full.
         auto s = a->active;
         if(s != nullptr)
         {
             if(rec::size(gocpp::recv(s->userArenaChunkFree)) > userArenaChunkMaxAllocBytes)
             {
+                // It's difficult to tell when we're actually out of memory
+                // in a chunk because the allocation that failed may still leave
+                // some free space available. However, that amount of free space
+                // should never exceed the maximum allocation size.
                 go_throw("wasted too much memory in an arena chunk"_s);
             }
             s->next = a->fullList;
@@ -417,9 +442,11 @@ namespace golang::runtime
             s = nullptr;
         }
         gocpp::unsafe_pointer x = {};
+        // Check the partially-used list.
         runtime::lock(& userArenaState.lock);
         if(len(userArenaState.reuse) > 0)
         {
+            // Pick off the last arena chunk from the list.
             auto n = len(userArenaState.reuse) - 1;
             x = userArenaState.reuse[n].x;
             s = userArenaState.reuse[n].mspan;
@@ -430,6 +457,7 @@ namespace golang::runtime
         runtime::unlock(& userArenaState.lock);
         if(s == nullptr)
         {
+            // Allocate a new one.
             std::tie(x, s) = newUserArenaChunk();
             if(s == nullptr)
             {
@@ -533,6 +561,7 @@ namespace golang::runtime
         {
             if(size > ~ uintptr_t(0) / uintptr_t(cap))
             {
+                // Overflow.
                 go_throw("out of memory"_s);
             }
             size *= uintptr_t(cap);
@@ -543,12 +572,16 @@ namespace golang::runtime
         }
         if(size > userArenaChunkMaxAllocBytes)
         {
+            // Redirect allocations that don't fit into a chunk well directly
+            // from the heap.
             if(cap >= 0)
             {
                 return newarray(typ, cap);
             }
             return newobject(typ);
         }
+        // Prevent preemption as we set up the space for a new object.
+        // Act like we're allocating.
         auto mp = acquirem();
         if(mp->mallocing != 0)
         {
@@ -562,6 +595,7 @@ namespace golang::runtime
         gocpp::unsafe_pointer ptr = {};
         if(typ->PtrBytes == 0)
         {
+            // Allocate pointer-less objects from the tail end of the chunk.
             auto [v, ok] = rec::takeFromBack(gocpp::recv(s->userArenaChunkFree), size, typ->Align_);
             if(ok)
             {
@@ -578,6 +612,7 @@ namespace golang::runtime
         }
         if(ptr == nullptr)
         {
+            // Failed to allocate.
             mp->mallocing = 0;
             releasem(mp);
             return nullptr;
@@ -586,6 +621,7 @@ namespace golang::runtime
         {
             go_throw("arena chunk needs zeroing, but should already be zeroed"_s);
         }
+        // Set up heap bitmap and do extra accounting.
         if(typ->PtrBytes != 0)
         {
             if(cap >= 0)
@@ -610,6 +646,12 @@ namespace golang::runtime
                 c->scanAlloc += typ->PtrBytes;
             }
         }
+        // Ensure that the stores above that initialize x to
+        // type-safe memory and set the heap bits occur before
+        // the caller can make ptr observable to the garbage
+        // collector. Otherwise, on weakly ordered machines,
+        // the garbage collector could follow a pointer to x,
+        // but see uninitialized memory or stale heap bits.
         publicationBarrier();
         mp->mallocing = 0;
         releasem(mp);
@@ -641,7 +683,14 @@ namespace golang::runtime
         {
             go_throw("newUserArenaChunk called with gcphase == _GCmarktermination"_s);
         }
+        // Deduct assist credit. Because user arena chunks are modeled as one
+        // giant heap object which counts toward heapLive, we're obligated to
+        // assist the GC proportionally (and it's worth noting that the arena
+        // does represent additional work for the GC, but we also have no idea
+        // what that looks like until we actually allocate things into the
+        // arena).
         deductAssistCredit(userArenaChunkBytes);
+        // Set mp.mallocing to keep from being preempted by GC.
         auto mp = acquirem();
         if(mp->mallocing != 0)
         {
@@ -663,20 +712,27 @@ namespace golang::runtime
             go_throw("out of memory"_s);
         }
         auto x = gocpp::unsafe_pointer(rec::base(gocpp::recv(span)));
+        // Allocate black during GC.
+        // All slots hold nil so no scanning is needed.
+        // This may be racing with GC so do it atomically if there can be
+        // a race marking the bit.
         if(gcphase != _GCoff)
         {
             gcmarknewobject(span, rec::base(gocpp::recv(span)));
         }
         if(raceenabled)
         {
+            // TODO(mknyszek): Track individual objects.
             racemalloc(gocpp::unsafe_pointer(rec::base(gocpp::recv(span))), span->elemsize);
         }
         if(msanenabled)
         {
+            // TODO(mknyszek): Track individual objects.
             msanmalloc(gocpp::unsafe_pointer(rec::base(gocpp::recv(span))), span->elemsize);
         }
         if(asanenabled)
         {
+            // TODO(mknyszek): Track individual objects.
             auto rzSize = computeRZlog(span->elemsize);
             span->elemsize -= rzSize;
             if(goexperiment::AllocHeaders)
@@ -695,6 +751,7 @@ namespace golang::runtime
             {
                 go_throw("newUserArenaChunk called without a P or outside bootstrapping"_s);
             }
+            // Note cache c only valid while m acquired; see #47302
             if(rate != 1 && userArenaChunkBytes < c->nextSample)
             {
                 c->nextSample -= userArenaChunkBytes;
@@ -706,6 +763,7 @@ namespace golang::runtime
         }
         mp->mallocing = 0;
         releasem(mp);
+        // Again, because this chunk counts toward heapLive, potentially trigger a GC.
         if(auto t = (gocpp::Init<gcTrigger>([=](auto& y) {
             y.kind = gcTriggerHeap;
         })); rec::test(gocpp::recv(t)))
@@ -720,9 +778,14 @@ namespace golang::runtime
             }
             if(inittrace.active && inittrace.id == getg()->goid)
             {
+                // Init functions are executed sequentially in a single goroutine.
                 inittrace.bytes += uint64_t(userArenaChunkBytes);
             }
         }
+        // Double-check it's aligned to the physical page size. Based on the current
+        // implementation this is trivially true, but it need not be in the future.
+        // However, if it's not aligned to the physical page size then we can't properly
+        // set it to fault later.
         if(uintptr_t(x) % physPageSize != 0)
         {
             go_throw("user arena chunk is not aligned to the physical page size"_s);
@@ -760,23 +823,50 @@ namespace golang::runtime
         {
             go_throw("span on userArena.faultList has invalid size"_s);
         }
+        // Update the span class to be noscan. What we want to happen is that
+        // any pointer into the span keeps it from getting recycled, so we want
+        // the mark bit to get set, but we're about to set the address space to fault,
+        // so we have to prevent the GC from scanning this memory.
+        // It's OK to set it here because (1) a GC isn't in progress, so the scanning code
+        // won't make a bad decision, (2) we're currently non-preemptible and in the runtime,
+        // so a GC is blocked from starting. We might race with sweeping, which could
+        // put it on the "wrong" sweep list, but really don't care because the chunk is
+        // treated as a large object span and there's no meaningful difference between scan
+        // and noscan large objects in the sweeper. The STW at the start of the GC acts as a
+        // barrier for this update.
         s->spanclass = makeSpanClass(0, true);
+        // Actually set the arena chunk to fault, so we'll get dangling pointer errors.
+        // sysFault currently uses a method on each OS that forces it to evacuate all
+        // memory backing the chunk.
         sysFault(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->npages * pageSize);
+        // Everything on the list is counted as in-use, however sysFault transitions to
+        // Reserved, not Prepared, so we skip updating heapFree or heapReleased and just
+        // remove the memory from the total altogether; it's just address space now.
         rec::add(gocpp::recv(gcController.heapInUse), - int64_t(s->npages * pageSize));
+        // Count this as a free of an object right now as opposed to when
+        // the span gets off the quarantine list. The main reason is so that the
+        // amount of bytes allocated doesn't exceed how much is counted as
+        // "mapped ready," which could cause a deadlock in the pacer.
         rec::Add(gocpp::recv(gcController.totalFree), int64_t(s->elemsize));
+        // Update consistent stats to match.
+        // We're non-preemptible, so it's safe to update consistent stats (our P
+        // won't change out from under us).
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xaddint64(& stats->committed, - int64_t(s->npages * pageSize));
         atomic::Xaddint64(& stats->inHeap, - int64_t(s->npages * pageSize));
         atomic::Xadd64(& stats->largeFreeCount, 1);
         atomic::Xadd64(& stats->largeFree, int64_t(s->elemsize));
         rec::release(gocpp::recv(memstats.heapStats));
+        // This counts as a free, so update heapLive.
         rec::update(gocpp::recv(gcController), - int64_t(s->elemsize), 0);
+        // Mark it as free for the race detector.
         if(raceenabled)
         {
             racefree(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->elemsize);
         }
         systemstack([=]() mutable -> void
         {
+            // Add the user arena to the quarantine list.
             lock(& mheap_.lock);
             rec::insert(gocpp::recv(mheap_.userArena.quarantineList), s);
             unlock(& mheap_.lock);
@@ -811,6 +901,8 @@ namespace golang::runtime
         {
             go_throw("invalid user arena span size"_s);
         }
+        // Mark the region as free to various santizers immediately instead
+        // of handling them at sweep time.
         if(raceenabled)
         {
             racefree(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->elemsize);
@@ -823,7 +915,10 @@ namespace golang::runtime
         {
             asanpoison(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->elemsize);
         }
+        // Make ourselves non-preemptible as we manipulate state and statistics.
+        // Also required by setUserArenaChunksToFault.
         auto mp = acquirem();
+        // We can only set user arenas to fault if we're in the _GCoff phase.
         if(gcphase == _GCoff)
         {
             lock(& userArenaState.lock);
@@ -835,11 +930,13 @@ namespace golang::runtime
             {
                 rec::setUserArenaChunkToFault(gocpp::recv(lc.mspan));
             }
+            // Until the chunks are set to fault, keep them alive via the fault list.
             KeepAlive(x);
             KeepAlive(faultList);
         }
         else
         {
+            // Put the user arena on the fault list.
             lock(& userArenaState.lock);
             userArenaState.fault = append(userArenaState.fault, liveUserArenaChunk {s, x});
             unlock(& userArenaState.lock);
@@ -860,6 +957,7 @@ namespace golang::runtime
     {
         mspan* s = {};
         uintptr_t base = {};
+        // First check the free list.
         runtime::lock(& h->lock);
         if(! rec::isEmpty(gocpp::recv(h->userArena.readyList)))
         {
@@ -869,9 +967,13 @@ namespace golang::runtime
         }
         else
         {
+            // Free list was empty, so allocate a new arena.
             auto hintList = & h->userArena.arenaHints;
             if(raceenabled)
             {
+                // In race mode just use the regular heap hints. We might fragment
+                // the address space, but the race detector requires that the heap
+                // is mapped contiguously.
                 hintList = & h->arenaHints;
             }
             auto [v, size] = rec::sysAlloc(gocpp::recv(h), userArenaChunkBytes, hintList, false);
@@ -881,6 +983,10 @@ namespace golang::runtime
             }
             if(size > userArenaChunkBytes)
             {
+                // We got more than we asked for. This can happen if
+                // heapArenaSize > userArenaChunkSize, or if sysAlloc just returns
+                // some extra as a result of trying to find an aligned region.
+                // Divide it up and put it on the ready list.
                 for(auto i = userArenaChunkBytes; i < size; i += userArenaChunkBytes)
                 {
                     auto s = rec::allocMSpanLocked(gocpp::recv(h));
@@ -892,14 +998,21 @@ namespace golang::runtime
             base = uintptr_t(v);
             if(base == 0)
             {
+                // Out of memory.
                 runtime::unlock(& h->lock);
                 return nullptr;
             }
             s = rec::allocMSpanLocked(gocpp::recv(h));
         }
         runtime::unlock(& h->lock);
+        // sysAlloc returns Reserved address space, and any span we're
+        // reusing is set to fault (so, also Reserved), so transition
+        // it to Prepared and then Ready.
+        // Unlike (*mheap).grow, just map in everything that we
+        // asked for. We're likely going to use it all.
         sysMap(gocpp::unsafe_pointer(base), userArenaChunkBytes, & gcController.heapReleased);
         sysUsed(gocpp::unsafe_pointer(base), userArenaChunkBytes, userArenaChunkBytes);
+        // Model the user arena as a heap span for a large object.
         auto spc = makeSpanClass(0, false);
         rec::initSpan(gocpp::recv(h), s, spanAllocHeap, spc, base, userArenaChunkPages);
         s->isUserArenaChunk = true;
@@ -907,24 +1020,43 @@ namespace golang::runtime
         s->limit = rec::base(gocpp::recv(s)) + s->elemsize;
         s->freeindex = 1;
         s->allocCount = 1;
+        // Account for this new arena chunk memory.
         rec::add(gocpp::recv(gcController.heapInUse), int64_t(userArenaChunkBytes));
         rec::add(gocpp::recv(gcController.heapReleased), - int64_t(userArenaChunkBytes));
         auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
         atomic::Xaddint64(& stats->inHeap, int64_t(userArenaChunkBytes));
         atomic::Xaddint64(& stats->committed, int64_t(userArenaChunkBytes));
+        // Model the arena as a single large malloc.
         atomic::Xadd64(& stats->largeAlloc, int64_t(s->elemsize));
         atomic::Xadd64(& stats->largeAllocCount, 1);
         rec::release(gocpp::recv(memstats.heapStats));
+        // Count the alloc in inconsistent, internal stats.
         rec::Add(gocpp::recv(gcController.totalAlloc), int64_t(s->elemsize));
+        // Update heapLive.
         rec::update(gocpp::recv(gcController), int64_t(s->elemsize), 0);
+        // This must clear the entire heap bitmap so that it's safe
+        // to allocate noscan data without writing anything out.
         rec::initHeapBits(gocpp::recv(s), true);
+        // Clear the span preemptively. It's an arena chunk, so let's assume
+        // everything is going to be used.
+        // This also seems to make a massive difference as to whether or
+        // not Linux decides to back this memory with transparent huge
+        // pages. There's latency involved in this zeroing, but the hugepage
+        // gains are almost always worth it. Note: it's important that we
+        // clear even if it's freshly mapped and we know there's no point
+        // to zeroing as *that* is the critical signal to use huge pages.
         memclrNoHeapPointers(gocpp::unsafe_pointer(rec::base(gocpp::recv(s))), s->elemsize);
         s->needzero = 0;
         s->freeIndexForScan = 1;
+        // Set up the range for allocation.
         s->userArenaChunkFree = makeAddrRange(base, base + s->elemsize);
+        // Put the large span in the mcentral swept list so that it's
+        // visible to the background sweeper.
         rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(h->central[spc].mcentral), h->sweepgen)), s);
         if(goexperiment::AllocHeaders)
         {
+            // Set up an allocation header. Avoid write barriers here because this type
+            // is not a real type, and it exists in an invalid location.
             *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType)) = uintptr_t(gocpp::unsafe_pointer(s->limit));
             *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType->GCData)) = s->limit + gocpp::Sizeof<runtime::_type>();
             s->largeType->PtrBytes = 0;

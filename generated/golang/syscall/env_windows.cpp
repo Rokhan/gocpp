@@ -90,6 +90,9 @@ namespace golang::syscall
     {
         for(auto [gocpp_ignored, s] : Environ())
         {
+            // Environment variables can begin with =
+            // so start looking for the separator = at j=1.
+            // https://devblogs.microsoft.com/oldnewthing/20100506-00/?p=14133
             for(auto j = 1; j < len(s); j++)
             {
                 if(s[j] == '=')
@@ -112,10 +115,13 @@ namespace golang::syscall
                 return nullptr;
             }
             defer.push_back([=]{ FreeEnvironmentStrings(envp); });
+            // Empty with room to grow.
             auto r = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, 50);
             auto size = gocpp::Sizeof<uint16_t>();
             for(; *envp != 0; )
             {
+                // environment block ends with empty string
+                // find NUL terminator
                 auto end = gocpp::unsafe_pointer(envp);
                 for(; *(uint16_t*)(end) != 0; )
                 {

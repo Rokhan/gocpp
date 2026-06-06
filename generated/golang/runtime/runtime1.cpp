@@ -87,6 +87,8 @@ namespace golang::runtime
         else
         if(gp->m->throwing >= throwTypeRuntime)
         {
+            // Always include runtime frames in runtime throws unless
+            // otherwise overridden by m.traceback.
             level = 2;
         }
         else
@@ -128,6 +130,9 @@ namespace golang::runtime
 
     void goenvs_unix()
     {
+        // TODO(austin): ppc64 in dynamic linking mode doesn't
+        // guarantee env[] will immediately follow argv. Might cause
+        // problems.
         auto n = int32_t(0);
         for(; argv_index(argv, argc + 1 + n) != nullptr; )
         {
@@ -664,11 +669,21 @@ namespace golang::runtime
     })};
     void parsedebugvars()
     {
+        // defaults
         debug.cgocheck = 1;
         debug.invalidptr = 1;
+        // set this to 0 to turn larger initial goroutine stacks off
         debug.adaptivestackstart = 1;
         if(GOOS == "linux"_s)
         {
+            // On Linux, MADV_FREE is faster than MADV_DONTNEED,
+            // but doesn't affect many of the statistics that
+            // MADV_DONTNEED does until the memory is actually
+            // reclaimed. This generally leads to poor user
+            // experience, like confusing stats in top and other
+            // monitoring tools; and bad integration with
+            // management systems that respond to memory usage.
+            // Hence, default to MADV_DONTNEED.
             debug.madvdontneed = 1;
         }
         debug.traceadvanceperiod = defaultTraceAdvancePeriod;
@@ -676,10 +691,12 @@ namespace golang::runtime
         auto p = new(string);
         *p = godebug;
         rec::Store<gocpp::string>(gocpp::recv(godebugEnv), p);
+        // apply runtime defaults, if any
         for(auto [gocpp_ignored, v] : dbgvars)
         {
             if(v->def != 0)
             {
+                // Every var should have either v.value or v.atomic set.
                 if(v->value != nullptr)
                 {
                     *v->value = v->def;
@@ -691,7 +708,9 @@ namespace golang::runtime
                 }
             }
         }
+        // apply compile-time GODEBUG settings
         parsegodebug(godebugDefault, nullptr);
+        // apply environment settings
         parsegodebug(godebug, nullptr);
         debug.malloc = (debug.allocfreetrace | debug.inittrace | debug.sbrk) != 0;
         setTraceback(gogetenv("GOTRACEBACK"_s));
@@ -703,8 +722,11 @@ namespace golang::runtime
     void reparsedebugvars(gocpp::string env)
     {
         auto seen = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
+        // apply environment settings
         parsegodebug(env, seen);
+        // apply compile-time GODEBUG settings for as-yet-unseen variables
         parsegodebug(godebugDefault, seen);
+        // apply defaults for as-yet-unseen variables
         for(auto [gocpp_ignored, v] : dbgvars)
         {
             if(v->atomic != nullptr && ! seen[v->name])
@@ -731,6 +753,7 @@ namespace golang::runtime
             gocpp::string field = {};
             if(seen == nullptr)
             {
+                // startup: process left to right, overwriting older settings with newer
                 auto i = bytealg::IndexByteString(p, ',');
                 if(i < 0)
                 {
@@ -743,6 +766,7 @@ namespace golang::runtime
             }
             else
             {
+                // incremental update: process right to left, updating and skipping seen
                 auto i = len(p) - 1;
                 for(; i >= 0 && p[i] != ','; )
                 {
@@ -771,6 +795,9 @@ namespace golang::runtime
             {
                 seen[key] = true;
             }
+            // Update MemProfileRate directly here since it
+            // is int, not int32, and should only be updated
+            // if specified in GODEBUG.
             if(seen == nullptr && key == "memprofilerate"_s)
             {
                 if(auto [n, ok] = atoi(value); ok)
@@ -855,6 +882,8 @@ namespace golang::runtime
                     break;
             }
         }
+        // when C owns the process, simply exit'ing the process on fatal errors
+        // and panics is surprising. Be louder and abort instead.
         if(islibrary || isarchive)
         {
             t |= tracebackCrash;
@@ -878,6 +907,8 @@ namespace golang::runtime
             if(v >= (int64_t(div) << (unsigned int)(bit)))
             {
                 v = v - (int64_t(div) << (unsigned int)(bit));
+                // Before this for loop, res was 0, thus all these
+                // power of 2 increments are now just bitsets.
                 res |= 1 << (unsigned int)(bit);
             }
         }
@@ -911,6 +942,7 @@ namespace golang::runtime
         mp->locks--;
         if(mp->locks == 0 && gp->preempt)
         {
+            // restore the preemption request in case we've cleared it in newstack
             gp->stackguard0 = stackPreempt;
         }
     }
@@ -985,6 +1017,7 @@ namespace golang::runtime
         if(! found)
         {
             id = reflectOffs.next;
+            // use negative offsets as IDs to aid debugging
             reflectOffs.next--;
             reflectOffs.m[id] = ptr;
             reflectOffs.minv[ptr] = id;

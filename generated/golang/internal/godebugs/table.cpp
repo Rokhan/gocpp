@@ -170,6 +170,7 @@ namespace golang::godebugs
     // Lookup returns the Info with the given name.
     struct Info* Lookup(gocpp::string name)
     {
+        // binary search, avoiding import of sort.
         auto lo = 0;
         auto hi = len(All);
         for(; lo < hi; )

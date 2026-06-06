@@ -84,8 +84,20 @@ namespace golang::sync
     // without calling f.
     void rec::Do(golang::sync::Once* o, std::function<void ()> f)
     {
+        // Note: Here is an incorrect implementation of Do:
+        // if o.done.CompareAndSwap(0, 1) {
+        // f()
+        // }
+        // Do guarantees that when it returns, f has finished.
+        // This implementation would not implement that guarantee:
+        // given two simultaneous calls, the winner of the cas would
+        // call f, and the second would return immediately, without
+        // waiting for the first's call to f to complete.
+        // This is why the slow path falls back to a mutex, and why
+        // the o.done.Store must be delayed until after f returns.
         if(rec::Load(gocpp::recv(o->done)) == 0)
         {
+            // Outlined slow-path to allow inlining of the fast-path.
             rec::doSlow(gocpp::recv(o), f);
         }
     }

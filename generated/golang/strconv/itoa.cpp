@@ -97,23 +97,36 @@ namespace golang::strconv
     {
         gocpp::slice<unsigned char> d;
         gocpp::string s;
+        // 2 <= base && base <= len(digits)
         if(base < 2 || base > len(digits))
         {
             gocpp::panic("strconv: illegal AppendInt/FormatInt base"_s);
         }
+        // +1 for sign of 64bit value in base 2
         gocpp::array<unsigned char, 64 + 1> a = {};
         auto i = len(a);
         if(neg)
         {
             u = - u;
         }
+        // convert bits
+        // We use uint values where we can because those will
+        // fit into a single register even on a 32bit machine.
         if(base == 10)
         {
+            // common case: use constants for / because
+            // the compiler can optimize it into a multiply+shift
             if(host32bit)
             {
+                // convert the lower digits using 32bit operations
+                // u < 1e9
                 for(; u >= 1e9; )
                 {
+                    // Avoid using r = a%b in addition to q = a/b
+                    // since 64bit division and modulo operations
+                    // are calculated by runtime functions on 32bit machines.
                     auto q = u / 1e9;
+                    // u % 1e9 fits into a uint
                     auto us = (unsigned int)(u - q * 1e9);
                     for(auto j = 4; j > 0; j--)
                     {
@@ -123,11 +136,14 @@ namespace golang::strconv
                         a[i + 1] = smallsString[is + 1];
                         a[i + 0] = smallsString[is + 0];
                     }
+                    // us < 10, since it contains the last digit
+                    // from the initial 9-digit us.
                     i--;
                     a[i] = smallsString[us * 2 + 1];
                     u = q;
                 }
             }
+            // u guaranteed to fit into a uint
             auto us = (unsigned int)(u);
             for(; us >= 100; )
             {
@@ -137,6 +153,7 @@ namespace golang::strconv
                 a[i + 1] = smallsString[is + 1];
                 a[i + 0] = smallsString[is + 0];
             }
+            // us < 100
             auto is = us * 2;
             i--;
             a[i] = smallsString[is + 1];
@@ -149,8 +166,16 @@ namespace golang::strconv
         else
         if(isPowerOfTwo(base))
         {
+            // Use shifts and masks instead of / and %.
+            // Base is a power of 2 and 2 <= base <= len(digits) where len(digits) is 36.
+            // The largest power of 2 below or equal to 36 is 32, which is 1 << 5;
+            // i.e., the largest possible shift count is 5. By &-ind that value with
+            // the constant 7 we tell the compiler that the shift count is always
+            // less than 8 which is smaller than any register width. This allows
+            // the compiler to generate better code for the shift operation.
             auto shift = (unsigned int)(bits::TrailingZeros((unsigned int)(base))) & 7;
             auto b = uint64_t(base);
+            // == 1<<shift - 1
             auto m = (unsigned int)(base) - 1;
             for(; u >= b; )
             {
@@ -158,22 +183,29 @@ namespace golang::strconv
                 a[i] = digits[(unsigned int)(u) & m];
                 u >>= shift;
             }
+            // u < base
             i--;
             a[i] = digits[(unsigned int)(u)];
         }
         else
         {
+            // general case
             auto b = uint64_t(base);
             for(; u >= b; )
             {
                 i--;
+                // Avoid using r = a%b in addition to q = a/b
+                // since 64bit division and modulo operations
+                // are calculated by runtime functions on 32bit machines.
                 auto q = u / b;
                 a[i] = digits[(unsigned int)(u - q * b)];
                 u = q;
             }
+            // u < base
             i--;
             a[i] = digits[(unsigned int)(u)];
         }
+        // add sign, if any
         if(neg)
         {
             i--;

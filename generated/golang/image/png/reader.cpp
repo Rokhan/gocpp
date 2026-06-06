@@ -226,6 +226,7 @@ namespace golang::png
         {
             return gocpp::error(UnsupportedError("dimension overflow"_s));
         }
+        // There can be up to 8 bytes per pixel, for 16 bits per channel RGBA.
         if(nPixels != (nPixels * 8) / 8)
         {
             return gocpp::error(UnsupportedError("dimension overflow"_s));
@@ -365,6 +366,7 @@ namespace golang::png
 
     struct gocpp::error rec::parsePLTE(golang::png::decoder* d, uint32_t length)
     {
+        // The number of palette entries.
         auto np = int(length / 3);
         if(length % 3 != 0 || np <= 0 || np > 256 || np > (1 << (unsigned int)(d->depth)))
         {
@@ -401,6 +403,11 @@ namespace golang::png
                     }
                     for(auto i = np; i < 256; i++)
                     {
+                        // Initialize the rest of the palette to opaque black. The spec (section
+                        // 11.2.3) says that "any out-of-range pixel value found in the image data
+                        // is an error", but some real-world PNG files have out-of-range pixel
+                        // values. We fall back to opaque black, the same as libpng 1.5.13;
+                        // ImageMagick 6.5.7 returns an error.
                         d->palette[i] = color::RGBA {0x00, 0x00, 0x00, 0xff};
                     }
                     d->palette = d->palette.make_slice(0, np);
@@ -410,6 +417,8 @@ namespace golang::png
                 case 6:
                 case 7:
                     break;
+                // As per the PNG spec, a PLTE chunk is optional (and for practical purposes,
+                // ignorable) for the ctTrueColor and ctTrueColorAlpha color types (section 4.1.2).
                 default:
                     return gocpp::error(FormatError("PLTE, color type mismatch"_s));
                     break;
@@ -539,10 +548,13 @@ namespace golang::png
         }
         for(; d->idatLength == 0; )
         {
+            // We have exhausted an IDAT chunk. Verify the checksum of that chunk.
             if(auto err = rec::verifyChecksum(gocpp::recv(d)); err != nullptr)
             {
                 return {0, err};
             }
+            // Read the length and chunk type of the next chunk, and check that
+            // it is an IDAT chunk.
             if(auto [gocpp_id_1, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 8)); err != nullptr)
             {
                 return {0, err};
@@ -589,6 +601,7 @@ namespace golang::png
             else
             if(d->interlace == itAdam7)
             {
+                // Allocate a blank image of the full size.
                 std::tie(img, err) = rec::readImagePass(gocpp::recv(d), nullptr, 0, true);
                 if(err != nullptr)
                 {
@@ -607,6 +620,7 @@ namespace golang::png
                     }
                 }
             }
+            // Check for EOF, to verify the zlib checksum.
             auto n = 0;
             for(auto i = 0; n == 0 && err == nullptr; i++)
             {
@@ -649,8 +663,12 @@ namespace golang::png
         if(d->interlace == itAdam7 && ! allocateOnly)
         {
             auto p = interlacing[pass];
+            // Add the multiplication factor and subtract one, effectively rounding up.
             width = (width - p.xOffset + p.xFactor - 1) / p.xFactor;
             height = (height - p.yOffset + p.yFactor - 1) / p.yFactor;
+            // A PNG image can't have zero width or height, but for an interlaced
+            // image, an individual pass might have zero width or height. If so, we
+            // shouldn't even read a per-row filter type byte, so return early.
             if(width == 0 || height == 0)
             {
                 return {nullptr, nullptr};
@@ -767,15 +785,18 @@ namespace golang::png
             return {img, nullptr};
         }
         auto bytesPerPixel = (bitsPerPixel + 7) / 8;
+        // The +1 is for the per-row filter type, which is at cr[0].
         auto rowSize = 1 + (int64_t(bitsPerPixel) * int64_t(width) + 7) / 8;
         if(rowSize != int64_t(int(rowSize)))
         {
             return {nullptr, gocpp::error(UnsupportedError("dimension overflow"_s))};
         }
+        // cr and pr are the bytes for the current and previous row.
         auto cr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), rowSize);
         auto pr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), rowSize);
         for(auto y = 0; y < height; y++)
         {
+            // Read the decompressed bytes.
             auto [gocpp_id_2, err] = io::ReadFull(r, cr);
             if(err != nullptr)
             {
@@ -785,6 +806,7 @@ namespace golang::png
                 }
                 return {nullptr, err};
             }
+            // Apply the filter.
             auto cdat = cr.make_slice(1);
             auto pdat = pr.make_slice(1);
             //Go switch emulation
@@ -800,6 +822,7 @@ namespace golang::png
                 {
                     case 0:
                         break;
+                    // No-op.
                     case 1:
                         for(auto i = bytesPerPixel; i < len(cdat); i++)
                         {
@@ -813,6 +836,9 @@ namespace golang::png
                         }
                         break;
                     case 3:
+                        // The first column has no column to the left of it, so it is a
+                        // special case. We know that the first column exists because we
+                        // check above that width != 0, and so len(cdat) != 0.
                         for(auto i = 0; i < bytesPerPixel; i++)
                         {
                             cdat[i] += pdat[i] / 2;
@@ -830,6 +856,7 @@ namespace golang::png
                         break;
                 }
             }
+            // Convert from bytes to colors.
             //Go switch emulation
             {
                 auto condition = d->cb;
@@ -1157,6 +1184,7 @@ namespace golang::png
                         break;
                 }
             }
+            // The current row for y is the previous row for y+1.
             std::tie(pr, cr) = std::tuple{cr, pr};
         }
         return {img, nullptr};
@@ -1243,6 +1271,10 @@ namespace golang::png
                     bytesPerPixel = 1;
                     if(len(target->Palette) < len(source->Palette))
                     {
+                        // readImagePass can return a paletted image whose implicit palette
+                        // length (one more than the maximum Pix value) is larger than the
+                        // explicit palette length (what's in the PLTE chunk). Make the
+                        // same adjustment here.
                         target->Palette = source->Palette;
                     }
                     break;
@@ -1301,6 +1333,7 @@ namespace golang::png
 
     struct gocpp::error rec::parseChunk(golang::png::decoder* d, bool configOnly)
     {
+        // Read the length and chunk type.
         if(auto [gocpp_id_4, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 8)); err != nullptr)
         {
             return err;
@@ -1308,6 +1341,7 @@ namespace golang::png
         auto length = rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4));
         rec::Reset(gocpp::recv(d->crc));
         rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(4, 8));
+        // Read the chunk data.
         //Go switch emulation
         {
             auto condition = gocpp::string(d->tmp.make_slice(4, 8));
@@ -1367,6 +1401,10 @@ namespace golang::png
                     else
                     if(d->stage == dsSeenIDAT)
                     {
+                        // Ignore trailing zero-length or garbage IDAT chunks.
+                        // This does not affect valid PNG images that contain multiple IDAT
+                        // chunks, since the first call to parseIDAT below will consume all
+                        // consecutive IDAT chunks required for decoding the image.
                         break;
                     }
                     d->stage = dsSeenIDAT;

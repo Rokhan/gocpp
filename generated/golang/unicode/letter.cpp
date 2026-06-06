@@ -212,6 +212,7 @@ namespace golang::unicode
             }
             return false;
         }
+        // binary search over ranges
         auto lo = 0;
         auto hi = len(ranges);
         for(; lo < hi; )
@@ -253,6 +254,7 @@ namespace golang::unicode
             }
             return false;
         }
+        // binary search over ranges
         auto lo = 0;
         auto hi = len(ranges);
         for(; lo < hi; )
@@ -279,6 +281,7 @@ namespace golang::unicode
     bool Is(struct RangeTable* rangeTab, gocpp::rune r)
     {
         auto r16 = rangeTab->R16;
+        // Compare as uint32 to correctly handle negative runes.
         if(len(r16) > 0 && uint32_t(r) <= uint32_t(r16[len(r16) - 1].Hi))
         {
             return is16(r16, uint16_t(r));
@@ -294,6 +297,7 @@ namespace golang::unicode
     bool isExcludingLatin(struct RangeTable* rangeTab, gocpp::rune r)
     {
         auto r16 = rangeTab->R16;
+        // Compare as uint32 to correctly handle negative runes.
         if(auto off = rangeTab->LatinOffset; len(r16) > off && uint32_t(r) <= uint32_t(r16[len(r16) - 1].Hi))
         {
             return is16(r16.make_slice(off), uint16_t(r));
@@ -309,6 +313,7 @@ namespace golang::unicode
     // IsUpper reports whether the rune is an upper case letter.
     bool IsUpper(gocpp::rune r)
     {
+        // See comment in IsGraphic.
         if(uint32_t(r) <= MaxLatin1)
         {
             return properties[uint8_t(r)] & pLmask == pLu;
@@ -319,6 +324,7 @@ namespace golang::unicode
     // IsLower reports whether the rune is a lower case letter.
     bool IsLower(gocpp::rune r)
     {
+        // See comment in IsGraphic.
         if(uint32_t(r) <= MaxLatin1)
         {
             return properties[uint8_t(r)] & pLmask == pLl;
@@ -344,8 +350,10 @@ namespace golang::unicode
         bool foundMapping;
         if(_case < 0 || MaxCase <= _case)
         {
+            // as reasonable an error as any
             return {ReplacementChar, false};
         }
+        // binary search over ranges
         auto lo = 0;
         auto hi = len(caseRange);
         for(; lo < hi; )
@@ -357,6 +365,16 @@ namespace golang::unicode
                 auto delta = cr.Delta[_case];
                 if(delta > MaxRune)
                 {
+                    // In an Upper-Lower sequence, which always starts with
+                    // an UpperCase letter, the real deltas always look like:
+                    // {0, 1, 0}    UpperCase (Lower is next)
+                    // {-1, 0, -1}  LowerCase (Upper, Title are previous)
+                    // The characters at even offsets from the beginning of the
+                    // sequence are upper case; the ones at odd offsets are lower.
+                    // The correct mapping can be done by clearing or setting the low
+                    // bit in the sequence offset.
+                    // The constants UpperCase and TitleCase are even while LowerCase
+                    // is odd so we take the low bit from _case.
                     return {gocpp::rune(cr.Lo) + ((r - gocpp::rune(cr.Lo)) &^ 1 | gocpp::rune(_case & 1)), true};
                 }
                 return {r + delta, true};
@@ -415,6 +433,7 @@ namespace golang::unicode
         {
             if('a' <= r && r <= 'z')
             {
+                // title case is upper case for ASCII
                 r -= 'a' - 'A';
             }
             return r;
@@ -519,6 +538,7 @@ namespace golang::unicode
         {
             return gocpp::rune(asciiFold[r]);
         }
+        // Consult caseOrbit table for special cases.
         auto lo = 0;
         auto hi = len(caseOrbit);
         for(; lo < hi; )
@@ -537,6 +557,9 @@ namespace golang::unicode
         {
             return gocpp::rune(caseOrbit[lo].To);
         }
+        // No folding specified. This is a one- or two-element
+        // equivalence class containing rune and ToLower(rune)
+        // and ToUpper(rune) if they are different from rune.
         if(auto l = ToLower(r); l != r)
         {
             return l;

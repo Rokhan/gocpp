@@ -23,7 +23,9 @@ namespace golang::main
 
     void main()
     {
+        // Create a tic-tac-toe board.
         auto board = gocpp::slice<gocpp::slice<gocpp::string>> {gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s}, gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s}, gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s}};
+        // The players take turns.
         board[0][0] = "X"_s;
         board[2][2] = "O"_s;
         board[1][2] = "X"_s;
@@ -31,6 +33,7 @@ namespace golang::main
         board[0][2] = "X"_s;
         for(auto i = 0; i < len(board); i++)
         {
+            // fmt.Printf("%s\n", strings.Join(board[i], " "))
             mocklib::Printf("%v\n"_s, mocklib::StringsJoin(board[i], " "_s));
         }
     }

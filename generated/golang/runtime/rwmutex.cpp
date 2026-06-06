@@ -137,21 +137,29 @@ namespace golang::runtime
     // rlock locks rw for reading.
     void rec::rlock(golang::runtime::rwmutex* rw)
     {
+        // The reader must not be allowed to lose its P or else other
+        // things blocking on the lock may consume all of the Ps and
+        // deadlock (issue #20903). Alternatively, we could drop the P
+        // while sleeping.
         acquirem();
         acquireLockRank(rw->readRank);
         lockWithRankMayAcquire(& rw->rLock, getLockRank(& rw->rLock));
         if(rec::Add(gocpp::recv(rw->readerCount), 1) < 0)
         {
+            // A writer is pending. Park on the reader queue.
             systemstack([=]() mutable -> void
             {
                 lock(& rw->rLock);
                 if(rw->readerPass > 0)
                 {
+                    // Writer finished.
                     rw->readerPass -= 1;
                     unlock(& rw->rLock);
                 }
                 else
                 {
+                    // Queue this reader to be woken by
+                    // the writer.
                     auto m = getg()->m;
                     m->schedlink = rw->readers;
                     rec::set(gocpp::recv(rw->readers), m);
@@ -172,8 +180,10 @@ namespace golang::runtime
             {
                 go_throw("runlock of unlocked rwmutex"_s);
             }
+            // A writer is pending.
             if(rec::Add(gocpp::recv(rw->readerWait), - 1) == 0)
             {
+                // The last reader unblocks the writer.
                 runtime::lock(& rw->rLock);
                 auto w = rec::ptr(gocpp::recv(rw->writer));
                 if(w != nullptr)
@@ -190,12 +200,16 @@ namespace golang::runtime
     // lock locks rw for writing.
     void rec::lock(golang::runtime::rwmutex* rw)
     {
+        // Resolve competition with other writers and stick to our P.
         runtime::lock(& rw->wLock);
         auto m = getg()->m;
+        // Announce that there is a pending writer.
         auto r = rec::Add(gocpp::recv(rw->readerCount), - rwmutexMaxReaders) + rwmutexMaxReaders;
+        // Wait for any active readers to complete.
         runtime::lock(& rw->rLock);
         if(r != 0 && rec::Add(gocpp::recv(rw->readerWait), r) != 0)
         {
+            // Wait for reader to wake us up.
             systemstack([=]() mutable -> void
             {
                 rec::set(gocpp::recv(rw->writer), m);
@@ -213,11 +227,13 @@ namespace golang::runtime
     // unlock unlocks rw for writing.
     void rec::unlock(golang::runtime::rwmutex* rw)
     {
+        // Announce to readers that there is no active writer.
         auto r = rec::Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);
         if(r >= rwmutexMaxReaders)
         {
             go_throw("unlock of unlocked rwmutex"_s);
         }
+        // Unblock blocked readers.
         runtime::lock(& rw->rLock);
         for(; rec::ptr(gocpp::recv(rw->readers)) != nullptr; )
         {
@@ -227,8 +243,11 @@ namespace golang::runtime
             notewakeup(& reader->park);
             r -= 1;
         }
+        // If r > 0, there are pending readers that aren't on the
+        // queue. Tell them to skip waiting.
         rw->readerPass += uint32_t(r);
         runtime::unlock(& rw->rLock);
+        // Allow other writers to proceed.
         runtime::unlock(& rw->wLock);
     }
 

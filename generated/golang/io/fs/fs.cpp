@@ -105,8 +105,10 @@ namespace golang::fs
         }
         if(name == "."_s)
         {
+            // special case
             return true;
         }
+        // Iterate over elements in name, checking each.
         for(; ; )
         {
             auto i = 0;
@@ -121,6 +123,7 @@ namespace golang::fs
             }
             if(i == len(name))
             {
+                // reached clean ending
                 return true;
             }
             name = name.make_slice(i + 1);
@@ -529,6 +532,7 @@ namespace golang::fs
     gocpp::string rec::String(golang::fs::FileMode m)
     {
         auto str = "dalTLDpSugct?"_s;
+        // Mode is uint32.
         gocpp::array<unsigned char, 32> buf = {};
         auto w = 0;
         for(auto [i, c] : str)

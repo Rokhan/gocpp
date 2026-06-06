@@ -62,6 +62,7 @@ namespace golang::main
     void rec::Inc(golang::main::SafeCounter* c, gocpp::string key)
     {
         rec::Lock(gocpp::recv(c->mu));
+        // Lock so only one goroutine at a time can access the map c.v.
         c->v[key]++;
         rec::Unlock(gocpp::recv(c->mu));
     }
@@ -73,6 +74,7 @@ namespace golang::main
         try
         {
             rec::Lock(gocpp::recv(c->mu));
+            // Lock so only one goroutine at a time can access the map c.v.
             defer.push_back([=]{ rec::Unlock(gocpp::recv(c->mu)); });
             return c->v[key];
         }
@@ -89,6 +91,7 @@ namespace golang::main
         });
         for(auto i = 0; i < 1000; i++)
         {
+            // Bug, counter passed by value in cpp translation
             gocpp::go([&]{ rec::Inc(gocpp::recv(c), "somekey"_s); });
         }
         mocklib::Sleep(mocklib::Second);

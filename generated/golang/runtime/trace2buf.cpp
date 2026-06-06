@@ -124,6 +124,8 @@ namespace golang::runtime
     {
         if(w.traceLocker.mp == nullptr)
         {
+            // Tolerate a nil mp. It makes code that creates traceWriters directly
+            // less error-prone.
             return;
         }
         w.traceLocker.mp->trace.buf[w.traceLocker.gen % 2] = w.traceBuf;
@@ -184,6 +186,7 @@ namespace golang::runtime
                 }
             }
         });
+        // Initialize the buffer.
         auto ts = traceClockNow();
         if(ts <= w.traceBuf->traceBufHeader.lastTime)
         {
@@ -192,11 +195,13 @@ namespace golang::runtime
         w.traceBuf->traceBufHeader.lastTime = ts;
         w.traceBuf->traceBufHeader.link = nullptr;
         w.traceBuf->traceBufHeader.pos = 0;
+        // Tolerate a nil mp.
         auto mID = ~ uint64_t(0);
         if(w.traceLocker.mp != nullptr)
         {
             mID = uint64_t(w.traceLocker.mp->procid);
         }
+        // Write the buffer's header.
         rec::byte(gocpp::recv(w), (unsigned char)(traceEvEventBatch));
         rec::varint(gocpp::recv(w), uint64_t(w.traceLocker.gen));
         rec::varint(gocpp::recv(w), uint64_t(mID));
@@ -432,8 +437,17 @@ namespace golang::runtime
     void traceBufFlush(struct traceBuf* buf, uintptr_t gen)
     {
         assertLockHeld(& trace.lock);
+        // Write out the non-header length of the batch in the header.
+        // Note: the length of the header is not included to make it easier
+        // to calculate this value when deserializing and reserializing the
+        // trace. Varints can have additional padding of zero bits that is
+        // quite difficult to preserve, and if we include the header we
+        // force serializers to do more work. Nothing else actually needs
+        // padding.
         rec::varintAt(gocpp::recv(buf), buf->traceBufHeader.lenPos, uint64_t(buf->traceBufHeader.pos - (buf->traceBufHeader.lenPos + traceBytesPerNumber)));
         rec::push(gocpp::recv(trace.full[gen % 2]), buf);
+        // Notify the scheduler that there's work available and that the trace
+        // reader should be scheduled.
         if(! rec::Load(gocpp::recv(trace.workAvailable)))
         {
             rec::Store(gocpp::recv(trace.workAvailable), true);

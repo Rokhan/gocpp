@@ -21,13 +21,26 @@ namespace golang::png
     // intSize is either 32 or 64.
     int abs(int x)
     {
+        // m := -1 if x < 0. m := 0 otherwise.
         auto m = x >> (intSize - 1);
+        // In two's complement representation, the negative number
+        // of any number (except the smallest one) can be computed
+        // by flipping all the bits and add 1. This is faster than
+        // code with a branch.
+        // See Hacker's Delight, section 2-4.
         return (x ^ m) - m;
     }
 
     // paeth implements the Paeth filter function, as per the PNG specification.
     uint8_t paeth(uint8_t a, uint8_t b, uint8_t c)
     {
+        // This is an optimized version of the sample code in the PNG spec.
+        // For example, the sample code starts with:
+        // p := int(a) + int(b) - int(c)
+        // pa := abs(p - int(a))
+        // but the optimized form uses fewer arithmetic operations:
+        // pa := int(b) - int(c)
+        // pa = abs(pa)
         auto pc = int(c);
         auto pa = int(b) - pc;
         auto pb = int(a) - pc;
@@ -71,6 +84,7 @@ namespace golang::png
                 {
                 }
                 else
+                // No-op.
                 if(pb <= pc)
                 {
                     a = b;

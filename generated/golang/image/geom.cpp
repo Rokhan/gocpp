@@ -250,6 +250,9 @@ namespace golang::image
         {
             r.Max.Y = s.Max.Y;
         }
+        // Letting r0 and s0 be the values of r and s at the time that the method
+        // is called, this next line is equivalent to:
+        // if max(r0.Min.X, s0.Min.X) >= min(r0.Max.X, s0.Max.X) || likewiseForY { etc }
         if(rec::Empty(gocpp::recv(r)))
         {
             return ZR;
@@ -313,6 +316,8 @@ namespace golang::image
         {
             return true;
         }
+        // Note that r.Max is an exclusive bound for r, so that r.In(s)
+        // does not require that r.Max.In(s).
         return s.Min.X <= r.Min.X && r.Max.X <= s.Max.X && s.Min.Y <= r.Min.Y && r.Max.Y <= s.Max.Y;
     }
 

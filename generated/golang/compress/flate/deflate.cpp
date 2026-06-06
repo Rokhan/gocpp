@@ -186,6 +186,7 @@ namespace golang::flate
     {
         if(d->index >= 2 * windowSize - (minMatchLength + maxMatchLength))
         {
+            // shift the window by windowSize
             copy(d->window, d->window.make_slice(windowSize, 2 * windowSize));
             d->index -= windowSize;
             d->windowEnd -= windowSize;
@@ -203,6 +204,8 @@ namespace golang::flate
                 auto delta = d->hashOffset - 1;
                 d->hashOffset -= delta;
                 d->chainHead -= delta;
+                // Iterate over slices instead of arrays to avoid copying
+                // the entire table onto the stack (Issue #18625).
                 for(auto [i, v] : d->hashPrev.make_slice(0))
                 {
                     if(int(v) > delta)
@@ -254,6 +257,7 @@ namespace golang::flate
     // Should only be used after a reset.
     void rec::fillWindow(golang::flate::compressor* d, gocpp::slice<unsigned char> b)
     {
+        // Do not fill window if we are in store-only mode.
         if(d->compressionLevel.level < 2)
         {
             return;
@@ -262,11 +266,14 @@ namespace golang::flate
         {
             gocpp::panic("internal error: fillWindow called with stale data"_s);
         }
+        // If we are given too much, cut it.
         if(len(b) > windowSize)
         {
             b = b.make_slice(len(b) - windowSize);
         }
+        // Add all to window.
         auto n = copy(d->window, b);
+        // Calculate 256 hashes at the time (more L1 cache hits)
         auto loops = (n + 256 - minMatchLength) / 256;
         for(auto j = 0; j < loops; j++)
         {
@@ -288,10 +295,14 @@ namespace golang::flate
             {
                 auto di = i + index;
                 auto hh = & d->hashHead[val & hashMask];
+                // Get previous value with the same hash.
+                // Our chain should point to the previous value.
                 d->hashPrev[di & windowMask] = *hh;
+                // Set the head of the hash chain to us.
                 *hh = uint32_t(di + d->hashOffset);
             }
         }
+        // Update window information.
         d->windowEnd = n;
         d->index = n;
     }
@@ -309,11 +320,13 @@ namespace golang::flate
             minMatchLook = lookahead;
         }
         auto win = d->window.make_slice(0, pos + minMatchLook);
+        // We quit when we get a match that's at least nice long
         auto nice = len(win) - pos;
         if(d->compressionLevel.nice < nice)
         {
             nice = d->compressionLevel.nice;
         }
+        // If we've got a match that's good enough, only look in 1/4 the chain.
         auto tries = d->compressionLevel.chain;
         length = prevLength;
         if(length >= d->compressionLevel.good)
@@ -335,6 +348,7 @@ namespace golang::flate
                     ok = true;
                     if(n >= nice)
                     {
+                        // The match is good enough that we don't try to find a better one.
                         break;
                     }
                     wEnd = win[pos + n];
@@ -342,6 +356,7 @@ namespace golang::flate
             }
             if(i == minIndex)
             {
+                // hashPrev[i & windowMask] has already been overwritten, so stop now.
                 break;
             }
             i = int(d->hashPrev[i & windowMask]) - d->hashOffset;
@@ -411,12 +426,14 @@ namespace golang::flate
     // Any error that occurred will be in d.err
     void rec::encSpeed(golang::flate::compressor* d)
     {
+        // We only compress if we have maxStoreBlockSize.
         if(d->windowEnd < maxStoreBlockSize)
         {
             if(! d->sync)
             {
                 return;
             }
+            // Handle small sizes.
             if(d->windowEnd < 128)
             {
                 //Go switch emulation
@@ -443,7 +460,9 @@ namespace golang::flate
                 return;
             }
         }
+        // Encode the block.
         d->tokens = rec::encode(gocpp::recv(d->bestSpeed), d->tokens.make_slice(0, 0), d->window.make_slice(0, d->windowEnd));
+        // If we removed less than 1/16th, Huffman compress the block.
         if(len(d->tokens) > d->windowEnd - (d->windowEnd >> 4))
         {
             rec::writeBlockHuff(gocpp::recv(d->w), false, d->window.make_slice(0, d->windowEnd));
@@ -502,8 +521,10 @@ namespace golang::flate
                 }
                 if(lookahead == 0)
                 {
+                    // Flush current output block if any.
                     if(d->byteAvailable)
                     {
+                        // There is still one pending token that needs to be flushed
                         d->tokens = append(d->tokens, literalToken(uint32_t(d->window[d->index - 1])));
                         d->byteAvailable = false;
                     }
@@ -520,6 +541,7 @@ namespace golang::flate
             }
             if(d->index < d->maxInsertIndex)
             {
+                // Update the hash
                 auto hash = hash4(d->window.make_slice(d->index, d->index + minMatchLength));
                 auto hh = & d->hashHead[hash & hashMask];
                 d->chainHead = int(*hh);
@@ -545,6 +567,8 @@ namespace golang::flate
             }
             if(d->compressionLevel.fastSkipHashing != skipNever && d->length >= minMatchLength || d->compressionLevel.fastSkipHashing == skipNever && prevLength >= minMatchLength && d->length <= prevLength)
             {
+                // There was a match at the previous step, and the current match is
+                // not better. Output the previous match.
                 if(d->compressionLevel.fastSkipHashing != skipNever)
                 {
                     d->tokens = append(d->tokens, matchToken(uint32_t(d->length - baseMatchLength), uint32_t(d->offset - baseMatchOffset)));
@@ -553,6 +577,10 @@ namespace golang::flate
                 {
                     d->tokens = append(d->tokens, matchToken(uint32_t(prevLength - baseMatchLength), uint32_t(prevOffset - baseMatchOffset)));
                 }
+                // Insert in the hash table all strings up to the end of the match.
+                // index and index-1 are already inserted. If there is not enough
+                // lookahead, the last two strings are not inserted into the hash
+                // table.
                 if(d->length <= d->compressionLevel.fastSkipHashing)
                 {
                     int newIndex = {};
@@ -570,8 +598,11 @@ namespace golang::flate
                         if(index < d->maxInsertIndex)
                         {
                             auto hash = hash4(d->window.make_slice(index, index + minMatchLength));
+                            // Get previous value with the same hash.
+                            // Our chain should point to the previous value.
                             auto hh = & d->hashHead[hash & hashMask];
                             d->hashPrev[index & windowMask] = *hh;
+                            // Set the head of the hash chain to us.
                             *hh = uint32_t(index + d->hashOffset);
                         }
                     }
@@ -584,10 +615,13 @@ namespace golang::flate
                 }
                 else
                 {
+                    // For matches this long, we don't bother inserting each individual
+                    // item into the table.
                     d->index += d->length;
                 }
                 if(len(d->tokens) == maxFlateBlockTokens)
                 {
+                    // The block includes the current character
                     if(d->err = rec::writeBlock(gocpp::recv(d), d->tokens, d->index); d->err != nullptr)
                     {
                         return;
@@ -849,6 +883,7 @@ namespace golang::flate
             return {nullptr, err};
         }
         rec::fillWindow(gocpp::recv(zw->d), dict);
+        // duplicate dictionary for Reset method.
         zw->dict = append(zw->dict, dict);
         return {zw, err};
     }
@@ -944,6 +979,8 @@ namespace golang::flate
     // In the terminology of the zlib library, Flush is equivalent to Z_SYNC_FLUSH.
     struct gocpp::error rec::Flush(golang::flate::Writer* w)
     {
+        // For more about flushing:
+        // https://www.bolet.org/~pornin/deflate-flush.html
         return rec::syncFlush(gocpp::recv(w->d));
     }
 
@@ -960,12 +997,14 @@ namespace golang::flate
     {
         if(auto [dw, ok] = gocpp::getValue<dictWriter*>(w->d.w->writer); ok)
         {
+            // w was created with NewWriterDict
             dw->w = dst;
             rec::reset(gocpp::recv(w->d), dw);
             rec::fillWindow(gocpp::recv(w->d), w->dict);
         }
         else
         {
+            // w was created with NewWriter
             rec::reset(gocpp::recv(w->d), dst);
         }
     }

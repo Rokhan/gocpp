@@ -25,6 +25,7 @@ namespace golang::main
     {
         for(auto [i, v] : pow)
         {
+            // fmt.Printf("2**%d = %d\n", i, v)
             mocklib::Printf("2**%v = %v\n"_s, i, v);
         }
         for(auto [i, gocpp_ignored] : pow)

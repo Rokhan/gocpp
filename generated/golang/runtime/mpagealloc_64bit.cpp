@@ -66,15 +66,19 @@ namespace golang::runtime
     // if any runtime statistic should be updated.
     void rec::sysInit(golang::runtime::pageAlloc* p, bool test)
     {
+        // Reserve memory for each level. This will get mapped in
+        // as R/W by setArenas.
         for(auto [l, shift] : levelShift)
         {
             auto entries = 1 << (heapAddrBits - shift);
+            // Reserve b bytes of memory anywhere in the address space.
             auto b = alignUp(uintptr_t(entries) * pallocSumBytes, physPageSize);
             auto r = sysReserve(nullptr, b);
             if(r == nullptr)
             {
                 go_throw("failed to reserve page summary memory"_s);
             }
+            // Put this reservation into a slice.
             auto sl = notInHeapSlice {(notInHeap*)(r), 0, entries};
             p->summary[l] = *(gocpp::slice<runtime::pallocSum>*)(gocpp::unsafe_pointer(& sl));
         }
@@ -97,11 +101,17 @@ namespace golang::runtime
             print("runtime: base = "_s, hex(base), ", limit = "_s, hex(limit), "\n"_s);
             go_throw("sysGrow bounds not aligned to pallocChunkBytes"_s);
         }
+        // addrRangeToSummaryRange converts a range of addresses into a range
+        // of summary indices which must be mapped to support those addresses
+        // in the summary range.
         auto addrRangeToSummaryRange = [=](int level, struct addrRange r) mutable -> std::tuple<int, int>
         {
             auto [sumIdxBase, sumIdxLimit] = addrsToSummaryRange(level, rec::addr(gocpp::recv(r.base)), rec::addr(gocpp::recv(r.limit)));
             return blockAlignSummaryRange(level, sumIdxBase, sumIdxLimit);
         };
+        // summaryRangeToSumAddrRange converts a range of indices in any
+        // level of p.summary into page-aligned addresses which cover that
+        // range of indices.
         auto summaryRangeToSumAddrRange = [=](int level, int sumIdxBase, int sumIdxLimit) mutable -> struct addrRange
         {
             auto baseOffset = alignDown(uintptr_t(sumIdxBase) * pallocSumBytes, physPageSize);
@@ -109,20 +119,41 @@ namespace golang::runtime
             auto base = gocpp::unsafe_pointer(& p->summary[level][0]);
             return addrRange {offAddr {uintptr_t(add(base, baseOffset))}, offAddr {uintptr_t(add(base, limitOffset))}};
         };
+        // addrRangeToSumAddrRange is a convenience function that converts
+        // an address range r to the address range of the given summary level
+        // that stores the summaries for r.
         auto addrRangeToSumAddrRange = [=](int level, struct addrRange r) mutable -> struct addrRange
         {
             auto [sumIdxBase, sumIdxLimit] = addrRangeToSummaryRange(level, r);
             return summaryRangeToSumAddrRange(level, sumIdxBase, sumIdxLimit);
         };
+        // Find the first inUse index which is strictly greater than base.
+        // Because this function will never be asked remap the same memory
+        // twice, this index is effectively the index at which we would insert
+        // this new growth, and base will never overlap/be contained within
+        // any existing range.
+        // This will be used to look at what memory in the summary array is already
+        // mapped before and after this new range.
         auto inUseIndex = rec::findSucc(gocpp::recv(p->inUse), base);
+        // Walk up the radix tree and map summaries in as needed.
         for(auto [l, gocpp_ignored] : p->summary)
         {
+            // Figure out what part of the summary array this new address space needs.
             auto [needIdxBase, needIdxLimit] = addrRangeToSummaryRange(l, makeAddrRange(base, limit));
+            // Update the summary slices with a new upper-bound. This ensures
+            // we get tight bounds checks on at least the top bound.
+            // We must do this regardless of whether we map new memory.
             if(needIdxLimit > len(p->summary[l]))
             {
                 p->summary[l] = p->summary[l].make_slice(0, needIdxLimit);
             }
+            // Compute the needed address range in the summary array for level l.
             auto need = summaryRangeToSumAddrRange(l, needIdxBase, needIdxLimit);
+            // Prune need down to what needs to be newly mapped. Some parts of it may
+            // already be mapped by what inUse describes due to page alignment requirements
+            // for mapping. Because this function will never be asked to remap the same
+            // memory twice, it should never be possible to prune in such a way that causes
+            // need to be split.
             if(inUseIndex > 0)
             {
                 need = rec::subtract(gocpp::recv(need), addrRangeToSumAddrRange(l, p->inUse.ranges[inUseIndex - 1]));
@@ -131,14 +162,17 @@ namespace golang::runtime
             {
                 need = rec::subtract(gocpp::recv(need), addrRangeToSumAddrRange(l, p->inUse.ranges[inUseIndex]));
             }
+            // It's possible that after our pruning above, there's nothing new to map.
             if(rec::size(gocpp::recv(need)) == 0)
             {
                 continue;
             }
+            // Map and commit need.
             sysMap(gocpp::unsafe_pointer(rec::addr(gocpp::recv(need.base))), rec::size(gocpp::recv(need)), p->sysStat);
             sysUsed(gocpp::unsafe_pointer(rec::addr(gocpp::recv(need.base))), rec::size(gocpp::recv(need)), rec::size(gocpp::recv(need)));
             p->summaryMappedReady += rec::size(gocpp::recv(need));
         }
+        // Update the scavenge index.
         p->summaryMappedReady += rec::sysGrow(gocpp::recv(p->scav.index), base, limit, p->sysStat);
     }
 
@@ -153,10 +187,20 @@ namespace golang::runtime
             go_throw("sysGrow bounds not aligned to pallocChunkBytes"_s);
         }
         auto scSize = gocpp::Sizeof<atomicScavChunkData>();
+        // Map and commit the pieces of chunks that we need.
+        // We always map the full range of the minimum heap address to the
+        // maximum heap address. We don't do this for the summary structure
+        // because it's quite large and a discontiguous heap could cause a
+        // lot of memory to be used. In this situation, the worst case overhead
+        // is in the single-digit MiB if we map the whole thing.
+        // The base address of the backing store is always page-aligned,
+        // because it comes from the OS, so it's sufficient to align the
+        // index.
         auto haveMin = rec::Load(gocpp::recv(s->min));
         auto haveMax = rec::Load(gocpp::recv(s->max));
         auto needMin = alignDown(uintptr_t(chunkIndex(base)), physPageSize / scSize);
         auto needMax = alignUp(uintptr_t(chunkIndex(limit)), physPageSize / scSize);
+        // We need a contiguous range, so extend the range if there's no overlap.
         if(needMax < haveMin)
         {
             needMax = haveMin;
@@ -165,14 +209,19 @@ namespace golang::runtime
         {
             needMin = haveMax;
         }
+        // Avoid a panic from indexing one past the last element.
         auto chunksBase = uintptr_t(gocpp::unsafe_pointer(& s->chunks[0]));
         auto have = makeAddrRange(chunksBase + haveMin * scSize, chunksBase + haveMax * scSize);
         auto need = makeAddrRange(chunksBase + needMin * scSize, chunksBase + needMax * scSize);
+        // Subtract any overlap from rounding. We can't re-map memory because
+        // it'll be zeroed.
         need = rec::subtract(gocpp::recv(need), have);
+        // If we've got something to map, map it, and update the slice bounds.
         if(rec::size(gocpp::recv(need)) != 0)
         {
             sysMap(gocpp::unsafe_pointer(rec::addr(gocpp::recv(need.base))), rec::size(gocpp::recv(need)), sysStat);
             sysUsed(gocpp::unsafe_pointer(rec::addr(gocpp::recv(need.base))), rec::size(gocpp::recv(need)), rec::size(gocpp::recv(need)));
+            // Update the indices only after the new memory is valid.
             if(haveMax == 0 || needMin < haveMin)
             {
                 rec::Store(gocpp::recv(s->min), needMin);
@@ -195,6 +244,7 @@ namespace golang::runtime
         auto r = sysReserve(nullptr, nbytes);
         auto sl = notInHeapSlice {(notInHeap*)(r), int(n), int(n)};
         s->chunks = *(gocpp::slice<atomicScavChunkData>*)(gocpp::unsafe_pointer(& sl));
+        // All memory above is mapped Reserved.
         return 0;
     }
 

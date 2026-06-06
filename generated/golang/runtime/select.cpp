@@ -110,11 +110,20 @@ namespace golang::runtime
 
     void selunlock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder)
     {
+        // We must be very careful here to not touch sel after we have unlocked
+        // the last lock, because sel can be freed right after the last unlock.
+        // Consider the following situation.
+        // First M calls runtime·park() in runtime·selectgo() passing the sel.
+        // Once runtime·park() has unlocked the last lock, another M makes
+        // the G that calls select runnable again and schedules it for execution.
+        // When the G runs on another M, it locks all the locks and frees sel.
+        // Now if the first M touches sel, it will access freed memory.
         for(auto i = len(lockorder) - 1; i >= 0; i--)
         {
             auto c = scases[lockorder[i]].c;
             if(i > 0 && c == scases[lockorder[i - 1]].c)
             {
+                // will unlock it on the next iteration
                 continue;
             }
             unlock(& c->lock);
@@ -123,7 +132,20 @@ namespace golang::runtime
 
     bool selparkcommit(struct g* gp, gocpp::unsafe_pointer _1)
     {
+        // There are unlocked sudogs that point into gp's stack. Stack
+        // copying must lock the channels of those sudogs.
+        // Set activeStackChans here instead of before we try parking
+        // because we could self-deadlock in stack growth on a
+        // channel lock.
         gp->activeStackChans = true;
+        // Mark that it's safe for stack shrinking to occur now,
+        // because any thread acquiring this G's stack for shrinking
+        // is guaranteed to observe activeStackChans after this store.
+        // Make sure we unlock after setting activeStackChans and
+        // unsetting parkingOnChan. The moment we unlock any of the
+        // channel locks we risk gp getting readied by a channel operation
+        // and so gp could continue running before everything before the
+        // unlock is visible (even to gp itself).
         rec::Store(gocpp::recv(gp->parkingOnChan), false);
         // This must not access gp's stack (see gopark). In
         // particular, it must not access the *hselect. That's okay,
@@ -134,6 +156,12 @@ namespace golang::runtime
         {
             if(sg->c != lastc && lastc != nullptr)
             {
+                // As soon as we unlock the channel, fields in
+                // any sudog with that channel may change,
+                // including c and waitlink. Since multiple
+                // sudogs may have the same channel, we unlock
+                // only after we've passed the last instance
+                // of a channel.
                 unlock(& lastc->lock);
             }
             lastc = sg->c;
@@ -147,6 +175,7 @@ namespace golang::runtime
 
     void block()
     {
+        // forever
         gopark(nullptr, nullptr, waitReasonSelectNoCases, traceBlockForever, 1);
     }
 
@@ -171,11 +200,14 @@ namespace golang::runtime
         {
             print("select: cas0="_s, cas0, "\n"_s);
         }
+        // NOTE: In order to maintain a lean stack size, the number of scases
+        // is capped at 65536.
         auto cas1 = (gocpp::array_ptr<gocpp::array<scase, 1 << 16>>)(gocpp::unsafe_pointer(cas0));
         auto order1 = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 17>>)(gocpp::unsafe_pointer(order0));
         auto ncases = nsends + nrecvs;
         auto scases = cas1.make_slice(0, ncases, ncases);
         auto pollorder = order1.make_slice(0, ncases, ncases);
+        // NOTE: pollorder/lockorder's underlying array was not zero-initialized by compiler.
         auto lockorder = order1.make_slice(ncases).make_slice(0, ncases, ncases);
         // Even when raceenabled is true, there might be select
         // statements in packages compiled without -race (e.g.,
@@ -199,12 +231,22 @@ namespace golang::runtime
         {
             t0 = cputicks();
         }
+        // The compiler rewrites selects that statically have
+        // only 0 or 1 cases plus default into simpler constructs.
+        // The only way we can end up with such small sel.ncase
+        // values here is for a larger select in which most channels
+        // have been nilled out. The general code handles those
+        // cases correctly, and they are rare enough not to bother
+        // optimizing (and needing to test).
+        // generate permuted order
         auto norder = 0;
         for(auto [i, gocpp_ignored] : scases)
         {
             auto cas = & scases[i];
+            // Omit cases without channels from the poll and lock orders.
             if(cas->c == nullptr)
             {
+                // allow GC
                 cas->elem = nullptr;
                 continue;
             }
@@ -215,9 +257,12 @@ namespace golang::runtime
         }
         pollorder = pollorder.make_slice(0, norder);
         lockorder = lockorder.make_slice(0, norder);
+        // sort the cases by Hchan address to get the locking order.
+        // simple heap sort, to guarantee n log n time and constant stack footprint.
         for(auto [i, gocpp_ignored] : lockorder)
         {
             auto j = i;
+            // Start with the pollorder to permute cases on the same channel.
             auto c = scases[pollorder[i]].c;
             for(; j > 0 && rec::sortkey(gocpp::recv(scases[lockorder[(j - 1) / 2]].c)) < rec::sortkey(gocpp::recv(c)); )
             {
@@ -265,6 +310,7 @@ namespace golang::runtime
                 }
             }
         }
+        // lock all the channels involved in the select
         sellock(scases, lockorder);
         g* gp = {};
         sudog* sg = {};
@@ -328,6 +374,7 @@ namespace golang::runtime
             casi = - 1;
             goto retc;
         }
+        // pass 2 - enqueue on all chans
         gp = getg();
         if(gp->waiting != nullptr)
         {
@@ -342,6 +389,8 @@ namespace golang::runtime
             auto sg = acquireSudog();
             sg->g = gp;
             sg->isSelect = true;
+            // No stack splits between assigning elem and enqueuing
+            // sg on gp.waiting where copystack can find it.
             sg->elem = cas->elem;
             sg->releasetime = 0;
             if(t0 != 0)
@@ -349,6 +398,7 @@ namespace golang::runtime
                 sg->releasetime = - 1;
             }
             sg->c = c;
+            // Construct waiting list in lock order.
             *nextp = sg;
             nextp = & sg->waitlink;
             if(casi < nsends)
@@ -360,7 +410,12 @@ namespace golang::runtime
                 rec::enqueue(gocpp::recv(c->recvq), sg);
             }
         }
+        // wait for someone to wake us up
         gp->param = nullptr;
+        // Signal to anyone trying to shrink our stack that we're about
+        // to park on a channel. The window between when this G's status
+        // changes and when we set gp.activeStackChans is not safe for
+        // stack shrinking.
         rec::Store(gocpp::recv(gp->parkingOnChan), true);
         gopark(selparkcommit, nullptr, waitReasonSelect, traceBlockSelect, 1);
         gp->activeStackChans = false;
@@ -368,10 +423,15 @@ namespace golang::runtime
         rec::Store(gocpp::recv(gp->selectDone), 0);
         sg = (sudog*)(gp->param);
         gp->param = nullptr;
+        // pass 3 - dequeue from unsuccessful chans
+        // otherwise they stack up on quiet channels
+        // record the successful case, if any.
+        // We singly-linked up the SudoGs in lock order.
         casi = - 1;
         cas = nullptr;
         caseSuccess = false;
         sglist = gp->waiting;
+        // Clear all elem before unlinking from gp.waiting.
         for(auto sg1 = gp->waiting; sg1 != nullptr; sg1 = sg1->waitlink)
         {
             sg1->isSelect = false;
@@ -384,6 +444,7 @@ namespace golang::runtime
             k = & scases[casei];
             if(sg == sglist)
             {
+                // sg has already been dequeued by the G that woke us up.
                 casi = int(casei);
                 cas = k;
                 caseSuccess = sglist->success;
@@ -468,6 +529,7 @@ namespace golang::runtime
         selunlock(scases, lockorder);
         goto retc;
         bufrecv:
+        // can receive from buffer
         if(raceenabled)
         {
             if(cas->elem != nullptr)
@@ -500,6 +562,7 @@ namespace golang::runtime
         selunlock(scases, lockorder);
         goto retc;
         bufsend:
+        // can send to buffer
         if(raceenabled)
         {
             racenotify(c, c->sendx, nullptr);
@@ -523,6 +586,7 @@ namespace golang::runtime
         selunlock(scases, lockorder);
         goto retc;
         recv:
+        // can receive from sleeping sender (sg)
         recv(c, sg, cas->elem, [=]() mutable -> void
         {
             selunlock(scases, lockorder);
@@ -534,6 +598,7 @@ namespace golang::runtime
         recvOK = true;
         goto retc;
         rclose:
+        // read at end of closed channel
         selunlock(scases, lockorder);
         recvOK = false;
         if(cas->elem != nullptr)
@@ -546,6 +611,7 @@ namespace golang::runtime
         }
         goto retc;
         send:
+        // can send to a sleeping receiver (sg)
         if(raceenabled)
         {
             raceReadObjectPC(c->elemtype, cas->elem, casePC(casi), chansendpc);
@@ -574,6 +640,7 @@ namespace golang::runtime
         }
         return {casi, recvOK};
         sclose:
+        // send on closed channel
         selunlock(scases, lockorder);
         gocpp::panic(plainError("send on closed channel"_s));
     }
@@ -667,10 +734,12 @@ namespace golang::runtime
             });
             orig[j] = i;
         }
+        // Only a default case.
         if(nsends + nrecvs == 0)
         {
             return {dflt, false};
         }
+        // Compact sel and orig if necessary.
         if(nsends + nrecvs < len(cases))
         {
             copy(sel.make_slice(nsends), sel.make_slice(len(cases) - nrecvs));
@@ -688,6 +757,7 @@ namespace golang::runtime
             pc0 = & pcs[0];
         }
         auto [chosen, recvOK] = selectgo(& sel[0], & order[0], pc0, nsends, nrecvs, dflt == - 1);
+        // Translate chosen back to caller's ordering.
         if(chosen < 0)
         {
             chosen = dflt;
@@ -707,12 +777,14 @@ namespace golang::runtime
         {
             if(y != nullptr)
             {
+                // middle of queue
                 x->next = y;
                 y->prev = x;
                 sgp->next = nullptr;
                 sgp->prev = nullptr;
                 return;
             }
+            // end of queue
             x->next = nullptr;
             q->last = x;
             sgp->prev = nullptr;
@@ -720,11 +792,14 @@ namespace golang::runtime
         }
         if(y != nullptr)
         {
+            // start of queue
             y->prev = nullptr;
             q->first = y;
             sgp->next = nullptr;
             return;
         }
+        // x==y==nil. Either sgp is the only element in the queue,
+        // or it has already been removed. Use q.first to disambiguate.
         if(q->first == sgp)
         {
             q->first = nullptr;

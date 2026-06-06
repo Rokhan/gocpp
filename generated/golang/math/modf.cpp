@@ -57,6 +57,7 @@ namespace golang::math
                         std::tie(int, frac) = Modf(- f);
                         return {- int, - frac};
                         break;
+                    // Return -0, -0 when f == -0
                     case 1:
                         return {f, f};
                         break;
@@ -66,6 +67,7 @@ namespace golang::math
         }
         auto x = Float64bits(f);
         auto e = (unsigned int)(x >> shift) & mask - bias;
+        // Keep the top 12+e bits, the integer part; clear the rest.
         if(e < 64 - 12)
         {
             x &^= (1 << (64 - 12 - e)) - 1;

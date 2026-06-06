@@ -57,6 +57,9 @@ namespace golang::windows
                     break;
             }
         }
+        // TODO: add more here, after collecting data on the common
+        // error values see on Windows. (perhaps when running
+        // all.bat?)
         return gocpp::error(e);
     }
 

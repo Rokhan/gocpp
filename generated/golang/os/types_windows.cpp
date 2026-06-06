@@ -132,6 +132,10 @@ namespace golang::os
         {
             if(auto [errno, ok] = gocpp::getValue<syscall::Errno>(err); ok && errno == windows::ERROR_INVALID_PARAMETER)
             {
+                // It appears calling GetFileInformationByHandleEx with
+                // FILE_ATTRIBUTE_TAG_INFO fails on FAT file system with
+                // ERROR_INVALID_PARAMETER. Clear ti.ReparseTag in that
+                // instance to indicate no symlinks are possible.
                 ti.ReparseTag = 0;
             }
             else
@@ -162,6 +166,10 @@ namespace golang::os
     // from windows.FILE_ID_BOTH_DIR_INFO d into the newly created fileStat.
     struct fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d)
     {
+        // The FILE_ID_BOTH_DIR_INFO MSDN documentations isn't completely correct.
+        // FileAttributes can contain any file attributes that is currently set on the file,
+        // not just the ones documented.
+        // EaSize contains the reparse tag if the file is a reparse point.
         return gocpp::InitPtr<fileStat>([=](auto& x) {
             x.FileAttributes = d->FileAttributes;
             x.CreationTime = d->CreationTime;
@@ -204,6 +212,10 @@ namespace golang::os
         });
         if(d->FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0)
         {
+            // Per https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-win32_find_dataw:
+            // “If the dwFileAttributes member includes the FILE_ATTRIBUTE_REPARSE_POINT
+            // attribute, this member specifies the reparse point tag. Otherwise, this
+            // value is undefined and should not be used.”
             fs->ReparseTag = d->Reserved0;
         }
         return fs;
@@ -216,11 +228,21 @@ namespace golang::os
     // and https://learn.microsoft.com/en-us/windows/win32/fileio/reparse-point-tags.
     bool rec::isReparseTagNameSurrogate(golang::os::fileStat* fs)
     {
+        // True for IO_REPARSE_TAG_SYMLINK and IO_REPARSE_TAG_MOUNT_POINT.
         return fs->ReparseTag & 0x20000000 != 0;
     }
 
     bool rec::isSymlink(golang::os::fileStat* fs)
     {
+        // As of https://go.dev/cl/86556, we treat MOUNT_POINT reparse points as
+        // symlinks because otherwise certain directory junction tests in the
+        // path/filepath package would fail.
+        // However,
+        // https://learn.microsoft.com/en-us/windows/win32/fileio/hard-links-and-junctions
+        // seems to suggest that directory junctions should be treated like hard
+        // links, not symlinks.
+        // TODO(bcmills): Get more input from Microsoft on what the behavior ought to
+        // be for MOUNT_POINT reparse points.
         return fs->ReparseTag == syscall::IO_REPARSE_TAG_SYMLINK || fs->ReparseTag == windows::IO_REPARSE_TAG_MOUNT_POINT;
     }
 
@@ -270,6 +292,28 @@ namespace golang::os
             {
             }
             else
+            // If the Data Deduplication service is enabled on Windows Server, its
+            // Optimization job may convert regular files to IO_REPARSE_TAG_DEDUP
+            // whenever that job runs.
+            // However, DEDUP reparse points remain similar in most respects to
+            // regular files: they continue to support random-access reads and writes
+            // of persistent data, and they shouldn't add unexpected latency or
+            // unavailability in the way that a network filesystem might.
+            // Go programs may use ModeIrregular to filter out unusual files (such as
+            // raw device files on Linux, POSIX FIFO special files, and so on), so
+            // to avoid files changing unpredictably from regular to irregular we will
+            // consider DEDUP files to be close enough to regular to treat as such.
+            // If the Data Deduplication service is enabled on Windows Server, its
+            // Optimization job may convert regular files to IO_REPARSE_TAG_DEDUP
+            // whenever that job runs.
+            // However, DEDUP reparse points remain similar in most respects to
+            // regular files: they continue to support random-access reads and writes
+            // of persistent data, and they shouldn't add unexpected latency or
+            // unavailability in the way that a network filesystem might.
+            // Go programs may use ModeIrregular to filter out unusual files (such as
+            // raw device files on Linux, POSIX FIFO special files, and so on), so
+            // to avoid files changing unpredictably from regular to irregular we will
+            // consider DEDUP files to be close enough to regular to treat as such.
             {
                 m |= ModeIrregular;
             }
@@ -304,6 +348,7 @@ namespace golang::os
             defer.push_back([=]{ rec::Unlock(gocpp::recv(fs)); });
             if(fs->path == ""_s)
             {
+                // already done
                 return nullptr;
             }
             gocpp::string path = {};
@@ -320,6 +365,17 @@ namespace golang::os
             {
                 return err;
             }
+            // Per https://learn.microsoft.com/en-us/windows/win32/fileio/reparse-points-and-file-operations,
+            // “Applications that use the CreateFile function should specify the
+            // FILE_FLAG_OPEN_REPARSE_POINT flag when opening the file if it is a reparse
+            // point.”
+            // And per https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew,
+            // “If the file is not a reparse point, then this flag is ignored.”
+            // So we set FILE_FLAG_OPEN_REPARSE_POINT unconditionally, since we want
+            // information about the reparse point itself.
+            // If the file is a symlink, the symlink target should have already been
+            // resolved when the fileStat was created, so we don't need to worry about
+            // resolving symlink reparse points again here.
             auto attrs = uint32_t(syscall::FILE_FLAG_BACKUP_SEMANTICS | syscall::FILE_FLAG_OPEN_REPARSE_POINT);
             syscall::Handle h;
             std::tie(h, err) = syscall::CreateFile(pathp, 0, 0, nullptr, syscall::OPEN_EXISTING, attrs, 0);

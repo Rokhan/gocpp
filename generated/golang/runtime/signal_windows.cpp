@@ -71,6 +71,7 @@ namespace golang::runtime
     // enableWER re-enables Windows error reporting without fault reporting UI.
     void enableWER()
     {
+        // re-enable Windows Error Reporting
         auto errormode = stdcall0(_GetErrorMode);
         if(errormode & _SEM_NOGPFAULTERRORBOX != 0)
         {
@@ -99,6 +100,8 @@ namespace golang::runtime
         stdcall2(_AddVectoredExceptionHandler, 1, abi::FuncPCABI0(exceptiontramp));
         if(GOARCH == "386"_s)
         {
+            // use SetUnhandledExceptionFilter for windows-386.
+            // note: SetUnhandledExceptionFilter handler won't be called, if debugging.
             stdcall1(_SetUnhandledExceptionFilter, abi::FuncPCABI0(lastcontinuetramp));
         }
         else
@@ -117,6 +120,9 @@ namespace golang::runtime
         auto pc = rec::ip(gocpp::recv(r));
         if(GOARCH == "386"_s || GOARCH == "amd64"_s || GOARCH == "arm"_s)
         {
+            // In the case of an abort, the exception IP is one byte after
+            // the INT3 (this differs from UNIX OSes). Note that on ARM,
+            // this means that the exception IP is no longer aligned.
             pc--;
         }
         return isAbortPC(pc);
@@ -131,10 +137,14 @@ namespace golang::runtime
     //go:nosplit
     bool isgoexception(struct exceptionrecord* info, struct context* r)
     {
+        // Only handle exception if executing instructions in Go binary
+        // (not Windows library code).
+        // TODO(mwhudson): needs to loop to support shared libs
         if(rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r)))
         {
             return false;
         }
+        // Go will only handle some exceptions.
         //Go switch emulation
         {
             auto condition = info->exceptioncode;
@@ -175,6 +185,7 @@ namespace golang::runtime
                     break;
                 case 9:
                     break;
+                // breakpoint arrives this way on arm64
                 case 10:
                     break;
             }
@@ -241,14 +252,12 @@ namespace golang::runtime
         // Check if we are running on g0 stack, and if we are,
         // call fn directly instead of creating the closure.
         // for the systemstack argument.
-        //
         // A closure can't be marked as nosplit, so it might
         // call morestack if we are at the g0 stack limit.
         // If that happens, the runtime will call abort
         // and end up in sigtrampgo again.
         // TODO: revisit this workaround if/when closures
         // can be compiled as nosplit.
-        //
         // Note that this scenario should only occur on
         // TestG0StackOverflow. Any other occurrence should
         // be treated as a bug.
@@ -268,8 +277,20 @@ namespace golang::runtime
         {
             return ret;
         }
+        // Check if we need to set up the control flow guard workaround.
+        // On Windows, the stack pointer in the context must lie within
+        // system stack limits when we resume from exception.
+        // Store the resume SP and PC in alternate registers
+        // and return to sigresume on the g0 stack.
+        // sigresume makes no use of the stack at all,
+        // loading SP from RX and jumping to RY, being RX and RY two scratch registers.
+        // Note that blindly smashing RX and RY is only safe because we know sigpanic
+        // will not actually return to the original frame, so the registers
+        // are effectively dead. But this does mean we can't use the
+        // same mechanism for async preemption.
         if(rec::ip(gocpp::recv(ep->context)) == abi::FuncPCABI0(sigresume))
         {
+            // sigresume has already been set up by a previous exception.
             return ret;
         }
         prepareContextForSigResume(ep->context);
@@ -294,12 +315,34 @@ namespace golang::runtime
         }
         if(gp->throwsplit || isAbort(r))
         {
+            // We can't safely sigpanic because it may grow the stack.
+            // Or this is a call to abort.
+            // Don't go through any more of the Windows handler chain.
+            // Crash now.
             winthrow(info, r, gp);
         }
+        // After this point, it is safe to grow the stack.
+        // Make it look like a call to the signal func.
+        // Have to pass arguments out of band since
+        // augmenting the stack frame would break
+        // the unwinding code.
         gp->sig = info->exceptioncode;
         gp->sigcode0 = info->exceptioninformation[0];
         gp->sigcode1 = info->exceptioninformation[1];
         gp->sigpc = rec::ip(gocpp::recv(r));
+        // Only push runtime·sigpanic if r.ip() != 0.
+        // If r.ip() == 0, probably panicked because of a
+        // call to a nil func. Not pushing that onto sp will
+        // make the trace look like a call to runtime·sigpanic instead.
+        // (Otherwise the trace will end at runtime·sigpanic and we
+        // won't get to see who faulted.)
+        // Also don't push a sigpanic frame if the faulting PC
+        // is the entry of asyncPreempt. In this case, we suspended
+        // the thread right between the fault and the exception handler
+        // starting to run, and we have pushed an asyncPreempt call.
+        // The exception is not from asyncPreempt, so not to push a
+        // sigpanic call to make it look like that. Instead, just
+        // overwrite the PC. (See issue #35773)
         if(rec::ip(gocpp::recv(r)) != 0 && rec::ip(gocpp::recv(r)) != abi::FuncPCABI0(asyncPreempt))
         {
             auto sp = gocpp::unsafe_pointer(rec::sp(gocpp::recv(r)));
@@ -330,8 +373,18 @@ namespace golang::runtime
         auto g0 = getg();
         if(g0 == nullptr || g0->m->curg == nullptr)
         {
+            // No g available, nothing to do here.
             return _EXCEPTION_CONTINUE_SEARCH_SEH;
         }
+        // The Windows SEH machinery will unwind the stack until it finds
+        // a frame with a handler for the exception or until the frame is
+        // outside the stack boundaries, in which case it will call the
+        // UnhandledExceptionFilter. Unfortunately, it doesn't know about
+        // the goroutine stack, so it will stop unwinding when it reaches the
+        // first frame not running in g0. As a result, neither non-Go exceptions
+        // handlers higher up the stack nor UnhandledExceptionFilter will be called.
+        // To work around this, manually unwind the stack until the top of the goroutine
+        // stack is reached, and then pass the control back to Windows.
         auto gp = g0->m->curg;
         auto ctxt = rec::ctx(gocpp::recv(dctxt));
         uintptr_t base = {};
@@ -379,13 +432,23 @@ namespace golang::runtime
     {
         if(islibrary || isarchive)
         {
+            // Go DLL/archive has been loaded in a non-go program.
+            // If the exception does not originate from go, the go runtime
+            // should not take responsibility of crashing the process.
             return _EXCEPTION_CONTINUE_SEARCH;
         }
+        // VEH is called before SEH, but arm64 MSVC DLLs use SEH to trap
+        // illegal instructions during runtime initialization to determine
+        // CPU features, so if we make it to the last handler and we're
+        // arm64 and it's an illegal instruction and this is coming from
+        // non-Go code, then assume it's this runtime probing happen, and
+        // pass that onward to SEH.
         if(GOARCH == "arm64"_s && info->exceptioncode == _EXCEPTION_ILLEGAL_INSTRUCTION && (rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r))))
         {
             return _EXCEPTION_CONTINUE_SEARCH;
         }
         winthrow(info, r, gp);
+        // not reached
         return 0;
     }
 
@@ -397,9 +460,13 @@ namespace golang::runtime
         auto g0 = getg();
         if(rec::Load(gocpp::recv(panicking)) != 0)
         {
+            // traceback already printed
             exit(2);
         }
         rec::Store(gocpp::recv(panicking), 1);
+        // In case we're handling a g0 stack overflow, blow away the
+        // g0 stack bounds so we have room to print the traceback. If
+        // this somehow overflows the stack, the OS will trap it.
         g0->stack.lo = 0;
         g0->stackguard0 = g0->stack.lo + stackGuard;
         g0->stackguard1 = g0->stackguard0;
@@ -464,6 +531,9 @@ namespace golang::runtime
                     }
                     if(inUserArenaChunk(gp->sigcode1))
                     {
+                        // We could check that the arena chunk is explicitly set to fault,
+                        // but the fact that we faulted on accessing it is enough to prove
+                        // that it is.
                         print("accessed data from freed user arena "_s, hex(gp->sigcode1), "\n"_s);
                     }
                     else
@@ -528,6 +598,8 @@ namespace golang::runtime
             auto gp = getg();
             if(gp->sig != 0)
             {
+                // Try to reconstruct an exception record from
+                // the exception information stored in gp.
                 info = gocpp::InitPtr<exceptionrecord>([=](auto& x) {
                     x.exceptionaddress = gp->sigpc;
                     x.exceptioncode = gp->sig;
@@ -538,6 +610,8 @@ namespace golang::runtime
             }
             else
             {
+                // By default, a failing Go application exits with exit code 2.
+                // Use this value when gp does not contain exception info.
                 info = gocpp::InitPtr<exceptionrecord>([=](auto& x) {
                     x.exceptioncode = 2;
                 });

@@ -119,6 +119,7 @@ namespace golang::runtime
     {
         if(p->pinner == nullptr)
         {
+            // Check the pinner cache first.
             auto mp = acquirem();
             if(auto pp = rec::ptr(gocpp::recv(mp->p)); pp != nullptr)
             {
@@ -128,12 +129,20 @@ namespace golang::runtime
             releasem(mp);
             if(p->pinner == nullptr)
             {
+                // Didn't get anything from the pinner cache.
                 p->pinner = new(pinner);
                 p->pinner.refs = p->pinner.refStore.make_slice(0, 0);
+                // We set this finalizer once and never clear it. Thus, if the
+                // pinner gets cached, we'll reuse it, along with its finalizer.
+                // This lets us avoid the relatively expensive SetFinalizer call
+                // when reusing from the cache. The finalizer however has to be
+                // resilient to an empty pinner being finalized, which is done
+                // by checking p.refs' length.
                 SetFinalizer(p->pinner, [=](struct pinner* i) mutable -> void
                 {
                     if(len(i->refs) != 0)
                     {
+                        // only required to make the test idempotent
                         rec::unpin(gocpp::recv(i));
                         pinnerLeakPanic();
                     }
@@ -154,6 +163,10 @@ namespace golang::runtime
         auto mp = acquirem();
         if(auto pp = rec::ptr(gocpp::recv(mp->p)); pp != nullptr && pp->pinnerCache == nullptr)
         {
+            // Put the pinner back in the cache, but only if the
+            // cache is empty. If application code is reusing Pinners
+            // on its own, we want to leave the backing store in place
+            // so reuse is more efficient.
             pp->pinnerCache = p->pinner;
             p->pinner = nullptr;
         }
@@ -203,6 +216,9 @@ namespace golang::runtime
         {
             runtime::setPinned(p->refs[i], false);
         }
+        // The following two lines make all pointers to references
+        // in p.refs unreachable, either by deleting them or dropping
+        // p.refs' backing store (if it was not backed by refStore).
         p->refStore = gocpp::array<gocpp::unsafe_pointer, pinnerRefStoreSize> {};
         p->refs = p->refStore.make_slice(0, 0);
     }
@@ -221,6 +237,7 @@ namespace golang::runtime
         }
         if(inUserArenaChunk(uintptr_t(e->data)))
         {
+            // Arena-allocated objects are not eligible for pinning.
             gocpp::panic(errorString("runtime.Pinner: object was allocated into an arena"_s));
         }
         return e->data;
@@ -235,15 +252,21 @@ namespace golang::runtime
         auto span = spanOfHeap(uintptr_t(ptr));
         if(span == nullptr)
         {
+            // this code is only called for Go pointer, so this must be a
+            // linker-allocated global object.
             return true;
         }
         auto pinnerBits = rec::getPinnerBits(gocpp::recv(span));
+        // these pinnerBits might get unlinked by a concurrently running sweep, but
+        // that's OK because gcBits don't get cleared until the following GC cycle
+        // (nextMarkBitArenaEpoch)
         if(pinnerBits == nullptr)
         {
             return false;
         }
         auto objIndex = rec::objIndex(gocpp::recv(span), uintptr_t(ptr));
         auto pinState = rec::ofObject(gocpp::recv(pinnerBits), objIndex);
+        // make sure ptr is alive until we are done so the span can't be freed
         KeepAlive(ptr);
         return rec::isPinned(gocpp::recv(pinState));
     }
@@ -261,12 +284,18 @@ namespace golang::runtime
             {
                 gocpp::panic(errorString("tried to unpin non-Go pointer"_s));
             }
+            // This is a linker-allocated, zero size object or other object,
+            // nothing to do, silently ignore it.
             return false;
         }
+        // ensure that the span is swept, b/c sweeping accesses the specials list
+        // w/o locks.
         auto mp = acquirem();
         rec::ensureSwept(gocpp::recv(span));
+        // make sure ptr is still alive after span is swept
         KeepAlive(ptr);
         auto objIndex = rec::objIndex(gocpp::recv(span), uintptr_t(ptr));
+        // guard against concurrent calls of setPinned on same span
         lock(& span->speciallock);
         auto pinnerBits = rec::getPinnerBits(gocpp::recv(span));
         if(pinnerBits == nullptr)
@@ -279,7 +308,10 @@ namespace golang::runtime
         {
             if(rec::isPinned(gocpp::recv(pinState)))
             {
+                // multiple pins on same object, set multipin bit
                 rec::setMultiPinned(gocpp::recv(pinState), true);
+                // and increase the pin counter
+                // TODO(mknyszek): investigate if systemstack is necessary here
                 systemstack([=]() mutable -> void
                 {
                     auto offset = objIndex * span->elemsize;
@@ -288,16 +320,19 @@ namespace golang::runtime
             }
             else
             {
+                // set pin bit
                 rec::setPinned(gocpp::recv(pinState), true);
             }
         }
         else
         {
+            // unpin
             if(rec::isPinned(gocpp::recv(pinState)))
             {
                 if(rec::isMultiPinned(gocpp::recv(pinState)))
                 {
                     bool exists = {};
+                    // TODO(mknyszek): investigate if systemstack is necessary here
                     systemstack([=]() mutable -> void
                     {
                         auto offset = objIndex * span->elemsize;
@@ -305,16 +340,19 @@ namespace golang::runtime
                     });
                     if(! exists)
                     {
+                        // counter is 0, clear multipin bit
                         rec::setMultiPinned(gocpp::recv(pinState), false);
                     }
                 }
                 else
                 {
+                    // no multipins recorded. unpin object.
                     rec::setPinned(gocpp::recv(pinState), false);
                 }
             }
             else
             {
+                // unpinning unpinned object, bail out
                 go_throw("runtime.Pinner: object already unpinned"_s);
             }
         }
@@ -450,6 +488,10 @@ namespace golang::runtime
         }
         auto hasPins = false;
         auto bytes = alignUp(rec::pinnerBitSize(gocpp::recv(s)), 8);
+        // Iterate over each 8-byte chunk and check for pins. Note that
+        // newPinnerBits guarantees that pinnerBits will be 8-byte aligned, so we
+        // don't have to worry about edge cases, irrelevant bits will simply be
+        // zero.
         for(auto [gocpp_ignored, x] : unsafe::Slice((uint64_t*)(gocpp::unsafe_pointer(& p->x)), bytes / 8))
         {
             if(x != 0)
@@ -481,6 +523,7 @@ namespace golang::runtime
             runtime::lock(& mheap_.speciallock);
             rec = (specialPinCounter*)(rec::alloc(gocpp::recv(mheap_.specialPinCounterAlloc)));
             runtime::unlock(& mheap_.speciallock);
+            // splice in record, fill in offset.
             rec->special.offset = uint16_t(offset);
             rec->special.kind = _KindSpecialPinCounter;
             rec->special.next = *ref;

@@ -44,6 +44,7 @@ namespace golang::math
     double hypot(double p, double q)
     {
         std::tie(p, q) = std::tuple{Abs(p), Abs(q)};
+        // special cases
         //Go switch emulation
         {
             int conditionId = -1;

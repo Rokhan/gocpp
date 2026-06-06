@@ -26,6 +26,7 @@ namespace golang::time
     gocpp::slice<unsigned char> rec::appendFormatRFC3339(golang::time::Time t, gocpp::slice<unsigned char> b, bool nanos)
     {
         auto [gocpp_id_0, offset, abs] = rec::locabs(gocpp::recv(t));
+        // Format date.
         auto [year, month, day, gocpp_id_1] = absDate(abs, true);
         b = appendInt(b, year, 4);
         b = append(b, '-');
@@ -33,6 +34,7 @@ namespace golang::time
         b = append(b, '-');
         b = appendInt(b, day, 2);
         b = append(b, 'T');
+        // Format time.
         auto [hour, min, sec] = absClock(abs);
         b = appendInt(b, hour, 2);
         b = append(b, ':');
@@ -48,6 +50,8 @@ namespace golang::time
         {
             return append(b, 'Z');
         }
+        // Format zone.
+        // convert to minutes
         auto zone = offset / 60;
         if(zone < 0)
         {
@@ -68,6 +72,9 @@ namespace golang::time
     {
         auto n0 = len(b);
         b = rec::appendFormatRFC3339(gocpp::recv(t), b, true);
+        // Not all valid Go timestamps can be serialized as valid RFC 3339.
+        // Explicitly check for these edge cases.
+        // See https://go.dev/issue/4556 and https://go.dev/issue/54580.
         auto num2 = [=](gocpp::slice<unsigned char> b) mutable -> unsigned char
         {
             return 10 * (b[0] - '0') + (b[1] - '0');
@@ -97,6 +104,10 @@ namespace golang::time
     template<typename bytes>
     std::tuple<struct Time, bool> parseRFC3339(bytes s, struct Location* local)
     {
+        // parseUint parses s as an unsigned decimal integer and
+        // verifies that it is within some range.
+        // If it is invalid or out-of-range,
+        // it sets ok to false and returns the min value.
         auto ok = true;
         auto parseUint = [=](bytes s, int min, int max) mutable -> int
         {
@@ -117,15 +128,22 @@ namespace golang::time
             }
             return x;
         };
+        // Parse the date and time.
         if(len(s) < len("2006-01-02T15:04:05"_s))
         {
             return {Time {}, false};
         }
+        // e.g., 2006
         auto year = parseUint(s.make_slice(0, 4), 0, 9999);
+        // e.g., 01
         auto month = parseUint(s.make_slice(5, 7), 1, 12);
+        // e.g., 02
         auto day = parseUint(s.make_slice(8, 10), 1, daysIn(Month(month), year));
+        // e.g., 15
         auto hour = parseUint(s.make_slice(11, 13), 0, 23);
+        // e.g., 04
         auto min = parseUint(s.make_slice(14, 16), 0, 59);
+        // e.g., 05
         auto sec = parseUint(s.make_slice(17, 19), 0, 59);
         if(! ok || ! (s[4] == '-' && s[7] == '-' && s[10] == 'T' && s[13] == ':' && s[16] == ':'))
         {
@@ -143,6 +161,7 @@ namespace golang::time
             std::tie(nsec, std::ignore, std::ignore) = parseNanoseconds(s, n);
             s = s.make_slice(n);
         }
+        // Parse the time zone.
         auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
         if(len(s) != 1 || s[0] != 'Z')
         {
@@ -150,7 +169,9 @@ namespace golang::time
             {
                 return {Time {}, false};
             }
+            // e.g., 07
             auto hr = parseUint(s.make_slice(1, 3), 0, 23);
+            // e.g., 00
             auto mm = parseUint(s.make_slice(4, 6), 0, 59);
             if(! ok || ! ((s[0] == '-' || s[0] == '+') && s[3] == ':'))
             {
@@ -162,6 +183,7 @@ namespace golang::time
                 zoneOffset *= - 1;
             }
             rec::addSec(gocpp::recv(t), - int64_t(zoneOffset));
+            // Use local zone with the given offset if possible.
             if(auto [gocpp_id_2, offset, gocpp_id_3, gocpp_id_4, gocpp_id_5] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t))); offset == zoneOffset)
             {
                 rec::setLoc(gocpp::recv(t), local);
@@ -184,6 +206,9 @@ namespace golang::time
             {
                 return {Time {}, err};
             }
+            // The parse template syntax cannot correctly validate RFC 3339.
+            // Explicitly check for cases that Parse is unable to validate for.
+            // See https://go.dev/issue/54580.
             auto num2 = [=](gocpp::slice<unsigned char> b) mutable -> unsigned char
             {
                 return 10 * (b[0] - '0') + (b[1] - '0');
@@ -197,6 +222,8 @@ namespace golang::time
                 else if(b[len(b) - 1] != 'Z') { conditionId = 3; }
                 switch(conditionId)
                 {
+                    // TODO(https://go.dev/issue/54580): Strict parsing is disabled for now.
+                    // Enable this again with a GODEBUG opt-out.
                     case 0:
                         return {t, nullptr};
                         break;
@@ -224,6 +251,7 @@ namespace golang::time
                         }
                         break;
                     default:
+                        // unknown error; should not occur
                         return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), RFC3339, gocpp::string(b), ""_s})};
                         break;
                 }

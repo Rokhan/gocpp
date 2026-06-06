@@ -120,6 +120,9 @@ namespace golang::fmtsort
         {
             return nullptr;
         }
+        // Note: this code is arranged to not panic even in the presence
+        // of a concurrent map update. The runtime is responsible for
+        // yelling loudly if that happens. See issue 33275.
         auto n = rec::Len(gocpp::recv(mapValue));
         auto key = gocpp::make(gocpp::Tag<gocpp::slice<reflect::Value>>(), 0, n);
         auto value = gocpp::make(gocpp::Tag<gocpp::slice<reflect::Value>>(), 0, n);
@@ -146,6 +149,7 @@ namespace golang::fmtsort
         auto [aType, bType] = std::tuple{rec::Type(gocpp::recv(aVal)), rec::Type(gocpp::recv(bVal))};
         if(aType != bType)
         {
+            // No good answer possible, but don't return 0: they're not equal.
             return - 1;
         }
         //Go switch emulation
@@ -363,6 +367,7 @@ namespace golang::fmtsort
                     return compare(rec::Elem(gocpp::recv(aVal)), rec::Elem(gocpp::recv(bVal)));
                     break;
                 default:
+                    // Certain types cannot appear as keys (maps, funcs, slices), but be explicit.
                     gocpp::panic("bad type in compare: "_s + rec::String(gocpp::recv(aType)));
                     break;
             }
@@ -403,6 +408,7 @@ namespace golang::fmtsort
             else if(a > b) { conditionId = 3; }
             switch(conditionId)
             {
+                // No good answer if b is a NaN so don't bother checking.
                 case 0:
                     return - 1;
                     break;

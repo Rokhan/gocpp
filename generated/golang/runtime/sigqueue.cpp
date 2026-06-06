@@ -119,18 +119,21 @@ namespace golang::runtime
         {
             return false;
         }
+        // We are running in the signal handler; defer is not available.
         rec::Add(gocpp::recv(sig.delivering), 1);
         if(auto w = atomic::Load(& sig.wanted[s / 32]); w & bit == 0)
         {
             rec::Add(gocpp::recv(sig.delivering), - 1);
             return false;
         }
+        // Add signal to outgoing queue.
         for(; ; )
         {
             auto mask = sig.mask[s / 32];
             if(mask & bit != 0)
             {
                 rec::Add(gocpp::recv(sig.delivering), - 1);
+                // signal already in queue
                 return true;
             }
             if(atomic::Cas(& sig.mask[s / 32], mask, mask | bit))
@@ -138,6 +141,7 @@ namespace golang::runtime
                 break;
             }
         }
+        // Notify receiver that queue has new bit.
         Send:
         for(; ; )
         {
@@ -166,6 +170,7 @@ namespace golang::runtime
                         }
                         break;
                     case 1:
+                        // notification already pending
                         goto Send_break;
                         break;
                     case 2:
@@ -195,6 +200,7 @@ namespace golang::runtime
     {
         for(; ; )
         {
+            // Serve any signals from local copy.
             for(auto i = uint32_t(0); i < _NSIG; i++)
             {
                 if(sig.recv[i / 32] & (1 << (i & 31)) != 0)
@@ -203,6 +209,7 @@ namespace golang::runtime
                     return i;
                 }
             }
+            // Wait for updates to be available from signal sender.
             Receive:
             for(; ; )
             {
@@ -245,6 +252,7 @@ namespace golang::runtime
                     }
                 }
             }
+            // Incorporate updates from sender into local copy.
             for(auto [i, gocpp_ignored] : sig.mask)
             {
                 sig.recv[i] = atomic::Xchg(& sig.mask[i], 0);
@@ -263,10 +271,18 @@ namespace golang::runtime
     //go:linkname signalWaitUntilIdle os/signal.signalWaitUntilIdle
     void signalWaitUntilIdle()
     {
+        // Although the signals we care about have been removed from
+        // sig.wanted, it is possible that another thread has received
+        // a signal, has read from sig.wanted, is now updating sig.mask,
+        // and has not yet woken up the processor thread. We need to wait
+        // until all current signal deliveries have completed.
         for(; rec::Load(gocpp::recv(sig.delivering)) != 0; )
         {
             Gosched();
         }
+        // Although WaitUntilIdle seems like the right name for this
+        // function, the state we are looking for is sigReceiving, not
+        // sigIdle.  The sigIdle state is really more like sigProcessing.
         for(; rec::Load(gocpp::recv(sig.state)) != sigReceiving; )
         {
             Gosched();
@@ -280,6 +296,8 @@ namespace golang::runtime
     {
         if(! sig.inuse)
         {
+            // This is the first call to signal_enable. Initialize.
+            // enable reception of signals; cannot disable
             sig.inuse = true;
             if(GOOS == "darwin"_s || GOOS == "ios"_s)
             {

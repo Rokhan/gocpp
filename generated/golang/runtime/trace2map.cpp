@@ -138,6 +138,7 @@ namespace golang::runtime
             return {0, false};
         }
         auto hash = memhash(data, 0, size);
+        // First, search the hashtable w/o the mutex.
         if(auto id = rec::find(gocpp::recv(tab), data, size, hash); id != 0)
         {
             return {id, false};
@@ -154,8 +155,13 @@ namespace golang::runtime
                 unlock(& tab->lock);
                 return;
             }
+            // Create new record.
             id = rec::Add(gocpp::recv(tab->seq), 1);
             auto vd = rec::newTraceMapNode(gocpp::recv(tab), data, size, hash, id);
+            // Insert it into the table.
+            // Update the link first, since the node isn't published yet.
+            // Then, store the node in the table as the new first node
+            // for the bucket.
             auto part = int(hash % uintptr_t(len(tab->tab)));
             rec::StoreNoWB(gocpp::recv(vd->link), rec::Load(gocpp::recv(tab->tab[part])));
             rec::StoreNoWB(gocpp::recv(tab->tab[part]), gocpp::unsafe_pointer(vd));
@@ -173,6 +179,8 @@ namespace golang::runtime
         auto part = int(hash % uintptr_t(len(tab->tab)));
         for(auto vd = rec::bucket(gocpp::recv(tab), part); vd != nullptr; vd = rec::next(gocpp::recv(vd)))
         {
+            // Synchronization not necessary. Once published to the table, these
+            // values are immutable.
             if(vd->hash == hash && uintptr_t(len(vd->data)) == size)
             {
                 if(memequal(gocpp::unsafe_pointer(& vd->data[0]), data, size))
@@ -192,12 +200,14 @@ namespace golang::runtime
 
     struct traceMapNode* rec::newTraceMapNode(golang::runtime::traceMap* tab, gocpp::unsafe_pointer data, uintptr_t size, uintptr_t hash, uint64_t id)
     {
+        // Create data array.
         auto sl = gocpp::Init<notInHeapSlice>([=](auto& x) {
             x.array = rec::alloc(gocpp::recv(tab->mem), size);
             x.len = int(size);
             x.cap = int(size);
         });
         memmove(gocpp::unsafe_pointer(sl.array), data, size);
+        // Create metadata structure.
         auto meta = (traceMapNode*)(gocpp::unsafe_pointer(rec::alloc(gocpp::recv(tab->mem), gocpp::Sizeof<traceMapNode>())));
         *(notInHeapSlice*)(gocpp::unsafe_pointer(& meta->data)) = sl;
         meta->id = id;
@@ -215,6 +225,11 @@ namespace golang::runtime
         assertLockHeld(& tab->lock);
         rec::drop(gocpp::recv(tab->mem));
         rec::Store(gocpp::recv(tab->seq), 0);
+        // Clear table without write barriers. The table consists entirely
+        // of notinheap pointers, so this is fine.
+        // Write barriers may theoretically call into the tracer and acquire
+        // the lock again, and this lock ordering is expressed in the static
+        // lock ranking checker.
         memclrNoHeapPointers(gocpp::unsafe_pointer(& tab->tab), gocpp::Sizeof<atomic::UnsafePointer, 8192>>());
     }
 

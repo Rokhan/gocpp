@@ -99,6 +99,7 @@ namespace golang::bytes
     {
         if(b == nullptr)
         {
+            // Special case, useful in debugging.
             return "<nil>"_s;
         }
         return gocpp::string(b->buf.make_slice(b->off));
@@ -177,10 +178,12 @@ namespace golang::bytes
     int rec::grow(golang::bytes::Buffer* b, int n)
     {
         auto m = rec::Len(gocpp::recv(b));
+        // If buffer is empty, reset to recover space.
         if(m == 0 && b->off != 0)
         {
             rec::Reset(gocpp::recv(b));
         }
+        // Try to grow by means of a reslice.
         if(auto [i, ok] = rec::tryGrowByReslice(gocpp::recv(b), n); ok)
         {
             return i;
@@ -193,6 +196,10 @@ namespace golang::bytes
         auto c = cap(b->buf);
         if(n <= c / 2 - m)
         {
+            // We can slide things down instead of allocating a new
+            // slice. We only need m+n <= c to slide, but
+            // we instead let capacity get twice as large so we
+            // don't spend all our time copying.
             copy(b->buf, b->buf.make_slice(b->off));
         }
         else
@@ -202,8 +209,10 @@ namespace golang::bytes
         }
         else
         {
+            // Add b.off to account for b.buf[:b.off] being sliced off the front.
             b->buf = growSlice(b->buf.make_slice(b->off), b->off + n);
         }
+        // Restore b.off and len(b.buf).
         b->off = 0;
         b->buf = b->buf.make_slice(0, m + n);
         return m;
@@ -282,6 +291,7 @@ namespace golang::bytes
             n += int64_t(m);
             if(e == io::go_EOF)
             {
+                // e is EOF, so return nil explicitly
                 return {n, nullptr};
             }
             if(e != nullptr)
@@ -305,9 +315,19 @@ namespace golang::bytes
                     gocpp::panic(ErrTooLarge);
                 }
             }(); });
+            // TODO(http://golang.org/issue/51462): We should rely on the append-make
+            // pattern so that the compiler can call runtime.growslice. For example:
+            // return append(b, make([]byte, n)...)
+            // This avoids unnecessary zero-ing of the first len(b) bytes of the
+            // allocated slice, but this pattern causes b to escape onto the heap.
+            // Instead use the append-make pattern with a nil slice to ensure that
+            // we allocate buffers rounded up to the closest size class.
+            // ensure enough space for n elements
             auto c = len(b) + n;
             if(c < 2 * cap(b))
             {
+                // The growth rate has historically always been 2x. In the future,
+                // we could rely purely on append to determine the growth rate.
                 c = 2 * cap(b);
             }
             auto b2 = append(gocpp::slice<unsigned char>(nullptr), gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), c));
@@ -342,11 +362,14 @@ namespace golang::bytes
             {
                 return {n, e};
             }
+            // all bytes should have been written, by definition of
+            // Write method in io.Writer
             if(m != nBytes)
             {
                 return {n, io::ErrShortWrite};
             }
         }
+        // Buffer is now empty; reset.
         rec::Reset(gocpp::recv(b));
         return {n, nullptr};
     }
@@ -375,6 +398,7 @@ namespace golang::bytes
     {
         int n;
         struct gocpp::error err;
+        // Compare as uint32 to correctly handle negative runes.
         if(uint32_t(r) < utf8::RuneSelf)
         {
             rec::WriteByte(gocpp::recv(b), (unsigned char)(r));
@@ -401,6 +425,7 @@ namespace golang::bytes
         b->lastRead = opInvalid;
         if(rec::empty(gocpp::recv(b)))
         {
+            // Buffer is empty, reset to recover space.
             rec::Reset(gocpp::recv(b));
             if(len(p) == 0)
             {
@@ -444,6 +469,7 @@ namespace golang::bytes
     {
         if(rec::empty(gocpp::recv(b)))
         {
+            // Buffer is empty, reset to recover space.
             rec::Reset(gocpp::recv(b));
             return {0, io::go_EOF};
         }
@@ -465,6 +491,7 @@ namespace golang::bytes
         struct gocpp::error err;
         if(rec::empty(gocpp::recv(b)))
         {
+            // Buffer is empty, reset to recover space.
             rec::Reset(gocpp::recv(b));
             return {0, 0, io::go_EOF};
         }
@@ -532,6 +559,8 @@ namespace golang::bytes
         struct gocpp::error err;
         gocpp::slice<unsigned char> slice;
         std::tie(slice, err) = rec::readSlice(gocpp::recv(b), delim);
+        // return a copy of slice. The buffer's backing array may
+        // be overwritten by later calls.
         line = append(line, slice);
         return {line, err};
     }

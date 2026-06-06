@@ -157,14 +157,17 @@ namespace golang::strconv
                     return append(dst, s);
                     break;
                 case 1:
+                    // denormalized
                     exp++;
                     break;
                 default:
+                    // add implicit top bit
                     mant |= uint64_t(1) << flt->mantbits;
                     break;
             }
         }
         exp += flt->bias;
+        // Pick off easy binary, hex formats.
         if(fmt == 'b')
         {
             return fmtB(dst, neg, mant, exp, flt);
@@ -179,6 +182,7 @@ namespace golang::strconv
         }
         decimalSlice digs = {};
         auto ok = false;
+        // Negative precision means "only as much as needed to be exact."
         auto shortest = prec < 0;
         if(shortest)
         {
@@ -187,6 +191,7 @@ namespace golang::strconv
             digs.d = buf.make_slice(0);
             ryuFtoaShortest(& digs, mant, exp - int(flt->mantbits), flt);
             ok = true;
+            // Precision for shortest representation mode.
             //Go switch emulation
             {
                 auto condition = fmt;
@@ -215,6 +220,7 @@ namespace golang::strconv
         else
         if(fmt != 'f')
         {
+            // Fixed number of digits.
             auto digits = prec;
             //Go switch emulation
             {
@@ -239,6 +245,7 @@ namespace golang::strconv
                         digits = prec;
                         break;
                     default:
+                        // Invalid mode.
                         digits = 1;
                         break;
                 }
@@ -281,6 +288,7 @@ namespace golang::strconv
                 x.nd = d->nd;
                 x.dp = d->dp;
             });
+            // Precision for shortest representation mode.
             //Go switch emulation
             {
                 auto condition = fmt;
@@ -308,6 +316,7 @@ namespace golang::strconv
         }
         else
         {
+            // Round appropriately.
             //Go switch emulation
             {
                 auto condition = fmt;
@@ -367,11 +376,15 @@ namespace golang::strconv
                     break;
                 case 3:
                 case 4:
+                    // trailing fractional zeros in 'e' form will be trimmed.
                     auto eprec = prec;
                     if(eprec > digs.nd && digs.nd >= digs.dp)
                     {
                         eprec = digs.nd;
                     }
+                    // %e is used if the exponent from the conversion
+                    // is less than -4 or greater than or equal to the precision.
+                    // if precision was the shortest possible, use precision 6 for this decision.
                     if(shortest)
                     {
                         eprec = 6;
@@ -393,6 +406,7 @@ namespace golang::strconv
                     break;
             }
         }
+        // unknown format
         return append(dst, '%', fmt);
     }
 
@@ -400,16 +414,33 @@ namespace golang::strconv
     // that will let the original floating point value be precisely reconstructed.
     void roundShortest(struct decimal* d, uint64_t mant, int exp, struct floatInfo* flt)
     {
+        // If mantissa is zero, the number is zero; stop now.
         if(mant == 0)
         {
             d->nd = 0;
             return;
         }
+        // Compute upper and lower such that any decimal number
+        // between upper and lower (possibly inclusive)
+        // will round to the original floating point number.
+        // We may see at once that the number is already shortest.
+        // Suppose d is not denormal, so that 2^exp <= d < 10^dp.
+        // The closest shorter number is at least 10^(dp-nd) away.
+        // The lower/upper bounds computed below are at distance
+        // at most 2^(exp-mantbits).
+        // So the number is already shortest if 10^(dp-nd) > 2^(exp-mantbits),
+        // or equivalently log2(10)*(dp-nd) > exp-mantbits.
+        // It is true if 332/100*(dp-nd) >= exp-mantbits (log2(10) > 3.32).
+        // minimum possible exponent
         auto minexp = flt->bias + 1;
         if(exp > minexp && 332 * (d->dp - d->nd) >= 100 * (exp - int(flt->mantbits)))
         {
+            // The number is already shortest.
             return;
         }
+        // d = mant << (exp - mantbits)
+        // Next highest floating point number is mant+1 << exp-mantbits.
+        // Our upper bound is halfway between, mant*2+1 << exp-mantbits-1.
         auto upper = new(decimal);
         rec::Assign(gocpp::recv(upper), mant * 2 + 1);
         rec::Shift(gocpp::recv(upper), exp - int(flt->mantbits) - 1);
@@ -434,42 +465,53 @@ namespace golang::strconv
         auto lower = new(decimal);
         rec::Assign(gocpp::recv(lower), mantlo * 2 + 1);
         rec::Shift(gocpp::recv(lower), explo - int(flt->mantbits) - 1);
+        // The upper and lower bounds are possible outputs only if
+        // the original mantissa is even, so that IEEE round-to-even
+        // would round to the original mantissa and not the neighbors.
         auto inclusive = mant % 2 == 0;
         // As we walk the digits we want to know whether rounding up would fall
         // within the upper bound. This is tracked by upperdelta:
-        //
         // If upperdelta == 0, the digits of d and upper are the same so far.
-        //
         // If upperdelta == 1, we saw a difference of 1 between d and upper on a
         // previous digit and subsequently only 9s for d and 0s for upper.
         // (Thus rounding up may fall outside the bound, if it is exclusive.)
-        //
         // If upperdelta == 2, then the difference is greater than 1
         // and we know that rounding up falls within the bound.
         uint8_t upperdelta = {};
+        // Now we can figure out the minimum number of digits required.
+        // Walk along until d has distinguished itself from upper and lower.
         for(auto ui = 0; ; ui++)
         {
+            // lower, d, and upper may have the decimal points at different
+            // places. In this case upper is the longest, so we iterate from
+            // ui==0 and start li and mi at (possibly) -1.
             auto mi = ui - upper->dp + d->dp;
             if(mi >= d->nd)
             {
                 break;
             }
             auto li = ui - upper->dp + lower->dp;
+            // lower digit
             auto l = (unsigned char)('0');
             if(li >= 0 && li < lower->nd)
             {
                 l = lower->d[li];
             }
+            // middle digit
             auto m = (unsigned char)('0');
             if(mi >= 0)
             {
                 m = d->d[mi];
             }
+            // upper digit
             auto u = (unsigned char)('0');
             if(ui < upper->nd)
             {
                 u = upper->d[ui];
             }
+            // Okay to round down (truncate) if lower has a different digit
+            // or if lower is inclusive and is exactly the result of rounding
+            // down (i.e., and we have reached the final digit of lower).
             auto okdown = l != m || inclusive && li + 1 == lower->nd;
             //Go switch emulation
             {
@@ -480,17 +522,30 @@ namespace golang::strconv
                 switch(conditionId)
                 {
                     case 0:
+                        // Example:
+                        // m = 12345xxx
+                        // u = 12347xxx
                         upperdelta = 2;
                         break;
                     case 1:
+                        // Example:
+                        // m = 12345xxx
+                        // u = 12346xxx
                         upperdelta = 1;
                         break;
                     case 2:
+                        // Example:
+                        // m = 1234598x
+                        // u = 1234600x
                         upperdelta = 2;
                         break;
                 }
             }
+            // Okay to round up if upper has a different digit and either upper
+            // is inclusive or upper is bigger than the result of rounding up.
             auto okup = upperdelta > 0 && (inclusive || upperdelta > 1 || ui + 1 < upper->nd);
+            // If it's okay to do either, then round to the nearest one.
+            // If it's okay to do only one, do it.
             //Go switch emulation
             {
                 int conditionId = -1;
@@ -554,16 +609,19 @@ namespace golang::strconv
     // %e: -d.ddddde±dd
     gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> dst, bool neg, struct decimalSlice d, int prec, unsigned char fmt)
     {
+        // sign
         if(neg)
         {
             dst = append(dst, '-');
         }
+        // first digit
         auto ch = (unsigned char)('0');
         if(d.nd != 0)
         {
             ch = d.d[0];
         }
         dst = append(dst, ch);
+        // .moredigits
         if(prec > 0)
         {
             dst = append(dst, '.');
@@ -579,10 +637,12 @@ namespace golang::strconv
                 dst = append(dst, '0');
             }
         }
+        // e±
         dst = append(dst, fmt);
         auto exp = d.dp - 1;
         if(d.nd == 0)
         {
+            // special case: 0 has exponent 0
             exp = 0;
         }
         if(exp < 0)
@@ -595,6 +655,7 @@ namespace golang::strconv
             ch = '+';
         }
         dst = append(dst, ch);
+        // dd or ddd
         //Go switch emulation
         {
             int conditionId = -1;
@@ -619,10 +680,12 @@ namespace golang::strconv
     // %f: -ddddddd.ddddd
     gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> dst, bool neg, struct decimalSlice d, int prec)
     {
+        // sign
         if(neg)
         {
             dst = append(dst, '-');
         }
+        // integer, padded with zeros as needed.
         if(d.dp > 0)
         {
             auto m = gocpp::min(d.nd, d.dp);
@@ -636,6 +699,7 @@ namespace golang::strconv
         {
             dst = append(dst, '0');
         }
+        // fraction
         if(prec > 0)
         {
             dst = append(dst, '.');
@@ -655,12 +719,16 @@ namespace golang::strconv
     // %b: -ddddddddp±ddd
     gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp, struct floatInfo* flt)
     {
+        // sign
         if(neg)
         {
             dst = append(dst, '-');
         }
+        // mantissa
         std::tie(dst, std::ignore) = formatBits(dst, mant, 10, false, true);
+        // p
         dst = append(dst, 'p');
+        // ±exponent
         exp -= int(flt->mantbits);
         if(exp >= 0)
         {
@@ -677,12 +745,14 @@ namespace golang::strconv
         {
             exp = 0;
         }
+        // Shift digits so leading 1 (if any) is at bit 1<<60.
         mant <<= 60 - flt->mantbits;
         for(; mant != 0 && mant & (1 << 60) == 0; )
         {
             mant <<= 1;
             exp--;
         }
+        // Round if requested.
         if(prec >= 0 && prec < 15)
         {
             auto shift = (unsigned int)(prec * 4);
@@ -695,6 +765,7 @@ namespace golang::strconv
             mant <<= 60 - shift;
             if(mant & (1 << 61) != 0)
             {
+                // Wrapped around.
                 mant >>= 1;
                 exp++;
             }
@@ -704,11 +775,14 @@ namespace golang::strconv
         {
             hex = upperhex;
         }
+        // sign, 0x, leading digit
         if(neg)
         {
             dst = append(dst, '-');
         }
         dst = append(dst, '0', fmt, '0' + (unsigned char)((mant >> 60) & 1));
+        // .fraction
+        // remove leading 0 or 1
         mant <<= 4;
         if(prec < 0 && mant != 0)
         {
@@ -729,6 +803,7 @@ namespace golang::strconv
                 mant <<= 4;
             }
         }
+        // p±
         auto ch = (unsigned char)('P');
         if(fmt == lower(fmt))
         {
@@ -745,6 +820,7 @@ namespace golang::strconv
             ch = '+';
         }
         dst = append(dst, ch);
+        // dd or ddd or dddd
         //Go switch emulation
         {
             int conditionId = -1;

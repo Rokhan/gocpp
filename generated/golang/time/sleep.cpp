@@ -91,6 +91,9 @@ namespace golang::time
         auto t = runtimeNano() + int64_t(d);
         if(t < 0)
         {
+            // N.B. runtimeNano() and d are always positive, so addition
+            // (including overflow) will never result in t == 0.
+            // math.MaxInt64
             t = (1 << 63) - 1;
         }
         return t;

@@ -47,6 +47,10 @@ namespace golang::math
     bool IsNaN(double f)
     {
         bool is;
+        // IEEE 754 says that only NaNs satisfy f != f.
+        // To avoid the floating-point hardware, could use:
+        // x := Float64bits(f);
+        // return uint32(x>>shift)&mask == mask && x != uvinf && x != uvneginf
         return f != f;
     }
 
@@ -56,6 +60,10 @@ namespace golang::math
     // If sign == 0, IsInf reports whether f is either infinity.
     bool IsInf(double f, int sign)
     {
+        // Test for infinity by comparing against maximum float.
+        // To avoid the floating-point hardware, could use:
+        // x := Float64bits(f);
+        // return sign >= 0 && x == uvinf || sign <= 0 && x == uvneginf;
         return sign >= 0 && f > MaxFloat64 || sign <= 0 && f < - MaxFloat64;
     }
 
@@ -65,6 +73,7 @@ namespace golang::math
     {
         double y;
         int exp;
+        // 2**-1022
         auto SmallestNormal = 2.2250738585072014e-308;
         if(Abs(x) < SmallestNormal)
         {

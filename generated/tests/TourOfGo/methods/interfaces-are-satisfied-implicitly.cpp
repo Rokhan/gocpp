@@ -128,19 +128,41 @@ namespace golang::main
         auto t3 = T {"Hello2"_s};
         auto f = F(mocklib::Pi);
         i = t1;
+        // true
         mocklib::Println(i == t1);
+        // false
         mocklib::Println(i == t2);
+        // false
+        // TODO: enable once interface comparison is supported for non-struct types
+        // fmt.Printf("%v\n", i == f) // false
         mocklib::Println(i == t3);
         i = t2;
+        // false
         mocklib::Println(i == t1);
+        // true
         mocklib::Println(i == t2);
+        // false
+        // TODO: enable once interface comparison is supported for non-struct types
+        // fmt.Printf("%v\n", i == f) // false
         mocklib::Println(i == t3);
         i = t3;
+        // false
         mocklib::Println(i == t1);
+        // false
+        // TODO: associating T value with interface creates a copy at the moment,
+        // so this is false. It shouldn't be the case.
+        // fmt.Println(i == t3) // true
+        // TODO: enable once interface comparison is supported for non-struct types
+        // fmt.Printf("%v\n", i == f) // false
         mocklib::Println(i == t2);
         i = f;
+        // false
         mocklib::Println(i == t1);
+        // false
         mocklib::Println(i == t2);
+        // false
+        // TODO: enable once interface comparison is supported for non-struct types
+        // fmt.Printf("%v\n", i == f) // true
         mocklib::Println(i == t3);
     }
 

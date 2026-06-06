@@ -159,19 +159,26 @@ namespace golang::sync
         auto [head, tail] = rec::unpack(gocpp::recv(d), ptrs);
         if((tail + uint32_t(len(d->vals))) & ((1 << dequeueBits) - 1) == head)
         {
+            // Queue is full.
             return false;
         }
         auto slot = & d->vals[head & uint32_t(len(d->vals) - 1)];
+        // Check if the head slot has been released by popTail.
         auto typ = atomic::LoadPointer(& slot->typ);
         if(typ != nullptr)
         {
+            // Another goroutine is still cleaning up the tail, so
+            // the queue is actually still full.
             return false;
         }
+        // The head slot is free, so we own it.
         if(val == nullptr)
         {
             val = dequeueNil(nullptr);
         }
         *(go_any*)(gocpp::unsafe_pointer(slot)) = val;
+        // Increment head. This passes ownership of slot to popTail
+        // and acts as a store barrier for writing the slot.
         rec::Add(gocpp::recv(d->headTail), 1 << dequeueBits);
         return true;
     }
@@ -188,12 +195,17 @@ namespace golang::sync
             auto [head, tail] = rec::unpack(gocpp::recv(d), ptrs);
             if(tail == head)
             {
+                // Queue is empty.
                 return {nullptr, false};
             }
+            // Confirm tail and decrement head. We do this before
+            // reading the value to take back ownership of this
+            // slot.
             head--;
             auto ptrs2 = rec::pack(gocpp::recv(d), head, tail);
             if(rec::CompareAndSwap(gocpp::recv(d->headTail), ptrs, ptrs2))
             {
+                // We successfully took back slot.
                 slot = & d->vals[head & uint32_t(len(d->vals) - 1)];
                 break;
             }
@@ -203,6 +215,8 @@ namespace golang::sync
         {
             val = nullptr;
         }
+        // Zero the slot. Unlike popTail, this isn't racing with
+        // pushHead, so we don't need to be careful here.
         *slot = eface {};
         return {val, true};
     }
@@ -219,21 +233,33 @@ namespace golang::sync
             auto [head, tail] = rec::unpack(gocpp::recv(d), ptrs);
             if(tail == head)
             {
+                // Queue is empty.
                 return {nullptr, false};
             }
+            // Confirm head and tail (for our speculative check
+            // above) and increment tail. If this succeeds, then
+            // we own the slot at tail.
             auto ptrs2 = rec::pack(gocpp::recv(d), head, tail + 1);
             if(rec::CompareAndSwap(gocpp::recv(d->headTail), ptrs, ptrs2))
             {
+                // Success.
                 slot = & d->vals[tail & uint32_t(len(d->vals) - 1)];
                 break;
             }
         }
+        // We now own slot.
         auto val = *(go_any*)(gocpp::unsafe_pointer(slot));
         if(val == dequeueNil(nullptr))
         {
             val = nullptr;
         }
+        // Tell pushHead that we're done with this slot. Zeroing the
+        // slot is also important so we don't leave behind references
+        // that could keep this object live longer than necessary.
+        // We write to val first and then publish that we're done with
+        // this slot by atomically writing to typ.
         slot->val = nullptr;
+        // At this point pushHead owns the slot.
         atomic::StorePointer(& slot->typ, nullptr);
         return {val, true};
     }
@@ -328,6 +354,7 @@ namespace golang::sync
         if(d == nullptr)
         {
             // Initialize the chain.
+            // Must be a power of 2
             auto initSize = 8;
             d = new(poolChainElt);
             d->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), initSize);
@@ -338,9 +365,12 @@ namespace golang::sync
         {
             return;
         }
+        // The current dequeue is full. Allocate a new one of twice
+        // the size.
         auto newSize = len(d->poolDequeue.vals) * 2;
         if(newSize >= dequeueLimit)
         {
+            // Can't make it any bigger.
             newSize = dequeueLimit;
         }
         auto d2 = gocpp::InitPtr<poolChainElt>([=](auto& x) {
@@ -361,6 +391,8 @@ namespace golang::sync
             {
                 return {val, ok};
             }
+            // There may still be unconsumed elements in the
+            // previous dequeue, so try backing up.
             d = loadPoolChainElt(& d->prev);
         }
         return {nullptr, false};
@@ -375,6 +407,12 @@ namespace golang::sync
         }
         for(; ; )
         {
+            // It's important that we load the next pointer
+            // *before* popping the tail. In general, d may be
+            // transiently empty, but if next is non-nil before
+            // the pop and the pop fails, then d is permanently
+            // empty, which is the only condition under which it's
+            // safe to drop d from the chain.
             auto d2 = loadPoolChainElt(& d->next);
             if(auto [val, ok] = rec::popTail(gocpp::recv(d)); ok)
             {
@@ -382,10 +420,20 @@ namespace golang::sync
             }
             if(d2 == nullptr)
             {
+                // This is the only dequeue. It's empty right
+                // now, but could be pushed to in the future.
                 return {nullptr, false};
             }
+            // The tail of the chain has been drained, so move on
+            // to the next dequeue. Try to drop it from the chain
+            // so the next pop doesn't have to look at the empty
+            // dequeue again.
             if(atomic::CompareAndSwapPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& c->tail)), gocpp::unsafe_pointer(d), gocpp::unsafe_pointer(d2)))
             {
+                // We won the race. Clear the prev pointer so
+                // the garbage collector can collect the empty
+                // dequeue and so popHead doesn't back up
+                // further than necessary.
                 storePoolChainElt(& d2->prev, nullptr);
             }
             d = d2;

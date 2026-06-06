@@ -281,8 +281,11 @@ namespace golang::syscall
     // since Epoch (00:00:00 UTC, January 1, 1970).
     int64_t rec::Nanoseconds(golang::syscall::Filetime* ft)
     {
+        // 100-nanosecond intervals since January 1, 1601
         auto nsec = (int64_t(ft->HighDateTime) << 32) + int64_t(ft->LowDateTime);
+        // change starting time to the Epoch (00:00:00 UTC, January 1, 1970)
         nsec -= 116444736000000000;
+        // convert into nanoseconds
         nsec *= 100;
         return nsec;
     }
@@ -290,8 +293,11 @@ namespace golang::syscall
     struct Filetime NsecToFiletime(int64_t nsec)
     {
         struct Filetime ft;
+        // convert into 100-nanosecond
         nsec /= 100;
+        // change starting time to January 1, 1601
         nsec += 116444736000000000;
+        // split into high / low
         ft.LowDateTime = uint32_t(nsec & 0xffffffff);
         ft.HighDateTime = uint32_t((nsec >> 32) & 0xffffffff);
         return ft;
@@ -421,6 +427,7 @@ namespace golang::syscall
         dst->FileSizeLow = src->FileSizeLow;
         dst->Reserved0 = src->Reserved0;
         dst->Reserved1 = src->Reserved1;
+        // The src is 1 element bigger than dst, but it must be NUL.
         copy(dst->FileName.make_slice(0), src->FileName.make_slice(0));
         copy(dst->AlternateFileName.make_slice(0), src->AlternateFileName.make_slice(0));
     }

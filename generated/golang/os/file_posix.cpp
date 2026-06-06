@@ -129,6 +129,7 @@ namespace golang::os
         {
             o |= syscall::S_ISVTX;
         }
+        // No mapping for Go's ModeTemporary (plan9 only).
         return o;
     }
 

@@ -34,6 +34,7 @@ namespace golang::time
         auto [fd, err] = syscall::Open(name, syscall::O_RDONLY, 0);
         if(err != nullptr)
         {
+            // This condition solves issue https://go.dev/issue/50248
             if(err == syscall::ERROR_PATH_NOT_FOUND)
             {
                 err = syscall::go_ENOENT;

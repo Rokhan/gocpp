@@ -176,6 +176,9 @@ namespace golang::runtime
         bool more;
         for(; len(ci->frames) < 2; )
         {
+            // Find the next frame.
+            // We need to look for 2 frames so we know what
+            // to return for the "more" result.
             if(len(ci->callers) == 0)
             {
                 break;
@@ -187,6 +190,9 @@ namespace golang::runtime
             {
                 if(cgoSymbolizer != nullptr)
                 {
+                    // Pre-expand cgo frames. We could do this
+                    // incrementally, too, but there's no way to
+                    // avoid allocation in this case anyway.
                     ci->frames = append(ci->frames, expandCgoFrames(pc));
                 }
                 continue;
@@ -195,12 +201,20 @@ namespace golang::runtime
             auto entry = rec::Entry(gocpp::recv(f));
             if(pc > entry)
             {
+                // We store the pc of the start of the instruction following
+                // the instruction in question (the call or the inline mark).
+                // This is done for historical reasons, and to make FuncForPC
+                // work correctly for entries in the result of runtime.Callers.
                 pc--;
             }
+            // It's important that interpret pc non-strictly as cgoTraceback may
+            // have added bogus PCs with a valid funcInfo but invalid PCDATA.
             auto [u, uf] = newInlineUnwinder(funcInfo, pc);
             auto sf = rec::srcFunc(gocpp::recv(u), uf);
             if(rec::isInlined(gocpp::recv(u), uf))
             {
+                // Note: entry is not modified. It always refers to a real frame, not an inlined one.
+                // File/line from funcline1 below are already correct.
                 f = nullptr;
             }
             ci->frames = append(ci->frames, gocpp::Init<Frame>([=](auto& x) {
@@ -212,6 +226,8 @@ namespace golang::runtime
                 x.funcInfo = funcInfo;
             }));
         }
+        // Pop one frame from the frame list. Keep the rest.
+        // Avoid allocation in the common case, which is 1 or 2 frames.
         //Go switch emulation
         {
             auto condition = len(ci->frames);
@@ -242,6 +258,9 @@ namespace golang::runtime
         more = len(ci->frames) > 0;
         if(rec::valid(gocpp::recv(frame.funcInfo)))
         {
+            // Compute file/line just before we need to return it,
+            // as it can be expensive. This avoids computing file/line
+            // for the Frame we find but don't return. See issue 32093.
             auto [file, line] = funcline1(frame.funcInfo, frame.PC, false);
             std::tie(frame.File, frame.Line) = std::tuple{file, int(line)};
         }
@@ -278,6 +297,8 @@ namespace golang::runtime
     //go:linkname runtime_expandFinalInlineFrame runtime/pprof.runtime_expandFinalInlineFrame
     gocpp::slice<uintptr_t> runtime_expandFinalInlineFrame(gocpp::slice<uintptr_t> stk)
     {
+        // TODO: It would be more efficient to report only physical PCs to pprof and
+        // just expand the whole stack.
         if(len(stk) == 0)
         {
             return stk;
@@ -287,14 +308,20 @@ namespace golang::runtime
         auto f = findfunc(tracepc);
         if(! rec::valid(gocpp::recv(f)))
         {
+            // Not a Go function.
             return stk;
         }
         auto [u, uf] = newInlineUnwinder(f, tracepc);
         if(! rec::isInlined(gocpp::recv(u), uf))
         {
+            // Nothing inline at tracepc.
             return stk;
         }
+        // Treat the previous func as normal. We haven't actually checked, but
+        // since this pc was included in the stack, we know it shouldn't be
+        // elided.
         auto calleeID = abi::FuncIDNormal;
+        // Remove pc from stk; we'll re-add it below.
         stk = stk.make_slice(0, len(stk) - 1);
         for(; rec::valid(gocpp::recv(uf)); uf = rec::next(gocpp::recv(u), uf))
         {
@@ -303,6 +330,8 @@ namespace golang::runtime
             {
             }
             else
+            // ignore wrappers
+            // ignore wrappers
             {
                 stk = append(stk, uf.pc + 1);
             }
@@ -322,6 +351,7 @@ namespace golang::runtime
         callCgoSymbolizer(& arg);
         if(arg.file == nullptr && arg.funcName == nullptr)
         {
+            // No useful information from symbolizer.
             return nullptr;
         }
         gocpp::slice<Frame> frames = {};
@@ -341,6 +371,10 @@ namespace golang::runtime
             }
             callCgoSymbolizer(& arg);
         }
+        // No more frames for this PC. Tell the symbolizer we are done.
+        // We don't try to maintain a single cgoSymbolizerArg for the
+        // whole use of Frames, because there would be no good way to tell
+        // the symbolizer when we are done.
         arg.pc = 0;
         callCgoSymbolizer(& arg);
         return frames;
@@ -415,6 +449,9 @@ namespace golang::runtime
 
     struct funcInfo rec::funcInfo(golang::runtime::_func* f)
     {
+        // Find the module containing fn. fn is located in the pclntable.
+        // The unsafe.Pointer to uintptr conversions and arithmetic
+        // are safe because we are working with module addresses.
         auto ptr = uintptr_t(gocpp::unsafe_pointer(f));
         moduledata* mod = {};
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
@@ -780,6 +817,14 @@ namespace golang::runtime
                 rec::addGlobals(gocpp::recv(gcController), int64_t(scanDataSize + scanBSSSize));
             }
         }
+        // Modules appear in the moduledata linked list in the order they are
+        // loaded by the dynamic loader, with one exception: the
+        // firstmoduledata itself the module that contains the runtime. This
+        // is not always the first module (when using -buildmode=shared, it
+        // is typically libstd.so, the second module). The order matters for
+        // typelinksinit, so we swap the first module with whatever module
+        // contains the main function.
+        // See Issue #18729.
         for(auto [i, md] : *modules)
         {
             if(md->hasmain != 0)
@@ -909,15 +954,18 @@ namespace golang::runtime
 
     void moduledataverify1(struct moduledata* datap)
     {
+        // Check that the pclntab's format is valid.
         auto hdr = datap->pcHeader;
         if(hdr->magic != 0xfffffff1 || hdr->pad1 != 0 || hdr->pad2 != 0 || hdr->minLC != sys::PCQuantum || hdr->ptrSize != goarch::PtrSize || hdr->textStart != datap->text)
         {
             println("runtime: pcHeader: magic="_s, hex(hdr->magic), "pad1="_s, hdr->pad1, "pad2="_s, hdr->pad2, "minLC="_s, hdr->minLC, "ptrSize="_s, hdr->ptrSize, "pcHeader.textStart="_s, hex(hdr->textStart), "text="_s, hex(datap->text), "pluginpath="_s, datap->pluginpath);
             go_throw("invalid function symbol table"_s);
         }
+        // ftab is lookup table for function by program counter.
         auto nftab = len(datap->ftab) - 1;
         for(auto i = 0; i < nftab; i++)
         {
+            // NOTE: ftab[nftab].entry is legal; it is the address beyond the final function.
             if(datap->ftab[i].entryoff > datap->ftab[i + 1].entryoff)
             {
                 auto f1 = funcInfo {(_func*)(gocpp::unsafe_pointer(& datap->pclntable[datap->ftab[i].funcoff])), datap};
@@ -982,6 +1030,7 @@ namespace golang::runtime
         {
             for(auto [i, sect] : md->textsectmap)
             {
+                // For the last section, include the end address (etext), as it is included in the functab.
                 if(off >= sect.vaddr && off < sect.end || (i == len(md->textsectmap) - 1 && off == sect.end))
                 {
                     res = sect.baseaddr + off - sect.vaddr;
@@ -990,6 +1039,7 @@ namespace golang::runtime
             }
             if(res > md->etext && GOARCH != "wasm"_s)
             {
+                // on wasm, functions do not live in the same address space as the linear memory
                 println("runtime: textAddr"_s, hex(res), "out of range"_s, hex(md->text), "-"_s, hex(md->etext));
                 go_throw("runtime: text offset out of range"_s);
             }
@@ -1012,9 +1062,11 @@ namespace golang::runtime
             {
                 if(sect.baseaddr > pc)
                 {
+                    // pc is not in any section.
                     return {0, false};
                 }
                 auto end = sect.baseaddr + (sect.end - sect.vaddr);
+                // For the last section, include the end address (etext), as it is included in the functab.
                 if(i == len(md->textsectmap) - 1)
                 {
                     end++;
@@ -1052,6 +1104,10 @@ namespace golang::runtime
         {
             return nullptr;
         }
+        // This must interpret PC non-strictly so bad PCs (those between functions) don't crash the runtime.
+        // We just report the preceding function in that situation. See issue 29735.
+        // TODO: Perhaps we should report no function at all in that case.
+        // The runtime currently doesn't have function end info, alas.
         auto [u, uf] = newInlineUnwinder(f, pc);
         if(! rec::isInlined(gocpp::recv(u), uf))
         {
@@ -1080,6 +1136,7 @@ namespace golang::runtime
         auto fn = rec::raw(gocpp::recv(f));
         if(rec::isInlined(gocpp::recv(fn)))
         {
+            // inlined version
             auto fi = (funcinl*)(gocpp::unsafe_pointer(fn));
             return funcNameForPrint(fi->name);
         }
@@ -1092,6 +1149,7 @@ namespace golang::runtime
         auto fn = rec::raw(gocpp::recv(f));
         if(rec::isInlined(gocpp::recv(fn)))
         {
+            // inlined version
             auto fi = (funcinl*)(gocpp::unsafe_pointer(fn));
             return fi->entry;
         }
@@ -1109,9 +1167,12 @@ namespace golang::runtime
         auto fn = rec::raw(gocpp::recv(f));
         if(rec::isInlined(gocpp::recv(fn)))
         {
+            // inlined version
             auto fi = (funcinl*)(gocpp::unsafe_pointer(fn));
             return {fi->file, int(fi->line)};
         }
+        // Pass strict=false here, because anyone can call this function,
+        // and they might just be wrong about targetpc belonging to f.
         int32_t line32;
         std::tie(file, line32) = funcline1(rec::funcInfo(gocpp::recv(f)), pc, false);
         return {file, int(line32)};
@@ -1124,6 +1185,7 @@ namespace golang::runtime
         auto fn = rec::raw(gocpp::recv(f));
         if(rec::isInlined(gocpp::recv(fn)))
         {
+            // inlined version
             auto fi = (funcinl*)(gocpp::unsafe_pointer(fn));
             return fi->startLine;
         }
@@ -1193,6 +1255,7 @@ namespace golang::runtime
     // isInlined reports whether f should be re-interpreted as a *funcinl.
     bool rec::isInlined(golang::runtime::_func* f)
     {
+        // see comment for funcinl.ones
         return f->entryOff == ~ uint32_t(0);
     }
 
@@ -1221,11 +1284,13 @@ namespace golang::runtime
         {
             return funcInfo {};
         }
+        // TODO: are datap.text and datap.minpc always equal?
         auto x = uintptr_t(pcOff) + datap->text - datap->minpc;
         auto b = x / pcbucketsize;
         auto i = x % pcbucketsize / (pcbucketsize / nsub);
         auto ffb = (findfuncbucket*)(add(gocpp::unsafe_pointer(datap->findfunctab), b * gocpp::Sizeof<findfuncbucket>()));
         auto idx = ffb->idx + uint32_t(ffb->subbuckets[i]);
+        // Find the ftab entry.
         for(; datap->ftab[idx + 1].entryoff <= pcOff; )
         {
             idx++;
@@ -1391,11 +1456,20 @@ namespace golang::runtime
         {
             auto mp = acquirem();
             auto cache = & mp->pcvalueCache;
+            // The cache can be used by the signal handler on this M. Avoid
+            // re-entrant use of the cache. The signal handler can also write inUse,
+            // but will always restore its value, so we can use a regular increment
+            // even if we get signaled in the middle of it.
             cache->inUse++;
             if(cache->inUse == 1)
             {
                 for(auto [i, gocpp_ignored] : cache->entries[ck])
                 {
+                    // We check off first because we're more
+                    // likely to have multiple entries with
+                    // different offsets for the same targetpc
+                    // than the other way around, so we'll usually
+                    // fail in the first clause.
                     auto ent = & cache->entries[ck][i];
                     if(ent->off == off && ent->targetpc == targetpc)
                     {
@@ -1417,6 +1491,8 @@ namespace golang::runtime
             else
             if(debugCheckCache && (cache->inUse < 1 || cache->inUse > 2))
             {
+                // Catch accounting errors or deeply reentrant use. In principle
+                // "inUse" should never exceed 2.
                 go_throw("cache.inUse out of range"_s);
             }
             cache->inUse--;
@@ -1446,6 +1522,12 @@ namespace golang::runtime
             }
             if(targetpc < pc)
             {
+                // Replace a random entry in the cache. Random
+                // replacement prevents a performance cliff if
+                // a recursive stack's cycle is slightly
+                // larger than the cache.
+                // Put the new element at the beginning,
+                // since it is the most likely to be newly used.
                 if(debugCheckCache && checkPC != 0)
                 {
                     if(checkVal != val || checkPC != prevpc)
@@ -1478,6 +1560,8 @@ namespace golang::runtime
             }
             prevpc = pc;
         }
+        // If there was a table, it should have covered all program counters.
+        // If not, something is wrong.
         if(rec::Load(gocpp::recv(panicking)) != 0 || ! strict)
         {
             return {- 1, 0};
@@ -1537,10 +1621,12 @@ namespace golang::runtime
         {
             return "?"_s;
         }
+        // Make sure the cu index and file offset are valid
         if(auto fileoff = datap->cutab[f._func.cuOffset + uint32_t(fileno)]; fileoff != ~ uint32_t(0))
         {
             return gostringnocopy(& datap->filetab[fileoff]);
         }
+        // pcln section is corrupt.
         return "?"_s;
     }
 
@@ -1557,6 +1643,7 @@ namespace golang::runtime
         std::tie(line, std::ignore) = pcvalue(f, f._func.pcln, targetpc, strict);
         if(fileno == - 1 || line == - 1 || int(fileno) >= len(datap->filetab))
         {
+            // print("looking for ", hex(targetpc), " in ", funcname(f), " got file=", fileno, " line=", lineno, "\n")
             return {"?"_s, 0};
         }
         file = funcfile(f, fileno);
@@ -1644,6 +1731,7 @@ namespace golang::runtime
         {
             return nullptr;
         }
+        // load gofunc address early so that we calculate during cache misses
         auto base = f.datap->gofunc;
         auto p = uintptr_t(gocpp::unsafe_pointer(& f._func.nfuncdata)) + gocpp::Sizeof<uint8_t>() + uintptr_t(f._func.npcdata) * 4 + uintptr_t(i) * 4;
         auto off = *(uint32_t*)(gocpp::unsafe_pointer(p));
@@ -1664,6 +1752,8 @@ namespace golang::runtime
     {
         gocpp::slice<unsigned char> newp;
         bool ok;
+        // For both uvdelta and pcdelta, the common case (~70%)
+        // is that they are a single byte. If so, avoid calling readvarint.
         auto uvdelta = uint32_t(p[0]);
         if(uvdelta == 0 && ! first)
         {
@@ -1747,6 +1837,9 @@ namespace golang::runtime
     //go:nowritebarrier
     struct bitvector stackmapdata(struct stackmap* stkmap, int32_t n)
     {
+        // Check this invariant only when stackDebug is on at all.
+        // The invariant is already checked by many of stackmapdata's callers,
+        // and disabling it by default allows stackmapdata to be inlined.
         if(stackDebug > 0 && (n < 0 || n >= stkmap->n))
         {
             go_throw("stackmapdata: index out of range"_s);

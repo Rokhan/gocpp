@@ -199,14 +199,20 @@ namespace golang::runtime
     {
         if(! rec::tryLock(gocpp::recv(l)))
         {
+            // This must happen during a STW, so we can't fail to acquire the lock.
+            // If we did, something went wrong. Throw.
             go_throw("failed to acquire lock to start a GC transition"_s);
         }
         if(l->gcEnabled == enableGC)
         {
             go_throw("transitioning GC to the same state as before?"_s);
         }
+        // Flush whatever was left between the last update and now.
         rec::updateLocked(gocpp::recv(l), now);
         l->gcEnabled = enableGC;
+        // N.B. finishGCTransition releases the lock.
+        // We don't release here to increase the chance that if there's a failure
+        // to finish the transition, that we throw on failing to acquire the lock.
         l->transitioning = true;
     }
 
@@ -219,6 +225,10 @@ namespace golang::runtime
         {
             go_throw("finishGCTransition called without starting one?"_s);
         }
+        // Count the full nprocs set of CPU time because the world is stopped
+        // between startGCTransition and finishGCTransition. Even though the GC
+        // isn't running on all CPUs, it is preventing user code from doing so,
+        // so it might as well be.
         if(auto lastUpdate = rec::Load(gocpp::recv(l->lastUpdate)); now >= lastUpdate)
         {
             rec::accumulate(gocpp::recv(l), 0, (now - lastUpdate) * int64_t(l->nprocs));
@@ -259,6 +269,9 @@ namespace golang::runtime
     {
         if(! rec::tryLock(gocpp::recv(l)))
         {
+            // We failed to acquire the lock, which means something else is currently
+            // updating. Just drop our update, the next one to update will include
+            // our total assist time.
             return;
         }
         if(l->transitioning)
@@ -275,15 +288,18 @@ namespace golang::runtime
         auto lastUpdate = rec::Load(gocpp::recv(l->lastUpdate));
         if(now < lastUpdate)
         {
+            // Defensively avoid overflow. This isn't even the latest update anyway.
             return;
         }
         auto windowTotalTime = (now - lastUpdate) * int64_t(l->nprocs);
         rec::Store(gocpp::recv(l->lastUpdate), now);
+        // Drain the pool of assist time.
         auto assistTime = rec::Load(gocpp::recv(l->assistTimePool));
         if(assistTime != 0)
         {
             rec::Add(gocpp::recv(l->assistTimePool), - assistTime);
         }
+        // Drain the pool of idle time.
         auto idleTime = rec::Load(gocpp::recv(l->idleTimePool));
         if(idleTime != 0)
         {
@@ -291,6 +307,12 @@ namespace golang::runtime
         }
         if(! l->test)
         {
+            // Consume time from in-flight events. Make sure we're not preemptible so allp can't change.
+            // The reason we do this instead of just waiting for those events to finish and push updates
+            // is to ensure that all the time we're accounting for happened sometime between lastUpdate
+            // and now. This dramatically simplifies reasoning about the limiter because we're not at
+            // risk of extra time being accounted for in this window than actually happened in this window,
+            // leading to all sorts of weird transient behavior.
             auto mp = acquirem();
             for(auto [gocpp_ignored, pp] : allp)
             {
@@ -326,11 +348,30 @@ namespace golang::runtime
             }
             releasem(mp);
         }
+        // Compute total GC time.
         auto windowGCTime = assistTime;
         if(l->gcEnabled)
         {
             windowGCTime += int64_t(double(windowTotalTime) * gcBackgroundUtilization);
         }
+        // Subtract out all idle time from the total time. Do this after computing
+        // GC time, because the background utilization is dependent on the *real*
+        // total time, not the total time after idle time is subtracted.
+        // Idle time is counted as any time that a P is on the P idle list plus idle mark
+        // time. Idle mark workers soak up time that the application spends idle.
+        // On a heavily undersubscribed system, any additional idle time can skew GC CPU
+        // utilization, because the GC might be executing continuously and thrashing,
+        // yet the CPU utilization with respect to GOMAXPROCS will be quite low, so
+        // the limiter fails to turn on. By subtracting idle time, we're removing time that
+        // we know the application was idle giving a more accurate picture of whether
+        // the GC is thrashing.
+        // Note that this can cause the limiter to turn on even if it's not needed. For
+        // instance, on a system with 32 Ps but only 1 running goroutine, each GC will have
+        // 8 dedicated GC workers. Assuming the GC cycle is half mark phase and half sweep
+        // phase, then the GC CPU utilization over that cycle, with idle time removed, will
+        // be 8/(8+2) = 80%. Even though the limiter turns on, though, assist should be
+        // unnecessary, as the GC has way more CPU time to outpace the 1 goroutine that's
+        // running.
         windowTotalTime -= idleTime;
         rec::accumulate(gocpp::recv(l), windowTotalTime - windowGCTime, windowGCTime);
     }
@@ -343,7 +384,13 @@ namespace golang::runtime
     {
         auto headroom = l->bucket.capacity - l->bucket.fill;
         auto enabled = headroom == 0;
+        // Let's be careful about three things here:
+        // 1. The addition and subtraction, for the invariants.
+        // 2. Overflow.
+        // 3. Excessive mutation of l.enabled, which is accessed
+        // by all assists, potentially more than once.
         auto change = gcTime - mutatorTime;
+        // Handle limiting case.
         if(change > 0 && headroom <= uint64_t(change))
         {
             l->overflow += uint64_t(change) - headroom;
@@ -355,12 +402,15 @@ namespace golang::runtime
             }
             return;
         }
+        // Handle non-limiting cases.
         if(change < 0 && l->bucket.fill <= uint64_t(- change))
         {
+            // Bucket emptied.
             l->bucket.fill = 0;
         }
         else
         {
+            // All other cases.
             l->bucket.fill -= uint64_t(- change);
         }
         if(change != 0 && enabled)
@@ -394,8 +444,11 @@ namespace golang::runtime
     {
         if(! rec::tryLock(gocpp::recv(l)))
         {
+            // This must happen during a STW, so we can't fail to acquire the lock.
+            // If we did, something went wrong. Throw.
             go_throw("failed to acquire lock to reset capacity"_s);
         }
+        // Flush the rest of the time for this period.
         rec::updateLocked(gocpp::recv(l), now);
         l->nprocs = nprocs;
         l->bucket.capacity = uint64_t(nprocs) * capacityPerProc;
@@ -434,6 +487,8 @@ namespace golang::runtime
     // before and after timestamps cross a 2^(64-limiterEventBits) boundary.
     int64_t rec::duration(golang::runtime::limiterEventStamp s, int64_t now)
     {
+        // The top limiterEventBits bits of the timestamp are derived from the current time
+        // when computing a duration.
         auto start = int64_t((uint64_t(now) & limiterEventTypeMask) | (uint64_t(s) &^ limiterEventTypeMask));
         if(now < start)
         {
@@ -507,17 +562,22 @@ namespace golang::runtime
     {
         runtime::limiterEventType typ;
         int64_t duration;
+        // Read the limiter event timestamp and update it to now.
         for(; ; )
         {
             auto old = limiterEventStamp(rec::Load(gocpp::recv(e->stamp)));
             typ = rec::typ(gocpp::recv(old));
             if(typ == limiterEventNone)
             {
+                // There's no in-flight event, so just push that up.
                 return {typ, duration};
             }
             duration = rec::duration(gocpp::recv(old), now);
             if(duration == 0)
             {
+                // We might have a stale now value, or this crossed the
+                // 2^(64-limiterEventBits) boundary in the clock readings.
+                // Just ignore it.
                 return {limiterEventNone, 0};
             }
             auto go_new = makeLimiterEventStamp(typ, now);
@@ -551,8 +611,15 @@ namespace golang::runtime
         auto duration = rec::duration(gocpp::recv(stamp), now);
         if(duration == 0)
         {
+            // It's possible that we're missing time because we crossed a
+            // 2^(64-limiterEventBits) boundary between the start and end.
+            // In this case, we're dropping that information. This is OK because
+            // at worst it'll cause a transient hiccup that will quickly resolve
+            // itself as all new timestamps begin on the other side of the boundary.
+            // Such a hiccup should be incredibly rare.
             return;
         }
+        // Account for the event.
         //Go switch emulation
         {
             auto condition = typ;

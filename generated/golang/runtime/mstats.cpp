@@ -323,6 +323,8 @@ namespace golang::runtime
             println(offset);
             go_throw("memstats.heapStats not aligned to 8 bytes"_s);
         }
+        // Ensure the size of heapStatsDelta causes adjacent fields/slots (e.g.
+        // [3]heapStatsDelta) to be 8-byte aligned.
         if(auto size = gocpp::Sizeof<heapStatsDelta>(); size % 8 != 0)
         {
             println(size);
@@ -338,6 +340,7 @@ namespace golang::runtime
     // collection cycle.
     void ReadMemStats(struct MemStats* m)
     {
+        // nil check test before we switch stacks, see issue 61158
         _ = m->Alloc;
         auto stw = stopTheWorld(stwReadMemStats);
         systemstack([=]() mutable -> void
@@ -401,10 +404,21 @@ namespace golang::runtime
     void readmemstats_m(struct MemStats* stats)
     {
         assertWorldStopped();
+        // Flush mcaches to mcentral before doing anything else.
+        // Flushing to the mcentral may in general cause stats to
+        // change as mcentral data structures are manipulated.
         systemstack(flushallmcaches);
+        // Calculate memory allocator stats.
+        // During program execution we only count number of frees and amount of freed memory.
+        // Current number of alive objects in the heap and amount of alive heap memory
+        // are calculated by scanning all spans.
+        // Total number of mallocs is calculated as number of frees plus number of alive objects.
+        // Similarly, total amount of allocated memory is calculated as amount of freed memory
+        // plus amount of alive heap memory.
         // Collect consistent stats, which are the source-of-truth in some cases.
         heapStatsDelta consStats = {};
         rec::unsafeRead(gocpp::recv(memstats.heapStats), & consStats);
+        // Collect large allocation stats.
         auto totalAlloc = consStats.largeAlloc;
         auto nMalloc = consStats.largeAllocCount;
         auto totalFree = consStats.largeFree;
@@ -414,17 +428,26 @@ namespace golang::runtime
         for(auto [i, gocpp_ignored] : bySize)
         {
             bySize[i].Size = uint32_t(class_to_size[i]);
+            // Malloc stats.
             auto a = consStats.smallAllocCount[i];
             totalAlloc += a * uint64_t(class_to_size[i]);
             nMalloc += a;
             bySize[i].Mallocs = a;
+            // Free stats.
             auto f = consStats.smallFreeCount[i];
             totalFree += f * uint64_t(class_to_size[i]);
             nFree += f;
             bySize[i].Frees = f;
         }
+        // Account for tiny allocations.
+        // For historical reasons, MemStats includes tiny allocations
+        // in both the total free and total alloc count. This double-counts
+        // memory in some sense because their tiny allocation block is also
+        // counted. Tracking the lifetime of individual tiny allocations is
+        // currently not done because it would be too expensive.
         nFree += consStats.tinyAllocCount;
         nMalloc += consStats.tinyAllocCount;
+        // Calculate derived stats.
         auto stackInUse = uint64_t(consStats.inStacks);
         auto gcWorkBufInUse = uint64_t(consStats.inWorkBufs);
         auto gcProgPtrScalarBitsInUse = uint64_t(consStats.inPtrScalarBits);
@@ -432,6 +455,19 @@ namespace golang::runtime
         auto heapGoal = rec::heapGoal(gocpp::recv(gcController));
         if(doubleCheckReadMemStats)
         {
+            // Only check this if we're debugging. It would be bad to crash an application
+            // just because the debugging stats are wrong. We mostly rely on tests to catch
+            // these issues, and we enable the double check mode for tests.
+            // The world is stopped, so the consistent stats (after aggregation)
+            // should be identical to some combination of memstats. In particular:
+            // * memstats.heapInUse == inHeap
+            // * memstats.heapReleased == released
+            // * memstats.heapInUse + memstats.heapFree == committed - inStacks - inWorkBufs - inPtrScalarBits
+            // * memstats.totalAlloc == totalAlloc
+            // * memstats.totalFree == totalFree
+            // Check if that's actually true.
+            // Prevent sysmon and the tracer from skewing the stats since they can
+            // act without synchronizing with a STW. See #64401.
             lock(& sched.sysmonlock);
             lock(& trace.lock);
             if(rec::load(gocpp::recv(gcController.heapInUse)) != uint64_t(consStats.inHeap))
@@ -466,6 +502,9 @@ namespace golang::runtime
                 print("runtime: consistent value="_s, totalFree, "\n"_s);
                 go_throw("totalFree and consistent stats are not equal"_s);
             }
+            // Also check that mappedReady lines up with totalMapped - released.
+            // This isn't really the same type of "make sure consistent stats line up" situation,
+            // but this is an opportune time to check.
             if(rec::Load(gocpp::recv(gcController.mappedReady)) != totalMapped - uint64_t(consStats.released))
             {
                 print("runtime: mappedReady="_s, rec::Load(gocpp::recv(gcController.mappedReady)), "\n"_s);
@@ -477,6 +516,7 @@ namespace golang::runtime
             unlock(& trace.lock);
             unlock(& sched.sysmonlock);
         }
+        // We've calculated all the values we need. Now, populate stats.
         stats->Alloc = totalAlloc - totalFree;
         stats->TotalAlloc = totalAlloc;
         stats->Sys = totalMapped;
@@ -484,17 +524,34 @@ namespace golang::runtime
         stats->Frees = nFree;
         stats->HeapAlloc = totalAlloc - totalFree;
         stats->HeapSys = rec::load(gocpp::recv(gcController.heapInUse)) + rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased));
+        // By definition, HeapIdle is memory that was mapped
+        // for the heap but is not currently used to hold heap
+        // objects. It also specifically is memory that can be
+        // used for other purposes, like stacks, but this memory
+        // is subtracted out of HeapSys before it makes that
+        // transition. Put another way:
+        // HeapSys = bytes allocated from the OS for the heap - bytes ultimately used for non-heap purposes
+        // HeapIdle = bytes allocated from the OS for the heap - bytes ultimately used for any purpose
+        // or
+        // HeapSys = sys - stacks_inuse - gcWorkBufInUse - gcProgPtrScalarBitsInUse
+        // HeapIdle = sys - stacks_inuse - gcWorkBufInUse - gcProgPtrScalarBitsInUse - heapInUse
+        // => HeapIdle = HeapSys - heapInUse = heapFree + heapReleased
         stats->HeapIdle = rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased));
         stats->HeapInuse = rec::load(gocpp::recv(gcController.heapInUse));
         stats->HeapReleased = rec::load(gocpp::recv(gcController.heapReleased));
         stats->HeapObjects = nMalloc - nFree;
         stats->StackInuse = stackInUse;
+        // memstats.stacks_sys is only memory mapped directly for OS stacks.
+        // Add in heap-allocated stack memory for user consumption.
         stats->StackSys = stackInUse + rec::load(gocpp::recv(memstats.stacks_sys));
         stats->MSpanInuse = uint64_t(mheap_.spanalloc.inuse);
         stats->MSpanSys = rec::load(gocpp::recv(memstats.mspan_sys));
         stats->MCacheInuse = uint64_t(mheap_.cachealloc.inuse);
         stats->MCacheSys = rec::load(gocpp::recv(memstats.mcache_sys));
         stats->BuckHashSys = rec::load(gocpp::recv(memstats.buckhash_sys));
+        // MemStats defines GCSys as an aggregate of all memory related
+        // to the memory management system, but we track this memory
+        // at a more granular level in the runtime.
         stats->GCSys = rec::load(gocpp::recv(memstats.gcMiscSys)) + gcWorkBufInUse + gcProgPtrScalarBitsInUse;
         stats->OtherSys = rec::load(gocpp::recv(memstats.other_sys));
         stats->NextGC = heapGoal;
@@ -506,6 +563,10 @@ namespace golang::runtime
         stats->NumForcedGC = memstats.numforcedgc;
         stats->GCCPUFraction = memstats.gc_cpu_fraction;
         stats->EnableGC = true;
+        // stats.BySize and bySize might not match in length.
+        // That's OK, stats.BySize cannot change due to backwards
+        // compatibility issues. copy will copy the minimum amount
+        // of values between the two of them.
         copy(stats->BySize.make_slice(0), bySize.make_slice(0));
     }
 
@@ -525,16 +586,22 @@ namespace golang::runtime
     void readGCStats_m(gocpp::slice<uint64_t>* pauses)
     {
         auto p = *pauses;
+        // Calling code in runtime/debug should make the slice large enough.
         if(cap(p) < len(memstats.pause_ns) + 3)
         {
             go_throw("short slice passed to readGCStats"_s);
         }
+        // Pass back: pauses, pause ends, last gc (absolute time), number of gc, total pause ns.
         lock(& mheap_.lock);
         auto n = memstats.numgc;
         if(n > uint32_t(len(memstats.pause_ns)))
         {
             n = uint32_t(len(memstats.pause_ns));
         }
+        // The pause buffer is circular. The most recent pause is at
+        // pause_ns[(numgc-1)%len(pause_ns)], and then backward
+        // from there to go back farther in time. We deliver the times
+        // most recent first (in p[0]).
         p = p.make_slice(0, cap(p));
         for(auto i = uint32_t(0); i < n; i++)
         {
@@ -767,6 +834,7 @@ namespace golang::runtime
             auto seq = rec::Add(gocpp::recv(pp->statsSeq), 1);
             if(seq % 2 == 0)
             {
+                // Should have been incremented to odd.
                 print("runtime: seq="_s, seq, "\n"_s);
                 go_throw("bad sequence number"_s);
             }
@@ -800,6 +868,7 @@ namespace golang::runtime
             auto seq = rec::Add(gocpp::recv(pp->statsSeq), 1);
             if(seq % 2 != 0)
             {
+                // Should have been incremented to even.
                 print("runtime: seq="_s, seq, "\n"_s);
                 go_throw("bad sequence number"_s);
             }
@@ -845,24 +914,47 @@ namespace golang::runtime
     // or metricsSema must be held.
     void rec::read(golang::runtime::consistentHeapStats* m, struct heapStatsDelta* out)
     {
+        // Getting preempted after this point is not safe because
+        // we read allp. We need to make sure a STW can't happen
+        // so it doesn't change out from under us.
         auto mp = acquirem();
+        // Get the current generation. We can be confident that this
+        // will not change since read is serialized and is the only
+        // one that modifies currGen.
         auto currGen = rec::Load(gocpp::recv(m->gen));
         auto prevGen = currGen - 1;
         if(currGen == 0)
         {
             prevGen = 2;
         }
+        // Prevent writers without a P from writing while we update gen.
         runtime::lock(& m->noPLock);
+        // Rotate gen, effectively taking a snapshot of the state of
+        // these statistics at the point of the exchange by moving
+        // writers to the next set of deltas.
+        // This exchange is safe to do because we won't race
+        // with anyone else trying to update this value.
         rec::Swap(gocpp::recv(m->gen), (currGen + 1) % 3);
+        // Allow P-less writers to continue. They'll be writing to the
+        // next generation now.
         runtime::unlock(& m->noPLock);
         for(auto [gocpp_ignored, p] : allp)
         {
+            // Spin until there are no more writers.
             for(; rec::Load(gocpp::recv(p->statsSeq)) % 2 != 0; )
             {
             }
         }
+        // At this point we've observed that each sequence
+        // number is even, so any future writers will observe
+        // the new gen value. That means it's safe to read from
+        // the other deltas in the stats buffer.
+        // Perform our responsibilities and free up
+        // stats[prevGen] for the next time we want to take
+        // a snapshot.
         rec::merge(gocpp::recv(m->stats[currGen]), & m->stats[prevGen]);
         m->stats[prevGen] = heapStatsDelta {};
+        // Finally, copy out the complete delta.
         *out = m->stats[currGen];
         releasem(mp);
     }
@@ -941,22 +1033,36 @@ namespace golang::runtime
         int64_t markIdleCpu = {};
         if(gcMarkPhase)
         {
+            // N.B. These stats may have stale values if the GC is not
+            // currently in the mark phase.
             markAssistCpu = rec::Load(gocpp::recv(gcController.assistTime));
             markDedicatedCpu = rec::Load(gocpp::recv(gcController.dedicatedMarkTime));
             markFractionalCpu = rec::Load(gocpp::recv(gcController.fractionalMarkTime));
             markIdleCpu = rec::Load(gocpp::recv(gcController.idleMarkTime));
         }
+        // The rest of the stats below are either derived from the above or
+        // are reset on each mark termination.
         auto scavAssistCpu = rec::Load(gocpp::recv(scavenge.assistTime));
         auto scavBgCpu = rec::Load(gocpp::recv(scavenge.backgroundTime));
+        // Update cumulative GC CPU stats.
         s->gcAssistTime += markAssistCpu;
         s->gcDedicatedTime += markDedicatedCpu + markFractionalCpu;
         s->gcIdleTime += markIdleCpu;
         s->gcTotalTime += markAssistCpu + markDedicatedCpu + markFractionalCpu + markIdleCpu;
+        // Update cumulative scavenge CPU stats.
         s->scavengeAssistTime += scavAssistCpu;
         s->scavengeBgTime += scavBgCpu;
         s->scavengeTotalTime += scavAssistCpu + scavBgCpu;
+        // Update total CPU.
         s->totalTime = sched.totaltime + (now - sched.procresizetime) * int64_t(gomaxprocs);
         s->idleTime += rec::Load(gocpp::recv(sched.idleTime));
+        // Compute userTime. We compute this indirectly as everything that's not the above.
+        // Since time spent in _Pgcstop is covered by gcPauseTime, and time spent in _Pidle
+        // is covered by idleTime, what we're left with is time spent in _Prunning and _Psyscall,
+        // the latter of which is fine because the P will either go idle or get used for something
+        // else via sysmon. Meanwhile if we subtract GC time from whatever's left, we get non-GC
+        // _Prunning time. Note that this still leaves time spent in sweeping and in the scheduler,
+        // but that's fine. The overwhelming majority of this time will be actual user time.
         s->userTime = s->totalTime - (s->gcTotalTime + s->scavengeTotalTime + s->idleTime);
     }
 

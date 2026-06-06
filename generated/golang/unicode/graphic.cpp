@@ -31,6 +31,8 @@ namespace golang::unicode
     // spaces, from categories [L], [M], [N], [P], [S], [Zs].
     bool IsGraphic(gocpp::rune r)
     {
+        // We convert to uint32 to avoid the extra test for negative,
+        // and in the index we convert to uint8 to avoid the range check.
         if(uint32_t(r) <= MaxLatin1)
         {
             return properties[uint8_t(r)] & pg != 0;
@@ -88,6 +90,7 @@ namespace golang::unicode
         {
             return properties[uint8_t(r)] & pC != 0;
         }
+        // All control characters are < MaxLatin1.
         return false;
     }
 
@@ -104,6 +107,7 @@ namespace golang::unicode
     // IsMark reports whether the rune is a mark character (category [M]).
     bool IsMark(gocpp::rune r)
     {
+        // There are no mark characters in Latin-1.
         return isExcludingLatin(Mark, r);
     }
 
@@ -138,6 +142,7 @@ namespace golang::unicode
     // Z and property [Pattern_White_Space].
     bool IsSpace(gocpp::rune r)
     {
+        // This property isn't the same as Z; special-case it.
         if(uint32_t(r) <= MaxLatin1)
         {
             //Go switch emulation

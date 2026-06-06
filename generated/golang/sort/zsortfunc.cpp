@@ -62,10 +62,12 @@ namespace golang::sort
         auto first = a;
         auto lo = 0;
         auto hi = b - a;
+        // Build heap with greatest element at top.
         for(auto i = (hi - 1) / 2; i >= 0; i--)
         {
             siftDown_func(data, i, hi, first);
         }
+        // Pop elements, largest first, into end of data.
         for(auto i = hi - 1; i >= 0; i--)
         {
             data.Swap(first, first + i);
@@ -92,11 +94,13 @@ namespace golang::sort
                 insertionSort_func(data, a, b);
                 return;
             }
+            // Fall back to heapsort if too many bad choices were made.
             if(limit == 0)
             {
                 heapSort_func(data, a, b);
                 return;
             }
+            // If the last partitioning was imbalanced, we need to breaking patterns.
             if(! wasBalanced)
             {
                 breakPatterns_func(data, a, b);
@@ -106,9 +110,13 @@ namespace golang::sort
             if(hint == decreasingHint)
             {
                 reverseRange_func(data, a, b);
+                // The chosen pivot was pivot-a elements after the start of the array.
+                // After reversing it is pivot-a elements before the end of the array.
+                // The idea came from Rust's implementation.
                 pivot = (b - 1) - (pivot - a);
                 hint = increasingHint;
             }
+            // The slice is likely already sorted.
             if(wasBalanced && wasPartitioned && hint == increasingHint)
             {
                 if(partialInsertionSort_func(data, a, b))
@@ -116,6 +124,8 @@ namespace golang::sort
                     return;
                 }
             }
+            // Probably the slice contains many duplicate elements, partition the slice into
+            // elements equal to and elements greater than the pivot.
             if(a > 0 && ! data.Less(a - 1, pivot))
             {
                 auto mid = partitionEqual_func(data, a, b, pivot);
@@ -150,6 +160,7 @@ namespace golang::sort
         int newpivot;
         bool alreadyPartitioned;
         data.Swap(a, pivot);
+        // i and j are inclusive of the elements remaining to be partitioned
         auto [i, j] = std::tuple{a + 1, b - 1};
         for(; i <= j && data.Less(i, a); )
         {
@@ -195,6 +206,7 @@ namespace golang::sort
     {
         int newpivot;
         data.Swap(a, pivot);
+        // i and j are inclusive of the elements remaining to be partitioned
         auto [i, j] = std::tuple{a + 1, b - 1};
         for(; ; )
         {
@@ -238,6 +250,7 @@ namespace golang::sort
                 return false;
             }
             data.Swap(i, i - 1);
+            // Shift the smaller one to the left.
             if(i - a >= 2)
             {
                 for(auto j = i - 1; j >= 1; j--)
@@ -249,6 +262,7 @@ namespace golang::sort
                     data.Swap(j, j - 1);
                 }
             }
+            // Shift the greater one to the right.
             if(b - i >= 2)
             {
                 for(auto j = i + 1; j < b; j++)
@@ -305,10 +319,12 @@ namespace golang::sort
         {
             if(l >= shortestNinther)
             {
+                // Tukey ninther method, the idea came from Rust's implementation.
                 i = medianAdjacent_func(data, i, & swaps);
                 j = medianAdjacent_func(data, j, & swaps);
                 k = medianAdjacent_func(data, k, & swaps);
             }
+            // Find the median among i, j, k and stores it into j.
             j = median_func(data, i, j, k, & swaps);
         }
         //Go switch emulation
@@ -380,6 +396,7 @@ namespace golang::sort
 
     void stable_func(struct lessSwap data, int n)
     {
+        // must be > 0
         auto blockSize = 20;
         auto [a, b] = std::tuple{0, blockSize};
         for(; b <= n; )
@@ -427,8 +444,14 @@ namespace golang::sort
     // which improves performance.
     void symMerge_func(struct lessSwap data, int a, int m, int b)
     {
+        // Avoid unnecessary recursions of symMerge
+        // by direct insertion of data[a] into data[m:b]
+        // if data[a:m] only contains one element.
         if(m - a == 1)
         {
+            // Use binary search to find the lowest index i
+            // such that data[i] >= data[a] for m <= i < b.
+            // Exit the search loop with i == b in case no such index exists.
             auto i = m;
             auto j = b;
             for(; i < j; )
@@ -443,14 +466,21 @@ namespace golang::sort
                     j = h;
                 }
             }
+            // Swap values until data[a] reaches the position before i.
             for(auto k = a; k < i - 1; k++)
             {
                 data.Swap(k, k + 1);
             }
             return;
         }
+        // Avoid unnecessary recursions of symMerge
+        // by direct insertion of data[m] into data[a:m]
+        // if data[m:b] only contains one element.
         if(b - m == 1)
         {
+            // Use binary search to find the lowest index i
+            // such that data[i] > data[m] for a <= i < m.
+            // Exit the search loop with i == m in case no such index exists.
             auto i = a;
             auto j = m;
             for(; i < j; )
@@ -465,6 +495,7 @@ namespace golang::sort
                     j = h;
                 }
             }
+            // Swap values until data[m] reaches the position i.
             for(auto k = m; k > i; k--)
             {
                 data.Swap(k, k - 1);
@@ -534,6 +565,7 @@ namespace golang::sort
                 j -= i;
             }
         }
+        // i == j
         swapRange_func(data, m - i, m, i);
     }
 

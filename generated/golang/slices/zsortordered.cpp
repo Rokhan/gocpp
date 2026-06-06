@@ -66,10 +66,12 @@ namespace golang::slices
         auto first = a;
         auto lo = 0;
         auto hi = b - a;
+        // Build heap with greatest element at top.
         for(auto i = (hi - 1) / 2; i >= 0; i--)
         {
             siftDownOrdered(data, i, hi, first);
         }
+        // Pop elements, largest first, into end of data.
         for(auto i = hi - 1; i >= 0; i--)
         {
             std::tie(data[first], data[first + i]) = std::tuple{data[first + i], data[first]};
@@ -97,11 +99,13 @@ namespace golang::slices
                 insertionSortOrdered(data, a, b);
                 return;
             }
+            // Fall back to heapsort if too many bad choices were made.
             if(limit == 0)
             {
                 heapSortOrdered(data, a, b);
                 return;
             }
+            // If the last partitioning was imbalanced, we need to breaking patterns.
             if(! wasBalanced)
             {
                 breakPatternsOrdered(data, a, b);
@@ -111,9 +115,13 @@ namespace golang::slices
             if(hint == decreasingHint)
             {
                 reverseRangeOrdered(data, a, b);
+                // The chosen pivot was pivot-a elements after the start of the array.
+                // After reversing it is pivot-a elements before the end of the array.
+                // The idea came from Rust's implementation.
                 pivot = (b - 1) - (pivot - a);
                 hint = increasingHint;
             }
+            // The slice is likely already sorted.
             if(wasBalanced && wasPartitioned && hint == increasingHint)
             {
                 if(partialInsertionSortOrdered(data, a, b))
@@ -121,6 +129,8 @@ namespace golang::slices
                     return;
                 }
             }
+            // Probably the slice contains many duplicate elements, partition the slice into
+            // elements equal to and elements greater than the pivot.
             if(a > 0 && ! cmp::Less(data[a - 1], data[pivot]))
             {
                 auto mid = partitionEqualOrdered(data, a, b, pivot);
@@ -156,6 +166,7 @@ namespace golang::slices
         int newpivot;
         bool alreadyPartitioned;
         std::tie(data[a], data[pivot]) = std::tuple{data[pivot], data[a]};
+        // i and j are inclusive of the elements remaining to be partitioned
         auto [i, j] = std::tuple{a + 1, b - 1};
         for(; i <= j && cmp::Less(data[i], data[a]); )
         {
@@ -202,6 +213,7 @@ namespace golang::slices
     {
         int newpivot;
         std::tie(data[a], data[pivot]) = std::tuple{data[pivot], data[a]};
+        // i and j are inclusive of the elements remaining to be partitioned
         auto [i, j] = std::tuple{a + 1, b - 1};
         for(; ; )
         {
@@ -246,6 +258,7 @@ namespace golang::slices
                 return false;
             }
             std::tie(data[i], data[i - 1]) = std::tuple{data[i - 1], data[i]};
+            // Shift the smaller one to the left.
             if(i - a >= 2)
             {
                 for(auto j = i - 1; j >= 1; j--)
@@ -257,6 +270,7 @@ namespace golang::slices
                     std::tie(data[j], data[j - 1]) = std::tuple{data[j - 1], data[j]};
                 }
             }
+            // Shift the greater one to the right.
             if(b - i >= 2)
             {
                 for(auto j = i + 1; j < b; j++)
@@ -315,10 +329,12 @@ namespace golang::slices
         {
             if(l >= shortestNinther)
             {
+                // Tukey ninther method, the idea came from Rust's implementation.
                 i = medianAdjacentOrdered(data, i, & swaps);
                 j = medianAdjacentOrdered(data, j, & swaps);
                 k = medianAdjacentOrdered(data, k, & swaps);
             }
+            // Find the median among i, j, k and stores it into j.
             j = medianOrdered(data, i, j, k, & swaps);
         }
         //Go switch emulation
@@ -396,6 +412,7 @@ namespace golang::slices
     template<typename E>
     void stableOrdered(gocpp::slice<E> data, int n)
     {
+        // must be > 0
         auto blockSize = 20;
         auto [a, b] = std::tuple{0, blockSize};
         for(; b <= n; )
@@ -444,8 +461,14 @@ namespace golang::slices
     template<typename E>
     void symMergeOrdered(gocpp::slice<E> data, int a, int m, int b)
     {
+        // Avoid unnecessary recursions of symMerge
+        // by direct insertion of data[a] into data[m:b]
+        // if data[a:m] only contains one element.
         if(m - a == 1)
         {
+            // Use binary search to find the lowest index i
+            // such that data[i] >= data[a] for m <= i < b.
+            // Exit the search loop with i == b in case no such index exists.
             auto i = m;
             auto j = b;
             for(; i < j; )
@@ -460,14 +483,21 @@ namespace golang::slices
                     j = h;
                 }
             }
+            // Swap values until data[a] reaches the position before i.
             for(auto k = a; k < i - 1; k++)
             {
                 std::tie(data[k], data[k + 1]) = std::tuple{data[k + 1], data[k]};
             }
             return;
         }
+        // Avoid unnecessary recursions of symMerge
+        // by direct insertion of data[m] into data[a:m]
+        // if data[m:b] only contains one element.
         if(b - m == 1)
         {
+            // Use binary search to find the lowest index i
+            // such that data[i] > data[m] for a <= i < m.
+            // Exit the search loop with i == m in case no such index exists.
             auto i = a;
             auto j = m;
             for(; i < j; )
@@ -482,6 +512,7 @@ namespace golang::slices
                     j = h;
                 }
             }
+            // Swap values until data[m] reaches the position i.
             for(auto k = m; k > i; k--)
             {
                 std::tie(data[k], data[k - 1]) = std::tuple{data[k - 1], data[k]};
@@ -552,6 +583,7 @@ namespace golang::slices
                 j -= i;
             }
         }
+        // i == j
         swapRangeOrdered(data, m - i, m, i);
     }
 

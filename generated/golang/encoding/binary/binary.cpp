@@ -341,12 +341,14 @@ namespace golang::binary
 
     uint16_t rec::Uint16(golang::binary::littleEndian, gocpp::slice<unsigned char> b)
     {
+        // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[1];
         return uint16_t(b[0]) | (uint16_t(b[1]) << 8);
     }
 
     void rec::PutUint16(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
+        // early bounds check to guarantee safety of writes below
         _ = b[1];
         b[0] = (unsigned char)(v);
         b[1] = (unsigned char)(v >> 8);
@@ -359,12 +361,14 @@ namespace golang::binary
 
     uint32_t rec::Uint32(golang::binary::littleEndian, gocpp::slice<unsigned char> b)
     {
+        // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[3];
         return uint32_t(b[0]) | (uint32_t(b[1]) << 8) | (uint32_t(b[2]) << 16) | (uint32_t(b[3]) << 24);
     }
 
     void rec::PutUint32(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
+        // early bounds check to guarantee safety of writes below
         _ = b[3];
         b[0] = (unsigned char)(v);
         b[1] = (unsigned char)(v >> 8);
@@ -379,12 +383,14 @@ namespace golang::binary
 
     uint64_t rec::Uint64(golang::binary::littleEndian, gocpp::slice<unsigned char> b)
     {
+        // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[7];
         return uint64_t(b[0]) | (uint64_t(b[1]) << 8) | (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) | (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) | (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
     }
 
     void rec::PutUint64(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
+        // early bounds check to guarantee safety of writes below
         _ = b[7];
         b[0] = (unsigned char)(v);
         b[1] = (unsigned char)(v >> 8);
@@ -439,12 +445,14 @@ namespace golang::binary
 
     uint16_t rec::Uint16(golang::binary::bigEndian, gocpp::slice<unsigned char> b)
     {
+        // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[1];
         return uint16_t(b[1]) | (uint16_t(b[0]) << 8);
     }
 
     void rec::PutUint16(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
+        // early bounds check to guarantee safety of writes below
         _ = b[1];
         b[0] = (unsigned char)(v >> 8);
         b[1] = (unsigned char)(v);
@@ -457,12 +465,14 @@ namespace golang::binary
 
     uint32_t rec::Uint32(golang::binary::bigEndian, gocpp::slice<unsigned char> b)
     {
+        // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[3];
         return uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24);
     }
 
     void rec::PutUint32(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
+        // early bounds check to guarantee safety of writes below
         _ = b[3];
         b[0] = (unsigned char)(v >> 24);
         b[1] = (unsigned char)(v >> 16);
@@ -477,12 +487,14 @@ namespace golang::binary
 
     uint64_t rec::Uint64(golang::binary::bigEndian, gocpp::slice<unsigned char> b)
     {
+        // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[7];
         return uint64_t(b[7]) | (uint64_t(b[6]) << 8) | (uint64_t(b[5]) << 16) | (uint64_t(b[4]) << 24) | (uint64_t(b[3]) << 32) | (uint64_t(b[2]) << 40) | (uint64_t(b[1]) << 48) | (uint64_t(b[0]) << 56);
     }
 
     void rec::PutUint64(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
+        // early bounds check to guarantee safety of writes below
         _ = b[7];
         b[0] = (unsigned char)(v >> 56);
         b[1] = (unsigned char)(v >> 48);
@@ -537,6 +549,7 @@ namespace golang::binary
     // Read returns [io.ErrUnexpectedEOF].
     struct gocpp::error Read(io::Reader r, struct ByteOrder order, go_any data)
     {
+        // Fast path for basic types and slices.
         if(auto n = intDataSize(data); n != 0)
         {
             auto bs = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
@@ -643,6 +656,7 @@ namespace golang::binary
                         gocpp::slice<bool> data = gocpp::any_cast<gocpp::slice<bool>>(data);
                         for(auto [i, x] : bs)
                         {
+                            // Easier to loop over the input for 8-bit values.
                             data[i] = x != 0;
                         }
                         break;
@@ -734,6 +748,7 @@ namespace golang::binary
                         }
                         break;
                     }
+                    // fast path doesn't apply
                     default:
                     {
                         auto data = data;
@@ -747,6 +762,7 @@ namespace golang::binary
                 return nullptr;
             }
         }
+        // Fallback to reflect-based decoding.
         auto v = reflect::ValueOf(data);
         auto size = - 1;
         //Go switch emulation
@@ -792,6 +808,7 @@ namespace golang::binary
     // with blank (_) field names.
     struct gocpp::error Write(io::Writer w, struct ByteOrder order, go_any data)
     {
+        // Fast path for basic types and slices.
         if(auto n = intDataSize(data); n != 0)
         {
             auto bs = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
@@ -1088,6 +1105,7 @@ namespace golang::binary
             auto [gocpp_id_4, err] = rec::Write(gocpp::recv(w), bs);
             return err;
         }
+        // Fallback to reflect-based encoding.
         auto v = reflect::Indirect(reflect::ValueOf(data));
         auto size = dataSize(v);
         if(size < 0)
@@ -1400,6 +1418,11 @@ namespace golang::binary
                     auto l = rec::NumField(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
                     {
+                        // Note: Calling v.CanSet() below is an optimization.
+                        // It would be sufficient to check the field name,
+                        // but creating the StructField info for each field is
+                        // costly (run "go test -bench=ReadStruct" and compare
+                        // results when making changes to this code).
                         {
                             auto v_tmp = rec::Field(gocpp::recv(v), i);
                             if(auto& v = v_tmp; rec::CanSet(gocpp::recv(v)) || rec::Field(gocpp::recv(t), i).Name != "_"_s)
@@ -1502,6 +1525,7 @@ namespace golang::binary
                     auto l = rec::NumField(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
                     {
+                        // see comment for corresponding code in decoder.value()
                         {
                             auto v_tmp = rec::Field(gocpp::recv(v), i);
                             if(auto& v = v_tmp; rec::CanSet(gocpp::recv(v)) || rec::Field(gocpp::recv(t), i).Name != "_"_s)

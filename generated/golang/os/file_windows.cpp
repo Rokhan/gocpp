@@ -134,6 +134,8 @@ namespace golang::os
             x.name = name;
         })};
         runtime::SetFinalizer(f->file, [&](auto x){ return rec::close(x); });
+        // Ignore initialization errors.
+        // Assume any problems will show up in later I/O.
         rec::Init(gocpp::recv(f->file.pfd), kind, false);
         return f;
     }
@@ -179,6 +181,7 @@ namespace golang::os
         auto [r, e] = syscall::Open(path, flag | syscall::O_CLOEXEC, syscallMode(perm));
         if(e != nullptr)
         {
+            // We should return EISDIR when we are trying to open a directory with write access.
             if(e == syscall::ERROR_ACCESS_DENIED && (flag & O_WRONLY != 0 || flag & O_RDWR != 0))
             {
                 auto [pathp, e1] = syscall::UTF16PtrFromString(path);
@@ -235,6 +238,7 @@ namespace golang::os
                 x.Err = e;
             });
         }
+        // no need for a finalizer anymore
         runtime::SetFinalizer(file, nullptr);
         return err;
     }
@@ -249,6 +253,8 @@ namespace golang::os
         struct gocpp::error err;
         if(f->file.dirinfo != nullptr)
         {
+            // Free cached dirinfo, so we allocate a new one if we
+            // access this file as a directory again. See #35767 and #37161.
             rec::close(gocpp::recv(f->file.dirinfo));
             f->file.dirinfo = nullptr;
         }
@@ -296,6 +302,8 @@ namespace golang::os
                 x.Err = e;
             }));
         }
+        // Go file interface forces us to know whether
+        // name is a file or directory. Try both.
         e = syscall::DeleteFile(p);
         if(e == nullptr)
         {
@@ -306,6 +314,7 @@ namespace golang::os
         {
             return nullptr;
         }
+        // Both failed: figure out which error to return.
         if(e1 != e)
         {
             auto [a, e2] = syscall::GetFileAttributes(p);
@@ -392,8 +401,10 @@ namespace golang::os
             {
             }
             else
+            // Do nothing for path, like C:\.
             if(n > 0 && b[n - 1] == '\\')
             {
+                // Otherwise remove terminating \.
                 n--;
             }
             return syscall::UTF16ToString(b.make_slice(0, n));
@@ -429,19 +440,25 @@ namespace golang::os
     // If there is an error, it will be of type *LinkError.
     struct gocpp::error Symlink(gocpp::string oldname, gocpp::string newname)
     {
+        // '/' does not work in link's content
         oldname = fromSlash(oldname);
+        // need the exact location of the oldname when it's relative to determine if it's a directory
         auto destpath = oldname;
         if(auto v = volumeName(oldname); v == ""_s)
         {
             if(len(oldname) > 0 && IsPathSeparator(oldname[0]))
             {
+                // oldname is relative to the volume containing newname.
                 if(v = volumeName(newname); v != ""_s)
                 {
+                    // Prepend the volume explicitly, because it may be different from the
+                    // volume of the current working directory.
                     destpath = v + oldname;
                 }
             }
             else
             {
+                // oldname is relative to newname.
                 destpath = dirname(newname) + "\\"_s + oldname;
             }
         }
@@ -467,6 +484,8 @@ namespace golang::os
         err = syscall::CreateSymbolicLink(n, o, flags);
         if(err != nullptr)
         {
+            // the unprivileged create flag is unsupported
+            // below Windows 10 (1703, v10.0.14972). retry without it.
             flags &^= windows::SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
             err = syscall::CreateSymbolicLink(n, o, flags);
             if(err != nullptr)
@@ -488,6 +507,8 @@ namespace golang::os
             return {0, err};
         }
         auto attrs = uint32_t(syscall::FILE_FLAG_BACKUP_SEMANTICS);
+        // Use FILE_FLAG_OPEN_REPARSE_POINT, otherwise CreateFile will follow symlink.
+        // See https://docs.microsoft.com/en-us/windows/desktop/FileIO/symbolic-link-effects-on-file-systems-functions#createfile-and-createfiletransacted
         attrs |= syscall::FILE_FLAG_OPEN_REPARSE_POINT;
         syscall::Handle h;
         std::tie(h, err) = syscall::CreateFile(p, 0, 0, nullptr, syscall::OPEN_EXISTING, attrs, 0);
@@ -513,8 +534,10 @@ namespace golang::os
         {
             if(len(path) < 4 || path.make_slice(0, 4) != "\\??\\"_s)
             {
+                // unexpected path, return it as is
                 return {path, nullptr};
             }
+            // we have path that start with \??\
             auto s = path.make_slice(4);
             //Go switch emulation
             {
@@ -531,6 +554,7 @@ namespace golang::os
                         break;
                 }
             }
+            // handle paths, like \??\Volume{abc}\...
             auto [h, err] = openSymlink(path);
             if(err != nullptr)
             {
@@ -557,6 +581,7 @@ namespace golang::os
                 s = s.make_slice(4);
                 if(len(s) > 3 && s.make_slice(0, 3) == "UNC"_s)
                 {
+                    // return path like \\server\share\...
                     return {"\\"_s + s.make_slice(3), nullptr};
                 }
                 return {s, nullptr};
@@ -609,6 +634,8 @@ namespace golang::os
                         return normaliseLinkPath(rec::Path(gocpp::recv((windows::MountPointReparseBuffer*)(gocpp::unsafe_pointer(& rdb->DUMMYUNIONNAME)))));
                         break;
                     default:
+                        // the path is not a symlink or junction but another type of reparse
+                        // point
                         return {""_s, gocpp::error(syscall::go_ENOENT)};
                         break;
                 }

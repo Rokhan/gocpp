@@ -198,7 +198,10 @@ namespace golang::runtime
     runtime::traceArg rec::startPC(golang::runtime::traceLocker tl, uintptr_t pc)
     {
         // +PCQuantum because makeTraceFrame expects return PCs and subtracts PCQuantum.
-        return traceArg(rec::put(gocpp::recv(trace.stackTab[tl.gen % 2]), gocpp::slice<uintptr_t> {logicalStackSentinel, startPCForTrace(pc) + sys::PCQuantum}));
+        return traceArg(rec::put(gocpp::recv(trace.stackTab[tl.gen % 2]), gocpp::slice<uintptr_t> {
+            logicalStackSentinel,
+            startPCForTrace(pc) + sys::PCQuantum
+        }));
     }
 
     // string returns a traceArg representing s which may be passed to write.

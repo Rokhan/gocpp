@@ -94,7 +94,12 @@ namespace golang::chacha8rand
     // Init seeds the State with the given seed value.
     void rec::Init(golang::chacha8rand::State* s, gocpp::array<unsigned char, 32> seed)
     {
-        rec::Init64(gocpp::recv(s), gocpp::array<uint64_t, 4> {leUint64(seed.make_slice(0 * 8)), leUint64(seed.make_slice(1 * 8)), leUint64(seed.make_slice(2 * 8)), leUint64(seed.make_slice(3 * 8))});
+        rec::Init64(gocpp::recv(s), gocpp::array<uint64_t, 4> {
+            leUint64(seed.make_slice(0 * 8)),
+            leUint64(seed.make_slice(1 * 8)),
+            leUint64(seed.make_slice(2 * 8)),
+            leUint64(seed.make_slice(3 * 8))
+        });
     }
 
     // Init64 seeds the state with the given seed value.

@@ -536,7 +536,11 @@ namespace golang::runtime
             p = alignUp(p + (256 << 10), heapArenaBytes);
             // Because we're worried about fragmentation on
             // 32-bit, we try to make a large initial reservation.
-            auto arenaSizes = gocpp::slice<uintptr_t> {512 << 20, 256 << 20, 128 << 20};
+            auto arenaSizes = gocpp::slice<uintptr_t> {
+                512 << 20,
+                256 << 20,
+                128 << 20
+            };
             for(auto [gocpp_ignored, arenaSize] : arenaSizes)
             {
                 auto [a, size] = sysReserveAligned(gocpp::unsafe_pointer(p), arenaSize, heapArenaBytes);

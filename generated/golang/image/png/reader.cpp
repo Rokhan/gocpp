@@ -101,7 +101,15 @@ namespace golang::png
 
     // interlacing defines Adam7 interlacing, with 7 passes of reduced images.
     // See https://www.w3.org/TR/PNG/#8Interlace
-    gocpp::slice<interlaceScan> interlacing = gocpp::slice<interlaceScan> { {8, 8, 0, 0},  {8, 8, 4, 0},  {4, 8, 0, 4},  {4, 4, 2, 0},  {2, 4, 0, 2},  {2, 2, 1, 0},  {1, 2, 0, 1}};
+    gocpp::slice<interlaceScan> interlacing = gocpp::slice<interlaceScan> {
+        {8, 8, 0, 0},
+        {8, 8, 4, 0},
+        {4, 8, 0, 4},
+        {4, 4, 2, 0},
+        {2, 4, 0, 2},
+        {2, 2, 1, 0},
+        {1, 2, 0, 1}
+    };
     // Decoding stage.
     // The PNG specification says that the IHDR, PLTE (if present), tRNS (if
     // present), IDAT and IEND chunks must appear in that order. There may be

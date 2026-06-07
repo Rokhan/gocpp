@@ -24,7 +24,11 @@ namespace golang::main
     void main()
     {
         // Create a tic-tac-toe board.
-        auto board = gocpp::slice<gocpp::slice<gocpp::string>> {gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s}, gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s}, gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s}};
+        auto board = gocpp::slice<gocpp::slice<gocpp::string>> {
+            gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s},
+            gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s},
+            gocpp::slice<gocpp::string> {"_"_s, "_"_s, "_"_s}
+        };
 
         // The players take turns.
         board[0][0] = "X"_s;

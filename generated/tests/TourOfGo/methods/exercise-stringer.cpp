@@ -27,7 +27,10 @@ namespace golang::main
 
     void main()
     {
-        auto hosts = gocpp::map<gocpp::string, main::IPAddr> {{ "loopback"_s,  {127, 0, 0, 1} }, { "googleDNS"_s,  {8, 8, 8, 8} }};
+        auto hosts = gocpp::map<gocpp::string, main::IPAddr> {
+            { "loopback"_s, {127, 0, 0, 1} },
+            { "googleDNS"_s, {8, 8, 8, 8} }
+        };
         for(auto [name, ip] : hosts)
         {
             mocklib::Printf("%v: %v\n"_s, name, ip);

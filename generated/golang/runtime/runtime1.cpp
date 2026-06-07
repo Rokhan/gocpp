@@ -603,85 +603,112 @@ namespace golang::runtime
     // existing int var for that value, which may
     // already have an initial value.
     gocpp_id_0 debug;
-    gocpp::slice<dbgVar*> dbgvars = gocpp::slice<dbgVar*> {gocpp::Init<>([](auto& x) {
+    gocpp::slice<dbgVar*> dbgvars = gocpp::slice<dbgVar*> {
+        gocpp::Init<>([](auto& x) {
         x.name = "allocfreetrace"_s;
         x.value = & debug.allocfreetrace;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "clobberfree"_s;
         x.value = & debug.clobberfree;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "cgocheck"_s;
         x.value = & debug.cgocheck;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "disablethp"_s;
         x.value = & debug.disablethp;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "dontfreezetheworld"_s;
         x.value = & debug.dontfreezetheworld;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "efence"_s;
         x.value = & debug.efence;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "gccheckmark"_s;
         x.value = & debug.gccheckmark;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "gcpacertrace"_s;
         x.value = & debug.gcpacertrace;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "gcshrinkstackoff"_s;
         x.value = & debug.gcshrinkstackoff;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "gcstoptheworld"_s;
         x.value = & debug.gcstoptheworld;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "gctrace"_s;
         x.value = & debug.gctrace;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "invalidptr"_s;
         x.value = & debug.invalidptr;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "madvdontneed"_s;
         x.value = & debug.madvdontneed;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "runtimecontentionstacks"_s;
         x.atomic = & debug.runtimeContentionStacks;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "sbrk"_s;
         x.value = & debug.sbrk;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "scavtrace"_s;
         x.value = & debug.scavtrace;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "scheddetail"_s;
         x.value = & debug.scheddetail;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "schedtrace"_s;
         x.value = & debug.schedtrace;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "tracebackancestors"_s;
         x.value = & debug.tracebackancestors;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "asyncpreemptoff"_s;
         x.value = & debug.asyncpreemptoff;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "inittrace"_s;
         x.value = & debug.inittrace;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "harddecommit"_s;
         x.value = & debug.harddecommit;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "adaptivestackstart"_s;
         x.value = & debug.adaptivestackstart;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "tracefpunwindoff"_s;
         x.value = & debug.tracefpunwindoff;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "panicnil"_s;
         x.atomic = & debug.panicnil;
-    }), gocpp::Init<>([](auto& x) {
+    }),
+        gocpp::Init<>([](auto& x) {
         x.name = "traceadvanceperiod"_s;
         x.value = & debug.traceadvanceperiod;
-    })};
+    })
+    };
     void parsedebugvars()
     {
         // defaults

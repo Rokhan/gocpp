@@ -1137,7 +1137,21 @@ namespace golang::time
     // daysBefore[m] counts the number of days in a non-leap year
     // before month m begins. There is an entry for m=12, counting
     // the number of days before January of next year (365).
-    gocpp::array<int32_t, 13> daysBefore = gocpp::array<int32_t, 13> {0, 31, 31 + 28, 31 + 28 + 31, 31 + 28 + 31 + 30, 31 + 28 + 31 + 30 + 31, 31 + 28 + 31 + 30 + 31 + 30, 31 + 28 + 31 + 30 + 31 + 30 + 31, 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31, 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30, 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31, 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30, 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31};
+    gocpp::array<int32_t, 13> daysBefore = gocpp::array<int32_t, 13> {
+        0,
+        31,
+        31 + 28,
+        31 + 28 + 31,
+        31 + 28 + 31 + 30,
+        31 + 28 + 31 + 30 + 31,
+        31 + 28 + 31 + 30 + 31 + 30,
+        31 + 28 + 31 + 30 + 31 + 30 + 31,
+        31 + 28 + 31 + 30 + 31 + 30 + 31 + 31,
+        31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30,
+        31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31,
+        31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30,
+        31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31
+    };
     int daysIn(golang::time::Month m, int year)
     {
         if(m == February && isLeap(year))
@@ -1360,7 +1374,23 @@ namespace golang::time
 
         auto sec = rec::sec(gocpp::recv(t));
         auto nsec = rec::nsec(gocpp::recv(t));
-        auto enc = gocpp::slice<unsigned char> {version, (unsigned char)(sec >> 56), (unsigned char)(sec >> 48), (unsigned char)(sec >> 40), (unsigned char)(sec >> 32), (unsigned char)(sec >> 24), (unsigned char)(sec >> 16), (unsigned char)(sec >> 8), (unsigned char)(sec), (unsigned char)(nsec >> 24), (unsigned char)(nsec >> 16), (unsigned char)(nsec >> 8), (unsigned char)(nsec), (unsigned char)(offsetMin >> 8), (unsigned char)(offsetMin)};
+        auto enc = gocpp::slice<unsigned char> {
+            /* byte 0 : version */ version,
+            (unsigned char)(sec >> 56),
+            (unsigned char)(sec >> 48),
+            (unsigned char)(sec >> 40),
+            (unsigned char)(sec >> 32),
+            (unsigned char)(sec >> 24),
+            (unsigned char)(sec >> 16),
+            (unsigned char)(sec >> 8),
+            (unsigned char)(sec),
+            (unsigned char)(nsec >> 24),
+            (unsigned char)(nsec >> 16),
+            (unsigned char)(nsec >> 8),
+            (unsigned char)(nsec),
+            (unsigned char)(offsetMin >> 8),
+            (unsigned char)(offsetMin)
+        };
         if(version == timeBinaryVersionV2)
         {
             enc = append(enc, (unsigned char)(offsetSec));

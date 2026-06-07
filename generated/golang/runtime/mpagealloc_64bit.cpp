@@ -47,7 +47,13 @@ namespace golang::runtime
     // structure.
     //
     // The sum of all the entries of levelBits should equal heapAddrBits.
-    gocpp::array<unsigned int, summaryLevels> levelBits = gocpp::array<unsigned int, summaryLevels> {summaryL0Bits, summaryLevelBits, summaryLevelBits, summaryLevelBits, summaryLevelBits};
+    gocpp::array<unsigned int, summaryLevels> levelBits = gocpp::array<unsigned int, summaryLevels> {
+        summaryL0Bits,
+        summaryLevelBits,
+        summaryLevelBits,
+        summaryLevelBits,
+        summaryLevelBits
+    };
     // levelShift is the number of bits to shift to acquire the radix for a given level
     // in the super summary structure.
     //
@@ -55,12 +61,24 @@ namespace golang::runtime
     // pointer p by doing:
     //
     //	p >> levelShift[l]
-    gocpp::array<unsigned int, summaryLevels> levelShift = gocpp::array<unsigned int, summaryLevels> {heapAddrBits - summaryL0Bits, heapAddrBits - summaryL0Bits - 1 * summaryLevelBits, heapAddrBits - summaryL0Bits - 2 * summaryLevelBits, heapAddrBits - summaryL0Bits - 3 * summaryLevelBits, heapAddrBits - summaryL0Bits - 4 * summaryLevelBits};
+    gocpp::array<unsigned int, summaryLevels> levelShift = gocpp::array<unsigned int, summaryLevels> {
+        heapAddrBits - summaryL0Bits,
+        heapAddrBits - summaryL0Bits - 1 * summaryLevelBits,
+        heapAddrBits - summaryL0Bits - 2 * summaryLevelBits,
+        heapAddrBits - summaryL0Bits - 3 * summaryLevelBits,
+        heapAddrBits - summaryL0Bits - 4 * summaryLevelBits
+    };
     // levelLogPages is log2 the maximum number of runtime pages in the address space
     // a summary in the given level represents.
     //
     // The leaf level always represents exactly log2 of 1 chunk's worth of pages.
-    gocpp::array<unsigned int, summaryLevels> levelLogPages = gocpp::array<unsigned int, summaryLevels> {logPallocChunkPages + 4 * summaryLevelBits, logPallocChunkPages + 3 * summaryLevelBits, logPallocChunkPages + 2 * summaryLevelBits, logPallocChunkPages + 1 * summaryLevelBits, logPallocChunkPages};
+    gocpp::array<unsigned int, summaryLevels> levelLogPages = gocpp::array<unsigned int, summaryLevels> {
+        logPallocChunkPages + 4 * summaryLevelBits,
+        logPallocChunkPages + 3 * summaryLevelBits,
+        logPallocChunkPages + 2 * summaryLevelBits,
+        logPallocChunkPages + 1 * summaryLevelBits,
+        logPallocChunkPages
+    };
     // sysInit performs architecture-dependent initialization of fields
     // in pageAlloc. pageAlloc should be uninitialized except for sysStat
     // if any runtime statistic should be updated.
@@ -121,7 +139,10 @@ namespace golang::runtime
             auto baseOffset = alignDown(uintptr_t(sumIdxBase) * pallocSumBytes, physPageSize);
             auto limitOffset = alignUp(uintptr_t(sumIdxLimit) * pallocSumBytes, physPageSize);
             auto base = gocpp::unsafe_pointer(& p->summary[level][0]);
-            return addrRange {offAddr {uintptr_t(add(base, baseOffset))}, offAddr {uintptr_t(add(base, limitOffset))}};
+            return addrRange {
+                offAddr {uintptr_t(add(base, baseOffset))},
+                offAddr {uintptr_t(add(base, limitOffset))}
+            };
         };
 
         // addrRangeToSumAddrRange is a convenience function that converts

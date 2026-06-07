@@ -142,7 +142,38 @@ namespace golang::main
     }
 
     // fetcher is a populated fakeFetcher.
-    main::fakeFetcher fetcher = main::fakeFetcher {{ "https://golang.org/"_s, new fakeResult {"The Go Programming Language"_s, gocpp::slice<gocpp::string> {"https://golang.org/pkg/"_s, "https://golang.org/cmd/"_s}} }, { "https://golang.org/pkg/"_s, new fakeResult {"Packages"_s, gocpp::slice<gocpp::string> {"https://golang.org/"_s, "https://golang.org/cmd/"_s, "https://golang.org/pkg/fmt/"_s, "https://golang.org/pkg/os/"_s}} }, { "https://golang.org/pkg/fmt/"_s, new fakeResult {"Package fmt"_s, gocpp::slice<gocpp::string> {"https://golang.org/"_s, "https://golang.org/pkg/"_s}} }, { "https://golang.org/pkg/os/"_s, new fakeResult {"Package os"_s, gocpp::slice<gocpp::string> {"https://golang.org/"_s, "https://golang.org/pkg/"_s}} }};
+    main::fakeFetcher fetcher = main::fakeFetcher {
+        { "https://golang.org/"_s, new fakeResult {
+        "The Go Programming Language"_s,
+        gocpp::slice<gocpp::string> {
+        "https://golang.org/pkg/"_s,
+        "https://golang.org/cmd/"_s
+    }
+    } },
+        { "https://golang.org/pkg/"_s, new fakeResult {
+        "Packages"_s,
+        gocpp::slice<gocpp::string> {
+        "https://golang.org/"_s,
+        "https://golang.org/cmd/"_s,
+        "https://golang.org/pkg/fmt/"_s,
+        "https://golang.org/pkg/os/"_s
+    }
+    } },
+        { "https://golang.org/pkg/fmt/"_s, new fakeResult {
+        "Package fmt"_s,
+        gocpp::slice<gocpp::string> {
+        "https://golang.org/"_s,
+        "https://golang.org/pkg/"_s
+    }
+    } },
+        { "https://golang.org/pkg/os/"_s, new fakeResult {
+        "Package os"_s,
+        gocpp::slice<gocpp::string> {
+        "https://golang.org/"_s,
+        "https://golang.org/pkg/"_s
+    }
+    } }
+    };
 }
 
 int main()

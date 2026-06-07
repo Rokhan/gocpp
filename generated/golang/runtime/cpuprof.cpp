@@ -230,7 +230,10 @@ namespace golang::runtime
         if(p->lostExtra > 0)
         {
             auto hdr = gocpp::array<uint64_t, 1> {p->lostExtra};
-            auto lostStk = gocpp::array<uintptr_t, 2> {abi::FuncPCABIInternal(_LostExternalCode) + sys::PCQuantum, abi::FuncPCABIInternal(_ExternalCode) + sys::PCQuantum};
+            auto lostStk = gocpp::array<uintptr_t, 2> {
+                abi::FuncPCABIInternal(_LostExternalCode) + sys::PCQuantum,
+                abi::FuncPCABIInternal(_ExternalCode) + sys::PCQuantum
+            };
             rec::write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0), lostStk.make_slice(0));
             p->lostExtra = 0;
         }
@@ -238,7 +241,10 @@ namespace golang::runtime
         if(p->lostAtomic > 0)
         {
             auto hdr = gocpp::array<uint64_t, 1> {p->lostAtomic};
-            auto lostStk = gocpp::array<uintptr_t, 2> {abi::FuncPCABIInternal(_LostSIGPROFDuringAtomic64) + sys::PCQuantum, abi::FuncPCABIInternal(_System) + sys::PCQuantum};
+            auto lostStk = gocpp::array<uintptr_t, 2> {
+                abi::FuncPCABIInternal(_LostSIGPROFDuringAtomic64) + sys::PCQuantum,
+                abi::FuncPCABIInternal(_System) + sys::PCQuantum
+            };
             rec::write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0), lostStk.make_slice(0));
             p->lostAtomic = 0;
         }

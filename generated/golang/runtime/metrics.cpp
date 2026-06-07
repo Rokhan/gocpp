@@ -172,139 +172,159 @@ namespace golang::runtime
         sizeClassBuckets = append(sizeClassBuckets, float64Inf());
 
         timeHistBuckets = timeHistogramMetricsBuckets();
-        metrics = gocpp::map<gocpp::string, metricData> {{ "/cgo/go-to-c-calls:calls"_s, gocpp::Init<>([=](auto& x) {
+        metrics = gocpp::map<gocpp::string, metricData> {
+            { "/cgo/go-to-c-calls:calls"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(NumCgoCall());
             };
-        }) }, { "/cpu/classes/gc/mark/assist:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/gc/mark/assist:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.gcAssistTime));
             };
-        }) }, { "/cpu/classes/gc/mark/dedicated:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/gc/mark/dedicated:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.gcDedicatedTime));
             };
-        }) }, { "/cpu/classes/gc/mark/idle:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/gc/mark/idle:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.gcIdleTime));
             };
-        }) }, { "/cpu/classes/gc/pause:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/gc/pause:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.gcPauseTime));
             };
-        }) }, { "/cpu/classes/gc/total:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/gc/total:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.gcTotalTime));
             };
-        }) }, { "/cpu/classes/idle:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/idle:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.idleTime));
             };
-        }) }, { "/cpu/classes/scavenge/assist:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/scavenge/assist:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.scavengeAssistTime));
             };
-        }) }, { "/cpu/classes/scavenge/background:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/scavenge/background:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.scavengeBgTime));
             };
-        }) }, { "/cpu/classes/scavenge/total:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/scavenge/total:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.scavengeTotalTime));
             };
-        }) }, { "/cpu/classes/total:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/total:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.totalTime));
             };
-        }) }, { "/cpu/classes/user:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/cpu/classes/user:cpu-seconds"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(cpuStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(in->cpuStats.cpuStats.userTime));
             };
-        }) }, { "/gc/cycles/automatic:gc-cycles"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/cycles/automatic:gc-cycles"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.gcCyclesDone - in->sysStats.gcCyclesForced;
             };
-        }) }, { "/gc/cycles/forced:gc-cycles"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/cycles/forced:gc-cycles"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.gcCyclesForced;
             };
-        }) }, { "/gc/cycles/total:gc-cycles"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/cycles/total:gc-cycles"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.gcCyclesDone;
             };
-        }) }, { "/gc/scan/globals:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/scan/globals:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(gcStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->gcStats.globalsScan;
             };
-        }) }, { "/gc/scan/heap:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/scan/heap:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(gcStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->gcStats.heapScan;
             };
-        }) }, { "/gc/scan/stack:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/scan/stack:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(gcStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->gcStats.stackScan;
             };
-        }) }, { "/gc/scan/total:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/scan/total:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(gcStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->gcStats.totalScan;
             };
-        }) }, { "/gc/heap/allocs-by-size:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/heap/allocs-by-size:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
@@ -317,21 +337,24 @@ namespace golang::runtime
                     hist->counts[i] = count;
                 }
             };
-        }) }, { "/gc/heap/allocs:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/heap/allocs:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->heapStats.totalAllocated;
             };
-        }) }, { "/gc/heap/allocs:objects"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/heap/allocs:objects"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->heapStats.totalAllocs;
             };
-        }) }, { "/gc/heap/frees-by-size:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/heap/frees-by-size:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
@@ -344,220 +367,254 @@ namespace golang::runtime
                     hist->counts[i] = count;
                 }
             };
-        }) }, { "/gc/heap/frees:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/heap/frees:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->heapStats.totalFreed;
             };
-        }) }, { "/gc/heap/frees:objects"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/heap/frees:objects"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->heapStats.totalFrees;
             };
-        }) }, { "/gc/heap/goal:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/heap/goal:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.heapGoal;
             };
-        }) }, { "/gc/gomemlimit:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/gomemlimit:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(rec::Load(gocpp::recv(gcController.memoryLimit)));
             };
-        }) }, { "/gc/gogc:percent"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/gogc:percent"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(rec::Load(gocpp::recv(gcController.gcPercent)));
             };
-        }) }, { "/gc/heap/live:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/heap/live:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = gcController.heapMarked;
             };
-        }) }, { "/gc/heap/objects:objects"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/heap/objects:objects"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->heapStats.numObjects;
             };
-        }) }, { "/gc/heap/tiny/allocs:objects"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/heap/tiny/allocs:objects"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->heapStats.heapStatsDelta.tinyAllocCount;
             };
-        }) }, { "/gc/limiter/last-enabled:gc-cycle"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/limiter/last-enabled:gc-cycle"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(rec::Load(gocpp::recv(gcCPULimiter.lastEnabledCycle)));
             };
-        }) }, { "/gc/pauses:seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/pauses:seconds"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 // N.B. this is identical to /sched/pauses/total/gc:seconds.
                 rec::write(gocpp::recv(sched.stwTotalTimeGC), out);
             };
-        }) }, { "/gc/stack/starting-size:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/gc/stack/starting-size:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(startingStackSize);
             };
-        }) }, { "/memory/classes/heap/free:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/heap/free:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(in->heapStats.heapStatsDelta.committed - in->heapStats.heapStatsDelta.inHeap - in->heapStats.heapStatsDelta.inStacks - in->heapStats.heapStatsDelta.inWorkBufs - in->heapStats.heapStatsDelta.inPtrScalarBits);
             };
-        }) }, { "/memory/classes/heap/objects:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/heap/objects:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->heapStats.inObjects;
             };
-        }) }, { "/memory/classes/heap/released:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/heap/released:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(in->heapStats.heapStatsDelta.released);
             };
-        }) }, { "/memory/classes/heap/stacks:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/heap/stacks:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(in->heapStats.heapStatsDelta.inStacks);
             };
-        }) }, { "/memory/classes/heap/unused:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/heap/unused:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(in->heapStats.heapStatsDelta.inHeap) - in->heapStats.inObjects;
             };
-        }) }, { "/memory/classes/metadata/mcache/free:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/metadata/mcache/free:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.mCacheSys - in->sysStats.mCacheInUse;
             };
-        }) }, { "/memory/classes/metadata/mcache/inuse:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/metadata/mcache/inuse:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.mCacheInUse;
             };
-        }) }, { "/memory/classes/metadata/mspan/free:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/metadata/mspan/free:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.mSpanSys - in->sysStats.mSpanInUse;
             };
-        }) }, { "/memory/classes/metadata/mspan/inuse:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/metadata/mspan/inuse:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.mSpanInUse;
             };
-        }) }, { "/memory/classes/metadata/other:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/metadata/other:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep, sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(in->heapStats.heapStatsDelta.inWorkBufs + in->heapStats.heapStatsDelta.inPtrScalarBits) + in->sysStats.gcMiscSys;
             };
-        }) }, { "/memory/classes/os-stacks:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/os-stacks:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.stacksSys;
             };
-        }) }, { "/memory/classes/other:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/other:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.otherSys;
             };
-        }) }, { "/memory/classes/profiling/buckets:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/profiling/buckets:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = in->sysStats.buckHashSys;
             };
-        }) }, { "/memory/classes/total:bytes"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/memory/classes/total:bytes"_s, gocpp::Init<>([=](auto& x) {
             x.deps = makeStatDepSet(heapStatsDep, sysStatsDep);
             x.compute = [=](struct statAggregate* in, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(in->heapStats.heapStatsDelta.committed + in->heapStats.heapStatsDelta.released) + in->sysStats.stacksSys + in->sysStats.mSpanSys + in->sysStats.mCacheSys + in->sysStats.buckHashSys + in->sysStats.gcMiscSys + in->sysStats.otherSys;
             };
-        }) }, { "/sched/gomaxprocs:threads"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/sched/gomaxprocs:threads"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(gomaxprocs);
             };
-        }) }, { "/sched/goroutines:goroutines"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/sched/goroutines:goroutines"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
                 out->scalar = uint64_t(gcount());
             };
-        }) }, { "/sched/latencies:seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/sched/latencies:seconds"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 rec::write(gocpp::recv(sched.timeToRun), out);
             };
-        }) }, { "/sched/pauses/stopping/gc:seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/sched/pauses/stopping/gc:seconds"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 rec::write(gocpp::recv(sched.stwStoppingTimeGC), out);
             };
-        }) }, { "/sched/pauses/stopping/other:seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/sched/pauses/stopping/other:seconds"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 rec::write(gocpp::recv(sched.stwStoppingTimeOther), out);
             };
-        }) }, { "/sched/pauses/total/gc:seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/sched/pauses/total/gc:seconds"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 rec::write(gocpp::recv(sched.stwTotalTimeGC), out);
             };
-        }) }, { "/sched/pauses/total/other:seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/sched/pauses/total/other:seconds"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 rec::write(gocpp::recv(sched.stwTotalTimeOther), out);
             };
-        }) }, { "/sync/mutex/wait/total:seconds"_s, gocpp::Init<>([=](auto& x) {
+        }) },
+            { "/sync/mutex/wait/total:seconds"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
             {
                 out->kind = metricKindFloat64;
                 out->scalar = float64bits(nsToSec(totalMutexWaitTimeNanos()));
             };
-        }) }};
+        }) }
+        };
 
         for(auto [gocpp_ignored, info] : godebugs::All)
         {

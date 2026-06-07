@@ -2678,13 +2678,16 @@ namespace golang::reflect
                 return funcTypes[n];
             }
 
-            funcTypes[n] = StructOf(gocpp::slice<StructField> {gocpp::Init<>([=](auto& x) {
+            funcTypes[n] = StructOf(gocpp::slice<StructField> {
+                gocpp::Init<>([=](auto& x) {
                 x.Name = "FuncType"_s;
                 x.Type = TypeOf(reflect::funcType {});
-            }), gocpp::Init<>([=](auto& x) {
+            }),
+                gocpp::Init<>([=](auto& x) {
                 x.Name = "Args"_s;
                 x.Type = ArrayOf(n, TypeOf(new rtype {}));
-            })});
+            })
+            });
             return funcTypes[n];
         }
         catch(gocpp::GoPanic& gp)
@@ -3700,16 +3703,20 @@ namespace golang::reflect
                 // struct. To get the same layout for a run time generated type, we
                 // need an array directly following the uncommonType memory.
                 // A similar strategy is used for funcTypeFixed4, ...funcTypeFixedN.
-                auto tt = New(StructOf(gocpp::slice<StructField> {gocpp::Init<>([=](auto& x) {
+                auto tt = New(StructOf(gocpp::slice<StructField> {
+                    gocpp::Init<>([=](auto& x) {
                     x.Name = "S"_s;
                     x.Type = TypeOf(structType {});
-                }), gocpp::Init<>([=](auto& x) {
+                }),
+                    gocpp::Init<>([=](auto& x) {
                     x.Name = "U"_s;
                     x.Type = TypeOf(reflect::uncommonType {});
-                }), gocpp::Init<>([=](auto& x) {
+                }),
+                    gocpp::Init<>([=](auto& x) {
                     x.Name = "M"_s;
                     x.Type = ArrayOf(len(methods), TypeOf(methods[0]));
-                })}));
+                })
+                }));
 
                 typ = (structType*)(rec::UnsafePointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 0))))));
                 ut = (reflect::uncommonType*)(rec::UnsafePointer(gocpp::recv(rec::Addr(gocpp::recv(rec::Field(gocpp::recv(rec::Elem(gocpp::recv(tt))), 1))))));

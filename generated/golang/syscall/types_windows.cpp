@@ -2142,7 +2142,12 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    GUID WSAID_CONNECTEX = GUID {0x25a207b9, 0xddf3, 0x4660, gocpp::array<unsigned char, 8> {0x8e, 0xe9, 0x76, 0xe5, 0x8c, 0x74, 0x06, 0x3e}};
+    GUID WSAID_CONNECTEX = GUID {
+        0x25a207b9,
+        0xddf3,
+        0x4660,
+        gocpp::array<unsigned char, 8> {0x8e, 0xe9, 0x76, 0xe5, 0x8c, 0x74, 0x06, 0x3e}
+    };
     
     template<typename T> requires gocpp::GoStruct<T>
     WSAProtocolInfo::operator T()

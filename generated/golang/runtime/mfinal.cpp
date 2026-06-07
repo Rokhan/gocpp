@@ -172,7 +172,31 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::array<unsigned char, 5> finalizer1 = gocpp::array<unsigned char, 5> {(1 << 0) | (1 << 1) | (0 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6) | (0 << 7), (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (0 << 4) | (1 << 5) | (1 << 6) | (1 << 7), (1 << 0) | (0 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (0 << 6) | (1 << 7), (1 << 0) | (1 << 1) | (1 << 2) | (0 << 3) | (1 << 4) | (1 << 5) | (1 << 6) | (1 << 7), (0 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (0 << 5) | (1 << 6) | (1 << 7)};
+    gocpp::array<unsigned char, 5> finalizer1 = gocpp::array<unsigned char, 5> {
+        // Each Finalizer is 5 words, ptr ptr INT ptr ptr (INT = uintptr here)
+        // Each byte describes 8 words.
+        // Need 8 Finalizers described by 5 bytes before pattern repeats:
+        // ptr ptr INT ptr ptr
+        // ptr ptr INT ptr ptr
+        // ptr ptr INT ptr ptr
+        // ptr ptr INT ptr ptr
+        // ptr ptr INT ptr ptr
+        // ptr ptr INT ptr ptr
+        // ptr ptr INT ptr ptr
+        // ptr ptr INT ptr ptr
+        // aka
+        // ptr ptr INT ptr ptr ptr ptr INT
+        // ptr ptr ptr ptr INT ptr ptr ptr
+        // ptr INT ptr ptr ptr ptr INT ptr
+        // ptr ptr ptr INT ptr ptr ptr ptr
+        // INT ptr ptr ptr ptr INT ptr ptr
+        // Assumptions about Finalizer layout checked below.
+        (1 << 0) | (1 << 1) | (0 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6) | (0 << 7),
+        (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (0 << 4) | (1 << 5) | (1 << 6) | (1 << 7),
+        (1 << 0) | (0 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (0 << 6) | (1 << 7),
+        (1 << 0) | (1 << 1) | (1 << 2) | (0 << 3) | (1 << 4) | (1 << 5) | (1 << 6) | (1 << 7),
+        (0 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (0 << 5) | (1 << 6) | (1 << 7)
+    };
     // lockRankMayQueueFinalizer records the lock ranking effects of a
     // function that may call queuefinalizer.
     void lockRankMayQueueFinalizer()

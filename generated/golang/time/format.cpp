@@ -360,10 +360,52 @@ namespace golang::time
         return {layout, 0, ""_s};
     }
 
-    gocpp::slice<gocpp::string> longDayNames = gocpp::slice<gocpp::string> {"Sunday"_s, "Monday"_s, "Tuesday"_s, "Wednesday"_s, "Thursday"_s, "Friday"_s, "Saturday"_s};
-    gocpp::slice<gocpp::string> shortDayNames = gocpp::slice<gocpp::string> {"Sun"_s, "Mon"_s, "Tue"_s, "Wed"_s, "Thu"_s, "Fri"_s, "Sat"_s};
-    gocpp::slice<gocpp::string> shortMonthNames = gocpp::slice<gocpp::string> {"Jan"_s, "Feb"_s, "Mar"_s, "Apr"_s, "May"_s, "Jun"_s, "Jul"_s, "Aug"_s, "Sep"_s, "Oct"_s, "Nov"_s, "Dec"_s};
-    gocpp::slice<gocpp::string> longMonthNames = gocpp::slice<gocpp::string> {"January"_s, "February"_s, "March"_s, "April"_s, "May"_s, "June"_s, "July"_s, "August"_s, "September"_s, "October"_s, "November"_s, "December"_s};
+    gocpp::slice<gocpp::string> longDayNames = gocpp::slice<gocpp::string> {
+        "Sunday"_s,
+        "Monday"_s,
+        "Tuesday"_s,
+        "Wednesday"_s,
+        "Thursday"_s,
+        "Friday"_s,
+        "Saturday"_s
+    };
+    gocpp::slice<gocpp::string> shortDayNames = gocpp::slice<gocpp::string> {
+        "Sun"_s,
+        "Mon"_s,
+        "Tue"_s,
+        "Wed"_s,
+        "Thu"_s,
+        "Fri"_s,
+        "Sat"_s
+    };
+    gocpp::slice<gocpp::string> shortMonthNames = gocpp::slice<gocpp::string> {
+        "Jan"_s,
+        "Feb"_s,
+        "Mar"_s,
+        "Apr"_s,
+        "May"_s,
+        "Jun"_s,
+        "Jul"_s,
+        "Aug"_s,
+        "Sep"_s,
+        "Oct"_s,
+        "Nov"_s,
+        "Dec"_s
+    };
+    gocpp::slice<gocpp::string> longMonthNames = gocpp::slice<gocpp::string> {
+        "January"_s,
+        "February"_s,
+        "March"_s,
+        "April"_s,
+        "May"_s,
+        "June"_s,
+        "July"_s,
+        "August"_s,
+        "September"_s,
+        "October"_s,
+        "November"_s,
+        "December"_s
+    };
     // match reports whether s1 and s2 match ignoring case.
     // It is assumed s1 and s2 are the same length.
     bool match(gocpp::string s1, gocpp::string s2)
@@ -2086,7 +2128,16 @@ namespace golang::time
         return {x, scale, s.make_slice(i)};
     }
 
-    gocpp::map<gocpp::string, uint64_t> unitMap = gocpp::map<gocpp::string, uint64_t> {{ "ns"_s, uint64_t(Nanosecond) }, { "us"_s, uint64_t(Microsecond) }, { "µs"_s, uint64_t(Microsecond) }, { "μs"_s, uint64_t(Microsecond) }, { "ms"_s, uint64_t(Millisecond) }, { "s"_s, uint64_t(Second) }, { "m"_s, uint64_t(Minute) }, { "h"_s, uint64_t(Hour) }};
+    gocpp::map<gocpp::string, uint64_t> unitMap = gocpp::map<gocpp::string, uint64_t> {
+        { "ns"_s, uint64_t(Nanosecond) },
+        { "us"_s, uint64_t(Microsecond) },
+        { "µs"_s, uint64_t(Microsecond) },
+        { "μs"_s, uint64_t(Microsecond) },
+        { "ms"_s, uint64_t(Millisecond) },
+        { "s"_s, uint64_t(Second) },
+        { "m"_s, uint64_t(Minute) },
+        { "h"_s, uint64_t(Hour) }
+    };
     // ParseDuration parses a duration string.
     // A duration string is a possibly signed sequence of
     // decimal numbers, each with optional fraction and a unit suffix,

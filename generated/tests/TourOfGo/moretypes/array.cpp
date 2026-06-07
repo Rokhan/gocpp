@@ -140,10 +140,10 @@ namespace golang::main
         auto ints = gocpp::array<int, 3> {1, 2, 3};
         mocklib::Println(ints);
 
-        auto st1 = main::semTable1 { {1},  {1}};
+        auto st1 = main::semTable1 {{1}, {1}};
         mocklib::Println(st1);
 
-        auto st2 = main::semTable2 { {1},  {1}};
+        auto st2 = main::semTable2 {{1}, {1}};
         mocklib::Println(st2);
 
         auto chars = gocpp::array<unsigned char, 5> {'H', 'e', 'l', 'l', 'o'};

@@ -231,8 +231,8 @@ namespace golang::time
     {
         auto l = gocpp::InitPtr<Location>([=](auto& x) {
             x.name = name;
-            x.zone = gocpp::slice<zone> { {name, offset, false}};
-            x.tx = gocpp::slice<zoneTrans> { {alpha, 0, false, false}};
+            x.zone = gocpp::slice<zone> {{name, offset, false}};
+            x.tx = gocpp::slice<zoneTrans> {{alpha, 0, false, false}};
             x.cacheStart = alpha;
             x.cacheEnd = omega;
         });

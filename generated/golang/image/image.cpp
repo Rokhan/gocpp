@@ -358,7 +358,12 @@ namespace golang::image
         auto g = uint16_t(s[1]);
         auto b = uint16_t(s[2]);
         auto a = uint16_t(s[3]);
-        return color::RGBA64 {(r << 8) | r, (g << 8) | g, (b << 8) | b, (a << 8) | a};
+        return color::RGBA64 {
+            (r << 8) | r,
+            (g << 8) | g,
+            (b << 8) | b,
+            (a << 8) | a
+        };
     }
 
     color::RGBA rec::RGBAAt(golang::image::RGBA* p, int x, int y)
@@ -539,7 +544,12 @@ namespace golang::image
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
-        return color::RGBA64 {(uint16_t(s[0]) << 8) | uint16_t(s[1]), (uint16_t(s[2]) << 8) | uint16_t(s[3]), (uint16_t(s[4]) << 8) | uint16_t(s[5]), (uint16_t(s[6]) << 8) | uint16_t(s[7])};
+        return color::RGBA64 {
+            (uint16_t(s[0]) << 8) | uint16_t(s[1]),
+            (uint16_t(s[2]) << 8) | uint16_t(s[3]),
+            (uint16_t(s[4]) << 8) | uint16_t(s[5]),
+            (uint16_t(s[6]) << 8) | uint16_t(s[7])
+        };
     }
 
     // PixOffset returns the index of the first element of Pix that corresponds to
@@ -889,7 +899,12 @@ namespace golang::image
         auto i = rec::PixOffset(gocpp::recv(p), x, y);
         // Small cap improves performance, see https://golang.org/issue/27857
         auto s = p->Pix.make_slice(i, i + 8, i + 8);
-        return color::NRGBA64 {(uint16_t(s[0]) << 8) | uint16_t(s[1]), (uint16_t(s[2]) << 8) | uint16_t(s[3]), (uint16_t(s[4]) << 8) | uint16_t(s[5]), (uint16_t(s[6]) << 8) | uint16_t(s[7])};
+        return color::NRGBA64 {
+            (uint16_t(s[0]) << 8) | uint16_t(s[1]),
+            (uint16_t(s[2]) << 8) | uint16_t(s[3]),
+            (uint16_t(s[4]) << 8) | uint16_t(s[5]),
+            (uint16_t(s[6]) << 8) | uint16_t(s[7])
+        };
     }
 
     // PixOffset returns the index of the first element of Pix that corresponds to
@@ -1864,7 +1879,12 @@ namespace golang::image
             c = p->Palette[p->Pix[i]];
         }
         auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
-        return color::RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
+        return color::RGBA64 {
+            uint16_t(r),
+            uint16_t(g),
+            uint16_t(b),
+            uint16_t(a)
+        };
     }
 
     // PixOffset returns the index of the first element of Pix that corresponds to

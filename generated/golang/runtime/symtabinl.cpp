@@ -212,7 +212,12 @@ namespace golang::runtime
             return rec::srcFunc(gocpp::recv(u->f));
         }
         auto t = & u->inlTree[uf.index];
-        return srcFunc {u->f.datap, t->nameOff, t->startLine, t->funcID};
+        return srcFunc {
+            u->f.datap,
+            t->nameOff,
+            t->startLine,
+            t->funcID
+        };
     }
 
     // fileLine returns the file name and line number of the call within the given

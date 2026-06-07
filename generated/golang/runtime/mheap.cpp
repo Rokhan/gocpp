@@ -464,7 +464,11 @@ namespace golang::runtime
     // such pointers may race with a span being allocated.
     // mSpanStateNames are the names of the span states, indexed by
     // mSpanState.
-    gocpp::slice<gocpp::string> mSpanStateNames = gocpp::slice<gocpp::string> {"mSpanDead"_s, "mSpanInUse"_s, "mSpanManual"_s};
+    gocpp::slice<gocpp::string> mSpanStateNames = gocpp::slice<gocpp::string> {
+        "mSpanDead"_s,
+        "mSpanInUse"_s,
+        "mSpanManual"_s
+    };
     // mSpanStateBox holds an atomic.Uint8 to provide atomic operations on
     // an mSpanState. This is a separate type to disallow accidental comparison
     // or assignment with mSpanState.

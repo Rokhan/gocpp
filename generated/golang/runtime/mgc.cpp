@@ -240,7 +240,12 @@ namespace golang::runtime
     // against gcController.idleMarkTime.
     // gcMarkWorkerModeStrings are the strings labels of gcMarkWorkerModes
     // to use in execution traces.
-    gocpp::array<gocpp::string, 4> gcMarkWorkerModeStrings = gocpp::array<gocpp::string, 4> {"Not worker"_s, "GC (dedicated)"_s, "GC (fractional)"_s, "GC (idle)"_s};
+    gocpp::array<gocpp::string, 4> gcMarkWorkerModeStrings = gocpp::array<gocpp::string, 4> {
+        "Not worker"_s,
+        "GC (dedicated)"_s,
+        "GC (fractional)"_s,
+        "GC (idle)"_s
+    };
     // pollFractionalWorkerExit reports whether a fractional mark worker
     // should self-preempt. It assumes it is called from the fractional
     // worker.
@@ -1314,7 +1319,13 @@ namespace golang::runtime
                 prev = ns;
             }
             print(" ms clock, "_s);
-            for(auto [i, ns] : gocpp::slice<int64_t> {int64_t(work.stwprocs) * (work.tMark - work.tSweepTerm), rec::Load(gocpp::recv(gcController.assistTime)), rec::Load(gocpp::recv(gcController.dedicatedMarkTime)) + rec::Load(gocpp::recv(gcController.fractionalMarkTime)), rec::Load(gocpp::recv(gcController.idleMarkTime)), markTermCpu})
+            for(auto [i, ns] : gocpp::slice<int64_t> {
+                int64_t(work.stwprocs) * (work.tMark - work.tSweepTerm),
+                rec::Load(gocpp::recv(gcController.assistTime)),
+                rec::Load(gocpp::recv(gcController.dedicatedMarkTime)) + rec::Load(gocpp::recv(gcController.fractionalMarkTime)),
+                rec::Load(gocpp::recv(gcController.idleMarkTime)),
+                markTermCpu
+            })
             {
                 if(i == 2 || i == 3)
                 {

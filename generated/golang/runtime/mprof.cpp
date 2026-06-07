@@ -1041,7 +1041,9 @@ namespace golang::runtime
         saveBlockEventStack(cycles, rate, prof->stack.make_slice(0, nstk), mutexProfile);
         if(lost > 0)
         {
-            auto lostStk = gocpp::array<uintptr_t, 1> {abi::FuncPCABIInternal(_LostContendedRuntimeLock) + sys::PCQuantum};
+            auto lostStk = gocpp::array<uintptr_t, 1> {
+                abi::FuncPCABIInternal(_LostContendedRuntimeLock) + sys::PCQuantum
+            };
             saveBlockEventStack(lost, rate, lostStk.make_slice(0), mutexProfile);
         }
 

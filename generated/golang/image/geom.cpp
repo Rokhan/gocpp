@@ -187,19 +187,28 @@ namespace golang::image
     // Size returns r's width and height.
     struct Point rec::Size(golang::image::Rectangle r)
     {
-        return Point {r.Max.X - r.Min.X, r.Max.Y - r.Min.Y};
+        return Point {
+            r.Max.X - r.Min.X,
+            r.Max.Y - r.Min.Y
+        };
     }
 
     // Add returns the rectangle r translated by p.
     struct Rectangle rec::Add(golang::image::Rectangle r, struct Point p)
     {
-        return Rectangle {Point {r.Min.X + p.X, r.Min.Y + p.Y}, Point {r.Max.X + p.X, r.Max.Y + p.Y}};
+        return Rectangle {
+            Point {r.Min.X + p.X, r.Min.Y + p.Y},
+            Point {r.Max.X + p.X, r.Max.Y + p.Y}
+        };
     }
 
     // Sub returns the rectangle r translated by -p.
     struct Rectangle rec::Sub(golang::image::Rectangle r, struct Point p)
     {
-        return Rectangle {Point {r.Min.X - p.X, r.Min.Y - p.Y}, Point {r.Max.X - p.X, r.Max.Y - p.Y}};
+        return Rectangle {
+            Point {r.Min.X - p.X, r.Min.Y - p.Y},
+            Point {r.Max.X - p.X, r.Max.Y - p.Y}
+        };
     }
 
     // Inset returns the rectangle r inset by n, which may be negative. If either

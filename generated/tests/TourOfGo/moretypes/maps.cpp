@@ -56,7 +56,9 @@ namespace golang::main
     void main()
     {
         m = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Vertex>>());
-        m["Bell Labs"_s] = Vertex {40.68433, - 74.39967};
+        m["Bell Labs"_s] = Vertex {
+            40.68433, - 74.39967
+        };
         mocklib::Println(m["Bell Labs"_s]);
     }
 

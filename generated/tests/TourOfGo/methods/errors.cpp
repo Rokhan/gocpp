@@ -61,7 +61,10 @@ namespace golang::main
 
     struct gocpp::error run()
     {
-        return gocpp::error(new MyError {mocklib::Date::Now(), "it didn't work"_s});
+        return gocpp::error(new MyError {
+            mocklib::Date::Now(),
+            "it didn't work"_s
+        });
     }
 
     void main()

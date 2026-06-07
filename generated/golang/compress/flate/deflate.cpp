@@ -89,7 +89,21 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    gocpp::slice<compressionLevel> levels = gocpp::slice<compressionLevel> { {0, 0, 0, 0, 0, 0},  {1, 0, 0, 0, 0, 0},  {2, 4, 0, 16, 8, 5},  {3, 4, 0, 32, 32, 6},  {4, 4, 4, 16, 16, skipNever},  {5, 8, 16, 32, 32, skipNever},  {6, 8, 16, 128, 128, skipNever},  {7, 8, 32, 128, 256, skipNever},  {8, 32, 128, 258, 1024, skipNever},  {9, 32, 258, 258, 4096, skipNever}};
+    gocpp::slice<compressionLevel> levels = gocpp::slice<compressionLevel> {
+        {0, 0, 0, 0, 0, /* NoCompression. */ 0},
+        {1, 0, 0, 0, 0, /* BestSpeed uses a custom algorithm; see deflatefast.go. */ 0},
+        // For levels 2-3 we don't bother trying with lazy matches.
+        {2, 4, 0, 16, 8, 5},
+        {3, 4, 0, 32, 32, 6},
+        // Levels 4-9 use increasingly more lazy matching
+        // and increasingly stringent conditions for "good enough".
+        {4, 4, 4, 16, 16, skipNever},
+        {5, 8, 16, 32, 32, skipNever},
+        {6, 8, 16, 128, 128, skipNever},
+        {7, 8, 32, 128, 256, skipNever},
+        {8, 32, 128, 258, 1024, skipNever},
+        {9, 32, 258, 258, 4096, skipNever}
+    };
     
     template<typename T> requires gocpp::GoStruct<T>
     compressor::operator T()

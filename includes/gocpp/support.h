@@ -264,6 +264,12 @@ namespace gocpp
         TArray* ptr = nullptr;
     };
 
+    template <typename TArray>
+    array_ptr<TArray> make_array_ptr(TArray& target)
+    {
+        return array_ptr<TArray>(&target);
+    }
+
     template<typename TArray>
     inline std::ostream& operator<<(std::ostream& os, const array_ptr<TArray>& value)
     {

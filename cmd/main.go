@@ -3579,6 +3579,8 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		switch {
 		case n.Op == token.AND && isCompositeLit:
 			return cv.convertCompositeLit(compositLit, true)
+		case n.Op == token.AND && cv.IsExprArray(n.X):
+			return ExprPrintf("gocpp::make_array_ptr(%s)", cv.convertExpr(n.X))
 		case n.Op == token.ARROW:
 			return ExprPrintf("%s.recv()", cv.convertExpr(n.X))
 		default:

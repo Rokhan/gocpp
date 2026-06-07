@@ -41,9 +41,13 @@ func (cv *parsingContext) Panicf(format string, params ...interface{}) {
 	Panicf(format, params...)
 }
 
+func (cv *parsingContext) getPosition(pos token.Pos) token.Position {
+	return cv.pcShared.fileSet.Position(pos)
+}
+
 func (cv *parsingContext) Position(expr ast.Node) token.Position {
 	if expr != nil {
-		return cv.pcShared.fileSet.Position(expr.Pos())
+		return cv.getPosition(expr.Pos())
 	}
 	return token.Position{}
 }
@@ -52,14 +56,22 @@ func (cv *parsingContext) EndPosition(expr ast.Node) token.Position {
 	switch e := expr.(type) {
 	case *ast.CaseClause:
 		if len(e.Body) > 0 {
-			return cv.pcShared.fileSet.Position(e.Body[len(e.Body)-1].End())
+			return cv.getPosition(e.Body[len(e.Body)-1].End())
 		}
 	case *ast.CommClause:
 		if len(e.Body) > 0 {
-			return cv.pcShared.fileSet.Position(e.Body[len(e.Body)-1].End())
+			return cv.getPosition(e.Body[len(e.Body)-1].End())
 		}
 	default:
-		return cv.pcShared.fileSet.Position(expr.End())
+		return cv.getPosition(expr.End())
 	}
 	return token.Position{}
+}
+
+func (cv *parsingContext) StartLine(expr ast.Node) int {
+	return cv.Position(expr).Line
+}
+
+func (cv *parsingContext) EndLine(expr ast.Node) int {
+	return cv.EndPosition(expr).Line
 }

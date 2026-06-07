@@ -1250,18 +1250,17 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 		// Insert blank lines in output to match empty lines in source between statements.
 		prevEndLine := 0
 		for _, stmt := range block.List {
-			startPos := cv.Position(stmt)
+			startLine := cv.StartLine(stmt)
 			// Don't add extra blank lines for comments: If there are comments associated
 			// with the statement, use the position of the first comment to determine the start line.
 			if cgs := cv.commentMap[stmt]; len(cgs) > 0 {
-				comStartPos := cv.Position(cgs[0])
+				comStartLine := cv.StartLine(cgs[0])
 				// The comment position can be after the statement position, so we take the minimum of the two positions.
 				// Surprisingly happens for switch/case statements.
-				if comStartPos.Line < startPos.Line {
-					startPos = comStartPos
+				if comStartLine < startLine {
+					startLine = comStartLine
 				}
 			}
-			startLine := startPos.Line
 			if prevEndLine != 0 {
 				gap := startLine - prevEndLine - 1
 				for i := 0; i < gap; i++ {
@@ -1271,9 +1270,7 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 
 			stmtOutiles, _ := cv.convertStmt(stmt, env)
 			outPlaces = append(outPlaces, stmtOutiles...)
-
-			endPos := cv.EndPosition(stmt)
-			prevEndLine = endPos.Line
+			prevEndLine = cv.EndLine(stmt)
 		}
 	})
 
@@ -2804,9 +2801,9 @@ func (cv *cppConverter) computeGenStructData(param genStructParam, templatePrmLi
 	return res
 }
 
-func convertComment(comment *ast.CommentGroup, indent string) string {
+func convertCommentLines(comment *ast.CommentGroup, indent string) []string {
 	if comment == nil {
-		return ""
+		return nil
 	}
 	lines := []string{}
 	for _, c := range strings.Split(comment.Text(), "\n") {
@@ -2815,9 +2812,19 @@ func convertComment(comment *ast.CommentGroup, indent string) string {
 			lines = append(lines, line)
 		}
 	}
+	return lines
+}
 
+func convertComment(comment *ast.CommentGroup, indent string) string {
+	lines := convertCommentLines(comment, indent)
 	sep := "\n" + indent + "// "
 	return fmt.Sprintf("// %s", strings.Join(lines, sep))
+}
+
+func convertInlinedComment(comment *ast.CommentGroup, indent string) string {
+	lines := convertCommentLines(comment, indent)
+	sep := "\n" + indent
+	return fmt.Sprintf("/* %s */", strings.Join(lines, sep))
 }
 
 func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms map[string][]string, param genStructParam) (cppStruct string, places []place) {
@@ -3103,7 +3110,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		data.out.indent++
 		for _, method := range methods {
 			if method.doc != nil {
-				subIndent := "    " + data.out.Indent()
+				subIndent := baseIndent + data.out.Indent()
 				fmt.Fprintf(buf, "%s%s\n", subIndent, convertComment(method.doc, subIndent))
 			}
 			comment := ""
@@ -3871,7 +3878,7 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 		cv.BuffExprPrintf(buf, "gocpp::Init%s<%s>(%s(auto& %s) {\n", ptrSuffix, litType, cv.getCaptureExpr(), lambdaVar)
 
 		// Maybe we should use a special 'indent' token  that will be replaced later
-		// instead of using cv.cpp.Indent() whhereas we have no guarantee that
+		// instead of using cv.cpp.Indent(), we have no guarantee here that
 		// the code will be generated in cpp file.
 		if isArrayType(n.Type) {
 			for _, elt := range n.Elts {
@@ -3896,12 +3903,62 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 			newPrefix = "new "
 		}
 
-		cv.BuffExprPrintf(buf, "%s%s {", newPrefix, litType)
+		if litType.str == "" {
+			if newPrefix != "" {
+				cv.Panicf("Cannot add pointer to composite literal with no type, position %v", cv.Position(n))
+			}
+			cv.BuffExprPrintf(buf, "%s{", newPrefix)
+		} else {
+			cv.BuffExprPrintf(buf, "%s%s {", newPrefix, litType)
+		}
 		var sep = ""
+		prevEndLine := cv.getPosition(n.Lbrace).Line
 		for _, elt := range n.Elts {
-			cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExpr(elt))
+			startLine := cv.StartLine(elt)
+			// Don't add extra blank lines for comments
+			if cgs := cv.commentMap[elt]; len(cgs) > 0 {
+				comStartLine := cv.StartLine(cgs[0])
+				if comStartLine < startLine {
+					startLine = comStartLine
+				}
+			}
+
+			if prevEndLine != 0 {
+				gap := startLine - prevEndLine
+				for i := 0; i < gap; i++ {
+					cv.BuffExprPrintf(buf, "%s\n", strings.TrimSpace(sep))
+					sep = cv.cpp.Indent() + baseIndent
+				}
+			}
+
+			cgs := cv.commentMap[elt]
+			comIndent := cv.cpp.Indent() + baseIndent
+
+			switch len(cgs) {
+			case 0:
+				cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExpr(elt))
+			case 1:
+				if cv.EndLine(cgs[0]) < cv.StartLine(elt) {
+					cv.BuffExprPrintf(buf, "%s%s\n", comIndent, convertComment(cgs[0], comIndent))
+					cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExpr(elt))
+				} else {
+					cv.BuffExprPrintf(buf, "%s%s %s", sep, convertInlinedComment(cgs[0], comIndent), cv.convertExpr(elt))
+				}
+			default:
+				for _, cg := range cgs {
+					cv.BuffExprPrintf(buf, "%s%s\n", comIndent, convertComment(cg, comIndent))
+				}
+				cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExpr(elt))
+			}
+
+			prevEndLine = cv.EndLine(elt)
 			sep = ", "
 		}
+
+		if cv.getPosition(n.Rbrace).Line != prevEndLine {
+			cv.BuffExprPrintf(buf, "\n%s", cv.cpp.Indent())
+		}
+
 		cv.BuffExprPrintf(buf, "}")
 	}
 

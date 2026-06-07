@@ -47,3 +47,19 @@ func (cv *parsingContext) Position(expr ast.Node) token.Position {
 	}
 	return token.Position{}
 }
+
+func (cv *parsingContext) EndPosition(expr ast.Node) token.Position {
+	switch e := expr.(type) {
+	case *ast.CaseClause:
+		if len(e.Body) > 0 {
+			return cv.pcShared.fileSet.Position(e.Body[len(e.Body)-1].End())
+		}
+	case *ast.CommClause:
+		if len(e.Body) > 0 {
+			return cv.pcShared.fileSet.Position(e.Body[len(e.Body)-1].End())
+		}
+	default:
+		return cv.pcShared.fileSet.Position(expr.End())
+	}
+	return token.Position{}
+}

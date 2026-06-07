@@ -1247,9 +1247,33 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 			fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
 		}
 
+		// Insert blank lines in output to match empty lines in source between statements.
+		prevEndLine := 0
 		for _, stmt := range block.List {
+			startPos := cv.Position(stmt)
+			// Don't add extra blank lines for comments: If there are comments associated
+			// with the statement, use the position of the first comment to determine the start line.
+			if cgs := cv.commentMap[stmt]; len(cgs) > 0 {
+				comStartPos := cv.Position(cgs[0])
+				// The comment position can be after the statement position, so we take the minimum of the two positions.
+				// Surprisingly happens for switch/case statements.
+				if comStartPos.Line < startPos.Line {
+					startPos = comStartPos
+				}
+			}
+			startLine := startPos.Line
+			if prevEndLine != 0 {
+				gap := startLine - prevEndLine - 1
+				for i := 0; i < gap; i++ {
+					fmt.Fprintln(cv.cpp.out)
+				}
+			}
+
 			stmtOutiles, _ := cv.convertStmt(stmt, env)
 			outPlaces = append(outPlaces, stmtOutiles...)
+
+			endPos := cv.EndPosition(stmt)
+			prevEndLine = endPos.Line
 		}
 	})
 

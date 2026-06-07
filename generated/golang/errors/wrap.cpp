@@ -118,6 +118,7 @@ namespace golang::errors
         {
             return err == target;
         }
+
         auto isComparable = rec::Comparable(gocpp::recv(reflectlite::TypeOf(target)));
         return is(err, target, isComparable);
     }

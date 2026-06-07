@@ -179,6 +179,7 @@ namespace golang::slices
     {
         // bounds check
         _ = s.make_slice(i);
+
         auto m = len(v);
         if(m == 0)
         {
@@ -201,6 +202,7 @@ namespace golang::slices
             return s2;
         }
         s = s.make_slice(0, n + m);
+
         // before:
         // s: aaaaaaaabbbbccccccccdddd
         // ^   ^       ^   ^
@@ -219,12 +221,14 @@ namespace golang::slices
             // (It might be in some of a or b, or elsewhere entirely.)
             // The data we copy up doesn't write to v at all, so just do it.
             copy(s.make_slice(i + m), s.make_slice(i));
+
             // Now we have
             // s: aaaaaaaabbbbbbbbcccccccc
             // ^   ^       ^   ^
             // i  i+m      n  n+m
             // Note the b values are duplicated.
             copy(s.make_slice(i), v);
+
             // Now we have
             // s: aaaaaaaavvvvbbbbcccccccc
             // ^   ^       ^   ^
@@ -232,16 +236,19 @@ namespace golang::slices
             // That's the result we want.
             return s;
         }
+
         // The hard case - v overlaps c or d. We can't just shift up
         // the data because we'd move or clobber the values we're trying
         // to insert.
         // So instead, write v on top of d, then rotate.
         copy(s.make_slice(n), v);
+
         // Now we have
         // s: aaaaaaaabbbbccccccccvvvv
         // ^   ^       ^   ^
         // i  i+m      n  n+m
         rotateRight(s.make_slice(i), m);
+
         // Now we have
         // s: aaaaaaaavvvvbbbbcccccccc
         // ^   ^       ^   ^
@@ -260,10 +267,12 @@ namespace golang::slices
     {
         // bounds check
         _ = s.make_slice(i, j, len(s));
+
         if(i == j)
         {
             return s;
         }
+
         auto oldlen = len(s);
         s = append(s.make_slice(0, i), s.make_slice(j));
         // zero/nil out the obsolete elements, for GC
@@ -305,6 +314,7 @@ namespace golang::slices
     {
         // bounds check
         _ = s.make_slice(i, j);
+
         if(i == j)
         {
             return Insert(s, i, v);
@@ -313,6 +323,7 @@ namespace golang::slices
         {
             return append(s.make_slice(0, i), v);
         }
+
         auto tot = len(s.make_slice(0, i)) + len(v) + len(s.make_slice(j));
         if(tot > cap(s))
         {
@@ -323,7 +334,9 @@ namespace golang::slices
             copy(s2.make_slice(i + len(v)), s.make_slice(j));
             return s2;
         }
+
         auto r = s.make_slice(0, tot);
+
         if(i + len(v) <= j)
         {
             // Easy, as v fits in the deleted portion.
@@ -333,6 +346,7 @@ namespace golang::slices
             clear(s.make_slice(tot));
             return r;
         }
+
         // We are expanding (v is bigger than j-i).
         // The situation is something like this:
         // (example has i=4,j=8,len(s)=16,len(v)=6)
@@ -350,6 +364,7 @@ namespace golang::slices
             copy(r.make_slice(i), v);
             return r;
         }
+
         // This is a situation where we don't have a single place to which
         // we can copy v. Parts of it need to go to two different places.
         // We want to copy the prefix of v into y and the suffix into x, then
@@ -362,6 +377,7 @@ namespace golang::slices
         // If either of those two destinations don't alias v, then we're good.
         // length of y portion
         auto y = len(v) - (j - i);
+
         if(! overlaps(r.make_slice(i, j), v))
         {
             copy(r.make_slice(i, j), v.make_slice(y));
@@ -376,6 +392,7 @@ namespace golang::slices
             rotateRight(r.make_slice(i), y);
             return r;
         }
+
         // Now we know that v overlaps both x and y.
         // That means that the entirety of b is *inside* v.
         // So we don't need to preserve b at all; instead we

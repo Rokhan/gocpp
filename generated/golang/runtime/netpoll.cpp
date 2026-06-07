@@ -204,6 +204,7 @@ namespace golang::runtime
             info |= pollExpiredWriteDeadline;
         }
         info |= uint32_t(rec::Load(gocpp::recv(pd->fdseq)) & pollFDSeqMask) << pollFDSeq;
+
         // Set all of x except the pollEventErr bit.
         auto x = rec::Load(gocpp::recv(pd->atomicInfo));
         for(; ! rec::CompareAndSwap(gocpp::recv(pd->atomicInfo), x, (x & pollEventErr) | info); )
@@ -336,6 +337,7 @@ namespace golang::runtime
         pd->self = pd;
         rec::publishInfo(gocpp::recv(pd));
         unlock(& pd->lock);
+
         auto errno = netpollopen(fd, pd);
         if(errno != 0)
         {
@@ -371,13 +373,17 @@ namespace golang::runtime
         // pd can't be shared here, but lock anyhow because
         // that's what publishInfo documents.
         runtime::lock(& pd->lock);
+
         // Increment the fdseq field, so that any currently
         // running netpoll calls will not mark pd as ready.
         auto fdseq = rec::Load(gocpp::recv(pd->fdseq));
         fdseq = (fdseq + 1) & ((1 << taggedPointerBits) - 1);
         rec::Store(gocpp::recv(pd->fdseq), fdseq);
+
         rec::publishInfo(gocpp::recv(pd));
+
         runtime::unlock(& pd->lock);
+
         runtime::lock(& c->lock);
         pd->link = c->first;
         c->first = pd;
@@ -688,6 +694,7 @@ namespace golang::runtime
         {
             gpp = & pd->wg;
         }
+
         // set the gpp semaphore to pdWait
         for(; ; )
         {
@@ -700,6 +707,7 @@ namespace golang::runtime
             {
                 break;
             }
+
             // Double check that this isn't corrupt; otherwise we'd loop
             // forever.
             if(auto v = rec::Load(gocpp::recv(gpp)); v != pdReady && v != pdNil)
@@ -707,6 +715,7 @@ namespace golang::runtime
                 go_throw("runtime: double wait"_s);
             }
         }
+
         // need to recheck error states after setting gpp to pdWait
         // this is necessary because runtime_pollUnblock/runtime_pollSetDeadline/deadlineimpl
         // do the opposite: store to closing/rd/wd, publishInfo, load of rg/wg
@@ -736,6 +745,7 @@ namespace golang::runtime
         {
             gpp = & pd->wg;
         }
+
         for(; ; )
         {
             auto old = rec::Load(gocpp::recv(gpp));

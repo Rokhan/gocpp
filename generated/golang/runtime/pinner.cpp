@@ -127,11 +127,13 @@ namespace golang::runtime
                 pp->pinnerCache = nullptr;
             }
             releasem(mp);
+
             if(p->pinner == nullptr)
             {
                 // Didn't get anything from the pinner cache.
                 p->pinner = new(pinner);
                 p->pinner.refs = p->pinner.refStore.make_slice(0, 0);
+
                 // We set this finalizer once and never clear it. Thus, if the
                 // pinner gets cached, we'll reuse it, along with its finalizer.
                 // This lets us avoid the relatively expensive SetFinalizer call
@@ -160,6 +162,7 @@ namespace golang::runtime
     void rec::Unpin(golang::runtime::Pinner* p)
     {
         rec::unpin(gocpp::recv(p->pinner));
+
         auto mp = acquirem();
         if(auto pp = rec::ptr(gocpp::recv(mp->p)); pp != nullptr && pp->pinnerCache == nullptr)
         {
@@ -288,15 +291,19 @@ namespace golang::runtime
             // nothing to do, silently ignore it.
             return false;
         }
+
         // ensure that the span is swept, b/c sweeping accesses the specials list
         // w/o locks.
         auto mp = acquirem();
         rec::ensureSwept(gocpp::recv(span));
         // make sure ptr is still alive after span is swept
         KeepAlive(ptr);
+
         auto objIndex = rec::objIndex(gocpp::recv(span), uintptr_t(ptr));
+
         // guard against concurrent calls of setPinned on same span
         lock(& span->speciallock);
+
         auto pinnerBits = rec::getPinnerBits(gocpp::recv(span));
         if(pinnerBits == nullptr)
         {
@@ -486,8 +493,10 @@ namespace golang::runtime
         {
             return;
         }
+
         auto hasPins = false;
         auto bytes = alignUp(rec::pinnerBitSize(gocpp::recv(s)), 8);
+
         // Iterate over each 8-byte chunk and check for pins. Note that
         // newPinnerBits guarantees that pinnerBits will be 8-byte aligned, so we
         // don't have to worry about edge cases, irrelevant bits will simply be
@@ -500,6 +509,7 @@ namespace golang::runtime
                 break;
             }
         }
+
         if(hasPins)
         {
             auto newPinnerBits = rec::newPinnerBits(gocpp::recv(s));

@@ -112,11 +112,13 @@ namespace golang::runtime
     void startCheckmarks()
     {
         assertWorldStopped();
+
         // Clear all checkmarks.
         for(auto [gocpp_ignored, ai] : mheap_.allArenas)
         {
             auto arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
             auto bitmap = arena->checkmarks;
+
             if(bitmap == nullptr)
             {
                 // Allocate bitmap on first use.
@@ -160,23 +162,29 @@ namespace golang::runtime
             printlock();
             print("runtime: checkmarks found unexpected unmarked object obj="_s, hex(obj), "\n"_s);
             print("runtime: found obj at *("_s, hex(base), "+"_s, hex(off), ")\n"_s);
+
             // Dump the source (base) object
             gcDumpObject("base"_s, base, off);
+
             // Dump the object
             gcDumpObject("obj"_s, obj, ~ uintptr_t(0));
+
             getg()->m->traceback = 2;
             go_throw("checkmark found unmarked object"_s);
         }
+
         auto ai = arenaIndex(obj);
         auto arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
         auto arenaWord = (obj / heapArenaBytes / 8) % uintptr_t(len(arena->checkmarks->b));
         auto mask = (unsigned char)(1 << ((obj / heapArenaBytes) % 8));
         auto bytep = & arena->checkmarks->b[arenaWord];
+
         if(atomic::Load8(bytep) & mask != 0)
         {
             // Already checkmarked.
             return true;
         }
+
         atomic::Or8(bytep, mask);
         return false;
     }

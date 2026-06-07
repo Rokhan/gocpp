@@ -137,9 +137,11 @@ namespace golang::runtime
             // were to try to preempt m.curg, it could deadlock.
             go_throw("suspendG from non-preemptible goroutine"_s);
         }
+
         // See https://golang.org/cl/21503 for justification of the yield delay.
         auto yieldDelay = 10 * 1000;
         int64_t nextYield = {};
+
         // Drive the goroutine to a preemption point.
         auto stopped = false;
         m* asyncM = {};
@@ -173,6 +175,7 @@ namespace golang::runtime
                         dumpgstatus(gp);
                         go_throw("invalid g status"_s);
                         break;
+
                     case 0:
                         // Nothing to suspend.
                         // preemptStop may need to be cleared, but
@@ -182,6 +185,7 @@ namespace golang::runtime
                             x.dead = true;
                         });
                         break;
+
                     // The stack is being copied. We need to wait
                     // until this is done.
                     case 1:
@@ -197,6 +201,7 @@ namespace golang::runtime
                         // We stopped the G, so we have to ready it later.
                         stopped = true;
                         s = _Gwaiting;
+
                     case 3:
                     case 4:
                     case 5:
@@ -229,6 +234,7 @@ namespace golang::runtime
                             x.stopped = stopped;
                         });
                         break;
+
                     case 6:
                         // Optimization: if there is already a pending preemption request
                         // (from the previous loop iteration), don't bother with the atomics.
@@ -274,6 +280,7 @@ namespace golang::runtime
                         break;
                 }
             }
+
             // TODO: Don't busy wait. This loop should really only
             // be a simple read/decide/CAS loop that only fails if
             // there's an active race. Once the CAS succeeds, we
@@ -306,6 +313,7 @@ namespace golang::runtime
             // We didn't actually stop anything.
             return;
         }
+
         auto gp = state.g;
         //Go switch emulation
         {
@@ -321,6 +329,7 @@ namespace golang::runtime
                     dumpgstatus(gp);
                     go_throw("unexpected g status"_s);
                     break;
+
                 case 0:
                 case 1:
                 case 2:
@@ -328,6 +337,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         if(state.stopped)
         {
             // We stopped it, so we need to re-schedule it.
@@ -424,6 +434,7 @@ namespace golang::runtime
     std::tuple<bool, uintptr_t> isAsyncSafePoint(struct g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr)
     {
         auto mp = gp->m;
+
         // Only user Gs can have safe-points. We check this first
         // because it's extremely common that we'll catch mp in the
         // scheduler processing this G preemption.
@@ -431,16 +442,19 @@ namespace golang::runtime
         {
             return {false, 0};
         }
+
         // Check M state.
         if(mp->p == 0 || ! canPreemptM(mp))
         {
             return {false, 0};
         }
+
         // Check stack space.
         if(sp < gp->stack.lo || sp - gp->stack.lo < asyncPreemptStack)
         {
             return {false, 0};
         }
+
         // Check if PC is an unsafe-point.
         auto f = findfunc(pc);
         if(! rec::valid(gocpp::recv(f)))

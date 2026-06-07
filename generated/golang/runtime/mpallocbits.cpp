@@ -183,6 +183,7 @@ namespace golang::runtime
             }
             auto t = (unsigned int)(sys::TrailingZeros64(x));
             auto l = (unsigned int)(sys::LeadingZeros64(x));
+
             // Finish any region spanning the uint64s
             cur += t;
             if(start == notSetYet)
@@ -200,6 +201,7 @@ namespace golang::runtime
             return packPallocSum(n, n, n);
         }
         most = gocpp::max(most, cur);
+
         if(most >= 64 - 2)
         {
             // There is no way an internal run of zeros could beat max.
@@ -217,6 +219,7 @@ namespace golang::runtime
                 break;
             }
             auto x = b[i];
+
             // Look inside this uint64. We have a pattern like
             // 000000 1xxxxx1 000000
             // We need to look inside the 1xxxxx1 for any contiguous
@@ -228,6 +231,7 @@ namespace golang::runtime
                 // no more zeros (except at the top).
                 continue;
             }
+
             // Strategy: shrink all runs of zeros by max. If any runs of zero
             // remain, then we've identified a larger maximum zero run.
             // number of zeros we still need to shrink by.
@@ -262,6 +266,7 @@ namespace golang::runtime
                     // This allows us to shift farther in the next iteration.
                     k *= 2;
                 }
+
                 // The length of the lowest-order zero run is an increment to our maximum.
                 // count contiguous trailing ones
                 auto j = (unsigned int)(sys::TrailingZeros64(~ x));

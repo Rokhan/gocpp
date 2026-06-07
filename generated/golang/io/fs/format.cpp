@@ -36,6 +36,7 @@ namespace golang::fs
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 40 + len(name));
         b = append(b, rec::String(gocpp::recv(rec::Mode(gocpp::recv(info)))));
         b = append(b, ' ');
+
         auto size = rec::Size(gocpp::recv(info));
         uint64_t usize = {};
         if(size >= 0)
@@ -59,13 +60,16 @@ namespace golang::fs
         buf[i] = (unsigned char)('0' + usize);
         b = append(b, buf.make_slice(i));
         b = append(b, ' ');
+
         b = append(b, rec::Format(gocpp::recv(rec::ModTime(gocpp::recv(info))), time::DateTime));
         b = append(b, ' ');
+
         b = append(b, name);
         if(rec::IsDir(gocpp::recv(info)))
         {
             b = append(b, '/');
         }
+
         return gocpp::string(b);
     }
 
@@ -79,10 +83,12 @@ namespace golang::fs
     {
         auto name = rec::Name(gocpp::recv(dir));
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 5 + len(name));
+
         // The Type method does not return any permission bits,
         // so strip them from the string.
         auto mode = rec::String(gocpp::recv(rec::Type(gocpp::recv(dir))));
         mode = mode.make_slice(0, len(mode) - 9);
+
         b = append(b, mode);
         b = append(b, ' ');
         b = append(b, name);

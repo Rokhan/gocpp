@@ -235,6 +235,7 @@ namespace golang::sync
         {
             return false;
         }
+
         // Copy the interface after the first load to make this method more amenable
         // to escape analysis: if the comparison fails from the start, we shouldn't
         // bother heap-allocating an interface value to store.
@@ -288,6 +289,7 @@ namespace golang::sync
                 return {actual, loaded};
             }
         }
+
         rec::Lock(gocpp::recv(m->mu));
         read = rec::loadReadOnly(gocpp::recv(m));
         if(auto [e, ok] = read.m[key]; ok)
@@ -320,6 +322,7 @@ namespace golang::sync
             std::tie(actual, loaded) = std::tuple{value, false};
         }
         rec::Unlock(gocpp::recv(m->mu));
+
         return {actual, loaded};
     }
 
@@ -342,6 +345,7 @@ namespace golang::sync
         {
             return {*p, true, true};
         }
+
         // Copy the interface after the first load to make this method more amenable
         // to escape analysis: if we hit the "load" path or the entry is expunged, we
         // shouldn't bother heap-allocating.
@@ -457,6 +461,7 @@ namespace golang::sync
                 return {*v, true};
             }
         }
+
         rec::Lock(gocpp::recv(m->mu));
         read = rec::loadReadOnly(gocpp::recv(m));
         if(auto [e, ok] = read.m[key]; ok)
@@ -519,6 +524,7 @@ namespace golang::sync
                 // No existing value for key.
                 return false;
             }
+
             rec::Lock(gocpp::recv(m->mu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(m->mu)); });
             read = rec::loadReadOnly(gocpp::recv(m));
@@ -628,6 +634,7 @@ namespace golang::sync
             }
             rec::Unlock(gocpp::recv(m->mu));
         }
+
         for(auto [k, e] : read.m)
         {
             auto [v, ok] = rec::load(gocpp::recv(e));
@@ -662,6 +669,7 @@ namespace golang::sync
         {
             return;
         }
+
         auto read = rec::loadReadOnly(gocpp::recv(m));
         m->dirty = gocpp::make(gocpp::Tag<gocpp::map<go_any, entry*>>(), len(read.m));
         for(auto [k, e] : read.m)

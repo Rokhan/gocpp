@@ -385,6 +385,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         auto b = (bucket*)(persistentalloc(size, 0, & memstats.buckhash_sys));
         b->typ = typ;
         b->nstk = uintptr_t(nstk);
@@ -445,6 +446,7 @@ namespace golang::runtime
             }
             unlock(& profInsertLock);
         }
+
         // Hash stack.
         uintptr_t h = {};
         for(auto [gocpp_ignored, pc] : stk)
@@ -460,6 +462,7 @@ namespace golang::runtime
         // finalize
         h += h << 3;
         h ^= h >> 11;
+
         auto i = int(h % buckHashSize);
         // first check optimistically, without the lock
         for(auto b = (bucket*)(rec::Load(gocpp::recv(bh[i]))); b != nullptr; b = b->next)
@@ -469,10 +472,12 @@ namespace golang::runtime
                 return b;
             }
         }
+
         if(! alloc)
         {
             return nullptr;
         }
+
         lock(& profInsertLock);
         // check again under the insertion lock
         for(auto b = (bucket*)(rec::Load(gocpp::recv(bh[i]))); b != nullptr; b = b->next)
@@ -483,11 +488,13 @@ namespace golang::runtime
                 return b;
             }
         }
+
         // Create new bucket.
         auto b = newBucket(typ, len(stk));
         copy(rec::stk(gocpp::recv(b)), stk);
         b->hash = h;
         b->size = size;
+
         atomic::UnsafePointer* allnext = {};
         if(typ == memProfile)
         {
@@ -502,10 +509,13 @@ namespace golang::runtime
         {
             allnext = & bbuckets;
         }
+
         b->next = (bucket*)(rec::Load(gocpp::recv(bh[i])));
         b->allnext = (bucket*)(rec::Load(gocpp::recv(allnext)));
+
         rec::StoreNoWB(gocpp::recv(bh[i]), gocpp::unsafe_pointer(b));
         rec::StoreNoWB(gocpp::recv(allnext), gocpp::unsafe_pointer(b));
+
         unlock(& profInsertLock);
         return b;
     }
@@ -553,6 +563,7 @@ namespace golang::runtime
         {
             return;
         }
+
         auto index = cycle % uint32_t(len(memRecord {}.future));
         lock(& profMemActiveLock);
         lock(& profMemFutureLock[index]);
@@ -573,6 +584,7 @@ namespace golang::runtime
         for(auto b = head; b != nullptr; b = b->allnext)
         {
             auto mp = rec::mp(gocpp::recv(b));
+
             // Flush cycle C into the published profile and clear
             // it for reuse.
             auto mpc = & mp->future[index];
@@ -593,6 +605,7 @@ namespace golang::runtime
         // C+2, which have to become C+1 in the next mark termination
         // and so on.
         auto cycle = rec::read(gocpp::recv(mProfCycle)) + 1;
+
         auto index = cycle % uint32_t(len(memRecord {}.future));
         lock(& profMemActiveLock);
         lock(& profMemFutureLock[index]);
@@ -606,14 +619,18 @@ namespace golang::runtime
     {
         gocpp::array<uintptr_t, maxStack> stk = {};
         auto nstk = callers(4, stk.make_slice(0));
+
         auto index = (rec::read(gocpp::recv(mProfCycle)) + 2) % uint32_t(len(memRecord {}.future));
+
         auto b = stkbucket(memProfile, size, stk.make_slice(0, nstk), true);
         auto mp = rec::mp(gocpp::recv(b));
         auto mpc = & mp->future[index];
+
         lock(& profMemFutureLock[index]);
         mpc->allocs++;
         mpc->alloc_bytes += size;
         unlock(& profMemFutureLock[index]);
+
         // Setprofilebucket locks a bunch of other mutexes, so we call it outside of
         // the profiler locks. This reduces potential contention and chances of
         // deadlocks. Since the object must be alive during the call to
@@ -628,8 +645,10 @@ namespace golang::runtime
     void mProf_Free(struct bucket* b, uintptr_t size)
     {
         auto index = (rec::read(gocpp::recv(mProfCycle)) + 1) % uint32_t(len(memRecord {}.future));
+
         auto mp = rec::mp(gocpp::recv(b));
         auto mpc = & mp->future[index];
+
         lock(& profMemFutureLock[index]);
         mpc->frees++;
         mpc->free_bytes += size;
@@ -666,6 +685,7 @@ namespace golang::runtime
                 r = 1;
             }
         }
+
         atomic::Store64(& blockprofilerate, uint64_t(r));
     }
 
@@ -675,6 +695,7 @@ namespace golang::runtime
         {
             cycles = 1;
         }
+
         auto rate = int64_t(atomic::Load64(& blockprofilerate));
         if(blocksampled(cycles, rate))
         {
@@ -706,6 +727,7 @@ namespace golang::runtime
         {
             nstk = gcallers(gp->m->curg, skip, stk.make_slice(0));
         }
+
         saveBlockEventStack(cycles, rate, stk.make_slice(0, nstk), which);
     }
 
@@ -808,6 +830,7 @@ namespace golang::runtime
     void rec::begin(golang::runtime::lockTimer* lt)
     {
         auto rate = int64_t(atomic::Load64(& mutexprofilerate));
+
         lt->timeRate = gTrackingPeriod;
         if(rate != 0 && rate < lt->timeRate)
         {
@@ -817,6 +840,7 @@ namespace golang::runtime
         {
             lt->timeStart = nanotime();
         }
+
         if(rate > 0 && int64_t(cheaprand()) % rate == 0)
         {
             lt->tickStart = cputicks();
@@ -826,11 +850,13 @@ namespace golang::runtime
     void rec::end(golang::runtime::lockTimer* lt)
     {
         auto gp = getg();
+
         if(lt->timeStart != 0)
         {
             auto nowTime = nanotime();
             rec::Add(gocpp::recv(gp->m->mLockProfile.waitTime), (nowTime - lt->timeStart) * lt->timeRate);
         }
+
         if(lt->tickStart != 0)
         {
             auto nowTick = cputicks();
@@ -888,6 +914,7 @@ namespace golang::runtime
         {
             return;
         }
+
         if(prof->disabled)
         {
             // We're experiencing contention while attempting to report contention.
@@ -896,6 +923,7 @@ namespace golang::runtime
             prof->cyclesLost += cycles;
             return;
         }
+
         if(uintptr_t(gocpp::unsafe_pointer(l)) == prof->pending)
         {
             // Optimization: we'd already planned to profile this same lock (though
@@ -903,6 +931,7 @@ namespace golang::runtime
             prof->cycles += cycles;
             return;
         }
+
         if(auto prev = prof->cycles; prev > 0)
         {
             // We can only store one call stack for runtime-internal lock contention
@@ -962,12 +991,14 @@ namespace golang::runtime
             skip += 1;
         }
         prof->pending = 0;
+
         if(rec::Load(gocpp::recv(debug.runtimeContentionStacks)) == 0)
         {
             prof->stack[0] = abi::FuncPCABIInternal(_LostContendedRuntimeLock) + sys::PCQuantum;
             prof->stack[1] = 0;
             return;
         }
+
         int nstk = {};
         auto gp = getg();
         auto sp = getcallersp();
@@ -992,6 +1023,7 @@ namespace golang::runtime
         // without copying, since it won't change during this function.
         auto mp = acquirem();
         prof->disabled = true;
+
         auto nstk = maxStack;
         for(auto i = 0; i < nstk; i++)
         {
@@ -1001,8 +1033,10 @@ namespace golang::runtime
                 break;
             }
         }
+
         auto [cycles, lost] = std::tuple{prof->cycles, prof->cyclesLost};
         std::tie(prof->cycles, prof->cyclesLost) = std::tuple{0, 0};
+
         auto rate = int64_t(atomic::Load64(& mutexprofilerate));
         saveBlockEventStack(cycles, rate, prof->stack.make_slice(0, nstk), mutexProfile);
         if(lost > 0)
@@ -1010,6 +1044,7 @@ namespace golang::runtime
             auto lostStk = gocpp::array<uintptr_t, 1> {abi::FuncPCABIInternal(_LostContendedRuntimeLock) + sys::PCQuantum};
             saveBlockEventStack(lost, rate, lostStk.make_slice(0), mutexProfile);
         }
+
         prof->disabled = false;
         releasem(mp);
     }
@@ -1018,6 +1053,7 @@ namespace golang::runtime
     {
         auto b = stkbucket(which, 0, stk, true);
         auto bp = rec::bp(gocpp::recv(b));
+
         lock(& profBlockLock);
         // We want to up-scale the count and cycles according to the
         // probability that the event was sampled. For block profile events,
@@ -1512,6 +1548,7 @@ namespace golang::runtime
         {
             labels = nullptr;
         }
+
         return goroutineProfileWithLabelsConcurrent(p, labels);
     }
 
@@ -1601,7 +1638,9 @@ namespace golang::runtime
         int n;
         bool ok;
         semacquire(& goroutineProfile.sema);
+
         auto ourg = getg();
+
         auto stw = stopTheWorld(stwGoroutineProfile);
         // Using gcount while the world is stopped should give us a consistent view
         // of the number of live goroutines, minus the number of goroutines that are
@@ -1615,6 +1654,7 @@ namespace golang::runtime
         {
             n++;
         }
+
         if(n > len(p))
         {
             // There's not enough space in p to store the whole profile, so (per the
@@ -1624,6 +1664,7 @@ namespace golang::runtime
             semrelease(& goroutineProfile.sema);
             return {n, false};
         }
+
         // Save current goroutine.
         auto sp = getcallersp();
         auto pc = getcallerpc();
@@ -1637,6 +1678,7 @@ namespace golang::runtime
         }
         rec::Store(gocpp::recv(ourg->goroutineProfiled), goroutineProfileSatisfied);
         rec::Store(gocpp::recv(goroutineProfile.offset), 1);
+
         // Prepare for all other goroutines to enter the profile. Aside from ourg,
         // every goroutine struct in the allgs list has its goroutineProfiled field
         // cleared. Any goroutine created from this point on (while
@@ -1657,6 +1699,7 @@ namespace golang::runtime
             }
         }
         startTheWorld(stw);
+
         // Visit each goroutine that existed as of the startTheWorld call above.
         // New goroutines may not be in this list, but we didn't want to know about
         // them anyway. If they do appear in this list (via reusing a dead goroutine
@@ -1670,22 +1713,26 @@ namespace golang::runtime
         {
             tryRecordGoroutineProfile(gp1, Gosched);
         });
+
         stw = stopTheWorld(stwGoroutineProfileCleanup);
         auto endOffset = rec::Swap(gocpp::recv(goroutineProfile.offset), 0);
         goroutineProfile.active = false;
         goroutineProfile.records = nullptr;
         goroutineProfile.labels = nullptr;
         startTheWorld(stw);
+
         // Restore the invariant that every goroutine struct in allgs has its
         // goroutineProfiled field cleared.
         forEachGRace([=](struct g* gp1) mutable -> void
         {
             rec::Store(gocpp::recv(gp1->goroutineProfiled), goroutineProfileAbsent);
         });
+
         if(raceenabled)
         {
             raceacquire(gocpp::unsafe_pointer(& labelSync));
         }
+
         if(n != int(endOffset))
         {
         }
@@ -1733,6 +1780,7 @@ namespace golang::runtime
             // goroutine is marked as "already profiled".)
             return;
         }
+
         for(; ; )
         {
             auto prev = rec::Load(gocpp::recv(gp1->goroutineProfiled));
@@ -1749,6 +1797,7 @@ namespace golang::runtime
                 yield();
                 continue;
             }
+
             // While we have gp1.goroutineProfiled set to
             // goroutineProfileInProgress, gp1 may appear _Grunnable but will not
             // actually be able to run. Disable preemption for ourselves, to make
@@ -1778,7 +1827,9 @@ namespace golang::runtime
             print("doRecordGoroutineProfile gp1="_s, gp1->goid, "\n"_s);
             go_throw("cannot read stack of running goroutine"_s);
         }
+
         auto offset = int(rec::Add(gocpp::recv(goroutineProfile.offset), 1)) - 1;
+
         if(offset >= len(goroutineProfile.records))
         {
             // Should be impossible, but better to return a truncated profile than
@@ -1786,6 +1837,7 @@ namespace golang::runtime
             // goroutineProfileWithLabelsConcurrent where we have more context.
             return;
         }
+
         // saveg calls gentraceback, which may call cgo traceback functions. When
         // called from the scheduler, this is on the system stack already so
         // traceback.go:cgoContextPCs will avoid calling back into the scheduler.
@@ -1797,6 +1849,7 @@ namespace golang::runtime
         {
             saveg(~ uintptr_t(0), ~ uintptr_t(0), gp1, & goroutineProfile.records[offset]);
         });
+
         if(goroutineProfile.labels != nullptr)
         {
             goroutineProfile.labels[offset] = gp1->labels;
@@ -1808,13 +1861,16 @@ namespace golang::runtime
         int n;
         bool ok;
         auto gp = getg();
+
         auto isOK = [=](struct g* gp1) mutable -> bool
         {
             // Checking isSystemGoroutine here makes GoroutineProfile
             // consistent with both NumGoroutine and Stack.
             return gp1 != gp && readgstatus(gp1) != _Gdead && ! isSystemGoroutine(gp1, false);
         };
+
         auto stw = stopTheWorld(stwGoroutineProfile);
+
         // World is stopped, no locking required.
         n = 1;
         forEachGRace([=](struct g* gp1) mutable -> void
@@ -1824,10 +1880,12 @@ namespace golang::runtime
                 n++;
             }
         });
+
         if(n <= len(p))
         {
             ok = true;
             auto [r, lbl] = std::tuple{p, labels};
+
             // Save current goroutine.
             auto sp = getcallersp();
             auto pc = getcallerpc();
@@ -1836,12 +1894,14 @@ namespace golang::runtime
                 saveg(pc, sp, gp, & r[0]);
             });
             r = r.make_slice(1);
+
             // If we have a place to put our goroutine labelmap, insert it there.
             if(labels != nullptr)
             {
                 lbl[0] = gp->labels;
                 lbl = lbl.make_slice(1);
             }
+
             // Save other goroutines.
             forEachGRace([=](struct g* gp1) mutable -> void
             {
@@ -1849,6 +1909,7 @@ namespace golang::runtime
                 {
                     return;
                 }
+
                 if(len(r) == 0)
                 {
                     // Should be impossible, but better to return a
@@ -1871,10 +1932,12 @@ namespace golang::runtime
                 r = r.make_slice(1);
             });
         }
+
         if(raceenabled)
         {
             raceacquire(gocpp::unsafe_pointer(& labelSync));
         }
+
         startTheWorld(stw);
         return {n, ok};
     }
@@ -1914,6 +1977,7 @@ namespace golang::runtime
         {
             stw = stopTheWorld(stwAllGoroutinesStack);
         }
+
         auto n = 0;
         if(len(buf) > 0)
         {
@@ -1939,6 +2003,7 @@ namespace golang::runtime
                 g0->writebuf = nullptr;
             });
         }
+
         if(all)
         {
             startTheWorld(stw);

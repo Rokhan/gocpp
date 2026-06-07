@@ -84,6 +84,7 @@ namespace golang::runtime
         {
             return ""_s;
         }
+
         // If there is just one string and either it is not on the stack
         // or our result does not escape the calling frame (buf != nil),
         // then we can return that string directly.
@@ -156,6 +157,7 @@ namespace golang::runtime
             }
             return unsafe::String((unsigned char*)(p), 1);
         }
+
         gocpp::unsafe_pointer p = {};
         if(buf != nullptr && n <= len(buf))
         {
@@ -250,6 +252,7 @@ namespace golang::runtime
         {
             n++;
         }
+
         gocpp::slice<gocpp::rune> a = {};
         if(buf != nullptr && n <= len(buf))
         {
@@ -260,6 +263,7 @@ namespace golang::runtime
         {
             a = rawruneslice(n);
         }
+
         n = 0;
         for(auto [gocpp_ignored, r] : s)
         {
@@ -416,6 +420,7 @@ namespace golang::runtime
         {
             memclrNoHeapPointers(add(p, uintptr_t(size)), cap - uintptr_t(size));
         }
+
         *(slice*)(gocpp::unsafe_pointer(& b)) = slice {p, size, int(cap)};
         return b;
     }
@@ -434,6 +439,7 @@ namespace golang::runtime
         {
             memclrNoHeapPointers(add(p, uintptr_t(size) * 4), mem - uintptr_t(size) * 4);
         }
+
         *(slice*)(gocpp::unsafe_pointer(& b)) = slice {p, size, int(mem / 4)};
         return b;
     }
@@ -446,12 +452,15 @@ namespace golang::runtime
         {
             return gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0);
         }
+
         if(n < 0 || uintptr_t(n) > maxAlloc)
         {
             gocpp::panic(errorString("gobytes: length out of range"_s));
         }
+
         auto bp = mallocgc(uintptr_t(n), nullptr, false);
         memmove(bp, gocpp::unsafe_pointer(p), uintptr_t(n));
+
         *(slice*)(gocpp::unsafe_pointer(& b)) = slice {bp, n, n};
         return b;
     }
@@ -509,12 +518,14 @@ namespace golang::runtime
         {
             return {0, false};
         }
+
         auto neg = false;
         if(s[0] == '-')
         {
             neg = true;
             s = s.make_slice(1);
         }
+
         auto un = uint64_t(0);
         for(auto i = 0; i < len(s); i++)
         {
@@ -537,6 +548,7 @@ namespace golang::runtime
             }
             un = un1;
         }
+
         if(! neg && un > uint64_t(maxInt64))
         {
             return {0, false};
@@ -545,11 +557,13 @@ namespace golang::runtime
         {
             return {0, false};
         }
+
         auto n = int64_t(un);
         if(neg)
         {
             n = - n;
         }
+
         return {n, true};
     }
 
@@ -696,6 +710,7 @@ namespace golang::runtime
         {
             return 0;
         }
+
         // Avoid IndexByteString on Plan 9 because it uses SSE instructions
         // on x86 machines, and those are classified as floating point instructions,
         // which are illegal in a note handler.
@@ -709,17 +724,20 @@ namespace golang::runtime
             }
             return l;
         }
+
         // pageSize is the unit we scan at a time looking for NULL.
         // It must be the minimum page size for any architecture Go
         // runs on. It's okay (just a minor performance loss) if the
         // actual system page size is larger than this value.
         auto pageSize = 4096;
+
         auto offset = 0;
         auto ptr = gocpp::unsafe_pointer(s);
         // IndexByteString uses wide reads, so we need to be careful
         // with page boundaries. Call IndexByteString on
         // [ptr, endOfPage) interval.
         auto safeLen = int(pageSize - uintptr_t(ptr) % pageSize);
+
         for(; ; )
         {
             auto t = *(gocpp::string*)(gocpp::unsafe_pointer(new stringStruct {ptr, safeLen}));

@@ -1247,6 +1247,7 @@ namespace golang::syscall
             // Don't count trailing NUL for abstract address.
             sl--;
         }
+
         return {gocpp::unsafe_pointer(& sa->raw), sl, nullptr};
     }
 
@@ -1286,6 +1287,7 @@ namespace golang::syscall
                     sa->Name = gocpp::string(unsafe::Slice((unsigned char*)(gocpp::unsafe_pointer(& pp->Path[0])), n));
                     return {sa, nullptr};
                     break;
+
                 case 1:
                     auto pp = (RawSockaddrInet4*)(gocpp::unsafe_pointer(rsa));
                     auto sa = new(SockaddrInet4);
@@ -1294,6 +1296,7 @@ namespace golang::syscall
                     sa->Addr = pp->Addr;
                     return {sa, nullptr};
                     break;
+
                 case 2:
                     auto pp = (RawSockaddrInet6*)(gocpp::unsafe_pointer(rsa));
                     auto sa = new(SockaddrInet6);
@@ -2165,6 +2168,7 @@ namespace golang::syscall
                 return {- 1, err};
             }
             defer.push_back([=]{ CloseHandle(fd); });
+
             auto rdbbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
             uint32_t bytesReturned = {};
             err = DeviceIoControl(fd, FSCTL_GET_REPARSE_POINT, nullptr, 0, & rdbbuf[0], uint32_t(len(rdbbuf)), & bytesReturned, nullptr);
@@ -2172,6 +2176,7 @@ namespace golang::syscall
             {
                 return {- 1, err};
             }
+
             auto rdb = (reparseDataBuffer*)(gocpp::unsafe_pointer(& rdbbuf[0]));
             gocpp::string s = {};
             //Go switch emulation
@@ -2239,6 +2244,7 @@ namespace golang::syscall
                 }
             }
             n = copy(buf, gocpp::slice<unsigned char>(s));
+
             return {n, nullptr};
         }
         catch(gocpp::GoPanic& gp)

@@ -36,6 +36,7 @@ namespace golang::main
         auto python = false;
         auto java = "no!"_s;
         mocklib::Println(i, j, c, python, java);
+
         auto [name, offset, abs] = locabs();
         mocklib::Println(name, offset, abs);
     }

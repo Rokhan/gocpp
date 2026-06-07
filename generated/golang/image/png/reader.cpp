@@ -214,6 +214,7 @@ namespace golang::png
             return gocpp::error(FormatError("invalid interlace method"_s));
         }
         d->interlace = int(d->tmp[12]);
+
         auto w = int32_t(rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4)));
         auto h = int32_t(rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(4, 8)));
         if(w <= 0 || h <= 0)
@@ -231,6 +232,7 @@ namespace golang::png
         {
             return gocpp::error(UnsupportedError("dimension overflow"_s));
         }
+
         d->cb = cbInvalid;
         d->depth = int(d->tmp[8]);
         //Go switch emulation
@@ -484,6 +486,7 @@ namespace golang::png
                     }
                     d->useTransparent = true;
                     break;
+
                 case 5:
                 case 6:
                     if(length != 6)
@@ -499,6 +502,7 @@ namespace golang::png
                     copy(d->transparent.make_slice(0), d->tmp.make_slice(0, length));
                     d->useTransparent = true;
                     break;
+
                 case 7:
                 case 8:
                 case 9:
@@ -523,6 +527,7 @@ namespace golang::png
                         d->palette[i] = color::NRGBA {rgba.R, rgba.G, rgba.B, d->tmp[i]};
                     }
                     break;
+
                 default:
                     return gocpp::error(FormatError("tRNS, color type mismatch"_s));
                     break;
@@ -620,6 +625,7 @@ namespace golang::png
                     }
                 }
             }
+
             // Check for EOF, to verify the zlib checksum.
             auto n = 0;
             for(auto i = 0; n == 0 && err == nullptr; i++)
@@ -638,6 +644,7 @@ namespace golang::png
             {
                 return {nullptr, gocpp::error(FormatError("too much pixel data"_s))};
             }
+
             return {img, nullptr};
         }
         catch(gocpp::GoPanic& gp)
@@ -785,6 +792,7 @@ namespace golang::png
             return {img, nullptr};
         }
         auto bytesPerPixel = (bitsPerPixel + 7) / 8;
+
         // The +1 is for the per-row filter type, which is at cr[0].
         auto rowSize = 1 + (int64_t(bitsPerPixel) * int64_t(width) + 7) / 8;
         if(rowSize != int64_t(int(rowSize)))
@@ -794,6 +802,7 @@ namespace golang::png
         // cr and pr are the bytes for the current and previous row.
         auto cr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), rowSize);
         auto pr = gocpp::make(gocpp::Tag<gocpp::slice<uint8_t>>(), rowSize);
+
         for(auto y = 0; y < height; y++)
         {
             // Read the decompressed bytes.
@@ -806,6 +815,7 @@ namespace golang::png
                 }
                 return {nullptr, err};
             }
+
             // Apply the filter.
             auto cdat = cr.make_slice(1);
             auto pdat = pr.make_slice(1);
@@ -856,6 +866,7 @@ namespace golang::png
                         break;
                 }
             }
+
             // Convert from bytes to colors.
             //Go switch emulation
             {
@@ -1184,9 +1195,11 @@ namespace golang::png
                         break;
                 }
             }
+
             // The current row for y is the previous row for y+1.
             std::tie(pr, cr) = std::tuple{cr, pr};
         }
+
         return {img, nullptr};
     }
 
@@ -1341,6 +1354,7 @@ namespace golang::png
         auto length = rec::Uint32(gocpp::recv(binary::BigEndian), d->tmp.make_slice(0, 4));
         rec::Reset(gocpp::recv(d->crc));
         rec::Write(gocpp::recv(d->crc), d->tmp.make_slice(4, 8));
+
         // Read the chunk data.
         //Go switch emulation
         {
@@ -1516,6 +1530,7 @@ namespace golang::png
             }
             return {image::Config {}, err};
         }
+
         for(; ; )
         {
             if(auto err = rec::parseChunk(gocpp::recv(d), true); err != nullptr)
@@ -1526,6 +1541,7 @@ namespace golang::png
                 }
                 return {image::Config {}, err};
             }
+
             if(cbPaletted(d->cb))
             {
                 if(d->stage >= dsSeentRNS)
@@ -1541,6 +1557,7 @@ namespace golang::png
                 }
             }
         }
+
         color::Model cm = {};
         //Go switch emulation
         {

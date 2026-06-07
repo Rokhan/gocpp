@@ -370,6 +370,7 @@ namespace golang::runtime
         {
             print("stackcacherefill order="_s, order, "\n"_s);
         }
+
         // Grab some stacks from the global cache.
         // Grab half of the allowed capacity (to prevent thrashing).
         runtime::gclinkptr list = {};
@@ -456,6 +457,7 @@ namespace golang::runtime
         {
             print("stackalloc "_s, n, "\n"_s);
         }
+
         if(debug.efence != 0 || stackFromSystem != 0)
         {
             n = uint32_t(alignUp(uintptr_t(n), physPageSize));
@@ -466,6 +468,7 @@ namespace golang::runtime
             }
             return stack {uintptr_t(v), uintptr_t(v) + uintptr_t(n)};
         }
+
         // Small stacks are allocated with a fixed-size free-list allocator.
         // If we need a stack of a bigger size, we fall back on allocating
         // a dedicated span.
@@ -509,6 +512,7 @@ namespace golang::runtime
             mspan* s = {};
             auto npage = uintptr_t(n) >> _PageShift;
             auto log2npage = stacklog2(npage);
+
             // Try to get a stack from the large stack cache.
             lock(& stackLarge.lock);
             if(! rec::isEmpty(gocpp::recv(stackLarge.free[log2npage])))
@@ -517,7 +521,9 @@ namespace golang::runtime
                 rec::remove(gocpp::recv(stackLarge.free[log2npage]), s);
             }
             unlock(& stackLarge.lock);
+
             lockWithRankMayAcquire(& mheap_.lock, lockRankMheap);
+
             if(s == nullptr)
             {
                 // Allocate a new stack from the heap.
@@ -531,6 +537,7 @@ namespace golang::runtime
             }
             v = gocpp::unsafe_pointer(rec::base(gocpp::recv(s)));
         }
+
         if(raceenabled)
         {
             racemalloc(v, uintptr_t(n));
@@ -833,6 +840,7 @@ namespace golang::runtime
         {
             print("    adjusting "_s, funcname(f), " frame=["_s, hex(frame->sp), ","_s, hex(frame->fp), "] pc="_s, hex(frame->pc), " continpc="_s, hex(frame->continpc), "\n"_s);
         }
+
         // Adjust saved frame pointer if there is one.
         if((goarch::ArchFamily == goarch::AMD64 || goarch::ArchFamily == goarch::ARM64) && frame->argp - frame->varp == 2 * goarch::PtrSize)
         {
@@ -858,13 +866,16 @@ namespace golang::runtime
             // by the caller in its frame (one word below its SP).
             adjustpointer(adjinfo, gocpp::unsafe_pointer(frame->varp));
         }
+
         auto [locals, args, objs] = rec::getStackMap(gocpp::recv(frame), true);
+
         // Adjust local variables if stack frame has been allocated.
         if(locals.n > 0)
         {
             auto size = uintptr_t(locals.n) * goarch::PtrSize;
             adjustpointers(gocpp::unsafe_pointer(frame->varp - size), & locals, adjinfo, f);
         }
+
         // Adjust arguments.
         if(args.n > 0)
         {
@@ -874,6 +885,7 @@ namespace golang::runtime
             }
             adjustpointers(gocpp::unsafe_pointer(frame->argp), & args, adjinfo, funcInfo {});
         }
+
         // Adjust pointers in all stack objects (whether they are live or not).
         // See comments in mgcmark.go:scanframeworker.
         if(frame->varp != 0)
@@ -1015,6 +1027,7 @@ namespace golang::runtime
         {
             return 0;
         }
+
         // Lock channels to prevent concurrent send/receive.
         hchan* lastc = {};
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
@@ -1034,8 +1047,10 @@ namespace golang::runtime
             }
             lastc = sg->c;
         }
+
         // Adjust sudogs.
         adjustsudogs(gp, adjinfo);
+
         // Copy the part of the stack the sudogs point in to
         // while holding the lock to prevent races on
         // send/receive slots.
@@ -1047,6 +1062,7 @@ namespace golang::runtime
             sgsize = adjinfo->sghi - oldBot;
             memmove(gocpp::unsafe_pointer(newBot), gocpp::unsafe_pointer(oldBot), sgsize);
         }
+
         // Unlock channels.
         lastc = nullptr;
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
@@ -1057,6 +1073,7 @@ namespace golang::runtime
             }
             lastc = sg->c;
         }
+
         return sgsize;
     }
 
@@ -1079,6 +1096,7 @@ namespace golang::runtime
         // It's also fine if we have no P, addScannableStack can deal with
         // that case.
         rec::addScannableStack(gocpp::recv(gcController), rec::ptr(gocpp::recv(getg()->m->p)), int64_t(newsize) - int64_t(old.hi - old.lo));
+
         // allocate new stack
         auto go_new = stackalloc(uint32_t(newsize));
         if(stackPoisonCopy != 0)
@@ -1089,10 +1107,12 @@ namespace golang::runtime
         {
             print("copystack gp="_s, gp, " ["_s, hex(old.lo), " "_s, hex(old.hi - used), " "_s, hex(old.hi), "]"_s, " -> ["_s, hex(go_new.lo), " "_s, hex(go_new.hi - used), " "_s, hex(go_new.hi), "]/"_s, newsize, "\n"_s);
         }
+
         // Compute adjustment.
         adjustinfo adjinfo = {};
         adjinfo.old = old;
         adjinfo.delta = go_new.hi - old.hi;
+
         // Adjust sudogs, synchronizing with channel ops if necessary.
         auto ncopy = used;
         if(! gp->activeStackChans)
@@ -1117,12 +1137,15 @@ namespace golang::runtime
             // of the stack, so there's little cost in handling
             // everything below it carefully.)
             adjinfo.sghi = findsghi(gp, old);
+
             // Synchronize with channel ops and copy the part of
             // the stack they may interact with.
             ncopy -= syncadjustsudogs(gp, used, & adjinfo);
         }
+
         // Copy the stack (or the rest of it) to the new location
         memmove(gocpp::unsafe_pointer(go_new.hi - ncopy), gocpp::unsafe_pointer(old.hi - ncopy), ncopy);
+
         // Adjust remaining structures that have pointers into stacks.
         // We have to do most of these before we traceback the new
         // stack because gentraceback uses them.
@@ -1133,18 +1156,21 @@ namespace golang::runtime
         {
             adjinfo.sghi += adjinfo.delta;
         }
+
         // Swap out old stack for new one
         gp->stack = go_new;
         // NOTE: might clobber a preempt request
         gp->stackguard0 = go_new.lo + stackGuard;
         gp->sched.sp = go_new.hi - used;
         gp->stktopsp += adjinfo.delta;
+
         // Adjust pointers in the new stack.
         unwinder u = {};
         for(rec::init(gocpp::recv(u), gp, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
             adjustframe(& u.frame, & adjinfo);
         }
+
         // free old stack
         if(stackPoisonCopy != 0)
         {
@@ -1191,7 +1217,9 @@ namespace golang::runtime
             traceback(morebuf.pc, morebuf.sp, morebuf.lr, rec::ptr(gocpp::recv(morebuf.g)));
             go_throw("runtime: wrong goroutine in newstack"_s);
         }
+
         auto gp = thisg->m->curg;
+
         if(thisg->m->curg->throwsplit)
         {
             // Update syscallsp, syscallpc in case traceback uses them.
@@ -1206,20 +1234,24 @@ namespace golang::runtime
                 pcoff = gp->sched.pc - rec::entry(gocpp::recv(f));
             }
             print("runtime: newstack at "_s, pcname, "+"_s, hex(pcoff), " sp="_s, hex(gp->sched.sp), " stack=["_s, hex(gp->stack.lo), ", "_s, hex(gp->stack.hi), "]\n"_s, "\tmorebuf={pc:"_s, hex(morebuf.pc), " sp:"_s, hex(morebuf.sp), " lr:"_s, hex(morebuf.lr), "}\n"_s, "\tsched={pc:"_s, hex(gp->sched.pc), " sp:"_s, hex(gp->sched.sp), " lr:"_s, hex(gp->sched.lr), " ctxt:"_s, gp->sched.ctxt, "}\n"_s);
+
             // Include runtime frames
             thisg->m->traceback = 2;
             traceback(morebuf.pc, morebuf.sp, morebuf.lr, gp);
             go_throw("runtime: stack split at bad time"_s);
         }
+
         auto morebuf = thisg->m->morebuf;
         thisg->m->morebuf.pc = 0;
         thisg->m->morebuf.lr = 0;
         thisg->m->morebuf.sp = 0;
         thisg->m->morebuf.g = 0;
+
         // NOTE: stackguard0 may change underfoot, if another thread
         // is about to try to preempt gp. Read it just once and use that same
         // value now and below.
         auto stackguard0 = atomic::Loaduintptr(& gp->stackguard0);
+
         // Be conservative about where we preempt.
         // We are interested in preempting user Go code, not runtime code.
         // If we're holding locks, mallocing, or preemption is disabled, don't
@@ -1244,6 +1276,7 @@ namespace golang::runtime
                 gogo(& gp->sched);
             }
         }
+
         if(gp->stack.lo == 0)
         {
             go_throw("missing stack in newstack"_s);
@@ -1264,6 +1297,7 @@ namespace golang::runtime
             print("runtime: split stack overflow: "_s, hex(sp), " < "_s, hex(gp->stack.lo), "\n"_s);
             go_throw("runtime: split stack overflow"_s);
         }
+
         if(preempt)
         {
             if(gp == thisg->m->g0)
@@ -1274,6 +1308,7 @@ namespace golang::runtime
             {
                 go_throw("runtime: g is running but p is not"_s);
             }
+
             if(gp->preemptShrink)
             {
                 // We're at a synchronous safe point now, so
@@ -1281,18 +1316,22 @@ namespace golang::runtime
                 gp->preemptShrink = false;
                 shrinkstack(gp);
             }
+
             if(gp->preemptStop)
             {
                 // never returns
                 preemptPark(gp);
             }
+
             // Act like goroutine called runtime.Gosched.
             // never return
             gopreempt_m(gp);
         }
+
         // Allocate a bigger segment and move the stack.
         auto oldsize = gp->stack.hi - gp->stack.lo;
         auto newsize = oldsize * 2;
+
         // Make sure we grow at least as much as needed to fit the new frame.
         // (This is just an optimization - the caller of morestack will
         // recheck the bounds on return.)
@@ -1306,6 +1345,7 @@ namespace golang::runtime
                 newsize *= 2;
             }
         }
+
         if(stackguard0 == stackForceMove)
         {
             // Forced stack movement used for debugging.
@@ -1313,6 +1353,7 @@ namespace golang::runtime
             // if this is done repeatedly).
             newsize = oldsize;
         }
+
         if(newsize > maxstacksize || newsize > maxstackceiling)
         {
             if(maxstacksize < maxstackceiling)
@@ -1326,9 +1367,11 @@ namespace golang::runtime
             print("runtime: sp="_s, hex(sp), " stack=["_s, hex(gp->stack.lo), ", "_s, hex(gp->stack.hi), "]\n"_s);
             go_throw("stack overflow"_s);
         }
+
         // The goroutine must be executing in order to call newstack,
         // so it must be Grunning (or Gscanrunning).
         casgstatus(gp, _Grunning, _Gcopystack);
+
         // The concurrent GC will not scan the stack while we are doing the copy since
         // the gp is in a Gcopystack status.
         copystack(gp, newsize);
@@ -1412,6 +1455,7 @@ namespace golang::runtime
         {
             go_throw("shrinking stack in libcall"_s);
         }
+
         if(debug.gcshrinkstackoff > 0)
         {
             return;
@@ -1423,6 +1467,7 @@ namespace golang::runtime
             // stack (see gcBgMarkWorker for explanation).
             return;
         }
+
         auto oldsize = gp->stack.hi - gp->stack.lo;
         auto newsize = oldsize / 2;
         // Don't shrink the allocation below the minimum-sized stack
@@ -1441,10 +1486,12 @@ namespace golang::runtime
         {
             return;
         }
+
         if(stackDebug > 0)
         {
             print("shrinking stack "_s, oldsize, "->"_s, newsize, "\n"_s);
         }
+
         copystack(gp, newsize);
     }
 
@@ -1470,6 +1517,7 @@ namespace golang::runtime
             }
             unlock(& stackpool[order].item.mu);
         }
+
         // Free large stack spans.
         lock(& stackLarge.lock);
         for(auto [i, gocpp_ignored] : stackLarge.free)

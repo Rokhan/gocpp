@@ -151,9 +151,11 @@ namespace golang::registry
         {
             return {""_s, err};
         }
+
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 1024);
         uint32_t buflen = {};
         uint16_t* pdir = {};
+
         err = regLoadMUIString(syscall::Handle(k), pname, & buf[0], uint32_t(len(buf)), & buflen, 0, pdir);
         if(err == syscall::ERROR_FILE_NOT_FOUND)
         {
@@ -174,8 +176,10 @@ namespace golang::registry
             {
                 return {""_s, err};
             }
+
             err = regLoadMUIString(syscall::Handle(k), pname, & buf[0], uint32_t(len(buf)), & buflen, 0, pdir);
         }
+
         for(; err == syscall::ERROR_MORE_DATA; )
         {
             // Grow buffer if needed
@@ -187,10 +191,12 @@ namespace golang::registry
             buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), buflen);
             err = regLoadMUIString(syscall::Handle(k), pname, & buf[0], uint32_t(len(buf)), & buflen, 0, pdir);
         }
+
         if(err != nullptr)
         {
             return {""_s, err};
         }
+
         return {syscall::UTF16ToString(buf), nullptr};
     }
 

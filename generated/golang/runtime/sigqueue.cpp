@@ -119,13 +119,17 @@ namespace golang::runtime
         {
             return false;
         }
+
         // We are running in the signal handler; defer is not available.
         rec::Add(gocpp::recv(sig.delivering), 1);
+
+
         if(auto w = atomic::Load(& sig.wanted[s / 32]); w & bit == 0)
         {
             rec::Add(gocpp::recv(sig.delivering), - 1);
             return false;
         }
+
         // Add signal to outgoing queue.
         for(; ; )
         {
@@ -141,6 +145,7 @@ namespace golang::runtime
                 break;
             }
         }
+
         // Notify receiver that queue has new bit.
         Send:
         for(; ; )
@@ -188,6 +193,7 @@ namespace golang::runtime
                 }
             }
         }
+
         rec::Add(gocpp::recv(sig.delivering), - 1);
         return true;
     }
@@ -209,6 +215,7 @@ namespace golang::runtime
                     return i;
                 }
             }
+
             // Wait for updates to be available from signal sender.
             Receive:
             for(; ; )
@@ -252,6 +259,7 @@ namespace golang::runtime
                     }
                 }
             }
+
             // Incorporate updates from sender into local copy.
             for(auto [i, gocpp_ignored] : sig.mask)
             {
@@ -280,6 +288,7 @@ namespace golang::runtime
         {
             Gosched();
         }
+
         // Although WaitUntilIdle seems like the right name for this
         // function, the state we are looking for is sigReceiving, not
         // sigIdle.  The sigIdle state is really more like sigProcessing.
@@ -308,16 +317,20 @@ namespace golang::runtime
                 noteclear(& sig.note);
             }
         }
+
         if(s >= uint32_t(len(sig.wanted) * 32))
         {
             return;
         }
+
         auto w = sig.wanted[s / 32];
         w |= 1 << (s & 31);
         atomic::Store(& sig.wanted[s / 32], w);
+
         auto i = sig.ignored[s / 32];
         i &^= 1 << (s & 31);
         atomic::Store(& sig.ignored[s / 32], i);
+
         sigenable(s);
     }
 
@@ -331,6 +344,7 @@ namespace golang::runtime
             return;
         }
         sigdisable(s);
+
         auto w = sig.wanted[s / 32];
         w &^= 1 << (s & 31);
         atomic::Store(& sig.wanted[s / 32], w);
@@ -346,9 +360,11 @@ namespace golang::runtime
             return;
         }
         sigignore(s);
+
         auto w = sig.wanted[s / 32];
         w &^= 1 << (s & 31);
         atomic::Store(& sig.wanted[s / 32], w);
+
         auto i = sig.ignored[s / 32];
         i |= 1 << (s & 31);
         atomic::Store(& sig.ignored[s / 32], i);

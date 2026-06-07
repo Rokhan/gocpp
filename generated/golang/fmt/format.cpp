@@ -228,6 +228,7 @@ namespace golang::fmt
     void rec::fmtUnicode(golang::fmt::fmt* f, uint64_t u)
     {
         auto buf = f->intbuf.make_slice(0);
+
         // With default precision set the maximum needed buf length is 18
         // for formatting -1 with %#U ("U+FFFFFFFFFFFFFFFF") which fits
         // into the already allocated intbuf with a capacity of 68 bytes.
@@ -242,8 +243,10 @@ namespace golang::fmt
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), width);
             }
         }
+
         // Format into buf, ending at buf[i]. Formatting numbers is easier right-to-left.
         auto i = len(buf);
+
         // For %#U we want to add a space and a quoted character at the end of the buffer.
         if(f->fmtFlags.sharp && u <= utf8::MaxRune && strconv::IsPrint(gocpp::rune(u)))
         {
@@ -279,6 +282,7 @@ namespace golang::fmt
         buf[i] = '+';
         i--;
         buf[i] = 'U';
+
         auto oldZero = f->fmtFlags.zero;
         f->fmtFlags.zero = false;
         rec::pad(gocpp::recv(f), buf.make_slice(i));
@@ -293,6 +297,7 @@ namespace golang::fmt
         {
             u = - u;
         }
+
         auto buf = f->intbuf.make_slice(0);
         // The already allocated f.intbuf with a capacity of 68 bytes
         // is large enough for integer formatting when no precision or width is set.
@@ -307,6 +312,7 @@ namespace golang::fmt
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), width);
             }
         }
+
         // Two ways to ask for extra leading zero digits: %.3d or %03d.
         // If both are specified the f.zero flag is ignored and
         // padding with spaces is used instead.
@@ -334,6 +340,7 @@ namespace golang::fmt
                 prec--;
             }
         }
+
         // Because printing is easier right-to-left: format u into buf, ending at buf[i].
         // We could make things marginally faster by splitting the 32-bit case out
         // into a separate block but it's not worth the duplication, so u has 64 bits.
@@ -395,6 +402,7 @@ namespace golang::fmt
             i--;
             buf[i] = '0';
         }
+
         // Various prefixes: 0x, -, etc.
         if(f->fmtFlags.sharp)
         {
@@ -438,6 +446,7 @@ namespace golang::fmt
             i--;
             buf[i] = '0';
         }
+
         if(negative)
         {
             i--;
@@ -455,6 +464,7 @@ namespace golang::fmt
             i--;
             buf[i] = ' ';
         }
+
         // Left padding with zeros has already been handled like precision earlier
         // or the f.zero flag is ignored due to an explicitly set precision.
         auto oldZero = f->fmtFlags.zero;
@@ -746,10 +756,12 @@ namespace golang::fmt
                         break;
                 }
             }
+
             // Buffer pre-allocated with enough room for
             // exponent notations of the form "e+123" or "p-1023".
             gocpp::array<unsigned char, 6> tailBuf = {};
             auto tail = tailBuf.make_slice(0, 0);
+
             auto hasDecimalPoint = false;
             auto sawNonzeroDigit = false;
             // Starting from i = 1 to skip sign at num[0].

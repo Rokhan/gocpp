@@ -219,6 +219,7 @@ namespace golang::time
             // Move to ext.
             rec::stripMono(gocpp::recv(t));
         }
+
         // Check if the sum of t.ext and d overflows and handle it properly.
         auto sum = t->ext + d;
         if((sum > t->ext) == (d > 0))
@@ -629,12 +630,14 @@ namespace golang::time
     {
         // Largest time is 2540400h10m10.000000000s
         auto w = len(buf);
+
         auto u = uint64_t(d);
         auto neg = d < 0;
         if(neg)
         {
             u = - u;
         }
+
         if(u < uint64_t(Second))
         {
             // Special case: if duration is smaller than a second,
@@ -682,10 +685,13 @@ namespace golang::time
         {
             w--;
             buf[w] = 's';
+
             std::tie(w, u) = fmtFrac(buf.make_slice(0, w), u, 9);
+
             // u is now integer seconds
             w = fmtInt(buf.make_slice(0, w), u % 60);
             u /= 60;
+
             // u is now integer minutes
             if(u > 0)
             {
@@ -693,6 +699,7 @@ namespace golang::time
                 buf[w] = 'm';
                 w = fmtInt(buf.make_slice(0, w), u % 60);
                 u /= 60;
+
                 // u is now integer hours
                 // Stop at hours because days can be different lengths.
                 if(u > 0)
@@ -703,11 +710,13 @@ namespace golang::time
                 }
             }
         }
+
         if(neg)
         {
             w--;
             buf[w] = '-';
         }
+
         return w;
     }
 
@@ -1040,10 +1049,12 @@ namespace golang::time
         int yday;
         // Split into time and day.
         auto d = abs / secondsPerDay;
+
         // Account for 400 year cycles.
         auto n = d / daysPer400Years;
         auto y = 400 * n;
         d -= daysPer400Years * n;
+
         // Cut off 100-year cycles.
         // The last cycle has one extra leap year, so on the last day
         // of that year, day / daysPer100Years will be 4 instead of 3.
@@ -1052,12 +1063,14 @@ namespace golang::time
         n -= n >> 2;
         y += 100 * n;
         d -= daysPer100Years * n;
+
         // Cut off 4-year cycles.
         // The last cycle has a missing leap year, which does not
         // affect the computation.
         n = d / daysPer4Years;
         y += 4 * n;
         d -= daysPer4Years * n;
+
         // Cut off years within a 4-year cycle.
         // The last year is a leap year, so on the last day of that year,
         // day / 365 will be 4 instead of 3. Cut it back down to 3
@@ -1066,12 +1079,15 @@ namespace golang::time
         n -= n >> 2;
         y += n;
         d -= 365 * n;
+
         year = int(int64_t(y) + absoluteZeroYear);
         yday = int(d);
+
         if(! full)
         {
             return {year, month, day, yday};
         }
+
         day = yday;
         if(isLeap(year))
         {
@@ -1096,6 +1112,7 @@ namespace golang::time
                 }
             }
         }
+
         // Estimate month on assumption that every month has 31 days.
         // The estimate may be too low by at most one month, so adjust.
         month = Month(day / 31);
@@ -1110,6 +1127,7 @@ namespace golang::time
         {
             begin = int(daysBefore[month]);
         }
+
         // because January is 1
         month++;
         day = day - begin + 1;
@@ -1135,21 +1153,26 @@ namespace golang::time
     uint64_t daysSinceEpoch(int year)
     {
         auto y = uint64_t(int64_t(year) - absoluteZeroYear);
+
         // Add in days from 400-year cycles.
         auto n = y / 400;
         y -= 400 * n;
         auto d = daysPer400Years * n;
+
         // Add in 100-year cycles.
         n = y / 100;
         y -= 100 * n;
         d += daysPer100Years * n;
+
         // Add in 4-year cycles.
         n = y / 4;
         y -= 4 * n;
         d += daysPer4Years * n;
+
         // Add in non-leap years.
         n = y;
         d += 365 * n;
+
         return d;
     }
 
@@ -1313,6 +1336,7 @@ namespace golang::time
         int16_t offsetMin = {};
         int8_t offsetSec = {};
         auto version = timeBinaryVersionV1;
+
         if(rec::Location(gocpp::recv(t)) == UTC)
         {
             offsetMin = - 1;
@@ -1325,6 +1349,7 @@ namespace golang::time
                 version = timeBinaryVersionV2;
                 offsetSec = int8_t(offset % 60);
             }
+
             offset /= 60;
             if(offset < - 32768 || offset == - 1 || offset > 32767)
             {
@@ -1332,6 +1357,7 @@ namespace golang::time
             }
             offsetMin = int16_t(offset);
         }
+
         auto sec = rec::sec(gocpp::recv(t));
         auto nsec = rec::nsec(gocpp::recv(t));
         auto enc = gocpp::slice<unsigned char> {version, (unsigned char)(sec >> 56), (unsigned char)(sec >> 48), (unsigned char)(sec >> 40), (unsigned char)(sec >> 32), (unsigned char)(sec >> 24), (unsigned char)(sec >> 16), (unsigned char)(sec >> 8), (unsigned char)(sec), (unsigned char)(nsec >> 24), (unsigned char)(nsec >> 16), (unsigned char)(nsec >> 8), (unsigned char)(nsec), (unsigned char)(offsetMin >> 8), (unsigned char)(offsetMin)};
@@ -1339,6 +1365,7 @@ namespace golang::time
         {
             enc = append(enc, (unsigned char)(offsetSec));
         }
+
         return {enc, nullptr};
     }
 
@@ -1350,11 +1377,13 @@ namespace golang::time
         {
             return errors::New("Time.UnmarshalBinary: no data"_s);
         }
+
         auto version = buf[0];
         if(version != timeBinaryVersionV1 && version != timeBinaryVersionV2)
         {
             return errors::New("Time.UnmarshalBinary: unsupported version"_s);
         }
+
         auto wantLen = 1 + 8 + 4 + 2;
         if(version == timeBinaryVersionV2)
         {
@@ -1364,19 +1393,24 @@ namespace golang::time
         {
             return errors::New("Time.UnmarshalBinary: invalid length"_s);
         }
+
         buf = buf.make_slice(1);
         auto sec = int64_t(buf[7]) | (int64_t(buf[6]) << 8) | (int64_t(buf[5]) << 16) | (int64_t(buf[4]) << 24) | (int64_t(buf[3]) << 32) | (int64_t(buf[2]) << 40) | (int64_t(buf[1]) << 48) | (int64_t(buf[0]) << 56);
+
         buf = buf.make_slice(8);
         auto nsec = int32_t(buf[3]) | (int32_t(buf[2]) << 8) | (int32_t(buf[1]) << 16) | (int32_t(buf[0]) << 24);
+
         buf = buf.make_slice(4);
         auto offset = int(int16_t(buf[1]) | (int16_t(buf[0]) << 8)) * 60;
         if(version == timeBinaryVersionV2)
         {
             offset += int(buf[2]);
         }
+
         *t = Time {};
         t->wall = uint64_t(nsec);
         t->ext = sec;
+
         if(offset == - 1 * 60)
         {
             rec::setLoc(gocpp::recv(t), & utcLoc);
@@ -1390,6 +1424,7 @@ namespace golang::time
         {
             rec::setLoc(gocpp::recv(t), FixedZone(""_s, offset));
         }
+
         return nullptr;
     }
 
@@ -1561,17 +1596,21 @@ namespace golang::time
         {
             gocpp::panic("time: missing Location in call to Date"_s);
         }
+
         // Normalize month, overflowing into year.
         auto m = int(month) - 1;
         std::tie(year, m) = norm(year, m, 12);
         month = Month(m) + 1;
+
         // Normalize nsec, sec, min, hour, overflowing into day.
         std::tie(sec, nsec) = norm(sec, nsec, 1e9);
         std::tie(min, sec) = norm(min, sec, 60);
         std::tie(hour, min) = norm(hour, min, 60);
         std::tie(day, hour) = norm(day, hour, 24);
+
         // Compute days since the absolute epoch.
         auto d = daysSinceEpoch(year);
+
         // Add in days before this month.
         d += uint64_t(daysBefore[month - 1]);
         if(isLeap(year) && month >= March)
@@ -1579,12 +1618,16 @@ namespace golang::time
             // February 29
             d++;
         }
+
         // Add in days before today.
         d += uint64_t(day - 1);
+
         // Add in time elapsed today.
         auto abs = d * secondsPerDay;
         abs += uint64_t(hour * secondsPerHour + min * secondsPerMinute + sec);
+
         auto unix = int64_t(abs) + (absoluteToInternal + internalToUnix);
+
         // Look for zone offset for expected time, so we can adjust to UTC.
         // The lookup function expects UTC, so first we pass unix in the
         // hope that it will not be too close to a zone transition,
@@ -1601,6 +1644,7 @@ namespace golang::time
             }
             unix -= int64_t(offset);
         }
+
         auto t = unixTime(unix, int32_t(nsec));
         rec::setLoc(gocpp::recv(t), loc);
         return t;
@@ -1670,6 +1714,7 @@ namespace golang::time
                 sec--;
             }
         }
+
         //Go switch emulation
         {
             int conditionId = -1;
@@ -1682,12 +1727,14 @@ namespace golang::time
                     qmod2 = int(nsec / int32_t(d)) & 1;
                     r = Duration(nsec % int32_t(d));
                     break;
+
                 // Special case: d is a multiple of 1 second.
                 case 1:
                     auto d1 = int64_t(d / Second);
                     qmod2 = int(sec / d1) & 1;
                     r = Duration(sec % d1) * Second + Duration(nsec);
                     break;
+
                 // General case.
                 // This could be faster if more cleverness were applied,
                 // but it's really only here to avoid special case restrictions in the API.
@@ -1745,6 +1792,7 @@ namespace golang::time
                     break;
             }
         }
+
         if(neg && r != 0)
         {
             // If input was negative and not an exact multiple of d, we computed q, r such that

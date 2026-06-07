@@ -51,6 +51,7 @@ namespace golang::rand
                 // This case should be hit better than 99% of the time.
                 return x;
             }
+
             if(i == 0)
             {
                 // This extra work is only required for the base strip.

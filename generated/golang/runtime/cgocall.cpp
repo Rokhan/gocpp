@@ -136,18 +136,23 @@ namespace golang::runtime
         {
             go_throw("cgocall unavailable"_s);
         }
+
         if(fn == nullptr)
         {
             go_throw("cgocall nil"_s);
         }
+
         if(raceenabled)
         {
             racereleasemerge(gocpp::unsafe_pointer(& racecgosync));
         }
+
         auto mp = getg()->m;
         mp->ncgocall++;
+
         // Reset traceback.
         mp->cgoCallers[0] = 0;
+
         // Announce we are entering a system call
         // so that the scheduler knows to create another
         // M to run goroutines while we are in the
@@ -161,12 +166,14 @@ namespace golang::runtime
         // and then re-enter the "system call" reusing the PC and SP
         // saved by entersyscall here.
         entersyscall();
+
         // Tell asynchronous preemption that we're entering external
         // code. We do this after entersyscall because this may block
         // and cause an async preemption to fail, but at this point a
         // sync preemption will succeed (though this is not a matter
         // of correctness).
         osPreemptExtEnter(mp);
+
         mp->incgo = true;
         // We use ncgo as a check during execution tracing for whether there is
         // any C on the call stack, which there will be after this point. If
@@ -175,19 +182,25 @@ namespace golang::runtime
         // on a stack, so it's preferable to update it here, after we emit a
         // trace event in entersyscall above.
         mp->ncgo++;
+
         auto errno = asmcgocall(fn, arg);
+
         // Update accounting before exitsyscall because exitsyscall may
         // reschedule us on to a different M.
         mp->incgo = false;
         mp->ncgo--;
+
         osPreemptExtExit(mp);
+
         exitsyscall();
+
         // Note that raceacquire must be called only after exitsyscall has
         // wired this M to a P.
         if(raceenabled)
         {
             raceacquire(gocpp::unsafe_pointer(& racecgosync));
         }
+
         // From the garbage collector's perspective, time can move
         // backwards in the sequence above. If there's a callback into
         // Go code, GC will see this function at the call to
@@ -201,6 +214,7 @@ namespace golang::runtime
         KeepAlive(fn);
         KeepAlive(arg);
         KeepAlive(mp);
+
         return errno;
     }
 
@@ -218,6 +232,7 @@ namespace golang::runtime
             // Stack already in bounds, nothing to do.
             return;
         }
+
         if(mp->ncgo > 0)
         {
             // ncgo > 0 indicates that this M was in Go further up the stack
@@ -232,10 +247,12 @@ namespace golang::runtime
             g0->stack.lo = sp - 32 * 1024;
             g0->stackguard0 = g0->stack.lo + stackGuard;
             g0->stackguard1 = g0->stackguard0;
+
             print("M "_s, mp->id, " procid "_s, mp->procid, " runtime: cgocallback with sp="_s, hex(sp), " out of bounds ["_s, hex(lo), ", "_s, hex(hi), "]"_s);
             print("\n"_s);
             exit(2);
         }
+
         // This M does not have Go further up the stack. However, it may have
         // previously called into Go, initializing the stack bounds. Between
         // that call returning and now the stack may have changed (perhaps the
@@ -282,19 +299,24 @@ namespace golang::runtime
             println("runtime: bad g in cgocallback"_s);
             exit(2);
         }
+
         // system sp saved by cgocallback.
         auto sp = gp->m->g0->sched.sp;
         callbackUpdateSystemStack(gp->m, sp, false);
+
         // The call from C is on gp.m's g0 stack, so we must ensure
         // that we stay on that M. We have to do this before calling
         // exitsyscall, since it would otherwise be free to move us to
         // a different M. The call to unlockOSThread is in this function
         // after cgocallbackg1, or in the case of panicking, in unwindm.
         lockOSThread();
+
         auto checkm = gp->m;
+
         // Save current syscall parameters, so m.syscall can be
         // used again if callback decide to make syscall.
         auto syscall = gp->m->syscall;
+
         // entersyscall saves the caller's SP to allow the GC to trace the Go
         // stack. However, since we're returning to an earlier stack frame and
         // need to pair with the entersyscall() call made by cgocall, we must
@@ -308,28 +330,37 @@ namespace golang::runtime
         {
             gp->m->isExtraInC = false;
         }
+
         osPreemptExtExit(gp->m);
+
         if(gp->nocgocallback)
         {
             gocpp::panic("runtime: function marked with #cgo nocallback called back into Go"_s);
         }
+
         cgocallbackg1(fn, frame, ctxt);
+
         // At this point we're about to call unlockOSThread.
         // The following code must not change to a different m.
         // This is enforced by checking incgo in the schedule function.
         gp->m->incgo = true;
         unlockOSThread();
+
         if(gp->m->isextra)
         {
             gp->m->isExtraInC = true;
         }
+
         if(gp->m != checkm)
         {
             go_throw("m changed unexpectedly in cgocallbackg"_s);
         }
+
         osPreemptExtEnter(gp->m);
+
         // going back to cgo call
         reentersyscall(savedpc, uintptr_t(savedsp));
+
         gp->m->syscall = syscall;
     }
 
@@ -339,14 +370,17 @@ namespace golang::runtime
         try
         {
             auto gp = getg();
+
             if(gp->m->needextram || rec::Load(gocpp::recv(extraMWaiters)) > 0)
             {
                 gp->m->needextram = false;
                 systemstack(newextram);
             }
+
             if(ctxt != 0)
             {
                 auto s = append(gp->cgoCtxt, ctxt);
+
                 // Now we need to set gp.cgoCtxt = s, but we could get
                 // a SIGPROF signal while manipulating the slice, and
                 // the SIGPROF handler could pick up gp.cgoCtxt while
@@ -357,6 +391,7 @@ namespace golang::runtime
                 atomicstorep(gocpp::unsafe_pointer(& p->array), gocpp::unsafe_pointer(& s[0]));
                 p->cap = cap(s);
                 p->len = len(s);
+
                 defer.push_back([=]{ [=](struct g* gp) mutable -> void
                 {
                     // Decrease the length of the slice by one, safely.
@@ -364,6 +399,7 @@ namespace golang::runtime
                     p->len--;
                 }(gp); });
             }
+
             if(gp->m->ncgo == 0)
             {
                 // The C call to Go came from a thread not currently running
@@ -372,6 +408,7 @@ namespace golang::runtime
                 // is complete. Wait until it is.
                 main_init_done.recv();
             }
+
             // Check whether the profiler needs to be turned on or off; this route to
             // run Go code does not use runtime.execute, so bypasses the check there.
             auto hz = sched.profilehz;
@@ -379,23 +416,28 @@ namespace golang::runtime
             {
                 setThreadCPUProfiler(hz);
             }
+
             // Add entry to defer stack in case of panic.
             auto restore = true;
             defer.push_back([=]{ unwindm(& restore); });
+
             if(raceenabled)
             {
                 raceacquire(gocpp::unsafe_pointer(& racecgosync));
             }
+
             // Invoke callback. This function is generated by cmd/cgo and
             // will unpack the argument frame and call the Go function.
             std::function<void (gocpp::unsafe_pointer frame)> cb = {};
             auto cbFV = funcval {uintptr_t(fn)};
             *(gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(& cb)) = noescape(gocpp::unsafe_pointer(& cbFV));
             cb(frame);
+
             if(raceenabled)
             {
                 racereleasemerge(gocpp::unsafe_pointer(& racecgosync));
             }
+
             // Do not unwind m->g0->sched.sp.
             // Our caller, cgocallback, will do that.
             restore = false;
@@ -415,6 +457,7 @@ namespace golang::runtime
             auto mp = acquirem();
             auto sched = & mp->g0->sched;
             sched->sp = *(uintptr_t*)(gocpp::unsafe_pointer(sched->sp + alignUp(sys::MinFrameSize, sys::StackAlign)));
+
             // Do the accounting that cgocall will not have a chance to do
             // during an unwind.
             // In the case where a Go call originates from C, ncgo is 0
@@ -425,6 +468,7 @@ namespace golang::runtime
                 mp->ncgo--;
                 osPreemptExtExit(mp);
             }
+
             // Undo the call to lockOSThread in cgocallbackg, only on the
             // panicking path. In normal return case cgocallbackg will call
             // unlockOSThread, ensuring no preemption point after the unlock.
@@ -432,6 +476,7 @@ namespace golang::runtime
             // panicking out of the callback and unwinding the g0 stack,
             // instead of reentering cgo (which requires the same thread).
             unlockOSThread();
+
             releasem(mp);
         }
     }
@@ -457,8 +502,10 @@ namespace golang::runtime
         {
             return;
         }
+
         auto ep = efaceOf(& ptr);
         auto t = ep->_type;
+
         auto top = true;
         if(arg != nullptr && (t->Kind_ & kindMask == kindPtr || t->Kind_ & kindMask == kindUnsafePointer))
         {
@@ -510,6 +557,7 @@ namespace golang::runtime
                 }
             }
         }
+
         cgoCheckArg(t, ep->data, t->Kind_ & kindDirectIface == 0, top, cgoCheckPointerFail);
     }
 
@@ -527,6 +575,7 @@ namespace golang::runtime
             // If the type has no pointers there is nothing to do.
             return;
         }
+
         //Go switch emulation
         {
             auto condition = t->Kind_ & kindMask;
@@ -735,6 +784,7 @@ namespace golang::runtime
             }
             return {base, i};
         }
+
         for(auto [gocpp_ignored, datap] : activeModules())
         {
             // In the text or noptr sections, we know that the
@@ -746,6 +796,7 @@ namespace golang::runtime
                 gocpp::panic(errorString(msg));
             }
         }
+
         return {base, i};
     }
 
@@ -761,10 +812,12 @@ namespace golang::runtime
         {
             return false;
         }
+
         if(inHeapOrStack(uintptr_t(p)))
         {
             return true;
         }
+
         for(auto [gocpp_ignored, datap] : activeModules())
         {
             if(cgoInRange(p, datap->data, datap->edata) || cgoInRange(p, datap->bss, datap->ebss))
@@ -772,6 +825,7 @@ namespace golang::runtime
                 return true;
             }
         }
+
         return false;
     }
 
@@ -793,6 +847,7 @@ namespace golang::runtime
         {
             return;
         }
+
         auto ep = efaceOf(& val);
         auto t = ep->_type;
         cgoCheckArg(t, ep->data, t->Kind_ & kindDirectIface == 0, false, cgoResultFail);

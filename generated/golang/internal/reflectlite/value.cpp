@@ -486,6 +486,7 @@ namespace golang::reflectlite
         {
             gocpp::panic(new ValueError {"reflectlite.Value.Interface"_s, 0});
         }
+
         if(rec::kind(gocpp::recv(v)) == abi::Interface)
         {
             // Special case: return the element inside the interface.
@@ -497,6 +498,7 @@ namespace golang::reflectlite
             }
             return *(gocpp_id_4*)(v.ptr);
         }
+
         // TODO: pass safe to packEface so we don't need to copy if safe==true?
         return packEface(v);
     }
@@ -697,6 +699,7 @@ namespace golang::reflectlite
                     fl |= flag(rec::Kind(gocpp::recv(dst)));
                     return Value {dst, v.ptr, fl};
                     break;
+
                 case 1:
                     if(target == nullptr)
                     {
@@ -722,6 +725,7 @@ namespace golang::reflectlite
                     break;
             }
         }
+
         // Failed.
         gocpp::panic(context + ": value of type "_s + rec::String(gocpp::recv(toRType(rec::typ(gocpp::recv(v))))) + " is not assignable to type "_s + rec::String(gocpp::recv(toRType(dst))));
     }

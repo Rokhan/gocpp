@@ -148,6 +148,7 @@ namespace golang::runtime
         {
             return;
         }
+
         sizeClassBuckets = gocpp::make(gocpp::Tag<gocpp::slice<double>>(), _NumSizeClasses, _NumSizeClasses + 1);
         // Skip size class 0 which is a stand-in for large objects, but large
         // objects are tracked separately (and they actually get placed in
@@ -169,6 +170,7 @@ namespace golang::runtime
             sizeClassBuckets[i] = double(class_to_size[i] + 1);
         }
         sizeClassBuckets = append(sizeClassBuckets, float64Inf());
+
         timeHistBuckets = timeHistogramMetricsBuckets();
         metrics = gocpp::map<gocpp::string, metricData> {{ "/cgo/go-to-c-calls:calls"_s, gocpp::Init<>([=](auto& x) {
             x.compute = [=](struct statAggregate* _1, struct metricValue* out) mutable -> void
@@ -556,6 +558,7 @@ namespace golang::runtime
                 out->scalar = float64bits(nsToSec(totalMutexWaitTimeNanos()));
             };
         }) }};
+
         for(auto [gocpp_ignored, info] : godebugs::All)
         {
             if(! info.Opaque)
@@ -565,6 +568,7 @@ namespace golang::runtime
                 });
             }
         }
+
         metricsInit = true;
     }
 
@@ -708,6 +712,7 @@ namespace golang::runtime
     void rec::compute(golang::runtime::heapStatsAggregate* a)
     {
         rec::read(gocpp::recv(memstats.heapStats), & a->heapStatsDelta);
+
         // Calculate derived stats.
         a->totalAllocs = a->heapStatsDelta.largeAllocCount;
         a->totalFrees = a->heapStatsDelta.largeFreeCount;
@@ -802,6 +807,7 @@ namespace golang::runtime
         a->heapGoal = rec::heapGoal(gocpp::recv(gcController));
         a->gcCyclesDone = uint64_t(memstats.numgc);
         a->gcCyclesForced = uint64_t(memstats.numforcedgc);
+
         systemstack([=]() mutable -> void
         {
             lock(& mheap_.lock);
@@ -1180,13 +1186,16 @@ namespace golang::runtime
         initMetrics();
         auto n = len(metrics);
         metricsUnlock();
+
         auto list = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, n);
+
         metricsLock();
         for(auto [name, gocpp_ignored] : metrics)
         {
             list = append(list, name);
         }
         metricsUnlock();
+
         return list;
     }
 
@@ -1196,8 +1205,10 @@ namespace golang::runtime
     void readMetrics(gocpp::unsafe_pointer samplesp, int len, int cap)
     {
         metricsLock();
+
         // Ensure the map is initialized.
         initMetrics();
+
         // Read the metrics.
         readMetricsLocked(samplesp, len, cap);
         metricsUnlock();
@@ -1212,8 +1223,10 @@ namespace golang::runtime
         // Construct a slice from the args.
         auto sl = slice {samplesp, len, cap};
         auto samples = *(gocpp::slice<metricSample>*)(gocpp::unsafe_pointer(& sl));
+
         // Clear agg defensively.
         agg = statAggregate {};
+
         // Sample.
         for(auto [i, gocpp_ignored] : samples)
         {
@@ -1227,6 +1240,7 @@ namespace golang::runtime
             // Ensure we have all the stats we need.
             // agg is populated lazily.
             rec::ensure(gocpp::recv(agg), & data.deps);
+
             // Compute the value based on the stats we have.
             data.compute(& agg, & sample->value);
         }

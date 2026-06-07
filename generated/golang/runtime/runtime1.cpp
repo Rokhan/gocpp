@@ -138,6 +138,7 @@ namespace golang::runtime
         {
             n++;
         }
+
         envs = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), n);
         for(auto i = int32_t(0); i < n; i++)
         {
@@ -251,6 +252,7 @@ namespace golang::runtime
         };
         x1t x1 = {};
         y1t y1 = {};
+
         if(gocpp::Sizeof<int8_t>() != 1)
         {
             go_throw("bad a"_s);
@@ -311,10 +313,12 @@ namespace golang::runtime
         {
             go_throw("bad unsafe.Sizeof y1"_s);
         }
+
         if(timediv(12345 * 1000000000 + 54321, 1000000000, & e) != 12345 || e != 54321)
         {
             go_throw("bad timediv"_s);
         }
+
         uint32_t z = {};
         z = 1;
         if(! atomic::Cas(& z, 1, 2))
@@ -325,6 +329,7 @@ namespace golang::runtime
         {
             go_throw("cas2"_s);
         }
+
         z = 4;
         if(atomic::Cas(& z, 5, 6))
         {
@@ -334,6 +339,7 @@ namespace golang::runtime
         {
             go_throw("cas4"_s);
         }
+
         z = 0xffffffff;
         if(! atomic::Cas(& z, 0xffffffff, 0xfffffffe))
         {
@@ -343,18 +349,21 @@ namespace golang::runtime
         {
             go_throw("cas6"_s);
         }
+
         m = gocpp::array<unsigned char, 4> {1, 1, 1, 1};
         atomic::Or8(& m[1], 0xf0);
         if(m[0] != 1 || m[1] != 0xf1 || m[2] != 1 || m[3] != 1)
         {
             go_throw("atomicor8"_s);
         }
+
         m = gocpp::array<unsigned char, 4> {0xff, 0xff, 0xff, 0xff};
         atomic::And8(& m[1], 0x1);
         if(m[0] != 0xff || m[1] != 0x1 || m[2] != 0xff || m[3] != 0xff)
         {
             go_throw("atomicand8"_s);
         }
+
         *(uint64_t*)(gocpp::unsafe_pointer(& j)) = ~ uint64_t(0);
         if(j == j)
         {
@@ -364,6 +373,7 @@ namespace golang::runtime
         {
             go_throw("float64nan1"_s);
         }
+
         *(uint64_t*)(gocpp::unsafe_pointer(& j1)) = ~ uint64_t(1);
         if(j == j1)
         {
@@ -373,6 +383,7 @@ namespace golang::runtime
         {
             go_throw("float64nan3"_s);
         }
+
         *(uint32_t*)(gocpp::unsafe_pointer(& i)) = ~ uint32_t(0);
         if(i == i)
         {
@@ -382,6 +393,7 @@ namespace golang::runtime
         {
             go_throw("float32nan1"_s);
         }
+
         *(uint32_t*)(gocpp::unsafe_pointer(& i1)) = ~ uint32_t(1);
         if(i == i1)
         {
@@ -391,11 +403,14 @@ namespace golang::runtime
         {
             go_throw("float32nan3"_s);
         }
+
         testAtomic64();
+
         if(fixedStack != round2(fixedStack))
         {
             go_throw("FixedStack is not power-of-2"_s);
         }
+
         if(! checkASM())
         {
             go_throw("assembly checks failed"_s);
@@ -687,10 +702,13 @@ namespace golang::runtime
             debug.madvdontneed = 1;
         }
         debug.traceadvanceperiod = defaultTraceAdvancePeriod;
+
         auto godebug = gogetenv("GODEBUG"_s);
+
         auto p = new(string);
         *p = godebug;
         rec::Store<gocpp::string>(gocpp::recv(godebugEnv), p);
+
         // apply runtime defaults, if any
         for(auto [gocpp_ignored, v] : dbgvars)
         {
@@ -708,11 +726,15 @@ namespace golang::runtime
                 }
             }
         }
+
         // apply compile-time GODEBUG settings
         parsegodebug(godebugDefault, nullptr);
+
         // apply environment settings
         parsegodebug(godebug, nullptr);
+
         debug.malloc = (debug.allocfreetrace | debug.inittrace | debug.sbrk) != 0;
+
         setTraceback(gogetenv("GOTRACEBACK"_s));
         traceback_env = traceback_cache;
     }
@@ -795,6 +817,7 @@ namespace golang::runtime
             {
                 seen[key] = true;
             }
+
             // Update MemProfileRate directly here since it
             // is int, not int32, and should only be updated
             // if specified in GODEBUG.
@@ -827,6 +850,7 @@ namespace golang::runtime
                 }
             }
         }
+
         if(debug.cgocheck > 1)
         {
             go_throw("cgocheck > 1 mode is no longer supported at runtime. Use GOEXPERIMENT=cgocheck2 at build time instead."_s);
@@ -888,7 +912,9 @@ namespace golang::runtime
         {
             t |= tracebackCrash;
         }
+
         t |= traceback_env;
+
         atomic::Store(& traceback_cache, t);
     }
 

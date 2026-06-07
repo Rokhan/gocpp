@@ -338,6 +338,7 @@ namespace golang::strings
         {
             n = Count(s, sep) + 1;
         }
+
         if(n > len(s) + 1)
         {
             n = len(s) + 1;
@@ -453,6 +454,7 @@ namespace golang::strings
             n += wasSpace & ~ isSpace;
             wasSpace = isSpace;
         }
+
         if(setBits >= utf8::RuneSelf)
         {
             // Some runes in the input string are not ASCII.
@@ -521,6 +523,7 @@ namespace golang::strings
             }
         };
         auto spans = gocpp::make(gocpp::Tag<gocpp::slice<span>>(), 0, 32);
+
         // Find the field start and end indices.
         // Doing this in a separate pass (rather than slicing the string s
         // and collecting the result substrings right away) is significantly
@@ -548,17 +551,20 @@ namespace golang::strings
                 }
             }
         }
+
         // Last field might end at EOF.
         if(start >= 0)
         {
             spans = append(spans, span {start, len(s)});
         }
+
         // Create strings from recorded field indices.
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), len(spans));
         for(auto [i, span] : spans)
         {
             a[i] = s.make_slice(span.start, span.end);
         }
+
         return a;
     }
 
@@ -582,6 +588,7 @@ namespace golang::strings
                     break;
             }
         }
+
         int n = {};
         if(len(sep) > 0)
         {
@@ -599,6 +606,7 @@ namespace golang::strings
             }
             n += len(elem);
         }
+
         Builder b = {};
         rec::Grow(gocpp::recv(b), n);
         rec::WriteString(gocpp::recv(b), elems[0]);
@@ -633,6 +641,7 @@ namespace golang::strings
         // The output buffer b is initialized on demand, the first
         // time a character differs.
         Builder b = {};
+
         for(auto [i, c] : s)
         {
             auto r = mapping(c);
@@ -640,6 +649,7 @@ namespace golang::strings
             {
                 continue;
             }
+
             int width = {};
             if(c == utf8::RuneError)
             {
@@ -653,24 +663,29 @@ namespace golang::strings
             {
                 width = utf8::RuneLen(c);
             }
+
             rec::Grow(gocpp::recv(b), len(s) + utf8::UTFMax);
             rec::WriteString(gocpp::recv(b), s.make_slice(0, i));
             if(r >= 0)
             {
                 rec::WriteRune(gocpp::recv(b), r);
             }
+
             s = s.make_slice(i + width);
             break;
         }
+
         // Fast path for unchanged input
         if(rec::Cap(gocpp::recv(b)) == 0)
         {
             // didn't call b.Grow above
             return s;
         }
+
         for(auto [gocpp_ignored, c] : s)
         {
             auto r = mapping(c);
+
             if(r >= 0)
             {
                 // common case
@@ -687,6 +702,7 @@ namespace golang::strings
                 }
             }
         }
+
         return rec::String(gocpp::recv(b));
     }
 
@@ -712,6 +728,7 @@ namespace golang::strings
                     break;
             }
         }
+
         // Since we cannot return an error on overflow,
         // we should panic if the repeat will generate an overflow.
         // See golang.org/issue/16237.
@@ -724,10 +741,12 @@ namespace golang::strings
             gocpp::panic("strings: Repeat output length overflow"_s);
         }
         auto n = len(s) * count;
+
         if(len(s) == 0)
         {
             return ""_s;
         }
+
         // Past a certain chunk size it is counterproductive to use
         // larger chunks as the source of the write, as when the source
         // is too large we are basically just thrashing the CPU D-cache.
@@ -748,6 +767,7 @@ namespace golang::strings
                 chunkMax = len(s);
             }
         }
+
         Builder b = {};
         rec::Grow(gocpp::recv(b), n);
         rec::WriteString(gocpp::recv(b), s);
@@ -781,6 +801,7 @@ namespace golang::strings
             }
             hasLower = hasLower || ('a' <= c && c <= 'z');
         }
+
         if(isASCII)
         {
             // optimize for ASCII-only strings.
@@ -828,6 +849,7 @@ namespace golang::strings
             }
             hasUpper = hasUpper || ('A' <= c && c <= 'Z');
         }
+
         if(isASCII)
         {
             // optimize for ASCII-only strings.
@@ -894,12 +916,14 @@ namespace golang::strings
     gocpp::string ToValidUTF8(gocpp::string s, gocpp::string replacement)
     {
         Builder b = {};
+
         for(auto [i, c] : s)
         {
             if(c != utf8::RuneError)
             {
                 continue;
             }
+
             auto [gocpp_id_1, wid] = utf8::DecodeRuneInString(s.make_slice(i));
             if(wid == 1)
             {
@@ -909,12 +933,14 @@ namespace golang::strings
                 break;
             }
         }
+
         // Fast path for unchanged input
         if(rec::Cap(gocpp::recv(b)) == 0)
         {
             // didn't call b.Grow above
             return s;
         }
+
         // previous byte was from an invalid UTF-8 sequence
         auto invalid = false;
         for(auto i = 0; i < len(s); )
@@ -942,6 +968,7 @@ namespace golang::strings
             rec::WriteString(gocpp::recv(b), s.make_slice(i, i + wid));
             i += wid;
         }
+
         return rec::String(gocpp::recv(b));
     }
 
@@ -1284,6 +1311,7 @@ namespace golang::strings
                 break;
             }
         }
+
         // Now look for the first ASCII non-space byte from the end
         auto stop = len(s);
         for(; stop > start; stop--)
@@ -1299,6 +1327,7 @@ namespace golang::strings
                 break;
             }
         }
+
         // At this point s[start:stop] starts and ends with an ASCII
         // non-space bytes, so we're done. Non-ASCII cases have already
         // been handled above.
@@ -1340,6 +1369,7 @@ namespace golang::strings
             // avoid allocation
             return s;
         }
+
         // Compute number of replacements.
         if(auto m = Count(s, old); m == 0)
         {
@@ -1351,6 +1381,7 @@ namespace golang::strings
         {
             n = m;
         }
+
         // Apply replacements to buffer.
         Builder b = {};
         rec::Grow(gocpp::recv(b), len(s) + n * (len(go_new) - len(old)));
@@ -1403,11 +1434,13 @@ namespace golang::strings
             {
                 goto hasUnicode;
             }
+
             // Easy case.
             if(tr == sr)
             {
                 continue;
             }
+
             // Make sr < tr to simplify what follows.
             if(tr < sr)
             {
@@ -1422,6 +1455,7 @@ namespace golang::strings
         }
         // Check if we've exhausted both strings.
         return len(s) == len(t);
+
         hasUnicode:
         s = s.make_slice(i);
         t = t.make_slice(i);
@@ -1432,6 +1466,7 @@ namespace golang::strings
             {
                 return false;
             }
+
             // Extract first rune from second string.
             gocpp::rune tr = {};
             if(t[0] < utf8::RuneSelf)
@@ -1443,12 +1478,14 @@ namespace golang::strings
                 auto [r, size] = utf8::DecodeRuneInString(t);
                 std::tie(tr, t) = std::tuple{r, t.make_slice(size)};
             }
+
             // If they match, keep going; if not, return false.
             // Easy case.
             if(tr == sr)
             {
                 continue;
             }
+
             // Make sr < tr to simplify what follows.
             if(tr < sr)
             {
@@ -1464,6 +1501,7 @@ namespace golang::strings
                 }
                 return false;
             }
+
             // General case. SimpleFold(x) returns the next equivalent rune > x
             // or wraps around to smaller values.
             auto r = unicode::SimpleFold(sr);
@@ -1477,6 +1515,7 @@ namespace golang::strings
             }
             return false;
         }
+
         // First string is empty, so check if the second one is also empty.
         return len(t) == 0;
     }

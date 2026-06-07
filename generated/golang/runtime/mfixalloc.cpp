@@ -141,6 +141,7 @@ namespace golang::runtime
             go_throw("runtime: fixalloc size too large"_s);
         }
         size = gocpp::max(size, gocpp::Sizeof<mlink>());
+
         f->size = size;
         f->first = first;
         f->arg = arg;
@@ -161,6 +162,7 @@ namespace golang::runtime
             print("runtime: use of FixAlloc_Alloc before FixAlloc_Init\n"_s);
             go_throw("runtime: internal error"_s);
         }
+
         if(f->list != nullptr)
         {
             auto v = gocpp::unsafe_pointer(f->list);
@@ -177,6 +179,7 @@ namespace golang::runtime
             f->chunk = uintptr_t(persistentalloc(uintptr_t(f->nalloc), 0, f->stat));
             f->nchunk = f->nalloc;
         }
+
         auto v = gocpp::unsafe_pointer(f->chunk);
         if(f->first != nullptr)
         {

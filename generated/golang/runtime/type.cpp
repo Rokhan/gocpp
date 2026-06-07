@@ -252,6 +252,7 @@ namespace golang::runtime
                 });
             }
         }
+
         // No module found. see if it is a run time name.
         reflectOffsLock();
         auto [res, found] = reflectOffs.m[int32_t(off)];
@@ -425,6 +426,7 @@ namespace golang::runtime
             return;
         }
         auto typehash = gocpp::make(gocpp::Tag<gocpp::map<uint32_t, gocpp::slice<runtime::_type*>>>(), len(firstmoduledata.typelinks));
+
         auto modules = activeModules();
         auto prev = modules[0];
         for(auto [gocpp_ignored, md] : modules.make_slice(1))
@@ -459,6 +461,7 @@ namespace golang::runtime
                 }
                 typehash[t->Hash] = append(tlist, t);
             }
+
             if(md->typemap == nullptr)
             {
                 // If any of this module's typelinks match a type from a
@@ -482,6 +485,7 @@ namespace golang::runtime
                     md->typemap[typeOff(tl)] = t;
                 }
             }
+
             prev = md;
         }
     }
@@ -601,10 +605,12 @@ namespace golang::runtime
         {
             return true;
         }
+
         // mark these types as seen, and thus equivalent which prevents an infinite loop if
         // the two types are identical, but recursively defined and loaded from
         // different modules
         seen[tp] = gocpp_id_4 {};
+
         if(t == v)
         {
             return true;

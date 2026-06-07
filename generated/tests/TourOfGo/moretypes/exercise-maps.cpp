@@ -25,6 +25,7 @@ namespace golang::main
     {
         auto fields = mocklib::StringsFields(s);
         auto wc = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
+
         for(auto [gocpp_ignored, f] : fields)
         {
             wc[f]++;

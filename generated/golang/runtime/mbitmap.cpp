@@ -209,7 +209,9 @@ namespace golang::runtime
         {
             go_throw("s.freeindex > s.nelems"_s);
         }
+
         auto aCache = s->allocCache;
+
         auto bitIndex = sys::TrailingZeros64(aCache);
         for(; bitIndex == 64; )
         {
@@ -234,8 +236,10 @@ namespace golang::runtime
             s->freeindex = snelems;
             return snelems;
         }
+
         s->allocCache >>= (unsigned int)(bitIndex + 1);
         sfreeindex = result + 1;
+
         if(sfreeindex % 64 == 0 && sfreeindex != snelems)
         {
             // We just incremented s.freeindex so it isn't 0.
@@ -276,8 +280,10 @@ namespace golang::runtime
     uintptr_t rec::divideByElemSize(golang::runtime::mspan* s, uintptr_t n)
     {
         auto doubleCheck = false;
+
         // See explanation in mksizeclasses.go's computeDivMagic.
         auto q = uintptr_t((uint64_t(n) * uint64_t(s->divMul)) >> 32);
+
         if(doubleCheck && q != n / s->elemsize)
         {
             println(n, "/"_s, s->elemsize, "should be"_s, n / s->elemsize, "but got"_s, q);
@@ -458,6 +464,7 @@ namespace golang::runtime
             }
             return {base, s, objIndex};
         }
+
         objIndex = rec::objIndex(gocpp::recv(s), p);
         base = rec::base(gocpp::recv(s)) + objIndex * s->elemsize;
         return {base, s, objIndex};
@@ -487,6 +494,7 @@ namespace golang::runtime
         auto word = maskOffset / goarch::PtrSize;
         bits = addb(bits, word / 8);
         auto mask = uint8_t(1) << (word % 8);
+
         auto buf = & rec::ptr(gocpp::recv(getg()->m->p))->wbBuf;
         for(auto i = uintptr_t(0); i < size; i += goarch::PtrSize)
         {
@@ -683,9 +691,11 @@ namespace golang::runtime
     uintptr_t runGCProg(unsigned char* prog, unsigned char* dst)
     {
         auto dstStart = dst;
+
         // Bits waiting to be written to memory.
         uintptr_t bits = {};
         uintptr_t nbits = {};
+
         auto p = prog;
         Run:
         for(; ; )
@@ -704,6 +714,7 @@ namespace golang::runtime
                 dst = add1(dst);
                 bits >>= 8;
             }
+
             // Process one instruction.
             auto inst = uintptr_t(*p);
             p = add1(p);
@@ -733,6 +744,7 @@ namespace golang::runtime
                 }
                 goto Run_continue;
             }
+
             // Repeat. If n == 0, it is encoded in a varint in the next bytes.
             if(n == 0)
             {
@@ -747,6 +759,7 @@ namespace golang::runtime
                     }
                 }
             }
+
             // Count is encoded in a varint in the next bytes.
             auto c = uintptr_t(0);
             for(auto off = (unsigned int)(0); ; off += 7)
@@ -761,6 +774,7 @@ namespace golang::runtime
             }
             // now total number of bits to copy
             c *= n;
+
             // If the number of bits being repeated is small, load them
             // into a register and use that register for the entire loop
             // instead of repeatedly reading from memory.
@@ -775,6 +789,7 @@ namespace golang::runtime
                 // Start with bits in output buffer.
                 auto pattern = bits;
                 auto npattern = nbits;
+
                 // If we need more bits, fetch them from memory.
                 src = subtract1(src);
                 for(; npattern < n; )
@@ -784,6 +799,7 @@ namespace golang::runtime
                     src = subtract1(src);
                     npattern += 8;
                 }
+
                 // We started with the whole bit output buffer,
                 // and then we loaded bits from whole bytes.
                 // Either way, we might now have too many instead of too few.
@@ -793,6 +809,7 @@ namespace golang::runtime
                     pattern >>= npattern - n;
                     npattern = n;
                 }
+
                 // Replicate pattern to at most maxBits.
                 if(npattern == 1)
                 {
@@ -832,6 +849,7 @@ namespace golang::runtime
                         npattern = nb;
                     }
                 }
+
                 // Add pattern to bit buffer and flush bit buffer, c/npattern times.
                 // Since pattern contains >8 bits, there will be full bytes to flush
                 // on each iteration.
@@ -847,6 +865,7 @@ namespace golang::runtime
                         nbits -= 8;
                     }
                 }
+
                 // Add final fragment to bit buffer.
                 if(c > 0)
                 {
@@ -856,6 +875,7 @@ namespace golang::runtime
                 }
                 goto Run_continue;
             }
+
             // Repeat; n too large to fit in a register.
             // Since nbits <= 7, we know the first few bytes of repeated data
             // are already written to memory.
@@ -887,6 +907,7 @@ namespace golang::runtime
                 nbits += c;
             }
         }
+
         // Write any final bits out, using full-byte writes, even for the final byte.
         auto totalBits = (uintptr_t(gocpp::unsafe_pointer(dst)) - uintptr_t(gocpp::unsafe_pointer(dstStart))) * 8 + nbits;
         nbits += - nbits & 7;

@@ -95,6 +95,7 @@ namespace golang::os
         {
             return syscall::Getwd();
         }
+
         // Clumsy but widespread kludge:
         // if $PWD is set and matches ".", use it.
         fs::FileInfo dot;
@@ -112,6 +113,7 @@ namespace golang::os
                 return {dir, nullptr};
             }
         }
+
         // If the operating system provides a Getwd call, use it.
         // Otherwise, we're trying to find our way back to ".".
         if(syscall::ImplementsGetwd)
@@ -128,6 +130,7 @@ namespace golang::os
             }
             return {s, NewSyscallError("getwd"_s, e)};
         }
+
         // Apply same kludge but to cached dir instead of $PWD.
         rec::Lock(gocpp::recv(getwdCache));
         dir = getwdCache.dir;
@@ -140,6 +143,7 @@ namespace golang::os
                 return {dir, nullptr};
             }
         }
+
         // Root is a special case because it has no parent
         // and ends in a slash.
         fs::FileInfo root;
@@ -153,6 +157,7 @@ namespace golang::os
         {
             return {"/"_s, nullptr};
         }
+
         // General algorithm: find name in parent
         // and then find name of parent. Each iteration
         // adds /name to the beginning of dir.
@@ -169,6 +174,7 @@ namespace golang::os
             {
                 return {""_s, err};
             }
+
             for(; ; )
             {
                 auto [names, err] = rec::Readdirnames(gocpp::recv(fd), 100);
@@ -187,6 +193,7 @@ namespace golang::os
                     }
                 }
             }
+
             Found:
             fs::FileInfo pd;
             std::tie(pd, err) = rec::Stat(gocpp::recv(fd));
@@ -202,10 +209,12 @@ namespace golang::os
             // Set up for next round.
             dot = pd;
         }
+
         // Save answer as hint to avoid the expensive path next time.
         rec::Lock(gocpp::recv(getwdCache));
         getwdCache.dir = dir;
         rec::Unlock(gocpp::recv(getwdCache));
+
         return {dir, nullptr};
     }
 

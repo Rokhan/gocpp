@@ -93,6 +93,7 @@ namespace golang::main
         {
             gocpp::go([&]{ rec::Inc(gocpp::recv(c), "somekey"_s); });
         }
+
         mocklib::Sleep(mocklib::Second);
         mocklib::Println("result: "_s, rec::Value(gocpp::recv(c), "somekey"_s));
         mocklib::Println("expected: "_s, 1000);

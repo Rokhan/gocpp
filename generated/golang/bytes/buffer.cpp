@@ -287,6 +287,7 @@ namespace golang::bytes
             {
                 gocpp::panic(errNegativeRead);
             }
+
             b->buf = b->buf.make_slice(0, i + m);
             n += int64_t(m);
             if(e == io::go_EOF)

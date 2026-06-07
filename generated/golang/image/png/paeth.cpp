@@ -23,6 +23,7 @@ namespace golang::png
     {
         // m := -1 if x < 0. m := 0 otherwise.
         auto m = x >> (intSize - 1);
+
         // In two's complement representation, the negative number
         // of any number (except the smallest one) can be computed
         // by flipping all the bits and add 1. This is faster than

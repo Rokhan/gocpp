@@ -117,11 +117,14 @@ namespace golang::runtime
     void traceFrequency(uintptr_t gen)
     {
         auto w = unsafeTraceWriter(gen, nullptr);
+
         // Ensure we have a place to write to.
         std::tie(w, std::ignore) = rec::ensure(gocpp::recv(w), 1 + traceBytesPerNumber);
+
         // Write out the string.
         rec::byte(gocpp::recv(w), (unsigned char)(traceEvFrequency));
         rec::varint(gocpp::recv(w), traceClockUnitsPerSecond());
+
         // Immediately flush the buffer.
         systemstack([=]() mutable -> void
         {

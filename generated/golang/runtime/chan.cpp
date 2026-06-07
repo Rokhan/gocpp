@@ -159,12 +159,14 @@ namespace golang::runtime
         {
             gocpp::panic(plainError("makechan: size out of range"_s));
         }
+
         return makechan(t, int(size));
     }
 
     struct hchan* makechan(golang::runtime::chantype* t, int size)
     {
         auto elem = t->Elem;
+
         // compiler checks this but be safe.
         if(elem->Size_ >= (1 << 16))
         {
@@ -174,11 +176,13 @@ namespace golang::runtime
         {
             go_throw("makechan: bad alignment"_s);
         }
+
         auto [mem, overflow] = math::MulUintptr(elem->Size_, uintptr_t(size));
         if(overflow || mem > maxAlloc - hchanSize || size < 0)
         {
             gocpp::panic(plainError("makechan: size out of range"_s));
         }
+
         // Hchan does not contain pointers interesting for GC when elements stored in buf do not contain pointers.
         // buf points into the same allocation, elemtype is persistent.
         // SudoG's are referenced from their owning thread so they can't be collected.
@@ -210,10 +214,12 @@ namespace golang::runtime
                     break;
             }
         }
+
         c->elemsize = uint16_t(elem->Size_);
         c->elemtype = elem;
         c->dataqsiz = (unsigned int)(size);
         lockInit(& c->lock, lockRankHchan);
+
         if(debugChan)
         {
             print("makechan: chan="_s, c, "; elemsize="_s, elem->Size_, "; dataqsiz="_s, size, "\n"_s);
@@ -275,14 +281,17 @@ namespace golang::runtime
             gopark(nullptr, nullptr, waitReasonChanSendNilChan, traceBlockForever, 2);
             go_throw("unreachable"_s);
         }
+
         if(debugChan)
         {
             print("chansend: chan="_s, c, "\n"_s);
         }
+
         if(raceenabled)
         {
             racereadpc(rec::raceaddr(gocpp::recv(c)), callerpc, abi::FuncPCABIInternal(chansend));
         }
+
         // Fast path: check for failed non-blocking operation without acquiring the lock.
         // After observing that the channel is not closed, we observe that the channel is
         // not ready for sending. Each of these observations is a single word-sized read
@@ -301,17 +310,21 @@ namespace golang::runtime
         {
             return false;
         }
+
         int64_t t0 = {};
         if(blockprofilerate > 0)
         {
             t0 = cputicks();
         }
+
         lock(& c->lock);
+
         if(c->closed != 0)
         {
             unlock(& c->lock);
             gocpp::panic(plainError("send on closed channel"_s));
         }
+
         if(auto sg = rec::dequeue(gocpp::recv(c->recvq)); sg != nullptr)
         {
             // Found a waiting receiver. We pass the value we want to send
@@ -322,6 +335,7 @@ namespace golang::runtime
             }, 3);
             return true;
         }
+
         if(c->qcount < c->dataqsiz)
         {
             // Space is available in the channel buffer. Enqueue the element to send.
@@ -340,11 +354,13 @@ namespace golang::runtime
             unlock(& c->lock);
             return true;
         }
+
         if(! block)
         {
             unlock(& c->lock);
             return false;
         }
+
         // Block on the channel. Some receiver will complete our operation for us.
         auto gp = getg();
         auto mysg = acquireSudog();
@@ -374,6 +390,7 @@ namespace golang::runtime
         // stack object, but sudogs aren't considered as roots of the
         // stack tracer.
         KeepAlive(ep);
+
         // someone woke us up.
         if(mysg != gp->waiting)
         {
@@ -475,20 +492,25 @@ namespace golang::runtime
         {
             gocpp::panic(plainError("close of nil channel"_s));
         }
+
         lock(& c->lock);
         if(c->closed != 0)
         {
             unlock(& c->lock);
             gocpp::panic(plainError("close of closed channel"_s));
         }
+
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
             racewritepc(rec::raceaddr(gocpp::recv(c)), callerpc, abi::FuncPCABIInternal(closechan));
             racerelease(rec::raceaddr(gocpp::recv(c)));
         }
+
         c->closed = 1;
+
         gList glist = {};
+
         // release all readers
         for(; ; )
         {
@@ -515,6 +537,7 @@ namespace golang::runtime
             }
             rec::push(gocpp::recv(glist), gp);
         }
+
         // release all writers (they will panic)
         for(; ; )
         {
@@ -538,6 +561,7 @@ namespace golang::runtime
             rec::push(gocpp::recv(glist), gp);
         }
         unlock(& c->lock);
+
         // Ready all Gs now that we've dropped the channel lock.
         for(; ! rec::empty(gocpp::recv(glist)); )
         {
@@ -591,6 +615,7 @@ namespace golang::runtime
         {
             print("chanrecv: chan="_s, c, "\n"_s);
         }
+
         if(c == nullptr)
         {
             if(! block)
@@ -600,6 +625,7 @@ namespace golang::runtime
             gopark(nullptr, nullptr, waitReasonChanReceiveNilChan, traceBlockForever, 2);
             go_throw("unreachable"_s);
         }
+
         // Fast path: check for failed non-blocking operation without acquiring the lock.
         if(! block && empty(c))
         {
@@ -636,12 +662,15 @@ namespace golang::runtime
                 return {true, false};
             }
         }
+
         int64_t t0 = {};
         if(blockprofilerate > 0)
         {
             t0 = cputicks();
         }
+
         lock(& c->lock);
+
         if(c->closed != 0)
         {
             if(c->qcount == 0)
@@ -676,6 +705,7 @@ namespace golang::runtime
                 return {true, true};
             }
         }
+
         if(c->qcount > 0)
         {
             // Receive directly from queue
@@ -698,11 +728,13 @@ namespace golang::runtime
             unlock(& c->lock);
             return {true, true};
         }
+
         if(! block)
         {
             unlock(& c->lock);
             return {false, false};
         }
+
         // no sender available: block on this channel.
         auto gp = getg();
         auto mysg = acquireSudog();
@@ -727,6 +759,7 @@ namespace golang::runtime
         // stack shrinking.
         rec::Store(gocpp::recv(gp->parkingOnChan), true);
         gopark(chanparkcommit, gocpp::unsafe_pointer(& c->lock), waitReasonChanReceive, traceBlockChanRecv, 2);
+
         // someone woke us up
         if(mysg != gp->waiting)
         {
@@ -967,6 +1000,7 @@ namespace golang::runtime
                 // mark as removed (see dequeueSudoG)
                 sgp->next = nullptr;
             }
+
             // if a goroutine was put on this queue because of a
             // select, there is a small window between the goroutine
             // being woken up by a different case and it grabbing the
@@ -979,6 +1013,7 @@ namespace golang::runtime
             {
                 continue;
             }
+
             return sgp;
         }
     }

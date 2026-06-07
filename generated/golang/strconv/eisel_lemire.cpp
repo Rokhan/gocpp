@@ -41,13 +41,16 @@ namespace golang::strconv
         {
             return {0, false};
         }
+
         // Normalization.
         auto clz = bits::LeadingZeros64(man);
         man <<= (unsigned int)(clz);
         auto float64ExponentBias = 1023;
         auto retExp2 = uint64_t((217706 * exp10 >> 16) + 64 + float64ExponentBias) - uint64_t(clz);
+
         // Multiplication.
         auto [xHi, xLo] = bits::Mul64(man, detailedPowersOfTen[exp10 - detailedPowersOfTenMinExp10][1]);
+
         // Wider Approximation.
         if(xHi & 0x1FF == 0x1FF && xLo + man < man)
         {
@@ -63,15 +66,18 @@ namespace golang::strconv
             }
             std::tie(xHi, xLo) = std::tuple{mergedHi, mergedLo};
         }
+
         // Shifting to 54 Bits.
         auto msb = xHi >> 63;
         auto retMantissa = xHi >> (msb + 9);
         retExp2 -= 1 ^ msb;
+
         // Half-way Ambiguity.
         if(xLo == 0 && xHi & 0x1FF == 0 && retMantissa & 3 == 1)
         {
             return {0, false};
         }
+
         // From 54 to 53 Bits.
         retMantissa += retMantissa & 1;
         retMantissa >>= 1;
@@ -121,13 +127,16 @@ namespace golang::strconv
         {
             return {0, false};
         }
+
         // Normalization.
         auto clz = bits::LeadingZeros64(man);
         man <<= (unsigned int)(clz);
         auto float32ExponentBias = 127;
         auto retExp2 = uint64_t((217706 * exp10 >> 16) + 64 + float32ExponentBias) - uint64_t(clz);
+
         // Multiplication.
         auto [xHi, xLo] = bits::Mul64(man, detailedPowersOfTen[exp10 - detailedPowersOfTenMinExp10][1]);
+
         // Wider Approximation.
         if(xHi & 0x3FFFFFFFFF == 0x3FFFFFFFFF && xLo + man < man)
         {
@@ -143,15 +152,18 @@ namespace golang::strconv
             }
             std::tie(xHi, xLo) = std::tuple{mergedHi, mergedLo};
         }
+
         // Shifting to 54 Bits (and for float32, it's shifting to 25 bits).
         auto msb = xHi >> 63;
         auto retMantissa = xHi >> (msb + 38);
         retExp2 -= 1 ^ msb;
+
         // Half-way Ambiguity.
         if(xLo == 0 && xHi & 0x3FFFFFFFFF == 0 && retMantissa & 3 == 1)
         {
             return {0, false};
         }
+
         // From 54 to 53 Bits (and for float32, it's from 25 to 24 bits).
         retMantissa += retMantissa & 1;
         retMantissa >>= 1;

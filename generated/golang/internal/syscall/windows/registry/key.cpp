@@ -92,6 +92,7 @@ namespace golang::registry
             // its current thread. See #49320.
             runtime::LockOSThread();
             defer.push_back([=]{ runtime::UnlockOSThread(); });
+
             auto names = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0);
             // Registry key size limit is 255 bytes and described there:
             // https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-element-size-limits

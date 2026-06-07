@@ -281,6 +281,7 @@ namespace golang::sync
                 return x;
             }
         }
+
         // Try the victim cache. We do this after attempting to steal
         // from all primary caches because we want objects in the
         // victim cache to age out if at all possible.
@@ -304,9 +305,11 @@ namespace golang::sync
                 return x;
             }
         }
+
         // Mark the victim cache as empty for future gets don't bother
         // with it.
         atomic::StoreUintptr(& p->victimSize, 0);
+
         return nullptr;
     }
 
@@ -322,6 +325,7 @@ namespace golang::sync
         {
             gocpp::panic("nil Pool"_s);
         }
+
         auto pid = runtime_procPin();
         // In pinSlow we store to local and then to localSize, here we load in opposite order.
         // Since we've disabled preemption, GC cannot happen in between.
@@ -387,6 +391,7 @@ namespace golang::sync
             p->victim = nullptr;
             p->victimSize = 0;
         }
+
         // Move primary cache to victim cache.
         for(auto [gocpp_ignored, p] : allPools)
         {
@@ -395,6 +400,7 @@ namespace golang::sync
             p->local = nullptr;
             p->localSize = 0;
         }
+
         // The pools with non-empty primary caches now have non-empty
         // victim caches and no pools have primary caches.
         std::tie(oldPools, allPools) = std::tuple{allPools, nullptr};

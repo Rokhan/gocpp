@@ -592,13 +592,16 @@ namespace golang::bits
         {
             gocpp::panic(overflowError);
         }
+
         // If high part is zero, we can directly return the results.
         if(hi == 0)
         {
             return {lo / y, lo % y};
         }
+
         auto s = (unsigned int)(LeadingZeros64(y));
         y <<= s;
+
         auto two32 = 1 << 32;
         auto mask32 = two32 - 1;
         auto yn1 = y >> 32;
@@ -609,6 +612,7 @@ namespace golang::bits
         auto un0 = un10 & mask32;
         auto q1 = un32 / yn1;
         auto rhat = un32 - q1 * yn1;
+
         for(; q1 >= two32 || q1 * yn0 > two32 * rhat + un1; )
         {
             q1--;
@@ -618,9 +622,11 @@ namespace golang::bits
                 break;
             }
         }
+
         auto un21 = un32 * two32 + un1 - q1 * y;
         auto q0 = un21 / yn1;
         rhat = un21 - q0 * yn1;
+
         for(; q0 >= two32 || q0 * yn0 > two32 * rhat + un0; )
         {
             q0--;
@@ -630,6 +636,7 @@ namespace golang::bits
                 break;
             }
         }
+
         return {q1 * two32 + q0, (un21 * two32 + un0 - q0 * y) >> s};
     }
 

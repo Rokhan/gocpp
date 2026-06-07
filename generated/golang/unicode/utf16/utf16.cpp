@@ -67,6 +67,7 @@ namespace golang::utf16
                 n++;
             }
         }
+
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);
         n = 0;
         for(auto [gocpp_ignored, v] : s)

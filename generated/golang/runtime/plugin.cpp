@@ -64,6 +64,7 @@ namespace golang::runtime
         {
             return {""_s, nullptr, nullptr, "plugin already loaded"_s};
         }
+
         for(auto [gocpp_ignored, pmd] : activeModules())
         {
             if(pmd->pluginpath == md->pluginpath)
@@ -71,6 +72,7 @@ namespace golang::runtime
                 md->bad = true;
                 return {""_s, nullptr, nullptr, "plugin already loaded"_s};
             }
+
             if(inRange(pmd->text, pmd->etext, md->text, md->etext) || inRange(pmd->bss, pmd->ebss, md->bss, md->ebss) || inRange(pmd->data, pmd->edata, md->data, md->edata) || inRange(pmd->types, pmd->etypes, md->types, md->etypes))
             {
                 println("plugin: new module data overlaps with previous moduledata"_s);
@@ -93,17 +95,21 @@ namespace golang::runtime
                 return {""_s, nullptr, nullptr, "plugin was built with a different version of package "_s + pkghash.modulename};
             }
         }
+
         // Initialize the freshly loaded module.
         modulesinit();
         typelinksinit();
+
         pluginftabverify(md);
         moduledataverify1(md);
+
         lock(& itabLock);
         for(auto [gocpp_ignored, i] : md->itablinks)
         {
             itabAdd(i);
         }
         unlock(& itabLock);
+
         // Build a map of symbol names to symbols. Here in the runtime
         // we fill out the first word of the interface, the type. We
         // pass these zero value interfaces to the plugin package,
@@ -120,6 +126,7 @@ namespace golang::runtime
             go_any val = {};
             auto valp = (gocpp::array_ptr<gocpp::array<gocpp::unsafe_pointer, 2>>)(gocpp::unsafe_pointer(& val));
             (*valp)[0] = gocpp::unsafe_pointer(t);
+
             auto name = rec::Name(gocpp::recv(symName));
             if(t->Kind_ & kindMask == kindFunc)
             {
@@ -140,8 +147,10 @@ namespace golang::runtime
             {
                 continue;
             }
+
             auto f = funcInfo {(_func*)(gocpp::unsafe_pointer(& md->pclntable[md->ftab[i].funcoff])), md};
             auto name = funcname(f);
+
             // A common bug is f.entry has a relocation to a duplicate
             // function symbol, meaning if we search for its PC we get
             // a valid entry with a name that is useful for debugging.

@@ -26,10 +26,12 @@ namespace golang::main
         try
         {
             mocklib::Println("counting"_s);
+
             for(auto i = 0; i < 10; i++)
             {
                 defer.push_back([=]{ mocklib::Println(i); });
             }
+
             mocklib::Println("done"_s);
         }
         catch(gocpp::GoPanic& gp)

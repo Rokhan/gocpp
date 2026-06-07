@@ -343,10 +343,12 @@ namespace golang::runtime
         // nil check test before we switch stacks, see issue 61158
         _ = m->Alloc;
         auto stw = stopTheWorld(stwReadMemStats);
+
         systemstack([=]() mutable -> void
         {
             readmemstats_m(m);
         });
+
         startTheWorld(stw);
     }
 
@@ -404,10 +406,12 @@ namespace golang::runtime
     void readmemstats_m(struct MemStats* stats)
     {
         assertWorldStopped();
+
         // Flush mcaches to mcentral before doing anything else.
         // Flushing to the mcentral may in general cause stats to
         // change as mcentral data structures are manipulated.
         systemstack(flushallmcaches);
+
         // Calculate memory allocator stats.
         // During program execution we only count number of frees and amount of freed memory.
         // Current number of alive objects in the heap and amount of alive heap memory
@@ -418,27 +422,32 @@ namespace golang::runtime
         // Collect consistent stats, which are the source-of-truth in some cases.
         heapStatsDelta consStats = {};
         rec::unsafeRead(gocpp::recv(memstats.heapStats), & consStats);
+
         // Collect large allocation stats.
         auto totalAlloc = consStats.largeAlloc;
         auto nMalloc = consStats.largeAllocCount;
         auto totalFree = consStats.largeFree;
         auto nFree = consStats.largeFreeCount;
+
         // Collect per-sizeclass stats.
         gocpp::array<gocpp_id_1, _NumSizeClasses> bySize = {};
         for(auto [i, gocpp_ignored] : bySize)
         {
             bySize[i].Size = uint32_t(class_to_size[i]);
+
             // Malloc stats.
             auto a = consStats.smallAllocCount[i];
             totalAlloc += a * uint64_t(class_to_size[i]);
             nMalloc += a;
             bySize[i].Mallocs = a;
+
             // Free stats.
             auto f = consStats.smallFreeCount[i];
             totalFree += f * uint64_t(class_to_size[i]);
             nFree += f;
             bySize[i].Frees = f;
         }
+
         // Account for tiny allocations.
         // For historical reasons, MemStats includes tiny allocations
         // in both the total free and total alloc count. This double-counts
@@ -447,12 +456,16 @@ namespace golang::runtime
         // currently not done because it would be too expensive.
         nFree += consStats.tinyAllocCount;
         nMalloc += consStats.tinyAllocCount;
+
         // Calculate derived stats.
         auto stackInUse = uint64_t(consStats.inStacks);
         auto gcWorkBufInUse = uint64_t(consStats.inWorkBufs);
         auto gcProgPtrScalarBitsInUse = uint64_t(consStats.inPtrScalarBits);
+
         auto totalMapped = rec::load(gocpp::recv(gcController.heapInUse)) + rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased)) + rec::load(gocpp::recv(memstats.stacks_sys)) + rec::load(gocpp::recv(memstats.mspan_sys)) + rec::load(gocpp::recv(memstats.mcache_sys)) + rec::load(gocpp::recv(memstats.buckhash_sys)) + rec::load(gocpp::recv(memstats.gcMiscSys)) + rec::load(gocpp::recv(memstats.other_sys)) + stackInUse + gcWorkBufInUse + gcProgPtrScalarBitsInUse;
+
         auto heapGoal = rec::heapGoal(gocpp::recv(gcController));
+
         if(doubleCheckReadMemStats)
         {
             // Only check this if we're debugging. It would be bad to crash an application
@@ -516,6 +529,7 @@ namespace golang::runtime
             unlock(& trace.lock);
             unlock(& sched.sysmonlock);
         }
+
         // We've calculated all the values we need. Now, populate stats.
         stats->Alloc = totalAlloc - totalFree;
         stats->TotalAlloc = totalAlloc;
@@ -563,6 +577,7 @@ namespace golang::runtime
         stats->NumForcedGC = memstats.numforcedgc;
         stats->GCCPUFraction = memstats.gc_cpu_fraction;
         stats->EnableGC = true;
+
         // stats.BySize and bySize might not match in length.
         // That's OK, stats.BySize cannot change due to backwards
         // compatibility issues. copy will copy the minimum amount
@@ -591,13 +606,16 @@ namespace golang::runtime
         {
             go_throw("short slice passed to readGCStats"_s);
         }
+
         // Pass back: pauses, pause ends, last gc (absolute time), number of gc, total pause ns.
         lock(& mheap_.lock);
+
         auto n = memstats.numgc;
         if(n > uint32_t(len(memstats.pause_ns)))
         {
             n = uint32_t(len(memstats.pause_ns));
         }
+
         // The pause buffer is circular. The most recent pause is at
         // pause_ns[(numgc-1)%len(pause_ns)], and then backward
         // from there to go back farther in time. We deliver the times
@@ -609,6 +627,7 @@ namespace golang::runtime
             p[i] = memstats.pause_ns[j];
             p[n + i] = memstats.pause_end[j];
         }
+
         p[n + n] = memstats.last_gc_unix;
         p[n + n + 1] = uint64_t(memstats.numgc);
         p[n + n + 2] = memstats.pause_total_ns;
@@ -624,6 +643,7 @@ namespace golang::runtime
     void flushmcache(int i)
     {
         assertWorldStopped();
+
         auto p = allp[i];
         auto c = p->mcache;
         if(c == nullptr)
@@ -642,6 +662,7 @@ namespace golang::runtime
     void flushallmcaches()
     {
         assertWorldStopped();
+
         for(auto i = 0; i < int(gomaxprocs); i++)
         {
             flushmcache(i);
@@ -753,6 +774,7 @@ namespace golang::runtime
         a->inStacks += b->inStacks;
         a->inWorkBufs += b->inWorkBufs;
         a->inPtrScalarBits += b->inPtrScalarBits;
+
         a->tinyAllocCount += b->tinyAllocCount;
         a->largeAlloc += b->largeAlloc;
         a->largeAllocCount += b->largeAllocCount;
@@ -886,6 +908,7 @@ namespace golang::runtime
     void rec::unsafeRead(golang::runtime::consistentHeapStats* m, struct heapStatsDelta* out)
     {
         assertWorldStopped();
+
         for(auto [i, gocpp_ignored] : m->stats)
         {
             rec::merge(gocpp::recv(out), & m->stats[i]);
@@ -899,6 +922,7 @@ namespace golang::runtime
     void rec::unsafeClear(golang::runtime::consistentHeapStats* m)
     {
         assertWorldStopped();
+
         for(auto [i, gocpp_ignored] : m->stats)
         {
             m->stats[i] = heapStatsDelta {};
@@ -918,6 +942,7 @@ namespace golang::runtime
         // we read allp. We need to make sure a STW can't happen
         // so it doesn't change out from under us.
         auto mp = acquirem();
+
         // Get the current generation. We can be confident that this
         // will not change since read is serialized and is the only
         // one that modifies currGen.
@@ -927,17 +952,21 @@ namespace golang::runtime
         {
             prevGen = 2;
         }
+
         // Prevent writers without a P from writing while we update gen.
         runtime::lock(& m->noPLock);
+
         // Rotate gen, effectively taking a snapshot of the state of
         // these statistics at the point of the exchange by moving
         // writers to the next set of deltas.
         // This exchange is safe to do because we won't race
         // with anyone else trying to update this value.
         rec::Swap(gocpp::recv(m->gen), (currGen + 1) % 3);
+
         // Allow P-less writers to continue. They'll be writing to the
         // next generation now.
         runtime::unlock(& m->noPLock);
+
         for(auto [gocpp_ignored, p] : allp)
         {
             // Spin until there are no more writers.
@@ -945,6 +974,7 @@ namespace golang::runtime
             {
             }
         }
+
         // At this point we've observed that each sequence
         // number is even, so any future writers will observe
         // the new gen value. That means it's safe to read from
@@ -954,8 +984,10 @@ namespace golang::runtime
         // a snapshot.
         rec::merge(gocpp::recv(m->stats[currGen]), & m->stats[prevGen]);
         m->stats[prevGen] = heapStatsDelta {};
+
         // Finally, copy out the complete delta.
         *out = m->stats[currGen];
+
         releasem(mp);
     }
 
@@ -1040,22 +1072,27 @@ namespace golang::runtime
             markFractionalCpu = rec::Load(gocpp::recv(gcController.fractionalMarkTime));
             markIdleCpu = rec::Load(gocpp::recv(gcController.idleMarkTime));
         }
+
         // The rest of the stats below are either derived from the above or
         // are reset on each mark termination.
         auto scavAssistCpu = rec::Load(gocpp::recv(scavenge.assistTime));
         auto scavBgCpu = rec::Load(gocpp::recv(scavenge.backgroundTime));
+
         // Update cumulative GC CPU stats.
         s->gcAssistTime += markAssistCpu;
         s->gcDedicatedTime += markDedicatedCpu + markFractionalCpu;
         s->gcIdleTime += markIdleCpu;
         s->gcTotalTime += markAssistCpu + markDedicatedCpu + markFractionalCpu + markIdleCpu;
+
         // Update cumulative scavenge CPU stats.
         s->scavengeAssistTime += scavAssistCpu;
         s->scavengeBgTime += scavBgCpu;
         s->scavengeTotalTime += scavAssistCpu + scavBgCpu;
+
         // Update total CPU.
         s->totalTime = sched.totaltime + (now - sched.procresizetime) * int64_t(gomaxprocs);
         s->idleTime += rec::Load(gocpp::recv(sched.idleTime));
+
         // Compute userTime. We compute this indirectly as everything that's not the above.
         // Since time spent in _Pgcstop is covered by gcPauseTime, and time spent in _Pidle
         // is covered by idleTime, what we're left with is time spent in _Prunning and _Psyscall,

@@ -125,6 +125,7 @@ namespace golang::os
                 kind = "pipe"_s;
             }
         }
+
         auto f = new File {gocpp::InitPtr<file>([=](auto& x) {
             x.pfd = gocpp::Init<poll::FD>([=](auto& x) {
                 x.Sysfd = h;
@@ -134,9 +135,11 @@ namespace golang::os
             x.name = name;
         })};
         runtime::SetFinalizer(f->file, [&](auto x){ return rec::close(x); });
+
         // Ignore initialization errors.
         // Assume any problems will show up in later I/O.
         rec::Init(gocpp::recv(f->file.pfd), kind, false);
+
         return f;
     }
 
@@ -238,6 +241,7 @@ namespace golang::os
                 x.Err = e;
             });
         }
+
         // no need for a finalizer anymore
         runtime::SetFinalizer(file, nullptr);
         return err;
@@ -302,6 +306,7 @@ namespace golang::os
                 x.Err = e;
             }));
         }
+
         // Go file interface forces us to know whether
         // name is a file or directory. Try both.
         e = syscall::DeleteFile(p);
@@ -314,6 +319,7 @@ namespace golang::os
         {
             return nullptr;
         }
+
         // Both failed: figure out which error to return.
         if(e1 != e)
         {
@@ -442,6 +448,7 @@ namespace golang::os
     {
         // '/' does not work in link's content
         oldname = fromSlash(oldname);
+
         // need the exact location of the oldname when it's relative to determine if it's a directory
         auto destpath = oldname;
         if(auto v = volumeName(oldname); v == ""_s)
@@ -462,8 +469,10 @@ namespace golang::os
                 destpath = dirname(newname) + "\\"_s + oldname;
             }
         }
+
         auto [fi, err] = Stat(destpath);
         auto isdir = err == nullptr && rec::IsDir(gocpp::recv(fi));
+
         uint16_t* n;
         std::tie(n, err) = syscall::UTF16PtrFromString(fixLongPath(newname));
         if(err != nullptr)
@@ -476,6 +485,7 @@ namespace golang::os
         {
             return gocpp::error(new LinkError {"symlink"_s, oldname, newname, err});
         }
+
         uint32_t flags = windows::SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
         if(isdir)
         {
@@ -554,6 +564,7 @@ namespace golang::os
                         break;
                 }
             }
+
             // handle paths, like \??\Volume{abc}\...
             auto [h, err] = openSymlink(path);
             if(err != nullptr)
@@ -561,6 +572,7 @@ namespace golang::os
                 return {""_s, err};
             }
             defer.push_back([=]{ syscall::CloseHandle(h); });
+
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 100);
             for(; ; )
             {
@@ -605,6 +617,7 @@ namespace golang::os
                 return {""_s, err};
             }
             defer.push_back([=]{ syscall::CloseHandle(h); });
+
             auto rdbbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), syscall::MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
             uint32_t bytesReturned = {};
             err = syscall::DeviceIoControl(h, syscall::FSCTL_GET_REPARSE_POINT, nullptr, 0, & rdbbuf[0], uint32_t(len(rdbbuf)), & bytesReturned, nullptr);
@@ -612,6 +625,7 @@ namespace golang::os
             {
                 return {""_s, err};
             }
+
             auto rdb = (windows::REPARSE_DATA_BUFFER*)(gocpp::unsafe_pointer(& rdbbuf[0]));
             //Go switch emulation
             {

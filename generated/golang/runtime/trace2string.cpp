@@ -127,8 +127,10 @@ namespace golang::runtime
         {
             s = s.make_slice(0, maxTraceStringLen);
         }
+
         runtime::lock(& t->lock);
         auto w = unsafeTraceWriter(gen, t->buf);
+
         // Ensure we have a place to write to.
         bool flushed = {};
         std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 2 * traceBytesPerNumber + len(s));
@@ -137,11 +139,13 @@ namespace golang::runtime
             // Annotate the batch as containing strings.
             rec::byte(gocpp::recv(w), (unsigned char)(traceEvStrings));
         }
+
         // Write out the string.
         rec::byte(gocpp::recv(w), (unsigned char)(traceEvString));
         rec::varint(gocpp::recv(w), id);
         rec::varint(gocpp::recv(w), uint64_t(len(s)));
         rec::stringData(gocpp::recv(w), s);
+
         // Store back buf if it was updated during ensure.
         t->buf = w.traceBuf;
         runtime::unlock(& t->lock);
@@ -165,6 +169,7 @@ namespace golang::runtime
             runtime::unlock(& trace.lock);
             t->buf = nullptr;
         }
+
         // Reset the table.
         runtime::lock(& t->tab.lock);
         rec::reset(gocpp::recv(t->tab));

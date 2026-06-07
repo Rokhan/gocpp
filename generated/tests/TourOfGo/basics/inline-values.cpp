@@ -27,6 +27,7 @@ namespace golang::main
         {
             mocklib::Println(" -> "_s, url);
         }
+
         mocklib::Print("Small primes:"_s);
         for(auto [gocpp_ignored, prime] : smallPrimes)
         {

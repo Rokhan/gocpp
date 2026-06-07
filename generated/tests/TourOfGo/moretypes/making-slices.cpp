@@ -24,14 +24,19 @@ namespace golang::main
     {
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 5);
         printSlice("a"_s, a);
+
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), 0, 5);
         printSlice("b"_s, b);
+
         auto bc = b.make_slice(0, 2);
         printSlice("bc"_s, bc);
+
         auto bd = b.make_slice(2, 5);
         printSlice("bd"_s, bd);
+
         auto ac = a.make_slice(0, 2);
         printSlice("bc"_s, ac);
+
         auto ad = a.make_slice(2, 5);
         printSlice("bd"_s, ad);
     }

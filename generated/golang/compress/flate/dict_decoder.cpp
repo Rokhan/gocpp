@@ -84,11 +84,13 @@ namespace golang::flate
         *dd = gocpp::Init<dictDecoder>([=](auto& x) {
             x.hist = dd->hist;
         });
+
         if(cap(dd->hist) < size)
         {
             dd->hist = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
         }
         dd->hist = dd->hist.make_slice(0, size);
+
         if(len(dict) > len(dd->hist))
         {
             dict = dict.make_slice(len(dict) - len(dd->hist));
@@ -164,6 +166,7 @@ namespace golang::flate
         {
             endPos = len(dd->hist);
         }
+
         // Copy non-overlapping section after destination position.
         // This section is non-overlapping in that the copy length for this section
         // is always less than or equal to the backwards distance. This can occur
@@ -176,6 +179,7 @@ namespace golang::flate
             dstPos += copy(dd->hist.make_slice(dstPos, endPos), dd->hist.make_slice(srcPos));
             srcPos = 0;
         }
+
         // Copy possibly overlapping section before destination position.
         // This section can overlap if the copy length for this section is larger
         // than the backwards distance. This is allowed by LZ77 so that repeated
@@ -191,6 +195,7 @@ namespace golang::flate
         {
             dstPos += copy(dd->hist.make_slice(dstPos, endPos), dd->hist.make_slice(srcPos, dstPos));
         }
+
         dd->wrPos = dstPos;
         return dstPos - dstBase;
     }
@@ -211,11 +216,13 @@ namespace golang::flate
         }
         auto dstBase = dstPos;
         auto srcPos = dstPos - dist;
+
         // Copy possibly overlapping section before destination position.
         for(; dstPos < endPos; )
         {
             dstPos += copy(dd->hist.make_slice(dstPos, endPos), dd->hist.make_slice(srcPos, dstPos));
         }
+
         dd->wrPos = dstPos;
         return dstPos - dstBase;
     }

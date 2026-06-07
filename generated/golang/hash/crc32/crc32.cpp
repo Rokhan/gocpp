@@ -61,6 +61,7 @@ namespace golang::crc32
     void castagnoliInit()
     {
         castagnoliTable = simpleMakeTable(Castagnoli);
+
         if(archAvailableCastagnoli())
         {
             archInitCastagnoli();
@@ -75,6 +76,7 @@ namespace golang::crc32
                 return slicingUpdate(crc, castagnoliTable8, p);
             };
         }
+
         rec::Store(gocpp::recv(haveCastagnoli), true);
     }
 

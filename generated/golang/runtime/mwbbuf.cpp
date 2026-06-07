@@ -129,6 +129,7 @@ namespace golang::runtime
         {
             b->end = start + uintptr_t(len(b->buf)) * gocpp::Sizeof<uintptr_t>();
         }
+
         if((b->end - b->next) % gocpp::Sizeof<uintptr_t>() != 0)
         {
             go_throw("bad write barrier buffer bounds"_s);
@@ -224,6 +225,7 @@ namespace golang::runtime
             rec::discard(gocpp::recv(rec::ptr(gocpp::recv(getg()->m->p))->wbBuf));
             return;
         }
+
         // Switch to the system stack so we don't have to worry about
         // safe points.
         systemstack([=]() mutable -> void
@@ -248,9 +250,11 @@ namespace golang::runtime
         auto start = uintptr_t(gocpp::unsafe_pointer(& pp->wbBuf.buf[0]));
         auto n = (pp->wbBuf.next - start) / gocpp::Sizeof<uintptr_t>();
         auto ptrs = pp->wbBuf.buf.make_slice(0, n);
+
         // Poison the buffer to make extra sure nothing is enqueued
         // while we're processing the buffer.
         pp->wbBuf.next = 0;
+
         if(useCheckmark)
         {
             // Slow path for checkmark mode.
@@ -261,6 +265,7 @@ namespace golang::runtime
             rec::reset(gocpp::recv(pp->wbBuf));
             return;
         }
+
         // Mark all of the pointers in the buffer and record only the
         // pointers we greyed. We use the buffer itself to temporarily
         // record greyed pointers.
@@ -299,12 +304,14 @@ namespace golang::runtime
                 continue;
             }
             rec::setMarked(gocpp::recv(mbits));
+
             // Mark span.
             auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(span)));
             if(arena->pageMarks[pageIdx] & pageMask == 0)
             {
                 atomic::Or8(& arena->pageMarks[pageIdx], pageMask);
             }
+
             if(rec::noscan(gocpp::recv(span->spanclass)))
             {
                 gcw->bytesMarked += uint64_t(span->elemsize);
@@ -313,8 +320,10 @@ namespace golang::runtime
             ptrs[pos] = obj;
             pos++;
         }
+
         // Enqueue the greyed objects.
         rec::putBatch(gocpp::recv(gcw), ptrs.make_slice(0, pos));
+
         rec::reset(gocpp::recv(pp->wbBuf));
     }
 

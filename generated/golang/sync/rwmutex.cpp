@@ -262,6 +262,7 @@ namespace golang::sync
             race::Release(gocpp::unsafe_pointer(& rw->readerSem));
             race::Disable();
         }
+
         // Announce to readers there is no active writer.
         auto r = rec::Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);
         if(r >= rwmutexMaxReaders)

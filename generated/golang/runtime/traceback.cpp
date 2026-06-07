@@ -188,6 +188,7 @@ namespace golang::runtime
             // instead on the g0 stack.
             go_throw("cannot trace user goroutine on its own stack"_s);
         }
+
         if(pc0 == ~ uintptr_t(0) && sp0 == ~ uintptr_t(0))
         {
             // Signal to fetch saved values from gp.
@@ -210,6 +211,7 @@ namespace golang::runtime
                 }
             }
         }
+
         stkframe frame = {};
         frame.pc = pc0;
         frame.sp = sp0;
@@ -217,6 +219,7 @@ namespace golang::runtime
         {
             frame.lr = lr0;
         }
+
         // If the PC is zero, it's likely a nil function call.
         // Start in the caller's frame.
         if(frame.pc == 0)
@@ -232,6 +235,7 @@ namespace golang::runtime
                 frame.sp += goarch::PtrSize;
             }
         }
+
         // runtime/internal/atomic functions call into kernel helpers on
         // arm < 7. See runtime/internal/atomic/sys_linux_arm.s.
         // Start in the caller's frame.
@@ -244,6 +248,7 @@ namespace golang::runtime
             frame.pc = frame.lr;
             frame.lr = 0;
         }
+
         auto f = findfunc(frame.pc);
         if(! rec::valid(gocpp::recv(f)))
         {
@@ -260,6 +265,7 @@ namespace golang::runtime
             return;
         }
         frame.fn = f;
+
         // Populate the unwinder.
         *u = gocpp::Init<unwinder>([=](auto& x) {
             x.frame = frame;
@@ -268,6 +274,7 @@ namespace golang::runtime
             x.calleeFuncID = abi::FuncIDNormal;
             x.flags = flags;
         });
+
         auto isSyscall = frame.pc == pc0 && frame.sp == sp0 && pc0 == gp->syscallpc && sp0 == gp->syscallsp;
         rec::resolveInternal(gocpp::recv(u), true, isSyscall);
     }
@@ -302,6 +309,7 @@ namespace golang::runtime
     {
         auto frame = & u->frame;
         auto gp = rec::ptr(gocpp::recv(u->g));
+
         auto f = frame->fn;
         if(f._func.pcsp == 0)
         {
@@ -310,6 +318,7 @@ namespace golang::runtime
             rec::finishInternal(gocpp::recv(u));
             return;
         }
+
         // Compute function info flags.
         auto flag = f._func.flag;
         if(f._func.funcID == abi::FuncID_cgocallback)
@@ -327,6 +336,7 @@ namespace golang::runtime
             // Since we are using the entry PC/SP, the later SP write doesn't matter.
             flag &^= abi::FuncFlagSPWrite;
         }
+
         // Found an actual function.
         // Derive frame pointer.
         if(frame->fp == 0)
@@ -393,6 +403,7 @@ namespace golang::runtime
                 frame->fp += goarch::PtrSize;
             }
         }
+
         // Derive link register.
         if(flag & abi::FuncFlagTopFrame != 0)
         {
@@ -452,12 +463,14 @@ namespace golang::runtime
                 }
             }
         }
+
         frame->varp = frame->fp;
         if(! usesLR)
         {
             // On x86, call instruction pushes return PC before entering new function.
             frame->varp -= goarch::PtrSize;
         }
+
         // For architectures with frame pointers, if there's
         // a frame, then there's a saved frame pointer here.
         // NOTE: This code is not as general as it looks.
@@ -478,7 +491,9 @@ namespace golang::runtime
         {
             frame->varp -= goarch::PtrSize;
         }
+
         frame->argp = frame->fp + sys::MinFrameSize;
+
         // Determine frame's 'continuation PC', where it can continue.
         // Normally this is the return address on the stack, but if sigpanic
         // is immediately below this function on the stack, then the frame
@@ -525,6 +540,7 @@ namespace golang::runtime
         auto frame = & u->frame;
         auto f = frame->fn;
         auto gp = rec::ptr(gocpp::recv(u->g));
+
         // Do not unwind past the bottom of the stack.
         if(frame->lr == 0)
         {
@@ -561,6 +577,7 @@ namespace golang::runtime
             rec::finishInternal(gocpp::recv(u));
             return;
         }
+
         if(frame->pc == frame->lr && frame->sp == frame->fp)
         {
             // If the next frame is identical to the current frame, we cannot make progress.
@@ -568,6 +585,7 @@ namespace golang::runtime
             tracebackHexdump(gp->stack, frame, frame->sp);
             go_throw("traceback stuck"_s);
         }
+
         auto injectedCall = f._func.funcID == abi::FuncID_sigpanic || f._func.funcID == abi::FuncID_asyncPreempt || f._func.funcID == abi::FuncID_debugCallV2;
         if(injectedCall)
         {
@@ -577,6 +595,7 @@ namespace golang::runtime
         {
             u->flags &^= unwindTrap;
         }
+
         // Unwind to next frame.
         u->calleeFuncID = f._func.funcID;
         frame->fn = flr;
@@ -584,6 +603,7 @@ namespace golang::runtime
         frame->lr = 0;
         frame->sp = frame->fp;
         frame->fp = 0;
+
         // On link register architectures, sighandler saves the LR on stack
         // before faking a call.
         if(usesLR && injectedCall)
@@ -602,6 +622,7 @@ namespace golang::runtime
                 frame->lr = x;
             }
         }
+
         rec::resolveInternal(gocpp::recv(u), false, false);
     }
 
@@ -611,6 +632,7 @@ namespace golang::runtime
     void rec::finishInternal(golang::runtime::unwinder* u)
     {
         u->frame.pc = 0;
+
         // Note that panic != nil is okay here: there can be leftover panics,
         // because the defers on the panic stack do not nest in frame order as
         // they do on the defer stack. If you have:
@@ -689,6 +711,7 @@ namespace golang::runtime
             // in a cgo frame or we're out of cgo context.
             return 0;
         }
+
         auto ctxt = rec::ptr(gocpp::recv(u->g))->cgoCtxt[u->cgoCtxt];
         u->cgoCtxt--;
         cgoContextPCs(ctxt, pcBuf);
@@ -719,6 +742,7 @@ namespace golang::runtime
         {
             auto f = u->frame.fn;
             auto cgoN = rec::cgoCallers(gocpp::recv(u), cgoBuf.make_slice(0));
+
             // TODO: Why does &u.cache cause u to escape? (Same in traceback2)
             for(auto [iu, uf] = newInlineUnwinder(f, rec::symPC(gocpp::recv(u))); n < len(pcBuf) && rec::valid(gocpp::recv(uf)); uf = rec::next(gocpp::recv(iu), uf))
             {
@@ -764,14 +788,17 @@ namespace golang::runtime
         auto _endAgg = 0xfd;
         auto _dotdotdot = 0xfc;
         auto _offsetTooLarge = 0xfb;
+
         auto limit = 10;
         auto maxDepth = 5;
         auto maxLen = (maxDepth * 3 + 2) * limit + 1;
+
         auto p = (gocpp::array_ptr<gocpp::array<uint8_t, maxLen>>)(funcdata(f, abi::FUNCDATA_ArgInfo));
         if(p == nullptr)
         {
             return;
         }
+
         auto liveInfo = funcdata(f, abi::FUNCDATA_ArgLiveInfo);
         auto liveIdx = pcdatavalue(f, abi::PCDATA_ArgLiveIndex, pc);
         // smallest offset that needs liveness info (slots with a lower offset is always live)
@@ -780,6 +807,7 @@ namespace golang::runtime
         {
             startOffset = *(uint8_t*)(liveInfo);
         }
+
         auto isLive = [=](uint8_t off, uint8_t slotIdx) mutable -> bool
         {
             if(liveInfo == nullptr || liveIdx <= 0)
@@ -794,6 +822,7 @@ namespace golang::runtime
             auto bits = *(uint8_t*)(add(liveInfo, uintptr_t(liveIdx) + uintptr_t(slotIdx / 8)));
             return bits & (1 << (slotIdx % 8)) != 0;
         };
+
         auto print1 = [=](uint8_t off, uint8_t sz, uint8_t slotIdx) mutable -> void
         {
             auto x = readUnaligned64(add(argp, uintptr_t(off)));
@@ -816,6 +845,7 @@ namespace golang::runtime
                 print("?"_s);
             }
         };
+
         auto start = true;
         auto printcomma = [=]() mutable -> void
         {
@@ -1002,8 +1032,10 @@ namespace golang::runtime
             auto cgoCallers = *gp->m->cgoCallers;
             gp->m->cgoCallers[0] = 0;
             rec::Store(gocpp::recv(gp->m->cgoCallersUse), 0);
+
             printCgoTraceback(& cgoCallers);
         }
+
         if(readgstatus(gp) &^ _Gscan == _Gsyscall)
         {
             // Override registers if blocked in system call.
@@ -1019,6 +1051,7 @@ namespace golang::runtime
             sp = gp->m->vdsoSP;
             flags &^= unwindTrap;
         }
+
         // Print traceback.
         // We print the first tracebackInnerFrames frames, and the last
         // tracebackOuterFrames frames. There are many possible approaches to this.
@@ -1093,6 +1126,7 @@ namespace golang::runtime
             tracebackWithRuntime(true);
         }
         printcreatedby(gp);
+
         if(gp->ancestors == nullptr)
         {
             return;
@@ -1135,6 +1169,7 @@ namespace golang::runtime
             max--;
             return {true, false};
         };
+
         auto gp = rec::ptr(gocpp::recv(u->g));
         auto [level, gocpp_id_1, gocpp_id_2] = gotraceback();
         gocpp::array<uintptr_t, 32> cgoBuf = {};
@@ -1151,6 +1186,7 @@ namespace golang::runtime
                 {
                     continue;
                 }
+
                 if(auto [pr, stop] = commitFrame(); stop)
                 {
                     return {n, lastN};
@@ -1160,6 +1196,7 @@ namespace golang::runtime
                 {
                     continue;
                 }
+
                 auto name = rec::name(gocpp::recv(sf));
                 auto [file, line] = rec::fileLine(gocpp::recv(iu), uf);
                 // Print during crash.
@@ -1191,6 +1228,7 @@ namespace golang::runtime
                 }
                 print("\n"_s);
             }
+
             // Print cgo frames.
             if(auto cgoN = rec::cgoCallers(gocpp::recv(u), cgoBuf.make_slice(0)); cgoN > 0)
             {
@@ -1326,11 +1364,14 @@ namespace golang::runtime
             // Show all frames.
             return true;
         }
+
         if(sf.funcID == abi::FuncIDWrapper && elideWrapperCalling(calleeID))
         {
             return false;
         }
+
         auto name = rec::name(gocpp::recv(sf));
+
         // Special case: always show runtime.gopanic frame
         // in the middle of a stack trace, so that we can
         // see the boundary between ordinary code and
@@ -1340,6 +1381,7 @@ namespace golang::runtime
         {
             return true;
         }
+
         return bytealg::IndexByteString(name, '.') >= 0 && (! hasPrefix(name, "runtime."_s) || isExportedRuntime(name));
     }
 
@@ -1374,10 +1416,13 @@ namespace golang::runtime
     void goroutineheader(struct g* gp)
     {
         auto [level, gocpp_id_5, gocpp_id_6] = gotraceback();
+
         auto gpstatus = readgstatus(gp);
+
         auto isScan = gpstatus & _Gscan != 0;
         // drop the scan bit
         gpstatus &^= _Gscan;
+
         // Basic string status
         gocpp::string status = {};
         if(0 <= gpstatus && gpstatus < uint32_t(len(gStatusStrings)))
@@ -1388,11 +1433,13 @@ namespace golang::runtime
         {
             status = "???"_s;
         }
+
         // Override.
         if(gpstatus == _Gwaiting && gp->waitreason != waitReasonZero)
         {
             status = rec::String(gocpp::recv(gp->waitreason));
         }
+
         // approx time the G is blocked, in minutes
         int64_t waitfor = {};
         if((gpstatus == _Gwaiting || gpstatus == _Gsyscall) && gp->waitsince != 0)
@@ -1431,6 +1478,7 @@ namespace golang::runtime
     void tracebackothers(struct g* me)
     {
         auto [level, gocpp_id_7, gocpp_id_8] = gotraceback();
+
         // Show the current goroutine first, if we haven't already.
         auto curgp = getg()->m->curg;
         if(curgp != nullptr && curgp != me)
@@ -1439,6 +1487,7 @@ namespace golang::runtime
             goroutineheader(curgp);
             traceback(~ uintptr_t(0), ~ uintptr_t(0), 0, curgp);
         }
+
         // We can't call locking forEachG here because this may be during fatal
         // throw/panic, where locking could be out-of-order or a direct
         // deadlock.
@@ -1507,6 +1556,7 @@ namespace golang::runtime
         {
             hi = stk.hi;
         }
+
         // Print the hex dump.
         print("stack: frame={sp:"_s, hex(frame->sp), ", fp:"_s, hex(frame->fp), "} stack=["_s, hex(stk.lo), ","_s, hex(stk.hi), ")\n"_s);
         hexdumpWords(lo, hi, [=](uintptr_t p) mutable -> unsigned char
@@ -1737,13 +1787,16 @@ namespace golang::runtime
         {
             gocpp::panic("unsupported version"_s);
         }
+
         if(cgoTraceback != nullptr && cgoTraceback != traceback || cgoContext != nullptr && cgoContext != context || cgoSymbolizer != nullptr && cgoSymbolizer != symbolizer)
         {
             gocpp::panic("call SetCgoTraceback only once"_s);
         }
+
         cgoTraceback = traceback;
         cgoContext = context;
         cgoSymbolizer = symbolizer;
+
         // The context function is called when a C function calls a Go
         // function. As such it is only called by C code in runtime/cgo.
         if(_cgo_set_context_function != nullptr)
@@ -1887,6 +1940,7 @@ namespace golang::runtime
             }
             return;
         }
+
         auto commitFrame = [=]() mutable -> std::tuple<bool, bool>
         {
             bool pr;
@@ -1923,6 +1977,7 @@ namespace golang::runtime
             {
                 continue;
             }
+
             callCgoSymbolizer(arg);
             if(arg->funcName != nullptr)
             {

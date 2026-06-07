@@ -162,6 +162,7 @@ namespace golang::runtime
     {
         // Make sure we have room.
         std::tie(w, std::ignore) = rec::ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
+
         // Compute the timestamp diff that we'll put in the trace.
         auto ts = traceClockNow();
         if(ts <= w.traceBuf->traceBufHeader.lastTime)
@@ -170,6 +171,7 @@ namespace golang::runtime
         }
         auto tsDiff = uint64_t(ts - w.traceBuf->traceBufHeader.lastTime);
         w.traceBuf->traceBufHeader.lastTime = ts;
+
         // Write out event.
         rec::byte(gocpp::recv(w), (unsigned char)(ev));
         rec::varint(gocpp::recv(w), tsDiff);

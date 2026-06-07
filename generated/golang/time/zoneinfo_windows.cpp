@@ -49,6 +49,7 @@ namespace golang::time
                 return {false, err};
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(k)); });
+
             gocpp::string std = {};
             gocpp::string dlt = {};
             // Try MUI_Std and MUI_Dlt first, fallback to Std and Dlt if *any* error occurs
@@ -69,6 +70,7 @@ namespace golang::time
                     return {false, err};
                 }
             }
+
             if(std != stdname)
             {
                 return {false, nullptr};
@@ -98,6 +100,7 @@ namespace golang::time
                 return {""_s, err};
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(k)); });
+
             gocpp::slice<gocpp::string> names;
             std::tie(names, err) = rec::ReadSubKeyNames(gocpp::recv(k));
             if(err != nullptr)
@@ -197,14 +200,18 @@ namespace golang::time
     void initLocalFromTZI(syscall::Timezoneinformation* i)
     {
         auto l = & localLoc;
+
         l->name = "Local"_s;
+
         auto nzone = 1;
         if(i->StandardDate.Month > 0)
         {
             nzone++;
         }
         l->zone = gocpp::make(gocpp::Tag<gocpp::slice<zone>>(), nzone);
+
         auto [stdname, dstname] = abbrev(i);
+
         auto std = & l->zone[0];
         std->name = stdname;
         if(nzone == 1)
@@ -219,14 +226,17 @@ namespace golang::time
             l->tx[0].index = 0;
             return;
         }
+
         // StandardBias must be ignored if StandardDate is not set,
         // so this computation is delayed until after the nzone==1
         // return above.
         std->offset = - int(i->Bias + i->StandardBias) * 60;
+
         auto dst = & l->zone[1];
         dst->name = dstname;
         dst->offset = - int(i->Bias + i->DaylightBias) * 60;
         dst->isDST = true;
+
         // Arrange so that d0 is first transition date, d1 second,
         // i0 is index of zone after first transition, i1 second.
         auto d0 = & i->StandardDate;
@@ -238,8 +248,10 @@ namespace golang::time
             std::tie(d0, d1) = std::tuple{d1, d0};
             std::tie(i0, i1) = std::tuple{i1, i0};
         }
+
         // 2 tx per year, 100 years on each side of this year
         l->tx = gocpp::make(gocpp::Tag<gocpp::slice<zoneTrans>>(), 400);
+
         auto t = rec::UTC(gocpp::recv(Now()));
         auto year = rec::Year(gocpp::recv(t));
         auto txi = 0;
@@ -249,6 +261,7 @@ namespace golang::time
             tx->when = pseudoUnix(y, d0) - int64_t(l->zone[i1].offset);
             tx->index = uint8_t(i0);
             txi++;
+
             tx = & l->tx[txi];
             tx->when = pseudoUnix(y, d1) - int64_t(l->zone[i0].offset);
             tx->index = uint8_t(i1);

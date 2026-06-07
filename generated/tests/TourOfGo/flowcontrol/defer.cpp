@@ -26,6 +26,7 @@ namespace golang::main
         try
         {
             defer.push_back([=]{ mocklib::Println("world"_s); });
+
             mocklib::Println("hello"_s);
         }
         catch(gocpp::GoPanic& gp)

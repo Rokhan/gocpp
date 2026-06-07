@@ -111,9 +111,11 @@ namespace golang::main
     void main()
     {
         I i = {};
+
         i = new T {"Hello"_s};
         describe(i);
         rec::M(gocpp::recv(i));
+
         i = F(mocklib::Pi);
         describe(i);
         rec::M(gocpp::recv(i));

@@ -75,12 +75,14 @@ namespace golang::runtime
             go_throw("runtime·lock: lock count"_s);
         }
         gp->m->locks++;
+
         // Speculative grab for lock.
         if(atomic::Casuintptr(& l->key, 0, locked))
         {
             return;
         }
         semacreate(gp->m);
+
         auto timer = gocpp::InitPtr<lockTimer>([=](auto& x) {
             x.lock = l;
         });
@@ -215,6 +217,7 @@ namespace golang::runtime
                 break;
             }
         }
+
         // Successfully set waitm to locked.
         // What was it before?
         //Go switch emulation
@@ -283,6 +286,7 @@ namespace golang::runtime
         // to the caller.
         // This reduces the nosplit footprint of notetsleep_internal.
         gp = getg();
+
         // Register for wakeup on n->waitm.
         if(! atomic::Casuintptr(& n->key, 0, uintptr_t(gocpp::unsafe_pointer(gp->m))))
         {
@@ -313,6 +317,7 @@ namespace golang::runtime
             gp->m->blocked = false;
             return true;
         }
+
         deadline = nanotime() + ns;
         for(; ; )
         {
@@ -342,6 +347,7 @@ namespace golang::runtime
                 break;
             }
         }
+
         // Deadline arrived. Still registered. Semaphore not acquired.
         // Want to give up and return, but have to unregister first,
         // so that any notewakeup racing with the return does not

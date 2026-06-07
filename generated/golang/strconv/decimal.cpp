@@ -70,6 +70,7 @@ namespace golang::strconv
         {
             n += - a->dp;
         }
+
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
         auto w = 0;
         //Go switch emulation
@@ -83,6 +84,7 @@ namespace golang::strconv
                 case 0:
                     return "0"_s;
                     break;
+
                 case 1:
                     // zeros fill space between decimal point and digits
                     buf[w] = '0';
@@ -92,6 +94,7 @@ namespace golang::strconv
                     w += digitZero(buf.make_slice(w, w + - a->dp));
                     w += copy(buf.make_slice(w), a->d.make_slice(0, a->nd));
                     break;
+
                 case 2:
                     // decimal point in middle of digits
                     w += copy(buf.make_slice(w), a->d.make_slice(0, a->dp));
@@ -99,6 +102,7 @@ namespace golang::strconv
                     w++;
                     w += copy(buf.make_slice(w), a->d.make_slice(a->dp, a->nd));
                     break;
+
                 default:
                     // zeros fill space between digits and decimal point
                     w += copy(buf.make_slice(w), a->d.make_slice(0, a->nd));
@@ -137,6 +141,7 @@ namespace golang::strconv
     void rec::Assign(golang::strconv::decimal* a, uint64_t v)
     {
         gocpp::array<unsigned char, 24> buf = {};
+
         // Write reversed decimal in buf.
         auto n = 0;
         for(; v > 0; )
@@ -147,6 +152,7 @@ namespace golang::strconv
             n++;
             v = v1;
         }
+
         // Reverse again to produce forward decimal in a.d.
         a->nd = 0;
         for(n--; n >= 0; n--)
@@ -167,6 +173,7 @@ namespace golang::strconv
         auto r = 0;
         // write pointer
         auto w = 0;
+
         // Pick up enough leading digits to cover first shift.
         unsigned int n = {};
         for(; (n >> k) == 0; r++)
@@ -190,7 +197,9 @@ namespace golang::strconv
             n = n * 10 + c - '0';
         }
         a->dp -= r - 1;
+
         unsigned int mask = (1 << k) - 1;
+
         // Pick up a digit, put down a digit.
         for(; r < a->nd; r++)
         {
@@ -201,6 +210,7 @@ namespace golang::strconv
             w++;
             n = n * 10 + c - '0';
         }
+
         // Put down extra digits.
         for(; n > 0; )
         {
@@ -218,6 +228,7 @@ namespace golang::strconv
             }
             n = n * 10;
         }
+
         a->nd = w;
         trim(a);
     }
@@ -280,10 +291,12 @@ namespace golang::strconv
         {
             delta--;
         }
+
         // read index
         auto r = a->nd;
         // write index
         auto w = a->nd + delta;
+
         // Pick up a digit, put down a digit.
         unsigned int n = {};
         for(r--; r >= 0; r--)
@@ -303,6 +316,7 @@ namespace golang::strconv
             }
             n = quo;
         }
+
         // Put down extra digits.
         for(; n > 0; )
         {
@@ -320,6 +334,7 @@ namespace golang::strconv
             }
             n = quo;
         }
+
         a->nd += delta;
         if(a->nd >= len(a->d))
         {
@@ -422,6 +437,7 @@ namespace golang::strconv
         {
             return;
         }
+
         // round up
         for(auto i = nd - 1; i >= 0; i--)
         {
@@ -434,6 +450,7 @@ namespace golang::strconv
                 return;
             }
         }
+
         // Number is all 9s.
         // Change to single 1 with adjusted decimal point.
         a->d[0] = '1';

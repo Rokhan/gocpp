@@ -290,12 +290,14 @@ namespace golang::flate
         auto n = int32_t(len(list));
         list = list.make_slice(0, n + 1);
         list[n] = maxNode();
+
         // The tree can't have greater depth than n - 1, no matter what. This
         // saves a little bit of work in some small cases
         if(maxBits > n - 1)
         {
             maxBits = n - 1;
         }
+
         // Create information about each of the levels.
         // A bogus "Level 0" whose sole purpose is so that
         // level1.prev.needed==0.  This makes level1.nextPairFreq
@@ -306,6 +308,7 @@ namespace golang::flate
         // leafCounts[i][j] is the number of literals at the left
         // of the level j ancestor.
         gocpp::array<gocpp::array<int32_t, maxBitsLimit>, maxBitsLimit> leafCounts = {};
+
         for(auto level = int32_t(1); level <= maxBits; level++)
         {
             // For every level, the first two items are the first two characters.
@@ -322,8 +325,10 @@ namespace golang::flate
                 levels[level].nextPairFreq = math::MaxInt32;
             }
         }
+
         // We need a total of 2*n - 2 items at top level and have already generated 2.
         levels[maxBits].needed = 2 * n - 4;
+
         auto level = maxBits;
         for(; ; )
         {
@@ -339,6 +344,7 @@ namespace golang::flate
                 level++;
                 continue;
             }
+
             auto prevFreq = l->lastFreq;
             if(l->nextCharFreq < l->nextPairFreq)
             {
@@ -359,6 +365,7 @@ namespace golang::flate
                 copy(leafCounts[level].make_slice(0, level), leafCounts[level - 1].make_slice(0, level));
                 levels[l->level - 1].needed = 2;
             }
+
             if(l->needed--; l->needed == 0)
             {
                 // We've done everything we need to do for this level.
@@ -382,12 +389,14 @@ namespace golang::flate
                 }
             }
         }
+
         // Somethings is wrong if at the end, the top level is null or hasn't used
         // all of the leaves.
         if(leafCounts[maxBits][maxBits] != n)
         {
             gocpp::panic("leafCounts[maxBits][maxBits] != n"_s);
         }
+
         auto bitCount = h->bitCount.make_slice(0, maxBits + 1);
         auto bits = 1;
         auto counts = & leafCounts[maxBits];
@@ -418,6 +427,7 @@ namespace golang::flate
             // code, code + 1, ....  The code values are
             // assigned in literal order (not frequency order).
             auto chunk = list.make_slice(len(list) - int(bits));
+
             rec::sort(gocpp::recv(h->lns), chunk);
             for(auto [gocpp_ignored, node] : chunk)
             {
@@ -460,6 +470,7 @@ namespace golang::flate
                 h->codes[i].len = 0;
             }
         }
+
         list = list.make_slice(0, count);
         if(count <= 2)
         {
@@ -473,6 +484,7 @@ namespace golang::flate
             return;
         }
         rec::sort(gocpp::recv(h->lfs), list);
+
         // Get the number of literals for each bit count
         auto bitCount = rec::bitCounts(gocpp::recv(h), list, maxBits);
         // And do the assignment

@@ -226,6 +226,7 @@ namespace golang::runtime
                 x.funcInfo = funcInfo;
             }));
         }
+
         // Pop one frame from the frame list. Keep the rest.
         // Avoid allocation in the common case, which is 1 or 2 frames.
         //Go switch emulation
@@ -305,24 +306,29 @@ namespace golang::runtime
         }
         auto pc = stk[len(stk) - 1];
         auto tracepc = pc - 1;
+
         auto f = findfunc(tracepc);
         if(! rec::valid(gocpp::recv(f)))
         {
             // Not a Go function.
             return stk;
         }
+
         auto [u, uf] = newInlineUnwinder(f, tracepc);
         if(! rec::isInlined(gocpp::recv(u), uf))
         {
             // Nothing inline at tracepc.
             return stk;
         }
+
         // Treat the previous func as normal. We haven't actually checked, but
         // since this pc was included in the stack, we know it shouldn't be
         // elided.
         auto calleeID = abi::FuncIDNormal;
+
         // Remove pc from stk; we'll re-add it below.
         stk = stk.make_slice(0, len(stk) - 1);
+
         for(; rec::valid(gocpp::recv(uf)); uf = rec::next(gocpp::recv(u), uf))
         {
             auto funcID = rec::srcFunc(gocpp::recv(u), uf).funcID;
@@ -337,6 +343,7 @@ namespace golang::runtime
             }
             calleeID = funcID;
         }
+
         return stk;
     }
 
@@ -349,11 +356,13 @@ namespace golang::runtime
             x.pc = pc;
         });
         callCgoSymbolizer(& arg);
+
         if(arg.file == nullptr && arg.funcName == nullptr)
         {
             // No useful information from symbolizer.
             return nullptr;
         }
+
         gocpp::slice<Frame> frames = {};
         for(; ; )
         {
@@ -371,12 +380,14 @@ namespace golang::runtime
             }
             callCgoSymbolizer(& arg);
         }
+
         // No more frames for this PC. Tell the symbolizer we are done.
         // We don't try to maintain a single cgoSymbolizerArg for the
         // whole use of Frames, because there would be no good way to tell
         // the symbolizer when we are done.
         arg.pc = 0;
         callCgoSymbolizer(& arg);
+
         return frames;
     }
 
@@ -817,6 +828,7 @@ namespace golang::runtime
                 rec::addGlobals(gocpp::recv(gcController), int64_t(scanDataSize + scanBSSSize));
             }
         }
+
         // Modules appear in the moduledata linked list in the order they are
         // loaded by the dynamic loader, with one exception: the
         // firstmoduledata itself the module that contains the runtime. This
@@ -834,6 +846,7 @@ namespace golang::runtime
                 break;
             }
         }
+
         atomicstorep(gocpp::unsafe_pointer(& modulesSlice), gocpp::unsafe_pointer(modules));
     }
 
@@ -961,6 +974,7 @@ namespace golang::runtime
             println("runtime: pcHeader: magic="_s, hex(hdr->magic), "pad1="_s, hdr->pad1, "pad2="_s, hdr->pad2, "minLC="_s, hdr->minLC, "ptrSize="_s, hdr->ptrSize, "pcHeader.textStart="_s, hex(hdr->textStart), "text="_s, hex(datap->text), "pluginpath="_s, datap->pluginpath);
             go_throw("invalid function symbol table"_s);
         }
+
         // ftab is lookup table for function by program counter.
         auto nftab = len(datap->ftab) - 1;
         for(auto i = 0; i < nftab; i++)
@@ -987,6 +1001,7 @@ namespace golang::runtime
                 go_throw("invalid runtime symbol table"_s);
             }
         }
+
         auto min = rec::textAddr(gocpp::recv(datap), datap->ftab[0].entryoff);
         auto max = rec::textAddr(gocpp::recv(datap), datap->ftab[nftab].entryoff);
         if(datap->minpc != min || datap->maxpc != max)
@@ -994,6 +1009,7 @@ namespace golang::runtime
             println("minpc="_s, hex(datap->minpc), "min="_s, hex(min), "maxpc="_s, hex(datap->maxpc), "max="_s, hex(max));
             go_throw("minpc or maxpc invalid"_s);
         }
+
         for(auto [gocpp_ignored, modulehash] : datap->modulehashes)
         {
             if(modulehash.linktimehash != *modulehash.runtimehash)
@@ -1279,22 +1295,27 @@ namespace golang::runtime
             return funcInfo {};
         }
         auto nsub = uintptr_t(len(findfuncbucket {}.subbuckets));
+
         auto [pcOff, ok] = rec::textOff(gocpp::recv(datap), pc);
         if(! ok)
         {
             return funcInfo {};
         }
+
         // TODO: are datap.text and datap.minpc always equal?
         auto x = uintptr_t(pcOff) + datap->text - datap->minpc;
         auto b = x / pcbucketsize;
         auto i = x % pcbucketsize / (pcbucketsize / nsub);
+
         auto ffb = (findfuncbucket*)(add(gocpp::unsafe_pointer(datap->findfunctab), b * gocpp::Sizeof<findfuncbucket>()));
         auto idx = ffb->idx + uint32_t(ffb->subbuckets[i]);
+
         // Find the ftab entry.
         for(; datap->ftab[idx + 1].entryoff <= pcOff; )
         {
             idx++;
         }
+
         auto funcoff = datap->ftab[idx].funcoff;
         return funcInfo {(_func*)(gocpp::unsafe_pointer(& datap->pclntable[funcoff])), datap};
     }
@@ -1443,10 +1464,12 @@ namespace golang::runtime
         // If true, when we get a cache hit, still look up the data and make sure it
         // matches the cached contents.
         auto debugCheckCache = false;
+
         if(off == 0)
         {
             return {- 1, 0};
         }
+
         // Check the cache. This speeds up walks of deep stacks, which
         // tend to have the same recursive functions over and over,
         // or repetitive stacks between goroutines.
@@ -1498,6 +1521,7 @@ namespace golang::runtime
             cache->inUse--;
             releasem(mp);
         }
+
         if(! rec::valid(gocpp::recv(f)))
         {
             if(strict && rec::Load(gocpp::recv(panicking)) == 0)
@@ -1556,17 +1580,21 @@ namespace golang::runtime
                     cache->inUse--;
                     releasem(mp);
                 }
+
                 return {val, prevpc};
             }
             prevpc = pc;
         }
+
         // If there was a table, it should have covered all program counters.
         // If not, something is wrong.
         if(rec::Load(gocpp::recv(panicking)) != 0 || ! strict)
         {
             return {- 1, 0};
         }
+
         print("runtime: invalid pc-encoded table f="_s, funcname(f), " pc="_s, hex(pc), " targetpc="_s, hex(targetpc), " tab="_s, p, "\n"_s);
+
         p = datap->pctab.make_slice(off);
         pc = rec::entry(gocpp::recv(f));
         val = - 1;
@@ -1580,6 +1608,7 @@ namespace golang::runtime
             }
             print("\tvalue="_s, val, " until pc="_s, hex(pc), "\n"_s);
         }
+
         go_throw("invalid runtime symbol table"_s);
         return {- 1, 0};
     }
@@ -1766,6 +1795,7 @@ namespace golang::runtime
         }
         *val += int32_t(- (uvdelta & 1) ^ (uvdelta >> 1));
         p = p.make_slice(n);
+
         auto pcdelta = uint32_t(p[0]);
         n = 1;
         if(pcdelta & 0x80 != 0)

@@ -78,6 +78,7 @@ namespace golang::runtime
     void recordForPanic(gocpp::slice<unsigned char> b)
     {
         printlock();
+
         if(rec::Load(gocpp::recv(panicking)) == 0)
         {
             // Not actively crashing: maintain circular buffer of print output.
@@ -89,6 +90,7 @@ namespace golang::runtime
                 printBacklogIndex %= len(printBacklog);
             }
         }
+
         printunlock();
     }
 
@@ -137,6 +139,7 @@ namespace golang::runtime
             writeErr(b);
             return;
         }
+
         auto n = copy(gp->writebuf.make_slice(len(gp->writebuf), cap(gp->writebuf)), b);
         gp->writebuf = gp->writebuf.make_slice(0, len(gp->writebuf) + n);
     }
@@ -187,6 +190,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         // digits printed
         auto n = 7;
         gocpp::array<unsigned char, n + 7> buf = {};
@@ -207,6 +211,7 @@ namespace golang::runtime
                 v = - v;
                 buf[0] = '-';
             }
+
             // normalize
             for(; v >= 10; )
             {
@@ -218,6 +223,7 @@ namespace golang::runtime
                 e--;
                 v *= 10;
             }
+
             // round
             auto h = 5.0;
             for(auto i = 0; i < n; i++)
@@ -231,6 +237,7 @@ namespace golang::runtime
                 v /= 10;
             }
         }
+
         // format +d.dddd+edd
         for(auto i = 0; i < n; i++)
         {
@@ -241,6 +248,7 @@ namespace golang::runtime
         }
         buf[1] = buf[2];
         buf[2] = '.';
+
         buf[n + 2] = 'e';
         buf[n + 3] = '+';
         if(e < 0)
@@ -248,6 +256,7 @@ namespace golang::runtime
             e = - e;
             buf[n + 3] = '-';
         }
+
         buf[n + 4] = (unsigned char)(e / 100) + '0';
         buf[n + 5] = (unsigned char)(e / 10) % 10 + '0';
         buf[n + 6] = (unsigned char)(e % 10) + '0';
@@ -360,6 +369,7 @@ namespace golang::runtime
                 }
                 print(hex(p + i), ": "_s);
             }
+
             if(mark != nullptr)
             {
                 markbuf[0] = mark(p + i);
@@ -372,6 +382,7 @@ namespace golang::runtime
             auto val = *(uintptr_t*)(gocpp::unsafe_pointer(p + i));
             print(hex(val));
             print(" "_s);
+
             // Can we symbolize val?
             auto fn = findfunc(val);
             if(rec::valid(gocpp::recv(fn)))

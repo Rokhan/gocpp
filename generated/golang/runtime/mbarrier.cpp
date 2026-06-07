@@ -143,6 +143,7 @@ namespace golang::runtime
             bulkBarrierPreWrite(uintptr_t(dst), uintptr_t(src), size, nullptr);
         }
         memmove(dst, src, size);
+
         // Move pointers returned in registers to a place where the GC can see them.
         for(auto [i, gocpp_ignored] : regs->Ints)
         {
@@ -165,6 +166,7 @@ namespace golang::runtime
         {
             return 0;
         }
+
         // The compiler emits calls to typedslicecopy before
         // instrumentation runs, so unlike the other copying and
         // assignment operations, it's not instrumented in the calling
@@ -186,14 +188,17 @@ namespace golang::runtime
             asanwrite(dstPtr, uintptr_t(n) * typ->Size_);
             asanread(srcPtr, uintptr_t(n) * typ->Size_);
         }
+
         if(goexperiment::CgoCheck2)
         {
             cgoCheckSliceCopy(typ, dstPtr, srcPtr, n);
         }
+
         if(dstPtr == srcPtr)
         {
             return n;
         }
+
         // Note: No point in checking typ.PtrBytes here:
         // compiler only emits calls to typedslicecopy for types with pointers,
         // and growslice and reflect_typedslicecopy check for pointers

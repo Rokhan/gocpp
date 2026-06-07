@@ -220,7 +220,9 @@ namespace golang::bisect
         {
             return {nullptr, nullptr};
         }
+
         auto m = new(Matcher);
+
         auto p = pattern;
         // Special case for leading 'q' so that 'qn' quietly disables, e.g. fmahash=qn to disable fma
         // Any instance of 'v' disables 'q'.
@@ -244,6 +246,7 @@ namespace golang::bisect
                 return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
             }
         }
+
         // Allow multiple !, each negating the last, so that “bisect cmd !PATTERN” works
         // even when bisect chooses to add its own !.
         m->enable = true;
@@ -256,12 +259,14 @@ namespace golang::bisect
                 return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
             }
         }
+
         if(p == "n"_s)
         {
             // n is an alias for !y.
             m->enable = ! m->enable;
             p = "y"_s;
         }
+
         // Parse actual pattern syntax.
         auto result = true;
         auto bits = uint64_t(0);
@@ -657,12 +662,14 @@ namespace golang::bisect
         {
             return false;
         }
+
         auto base = stk[0];
         // normalize PCs
         for(auto [i, gocpp_ignored] : stk.make_slice(0, n))
         {
             stk[i] -= base;
         }
+
         auto h = Hash(stk.make_slice(0, n));
         if(rec::ShouldPrint(gocpp::recv(m), h))
         {
@@ -680,6 +687,7 @@ namespace golang::bisect
                     break;
                 }
             }
+
             if(rec::MarkerOnly(gocpp::recv(m)))
             {
                 if(! rec::seenLossy(gocpp::recv(d), h))
@@ -769,8 +777,10 @@ namespace golang::bisect
     struct gocpp::error printStack(struct Writer w, uint64_t h, gocpp::slice<uintptr_t> stk)
     {
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 2048);
+
         gocpp::array<unsigned char, 100> prefixBuf = {};
         auto prefix = AppendMarker(prefixBuf.make_slice(0, 0), h);
+
         auto frames = runtime::CallersFrames(stk);
         for(; ; )
         {
@@ -840,6 +850,7 @@ namespace golang::bisect
                 break;
             }
         }
+
         // Scan to ].
         auto j = i + len(prefix);
         for(; j < len(line) && line[j] != ']'; )
@@ -850,6 +861,7 @@ namespace golang::bisect
         {
             return {line, 0, false};
         }
+
         // Parse id.
         auto idstr = line.make_slice(i + len(prefix), j);
         if(len(idstr) >= 3 && idstr.make_slice(0, 2) == "0x"_s)
@@ -916,6 +928,7 @@ namespace golang::bisect
                 }
             }
         }
+
         // Construct shortened line.
         // Remove at most one space from around the marker,
         // so that "foo [marker] bar" shortens to "foo bar".
@@ -1263,6 +1276,7 @@ namespace golang::bisect
                 return true;
             }
         }
+
         // Compute index in set to evict as hash of current set.
         auto ch = offset64;
         for(auto [gocpp_ignored, x] : cache)

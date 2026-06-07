@@ -215,8 +215,10 @@ namespace golang::poll
         rec::InitBuf(gocpp::recv(o), p);
         o->msg.Buffers = & o->buf;
         o->msg.BufferCount = 1;
+
         o->msg.Name = nullptr;
         o->msg.Namelen = 0;
+
         o->msg.Flags = 0;
         o->msg.Control.Len = uint32_t(len(oob));
         o->msg.Control.Buf = nullptr;
@@ -236,6 +238,7 @@ namespace golang::poll
         {
             return {0, errors::New("internal error: polling on unsupported descriptor type"_s)};
         }
+
         auto fd = o->fd;
         // Notify runtime netpoll about starting IO.
         auto err = rec::prepare(gocpp::recv(fd->pd), int(o->mode), fd->isFile);
@@ -425,6 +428,7 @@ namespace golang::poll
         {
             return {""_s, initErr};
         }
+
         //Go switch emulation
         {
             auto condition = net;
@@ -477,6 +481,7 @@ namespace golang::poll
             }
         }
         fd->isFile = fd->kind != kindNet;
+
         gocpp::error err = {};
         if(pollable)
         {
@@ -632,10 +637,12 @@ namespace golang::poll
                 return {0, err};
             }
             defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
+
             if(len(buf) > maxRW)
             {
                 buf = buf.make_slice(0, maxRW);
             }
+
             int n = {};
             gocpp::error err = {};
             if(fd->isFile)
@@ -704,6 +711,7 @@ namespace golang::poll
         {
             return {0, nullptr};
         }
+
         if(fd->readuint16 == nullptr)
         {
             // Note: syscall.ReadConsole fails for very large buffers.
@@ -712,6 +720,7 @@ namespace golang::poll
             fd->readuint16 = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 0, 10000);
             fd->readbyte = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 4 * cap(fd->readuint16));
         }
+
         for(; fd->readbyteOffset >= len(fd->readbyte); )
         {
             auto n = cap(fd->readuint16) - len(fd->readuint16);
@@ -762,6 +771,7 @@ namespace golang::poll
                 break;
             }
         }
+
         auto src = fd->readbyte.make_slice(fd->readbyteOffset);
         int i = {};
         for(i = 0; i < len(src) && i < len(b); i++)
@@ -800,10 +810,12 @@ namespace golang::poll
                 return {0, err};
             }
             defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
+
             if(len(b) > maxRW)
             {
                 b = b.make_slice(0, maxRW);
             }
+
             rec::Lock(gocpp::recv(fd->l));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
             auto [curoffset, e] = syscall::Seek(fd->Sysfd, 0, io::SeekCurrent);
@@ -986,6 +998,7 @@ namespace golang::poll
                 rec::Lock(gocpp::recv(fd->l));
                 defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
             }
+
             auto ntotal = 0;
             for(; len(buf) > 0; )
             {
@@ -1121,6 +1134,7 @@ namespace golang::poll
                 return {0, err};
             }
             defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
+
             rec::Lock(gocpp::recv(fd->l));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
             auto [curoffset, e] = syscall::Seek(fd->Sysfd, 0, io::SeekCurrent);
@@ -1129,6 +1143,7 @@ namespace golang::poll
                 return {0, e};
             }
             defer.push_back([=]{ syscall::Seek(fd->Sysfd, curoffset, io::SeekStart); });
+
             auto ntotal = 0;
             for(; len(buf) > 0; )
             {
@@ -1206,6 +1221,7 @@ namespace golang::poll
                 return {0, err};
             }
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
+
             if(len(buf) == 0)
             {
                 // handle zero-byte payload
@@ -1218,6 +1234,7 @@ namespace golang::poll
                 });
                 return {n, err};
             }
+
             auto ntotal = 0;
             for(; len(buf) > 0; )
             {
@@ -1259,6 +1276,7 @@ namespace golang::poll
                 return {0, err};
             }
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
+
             if(len(buf) == 0)
             {
                 // handle zero-byte payload
@@ -1270,6 +1288,7 @@ namespace golang::poll
                 });
                 return {n, err};
             }
+
             auto ntotal = 0;
             for(; len(buf) > 0; )
             {
@@ -1310,6 +1329,7 @@ namespace golang::poll
                 return {0, err};
             }
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
+
             if(len(buf) == 0)
             {
                 // handle zero-byte payload
@@ -1321,6 +1341,7 @@ namespace golang::poll
                 });
                 return {n, err};
             }
+
             auto ntotal = 0;
             for(; len(buf) > 0; )
             {
@@ -1378,6 +1399,7 @@ namespace golang::poll
             CloseFunc(s);
             return {"acceptex"_s, err};
         }
+
         // Inherit properties of the listening socket.
         err = syscall::Setsockopt(s, syscall::SOL_SOCKET, syscall::SO_UPDATE_ACCEPT_CONTEXT, (unsigned char*)(gocpp::unsafe_pointer(& fd->Sysfd)), int32_t(gocpp::Sizeof<syscall::Handle>()));
         if(err != nullptr)
@@ -1385,6 +1407,7 @@ namespace golang::poll
             CloseFunc(s);
             return {"setsockopt"_s, err};
         }
+
         return {""_s, nullptr};
     }
 
@@ -1400,6 +1423,7 @@ namespace golang::poll
                 return {syscall::InvalidHandle, nullptr, 0, ""_s, err};
             }
             defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
+
             auto o = & fd->rop;
             gocpp::array<syscall::RawSockaddrAny, 2> rawsa = {};
             for(; ; )
@@ -1409,12 +1433,14 @@ namespace golang::poll
                 {
                     return {syscall::InvalidHandle, nullptr, 0, ""_s, err};
                 }
+
                 gocpp::string errcall;
                 std::tie(errcall, err) = rec::acceptOne(gocpp::recv(fd), s, rawsa.make_slice(0), o);
                 if(err == nullptr)
                 {
                     return {s, rawsa.make_slice(0), uint32_t(o->rsan), ""_s, nullptr};
                 }
+
                 // Sometimes we see WSAECONNRESET and ERROR_NETNAME_DELETED is
                 // returned here. These happen if connection reset is received
                 // before AcceptEx could complete. These errors relate to new
@@ -1465,8 +1491,10 @@ namespace golang::poll
                 return {0, err};
             }
             defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
+
             rec::Lock(gocpp::recv(fd->l));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(fd->l)); });
+
             return syscall::Seek(fd->Sysfd, offset, whence);
         }
         catch(gocpp::GoPanic& gp)
@@ -1486,6 +1514,7 @@ namespace golang::poll
                 return err;
             }
             defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
+
             syscall::ByHandleFileInformation d = {};
             if(auto err = syscall::GetFileInformationByHandle(fd->Sysfd, & d); err != nullptr)
             {
@@ -1504,6 +1533,7 @@ namespace golang::poll
             {
                 return nullptr;
             }
+
             windows::FILE_BASIC_INFO du = {};
             du.FileAttributes = attrs;
             return windows::SetFileInformationByHandle(fd->Sysfd, windows::FileBasicInfo, gocpp::unsafe_pointer(& du), uint32_t(gocpp::Sizeof<windows::FILE_BASIC_INFO>()));
@@ -1588,6 +1618,7 @@ namespace golang::poll
                 {
                     return nullptr;
                 }
+
                 // Use a zero-byte read as a way to get notified when this
                 // socket is readable. h/t https://stackoverflow.com/a/42019668/332798
                 auto o = & fd->rop;
@@ -1628,10 +1659,12 @@ namespace golang::poll
                 return err;
             }
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
+
             if(f(uintptr_t(fd->Sysfd)))
             {
                 return nullptr;
             }
+
             // TODO(tmm1): find a way to detect socket writability
             return gocpp::error(syscall::go_EWINDOWS);
         }
@@ -1728,10 +1761,12 @@ namespace golang::poll
                 return {0, 0, 0, nullptr, err};
             }
             defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
+
             if(len(p) > maxRW)
             {
                 p = p.make_slice(0, maxRW);
             }
+
             auto o = & fd->rop;
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
@@ -1770,10 +1805,12 @@ namespace golang::poll
                 return {0, 0, 0, err};
             }
             defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
+
             if(len(p) > maxRW)
             {
                 p = p.make_slice(0, maxRW);
             }
+
             auto o = & fd->rop;
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
@@ -1811,10 +1848,12 @@ namespace golang::poll
                 return {0, 0, 0, err};
             }
             defer.push_back([=]{ rec::readUnlock(gocpp::recv(fd)); });
+
             if(len(p) > maxRW)
             {
                 p = p.make_slice(0, maxRW);
             }
+
             auto o = & fd->rop;
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
@@ -1851,11 +1890,13 @@ namespace golang::poll
             {
                 return {0, 0, errors::New("packet is too large (only 1GB is allowed)"_s)};
             }
+
             if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, 0, err};
             }
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
+
             auto o = & fd->wop;
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(sa != nullptr)
@@ -1894,11 +1935,13 @@ namespace golang::poll
             {
                 return {0, 0, errors::New("packet is too large (only 1GB is allowed)"_s)};
             }
+
             if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, 0, err};
             }
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
+
             auto o = & fd->wop;
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
@@ -1930,11 +1973,13 @@ namespace golang::poll
             {
                 return {0, 0, errors::New("packet is too large (only 1GB is allowed)"_s)};
             }
+
             if(auto err = rec::writeLock(gocpp::recv(fd)); err != nullptr)
             {
                 return {0, 0, err};
             }
             defer.push_back([=]{ rec::writeUnlock(gocpp::recv(fd)); });
+
             auto o = & fd->wop;
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)

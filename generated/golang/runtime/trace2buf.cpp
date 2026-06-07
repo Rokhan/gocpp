@@ -195,12 +195,14 @@ namespace golang::runtime
         w.traceBuf->traceBufHeader.lastTime = ts;
         w.traceBuf->traceBufHeader.link = nullptr;
         w.traceBuf->traceBufHeader.pos = 0;
+
         // Tolerate a nil mp.
         auto mID = ~ uint64_t(0);
         if(w.traceLocker.mp != nullptr)
         {
             mID = uint64_t(w.traceLocker.mp->procid);
         }
+
         // Write the buffer's header.
         rec::byte(gocpp::recv(w), (unsigned char)(traceEvEventBatch));
         rec::varint(gocpp::recv(w), uint64_t(w.traceLocker.gen));
@@ -437,6 +439,7 @@ namespace golang::runtime
     void traceBufFlush(struct traceBuf* buf, uintptr_t gen)
     {
         assertLockHeld(& trace.lock);
+
         // Write out the non-header length of the batch in the header.
         // Note: the length of the header is not included to make it easier
         // to calculate this value when deserializing and reserializing the
@@ -446,6 +449,7 @@ namespace golang::runtime
         // padding.
         rec::varintAt(gocpp::recv(buf), buf->traceBufHeader.lenPos, uint64_t(buf->traceBufHeader.pos - (buf->traceBufHeader.lenPos + traceBytesPerNumber)));
         rec::push(gocpp::recv(trace.full[gen % 2]), buf);
+
         // Notify the scheduler that there's work available and that the trace
         // reader should be scheduled.
         if(! rec::Load(gocpp::recv(trace.workAvailable)))

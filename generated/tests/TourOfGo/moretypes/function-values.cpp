@@ -34,6 +34,7 @@ namespace golang::main
             return std::sqrt(x * x + y * y);
         };
         mocklib::Println(hypot(5, 12));
+
         mocklib::Println(compute(hypot));
         mocklib::Println(compute(mocklib::Pow));
     }

@@ -189,6 +189,7 @@ namespace golang::os
         {
             return {0, err};
         }
+
         if(off < 0)
         {
             return {0, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
@@ -197,6 +198,7 @@ namespace golang::os
                 x.Err = errors::New("negative offset"_s);
             }))};
         }
+
         for(; len(b) > 0; )
         {
             auto [m, e] = rec::pread(gocpp::recv(f), b, off);
@@ -330,11 +332,14 @@ namespace golang::os
         {
             err = io::ErrShortWrite;
         }
+
         epipecheck(f, e);
+
         if(e != nullptr)
         {
             err = rec::wrapErr(gocpp::recv(f), "write"_s, e);
         }
+
         return {n, err};
     }
 
@@ -356,6 +361,7 @@ namespace golang::os
         {
             return {0, errWriteAtInAppendMode};
         }
+
         if(off < 0)
         {
             return {0, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
@@ -364,6 +370,7 @@ namespace golang::os
                 x.Err = errors::New("negative offset"_s);
             }))};
         }
+
         for(; len(b) > 0; )
         {
             auto [m, e] = rec::pwrite(gocpp::recv(f), b, off);
@@ -521,6 +528,7 @@ namespace golang::os
         {
             return syscall::Mkdir(longName, syscallMode(perm));
         });
+
         if(e != nullptr)
         {
             return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
@@ -529,16 +537,19 @@ namespace golang::os
                 x.Err = e;
             }));
         }
+
         // mkdir(2) itself won't handle the sticky bit on *BSD and Solaris
         if(! supportsCreateWithStickyBit && perm & ModeSticky != 0)
         {
             e = setStickyBit(name);
+
             if(e != nullptr)
             {
                 Remove(name);
                 return e;
             }
         }
+
         return nullptr;
     }
 
@@ -612,6 +623,7 @@ namespace golang::os
             return {nullptr, err};
         }
         f->file.appendMode = flag & O_APPEND != 0;
+
         return {f, nullptr};
     }
 
@@ -706,6 +718,7 @@ namespace golang::os
     std::tuple<gocpp::string, struct gocpp::error> UserCacheDir()
     {
         gocpp::string dir = {};
+
         //Go switch emulation
         {
             auto condition = mocklib::GOOS;
@@ -723,6 +736,7 @@ namespace golang::os
                         return {""_s, errors::New("%LocalAppData% is not defined"_s)};
                     }
                     break;
+
                 case 1:
                 case 2:
                     dir = Getenv("HOME"_s);
@@ -732,6 +746,7 @@ namespace golang::os
                     }
                     dir += "/Library/Caches"_s;
                     break;
+
                 case 3:
                     dir = Getenv("home"_s);
                     if(dir == ""_s)
@@ -740,6 +755,7 @@ namespace golang::os
                     }
                     dir += "/lib/cache"_s;
                     break;
+
                 default:
                     // Unix
                     dir = Getenv("XDG_CACHE_HOME"_s);
@@ -755,6 +771,7 @@ namespace golang::os
                     break;
             }
         }
+
         return {dir, nullptr};
     }
 
@@ -774,6 +791,7 @@ namespace golang::os
     std::tuple<gocpp::string, struct gocpp::error> UserConfigDir()
     {
         gocpp::string dir = {};
+
         //Go switch emulation
         {
             auto condition = mocklib::GOOS;
@@ -791,6 +809,7 @@ namespace golang::os
                         return {""_s, errors::New("%AppData% is not defined"_s)};
                     }
                     break;
+
                 case 1:
                 case 2:
                     dir = Getenv("HOME"_s);
@@ -800,6 +819,7 @@ namespace golang::os
                     }
                     dir += "/Library/Application Support"_s;
                     break;
+
                 case 3:
                     dir = Getenv("home"_s);
                     if(dir == ""_s)
@@ -808,6 +828,7 @@ namespace golang::os
                     }
                     dir += "/lib"_s;
                     break;
+
                 default:
                     // Unix
                     dir = Getenv("XDG_CONFIG_HOME"_s);
@@ -823,6 +844,7 @@ namespace golang::os
                     break;
             }
         }
+
         return {dir, nullptr};
     }
 
@@ -1129,6 +1151,7 @@ namespace golang::os
                 return {nullptr, err};
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(f)); });
+
             int size = {};
             if(auto [info, err] = rec::Stat(gocpp::recv(f)); err == nullptr)
             {
@@ -1140,6 +1163,7 @@ namespace golang::os
             }
             // one byte for final read at EOF
             size++;
+
             // If a file claims a small size, read at least 512 bytes.
             // In particular, files in Linux's /proc claim size 0 but
             // then do not work right if read in small pieces,
@@ -1148,6 +1172,7 @@ namespace golang::os
             {
                 size = 512;
             }
+
             auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, size);
             for(; ; )
             {
@@ -1161,6 +1186,7 @@ namespace golang::os
                     }
                     return {data, err};
                 }
+
                 if(len(data) >= cap(data))
                 {
                     auto d = append(data.make_slice(0, cap(data)), 0);

@@ -174,8 +174,10 @@ namespace golang::runtime
                 flushed = true;
             }
         }
+
         wbuf->obj[wbuf->workbufhdr.nobj] = obj;
         wbuf->workbufhdr.nobj++;
+
         // If we put a buffer on full, let the GC controller know so
         // it can encourage more workers to run. We delay this until
         // the end of put so that w is in a consistent state, since
@@ -197,6 +199,7 @@ namespace golang::runtime
         {
             return false;
         }
+
         wbuf->obj[wbuf->workbufhdr.nobj] = obj;
         wbuf->workbufhdr.nobj++;
         return true;
@@ -212,6 +215,7 @@ namespace golang::runtime
         {
             return;
         }
+
         auto flushed = false;
         auto wbuf = w->wbuf1;
         if(wbuf == nullptr)
@@ -219,6 +223,7 @@ namespace golang::runtime
             rec::init(gocpp::recv(w));
             wbuf = w->wbuf1;
         }
+
         for(; len(obj) > 0; )
         {
             for(; wbuf->workbufhdr.nobj == len(wbuf->obj); )
@@ -233,6 +238,7 @@ namespace golang::runtime
             wbuf->workbufhdr.nobj += n;
             obj = obj.make_slice(n);
         }
+
         if(flushed && gcphase == _GCmark)
         {
             rec::enlistWorker(gocpp::recv(gcController));
@@ -271,6 +277,7 @@ namespace golang::runtime
                 w->wbuf1 = wbuf;
             }
         }
+
         wbuf->workbufhdr.nobj--;
         return wbuf->obj[wbuf->workbufhdr.nobj];
     }
@@ -287,6 +294,7 @@ namespace golang::runtime
         {
             return 0;
         }
+
         wbuf->workbufhdr.nobj--;
         return wbuf->obj[wbuf->workbufhdr.nobj];
     }
@@ -312,6 +320,7 @@ namespace golang::runtime
                 w->flushedWork = true;
             }
             w->wbuf1 = nullptr;
+
             wbuf = w->wbuf2;
             if(wbuf->workbufhdr.nobj == 0)
             {
@@ -579,6 +588,7 @@ namespace golang::runtime
         b->workbufhdr.nobj -= n;
         b1->workbufhdr.nobj = n;
         memmove(gocpp::unsafe_pointer(& b1->obj[0]), gocpp::unsafe_pointer(& b->obj[b->workbufhdr.nobj]), uintptr_t(n) * gocpp::Sizeof<uintptr_t>());
+
         // Put b on full list - let first half of b get stolen.
         putfull(b);
         return b1;

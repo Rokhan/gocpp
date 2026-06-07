@@ -33,6 +33,7 @@ namespace golang::main
             // fmt.Printf("%d\n", value)
             mocklib::Printf("%v\n"_s, value);
         }
+
         // assignment versions
         auto value = 0;
         auto it_0 = std::begin(pow);
@@ -54,6 +55,7 @@ namespace golang::main
         {
             mocklib::Printf("%v\n"_s, pow[i]);
         }
+
         // strings are range
         for(auto [gocpp_ignored, go_char] : "hello"_s)
         {

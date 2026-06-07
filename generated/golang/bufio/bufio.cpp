@@ -157,10 +157,12 @@ namespace golang::bufio
             b->w -= b->r;
             b->r = 0;
         }
+
         if(b->w >= len(b->buf))
         {
             gocpp::panic("bufio: tried to fill full buffer"_s);
         }
+
         // Read new data: try a limited number of times.
         for(auto i = maxConsecutiveEmptyReads; i > 0; i--)
         {
@@ -203,17 +205,21 @@ namespace golang::bufio
         {
             return {nullptr, ErrNegativeCount};
         }
+
         b->lastByte = - 1;
         b->lastRuneSize = - 1;
+
         for(; b->w - b->r < n && b->w - b->r < len(b->buf) && b->err == nullptr; )
         {
             // b.w-b.r < len(b.buf) => buffer is not full
             rec::fill(gocpp::recv(b));
         }
+
         if(n > len(b->buf))
         {
             return {b->buf.make_slice(b->r, b->w), ErrBufferFull};
         }
+
         // 0 <= n <= len(b.buf)
         gocpp::error err = {};
         if(auto avail = b->w - b->r; avail < n)
@@ -246,8 +252,10 @@ namespace golang::bufio
         {
             return {discarded, err};
         }
+
         b->lastByte = - 1;
         b->lastRuneSize = - 1;
+
         auto remain = n;
         for(; ; )
         {
@@ -331,6 +339,7 @@ namespace golang::bufio
             }
             b->w += n;
         }
+
         // copy as much as we can
         // Note: if the slice panics here, it is probably because
         // the underlying reader returned a bad count. See issue 49795.
@@ -465,6 +474,7 @@ namespace golang::bufio
                 b->r += i + 1;
                 break;
             }
+
             // Pending error?
             if(b->err != nullptr)
             {
@@ -473,6 +483,7 @@ namespace golang::bufio
                 err = rec::readErr(gocpp::recv(b));
                 break;
             }
+
             // Buffer full?
             if(rec::Buffered(gocpp::recv(b)) >= len(b->buf))
             {
@@ -481,17 +492,21 @@ namespace golang::bufio
                 err = ErrBufferFull;
                 break;
             }
+
             // do not rescan area we scanned before
             s = b->w - b->r;
+
             // buffer is not full
             rec::fill(gocpp::recv(b));
         }
+
         // Handle last byte, if any.
         if(auto i = len(line) - 1; i >= 0)
         {
             b->lastByte = int(line[i]);
             b->lastRuneSize = - 1;
         }
+
         return {line, err};
     }
 
@@ -534,6 +549,7 @@ namespace golang::bufio
             }
             return {line, true, nullptr};
         }
+
         if(len(line) == 0)
         {
             if(err != nullptr)
@@ -543,6 +559,7 @@ namespace golang::bufio
             return {line, isPrefix, err};
         }
         err = nullptr;
+
         if(line[len(line) - 1] == '\n')
         {
             auto drop = 1;
@@ -585,11 +602,13 @@ namespace golang::bufio
                 err = e;
                 break;
             }
+
             // Make a copy of the buffer.
             auto buf = bytes::Clone(frag);
             fullBuffers = append(fullBuffers, buf);
             totalLen += len(buf);
         }
+
         totalLen += len(frag);
         return {fullBuffers, frag, totalLen, err};
     }
@@ -648,17 +667,20 @@ namespace golang::bufio
         struct gocpp::error err;
         b->lastByte = - 1;
         b->lastRuneSize = - 1;
+
         std::tie(n, err) = rec::writeBuf(gocpp::recv(b), w);
         if(err != nullptr)
         {
             return {n, err};
         }
+
         if(auto [r, ok] = gocpp::getValue<io::WriterTo>(b->rd); ok)
         {
             auto [m, err] = rec::WriteTo(gocpp::recv(r), w);
             n += m;
             return {n, err};
         }
+
         {
             auto [w_tmp, ok] = gocpp::getValue<io::ReaderFrom>(w);
             if(auto& w = w_tmp; ok)
@@ -668,11 +690,13 @@ namespace golang::bufio
                 return {n, err};
             }
         }
+
         if(b->w - b->r < len(b->buf))
         {
             // buffer not full
             rec::fill(gocpp::recv(b));
         }
+
         for(; b->r < b->w; )
         {
             // b.r < b.w => buffer is not empty
@@ -685,10 +709,12 @@ namespace golang::bufio
             // buffer is empty
             rec::fill(gocpp::recv(b));
         }
+
         if(b->err == io::go_EOF)
         {
             b->err = nullptr;
         }
+
         return {n, rec::readErr(gocpp::recv(b))};
     }
 
@@ -957,6 +983,7 @@ namespace golang::bufio
     {
         io::StringWriter sw = {};
         auto tryStringWriter = true;
+
         auto nn = 0;
         for(; len(s) > rec::Available(gocpp::recv(b)) && b->err == nullptr; )
         {

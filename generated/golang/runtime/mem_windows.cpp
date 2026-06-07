@@ -38,6 +38,7 @@ namespace golang::runtime
         {
             return;
         }
+
         // Decommit failed. Usual reason is that we've merged memory from two different
         // VirtualAlloc calls, and Windows will only let each VirtualFree handle pages from
         // a single VirtualAlloc. It is okay to specify a subset of the pages from a single alloc,
@@ -72,6 +73,7 @@ namespace golang::runtime
         {
             return;
         }
+
         // Commit failed. See SysUnused.
         // Hold on to n here so we can give back a better error message
         // for certain cases.
@@ -154,6 +156,7 @@ namespace golang::runtime
         {
             return v;
         }
+
         // Next let the kernel choose the address.
         return gocpp::unsafe_pointer(stdcall4(_VirtualAlloc, 0, n, _MEM_RESERVE, _PAGE_READWRITE));
     }

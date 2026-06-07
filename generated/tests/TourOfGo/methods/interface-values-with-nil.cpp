@@ -110,10 +110,12 @@ namespace golang::main
     void main()
     {
         I i = {};
+
         T* t = nullptr;
         i = t;
         describe(i);
         rec::M(gocpp::recv(i));
+
         i = new T {"hello"_s};
         describe(i);
         rec::M(gocpp::recv(i));

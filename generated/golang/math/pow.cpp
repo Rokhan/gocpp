@@ -40,6 +40,7 @@ namespace golang::math
             // on some architectures (and does so on arm64). See issue #57465.
             return false;
         }
+
         auto [xi, xf] = Modf(x);
         return xf == 0 && int64_t(xi) & 1 == 1;
     }
@@ -176,6 +177,7 @@ namespace golang::math
                     break;
             }
         }
+
         auto [yi, yf] = Modf(Abs(y));
         if(yf != 0 && x < 0)
         {
@@ -204,9 +206,11 @@ namespace golang::math
                 }
             }
         }
+
         // ans = a1 * 2**ae (= 1 for now).
         auto a1 = 1.0;
         auto ae = 0;
+
         // ans *= x**yf
         if(yf != 0)
         {
@@ -217,6 +221,7 @@ namespace golang::math
             }
             a1 = Exp(yf * Log(x));
         }
+
         // ans *= x**yi
         // by multiplying in successive squarings
         // of x according to bits of yi.
@@ -247,6 +252,7 @@ namespace golang::math
                 xe--;
             }
         }
+
         // ans = a1*2**ae
         // if y < 0 { ans = 1 / ans }
         // but in the opposite order

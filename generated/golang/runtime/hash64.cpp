@@ -87,6 +87,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         return mix(m5 ^ s, mix(a ^ m2, b ^ seed));
     }
 

@@ -239,14 +239,19 @@ namespace golang::main
     {
         auto [h1, h2] = HashStr("toto"_s);
         mocklib::Printf("Hash: %v, %v\n"_s, h1, h2);
+
         auto [h3, h4] = HashStr(gocpp::slice<unsigned char> {1, 2, 3});
         mocklib::Printf("Hash: %v, %v\n"_s, h3, h4);
+
         auto o1 = Or(1, 2, 3, 4, 5);
         auto o2 = Or(0, 1, 2, 2, 3, 0, 0);
         mocklib::Printf("o1: %v, o2:%v\n"_s, o1, o2);
+
         mocklib::Printf("Zero: %v\n"_s, Zero<int>());
+
         mocklib::Printf("Unused: %v\n"_s, UnusedGenericParameter<double>());
         mocklib::Printf("OneOrDefault: %v\n"_s, OneOrDefault(gocpp::map<int, gocpp::string> {{ 1, "toto"_s }}));
+
         auto w1 = gocpp::Init<main::Wrapper<int>>([=](auto& x) {
             x.value = 42;
         });
@@ -254,6 +259,7 @@ namespace golang::main
             x.value = "hello"_s;
         });
         mocklib::Printf("Wrapper: %v, %v\n"_s, rec::Get<int>(gocpp::recv(w1)), rec::Get<gocpp::string>(gocpp::recv(w2)));
+
         auto s1 = gocpp::slice<int> {1, 2, 3};
         auto s2 = Grow(s1, 10);
         mocklib::Printf("Grow: %v, %v\n"_s, s1, s2);

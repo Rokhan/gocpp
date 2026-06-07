@@ -86,10 +86,12 @@ namespace golang::base64
         {
             gocpp::panic("encoding alphabet is not 64-bytes long"_s);
         }
+
         auto e = new(Encoding);
         e->padChar = StdPadding;
         copy(e->encode.make_slice(0), encoder);
         copy(e->decodeMap.make_slice(0), decodeMapInitialize);
+
         for(auto i = 0; i < len(encoder); i++)
         {
             // Note: While we document that the alphabet cannot contain
@@ -184,19 +186,23 @@ namespace golang::base64
         // loop below means a nil check at every operation. Lift that nil check
         // outside of the loop to speed up the encoder.
         _ = enc->encode;
+
         auto [di, si] = std::tuple{0, 0};
         auto n = (len(src) / 3) * 3;
         for(; si < n; )
         {
             // Convert 3x 8bit source bytes into 4 bytes
             auto val = ((unsigned int)(src[si + 0]) << 16) | ((unsigned int)(src[si + 1]) << 8) | (unsigned int)(src[si + 2]);
+
             dst[di + 0] = enc->encode[(val >> 18) & 0x3F];
             dst[di + 1] = enc->encode[(val >> 12) & 0x3F];
             dst[di + 2] = enc->encode[(val >> 6) & 0x3F];
             dst[di + 3] = enc->encode[val & 0x3F];
+
             si += 3;
             di += 4;
         }
+
         auto remain = len(src) - si;
         if(remain == 0)
         {
@@ -208,8 +214,10 @@ namespace golang::base64
         {
             val |= (unsigned int)(src[si + 1]) << 8;
         }
+
         dst[di + 0] = enc->encode[(val >> 18) & 0x3F];
         dst[di + 1] = enc->encode[(val >> 12) & 0x3F];
+
         //Go switch emulation
         {
             auto condition = remain;
@@ -306,6 +314,7 @@ namespace golang::base64
         {
             return {0, e->err};
         }
+
         // Leading fringe.
         if(e->nbuf > 0)
         {
@@ -328,6 +337,7 @@ namespace golang::base64
             }
             e->nbuf = 0;
         }
+
         // Large interior chunks.
         for(; len(p) >= 3; )
         {
@@ -345,6 +355,7 @@ namespace golang::base64
             n += nn;
             p = p.make_slice(nn);
         }
+
         // Trailing fringe.
         copy(e->buf.make_slice(0), p);
         e->nbuf = len(p);
@@ -410,8 +421,10 @@ namespace golang::base64
         // Decode quantum using the base64 alphabet
         gocpp::array<unsigned char, 4> dbuf = {};
         auto dlen = 4;
+
         // Lift the nil check outside of the loop.
         _ = enc->decodeMap;
+
         for(auto j = 0; j < len(dbuf); j++)
         {
             if(len(src) == si)
@@ -438,21 +451,25 @@ namespace golang::base64
             }
             auto in = src[si];
             si++;
+
             auto out = enc->decodeMap[in];
             if(out != 0xff)
             {
                 dbuf[j] = out;
                 continue;
             }
+
             if(in == '\n' || in == '\r')
             {
                 j--;
                 continue;
             }
+
             if(gocpp::rune(in) != enc->padChar)
             {
                 return {si, 0, gocpp::error(CorruptInputError(si - 1))};
             }
+
             // We've reached the end and there's padding
             //Go switch emulation
             {
@@ -489,6 +506,7 @@ namespace golang::base64
                         break;
                 }
             }
+
             // skip over newlines
             for(; si < len(src) && (src[si] == '\n' || src[si] == '\r'); )
             {
@@ -502,6 +520,7 @@ namespace golang::base64
             dlen = j;
             break;
         }
+
         // Convert 4x 6bit source bytes into 3 bytes
         auto val = ((unsigned int)(dbuf[0]) << 18) | ((unsigned int)(dbuf[1]) << 12) | ((unsigned int)(dbuf[2]) << 6) | (unsigned int)(dbuf[3]);
         std::tie(dbuf[2], dbuf[1], dbuf[0]) = std::tuple{(unsigned char)(val >> 0), (unsigned char)(val >> 8), (unsigned char)(val >> 16)};
@@ -533,6 +552,7 @@ namespace golang::base64
                     break;
             }
         }
+
         return {si, dlen - 1, err};
     }
 
@@ -548,6 +568,7 @@ namespace golang::base64
             n--;
         }
         n = decodedLen(n, NoPadding);
+
         dst = slices::Grow(dst, n);
         gocpp::error err;
         std::tie(n, err) = rec::Decode(gocpp::recv(enc), dst.make_slice(len(dst)).make_slice(0, n), src);
@@ -623,10 +644,12 @@ namespace golang::base64
             d->out = d->out.make_slice(n);
             return {n, nullptr};
         }
+
         if(d->err != nullptr)
         {
             return {0, d->err};
         }
+
         // This code assumes that d.r strips supported whitespace ('\r' and '\n').
         // Refill buffer.
         for(; d->nbuf < 4 && d->readErr == nullptr; )
@@ -643,6 +666,7 @@ namespace golang::base64
             std::tie(nn, d->readErr) = rec::Read(gocpp::recv(d->r), d->buf.make_slice(d->nbuf, nn));
             d->nbuf += nn;
         }
+
         if(d->nbuf < 4)
         {
             if(d->enc->padChar == NoPadding && d->nbuf > 0)
@@ -670,6 +694,7 @@ namespace golang::base64
             }
             return {0, d->err};
         }
+
         // Decode chunk into p, or d.out and then p if p is too small.
         auto nr = d->nbuf / 4 * 4;
         auto nw = d->nbuf / 4 * 3;
@@ -702,10 +727,12 @@ namespace golang::base64
         {
             return {0, nullptr};
         }
+
         // Lift the nil check outside of the loop. enc.decodeMap is directly
         // used later in this function, to let the compiler know that the
         // receiver can't be nil.
         _ = enc->decodeMap;
+
         auto si = 0;
         for(; strconv::IntSize >= 64 && len(src) - si >= 8 && len(dst) - n >= 8; )
         {
@@ -727,6 +754,7 @@ namespace golang::base64
                 }
             }
         }
+
         for(; len(src) - si >= 4 && len(dst) - n >= 4; )
         {
             auto src2 = src.make_slice(si, si + 4);
@@ -747,6 +775,7 @@ namespace golang::base64
                 }
             }
         }
+
         for(; si < len(src); )
         {
             int ninc = {};

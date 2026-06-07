@@ -54,10 +54,12 @@ namespace golang::strconv
         // 2^(e2+24) >= 10^(-q+prec-1)
         // or q = -mulByLog2Log10(e2+24) + prec - 1
         auto q = - mulByLog2Log10(e2 + 24) + prec - 1;
+
         // Now compute mant*(2^e2)*(10^q).
         // Is it an exact computation?
         // Only small positive powers of 10 are exact (5^28 has 66 bits).
         auto exact = q <= 27 && q >= 0;
+
         auto [di, dexp2, d0] = mult64bitPow10(mant, e2, q);
         if(dexp2 >= 0)
         {
@@ -75,6 +77,7 @@ namespace golang::strconv
         // Remove extra lower bits and keep rounding info.
         auto extra = (unsigned int)(- dexp2);
         auto extraMask = uint32_t((1 << extra) - 1);
+
         uint32_t dfrac;
         std::tie(di, dfrac) = std::tuple{di >> extra, di & extraMask};
         auto roundUp = false;
@@ -129,10 +132,12 @@ namespace golang::strconv
         // The minimal required exponent is -mulByLog2Log10(1025)+18 = -291
         // The maximal required exponent is mulByLog2Log10(1074)+18 = 342
         auto q = - mulByLog2Log10(e2 + 54) + prec - 1;
+
         // Now compute mant*(2^e2)*(10^q).
         // Is it an exact computation?
         // Only small positive powers of 10 are exact (5^55 has 128 bits).
         auto exact = q <= 55 && q >= 0;
+
         auto [di, dexp2, d0] = mult128bitPow10(mant, e2, q);
         if(dexp2 >= 0)
         {
@@ -150,6 +155,7 @@ namespace golang::strconv
         // Remove extra lower bits and keep rounding info.
         auto extra = (unsigned int)(- dexp2);
         auto extraMask = uint64_t((1 << extra) - 1);
+
         uint64_t dfrac;
         std::tie(di, dfrac) = std::tuple{di >> extra, di & extraMask};
         auto roundUp = false;
@@ -282,6 +288,7 @@ namespace golang::strconv
         }
         // Find 10^q *larger* than 2^-e2
         auto q = mulByLog2Log10(- e2) + 1;
+
         // We are going to multiply by 10^q using 128-bit arithmetic.
         // The exponent is the same for all 3 numbers.
         uint64_t dl = {};
@@ -635,6 +642,7 @@ namespace golang::strconv
             pow[0] += 1;
         }
         e2 += mulByLog10Log2(q) - 127 + 119;
+
         // long multiplication
         auto [l1, l0] = bits::Mul64(m, pow[0]);
         auto [h1, h0] = bits::Mul64(m, pow[1]);

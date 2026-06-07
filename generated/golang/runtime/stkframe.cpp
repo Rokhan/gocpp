@@ -243,6 +243,7 @@ namespace golang::runtime
             // Frame is dead. Return empty bitvectors.
             return {locals, args, objs};
         }
+
         auto f = frame->fn;
         auto pcdata = int32_t(- 1);
         if(targetpc != rec::entry(gocpp::recv(f)))
@@ -261,6 +262,7 @@ namespace golang::runtime
             // at the function prologue, assume so and hope for the best.
             pcdata = 0;
         }
+
         // Local variables.
         auto size = frame->varp - frame->sp;
         uintptr_t minsize = {};
@@ -309,6 +311,7 @@ namespace golang::runtime
                 print("      no locals to adjust\n"_s);
             }
         }
+
         // Arguments. First fetch frame size and special-case argument maps.
         bool isReflect = {};
         std::tie(args, isReflect) = rec::argMapInternal(gocpp::recv(frame));
@@ -338,6 +341,7 @@ namespace golang::runtime
                 args = stackmapdata(stackmap, pcdata);
             }
         }
+
         // stack objects.
         if((GOARCH == "amd64"_s || GOARCH == "arm64"_s || GOARCH == "loong64"_s || GOARCH == "ppc64"_s || GOARCH == "ppc64le"_s || GOARCH == "riscv64"_s) && gocpp::Sizeof<abi::RegArgs>() > 0 && isReflect)
         {
@@ -363,6 +367,7 @@ namespace golang::runtime
                 objs = unsafe::Slice(r0, int(n));
             }
         }
+
         return {locals, args, objs};
     }
 

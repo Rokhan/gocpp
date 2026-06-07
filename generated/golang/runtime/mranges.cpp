@@ -418,6 +418,7 @@ namespace golang::runtime
     int rec::findSucc(golang::runtime::addrRanges* a, uintptr_t addr)
     {
         auto base = offAddr {addr};
+
         // Narrow down the search space via a binary search
         // for large addrRanges until we have at most iterMax
         // candidates left.
@@ -526,6 +527,7 @@ namespace golang::runtime
             // We have neighbors and they both border us.
             // Merge a.ranges[i-1], r, and a.ranges[i] together into a.ranges[i-1].
             a->ranges[i - 1].limit = a->ranges[i].limit;
+
             // Delete a.ranges[i].
             copy(a->ranges.make_slice(i), a->ranges.make_slice(i + 1));
             a->ranges = a->ranges.make_slice(0, len(a->ranges) - 1);
@@ -559,6 +561,7 @@ namespace golang::runtime
                 ranges->len = len(oldRanges) + 1;
                 ranges->cap = cap(oldRanges) * 2;
                 ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, a->sysStat));
+
                 // Copy in the old array, but make space for the new range.
                 copy(a->ranges.make_slice(0, i), oldRanges.make_slice(0, i));
                 copy(a->ranges.make_slice(i + 1), oldRanges.make_slice(i));

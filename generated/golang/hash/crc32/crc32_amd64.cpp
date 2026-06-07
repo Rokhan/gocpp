@@ -90,6 +90,7 @@ namespace golang::crc32
         {
             gocpp::panic("not available"_s);
         }
+
         // This method is inspired from the algorithm in Intel's white paper:
         // "Fast CRC Computation for iSCSI Polynomial Using CRC32 Instruction"
         // The same strategy of splitting the buffer in three is used but the
@@ -136,6 +137,7 @@ namespace golang::crc32
         // We can compute tables corresponding to the four terms for all 8-bit
         // values.
         crc = ~ crc;
+
         // If a buffer is long enough to use the optimization, process the first few
         // bytes to align the buffer to an 8 byte boundary (if necessary).
         if(len(p) >= castagnoliK1 * 3)
@@ -148,28 +150,33 @@ namespace golang::crc32
                 p = p.make_slice(delta);
             }
         }
+
         // Process 3*K2 at a time.
         for(; len(p) >= castagnoliK2 * 3; )
         {
             // Compute CRC(I, A), CRC(0, B), and CRC(0, C).
             auto [crcA, crcB, crcC] = castagnoliSSE42Triple(crc, 0, 0, p, p.make_slice(castagnoliK2), p.make_slice(castagnoliK2 * 2), castagnoliK2 / 24);
+
             // CRC(I, AB) = CRC(CRC(I, A), O) xor CRC(0, B)
             auto crcAB = castagnoliShift(castagnoliSSE42TableK2, crcA) ^ crcB;
             // CRC(I, ABC) = CRC(CRC(I, AB), O) xor CRC(0, C)
             crc = castagnoliShift(castagnoliSSE42TableK2, crcAB) ^ crcC;
             p = p.make_slice(castagnoliK2 * 3);
         }
+
         // Process 3*K1 at a time.
         for(; len(p) >= castagnoliK1 * 3; )
         {
             // Compute CRC(I, A), CRC(0, B), and CRC(0, C).
             auto [crcA, crcB, crcC] = castagnoliSSE42Triple(crc, 0, 0, p, p.make_slice(castagnoliK1), p.make_slice(castagnoliK1 * 2), castagnoliK1 / 24);
+
             // CRC(I, AB) = CRC(CRC(I, A), O) xor CRC(0, B)
             auto crcAB = castagnoliShift(castagnoliSSE42TableK1, crcA) ^ crcB;
             // CRC(I, ABC) = CRC(CRC(I, AB), O) xor CRC(0, C)
             crc = castagnoliShift(castagnoliSSE42TableK1, crcAB) ^ crcC;
             p = p.make_slice(castagnoliK1 * 3);
         }
+
         // Use the simple implementation for what's left.
         crc = castagnoliSSE42(crc, p);
         return ~ crc;
@@ -197,6 +204,7 @@ namespace golang::crc32
         {
             gocpp::panic("not available"_s);
         }
+
         if(len(p) >= 64)
         {
             auto left = len(p) & 15;

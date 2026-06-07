@@ -27,6 +27,7 @@ namespace golang::main
         auto dst = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), hex::EncodedLen(len(src)));
         hex::Encode(dst, src);
         mocklib::Printf("%s\n"_s, dst);
+
         auto decoded = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), hex::DecodedLen(len(dst)));
         auto [gocpp_id_0, err] = hex::Decode(decoded, dst);
         if(err != nullptr)
@@ -34,8 +35,10 @@ namespace golang::main
             mocklib::Println(err);
         }
         mocklib::Printf("%s\n"_s, decoded);
+
         auto dump = hex::Dump(src);
         mocklib::Println(dump);
+
         auto s = "48656c6c6f"_s;
         gocpp::slice<unsigned char> data;
         std::tie(data, err) = hex::DecodeString(s);
@@ -44,6 +47,7 @@ namespace golang::main
             gocpp::panic(err);
         }
         mocklib::Printf("%s\n"_s, data);
+
         auto str = hex::EncodeToString(src);
         mocklib::Println(str);
     }

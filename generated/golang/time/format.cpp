@@ -194,6 +194,7 @@ namespace golang::time
                             }
                         }
                         break;
+
                     case 1:
                         if(len(layout) >= i + 3)
                         {
@@ -214,6 +215,7 @@ namespace golang::time
                             }
                         }
                         break;
+
                     case 2:
                         if(len(layout) >= i + 2 && '1' <= layout[i + 1] && layout[i + 1] <= '6')
                         {
@@ -224,6 +226,7 @@ namespace golang::time
                             return {layout.make_slice(0, i), stdZeroYearDay, layout.make_slice(i + 3)};
                         }
                         break;
+
                     case 3:
                         if(len(layout) >= i + 2 && layout[i + 1] == '5')
                         {
@@ -231,6 +234,7 @@ namespace golang::time
                         }
                         return {layout.make_slice(0, i), stdNumMonth, layout.make_slice(i + 1)};
                         break;
+
                     case 4:
                         if(len(layout) >= i + 4 && layout.make_slice(i, i + 4) == "2006"_s)
                         {
@@ -238,6 +242,7 @@ namespace golang::time
                         }
                         return {layout.make_slice(0, i), stdDay, layout.make_slice(i + 1)};
                         break;
+
                     case 5:
                         if(len(layout) >= i + 2 && layout[i + 1] == '2')
                         {
@@ -253,27 +258,33 @@ namespace golang::time
                             return {layout.make_slice(0, i), stdUnderYearDay, layout.make_slice(i + 3)};
                         }
                         break;
+
                     case 6:
                         return {layout.make_slice(0, i), stdHour12, layout.make_slice(i + 1)};
                         break;
+
                     case 7:
                         return {layout.make_slice(0, i), stdMinute, layout.make_slice(i + 1)};
                         break;
+
                     case 8:
                         return {layout.make_slice(0, i), stdSecond, layout.make_slice(i + 1)};
                         break;
+
                     case 9:
                         if(len(layout) >= i + 2 && layout[i + 1] == 'M')
                         {
                             return {layout.make_slice(0, i), stdPM, layout.make_slice(i + 2)};
                         }
                         break;
+
                     case 10:
                         if(len(layout) >= i + 2 && layout[i + 1] == 'm')
                         {
                             return {layout.make_slice(0, i), stdpm, layout.make_slice(i + 2)};
                         }
                         break;
+
                     case 11:
                         if(len(layout) >= i + 7 && layout.make_slice(i, i + 7) == "-070000"_s)
                         {
@@ -296,6 +307,7 @@ namespace golang::time
                             return {layout.make_slice(0, i), stdNumShortTZ, layout.make_slice(i + 3)};
                         }
                         break;
+
                     case 12:
                         if(len(layout) >= i + 7 && layout.make_slice(i, i + 7) == "Z070000"_s)
                         {
@@ -318,6 +330,7 @@ namespace golang::time
                             return {layout.make_slice(0, i), stdISO8601ShortTZ, layout.make_slice(i + 3)};
                         }
                         break;
+
                     case 13:
                     case 14:
                         if(i + 1 < len(layout) && (layout[i + 1] == '0' || layout[i + 1] == '9'))
@@ -396,6 +409,7 @@ namespace golang::time
             b = append(b, '-');
             u = (unsigned int)(- x);
         }
+
         // 2-digit and 4-digit fields are the most common in time formats.
         auto utod = [=](unsigned int u) mutable -> unsigned char
         {
@@ -416,6 +430,7 @@ namespace golang::time
                     break;
             }
         }
+
         // Compute the number of decimal digits.
         int n = {};
         if(u == 0)
@@ -426,11 +441,13 @@ namespace golang::time
         {
             n++;
         }
+
         // Add 0-padding.
         for(auto pad = width - n; pad > 0; pad--)
         {
             b = append(b, '0');
         }
+
         // Ensure capacity.
         if(len(b) + n <= cap(b))
         {
@@ -440,6 +457,7 @@ namespace golang::time
         {
             b = append(b, gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n));
         }
+
         // Assemble decimal in reverse order.
         auto i = len(b) - 1;
         for(; u >= 10 && i > 0; )
@@ -554,6 +572,7 @@ namespace golang::time
     gocpp::string rec::String(golang::time::Time t)
     {
         auto s = rec::Format(gocpp::recv(t), "2006-01-02 15:04:05.999999999 -0700 MST"_s);
+
         // Format monotonic clock reading as m=±ddd.nnnnnnnnn.
         if(t.wall & hasMonotonic != 0)
         {
@@ -592,6 +611,7 @@ namespace golang::time
         auto abs = rec::abs(gocpp::recv(t));
         auto [year, month, day, gocpp_id_1] = absDate(abs, true);
         auto [hour, minute, second] = absClock(abs);
+
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len("time.Date(9999, time.September, 31, 23, 59, 59, 999999999, time.Local)"_s));
         buf = append(buf, "time.Date("_s);
         buf = appendInt(buf, year, 0);
@@ -718,6 +738,7 @@ namespace golang::time
         int hour = - 1;
         int min = - 1;
         int sec = - 1;
+
         // Each iteration generates one std value.
         for(; layout != ""_s; )
         {
@@ -731,17 +752,20 @@ namespace golang::time
                 break;
             }
             layout = suffix;
+
             // Compute year, month, day if needed.
             if(year < 0 && std & stdNeedDate != 0)
             {
                 std::tie(year, month, day, yday) = absDate(abs, true);
                 yday++;
             }
+
             // Compute hour, minute, second if needed.
             if(hour < 0 && std & stdNeedClock != 0)
             {
                 std::tie(hour, min, sec) = absClock(abs);
             }
+
             //Go switch emulation
             {
                 auto condition = std & stdMask;
@@ -943,6 +967,7 @@ namespace golang::time
                             b = appendInt(b, absoffset % 60, 2);
                         }
                         break;
+
                     case 32:
                         if(name != ""_s)
                         {
@@ -1262,6 +1287,7 @@ namespace golang::time
         auto amSet = false;
         // do we need to add 12 to the hour?
         auto pmSet = false;
+
         // Time being constructed.
         int year = {};
         int month = - 1;
@@ -1274,6 +1300,7 @@ namespace golang::time
         Location* z = - 1;
         int zoneOffset = - 1;
         gocpp::string zoneName = - 1;
+
         // Each iteration processes one std value.
         for(; ; )
         {
@@ -1651,6 +1678,7 @@ namespace golang::time
                         }
                         std::tie(zoneName, value) = std::tuple{value.make_slice(0, n), value.make_slice(n)};
                         break;
+
                     case 33:
                         // stdFracSecond0 requires the exact number of digits as specified in
                         // the layout.
@@ -1663,6 +1691,7 @@ namespace golang::time
                         std::tie(nsec, rangeErrString, err) = parseNanoseconds(value, ndigit);
                         value = value.make_slice(ndigit);
                         break;
+
                     case 34:
                         if(len(value) < 2 || ! commaOrPeriod(value[0]) || value[1] < '0' || '9' < value[1])
                         {
@@ -1699,6 +1728,7 @@ namespace golang::time
         {
             hour = 0;
         }
+
         // Convert yday to day, month.
         if(yday >= 0)
         {
@@ -1754,19 +1784,23 @@ namespace golang::time
                 day = 1;
             }
         }
+
         // Validate the day of the month.
         if(day < 1 || day > daysIn(Month(month), year))
         {
             return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day out of range"_s))};
         }
+
         if(z != nullptr)
         {
             return {Date(year, Month(month), day, hour, min, sec, nsec, z), nullptr};
         }
+
         if(zoneOffset != - 1)
         {
             auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
             rec::addSec(gocpp::recv(t), - int64_t(zoneOffset));
+
             // Look for local zone with the given offset.
             // If that zone was in effect at the given time, use it.
             auto [name, offset, gocpp_id_2, gocpp_id_3, gocpp_id_4] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t)));
@@ -1775,12 +1809,14 @@ namespace golang::time
                 rec::setLoc(gocpp::recv(t), local);
                 return {t, nullptr};
             }
+
             // Otherwise create fake zone to record offset.
             // avoid leaking the input value
             auto zoneNameCopy = cloneString(zoneName);
             rec::setLoc(gocpp::recv(t), FixedZone(zoneNameCopy, zoneOffset));
             return {t, nullptr};
         }
+
         if(zoneName != ""_s)
         {
             auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
@@ -1793,6 +1829,7 @@ namespace golang::time
                 rec::setLoc(gocpp::recv(t), local);
                 return {t, nullptr};
             }
+
             // Otherwise, create fake zone with unknown offset.
             if(len(zoneName) > 3 && zoneName.make_slice(0, 3) == "GMT"_s)
             {
@@ -1805,6 +1842,7 @@ namespace golang::time
             rec::setLoc(gocpp::recv(t), FixedZone(zoneNameCopy, offset));
             return {t, nullptr};
         }
+
         // Otherwise, fall back to default.
         return {Date(year, Month(month), day, hour, min, sec, nsec, defaultLocation), nullptr};
     }
@@ -1909,6 +1947,7 @@ namespace golang::time
         {
             return 3;
         }
+
         return 3 + parseSignedOffset(value);
     }
 
@@ -1923,6 +1962,7 @@ namespace golang::time
             return 0;
         }
         auto [x, rem, err] = leadingInt(value.make_slice(1));
+
         // fail if nothing consumed by leadingInt
         if(err != nullptr || value.make_slice(1) == rem)
         {
@@ -2058,6 +2098,7 @@ namespace golang::time
         auto orig = s;
         uint64_t d = {};
         auto neg = false;
+
         // Consume [-+]?
         if(s != ""_s)
         {
@@ -2082,7 +2123,9 @@ namespace golang::time
             uint64_t v = {};
             uint64_t f = {};
             double scale = 1;
+
             gocpp::error err = {};
+
             // The next character must be [0-9.]
             if(! (s[0] == '.' || '0' <= s[0] && s[0] <= '9'))
             {
@@ -2097,6 +2140,7 @@ namespace golang::time
             }
             // whether we consumed anything before a period
             auto pre = pl != len(s);
+
             // Consume (\.[0-9]*)?
             auto post = false;
             if(s != ""_s && s[0] == '.')
@@ -2111,6 +2155,7 @@ namespace golang::time
                 // no digits (e.g. ".s" or "-.s")
                 return {0, errors::New("time: invalid duration "_s + quote(orig))};
             }
+
             // Consume unit.
             auto i = 0;
             for(; i < len(s); i++)

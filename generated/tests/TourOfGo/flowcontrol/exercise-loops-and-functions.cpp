@@ -26,6 +26,7 @@ namespace golang::main
         {
             gocpp::panic("error, Sqrt(x) with x<1"_s);
         }
+
         auto z = 1.0;
         for(auto i = 0; i < 15; i++)
         {

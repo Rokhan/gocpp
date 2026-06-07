@@ -70,6 +70,7 @@ namespace golang::runtime
             // WebAssembly has no threads yet, so only one CPU is possible.
             n = 1;
         }
+
         lock(& sched.lock);
         auto ret = int(gomaxprocs);
         unlock(& sched.lock);
@@ -77,9 +78,12 @@ namespace golang::runtime
         {
             return ret;
         }
+
         auto stw = stopTheWorldGC(stwGOMAXPROCS);
+
         // newprocs will be processed by startTheWorld
         newprocs = int32_t(n);
+
         startTheWorldGC(stw);
         return ret;
     }
@@ -108,11 +112,13 @@ namespace golang::runtime
     int64_t totalMutexWaitTimeNanos()
     {
         auto total = rec::Load(gocpp::recv(sched.totalMutexWaitTime));
+
         total += rec::Load(gocpp::recv(sched.totalRuntimeLockWaitTime));
         for(auto mp = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm))); mp != nullptr; mp = mp->alllink)
         {
             total += rec::Load(gocpp::recv(mp->mLockProfile.waitTime));
         }
+
         return total;
     }
 

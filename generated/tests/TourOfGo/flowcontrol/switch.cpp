@@ -70,6 +70,7 @@ namespace golang::main
                     break;
             }
         }
+
         // With default first
         mocklib::Print("\nGo runs on "_s);
         //Go switch emulation
@@ -96,6 +97,7 @@ namespace golang::main
                     break;
             }
         }
+
         // With multiple cases first
         mocklib::Print("\nGo runs on "_s);
         //Go switch emulation
@@ -122,6 +124,7 @@ namespace golang::main
                     break;
             }
         }
+
         testFallThrough(0);
         testFallThrough(1);
         testFallThrough(2);

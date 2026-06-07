@@ -103,11 +103,13 @@ namespace golang::fs
         {
             return false;
         }
+
         if(name == "."_s)
         {
             // special case
             return true;
         }
+
         // Iterate over elements in name, checking each.
         for(; ; )
         {

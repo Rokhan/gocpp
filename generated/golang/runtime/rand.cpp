@@ -117,6 +117,7 @@ namespace golang::runtime
         {
             fatal("randinit twice"_s);
         }
+
         auto seed = & globalRand.seed;
         if(startupRand != nullptr)
         {
@@ -288,6 +289,7 @@ namespace golang::runtime
             auto [hi, lo] = math::Mul64(mp->cheaprand, mp->cheaprand ^ 0xe7037ed1a0b428db);
             return uint32_t(hi ^ lo);
         }
+
         // Implement xorshift64+: 2 32-bit xorshift sequences added together.
         // Shift triplet [17,7,16] was calculated as indicated in Marsaglia's
         // Xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf

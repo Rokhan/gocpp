@@ -290,12 +290,14 @@ namespace golang::runtime
         {
             go_throw("bad TinySizeClass"_s);
         }
+
         if(heapArenaBitmapWords & (heapArenaBitmapWords - 1) != 0)
         {
             // heapBits expects modular arithmetic on bitmap
             // addresses to work.
             go_throw("heapArenaBitmapWords not a power of 2"_s);
         }
+
         // Check physPageSize.
         if(physPageSize == 0)
         {
@@ -374,10 +376,12 @@ namespace golang::runtime
                 go_throw("max pointer/scan bitmap size for headerless objects is too large"_s);
             }
         }
+
         if(minTagBits > taggedPointerBits)
         {
             go_throw("taggedPointerbits too small"_s);
         }
+
         // Initialize the heap.
         rec::init(gocpp::recv(mheap_));
         mcache0 = allocmcache();
@@ -390,6 +394,7 @@ namespace golang::runtime
             lockInit(& profMemFutureLock[i], lockRankProfMemFuture);
         }
         lockInit(& globalAlloc.mutex, lockRankGlobalAlloc);
+
         // Create initial arena growth hints.
         if(goarch::PtrSize == 8)
         {
@@ -502,6 +507,7 @@ namespace golang::runtime
             {
                 rec::init(gocpp::recv(mheap_.heapArenaAlloc), meta, arenaMetaSize, true);
             }
+
             // We want to start the arena low, but if we're linked
             // against C code, it's possible global constructors
             // have called malloc and adjusted the process' brk.
@@ -510,6 +516,7 @@ namespace golang::runtime
             // the region somewhere else, likely at a high
             // address).
             auto procBrk = sbrk0();
+
             // If we ask for the end of the data segment but the
             // operating system requires a little more space
             // before we can start allocating, it will give out a
@@ -544,6 +551,7 @@ namespace golang::runtime
             auto hint = (arenaHint*)(rec::alloc(gocpp::recv(mheap_.arenaHintAlloc)));
             hint->addr = p;
             std::tie(hint->next, mheap_.arenaHints) = std::tuple{mheap_.arenaHints, hint};
+
             // Place the hint for user arenas just after the large reservation.
             // While this potentially competes with the hint above, in practice we probably
             // aren't going to be getting this far anyway on 32-bit platforms.
@@ -577,7 +585,9 @@ namespace golang::runtime
         gocpp::unsafe_pointer v;
         uintptr_t size;
         assertLockHeld(& h->lock);
+
         n = alignUp(n, heapArenaBytes);
+
         if(hintList == & h->arenaHints)
         {
             // First, try the arena pre-reservation.
@@ -591,6 +601,7 @@ namespace golang::runtime
                 goto mapped;
             }
         }
+
         // Try to grow the heap at a hint address.
         for(; *hintList != nullptr; )
         {
@@ -638,6 +649,7 @@ namespace golang::runtime
             *hintList = hint->next;
             rec::free(gocpp::recv(h->arenaHintAlloc), gocpp::unsafe_pointer(hint));
         }
+
         if(size == 0)
         {
             if(raceenabled)
@@ -648,6 +660,7 @@ namespace golang::runtime
                 // a nice failure.
                 go_throw("too many address space collisions for -race mode"_s);
             }
+
             // All of the hints failed, so we'll take any
             // (sufficiently aligned) address the kernel will give
             // us.
@@ -656,6 +669,7 @@ namespace golang::runtime
             {
                 return {nullptr, 0};
             }
+
             // Create new hints for extending this region.
             auto hint = (arenaHint*)(rec::alloc(gocpp::recv(h->arenaHintAlloc)));
             std::tie(hint->addr, hint->down) = std::tuple{uintptr_t(v), true};
@@ -664,6 +678,7 @@ namespace golang::runtime
             hint->addr = uintptr_t(v) + size;
             std::tie(hint->next, mheap_.arenaHints) = std::tuple{mheap_.arenaHints, hint};
         }
+
         // Check for bad pointers or pointers we can't use.
         // Check for bad pointers or pointers we can't use.
         {
@@ -691,10 +706,12 @@ namespace golang::runtime
                 go_throw("memory reservation exceeds address space limit"_s);
             }
         }
+
         if(uintptr_t(v) & (heapArenaBytes - 1) != 0)
         {
             go_throw("misrounded allocation in sysAlloc"_s);
         }
+
         mapped:
         // Create arena metadata.
         for(auto ri = arenaIndex(uintptr_t(v)); ri <= arenaIndex(uintptr_t(v) + size - 1); ri++)
@@ -730,6 +747,7 @@ namespace golang::runtime
                 }
                 atomic::StorepNoWB(gocpp::unsafe_pointer(& h->arenas[rec::l1(gocpp::recv(ri))]), gocpp::unsafe_pointer(l2));
             }
+
             if(l2[rec::l2(gocpp::recv(ri))] != nullptr)
             {
                 go_throw("arena already initialized"_s);
@@ -744,6 +762,7 @@ namespace golang::runtime
                     go_throw("out of memory allocating heap arena metadata"_s);
                 }
             }
+
             // Register the arena in allArenas if requested.
             if(go_register)
             {
@@ -770,17 +789,20 @@ namespace golang::runtime
                 h->allArenas = h->allArenas.make_slice(0, len(h->allArenas) + 1);
                 h->allArenas[len(h->allArenas) - 1] = ri;
             }
+
             // Store atomically just in case an object from the
             // new heap arena becomes visible before the heap lock
             // is released (which shouldn't happen, but there's
             // little downside to this).
             atomic::StorepNoWB(gocpp::unsafe_pointer(& l2[rec::l2(gocpp::recv(ri))]), gocpp::unsafe_pointer(r));
         }
+
         // Tell the race detector about the new heap memory.
         if(raceenabled)
         {
             racemapshadow(v, size);
         }
+
         return {v, size};
     }
 
@@ -863,6 +885,7 @@ namespace golang::runtime
     {
         // Enable huge pages for page structure.
         rec::enableChunkHugePages(gocpp::recv(h->pages));
+
         // Grab the lock and set arenasHugePages if it's not.
         // Once arenasHugePages is set, all new L2 entries will be eligible for
         // huge pages. We'll set all the old entries after we release the lock.
@@ -874,6 +897,7 @@ namespace golang::runtime
         }
         h->arenasHugePages = true;
         runtime::unlock(& h->lock);
+
         // N.B. The arenas L1 map is quite small on all platforms, so it's fine to
         // just iterate over the whole thing.
         for(auto [i, gocpp_ignored] : h->arenas)
@@ -942,12 +966,15 @@ namespace golang::runtime
             rec::refill(gocpp::recv(c), spc);
             shouldhelpgc = true;
             s = c->alloc[spc];
+
             freeIndex = rec::nextFreeIndex(gocpp::recv(s));
         }
+
         if(freeIndex >= s->nelems)
         {
             go_throw("freeIndex is not valid"_s);
         }
+
         v = gclinkptr(uintptr_t(freeIndex) * s->elemsize + rec::base(gocpp::recv(s)));
         s->allocCount++;
         if(s->allocCount > s->nelems)
@@ -967,13 +994,16 @@ namespace golang::runtime
         {
             go_throw("mallocgc called with gcphase == _GCmarktermination"_s);
         }
+
         if(size == 0)
         {
             return gocpp::unsafe_pointer(& zerobase);
         }
+
         // It's possible for any malloc to trigger sweeping, which may in
         // turn queue finalizers. Record this dynamic lock edge.
         lockRankMayQueueFinalizer();
+
         auto userSize = size;
         if(asanenabled)
         {
@@ -983,6 +1013,7 @@ namespace golang::runtime
             // underflows.
             size += computeRZlog(size);
         }
+
         if(debug.malloc)
         {
             if(debug.sbrk != 0)
@@ -1018,15 +1049,18 @@ namespace golang::runtime
                 }
                 return persistentalloc(size, align, & memstats.other_sys);
             }
+
             if(inittrace.active && inittrace.id == getg()->goid)
             {
                 // Init functions are executed sequentially in a single goroutine.
                 inittrace.allocs += 1;
             }
         }
+
         // assistG is the G to charge for this allocation, or nil if
         // GC is not currently active.
         auto assistG = deductAssistCredit(size);
+
         // Set mp.mallocing to keep from being preempted by GC.
         auto mp = acquirem();
         if(mp->mallocing != 0)
@@ -1038,6 +1072,7 @@ namespace golang::runtime
             go_throw("malloc during signal"_s);
         }
         mp->mallocing = 1;
+
         auto shouldhelpgc = false;
         auto dataSize = userSize;
         auto c = getMCache(mp);
@@ -1235,6 +1270,7 @@ namespace golang::runtime
                 c->scanAlloc += scanSize;
             }
         }
+
         // Ensure that the stores above that initialize x to
         // type-safe memory and set the heap bits occur before
         // the caller can make x observable to the garbage
@@ -1252,6 +1288,7 @@ namespace golang::runtime
         // conservative scanning considers this pointer dead until
         // this point.
         span->freeIndexForScan = span->freeindex;
+
         // Allocate black during GC.
         // All slots hold nil so no scanning is needed.
         // This may be racing with GC so do it atomically if there can be
@@ -1260,14 +1297,17 @@ namespace golang::runtime
         {
             gcmarknewobject(span, uintptr_t(x));
         }
+
         if(raceenabled)
         {
             racemalloc(x, size);
         }
+
         if(msanenabled)
         {
             msanmalloc(x, size);
         }
+
         if(asanenabled)
         {
             // We should only read/write the memory with the size asked by the user.
@@ -1279,6 +1319,7 @@ namespace golang::runtime
             asanpoison(rzBeg, size - userSize);
             asanunpoison(x, userSize);
         }
+
         // If !goexperiment.AllocHeaders, "size" doesn't include the
         // allocation header, so use span.elemsize as the "full" size
         // for various computations below.
@@ -1308,6 +1349,7 @@ namespace golang::runtime
         }
         mp->mallocing = 0;
         releasem(mp);
+
         // Pointerfree data can be zeroed late in a context where preemption can occur.
         // x will keep the memory alive.
         if(delayedZeroing)
@@ -1324,18 +1366,21 @@ namespace golang::runtime
             // This is a possible preemption point: see #47302
             memclrNoHeapPointersChunked(size, x);
         }
+
         if(debug.malloc)
         {
             if(debug.allocfreetrace != 0)
             {
                 tracealloc(x, size, typ);
             }
+
             if(inittrace.active && inittrace.id == getg()->goid)
             {
                 // Init functions are executed sequentially in a single goroutine.
                 inittrace.bytes += uint64_t(fullSize);
             }
         }
+
         if(assistG != nullptr)
         {
             // Account for internal fragmentation in the assist
@@ -1344,6 +1389,7 @@ namespace golang::runtime
             // of the GC accounts for bytes marked.
             assistG->gcAssistBytes -= int64_t(fullSize - dataSize);
         }
+
         if(shouldhelpgc)
         {
             if(auto t = (gocpp::Init<gcTrigger>([=](auto& y) {
@@ -1353,6 +1399,7 @@ namespace golang::runtime
                 gcStart(t);
             }
         }
+
         if(raceenabled && noscan && dataSize < maxTinySize)
         {
             // Pad tinysize allocations so they are aligned with the end
@@ -1369,6 +1416,7 @@ namespace golang::runtime
             // Maybe just all noscan objects?
             x = add(x, size - dataSize);
         }
+
         return x;
     }
 
@@ -1392,6 +1440,7 @@ namespace golang::runtime
             // Charge the allocation against the G. We'll account
             // for internal fragmentation at the end of mallocgc.
             assistG->gcAssistBytes -= int64_t(size);
+
             if(assistG->gcAssistBytes < 0)
             {
                 // This G is in debt. Assist the GC to correct
@@ -1511,6 +1560,7 @@ namespace golang::runtime
                 return nextSampleNoFP();
             }
         }
+
         return uintptr_t(fastexprand(MemProfileRate));
     }
 
@@ -1535,6 +1585,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         // Take a random sample of the exponential distribution exp(-mean*x).
         // The probability distribution function is mean*exp(-mean*x), so the CDF is
         // p = 1 - exp(-mean*x), so
@@ -1678,6 +1729,7 @@ namespace golang::runtime
     struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
     {
         auto maxBlock = 64 << 10;
+
         if(size == 0)
         {
             go_throw("persistentalloc: size == 0"_s);
@@ -1697,10 +1749,12 @@ namespace golang::runtime
         {
             align = 8;
         }
+
         if(size >= maxBlock)
         {
             return (notInHeap*)(sysAlloc(size, sysStat));
         }
+
         auto mp = acquirem();
         persistentAlloc* persistent = {};
         if(mp != nullptr && mp->p != 0)
@@ -1724,6 +1778,7 @@ namespace golang::runtime
                 }
                 go_throw("runtime: cannot allocate memory"_s);
             }
+
             // Add the new chunk to the persistentChunks list.
             for(; ; )
             {
@@ -1743,6 +1798,7 @@ namespace golang::runtime
         {
             unlock(& globalAlloc.mutex);
         }
+
         if(sysStat != & memstats.other_sys)
         {
             rec::add(gocpp::recv(sysStat), int64_t(size));

@@ -233,10 +233,12 @@ namespace golang::flate
         // table construction. It's intended to be used during
         // development to supplement the currently ad-hoc unit tests.
         auto sanity = false;
+
         if(h->min != 0)
         {
             *h = huffmanDecoder {};
         }
+
         // Count number of codes of each length,
         // compute min and max length.
         gocpp::array<int, maxCodeLen> count = {};
@@ -258,6 +260,7 @@ namespace golang::flate
             }
             count[n]++;
         }
+
         // Empty tree. The decompressor.huffSym function will fail later if the tree
         // is used. Technically, an empty tree is only valid for the HDIST tree and
         // not the HCLEN and HLIT tree. However, a stream with an empty HCLEN tree
@@ -269,6 +272,7 @@ namespace golang::flate
         {
             return true;
         }
+
         auto code = 0;
         gocpp::array<int, maxCodeLen> nextcode = {};
         for(auto i = min; i <= max; i++)
@@ -277,6 +281,7 @@ namespace golang::flate
             nextcode[i] = code;
             code += count[i];
         }
+
         // Check that the coding is complete (i.e., that we've
         // assigned all 2-to-the-max possible bit sequences).
         // Exception: To be compatible with zlib, we also need to
@@ -286,11 +291,13 @@ namespace golang::flate
         {
             return false;
         }
+
         h->min = min;
         if(max > huffmanChunkBits)
         {
             auto numLinks = 1 << ((unsigned int)(max) - huffmanChunkBits);
             h->linkMask = uint32_t(numLinks - 1);
+
             // create link tables
             auto link = nextcode[huffmanChunkBits + 1] >> 1;
             h->links = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<uint32_t>>>(), huffmanNumChunks - link);
@@ -307,6 +314,7 @@ namespace golang::flate
                 h->links[off] = gocpp::make(gocpp::Tag<gocpp::slice<uint32_t>>(), numLinks);
             }
         }
+
         for(auto [i, n] : lengths)
         {
             if(n == 0)
@@ -356,6 +364,7 @@ namespace golang::flate
                 }
             }
         }
+
         if(sanity)
         {
             // Above we've sanity checked that we never overwrote
@@ -386,6 +395,7 @@ namespace golang::flate
                 }
             }
         }
+
         return true;
     }
 
@@ -625,6 +635,7 @@ namespace golang::flate
         // numCodes is 19, so nclen is always valid.
         f->b >>= 4;
         f->nb -= 5 + 5 + 4;
+
         // (HCLEN+4)*3 bits: code lengths in the magic codeOrder order.
         for(auto i = 0; i < nclen; i++)
         {
@@ -647,6 +658,7 @@ namespace golang::flate
         {
             return gocpp::error(CorruptInputError(f->roffset));
         }
+
         // HLIT + 257 code lengths, HDIST + 1 code lengths,
         // using the code length Huffman code.
         for(auto [i, n] = std::tuple{0, nlit + ndist}; i < n; )
@@ -720,10 +732,12 @@ namespace golang::flate
                 i++;
             }
         }
+
         if(! rec::init(gocpp::recv(f->h1), f->bits.make_slice(0, nlit)) || ! rec::init(gocpp::recv(f->h2), f->bits.make_slice(nlit, nlit + ndist)))
         {
             return gocpp::error(CorruptInputError(f->roffset));
         }
+
         // As an optimization, we can initialize the min bits to read at a time
         // for the HLIT tree to the length of the EOB marker since we know that
         // every block must terminate with one. This preserves the property that
@@ -732,6 +746,7 @@ namespace golang::flate
         {
             f->h1.min = f->bits[endBlockMarker];
         }
+
         return nullptr;
     }
 
@@ -743,6 +758,7 @@ namespace golang::flate
     {
         auto stateInit = 0;
         auto stateDict = 1;
+
         //Go switch emulation
         {
             auto condition = f->stepState;
@@ -759,6 +775,7 @@ namespace golang::flate
                     break;
             }
         }
+
         readLiteral:
         // Read literal and/or (length, distance) according to RFC section 3.2.3.
         // Read literal and/or (length, distance) according to RFC section 3.2.3.
@@ -850,6 +867,7 @@ namespace golang::flate
                 f->b >>= n;
                 f->nb -= n;
             }
+
             int dist = {};
             if(f->hd == nullptr)
             {
@@ -873,6 +891,7 @@ namespace golang::flate
                     return;
                 }
             }
+
             //Go switch emulation
             {
                 int conditionId = -1;
@@ -906,15 +925,18 @@ namespace golang::flate
                         break;
                 }
             }
+
             // No check on length; encoding can be prescient.
             if(dist > rec::histSize(gocpp::recv(f->dict)))
             {
                 f->err = CorruptInputError(f->roffset);
                 return;
             }
+
             std::tie(f->copyLen, f->copyDist) = std::tuple{length, dist};
             goto copyHistory;
         }
+
         copyHistory:
         // Perform a backwards copy according to RFC section 3.2.3.
         // Perform a backwards copy according to RFC section 3.2.3.
@@ -925,6 +947,7 @@ namespace golang::flate
                 cnt = rec::writeCopy(gocpp::recv(f->dict), f->copyDist, f->copyLen);
             }
             f->copyLen -= cnt;
+
             if(rec::availWrite(gocpp::recv(f->dict)) == 0 || f->copyLen > 0)
             {
                 f->toRead = rec::readFlush(gocpp::recv(f->dict));
@@ -944,6 +967,7 @@ namespace golang::flate
         // Discard current half-byte.
         f->nb = 0;
         f->b = 0;
+
         // Length then ones-complement of length.
         auto [nr, err] = io::ReadFull(f->r, f->buf.make_slice(0, 4));
         f->roffset += int64_t(nr);
@@ -959,12 +983,14 @@ namespace golang::flate
             f->err = CorruptInputError(f->roffset);
             return;
         }
+
         if(n == 0)
         {
             f->toRead = rec::readFlush(gocpp::recv(f->dict));
             rec::finishBlock(gocpp::recv(f));
             return;
         }
+
         f->copyLen = n;
         rec::copyData(gocpp::recv(f));
     }
@@ -978,6 +1004,7 @@ namespace golang::flate
         {
             buf = buf.make_slice(0, f->copyLen);
         }
+
         auto [cnt, err] = io::ReadFull(f->r, buf);
         f->roffset += int64_t(cnt);
         f->copyLen -= cnt;
@@ -987,6 +1014,7 @@ namespace golang::flate
             f->err = noEOF(err);
             return;
         }
+
         if(rec::availWrite(gocpp::recv(f->dict)) == 0 || f->copyLen > 0)
         {
             f->toRead = rec::readFlush(gocpp::recv(f->dict));
@@ -1154,6 +1182,7 @@ namespace golang::flate
     io::ReadCloser NewReader(io::Reader r)
     {
         fixedHuffmanDecoderInit();
+
         decompressor f = {};
         rec::makeReader(gocpp::recv(f), r);
         f.bits = new(gocpp::Tag<gocpp::array<int, maxNumLit + maxNumDist>>());
@@ -1173,6 +1202,7 @@ namespace golang::flate
     io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)
     {
         fixedHuffmanDecoderInit();
+
         decompressor f = {};
         rec::makeReader(gocpp::recv(f), r);
         f.bits = new(gocpp::Tag<gocpp::array<int, maxNumLit + maxNumDist>>());

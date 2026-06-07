@@ -23,9 +23,11 @@ namespace golang::main
     void main()
     {
         testGoTo();
+
         testFor(0);
         testFor(1);
         testFor(2);
+
         testRange(0);
         testRange(1);
         testRange(2);
@@ -108,11 +110,13 @@ namespace golang::main
         auto i = 0;
         label1:
         i++;
+
         if(i < 5)
         {
             mocklib::Println("goto label1"_s);
             goto label1;
         }
+
         label2:
         if(i < 10)
         {
@@ -135,6 +139,7 @@ namespace golang::main
                 mocklib::Printf("goto label3, i = %v, j = %v\n"_s, i, j);
                 goto label3;
             }
+
             mocklib::Printf("............ i = %v, j = %v\n"_s, i, j);
         }
     }

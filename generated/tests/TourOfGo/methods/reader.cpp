@@ -25,6 +25,7 @@ namespace golang::main
     void main()
     {
         auto r = strings::NewReader("Hello, Reader!"_s);
+
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 8);
         for(; ; )
         {

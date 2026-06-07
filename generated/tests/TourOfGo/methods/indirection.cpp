@@ -69,9 +69,11 @@ namespace golang::main
         auto v = Vertex {3, 4};
         rec::Scale(gocpp::recv(v), 2);
         ScaleFunc(& v, 10);
+
         auto p = new Vertex {4, 3};
         rec::Scale(gocpp::recv(p), 3);
         ScaleFunc(p, 8);
+
         mocklib::Println(v, p);
     }
 

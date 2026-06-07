@@ -198,6 +198,7 @@ namespace golang::safefilepath
                 }
             }
         }
+
         // Passing CONIN$ or CONOUT$ to CreateFile opens a console handle.
         // https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea#consoles
         // While CONIN$ and CONOUT$ aren't documented as being files,

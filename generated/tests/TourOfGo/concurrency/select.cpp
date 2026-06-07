@@ -113,6 +113,7 @@ namespace golang::main
     void testInlinedType()
     {
         gocpp::channel<gocpp_id_0> wakeup = {};
+
         //Go select emulation
         {
             int conditionId = -1;

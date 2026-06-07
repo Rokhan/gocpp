@@ -659,6 +659,7 @@ namespace golang::color
             return c;
         }
         auto [r, g, b, gocpp_id_13] = rec::RGBA(gocpp::recv(c));
+
         // These coefficients (the fractions 0.299, 0.587 and 0.114) are the same
         // as those given by the JFIF specification and used by func RGBToYCbCr in
         // ycbcr.go.
@@ -666,6 +667,7 @@ namespace golang::color
         // The 24 is 16 + 8. The 16 is the same as used in RGBToYCbCr. The 8 is
         // because the return value is 8 bit color, not 16 bit color.
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 24;
+
         return Gray {uint8_t(y)};
     }
 
@@ -676,11 +678,13 @@ namespace golang::color
             return c;
         }
         auto [r, g, b, gocpp_id_15] = rec::RGBA(gocpp::recv(c));
+
         // These coefficients (the fractions 0.299, 0.587 and 0.114) are the same
         // as those given by the JFIF specification and used by func RGBToYCbCr in
         // ycbcr.go.
         // Note that 19595 + 38470 + 7471 equals 65536.
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 16;
+
         return Gray16 {uint16_t(y)};
     }
 

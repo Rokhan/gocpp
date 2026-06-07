@@ -133,27 +133,37 @@ namespace golang::main
         a[1] = "World"_s;
         mocklib::Println(a[0], a[1]);
         mocklib::Println(a);
+
         auto primes = gocpp::array<int, 6> {2, 3, 5, 7, 11, 13};
         mocklib::Println(primes);
+
         auto ints = gocpp::array<int, 3> {1, 2, 3};
         mocklib::Println(ints);
+
         auto st1 = main::semTable1 { {1},  {1}};
         mocklib::Println(st1);
+
         auto st2 = main::semTable2 { {1},  {1}};
         mocklib::Println(st2);
+
         auto chars = gocpp::array<unsigned char, 5> {'H', 'e', 'l', 'l', 'o'};
         mocklib::Println(chars);
+
         auto hw1 = "Hello, World!"_s;
         auto hwBytes1 = gocpp::slice<unsigned char>(hw1);
         mocklib::Println(hwBytes1);
+
         auto hw2 = "Hello, World!"_s;
         auto hwBytes2 = gocpp::slice<unsigned char>(hw2);
         mocklib::Println(hwBytes2);
+
         gocpp::array<unsigned char, 32> buf = {};
         auto n = len(buf);
         mocklib::Println("Length of buf:"_s, n);
+
         auto w = arrayLen(& buf);
         mocklib::Println("Length of buf from arrayLen:"_s, w);
+
         testPtrArray();
     }
 

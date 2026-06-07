@@ -212,6 +212,7 @@ namespace golang::unicode
             }
             return false;
         }
+
         // binary search over ranges
         auto lo = 0;
         auto hi = len(ranges);
@@ -254,6 +255,7 @@ namespace golang::unicode
             }
             return false;
         }
+
         // binary search over ranges
         auto lo = 0;
         auto hi = len(ranges);
@@ -534,10 +536,12 @@ namespace golang::unicode
         {
             return r;
         }
+
         if(int(r) < len(asciiFold))
         {
             return gocpp::rune(asciiFold[r]);
         }
+
         // Consult caseOrbit table for special cases.
         auto lo = 0;
         auto hi = len(caseOrbit);
@@ -557,6 +561,7 @@ namespace golang::unicode
         {
             return gocpp::rune(caseOrbit[lo].To);
         }
+
         // No folding specified. This is a one- or two-element
         // equivalence class containing rune and ToLower(rune)
         // and ToUpper(rune) if they are different from rune.

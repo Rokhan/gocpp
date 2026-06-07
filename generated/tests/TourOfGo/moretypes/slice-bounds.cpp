@@ -23,14 +23,19 @@ namespace golang::main
     void main()
     {
         auto s = gocpp::slice<int> {2, 3, 5, 7, 11, 13};
+
         s = s.make_slice(1, 4);
         mocklib::Println(s);
+
         s = s.make_slice(0, 2);
         mocklib::Println(s);
+
         s = s.make_slice(1);
         mocklib::Println(s);
+
         s = s.make_slice(0);
         mocklib::Println(s);
+
         s = s.make_slice(0, 0, 0);
         mocklib::Println(s);
     }

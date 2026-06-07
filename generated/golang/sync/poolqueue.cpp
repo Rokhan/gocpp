@@ -163,6 +163,7 @@ namespace golang::sync
             return false;
         }
         auto slot = & d->vals[head & uint32_t(len(d->vals) - 1)];
+
         // Check if the head slot has been released by popTail.
         auto typ = atomic::LoadPointer(& slot->typ);
         if(typ != nullptr)
@@ -171,12 +172,14 @@ namespace golang::sync
             // the queue is actually still full.
             return false;
         }
+
         // The head slot is free, so we own it.
         if(val == nullptr)
         {
             val = dequeueNil(nullptr);
         }
         *(go_any*)(gocpp::unsafe_pointer(slot)) = val;
+
         // Increment head. This passes ownership of slot to popTail
         // and acts as a store barrier for writing the slot.
         rec::Add(gocpp::recv(d->headTail), 1 << dequeueBits);
@@ -198,6 +201,7 @@ namespace golang::sync
                 // Queue is empty.
                 return {nullptr, false};
             }
+
             // Confirm tail and decrement head. We do this before
             // reading the value to take back ownership of this
             // slot.
@@ -210,6 +214,7 @@ namespace golang::sync
                 break;
             }
         }
+
         auto val = *(go_any*)(gocpp::unsafe_pointer(slot));
         if(val == dequeueNil(nullptr))
         {
@@ -236,6 +241,7 @@ namespace golang::sync
                 // Queue is empty.
                 return {nullptr, false};
             }
+
             // Confirm head and tail (for our speculative check
             // above) and increment tail. If this succeeds, then
             // we own the slot at tail.
@@ -247,12 +253,14 @@ namespace golang::sync
                 break;
             }
         }
+
         // We now own slot.
         auto val = *(go_any*)(gocpp::unsafe_pointer(slot));
         if(val == dequeueNil(nullptr))
         {
             val = nullptr;
         }
+
         // Tell pushHead that we're done with this slot. Zeroing the
         // slot is also important so we don't leave behind references
         // that could keep this object live longer than necessary.
@@ -261,6 +269,8 @@ namespace golang::sync
         slot->val = nullptr;
         // At this point pushHead owns the slot.
         atomic::StorePointer(& slot->typ, nullptr);
+
+
         return {val, true};
     }
 
@@ -361,10 +371,12 @@ namespace golang::sync
             c->head = d;
             storePoolChainElt(& c->tail, d);
         }
+
         if(rec::pushHead(gocpp::recv(d), val))
         {
             return;
         }
+
         // The current dequeue is full. Allocate a new one of twice
         // the size.
         auto newSize = len(d->poolDequeue.vals) * 2;
@@ -373,6 +385,7 @@ namespace golang::sync
             // Can't make it any bigger.
             newSize = dequeueLimit;
         }
+
         auto d2 = gocpp::InitPtr<poolChainElt>([=](auto& x) {
             x.prev = d;
         });
@@ -405,6 +418,7 @@ namespace golang::sync
         {
             return {nullptr, false};
         }
+
         for(; ; )
         {
             // It's important that we load the next pointer
@@ -414,16 +428,19 @@ namespace golang::sync
             // empty, which is the only condition under which it's
             // safe to drop d from the chain.
             auto d2 = loadPoolChainElt(& d->next);
+
             if(auto [val, ok] = rec::popTail(gocpp::recv(d)); ok)
             {
                 return {val, ok};
             }
+
             if(d2 == nullptr)
             {
                 // This is the only dequeue. It's empty right
                 // now, but could be pushed to in the future.
                 return {nullptr, false};
             }
+
             // The tail of the chain has been drained, so move on
             // to the next dequeue. Try to drop it from the chain
             // so the next pop doesn't have to look at the empty

@@ -247,6 +247,7 @@ namespace golang::runtime
         for(; ; )
         {
             auto overflow = rec::Load(gocpp::recv(b->overflow));
+
             // Once we see b.overflow reach 0, it's stable: no one else is changing it underfoot.
             // We need to set overflowTime if we're incrementing b.overflow from 0.
             if(uint32_t(overflow) == 0)
@@ -279,6 +280,7 @@ namespace golang::runtime
         {
             bufwords = min;
         }
+
         // Buffer sizes must be power of two, so that we don't have to
         // worry about uint32 wraparound changing the effective position
         // within the buffers. We store 30 bits of count; limiting to 28
@@ -296,6 +298,7 @@ namespace golang::runtime
         {
         }
         tags = i;
+
         auto b = new(profBuf);
         b->hdrsize = uintptr_t(hdrsize);
         b->data = gocpp::make(gocpp::Tag<gocpp::slice<uint64_t>>(), bufwords);
@@ -310,11 +313,13 @@ namespace golang::runtime
     {
         auto br = rec::load(gocpp::recv(b->r));
         auto bw = rec::load(gocpp::recv(b->w));
+
         // room for tag?
         if(countSub(rec::tagCount(gocpp::recv(br)), rec::tagCount(gocpp::recv(bw))) + len(b->tags) < 1)
         {
             return false;
         }
+
         // room for data?
         auto nd = countSub(rec::dataCount(gocpp::recv(br)), rec::dataCount(gocpp::recv(bw))) + len(b->data);
         auto want = 2 + int(b->hdrsize) + nstk;
@@ -337,13 +342,16 @@ namespace golang::runtime
     {
         auto br = rec::load(gocpp::recv(b->r));
         auto bw = rec::load(gocpp::recv(b->w));
+
         // room for tag?
         if(countSub(rec::tagCount(gocpp::recv(br)), rec::tagCount(gocpp::recv(bw))) + len(b->tags) < 2)
         {
             return false;
         }
+
         // room for data?
         auto nd = countSub(rec::dataCount(gocpp::recv(br)), rec::dataCount(gocpp::recv(bw))) + len(b->data);
+
         // first record
         auto want = 2 + int(b->hdrsize) + nstk1;
         auto i = int(rec::dataCount(gocpp::recv(bw)) % uint32_t(len(b->data)));
@@ -356,6 +364,7 @@ namespace golang::runtime
         }
         i += want;
         nd -= want;
+
         // second record
         want = 2 + int(b->hdrsize) + nstk2;
         if(i + want > len(b->data))
@@ -383,6 +392,7 @@ namespace golang::runtime
         {
             go_throw("misuse of profBuf.write"_s);
         }
+
         if(auto hasOverflow = rec::hasOverflow(gocpp::recv(b)); hasOverflow && rec::canWriteTwoRecords(gocpp::recv(b), 1, len(stk)))
         {
             // Room for both an overflow record and the one being written.
@@ -405,9 +415,11 @@ namespace golang::runtime
             rec::wakeupExtra(gocpp::recv(b));
             return;
         }
+
         // There's room: write the record.
         auto br = rec::load(gocpp::recv(b->r));
         auto bw = rec::load(gocpp::recv(b->w));
+
         // Profiling tag
         // The tag is a pointer, but we can't run a write barrier here.
         // We have interrupted the OS-level execution of gp, but the
@@ -428,6 +440,7 @@ namespace golang::runtime
         {
             *(uintptr_t*)(gocpp::unsafe_pointer(& b->tags[wt])) = uintptr_t(*tagPtr);
         }
+
         // Main record.
         // It has to fit in a contiguous section of the slice, so if it doesn't fit at the end,
         // leave a rewind marker (0) and start over at the beginning of the slice.
@@ -456,6 +469,7 @@ namespace golang::runtime
         {
             data[2 + b->hdrsize + uintptr_t(i)] = uint64_t(pc);
         }
+
         for(; ; )
         {
             // Commit write.
@@ -519,7 +533,9 @@ namespace golang::runtime
         {
             return {nullptr, nullptr, true};
         }
+
         auto br = b->rNext;
+
         // Commit previous read, returning that part of the ring to the writer.
         // First clear tags that have now been read, both to avoid holding
         // up the memory they point at for longer than necessary
@@ -540,6 +556,7 @@ namespace golang::runtime
             }
             rec::store(gocpp::recv(b->r), br);
         }
+
         Read:
         auto bw = rec::load(gocpp::recv(b->w));
         auto numData = countSub(rec::dataCount(gocpp::recv(bw)), rec::dataCount(gocpp::recv(br)));
@@ -580,6 +597,7 @@ namespace golang::runtime
                 rec::cas(gocpp::recv(b->w), bw, bw &^ profWriteExtra);
                 goto Read;
             }
+
             // Nothing to read right now.
             // Return or sleep according to mode.
             if(mode == profBufNonBlocking)
@@ -617,6 +635,7 @@ namespace golang::runtime
                 data = data.make_slice(0, numData);
             }
         }
+
         auto ntag = countSub(rec::tagCount(gocpp::recv(bw)), rec::tagCount(gocpp::recv(br)));
         if(ntag == 0)
         {
@@ -627,6 +646,7 @@ namespace golang::runtime
         {
             tags = tags.make_slice(0, ntag);
         }
+
         // Count out whole data records until either data or tags is done.
         // They are always in sync in the buffer, but due to an end-of-slice
         // wraparound we might need to stop early and return the rest
@@ -642,8 +662,10 @@ namespace golang::runtime
             di += int(data[di]);
             ti++;
         }
+
         // Remember how much we returned, to commit read on next call.
         b->rNext = rec::addCountsAndClearFlags(gocpp::recv(br), skip + di, ti);
+
         if(raceenabled)
         {
             // Match racereleasemerge in runtime_setProfLabel,
@@ -657,6 +679,7 @@ namespace golang::runtime
             // atomics to read those queue indices.
             raceacquire(gocpp::unsafe_pointer(& labelSync));
         }
+
         return {data.make_slice(0, di), tags.make_slice(0, ti), false};
     }
 

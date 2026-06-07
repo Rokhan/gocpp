@@ -450,6 +450,7 @@ namespace golang::runtime
             // go code on the system stack can't defer
             go_throw("defer on system stack"_s);
         }
+
         auto d = newdefer();
         d->link = gp->_defer;
         gp->_defer = d;
@@ -459,6 +460,7 @@ namespace golang::runtime
         // storing it to d.sp because getcallersp's result is a
         // uintptr stack pointer.
         d->sp = getcallersp();
+
         // deferproc returns 0 normally.
         // a deferred func that stops a panic
         // makes the deferproc return 1.
@@ -552,6 +554,7 @@ namespace golang::runtime
             // go code on the system stack can't defer
             go_throw("defer on system stack"_s);
         }
+
         auto d = newdefer();
         d->link = gp->_defer;
         gp->_defer = d;
@@ -560,8 +563,10 @@ namespace golang::runtime
         // storing it to d.sp because getcallersp's result is a
         // uintptr stack pointer.
         d->sp = getcallersp();
+
         d->rangefunc = true;
         d->head = new(atomic::Pointer[_defer]);
+
         return d->head;
     }
 
@@ -594,6 +599,7 @@ namespace golang::runtime
                 break;
             }
         }
+
         // Must be last - see deferproc above.
         return0();
     }
@@ -610,6 +616,7 @@ namespace golang::runtime
         auto tail = d->link;
         d->rangefunc = false;
         auto d0 = d;
+
         for(; ; )
         {
             d = rec::Load<_defer>(gocpp::recv(head));
@@ -673,6 +680,7 @@ namespace golang::runtime
         *(uintptr_t*)(gocpp::unsafe_pointer(& d->link)) = uintptr_t(gocpp::unsafe_pointer(gp->_defer));
         *(uintptr_t*)(gocpp::unsafe_pointer(& d->head)) = 0;
         *(uintptr_t*)(gocpp::unsafe_pointer(& gp->_defer)) = uintptr_t(gocpp::unsafe_pointer(d));
+
         // No code can go here - the C return register has
         // been set and must not be clobbered.
         return0();
@@ -706,6 +714,7 @@ namespace golang::runtime
         }
         releasem(mp);
         std::tie(mp, pp) = std::tuple{nullptr, nullptr};
+
         if(d == nullptr)
         {
             // Allocate new defer.
@@ -728,6 +737,8 @@ namespace golang::runtime
     {
         // After this point we can copy the stack.
         d->link = nullptr;
+
+
         if(d->fn != nullptr)
         {
             freedeferfn();
@@ -736,6 +747,7 @@ namespace golang::runtime
         {
             return;
         }
+
         auto mp = acquirem();
         auto pp = rec::ptr(gocpp::recv(mp->p));
         if(len(pp->deferpool) == cap(pp->deferpool))
@@ -764,8 +776,11 @@ namespace golang::runtime
             sched.deferpool = first;
             unlock(& sched.deferlock);
         }
+
         *d = _defer {};
+
         pp->deferpool = append(pp->deferpool, d);
+
         releasem(mp);
         std::tie(mp, pp) = std::tuple{nullptr, nullptr};
     }
@@ -785,6 +800,7 @@ namespace golang::runtime
     {
         _panic p = {};
         p.deferreturn = true;
+
         rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
         for(; ; )
         {
@@ -811,6 +827,7 @@ namespace golang::runtime
         // bypassed by a recover().
         _panic p = {};
         p.goexit = true;
+
         rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
         for(; ; )
         {
@@ -821,6 +838,7 @@ namespace golang::runtime
             }
             fn();
         }
+
         goexit1();
     }
 
@@ -1007,6 +1025,7 @@ namespace golang::runtime
                 rec::IncNonDefault(gocpp::recv(panicnil));
             }
         }
+
         auto gp = getg();
         if(gp->m->curg != gp)
         {
@@ -1015,6 +1034,7 @@ namespace golang::runtime
             print("\n"_s);
             go_throw("panic on system stack"_s);
         }
+
         if(gp->m->mallocing != 0)
         {
             print("panic: "_s);
@@ -1039,9 +1059,12 @@ namespace golang::runtime
             print("\n"_s);
             go_throw("panic holding locks"_s);
         }
+
         _panic p = {};
         p.arg = e;
+
         rec::Add(gocpp::recv(runningPanicDefers), 1);
+
         rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
         for(; ; )
         {
@@ -1052,11 +1075,13 @@ namespace golang::runtime
             }
             fn();
         }
+
         // ran out of deferred calls - old-school panic now
         // Because it is unsafe to call arbitrary user code after freezing
         // the world, we call preprintpanics to invoke all necessary Error
         // and String methods to prepare the panic strings before startpanic.
         preprintpanics(& p);
+
         // should not return
         fatalpanic(& p);
         // not reached
@@ -1069,28 +1094,35 @@ namespace golang::runtime
     void rec::start(golang::runtime::_panic* p, uintptr_t pc, gocpp::unsafe_pointer sp)
     {
         auto gp = getg();
+
         // Record the caller's PC and SP, so recovery can identify panics
         // that have been recovered. Also, so that if p is from Goexit, we
         // can restart its defer processing loop if a recovered panic tries
         // to jump past it.
         p->startPC = getcallerpc();
         p->startSP = gocpp::unsafe_pointer(getcallersp());
+
         if(p->deferreturn)
         {
             p->sp = sp;
+
             if(auto s = (savedOpenDeferState*)(gp->param); s != nullptr)
             {
                 // recovery saved some state for us, so that we can resume
                 // calling open-coded defers without unwinding the stack.
                 gp->param = nullptr;
+
                 p->retpc = s->retpc;
                 p->deferBitsPtr = (unsigned char*)(runtime::add(sp, s->deferBitsOffset));
                 p->slotsPtr = runtime::add(sp, s->slotsOffset);
             }
+
             return;
         }
+
         p->link = gp->_panic;
         gp->_panic = (_panic*)(noescape(gocpp::unsafe_pointer(p)));
+
         // Initialize state machine, and find the first frame with a defer.
         // Note: We could use startPC and startSP here, but callers will
         // never have defer statements themselves. By starting at their
@@ -1108,12 +1140,14 @@ namespace golang::runtime
     std::tuple<std::function<void ()>, bool> rec::nextDefer(golang::runtime::_panic* p)
     {
         auto gp = getg();
+
         if(! p->deferreturn)
         {
             if(gp->_panic != p)
             {
                 go_throw("bad panic stack"_s);
             }
+
             if(p->recovered)
             {
                 // does not return
@@ -1121,14 +1155,17 @@ namespace golang::runtime
                 go_throw("recovery failed"_s);
             }
         }
+
         // The assembler adjusts p.argp in wrapper functions that shouldn't
         // be visible to recover(), so we need to restore it each iteration.
         p->argp = runtime::add(p->startSP, sys::MinFrameSize);
+
         for(; ; )
         {
             for(; p->deferBitsPtr != nullptr; )
             {
                 auto bits = *p->deferBitsPtr;
+
                 // Check whether any open-coded defers are still pending.
                 // Note: We need to check this upfront (rather than after
                 // clearing the top bit) because it's possible that Goexit
@@ -1141,13 +1178,17 @@ namespace golang::runtime
                     p->deferBitsPtr = nullptr;
                     break;
                 }
+
                 // Find index of top bit set.
                 auto i = 7 - uintptr_t(sys::LeadingZeros8(bits));
+
                 // Clear bit and store it back.
                 bits &^= 1 << i;
                 *p->deferBitsPtr = bits;
+
                 return {*(std::function<void ()>*)(runtime::add(p->slotsPtr, i * goarch::PtrSize)), true};
             }
+
             Recheck:
             if(auto d = gp->_defer; d != nullptr && d->sp == uintptr_t(p->sp))
             {
@@ -1156,17 +1197,22 @@ namespace golang::runtime
                     gp->_defer = deferconvert(d);
                     goto Recheck;
                 }
+
                 auto fn = [&](){ return rec::fn(d); };
                 d->fn = nullptr;
+
                 // TODO(mdempsky): Instead of having each deferproc call have
                 // its own "deferreturn(); return" sequence, we should just make
                 // them reuse the one we emit for open-coded defers.
                 p->retpc = d->pc;
+
                 // Unlink and free.
                 gp->_defer = d->link;
                 freedefer(d);
+
                 return {fn, true};
             }
+
             if(! rec::nextFrame(gocpp::recv(p)))
             {
                 return {nullptr, false};
@@ -1182,6 +1228,7 @@ namespace golang::runtime
         {
             return false;
         }
+
         auto gp = getg();
         systemstack([=]() mutable -> void
         {
@@ -1190,6 +1237,7 @@ namespace golang::runtime
             {
                 limit = d->sp;
             }
+
             unwinder u = {};
             rec::initAt(gocpp::recv(u), p->lr, uintptr_t(p->fp), 0, gp, 0);
             for(; ; )
@@ -1200,6 +1248,7 @@ namespace golang::runtime
                     // ok == false
                     return;
                 }
+
                 // TODO(mdempsky): If we populate u.frame.fn.deferreturn for
                 // every frame containing a defer (not just open-coded defers),
                 // then we can simply loop until we find the next frame where
@@ -1209,18 +1258,23 @@ namespace golang::runtime
                     // found a frame with linked defers
                     break;
                 }
+
                 if(rec::initOpenCodedDefers(gocpp::recv(p), u.frame.fn, gocpp::unsafe_pointer(u.frame.varp)))
                 {
                     // found a frame with open-coded defers
                     break;
                 }
+
                 rec::next(gocpp::recv(u));
             }
+
             p->lr = u.frame.lr;
             p->sp = gocpp::unsafe_pointer(u.frame.sp);
             p->fp = gocpp::unsafe_pointer(u.frame.fp);
+
             ok = true;
         });
+
         return ok;
     }
 
@@ -1231,10 +1285,12 @@ namespace golang::runtime
         {
             return false;
         }
+
         if(fn._func.deferreturn == 0)
         {
             go_throw("missing deferreturn"_s);
         }
+
         uint32_t deferBitsOffset;
         std::tie(deferBitsOffset, fd) = readvarintUnsafe(fd);
         auto deferBitsPtr = (uint8_t*)(runtime::add(varp, - uintptr_t(deferBitsOffset)));
@@ -1243,11 +1299,14 @@ namespace golang::runtime
             // has open-coded defers, but none pending
             return false;
         }
+
         uint32_t slotsOffset;
         std::tie(slotsOffset, fd) = readvarintUnsafe(fd);
+
         p->retpc = rec::entry(gocpp::recv(fn)) + uintptr_t(fn._func.deferreturn);
         p->deferBitsPtr = deferBitsPtr;
         p->slotsPtr = runtime::add(varp, - uintptr_t(slotsOffset));
+
         return true;
     }
 
@@ -1303,6 +1362,7 @@ namespace golang::runtime
         {
             print("fatal error: "_s, s, "\n"_s);
         });
+
         fatalthrow(throwTypeRuntime);
     }
 
@@ -1323,6 +1383,7 @@ namespace golang::runtime
         {
             print("fatal error: "_s, s, "\n"_s);
         });
+
         fatalthrow(throwTypeUser);
     }
 
@@ -1346,6 +1407,7 @@ namespace golang::runtime
         auto p = gp->_panic;
         auto [pc, sp, fp] = std::tuple{p->retpc, uintptr_t(p->sp), uintptr_t(p->fp)};
         auto [p0, saveOpenDeferState] = std::tuple{p, p->deferBitsPtr != nullptr && *p->deferBitsPtr != 0};
+
         // Unwind the panic stack.
         for(; p != nullptr && uintptr_t(p->startSP) < sp; p = p->link)
         {
@@ -1371,14 +1433,17 @@ namespace golang::runtime
                 saveOpenDeferState = false;
                 break;
             }
+
             rec::Add(gocpp::recv(runningPanicDefers), - 1);
         }
         gp->_panic = p;
+
         if(p == nullptr)
         {
             // must be done with signal
             gp->sig = 0;
         }
+
         if(gp->param != nullptr)
         {
             go_throw("unexpected gp.param"_s);
@@ -1394,6 +1459,7 @@ namespace golang::runtime
                 x.slotsOffset = uintptr_t(p0->slotsPtr) - uintptr_t(p0->sp);
             }));
         }
+
         // TODO(mdempsky): Currently, we rely on frames containing "defer"
         // to end with "CALL deferreturn; RET". This allows deferreturn to
         // finish running any pending defers in the frame.
@@ -1420,6 +1486,7 @@ namespace golang::runtime
             print("recover: "_s, hex(sp), " not in ["_s, hex(gp->stack.lo), ", "_s, hex(gp->stack.hi), "]\n"_s);
             go_throw("bad recovery"_s);
         }
+
         // Make the deferproc for this d return again,
         // this time returning 1. The calling function will
         // jump to the standard return epilogue.
@@ -1464,10 +1531,12 @@ namespace golang::runtime
         auto pc = getcallerpc();
         auto sp = getcallersp();
         auto gp = getg();
+
         if(gp->m->throwing == throwTypeNone)
         {
             gp->m->throwing = t;
         }
+
         // Switch to the system stack to avoid any stack growth, which may make
         // things worse if the runtime is in a bad state.
         systemstack([=]() mutable -> void
@@ -1476,7 +1545,9 @@ namespace golang::runtime
             {
                 exit(2);
             }
+
             startpanic_m();
+
             if(dopanic_m(gp, pc, sp))
             {
                 // crash uses a decent amount of nosplit stack and we're already
@@ -1484,8 +1555,10 @@ namespace golang::runtime
                 // fatalpanic).
                 crash();
             }
+
             exit(2);
         });
+
         // not reached
         *(int*)(nullptr) = 0;
     }
@@ -1513,10 +1586,13 @@ namespace golang::runtime
                 // block main from exiting, so now OK to
                 // decrement runningPanicDefers.
                 rec::Add(gocpp::recv(runningPanicDefers), - 1);
+
                 printpanics(msgs);
             }
+
             docrash = dopanic_m(gp, pc, sp);
         });
+
         if(docrash)
         {
             // By crashing outside the above systemstack call, debuggers
@@ -1524,10 +1600,12 @@ namespace golang::runtime
             // Function crash is marked nosplit to avoid stack growth.
             crash();
         }
+
         systemstack([=]() mutable -> void
         {
             exit(2);
         });
+
         // not reached
         *(int*)(nullptr) = 0;
     }
@@ -1557,12 +1635,14 @@ namespace golang::runtime
         // malloc itself. We want to catch if an allocation ever does
         // happen (even if we're not in one of these situations).
         gp->m->mallocing++;
+
         // If we're dying because of a bad lock count, set it to a
         // good lock count so we don't recursively panic below.
         if(gp->m->locks < 0)
         {
             gp->m->locks = 1;
         }
+
         //Go switch emulation
         {
             auto condition = gp->m->dying;
@@ -1627,6 +1707,7 @@ namespace golang::runtime
             }
             print(" code="_s, hex(gp->sigcode0), " addr="_s, hex(gp->sigcode1), " pc="_s, hex(gp->sigpc), "]\n"_s);
         }
+
         auto [level, all, docrash] = gotraceback();
         if(level > 0)
         {
@@ -1653,6 +1734,7 @@ namespace golang::runtime
             }
         }
         unlock(& paniclk);
+
         if(rec::Add(gocpp::recv(panicking), - 1) != 0)
         {
             // Some other m is panicking too.
@@ -1662,7 +1744,9 @@ namespace golang::runtime
             lock(& deadlock);
             lock(& deadlock);
         }
+
         printDebugLog();
+
         return docrash;
     }
 
@@ -1674,6 +1758,7 @@ namespace golang::runtime
     {
         auto gp = getg();
         auto mp = acquirem();
+
         // Is it okay for gp to panic instead of crashing the program?
         // Yes, as long as it is running Go code, not runtime code,
         // and not stuck in a system call.

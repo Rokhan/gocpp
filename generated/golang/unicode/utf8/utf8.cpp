@@ -612,6 +612,7 @@ namespace golang::utf8
         // when generating code for p[8:], bringing it to parity with
         // ValidString, which was 20% faster on long ASCII strings.
         p = p.make_slice(0, len(p), len(p));
+
         // Fast path. Check for and skip 8 bytes of ASCII characters per iteration.
         for(; len(p) >= 8; )
         {

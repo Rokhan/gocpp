@@ -59,6 +59,7 @@ namespace golang::runtime
     {
         auto errormode = stdcall0(_GetErrorMode);
         stdcall1(_SetErrorMode, errormode | _SEM_FAILCRITICALERRORS | _SEM_NOGPFAULTERRORBOX | _SEM_NOOPENFILEERRORBOX);
+
         // Disable WER fault reporting UI.
         // Do this even if WER is disabled as a whole,
         // as WER might be enabled later with setTraceback("wer")
@@ -144,6 +145,7 @@ namespace golang::runtime
         {
             return false;
         }
+
         // Go will only handle some exceptions.
         //Go switch emulation
         {
@@ -225,6 +227,7 @@ namespace golang::runtime
         {
             return _EXCEPTION_CONTINUE_SEARCH;
         }
+
         std::function<int32_t (struct exceptionrecord* info, struct context* r, struct g* gp)> fn = {};
         //Go switch emulation
         {
@@ -249,6 +252,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         // Check if we are running on g0 stack, and if we are,
         // call fn directly instead of creating the closure.
         // for the systemstack argument.
@@ -277,6 +281,7 @@ namespace golang::runtime
         {
             return ret;
         }
+
         // Check if we need to set up the control flow guard workaround.
         // On Windows, the stack pointer in the context must lie within
         // system stack limits when we resume from exception.
@@ -313,6 +318,7 @@ namespace golang::runtime
         {
             return _EXCEPTION_CONTINUE_SEARCH;
         }
+
         if(gp->throwsplit || isAbort(r))
         {
             // We can't safely sigpanic because it may grow the stack.
@@ -321,6 +327,7 @@ namespace golang::runtime
             // Crash now.
             winthrow(info, r, gp);
         }
+
         // After this point, it is safe to grow the stack.
         // Make it look like a call to the signal func.
         // Have to pass arguments out of band since
@@ -330,6 +337,7 @@ namespace golang::runtime
         gp->sigcode0 = info->exceptioninformation[0];
         gp->sigcode1 = info->exceptioninformation[1];
         gp->sigpc = rec::ip(gocpp::recv(r));
+
         // Only push runtime·sigpanic if r.ip() != 0.
         // If r.ip() == 0, probably panicked because of a
         // call to a nil func. Not pushing that onto sp will
@@ -437,6 +445,7 @@ namespace golang::runtime
             // should not take responsibility of crashing the process.
             return _EXCEPTION_CONTINUE_SEARCH;
         }
+
         // VEH is called before SEH, but arm64 MSVC DLLs use SEH to trap
         // illegal instructions during runtime initialization to determine
         // CPU features, so if we make it to the last handler and we're
@@ -447,6 +456,7 @@ namespace golang::runtime
         {
             return _EXCEPTION_CONTINUE_SEARCH;
         }
+
         winthrow(info, r, gp);
         // not reached
         return 0;
@@ -458,19 +468,23 @@ namespace golang::runtime
     void winthrow(struct exceptionrecord* info, struct context* r, struct g* gp)
     {
         auto g0 = getg();
+
         if(rec::Load(gocpp::recv(panicking)) != 0)
         {
             // traceback already printed
             exit(2);
         }
         rec::Store(gocpp::recv(panicking), 1);
+
         // In case we're handling a g0 stack overflow, blow away the
         // g0 stack bounds so we have room to print the traceback. If
         // this somehow overflows the stack, the OS will trap it.
         g0->stack.lo = 0;
         g0->stackguard0 = g0->stack.lo + stackGuard;
         g0->stackguard1 = g0->stackguard0;
+
         print("Exception "_s, hex(info->exceptioncode), " "_s, hex(info->exceptioninformation[0]), " "_s, hex(info->exceptioninformation[1]), " "_s, hex(rec::ip(gocpp::recv(r))), "\n"_s);
+
         print("PC="_s, hex(rec::ip(gocpp::recv(r))), "\n"_s);
         if(g0->m->incgo && gp == g0->m->g0 && g0->m->curg != nullptr)
         {
@@ -481,8 +495,10 @@ namespace golang::runtime
             gp = g0->m->curg;
         }
         print("\n"_s);
+
         g0->m->throwing = throwTypeRuntime;
         rec::set(gocpp::recv(g0->m->caughtsig), gp);
+
         auto [level, gocpp_id_0, docrash] = gotraceback();
         if(level > 0)
         {
@@ -490,10 +506,12 @@ namespace golang::runtime
             tracebackothers(gp);
             dumpregs(r);
         }
+
         if(docrash)
         {
             dieFromException(info, r);
         }
+
         exit(2);
     }
 
@@ -504,6 +522,7 @@ namespace golang::runtime
         {
             go_throw("unexpected signal during runtime execution"_s);
         }
+
         //Go switch emulation
         {
             auto condition = gp->sig;

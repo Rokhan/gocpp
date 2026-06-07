@@ -102,13 +102,17 @@ namespace golang::strconv
         {
             gocpp::panic("strconv: illegal AppendInt/FormatInt base"_s);
         }
+
+
         // +1 for sign of 64bit value in base 2
         gocpp::array<unsigned char, 64 + 1> a = {};
         auto i = len(a);
+
         if(neg)
         {
             u = - u;
         }
+
         // convert bits
         // We use uint values where we can because those will
         // fit into a single register even on a 32bit machine.
@@ -136,13 +140,16 @@ namespace golang::strconv
                         a[i + 1] = smallsString[is + 1];
                         a[i + 0] = smallsString[is + 0];
                     }
+
                     // us < 10, since it contains the last digit
                     // from the initial 9-digit us.
                     i--;
                     a[i] = smallsString[us * 2 + 1];
+
                     u = q;
                 }
             }
+
             // u guaranteed to fit into a uint
             auto us = (unsigned int)(u);
             for(; us >= 100; )
@@ -153,6 +160,7 @@ namespace golang::strconv
                 a[i + 1] = smallsString[is + 1];
                 a[i + 0] = smallsString[is + 0];
             }
+
             // us < 100
             auto is = us * 2;
             i--;
@@ -205,12 +213,14 @@ namespace golang::strconv
             i--;
             a[i] = digits[(unsigned int)(u)];
         }
+
         // add sign, if any
         if(neg)
         {
             i--;
             a[i] = '-';
         }
+
         if(append_)
         {
             d = append(dst, a.make_slice(i));

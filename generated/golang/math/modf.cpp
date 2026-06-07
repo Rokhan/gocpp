@@ -65,8 +65,10 @@ namespace golang::math
             }
             return {0, f};
         }
+
         auto x = Float64bits(f);
         auto e = (unsigned int)(x >> shift) & mask - bias;
+
         // Keep the top 12+e bits, the integer part; clear the rest.
         if(e < 64 - 12)
         {

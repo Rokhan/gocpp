@@ -122,9 +122,11 @@ namespace golang::strconv
                     break;
             }
         }
+
         auto neg = (bits >> (flt->expbits + flt->mantbits)) != 0;
         auto exp = int(bits >> flt->mantbits) & ((1 << flt->expbits) - 1);
         auto mant = bits & ((uint64_t(1) << flt->mantbits) - 1);
+
         //Go switch emulation
         {
             auto condition = exp;
@@ -156,10 +158,12 @@ namespace golang::strconv
                     }
                     return append(dst, s);
                     break;
+
                 case 1:
                     // denormalized
                     exp++;
                     break;
+
                 default:
                     // add implicit top bit
                     mant |= uint64_t(1) << flt->mantbits;
@@ -167,6 +171,7 @@ namespace golang::strconv
             }
         }
         exp += flt->bias;
+
         // Pick off easy binary, hex formats.
         if(fmt == 'b')
         {
@@ -176,10 +181,12 @@ namespace golang::strconv
         {
             return fmtX(dst, prec, fmt, neg, mant, exp, flt);
         }
+
         if(! optimize)
         {
             return bigFtoa(dst, prec, fmt, neg, mant, exp, flt);
         }
+
         decimalSlice digs = {};
         auto ok = false;
         // Negative precision means "only as much as needed to be exact."
@@ -406,6 +413,7 @@ namespace golang::strconv
                     break;
             }
         }
+
         // unknown format
         return append(dst, '%', fmt);
     }
@@ -420,6 +428,7 @@ namespace golang::strconv
             d->nd = 0;
             return;
         }
+
         // Compute upper and lower such that any decimal number
         // between upper and lower (possibly inclusive)
         // will round to the original floating point number.
@@ -438,12 +447,14 @@ namespace golang::strconv
             // The number is already shortest.
             return;
         }
+
         // d = mant << (exp - mantbits)
         // Next highest floating point number is mant+1 << exp-mantbits.
         // Our upper bound is halfway between, mant*2+1 << exp-mantbits-1.
         auto upper = new(decimal);
         rec::Assign(gocpp::recv(upper), mant * 2 + 1);
         rec::Shift(gocpp::recv(upper), exp - int(flt->mantbits) - 1);
+
         // d = mant << (exp - mantbits)
         // Next lowest floating point number is mant-1 << exp-mantbits,
         // unless mant-1 drops the significant bit and exp is not the minimum exp,
@@ -465,10 +476,12 @@ namespace golang::strconv
         auto lower = new(decimal);
         rec::Assign(gocpp::recv(lower), mantlo * 2 + 1);
         rec::Shift(gocpp::recv(lower), explo - int(flt->mantbits) - 1);
+
         // The upper and lower bounds are possible outputs only if
         // the original mantissa is even, so that IEEE round-to-even
         // would round to the original mantissa and not the neighbors.
         auto inclusive = mant % 2 == 0;
+
         // As we walk the digits we want to know whether rounding up would fall
         // within the upper bound. This is tracked by upperdelta:
         // If upperdelta == 0, the digits of d and upper are the same so far.
@@ -478,6 +491,7 @@ namespace golang::strconv
         // If upperdelta == 2, then the difference is greater than 1
         // and we know that rounding up falls within the bound.
         uint8_t upperdelta = {};
+
         // Now we can figure out the minimum number of digits required.
         // Walk along until d has distinguished itself from upper and lower.
         for(auto ui = 0; ; ui++)
@@ -509,10 +523,12 @@ namespace golang::strconv
             {
                 u = upper->d[ui];
             }
+
             // Okay to round down (truncate) if lower has a different digit
             // or if lower is inclusive and is exactly the result of rounding
             // down (i.e., and we have reached the final digit of lower).
             auto okdown = l != m || inclusive && li + 1 == lower->nd;
+
             //Go switch emulation
             {
                 int conditionId = -1;
@@ -544,6 +560,7 @@ namespace golang::strconv
             // Okay to round up if upper has a different digit and either upper
             // is inclusive or upper is bigger than the result of rounding up.
             auto okup = upperdelta > 0 && (inclusive || upperdelta > 1 || ui + 1 < upper->nd);
+
             // If it's okay to do either, then round to the nearest one.
             // If it's okay to do only one, do it.
             //Go switch emulation
@@ -614,6 +631,7 @@ namespace golang::strconv
         {
             dst = append(dst, '-');
         }
+
         // first digit
         auto ch = (unsigned char)('0');
         if(d.nd != 0)
@@ -621,6 +639,7 @@ namespace golang::strconv
             ch = d.d[0];
         }
         dst = append(dst, ch);
+
         // .moredigits
         if(prec > 0)
         {
@@ -637,6 +656,7 @@ namespace golang::strconv
                 dst = append(dst, '0');
             }
         }
+
         // e±
         dst = append(dst, fmt);
         auto exp = d.dp - 1;
@@ -655,6 +675,7 @@ namespace golang::strconv
             ch = '+';
         }
         dst = append(dst, ch);
+
         // dd or ddd
         //Go switch emulation
         {
@@ -674,6 +695,7 @@ namespace golang::strconv
                     break;
             }
         }
+
         return dst;
     }
 
@@ -685,6 +707,7 @@ namespace golang::strconv
         {
             dst = append(dst, '-');
         }
+
         // integer, padded with zeros as needed.
         if(d.dp > 0)
         {
@@ -699,6 +722,7 @@ namespace golang::strconv
         {
             dst = append(dst, '0');
         }
+
         // fraction
         if(prec > 0)
         {
@@ -713,6 +737,7 @@ namespace golang::strconv
                 dst = append(dst, ch);
             }
         }
+
         return dst;
     }
 
@@ -724,10 +749,13 @@ namespace golang::strconv
         {
             dst = append(dst, '-');
         }
+
         // mantissa
         std::tie(dst, std::ignore) = formatBits(dst, mant, 10, false, true);
+
         // p
         dst = append(dst, 'p');
+
         // ±exponent
         exp -= int(flt->mantbits);
         if(exp >= 0)
@@ -735,6 +763,7 @@ namespace golang::strconv
             dst = append(dst, '+');
         }
         std::tie(dst, std::ignore) = formatBits(dst, uint64_t(exp), 10, exp < 0, true);
+
         return dst;
     }
 
@@ -745,6 +774,7 @@ namespace golang::strconv
         {
             exp = 0;
         }
+
         // Shift digits so leading 1 (if any) is at bit 1<<60.
         mant <<= 60 - flt->mantbits;
         for(; mant != 0 && mant & (1 << 60) == 0; )
@@ -752,6 +782,7 @@ namespace golang::strconv
             mant <<= 1;
             exp--;
         }
+
         // Round if requested.
         if(prec >= 0 && prec < 15)
         {
@@ -770,17 +801,20 @@ namespace golang::strconv
                 exp++;
             }
         }
+
         auto hex = lowerhex;
         if(fmt == 'X')
         {
             hex = upperhex;
         }
+
         // sign, 0x, leading digit
         if(neg)
         {
             dst = append(dst, '-');
         }
         dst = append(dst, '0', fmt, '0' + (unsigned char)((mant >> 60) & 1));
+
         // .fraction
         // remove leading 0 or 1
         mant <<= 4;
@@ -803,6 +837,7 @@ namespace golang::strconv
                 mant <<= 4;
             }
         }
+
         // p±
         auto ch = (unsigned char)('P');
         if(fmt == lower(fmt))
@@ -820,6 +855,7 @@ namespace golang::strconv
             ch = '+';
         }
         dst = append(dst, ch);
+
         // dd or ddd or dddd
         //Go switch emulation
         {
@@ -839,6 +875,7 @@ namespace golang::strconv
                     break;
             }
         }
+
         return dst;
     }
 

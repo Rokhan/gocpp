@@ -116,13 +116,18 @@ namespace golang::cpu
                 x.Feature = & X86.HasAVX512VL;
             }));
         }
+
         auto [maxID, gocpp_id_0, gocpp_id_1, gocpp_id_2] = cpuid(0, 0);
+
         if(maxID < 1)
         {
             return;
         }
+
         std::tie(maxExtendedFunctionInformation, std::ignore, std::ignore, std::ignore) = cpuid(0x80000000, 0);
+
         auto [gocpp_id_3, gocpp_id_4, ecx1, gocpp_id_5] = cpuid(1, 0);
+
         X86.HasSSE3 = isSet(ecx1, cpuid_SSE3);
         X86.HasPCLMULQDQ = isSet(ecx1, cpuid_PCLMULQDQ);
         X86.HasSSSE3 = isSet(ecx1, cpuid_SSSE3);
@@ -130,15 +135,18 @@ namespace golang::cpu
         X86.HasSSE42 = isSet(ecx1, cpuid_SSE42);
         X86.HasPOPCNT = isSet(ecx1, cpuid_POPCNT);
         X86.HasAES = isSet(ecx1, cpuid_AES);
+
         // OSXSAVE can be false when using older Operating Systems
         // or when explicitly disabled on newer Operating Systems by
         // e.g. setting the xsavedisable boot option on Windows 10.
         X86.HasOSXSAVE = isSet(ecx1, cpuid_OSXSAVE);
+
         // The FMA instruction set extension only has VEX prefixed instructions.
         // VEX prefixed instructions require OSXSAVE to be enabled.
         // See Intel 64 and IA-32 Architecture Software Developer’s Manual Volume 2
         // Section 2.4 "AVX and SSE Instruction Exception Specification"
         X86.HasFMA = isSet(ecx1, cpuid_FMA) && X86.HasOSXSAVE;
+
         auto osSupportsAVX = false;
         auto osSupportsAVX512 = false;
         // For XGETBV, OSXSAVE bit is required and sufficient.
@@ -147,16 +155,20 @@ namespace golang::cpu
             auto [eax, gocpp_id_6] = xgetbv();
             // Check if XMM and YMM registers have OS support.
             osSupportsAVX = isSet(eax, 1 << 1) && isSet(eax, 1 << 2);
+
             // AVX512 detection does not work on Darwin,
             // see https://github.com/golang/go/issues/49233
             // Check if opmask, ZMMhi256 and Hi16_ZMM have OS support.
             osSupportsAVX512 = osSupportsAVX && isSet(eax, 1 << 5) && isSet(eax, 1 << 6) && isSet(eax, 1 << 7);
         }
+
         X86.HasAVX = isSet(ecx1, cpuid_AVX) && osSupportsAVX;
+
         if(maxID < 7)
         {
             return;
         }
+
         auto [gocpp_id_7, ebx7, gocpp_id_8, gocpp_id_9] = cpuid(7, 0);
         X86.HasBMI1 = isSet(ebx7, cpuid_BMI1);
         X86.HasAVX2 = isSet(ebx7, cpuid_AVX2) && osSupportsAVX;
@@ -164,18 +176,22 @@ namespace golang::cpu
         X86.HasERMS = isSet(ebx7, cpuid_ERMS);
         X86.HasADX = isSet(ebx7, cpuid_ADX);
         X86.HasSHA = isSet(ebx7, cpuid_SHA);
+
         X86.HasAVX512F = isSet(ebx7, cpuid_AVX512F) && osSupportsAVX512;
         if(X86.HasAVX512F)
         {
             X86.HasAVX512BW = isSet(ebx7, cpuid_AVX512BW);
             X86.HasAVX512VL = isSet(ebx7, cpuid_AVX512VL);
         }
+
         uint32_t maxExtendedInformation = {};
         std::tie(maxExtendedInformation, std::ignore, std::ignore, std::ignore) = cpuid(0x80000000, 0);
+
         if(maxExtendedInformation < 0x80000001)
         {
             return;
         }
+
         auto [gocpp_id_10, gocpp_id_11, gocpp_id_12, edxExt1] = cpuid(0x80000001, 0);
         X86.HasRDTSCP = isSet(edxExt1, cpuid_RDTSCP);
     }
@@ -194,7 +210,9 @@ namespace golang::cpu
         {
             return ""_s;
         }
+
         auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 3 * 4 * 4);
+
         uint32_t eax = {};
         uint32_t ebx = {};
         uint32_t ecx = {};
@@ -205,11 +223,13 @@ namespace golang::cpu
         data = appendBytes(data, eax, ebx, ecx, edx);
         std::tie(eax, ebx, ecx, edx) = cpuid(0x80000004, 0);
         data = appendBytes(data, eax, ebx, ecx, edx);
+
         // Trim leading spaces.
         for(; len(data) > 0 && data[0] == ' '; )
         {
             data = data.make_slice(1);
         }
+
         // Trim tail after and including the first null byte.
         for(auto [i, c] : data)
         {
@@ -219,6 +239,7 @@ namespace golang::cpu
                 break;
             }
         }
+
         return gocpp::string(data);
     }
 

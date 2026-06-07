@@ -32,14 +32,17 @@ namespace golang::main
         {
             mocklib::Println(s1);
         }
+
         if(auto [s2, ok] = dummy(); ok)
         {
             mocklib::Println(s2);
         }
+
         if(auto [s3, okok] = dummy(); okok)
         {
             mocklib::Println(s3);
         }
+
         mocklib::Println(okok);
     }
 
@@ -50,16 +53,19 @@ namespace golang::main
             mocklib::Println(s1);
             break;
         }
+
         for(auto [s2, ok] = dummy(); ok; )
         {
             mocklib::Println(s2);
             break;
         }
+
         for(auto [s3, okok] = dummy(); okok; )
         {
             mocklib::Println(s3);
             break;
         }
+
         mocklib::Println(okok);
     }
 
@@ -81,6 +87,7 @@ namespace golang::main
                     break;
             }
         }
+
         //Go switch emulation
         {
             auto [s2, ok] = dummy();
@@ -97,6 +104,7 @@ namespace golang::main
                     break;
             }
         }
+
         //Go switch emulation
         {
             auto [s3, okok] = dummy();
@@ -113,6 +121,7 @@ namespace golang::main
                     break;
             }
         }
+
         mocklib::Println(okok);
     }
 

@@ -325,6 +325,7 @@ namespace golang::main
     void embededStructDef()
     {
         auto s = gocpp::slice<unsigned char>("hello world"_s);
+
         struct span
         {
             int start;
@@ -341,14 +342,17 @@ namespace golang::main
                 return os;
             }
         };
+
         auto spans = gocpp::make(gocpp::Tag<gocpp::slice<span>>(), 0, 32);
         spans = append(spans, span {0, 5});
         spans = append(spans, span {6, 11});
+
         auto a = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<unsigned char>>>(), len(spans));
         for(auto [i, span] : spans)
         {
             a[i] = s.make_slice(span.start, span.end, span.end);
         }
+
         for(auto [i, part] : a)
         {
             mocklib::Println("part "_s, i, ":"_s, gocpp::string(part));
@@ -578,35 +582,46 @@ namespace golang::main
     void main()
     {
         mocklib::Println(Vertex {1, 2});
+
         gocpp_id_3 i = {};
         gocpp_id_4 j = {};
         mocklib::Println(i == j);
+
         auto e = Empty {};
         mocklib::Println(e == j);
+
         auto v1 = gocpp_id_5 {1, 2};
         auto v2 = gocpp_id_6 {1, 2};
         mocklib::Println(v1 == v2);
+
         auto d = Dummy {1, 2};
         d = gocpp_id_7 {1, 2};
         mocklib::Println(d == v2);
         mocklib::Println(d == v1);
+
         Dummy* p1 = & d;
         mocklib::Println(p1);
+
         p1 = nullptr;
         mocklib::Println(p1);
+
         auto dd = Dummy2 {d, Vertex {}, 3};
         mocklib::Println(dd);
+
         inlineStructDef(gocpp_id_8 {42});
         embededStructDef();
+
         auto vv = Vertex {3, 4};
         auto offsetX = gocpp::Offsetof<Vertex>(&Vertex::X);
         auto offsetY = gocpp::Offsetof<Vertex>(&Vertex::Y);
         mocklib::Println("Offset of X in Vertex:"_s, offsetX);
         mocklib::Println("Offset of Y in Vertex:"_s, offsetY);
         mocklib::Println("Size of Vertex:"_s, gocpp::Sizeof<Vertex>());
+
         mocklib::Println("Offset of a in Anonymous struct:"_s, gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::first));
         mocklib::Println("Offset of b in Anonymous struct:"_s, gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::second));
         mocklib::Println("Size of Anonymous struct:"_s, gocpp::Sizeof<gocpp_id_0>());
+
         // test field access
         Dummy3 d3 = Dummy3 {Dummy2 {Dummy {1, 2}, Vertex {3, 4}, 5}, 6, 7};
         // should print 1

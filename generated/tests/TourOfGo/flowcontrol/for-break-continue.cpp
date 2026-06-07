@@ -32,6 +32,7 @@ namespace golang::main
             sum += i;
         }
         mocklib::Println(sum);
+
         sum = 0;
         for(auto i = 0; i < 10; i++)
         {

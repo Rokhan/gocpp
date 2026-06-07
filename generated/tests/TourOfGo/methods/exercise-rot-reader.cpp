@@ -68,10 +68,12 @@ namespace golang::main
         {
             return {n, err};
         }
+
         for(auto i = 0; i < n; i++)
         {
             buf[i] += 13;
         }
+
         return {n, nullptr};
     }
 

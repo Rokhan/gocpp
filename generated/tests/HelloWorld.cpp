@@ -28,8 +28,11 @@ namespace golang::main
         auto world = "World"_s;
         // time.Sleep(100 * time.Millisecond)
         helloFunc(hello, world, "!"_s);
+
+
         using Yyy = color::Color;
         Yyy _ = {};
+
         auto a = 5;
         auto b = 8 + 7;
         mocklib::Printf("result = %d\n"_s, a * b + 4);

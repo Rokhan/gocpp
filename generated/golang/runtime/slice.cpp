@@ -140,6 +140,7 @@ namespace golang::runtime
             tomem = et->Size_ * uintptr_t(tolen);
             copymem = tomem;
         }
+
         gocpp::unsafe_pointer to = {};
         if(et->PtrBytes == 0)
         {
@@ -163,6 +164,7 @@ namespace golang::runtime
                 bulkBarrierPreWriteSrcOnly(uintptr_t(to), uintptr_t(from), copymem, et);
             }
         }
+
         if(raceenabled)
         {
             auto callerpc = getcallerpc();
@@ -177,7 +179,9 @@ namespace golang::runtime
         {
             asanread(from, copymem);
         }
+
         memmove(to, from, copymem);
+
         return to;
     }
 
@@ -198,6 +202,7 @@ namespace golang::runtime
             }
             panicmakeslicecap();
         }
+
         return mallocgc(mem, et, true);
     }
 
@@ -208,11 +213,13 @@ namespace golang::runtime
         {
             panicmakeslicelen();
         }
+
         auto cap = int(cap64);
         if(int64_t(cap) != cap64)
         {
             panicmakeslicecap();
         }
+
         return makeslice(et, len, cap);
     }
 
@@ -263,17 +270,21 @@ namespace golang::runtime
         {
             asanread(oldPtr, uintptr_t(oldLen * int(et->Size_)));
         }
+
         if(newLen < 0)
         {
             gocpp::panic(errorString("growslice: len out of range"_s));
         }
+
         if(et->Size_ == 0)
         {
             // append should not create a slice with nil pointer but non-zero len.
             // We assume that append doesn't need to preserve oldPtr in this case.
             return slice {gocpp::unsafe_pointer(& zerobase), newLen, newLen};
         }
+
         auto newcap = nextslicecap(newLen, oldCap);
+
         bool overflow = {};
         uintptr_t lenmem = {};
         uintptr_t newlenmem = {};
@@ -333,6 +344,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         // The check of overflow in addition to capmem > maxAlloc is needed
         // to prevent an overflow which can be used to trigger a segfault
         // on 32bit architectures with this example program:
@@ -347,6 +359,7 @@ namespace golang::runtime
         {
             gocpp::panic(errorString("growslice: len out of range"_s));
         }
+
         gocpp::unsafe_pointer p = {};
         if(et->PtrBytes == 0)
         {
@@ -372,6 +385,7 @@ namespace golang::runtime
             }
         }
         memmove(p, oldPtr, lenmem);
+
         return slice {p, newLen, newcap};
     }
 
@@ -384,6 +398,7 @@ namespace golang::runtime
         {
             return newLen;
         }
+
         auto threshold = 256;
         if(oldCap < threshold)
         {
@@ -395,6 +410,7 @@ namespace golang::runtime
             // to growing 1.25x for large slices. This formula
             // gives a smooth-ish transition between the two.
             newcap += (newcap + 3 * threshold) >> 2;
+
             // We need to check `newcap >= newLen` and whether `newcap` overflowed.
             // newLen is guaranteed to be larger than zero, hence
             // when newcap overflows then `uint(newcap) > uint(newLen)`.
@@ -404,6 +420,7 @@ namespace golang::runtime
                 break;
             }
         }
+
         // Set newcap to the requested cap when
         // the newcap calculation overflowed.
         if(newcap <= 0)
@@ -448,15 +465,18 @@ namespace golang::runtime
         {
             return 0;
         }
+
         auto n = fromLen;
         if(toLen < n)
         {
             n = toLen;
         }
+
         if(width == 0)
         {
             return n;
         }
+
         auto size = uintptr_t(n) * width;
         if(raceenabled)
         {
@@ -475,6 +495,7 @@ namespace golang::runtime
             asanread(fromPtr, size);
             asanwrite(toPtr, size);
         }
+
         if(size == 1)
         {
             // common case worth about 2x to do here

@@ -119,6 +119,7 @@ namespace golang::runtime
         auto gp = getg();
         auto c = gp->coroarg;
         gp->coroarg = nullptr;
+
         c->f(c);
         coroexit(c);
     }
@@ -166,6 +167,7 @@ namespace golang::runtime
         auto exit = gp->coroexit;
         gp->coroexit = false;
         auto mp = gp->m;
+
         if(exit)
         {
             gdestroy(gp);
@@ -182,9 +184,11 @@ namespace golang::runtime
                 // coordinating with the garbage collector about the state change.
                 casgstatus(gp, _Grunning, _Gwaiting);
             }
+
             // Clear gp.m.
             setMNoWB(& gp->m, nullptr);
         }
+
         // The goroutine stored in c is the one to run next.
         // Swap it with ourselves.
         g* gnext = {};
@@ -213,6 +217,7 @@ namespace golang::runtime
                 break;
             }
         }
+
         // Start running next, without heavy scheduling machinery.
         // Set mp.curg and gnext.m and then update scheduling state
         // directly if possible.
@@ -225,6 +230,7 @@ namespace golang::runtime
             casgstatus(gnext, _Gwaiting, _Grunnable);
             casgstatus(gnext, _Grunnable, _Grunning);
         }
+
         // Switch to gnext. Does not return.
         gogo(& gnext->sched);
     }

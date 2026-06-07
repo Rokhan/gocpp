@@ -568,6 +568,7 @@ namespace golang::runtime
     {
         auto eface = efaceOf(& i);
         auto typestring = rec::string(gocpp::recv(toRType(eface->_type)));
+
         //Go switch emulation
         {
             auto condition = eface->_type->Kind_;

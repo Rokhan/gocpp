@@ -754,6 +754,7 @@ namespace golang::reflectlite
         }
         auto rT = toRType(T);
         auto rV = toRType(V);
+
         // The same algorithm applies in both cases, but the
         // method tables for an interface type and a concrete type
         // are different, so the code is duplicated.
@@ -803,6 +804,7 @@ namespace golang::reflectlite
             }
             return false;
         }
+
         auto v = rec::Uncommon(gocpp::recv(V));
         if(v == nullptr)
         {
@@ -856,12 +858,14 @@ namespace golang::reflectlite
         {
             return true;
         }
+
         // Otherwise at least one of T and V must not be defined
         // and they must have the same kind.
         if(rec::HasName(gocpp::recv(T)) && rec::HasName(gocpp::recv(V)) || rec::Kind(gocpp::recv(T)) != rec::Kind(gocpp::recv(V)))
         {
             return false;
         }
+
         // x's type T and V must  have identical underlying types.
         return haveIdenticalUnderlyingType(T, V, true);
     }
@@ -872,10 +876,12 @@ namespace golang::reflectlite
         {
             return T == V;
         }
+
         if(rec::Name(gocpp::recv(toRType(T))) != rec::Name(gocpp::recv(toRType(V))) || rec::Kind(gocpp::recv(T)) != rec::Kind(gocpp::recv(V)))
         {
             return false;
         }
+
         return haveIdenticalUnderlyingType(T, V, false);
     }
 
@@ -885,17 +891,20 @@ namespace golang::reflectlite
         {
             return true;
         }
+
         auto kind = rec::Kind(gocpp::recv(T));
         if(kind != rec::Kind(gocpp::recv(V)))
         {
             return false;
         }
+
         // Non-composite types of equal kind have same underlying type
         // (the predefined instance of the type).
         if(abi::Bool <= kind && kind <= abi::Complex128 || kind == abi::String || kind == abi::UnsafePointer)
         {
             return true;
         }
+
         // Composite types.
         //Go switch emulation
         {
@@ -914,6 +923,7 @@ namespace golang::reflectlite
                 case 0:
                     return rec::Len(gocpp::recv(T)) == rec::Len(gocpp::recv(V)) && haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), cmpTags);
                     break;
+
                 case 1:
                     // Special case:
                     // x is a bidirectional channel value, T is a channel type,
@@ -925,6 +935,7 @@ namespace golang::reflectlite
                     // Otherwise continue test for identical underlying type.
                     return rec::ChanDir(gocpp::recv(V)) == rec::ChanDir(gocpp::recv(T)) && haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), cmpTags);
                     break;
+
                 case 2:
                     auto t = (reflectlite::funcType*)(gocpp::unsafe_pointer(T));
                     auto v = (reflectlite::funcType*)(gocpp::unsafe_pointer(V));
@@ -948,6 +959,7 @@ namespace golang::reflectlite
                     }
                     return true;
                     break;
+
                 case 3:
                     auto t = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(T));
                     auto v = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(V));
@@ -959,13 +971,16 @@ namespace golang::reflectlite
                     // need a run time conversion.
                     return false;
                     break;
+
                 case 4:
                     return haveIdenticalType(rec::Key(gocpp::recv(T)), rec::Key(gocpp::recv(V)), cmpTags) && haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), cmpTags);
                     break;
+
                 case 5:
                 case 6:
                     return haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), cmpTags);
                     break;
+
                 case 7:
                     auto t = (reflectlite::structType*)(gocpp::unsafe_pointer(T));
                     auto v = (reflectlite::structType*)(gocpp::unsafe_pointer(V));
@@ -1006,6 +1021,7 @@ namespace golang::reflectlite
                     break;
             }
         }
+
         return false;
     }
 

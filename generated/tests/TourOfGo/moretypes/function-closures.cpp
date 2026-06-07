@@ -133,6 +133,7 @@ namespace golang::main
         {
             mocklib::Println(pos(i), neg(- 2 * i));
         }
+
         auto writer = new compressor {};
         rec::init(gocpp::recv(writer));
         rec::write(gocpp::recv(writer), gocpp::slice<unsigned char>("Hello, World!"_s));

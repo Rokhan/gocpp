@@ -66,9 +66,11 @@ namespace golang::reflectlite
                     break;
             }
         }
+
         auto typ = rec::common(gocpp::recv(rec::Elem(gocpp::recv(rec::Type(gocpp::recv(v))))));
         auto size = rec::Size(gocpp::recv(typ));
         auto hasPtr = typ->PtrBytes != 0;
+
         // Some common & small cases, without using memmove:
         if(hasPtr)
         {
@@ -132,9 +134,11 @@ namespace golang::reflectlite
                 }
             }
         }
+
         auto s = (unsafeheader::Slice*)(v.ptr);
         // swap scratch space
         auto tmp = unsafe_New(typ);
+
         return [=](int i, int j) mutable -> void
         {
             if((unsigned int)(i) >= (unsigned int)(s->Len) || (unsigned int)(j) >= (unsigned int)(s->Len))

@@ -184,6 +184,7 @@ namespace golang::zlib
         {
             return {0, z->err};
         }
+
         int n = {};
         std::tie(n, z->err) = rec::Read(gocpp::recv(z->decompressor), p);
         rec::Write(gocpp::recv(z->digest), p.make_slice(0, n));
@@ -192,6 +193,7 @@ namespace golang::zlib
             // In the normal case we return here.
             return {n, z->err};
         }
+
         // Finished file; check checksum.
         if(auto [gocpp_id_0, err] = io::ReadFull(z->r, z->scratch.make_slice(0, 4)); err != nullptr)
         {
@@ -238,6 +240,7 @@ namespace golang::zlib
         {
             z->r = bufio::NewReader(r);
         }
+
         // Read the header (RFC 1950 section 2.2.).
         std::tie(std::ignore, z->err) = io::ReadFull(z->r, z->scratch.make_slice(0, 2));
         if(z->err != nullptr)
@@ -273,6 +276,7 @@ namespace golang::zlib
                 return z->err;
             }
         }
+
         if(z->decompressor == nullptr)
         {
             if(haveDict)

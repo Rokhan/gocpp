@@ -230,6 +230,7 @@ namespace golang::runtime
             print("runtime: addr="_s, addr, " base="_s, rec::objBase(gocpp::recv(span), addr), "\n"_s);
             go_throw("typePointersOfUnchecked consisting of non-base-address for object"_s);
         }
+
         auto spc = span->spanclass;
         if(rec::noscan(gocpp::recv(spc)))
         {
@@ -244,6 +245,7 @@ namespace golang::runtime
                 x.mask = rec::heapBitsSmallForAddr(gocpp::recv(span), addr);
             });
         }
+
         // All of these objects have a header.
         runtime::_type* typ = {};
         if(rec::sizeclass(gocpp::recv(spc)) != 0)
@@ -355,11 +357,13 @@ namespace golang::runtime
             {
                 return rec::nextFast(gocpp::recv(tp));
             }
+
             // Stop if we don't actually have type information.
             if(tp.typ == nullptr)
             {
                 return {typePointers {}, 0};
             }
+
             // Advance to the next element if necessary.
             if(tp.addr + goarch::PtrSize * ptrBits >= tp.elem + tp.typ->PtrBytes)
             {
@@ -370,11 +374,13 @@ namespace golang::runtime
             {
                 tp.addr += ptrBits * goarch::PtrSize;
             }
+
             // Check if we've exceeded the limit with the last update.
             if(tp.addr >= limit)
             {
                 return {typePointers {}, 0};
             }
+
             // Grab more bits and try again.
             tp.mask = readUintptr(addb(tp.typ->GCData, (tp.addr - tp.elem) / goarch::PtrSize / 8));
             if(tp.addr + goarch::PtrSize * ptrBits > limit)
@@ -413,6 +419,7 @@ namespace golang::runtime
             }
             return tp;
         }
+
         // Move up elem and addr.
         // Offsets within an element are always at a ptrBits*goarch.PtrSize boundary.
         if(n >= tp.typ->Size_)
@@ -427,6 +434,7 @@ namespace golang::runtime
         {
             tp.addr += alignDown(n, ptrBits * goarch::PtrSize);
         }
+
         if(tp.addr - tp.elem >= tp.typ->PtrBytes)
         {
             // We're starting in the non-pointer area of an array.
@@ -434,6 +442,7 @@ namespace golang::runtime
             tp.elem += tp.typ->Size_;
             tp.addr = tp.elem;
             tp.mask = readUintptr(tp.typ->GCData);
+
             // We may have exceeded the limit after this. Bail just like next does.
             if(tp.addr >= limit)
             {
@@ -552,12 +561,14 @@ namespace golang::runtime
             return;
         }
         auto buf = & rec::ptr(gocpp::recv(getg()->m->p))->wbBuf;
+
         // Double-check that the bitmaps generated in the two possible paths match.
         auto doubleCheck = false;
         if(doubleCheck)
         {
             doubleCheckTypePointersOfType(s, typ, dst, size);
         }
+
         typePointers tp = {};
         if(typ != nullptr && typ->Kind_ & kindGCProg == 0)
         {
@@ -625,12 +636,14 @@ namespace golang::runtime
         }
         auto buf = & rec::ptr(gocpp::recv(getg()->m->p))->wbBuf;
         auto s = spanOf(dst);
+
         // Double-check that the bitmaps generated in the two possible paths match.
         auto doubleCheck = false;
         if(doubleCheck)
         {
             doubleCheckTypePointersOfType(s, typ, dst, size);
         }
+
         typePointers tp = {};
         if(typ != nullptr && typ->Kind_ & kindGCProg == 0)
         {
@@ -727,15 +740,19 @@ namespace golang::runtime
     {
         struct writeUserArenaHeapBits h;
         auto offset = addr - rec::base(gocpp::recv(s));
+
         // We start writing bits maybe in the middle of a heap bitmap word.
         // Remember how many bits into the word we started, so we can be sure
         // not to overwrite the previous bits.
         h.low = offset / goarch::PtrSize % ptrBits;
+
         // round down to heap word that starts the bitmap word.
         h.offset = offset - h.low * goarch::PtrSize;
+
         // We don't have any bits yet.
         h.mask = 0;
         h.valid = h.low;
+
         return h;
     }
 
@@ -752,12 +769,16 @@ namespace golang::runtime
             h.valid += valid;
             return h;
         }
+
+
+
         // mask for this word
         auto data = h.mask | (bits << h.valid);
         // leftover for next word
         h.mask = bits >> (ptrBits - h.valid);
         // have h.valid+valid bits, writing ptrBits of them
         h.valid += valid - ptrBits;
+
         // Flush mask to the memory bitmap.
         auto idx = h.offset / (ptrBits * goarch::PtrSize);
         auto m = (uintptr_t(1) << h.low) - 1;
@@ -767,6 +788,11 @@ namespace golang::runtime
         // entries are all for a single page. Also, visibility of these
         // writes is guaranteed by the publication barrier in mallocgc.
         bitmap[idx] = bswapIfBigEndian(bswapIfBigEndian(bitmap[idx]) & m | data);
+
+
+
+
+
         // Move to next word of bitmap.
         h.offset += ptrBits * goarch::PtrSize;
         h.low = 0;
@@ -794,10 +820,12 @@ namespace golang::runtime
     void rec::flush(golang::runtime::writeUserArenaHeapBits h, struct mspan* s, uintptr_t addr, uintptr_t size)
     {
         auto offset = addr - rec::base(gocpp::recv(s));
+
         // zeros counts the number of bits needed to represent the object minus the
         // number of bits we've already written. This is the number of 0 bits
         // that need to be added.
         auto zeros = (offset + size - h.offset) / goarch::PtrSize - h.valid;
+
         // Add zero bits up to the bitmap word boundary
         if(zeros > 0)
         {
@@ -809,9 +837,11 @@ namespace golang::runtime
             h.valid += z;
             zeros -= z;
         }
+
         // Find word in bitmap that we're going to write.
         auto bitmap = rec::heapBits(gocpp::recv(s));
         auto idx = h.offset / (ptrBits * goarch::PtrSize);
+
         // Write remaining bits.
         if(h.valid != h.low)
         {
@@ -825,8 +855,10 @@ namespace golang::runtime
         {
             return;
         }
+
         // Advance to next bitmap word.
         h.offset += ptrBits * goarch::PtrSize;
+
         // Continue on writing zeros for the rest of the object.
         // For standard use of the ptr bits this is not required, as
         // the bits are read from the beginning of the object. Some uses,
@@ -873,6 +905,7 @@ namespace golang::runtime
     gocpp::slice<uintptr_t> rec::heapBits(golang::runtime::mspan* span)
     {
         auto doubleCheck = false;
+
         if(doubleCheck && ! span->isUserArenaChunk)
         {
             if(rec::noscan(gocpp::recv(span->spanclass)))
@@ -917,6 +950,7 @@ namespace golang::runtime
         auto spanSize = span->npages * pageSize;
         auto bitmapSize = spanSize / goarch::PtrSize / 8;
         auto hbits = (unsigned char*)(gocpp::unsafe_pointer(rec::base(gocpp::recv(span)) + spanSize - bitmapSize));
+
         // These objects are always small enough that their bitmaps
         // fit in a single word, so just load the word or two we need.
         // Mirrors mspan.writeHeapBitsSmall.
@@ -928,6 +962,7 @@ namespace golang::runtime
         auto bits = span->elemsize / goarch::PtrSize;
         auto word0 = (uintptr_t*)(gocpp::unsafe_pointer(addb(hbits, goarch::PtrSize * (i + 0))));
         auto word1 = (uintptr_t*)(gocpp::unsafe_pointer(addb(hbits, goarch::PtrSize * (i + 1))));
+
         uintptr_t read = {};
         if(j + bits > ptrBits)
         {
@@ -957,6 +992,7 @@ namespace golang::runtime
         uintptr_t scanSize;
         // The objects here are always really small, so a single load is sufficient.
         auto src0 = readUintptr(typ->GCData);
+
         // Create repetitions of the bitmap if we have a small array.
         auto bits = span->elemsize / goarch::PtrSize;
         scanSize = typ->PtrBytes;
@@ -980,6 +1016,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         // Since we're never writing more than one uintptr's worth of bits, we're either going
         // to do one or two writes.
         auto dst = rec::heapBits(gocpp::recv(span));
@@ -999,6 +1036,7 @@ namespace golang::runtime
             // One write.
             dst[i] = (dst[i] &^ (((1 << bits) - 1) << j)) | (src << j);
         }
+
         auto doubleCheck = false;
         if(doubleCheck)
         {
@@ -1039,6 +1077,7 @@ namespace golang::runtime
     {
         uintptr_t scanSize;
         auto doubleCheck = false;
+
         auto gctyp = typ;
         if(header == nullptr)
         {
@@ -1078,16 +1117,20 @@ namespace golang::runtime
                 gctyp->PtrBytes = typ->PtrBytes;
                 gctyp->GCData = (unsigned char*)(add(gocpp::unsafe_pointer(rec::base(gocpp::recv(progSpan))), heapBitsOff));
                 gctyp->TFlag = abi::TFlagUnrolledBitmap;
+
                 // Expand the GC program into space reserved at the end of the new span.
                 runGCProg(addb(typ->GCData, 4), gctyp->GCData);
             }
+
             // Write out the header.
             *header = gctyp;
             scanSize = span->elemsize;
         }
+
         if(doubleCheck)
         {
             doubleCheckHeapPointers(x, dataSize, gctyp, header, span);
+
             // To exercise the less common path more often, generate
             // a random interior pointer and make sure iterating from
             // that point works correctly too.
@@ -1255,6 +1298,7 @@ namespace golang::runtime
             print("runtime: addr="_s, hex(addr), "\n"_s);
             dumpTypePointers(tp);
         }
+
         print("runtime: want: "_s);
         for(auto i = off; i < off + size; i += goarch::PtrSize)
         {
@@ -1279,6 +1323,7 @@ namespace golang::runtime
             }
         }
         println();
+
         go_throw("heapSetType: pointer entry not correct"_s);
     }
 
@@ -1366,12 +1411,14 @@ namespace golang::runtime
         auto e = *efaceOf(& ep);
         auto p = e.data;
         auto t = e._type;
+
         runtime::_type* et = {};
         if(t->Kind_ & kindMask != kindPtr)
         {
             go_throw("bad argument to getgcmask: expected type to be a pointer to the value type whose mask is being queried"_s);
         }
         et = (runtime::ptrtype*)(gocpp::unsafe_pointer(t))->Elem;
+
         // data or bss
         for(auto [gocpp_ignored, datap] : activeModules())
         {
@@ -1388,6 +1435,7 @@ namespace golang::runtime
                 }
                 return mask;
             }
+
             // bss
             if(datap->bss <= uintptr_t(p) && uintptr_t(p) < datap->ebss)
             {
@@ -1402,6 +1450,7 @@ namespace golang::runtime
                 return mask;
             }
         }
+
         // heap
         if(auto [base, s, gocpp_id_0] = findObject(uintptr_t(p), 0, 0); base != 0)
         {
@@ -1410,11 +1459,13 @@ namespace golang::runtime
                 return nullptr;
             }
             auto limit = base + s->elemsize;
+
             // Move the base up to the iterator's start, because
             // we want to hide evidence of a malloc header from the
             // caller.
             auto tp = rec::typePointersOfUnchecked(gocpp::recv(s), base);
             base = tp.addr;
+
             // Unroll the full bitmap the GC would actually observe.
             auto maskFromHeap = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), (limit - base) / goarch::PtrSize);
             for(; ; )
@@ -1426,6 +1477,7 @@ namespace golang::runtime
                 }
                 maskFromHeap[(addr - base) / goarch::PtrSize] = 1;
             }
+
             // Double-check that every part of the ptr/scalar we're not
             // showing the caller is zeroed. This keeps us honest that
             // that information is actually irrelevant.
@@ -1436,12 +1488,14 @@ namespace golang::runtime
                     go_throw("found non-zeroed tail of allocation"_s);
                 }
             }
+
             // Callers (and a check we're about to run) expects this mask
             // to end at the last pointer.
             for(; len(maskFromHeap) > 0 && maskFromHeap[len(maskFromHeap) - 1] == 0; )
             {
                 maskFromHeap = maskFromHeap.make_slice(0, len(maskFromHeap) - 1);
             }
+
             if(et->Kind_ & kindGCProg == 0)
             {
                 // Unroll again, but this time from the type information.
@@ -1456,6 +1510,7 @@ namespace golang::runtime
                     }
                     maskFromType[(addr - base) / goarch::PtrSize] = 1;
                 }
+
                 // Validate that the prefix of maskFromType is equal to
                 // maskFromHeap. maskFromType may contain more pointers than
                 // maskFromHeap produces because maskFromHeap may be able to
@@ -1474,6 +1529,7 @@ namespace golang::runtime
                         break;
                     }
                 }
+
                 if(differs)
                 {
                     print("runtime: heap mask="_s);
@@ -1492,14 +1548,17 @@ namespace golang::runtime
                     go_throw("found two different masks from two different methods"_s);
                 }
             }
+
             // Select the heap mask to return. We may not have a type mask.
             mask = maskFromHeap;
+
             // Make sure we keep ep alive. We may have stopped referencing
             // ep's data pointer sometime before this point and it's possible
             // for that memory to get freed.
             KeepAlive(ep);
             return mask;
         }
+
         // stack
         if(auto gp = getg(); gp->m->curg->stack.lo <= uintptr_t(p) && uintptr_t(p) < gp->m->curg->stack.hi)
         {
@@ -1531,6 +1590,7 @@ namespace golang::runtime
             }
             return mask;
         }
+
         // otherwise, not something the GC knows about.
         // possibly read-only data, like malloc(0).
         // must not have pointers
@@ -1545,6 +1605,7 @@ namespace golang::runtime
     {
         auto base = rec::base(gocpp::recv(s));
         auto h = rec::writeUserArenaHeapBits(gocpp::recv(s), uintptr_t(ptr));
+
         // start of 1-bit pointer mask (or GC program)
         auto p = typ->GCData;
         uintptr_t gcProgBits = {};
@@ -1555,6 +1616,7 @@ namespace golang::runtime
             p = (unsigned char*)(ptr);
         }
         auto nb = typ->PtrBytes / goarch::PtrSize;
+
         for(auto i = uintptr_t(0); i < nb; i += ptrBits)
         {
             auto k = nb - i;
@@ -1578,14 +1640,17 @@ namespace golang::runtime
         // are always fully cleared when reused.
         h = rec::pad(gocpp::recv(h), s, typ->Size_ - typ->PtrBytes);
         rec::flush(gocpp::recv(h), s, uintptr_t(ptr), typ->Size_);
+
         if(typ->Kind_ & kindGCProg != 0)
         {
             // Zero out temporary ptrmask buffer inside object.
             memclrNoHeapPointers(ptr, (gcProgBits + 7) / 8);
         }
+
         // Update the PtrBytes value in the type information. After this
         // point, the GC will observe the new bitmap.
         s->largeType->PtrBytes = uintptr_t(ptr) - base + typ->PtrBytes;
+
         // Double-check that the bitmap was written out correctly.
         auto doubleCheck = false;
         if(doubleCheck)

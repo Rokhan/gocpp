@@ -96,6 +96,7 @@ namespace golang::hex
         {
             auto p = src[j - 1];
             auto q = src[j];
+
             auto a = reverseHexTable[p];
             auto b = reverseHexTable[q];
             if(a > 0x0f)
@@ -165,11 +166,13 @@ namespace golang::hex
         {
             return ""_s;
         }
+
         strings::Builder buf = {};
         // Dumper will write 79 bytes per complete 16 byte chunk, and at least
         // 64 bytes for whatever remains. Round the allocation up, since only a
         // maximum of 15 bytes will be wasted.
         rec::Grow(gocpp::recv(buf), (1 + ((len(data) - 1) / 16)) * 79);
+
         auto dumper = Dumper(& buf);
         rec::Write(gocpp::recv(dumper), data);
         rec::Close(gocpp::recv(dumper));
@@ -231,6 +234,7 @@ namespace golang::hex
             {
                 chunkSize = len(p);
             }
+
             int written = {};
             auto encoded = Encode(e->out.make_slice(0), p.make_slice(0, chunkSize));
             std::tie(written, e->err) = rec::Write(gocpp::recv(e->w), e->out.make_slice(0, encoded));
@@ -312,6 +316,7 @@ namespace golang::hex
                 }
             }
         }
+
         // Decode internal buffer into output buffer
         if(auto numAvail = len(d->in) / 2; len(p) > numAvail)
         {
@@ -325,6 +330,7 @@ namespace golang::hex
             // Decode error; discard input remainder
             std::tie(d->in, d->err) = std::tuple{nullptr, err};
         }
+
         if(len(d->in) < 2)
         {
             // Only expose errors when buffer fully consumed
@@ -404,6 +410,7 @@ namespace golang::hex
         {
             return {0, errors::New("encoding/hex: dumper closed"_s)};
         }
+
         // Output lines look like:
         // 00000010  2e 2f 30 31 32 33 34 35  36 37 38 39 3a 3b 3c 3d  |./0123456789:;<=|
         // ^ offset                          ^ extra space              ^ ASCII of line.

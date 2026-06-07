@@ -140,6 +140,7 @@ namespace golang::runtime
         // Deduct credit for this span allocation and sweep if necessary.
         auto spanBytes = uintptr_t(class_to_allocnpages[rec::sizeclass(gocpp::recv(c->spanclass))]) * _PageSize;
         deductSweepCredit(spanBytes, 0);
+
         auto traceDone = false;
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
@@ -147,6 +148,7 @@ namespace golang::runtime
             rec::GCSweepStart(gocpp::recv(trace));
             traceRelease(trace);
         }
+
         // If we sweep spanBudget spans without finding any free
         // space, just allocate a fresh span. This limits the amount
         // of time we can spend trying to find free space and
@@ -160,14 +162,17 @@ namespace golang::runtime
         // running free-to-used budget and switch to fresh span
         // allocation if the budget runs low.
         auto spanBudget = 100;
+
         mspan* s = {};
         sweepLocker sl = {};
+
         // Try partial swept spans first.
         auto sg = mheap_.sweepgen;
         if(s = rec::pop(gocpp::recv(rec::partialSwept(gocpp::recv(c), sg))); s != nullptr)
         {
             goto havespan;
         }
+
         sl = rec::begin(gocpp::recv(sweep.active));
         if(sl.valid)
         {
@@ -234,12 +239,14 @@ namespace golang::runtime
             traceDone = true;
             traceRelease(trace);
         }
+
         // We failed to get a span from the mcentral so get one from mheap.
         s = rec::grow(gocpp::recv(c));
         if(s == nullptr)
         {
             return nullptr;
         }
+
         // At this point s is a span that should have free slots.
         havespan:
         if(! traceDone)
@@ -260,9 +267,11 @@ namespace golang::runtime
         auto whichByte = freeByteBase / 8;
         // Init alloc bits cache.
         rec::refillAllocCache(gocpp::recv(s), whichByte);
+
         // Adjust the allocCache so that s.freeindex corresponds to the low bit in
         // s.allocCache.
         s->allocCache >>= s->freeindex % 64;
+
         return s;
     }
 
@@ -276,8 +285,10 @@ namespace golang::runtime
         {
             go_throw("uncaching span but s.allocCount == 0"_s);
         }
+
         auto sg = mheap_.sweepgen;
         auto stale = s->sweepgen == sg + 1;
+
         // Fix up sweepgen.
         if(stale)
         {
@@ -293,6 +304,7 @@ namespace golang::runtime
             // Indicate that s is no longer cached.
             atomic::Store(& s->sweepgen, sg);
         }
+
         // Put the span in the appropriate place.
         if(stale)
         {
@@ -326,11 +338,13 @@ namespace golang::runtime
     {
         auto npages = uintptr_t(class_to_allocnpages[rec::sizeclass(gocpp::recv(c->spanclass))]);
         auto size = uintptr_t(class_to_size[rec::sizeclass(gocpp::recv(c->spanclass))]);
+
         auto s = rec::alloc(gocpp::recv(mheap_), npages, c->spanclass);
         if(s == nullptr)
         {
             return nullptr;
         }
+
         // Use division by multiplication and shifts to quickly compute:
         // n := (npages << _PageShift) / size
         auto n = rec::divideByElemSize(gocpp::recv(s), npages << _PageShift);

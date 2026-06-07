@@ -24,8 +24,10 @@ namespace golang::main
     {
         std::any i = {};
         describe(i);
+
         i = 42;
         describe(i);
+
         i = "hello"_s;
         describe(i);
     }

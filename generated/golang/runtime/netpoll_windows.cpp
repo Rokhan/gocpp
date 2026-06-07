@@ -172,6 +172,7 @@ namespace golang::runtime
         {
             return;
         }
+
         if(stdcall4(_PostQueuedCompletionStatus, iocphandle, 0, 0, 0) == 0)
         {
             println("runtime: netpoll: PostQueuedCompletionStatus failed (errno="_s, getlasterror(), ")"_s);
@@ -195,7 +196,9 @@ namespace golang::runtime
         int32_t errno = {};
         net_op* op = {};
         gList toRun = {};
+
         auto mp = getg()->m;
+
         if(iocphandle == _INVALID_HANDLE_VALUE)
         {
             return {gList {}, 0};
@@ -225,6 +228,7 @@ namespace golang::runtime
             // 1e9 ms == ~11.5 days.
             wait = 1e9;
         }
+
         n = uint32_t(len(entries) / int(gomaxprocs));
         if(n < 8)
         {

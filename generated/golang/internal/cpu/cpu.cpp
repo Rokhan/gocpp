@@ -648,6 +648,7 @@ namespace golang::cpu
             }
             // e.g. "SSE2", "on"
             auto [key, value] = std::tuple{field.make_slice(4, i), field.make_slice(i + 1)};
+
             bool enable = {};
             //Go switch emulation
             {
@@ -669,6 +670,7 @@ namespace golang::cpu
                         break;
                 }
             }
+
             if(key == "all"_s)
             {
                 for(auto [i, gocpp_ignored] : options)
@@ -678,6 +680,7 @@ namespace golang::cpu
                 }
                 goto field_continue;
             }
+
             for(auto [i, gocpp_ignored] : options)
             {
                 if(options[i].Name == key)
@@ -687,19 +690,23 @@ namespace golang::cpu
                     goto field_continue;
                 }
             }
+
             print("GODEBUG: unknown cpu feature \""_s, key, "\"\n"_s);
         }
+
         for(auto [gocpp_ignored, o] : options)
         {
             if(! o.Specified)
             {
                 continue;
             }
+
             if(o.Enable && ! *o.Feature)
             {
                 print("GODEBUG: can not enable \""_s, o.Name, "\", missing CPU support\n"_s);
                 continue;
             }
+
             *o.Feature = o.Enable;
         }
     }

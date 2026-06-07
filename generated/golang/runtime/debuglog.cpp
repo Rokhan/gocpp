@@ -95,10 +95,13 @@ namespace golang::runtime
         {
             return nullptr;
         }
+
         // Get the time.
         auto [tick, nano] = std::tuple{uint64_t(cputicks()), uint64_t(nanotime())};
+
         // Try to get a cached logger.
         auto l = getCachedDlogger();
+
         // If we couldn't get a cached logger, try to get one from the
         // global pool.
         if(l == nullptr)
@@ -114,6 +117,7 @@ namespace golang::runtime
                 }
             }
         }
+
         // If that failed, allocate a new logger.
         if(l == nullptr)
         {
@@ -126,6 +130,7 @@ namespace golang::runtime
             }
             l->w.r.data = & l->w.data;
             rec::Store(gocpp::recv(l->owned), 1);
+
             // Prepend to allDloggers list.
             auto headp = (uintptr_t*)(gocpp::unsafe_pointer(& allDloggers));
             for(; ; )
@@ -138,6 +143,7 @@ namespace golang::runtime
                 }
             }
         }
+
         // If the time delta is getting too high, write a new sync
         // packet. We set the limit so we don't write more than 6
         // bytes of delta in the record header.
@@ -147,9 +153,11 @@ namespace golang::runtime
         {
             rec::writeSync(gocpp::recv(l->w), tick, nano);
         }
+
         // Reserve space for framing header.
         rec::ensure(gocpp::recv(l->w), debugLogHeaderSize);
         l->w.write += debugLogHeaderSize;
+
         // Write record header.
         rec::uvarint(gocpp::recv(l->w), tick - l->w.tick);
         rec::uvarint(gocpp::recv(l->w), nano - l->w.nano);
@@ -162,6 +170,7 @@ namespace golang::runtime
         {
             rec::varint(gocpp::recv(l->w), - 1);
         }
+
         return l;
     }
 
@@ -218,19 +227,23 @@ namespace golang::runtime
         {
             return;
         }
+
         // Fill in framing header.
         auto size = l->w.write - l->w.r.end;
         if(! rec::writeFrameAt(gocpp::recv(l->w), l->w.r.end, size))
         {
             go_throw("record too large"_s);
         }
+
         // Commit the record.
         l->w.r.end = l->w.write;
+
         // Attempt to return this logger to the cache.
         if(putCachedDlogger(l))
         {
             return;
         }
+
         // Return the logger to the global pool.
         rec::Store(gocpp::recv(l->owned), 0);
     }
@@ -392,6 +405,7 @@ namespace golang::runtime
         {
             return l;
         }
+
         auto strData = unsafe::StringData(x);
         auto datap = & firstmoduledata;
         if(len(x) > 4 && datap->etext <= uintptr_t(gocpp::unsafe_pointer(strData)) && uintptr_t(gocpp::unsafe_pointer(strData)) < datap->end)
@@ -766,6 +780,7 @@ namespace golang::runtime
             r->nano = rec::readUint64LEAt(gocpp::recv(r), r->begin + debugLogHeaderSize + 8);
             r->begin += debugLogSyncSize;
         }
+
         // Peek tick delta.
         if(r->begin + size > r->end)
         {
@@ -801,10 +816,12 @@ namespace golang::runtime
         auto size = uint64_t(rec::readUint16LEAt(gocpp::recv(r), r->begin));
         end = r->begin + size;
         r->begin += debugLogHeaderSize;
+
         // Read tick, nano, and p.
         tick = rec::uvarint(gocpp::recv(r)) + r->tick;
         nano = rec::uvarint(gocpp::recv(r)) + r->nano;
         p = int(rec::varint(gocpp::recv(r)));
+
         return {end, tick, nano, p};
     }
 
@@ -843,6 +860,7 @@ namespace golang::runtime
     {
         auto typ = r->data->b[r->begin % uint64_t(len(r->data->b))];
         r->begin++;
+
         //Go switch emulation
         {
             auto condition = typ;
@@ -865,25 +883,32 @@ namespace golang::runtime
                     print("<unknown field type "_s, hex(typ), " pos "_s, r->begin - 1, " end "_s, r->end, ">\n"_s);
                     return false;
                     break;
+
                 case 0:
                     print("<unknown kind>"_s);
                     break;
+
                 case 1:
                     print(true);
                     break;
+
                 case 2:
                     print(false);
                     break;
+
                 case 3:
                     print(rec::varint(gocpp::recv(r)));
                     break;
+
                 case 4:
                     print(rec::uvarint(gocpp::recv(r)));
                     break;
+
                 case 5:
                 case 6:
                     print(hex(rec::uvarint(gocpp::recv(r))));
                     break;
+
                 case 7:
                     auto sl = rec::uvarint(gocpp::recv(r));
                     if(r->begin + sl > r->end)
@@ -904,6 +929,7 @@ namespace golang::runtime
                         gwrite(b);
                     }
                     break;
+
                 case 8:
                     auto [len, ptr] = std::tuple{int(rec::uvarint(gocpp::recv(r))), uintptr_t(rec::uvarint(gocpp::recv(r)))};
                     ptr += firstmoduledata.etext;
@@ -917,12 +943,15 @@ namespace golang::runtime
                     auto s = *(gocpp::string*)(gocpp::unsafe_pointer(& str));
                     print(s);
                     break;
+
                 case 9:
                     print("..("_s, rec::uvarint(gocpp::recv(r)), " more bytes).."_s);
                     break;
+
                 case 10:
                     printDebugLogPC(uintptr_t(rec::uvarint(gocpp::recv(r))), false);
                     break;
+
                 case 11:
                     auto n = int(rec::uvarint(gocpp::recv(r)));
                     for(auto i = 0; i < n; i++)
@@ -936,6 +965,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         return true;
     }
 
@@ -986,12 +1016,15 @@ namespace golang::runtime
         {
             return;
         }
+
         // This function should not panic or throw since it is used in
         // the fatal panic path and this may deadlock.
         printlock();
+
         // Get the list of all debug logs.
         auto allp = (uintptr_t*)(gocpp::unsafe_pointer(& allDloggers));
         auto all = (dlogger*)(gocpp::unsafe_pointer(atomic::Loaduintptr(allp)));
+
         // Count the logs.
         auto n = 0;
         for(auto l = all; l != nullptr; l = l->allLink)
@@ -1003,6 +1036,7 @@ namespace golang::runtime
             printunlock();
             return;
         }
+
         // Prepare read state for all logs.
         struct readState
         {
@@ -1046,6 +1080,7 @@ namespace golang::runtime
                 l = l->allLink;
             }
         }
+
         // Print records.
         for(; ; )
         {
@@ -1064,6 +1099,7 @@ namespace golang::runtime
             {
                 break;
             }
+
             // Print record.
             auto s = & state[best.i];
             if(s->first)
@@ -1076,9 +1112,11 @@ namespace golang::runtime
                 print(" <<\n"_s);
                 s->first = false;
             }
+
             auto [end, gocpp_id_1, nano, p] = rec::header(gocpp::recv(s));
             auto oldEnd = s->debugLogReader.end;
             s->debugLogReader.end = end;
+
             print("["_s);
             gocpp::array<unsigned char, 21> tmpbuf = {};
             auto pnano = int64_t(nano) - runtimeInitTime;
@@ -1090,6 +1128,7 @@ namespace golang::runtime
             auto pnanoBytes = itoaDiv(tmpbuf.make_slice(0), uint64_t(pnano), 9);
             print(slicebytetostringtmp((unsigned char*)(noescape(gocpp::unsafe_pointer(& pnanoBytes[0]))), len(pnanoBytes)));
             print(" P "_s, p, "] "_s);
+
             for(auto i = 0; s->debugLogReader.begin < s->debugLogReader.end; i++)
             {
                 if(i > 0)
@@ -1105,11 +1144,13 @@ namespace golang::runtime
                 }
             }
             println();
+
             // Move on to the next record.
             s->debugLogReader.begin = end;
             s->debugLogReader.end = oldEnd;
             s->nextTick = rec::peek(gocpp::recv(s));
         }
+
         printunlock();
     }
 
@@ -1124,6 +1165,7 @@ namespace golang::runtime
             // was a sigpanic.
             pc--;
         }
+
         print(hex(pc));
         if(! rec::valid(gocpp::recv(fn)))
         {

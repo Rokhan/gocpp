@@ -383,6 +383,7 @@ namespace golang::strconv
                     break;
             }
         }
+
         // hard case: c is backslash
         if(len(s) <= 1)
         {
@@ -391,6 +392,7 @@ namespace golang::strconv
         }
         auto c = s[1];
         s = s.make_slice(2);
+
         //Go switch emulation
         {
             auto condition = c;
@@ -594,6 +596,7 @@ namespace golang::strconv
         }
         // position after terminating quote; may be wrong if escape sequences are present
         end += 2;
+
         //Go switch emulation
         {
             auto condition = quote;
@@ -695,6 +698,7 @@ namespace golang::strconv
                             return {""_s, in0, ErrSyntax};
                         }
                         in = rem;
+
                         // Append the character if unescaping the input.
                         if(unescape)
                         {
@@ -707,6 +711,7 @@ namespace golang::strconv
                                 buf = utf8::AppendRune(buf, r);
                             }
                         }
+
                         // Single quoted strings must be a single character.
                         if(quote == '\'')
                         {
@@ -794,6 +799,7 @@ namespace golang::strconv
             }
             return false;
         }
+
         // Same algorithm, either on uint16 or uint32 value.
         // First, find first i such that isPrint[i] >= x.
         // This is the index of either the start or end of a pair that might span x.
@@ -810,6 +816,7 @@ namespace golang::strconv
             auto j = bsearch16(isNotPrint, rr);
             return j >= len(isNotPrint) || isNotPrint[j] != rr;
         }
+
         auto [rr, isPrint, isNotPrint] = std::tuple{uint32_t(r), isPrint32, isNotPrint32};
         auto i = bsearch32(isPrint, rr);
         if(i >= len(isPrint) || rr < isPrint[i &^ 1] || isPrint[i | 1] < rr)

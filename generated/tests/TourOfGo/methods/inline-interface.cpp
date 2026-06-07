@@ -121,10 +121,13 @@ namespace golang::main
     {
         gocpp_id_0 i = {};
         describe(i);
+
         i = MyInt(42);
         describe(i);
+
         i = MyFloat(42.0);
         describe(i);
+
         i = Vertex {4, 2};
         describe(i);
     }

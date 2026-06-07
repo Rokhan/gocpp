@@ -131,14 +131,17 @@ namespace golang::runtime
     void gcPaceScavenger(int64_t memoryLimit, uint64_t heapGoal, uint64_t lastHeapGoal)
     {
         assertWorldStoppedOrLockHeld(& mheap_.lock);
+
         // As described at the top of this file, there are two scavenge goals here: one
         // for gcPercent and one for memoryLimit. Let's handle the latter first because
         // it's simpler.
         // We want to target retaining (100-reduceExtraPercent)% of the heap.
         auto memoryLimitGoal = uint64_t(double(memoryLimit) * (1 - reduceExtraPercent / 100.0));
+
         // mappedReady is comparable to memoryLimit, and represents how much total memory
         // the Go runtime has committed now (estimated).
         auto mappedReady = rec::Load(gocpp::recv(gcController.mappedReady));
+
         // If we're below the goal already indicate that we don't need the background
         // scavenger for the memory limit. This may seems worrisome at first, but note
         // that the allocator will assist the background scavenger in the face of a memory
@@ -151,6 +154,7 @@ namespace golang::runtime
         {
             rec::Store(gocpp::recv(scavenge.memoryLimitGoal), memoryLimitGoal);
         }
+
         // Now handle the gcPercent goal.
         // If we're called before the first GC completed, disable scavenging.
         // We never scavenge before the 2nd GC cycle anyway (we don't have enough
@@ -172,6 +176,7 @@ namespace golang::runtime
         // Align it to a physical page boundary to make the following calculations
         // a bit more exact.
         gcPercentGoal = (gcPercentGoal + uint64_t(physPageSize) - 1) &^ (uint64_t(physPageSize) - 1);
+
         // Represents where we are now in the heap's contribution to RSS in bytes.
         // Guaranteed to always be a multiple of physPageSize on systems where
         // physPageSize <= pageSize since we map new heap memory at a size larger than
@@ -182,6 +187,7 @@ namespace golang::runtime
         // Generally this is OK since we'll be off by at most one regular
         // physical page.
         auto heapRetainedNow = heapRetained();
+
         // If we're already below our goal, or within one page of our goal, then indicate
         // that we don't need the background scavenger for maintaining a memory overhead
         // proportional to the heap goal.
@@ -345,12 +351,14 @@ namespace golang::runtime
         }
         lockInit(& s->lock, lockRankScavenge);
         s->g = getg();
+
         s->timer = new(timer);
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {
             rec::wake(gocpp::recv(gocpp::getValue<scavengerState*>(s)));
         };
+
         // input: fraction of CPU time actually used.
         // setpoint: ideal CPU fraction.
         // output: ratio of time worked to time slept (determines sleep time).
@@ -367,6 +375,7 @@ namespace golang::runtime
             x.max = 1000.0;
         });
         s->sleepRatio = startingScavSleepRatio;
+
         // Install real functions if stubs aren't present.
         if(s->scavenge == nullptr)
         {
@@ -428,8 +437,10 @@ namespace golang::runtime
         {
             // Unset sysmonWake, since the scavenger is now being awoken.
             rec::Store(gocpp::recv(s->sysmonWake), 0);
+
             // s.parked is unset to prevent a double wake-up.
             s->parked = false;
+
             // Ready the goroutine by injecting it. We use injectglist instead
             // of ready or goready in order to allow us to run this function
             // without a P. injectglist also avoids placing the goroutine in
@@ -457,6 +468,7 @@ namespace golang::runtime
         {
             go_throw("tried to sleep scavenger from another goroutine"_s);
         }
+
         if(worked < minScavWorkTime)
         {
             // This means there wasn't enough work to actually fill up minScavWorkTime.
@@ -466,6 +478,7 @@ namespace golang::runtime
             // All this means is that we'll sleep longer than we otherwise would have.
             worked = minScavWorkTime;
         }
+
         // Multiply the critical time by 1 + the ratio of the costs of using
         // scavenged memory vs. scavenging memory. This forces us to pay down
         // the cost of reusing this memory eagerly by sleeping for a longer period
@@ -473,9 +486,11 @@ namespace golang::runtime
         // where we end up scavenging so often that we hurt allocation performance
         // because of the additional overheads of using scavenged memory.
         worked *= 1 + scavengeCostRatio;
+
         // sleepTime is the amount of time we're going to sleep, based on the amount
         // of time we worked, and the sleepRatio.
         auto sleepTime = int64_t(worked / s->sleepRatio);
+
         int64_t slept = {};
         if(s->sleepStub == nullptr)
         {
@@ -485,11 +500,14 @@ namespace golang::runtime
             // failing escape analysis.
             auto start = nanotime();
             resetTimer(s->timer, start + sleepTime);
+
             // Mark ourselves as asleep and go to sleep.
             s->parked = true;
             goparkunlock(& s->lock, waitReasonSleep, traceBlockSleep, 2);
+
             // How long we actually slept for.
             slept = nanotime() - start;
+
             runtime::lock(& s->lock);
             // Stop the timer here because s.wake is unable to do it for us.
             // We don't really care if we succeed in stopping the timer. One
@@ -504,6 +522,7 @@ namespace golang::runtime
             runtime::unlock(& s->lock);
             slept = s->sleepStub(sleepTime);
         }
+
         // Stop here if we're cooling down from the controller.
         if(s->controllerCooldown > 0)
         {
@@ -520,15 +539,18 @@ namespace golang::runtime
             }
             return;
         }
+
         // idealFraction is the ideal % of overall application CPU time that we
         // spend scavenging.
         auto idealFraction = double(scavengePercent) / 100.0;
+
         // Calculate the CPU time spent.
         // This may be slightly inaccurate with respect to GOMAXPROCS, but we're
         // recomputing this often enough relative to GOMAXPROCS changes in general
         // (it only changes when the world is stopped, and not during a GC) that
         // that small inaccuracy is in the noise.
         auto cpuFraction = worked / ((double(slept) + worked) * double(s->gomaxprocs()));
+
         // Update the critSleepRatio, adjusting until we reach our ideal fraction.
         bool ok = {};
         std::tie(s->sleepRatio, ok) = rec::next(gocpp::recv(s->sleepController), cpuFraction, idealFraction, double(slept) + worked);
@@ -540,6 +562,7 @@ namespace golang::runtime
             s->sleepRatio = startingScavSleepRatio;
             // 5 seconds.
             s->controllerCooldown = 5e9;
+
             // Signal the scav trace printer to output this.
             rec::controllerFailed(gocpp::recv(s));
         }
@@ -570,6 +593,7 @@ namespace golang::runtime
             go_throw("tried to run scavenger from another goroutine"_s);
         }
         runtime::unlock(& s->lock);
+
         for(; worked < minScavWorkTime; )
         {
             // If something from outside tells us to stop early, stop.
@@ -577,6 +601,7 @@ namespace golang::runtime
             {
                 break;
             }
+
             // scavengeQuantum is the amount of memory we try to scavenge
             // in one go. A smaller value means the scavenger is more responsive
             // to the scheduler in case of e.g. preemption. A larger value means
@@ -587,8 +612,10 @@ namespace golang::runtime
             // about 160µs for 4 KiB physical pages. The current value is biased
             // toward latency over throughput.
             auto scavengeQuantum = 64 << 10;
+
             // Accumulate the amount of time spent scavenging.
             auto [r, duration] = s->scavenge(scavengeQuantum);
+
             // On some platforms we may see end >= start if the time it takes to scavenge
             // memory is less than the minimum granularity of its clock (e.g. Windows) or
             // due to clock bugs.
@@ -609,6 +636,7 @@ namespace golang::runtime
                 worked += double(duration);
             }
             released += r;
+
             // scavenge does not return until it either finds the requisite amount of
             // memory to scavenge, or exhausts the heap. If we haven't found enough
             // to scavenge, then the heap must be exhausted.
@@ -641,8 +669,10 @@ namespace golang::runtime
     void bgscavenge(gocpp::channel<int> c)
     {
         rec::init(gocpp::recv(scavenger));
+
         c.send(1);
         rec::park(gocpp::recv(scavenger));
+
         for(; ; )
         {
             auto [released, workTime] = rec::run(gocpp::recv(scavenger));
@@ -697,6 +727,7 @@ namespace golang::runtime
     void printScavTrace(uintptr_t releasedBg, uintptr_t releasedEager, bool forced)
     {
         assertLockHeld(& scavenger.lock);
+
         printlock();
         print("scav "_s, releasedBg >> 10, " KiB work (bg), "_s, releasedEager >> 10, " KiB work (eager), "_s, rec::load(gocpp::recv(gcController.heapReleased)) >> 10, " KiB now, "_s, (rec::load(gocpp::recv(gcController.heapInUse)) * 100) / heapRetained(), "% util"_s);
         if(forced)
@@ -738,6 +769,7 @@ namespace golang::runtime
         {
             maxPages++;
         }
+
         // Calculate the minimum number of pages we can scavenge.
         // Because we can only scavenge whole physical pages, we must
         // ensure that we scavenge at least minPages each time, aligned
@@ -747,41 +779,50 @@ namespace golang::runtime
         {
             minPages = 1;
         }
+
         runtime::lock(p->mheapLock);
         if(rec::max(gocpp::recv(p->summary[len(p->summary) - 1][ci])) >= (unsigned int)(minPages))
         {
             // We only bother looking for a candidate if there at least
             // minPages free pages at all.
             auto [base, npages] = rec::findScavengeCandidate(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), searchIdx, minPages, maxPages);
+
             // If we found something, scavenge it and return!
             if(npages != 0)
             {
                 // Compute the full address for the start of the range.
                 auto addr = chunkBase(ci) + uintptr_t(base) * pageSize;
+
                 // Mark the range we're about to scavenge as allocated, because
                 // we don't want any allocating goroutines to grab it while
                 // the scavenging is in progress. Be careful here -- just do the
                 // bare minimum to avoid stepping on our own scavenging stats.
                 rec::allocRange(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), base, npages);
                 rec::update(gocpp::recv(p), addr, uintptr_t(npages), true, true);
+
                 // With that done, it's safe to unlock.
                 runtime::unlock(p->mheapLock);
+
                 if(! p->test)
                 {
                     pageTraceScav(rec::ptr(gocpp::recv(getg()->m->p)), 0, addr, uintptr_t(npages));
+
                     // Only perform sys* operations if we're not in a test.
                     // It's dangerous to do so otherwise.
                     sysUnused(gocpp::unsafe_pointer(addr), uintptr_t(npages) * pageSize);
+
                     // Update global accounting only when not in test, otherwise
                     // the runtime's accounting will be wrong.
                     auto nbytes = int64_t(npages * pageSize);
                     rec::add(gocpp::recv(gcController.heapReleased), nbytes);
                     rec::add(gocpp::recv(gcController.heapFree), - nbytes);
+
                     auto stats = rec::acquire(gocpp::recv(memstats.heapStats));
                     atomic::Xaddint64(& stats->committed, - nbytes);
                     atomic::Xaddint64(& stats->released, nbytes);
                     rec::release(gocpp::recv(memstats.heapStats));
                 }
+
                 // Relock the heap, because now we need to make these pages
                 // available allocation. Free them back to the page allocator.
                 runtime::lock(p->mheapLock);
@@ -791,15 +832,18 @@ namespace golang::runtime
                 }
                 rec::free(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)), base, npages);
                 rec::update(gocpp::recv(p), addr, uintptr_t(npages), true, false);
+
                 // Mark the range as scavenged.
                 rec::setRange(gocpp::recv(rec::chunkOf(gocpp::recv(p), ci)->scavenged), base, npages);
                 runtime::unlock(p->mheapLock);
+
                 return uintptr_t(npages) * pageSize;
             }
         }
         // Mark this chunk as having no free pages.
         rec::setEmpty(gocpp::recv(p->scav.index), ci);
         runtime::unlock(p->mheapLock);
+
         return 0;
     }
 
@@ -874,6 +918,9 @@ namespace golang::runtime
                     break;
             }
         }
+
+
+
         // From each group of m bits subtract 1.
         // Because we know only the top bits of each
         // m-aligned group are set, we know this will
@@ -929,6 +976,7 @@ namespace golang::runtime
         {
             max = alignUp(max, minimum);
         }
+
         auto i = int(searchIdx / 64);
         // Start by quickly skipping over blocks of non-free or scavenged pages.
         for(; i >= 0; i--)
@@ -947,6 +995,9 @@ namespace golang::runtime
             // Failed to find any free/unscavenged pages.
             return {0, 0};
         }
+
+
+
         // 1s are scavenged OR non-free => 0s are unscavenged AND free
         auto x = fillAligned(m->scavenged[i] | m->pallocBits[i], (unsigned int)(minimum));
         auto z1 = (unsigned int)(sys::LeadingZeros64(~ x));
@@ -974,10 +1025,12 @@ namespace golang::runtime
                 }
             }
         }
+
         // Split the run we found if it's larger than max but hold on to
         // our original length, since we may need it later.
         auto size = gocpp::min(run, (unsigned int)(max));
         auto start = end - size;
+
         // Each huge page is guaranteed to fit in a single palloc chunk.
         // TODO(mknyszek): Support larger huge page sizes.
         // TODO(mknyszek): Consider taking pages-per-huge-page as a parameter
@@ -991,12 +1044,14 @@ namespace golang::runtime
             // Compute the huge page boundary above our candidate.
             auto pagesPerHugePage = physHugePageSize / pageSize;
             auto hugePageAbove = (unsigned int)(alignUp(uintptr_t(start), pagesPerHugePage));
+
             // If that boundary is within our current candidate, then we may be breaking
             // a huge page.
             if(hugePageAbove <= end)
             {
                 // Compute the huge page boundary below our candidate.
                 auto hugePageBelow = (unsigned int)(alignDown(uintptr_t(start), pagesPerHugePage));
+
                 if(hugePageBelow >= end - run)
                 {
                     // We're in danger of breaking apart a huge page since start+size crosses
@@ -1108,6 +1163,7 @@ namespace golang::runtime
             // We got a cleared search addr.
             return {0, 0};
         }
+
         // Starting from searchAddr's chunk, iterate until we find a chunk with pages to scavenge.
         auto gen = s->gen;
         auto min = chunkIdx(rec::Load(gocpp::recv(s->minHeapIdx)));
@@ -1178,6 +1234,7 @@ namespace golang::runtime
         auto sc = rec::load(gocpp::recv(s->chunks[ci]));
         rec::free(gocpp::recv(sc), npages, s->gen);
         rec::store(gocpp::recv(s->chunks[ci]), sc);
+
         // Update scavenge search addresses.
         auto addr = chunkBase(ci) + uintptr_t(page + npages - 1) * pageSize;
         if(rec::lessThan(gocpp::recv(s->freeHWM), offAddr {addr}))
@@ -1488,6 +1545,7 @@ namespace golang::runtime
         // Compute the raw output value.
         auto prop = c->kp * (setpoint - input);
         auto rawOutput = prop + c->errIntegral;
+
         // Clamp rawOutput into output.
         auto output = rawOutput;
         if(isInf(output) || isNaN(output))
@@ -1508,6 +1566,7 @@ namespace golang::runtime
         {
             output = c->max;
         }
+
         // Update the controller's state.
         if(c->ti != 0 && c->tt != 0)
         {

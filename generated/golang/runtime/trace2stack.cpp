@@ -76,6 +76,7 @@ namespace golang::runtime
     uint64_t traceStack(int skip, struct m* mp, uintptr_t gen)
     {
         gocpp::array<uintptr_t, traceStackSize> pcBuf = {};
+
         auto gp = getg();
         auto curgp = gp->m->curg;
         auto nstk = 1;
@@ -186,6 +187,7 @@ namespace golang::runtime
     void rec::dump(golang::runtime::traceStackTable* t, uintptr_t gen)
     {
         auto w = unsafeTraceWriter(gen, nullptr);
+
         // Iterate over the table.
         // Do not acquire t.tab.lock. There's a conceptual lock cycle between acquiring this lock
         // here and allocation-related locks. Specifically, this lock may be acquired when an event
@@ -201,12 +203,15 @@ namespace golang::runtime
             for(; stk != nullptr; stk = rec::next(gocpp::recv(stk)))
             {
                 auto stack = unsafe::Slice((uintptr_t*)(gocpp::unsafe_pointer(& stk->data[0])), uintptr_t(len(stk->data)) / gocpp::Sizeof<uintptr_t>());
+
                 // N.B. This might allocate, but that's OK because we're not writing to the M's buffer,
                 // but one we're about to create (with ensure).
                 auto frames = makeTraceFrames(gen, fpunwindExpand(stack));
+
                 // Returns the maximum number of bytes required to hold the encoded stack, given that
                 // it contains N frames.
                 auto maxBytes = 1 + (2 + 4 * len(frames)) * traceBytesPerNumber;
+
                 // Estimate the size of this record. This
                 // bound is pretty loose, but avoids counting
                 // lots of varint sizes.
@@ -217,6 +222,7 @@ namespace golang::runtime
                 {
                     rec::byte(gocpp::recv(w), (unsigned char)(traceEvStacks));
                 }
+
                 // Emit stack event.
                 rec::byte(gocpp::recv(w), (unsigned char)(traceEvStack));
                 rec::varint(gocpp::recv(w), uint64_t(stk->id));
@@ -235,6 +241,7 @@ namespace golang::runtime
         runtime::lock(& t->tab.lock);
         rec::reset(gocpp::recv(t->tab));
         runtime::unlock(& t->tab.lock);
+
         rec::end(gocpp::recv(rec::flush(gocpp::recv(w))));
     }
 
@@ -298,6 +305,7 @@ namespace golang::runtime
     {
         traceFrame frame = {};
         frame.PC = f.PC;
+
         auto fn = f.Function;
         auto maxLen = 1 << 10;
         if(len(fn) > maxLen)
@@ -352,6 +360,7 @@ namespace golang::runtime
             // applied, just return it without the sentinel value in pcBuf[0].
             return pcBuf.make_slice(1);
         }
+
         // skipOrAdd skips or appends retPC to newPCBuf and returns true if more
         // pcs can be added.
         auto lastFuncID = abi::FuncIDNormal;
@@ -369,6 +378,7 @@ namespace golang::runtime
             }
             return len(newPCBuf) < cap(newPCBuf);
         };
+
         outer:
         for(auto [gocpp_ignored, retPC] : pcBuf.make_slice(1))
         {
@@ -390,6 +400,7 @@ namespace golang::runtime
                 }
                 continue;
             }
+
             auto [u, uf] = newInlineUnwinder(fi, callPC);
             for(; rec::valid(gocpp::recv(uf)); uf = rec::next(gocpp::recv(u), uf))
             {

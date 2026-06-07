@@ -115,6 +115,7 @@ namespace golang::main
             });
             x.End = Vertex {1, one, 1};
         });
+
         mocklib::Println(v1, v2, v3, v4, s1, s2);
     }
 

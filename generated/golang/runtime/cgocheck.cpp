@@ -82,6 +82,7 @@ namespace golang::runtime
         {
             return;
         }
+
         // If we are running on the system stack then dst might be an
         // address on the stack, which is OK.
         auto gp = getg();
@@ -89,18 +90,21 @@ namespace golang::runtime
         {
             return;
         }
+
         // Allocating memory can write to various mfixalloc structs
         // that look like they are non-Go memory.
         if(gp->m->mallocing != 0)
         {
             return;
         }
+
         // If the object is pinned, it's safe to store it in C memory. The GC
         // ensures it will not be moved or freed.
         if(isPinned(src))
         {
             return;
         }
+
         // It's OK if writing to memory allocated by persistentalloc.
         // Do this check last because it is more expensive and rarely true.
         // If it is false the expense doesn't matter since we are crashing.
@@ -108,6 +112,7 @@ namespace golang::runtime
         {
             return;
         }
+
         systemstack([=]() mutable -> void
         {
             println("write of unpinned Go pointer"_s, hex(uintptr_t(src)), "to non-Go memory"_s, hex(uintptr_t(gocpp::unsafe_pointer(dst))));
@@ -200,11 +205,13 @@ namespace golang::runtime
         {
             size = ptrdataSize;
         }
+
         if(typ->Kind_ & kindGCProg == 0)
         {
             cgoCheckBits(src, typ->GCData, off, size);
             return;
         }
+
         // The type has a GC program. Try to find GC bits somewhere else.
         for(auto [gocpp_ignored, datap] : activeModules())
         {
@@ -221,6 +228,7 @@ namespace golang::runtime
                 return;
             }
         }
+
         auto s = spanOfUnchecked(uintptr_t(src));
         if(rec::get(gocpp::recv(s->state)) == mSpanManual)
         {
@@ -237,6 +245,7 @@ namespace golang::runtime
             });
             return;
         }
+
         // src must be in the regular heap.
         if(goexperiment::AllocHeaders)
         {
@@ -332,6 +341,7 @@ namespace golang::runtime
         {
             return;
         }
+
         // Anything past typ.PtrBytes is not a pointer.
         if(typ->PtrBytes <= off)
         {
@@ -341,6 +351,7 @@ namespace golang::runtime
         {
             size = ptrdataSize;
         }
+
         if(typ->Kind_ & kindGCProg == 0)
         {
             cgoCheckBits(src, typ->GCData, off, size);

@@ -129,6 +129,7 @@ namespace golang::runtime
             go_throw("internal error: exit hook invoked exit"_s);
         }
         exitHooks.runningExitHooks = true;
+
         auto runExitHook = [=](std::function<void ()> f) mutable -> bool
         {
             gocpp::Defer defer;
@@ -150,6 +151,7 @@ namespace golang::runtime
                 defer.handlePanic(gp);
             }
         };
+
         finishPageTrace();
         for(auto [i, gocpp_ignored] : exitHooks.hooks)
         {

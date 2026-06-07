@@ -68,6 +68,7 @@ namespace golang::main
         auto v = Vertex {3, 4};
         mocklib::Println(rec::Abs(gocpp::recv(v)));
         mocklib::Println(AbsFunc(v));
+
         auto p = new Vertex {4, 3};
         mocklib::Println(rec::Abs(gocpp::recv(p)));
         mocklib::Println(AbsFunc(*p));

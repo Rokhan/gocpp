@@ -141,6 +141,7 @@ namespace golang::os
         {
             return path;
         }
+
         copy(pathbuf.make_slice(lastSlash), path.make_slice(lastSlash));
         return gocpp::string(pathbuf);
     }
@@ -199,6 +200,7 @@ namespace golang::os
             // not automatically generating the \\?\ form)
             return path;
         }
+
         // The extended form begins with \\?\, as in
         // \\?\c:\windows\foo.txt or \\?\UNC\server\share\foo.txt.
         // The extended form disables evaluation of . and .. path
@@ -220,7 +222,9 @@ namespace golang::os
             // Relative path
             return path;
         }
+
         auto prefix = "\\\\?"_s;
+
         auto pathbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(prefix) + len(path) + len("\\"_s));
         copy(pathbuf, prefix);
         auto n = len(path);

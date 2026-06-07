@@ -24,9 +24,11 @@ namespace golang::main
     {
         auto names = gocpp::array<gocpp::string, 4> {"John"_s, "Paul"_s, "George"_s, "Ringo"_s};
         mocklib::Println(names);
+
         auto a = names.make_slice(0, 2);
         auto b = names.make_slice(1, 3);
         mocklib::Println(a, b);
+
         b[0] = "XXX"_s;
         mocklib::Println(a, b);
         mocklib::Println(names);

@@ -61,6 +61,7 @@ namespace golang::rand
         auto A = 48271;
         auto Q = 44488;
         auto R = 3399;
+
         auto hi = x / Q;
         auto lo = x % Q;
         x = A * lo - R * hi;
@@ -76,6 +77,7 @@ namespace golang::rand
     {
         rng->tap = 0;
         rng->feed = rngLen - rngTap;
+
         seed = seed % int32max;
         if(seed < 0)
         {
@@ -85,6 +87,7 @@ namespace golang::rand
         {
             seed = 89482311;
         }
+
         auto x = int32_t(seed);
         for(auto i = - 20; i < rngLen; i++)
         {
@@ -117,11 +120,13 @@ namespace golang::rand
         {
             rng->tap += rngLen;
         }
+
         rng->feed--;
         if(rng->feed < 0)
         {
             rng->feed += rngLen;
         }
+
         auto x = rng->vec[rng->feed] + rng->vec[rng->tap];
         rng->vec[rng->feed] = x;
         return uint64_t(x);

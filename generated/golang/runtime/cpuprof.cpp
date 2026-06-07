@@ -109,6 +109,7 @@ namespace golang::runtime
         {
             hz = 1000000;
         }
+
         lock(& cpuprof.lock);
         if(hz > 0)
         {
@@ -118,6 +119,7 @@ namespace golang::runtime
                 unlock(& cpuprof.lock);
                 return;
             }
+
             cpuprof.on = true;
             cpuprof.log = newProfBuf(1, profBufWordCount, profBufTagCount);
             auto hdr = gocpp::array<uint64_t, 1> {uint64_t(hz)};
@@ -150,6 +152,7 @@ namespace golang::runtime
             // TODO: Is it safe to osyield here? https://go.dev/issue/52672
             osyield();
         }
+
         if(rec::Load(gocpp::recv(prof.hz)) != 0)
         {
             // implies cpuprof.log != nil
@@ -164,6 +167,7 @@ namespace golang::runtime
             // changing the argument here.
             rec::write(gocpp::recv(cpuprof.log), tagPtr, nanotime(), hdr.make_slice(0), stk);
         }
+
         rec::Store(gocpp::recv(prof.signalLock), 0);
     }
 
@@ -190,6 +194,7 @@ namespace golang::runtime
             // TODO: Is it safe to osyield here? https://go.dev/issue/52672
             osyield();
         }
+
         if(cpuprof.numExtra + 1 + len(stk) < len(cpuprof.extra))
         {
             auto i = cpuprof.numExtra;
@@ -201,6 +206,7 @@ namespace golang::runtime
         {
             cpuprof.lostExtra++;
         }
+
         rec::Store(gocpp::recv(prof.signalLock), 0);
     }
 
@@ -219,6 +225,7 @@ namespace golang::runtime
             i += int(p->extra[i]);
         }
         p->numExtra = 0;
+
         // Report any lost events.
         if(p->lostExtra > 0)
         {
@@ -227,6 +234,7 @@ namespace golang::runtime
             rec::write(gocpp::recv(p->log), nullptr, 0, hdr.make_slice(0), lostStk.make_slice(0));
             p->lostExtra = 0;
         }
+
         if(p->lostAtomic > 0)
         {
             auto hdr = gocpp::array<uint64_t, 1> {p->lostAtomic};

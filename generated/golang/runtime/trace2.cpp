@@ -295,24 +295,31 @@ namespace golang::runtime
         // Block until cleanup of the last trace is done.
         semacquire(& traceShutdownSema);
         semrelease(& traceShutdownSema);
+
         // Hold traceAdvanceSema across trace start, since we'll want it on
         // the other side of tracing being enabled globally.
         semacquire(& traceAdvanceSema);
+
         // Initialize CPU profile -> trace ingestion.
         traceInitReadCPU();
+
         // Compute the first generation for this StartTrace.
         // Note: we start from the last non-zero generation rather than 1 so we
         // can avoid resetting all the arrays indexed by gen%2 or gen%3. There's
         // more than one of each per m, p, and goroutine.
         auto firstGen = traceNextGen(trace.lastNonZeroGen);
+
         // Reset GC sequencer.
         trace.seqGC = 1;
+
         // Reset trace reader state.
         trace.headerWritten = false;
         rec::Store(gocpp::recv(trace.readerGen), firstGen);
         rec::Store(gocpp::recv(trace.flushedGen), 0);
+
         // Register some basic strings in the string tables.
         traceRegisterLabelsAndReasons(firstGen);
+
         // Stop the world.
         // The purpose of stopping the world is to make sure that no goroutine is in a
         // context where it could emit an event by bringing all goroutines to a safe point
@@ -345,17 +352,21 @@ namespace golang::runtime
         // coherent. Since the world is stopped and sweeps are non-preemptible, we can never start
         // the world and see an unpaired sweep 'end' event. Other parts of the tracer rely on this.
         auto stw = stopTheWorld(stwStartTrace);
+
         // Prevent sysmon from running any code that could generate events.
         lock(& sched.sysmonlock);
+
         // Reset mSyscallID on all Ps while we have them stationary and the trace is disabled.
         for(auto [gocpp_ignored, pp] : allp)
         {
             pp->trace.mSyscallID = - 1;
         }
+
         // Start tracing.
         // After this executes, other Ms may start creating trace buffers and emitting
         // data into them.
         rec::Store(gocpp::recv(trace.gen), firstGen);
+
         // Wait for exitingSyscall to drain.
         // It may not monotonically decrease to zero, but in the limit it will always become
         // zero because the world is stopped and there are no available Ps for syscall-exited
@@ -369,6 +380,7 @@ namespace golang::runtime
         {
             osyield();
         }
+
         // Record some initial pieces of information.
         // N.B. This will also emit a status event for this goroutine.
         auto tl = traceAcquire();
@@ -376,23 +388,29 @@ namespace golang::runtime
         rec::Gomaxprocs(gocpp::recv(tl), gomaxprocs);
         // We didn't trace this above, so trace it now.
         rec::STWStart(gocpp::recv(tl), stwStartTrace);
+
         // Record the fact that a GC is active, if applicable.
         if(gcphase == _GCmark || gcphase == _GCmarktermination)
         {
             rec::GCActive(gocpp::recv(tl));
         }
+
         // Record the heap goal so we have it at the very beginning of the trace.
         rec::HeapGoal(gocpp::recv(tl));
+
         // Make sure a ProcStatus is emitted for every P, while we're here.
         for(auto [gocpp_ignored, pp] : allp)
         {
             rec::end(gocpp::recv(rec::writeProcStatusForP(gocpp::recv(rec::writer(gocpp::recv(tl))), pp, pp == rec::ptr(gocpp::recv(tl.mp->p)))));
         }
         traceRelease(tl);
+
         unlock(& sched.sysmonlock);
         startTheWorld(stw);
+
         traceStartReadCPU();
         rec::start(gocpp::recv(traceAdvancer));
+
         semrelease(& traceAdvanceSema);
         return nullptr;
     }
@@ -412,6 +430,7 @@ namespace golang::runtime
     void traceAdvance(bool stopTrace)
     {
         semacquire(& traceAdvanceSema);
+
         // Get the gen that we're advancing from. In this function we don't really care much
         // about the generation we're advancing _into_ since we'll do all the cleanup in this
         // generation for the next advancement.
@@ -422,10 +441,12 @@ namespace golang::runtime
             semrelease(& traceAdvanceSema);
             return;
         }
+
         // Write an EvFrequency event for this generation.
         // N.B. This may block for quite a while to get a good frequency estimate, so make sure we do
         // this here and not e.g. on the trace reader.
         traceFrequency(gen);
+
         // Collect all the untraced Gs.
         struct untracedG
         {
@@ -506,11 +527,13 @@ namespace golang::runtime
                 untracedGs = append(untracedGs, ug);
             }
         });
+
         if(! stopTrace)
         {
             // Re-register runtime goroutine labels and stop/block reasons.
             traceRegisterLabelsAndReasons(traceNextGen(gen));
         }
+
         // Now that we've done some of the heavy stuff, prevent the world from stopping.
         // This is necessary to ensure the consistency of the STW events. If we're feeling
         // adventurous we could lift this restriction and add a STWActive event, but the
@@ -520,6 +543,7 @@ namespace golang::runtime
         // through this. We want to get this done as soon as possible.
         semacquire(& worldsema);
         auto mp = acquirem();
+
         // Advance the generation or stop the trace.
         trace.lastNonZeroGen = gen;
         if(stopTrace)
@@ -540,6 +564,7 @@ namespace golang::runtime
         {
             rec::Store(gocpp::recv(trace.gen), traceNextGen(gen));
         }
+
         // Emit a ProcsChange event so we have one on record for each generation.
         // Let's emit it as soon as possible so that downstream tools can rely on the value
         // being there fairly soon in a generation.
@@ -551,6 +576,7 @@ namespace golang::runtime
             rec::Gomaxprocs(gocpp::recv(tl), gomaxprocs);
             traceRelease(tl);
         }
+
         // Emit a GCActive event in the new generation if necessary.
         // It's important that we do this before allowing stop-the-worlds again,
         // because that could emit global GC-related events.
@@ -560,11 +586,13 @@ namespace golang::runtime
             rec::GCActive(gocpp::recv(tl));
             traceRelease(tl);
         }
+
         // Preemption is OK again after this. If the world stops or whatever it's fine.
         // We're just cleaning up the last generation after this point.
         // We also don't care if the GC starts again after this for the same reasons.
         releasem(mp);
         semrelease(& worldsema);
+
         // Snapshot allm and freem.
         // Snapshotting after the generation counter update is sufficient.
         // Because an m must be on either allm or sched.freem if it has an active trace
@@ -591,6 +619,7 @@ namespace golang::runtime
             mToFlush = mp;
         }
         unlock(& sched.lock);
+
         // Iterate over our snapshot, flushing every buffer until we're done.
         // Because trace writers read the generation while the seqlock is
         // held, we can be certain that when there are no writers there are
@@ -602,6 +631,7 @@ namespace golang::runtime
             // Track iterations for some rudimentary deadlock detection.
             auto i = 0;
             auto detectedDeadlock = false;
+
             for(; mToFlush != nullptr; )
             {
                 auto prev = & mToFlush;
@@ -625,6 +655,7 @@ namespace golang::runtime
                         *bufp = nullptr;
                     }
                     unlock(& trace.lock);
+
                     // Remove the m from the flush list.
                     *prev = mp->trace.link;
                     mp->trace.link = nullptr;
@@ -635,6 +666,7 @@ namespace golang::runtime
                 {
                     osyield();
                 }
+
                 if(debugDeadlock)
                 {
                     // Try to detect a deadlock. We probably shouldn't loop here
@@ -652,6 +684,7 @@ namespace golang::runtime
                 }
             }
         });
+
         // At this point, the old generation is fully flushed minus stack and string
         // tables, CPU samples, and goroutines that haven't run at all during the last
         // generation.
@@ -672,8 +705,10 @@ namespace golang::runtime
             statusWriter = rec::writeGoStatus(gocpp::recv(statusWriter), ug.goid, ug.mid, status, ug.inMarkAssist);
         }
         rec::end(gocpp::recv(rec::flush(gocpp::recv(statusWriter))));
+
         // Read everything out of the last gen's CPU profile buffer.
         traceReadCPU(gen);
+
         systemstack([=]() mutable -> void
         {
             // Flush CPU samples, stacks, and strings for the last generation. This is safe,
@@ -683,14 +718,17 @@ namespace golang::runtime
             traceCPUFlush(gen);
             rec::dump(gocpp::recv(trace.stackTab[gen % 2]), gen);
             rec::reset(gocpp::recv(trace.stringTab[gen % 2]), gen);
+
             // That's it. This generation is done producing buffers.
             lock(& trace.lock);
             rec::Store(gocpp::recv(trace.flushedGen), gen);
             unlock(& trace.lock);
         });
+
         if(stopTrace)
         {
             semacquire(& traceShutdownSema);
+
             // Finish off CPU profile reading.
             traceStopReadCPU();
         }
@@ -723,12 +761,14 @@ namespace golang::runtime
             }
             semrelease(& worldsema);
         }
+
         // Block until the trace reader has finished processing the last generation.
         semacquire(& trace.doneSema[gen % 2]);
         if(raceenabled)
         {
             raceacquire(gocpp::unsafe_pointer(& trace.doneSema[gen % 2]));
         }
+
         // Double-check that things look as we expect after advancing and perform some
         // final cleanup if the trace has fully stopped.
         systemstack([=]() mutable -> void
@@ -761,6 +801,7 @@ namespace golang::runtime
             }
             unlock(& trace.lock);
         });
+
         if(stopTrace)
         {
             // Clear the sweep state on every P for the next time tracing is enabled.
@@ -782,11 +823,13 @@ namespace golang::runtime
             }
             releasem(mp);
         }
+
         // Release the advance semaphore. If stopTrace is true we're still holding onto
         // traceShutdownSema.
         // Do a direct handoff. Don't let one caller of traceAdvance starve
         // other calls to traceAdvance.
         semrelease1(& traceAdvanceSema, true, 0);
+
         if(stopTrace)
         {
             // Stop the traceAdvancer. We can't be holding traceAdvanceSema here because
@@ -852,6 +895,7 @@ namespace golang::runtime
                     // Wake up and handle this case.
                     return false;
                 }
+
                 if(auto g2 = traceReader(); gp == g2)
                 {
                     // New data arrived between unlocking
@@ -866,10 +910,12 @@ namespace golang::runtime
                     println("runtime: got trace reader"_s, g2, g2->goid);
                     go_throw("unexpected trace reader"_s);
                 }
+
                 return true;
             }, nullptr, waitReasonTraceReaderBlocked, traceBlockSystemGoroutine, 2);
             goto top;
         }
+
         return buf;
     }
 
@@ -899,10 +945,12 @@ namespace golang::runtime
                     getg()->racectx = 0;
                 }(); });
             }
+
             // This function must not allocate while holding trace.lock:
             // allocation can call heap allocate, which will try to emit a trace
             // event while holding heap lock.
             lock(& trace.lock);
+
             if(rec::Load<g>(gocpp::recv(trace.reader)) != nullptr)
             {
                 // More than one goroutine reads trace. This is bad.
@@ -926,6 +974,7 @@ namespace golang::runtime
                 unlock(& trace.lock);
                 return {gocpp::slice<unsigned char>("go 1.22 trace\x00\x00\x00"_s), false};
             }
+
             // Read the next buffer.
             if(rec::Load(gocpp::recv(trace.readerGen)) == 0)
             {
@@ -936,6 +985,7 @@ namespace golang::runtime
             {
                 assertLockHeld(& trace.lock);
                 gen = rec::Load(gocpp::recv(trace.readerGen));
+
                 // Check to see if we need to block for more data in this generation
                 // or if we need to move our generation forward.
                 if(! rec::empty(gocpp::recv(trace.full[gen % 2])))
@@ -952,6 +1002,7 @@ namespace golang::runtime
                     if(rec::Load(gocpp::recv(trace.shutdown)))
                     {
                         unlock(& trace.lock);
+
                         // Wake up anyone waiting for us to be done with this generation.
                         // Do this after reading trace.shutdown, because the thread we're
                         // waking up is going to clear trace.shutdown.
@@ -963,6 +1014,7 @@ namespace golang::runtime
                             racerelease(gocpp::unsafe_pointer(& trace.doneSema[gen % 2]));
                         }
                         semrelease(& trace.doneSema[gen % 2]);
+
                         // We're shutting down, and the last generation is fully
                         // read. We're done.
                         return {nullptr, false};
@@ -972,6 +1024,7 @@ namespace golang::runtime
                     // we're reading from and try again.
                     rec::Store(gocpp::recv(trace.readerGen), rec::Load(gocpp::recv(trace.gen)));
                     unlock(& trace.lock);
+
                     // Wake up anyone waiting for us to be done with this generation.
                     // Do this after reading gen to make sure we can't have the trace
                     // advance until we've read it.
@@ -981,6 +1034,7 @@ namespace golang::runtime
                         racerelease(gocpp::unsafe_pointer(& trace.doneSema[gen % 2]));
                     }
                     semrelease(& trace.doneSema[gen % 2]);
+
                     // Reacquire the lock and go back to the top of the loop.
                     lock(& trace.lock);
                     continue;
@@ -1186,6 +1240,7 @@ namespace golang::runtime
             {
                 // Set a timer to wake us up
                 rec::sleep(gocpp::recv(s->timer), int64_t(debug.traceadvanceperiod));
+
                 // Try to advance the trace.
                 traceAdvance(false);
             }
@@ -1429,8 +1484,10 @@ namespace golang::runtime
         }
         auto wakeup = s->wakeup;
         s->wakeup = nullptr;
+
         // Close the channel.
         close(wakeup);
+
         if(raceenabled)
         {
             racerelease(gocpp::unsafe_pointer(& s->lock));

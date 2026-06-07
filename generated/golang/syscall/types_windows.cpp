@@ -427,6 +427,7 @@ namespace golang::syscall
         dst->FileSizeLow = src->FileSizeLow;
         dst->Reserved0 = src->Reserved0;
         dst->Reserved1 = src->Reserved1;
+
         // The src is 1 element bigger than dst, but it must be NUL.
         copy(dst->FileName.make_slice(0), src->FileName.make_slice(0));
         copy(dst->AlternateFileName.make_slice(0), src->AlternateFileName.make_slice(0));

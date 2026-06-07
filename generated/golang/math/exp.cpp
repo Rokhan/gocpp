@@ -49,6 +49,7 @@ namespace golang::math
         auto Overflow = 7.09782712893383973096e+02;
         auto Underflow = - 7.45133219101941108420e+02;
         auto NearZero = 1.0 / (1 << 28);
+
         // special cases
         //Go switch emulation
         {
@@ -77,6 +78,7 @@ namespace golang::math
                     break;
             }
         }
+
         // reduce; computed as r = hi - lo for extra precision.
         int k = {};
         //Go switch emulation
@@ -96,6 +98,7 @@ namespace golang::math
         }
         auto hi = x - double(k) * Ln2Hi;
         auto lo = double(k) * Ln2Lo;
+
         // compute
         return expmulti(hi, lo, k);
     }
@@ -118,6 +121,7 @@ namespace golang::math
         auto Ln2Lo = 1.90821492927058770002e-10;
         auto Overflow = 1.0239999999999999e+03;
         auto Underflow = - 1.0740e+03;
+
         // special cases
         //Go switch emulation
         {
@@ -142,6 +146,7 @@ namespace golang::math
                     break;
             }
         }
+
         // argument reduction; x = r×lg(e) + k with |r| ≤ ln(2)/2.
         // computed as r = hi - lo for extra precision.
         int k = {};
@@ -163,6 +168,7 @@ namespace golang::math
         auto t = x - double(k);
         auto hi = t * Ln2Hi;
         auto lo = - t * Ln2Lo;
+
         // compute
         return expmulti(hi, lo, k);
     }
@@ -175,6 +181,7 @@ namespace golang::math
         auto P3 = 6.61375632143793436117e-05;
         auto P4 = - 1.65339022054652515390e-06;
         auto P5 = 4.13813679705723846039e-08;
+
         auto r = hi - lo;
         auto t = r * r;
         auto c = r - t * (P1 + t * (P2 + t * (P3 + t * (P4 + t * P5))));

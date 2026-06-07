@@ -34,13 +34,16 @@ namespace golang::main
     void main()
     {
         auto s = gocpp::slice<int> {7, 2, 8, - 9, 4, 0};
+
         auto c = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
         gocpp::go([&]{ sum(s.make_slice(0, len(s) / 2), c); });
         gocpp::go([&]{ sum(s.make_slice(len(s) / 2), c); });
         // TODO: check evaluation order
         // receive from c
         auto [x, y] = std::tuple{c.recv(), c.recv()};
+
         mocklib::Println(x, y, x + y);
+
         c = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
         gocpp::go([&]{ sum(s.make_slice(0, len(s) / 2), c); });
         gocpp::go([&]{ sum(s.make_slice(len(s) / 2), c); });
@@ -48,6 +51,7 @@ namespace golang::main
         x = c.recv();
         // receive from c
         y = c.recv();
+
         mocklib::Println(x, y, x + y);
     }
 

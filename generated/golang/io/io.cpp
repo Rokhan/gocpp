@@ -1614,6 +1614,7 @@ namespace golang::io
         {
             return {0, errOffset};
         }
+
         off += o->base;
         return rec::WriteAt(gocpp::recv(o->w), p, off);
     }
@@ -1885,6 +1886,7 @@ namespace golang::io
                 }
                 return {b, err};
             }
+
             if(len(b) == cap(b))
             {
                 // Add more capacity (let append pick how much).

@@ -129,6 +129,7 @@ namespace golang::runtime
         {
             return r;
         }
+
         // Compute the conversion rate.
         for(; ; )
         {
@@ -139,9 +140,11 @@ namespace golang::runtime
                 unlock(& ticks.lock);
                 return r;
             }
+
             // Grab the current time in both clocks.
             auto nowTime = nanotime();
             auto nowTicks = cputicks();
+
             // See if we can use these times.
             if(nowTicks > ticks.startTicks && nowTime - ticks.startTime > minTimeForTicksPerSecond)
             {
@@ -158,6 +161,7 @@ namespace golang::runtime
                 break;
             }
             unlock(& ticks.lock);
+
             // Sleep in one millisecond increments until we have a reliable time.
             timeSleep(1000000);
         }

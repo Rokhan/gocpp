@@ -284,6 +284,7 @@ namespace golang::godebug
             // Lost race: someone else created it. Use theirs.
             return gocpp::getValue<setting*>(v);
         }
+
         return s;
     }
 
@@ -344,6 +345,7 @@ namespace golang::godebug
         {
             rec::Lock(gocpp::recv(updateMu));
             defer.push_back([=]{ rec::Unlock(gocpp::recv(updateMu)); });
+
             // Update all the cached values, creating new ones as needed.
             // We parse the environment variable first, so that any settings it has
             // are already locked in place (did[name] = true) before we consider
@@ -351,6 +353,7 @@ namespace golang::godebug
             auto did = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, bool>>());
             parse(did, env);
             parse(did, def);
+
             // Clear any cached values that are no longer present.
             rec::Range(gocpp::recv(cache), [=](go_any name, go_any s) mutable -> bool
             {

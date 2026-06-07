@@ -762,6 +762,7 @@ namespace golang::binary
                 return nullptr;
             }
         }
+
         // Fallback to reflect-based decoding.
         auto v = reflect::ValueOf(data);
         auto size = - 1;
@@ -1105,6 +1106,7 @@ namespace golang::binary
             auto [gocpp_id_4, err] = rec::Write(gocpp::recv(w), bs);
             return err;
         }
+
         // Fallback to reflect-based encoding.
         auto v = reflect::Indirect(reflect::ValueOf(data));
         auto size = dataSize(v);
@@ -1151,6 +1153,7 @@ namespace golang::binary
                         return s * rec::Len(gocpp::recv(v));
                     }
                     break;
+
                 case 1:
                     auto t = rec::Type(gocpp::recv(v));
                     if(auto [size, ok] = rec::Load(gocpp::recv(structSize), t); ok)
@@ -1161,6 +1164,7 @@ namespace golang::binary
                     rec::Store(gocpp::recv(structSize), t, size);
                     return size;
                     break;
+
                 default:
                     if(rec::IsValid(gocpp::recv(v)))
                     {
@@ -1169,6 +1173,7 @@ namespace golang::binary
                     break;
             }
         }
+
         return - 1;
     }
 
@@ -1202,6 +1207,7 @@ namespace golang::binary
                         return s * rec::Len(gocpp::recv(t));
                     }
                     break;
+
                 case 1:
                     auto sum = 0;
                     for(auto [i, n] = std::tuple{0, rec::NumField(gocpp::recv(t))}; i < n; i++)
@@ -1215,6 +1221,7 @@ namespace golang::binary
                     }
                     return sum;
                     break;
+
                 case 2:
                 case 3:
                 case 4:
@@ -1232,6 +1239,7 @@ namespace golang::binary
                     break;
             }
         }
+
         return - 1;
     }
 
@@ -1413,6 +1421,7 @@ namespace golang::binary
                         rec::value(gocpp::recv(d), rec::Index(gocpp::recv(v), i));
                     }
                     break;
+
                 case 1:
                     auto t = rec::Type(gocpp::recv(v));
                     auto l = rec::NumField(gocpp::recv(v));
@@ -1436,6 +1445,7 @@ namespace golang::binary
                         }
                     }
                     break;
+
                 case 2:
                     auto l = rec::Len(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
@@ -1443,9 +1453,11 @@ namespace golang::binary
                         rec::value(gocpp::recv(d), rec::Index(gocpp::recv(v), i));
                     }
                     break;
+
                 case 3:
                     rec::SetBool(gocpp::recv(v), rec::bool(gocpp::recv(d)));
                     break;
+
                 case 4:
                     rec::SetInt(gocpp::recv(v), int64_t(rec::int8(gocpp::recv(d))));
                     break;
@@ -1458,6 +1470,7 @@ namespace golang::binary
                 case 7:
                     rec::SetInt(gocpp::recv(v), rec::int64(gocpp::recv(d)));
                     break;
+
                 case 8:
                     rec::SetUint(gocpp::recv(v), uint64_t(rec::uint8(gocpp::recv(d))));
                     break;
@@ -1470,12 +1483,14 @@ namespace golang::binary
                 case 11:
                     rec::SetUint(gocpp::recv(v), rec::uint64(gocpp::recv(d)));
                     break;
+
                 case 12:
                     rec::SetFloat(gocpp::recv(v), double(math::Float32frombits(rec::uint32(gocpp::recv(d)))));
                     break;
                 case 13:
                     rec::SetFloat(gocpp::recv(v), math::Float64frombits(rec::uint64(gocpp::recv(d))));
                     break;
+
                 case 14:
                     rec::SetComplex(gocpp::recv(v), complex(double(math::Float32frombits(rec::uint32(gocpp::recv(d)))), double(math::Float32frombits(rec::uint32(gocpp::recv(d))))));
                     break;
@@ -1520,6 +1535,7 @@ namespace golang::binary
                         rec::value(gocpp::recv(e), rec::Index(gocpp::recv(v), i));
                     }
                     break;
+
                 case 1:
                     auto t = rec::Type(gocpp::recv(v));
                     auto l = rec::NumField(gocpp::recv(v));
@@ -1539,6 +1555,7 @@ namespace golang::binary
                         }
                     }
                     break;
+
                 case 2:
                     auto l = rec::Len(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
@@ -1546,9 +1563,11 @@ namespace golang::binary
                         rec::value(gocpp::recv(e), rec::Index(gocpp::recv(v), i));
                     }
                     break;
+
                 case 3:
                     rec::bool(gocpp::recv(e), rec::Bool(gocpp::recv(v)));
                     break;
+
                 case 4:
                 case 5:
                 case 6:
@@ -1579,6 +1598,7 @@ namespace golang::binary
                         }
                     }
                     break;
+
                 case 9:
                 case 10:
                 case 11:
@@ -1610,6 +1630,7 @@ namespace golang::binary
                         }
                     }
                     break;
+
                 case 15:
                 case 16:
                     //Go switch emulation
@@ -1629,6 +1650,7 @@ namespace golang::binary
                         }
                     }
                     break;
+
                 case 17:
                 case 18:
                     //Go switch emulation

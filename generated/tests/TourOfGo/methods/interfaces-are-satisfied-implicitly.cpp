@@ -114,19 +114,23 @@ namespace golang::main
     {
         I i = T {"hello"_s};
         rec::M(gocpp::recv(i));
+
         auto t = T {"hello"_s};
         I j = t;
         rec::M(gocpp::recv(j));
+
         compare();
     }
 
     void compare()
     {
         I i = {};
+
         auto t1 = new T {"Hello1"_s};
         auto t2 = new T {"Hello2"_s};
         auto t3 = T {"Hello2"_s};
         auto f = F(mocklib::Pi);
+
         i = t1;
         // true
         mocklib::Println(i == t1);
@@ -136,6 +140,9 @@ namespace golang::main
         // TODO: enable once interface comparison is supported for non-struct types
         // fmt.Printf("%v\n", i == f) // false
         mocklib::Println(i == t3);
+
+
+
         i = t2;
         // false
         mocklib::Println(i == t1);
@@ -145,6 +152,9 @@ namespace golang::main
         // TODO: enable once interface comparison is supported for non-struct types
         // fmt.Printf("%v\n", i == f) // false
         mocklib::Println(i == t3);
+
+
+
         i = t3;
         // false
         mocklib::Println(i == t1);
@@ -155,6 +165,12 @@ namespace golang::main
         // TODO: enable once interface comparison is supported for non-struct types
         // fmt.Printf("%v\n", i == f) // false
         mocklib::Println(i == t2);
+
+
+
+
+
+
         i = f;
         // false
         mocklib::Println(i == t1);

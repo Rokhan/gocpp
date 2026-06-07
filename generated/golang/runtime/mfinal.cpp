@@ -192,6 +192,7 @@ namespace golang::runtime
             // have automatically).
             go_throw("queuefinalizer during GC"_s);
         }
+
         lock(& finlock);
         if(finq == nullptr || finq->cnt == uint32_t(len(finq->fin)))
         {
@@ -277,10 +278,12 @@ namespace golang::runtime
         gocpp::unsafe_pointer frame = {};
         uintptr_t framecap = {};
         int argRegs = {};
+
         auto gp = getg();
         lock(& finlock);
         fing = gp;
         unlock(& finlock);
+
         for(; ; )
         {
             lock(& finlock);
@@ -302,6 +305,7 @@ namespace golang::runtime
                 for(auto i = fb->cnt; i > 0; i--)
                 {
                     auto f = & fb->fin[i - 1];
+
                     abi::RegArgs regs = {};
                     // The args may be passed in registers or on stack. Even for
                     // the register case, we still need the spill slots.
@@ -320,6 +324,7 @@ namespace golang::runtime
                         frame = mallocgc(framesz, nullptr, true);
                         framecap = framesz;
                     }
+
                     if(f->fint == nullptr)
                     {
                         go_throw("missing type in runfinq"_s);
@@ -369,6 +374,7 @@ namespace golang::runtime
                     rec::Or(gocpp::recv(fingStatus), fingRunningFinalizer);
                     reflectcall(nullptr, gocpp::unsafe_pointer(f->fn), frame, uint32_t(framesz), uint32_t(framesz), uint32_t(framesz), & regs);
                     rec::And(gocpp::recv(fingStatus), ~ fingRunningFinalizer);
+
                     // Drop finalizer queue heap references
                     // before hiding them from markroot.
                     // This also ensures these will be
@@ -395,6 +401,7 @@ namespace golang::runtime
         {
             return true;
         }
+
         // Global initializers might be linker-allocated.
         // var Foo = &Object{}
         // func main() {
@@ -546,13 +553,16 @@ namespace golang::runtime
         {
             go_throw("nil elem type!"_s);
         }
+
         if(inUserArenaChunk(uintptr_t(e->data)))
         {
             // Arena-allocated objects are not eligible for finalizers.
             go_throw("runtime.SetFinalizer: first argument was allocated into an arena"_s);
         }
+
         // find the containing object
         auto [base, span, gocpp_id_0] = findObject(uintptr_t(e->data), 0, 0);
+
         if(base == 0)
         {
             if(isGoPointerWithoutSpan(e->data))
@@ -561,11 +571,13 @@ namespace golang::runtime
             }
             go_throw("runtime.SetFinalizer: pointer not in allocated block"_s);
         }
+
         // Move base forward if we've got an allocation header.
         if(goexperiment::AllocHeaders && ! rec::noscan(gocpp::recv(span->spanclass)) && ! heapBitsInSpan(span->elemsize) && rec::sizeclass(gocpp::recv(span->spanclass)) != 0)
         {
             base += mallocHeaderSize;
         }
+
         if(uintptr_t(e->data) != base)
         {
             // As an implementation detail we allow to set finalizers for an inner byte
@@ -575,6 +587,7 @@ namespace golang::runtime
                 go_throw("runtime.SetFinalizer: pointer not at beginning of allocated block"_s);
             }
         }
+
         auto f = efaceOf(& finalizer);
         auto ftyp = f->_type;
         if(ftyp == nullptr)
@@ -586,6 +599,7 @@ namespace golang::runtime
             });
             return;
         }
+
         if(ftyp->Kind_ & kindMask != kindFunc)
         {
             go_throw("runtime.SetFinalizer: second argument is "_s + rec::string(gocpp::recv(toRType(ftyp))) + ", not a function"_s);
@@ -643,8 +657,10 @@ namespace golang::runtime
             nret = alignUp(nret, uintptr_t(t->Align_)) + t->Size_;
         }
         nret = alignUp(nret, goarch::PtrSize);
+
         // make sure we have a finalizer goroutine
         createfing();
+
         systemstack([=]() mutable -> void
         {
             if(! addfinalizer(e->data, (funcval*)(f->data), nret, fint, ot))

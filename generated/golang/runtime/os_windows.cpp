@@ -293,6 +293,7 @@ namespace golang::runtime
             go_throw("bcryptprimitives.dll not found"_s);
         }
         _ProcessPrng = windowsFindfunc(bcryptPrimitives, gocpp::slice<unsigned char>("ProcessPrng\000"_s));
+
         auto n32 = windowsLoadSystemLib(ntdlldll.make_slice(0));
         if(n32 == 0)
         {
@@ -300,6 +301,7 @@ namespace golang::runtime
         }
         _RtlGetCurrentPeb = windowsFindfunc(n32, gocpp::slice<unsigned char>("RtlGetCurrentPeb\000"_s));
         _RtlGetNtVersionNumbers = windowsFindfunc(n32, gocpp::slice<unsigned char>("RtlGetNtVersionNumbers\000"_s));
+
         auto m32 = windowsLoadSystemLib(winmmdll.make_slice(0));
         if(m32 == 0)
         {
@@ -311,6 +313,7 @@ namespace golang::runtime
         {
             go_throw("timeBegin/EndPeriod not found"_s);
         }
+
         auto ws232 = windowsLoadSystemLib(ws2_32dll.make_slice(0));
         if(ws232 == 0)
         {
@@ -342,6 +345,7 @@ namespace golang::runtime
                 return os;
             }
         };
+
         auto powrprof = windowsLoadSystemLib(powrprofdll.make_slice(0));
         if(powrprof == 0)
         {
@@ -452,6 +456,7 @@ namespace golang::runtime
             // the global clock frequency.
             return 0;
         }
+
         if(relax)
         {
             return uint32_t(stdcall1(_timeEndPeriod, 1));
@@ -511,6 +516,7 @@ namespace golang::runtime
         auto PebBitFieldOffset = 3;
         auto OPEN_EXISTING = 3;
         auto ERROR_PATH_NOT_FOUND = 3;
+
         // Check that we're ≥ 10.0.15063.
         uint32_t maj = {};
         uint32_t min = {};
@@ -520,10 +526,12 @@ namespace golang::runtime
         {
             return;
         }
+
         // Set the IsLongPathAwareProcess flag of the PEB's bit field.
         auto bitField = (unsigned char*)(gocpp::unsafe_pointer(stdcall0(_RtlGetCurrentPeb) + PebBitFieldOffset));
         auto originalBitField = *bitField;
         *bitField |= IsLongPathAwareProcess;
+
         // Check that this actually has an effect, by constructing a large file
         // path and seeing whether we get ERROR_PATH_NOT_FOUND, rather than
         // some other error, which would indicate the path is too long, and
@@ -558,21 +566,30 @@ namespace golang::runtime
             println("runtime: warning: IsLongPathAwareProcess failed to enable long paths; proceeding in fixup mode"_s);
             return;
         }
+
         canUseLongPaths = true;
     }
 
     void osinit()
     {
         asmstdcallAddr = gocpp::unsafe_pointer(abi::FuncPCABI0(asmstdcall));
+
         loadOptionalSyscalls();
+
         preventErrorDialogs();
+
         initExceptionHandler();
+
         initHighResTimer();
         timeBeginPeriodRetValue = osRelax(false);
+
         initSysDirectory();
         initLongPathSupport();
+
         ncpu = getproccount();
+
         physPageSize = getPageSize();
+
         // Windows dynamic priority boosting assumes that a process has different types
         // of dedicated threads -- GUI, IO, computational, etc. Go processes use
         // equivalent threads that all do a mix of GUI, IO, computations, etc.
@@ -598,6 +615,7 @@ namespace golang::runtime
         // Two consecutive zero bytes end the list.
         auto strings = gocpp::unsafe_pointer(stdcall0(_GetEnvironmentStringsW));
         auto p = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 24>>)(strings).make_slice(0);
+
         auto n = 0;
         for(auto [from, i] = std::tuple{0, 0}; true; i++)
         {
@@ -613,6 +631,7 @@ namespace golang::runtime
             }
         }
         envs = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), n);
+
         for(auto [i, gocpp_ignored] : envs)
         {
             envs[i] = gostringw(& p[0]);
@@ -623,12 +642,15 @@ namespace golang::runtime
             // skip nil byte
             p = p.make_slice(1);
         }
+
         stdcall1(_FreeEnvironmentStringsW, uintptr_t(strings));
+
         // We call these all the way here, late in init, so that malloc works
         // for the callback functions these generate.
         go_any fn = ctrlHandler;
         auto ctrlHandlerPC = compileCallback(*efaceOf(& fn), true);
         stdcall2(_SetConsoleCtrlHandler, ctrlHandlerPC, 1);
+
         monitorSuspendResume();
     }
 
@@ -686,6 +708,7 @@ namespace golang::runtime
                 break;
             }
         }
+
         if(! isASCII)
         {
             uint32_t m = {};
@@ -709,11 +732,15 @@ namespace golang::runtime
     int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen)
     {
         auto surr2 = (surrogateMin + surrogateMax + 1) / 2;
+
         // Do not use defer for unlock. May cause issues when printing a panic.
         lock(& utf16ConsoleBackLock);
+
         auto b = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(buf).make_slice(0, bufLen);
         auto s = *(gocpp::string*)(gocpp::unsafe_pointer(& b));
+
         auto utf16tmp = utf16ConsoleBack.make_slice(0);
+
         auto total = len(s);
         auto w = 0;
         for(auto [gocpp_ignored, r] : s)
@@ -763,6 +790,7 @@ namespace golang::runtime
         auto _WAIT_OBJECT_0 = 0x00000000;
         auto _WAIT_TIMEOUT = 0x00000102;
         auto _WAIT_FAILED = 0xFFFFFFFF;
+
         uintptr_t result = {};
         if(ns < 0)
         {
@@ -805,15 +833,18 @@ namespace golang::runtime
                 case 0:
                     return 0;
                     break;
+
                 case 1:
                     return - 1;
                     break;
+
                 case 2:
                     systemstack([=]() mutable -> void
                     {
                         go_throw("runtime.semasleep wait_abandoned"_s);
                     });
                     break;
+
                 case 3:
                     systemstack([=]() mutable -> void
                     {
@@ -821,6 +852,7 @@ namespace golang::runtime
                         go_throw("runtime.semasleep wait_failed"_s);
                     });
                     break;
+
                 default:
                     systemstack([=]() mutable -> void
                     {
@@ -830,6 +862,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         // unreachable
         return - 1;
     }
@@ -886,6 +919,7 @@ namespace golang::runtime
     {
         // We pass 0 for the stack size to use the default for this binary.
         auto thandle = stdcall6(_CreateThread, 0, 0, abi::FuncPCABI0(tstart_stdcall), uintptr_t(gocpp::unsafe_pointer(mp)), 0, 0);
+
         if(thandle == 0)
         {
             if(atomic::Load(& exiting) != 0)
@@ -900,6 +934,7 @@ namespace golang::runtime
             print("runtime: failed to create new OS thread (have "_s, mcount(), " already; errno="_s, getlasterror(), ")\n"_s);
             go_throw("runtime.newosproc"_s);
         }
+
         // Close thandle to avoid leaking the thread object if it exits.
         stdcall1(_CloseHandle, thandle);
     }
@@ -962,10 +997,12 @@ namespace golang::runtime
             print("runtime.minit: duplicatehandle failed; errno="_s, getlasterror(), "\n"_s);
             go_throw("runtime.minit: duplicatehandle failed"_s);
         }
+
         auto mp = getg()->m;
         lock(& mp->mOS.threadLock);
         mp->mOS.thread = thandle;
         mp->procid = uint64_t(stdcall0(_GetCurrentThreadId));
+
         // Configure usleep timer, if possible.
         if(mp->mOS.highResTimer == 0 && haveHighResTimer)
         {
@@ -977,6 +1014,7 @@ namespace golang::runtime
             }
         }
         unlock(& mp->mOS.threadLock);
+
         // Query the true stack base from the OS. Currently we're
         // running on a small assumed stack.
         memoryBasicInformation mbi = {};
@@ -1020,6 +1058,7 @@ namespace golang::runtime
             mp->mOS.thread = 0;
         }
         unlock(& mp->mOS.threadLock);
+
         mp->procid = 0;
     }
 
@@ -1238,6 +1277,7 @@ namespace golang::runtime
     uintptr_t ctrlHandler(uint32_t _type)
     {
         uint32_t s = {};
+
         //Go switch emulation
         {
             auto condition = _type;
@@ -1263,6 +1303,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         if(sigsend(s))
         {
             if(s == _SIGTERM)
@@ -1289,9 +1330,12 @@ namespace golang::runtime
         context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
         c = (context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
+
         c->contextflags = _CONTEXT_CONTROL;
         stdcall2(_GetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));
+
         auto gp = gFromSP(mp, rec::sp(gocpp::recv(c)));
+
         sigprof(rec::ip(gocpp::recv(c)), rec::sp(gocpp::recv(c)), rec::lr(gocpp::recv(c)), gp, mp);
     }
 
@@ -1315,6 +1359,7 @@ namespace golang::runtime
     void profileLoop()
     {
         stdcall2(_SetThreadPriority, currentThread, _THREAD_PRIORITY_HIGHEST);
+
         for(; ; )
         {
             stdcall2(_WaitForSingleObject, profiletimer, _INFINITE);
@@ -1326,6 +1371,7 @@ namespace golang::runtime
                     // Don't profile ourselves.
                     continue;
                 }
+
                 lock(& mp->mOS.threadLock);
                 // Do not profile threads blocked on Notes,
                 // this includes idle worker threads,
@@ -1343,6 +1389,7 @@ namespace golang::runtime
                     go_throw("duplicatehandle failed"_s);
                 }
                 unlock(& mp->mOS.threadLock);
+
                 // mp may exit between the DuplicateHandle
                 // above and the SuspendThread. The handle
                 // will remain valid, but SuspendThread may
@@ -1409,6 +1456,7 @@ namespace golang::runtime
         {
             go_throw("self-preempt"_s);
         }
+
         // Synchronize with external code that may try to ExitProcess.
         if(! atomic::Cas(& mp->mOS.preemptExtLock, 0, 1))
         {
@@ -1417,6 +1465,7 @@ namespace golang::runtime
             rec::Add(gocpp::recv(mp->preemptGen), 1);
             return;
         }
+
         // Acquire our own handle to mp's thread.
         lock(& mp->mOS.threadLock);
         if(mp->mOS.thread == 0)
@@ -1434,17 +1483,20 @@ namespace golang::runtime
             go_throw("runtime.preemptM: duplicatehandle failed"_s);
         }
         unlock(& mp->mOS.threadLock);
+
         // Prepare thread context buffer. This must be aligned to 16 bytes.
         context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
         c = (context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
         c->contextflags = _CONTEXT_CONTROL;
+
         // Serialize thread suspension. SuspendThread is asynchronous,
         // so it's otherwise possible for two threads to suspend each
         // other and deadlock. We must hold this lock until after
         // GetThreadContext, since that blocks until the thread is
         // actually suspended.
         lock(& suspendLock);
+
         // Suspend the thread.
         if(int32_t(stdcall1(_SuspendThread, thread)) == - 1)
         {
@@ -1456,6 +1508,7 @@ namespace golang::runtime
             rec::Add(gocpp::recv(mp->preemptGen), 1);
             return;
         }
+
         // We have to be very careful between this point and once
         // we've shown mp is at an async safe-point. This is like a
         // signal handler in the sense that mp could have been doing
@@ -1465,7 +1518,9 @@ namespace golang::runtime
         // because SuspendThread only requests a suspend.
         // GetThreadContext actually blocks until it's suspended.
         stdcall2(_GetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));
+
         unlock(& suspendLock);
+
         // Does it want a preemption and is it safe to preempt?
         auto gp = gFromSP(mp, rec::sp(gocpp::recv(c)));
         if(gp != nullptr && wantAsyncPreempt(gp))
@@ -1496,6 +1551,7 @@ namespace golang::runtime
                             rec::set_sp(gocpp::recv(c), sp);
                             rec::set_ip(gocpp::recv(c), targetPC);
                             break;
+
                         case 2:
                             // Push LR. The injected call is responsible
                             // for restoring LR. gentraceback is aware of
@@ -1509,6 +1565,7 @@ namespace golang::runtime
                             rec::set_lr(gocpp::recv(c), newpc - 1);
                             rec::set_ip(gocpp::recv(c), targetPC);
                             break;
+
                         case 3:
                             // Push LR. The injected call is responsible
                             // for restoring LR. gentraceback is aware of
@@ -1526,9 +1583,12 @@ namespace golang::runtime
                 stdcall2(_SetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));
             }
         }
+
         atomic::Store(& mp->mOS.preemptExtLock, 0);
+
         // Acknowledge the preemption.
         rec::Add(gocpp::recv(mp->preemptGen), 1);
+
         stdcall1(_ResumeThread, thread);
         stdcall1(_CloseHandle, thread);
     }

@@ -46,11 +46,14 @@ namespace golang::runtime
         gocpp::rune r;
         int pos;
         pos = k;
+
         if(k >= len(s))
         {
             return {runeError, k + 1};
         }
+
         s = s.make_slice(k);
+
         //Go switch emulation
         {
             int conditionId = -1;
@@ -97,6 +100,7 @@ namespace golang::runtime
                     break;
             }
         }
+
         return {runeError, k + 1};
     }
 

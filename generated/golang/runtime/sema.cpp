@@ -207,11 +207,13 @@ namespace golang::runtime
         {
             go_throw("semacquire not on the G stack"_s);
         }
+
         // Easy case.
         if(cansemacquire(addr))
         {
             return;
         }
+
         // Harder case:
         // increment waiter count
         // try cansemacquire one more time, return if succeeded
@@ -274,6 +276,7 @@ namespace golang::runtime
     {
         auto root = rec::rootFor(gocpp::recv(semtable), addr);
         atomic::Xadd(addr, 1);
+
         // Easy case: no waiters?
         // This check must happen after the xadd, to avoid a missed wakeup
         // (see loop in semacquire).
@@ -281,6 +284,7 @@ namespace golang::runtime
         {
             return;
         }
+
         // Harder case: search for a waiter and wake it.
         lockWithRank(& root->lock, lockRankRoot);
         if(rec::Load(gocpp::recv(root->nwait)) == 0)
@@ -382,6 +386,7 @@ namespace golang::runtime
         s->next = nullptr;
         s->prev = nullptr;
         s->waiters = 0;
+
         sudog* last = {};
         auto pt = & root->treap;
         for(auto t = *pt; t != nullptr; t = *pt)
@@ -454,6 +459,7 @@ namespace golang::runtime
                 pt = & t->next;
             }
         }
+
         // Add s as new leaf in tree of unique addrs.
         // The balanced tree is a treap using ticket as the random heap priority.
         // That is, it is a binary tree ordered according to the elem addresses,
@@ -467,6 +473,7 @@ namespace golang::runtime
         s->ticket = cheaprand() | 1;
         s->parent = last;
         *pt = s;
+
         // Rotate up into tree according to ticket (priority).
         for(; s->parent != nullptr && s->parent->ticket > s->ticket; )
         {
@@ -515,6 +522,7 @@ namespace golang::runtime
             }
         }
         return {nullptr, 0, 0};
+
         Found:
         now = int64_t(0);
         if(s->acquiretime != 0)
@@ -607,6 +615,7 @@ namespace golang::runtime
         auto p = x->parent;
         auto y = x->next;
         auto b = y->prev;
+
         y->prev = x;
         x->parent = y;
         x->next = b;
@@ -614,6 +623,7 @@ namespace golang::runtime
         {
             b->parent = x;
         }
+
         y->parent = p;
         if(p == nullptr)
         {
@@ -642,6 +652,7 @@ namespace golang::runtime
         auto p = y->parent;
         auto x = y->prev;
         auto b = x->next;
+
         x->next = y;
         y->parent = x;
         y->prev = b;
@@ -649,6 +660,7 @@ namespace golang::runtime
         {
             b->parent = y;
         }
+
         x->parent = p;
         if(p == nullptr)
         {
@@ -739,12 +751,14 @@ namespace golang::runtime
     void notifyListWait(struct notifyList* l, uint32_t t)
     {
         lockWithRank(& l->lock, lockRankNotifyList);
+
         // Return right away if this ticket has already been notified.
         if(less(t, l->notify))
         {
             unlock(& l->lock);
             return;
         }
+
         // Enqueue itself.
         auto s = acquireSudog();
         s->g = getg();
@@ -784,18 +798,21 @@ namespace golang::runtime
         {
             return;
         }
+
         // Pull the list out into a local variable, waiters will be readied
         // outside the lock.
         lockWithRank(& l->lock, lockRankNotifyList);
         auto s = l->head;
         l->head = nullptr;
         l->tail = nullptr;
+
         // Update the next ticket to be notified. We can set it to the current
         // value of wait because any previous waiters are already in the list
         // or will notice that they have already been notified when trying to
         // add themselves to the list.
         atomic::Store(& l->notify, rec::Load(gocpp::recv(l->wait)));
         unlock(& l->lock);
+
         // Go through the local list and ready all waiters.
         for(; s != nullptr; )
         {
@@ -817,7 +834,9 @@ namespace golang::runtime
         {
             return;
         }
+
         lockWithRank(& l->lock, lockRankNotifyList);
+
         // Re-check under the lock if we need to do anything.
         auto t = l->notify;
         if(t == rec::Load(gocpp::recv(l->wait)))
@@ -825,8 +844,10 @@ namespace golang::runtime
             unlock(& l->lock);
             return;
         }
+
         // Update the next notify ticket number.
         atomic::Store(& l->notify, t + 1);
+
         // Try to find the g that needs to be notified.
         // If it hasn't made it to the list yet we won't find it,
         // but it won't park itself once it sees the new notify number.

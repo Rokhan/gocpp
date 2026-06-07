@@ -158,6 +158,7 @@ namespace golang::runtime
             // Create new record.
             id = rec::Add(gocpp::recv(tab->seq), 1);
             auto vd = rec::newTraceMapNode(gocpp::recv(tab), data, size, hash, id);
+
             // Insert it into the table.
             // Update the link first, since the node isn't published yet.
             // Then, store the node in the table as the new first node
@@ -166,6 +167,7 @@ namespace golang::runtime
             rec::StoreNoWB(gocpp::recv(vd->link), rec::Load(gocpp::recv(tab->tab[part])));
             rec::StoreNoWB(gocpp::recv(tab->tab[part]), gocpp::unsafe_pointer(vd));
             unlock(& tab->lock);
+
             added = true;
         });
         return {id, added};
@@ -207,6 +209,7 @@ namespace golang::runtime
             x.cap = int(size);
         });
         memmove(gocpp::unsafe_pointer(sl.array), data, size);
+
         // Create metadata structure.
         auto meta = (traceMapNode*)(gocpp::unsafe_pointer(rec::alloc(gocpp::recv(tab->mem), gocpp::Sizeof<traceMapNode>())));
         *(notInHeapSlice*)(gocpp::unsafe_pointer(& meta->data)) = sl;

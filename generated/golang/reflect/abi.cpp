@@ -585,11 +585,14 @@ namespace golang::reflect
         // TODO(mknyszek): Remove this when we no longer have
         // caller reserved spill space.
         auto spill = uintptr_t(0);
+
         // Compute gc program & stack bitmap for stack arguments
         auto stackPtrs = new(bitVector);
+
         // Compute the stack frame pointer bitmap and register
         // pointer bitmap for arguments.
         auto inRegPtrs = abi::IntArgRegBitmap {};
+
         // Compute abiSeq for input parameters.
         abiSeq in = {};
         if(rcvr != nullptr)
@@ -632,13 +635,16 @@ namespace golang::reflect
             }
         }
         spill = align(spill, goarch::PtrSize);
+
         // From the input parameters alone, we now know
         // the stackCallArgsSize and retOffset.
         auto stackCallArgsSize = in.stackBytes;
         auto retOffset = align(in.stackBytes, goarch::PtrSize);
+
         // Compute the stack frame pointer bitmap and register
         // pointer bitmap for return values.
         auto outRegPtrs = abi::IntArgRegBitmap {};
+
         // Compute abiSeq for output parameters.
         abiSeq out = {};
         // Stack-assigned return values do not share

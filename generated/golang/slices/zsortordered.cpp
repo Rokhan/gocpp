@@ -66,11 +66,13 @@ namespace golang::slices
         auto first = a;
         auto lo = 0;
         auto hi = b - a;
+
         // Build heap with greatest element at top.
         for(auto i = (hi - 1) / 2; i >= 0; i--)
         {
             siftDownOrdered(data, i, hi, first);
         }
+
         // Pop elements, largest first, into end of data.
         for(auto i = hi - 1; i >= 0; i--)
         {
@@ -89,28 +91,34 @@ namespace golang::slices
     void pdqsortOrdered(gocpp::slice<E> data, int a, int b, int limit)
     {
         auto maxInsertion = 12;
+
         auto wasBalanced = true;
         auto wasPartitioned = true;
+
         for(; ; )
         {
             auto length = b - a;
+
             if(length <= maxInsertion)
             {
                 insertionSortOrdered(data, a, b);
                 return;
             }
+
             // Fall back to heapsort if too many bad choices were made.
             if(limit == 0)
             {
                 heapSortOrdered(data, a, b);
                 return;
             }
+
             // If the last partitioning was imbalanced, we need to breaking patterns.
             if(! wasBalanced)
             {
                 breakPatternsOrdered(data, a, b);
                 limit--;
             }
+
             auto [pivot, hint] = choosePivotOrdered(data, a, b);
             if(hint == decreasingHint)
             {
@@ -121,6 +129,7 @@ namespace golang::slices
                 pivot = (b - 1) - (pivot - a);
                 hint = increasingHint;
             }
+
             // The slice is likely already sorted.
             if(wasBalanced && wasPartitioned && hint == increasingHint)
             {
@@ -129,6 +138,7 @@ namespace golang::slices
                     return;
                 }
             }
+
             // Probably the slice contains many duplicate elements, partition the slice into
             // elements equal to and elements greater than the pivot.
             if(a > 0 && ! cmp::Less(data[a - 1], data[pivot]))
@@ -137,8 +147,10 @@ namespace golang::slices
                 a = mid;
                 continue;
             }
+
             auto [mid, alreadyPartitioned] = partitionOrdered(data, a, b, pivot);
             wasPartitioned = alreadyPartitioned;
+
             auto [leftLen, rightLen] = std::tuple{mid - a, b - mid};
             auto balanceThreshold = length / 8;
             if(leftLen < rightLen)
@@ -168,6 +180,7 @@ namespace golang::slices
         std::tie(data[a], data[pivot]) = std::tuple{data[pivot], data[a]};
         // i and j are inclusive of the elements remaining to be partitioned
         auto [i, j] = std::tuple{a + 1, b - 1};
+
         for(; i <= j && cmp::Less(data[i], data[a]); )
         {
             i++;
@@ -184,6 +197,7 @@ namespace golang::slices
         std::tie(data[i], data[j]) = std::tuple{data[j], data[i]};
         i++;
         j--;
+
         for(; ; )
         {
             for(; i <= j && cmp::Less(data[i], data[a]); )
@@ -215,6 +229,7 @@ namespace golang::slices
         std::tie(data[a], data[pivot]) = std::tuple{data[pivot], data[a]};
         // i and j are inclusive of the elements remaining to be partitioned
         auto [i, j] = std::tuple{a + 1, b - 1};
+
         for(; ; )
         {
             for(; i <= j && ! cmp::Less(data[a], data[i]); )
@@ -249,15 +264,19 @@ namespace golang::slices
             {
                 i++;
             }
+
             if(i == b)
             {
                 return true;
             }
+
             if(b - a < shortestShifting)
             {
                 return false;
             }
+
             std::tie(data[i], data[i - 1]) = std::tuple{data[i - 1], data[i]};
+
             // Shift the smaller one to the left.
             if(i - a >= 2)
             {
@@ -296,6 +315,7 @@ namespace golang::slices
         {
             auto random = xorshift(length);
             auto modulus = nextPowerOfTwo(length);
+
             for(auto idx = a + (length / 4) * 2 - 1; idx <= a + (length / 4) * 2 + 1; idx++)
             {
                 auto other = int((unsigned int)(rec::Next(gocpp::recv(random))) & (modulus - 1));
@@ -320,11 +340,14 @@ namespace golang::slices
         slices::sortedHint hint;
         auto shortestNinther = 50;
         auto maxSwaps = 4 * 3;
+
         auto l = b - a;
+
         int swaps = {};
         auto i = a + l / 4 * 1;
         auto j = a + l / 4 * 2;
         auto k = a + l / 4 * 3;
+
         if(l >= 8)
         {
             if(l >= shortestNinther)
@@ -337,6 +360,7 @@ namespace golang::slices
             // Find the median among i, j, k and stores it into j.
             j = medianOrdered(data, i, j, k, & swaps);
         }
+
         //Go switch emulation
         {
             auto condition = swaps;
@@ -422,6 +446,7 @@ namespace golang::slices
             b += blockSize;
         }
         insertionSortOrdered(data, a, n);
+
         for(; blockSize < n; )
         {
             std::tie(a, b) = std::tuple{0, 2 * blockSize};
@@ -490,6 +515,7 @@ namespace golang::slices
             }
             return;
         }
+
         // Avoid unnecessary recursions of symMerge
         // by direct insertion of data[m] into data[a:m]
         // if data[m:b] only contains one element.
@@ -519,6 +545,7 @@ namespace golang::slices
             }
             return;
         }
+
         auto mid = int((unsigned int)(a + b) >> 1);
         auto n = mid + m;
         int start = {};
@@ -534,6 +561,7 @@ namespace golang::slices
             r = m;
         }
         auto p = n - 1;
+
         for(; start < r; )
         {
             auto c = int((unsigned int)(start + r) >> 1);
@@ -546,6 +574,7 @@ namespace golang::slices
                 r = c;
             }
         }
+
         auto end = n - start;
         if(start < m && m < end)
         {
@@ -570,6 +599,7 @@ namespace golang::slices
     {
         auto i = m - a;
         auto j = b - m;
+
         for(; i != j; )
         {
             if(i > j)

@@ -293,18 +293,21 @@ namespace golang::runtime
         }
         auto windowTotalTime = (now - lastUpdate) * int64_t(l->nprocs);
         rec::Store(gocpp::recv(l->lastUpdate), now);
+
         // Drain the pool of assist time.
         auto assistTime = rec::Load(gocpp::recv(l->assistTimePool));
         if(assistTime != 0)
         {
             rec::Add(gocpp::recv(l->assistTimePool), - assistTime);
         }
+
         // Drain the pool of idle time.
         auto idleTime = rec::Load(gocpp::recv(l->idleTimePool));
         if(idleTime != 0)
         {
             rec::Add(gocpp::recv(l->idleTimePool), - idleTime);
         }
+
         if(! l->test)
         {
             // Consume time from in-flight events. Make sure we're not preemptible so allp can't change.
@@ -348,12 +351,14 @@ namespace golang::runtime
             }
             releasem(mp);
         }
+
         // Compute total GC time.
         auto windowGCTime = assistTime;
         if(l->gcEnabled)
         {
             windowGCTime += int64_t(double(windowTotalTime) * gcBackgroundUtilization);
         }
+
         // Subtract out all idle time from the total time. Do this after computing
         // GC time, because the background utilization is dependent on the *real*
         // total time, not the total time after idle time is subtracted.
@@ -373,6 +378,7 @@ namespace golang::runtime
         // unnecessary, as the GC has way more CPU time to outpace the 1 goroutine that's
         // running.
         windowTotalTime -= idleTime;
+
         rec::accumulate(gocpp::recv(l), windowTotalTime - windowGCTime, windowGCTime);
     }
 
@@ -384,12 +390,14 @@ namespace golang::runtime
     {
         auto headroom = l->bucket.capacity - l->bucket.fill;
         auto enabled = headroom == 0;
+
         // Let's be careful about three things here:
         // 1. The addition and subtraction, for the invariants.
         // 2. Overflow.
         // 3. Excessive mutation of l.enabled, which is accessed
         // by all assists, potentially more than once.
         auto change = gcTime - mutatorTime;
+
         // Handle limiting case.
         if(change > 0 && headroom <= uint64_t(change))
         {
@@ -402,6 +410,7 @@ namespace golang::runtime
             }
             return;
         }
+
         // Handle non-limiting cases.
         if(change < 0 && l->bucket.fill <= uint64_t(- change))
         {
@@ -451,6 +460,7 @@ namespace golang::runtime
         // Flush the rest of the time for this period.
         rec::updateLocked(gocpp::recv(l), now);
         l->nprocs = nprocs;
+
         l->bucket.capacity = uint64_t(nprocs) * capacityPerProc;
         if(l->bucket.fill > l->bucket.capacity)
         {

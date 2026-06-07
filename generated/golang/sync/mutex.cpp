@@ -196,6 +196,7 @@ namespace golang::sync
         {
             return false;
         }
+
         // There may be a goroutine waiting for the mutex, but we are
         // running now and can try to grab the mutex before that
         // goroutine wakes up.
@@ -203,6 +204,7 @@ namespace golang::sync
         {
             return false;
         }
+
         if(race::Enabled)
         {
             race::Acquire(gocpp::unsafe_pointer(m));
@@ -310,6 +312,7 @@ namespace golang::sync
                 old = m->state;
             }
         }
+
         if(race::Enabled)
         {
             race::Acquire(gocpp::unsafe_pointer(m));
@@ -329,6 +332,7 @@ namespace golang::sync
             _ = m->state;
             race::Release(gocpp::unsafe_pointer(m));
         }
+
         // Fast path: drop lock bit.
         auto go_new = atomic::AddInt32(& m->state, - mutexLocked);
         if(go_new != 0)

@@ -130,6 +130,7 @@ namespace golang::runtime
     void rec::init(golang::runtime::rwmutex* rw, golang::runtime::lockRank readRank, golang::runtime::lockRank readRankInternal, golang::runtime::lockRank writeRank)
     {
         rw->readRank = readRank;
+
         lockInit(& rw->rLock, readRankInternal);
         lockInit(& rw->wLock, writeRank);
     }
@@ -142,8 +143,10 @@ namespace golang::runtime
         // deadlock (issue #20903). Alternatively, we could drop the P
         // while sleeping.
         acquirem();
+
         acquireLockRank(rw->readRank);
         lockWithRankMayAcquire(& rw->rLock, getLockRank(& rw->rLock));
+
         if(rec::Add(gocpp::recv(rw->readerCount), 1) < 0)
         {
             // A writer is pending. Park on the reader queue.

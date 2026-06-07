@@ -204,6 +204,7 @@ namespace golang::flate
                 auto delta = d->hashOffset - 1;
                 d->hashOffset -= delta;
                 d->chainHead -= delta;
+
                 // Iterate over slices instead of arrays to avoid copying
                 // the entire table onto the stack (Issue #18625).
                 for(auto [i, v] : d->hashPrev.make_slice(0))
@@ -266,6 +267,7 @@ namespace golang::flate
         {
             gocpp::panic("internal error: fillWindow called with stale data"_s);
         }
+
         // If we are given too much, cut it.
         if(len(b) > windowSize)
         {
@@ -273,6 +275,7 @@ namespace golang::flate
         }
         // Add all to window.
         auto n = copy(d->window, b);
+
         // Calculate 256 hashes at the time (more L1 cache hits)
         auto loops = (n + 256 - minMatchLength) / 256;
         for(auto j = 0; j < loops; j++)
@@ -285,10 +288,12 @@ namespace golang::flate
             }
             auto toCheck = d->window.make_slice(index, end);
             auto dstSize = len(toCheck) - minMatchLength + 1;
+
             if(dstSize <= 0)
             {
                 continue;
             }
+
             auto dst = d->hashMatch.make_slice(0, dstSize);
             d->bulkHasher(toCheck, dst);
             for(auto [i, val] : dst)
@@ -319,13 +324,16 @@ namespace golang::flate
         {
             minMatchLook = lookahead;
         }
+
         auto win = d->window.make_slice(0, pos + minMatchLook);
+
         // We quit when we get a match that's at least nice long
         auto nice = len(win) - pos;
         if(d->compressionLevel.nice < nice)
         {
             nice = d->compressionLevel.nice;
         }
+
         // If we've got a match that's good enough, only look in 1/4 the chain.
         auto tries = d->compressionLevel.chain;
         length = prevLength;
@@ -333,14 +341,17 @@ namespace golang::flate
         {
             tries >>= 2;
         }
+
         auto wEnd = win[pos + length];
         auto wPos = win.make_slice(pos);
         auto minIndex = pos - windowSize;
+
         for(auto i = prevHead; tries > 0; tries--)
         {
             if(wEnd == win[i + length])
             {
                 auto n = flate::matchLen(win.make_slice(i), wPos, minMatchLook);
+
                 if(n > length && (n > minMatchLength || pos - i <= 4096))
                 {
                     length = n;
@@ -433,6 +444,7 @@ namespace golang::flate
             {
                 return;
             }
+
             // Handle small sizes.
             if(d->windowEnd < 128)
             {
@@ -462,6 +474,7 @@ namespace golang::flate
         }
         // Encode the block.
         d->tokens = rec::encode(gocpp::recv(d->bestSpeed), d->tokens.make_slice(0, 0), d->window.make_slice(0, d->windowEnd));
+
         // If we removed less than 1/16th, Huffman compress the block.
         if(len(d->tokens) > d->windowEnd - (d->windowEnd >> 4))
         {
@@ -494,7 +507,9 @@ namespace golang::flate
         {
             return;
         }
+
         d->maxInsertIndex = d->windowEnd - (minMatchLength - 1);
+
         Loop:
         for(; ; )
         {
@@ -557,6 +572,7 @@ namespace golang::flate
             {
                 minIndex = 0;
             }
+
             if(d->chainHead - d->hashOffset >= minIndex && (d->compressionLevel.fastSkipHashing != skipNever && lookahead > minMatchLength - 1 || d->compressionLevel.fastSkipHashing == skipNever && lookahead > prevLength && prevLength < d->compressionLevel.lazy))
             {
                 if(auto [newLength, newOffset, ok] = rec::findMatch(gocpp::recv(d), d->index, d->chainHead - d->hashOffset, minMatchLength - 1, lookahead); ok)
@@ -607,6 +623,7 @@ namespace golang::flate
                         }
                     }
                     d->index = index;
+
                     if(d->compressionLevel.fastSkipHashing == skipNever)
                     {
                         d->byteAvailable = false;
@@ -730,6 +747,7 @@ namespace golang::flate
     {
         struct gocpp::error err;
         d->w = newHuffmanBitWriter(w);
+
         //Go switch emulation
         {
             int conditionId = -1;

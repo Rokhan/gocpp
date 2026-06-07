@@ -163,11 +163,13 @@ namespace golang::time
     std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data)
     {
         auto d = dataIO {data, false};
+
         // 4-byte magic "TZif"
         if(auto magic = rec::read(gocpp::recv(d), 4); gocpp::string(magic) != "TZif"_s)
         {
             return {nullptr, errBadData};
         }
+
         // 1-byte version, then 15 bytes of padding
         int version = {};
         gocpp::slice<unsigned char> p = {};
@@ -201,6 +203,7 @@ namespace golang::time
                 }
             }
         }
+
         // six big-endian 32-bit integers:
         // number of UTC/local indicators
         // number of standard/wall indicators
@@ -228,6 +231,7 @@ namespace golang::time
             }
             n[i] = int(nn);
         }
+
         // If we have version 2 or 3, then the data is first written out
         // in a 32-bit format, then written out again in a 64-bit format.
         // Skip the 32-bit format and read the 64-bit one, as it can
@@ -240,7 +244,9 @@ namespace golang::time
             // Skip the version 2 header that we just read.
             skip += 4 + 16;
             rec::read(gocpp::recv(d), skip);
+
             is64 = true;
+
             // Read the counts again, they can differ.
             for(auto i = 0; i < 6; i++)
             {
@@ -256,38 +262,49 @@ namespace golang::time
                 n[i] = int(nn);
             }
         }
+
         auto size = 4;
         if(is64)
         {
             size = 8;
         }
+
         // Transition times.
         auto txtimes = dataIO {rec::read(gocpp::recv(d), n[NTime] * size), false};
+
         // Time zone indices for transition times.
         auto txzones = rec::read(gocpp::recv(d), n[NTime]);
+
         // Zone info structures
         auto zonedata = dataIO {rec::read(gocpp::recv(d), n[NZone] * 6), false};
+
         // Time zone abbreviations.
         auto abbrev = rec::read(gocpp::recv(d), n[NChar]);
+
         // Leap-second time pairs
         rec::read(gocpp::recv(d), n[NLeap] * (size + 4));
+
         // Whether tx times associated with local time types
         // are specified as standard time or wall time.
         auto isstd = rec::read(gocpp::recv(d), n[NStdWall]);
+
         // Whether tx times associated with local time types
         // are specified as UTC or local time.
         auto isutc = rec::read(gocpp::recv(d), n[NUTCLocal]);
+
         if(d.error)
         {
             // ran out of data
             return {nullptr, errBadData};
         }
+
         gocpp::string extend = {};
         auto rest = rec::rest(gocpp::recv(d));
         if(len(rest) > 2 && rest[0] == '\n' && rest[len(rest) - 1] == '\n')
         {
             extend = gocpp::string(rest.make_slice(1, len(rest) - 1));
         }
+
         // Now we can build up a useful data structure.
         // First the zone information.
         // utcoff[4] isdst[1] nameindex[1]
@@ -334,6 +351,7 @@ namespace golang::time
                 }
             }
         }
+
         // Now the transition time info.
         auto tx = gocpp::make(gocpp::Tag<gocpp::slice<zoneTrans>>(), n[NTime]);
         for(auto [i, gocpp_ignored] : tx)
@@ -376,6 +394,7 @@ namespace golang::time
                 tx[i].isutc = isutc[i] != 0;
             }
         }
+
         if(len(tx) == 0)
         {
             // Build fake transition to cover all time.
@@ -385,6 +404,7 @@ namespace golang::time
                 x.index = 0;
             }));
         }
+
         // Committed to succeed.
         auto l = gocpp::InitPtr<Location>([=](auto& x) {
             x.zone = zones;
@@ -392,6 +412,7 @@ namespace golang::time
             x.name = name;
             x.extend = extend;
         });
+
         // Fill in the cache with information about right now,
         // since that will be the most common lookup.
         auto [sec, gocpp_id_0, gocpp_id_1] = now();
@@ -433,6 +454,7 @@ namespace golang::time
                 break;
             }
         }
+
         return {l, nullptr};
     }
 
@@ -496,11 +518,13 @@ namespace golang::time
                 return {nullptr, err};
             }
             defer.push_back([=]{ closefd(fd); });
+
             auto zecheader = 0x06054b50;
             auto zcheader = 0x02014b50;
             auto ztailsize = 22;
             auto zheadersize = 30;
             auto zheader = 0x04034b50;
+
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), ztailsize);
             if(auto err = preadn(fd, buf, - ztailsize); err != nullptr || get4(buf) != zecheader)
             {
@@ -509,11 +533,13 @@ namespace golang::time
             auto n = get2(buf.make_slice(10));
             auto size = get4(buf.make_slice(12));
             auto off = get4(buf.make_slice(16));
+
             buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
             if(auto err = preadn(fd, buf, off); err != nullptr)
             {
                 return {nullptr, errors::New("corrupt zip file "_s + zipfile)};
             }
+
             for(auto i = 0; i < n; i++)
             {
                 // zip entry layout:
@@ -558,6 +584,7 @@ namespace golang::time
                 {
                     return {nullptr, errors::New("unsupported compression for "_s + name + " in "_s + zipfile)};
                 }
+
                 // zip per-file header layout:
                 // 0	magic[4]
                 // 4	extvers[1]
@@ -579,13 +606,16 @@ namespace golang::time
                     return {nullptr, errors::New("corrupt zip file "_s + zipfile)};
                 }
                 xlen = get2(buf.make_slice(28));
+
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
                 if(auto err = preadn(fd, buf, off + 30 + namelen + xlen); err != nullptr)
                 {
                     return {nullptr, errors::New("corrupt zip file "_s + zipfile)};
                 }
+
                 return {buf, nullptr};
             }
+
             return {nullptr, gocpp::error(syscall::go_ENOENT)};
         }
         catch(gocpp::GoPanic& gp)

@@ -201,6 +201,7 @@ namespace golang::runtime
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<double>>(), timeHistTotalBuckets + 1);
         // Underflow bucket.
         b[0] = float64NegInf();
+
         for(auto j = 0; j < timeHistNumSubBuckets; j++)
         {
             // No bucket bit for the first few buckets. Just sub-bucket bits after the

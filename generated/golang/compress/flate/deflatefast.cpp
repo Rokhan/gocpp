@@ -136,6 +136,7 @@ namespace golang::flate
         {
             rec::shiftOffsets(gocpp::recv(e));
         }
+
         // This check isn't in the Snappy implementation, but there, the caller
         // instead of the callee handles this case.
         if(len(src) < minNonLiteralBlockSize)
@@ -144,15 +145,18 @@ namespace golang::flate
             e->prev = e->prev.make_slice(0, 0);
             return emitLiteral(dst, src);
         }
+
         // sLimit is when to stop looking for offset/length copies. The inputMargin
         // lets us use a fast path for emitLiteral in the main loop, while we are
         // looking for copies.
         auto sLimit = int32_t(len(src) - inputMargin);
+
         // nextEmit is where in src the next emitLiteral should start from.
         auto nextEmit = int32_t(0);
         auto s = int32_t(0);
         auto cv = load32(src, s);
         auto nextHash = hash(cv);
+
         for(; ; )
         {
             // Copied from the C++ snappy implementation:
@@ -169,6 +173,7 @@ namespace golang::flate
             // the last match; dividing it by 32 (ie. right-shifting by five) gives
             // the number of bytes to move ahead for each iteration.
             auto skip = int32_t(32);
+
             auto nextS = s;
             tableEntry candidate = {};
             for(; ; )
@@ -188,6 +193,7 @@ namespace golang::flate
                     x.val = cv;
                 });
                 nextHash = hash(now);
+
                 auto offset = s - (candidate.offset - e->cur);
                 if(offset > maxMatchOffset || cv != candidate.val)
                 {
@@ -197,10 +203,12 @@ namespace golang::flate
                 }
                 break;
             }
+
             // A 4-byte match has been found. We'll later see if more than 4 bytes
             // match. But, prior to the match, src[nextEmit:s] are unmatched. Emit
             // them as literal bytes.
             dst = emitLiteral(dst, src.make_slice(nextEmit, s));
+
             // Call emitCopy, and then see if another emitCopy could be our next
             // move. Repeat until we find no match for the input immediately after
             // what was consumed by the last emitCopy call.
@@ -216,6 +224,7 @@ namespace golang::flate
                 s += 4;
                 auto t = candidate.offset - e->cur + 4;
                 auto l = rec::matchLen(gocpp::recv(e), s, t, src);
+
                 // matchToken is flate's equivalent of Snappy's emitCopy. (length,offset)
                 dst = append(dst, matchToken(uint32_t(l + 4 - baseMatchLength), uint32_t(s - t - baseMatchOffset)));
                 s += l;
@@ -224,6 +233,7 @@ namespace golang::flate
                 {
                     goto emitRemainder;
                 }
+
                 // We could immediately start working at s now, but to improve
                 // compression we first update the hash table at s-1 and at s. If
                 // another emitCopy is not our next move, also calculate nextHash
@@ -243,6 +253,7 @@ namespace golang::flate
                     y.offset = e->cur + s;
                     y.val = uint32_t(x);
                 });
+
                 auto offset = s - (candidate.offset - e->cur);
                 if(offset > maxMatchOffset || uint32_t(x) != candidate.val)
                 {
@@ -253,6 +264,7 @@ namespace golang::flate
                 }
             }
         }
+
         emitRemainder:
         if(int(nextEmit) < len(src))
         {
@@ -283,6 +295,7 @@ namespace golang::flate
         {
             s1 = len(src);
         }
+
         // If we are inside the current block
         if(t >= 0)
         {
@@ -299,12 +312,14 @@ namespace golang::flate
             }
             return int32_t(len(a));
         }
+
         // We found a match in the previous block.
         auto tp = int32_t(len(e->prev)) + t;
         if(tp < 0)
         {
             return 0;
         }
+
         // Extend the match to be as long as possible.
         auto a = src.make_slice(s, s1);
         auto b = e->prev.make_slice(tp);
@@ -320,6 +335,7 @@ namespace golang::flate
                 return int32_t(i);
             }
         }
+
         // If we reached our limit, we matched everything we are
         // allowed to in the previous block and we return.
         auto n = int32_t(len(b));
@@ -327,6 +343,7 @@ namespace golang::flate
         {
             return n;
         }
+
         // Continue looking for more matches in the current block.
         a = src.make_slice(s + n, s1);
         b = src.make_slice(0, len(a));
@@ -348,6 +365,7 @@ namespace golang::flate
         // Bump the offset, so all matches will fail distance check.
         // Nothing should be >= e.cur in the table.
         e->cur += maxMatchOffset;
+
         // Protect against e.cur wraparound.
         if(e->cur >= bufferReset)
         {
@@ -371,6 +389,7 @@ namespace golang::flate
             e->cur = maxMatchOffset + 1;
             return;
         }
+
         // Shift down everything in the table that isn't already too far away.
         for(auto [i, gocpp_ignored] : e->table.make_slice(0))
         {

@@ -320,6 +320,7 @@ namespace golang::png
         rec::Write(gocpp::recv(crc), e->header.make_slice(4, 8));
         rec::Write(gocpp::recv(crc), b);
         rec::PutUint32(gocpp::recv(binary::BigEndian), e->footer.make_slice(0, 4), rec::Sum32(gocpp::recv(crc)));
+
         std::tie(std::ignore, e->err) = rec::Write(gocpp::recv(e->w), e->header.make_slice(0, 8));
         if(e->err != nullptr)
         {
@@ -464,6 +465,7 @@ namespace golang::png
         auto cdat4 = cr[4].make_slice(1);
         auto pdat = pr.make_slice(1);
         auto n = len(cdat0);
+
         // The up filter.
         auto sum = 0;
         for(auto i = 0; i < n; i++)
@@ -473,6 +475,7 @@ namespace golang::png
         }
         auto best = sum;
         auto filter = ftUp;
+
         // The Paeth filter.
         sum = 0;
         for(auto i = 0; i < bpp; i++)
@@ -494,6 +497,7 @@ namespace golang::png
             best = sum;
             filter = ftPaeth;
         }
+
         // The none filter.
         sum = 0;
         for(auto i = 0; i < n; i++)
@@ -509,6 +513,7 @@ namespace golang::png
             best = sum;
             filter = ftNone;
         }
+
         // The sub filter.
         sum = 0;
         for(auto i = 0; i < bpp; i++)
@@ -530,6 +535,7 @@ namespace golang::png
             best = sum;
             filter = ftSub;
         }
+
         // The average filter.
         sum = 0;
         for(auto i = 0; i < bpp; i++)
@@ -550,6 +556,7 @@ namespace golang::png
         {
             filter = ftAverage;
         }
+
         return filter;
     }
 
@@ -581,7 +588,9 @@ namespace golang::png
                 rec::Reset(gocpp::recv(e->zw), w);
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(e->zw)); });
+
             auto bitsPerPixel = 0;
+
             //Go switch emulation
             {
                 auto condition = cb;
@@ -630,6 +639,7 @@ namespace golang::png
                         break;
                 }
             }
+
             // cr[*] and pr are the bytes for the current and previous row.
             // cr[0] is unfiltered (or equivalently, filtered with the ftNone filter).
             // cr[ft], for non-zero filter types ft, are buffers for transforming cr[0] under the
@@ -660,10 +670,12 @@ namespace golang::png
                 zeroMemory(e->pr);
             }
             auto pr = e->pr;
+
             auto [gray, gocpp_id_3] = gocpp::getValue<image::Gray*>(m);
             auto [rgba, gocpp_id_4] = gocpp::getValue<image::RGBA*>(m);
             auto [paletted, gocpp_id_5] = gocpp::getValue<image::Paletted*>(m);
             auto [nrgba, gocpp_id_6] = gocpp::getValue<image::NRGBA*>(m);
+
             for(auto y = b.Min.Y; y < b.Max.Y; y++)
             {
                 // Convert from colors to bytes.
@@ -753,6 +765,7 @@ namespace golang::png
                                 }
                             }
                             break;
+
                         case 3:
                         case 4:
                         case 5:
@@ -782,6 +795,7 @@ namespace golang::png
                                 cr[0][i] = a;
                             }
                             break;
+
                         case 6:
                             if(nrgba != nullptr)
                             {
@@ -882,6 +896,7 @@ namespace golang::png
                             break;
                     }
                 }
+
                 // Apply the filter.
                 // Skip filter for NoCompression and paletted images (cbP8) as
                 // "filters are rarely useful on palette images" and will result
@@ -894,11 +909,13 @@ namespace golang::png
                     auto bpp = bitsPerPixel / 8;
                     f = filter(& cr, pr, bpp);
                 }
+
                 // Write the compressed bytes.
                 if(auto [gocpp_id_9, err] = rec::Write(gocpp::recv(e->zw), cr[f]); err != nullptr)
                 {
                     return err;
                 }
+
                 // The current row for y is the previous row for y+1.
                 std::tie(pr, cr[0]) = std::tuple{cr[0], pr};
             }
@@ -993,6 +1010,7 @@ namespace golang::png
             {
                 return gocpp::error(FormatError("invalid image size: "_s + strconv::FormatInt(mw, 10) + "x"_s + strconv::FormatInt(mh, 10)));
             }
+
             encoder* e = {};
             if(enc->BufferPool != nullptr)
             {
@@ -1007,9 +1025,11 @@ namespace golang::png
             {
                 defer.push_back([=]{ rec::Put(gocpp::recv(enc->BufferPool), (png::EncoderBuffer*)(e)); });
             }
+
             e->enc = enc;
             e->w = w;
             e->m = m;
+
             color::Palette pal = {};
             // cbP8 encoding needs PalettedImage's ColorIndexAt method.
             if(auto [gocpp_id_10, ok] = gocpp::getValue<image::PalettedImage>(m); ok)
@@ -1081,6 +1101,7 @@ namespace golang::png
                     }
                 }
             }
+
             std::tie(std::ignore, e->err) = io::WriteString(w, pngHeader);
             rec::writeIHDR(gocpp::recv(e));
             if(pal != nullptr)

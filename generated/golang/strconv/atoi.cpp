@@ -127,11 +127,14 @@ namespace golang::strconv
     std::tuple<uint64_t, struct gocpp::error> ParseUint(gocpp::string s, int base, int bitSize)
     {
         auto fnParseUint = "ParseUint"_s;
+
         if(s == ""_s)
         {
             return {0, gocpp::error(syntaxError(fnParseUint, s))};
         }
+
         auto base0 = base == 0;
+
         auto s0 = s;
         //Go switch emulation
         {
@@ -176,11 +179,13 @@ namespace golang::strconv
                         }
                     }
                     break;
+
                 default:
                     return {0, gocpp::error(baseError(fnParseUint, s0, base))};
                     break;
             }
         }
+
         if(bitSize == 0)
         {
             bitSize = IntSize;
@@ -190,6 +195,7 @@ namespace golang::strconv
         {
             return {0, gocpp::error(bitSizeError(fnParseUint, s0, bitSize))};
         }
+
         // Cutoff is the smallest number such that cutoff*base > maxUint64.
         // Use compile-time constants for common cases.
         uint64_t cutoff = {};
@@ -212,7 +218,9 @@ namespace golang::strconv
                     break;
             }
         }
+
         auto maxVal = (uint64_t(1) << (unsigned int)(bitSize)) - 1;
+
         auto underscores = false;
         uint64_t n = {};
         for(auto [gocpp_ignored, c] : gocpp::slice<unsigned char>(s))
@@ -241,16 +249,19 @@ namespace golang::strconv
                         break;
                 }
             }
+
             if(d >= (unsigned char)(base))
             {
                 return {0, gocpp::error(syntaxError(fnParseUint, s0))};
             }
+
             if(n >= cutoff)
             {
                 // n*base overflows
                 return {maxVal, gocpp::error(rangeError(fnParseUint, s0))};
             }
             n *= uint64_t(base);
+
             auto n1 = n + uint64_t(d);
             if(n1 < n || n1 > maxVal)
             {
@@ -259,10 +270,12 @@ namespace golang::strconv
             }
             n = n1;
         }
+
         if(underscores && ! underscoreOK(s0))
         {
             return {0, gocpp::error(syntaxError(fnParseUint, s0))};
         }
+
         return {n, nullptr};
     }
 
@@ -296,10 +309,12 @@ namespace golang::strconv
         int64_t i;
         struct gocpp::error err;
         auto fnParseInt = "ParseInt"_s;
+
         if(s == ""_s)
         {
             return {0, gocpp::error(syntaxError(fnParseInt, s))};
         }
+
         // Pick off leading sign.
         auto s0 = s;
         auto neg = false;
@@ -313,6 +328,7 @@ namespace golang::strconv
             neg = true;
             s = s.make_slice(1);
         }
+
         // Convert unsigned and check range.
         uint64_t un = {};
         std::tie(un, err) = ParseUint(s, base, bitSize);
@@ -322,10 +338,12 @@ namespace golang::strconv
             gocpp::getValue<NumError*>(err)->Num = cloneString(s0);
             return {0, err};
         }
+
         if(bitSize == 0)
         {
             bitSize = IntSize;
         }
+
         auto cutoff = uint64_t(1 << (unsigned int)(bitSize - 1));
         if(! neg && un >= cutoff)
         {
@@ -347,6 +365,7 @@ namespace golang::strconv
     std::tuple<int, struct gocpp::error> Atoi(gocpp::string s)
     {
         auto fnAtoi = "Atoi"_s;
+
         auto sLen = len(s);
         if(intSize == 32 && (0 < sLen && sLen < 10) || intSize == 64 && (0 < sLen && sLen < 19))
         {
@@ -360,6 +379,7 @@ namespace golang::strconv
                     return {0, gocpp::error(syntaxError(fnAtoi, s0))};
                 }
             }
+
             auto n = 0;
             for(auto [gocpp_ignored, ch] : gocpp::slice<unsigned char>(s))
             {
@@ -376,6 +396,7 @@ namespace golang::strconv
             }
             return {n, nullptr};
         }
+
         // Slow path for invalid, big, or underscored integers.
         auto [i64, err] = ParseInt(s, 10, 0);
         if(auto [nerr, ok] = gocpp::getValue<NumError*>(err); ok)
@@ -397,11 +418,13 @@ namespace golang::strconv
         // ! for none of the above.
         auto saw = '^';
         auto i = 0;
+
         // Optional sign.
         if(len(s) >= 1 && (s[0] == '-' || s[0] == '+'))
         {
             s = s.make_slice(1);
         }
+
         // Optional base prefix.
         auto hex = false;
         if(len(s) >= 2 && s[0] == '0' && (lower(s[1]) == 'b' || lower(s[1]) == 'o' || lower(s[1]) == 'x'))
@@ -411,6 +434,7 @@ namespace golang::strconv
             saw = '0';
             hex = lower(s[1]) == 'x';
         }
+
         // Number proper.
         for(; i < len(s); i++)
         {

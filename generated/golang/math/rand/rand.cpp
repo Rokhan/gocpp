@@ -243,6 +243,7 @@ namespace golang::rand
             rec::seedPos(gocpp::recv(lk), seed, & r->readPos);
             return;
         }
+
         rec::Seed(gocpp::recv(r->src), seed);
         r->readPos = 0;
     }
@@ -440,6 +441,7 @@ namespace golang::rand
         {
             gocpp::panic("invalid argument to Shuffle"_s);
         }
+
         // Fisher-Yates shuffle: https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
         // Shuffle really ought not be called with n that doesn't fit in 32 bits.
         // Not only will it take a very long time, but with 2³¹! possible permutations,
@@ -535,6 +537,7 @@ namespace golang::rand
         {
             return r;
         }
+
         // This is the first call. Initialize based on GODEBUG.
         Rand* r = {};
         if(rec::Value(gocpp::recv(randautoseed)) == "0"_s)
@@ -550,6 +553,7 @@ namespace golang::rand
                 x.s64 = new runtimeSource {};
             });
         }
+
         if(! rec::CompareAndSwap<Rand>(gocpp::recv(globalRandGenerator), nullptr, r))
         {
             // Two different goroutines called some top-level
@@ -560,6 +564,7 @@ namespace golang::rand
             // Just use the first one to get in.
             return rec::Load<Rand>(gocpp::recv(globalRandGenerator));
         }
+
         return r;
     }
 
@@ -642,6 +647,7 @@ namespace golang::rand
     void Seed(int64_t seed)
     {
         auto orig = rec::Load<Rand>(gocpp::recv(globalRandGenerator));
+
         // If we are already using a lockedSource, we can just re-seed it.
         if(orig != nullptr)
         {
@@ -651,6 +657,7 @@ namespace golang::rand
                 return;
             }
         }
+
         // Otherwise either
         // 1) orig == nil, which is the normal case when Seed is the first
         // top-level function to be called, or
@@ -659,6 +666,7 @@ namespace golang::rand
         // Either way we do the same thing.
         auto r = New(new(lockedSource));
         rec::Seed(gocpp::recv(r), seed);
+
         if(! rec::CompareAndSwap<Rand>(gocpp::recv(globalRandGenerator), orig, r))
         {
             // Something changed underfoot. Retry to be safe.

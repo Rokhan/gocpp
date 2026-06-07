@@ -31,9 +31,11 @@ namespace golang::color
         auto r1 = int32_t(r);
         auto g1 = int32_t(g);
         auto b1 = int32_t(b);
+
         // yy is in range [0,0xff].
         // Note that 19595 + 38470 + 7471 equals 65536.
         auto yy = (19595 * r1 + 38470 * g1 + 7471 * b1 + (1 << 15)) >> 16;
+
         // The bit twiddling below is equivalent to
         // cb := (-11056*r1 - 21712*g1 + 32768*b1 + 257<<15) >> 16
         // if cb < 0 {
@@ -55,6 +57,7 @@ namespace golang::color
         {
             cb = ~ (cb >> 31);
         }
+
         // Note that 32768 - 27440 - 5328 equals 0.
         auto cr = 32768 * r1 - 27440 * g1 - 5328 * b1 + (257 << 15);
         if(uint32_t(cr) & 0xff000000 == 0)
@@ -65,6 +68,7 @@ namespace golang::color
         {
             cr = ~ (cr >> 31);
         }
+
         return {uint8_t(yy), uint8_t(cb), uint8_t(cr)};
     }
 
@@ -123,6 +127,7 @@ namespace golang::color
         auto yy1 = int32_t(y) * 0x10101;
         auto cb1 = int32_t(cb) - 128;
         auto cr1 = int32_t(cr) - 128;
+
         // The bit twiddling below is equivalent to
         // r := (yy1 + 91881*cr1) >> 16
         // if r < 0 {
@@ -143,6 +148,7 @@ namespace golang::color
         {
             r = ~ (r >> 31);
         }
+
         auto g = yy1 - 22554 * cb1 - 46802 * cr1;
         if(uint32_t(g) & 0xff000000 == 0)
         {
@@ -152,6 +158,7 @@ namespace golang::color
         {
             g = ~ (g >> 31);
         }
+
         auto b = yy1 + 116130 * cb1;
         if(uint32_t(b) & 0xff000000 == 0)
         {
@@ -161,6 +168,7 @@ namespace golang::color
         {
             b = ~ (b >> 31);
         }
+
         return {uint8_t(r), uint8_t(g), uint8_t(b)};
     }
 
@@ -230,6 +238,7 @@ namespace golang::color
         auto yy1 = int32_t(c.Y) * 0x10101;
         auto cb1 = int32_t(c.Cb) - 128;
         auto cr1 = int32_t(c.Cr) - 128;
+
         // The bit twiddling below is equivalent to
         // r := (yy1 + 91881*cr1) >> 8
         // if r < 0 {
@@ -248,6 +257,7 @@ namespace golang::color
         {
             r = ~ (r >> 31) & 0xffff;
         }
+
         auto g = yy1 - 22554 * cb1 - 46802 * cr1;
         if(uint32_t(g) & 0xff000000 == 0)
         {
@@ -257,6 +267,7 @@ namespace golang::color
         {
             g = ~ (g >> 31) & 0xffff;
         }
+
         auto b = yy1 + 116130 * cb1;
         if(uint32_t(b) & 0xff000000 == 0)
         {
@@ -266,6 +277,7 @@ namespace golang::color
         {
             b = ~ (b >> 31) & 0xffff;
         }
+
         return {uint32_t(r), uint32_t(g), uint32_t(b), 0xffff};
     }
 
@@ -322,6 +334,7 @@ namespace golang::color
         auto yy1 = int32_t(c.YCbCr.Y) * 0x10101;
         auto cb1 = int32_t(c.YCbCr.Cb) - 128;
         auto cr1 = int32_t(c.YCbCr.Cr) - 128;
+
         // The bit twiddling below is equivalent to
         // r := (yy1 + 91881*cr1) >> 8
         // if r < 0 {
@@ -340,6 +353,7 @@ namespace golang::color
         {
             r = ~ (r >> 31) & 0xffff;
         }
+
         auto g = yy1 - 22554 * cb1 - 46802 * cr1;
         if(uint32_t(g) & 0xff000000 == 0)
         {
@@ -349,6 +363,7 @@ namespace golang::color
         {
             g = ~ (g >> 31) & 0xffff;
         }
+
         auto b = yy1 + 116130 * cb1;
         if(uint32_t(b) & 0xff000000 == 0)
         {
@@ -358,6 +373,7 @@ namespace golang::color
         {
             b = ~ (b >> 31) & 0xffff;
         }
+
         // The second part of this method applies the alpha.
         auto a = uint32_t(c.A) * 0x101;
         return {uint32_t(r) * a / 0xffff, uint32_t(g) * a / 0xffff, uint32_t(b) * a / 0xffff, a};
@@ -391,6 +407,7 @@ namespace golang::color
             }
         }
         auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
+
         // Convert from alpha-premultiplied to non-alpha-premultiplied.
         if(a != 0)
         {
@@ -398,6 +415,7 @@ namespace golang::color
             g = (g * 0xffff) / a;
             b = (b * 0xffff) / a;
         }
+
         auto [y, u, v] = RGBToYCbCr(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
         return NYCbCrA {gocpp::Init<YCbCr>([=](auto& x) {
             x.Y = y;

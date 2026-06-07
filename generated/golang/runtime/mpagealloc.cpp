@@ -283,16 +283,22 @@ namespace golang::runtime
             go_throw("root level max pages doesn't fit in summary"_s);
         }
         p->sysStat = sysStat;
+
         // Initialize p.inUse.
         rec::init(gocpp::recv(p->inUse), sysStat);
+
         // System-dependent initialization.
         rec::sysInit(gocpp::recv(p), test);
+
         // Start with the searchAddr in a state indicating there's no free memory.
         p->searchAddr = maxSearchAddr();
+
         // Set the mheapLock.
         p->mheapLock = mheapLock;
+
         // Initialize the scavenge index.
         p->summaryMappedReady += rec::init(gocpp::recv(p->scav.index), test, sysStat);
+
         // Set if we're in a test.
         p->test = test;
     }
@@ -325,15 +331,19 @@ namespace golang::runtime
     void rec::grow(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t size)
     {
         assertLockHeld(p->mheapLock);
+
         // Round up to chunks, since we can't deal with increments smaller
         // than chunks. Also, sysGrow expects aligned values.
         auto limit = alignUp(base + size, pallocChunkBytes);
         base = alignDown(base, pallocChunkBytes);
+
         // Grow the summary levels in a system-dependent manner.
         // We just update a bunch of additional metadata here.
         rec::sysGrow(gocpp::recv(p), base, limit);
+
         // Grow the scavenge index.
         p->summaryMappedReady += rec::grow(gocpp::recv(p->scav.index), base, limit, p->sysStat);
+
         // Update p.start and p.end.
         // If no growth happened yet, start == 0. This is generally
         // safe since the zero page is unmapped.
@@ -351,6 +361,7 @@ namespace golang::runtime
         // range inUse because grow only ever adds never-used memory
         // regions to the page allocator.
         rec::add(gocpp::recv(p->inUse), makeAddrRange(base, limit));
+
         // A grow operation is a lot like a free operation, so if our
         // chunk ends up below p.searchAddr, update p.searchAddr to the
         // new address, just like in free.
@@ -358,6 +369,7 @@ namespace golang::runtime
         {
             p->searchAddr = b;
         }
+
         // Add entries into chunks, which is sparse, if needed. Then,
         // initialize the bitmap.
         // Newly-grown memory is always considered scavenged.
@@ -393,6 +405,7 @@ namespace golang::runtime
             }
             rec::setRange(gocpp::recv(rec::chunkOf(gocpp::recv(p), c)->scavenged), 0, pallocChunkPages);
         }
+
         // Update summaries accordingly. The grow acts like a free, so
         // we need to ensure this newly-free memory is visible in the
         // summaries.
@@ -431,6 +444,7 @@ namespace golang::runtime
         inUse.sysStat = p->sysStat;
         rec::cloneInto(gocpp::recv(p->inUse), & inUse);
         runtime::unlock(& mheap_.lock);
+
         // This might seem like a lot of work, but all these loops are for generality.
         // For a 1 GiB contiguous heap, a 48-bit address space, 13 L1 bits, a palloc chunk size
         // of 4 MiB, and adherence to the default set of heap address hints, this will result in
@@ -457,9 +471,11 @@ namespace golang::runtime
     void rec::update(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc)
     {
         assertLockHeld(p->mheapLock);
+
         // base, limit, start, and end are inclusive.
         auto limit = base + npages * pageSize - 1;
         auto [sc, ec] = std::tuple{chunkIndex(base), chunkIndex(limit)};
+
         // Handle updating the lowest level first.
         if(sc == ec)
         {
@@ -479,8 +495,10 @@ namespace golang::runtime
             // Slow contiguous path: the allocation spans more than one chunk
             // and at least one summary is guaranteed to change.
             auto summary = p->summary[len(p->summary) - 1];
+
             // Update the summary for chunk sc.
             summary[sc] = rec::summarize(gocpp::recv(rec::chunkOf(gocpp::recv(p), sc)));
+
             // Update the summaries for chunks in between, which are
             // either totally allocated or freed.
             auto whole = p->summary[len(p->summary) - 1].make_slice(sc + 1, ec);
@@ -499,6 +517,7 @@ namespace golang::runtime
                     whole[i] = freeChunkSum;
                 }
             }
+
             // Update the summary for chunk ec.
             summary[ec] = rec::summarize(gocpp::recv(rec::chunkOf(gocpp::recv(p), ec)));
         }
@@ -514,18 +533,22 @@ namespace golang::runtime
                 summary[c] = rec::summarize(gocpp::recv(rec::chunkOf(gocpp::recv(p), c)));
             }
         }
+
         // Walk up the radix tree and update the summaries appropriately.
         auto changed = true;
         for(auto l = len(p->summary) - 2; l >= 0 && changed; l--)
         {
             // Update summaries at level l from summaries at level l+1.
             changed = false;
+
             // "Constants" for the previous level which we
             // need to compute the summary from that level.
             auto logEntriesPerBlock = levelBits[l + 1];
             auto logMaxPages = levelLogPages[l + 1];
+
             // lo and hi describe all the parts of the level we need to look at.
             auto [lo, hi] = addrsToSummaryRange(l, base, limit + 1);
+
             // Iterate over each block, updating the corresponding summary in the less-granular level.
             for(auto i = lo; i < hi; i++)
             {
@@ -552,9 +575,11 @@ namespace golang::runtime
     uintptr_t rec::allocRange(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
+
         auto limit = base + npages * pageSize - 1;
         auto [sc, ec] = std::tuple{chunkIndex(base), chunkIndex(limit)};
         auto [si, ei] = std::tuple{chunkPageIndex(base), chunkPageIndex(limit)};
+
         auto scav = (unsigned int)(0);
         if(sc == ec)
         {
@@ -596,6 +621,7 @@ namespace golang::runtime
     struct offAddr rec::findMappedAddr(golang::runtime::pageAlloc* p, struct offAddr addr)
     {
         assertLockHeld(p->mheapLock);
+
         // If we're not in a test, validate first by checking mheap_.arenas.
         // This is a fast path which is only safe to use outside of testing.
         auto ai = arenaIndex(rec::addr(gocpp::recv(addr)));
@@ -676,6 +702,7 @@ namespace golang::runtime
     std::tuple<uintptr_t, struct offAddr> rec::find(golang::runtime::pageAlloc* p, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
+
         // Search algorithm.
         // This algorithm walks each level l of the radix tree from the root level
         // to the leaf level. It iterates over at most 1 << levelBits[l] of entries
@@ -699,6 +726,7 @@ namespace golang::runtime
         // i is the beginning of the block of entries we're searching at the
         // current level.
         auto i = 0;
+
         // firstFree is the region of address space that we are certain to
         // find the first free page in the heap. base and bound are the inclusive
         // bounds of this window, and both are addresses in the linearized, contiguous
@@ -741,12 +769,14 @@ namespace golang::runtime
                 go_throw("range partially overlaps"_s);
             }
         };
+
         // lastSum is the summary which we saw on the previous level that made us
         // move on to the next level. Used to print additional information in the
         // case of a catastrophic failure.
         // lastSumIdx is that summary's index in the previous level.
         auto lastSum = packPallocSum(0, 0, 0);
         auto lastSumIdx = - 1;
+
         nextLevel:
         for(auto l = 0; l < len(p->summary); l++)
         {
@@ -759,11 +789,14 @@ namespace golang::runtime
             // For the root level, entriesPerBlock is the whole level.
             auto entriesPerBlock = 1 << levelBits[l];
             auto logMaxPages = levelLogPages[l];
+
             // We've moved into a new level, so let's update i to our new
             // starting index. This is a no-op for level 0.
             i <<= levelBits[l];
+
             // Slice out the block of entries we care about.
             auto entries = p->summary[l].make_slice(i, i + entriesPerBlock);
+
             // Determine j0, the first index we should start iterating from.
             // The searchAddr may help us eliminate iterations if we followed the
             // searchAddr on the previous level or we're on the root level, in which
@@ -773,6 +806,7 @@ namespace golang::runtime
             {
                 j0 = searchIdx & (entriesPerBlock - 1);
             }
+
             // Run over the level entries looking for
             // a contiguous run of at least npages either
             // within an entry or across entries.
@@ -793,9 +827,11 @@ namespace golang::runtime
                     size = 0;
                     continue;
                 }
+
                 // We've encountered a non-zero summary which means
                 // free memory, so update firstFree.
                 foundFree(levelIndexToOffAddr(l, i + j), (uintptr_t(1) << logMaxPages) * pageSize);
+
                 auto s = rec::start(gocpp::recv(sum));
                 if(size + s >= (unsigned int)(npages))
                 {
@@ -845,6 +881,7 @@ namespace golang::runtime
                 // We're at level zero, so that means we've exhausted our search.
                 return {0, maxSearchAddr()};
             }
+
             // We're not at level zero, and we exhausted the level we were looking in.
             // This means that either our calculations were wrong or the level above
             // lied to us. In either case, dump some useful state and throw.
@@ -859,6 +896,7 @@ namespace golang::runtime
             }
             go_throw("bad summary data"_s);
         }
+
         // Since we've gotten to this point, that means we haven't found a
         // sufficiently-sized free region straddling some boundary (chunk or larger).
         // This means the last summary we inspected must have had a large enough "max"
@@ -876,8 +914,10 @@ namespace golang::runtime
             print("runtime: npages = "_s, npages, "\n"_s);
             go_throw("bad summary data"_s);
         }
+
         // Compute the address at which the free space starts.
         auto addr = chunkBase(ci) + uintptr_t(j) * pageSize;
+
         // Since we actually searched the chunk, we may have
         // found an even narrower free window.
         auto searchAddr = chunkBase(ci) + uintptr_t(searchIdx) * pageSize;
@@ -902,12 +942,14 @@ namespace golang::runtime
         uintptr_t addr;
         uintptr_t scav;
         assertLockHeld(p->mheapLock);
+
         // If the searchAddr refers to a region which has a higher address than
         // any known chunk, then we know we're out of memory.
         if(chunkIndex(rec::addr(gocpp::recv(p->searchAddr))) >= p->end)
         {
             return {0, 0};
         }
+
         // If npages has a chance of fitting in the chunk where the searchAddr is,
         // search it directly.
         auto searchAddr = minOffAddr;
@@ -948,6 +990,7 @@ namespace golang::runtime
         Found:
         // Go ahead and actually mark the bits now that we have an address.
         scav = rec::allocRange(gocpp::recv(p), addr, npages);
+
         // If we found a higher searchAddr, we know that all the
         // heap memory before that searchAddr in an offset address space is
         // allocated, so bump p.searchAddr up to the new one.
@@ -968,6 +1011,7 @@ namespace golang::runtime
     void rec::free(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
+
         // If we're freeing pages below the p.searchAddr, update searchAddr.
         if(auto b = (offAddr {base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
         {
@@ -988,6 +1032,7 @@ namespace golang::runtime
             // Slow path: we're clearing more bits so we may need to iterate.
             auto [sc, ec] = std::tuple{chunkIndex(base), chunkIndex(limit)};
             auto [si, ei] = std::tuple{chunkPageIndex(base), chunkPageIndex(limit)};
+
             if(sc == ec)
             {
                 // The range doesn't cross any chunk boundaries.
@@ -1080,6 +1125,7 @@ namespace golang::runtime
         {
             // Merge in sums[i].
             auto [si, mi, ei] = rec::unpack(gocpp::recv(sums[i]));
+
             // Merge in sums[i].start only if the running summary is
             // completely free, otherwise this summary's start
             // plays no role in the combined sum.
@@ -1087,11 +1133,13 @@ namespace golang::runtime
             {
                 start += si;
             }
+
             // Recompute the max value of the running sum by looking
             // across the boundary between the running sum and sums[i]
             // and at the max sums[i], taking the greatest of those two
             // and the max of the running sum.
             most = gocpp::max(most, end + si, mi);
+
             // Merge in end by checking if this new summary is totally
             // free. If it is, then we want to extend the running sum's
             // end by the new summary. If not, then we have some alloc'd

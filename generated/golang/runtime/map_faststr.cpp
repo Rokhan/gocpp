@@ -291,13 +291,16 @@ namespace golang::runtime
         }
         auto key = stringStructOf(& s);
         auto hash = t->Hasher(noescape(gocpp::unsafe_pointer(& s)), uintptr_t(h->hash0));
+
         // Set hashWriting after calling t.hasher for consistency with mapassign.
         h->flags ^= hashWriting;
+
         if(h->buckets == nullptr)
         {
             // newarray(t.bucket, 1)
             h->buckets = newobject(t->Bucket);
         }
+
         again:
         auto bucket = hash & bucketMask(h->B);
         if(rec::growing(gocpp::recv(h)))
@@ -306,9 +309,11 @@ namespace golang::runtime
         }
         auto b = (bmap*)(add(h->buckets, bucket * uintptr_t(t->BucketSize)));
         auto top = tophash(hash);
+
         bmap* insertb = {};
         uintptr_t inserti = {};
         gocpp::unsafe_pointer insertk = {};
+
         bucketloop:
         for(; ; )
         {
@@ -357,6 +362,7 @@ namespace golang::runtime
             }
             b = ovf;
         }
+
         // Did not find mapping for key. Allocate new cell & add entry.
         // If we hit the max load factor or we have too many overflow buckets,
         // and we're not already in the middle of growing, start growing.
@@ -366,6 +372,7 @@ namespace golang::runtime
             // Growing the table invalidates everything, so try again
             goto again;
         }
+
         if(insertb == nullptr)
         {
             // The current bucket and all the overflow buckets connected to it are full, allocate a new one.
@@ -375,10 +382,12 @@ namespace golang::runtime
         }
         // mask inserti to avoid bounds checks
         insertb->tophash[inserti & (bucketCnt - 1)] = top;
+
         insertk = add(gocpp::unsafe_pointer(insertb), dataOffset + inserti * 2 * goarch::PtrSize);
         // store new key at insert position
         *((stringStruct*)(insertk)) = *key;
         h->count++;
+
         done:
         auto elem = add(gocpp::unsafe_pointer(insertb), dataOffset + bucketCnt * 2 * goarch::PtrSize + inserti * uintptr_t(t->ValueSize));
         if(h->flags & hashWriting == 0)
@@ -404,10 +413,13 @@ namespace golang::runtime
         {
             fatal("concurrent map writes"_s);
         }
+
         auto key = stringStructOf(& ky);
         auto hash = t->Hasher(noescape(gocpp::unsafe_pointer(& ky)), uintptr_t(h->hash0));
+
         // Set hashWriting after calling t.hasher for consistency with mapdelete
         h->flags ^= hashWriting;
+
         auto bucket = hash & bucketMask(h->B);
         if(rec::growing(gocpp::recv(h)))
         {
@@ -501,6 +513,7 @@ namespace golang::runtime
                 goto search_break;
             }
         }
+
         if(h->flags & hashWriting == 0)
         {
             fatal("concurrent map writes"_s);
@@ -513,6 +526,7 @@ namespace golang::runtime
         // make sure we evacuate the oldbucket corresponding
         // to the bucket we're about to use
         evacuate_faststr(t, h, bucket & rec::oldbucketmask(gocpp::recv(h)));
+
         // evacuate one more oldbucket to make progress on growing
         if(rec::growing(gocpp::recv(h)))
         {
@@ -534,6 +548,7 @@ namespace golang::runtime
             x->b = (bmap*)(add(h->buckets, oldbucket * uintptr_t(t->BucketSize)));
             x->k = add(gocpp::unsafe_pointer(x->b), dataOffset);
             x->e = add(x->k, bucketCnt * 2 * goarch::PtrSize);
+
             if(! rec::sameSizeGrow(gocpp::recv(h)))
             {
                 // Only calculate y pointers if we're growing bigger.
@@ -543,6 +558,7 @@ namespace golang::runtime
                 y->k = add(gocpp::unsafe_pointer(y->b), dataOffset);
                 y->e = add(y->k, bucketCnt * 2 * goarch::PtrSize);
             }
+
             for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
             {
                 auto k = add(gocpp::unsafe_pointer(b), dataOffset);
@@ -570,10 +586,12 @@ namespace golang::runtime
                             useY = 1;
                         }
                     }
+
                     // evacuatedX + 1 == evacuatedY, enforced in makemap
                     b->tophash[i] = evacuatedX + useY;
                     // evacuation destination
                     auto dst = & xy[useY];
+
                     if(dst->i == bucketCnt)
                     {
                         dst->b = rec::newoverflow(gocpp::recv(h), t, dst->b);
@@ -583,8 +601,10 @@ namespace golang::runtime
                     }
                     // mask dst.i as an optimization, to avoid a bounds check
                     dst->b->tophash[dst->i & (bucketCnt - 1)] = top;
+
                     // Copy key.
                     *(gocpp::string*)(dst->k) = *(gocpp::string*)(k);
+
                     typedmemmove(t->Elem, dst->e, e);
                     dst->i++;
                     // These updates might push these pointers past the end of the
@@ -606,6 +626,7 @@ namespace golang::runtime
                 memclrHasPointers(ptr, n);
             }
         }
+
         if(oldbucket == h->nevacuate)
         {
             advanceEvacuationMark(h, t, newbit);

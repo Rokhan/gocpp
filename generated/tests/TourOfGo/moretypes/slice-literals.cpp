@@ -69,10 +69,13 @@ namespace golang::main
     {
         auto q = gocpp::slice<int> {2, 3, 5, 7, 11, 13};
         mocklib::Println(q);
+
         auto r = gocpp::slice<bool> {true, false, true, true, false, true};
         mocklib::Println(r);
+
         auto s = gocpp::slice<gocpp_id_0> { {2, true},  {3, false},  {5, true},  {7, true},  {11, false},  {13, true}};
         mocklib::Println(s);
+
         for(auto [i, err] : errors)
         {
             mocklib::Println(i, err);

@@ -26,6 +26,7 @@ namespace golang::time
     gocpp::slice<unsigned char> rec::appendFormatRFC3339(golang::time::Time t, gocpp::slice<unsigned char> b, bool nanos)
     {
         auto [gocpp_id_0, offset, abs] = rec::locabs(gocpp::recv(t));
+
         // Format date.
         auto [year, month, day, gocpp_id_1] = absDate(abs, true);
         b = appendInt(b, year, 4);
@@ -33,7 +34,9 @@ namespace golang::time
         b = appendInt(b, int(month), 2);
         b = append(b, '-');
         b = appendInt(b, day, 2);
+
         b = append(b, 'T');
+
         // Format time.
         auto [hour, min, sec] = absClock(abs);
         b = appendInt(b, hour, 2);
@@ -41,15 +44,18 @@ namespace golang::time
         b = appendInt(b, min, 2);
         b = append(b, ':');
         b = appendInt(b, sec, 2);
+
         if(nanos)
         {
             auto std = stdFracSecond(stdFracSecond9, 9, '.');
             b = appendNano(b, rec::Nanosecond(gocpp::recv(t)), std);
         }
+
         if(offset == 0)
         {
             return append(b, 'Z');
         }
+
         // Format zone.
         // convert to minutes
         auto zone = offset / 60;
@@ -72,6 +78,7 @@ namespace golang::time
     {
         auto n0 = len(b);
         b = rec::appendFormatRFC3339(gocpp::recv(t), b, true);
+
         // Not all valid Go timestamps can be serialized as valid RFC 3339.
         // Explicitly check for these edge cases.
         // See https://go.dev/issue/4556 and https://go.dev/issue/54580.
@@ -128,6 +135,7 @@ namespace golang::time
             }
             return x;
         };
+
         // Parse the date and time.
         if(len(s) < len("2006-01-02T15:04:05"_s))
         {
@@ -150,6 +158,7 @@ namespace golang::time
             return {Time {}, false};
         }
         s = s.make_slice(19);
+
         // Parse the fractional second.
         int nsec = {};
         if(len(s) >= 2 && s[0] == '.' && isDigit(s, 1))
@@ -161,6 +170,7 @@ namespace golang::time
             std::tie(nsec, std::ignore, std::ignore) = parseNanoseconds(s, n);
             s = s.make_slice(n);
         }
+
         // Parse the time zone.
         auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
         if(len(s) != 1 || s[0] != 'Z')
@@ -183,6 +193,7 @@ namespace golang::time
                 zoneOffset *= - 1;
             }
             rec::addSec(gocpp::recv(t), - int64_t(zoneOffset));
+
             // Use local zone with the given offset if possible.
             if(auto [gocpp_id_2, offset, gocpp_id_3, gocpp_id_4, gocpp_id_5] = rec::lookup(gocpp::recv(local), rec::unixSec(gocpp::recv(t))); offset == zoneOffset)
             {
@@ -206,6 +217,7 @@ namespace golang::time
             {
                 return {Time {}, err};
             }
+
             // The parse template syntax cannot correctly validate RFC 3339.
             // Explicitly check for cases that Parse is unable to validate for.
             // See https://go.dev/issue/54580.

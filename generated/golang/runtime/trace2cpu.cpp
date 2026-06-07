@@ -179,6 +179,7 @@ namespace golang::runtime
                 // we would still want to do a goroutine-level sleep in between
                 // reads to avoid frequent wakeups.
                 rec::sleep(gocpp::recv(trace.cpuSleep), 100000000);
+
                 auto tl = traceAcquire();
                 if(! rec::ok(gocpp::recv(tl)))
                 {
@@ -206,6 +207,7 @@ namespace golang::runtime
         {
             go_throw("traceStopReadCPU called with trace enabled"_s);
         }
+
         // Once we close the profbuf, we'll be in one of two situations:
         // - The logger goroutine has already exited because it observed
         // that the trace is disabled.
@@ -217,8 +219,10 @@ namespace golang::runtime
         rec::close(gocpp::recv(trace.cpuLogRead[0]));
         rec::close(gocpp::recv(trace.cpuLogRead[1]));
         rec::wake(gocpp::recv(trace.cpuSleep));
+
         // Wait until the logger goroutine exits.
         trace.cpuLogDone.recv();
+
         // Clear state for the next trace.
         trace.cpuLogDone = nullptr;
         trace.cpuLogRead[0] = nullptr;
@@ -242,6 +246,7 @@ namespace golang::runtime
     bool traceReadCPU(uintptr_t gen)
     {
         gocpp::array<uintptr_t, traceStackSize> pcBuf = {};
+
         auto [data, tags, eof] = rec::read(gocpp::recv(trace.cpuLogRead[gen % 2]), profBufNonBlocking);
         for(; len(data) > 0; )
         {
@@ -260,6 +265,7 @@ namespace golang::runtime
                 // mismatched profile records and tags
                 break;
             }
+
             // Deserialize the data in the profile buffer.
             auto recordLen = data[0];
             auto timestamp = data[1];
@@ -271,9 +277,11 @@ namespace golang::runtime
             auto goid = data[3];
             auto mpid = data[4];
             auto stk = data.make_slice(5, recordLen);
+
             // Overflow records always have their headers contain
             // all zeroes.
             auto isOverflowRecord = len(stk) == 1 && data[2] == 0 && data[3] == 0 && data[4] == 0;
+
             // Move the data iterator forward.
             data = data.make_slice(recordLen);
             // No support here for reporting goroutine tags at the moment; if
@@ -281,12 +289,14 @@ namespace golang::runtime
             // probably want to see when the tags are applied and when they
             // change, instead of only seeing them when we get a CPU sample.
             tags = tags.make_slice(1);
+
             if(isOverflowRecord)
             {
                 // Looks like an overflow record from the profBuf. Not much to
                 // do here, we only want to report full records.
                 continue;
             }
+
             // Construct the stack for insertion to the stack table.
             auto nstk = 1;
             pcBuf[0] = logicalStackSentinel;
@@ -294,8 +304,10 @@ namespace golang::runtime
             {
                 pcBuf[nstk] = uintptr_t(stk[nstk - 1]);
             }
+
             // Write out a trace event.
             auto w = unsafeTraceWriter(gen, trace.cpuBuf[gen % 2]);
+
             // Ensure we have a place to write to.
             bool flushed = {};
             std::tie(w, flushed) = rec::ensure(gocpp::recv(w), 2 + 5 * traceBytesPerNumber);
@@ -304,8 +316,10 @@ namespace golang::runtime
                 // Annotate the batch as containing strings.
                 rec::byte(gocpp::recv(w), (unsigned char)(traceEvCPUSamples));
             }
+
             // Add the stack to the table.
             auto stackID = rec::put(gocpp::recv(trace.stackTab[gen % 2]), pcBuf.make_slice(0, nstk));
+
             // Write out the CPU sample.
             rec::byte(gocpp::recv(w), (unsigned char)(traceEvCPUSample));
             rec::varint(gocpp::recv(w), timestamp);
@@ -313,6 +327,7 @@ namespace golang::runtime
             rec::varint(gocpp::recv(w), ppid);
             rec::varint(gocpp::recv(w), goid);
             rec::varint(gocpp::recv(w), stackID);
+
             trace.cpuBuf[gen % 2] = w.traceBuf;
         }
         return ! eof;
@@ -354,6 +369,7 @@ namespace golang::runtime
             // this in any useful way anyway.
             return;
         }
+
         // We're going to conditionally write to one of two buffers based on the
         // generation. To make sure we write to the correct one, we need to make
         // sure this thread's trace seqlock is held. If it already is, then we're
@@ -376,6 +392,7 @@ namespace golang::runtime
             }
             return;
         }
+
         auto now = traceClockNow();
         // The "header" here is the ID of the M that was running the profiled code,
         // followed by the IDs of the P and goroutine. (For normal CPU profiling, it's
@@ -400,12 +417,14 @@ namespace golang::runtime
         {
             hdr[2] = uint64_t(mp->procid);
         }
+
         // Allow only one writer at a time
         for(; ! rec::CompareAndSwap(gocpp::recv(trace.signalLock), 0, 1); )
         {
             // TODO: Is it safe to osyield here? https://go.dev/issue/52672
             osyield();
         }
+
         if(auto log = rec::Load<profBuf>(gocpp::recv(trace.cpuLogWrite[gen % 2])); log != nullptr)
         {
             // Note: we don't pass a tag pointer here (how should profiling tags
@@ -413,7 +432,9 @@ namespace golang::runtime
             // careful about write barriers. See the long comment in profBuf.write.
             rec::write(gocpp::recv(log), nullptr, int64_t(now), hdr.make_slice(0), stk);
         }
+
         rec::Store(gocpp::recv(trace.signalLock), 0);
+
         // Release the seqlock if we acquired it earlier.
         if(locked)
         {

@@ -303,6 +303,7 @@ namespace golang::runtime
         rec::Store(gocpp::recv(c->idleMarkTime), 0);
         c->markStartTime = markStartTime;
         c->triggered = rec::Load(gocpp::recv(c->heapLive));
+
         // Compute the background mark utilization goal. In general,
         // this may not come out exactly. We round the number of
         // dedicated workers so that the utilization is closest to
@@ -329,18 +330,21 @@ namespace golang::runtime
         {
             c->fractionalUtilizationGoal = 0;
         }
+
         // In STW mode, we just want dedicated workers.
         if(debug.gcstoptheworld > 0)
         {
             dedicatedMarkWorkersNeeded = int64_t(procs);
             c->fractionalUtilizationGoal = 0;
         }
+
         // Clear per-P state
         for(auto [gocpp_ignored, p] : allp)
         {
             p->gcAssistTime = 0;
             p->gcFractionalMarkTime = 0;
         }
+
         if(trigger.kind == gcTriggerTime)
         {
             // During a periodic GC cycle, reduce the number of idle mark workers
@@ -366,10 +370,12 @@ namespace golang::runtime
             // change during a GC cycle.
             rec::setMaxIdleMarkWorkers(gocpp::recv(c), int32_t(procs) - int32_t(dedicatedMarkWorkersNeeded));
         }
+
         // Compute initial values for controls that are updated
         // throughout the cycle.
         rec::Store(gocpp::recv(c->dedicatedMarkWorkersNeeded), dedicatedMarkWorkersNeeded);
         rec::revise(gocpp::recv(c));
+
         if(debug.gcpacertrace > 0)
         {
             auto heapGoal = rec::heapGoal(gocpp::recv(c));
@@ -412,12 +418,15 @@ namespace golang::runtime
         auto live = rec::Load(gocpp::recv(c->heapLive));
         auto scan = rec::Load(gocpp::recv(c->heapScan));
         auto work = rec::Load(gocpp::recv(c->heapScanWork)) + rec::Load(gocpp::recv(c->stackScanWork)) + rec::Load(gocpp::recv(c->globalsScanWork));
+
         // Assume we're under the soft goal. Pace GC to complete at
         // heapGoal assuming the heap is in steady-state.
         auto heapGoal = int64_t(rec::heapGoal(gocpp::recv(c)));
+
         // The expected scan work is computed as the amount of bytes scanned last
         // GC cycle (both heap and stack), plus our estimate of globals work for this cycle.
         auto scanWorkExpected = int64_t(c->lastHeapScan + rec::Load(gocpp::recv(c->lastStackScan)) + rec::Load(gocpp::recv(c->globalsScan)));
+
         // maxScanWork is a worst-case estimate of the amount of scan work that
         // needs to be performed in this GC cycle. Specifically, it represents
         // the case where *all* scannable memory turns out to be live, and
@@ -437,6 +446,7 @@ namespace golang::runtime
             // memory anyway.
             auto extHeapGoal = int64_t(double(heapGoal - int64_t(c->triggered)) / double(scanWorkExpected) * double(maxScanWork)) + int64_t(c->triggered);
             scanWorkExpected = maxScanWork;
+
             // hardGoal is a hard limit on the amount that we're willing to push back the
             // heap goal, and that's twice the heap goal (i.e. if GOGC=100 and the heap and/or
             // stacks and/or globals grow to twice their size, this limits the current GC cycle's
@@ -457,9 +467,11 @@ namespace golang::runtime
             // finish by that point.
             auto maxOvershoot = 1.1;
             heapGoal = int64_t(double(heapGoal) * maxOvershoot);
+
             // Compute the upper bound on the scan work remaining.
             scanWorkExpected = maxScanWork;
         }
+
         // Compute the remaining scan work estimate.
         // Note that we currently count allocations during GC as both
         // scannable heap (heapScan) and scan work completed
@@ -478,6 +490,7 @@ namespace golang::runtime
             // negative, even in the hard goal regime.
             scanWorkRemaining = 1000;
         }
+
         // Compute the heap distance remaining.
         auto heapRemaining = heapGoal - int64_t(live);
         if(heapRemaining <= 0)
@@ -486,6 +499,7 @@ namespace golang::runtime
             // dividing by zero or setting the assist negative.
             heapRemaining = 1;
         }
+
         // Compute the mutator assist ratio so by the time the mutator
         // allocates the remaining heap bytes up to heapGoal, it will
         // have done (or stolen) the remaining amount of scan work.
@@ -508,8 +522,10 @@ namespace golang::runtime
         // Record last heap goal for the scavenger.
         // We'll be updating the heap goal soon.
         gcController.lastHeapGoal = rec::heapGoal(gocpp::recv(c));
+
         // Compute the duration of time for which assists were turned on.
         auto assistDuration = now - c->markStartTime;
+
         // Assume background mark hit its utilization goal.
         auto utilization = gcBackgroundUtilization;
         // Add assist utilization; avoid divide by zero.
@@ -517,6 +533,7 @@ namespace golang::runtime
         {
             utilization += double(rec::Load(gocpp::recv(c->assistTime))) / double(assistDuration * int64_t(procs));
         }
+
         if(rec::Load(gocpp::recv(c->heapLive)) <= c->triggered)
         {
             // Shouldn't happen, but let's be very safe about this in case the
@@ -553,6 +570,7 @@ namespace golang::runtime
         // Note that because we only care about the ratio, assistDuration and procs cancel out.
         auto scanWork = rec::Load(gocpp::recv(c->heapScanWork)) + rec::Load(gocpp::recv(c->stackScanWork)) + rec::Load(gocpp::recv(c->globalsScanWork));
         auto currentConsMark = (double(rec::Load(gocpp::recv(c->heapLive)) - c->triggered) * (utilization + idleUtilization)) / (double(scanWork) * (1 - utilization));
+
         // Update our cons/mark estimate. This is the maximum of the value we just computed and the last
         // 4 cons/mark values we measured. The reason we take the maximum here is to bias a noisy
         // cons/mark measurement toward fewer assists at the expense of additional GC cycles (starting
@@ -568,6 +586,7 @@ namespace golang::runtime
         }
         copy(c->lastConsMark.make_slice(0), c->lastConsMark.make_slice(1));
         c->lastConsMark[len(c->lastConsMark) - 1] = currentConsMark;
+
         if(debug.gcpacertrace > 0)
         {
             printlock();
@@ -638,6 +657,7 @@ namespace golang::runtime
         {
             go_throw("gcControllerState.findRunnable: blackening not enabled"_s);
         }
+
         // Since we have the current time, check if the GC CPU limiter
         // hasn't had an update in a while. This check is necessary in
         // case the limiter is on but hasn't been checked in a while and
@@ -650,6 +670,7 @@ namespace golang::runtime
         {
             rec::update(gocpp::recv(gcCPULimiter), now);
         }
+
         if(! gcMarkWorkAvailable(pp))
         {
             // No work to be done right now. This can happen at
@@ -658,6 +679,7 @@ namespace golang::runtime
             // now because it'll just return immediately.
             return {nullptr, now};
         }
+
         // Grab a worker before we commit to running below.
         auto node = (gcBgMarkWorkerNode*)(rec::pop(gocpp::recv(gcBgMarkWorkerPool)));
         if(node == nullptr)
@@ -674,6 +696,7 @@ namespace golang::runtime
             // just using, ensuring work can complete.
             return {nullptr, now};
         }
+
         auto decIfPositive = [=](atomic::Int64* val) mutable -> bool
         {
             for(; ; )
@@ -683,12 +706,14 @@ namespace golang::runtime
                 {
                     return false;
                 }
+
                 if(rec::CompareAndSwap(gocpp::recv(val), v, v - 1))
                 {
                     return true;
                 }
             }
         };
+
         if(decIfPositive(& c->dedicatedMarkWorkersNeeded))
         {
             // This P is now dedicated to marking until the end of
@@ -717,6 +742,7 @@ namespace golang::runtime
             // Run a fractional worker.
             pp->gcMarkWorkerMode = gcMarkWorkerFractionalMode;
         }
+
         // Run the background mark worker.
         auto gp = rec::ptr(gocpp::recv(node->gp));
         auto trace = traceAcquire();
@@ -743,6 +769,7 @@ namespace golang::runtime
         rec::Store(gocpp::recv(c->lastStackScan), uint64_t(rec::Load(gocpp::recv(c->stackScanWork))));
         // Reset triggered.
         c->triggered = ~ uint64_t(0);
+
         // heapLive was updated, so emit a trace event.
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
@@ -853,6 +880,7 @@ namespace golang::runtime
         uint64_t minTrigger;
         // Start with the goal calculated for gcPercent.
         goal = rec::Load(gocpp::recv(c->gcPercentHeapGoal));
+
         // Check if the memory-limit-based goal is smaller, and if so, pick that.
         if(auto newGoal = rec::memoryLimitHeapGoal(gocpp::recv(c)); newGoal < goal)
         {
@@ -876,6 +904,7 @@ namespace golang::runtime
             // the trigger, because it could cause a violation of the
             // invariant that the trigger < goal.
             minTrigger = sweepDistTrigger;
+
             // Ensure that the heap goal is at least a little larger than
             // the point at which we triggered. This may not be the case if GC
             // start is delayed or if the allocation that pushed gcController.heapLive
@@ -921,6 +950,7 @@ namespace golang::runtime
                 break;
             }
         }
+
         // Below we compute a goal from memoryLimit. There are a few things to be aware of.
         // Firstly, the memoryLimit does not easily compare to the heap goal: the former
         // is total mapped memory by the runtime that hasn't been released, while the latter is
@@ -966,14 +996,17 @@ namespace golang::runtime
         // Shorter GC cycles and less GC work means noisy external factors like the OS scheduler have a
         // greater impact.
         auto memoryLimit = uint64_t(rec::Load(gocpp::recv(c->memoryLimit)));
+
         // Compute term 1.
         auto nonHeapMemory = mappedReady - heapFree - heapAlloc;
+
         // Compute term 2.
         uint64_t overage = {};
         if(mappedReady > memoryLimit)
         {
             overage = mappedReady - memoryLimit;
         }
+
         if(nonHeapMemory + overage >= memoryLimit)
         {
             // We're at a point where non-heap memory exceeds the memory limit on its own.
@@ -982,8 +1015,10 @@ namespace golang::runtime
             // Set it to heapMarked, the lowest possible goal.
             return c->heapMarked;
         }
+
         // Compute the goal.
         auto goal = memoryLimit - (nonHeapMemory + overage);
+
         // Apply some headroom to the goal to account for pacing inaccuracies and to reduce
         // the impact of scavenging at allocation time in response to a high allocation rate
         // when GOGC=off. See issue #57069. Also, be careful about small limits.
@@ -1033,6 +1068,7 @@ namespace golang::runtime
     std::tuple<uint64_t, uint64_t> rec::trigger(golang::runtime::gcControllerState* c)
     {
         auto [goal, minTrigger] = rec::heapGoalInternal(gocpp::recv(c));
+
         // Invariant: the trigger must always be less than the heap goal.
         // Note that the memory limit sets a hard maximum on our heap goal,
         // but the live heap may grow beyond it.
@@ -1044,6 +1080,7 @@ namespace golang::runtime
             // if it came out as smaller than that.
             return {goal, goal};
         }
+
         // Below this point, c.heapMarked < goal.
         // heapMarked is our absolute minimum, and it's possible the trigger
         // bound we get from heapGoalinternal is less than that.
@@ -1051,6 +1088,7 @@ namespace golang::runtime
         {
             minTrigger = c->heapMarked;
         }
+
         // If we let the trigger go too low, then if the application
         // is allocating very rapidly we might end up in a situation
         // where we're allocating black during a nearly always-on GC.
@@ -1063,6 +1101,7 @@ namespace golang::runtime
         {
             minTrigger = triggerLowerBound;
         }
+
         // For small heaps, set the max trigger point at maxTriggerRatio of the way
         // from the live heap to the heap goal. This ensures we always have *some*
         // headroom when the GC actually starts. For larger heaps, set the max trigger
@@ -1077,6 +1116,7 @@ namespace golang::runtime
             maxTrigger = goal - defaultHeapMinimum;
         }
         maxTrigger = gocpp::max(maxTrigger, minTrigger);
+
         // Compute the trigger from our bounds and the runway stored by commit.
         uint64_t trigger = {};
         auto runway = rec::Load(gocpp::recv(c->runway));
@@ -1122,6 +1162,7 @@ namespace golang::runtime
         {
             assertWorldStoppedOrLockHeld(& mheap_.lock);
         }
+
         if(isSweepDone)
         {
             // The sweep is done, so there aren't any restrictions on the trigger
@@ -1135,6 +1176,7 @@ namespace golang::runtime
             // give the sweeper some runway if it doesn't have enough.
             rec::Store(gocpp::recv(c->sweepDistMinTrigger), rec::Load(gocpp::recv(c->heapLive)) + sweepMinHeapDistance);
         }
+
         // Compute the next GC goal, which is when the allocated heap
         // has grown by GOGC/100 over where it started the last cycle,
         // plus additional runway for non-heap sources of GC work.
@@ -1150,6 +1192,7 @@ namespace golang::runtime
             gcPercentHeapGoal = c->heapMinimum;
         }
         rec::Store(gocpp::recv(c->gcPercentHeapGoal), gcPercentHeapGoal);
+
         // Compute the amount of runway we want the GC to have by using our
         // estimate of the cons/mark ratio.
         // The idea is to take our expected scan work, and multiply it by
@@ -1182,6 +1225,7 @@ namespace golang::runtime
         {
             assertWorldStoppedOrLockHeld(& mheap_.lock);
         }
+
         auto out = rec::Load(gocpp::recv(c->gcPercent));
         if(in < 0)
         {
@@ -1189,6 +1233,7 @@ namespace golang::runtime
         }
         c->heapMinimum = defaultHeapMinimum * uint64_t(in) / 100;
         rec::Store(gocpp::recv(c->gcPercent), in);
+
         return out;
     }
 
@@ -1204,12 +1249,14 @@ namespace golang::runtime
             gcControllerCommit();
             unlock(& mheap_.lock);
         });
+
         // If we just disabled GC, wait for any concurrent GC mark to
         // finish so we always return with no GC running.
         if(in < 0)
         {
             gcWaitOnMark(rec::Load(gocpp::recv(work.cycles)));
         }
+
         return out;
     }
 
@@ -1237,11 +1284,13 @@ namespace golang::runtime
         {
             assertWorldStoppedOrLockHeld(& mheap_.lock);
         }
+
         auto out = rec::Load(gocpp::recv(c->memoryLimit));
         if(in >= 0)
         {
             rec::Store(gocpp::recv(c->memoryLimit), in);
         }
+
         return out;
     }
 
@@ -1389,12 +1438,15 @@ namespace golang::runtime
     void gcControllerCommit()
     {
         assertWorldStoppedOrLockHeld(& mheap_.lock);
+
         rec::commit(gocpp::recv(gcController), isSweepDone());
+
         // Update mark pacing.
         if(gcphase != _GCoff)
         {
             rec::revise(gocpp::recv(gcController));
         }
+
         // TODO(mknyszek): This isn't really accurate any longer because the heap
         // goal is computed dynamically. Still useful to snapshot, but not as useful.
         auto trace = traceAcquire();
@@ -1403,6 +1455,7 @@ namespace golang::runtime
             rec::HeapGoal(gocpp::recv(trace));
             traceRelease(trace);
         }
+
         auto [trigger, heapGoal] = rec::trigger(gocpp::recv(gcController));
         gcPaceSweeper(trigger);
         gcPaceScavenger(rec::Load(gocpp::recv(gcController.memoryLimit)), heapGoal, gcController.lastHeapGoal);

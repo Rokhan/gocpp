@@ -325,8 +325,10 @@ namespace golang::runtime
         // buffer flushes are rare. Record the lock edge even if it doesn't happen
         // this time.
         lockRankMayTraceFlush();
+
         // Prevent preemption.
         auto mp = acquirem();
+
         // Acquire the trace seqlock. This prevents traceAdvance from moving forward
         // until all Ms are observed to be outside of their seqlock critical section.
         // Note: The seqlock is mutated here and also in traceCPUSample. If you update
@@ -337,6 +339,7 @@ namespace golang::runtime
         {
             go_throw("bad use of trace.seqlock or tracer is reentrant"_s);
         }
+
         // N.B. This load of gen appears redundant with the one in traceEnabled.
         // However, it's very important that the gen we use for writing to the trace
         // is acquired under a traceLocker so traceAdvance can make sure no stale
@@ -690,6 +693,7 @@ namespace golang::runtime
         // Grab the M ID we stole from.
         auto mStolenFrom = pp->trace.mSyscallID;
         pp->trace.mSyscallID = - 1;
+
         // The status of the proc and goroutine, if we need to emit one here, is not evident from the
         // context of just emitting this event alone. There are two cases. Either we're trying to steal
         // the P just to get its attention (e.g. STW or sysmon retake) or we're trying to steal a P for
@@ -704,6 +708,7 @@ namespace golang::runtime
             procStatus = traceProcSyscallAbandoned;
         }
         auto w = rec::eventWriter(gocpp::recv(tl), goStatus, procStatus);
+
         // Emit the status of the P we're stealing. We may have *just* done this when creating the event
         // writer but it's not guaranteed, even if inSyscall is true. Although it might seem like from a
         // syscall context we're always stealing a P for ourselves, we may have not wired it up yet (so
@@ -875,6 +880,7 @@ namespace golang::runtime
     void traceThreadDestroy(struct m* mp)
     {
         assertLockHeld(& sched.lock);
+
         // Flush all outstanding buffers to maintain the invariant
         // that an M only has active buffers while on sched.freem
         // or allm.

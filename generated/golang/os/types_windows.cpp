@@ -126,6 +126,7 @@ namespace golang::os
                 x.Err = err;
             }))};
         }
+
         windows::FILE_ATTRIBUTE_TAG_INFO ti = {};
         err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(gocpp::unsafe_pointer(& ti)), uint32_t(gocpp::Sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
         if(err != nullptr)
@@ -147,6 +148,7 @@ namespace golang::os
                 }))};
             }
         }
+
         return {gocpp::InitPtr<fileStat>([=](auto& x) {
             x.name = basename(path);
             x.FileAttributes = d.FileAttributes;
@@ -365,6 +367,7 @@ namespace golang::os
             {
                 return err;
             }
+
             // Per https://learn.microsoft.com/en-us/windows/win32/fileio/reparse-points-and-file-operations,
             // “Applications that use the CreateFile function should specify the
             // FILE_FLAG_OPEN_REPARSE_POINT flag when opening the file if it is a reparse
@@ -377,6 +380,7 @@ namespace golang::os
             // resolved when the fileStat was created, so we don't need to worry about
             // resolving symlink reparse points again here.
             auto attrs = uint32_t(syscall::FILE_FLAG_BACKUP_SEMANTICS | syscall::FILE_FLAG_OPEN_REPARSE_POINT);
+
             syscall::Handle h;
             std::tie(h, err) = syscall::CreateFile(pathp, 0, 0, nullptr, syscall::OPEN_EXISTING, attrs, 0);
             if(err != nullptr)

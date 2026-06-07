@@ -150,6 +150,7 @@ namespace golang::os
                 return {nullptr, err};
             }
             defer.push_back([=]{ rec::Close(gocpp::recv(f)); });
+
             fs::DirEntry> dirs;
             std::tie(dirs, err) = rec::ReadDir(gocpp::recv(f), - 1);
             sort::Slice(dirs, [=](int i, int j) mutable -> bool

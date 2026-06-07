@@ -82,6 +82,7 @@ namespace golang::syscall
         {
             return append(b, """"_s);
         }
+
         auto needsBackslash = false;
         auto hasSpace = false;
         for(auto i = 0; i < len(s); i++)
@@ -107,6 +108,7 @@ namespace golang::syscall
                 }
             }
         }
+
         if(! needsBackslash && ! hasSpace)
         {
             // No special handling required; normal case.
@@ -119,6 +121,7 @@ namespace golang::syscall
             b = append(b, s);
             return append(b, '"');
         }
+
         if(hasSpace)
         {
             b = append(b, '"');
@@ -160,6 +163,7 @@ namespace golang::syscall
             }
             b = append(b, '"');
         }
+
         return b;
     }
 
@@ -200,6 +204,7 @@ namespace golang::syscall
             length += len(s) + 1;
         }
         length += 1;
+
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), 0, length);
         for(auto [gocpp_ignored, s] : envv)
         {
@@ -457,6 +462,7 @@ namespace golang::syscall
             {
                 sys = & zeroSysProcAttr;
             }
+
             if(len(attr->Files) > 3)
             {
                 return {0, 0, gocpp::error(go_EWINDOWS)};
@@ -465,6 +471,7 @@ namespace golang::syscall
             {
                 return {0, 0, gocpp::error(go_EINVAL)};
             }
+
             if(len(attr->Dir) != 0)
             {
                 // StartProcess assumes that argv0 is relative to attr.Dir,
@@ -486,6 +493,7 @@ namespace golang::syscall
             {
                 return {0, 0, err};
             }
+
             gocpp::string cmdline = {};
             // Windows CreateProcess takes the command line as a single string:
             // use attr.CmdLine if set, else build the command line by escaping
@@ -498,6 +506,7 @@ namespace golang::syscall
             {
                 cmdline = makeCmdLine(argv);
             }
+
             uint16_t* argvp = {};
             if(len(cmdline) != 0)
             {
@@ -507,6 +516,7 @@ namespace golang::syscall
                     return {0, 0, err};
                 }
             }
+
             uint16_t* dirp = {};
             if(len(attr->Dir) != 0)
             {
@@ -516,6 +526,7 @@ namespace golang::syscall
                     return {0, 0, err};
                 }
             }
+
             auto [p, gocpp_id_0] = GetCurrentProcess();
             auto parentProcess = p;
             if(sys->ParentProcess != 0)
@@ -560,7 +571,9 @@ namespace golang::syscall
             si->StartupInfo.StdInput = fd[0];
             si->StartupInfo.StdOutput = fd[1];
             si->StartupInfo.StdErr = fd[2];
+
             fd = append(fd, sys->AdditionalInheritedHandles);
+
             // The presence of a NULL handle in the list is enough to cause PROC_THREAD_ATTRIBUTE_HANDLE_LIST
             // to treat the entire list as empty, so remove NULL handles.
             auto j = 0;
@@ -573,7 +586,9 @@ namespace golang::syscall
                 }
             }
             fd = fd.make_slice(0, j);
+
             auto willInheritHandles = len(fd) > 0 && ! sys->NoInheritHandles;
+
             // Do not accidentally inherit more than these handles.
             if(willInheritHandles)
             {
@@ -583,12 +598,14 @@ namespace golang::syscall
                     return {0, 0, err};
                 }
             }
+
             gocpp::slice<uint16_t> envBlock;
             std::tie(envBlock, err) = createEnvBlock(attr->Env);
             if(err != nullptr)
             {
                 return {0, 0, err};
             }
+
             auto pi = new(ProcessInformation);
             auto flags = sys->CreationFlags | CREATE_UNICODE_ENVIRONMENT | _EXTENDED_STARTUPINFO_PRESENT;
             if(sys->Token != 0)
@@ -606,6 +623,7 @@ namespace golang::syscall
             defer.push_back([=]{ CloseHandle(Handle(pi->Thread)); });
             runtime::KeepAlive(fd);
             runtime::KeepAlive(sys);
+
             return {int(pi->ProcessId), uintptr_t(pi->Process), nullptr};
         }
         catch(gocpp::GoPanic& gp)

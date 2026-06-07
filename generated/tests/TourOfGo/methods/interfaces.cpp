@@ -124,10 +124,12 @@ namespace golang::main
         Abser a = {};
         auto f = MyFloat(- mocklib::Sqrt2);
         auto v = Vertex {3, 4};
+
         // a MyFloat implements Abser
         a = f;
         // a *Vertex implements Abser
         a = & v;
+
         // In the following line, v is a Vertex (not *Vertex)
         // and does NOT implement Abser.
         // a = v

@@ -81,8 +81,10 @@ namespace golang::runtime
             print("runtime: goid="_s, goid, "\n"_s);
             go_throw("attempted to trace a bad status for a goroutine"_s);
         }
+
         // Trace the status.
         w = rec::event(gocpp::recv(w), traceEvGoStatus, traceArg(goid), traceArg(uint64_t(mid)), traceArg(status));
+
         // Trace any special ranges that are in-progress.
         if(markAssist)
         {
@@ -157,8 +159,10 @@ namespace golang::runtime
             print("runtime: pid="_s, pid, "\n"_s);
             go_throw("attempted to trace a bad status for a proc"_s);
         }
+
         // Trace the status.
         w = rec::event(gocpp::recv(w), traceEvProcStatus, traceArg(pid), traceArg(status));
+
         // Trace any special ranges that are in-progress.
         if(inSweep)
         {

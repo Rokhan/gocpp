@@ -70,10 +70,12 @@ namespace golang::os
                     x.Err = err;
                 }))};
             }
+
             // Try GetFileAttributesEx first, because it is faster than CreateFile.
             // See https://golang.org/issues/19922#issuecomment-300031421 for details.
             syscall::Win32FileAttributeData fa = {};
             err = syscall::GetFileAttributesEx(namep, syscall::GetFileExInfoStandard, (unsigned char*)(gocpp::unsafe_pointer(& fa)));
+
             // GetFileAttributesEx fails with ERROR_SHARING_VIOLATION error for
             // files like c:\pagefile.sys. Use FindFirstFile for such files.
             if(err == windows::ERROR_SHARING_VIOLATION)
@@ -100,6 +102,7 @@ namespace golang::os
                     return {fs, nullptr};
                 }
             }
+
             if(err == nullptr && fa.FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT == 0)
             {
                 // Not a surrogate for another named entity, because it isn't any kind of reparse point.
@@ -118,6 +121,7 @@ namespace golang::os
                 }
                 return {fs, nullptr};
             }
+
             // Use CreateFile to determine whether the file is a name surrogate and, if so,
             // save information about the link target.
             // Set FILE_FLAG_BACKUP_SEMANTICS so that CreateFile will create the handle
@@ -135,6 +139,7 @@ namespace golang::os
                     x.Err = err;
                 }))};
             }
+
             fs::FileInfo fi;
             std::tie(fi, err) = statHandle(name, h);
             syscall::CloseHandle(h);

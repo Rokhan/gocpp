@@ -77,26 +77,33 @@ namespace golang::main
         int i = {};
         mocklib::Println(i, c, python, java);
         mocklib::Println(ii, jj, kk);
+
         std::tie(ii, jj, kk) = std::tuple{6, 7, 8};
         mocklib::Println(ii, jj, kk);
+
         auto [ii, zz, kk] = std::tuple{9, 10, 11};
         mocklib::Println(ii, zz, kk);
+
         {
             auto [ii, zz, ll] = std::tuple{12, 13, 14};
             mocklib::Println(ii, zz, ll);
         }
         mocklib::Println(ii, zz, kk);
+
         if(true)
         {
             auto [ii, zz, ll] = std::tuple{15, 16, 17};
             mocklib::Println(ii, zz, ll);
         }
         mocklib::Println(ii, zz, kk);
+
         auto [go_do, go_while, go_template, go_class] = std::tuple{"do"_s, "while"_s, "template"_s, "class"_s};
         mocklib::Println(go_do, go_while, go_template, go_class);
+
         dummy_vars();
         funcVar1();
         ii = funcVar2(3);
+
         gocpp::string s = {};
         std::tie(ii, s) = funcVar3(3);
         mocklib::Println(ii, s);
@@ -136,15 +143,18 @@ namespace golang::main
             mocklib::Println("inlineAssign:"_s, i);
         }
         mocklib::Println("inlineAssign:"_s, i);
+
         if(auto [i, ok2] = std::tuple{2, true}; ok2)
         {
             mocklib::Println("inlineAssign:"_s, i);
         }
         mocklib::Println("inlineAssign:"_s, i);
+
         if(auto [i, ok2] = std::tuple{22, true}; ok2)
         {
             mocklib::Println("inlineAssign:"_s, i);
         }
+
         {
             if(auto [i, ok1] = std::tuple{3, true}; ok1)
             {
@@ -153,6 +163,7 @@ namespace golang::main
             mocklib::Println("inlineAssign:"_s, i);
         }
         mocklib::Println("inlineAssign:"_s, i);
+
         {
             auto i = 66;
             if(auto [i, ok1] = std::tuple{4, true}; ok1)

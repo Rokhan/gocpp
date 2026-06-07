@@ -24,6 +24,7 @@ namespace golang::main
     {
         f();
         mocklib::Println("Returned normally from f."_s);
+
         // As it's not called in a defer statement, r should always be nil.
         if(auto r = gocpp::recover(); r != nullptr)
         {
@@ -43,10 +44,12 @@ namespace golang::main
                     mocklib::Println("Recovered in f"_s, r);
                 }
             }(); });
+
             defer.push_back([=]{ [=]() mutable -> void
             {
                 mocklib::Println("Simple defer in f"_s);
             }(); });
+
             mocklib::Println("Calling g."_s);
             g(0);
             mocklib::Println("Returned normally from g."_s);

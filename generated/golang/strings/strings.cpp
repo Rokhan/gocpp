@@ -1164,7 +1164,7 @@ namespace golang::strings
         }
         if(auto [as, ok] = makeASCIISet(cutset); ok)
         {
-            return trimLeftASCII(trimRightASCII(s, & as), & as);
+            return trimLeftASCII(trimRightASCII(s, gocpp::make_array_ptr(as)), gocpp::make_array_ptr(as));
         }
         return trimLeftUnicode(trimRightUnicode(s, cutset), cutset);
     }
@@ -1185,7 +1185,7 @@ namespace golang::strings
         }
         if(auto [as, ok] = makeASCIISet(cutset); ok)
         {
-            return trimLeftASCII(s, & as);
+            return trimLeftASCII(s, gocpp::make_array_ptr(as));
         }
         return trimLeftUnicode(s, cutset);
     }
@@ -1246,7 +1246,7 @@ namespace golang::strings
         }
         if(auto [as, ok] = makeASCIISet(cutset); ok)
         {
-            return trimRightASCII(s, & as);
+            return trimRightASCII(s, gocpp::make_array_ptr(as));
         }
         return trimRightUnicode(s, cutset);
     }

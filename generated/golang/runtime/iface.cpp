@@ -196,7 +196,7 @@ namespace golang::runtime
         auto h = itabHashFunc(inter, typ) & mask;
         for(auto i = uintptr_t(1); ; i++)
         {
-            auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(& t->entries), h * goarch::PtrSize));
+            auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), h * goarch::PtrSize));
             // Use atomic read here so if we see m != nil, we also see
             // the initializations of the fields of m.
             // m := *p
@@ -266,7 +266,7 @@ namespace golang::runtime
         auto h = itabHashFunc(m->inter, m->_type) & mask;
         for(auto i = uintptr_t(1); ; i++)
         {
-            auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(& t->entries), h * goarch::PtrSize));
+            auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), h * goarch::PtrSize));
             auto m2 = *p;
             if(m2 == m)
             {
@@ -826,7 +826,7 @@ namespace golang::runtime
         auto t = itabTable;
         for(auto i = uintptr_t(0); i < t->size; i++)
         {
-            auto m = *(itab**)(add(gocpp::unsafe_pointer(& t->entries), i * goarch::PtrSize));
+            auto m = *(itab**)(add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), i * goarch::PtrSize));
             if(m != nullptr)
             {
                 fn(m);

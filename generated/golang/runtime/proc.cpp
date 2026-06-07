@@ -8164,7 +8164,7 @@ namespace golang::runtime
     struct g* runqsteal(struct p* pp, struct p* p2, bool stealRunNextG)
     {
         auto t = pp->runqtail;
-        auto n = runqgrab(p2, & pp->runq, t, stealRunNextG);
+        auto n = runqgrab(p2, gocpp::make_array_ptr(pp->runq), t, stealRunNextG);
         if(n == 0)
         {
             return nullptr;

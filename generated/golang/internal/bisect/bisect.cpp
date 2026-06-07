@@ -1268,7 +1268,7 @@ namespace golang::bisect
     // overwriting whatever was there before.
     bool rec::seenLossy(golang::bisect::dedup* d, uint64_t h)
     {
-        auto cache = & d->recent[(unsigned int)(h) % (unsigned int)(len(d->recent))];
+        auto cache = gocpp::make_array_ptr(d->recent[(unsigned int)(h) % (unsigned int)(len(d->recent))]);
         for(auto i = 0; i < len(cache); i++)
         {
             if(atomic::LoadUint64(& cache[i]) == h)

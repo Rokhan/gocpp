@@ -106,7 +106,7 @@ namespace golang::chacha8rand
     void rec::Init64(golang::chacha8rand::State* s, gocpp::array<uint64_t, 4> seed)
     {
         s->seed = seed;
-        block(& s->seed, & s->buf, 0);
+        block(gocpp::make_array_ptr(s->seed), gocpp::make_array_ptr(s->buf), 0);
         s->c = 0;
         s->i = 0;
         s->n = chunk;
@@ -133,7 +133,7 @@ namespace golang::chacha8rand
             s->seed[3] = s->buf[len(s->buf) - reseed + 3];
             s->c = 0;
         }
-        block(& s->seed, & s->buf, s->c);
+        block(gocpp::make_array_ptr(s->seed), gocpp::make_array_ptr(s->buf), s->c);
         s->i = 0;
         s->n = uint32_t(len(s->buf));
         if(s->c == ctrMax - ctrInc)
@@ -231,7 +231,7 @@ namespace golang::chacha8rand
             s->seed[i] = leUint64(data.make_slice((2 + i) * 8));
         }
         s->c = ctrInc * (uint32_t(used) / chunk);
-        block(& s->seed, & s->buf, s->c);
+        block(gocpp::make_array_ptr(s->seed), gocpp::make_array_ptr(s->buf), s->c);
         s->i = uint32_t(used) % chunk;
         s->n = chunk;
         if(s->c == ctrMax - ctrInc)

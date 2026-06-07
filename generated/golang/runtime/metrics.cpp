@@ -1296,7 +1296,7 @@ namespace golang::runtime
             }
             // Ensure we have all the stats we need.
             // agg is populated lazily.
-            rec::ensure(gocpp::recv(agg), & data.deps);
+            rec::ensure(gocpp::recv(agg), gocpp::make_array_ptr(data.deps));
 
             // Compute the value based on the stats we have.
             data.compute(& agg, & sample->value);

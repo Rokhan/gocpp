@@ -273,7 +273,7 @@ namespace golang::runtime
             // we're getting out of the signal handler very soon
             // anyway. Not worth it.)
             gocpp::array<uintptr_t, 2> bounds = {};
-            asmcgocall(_cgo_getstackbound, gocpp::unsafe_pointer(& bounds));
+            asmcgocall(_cgo_getstackbound, gocpp::unsafe_pointer(gocpp::make_array_ptr(bounds)));
             // getstackbound is an unsupported no-op on Windows.
             // Don't use these bounds if they don't contain SP. Perhaps we
             // were called by something not using the standard thread

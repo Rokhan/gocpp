@@ -631,7 +631,7 @@ namespace golang::runtime
     {
         useAeshash = true;
         // Initialize with random data so hash collisions will be hard to engineer.
-        auto key = (gocpp::array_ptr<gocpp::array<uint64_t, hashRandomBytes / 8>>)(gocpp::unsafe_pointer(& aeskeysched));
+        auto key = (gocpp::array_ptr<gocpp::array<uint64_t, hashRandomBytes / 8>>)(gocpp::unsafe_pointer(gocpp::make_array_ptr(aeskeysched)));
         for(auto [i, gocpp_ignored] : key)
         {
             key[i] = bootstrapRand();

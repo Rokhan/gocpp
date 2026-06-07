@@ -1567,7 +1567,7 @@ namespace golang::runtime
                     cache->inUse++;
                     if(cache->inUse == 1)
                     {
-                        auto e = & cache->entries[ck];
+                        auto e = gocpp::make_array_ptr(cache->entries[ck]);
                         auto ci = cheaprandn(uint32_t(len(cache->entries[ck])));
                         e[ci] = e[0];
                         e[0] = gocpp::Init<pcvalueCacheEnt>([=](auto& x) {

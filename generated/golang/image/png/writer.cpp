@@ -907,7 +907,7 @@ namespace golang::png
                     // Since we skip paletted images we don't have to worry about
                     // bitsPerPixel not being a multiple of 8
                     auto bpp = bitsPerPixel / 8;
-                    f = filter(& cr, pr, bpp);
+                    f = filter(gocpp::make_array_ptr(cr), pr, bpp);
                 }
 
                 // Write the compressed bytes.

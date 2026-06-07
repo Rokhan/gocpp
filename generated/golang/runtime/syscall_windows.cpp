@@ -680,7 +680,7 @@ namespace golang::runtime
         // Convert from C to Go ABI.
         abi::RegArgs regs = {};
         gocpp::array<unsigned char, callbackMaxFrame> frame = {};
-        auto goArgs = gocpp::unsafe_pointer(& frame);
+        auto goArgs = gocpp::unsafe_pointer(gocpp::make_array_ptr(frame));
         for(auto [gocpp_ignored, part] : c.abiMap.parts)
         {
             //Go switch emulation

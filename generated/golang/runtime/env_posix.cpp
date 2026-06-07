@@ -80,7 +80,7 @@ namespace golang::runtime
             return;
         }
         auto arg = gocpp::array<gocpp::unsafe_pointer, 2> {cstring(k), cstring(v)};
-        asmcgocall(_cgo_setenv, gocpp::unsafe_pointer(& arg));
+        asmcgocall(_cgo_setenv, gocpp::unsafe_pointer(gocpp::make_array_ptr(arg)));
     }
 
     // Update the C environment if cgo is loaded.
@@ -91,7 +91,7 @@ namespace golang::runtime
             return;
         }
         auto arg = gocpp::array<gocpp::unsafe_pointer, 1> {cstring(k)};
-        asmcgocall(_cgo_unsetenv, gocpp::unsafe_pointer(& arg));
+        asmcgocall(_cgo_unsetenv, gocpp::unsafe_pointer(gocpp::make_array_ptr(arg)));
     }
 
     gocpp::unsafe_pointer cstring(gocpp::string s)

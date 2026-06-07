@@ -71,7 +71,7 @@ namespace golang::crc32
     gocpp::array_ptr<crc32::slicing8Table> slicingMakeTable(uint32_t poly)
     {
         auto t = new(slicing8Table);
-        simplePopulateTable(poly, & t[0]);
+        simplePopulateTable(poly, gocpp::make_array_ptr(t[0]));
         for(auto i = 0; i < 256; i++)
         {
             auto crc = t[0][i];
@@ -103,7 +103,7 @@ namespace golang::crc32
         {
             return crc;
         }
-        return simpleUpdate(crc, & tab[0], p);
+        return simpleUpdate(crc, gocpp::make_array_ptr(tab[0]), p);
     }
 
 }

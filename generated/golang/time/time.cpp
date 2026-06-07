@@ -620,7 +620,7 @@ namespace golang::time
         // This is inlinable to take advantage of "function outlining".
         // Thus, the caller can decide whether a string must be heap allocated.
         gocpp::array<unsigned char, 32> arr = {};
-        auto n = rec::format(gocpp::recv(d), & arr);
+        auto n = rec::format(gocpp::recv(d), gocpp::make_array_ptr(arr));
         return gocpp::string(arr.make_slice(n));
     }
 

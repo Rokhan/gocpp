@@ -118,7 +118,7 @@ namespace golang::runtime
             fatal("randinit twice"_s);
         }
 
-        auto seed = & globalRand.seed;
+        auto seed = gocpp::make_array_ptr(globalRand.seed);
         if(startupRand != nullptr)
         {
             for(auto [i, c] : startupRand)

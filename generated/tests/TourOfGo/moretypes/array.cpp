@@ -121,9 +121,9 @@ namespace golang::main
         as1 = makeASCIISet("abc"_s);
         gocpp::array<uint32_t, 8> as2 = as1;
         mocklib::Println(rec::contains(gocpp::recv(as1), 'a'));
-        mocklib::Println(contains(& as2, 'a'));
+        mocklib::Println(contains(gocpp::make_array_ptr(as2), 'a'));
         mocklib::Println(rec::contains(gocpp::recv(as1), 'z'));
-        mocklib::Println(contains(& as2, 'z'));
+        mocklib::Println(contains(gocpp::make_array_ptr(as2), 'z'));
     }
 
     void main()
@@ -161,7 +161,7 @@ namespace golang::main
         auto n = len(buf);
         mocklib::Println("Length of buf:"_s, n);
 
-        auto w = arrayLen(& buf);
+        auto w = arrayLen(gocpp::make_array_ptr(buf));
         mocklib::Println("Length of buf from arrayLen:"_s, w);
 
         testPtrArray();

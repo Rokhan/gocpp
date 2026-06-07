@@ -356,7 +356,7 @@ namespace golang::runtime
                     auto r = frame;
                     if(argRegs > 0)
                     {
-                        r = gocpp::unsafe_pointer(& regs.Ints);
+                        r = gocpp::unsafe_pointer(gocpp::make_array_ptr(regs.Ints));
                     }
                     else
                     {

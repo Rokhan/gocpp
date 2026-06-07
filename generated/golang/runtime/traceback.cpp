@@ -1033,7 +1033,7 @@ namespace golang::runtime
             gp->m->cgoCallers[0] = 0;
             rec::Store(gocpp::recv(gp->m->cgoCallersUse), 0);
 
-            printCgoTraceback(& cgoCallers);
+            printCgoTraceback(gocpp::make_array_ptr(cgoCallers));
         }
 
         if(readgstatus(gp) &^ _Gscan == _Gsyscall)

@@ -399,7 +399,7 @@ namespace golang::flate
 
         auto bitCount = h->bitCount.make_slice(0, maxBits + 1);
         auto bits = 1;
-        auto counts = & leafCounts[maxBits];
+        auto counts = gocpp::make_array_ptr(leafCounts[maxBits]);
         for(auto level = maxBits; level > 0; level--)
         {
             // chain.leafCount gives the number of literals requiring at least "bits"

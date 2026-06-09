@@ -388,7 +388,10 @@ func needPriority(t token.Token) bool {
 type stmtEnv struct {
 	outNames []string
 	outTypes []outType
-	varNames *[]string // maybe use map for perfs
+
+	// - maybe use map for perfs
+	// - check if it can be removed: probably redundant with cv.getScopeVars()
+	varNames *[]string
 
 	toBeDeclared []string // list of variables to be declared at start of scope
 
@@ -406,12 +409,14 @@ func (env *stmtEnv) generateId(prefix string) (id string) {
 	return id
 }
 
-func (env *stmtEnv) localVarScope(todo func()) {
+func (env *stmtEnv) localVarScope(cv *cppConverter, todo func()) {
 	//clear already declared var names at start of scope
+	cv.startScope()
 	outVarNames := env.varNames
 	env.varNames = &[]string{}
 	todo()
 	env.varNames = outVarNames
+	cv.endScope()
 }
 
 func makeStmtEnv(outNames []string, outTypes []outType, paramNames []string) stmtEnv {

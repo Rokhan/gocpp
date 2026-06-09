@@ -109,9 +109,16 @@ gocpp.exe: cmd/*.go
 
 CUSTOM_BUILD_INPUT = tests/HelloWorld.go
 
+# Build the cpp from a go file without compiling it.
+# usage example: 'make custom-build GOCPP_IGNORE_DEPENDENCIES=true CUSTOM_BUILD_INPUT="F:/Dev/go1.22.2/src/compress/flate/huffman_code.go"'
 custom-build: gocpp.exe
 	./gocpp.exe $(GOCPP_PARAMETERS) -input $(CUSTOM_BUILD_INPUT) > $(LOGDIR)/gocpp.log
 
+# Build the cpp from a standard library go file then compile it.
+# usage example: 'make custom-stdlib-build GOCPP_IGNORE_DEPENDENCIES=true CUSTOM_BUILD_INPUT="compress/flate/huffman_bit_writer.go"'
+custom-stdlib-build: gocpp.exe
+	./gocpp.exe $(GOCPP_PARAMETERS) -input $$(go env GOROOT)/src/$(CUSTOM_BUILD_INPUT) > $(LOGDIR)/gocpp-stdlib.log
+	make $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.o)
 
 $(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES) gocpp.exe
 	$(call DEBUG_LOG, " => $<")

@@ -253,6 +253,12 @@ func (cv *cppConverter) getScopeVars() (result []string) {
 	return
 }
 
+func (cv *cppConverter) getLocalScopeVars() (result []string) {
+	elt := cv.scopes.Back()
+	scope := elt.Value.(scope)
+	return maps.Keys(scope.vars)
+}
+
 // FIXME : manage composed names like A.B.C
 func (cv *cppConverter) isPtr(name string) bool {
 	for elt := cv.scopes.Back(); elt != nil; elt = elt.Prev() {
@@ -1367,8 +1373,13 @@ func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []
 					varName.str = cv.GenerateId()
 					leftVarName = "std::ignore"
 				}
+				allVarNames := *env.varNames
+				for _, scopeVar := range cv.getLocalScopeVars() {
+					allVarNames = append(allVarNames, scopeVar)
+				}
 				cv.declareVar(varName.str, false)
-				if !slices.Contains(*env.varNames, varName.str) {
+
+				if !slices.Contains(allVarNames, varName.str) {
 					if isIdentifierUsed(varName.str, stmt.Rhs[0]) {
 						toDeclare = append(toDeclare, varName.str+"_tmp")
 						leftVarList = append(leftVarList, leftVarName+"_tmp")
@@ -1508,6 +1519,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		cv.WritterExprPrintf(cppOut, "%s%s.send(%s);\n", cv.cpp.Indent(), cv.convertExpr(s.Chan), cv.convertExpr(s.Value))
 
 	case *ast.ForStmt:
+		cv.startScope()
 		env.startVarScope()
 		initExpr, initNeedScope := cv.inlineStmt(s.Init, env)
 		postExpr, postNeedScope := cv.inlineStmt(s.Post, env)
@@ -1516,6 +1528,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			cv.WritterExprPrintf(cppOut, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), initExpr, cv.convertExpr(s.Cond), postExpr)
 			outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
 		})
+		cv.endScope()
 
 	case *ast.BranchStmt:
 		if s.Label == nil {
@@ -1592,10 +1605,9 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		needScope := false
 
 		if s.Init != nil {
-			env.localVarScope(func() {
+			env.localVarScope(cv, func() {
 				var initExpr cppExpr
 				initExpr, needScope = cv.inlineStmt(s.Init, env)
-
 				cv.StartOptionalScope(cppOut, needScope)
 				cv.WritterExprPrintf(cppOut, "%sif(%s; %s)\n", cv.cpp.Indent(), initExpr, cv.convertExpr(s.Cond))
 			})
@@ -1622,6 +1634,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		cv.cpp.indent++
 
 		if s.Init != nil {
+			cv.startScope()
 			env.startVarScope()
 			initExpr, _ := cv.inlineStmt(s.Init, env)
 			cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), initExpr)
@@ -1635,12 +1648,17 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 		outPlaces = cv.convertSwitchBody(env, s.Body, "conditionId", inputVarName)
 
+		if s.Init != nil {
+			cv.endScope()
+		}
+
 	case *ast.TypeSwitchStmt:
 		cv.WritterExprPrintf(cppOut, "%s//Go type switch emulation\n", cv.cpp.Indent())
 		cv.WritterExprPrintf(cppOut, "%s{\n", cv.cpp.Indent())
 		cv.cpp.indent++
 
 		if s.Init != nil {
+			cv.startScope()
 			env.startVarScope()
 			initExpr, _ := cv.inlineStmt(s.Init, env)
 			cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), initExpr)
@@ -1658,6 +1676,10 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		env.typeSwitchVarName = inputVarName.str
 		env.switchVarName = switchExpr.str
 		outPlaces = cv.convertSwitchBody(env, s.Body, "conditionId", switchVarName)
+
+		if s.Init != nil {
+			cv.endScope()
+		}
 
 	case *ast.SelectStmt:
 		cv.WritterExprPrintf(cppOut, "%s//Go select emulation\n", cv.cpp.Indent())

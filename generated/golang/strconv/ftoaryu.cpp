@@ -348,12 +348,12 @@ namespace golang::strconv
         auto extra = (unsigned int)(- e2);
         auto extraMask = uint64_t((1 << extra) - 1);
         // Now compute the floored, integral base 10 mantissas.
-        auto [dl_tmp, fracl] = std::tuple{dl >> extra, dl & extraMask};
-        auto& dl = dl_tmp;
-        auto [dc_tmp, fracc] = std::tuple{dc >> extra, dc & extraMask};
-        auto& dc = dc_tmp;
-        auto [du_tmp, fracu] = std::tuple{du >> extra, du & extraMask};
-        auto& du = du_tmp;
+        uint64_t fracl;
+        std::tie(dl, fracl) = std::tuple{dl >> extra, dl & extraMask};
+        uint64_t fracc;
+        std::tie(dc, fracc) = std::tuple{dc >> extra, dc & extraMask};
+        uint64_t fracu;
+        std::tie(du, fracu) = std::tuple{du >> extra, du & extraMask};
         // Is it allowed to use 'du' as a result?
         // It is always allowed when it is truncated, but also
         // if it is exact and the original binary mantissa is even

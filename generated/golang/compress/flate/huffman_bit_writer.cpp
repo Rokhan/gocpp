@@ -572,7 +572,8 @@ namespace golang::flate
         // the literalEncoding and the offsetEncoding.
         rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, w->offsetEncoding);
         rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0), 7);
-        auto [dynamicSize, numCodegens] = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding, extraBits);
+        int dynamicSize;
+        std::tie(dynamicSize, numCodegens) = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, w->offsetEncoding, extraBits);
 
         if(dynamicSize < size)
         {
@@ -779,7 +780,8 @@ namespace golang::flate
         // the literalEncoding and the offsetEncoding.
         rec::generateCodegen(gocpp::recv(w), numLiterals, numOffsets, w->literalEncoding, huffOffset);
         rec::generate(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0), 7);
-        auto [size, numCodegens] = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, huffOffset, 0);
+        int size;
+        std::tie(size, numCodegens) = rec::dynamicSize(gocpp::recv(w), w->literalEncoding, huffOffset, 0);
 
         // Store bytes, if we don't get a reasonable improvement.
         if(auto [ssize, storable] = rec::storedSize(gocpp::recv(w), input); storable && ssize < (size + (size >> 4)))

@@ -219,14 +219,14 @@ namespace golang::runtime
                         rec::sweep(gocpp::recv(s), true);
                         // Check if there's any free space.
                         auto freeIndex = rec::nextFreeIndex(gocpp::recv(s));
-                        if(freeIndex != s.mspan.nelems)
+                        if(freeIndex != s->mspan.nelems)
                         {
-                            s.mspan.freeindex = freeIndex;
+                            s->mspan.freeindex = freeIndex;
                             rec::end(gocpp::recv(sweep.active), sl);
                             goto havespan;
                         }
                         // Add it to the swept list, because sweeping didn't give us any free space.
-                        rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(c), sg)), s.mspan);
+                        rec::push(gocpp::recv(rec::fullSwept(gocpp::recv(c), sg)), s->mspan);
                     }
                 }
             }

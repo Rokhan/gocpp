@@ -1006,6 +1006,19 @@ func toSortedList(nsSet set[string]) []string {
 	return nsList
 }
 
+func canBeAliased(node ast.Expr) bool {
+	switch node.(type) {
+	case *ast.ArrayType:
+		return true
+	case *ast.MapType:
+		return true
+	case *ast.ChanType:
+		return true
+	default:
+		return false
+	}
+}
+
 func isMapType(node ast.Expr) bool {
 	switch node.(type) {
 	case *ast.MapType:

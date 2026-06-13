@@ -29,6 +29,8 @@ namespace golang
 
 namespace gocpp
 {
+    template<typename T, typename AliasType> struct alias;
+
     template<typename T> struct slice;
     template<typename T> struct array_base;
     template<typename T, int N> struct array;    

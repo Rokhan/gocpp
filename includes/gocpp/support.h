@@ -145,6 +145,15 @@ namespace gocpp
 
     template<typename T>
     concept GoInterface = IsGoInterface<T>::value;
+
+    template<typename T, typename AliasType>
+    struct alias : T
+    {
+        using T::T;
+
+        alias() = default;
+        explicit alias(const T& t) : T(t) { }
+    };
     
 
     [[noreturn]] void panic(const gocpp::string& message);
@@ -933,6 +942,19 @@ namespace gocpp
         operator array_ptr<array<T, N>>() { return ptr; }
         operator array_ptr<const array<T, N>>() const { return ptr; }
     };
+
+    template <typename T, int N, typename AliasType>
+    struct PtrRecv<alias<array<T, N>, AliasType>>
+    {
+        alias<array<T, N>, AliasType>* ptr;
+
+        PtrRecv(alias<array<T, N>, AliasType>* t) : ptr(t) { }
+
+        operator const array<T, N>& () const { return *ptr; }
+        operator array_ptr<alias<array<T, N>, AliasType>>() { return ptr; }
+        operator array_ptr<alias<const array<T, N>, AliasType>>() const { return ptr; }
+    };
+
 
     template <typename T>
     struct ObjRecv

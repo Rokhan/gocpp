@@ -2280,6 +2280,10 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		cppType := cv.convertTypeExpr(n, ctContext{})
 		name := GetCppName(node.Name.Name)
 		var usingDec string
+		var tagAliasDec string
+		var fwdAliasDec string
+		var fwdTagAliasDec string
+		isAlias := false
 
 		cv.Logf("New typedef. Name %v, type: %v", name, cppType)
 		cv.typedefs.add(cv.typeInfo.Defs[node.Name].Type())
@@ -2287,11 +2291,26 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		if cv.ignoreKnownError(name, knownMissingDeps) {
 			usingDec = fmt.Sprintf("/* %susing %s = %s */%s", templateDec, name, cppType.str, end)
 		} else {
-			// TODO: make a type alias if node.Assign != nil
-			usingDec = fmt.Sprintf("%susing %s = %s%s", templateDec, name, cppType.str, end)
+			if canBeAliased(node.Type) {
+				tagName := fmt.Sprintf("GoTag_%s", name)
+				fwdAliasDec = fmt.Sprintf("%susing %s = gocpp::alias<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
+				fwdTagAliasDec = fmt.Sprintf("%sstruct %s%s", templateDec, tagName, end)
+				tagAliasDec = fmt.Sprintf("%sstruct %s { }%s", templateDec, tagName, end)
+				usingDec = fmt.Sprintf("%susing %s = gocpp::alias<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
+				isAlias = true
+			} else {
+				usingDec = fmt.Sprintf("%susing %s = %s%s", templateDec, name, cppType.str, end)
+			}
 		}
 
 		if isNamespace {
+			if isAlias {
+				cppType.defs = append(cppType.defs, fwdHeaderStr(fwdTagAliasDec, node, depInfo{}))
+				cppType.defs = append(cppType.defs, fwdHeaderStr(fwdAliasDec, node, cv.getTypeDepInfo(node)))
+				cppType.defs = append(cppType.defs, headerStr(tagAliasDec, nil))
+				cppType.defs = append(cppType.defs, headerStr(usingDec, node))
+				return mkCppType("", cppType.defs)
+			}
 			return mkCppType("", append(cppType.defs, fwdHeaderStr(usingDec, node, cv.getTypeDepInfo(node))))
 		} else {
 			cv.declareType(name)

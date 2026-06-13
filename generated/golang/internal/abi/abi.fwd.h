@@ -3,10 +3,15 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::abi
+{
+    struct GoTag_IntArgRegBitmap;
+}
 #include "golang/internal/abi/abi_amd64.fwd.h"
 
 namespace golang::abi
 {
     struct RegArgs;
-    using IntArgRegBitmap = gocpp::array<uint8_t, (IntArgRegs + 7) / 8>;
+    using IntArgRegBitmap = gocpp::alias<gocpp::array<uint8_t, (IntArgRegs + 7) / 8>, GoTag_IntArgRegBitmap>;
 }

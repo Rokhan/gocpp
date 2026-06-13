@@ -11,6 +11,8 @@ namespace golang::flate
     struct literalNode;
     struct levelInfo;
     const long maxBitsLimit = 16;
-    using byLiteral = gocpp::slice<literalNode>;
-    using byFreq = gocpp::slice<literalNode>;
+    struct GoTag_byLiteral;
+    struct GoTag_byFreq;
+    using byLiteral = gocpp::alias<gocpp::slice<literalNode>, GoTag_byLiteral>;
+    using byFreq = gocpp::alias<gocpp::slice<literalNode>, GoTag_byFreq>;
 }

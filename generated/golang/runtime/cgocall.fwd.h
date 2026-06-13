@@ -6,6 +6,7 @@
 
 namespace golang::runtime
 {
-    using cgoCallers = gocpp::array<uintptr_t, 32>;
+    struct GoTag_cgoCallers;
+    using cgoCallers = gocpp::alias<gocpp::array<uintptr_t, 32>, GoTag_cgoCallers>;
     struct argset;
 }

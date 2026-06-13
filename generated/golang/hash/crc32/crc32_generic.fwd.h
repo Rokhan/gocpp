@@ -7,10 +7,11 @@
 namespace golang::crc32
 {
     const long slicing8Cutoff = 16;
+    struct GoTag_slicing8Table;
 }
 #include "golang/hash/crc32/crc32.fwd.h"
 
 namespace golang::crc32
 {
-    using slicing8Table = gocpp::array<Table, 8>;
+    using slicing8Table = gocpp::alias<gocpp::array<Table, 8>, GoTag_slicing8Table>;
 }

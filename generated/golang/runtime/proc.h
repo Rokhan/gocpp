@@ -313,6 +313,8 @@ namespace golang::runtime
     void globrunqputhead(struct g* gp);
     void globrunqputbatch(struct gQueue* batch, int32_t n);
     struct g* globrunqget(struct p* pp, int32_t max);
+    struct GoTag_pMask { };
+    using pMask = gocpp::alias<gocpp::slice<uint32_t>, GoTag_pMask>;
     void updateTimerPMask(struct p* pp);
     int64_t pidleput(struct p* pp, int64_t now);
     std::tuple<struct p*, int64_t> pidleget(int64_t now);

@@ -51,7 +51,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct semaRoot& value);
-    extern semTable semtable;
+    struct GoTag_semTable { };
     void sync_runtime_Semacquire(uint32_t* addr);
     void poll_runtime_Semacquire(uint32_t* addr);
     void sync_runtime_Semrelease(uint32_t* addr, bool handoff, int skipframes);
@@ -101,6 +101,8 @@ namespace golang::runtime
     void notifyListNotifyOne(struct notifyList* l);
     void notifyListCheck(uintptr_t sz);
     int64_t sync_nanotime();
+    using semTable = gocpp::alias<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;
+    extern semTable semtable;
 
     namespace rec
     {

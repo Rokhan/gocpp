@@ -14,7 +14,8 @@ namespace golang::runtime
     struct gocpp_id_8;
     struct sysmontick;
     const int forcePreemptNS = 10 * 1000 * 1000;
-    using pMask = gocpp::slice<uint32_t>;
+    struct GoTag_pMask;
+    using pMask = gocpp::alias<gocpp::slice<uint32_t>, GoTag_pMask>;
     struct randomOrder;
     struct randomEnum;
     struct initTask;

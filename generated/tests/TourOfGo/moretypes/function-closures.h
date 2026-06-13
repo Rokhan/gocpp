@@ -15,6 +15,8 @@ namespace golang::main
 {
     std::function<int (int _1)> adder();
     gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s);
+    struct GoTag_SpecialCase { };
+    using SpecialCase = gocpp::alias<gocpp::slice<unicode::CaseRange>, GoTag_SpecialCase>;
     gocpp::rune ToUpper(gocpp::rune r);
     gocpp::slice<unsigned char> TestLambda0(golang::main::SpecialCase c, gocpp::slice<unsigned char> s);
     gocpp::slice<unsigned char> TestLambda1(golang::main::SpecialCase c, gocpp::slice<unsigned char> s);

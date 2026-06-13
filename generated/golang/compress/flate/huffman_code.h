@@ -77,7 +77,11 @@ namespace golang::flate
     struct huffmanEncoder* newHuffmanEncoder(int size);
     struct huffmanEncoder* generateFixedLiteralEncoding();
     struct huffmanEncoder* generateFixedOffsetEncoding();
+    struct GoTag_byLiteral { };
+    struct GoTag_byFreq { };
     uint16_t reverseBits(uint16_t number, unsigned char bitLength);
+    using byLiteral = gocpp::alias<gocpp::slice<literalNode>, GoTag_byLiteral>;
+    using byFreq = gocpp::alias<gocpp::slice<literalNode>, GoTag_byFreq>;
     struct huffmanEncoder
     {
         gocpp::slice<hcode> codes;

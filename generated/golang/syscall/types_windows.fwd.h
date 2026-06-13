@@ -370,7 +370,8 @@ namespace golang::syscall
     const long IFF_POINTTOPOINT = 8;
     const long IFF_MULTICAST = 16;
     const long SIO_GET_INTERFACE_LIST = 0x4004747F;
-    using SockaddrGen = gocpp::array<unsigned char, 24>;
+    struct GoTag_SockaddrGen;
+    using SockaddrGen = gocpp::alias<gocpp::array<unsigned char, 24>, GoTag_SockaddrGen>;
     struct InterfaceInfo;
     struct IpAddressString;
     struct IpAddrString;

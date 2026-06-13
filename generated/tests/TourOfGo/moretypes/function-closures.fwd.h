@@ -6,11 +6,12 @@
 
 namespace golang::main
 {
+    struct GoTag_SpecialCase;
     struct compressor;
 }
 #include "golang/unicode/letter.fwd.h"
 
 namespace golang::main
 {
-    using SpecialCase = gocpp::slice<unicode::CaseRange>;
+    using SpecialCase = gocpp::alias<gocpp::slice<unicode::CaseRange>, GoTag_SpecialCase>;
 }

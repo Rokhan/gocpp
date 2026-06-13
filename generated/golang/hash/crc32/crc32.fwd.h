@@ -10,7 +10,8 @@ namespace golang::crc32
     const long IEEE = 0xedb88320;
     const long Castagnoli = 0x82f63b78;
     const long Koopman = 0xeb31d82e;
-    using Table = gocpp::array<uint32_t, 256>;
+    struct GoTag_Table;
+    using Table = gocpp::alias<gocpp::array<uint32_t, 256>, GoTag_Table>;
     struct digest;
     const int marshaledSize = len(magic) + 4 + 4;
 }

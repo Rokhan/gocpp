@@ -7,6 +7,7 @@
 namespace golang::main
 {
     struct Fetcher;
+    struct GoTag_fakeFetcher;
     struct fakeResult;
-    using fakeFetcher = gocpp::map<gocpp::string, fakeResult*>;
+    using fakeFetcher = gocpp::alias<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
 }

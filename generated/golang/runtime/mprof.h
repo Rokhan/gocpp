@@ -97,6 +97,8 @@ namespace golang::runtime
     extern atomic::UnsafePointer bbuckets;
     extern atomic::UnsafePointer xbuckets;
     extern atomic::UnsafePointer buckhash;
+    struct GoTag_buckhashArray { };
+    using buckhashArray = gocpp::alias<gocpp::array<atomic::UnsafePointer, buckHashSize>, GoTag_buckhashArray>;
     struct mProfCycleHolder
     {
         atomic::Uint32 value;

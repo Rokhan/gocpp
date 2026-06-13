@@ -8,10 +8,11 @@ namespace golang::crc32
 {
     const long castagnoliK1 = 168;
     const long castagnoliK2 = 1344;
+    struct GoTag_sse42Table;
 }
 #include "golang/hash/crc32/crc32.fwd.h"
 
 namespace golang::crc32
 {
-    using sse42Table = gocpp::array<Table, 4>;
+    using sse42Table = gocpp::alias<gocpp::array<Table, 4>, GoTag_sse42Table>;
 }

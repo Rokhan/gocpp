@@ -6,5 +6,6 @@
 
 namespace golang::main
 {
-    using IPAddr = gocpp::array<unsigned char, 4>;
+    struct GoTag_IPAddr;
+    using IPAddr = gocpp::alias<gocpp::array<unsigned char, 4>, GoTag_IPAddr>;
 }

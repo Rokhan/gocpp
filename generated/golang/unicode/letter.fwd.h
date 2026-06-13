@@ -14,13 +14,15 @@ namespace golang::unicode
     struct Range16;
     struct Range32;
     struct CaseRange;
+    struct GoTag_SpecialCase;
     const int UpperCase = 0;
     const int LowerCase = 1;
     const int TitleCase = 2;
     const int MaxCase = 3;
-    using d = gocpp::array<gocpp::rune, MaxCase>;
+    struct GoTag_d;
+    using d = gocpp::alias<gocpp::array<gocpp::rune, MaxCase>, GoTag_d>;
     const long linearMax = 18;
     struct foldPair;
-    using SpecialCase = gocpp::slice<CaseRange>;
+    using SpecialCase = gocpp::alias<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
     const gocpp::rune UpperLower = MaxRune + 1;
 }

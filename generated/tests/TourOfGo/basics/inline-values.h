@@ -10,10 +10,15 @@
 #include "gocpp/support.h"
 
 
+#include "golang/reflect/value.h"
+
 namespace golang::main
 {
     void main();
-    extern main::ints smallPrimes;
+    struct GoTag_ints { };
+    using ints = gocpp::alias<gocpp::slice<int>, GoTag_ints>;
+    struct GoTag_fakeFetcher { };
+    using fakeFetcher = gocpp::alias<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
     struct fakeResult
     {
         gocpp::string body;
@@ -31,6 +36,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
+    extern main::ints smallPrimes;
     extern main::fakeFetcher fetcher;
 
     namespace rec

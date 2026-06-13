@@ -395,25 +395,8 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TransmitFileBuffers& value);
-    struct InterfaceInfo
-    {
-        uint32_t Flags;
-        golang::syscall::SockaddrGen Address;
-        golang::syscall::SockaddrGen BroadcastAddress;
-        golang::syscall::SockaddrGen Netmask;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct InterfaceInfo& value);
+    struct GoTag_SockaddrGen { };
+    using SockaddrGen = gocpp::alias<gocpp::array<unsigned char, 24>, GoTag_SockaddrGen>;
     struct IpAddressString
     {
         gocpp::array<unsigned char, 16> String;
@@ -920,6 +903,25 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Timezoneinformation& value);
+    struct InterfaceInfo
+    {
+        uint32_t Flags;
+        golang::syscall::SockaddrGen Address;
+        golang::syscall::SockaddrGen BroadcastAddress;
+        golang::syscall::SockaddrGen Netmask;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct InterfaceInfo& value);
     struct IpAddrString
     {
         IpAddrString* Next;

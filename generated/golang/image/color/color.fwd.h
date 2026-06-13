@@ -17,5 +17,6 @@ namespace golang::color
     struct Gray16;
     struct Model;
     struct modelFunc;
-    using Palette = gocpp::slice<Color>;
+    struct GoTag_Palette;
+    using Palette = gocpp::alias<gocpp::slice<Color>, GoTag_Palette>;
 }

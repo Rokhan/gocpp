@@ -7,9 +7,12 @@
 namespace golang::main
 {
     struct gocpp_id_0;
-    using semTable1 = gocpp::array<gocpp_id_0, 10>;
+    struct GoTag_semTable1;
+    using semTable1 = gocpp::alias<gocpp::array<gocpp_id_0, 10>, GoTag_semTable1>;
     const int ten = 10;
     struct gocpp_id_1;
-    using semTable2 = gocpp::array<gocpp_id_1, ten>;
-    using asciiSet = gocpp::array<uint32_t, 8>;
+    struct GoTag_semTable2;
+    using semTable2 = gocpp::alias<gocpp::array<gocpp_id_1, ten>, GoTag_semTable2>;
+    struct GoTag_asciiSet;
+    using asciiSet = gocpp::alias<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
 }

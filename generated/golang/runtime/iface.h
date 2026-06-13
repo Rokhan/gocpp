@@ -42,11 +42,12 @@ namespace golang::runtime
     void panicdottypeE(golang::runtime::_type* have, golang::runtime::_type* want, golang::runtime::_type* iface);
     void panicdottypeI(struct itab* have, golang::runtime::_type* want, golang::runtime::_type* iface);
     void panicnildottype(golang::runtime::_type* want);
+    struct GoTag_sliceInterfacePtr { };
+    using sliceInterfacePtr = gocpp::alias<gocpp::slice<unsigned char>, GoTag_sliceInterfacePtr>;
     extern go_any uint16Eface;
     extern go_any uint32Eface;
     extern go_any uint64Eface;
     extern go_any stringEface;
-    extern go_any sliceEface;
     gocpp::unsafe_pointer convT(golang::runtime::_type* t, gocpp::unsafe_pointer v);
     gocpp::unsafe_pointer convTnoptr(golang::runtime::_type* t, gocpp::unsafe_pointer v);
     gocpp::unsafe_pointer convT16(uint16_t val);
@@ -68,12 +69,13 @@ namespace golang::runtime
     extern gocpp::array<uint64_t, 256> staticuint64s;
     void unreachableMethod();
     extern itabTableType itabTableInit;
+    extern go_any sliceEface;
     extern runtime::_type* uint16Type;
     extern runtime::_type* uint32Type;
     extern runtime::_type* uint64Type;
     extern runtime::_type* stringType;
-    extern runtime::_type* sliceType;
     extern itabTableType* itabTable;
+    extern runtime::_type* sliceType;
 
     namespace rec
     {

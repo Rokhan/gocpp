@@ -17,33 +17,13 @@ namespace golang::runtime
     extern bool metricsInit;
     extern gocpp::slice<double> sizeClassBuckets;
     extern gocpp::slice<double> timeHistBuckets;
-    struct metricData
-    {
-        // deps is the set of runtime statistics that this metric
-        // depends on. Before compute is called, the statAggregate
-        // which will be passed must ensure() these dependencies.
-        statDepSet deps;
-        // compute is a function that populates a metricValue
-        // given a populated statAggregate structure.
-        std::function<void (struct statAggregate* in, struct metricValue* out)> compute;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricData& value);
     void metricsLock();
     void metricsUnlock();
     void initMetrics();
     void compute0(struct statAggregate* _1, struct metricValue* out);
     void godebug_registerMetric(gocpp::string name, std::function<uint64_t ()> read);
+    struct GoTag_statDepSet { };
+    using statDepSet = gocpp::alias<gocpp::array<uint64_t, 1>, GoTag_statDepSet>;
     runtime::statDepSet makeStatDepSet(gocpp::slice<golang::runtime::statDep> deps);
     
     template<typename... Args>
@@ -206,7 +186,28 @@ namespace golang::runtime
     gocpp::slice<gocpp::string> readMetricNames();
     void readMetrics(gocpp::unsafe_pointer samplesp, int len, int cap);
     void readMetricsLocked(gocpp::unsafe_pointer samplesp, int len, int cap);
-    extern gocpp::map<gocpp::string, metricData> metrics;
+    struct metricData
+    {
+        // deps is the set of runtime statistics that this metric
+        // depends on. Before compute is called, the statAggregate
+        // which will be passed must ensure() these dependencies.
+        statDepSet deps;
+        // compute is a function that populates a metricValue
+        // given a populated statAggregate structure.
+        std::function<void (struct statAggregate* in, struct metricValue* out)> compute;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricData& value);
     struct statAggregate
     {
         golang::runtime::statDepSet ensured;
@@ -244,6 +245,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricSample& value);
+    extern gocpp::map<gocpp::string, metricData> metrics;
     extern statAggregate agg;
 
     namespace rec

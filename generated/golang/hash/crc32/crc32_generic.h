@@ -16,6 +16,8 @@ namespace golang::crc32
     gocpp::array_ptr<Table> simpleMakeTable(uint32_t poly);
     void simplePopulateTable(uint32_t poly, gocpp::array_ptr<Table> t);
     uint32_t simpleUpdate(uint32_t crc, gocpp::array_ptr<Table> tab, gocpp::slice<unsigned char> p);
+    struct GoTag_slicing8Table { };
+    using slicing8Table = gocpp::alias<gocpp::array<Table, 8>, GoTag_slicing8Table>;
     gocpp::array_ptr<crc32::slicing8Table> slicingMakeTable(uint32_t poly);
     uint32_t slicingUpdate(uint32_t crc, gocpp::array_ptr<golang::crc32::slicing8Table> tab, gocpp::slice<unsigned char> p);
 

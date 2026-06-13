@@ -13,6 +13,8 @@
 
 namespace golang::runtime
 {
+    struct GoTag_pageBits { };
+    using pageBits = gocpp::alias<gocpp::array<uint64_t, pallocChunkPages / 64>, GoTag_pageBits>;
     unsigned int findBitRange64(uint64_t c, unsigned int n);
     struct pallocData
     {

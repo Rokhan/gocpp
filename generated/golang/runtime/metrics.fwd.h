@@ -9,7 +9,8 @@ namespace golang::runtime
     struct metricData;
     using metricReader = std::function<uint64_t ()>;
     using statDep = unsigned int;
-    using statDepSet = gocpp::array<uint64_t, 1>;
+    struct GoTag_statDepSet;
+    using statDepSet = gocpp::alias<gocpp::array<uint64_t, 1>, GoTag_statDepSet>;
     struct sysStatsAggregate;
     struct gcStatsAggregate;
     struct statAggregate;

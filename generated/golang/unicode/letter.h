@@ -48,24 +48,9 @@ namespace golang::unicode
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Range32& value);
-    struct CaseRange
-    {
-        uint32_t Lo;
-        uint32_t Hi;
-        d Delta;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CaseRange& value);
+    struct GoTag_SpecialCase { };
+    struct GoTag_d { };
+    using d = gocpp::alias<gocpp::array<gocpp::rune, MaxCase>, GoTag_d>;
     bool is16(gocpp::slice<Range16> ranges, uint16_t r);
     bool is32(gocpp::slice<Range32> ranges, uint32_t r);
     bool Is(struct RangeTable* rangeTab, gocpp::rune r);
@@ -114,6 +99,25 @@ namespace golang::unicode
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RangeTable& value);
+    struct CaseRange
+    {
+        uint32_t Lo;
+        uint32_t Hi;
+        d Delta;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CaseRange& value);
+    using SpecialCase = gocpp::alias<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
 
     namespace rec
     {

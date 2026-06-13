@@ -6,7 +6,9 @@
 
 namespace golang::main
 {
-    using ints = gocpp::slice<int>;
+    struct GoTag_ints;
+    using ints = gocpp::alias<gocpp::slice<int>, GoTag_ints>;
+    struct GoTag_fakeFetcher;
     struct fakeResult;
-    using fakeFetcher = gocpp::map<gocpp::string, fakeResult*>;
+    using fakeFetcher = gocpp::alias<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
 }

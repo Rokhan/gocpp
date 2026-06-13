@@ -12,6 +12,7 @@ namespace golang::runtime
     struct memRecord;
     struct memRecordCycle;
     struct blockRecord;
+    struct GoTag_buckhashArray;
     struct StackRecord;
     struct MemProfileRecord;
     struct BlockProfileRecord;
@@ -32,7 +33,7 @@ namespace golang::runtime
 namespace golang::runtime
 {
     struct bucket;
-    using buckhashArray = gocpp::array<atomic::UnsafePointer, buckHashSize>;
+    using buckhashArray = gocpp::alias<gocpp::array<atomic::UnsafePointer, buckHashSize>, GoTag_buckhashArray>;
     struct mProfCycleHolder;
     struct lockTimer;
     struct mLockProfile;

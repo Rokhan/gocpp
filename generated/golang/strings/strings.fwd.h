@@ -7,5 +7,6 @@
 namespace golang::strings
 {
     const int maxInt = int(~ (unsigned int)(0) >> 1);
-    using asciiSet = gocpp::array<uint32_t, 8>;
+    struct GoTag_asciiSet;
+    using asciiSet = gocpp::alias<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
 }

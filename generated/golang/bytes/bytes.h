@@ -59,6 +59,8 @@ namespace golang::bytes
     int LastIndexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f);
     int indexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f, bool truth);
     int lastIndexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f, bool truth);
+    struct GoTag_asciiSet { };
+    using asciiSet = gocpp::alias<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
     std::tuple<bytes::asciiSet, bool> makeASCIISet(gocpp::string chars);
     bool containsRune(gocpp::string s, gocpp::rune r);
     gocpp::slice<unsigned char> Trim(gocpp::slice<unsigned char> s, gocpp::string cutset);

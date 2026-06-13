@@ -287,40 +287,8 @@ namespace golang::fmt
 
     std::ostream& operator<<(std::ostream& os, const struct GoStringer& value);
     gocpp::string FormatString(struct State state, gocpp::rune verb);
-    struct pp
-    {
-        golang::fmt::buffer buf;
-        // arg holds the current item, as an interface{}.
-        go_any arg;
-        // value is used instead of arg for reflect values.
-        reflect::Value value;
-        // fmt is used to format basic items such as integers or strings.
-        golang::fmt::fmt fmt;
-        // reordered records whether the format string used argument reordering.
-        bool reordered;
-        // goodArgNum records whether the most recent reordering directive was valid.
-        bool goodArgNum;
-        // panicking is set by catchPanic to avoid infinite panic, recover, panic, ... recursion.
-        bool panicking;
-        // erroring is set when printing an error string to guard against calling handleMethods.
-        bool erroring;
-        // wrapErrs is set when the format string may contain a %w verb.
-        bool wrapErrs;
-        // wrappedErrs records the targets of the %w verb.
-        gocpp::slice<int> wrappedErrs;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct pp& value);
+    struct GoTag_buffer { };
+    using buffer = gocpp::alias<gocpp::slice<unsigned char>, GoTag_buffer>;
     struct pp* newPrinter();
     std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a);
     
@@ -483,6 +451,40 @@ namespace golang::fmt
     std::tuple<int, bool, int> parsenum(gocpp::string s, int start, int end);
     std::tuple<int, bool, int> intFromArg(gocpp::slice<go_any> a, int argNum);
     std::tuple<int, int, bool> parseArgNumber(gocpp::string format);
+    struct pp
+    {
+        golang::fmt::buffer buf;
+        // arg holds the current item, as an interface{}.
+        go_any arg;
+        // value is used instead of arg for reflect values.
+        reflect::Value value;
+        // fmt is used to format basic items such as integers or strings.
+        golang::fmt::fmt fmt;
+        // reordered records whether the format string used argument reordering.
+        bool reordered;
+        // goodArgNum records whether the most recent reordering directive was valid.
+        bool goodArgNum;
+        // panicking is set by catchPanic to avoid infinite panic, recover, panic, ... recursion.
+        bool panicking;
+        // erroring is set when printing an error string to guard against calling handleMethods.
+        bool erroring;
+        // wrapErrs is set when the format string may contain a %w verb.
+        bool wrapErrs;
+        // wrappedErrs records the targets of the %w verb.
+        gocpp::slice<int> wrappedErrs;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct pp& value);
     extern sync::Pool ppFree;
 
     namespace rec

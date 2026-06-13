@@ -12,6 +12,8 @@
 
 namespace golang::runtime
 {
+    struct GoTag_tmpBuf { };
+    using tmpBuf = gocpp::alias<gocpp::array<unsigned char, tmpStringBufSize>, GoTag_tmpBuf>;
     gocpp::string concatstrings(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::slice<gocpp::string> a);
     gocpp::string concatstring2(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1);
     gocpp::string concatstring3(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2);

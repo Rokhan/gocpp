@@ -12,6 +12,12 @@
 
 namespace golang::main
 {
+    struct GoTag_semTable1 { };
+    using semTable1 = gocpp::alias<gocpp::array<gocpp_id_0, 10>, GoTag_semTable1>;
+    struct GoTag_semTable2 { };
+    using semTable2 = gocpp::alias<gocpp::array<gocpp_id_1, ten>, GoTag_semTable2>;
+    struct GoTag_asciiSet { };
+    using asciiSet = gocpp::alias<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
     main::asciiSet makeASCIISet(gocpp::string chars);
     bool contains(gocpp::array_ptr<gocpp::array<uint32_t, 8>> as, unsigned char c);
     void testPtrArray();

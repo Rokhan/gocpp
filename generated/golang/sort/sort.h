@@ -117,7 +117,13 @@ namespace golang::sort
     std::ostream& operator<<(std::ostream& os, const struct lessSwap& value);
     struct Interface Reverse(struct Interface data);
     bool IsSorted(struct Interface data);
+    struct GoTag_IntSlice { };
+    using IntSlice = gocpp::alias<gocpp::slice<int>, GoTag_IntSlice>;
+    struct GoTag_Float64Slice { };
+    using Float64Slice = gocpp::alias<gocpp::slice<double>, GoTag_Float64Slice>;
     bool isNaN(double f);
+    struct GoTag_StringSlice { };
+    using StringSlice = gocpp::alias<gocpp::slice<gocpp::string>, GoTag_StringSlice>;
     void Ints(gocpp::slice<int> x);
     void Float64s(gocpp::slice<double> x);
     void Strings(gocpp::slice<gocpp::string> x);

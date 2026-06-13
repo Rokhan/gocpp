@@ -10,7 +10,8 @@ namespace golang::fmt
     struct Formatter;
     struct Stringer;
     struct GoStringer;
-    using buffer = gocpp::slice<unsigned char>;
+    struct GoTag_buffer;
+    using buffer = gocpp::alias<gocpp::slice<unsigned char>, GoTag_buffer>;
 }
 #include "golang/fmt/format.fwd.h"
 #include "golang/reflect/value.fwd.h"

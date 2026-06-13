@@ -54,6 +54,8 @@ namespace golang::strings
     int LastIndexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f);
     int indexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f, bool truth);
     int lastIndexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f, bool truth);
+    struct GoTag_asciiSet { };
+    using asciiSet = gocpp::alias<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
     std::tuple<strings::asciiSet, bool> makeASCIISet(gocpp::string chars);
     gocpp::string Trim(gocpp::string s, gocpp::string cutset);
     gocpp::string TrimLeft(gocpp::string s, gocpp::string cutset);

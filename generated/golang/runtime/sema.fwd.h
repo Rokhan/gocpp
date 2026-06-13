@@ -8,6 +8,7 @@ namespace golang::runtime
 {
     const long semTabSize = 251;
     struct gocpp_id_0;
+    struct GoTag_semTable;
     using semaProfileFlags = int;
     const runtime::semaProfileFlags semaBlockProfile = 1 << 0;
     const runtime::semaProfileFlags semaMutexProfile = 1 << 1;
@@ -19,6 +20,6 @@ namespace golang::runtime
 namespace golang::runtime
 {
     struct semaRoot;
-    using semTable = gocpp::array<gocpp_id_0, semTabSize>;
+    using semTable = gocpp::alias<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;
     struct notifyList;
 }

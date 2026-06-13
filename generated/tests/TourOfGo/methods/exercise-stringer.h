@@ -12,6 +12,8 @@
 
 namespace golang::main
 {
+    struct GoTag_IPAddr { };
+    using IPAddr = gocpp::alias<gocpp::array<unsigned char, 4>, GoTag_IPAddr>;
     void main();
 
     namespace rec

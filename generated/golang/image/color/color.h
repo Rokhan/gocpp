@@ -282,6 +282,7 @@ namespace golang::color
     struct Color alpha16Model(struct Color c);
     struct Color grayModel(struct Color c);
     struct Color gray16Model(struct Color c);
+    struct GoTag_Palette { };
     uint32_t sqDiff(uint32_t x, uint32_t y);
     struct modelFunc
     {
@@ -307,6 +308,7 @@ namespace golang::color
     extern Model Alpha16Model;
     extern Model GrayModel;
     extern Model Gray16Model;
+    using Palette = gocpp::alias<gocpp::slice<Color>, GoTag_Palette>;
     extern Gray16 Black;
     extern Gray16 White;
     extern Alpha16 Transparent;

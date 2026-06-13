@@ -18,7 +18,8 @@
 
 namespace golang::crc32
 {
-    extern gocpp::array_ptr<crc32::Table> castagnoliTable;
+    struct GoTag_Table { };
+    using Table = gocpp::alias<gocpp::array<uint32_t, 256>, GoTag_Table>;
     extern gocpp::array_ptr<slicing8Table> castagnoliTable8;
     extern std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
     extern sync::Once castagnoliOnce;
@@ -57,6 +58,7 @@ namespace golang::crc32
     uint32_t Checksum(gocpp::slice<unsigned char> data, gocpp::array_ptr<golang::crc32::Table> tab);
     uint32_t ChecksumIEEE(gocpp::slice<unsigned char> data);
     uint32_t tableSum(gocpp::array_ptr<golang::crc32::Table> t);
+    extern gocpp::array_ptr<crc32::Table> castagnoliTable;
 
     namespace rec
     {

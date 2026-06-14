@@ -1709,7 +1709,10 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			}
 		}
 
-		if env.isTypeSwitch {
+		hasDeclarations := hasDeclarations(s.Body)
+		needScope := hasDeclarations || env.isTypeSwitch
+
+		if needScope {
 			cv.WritterExprPrintf(cppOut, "%s{\n", cv.cpp.Indent())
 		}
 
@@ -1738,7 +1741,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		}
 		cv.cpp.indent--
 
-		if env.isTypeSwitch {
+		if needScope {
 			cv.WritterExprPrintf(cppOut, "%s}\n", cv.cpp.Indent())
 		}
 

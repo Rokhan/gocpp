@@ -896,7 +896,7 @@ func mkTemplateParameter(name string, deps []string) string {
 		return fmt.Sprintf("typename %s", name)
 	} else {
 		// We don't really need deps names, just the number of parameters
-		for i, _ := range deps {
+		for i := range deps {
 			deps[i] = "typename"
 		}
 		return fmt.Sprintf("template<%s> class  %s", strings.Join(deps, ", "), name)
@@ -1019,6 +1019,41 @@ func toSortedList(nsSet set[string]) []string {
 		return strings.Compare(x, y)
 	})
 	return nsList
+}
+
+func isDeclaration(stmt ast.Stmt) bool {
+	switch s := stmt.(type) {
+	case *ast.AssignStmt:
+		if s.Tok == token.DEFINE {
+			return true
+		}
+		return false
+	case *ast.DeclStmt:
+		switch dec := s.Decl.(type) {
+		case *ast.GenDecl:
+			switch dec.Tok {
+			case token.VAR:
+			case token.CONST:
+				return true
+			default:
+				return false
+			}
+		default:
+			return true
+		}
+	default:
+		return false
+	}
+	return false
+}
+
+func hasDeclarations(stmts []ast.Stmt) bool {
+	for _, stmt := range stmts {
+		if isDeclaration(stmt) {
+			return true
+		}
+	}
+	return false
 }
 
 func canBeAliased(node ast.Expr) bool {

@@ -19,7 +19,6 @@ namespace golang::errors
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using reflectlite::rec::AssignableTo;
         using reflectlite::rec::Comparable;
         using reflectlite::rec::Elem;

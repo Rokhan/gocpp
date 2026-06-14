@@ -20,7 +20,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Log returns the natural logarithm of x.

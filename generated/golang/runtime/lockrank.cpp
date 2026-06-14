@@ -15,7 +15,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Constants representing the ranks of all non-leaf runtime locks, in rank order.

@@ -17,7 +17,6 @@ namespace golang::bytealg
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Offsets into internal/cpu records for use in assembly.

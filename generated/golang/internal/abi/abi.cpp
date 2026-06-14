@@ -18,7 +18,6 @@ namespace golang::abi
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // RegArgs is a struct that has space for each argument

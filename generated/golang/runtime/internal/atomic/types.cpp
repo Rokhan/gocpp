@@ -18,7 +18,6 @@ namespace golang::atomic
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Int32 is an atomically accessed int32 value.

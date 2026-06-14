@@ -20,7 +20,6 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     std::tuple<gocpp::string, bool> Getenv(gocpp::string key)

@@ -15,7 +15,6 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     void asanRead(gocpp::unsafe_pointer addr, int len)

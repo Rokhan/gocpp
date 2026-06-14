@@ -17,7 +17,6 @@ namespace golang::atomic
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A Value provides an atomic load and store of a consistently typed value.

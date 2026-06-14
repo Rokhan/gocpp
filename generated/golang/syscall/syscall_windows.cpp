@@ -31,7 +31,7 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
+        using mocklib::rec::Error;
         using sync::rec::Do;
     }
 

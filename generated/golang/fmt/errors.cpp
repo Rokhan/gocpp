@@ -22,7 +22,6 @@ namespace golang::fmt
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Errorf formats according to a format specifier and returns the string as a

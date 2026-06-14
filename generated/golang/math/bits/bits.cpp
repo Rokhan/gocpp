@@ -25,7 +25,6 @@ namespace golang::bits
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // UintSize is the size of a uint in bits.

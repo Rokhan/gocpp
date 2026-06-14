@@ -22,7 +22,6 @@ namespace golang::reflectlite
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using abi::rec::Kind;
         using abi::rec::NumMethod;
         using abi::rec::Pointers;

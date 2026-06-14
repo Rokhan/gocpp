@@ -25,7 +25,6 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::unsafe_pointer _;

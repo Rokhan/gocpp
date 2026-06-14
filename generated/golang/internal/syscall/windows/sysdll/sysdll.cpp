@@ -18,7 +18,6 @@ namespace golang::sysdll
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // IsSystemDLL reports whether the named dll key (a base name, like

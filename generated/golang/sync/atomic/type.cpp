@@ -17,7 +17,6 @@ namespace golang::atomic
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A Bool is an atomic boolean value.

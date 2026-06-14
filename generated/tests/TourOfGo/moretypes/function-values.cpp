@@ -19,7 +19,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     double compute(std::function<double (double _1, double _2)> fn)

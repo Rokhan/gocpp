@@ -17,7 +17,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::string rec::String(golang::main::IPAddr ip)

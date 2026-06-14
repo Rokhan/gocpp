@@ -19,7 +19,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     void say(gocpp::string s)

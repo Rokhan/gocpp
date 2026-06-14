@@ -52,7 +52,6 @@ namespace golang::image
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using color::rec::Convert;
         using color::rec::Index;
         using color::rec::RGBA;

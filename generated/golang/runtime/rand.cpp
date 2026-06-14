@@ -42,7 +42,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using chacha8rand::rec::Init;
         using chacha8rand::rec::Init64;
         using chacha8rand::rec::Next;

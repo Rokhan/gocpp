@@ -17,7 +17,6 @@ namespace golang::wc
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Test runs a test suite against f.

@@ -19,7 +19,6 @@ namespace golang::unicode
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // RangeTable defines a set of Unicode code points by listing the ranges of

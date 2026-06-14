@@ -33,7 +33,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A stkframe holds information about a single physical stack frame.

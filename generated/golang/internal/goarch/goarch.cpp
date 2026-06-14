@@ -19,7 +19,6 @@ namespace golang::goarch
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // PtrSize is the size of a pointer in bytes - unsafe.Sizeof(uintptr(0)) but as an ideal constant.

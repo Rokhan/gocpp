@@ -24,7 +24,6 @@ namespace golang::bufio
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using io::rec::Read;
         using io::rec::ReadFrom;
         using io::rec::Write;

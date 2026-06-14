@@ -20,7 +20,6 @@ namespace golang::sync
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Cond implements a condition variable, a rendezvous point

@@ -15,7 +15,6 @@ namespace golang::abi
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A FuncFlag records bits about a function, passed to the runtime.

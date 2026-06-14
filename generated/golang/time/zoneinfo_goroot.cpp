@@ -15,7 +15,6 @@ namespace golang::time
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     std::tuple<gocpp::string, bool> gorootZoneSource(gocpp::string goroot)

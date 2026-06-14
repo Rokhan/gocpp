@@ -15,7 +15,6 @@ namespace golang::abi
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // StackNosplitBase is the base maximum number of bytes that a chain of

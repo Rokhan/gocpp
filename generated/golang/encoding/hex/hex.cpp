@@ -22,7 +22,6 @@ namespace golang::hex
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using io::rec::Close;
         using io::rec::Read;
         using io::rec::Write;

@@ -53,7 +53,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::string cgoWriteBarrierFail = "unpinned Go pointer stored into non-Go memory"_s;

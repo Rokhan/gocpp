@@ -17,7 +17,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Signbit reports whether x is negative or negative zero.

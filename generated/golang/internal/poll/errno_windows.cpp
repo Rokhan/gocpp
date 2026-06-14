@@ -18,7 +18,6 @@ namespace golang::poll
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::error errERROR_IO_PENDING = syscall::Errno(syscall::ERROR_IO_PENDING);

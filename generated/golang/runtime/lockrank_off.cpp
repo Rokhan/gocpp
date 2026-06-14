@@ -19,7 +19,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // // lockRankStruct is embedded in mutex, but is empty when staticklockranking is

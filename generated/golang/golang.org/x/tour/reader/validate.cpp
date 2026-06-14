@@ -28,7 +28,6 @@ namespace golang::reader
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using io::rec::Read;
     }
 

@@ -56,7 +56,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Event types in the trace, args are given in square brackets.

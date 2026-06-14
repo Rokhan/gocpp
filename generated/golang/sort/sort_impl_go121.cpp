@@ -17,7 +17,6 @@ namespace golang::sort
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     void intsImpl(gocpp::slice<int> x)

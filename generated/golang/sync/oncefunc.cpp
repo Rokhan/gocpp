@@ -19,7 +19,6 @@ namespace golang::sync
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // OnceFunc returns a function that invokes f only once. The returned function

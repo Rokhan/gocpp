@@ -37,7 +37,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using abi::rec::IndirectElem;
         using abi::rec::IndirectKey;
         using abi::rec::NeedKeyUpdate;

@@ -17,7 +17,6 @@ namespace golang::unicode
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Bit masks for each code point under U+0100, for fast lookup.

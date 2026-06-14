@@ -32,7 +32,6 @@ namespace golang::crc32
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using atomic::rec::Load;
         using atomic::rec::Store;
         using sync::rec::Do;

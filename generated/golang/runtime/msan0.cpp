@@ -17,7 +17,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     void msanread(gocpp::unsafe_pointer addr, uintptr_t sz)

@@ -38,7 +38,6 @@ namespace golang::rand
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using atomic::rec::CompareAndSwap;
         using atomic::rec::Load;
         using godebug::rec::IncNonDefault;

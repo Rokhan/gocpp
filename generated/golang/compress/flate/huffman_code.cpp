@@ -20,7 +20,6 @@ namespace golang::flate
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // hcode is a huffman code with a bit code and bit length.

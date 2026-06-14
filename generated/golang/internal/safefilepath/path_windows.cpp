@@ -18,7 +18,6 @@ namespace golang::safefilepath
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     std::tuple<gocpp::string, struct gocpp::error> fromFS(gocpp::string path)

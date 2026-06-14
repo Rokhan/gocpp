@@ -23,7 +23,6 @@ namespace golang::reflect
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using abi::rec::Align;
         using abi::rec::Get;
         using abi::rec::InSlice;

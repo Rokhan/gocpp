@@ -18,7 +18,6 @@ namespace golang::slices
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Equal reports whether two slices are equal: the same length and all

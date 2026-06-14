@@ -17,7 +17,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // MulUintptr returns a * b and whether the multiplication overflowed.

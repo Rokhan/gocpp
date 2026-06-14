@@ -25,7 +25,7 @@ namespace golang::fs
 {
     namespace rec
     {
-        using namespace mocklib::rec;
+        using mocklib::rec::Error;
     }
 
     // An FS provides access to a hierarchical file system.

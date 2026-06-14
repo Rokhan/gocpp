@@ -37,7 +37,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // osSetupTLS is called by needm to set up TLS for non-Go threads.

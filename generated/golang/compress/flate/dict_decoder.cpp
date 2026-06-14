@@ -15,7 +15,6 @@ namespace golang::flate
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // dictDecoder implements the LZ77 sliding dictionary as used in decompression.

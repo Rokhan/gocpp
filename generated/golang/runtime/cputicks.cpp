@@ -15,7 +15,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // careful: cputicks is not guaranteed to be monotonic! In particular, we have

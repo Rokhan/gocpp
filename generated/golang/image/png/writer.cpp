@@ -33,7 +33,6 @@ namespace golang::png
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using binary::rec::PutUint32;
         using bufio::rec::Flush;
         using bufio::rec::Reset;

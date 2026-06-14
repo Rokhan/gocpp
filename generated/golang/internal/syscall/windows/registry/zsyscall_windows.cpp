@@ -22,7 +22,6 @@ namespace golang::registry
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using syscall::rec::Addr;
         using syscall::rec::NewProc;
     }

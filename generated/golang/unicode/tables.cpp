@@ -18,7 +18,6 @@ namespace golang::unicode
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Version is the Unicode edition from which the tables are derived.

@@ -19,7 +19,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Don't split the stack as this function may be invoked without a valid G,

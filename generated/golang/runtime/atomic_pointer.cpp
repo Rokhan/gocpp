@@ -54,7 +54,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // atomicwb performs a write barrier before an atomic pointer write.

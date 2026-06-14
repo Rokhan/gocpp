@@ -22,7 +22,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Buffer for pointers found during stack tracing.

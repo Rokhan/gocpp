@@ -18,7 +18,6 @@ namespace golang::time
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Sleep pauses the current goroutine for at least the duration d.

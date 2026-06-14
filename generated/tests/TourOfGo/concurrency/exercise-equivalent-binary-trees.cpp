@@ -18,7 +18,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Walk walks the tree t sending all values

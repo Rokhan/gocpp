@@ -36,7 +36,6 @@ namespace golang::os
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using fs::rec::Perm;
         using poll::rec::Fchdir;
         using poll::rec::Fchmod;

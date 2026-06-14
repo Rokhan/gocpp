@@ -20,7 +20,7 @@ namespace golang::os
 {
     namespace rec
     {
-        using namespace mocklib::rec;
+        using mocklib::rec::Error;
         using syscall::rec::Is;
     }
 

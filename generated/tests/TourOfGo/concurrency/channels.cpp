@@ -17,7 +17,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     void sum(gocpp::slice<int> s, gocpp::channel<int> c)

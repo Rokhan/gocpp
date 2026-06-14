@@ -15,7 +15,6 @@ namespace golang::bytealg
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     int LastIndexByte(gocpp::slice<unsigned char> s, unsigned char c)

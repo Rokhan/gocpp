@@ -20,7 +20,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using color::rec::RGBA;
         using image::rec::At;
         using image::rec::Bounds;

@@ -17,7 +17,6 @@ namespace golang::cpu
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // cpuid is implemented in cpu_x86.s.

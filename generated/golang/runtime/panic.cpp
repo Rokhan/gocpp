@@ -81,10 +81,10 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using atomic::rec::Add;
         using atomic::rec::CompareAndSwap;
         using atomic::rec::Load;
+        using mocklib::rec::Error;
     }
 
     // throwType indicates the current type of ongoing throw, which affects the

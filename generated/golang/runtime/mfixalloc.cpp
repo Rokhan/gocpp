@@ -21,7 +21,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // fixalloc is a simple free-list allocator for fixed size objects.

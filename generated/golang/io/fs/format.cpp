@@ -20,7 +20,6 @@ namespace golang::fs
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using time::rec::Format;
     }
 

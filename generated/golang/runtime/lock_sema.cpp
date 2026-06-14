@@ -42,7 +42,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // This implementation depends on OS-specific implementations of

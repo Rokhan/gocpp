@@ -19,7 +19,6 @@ namespace golang::crc32
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // castagnoliSSE42 is defined in crc32_amd64.s and uses the SSE 4.2 CRC32

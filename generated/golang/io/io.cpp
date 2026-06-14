@@ -27,7 +27,6 @@ namespace golang::io
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using sync::rec::Get;
         using sync::rec::Put;
     }

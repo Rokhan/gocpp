@@ -305,7 +305,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Caller reports file and line number information about function invocations on

@@ -20,7 +20,6 @@ namespace golang::fmt
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::string ldigits = "0123456789abcdefx"_s;

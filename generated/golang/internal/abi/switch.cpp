@@ -17,7 +17,6 @@ namespace golang::abi
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     

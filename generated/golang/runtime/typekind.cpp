@@ -18,7 +18,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // isDirectIface reports whether t is stored directly in an interface value.

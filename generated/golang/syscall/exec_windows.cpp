@@ -27,7 +27,6 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // ForkLock is not used on Windows.

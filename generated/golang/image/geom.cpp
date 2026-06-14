@@ -19,7 +19,6 @@ namespace golang::image
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A Point is an X, Y coordinate pair. The axes increase right and down.

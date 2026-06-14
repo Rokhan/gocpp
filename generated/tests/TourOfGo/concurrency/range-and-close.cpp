@@ -17,7 +17,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     void fibonacci(int n, gocpp::channel<int> c)

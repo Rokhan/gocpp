@@ -46,7 +46,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // traceStringTable is map of string -> unique ID that also manages

@@ -57,7 +57,6 @@ namespace golang::atomic
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // SwapInt32 atomically stores new into *addr and returns the previous *addr value.

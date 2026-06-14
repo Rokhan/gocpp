@@ -29,7 +29,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::unsafe_pointer mapaccess1_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string ky)

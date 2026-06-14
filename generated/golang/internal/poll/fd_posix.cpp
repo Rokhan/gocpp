@@ -24,7 +24,6 @@ namespace golang::poll
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // eofError returns io.EOF when fd is available for reading end of

@@ -17,7 +17,6 @@ namespace golang::crc32
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // simpleMakeTable allocates and constructs a Table for the specified

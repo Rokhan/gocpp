@@ -29,7 +29,6 @@ namespace golang::poll
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using sync::rec::Do;
         using time::rec::IsZero;
     }

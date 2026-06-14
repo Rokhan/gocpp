@@ -23,7 +23,6 @@ namespace golang::poll
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Fsync wraps syscall.Fsync.

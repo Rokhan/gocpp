@@ -15,7 +15,6 @@ namespace golang::sys
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::array<unsigned char, 32> deBruijn32tab = gocpp::array<unsigned char, 32> {

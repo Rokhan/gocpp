@@ -30,7 +30,6 @@ namespace golang::png
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using binary::rec::Uint32;
         using hash::rec::Reset;
         using hash::rec::Sum32;
@@ -44,6 +43,7 @@ namespace golang::png
         using io::rec::Close;
         using io::rec::Read;
         using io::rec::Write;
+        using mocklib::rec::Error;
     }
 
     // Color type, as per the PNG spec.

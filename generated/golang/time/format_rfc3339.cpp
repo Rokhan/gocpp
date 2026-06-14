@@ -20,7 +20,6 @@ namespace golang::time
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::slice<unsigned char> rec::appendFormatRFC3339(golang::time::Time t, gocpp::slice<unsigned char> b, bool nanos)

@@ -19,7 +19,6 @@ namespace golang::time
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A Ticker holds a channel that delivers “ticks” of a clock

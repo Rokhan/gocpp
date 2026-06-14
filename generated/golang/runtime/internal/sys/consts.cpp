@@ -19,7 +19,6 @@ namespace golang::sys
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // AIX requires a larger stack for syscalls.

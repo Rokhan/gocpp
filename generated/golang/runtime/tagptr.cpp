@@ -15,7 +15,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // taggedPointer is a pointer with a numeric tag.

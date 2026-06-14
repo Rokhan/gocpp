@@ -15,7 +15,6 @@ namespace golang::abi
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // RAX, RBX, RCX, RDI, RSI, R8, R9, R10, R11.

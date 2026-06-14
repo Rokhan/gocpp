@@ -19,7 +19,7 @@ namespace golang::strconv
 {
     namespace rec
     {
-        using namespace mocklib::rec;
+        using mocklib::rec::Error;
     }
 
     // lower(c) is a lower-case letter if and only if

@@ -17,7 +17,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     std::tuple<gocpp::string, int, gocpp::slice<gocpp::string>> f1()

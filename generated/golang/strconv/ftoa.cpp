@@ -22,7 +22,6 @@ namespace golang::strconv
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // TODO: move elsewhere?

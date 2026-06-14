@@ -17,7 +17,6 @@ namespace golang::strconv
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // index returns the index of the first instance of c in s, or -1 if missing.

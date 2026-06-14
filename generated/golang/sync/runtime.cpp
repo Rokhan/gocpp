@@ -17,7 +17,6 @@ namespace golang::sync
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Semacquire waits until *s > 0 and then atomically decrements it.

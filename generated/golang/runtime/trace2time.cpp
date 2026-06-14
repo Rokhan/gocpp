@@ -50,7 +50,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Timestamps in trace are produced through either nanotime or cputicks

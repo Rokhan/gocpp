@@ -15,7 +15,6 @@ namespace golang::goexperiment
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
 }

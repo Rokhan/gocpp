@@ -18,7 +18,6 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Go names for Windows errors.

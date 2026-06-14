@@ -19,7 +19,6 @@ namespace golang::flate
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Reset the buffer offset when reaching this.

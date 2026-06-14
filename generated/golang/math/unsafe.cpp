@@ -15,7 +15,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Float32bits returns the IEEE 754 binary representation of f,

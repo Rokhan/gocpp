@@ -28,7 +28,6 @@ namespace golang::adler32
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // mod is the largest prime that is less than 65536.

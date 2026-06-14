@@ -21,7 +21,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // addrBits is the number of bits needed to represent a virtual address.

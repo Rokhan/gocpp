@@ -16,7 +16,6 @@ namespace golang::utf16
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // 0xd800-0xdc00 encodes the high 10 bits of a pair.

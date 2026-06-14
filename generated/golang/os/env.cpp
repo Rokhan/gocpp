@@ -19,7 +19,6 @@ namespace golang::os
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Expand replaces ${var} or $var in the string based on the mapping function.

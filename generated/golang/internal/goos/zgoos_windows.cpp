@@ -15,7 +15,6 @@ namespace golang::goos
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::string GOOS = "windows"_s;

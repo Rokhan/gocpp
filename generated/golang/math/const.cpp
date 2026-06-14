@@ -18,7 +18,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Mathematical constants.

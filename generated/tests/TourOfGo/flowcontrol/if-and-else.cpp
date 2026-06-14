@@ -18,7 +18,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     double pow(double x, double n, double lim)

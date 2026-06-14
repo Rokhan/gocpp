@@ -24,7 +24,6 @@ namespace golang::flate
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using io::rec::Write;
     }
 

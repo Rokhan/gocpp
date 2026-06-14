@@ -18,7 +18,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     double rec::Abs(golang::main::MyFloat f)

@@ -21,7 +21,6 @@ namespace golang::cmplx
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Sqrt returns the square root of x.

@@ -59,7 +59,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using abi::rec::IsExported;
         using abi::rec::Name;
         using abi::rec::Uncommon;

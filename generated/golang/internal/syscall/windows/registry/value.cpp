@@ -24,7 +24,6 @@ namespace golang::registry
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Registry value types.

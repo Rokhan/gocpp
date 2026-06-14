@@ -19,7 +19,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // faketime is the simulated time in nanoseconds since 1970 for the

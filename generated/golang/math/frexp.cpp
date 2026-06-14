@@ -19,7 +19,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Frexp breaks f into a normalized fraction

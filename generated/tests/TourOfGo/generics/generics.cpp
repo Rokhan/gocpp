@@ -17,7 +17,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // PrimeRK is the prime base used in Rabin-Karp algorithm.

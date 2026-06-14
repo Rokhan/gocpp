@@ -17,7 +17,6 @@ namespace golang::color
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // RGBToYCbCr converts an RGB triple to a Y'CbCr triple.

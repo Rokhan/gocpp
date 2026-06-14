@@ -20,7 +20,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Ldexp is the inverse of [Frexp].

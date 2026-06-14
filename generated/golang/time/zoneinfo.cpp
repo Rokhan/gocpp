@@ -26,7 +26,6 @@ namespace golang::time
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using sync::rec::Do;
     }
 

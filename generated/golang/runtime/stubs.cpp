@@ -42,7 +42,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Should be a built-in for unsafe.Pointer?

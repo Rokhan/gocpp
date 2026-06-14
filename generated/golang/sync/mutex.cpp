@@ -25,7 +25,6 @@ namespace golang::sync
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Provided by runtime via linkname.

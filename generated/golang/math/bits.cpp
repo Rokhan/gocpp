@@ -19,7 +19,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Inf returns positive infinity if sign >= 0, negative infinity if sign < 0.

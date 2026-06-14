@@ -10,8 +10,6 @@
 #include "gocpp/support.h"
 
 
-#include "golang/reflect/value.h"
-
 namespace golang::main
 {
     void main();

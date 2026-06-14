@@ -30,7 +30,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // lfstack is the head of a lock-free stack.

@@ -199,7 +199,6 @@ namespace golang::bisect
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
         using runtime::rec::Name;

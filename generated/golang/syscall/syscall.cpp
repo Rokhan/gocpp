@@ -41,7 +41,6 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // StringByteSlice converts a string to a NUL-terminated []byte,

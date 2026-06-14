@@ -40,7 +40,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // The size of a bitmap chunk, i.e. the amount of bits (that is, pages) to consider

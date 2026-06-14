@@ -15,7 +15,6 @@ namespace golang::bytealg
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Index returns the index of the first instance of b in a, or -1 if b is not present in a.

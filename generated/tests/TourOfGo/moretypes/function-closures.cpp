@@ -18,7 +18,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     std::function<int (int _1)> adder()

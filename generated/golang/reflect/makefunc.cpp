@@ -24,7 +24,6 @@ namespace golang::reflect
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using abi::rec::Common;
         using abi::rec::Get;
         using abi::rec::Kind;

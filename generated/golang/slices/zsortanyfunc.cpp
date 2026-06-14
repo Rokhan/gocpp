@@ -17,7 +17,6 @@ namespace golang::slices
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // insertionSortCmpFunc sorts data[a:b] using insertion sort.

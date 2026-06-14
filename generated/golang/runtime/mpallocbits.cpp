@@ -18,7 +18,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // pageBits is a bitmap representing one bit per page in a palloc chunk.

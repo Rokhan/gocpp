@@ -20,7 +20,6 @@ namespace golang::strconv
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // ryuFtoaFixed32 formats mant*(2^exp) with prec decimal digits.

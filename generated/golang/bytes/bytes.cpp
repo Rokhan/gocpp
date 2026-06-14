@@ -30,7 +30,6 @@ namespace golang::bytes
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Equal reports whether a and b

@@ -21,7 +21,6 @@ namespace golang::windows
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     

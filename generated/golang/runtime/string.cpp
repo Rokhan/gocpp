@@ -50,7 +50,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // The constant is known to the compiler.

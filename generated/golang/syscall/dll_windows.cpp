@@ -21,7 +21,7 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
+        using mocklib::rec::Error;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
     }

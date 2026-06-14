@@ -33,7 +33,6 @@ namespace golang::os
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Stat returns the FileInfo structure describing file.

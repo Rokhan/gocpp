@@ -15,7 +15,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     double inf = float64frombits(0x7FF0000000000000);

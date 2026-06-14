@@ -64,7 +64,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A checkmarksMap stores the GC marks in "checkmarks" mode. It is a

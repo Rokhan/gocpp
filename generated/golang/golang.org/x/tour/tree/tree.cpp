@@ -18,7 +18,6 @@ namespace golang::tree
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A Tree is a binary tree with integer values.

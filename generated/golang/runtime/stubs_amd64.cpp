@@ -15,7 +15,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Called from compiled code; declared for vet; do NOT call from Go.

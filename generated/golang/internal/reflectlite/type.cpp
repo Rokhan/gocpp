@@ -20,7 +20,6 @@ namespace golang::reflectlite
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using abi::rec::ArrayType;
         using abi::rec::ChanDir;
         using abi::rec::DataChecked;

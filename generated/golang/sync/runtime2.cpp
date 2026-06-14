@@ -15,7 +15,6 @@ namespace golang::sync
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Approximation of notifyList in runtime/sema.go. Size and alignment must

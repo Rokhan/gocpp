@@ -29,7 +29,6 @@ namespace golang::os
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using poll::rec::RawControl;
         using poll::rec::RawRead;
         using poll::rec::RawWrite;

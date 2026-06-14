@@ -70,7 +70,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A Pinner is a set of Go objects each pinned to a fixed location in memory. The

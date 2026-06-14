@@ -18,7 +18,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // adjust Gobuf as if it executed a call to fn with context ctxt

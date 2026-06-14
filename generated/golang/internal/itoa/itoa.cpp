@@ -15,7 +15,6 @@ namespace golang::itoa
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Itoa converts val to a decimal string.

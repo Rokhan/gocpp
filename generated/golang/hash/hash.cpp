@@ -18,7 +18,6 @@ namespace golang::hash
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Hash is the common interface implemented by all hash functions.

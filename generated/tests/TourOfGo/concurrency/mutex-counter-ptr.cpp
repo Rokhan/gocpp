@@ -20,7 +20,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
     }

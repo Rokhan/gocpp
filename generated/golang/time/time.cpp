@@ -102,7 +102,7 @@ namespace golang::time
 {
     namespace rec
     {
-        using namespace mocklib::rec;
+        using mocklib::rec::Error;
     }
 
     // A Time represents an instant in time with nanosecond precision.

@@ -26,7 +26,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // traceRegionAlloc is a non-thread-safe region allocator.

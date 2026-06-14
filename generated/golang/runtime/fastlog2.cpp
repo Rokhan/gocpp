@@ -18,7 +18,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // fastlog2 implements a fast approximation to the base 2 log of a

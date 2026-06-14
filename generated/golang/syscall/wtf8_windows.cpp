@@ -18,7 +18,6 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // encodeWTF16 returns the potentially ill-formed

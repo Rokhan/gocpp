@@ -19,7 +19,6 @@ namespace golang::rand
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // ExpFloat64 returns an exponentially distributed float64 in the range

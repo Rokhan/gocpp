@@ -17,7 +17,6 @@ namespace golang::windows
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // symlink support for CreateSymbolicLink() starting with Windows 10 (1703, v10.0.14972)

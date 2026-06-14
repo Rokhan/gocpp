@@ -25,7 +25,6 @@ namespace golang::windows
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using sync::rec::Do;
         using syscall::rec::Find;
     }

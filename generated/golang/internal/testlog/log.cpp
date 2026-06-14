@@ -20,7 +20,6 @@ namespace golang::testlog
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using atomic::rec::Load;
         using atomic::rec::Store;
     }

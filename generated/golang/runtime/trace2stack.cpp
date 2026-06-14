@@ -54,7 +54,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Maximum number of PCs in a single stack trace.

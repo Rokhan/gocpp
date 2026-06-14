@@ -17,7 +17,6 @@ namespace golang::cmp
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Ordered is a constraint that permits any ordered type: any type

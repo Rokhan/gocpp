@@ -15,7 +15,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     double archHypot(double p, double q)

@@ -43,7 +43,6 @@ namespace golang::binary
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using io::rec::Write;
         using reflect::rec::Bool;
         using reflect::rec::CanSet;

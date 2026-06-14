@@ -20,7 +20,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::string gogetenv(gocpp::string key)

@@ -17,7 +17,6 @@ namespace golang::sort
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // insertionSort sorts data[a:b] using insertion sort.

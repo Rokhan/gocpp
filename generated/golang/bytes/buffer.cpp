@@ -20,7 +20,6 @@ namespace golang::bytes
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using io::rec::Read;
         using io::rec::Write;
     }

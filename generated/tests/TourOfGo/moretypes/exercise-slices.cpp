@@ -17,7 +17,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::slice<gocpp::slice<uint8_t>> Pic(int dx, int dy)

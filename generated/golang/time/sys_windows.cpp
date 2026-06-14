@@ -21,7 +21,6 @@ namespace golang::time
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // for testing: whatever interrupts a sleep

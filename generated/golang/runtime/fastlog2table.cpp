@@ -15,7 +15,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::array<double, (1 << fastlogNumBits) + 1> fastlog2Table = gocpp::array<double, (1 << fastlogNumBits) + 1> {

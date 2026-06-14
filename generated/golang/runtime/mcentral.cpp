@@ -54,7 +54,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Central list of free objects of a given size.

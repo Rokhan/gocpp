@@ -25,7 +25,6 @@ namespace golang::time
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using registry::rec::Close;
         using registry::rec::GetMUIStringValue;
         using registry::rec::GetStringValue;

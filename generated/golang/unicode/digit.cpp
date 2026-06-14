@@ -17,7 +17,6 @@ namespace golang::unicode
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // IsDigit reports whether the rune is a decimal digit.

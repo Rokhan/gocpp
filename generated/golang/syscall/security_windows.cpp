@@ -20,7 +20,6 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // TranslateAccountName converts a directory service

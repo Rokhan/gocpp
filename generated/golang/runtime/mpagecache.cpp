@@ -28,7 +28,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // pageCache represents a per-p cache of pages the allocator can

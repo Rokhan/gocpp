@@ -24,7 +24,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // inlinedCall is the encoding of entries in the FUNCDATA_InlTree table.

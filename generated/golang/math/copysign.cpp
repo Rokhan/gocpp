@@ -17,7 +17,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Copysign returns a value with the magnitude of f

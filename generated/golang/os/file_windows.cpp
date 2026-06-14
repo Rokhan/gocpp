@@ -42,7 +42,6 @@ namespace golang::os
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using fs::rec::IsDir;
         using poll::rec::Close;
         using poll::rec::Init;

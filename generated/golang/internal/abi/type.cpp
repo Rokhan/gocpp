@@ -15,7 +15,6 @@ namespace golang::abi
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Type is the runtime representation of a Go type.

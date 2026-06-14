@@ -19,7 +19,6 @@ namespace golang::rand
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     uint32_t absInt32(int32_t i)

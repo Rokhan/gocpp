@@ -15,7 +15,6 @@ namespace golang::rand
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // rngCooked used for seeding. See gen_cooked.go for details.

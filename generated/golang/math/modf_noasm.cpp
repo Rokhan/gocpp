@@ -15,7 +15,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     std::tuple<double, double> archModf(double f)

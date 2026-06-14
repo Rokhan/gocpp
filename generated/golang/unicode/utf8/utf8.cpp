@@ -18,7 +18,6 @@ namespace golang::utf8
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Numbers fundamental to the encoding.

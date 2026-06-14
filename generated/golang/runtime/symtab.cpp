@@ -57,7 +57,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using atomic::rec::Load;
     }
 

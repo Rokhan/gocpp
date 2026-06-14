@@ -29,9 +29,9 @@ namespace golang::flate
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using bufio::rec::Reset;
         using io::rec::ReadByte;
+        using mocklib::rec::Error;
         using sync::rec::Do;
     }
 

@@ -18,7 +18,6 @@ namespace golang::godebugs
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // An Info describes a single known GODEBUG setting.

@@ -19,7 +19,6 @@ namespace golang::windows
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     //go:linkname WSASendtoInet4 syscall.wsaSendtoInet4

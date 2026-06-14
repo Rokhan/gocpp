@@ -30,7 +30,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // The Error interface identifies a run time error.

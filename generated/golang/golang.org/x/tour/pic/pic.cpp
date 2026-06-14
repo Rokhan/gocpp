@@ -42,7 +42,6 @@ namespace golang::pic
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using bufio::rec::Flush;
         using io::rec::Close;
         using png::rec::Encode;

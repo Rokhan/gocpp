@@ -20,7 +20,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Exp returns e**x, the base-e exponential of x.

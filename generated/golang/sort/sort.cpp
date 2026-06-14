@@ -20,7 +20,6 @@ namespace golang::sort
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // An implementation of Interface can be sorted by the routines in this package.

@@ -22,7 +22,6 @@ namespace golang::sort
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using reflectlite::rec::Len;
     }
 

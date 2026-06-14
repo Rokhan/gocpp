@@ -20,7 +20,6 @@ namespace golang::unsafeheader
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Slice is the runtime representation of a slice.

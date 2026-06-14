@@ -18,7 +18,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // addExitHook registers the specified function 'f' to be run at

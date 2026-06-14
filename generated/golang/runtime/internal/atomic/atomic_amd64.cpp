@@ -15,7 +15,6 @@ namespace golang::atomic
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     //go:nosplit

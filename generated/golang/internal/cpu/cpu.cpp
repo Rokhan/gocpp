@@ -19,7 +19,6 @@ namespace golang::cpu
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // DebugOptions is set to true by the runtime if the OS supports reading

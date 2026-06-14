@@ -36,8 +36,8 @@ namespace golang::fmt
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using io::rec::Write;
+        using mocklib::rec::Error;
         using reflect::rec::Bool;
         using reflect::rec::Bytes;
         using reflect::rec::CanAddr;

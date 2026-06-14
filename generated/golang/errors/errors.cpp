@@ -67,7 +67,6 @@ namespace golang::errors
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // New returns an error that formats as the given text.

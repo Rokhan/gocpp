@@ -73,7 +73,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A malloc header is functionally a single type pointer, but

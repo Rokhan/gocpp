@@ -70,7 +70,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // addb returns the byte pointer p+n.

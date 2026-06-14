@@ -15,7 +15,6 @@ namespace golang::sys
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // NOTE: keep in sync with cmd/compile/internal/types.CalcSize

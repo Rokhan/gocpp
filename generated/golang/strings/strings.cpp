@@ -30,7 +30,6 @@ namespace golang::strings
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // explode splits s into a slice of UTF-8 strings,

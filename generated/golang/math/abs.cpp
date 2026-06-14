@@ -17,7 +17,6 @@ namespace golang::math
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Abs returns the absolute value of x.

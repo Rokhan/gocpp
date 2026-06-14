@@ -42,7 +42,6 @@ namespace golang::zlib
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using binary::rec::Uint16;
         using binary::rec::Uint32;
         using flate::rec::Reset;

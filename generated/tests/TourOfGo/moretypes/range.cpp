@@ -17,7 +17,6 @@ namespace golang::main
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::slice<int> pow = gocpp::slice<int> {1, 2, 4, 8, 16, 32, 64, 128};

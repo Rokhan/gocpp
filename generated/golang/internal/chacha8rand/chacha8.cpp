@@ -18,7 +18,6 @@ namespace golang::chacha8rand
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // block is the chacha8rand block function.

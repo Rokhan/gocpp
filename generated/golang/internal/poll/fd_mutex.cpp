@@ -24,7 +24,6 @@ namespace golang::poll
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // fdMutex is a specialized synchronization primitive that manages

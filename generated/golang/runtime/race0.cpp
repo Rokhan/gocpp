@@ -38,7 +38,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     void raceReadObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)

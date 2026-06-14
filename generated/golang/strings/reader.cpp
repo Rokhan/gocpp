@@ -19,7 +19,6 @@ namespace golang::strings
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A Reader implements the [io.Reader], [io.ReaderAt], [io.ByteReader], [io.ByteScanner],

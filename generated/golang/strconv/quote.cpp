@@ -18,7 +18,6 @@ namespace golang::strconv
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::string lowerhex = "0123456789abcdef"_s;

@@ -17,7 +17,6 @@ namespace golang::strconv
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // FormatUint returns the string representation of i in the given base,

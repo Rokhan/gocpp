@@ -27,7 +27,6 @@ namespace golang::os
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     std::tuple<int64_t, bool, struct gocpp::error> rec::writeTo(golang::os::File* f, io::Writer w)

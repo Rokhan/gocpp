@@ -15,7 +15,6 @@ namespace golang::png
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // intSize is either 32 or 64.

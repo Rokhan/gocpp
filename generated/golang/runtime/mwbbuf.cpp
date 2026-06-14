@@ -55,7 +55,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // testSmallBuf forces a small write barrier buffer to stress write

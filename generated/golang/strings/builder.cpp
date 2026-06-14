@@ -18,7 +18,6 @@ namespace golang::strings
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A Builder is used to efficiently build a string using [Builder.Write] methods.

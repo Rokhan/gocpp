@@ -16,7 +16,6 @@ namespace golang::color
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Color can convert itself to alpha-premultiplied 16-bits per channel RGBA.

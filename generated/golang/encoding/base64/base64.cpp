@@ -22,7 +22,6 @@ namespace golang::base64
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using binary::rec::PutUint32;
         using binary::rec::PutUint64;
         using io::rec::Read;

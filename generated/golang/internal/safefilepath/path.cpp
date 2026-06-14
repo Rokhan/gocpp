@@ -19,7 +19,6 @@ namespace golang::safefilepath
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     gocpp::error errInvalidPath = errors::New("invalid path"_s);

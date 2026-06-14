@@ -15,7 +15,6 @@ namespace golang::syscall
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // A RawConn is a raw network connection.

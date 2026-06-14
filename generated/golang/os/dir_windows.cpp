@@ -41,7 +41,6 @@ namespace golang::os
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using fs::rec::IsDir;
         using fs::rec::Type;
         using sync::rec::Get;

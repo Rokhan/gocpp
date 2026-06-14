@@ -24,7 +24,6 @@ namespace golang::fmtsort
 {
     namespace rec
     {
-        using namespace mocklib::rec;
         using reflect::rec::Bool;
         using reflect::rec::Complex;
         using reflect::rec::Elem;

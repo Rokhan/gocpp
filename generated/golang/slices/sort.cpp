@@ -20,7 +20,6 @@ namespace golang::slices
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // Sort sorts a slice of any ordered type in ascending order.

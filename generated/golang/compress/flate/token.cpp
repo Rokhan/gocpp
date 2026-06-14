@@ -15,7 +15,6 @@ namespace golang::flate
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // 2 bits:   type   0 = literal  1=EOF  2=Match   3=Unused

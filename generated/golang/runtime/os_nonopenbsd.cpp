@@ -24,7 +24,6 @@ namespace golang::runtime
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // osStackAlloc performs OS-specific initialization before s is used

@@ -22,7 +22,6 @@ namespace golang::poll
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // errNetClosing is the type of the variable ErrNetClosing.

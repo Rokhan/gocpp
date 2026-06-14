@@ -24,7 +24,6 @@ namespace golang::time
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // registerLoadFromEmbeddedTZData is called by the time/tzdata package,

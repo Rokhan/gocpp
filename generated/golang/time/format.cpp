@@ -20,7 +20,6 @@ namespace golang::time
 {
     namespace rec
     {
-        using namespace mocklib::rec;
     }
 
     // These are predefined layouts for use in Time.Format and time.Parse.

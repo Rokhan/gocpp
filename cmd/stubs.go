@@ -35,10 +35,6 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo, receiversElts set[stri
 
 	fmt.Fprintf(out, "    namespace %s\n", recNs)
 	fmt.Fprintf(out, "    {\n")
-	fmt.Fprintf(out, "        using namespace mocklib::%s;\n", recNs)
-	for _, elt := range mocklibReceiverElts {
-		fmt.Fprintf(out, "        using mocklib::%s::%s;\n", recNs, elt)
-	}
 	for _, elt := range toSortedList(receiversElts) {
 		fmt.Fprintf(out, "        using %s;\n", elt)
 	}

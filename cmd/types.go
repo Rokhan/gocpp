@@ -139,6 +139,16 @@ func (cv *parsingInfos) IsSelectorExprSignature(expr *ast.SelectorExpr) (isFunc 
 	}
 }
 
+func (cv *parsingInfos) IsFunc(expr ast.Expr) bool {
+	tv := cv.typeInfo.Types[expr].Type
+
+	switch tv.(type) {
+	case *types.Signature:
+		return true
+	}
+	return false
+}
+
 func (cv *parsingInfos) IsExprSignature(expr ast.Expr) (isFunc bool, hasReceiv bool, nbPrams int) {
 	exprGoType := cv.convertExprToType(expr)
 

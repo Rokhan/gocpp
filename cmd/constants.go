@@ -5,10 +5,13 @@ var baseIndent string = "    "
 // receiver namespace
 var recNs = "rec"
 
-var mocklibReceiverElts = []string{
-	// "Date",
-	// "Error",
-	// "Mutex",
+var mocklibReceiverElts = map[string]string{
+	"Error":              "mocklib::rec::Error",
+	"rec::Error":         "mocklib::rec::Error",
+	"time::rec::Weekday": "mocklib::rec::Weekday",
+	"time::rec::Hour":    "mocklib::rec::Hour",
+	"sync::rec::Lock":    "mocklib::rec::Lock",
+	"sync::rec::Unlock":  "mocklib::rec::Unlock",
 }
 
 const cpp_str_lit = "_s"

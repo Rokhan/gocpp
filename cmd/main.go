@@ -415,8 +415,8 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 			if place.headerEnd != nil {
 				headerEnds = append(headerEnds, *place.headerEnd)
 			}
-			if place.receivers != nil {
-				receiversElts.addOpt(cv.getFullReceiverName(*place.receivers))
+			if place.receiver != nil {
+				receiversElts.addOpt(place.receiver.getFullReceiverName(cv))
 			}
 
 			if place.inline != nil {
@@ -510,7 +510,7 @@ func (cv *cppConverter) ConvertDoc(doc *ast.CommentGroup) {
 	}
 }
 
-func (cv *cppConverter) getFullReceiverName(rec ast.SelectorExpr) *string {
+func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
 	pkg := cv.typeInfo.Uses[rec.Sel].Pkg()
 	if pkg == nil {
 		cv.Logf("WARNING: getFullReceiverName, nil pkg for rec: %v\n", rec.Sel.Name)
@@ -521,6 +521,10 @@ func (cv *cppConverter) getFullReceiverName(rec ast.SelectorExpr) *string {
 		return Ptr(GetCppFunc(fmt.Sprintf("%s::%s::%s", pkgName, recNs, rec.Sel.Name)))
 	}
 	return nil
+}
+
+func (rec mockReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
+	return Ptr(string(rec))
 }
 
 func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(place) string, dm depMode, outFile outFile, inNamespace bool) bool {
@@ -2502,16 +2506,6 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 	return false, ""
 }
 
-func (cv *cppConverter) IsFunc(expr ast.Expr) bool {
-	tv := cv.typeInfo.Types[expr].Type
-
-	switch tv.(type) {
-	case *types.Signature:
-		return true
-	}
-	return false
-}
-
 func (cv *cppConverter) checkCanFwd(cppType *cppType) {
 	switch cppType.str {
 	case cpp_string_type:
@@ -2842,7 +2836,7 @@ func (cv *cppConverter) computeGenStructData(param genStructParam, templatePrmLi
 	return res
 }
 
-func convertCommentLines(comment *ast.CommentGroup, indent string) []string {
+func convertCommentLines(comment *ast.CommentGroup) []string {
 	if comment == nil {
 		return nil
 	}
@@ -2857,13 +2851,13 @@ func convertCommentLines(comment *ast.CommentGroup, indent string) []string {
 }
 
 func convertComment(comment *ast.CommentGroup, indent string) string {
-	lines := convertCommentLines(comment, indent)
+	lines := convertCommentLines(comment)
 	sep := "\n" + indent + "// "
 	return fmt.Sprintf("// %s", strings.Join(lines, sep))
 }
 
 func convertInlinedComment(comment *ast.CommentGroup, indent string) string {
-	lines := convertCommentLines(comment, indent)
+	lines := convertCommentLines(comment)
 	sep := "\n" + indent
 	return fmt.Sprintf("/* %s */", strings.Join(lines, sep))
 }
@@ -3680,7 +3674,12 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 				} else {
 					cv.BuffExprPrintf(buf, "%s::%v(gocpp::recv(%v)", recNs, cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
 				}
-				*buf.defs = append(*buf.defs, receiver(fun))
+				mockReceiv, hasMock := mocklibReceiverElts[fun.Sel.Name]
+				if hasMock {
+					*buf.defs = append(*buf.defs, mockReceiver(mockReceiv))
+				} else {
+					*buf.defs = append(*buf.defs, goReceiver(*fun))
+				}
 				sep = ", "
 			} else {
 				if cv.IsExprPtr(fun.X) {
@@ -3713,6 +3712,13 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 						}
 					}
 				}
+
+				// TODO: Check if useful
+				// receiv, ok := mocklibReceiverElts[fun.Name]
+				// if ok {
+				// 	*buf.defs = append(*buf.defs, mockReceiver(receiv))
+				// }
+
 				if needNamespace {
 					cv.BuffExprPrintf(buf, "%s::%v(", cv.namespace, GetCppFunc(fun.Name))
 				} else {

@@ -90,6 +90,11 @@ func GetCppFunc(funcName string) string {
 
 func GetCppExprFunc(funcName cppExpr) cppExpr {
 	funcName.str = GetCppName(funcName.str)
+	// TODO: Check if useful
+	// receiv, ok := mocklibReceiverElts[funcName.str]
+	// if ok {
+	// 	funcName.defs = append(funcName.defs, mockReceiver(receiv))
+	// }
 	val, ok := stdFuncMapping[funcName.str]
 	if ok {
 		return cppExpr{val, "", funcName.defs, funcName.typenames}
@@ -686,6 +691,12 @@ func ComputeDeps(toDo map[string]types.Type, dm depMode) map[string]types.Type {
 	return done
 }
 
+type receiverDesc interface {
+	getFullReceiverName(cv *cppConverter) *string
+}
+type goReceiverDesc ast.SelectorExpr
+type mockReceiverDesc string
+
 type place struct {
 	// when type/declaration need be generated inlined
 	inline *string
@@ -711,7 +722,7 @@ type place struct {
 	node ast.Node
 
 	// used receivers
-	receivers *ast.SelectorExpr
+	receiver receiverDesc
 }
 
 func (place place) DepInfoTypeStr() string {
@@ -733,8 +744,12 @@ func inlineStr(str string, node ast.Node) place {
 	return place{&str, nil, nil, nil, nil, false, depInfo{}, nil, node, nil}
 }
 
-func receiver(rec *ast.SelectorExpr) place {
-	return place{nil, nil, nil, nil, nil, false, depInfo{}, nil, nil, rec}
+func goReceiver(rec ast.SelectorExpr) place {
+	return place{nil, nil, nil, nil, nil, false, depInfo{}, nil, nil, goReceiverDesc(rec)}
+}
+
+func mockReceiver(rec string) place {
+	return place{nil, nil, nil, nil, nil, false, depInfo{}, nil, nil, mockReceiverDesc(rec)}
 }
 
 func outlineStr(str string, node ast.Node) place {

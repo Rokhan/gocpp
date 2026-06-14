@@ -665,25 +665,35 @@ namespace golang::abi
             switch(conditionId)
             {
                 case 0:
+                {
                     auto tt = (ArrayType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
+                }
                 case 1:
+                {
                     auto tt = (ChanType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
+                }
                 case 2:
+                {
                     auto tt = (MapType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
+                }
                 case 3:
+                {
                     auto tt = (PtrType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
+                }
                 case 4:
+                {
                     auto tt = (SliceType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
+                }
             }
         }
         return nullptr;

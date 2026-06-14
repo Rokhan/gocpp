@@ -137,13 +137,17 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
+                {
                     auto st = (runtime::structtype*)(gocpp::unsafe_pointer(t.Type));
                     return rec::Name(gocpp::recv(st->PkgPath));
                     break;
+                }
                 case 1:
+                {
                     auto it = (runtime::interfacetype*)(gocpp::unsafe_pointer(t.Type));
                     return rec::Name(gocpp::recv(it->PkgPath));
                     break;
+                }
             }
         }
         return ""_s;
@@ -664,16 +668,21 @@ namespace golang::runtime
                     return true;
                     break;
                 case 2:
+                {
                     auto at = (runtime::arraytype*)(gocpp::unsafe_pointer(t));
                     auto av = (runtime::arraytype*)(gocpp::unsafe_pointer(v));
                     return typesEqual(at->Elem, av->Elem, seen) && at->Len == av->Len;
                     break;
+                }
                 case 3:
+                {
                     auto ct = (runtime::chantype*)(gocpp::unsafe_pointer(t));
                     auto cv = (runtime::chantype*)(gocpp::unsafe_pointer(v));
                     return ct->Dir == cv->Dir && typesEqual(ct->Elem, cv->Elem, seen);
                     break;
+                }
                 case 4:
+                {
                     auto ft = (runtime::functype*)(gocpp::unsafe_pointer(t));
                     auto fv = (runtime::functype*)(gocpp::unsafe_pointer(v));
                     if(ft->OutCount != fv->OutCount || ft->InCount != fv->InCount)
@@ -698,7 +707,9 @@ namespace golang::runtime
                     }
                     return true;
                     break;
+                }
                 case 5:
+                {
                     auto it = (runtime::interfacetype*)(gocpp::unsafe_pointer(t));
                     auto iv = (runtime::interfacetype*)(gocpp::unsafe_pointer(v));
                     if(rec::Name(gocpp::recv(it->PkgPath)) != rec::Name(gocpp::recv(iv->PkgPath)))
@@ -734,22 +745,30 @@ namespace golang::runtime
                     }
                     return true;
                     break;
+                }
                 case 6:
+                {
                     auto mt = (runtime::maptype*)(gocpp::unsafe_pointer(t));
                     auto mv = (runtime::maptype*)(gocpp::unsafe_pointer(v));
                     return typesEqual(mt->Key, mv->Key, seen) && typesEqual(mt->Elem, mv->Elem, seen);
                     break;
+                }
                 case 7:
+                {
                     auto pt = (runtime::ptrtype*)(gocpp::unsafe_pointer(t));
                     auto pv = (runtime::ptrtype*)(gocpp::unsafe_pointer(v));
                     return typesEqual(pt->Elem, pv->Elem, seen);
                     break;
+                }
                 case 8:
+                {
                     auto st = (runtime::slicetype*)(gocpp::unsafe_pointer(t));
                     auto sv = (runtime::slicetype*)(gocpp::unsafe_pointer(v));
                     return typesEqual(st->Elem, sv->Elem, seen);
                     break;
+                }
                 case 9:
+                {
                     auto st = (runtime::structtype*)(gocpp::unsafe_pointer(t));
                     auto sv = (runtime::structtype*)(gocpp::unsafe_pointer(v));
                     if(len(st->Fields) != len(sv->Fields))
@@ -787,6 +806,7 @@ namespace golang::runtime
                     }
                     return true;
                     break;
+                }
                 default:
                     println("runtime: impossible type kind"_s, kind);
                     go_throw("runtime: impossible type kind"_s);

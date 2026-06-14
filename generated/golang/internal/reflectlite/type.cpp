@@ -936,6 +936,7 @@ namespace golang::reflectlite
                     break;
 
                 case 2:
+                {
                     auto t = (reflectlite::funcType*)(gocpp::unsafe_pointer(T));
                     auto v = (reflectlite::funcType*)(gocpp::unsafe_pointer(V));
                     if(t->OutCount != v->OutCount || t->InCount != v->InCount)
@@ -958,8 +959,10 @@ namespace golang::reflectlite
                     }
                     return true;
                     break;
+                }
 
                 case 3:
+                {
                     auto t = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(T));
                     auto v = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(V));
                     if(len(t->Methods) == 0 && len(v->Methods) == 0)
@@ -970,6 +973,7 @@ namespace golang::reflectlite
                     // need a run time conversion.
                     return false;
                     break;
+                }
 
                 case 4:
                     return haveIdenticalType(rec::Key(gocpp::recv(T)), rec::Key(gocpp::recv(V)), cmpTags) && haveIdenticalType(rec::Elem(gocpp::recv(T)), rec::Elem(gocpp::recv(V)), cmpTags);
@@ -981,6 +985,7 @@ namespace golang::reflectlite
                     break;
 
                 case 7:
+                {
                     auto t = (reflectlite::structType*)(gocpp::unsafe_pointer(T));
                     auto v = (reflectlite::structType*)(gocpp::unsafe_pointer(V));
                     if(len(t->Fields) != len(v->Fields))
@@ -1018,6 +1023,7 @@ namespace golang::reflectlite
                     }
                     return true;
                     break;
+                }
             }
         }
 

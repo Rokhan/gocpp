@@ -551,6 +551,7 @@ namespace golang::poll
                 case 0:
                 case 1:
                 case 2:
+                {
                     auto ret = uint32_t(0);
                     auto flag = uint32_t(0);
                     auto size = uint32_t(gocpp::Sizeof<uint32_t>());
@@ -560,6 +561,7 @@ namespace golang::poll
                         return {"wsaioctl"_s, err};
                     }
                     break;
+                }
             }
         }
         fd->rop.mode = 'r';

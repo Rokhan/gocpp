@@ -903,6 +903,7 @@ namespace golang::flate
                         dist++;
                         break;
                     case 1:
+                    {
                         auto nb = (unsigned int)(dist - 2) >> 1;
                         // have 1 bit in bottom of dist, need nb more.
                         auto extra = (dist & 1) << nb;
@@ -919,6 +920,7 @@ namespace golang::flate
                         f->nb -= nb;
                         dist = (1 << (nb + 1)) + 1 + extra;
                         break;
+                    }
                     default:
                         f->err = CorruptInputError(f->roffset);
                         return;

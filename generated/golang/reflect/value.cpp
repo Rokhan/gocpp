@@ -175,6 +175,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
+                {
                     if(v.flag & flagIndir == 0)
                     {
                         gocpp::panic("bad indir"_s);
@@ -191,6 +192,7 @@ namespace golang::reflect
                     }
                     e->word = ptr;
                     break;
+                }
                 case 1:
                     // Value is indirect, but interface is direct. We need
                     // to load the data at v.ptr into the interface data word.
@@ -537,6 +539,7 @@ namespace golang::reflect
                     return *(gocpp::slice<unsigned char>*)(v.ptr);
                     break;
                 case 1:
+                {
                     if(rec::Kind(gocpp::recv(rec::Elem(gocpp::recv(rec::typ(gocpp::recv(v)))))) != abi::Uint8)
                     {
                         gocpp::panic("reflect.Value.Bytes of non-byte array"_s);
@@ -549,6 +552,7 @@ namespace golang::reflect
                     auto n = int((reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))))->Len);
                     return unsafe::Slice(p, n);
                     break;
+                }
             }
         }
         gocpp::panic(new ValueError {"reflect.Value.Bytes"_s, rec::kind(gocpp::recv(v))});
@@ -816,6 +820,7 @@ namespace golang::reflect
                     switch(conditionId)
                     {
                         case 0:
+                        {
                             // Copy values to the "stack."
                             auto addr = reflect::add(stackArgs, st.stkOff, "precomputed stack arg offset"_s);
                             if(v.flag & flagIndir != 0)
@@ -829,6 +834,7 @@ namespace golang::reflect
                             // There's only one step for a stack-allocated value.
                             goto stepsLoop_break;
                             break;
+                        }
                         case 1:
                         case 2:
                             // Copy values to "integer registers."
@@ -855,6 +861,7 @@ namespace golang::reflect
                             }
                             break;
                         case 3:
+                        {
                             // Copy values to "float registers."
                             if(v.flag & flagIndir == 0)
                             {
@@ -863,6 +870,7 @@ namespace golang::reflect
                             auto offset = reflect::add(v.ptr, st.offset, "precomputed value offset"_s);
                             floatToReg(& regArgs, st.freg, st.size, offset);
                             break;
+                        }
                         default:
                             gocpp::panic("unknown ABI part kind"_s);
                             break;
@@ -980,18 +988,24 @@ namespace golang::reflect
                         switch(conditionId)
                         {
                             case 0:
+                            {
                                 auto offset = reflect::add(s, st.offset, "precomputed value offset"_s);
                                 intFromReg(& regArgs, st.ireg, st.size, offset);
                                 break;
+                            }
                             case 1:
+                            {
                                 auto s_tmp = reflect::add(s, st.offset, "precomputed value offset"_s);
                                 auto& s = s_tmp;
                                 *((gocpp::unsafe_pointer*)(s)) = regArgs.Ptrs[st.ireg];
                                 break;
+                            }
                             case 2:
+                            {
                                 auto offset = reflect::add(s, st.offset, "precomputed value offset"_s);
                                 floatFromReg(& regArgs, st.freg, st.size, offset);
                                 break;
+                            }
                             case 3:
                                 gocpp::panic("register-based return value has stack component"_s);
                                 break;
@@ -1097,17 +1111,23 @@ namespace golang::reflect
                             switch(conditionId)
                             {
                                 case 0:
+                                {
                                     auto offset = add(v.ptr, st.offset, "precomputed value offset"_s);
                                     intFromReg(regs, st.ireg, st.size, offset);
                                     break;
+                                }
                                 case 1:
+                                {
                                     auto s = add(v.ptr, st.offset, "precomputed value offset"_s);
                                     *((gocpp::unsafe_pointer*)(s)) = regs->Ptrs[st.ireg];
                                     break;
+                                }
                                 case 2:
+                                {
                                     auto offset = add(v.ptr, st.offset, "precomputed value offset"_s);
                                     floatFromReg(regs, st.freg, st.size, offset);
                                     break;
+                                }
                                 case 3:
                                     gocpp::panic("register-based return value has stack component"_s);
                                     break;
@@ -1191,6 +1211,7 @@ namespace golang::reflect
                         switch(conditionId)
                         {
                             case 0:
+                            {
                                 // Copy values to the "stack."
                                 auto addr = add(ptr, st.stkOff, "precomputed stack arg offset"_s);
                                 // Do not use write barriers. The stack space used
@@ -1209,6 +1230,7 @@ namespace golang::reflect
                                 // There's only one step for a stack-allocated value.
                                 goto stepsLoop_break;
                                 break;
+                            }
                             case 1:
                             case 2:
                                 // Copy values to "integer registers."
@@ -1228,6 +1250,7 @@ namespace golang::reflect
                                 }
                                 break;
                             case 3:
+                            {
                                 // Copy values to "float registers."
                                 if(v.flag & flagIndir == 0)
                                 {
@@ -1236,6 +1259,7 @@ namespace golang::reflect
                                 auto offset = add(v.ptr, st.offset, "precomputed value offset"_s);
                                 floatToReg(regs, st.freg, st.size, offset);
                                 break;
+                            }
                             default:
                                 gocpp::panic("unknown ABI part kind"_s);
                                 break;
@@ -1794,6 +1818,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
+                {
                     go_any eface = {};
                     if(rec::NumMethod(gocpp::recv(rec::typ(gocpp::recv(v)))) == 0)
                     {
@@ -1810,7 +1835,9 @@ namespace golang::reflect
                     }
                     return x;
                     break;
+                }
                 case 1:
+                {
                     auto ptr = v.ptr;
                     if(v.flag & flagIndir != 0)
                     {
@@ -1844,6 +1871,7 @@ namespace golang::reflect
                     fl |= flag(rec::Kind(gocpp::recv(typ)));
                     return Value {typ, ptr, fl};
                     break;
+                }
             }
         }
         gocpp::panic(new ValueError {"reflect.Value.Elem"_s, rec::kind(gocpp::recv(v))});
@@ -2032,6 +2060,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
+                {
                     auto tt = (reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     if((unsigned int)(i) >= (unsigned int)(tt->Len))
                     {
@@ -2049,8 +2078,10 @@ namespace golang::reflect
                     auto fl = v.flag & (flagIndir | flagAddr) | rec::ro(gocpp::recv(v.flag)) | flag(rec::Kind(gocpp::recv(typ)));
                     return Value {typ, val, fl};
                     break;
+                }
 
                 case 1:
+                {
                     // Element flag same as Elem of Pointer.
                     // Addressable, indirect, possibly read-only.
                     auto s = (unsafeheader::Slice*)(v.ptr);
@@ -2064,8 +2095,10 @@ namespace golang::reflect
                     auto fl = flagAddr | flagIndir | rec::ro(gocpp::recv(v.flag)) | flag(rec::Kind(gocpp::recv(typ)));
                     return Value {typ, val, fl};
                     break;
+                }
 
                 case 2:
+                {
                     auto s = (unsafeheader::String*)(v.ptr);
                     if((unsigned int)(i) >= (unsigned int)(s->Len))
                     {
@@ -2075,6 +2108,7 @@ namespace golang::reflect
                     auto fl = rec::ro(gocpp::recv(v.flag)) | flag(Uint8) | flagIndir;
                     return Value {uint8Type, p, fl};
                     break;
+                }
             }
         }
         gocpp::panic(new ValueError {"reflect.Value.Index"_s, rec::kind(gocpp::recv(v))});
@@ -2301,6 +2335,7 @@ namespace golang::reflect
                 case 2:
                 case 3:
                 case 4:
+                {
                     if(v.flag & flagMethod != 0)
                     {
                         return false;
@@ -2312,6 +2347,7 @@ namespace golang::reflect
                     }
                     return ptr == nullptr;
                     break;
+                }
                 case 5:
                 case 6:
                     // Both interface and slice are nil if first word is 0.
@@ -2396,6 +2432,7 @@ namespace golang::reflect
                     return rec::Complex(gocpp::recv(v)) == 0;
                     break;
                 case 16:
+                {
                     if(v.flag & flagIndir == 0)
                     {
                         return v.ptr == nullptr;
@@ -2425,6 +2462,7 @@ namespace golang::reflect
                     }
                     return true;
                     break;
+                }
                 case 17:
                 case 18:
                 case 19:
@@ -2438,6 +2476,7 @@ namespace golang::reflect
                     return rec::Len(gocpp::recv(v)) == 0;
                     break;
                 case 25:
+                {
                     if(v.flag & flagIndir == 0)
                     {
                         return v.ptr == nullptr;
@@ -2465,6 +2504,7 @@ namespace golang::reflect
                     }
                     return true;
                     break;
+                }
                 default:
                     // This should never happen, but will act as a safeguard for later,
                     // as a default value doesn't makes sense here.
@@ -2676,9 +2716,11 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
+                {
                     auto tt = (reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     return int(tt->Len);
                     break;
+                }
                 case 1:
                     return chanlen(rec::pointer(gocpp::recv(v)));
                     break;
@@ -3247,10 +3289,12 @@ namespace golang::reflect
                 case 2:
                 case 3:
                 case 4:
+                {
                     auto bitSize = rec::Size(gocpp::recv(rec::typ(gocpp::recv(v)))) * 8;
                     auto trunc = (x << (64 - bitSize)) >> (64 - bitSize);
                     return x != trunc;
                     break;
+                }
             }
         }
         gocpp::panic(new ValueError {"reflect.Value.OverflowInt"_s, rec::kind(gocpp::recv(v))});
@@ -3279,11 +3323,13 @@ namespace golang::reflect
                 case 3:
                 case 4:
                 case 5:
+                {
                     // ok to use v.typ_ directly as Size doesn't escape
                     auto bitSize = rec::Size(gocpp::recv(v.typ_)) * 8;
                     auto trunc = (x << (64 - bitSize)) >> (64 - bitSize);
                     return x != trunc;
                     break;
+                }
             }
         }
         gocpp::panic(new ValueError {"reflect.Value.OverflowUint"_s, rec::kind(gocpp::recv(v))});
@@ -3338,6 +3384,7 @@ namespace golang::reflect
                     return uintptr_t(rec::pointer(gocpp::recv(v)));
                     break;
                 case 4:
+                {
                     if(v.flag & flagMethod != 0)
                     {
                         // As the doc comment says, the returned pointer is an
@@ -3357,6 +3404,7 @@ namespace golang::reflect
                     }
                     return uintptr_t(p);
                     break;
+                }
 
                 case 5:
                     return uintptr_t((unsafeheader::Slice*)(v.ptr)->Data);
@@ -3787,6 +3835,7 @@ namespace golang::reflect
                     break;
 
                 case 0:
+                {
                     if(v.flag & flagAddr == 0)
                     {
                         gocpp::panic("reflect.Value.Slice: slice of unaddressable array"_s);
@@ -3796,15 +3845,19 @@ namespace golang::reflect
                     typ = (sliceType*)(gocpp::unsafe_pointer(tt->Slice));
                     base = v.ptr;
                     break;
+                }
 
                 case 1:
+                {
                     typ = (sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     auto s = (unsafeheader::Slice*)(v.ptr);
                     base = s->Data;
                     cap = s->Cap;
                     break;
+                }
 
                 case 2:
+                {
                     auto s = (unsafeheader::String*)(v.ptr);
                     if(i < 0 || j < i || j > s->Len)
                     {
@@ -3820,6 +3873,7 @@ namespace golang::reflect
                     }
                     return Value {rec::typ(gocpp::recv(v)), gocpp::unsafe_pointer(& t), v.flag};
                     break;
+                }
             }
         }
 
@@ -3871,6 +3925,7 @@ namespace golang::reflect
                     break;
 
                 case 0:
+                {
                     if(v.flag & flagAddr == 0)
                     {
                         gocpp::panic("reflect.Value.Slice3: slice of unaddressable array"_s);
@@ -3880,13 +3935,16 @@ namespace golang::reflect
                     typ = (sliceType*)(gocpp::unsafe_pointer(tt->Slice));
                     base = v.ptr;
                     break;
+                }
 
                 case 1:
+                {
                     typ = (sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     auto s = (unsafeheader::Slice*)(v.ptr);
                     base = s->Data;
                     cap = s->Cap;
                     break;
+                }
             }
         }
 
@@ -4150,6 +4208,7 @@ namespace golang::reflect
                     return rec::pointer(gocpp::recv(v));
                     break;
                 case 4:
+                {
                     if(v.flag & flagMethod != 0)
                     {
                         // As the doc comment says, the returned pointer is an
@@ -4170,6 +4229,7 @@ namespace golang::reflect
                     }
                     return p;
                     break;
+                }
 
                 case 5:
                     return (unsafeheader::Slice*)(v.ptr)->Data;
@@ -4314,9 +4374,11 @@ namespace golang::reflect
                     gocpp::panic("reflect.Value.Grow: slice overflow"_s);
                     break;
                 case 2:
+                {
                     auto t = rec::Elem(gocpp::recv(rec::typ(gocpp::recv(v))));
                     *p = growslice(t, *p, n);
                     break;
+                }
             }
         }
     }
@@ -4359,10 +4421,12 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
+                {
                     auto sh = *(unsafeheader::Slice*)(v.ptr);
                     auto st = (sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     typedarrayclear(st->SliceType.Elem, sh.Data, sh.Len);
                     break;
+                }
                 case 1:
                     mapclear(rec::typ(gocpp::recv(v)), rec::pointer(gocpp::recv(v)));
                     break;
@@ -4647,6 +4711,7 @@ namespace golang::reflect
                         break;
 
                     case 1:
+                    {
                         auto ch = c.Chan;
                         if(! rec::IsValid(gocpp::recv(ch)))
                         {
@@ -4680,8 +4745,10 @@ namespace golang::reflect
                         // why we need forced escape.
                         escapes(rc->val);
                         break;
+                    }
 
                     case 2:
+                    {
                         if(rec::IsValid(gocpp::recv(c.Send)))
                         {
                             gocpp::panic("reflect.Select: RecvDir case has Send value"_s);
@@ -4702,6 +4769,7 @@ namespace golang::reflect
                         rc->typ = toRType(& tt->Type);
                         rc->val = unsafe_New(tt->Elem);
                         break;
+                    }
                 }
             }
         }
@@ -4904,14 +4972,17 @@ namespace golang::reflect
             switch(conditionId)
             {
                 case 0:
+                {
                     // Overwrite type so that they match.
                     // Same memory layout, so no harm done.
                     auto fl = v.flag & (flagAddr | flagIndir) | rec::ro(gocpp::recv(v.flag));
                     fl |= flag(rec::Kind(gocpp::recv(dst)));
                     return Value {dst, v.ptr, fl};
                     break;
+                }
 
                 case 1:
+                {
                     if(rec::Kind(gocpp::recv(v)) == Interface && rec::IsNil(gocpp::recv(v)))
                     {
                         // A nil ReadWriter passed to nil Reader is OK,
@@ -4934,6 +5005,7 @@ namespace golang::reflect
                     }
                     return Value {dst, target, flagIndir | flag(Interface)};
                     break;
+                }
             }
         }
 
@@ -4983,12 +5055,14 @@ namespace golang::reflect
                     }
                     break;
                 case 1:
+                {
                     auto n = rec::Len(gocpp::recv(rec::Elem(gocpp::recv(t))));
                     if(n > rec::Len(gocpp::recv(v)))
                     {
                         return false;
                     }
                     break;
+                }
             }
         }
         return true;
@@ -5164,6 +5238,7 @@ namespace golang::reflect
                     return rec::Pointer(gocpp::recv(v)) == rec::Pointer(gocpp::recv(u));
                     break;
                 case 20:
+                {
                     // u and v have the same type so they have the same length
                     auto vl = rec::Len(gocpp::recv(v));
                     if(vl == 0)
@@ -5184,7 +5259,9 @@ namespace golang::reflect
                     }
                     return true;
                     break;
+                }
                 case 21:
+                {
                     // u and v have the same type so they have the same fields
                     auto nf = rec::NumField(gocpp::recv(v));
                     for(auto i = 0; i < nf; i++)
@@ -5196,6 +5273,7 @@ namespace golang::reflect
                     }
                     return true;
                     break;
+                }
                 case 22:
                 case 23:
                 case 24:

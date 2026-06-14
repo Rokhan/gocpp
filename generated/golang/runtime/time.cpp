@@ -320,6 +320,7 @@ namespace golang::runtime
                 {
                     case 0:
                     case 1:
+                    {
                         // Prevent preemption while the timer is in timerModifying.
                         // This could lead to a self-deadlock. See #38070.
                         auto mp = acquirem();
@@ -343,7 +344,9 @@ namespace golang::runtime
                             releasem(mp);
                         }
                         break;
+                    }
                     case 2:
+                    {
                         // Prevent preemption while the timer is in timerModifying.
                         // This could lead to a self-deadlock. See #38070.
                         auto mp = acquirem();
@@ -366,6 +369,7 @@ namespace golang::runtime
                             releasem(mp);
                         }
                         break;
+                    }
                     case 3:
                     case 4:
                     case 5:

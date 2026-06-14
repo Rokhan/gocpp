@@ -86,12 +86,14 @@ namespace golang::utf16
                         n++;
                         break;
                     case 2:
+                    {
                         // needs surrogate sequence
                         auto [r1, r2] = EncodeRune(v);
                         a[n] = uint16_t(r1);
                         a[n + 1] = uint16_t(r2);
                         n += 2;
                         break;
+                    }
                     default:
                         a[n] = uint16_t(replacementChar);
                         n++;
@@ -122,10 +124,12 @@ namespace golang::utf16
                     return append(a, uint16_t(r));
                     break;
                 case 2:
+                {
                     // needs surrogate sequence
                     auto [r1, r2] = EncodeRune(r);
                     return append(a, uint16_t(r1), uint16_t(r2));
                     break;
+                }
             }
         }
         return append(a, replacementChar);

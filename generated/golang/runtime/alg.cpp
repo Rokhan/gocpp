@@ -261,6 +261,7 @@ namespace golang::runtime
                     return strhash(p, h);
                     break;
                 case 5:
+                {
                     auto i = (runtime::interfacetype*)(gocpp::unsafe_pointer(t));
                     if(len(i->Methods) == 0)
                     {
@@ -268,7 +269,9 @@ namespace golang::runtime
                     }
                     return interhash(p, h);
                     break;
+                }
                 case 6:
+                {
                     auto a = (runtime::arraytype*)(gocpp::unsafe_pointer(t));
                     for(auto i = uintptr_t(0); i < a->Len; i++)
                     {
@@ -276,7 +279,9 @@ namespace golang::runtime
                     }
                     return h;
                     break;
+                }
                 case 7:
+                {
                     auto s = (runtime::structtype*)(gocpp::unsafe_pointer(t));
                     for(auto [gocpp_ignored, f] : s->Fields)
                     {
@@ -288,6 +293,7 @@ namespace golang::runtime
                     }
                     return h;
                     break;
+                }
                 default:
                     // Should never happen, as typehash should only be called
                     // with comparable types.
@@ -334,6 +340,7 @@ namespace golang::runtime
                     return nullptr;
                     break;
                 case 5:
+                {
                     auto i = (runtime::interfacetype*)(gocpp::unsafe_pointer(t));
                     runtime::_type* t = {};
                     gocpp::unsafe_pointer* pdata = {};
@@ -370,7 +377,9 @@ namespace golang::runtime
                         return mapKeyError2(t, *pdata);
                     }
                     break;
+                }
                 case 6:
+                {
                     auto a = (runtime::arraytype*)(gocpp::unsafe_pointer(t));
                     for(auto i = uintptr_t(0); i < a->Len; i++)
                     {
@@ -381,7 +390,9 @@ namespace golang::runtime
                     }
                     return nullptr;
                     break;
+                }
                 case 7:
+                {
                     auto s = (runtime::structtype*)(gocpp::unsafe_pointer(t));
                     for(auto [gocpp_ignored, f] : s->Fields)
                     {
@@ -396,6 +407,7 @@ namespace golang::runtime
                     }
                     return nullptr;
                     break;
+                }
                 default:
                     // Should never happen, keep this case for robustness.
                     return gocpp::error(errorString("hash of unhashable type "_s + rec::string(gocpp::recv(toRType(t)))));

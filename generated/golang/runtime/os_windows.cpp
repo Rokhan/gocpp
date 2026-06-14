@@ -1543,6 +1543,7 @@ namespace golang::runtime
                             break;
                         case 0:
                         case 1:
+                        {
                             // Make it look like the thread called targetPC.
                             auto sp = rec::sp(gocpp::recv(c));
                             sp -= goarch::PtrSize;
@@ -1550,8 +1551,10 @@ namespace golang::runtime
                             rec::set_sp(gocpp::recv(c), sp);
                             rec::set_ip(gocpp::recv(c), targetPC);
                             break;
+                        }
 
                         case 2:
+                        {
                             // Push LR. The injected call is responsible
                             // for restoring LR. gentraceback is aware of
                             // this extra slot. See sigctxt.pushCall in
@@ -1564,8 +1567,10 @@ namespace golang::runtime
                             rec::set_lr(gocpp::recv(c), newpc - 1);
                             rec::set_ip(gocpp::recv(c), targetPC);
                             break;
+                        }
 
                         case 3:
+                        {
                             // Push LR. The injected call is responsible
                             // for restoring LR. gentraceback is aware of
                             // this extra slot. See sigctxt.pushCall in
@@ -1577,6 +1582,7 @@ namespace golang::runtime
                             rec::set_lr(gocpp::recv(c), newpc);
                             rec::set_ip(gocpp::recv(c), targetPC);
                             break;
+                        }
                     }
                 }
                 stdcall2(_SetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));

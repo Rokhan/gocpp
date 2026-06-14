@@ -909,6 +909,7 @@ namespace golang::runtime
                     break;
 
                 case 7:
+                {
                     auto sl = rec::uvarint(gocpp::recv(r));
                     if(r->begin + sl > r->end)
                     {
@@ -928,8 +929,10 @@ namespace golang::runtime
                         gwrite(b);
                     }
                     break;
+                }
 
                 case 8:
+                {
                     auto [len, ptr] = std::tuple{int(rec::uvarint(gocpp::recv(r))), uintptr_t(rec::uvarint(gocpp::recv(r)))};
                     ptr += firstmoduledata.etext;
                     // We can't use unsafe.String as it may panic, which isn't safe
@@ -942,6 +945,7 @@ namespace golang::runtime
                     auto s = *(gocpp::string*)(gocpp::unsafe_pointer(& str));
                     print(s);
                     break;
+                }
 
                 case 9:
                     print("..("_s, rec::uvarint(gocpp::recv(r)), " more bytes).."_s);
@@ -952,6 +956,7 @@ namespace golang::runtime
                     break;
 
                 case 11:
+                {
                     auto n = int(rec::uvarint(gocpp::recv(r)));
                     for(auto i = 0; i < n; i++)
                     {
@@ -962,6 +967,7 @@ namespace golang::runtime
                         printDebugLogPC(uintptr_t(rec::uvarint(gocpp::recv(r))), true);
                     }
                     break;
+                }
             }
         }
 

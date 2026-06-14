@@ -635,6 +635,7 @@ namespace golang::os
                 switch(conditionId)
                 {
                     case 0:
+                    {
                         auto rb = (windows::SymbolicLinkReparseBuffer*)(gocpp::unsafe_pointer(& rdb->DUMMYUNIONNAME));
                         auto s = rec::Path(gocpp::recv(rb));
                         if(rb->Flags & windows::SYMLINK_FLAG_RELATIVE != 0)
@@ -643,6 +644,7 @@ namespace golang::os
                         }
                         return normaliseLinkPath(s);
                         break;
+                    }
                     case 1:
                         return normaliseLinkPath(rec::Path(gocpp::recv((windows::MountPointReparseBuffer*)(gocpp::unsafe_pointer(& rdb->DUMMYUNIONNAME)))));
                         break;

@@ -175,12 +175,15 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
+                {
                     auto s1 = gocpp::getValue<gocpp::string>(s);
                     auto [s2, b] = rawstring(len(s1));
                     copy(b, s1);
                     x = s2;
                     break;
+                }
                 case 1:
+                {
                     auto len = (slice*)(e->data)->len;
                     auto et = (runtime::slicetype*)(gocpp::unsafe_pointer(t))->Elem;
                     auto sl = new(slice);
@@ -189,7 +192,9 @@ namespace golang::runtime
                     xe->_type = t;
                     xe->data = gocpp::unsafe_pointer(sl);
                     break;
+                }
                 case 2:
+                {
                     auto et = (runtime::ptrtype*)(gocpp::unsafe_pointer(t))->Elem;
                     auto e2 = newobject(et);
                     typedmemmove(et, e2, e->data);
@@ -197,6 +202,7 @@ namespace golang::runtime
                     xe->_type = t;
                     xe->data = e2;
                     break;
+                }
             }
         }
         return x;

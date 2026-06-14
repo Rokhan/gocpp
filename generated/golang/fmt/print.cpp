@@ -947,6 +947,7 @@ namespace golang::fmt
                 case 7:
                 case 8:
                 case 9:
+                {
                     auto oldPlus = p->fmt.fmtFlags.plus;
                     rec::writeByte(gocpp::recv(p->buf), '(');
                     rec::fmtFloat(gocpp::recv(p), real(v), size / 2, verb);
@@ -956,6 +957,7 @@ namespace golang::fmt
                     rec::writeString(gocpp::recv(p->buf), "i)"_s);
                     p->fmt.fmtFlags.plus = oldPlus;
                     break;
+                }
                 default:
                     rec::badVerb(gocpp::recv(p), verb);
                     break;
@@ -1631,6 +1633,7 @@ namespace golang::fmt
                     rec::fmtString(gocpp::recv(p), rec::String(gocpp::recv(f)), verb);
                     break;
                 case 18:
+                {
                     if(p->fmt.fmtFlags.sharpV)
                     {
                         rec::writeString(gocpp::recv(p->buf), rec::String(gocpp::recv(rec::Type(gocpp::recv(f)))));
@@ -1672,6 +1675,7 @@ namespace golang::fmt
                         rec::writeByte(gocpp::recv(p->buf), ']');
                     }
                     break;
+                }
                 case 19:
                     if(p->fmt.fmtFlags.sharpV)
                     {
@@ -1704,6 +1708,7 @@ namespace golang::fmt
                     rec::writeByte(gocpp::recv(p->buf), '}');
                     break;
                 case 20:
+                {
                     auto value = rec::Elem(gocpp::recv(f));
                     if(! rec::IsValid(gocpp::recv(value)))
                     {
@@ -1722,6 +1727,7 @@ namespace golang::fmt
                         rec::printValue(gocpp::recv(p), value, verb, depth + 1);
                     }
                     break;
+                }
                 case 21:
                 case 22:
                     //Go switch emulation
@@ -1738,6 +1744,7 @@ namespace golang::fmt
                             case 1:
                             case 2:
                             case 3:
+                            {
                                 // Handle byte and uint8 slices and arrays special for the above verbs.
                                 auto t = rec::Type(gocpp::recv(f));
                                 if(rec::Kind(gocpp::recv(rec::Elem(gocpp::recv(t)))) == reflect::Uint8)
@@ -1762,6 +1769,7 @@ namespace golang::fmt
                                     return;
                                 }
                                 break;
+                            }
                         }
                     }
                     if(p->fmt.fmtFlags.sharpV)
@@ -1873,6 +1881,7 @@ namespace golang::fmt
                         case 2:
                         case 3:
                         case 4:
+                        {
                             auto n = rec::Int(gocpp::recv(v));
                             if(int64_t(int(n)) == n)
                             {
@@ -1880,12 +1889,14 @@ namespace golang::fmt
                                 isInt = true;
                             }
                             break;
+                        }
                         case 5:
                         case 6:
                         case 7:
                         case 8:
                         case 9:
                         case 10:
+                        {
                             auto n = rec::Uint(gocpp::recv(v));
                             if(int64_t(n) >= 0 && uint64_t(int(n)) == n)
                             {
@@ -1893,6 +1904,7 @@ namespace golang::fmt
                                 isInt = true;
                             }
                             break;
+                        }
                         // Already 0, false.
                         default:
                             break;

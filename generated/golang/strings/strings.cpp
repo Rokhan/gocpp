@@ -1550,6 +1550,7 @@ namespace golang::strings
                     return - 1;
                     break;
                 case 4:
+                {
                     // Use brute force when s and substr both are small
                     if(len(s) <= bytealg::MaxBruteForce)
                     {
@@ -1592,6 +1593,7 @@ namespace golang::strings
                     }
                     return - 1;
                     break;
+                }
             }
         }
         auto c0 = substr[0];

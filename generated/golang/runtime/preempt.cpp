@@ -235,6 +235,7 @@ namespace golang::runtime
                         break;
 
                     case 6:
+                    {
                         // Optimization: if there is already a pending preemption request
                         // (from the previous loop iteration), don't bother with the atomics.
                         if(gp->preemptStop && gp->preempt && gp->stackguard0 == stackPreempt && asyncM == gp->m && rec::Load(gocpp::recv(asyncM->preemptGen)) == asyncGen)
@@ -277,6 +278,7 @@ namespace golang::runtime
                             }
                         }
                         break;
+                    }
                 }
             }
 

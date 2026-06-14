@@ -140,6 +140,7 @@ namespace golang::reflectlite
             switch(conditionId)
             {
                 case 0:
+                {
                     if(v.flag & flagIndir == 0)
                     {
                         gocpp::panic("bad indir"_s);
@@ -156,6 +157,7 @@ namespace golang::reflectlite
                     }
                     e->word = ptr;
                     break;
+                }
                 case 1:
                     // Value is indirect, but interface is direct. We need
                     // to load the data at v.ptr into the interface data word.
@@ -392,6 +394,7 @@ namespace golang::reflectlite
             switch(conditionId)
             {
                 case 0:
+                {
                     go_any eface = {};
                     if(rec::NumMethod(gocpp::recv(rec::typ(gocpp::recv(v)))) == 0)
                     {
@@ -408,7 +411,9 @@ namespace golang::reflectlite
                     }
                     return x;
                     break;
+                }
                 case 1:
+                {
                     auto ptr = v.ptr;
                     if(v.flag & flagIndir != 0)
                     {
@@ -425,6 +430,7 @@ namespace golang::reflectlite
                     fl |= flag(rec::Kind(gocpp::recv(typ)));
                     return Value {typ, ptr, fl};
                     break;
+                }
             }
         }
         gocpp::panic(new ValueError {"reflectlite.Value.Elem"_s, rec::kind(gocpp::recv(v))});
@@ -530,6 +536,7 @@ namespace golang::reflectlite
                 case 2:
                 case 3:
                 case 4:
+                {
                     // if v.flag&flagMethod != 0 {
                     // return false
                     // }
@@ -540,6 +547,7 @@ namespace golang::reflectlite
                     }
                     return ptr == nullptr;
                     break;
+                }
                 case 5:
                 case 6:
                     // Both interface and slice are nil if first word is 0.
@@ -593,9 +601,11 @@ namespace golang::reflectlite
             switch(conditionId)
             {
                 case 0:
+                {
                     auto tt = (reflectlite::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     return int(tt->Len);
                     break;
+                }
                 case 1:
                     return chanlen(rec::pointer(gocpp::recv(v)));
                     break;
@@ -692,14 +702,17 @@ namespace golang::reflectlite
             switch(conditionId)
             {
                 case 0:
+                {
                     // Overwrite type so that they match.
                     // Same memory layout, so no harm done.
                     auto fl = v.flag & (flagAddr | flagIndir) | rec::ro(gocpp::recv(v.flag));
                     fl |= flag(rec::Kind(gocpp::recv(dst)));
                     return Value {dst, v.ptr, fl};
                     break;
+                }
 
                 case 1:
+                {
                     if(target == nullptr)
                     {
                         target = unsafe_New(dst);
@@ -722,6 +735,7 @@ namespace golang::reflectlite
                     }
                     return Value {dst, target, flagIndir | flag(abi::Interface)};
                     break;
+                }
             }
         }
 

@@ -1263,6 +1263,7 @@ namespace golang::syscall
             switch(conditionId)
             {
                 case 0:
+                {
                     auto pp = (RawSockaddrUnix*)(gocpp::unsafe_pointer(rsa));
                     auto sa = new(SockaddrUnix);
                     if(pp->Path[0] == 0)
@@ -1287,8 +1288,10 @@ namespace golang::syscall
                     sa->Name = gocpp::string(unsafe::Slice((unsigned char*)(gocpp::unsafe_pointer(& pp->Path[0])), n));
                     return {sa, nullptr};
                     break;
+                }
 
                 case 1:
+                {
                     auto pp = (RawSockaddrInet4*)(gocpp::unsafe_pointer(rsa));
                     auto sa = new(SockaddrInet4);
                     auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& pp->Port));
@@ -1296,8 +1299,10 @@ namespace golang::syscall
                     sa->Addr = pp->Addr;
                     return {sa, nullptr};
                     break;
+                }
 
                 case 2:
+                {
                     auto pp = (RawSockaddrInet6*)(gocpp::unsafe_pointer(rsa));
                     auto sa = new(SockaddrInet6);
                     auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& pp->Port));
@@ -1306,6 +1311,7 @@ namespace golang::syscall
                     sa->Addr = pp->Addr;
                     return {sa, nullptr};
                     break;
+                }
             }
         }
         return {nullptr, gocpp::error(go_EAFNOSUPPORT)};
@@ -2188,6 +2194,7 @@ namespace golang::syscall
                 switch(conditionId)
                 {
                     case 0:
+                    {
                         auto data = (symbolicLinkReparseBuffer*)(gocpp::unsafe_pointer(& rdb->reparseBuffer));
                         auto p = (gocpp::array_ptr<gocpp::array<uint16_t, 0xffff>>)(gocpp::unsafe_pointer(& data->PathBuffer[0]));
                         s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
@@ -2221,8 +2228,10 @@ namespace golang::syscall
                             }
                         }
                         break;
+                    }
                     // unexpected; do nothing
                     case 1:
+                    {
                         auto data = (mountPointReparseBuffer*)(gocpp::unsafe_pointer(& rdb->reparseBuffer));
                         auto p = (gocpp::array_ptr<gocpp::array<uint16_t, 0xffff>>)(gocpp::unsafe_pointer(& data->PathBuffer[0]));
                         s = UTF16ToString(p.make_slice(data->SubstituteNameOffset / 2, (data->SubstituteNameOffset + data->SubstituteNameLength) / 2));
@@ -2235,6 +2244,7 @@ namespace golang::syscall
                         {
                         }
                         break;
+                    }
                     // unexpected; do nothing
                     default:
                         // the path is not a symlink or junction but another type of reparse

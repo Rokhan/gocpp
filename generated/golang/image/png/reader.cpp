@@ -461,6 +461,7 @@ namespace golang::png
                 case 2:
                 case 3:
                 case 4:
+                {
                     if(length != 2)
                     {
                         return gocpp::error(FormatError("bad tRNS length"_s));
@@ -494,9 +495,11 @@ namespace golang::png
                     }
                     d->useTransparent = true;
                     break;
+                }
 
                 case 5:
                 case 6:
+                {
                     if(length != 6)
                     {
                         return gocpp::error(FormatError("bad tRNS length"_s));
@@ -510,11 +513,13 @@ namespace golang::png
                     copy(d->transparent.make_slice(0), d->tmp.make_slice(0, length));
                     d->useTransparent = true;
                     break;
+                }
 
                 case 7:
                 case 8:
                 case 9:
                 case 10:
+                {
                     if(length > 256)
                     {
                         return gocpp::error(FormatError("bad tRNS length"_s));
@@ -535,6 +540,7 @@ namespace golang::png
                         d->palette[i] = color::NRGBA {rgba.R, rgba.G, rgba.B, d->tmp[i]};
                     }
                     break;
+                }
 
                 default:
                     return gocpp::error(FormatError("tRNS, color type mismatch"_s));

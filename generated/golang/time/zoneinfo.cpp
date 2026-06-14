@@ -851,6 +851,7 @@ namespace golang::time
                     s = r.day * secondsPerDay;
                     break;
                 case 2:
+                {
                     // Zeller's Congruence.
                     auto m1 = (r.mon + 9) % 12 + 1;
                     auto yy0 = year;
@@ -887,6 +888,7 @@ namespace golang::time
                     }
                     s = d * secondsPerDay;
                     break;
+                }
             }
         }
 

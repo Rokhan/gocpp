@@ -405,6 +405,7 @@ namespace golang::runtime
                     }
                     break;
                 case 14:
+                {
                     auto at = (runtime::arraytype*)(gocpp::unsafe_pointer(t));
                     if(at->Len == 1)
                     {
@@ -412,7 +413,9 @@ namespace golang::runtime
                         return rec::tryRegAssignArg(gocpp::recv(p), at->Elem, offset);
                     }
                     break;
+                }
                 case 15:
+                {
                     auto st = (runtime::structtype*)(gocpp::unsafe_pointer(t));
                     for(auto [i, gocpp_ignored] : st->Fields)
                     {
@@ -424,6 +427,7 @@ namespace golang::runtime
                     }
                     return true;
                     break;
+                }
             }
         }
         // Pointer-sized types such as maps and channels are currently
@@ -694,9 +698,11 @@ namespace golang::runtime
                         memmove(add(goArgs, part.dstStackOffset), add(a->args, part.srcStackOffset), part.len);
                         break;
                     case 1:
+                    {
                         auto goReg = gocpp::unsafe_pointer(& regs.Ints[part.dstRegister]);
                         memmove(goReg, add(a->args, part.srcStackOffset), part.len);
                         break;
+                    }
                     default:
                         gocpp::panic("bad ABI description"_s);
                         break;

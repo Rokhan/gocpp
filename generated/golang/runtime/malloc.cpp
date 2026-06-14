@@ -835,6 +835,7 @@ namespace golang::runtime
                     return {gocpp::unsafe_pointer(p), size + align};
                     break;
                 case 2:
+                {
                     // On Windows we can't release pieces of a
                     // reservation, so we release the whole thing and
                     // re-reserve the aligned sub-region. This may race,
@@ -855,7 +856,9 @@ namespace golang::runtime
                     // Success.
                     return {p2, size};
                     break;
+                }
                 default:
+                {
                     // Trim off the unaligned parts.
                     auto pAligned = alignUp(p, align);
                     sysFreeOS(gocpp::unsafe_pointer(p), pAligned - p);
@@ -867,6 +870,7 @@ namespace golang::runtime
                     }
                     return {gocpp::unsafe_pointer(pAligned), size};
                     break;
+                }
             }
         }
     }

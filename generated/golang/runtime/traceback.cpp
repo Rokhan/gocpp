@@ -899,6 +899,7 @@ namespace golang::runtime
                         print("_"_s);
                         break;
                     default:
+                    {
                         printcomma();
                         auto sz = p[pi];
                         pi++;
@@ -908,6 +909,7 @@ namespace golang::runtime
                             slotIdx++;
                         }
                         break;
+                    }
                 }
             }
             start = false;

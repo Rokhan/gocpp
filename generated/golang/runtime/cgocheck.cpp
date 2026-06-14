@@ -368,6 +368,7 @@ namespace golang::runtime
                     go_throw("can't happen"_s);
                     break;
                 case 0:
+                {
                     auto at = (runtime::arraytype*)(gocpp::unsafe_pointer(typ));
                     for(auto i = uintptr_t(0); i < at->Len; i++)
                     {
@@ -390,7 +391,9 @@ namespace golang::runtime
                         size -= checked;
                     }
                     break;
+                }
                 case 1:
+                {
                     auto st = (runtime::structtype*)(gocpp::unsafe_pointer(typ));
                     for(auto [gocpp_ignored, f] : st->Fields)
                     {
@@ -413,6 +416,7 @@ namespace golang::runtime
                         size -= checked;
                     }
                     break;
+                }
             }
         }
     }

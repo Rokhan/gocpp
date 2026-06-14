@@ -382,6 +382,7 @@ namespace golang::strconv
                     break;
                 case 3:
                 case 4:
+                {
                     // trailing fractional zeros in 'e' form will be trimmed.
                     auto eprec = prec;
                     if(eprec > digs.nd && digs.nd >= digs.dp)
@@ -410,6 +411,7 @@ namespace golang::strconv
                     }
                     return fmtF(dst, neg, digs, gocpp::max(prec - digs.dp, 0));
                     break;
+                }
             }
         }
 

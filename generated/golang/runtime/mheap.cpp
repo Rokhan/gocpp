@@ -1925,6 +1925,7 @@ namespace golang::runtime
                     }
                     break;
                 case 1:
+                {
                     if(s->isUserArenaChunk)
                     {
                         go_throw("mheap.freeSpanLocked - invalid free of user arena chunk"_s);
@@ -1939,6 +1940,7 @@ namespace golang::runtime
                     auto [arena, pageIdx, pageMask] = pageIndexOf(rec::base(gocpp::recv(s)));
                     atomic::And8(& arena->pageInUse[pageIdx], ~ pageMask);
                     break;
+                }
                 default:
                     go_throw("mheap.freeSpanLocked - invalid span state"_s);
                     break;
@@ -2638,23 +2640,29 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
+                {
                     auto sf = (specialfinalizer*)(gocpp::unsafe_pointer(s));
                     queuefinalizer(p, sf->fn, sf->nret, sf->fint, sf->ot);
                     lock(& mheap_.speciallock);
                     rec::free(gocpp::recv(mheap_.specialfinalizeralloc), gocpp::unsafe_pointer(sf));
                     unlock(& mheap_.speciallock);
                     break;
+                }
                 case 1:
+                {
                     auto sp = (specialprofile*)(gocpp::unsafe_pointer(s));
                     mProf_Free(sp->b, size);
                     lock(& mheap_.speciallock);
                     rec::free(gocpp::recv(mheap_.specialprofilealloc), gocpp::unsafe_pointer(sp));
                     unlock(& mheap_.speciallock);
                     break;
+                }
                 case 2:
+                {
                     auto sp = (specialReachable*)(gocpp::unsafe_pointer(s));
                     sp->done = true;
                     break;
+                }
                 // The creator frees these.
                 case 3:
                     lock(& mheap_.speciallock);

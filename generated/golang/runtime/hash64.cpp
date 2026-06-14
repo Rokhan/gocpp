@@ -62,6 +62,7 @@ namespace golang::runtime
                     b = r8(add(p, s - 8));
                     break;
                 default:
+                {
                     auto l = s;
                     if(l > 48)
                     {
@@ -84,6 +85,7 @@ namespace golang::runtime
                     a = r8(add(p, l - 16));
                     b = r8(add(p, l - 8));
                     break;
+                }
             }
         }
 

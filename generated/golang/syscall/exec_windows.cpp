@@ -62,11 +62,13 @@ namespace golang::syscall
                     case 1:
                     case 2:
                     case 3:
+                    {
                         // Some escaping required.
                         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(s) + 2);
                         b = appendEscapeArg(b, s);
                         return gocpp::string(b);
                         break;
+                    }
                 }
             }
         }

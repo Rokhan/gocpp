@@ -876,6 +876,7 @@ namespace golang::runtime
                 case 7:
                 case 8:
                 case 9:
+                {
                     // Similar to goenv_unix but extracts the environment value for
                     // GODEBUG directly.
                     // TODO(moehrmann): remove when general goenvs() can be called before cpuinit()
@@ -896,6 +897,7 @@ namespace golang::runtime
                         }
                     }
                     break;
+                }
             }
         }
         return env;
@@ -1388,6 +1390,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
+                {
                     // We transitioned out of runnable, so measure how much
                     // time we spent in this state and add it to
                     // runnableTime.
@@ -1395,7 +1398,9 @@ namespace golang::runtime
                     gp->runnableTime += now - gp->trackingStamp;
                     gp->trackingStamp = 0;
                     break;
+                }
                 case 1:
+                {
                     if(! rec::isMutexWait(gocpp::recv(gp->waitreason)))
                     {
                         // Not blocking on a lock.
@@ -1410,6 +1415,7 @@ namespace golang::runtime
                     rec::Add(gocpp::recv(sched.totalMutexWaitTime), (now - gp->trackingStamp) * gTrackingPeriod);
                     gp->trackingStamp = 0;
                     break;
+                }
             }
         }
         //Go switch emulation
@@ -1422,6 +1428,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
+                {
                     if(! rec::isMutexWait(gocpp::recv(gp->waitreason)))
                     {
                         // Not blocking on a lock.
@@ -1431,12 +1438,15 @@ namespace golang::runtime
                     auto now = nanotime();
                     gp->trackingStamp = now;
                     break;
+                }
                 case 1:
+                {
                     // We just transitioned into runnable, so record what
                     // time that happened.
                     auto now = nanotime();
                     gp->trackingStamp = now;
                     break;
+                }
                 case 2:
                     // We're transitioning into running, so turn off
                     // tracking and record how much time we spent in
@@ -8677,6 +8687,7 @@ namespace golang::runtime
                     break;
                 // initialization done
                 default:
+                {
                     // not initialized yet
                     // initialization in progress
                     t->state = 1;
@@ -8719,6 +8730,7 @@ namespace golang::runtime
                     }
                     t->state = 2;
                     break;
+                }
             }
         }
     }

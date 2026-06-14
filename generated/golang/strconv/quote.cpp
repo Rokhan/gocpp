@@ -374,9 +374,11 @@ namespace golang::strconv
                     return {value, multibyte, tail, err};
                     break;
                 case 1:
+                {
                     auto [r, size] = utf8::DecodeRuneInString(s);
                     return {r, true, s.make_slice(size), nullptr};
                     break;
+                }
                 case 2:
                     return {gocpp::rune(s[0]), false, s.make_slice(1), nullptr};
                     break;
@@ -443,6 +445,7 @@ namespace golang::strconv
                 case 7:
                 case 8:
                 case 9:
+                {
                     auto n = 0;
                     //Go switch emulation
                     {
@@ -495,6 +498,7 @@ namespace golang::strconv
                     value = v;
                     multibyte = true;
                     break;
+                }
                 case 10:
                 case 11:
                 case 12:
@@ -503,6 +507,7 @@ namespace golang::strconv
                 case 15:
                 case 16:
                 case 17:
+                {
                     auto v = gocpp::rune(c) - '0';
                     if(len(s) < 2)
                     {
@@ -528,6 +533,7 @@ namespace golang::strconv
                     }
                     value = v;
                     break;
+                }
                 case 18:
                     value = '\\';
                     break;
@@ -622,6 +628,7 @@ namespace golang::strconv
                                 out = in.make_slice(len("`"_s), end - len("`"_s));
                                 break;
                             default:
+                            {
                                 // Carriage return characters ('\r') inside raw string literals
                                 // are discarded from the raw string value.
                                 auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, end - len("`"_s) - len("\r"_s) - len("`"_s));
@@ -634,6 +641,7 @@ namespace golang::strconv
                                 }
                                 out = gocpp::string(buf);
                                 break;
+                            }
                         }
                     }
                     // NOTE: Prior implementations did not verify that raw strings consist
@@ -645,6 +653,7 @@ namespace golang::strconv
                     break;
                 case 1:
                 case 2:
+                {
                     // Handle quoted strings without any escape sequences.
                     if(! contains(in.make_slice(0, end), '\\') && ! contains(in.make_slice(0, end), '\n'))
                     {
@@ -661,9 +670,11 @@ namespace golang::strconv
                                     valid = utf8::ValidString(in.make_slice(len("""_s), end - len("""_s)));
                                     break;
                                 case 1:
+                                {
                                     auto [r, n] = utf8::DecodeRuneInString(in.make_slice(len("'"_s), end - len("'"_s)));
                                     valid = len("'"_s) + n + len("'"_s) == end && (r != utf8::RuneError || n != 1);
                                     break;
+                                }
                             }
                         }
                         if(valid)
@@ -730,6 +741,7 @@ namespace golang::strconv
                     }
                     return {in0.make_slice(0, len(in0) - len(in)), in, nullptr};
                     break;
+                }
                 default:
                     return {""_s, in, ErrSyntax};
                     break;

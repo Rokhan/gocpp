@@ -689,10 +689,13 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
+                {
                     auto [trigger, gocpp_id_4] = rec::trigger(gocpp::recv(gcController));
                     return rec::Load(gocpp::recv(gcController.heapLive)) >= trigger;
                     break;
+                }
                 case 1:
+                {
                     if(rec::Load(gocpp::recv(gcController.gcPercent)) < 0)
                     {
                         return false;
@@ -700,6 +703,7 @@ namespace golang::runtime
                     auto lastgc = int64_t(atomic::Load64(& memstats.last_gc_nanotime));
                     return lastgc != 0 && t.now - lastgc > forcegcperiod;
                     break;
+                }
                 case 2:
                     // t.n > work.cycles, but accounting for wraparound.
                     return int32_t(t.n - rec::Load(gocpp::recv(work.cycles))) > 0;

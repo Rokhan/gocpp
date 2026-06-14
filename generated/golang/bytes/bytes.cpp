@@ -218,10 +218,12 @@ namespace golang::bytes
                     return - 1;
                     break;
                 default:
+                {
                     gocpp::array<unsigned char, utf8::UTFMax> b = {};
                     auto n = utf8::EncodeRune(b.make_slice(0), r);
                     return Index(s, b.make_slice(0, n));
                     break;
+                }
             }
         }
     }
@@ -1612,6 +1614,7 @@ namespace golang::bytes
                     return - 1;
                     break;
                 case 4:
+                {
                     // Use brute force when s and sep both are small
                     if(len(s) <= bytealg::MaxBruteForce)
                     {
@@ -1654,6 +1657,7 @@ namespace golang::bytes
                     }
                     return - 1;
                     break;
+                }
             }
         }
         auto c0 = sep[0];

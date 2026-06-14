@@ -103,33 +103,41 @@ namespace golang::reflectlite
                 switch(conditionId)
                 {
                     case 0:
+                    {
                         auto is = *(gocpp::slice<int64_t>*)(v.ptr);
                         return [=](int i, int j) mutable -> void
                         {
                             std::tie(is[i], is[j]) = std::tuple{is[j], is[i]};
                         };
                         break;
+                    }
                     case 1:
+                    {
                         auto is = *(gocpp::slice<int32_t>*)(v.ptr);
                         return [=](int i, int j) mutable -> void
                         {
                             std::tie(is[i], is[j]) = std::tuple{is[j], is[i]};
                         };
                         break;
+                    }
                     case 2:
+                    {
                         auto is = *(gocpp::slice<int16_t>*)(v.ptr);
                         return [=](int i, int j) mutable -> void
                         {
                             std::tie(is[i], is[j]) = std::tuple{is[j], is[i]};
                         };
                         break;
+                    }
                     case 3:
+                    {
                         auto is = *(gocpp::slice<int8_t>*)(v.ptr);
                         return [=](int i, int j) mutable -> void
                         {
                             std::tie(is[i], is[j]) = std::tuple{is[j], is[i]};
                         };
                         break;
+                    }
                 }
             }
         }

@@ -185,6 +185,7 @@ namespace golang::fmtsort
                 case 2:
                 case 3:
                 case 4:
+                {
                     auto [a, b] = std::tuple{rec::Int(gocpp::recv(aVal)), rec::Int(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
@@ -205,12 +206,14 @@ namespace golang::fmtsort
                         }
                     }
                     break;
+                }
                 case 5:
                 case 6:
                 case 7:
                 case 8:
                 case 9:
                 case 10:
+                {
                     std::tie(a, b) = std::tuple{rec::Uint(gocpp::recv(aVal)), rec::Uint(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
@@ -231,7 +234,9 @@ namespace golang::fmtsort
                         }
                     }
                     break;
+                }
                 case 11:
+                {
                     std::tie(a, b) = std::tuple{rec::String(gocpp::recv(aVal)), rec::String(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
@@ -252,12 +257,14 @@ namespace golang::fmtsort
                         }
                     }
                     break;
+                }
                 case 12:
                 case 13:
                     return floatCompare(rec::Float(gocpp::recv(aVal)), rec::Float(gocpp::recv(bVal)));
                     break;
                 case 14:
                 case 15:
+                {
                     std::tie(a, b) = std::tuple{rec::Complex(gocpp::recv(aVal)), rec::Complex(gocpp::recv(bVal))};
                     if(auto c = floatCompare(real(a), real(b)); c != 0)
                     {
@@ -265,7 +272,9 @@ namespace golang::fmtsort
                     }
                     return floatCompare(imag(a), imag(b));
                     break;
+                }
                 case 16:
+                {
                     std::tie(a, b) = std::tuple{rec::Bool(gocpp::recv(aVal)), rec::Bool(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
@@ -286,8 +295,10 @@ namespace golang::fmtsort
                         }
                     }
                     break;
+                }
                 case 17:
                 case 18:
+                {
                     std::tie(a, b) = std::tuple{rec::Pointer(gocpp::recv(aVal)), rec::Pointer(gocpp::recv(bVal))};
                     //Go switch emulation
                     {
@@ -308,7 +319,9 @@ namespace golang::fmtsort
                         }
                     }
                     break;
+                }
                 case 19:
+                {
                     if(auto [c, ok] = nilCompare(aVal, bVal); ok)
                     {
                         return c;
@@ -333,6 +346,7 @@ namespace golang::fmtsort
                         }
                     }
                     break;
+                }
                 case 20:
                     for(auto i = 0; i < rec::NumField(gocpp::recv(aVal)); i++)
                     {
@@ -354,6 +368,7 @@ namespace golang::fmtsort
                     return 0;
                     break;
                 case 22:
+                {
                     if(auto [c, ok] = nilCompare(aVal, bVal); ok)
                     {
                         return c;
@@ -365,6 +380,7 @@ namespace golang::fmtsort
                     }
                     return compare(rec::Elem(gocpp::recv(aVal)), rec::Elem(gocpp::recv(bVal)));
                     break;
+                }
                 default:
                     // Certain types cannot appear as keys (maps, funcs, slices), but be explicit.
                     gocpp::panic("bad type in compare: "_s + rec::String(gocpp::recv(aType)));

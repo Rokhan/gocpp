@@ -169,6 +169,7 @@ namespace golang::runtime
             {
                 case 0:
                 case 1:
+                {
                     // These take a *reflect.methodValue as their
                     // context register and immediately save it to 0(SP).
                     // Get the methodValue from 0(SP).
@@ -224,6 +225,7 @@ namespace golang::runtime
                         }
                     }
                     break;
+                }
             }
         }
         return {argMap, hasReflectStackObj};

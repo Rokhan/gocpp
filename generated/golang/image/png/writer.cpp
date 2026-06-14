@@ -712,6 +712,7 @@ namespace golang::png
                             }
                             break;
                         case 1:
+                        {
                             // We have previously verified that the alpha value is fully opaque.
                             auto cr0 = cr[0];
                             auto [stride, pix] = std::tuple{0, gocpp::slice<unsigned char>(nullptr)};
@@ -748,6 +749,7 @@ namespace golang::png
                                 }
                             }
                             break;
+                        }
                         case 2:
                             if(paletted != nullptr)
                             {
@@ -768,6 +770,7 @@ namespace golang::png
                         case 3:
                         case 4:
                         case 5:
+                        {
                             auto pi = gocpp::getValue<image::PalettedImage>(m);
                             uint8_t a = {};
                             int c = {};
@@ -794,6 +797,7 @@ namespace golang::png
                                 cr[0][i] = a;
                             }
                             break;
+                        }
 
                         case 6:
                             if(nrgba != nullptr)

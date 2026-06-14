@@ -849,6 +849,7 @@ namespace golang::time
                 switch(conditionId)
                 {
                     case 0:
+                    {
                         auto y = year;
                         if(y < 0)
                         {
@@ -856,6 +857,7 @@ namespace golang::time
                         }
                         b = appendInt(b, y % 100, 2);
                         break;
+                    }
                     case 1:
                         b = appendInt(b, year, 4);
                         break;
@@ -863,9 +865,11 @@ namespace golang::time
                         b = append(b, rec::String(gocpp::recv(month)).make_slice(0, 3));
                         break;
                     case 3:
+                    {
                         auto m = rec::String(gocpp::recv(month));
                         b = append(b, m);
                         break;
+                    }
                     case 4:
                         b = appendInt(b, int(month), 0);
                         break;
@@ -876,9 +880,11 @@ namespace golang::time
                         b = append(b, rec::String(gocpp::recv(absWeekday(abs))).make_slice(0, 3));
                         break;
                     case 7:
+                    {
                         auto s = rec::String(gocpp::recv(absWeekday(abs)));
                         b = append(b, s);
                         break;
+                    }
                     case 8:
                         b = appendInt(b, day, 0);
                         break;
@@ -910,6 +916,7 @@ namespace golang::time
                         b = appendInt(b, hour, 2);
                         break;
                     case 14:
+                    {
                         // Noon is 12PM, midnight is 12AM.
                         auto hr = hour % 12;
                         if(hr == 0)
@@ -918,7 +925,9 @@ namespace golang::time
                         }
                         b = appendInt(b, hr, 0);
                         break;
+                    }
                     case 15:
+                    {
                         // Noon is 12PM, midnight is 12AM.
                         auto hr = hour % 12;
                         if(hr == 0)
@@ -927,6 +936,7 @@ namespace golang::time
                         }
                         b = appendInt(b, hr, 2);
                         break;
+                    }
                     case 16:
                         b = appendInt(b, min, 0);
                         break;
@@ -969,6 +979,7 @@ namespace golang::time
                     case 29:
                     case 30:
                     case 31:
+                    {
                         // Ugly special case. We cheat and take the "Z" variants
                         // to mean "the time zone as formatted for ISO 8601".
                         if(offset == 0 && (std == stdISO8601TZ || std == stdISO8601ColonTZ || std == stdISO8601SecondsTZ || std == stdISO8601ShortTZ || std == stdISO8601ColonSecondsTZ))
@@ -1008,8 +1019,10 @@ namespace golang::time
                             b = appendInt(b, absoffset % 60, 2);
                         }
                         break;
+                    }
 
                     case 32:
+                    {
                         if(name != ""_s)
                         {
                             b = append(b, name);
@@ -1031,6 +1044,7 @@ namespace golang::time
                         b = appendInt(b, zone / 60, 2);
                         b = appendInt(b, zone % 60, 2);
                         break;
+                    }
                     case 33:
                     case 34:
                         b = appendNano(b, rec::Nanosecond(gocpp::recv(t)), std);
@@ -1704,6 +1718,7 @@ namespace golang::time
                         }
                         break;
                     case 32:
+                    {
                         // Does it look like a time zone?
                         if(len(value) >= 3 && value.make_slice(0, 3) == "UTC"_s)
                         {
@@ -1719,8 +1734,10 @@ namespace golang::time
                         }
                         std::tie(zoneName, value) = std::tuple{value.make_slice(0, n), value.make_slice(n)};
                         break;
+                    }
 
                     case 33:
+                    {
                         // stdFracSecond0 requires the exact number of digits as specified in
                         // the layout.
                         auto ndigit = 1 + digitsLen(std);
@@ -1732,8 +1749,10 @@ namespace golang::time
                         std::tie(nsec, rangeErrString, err) = parseNanoseconds(value, ndigit);
                         value = value.make_slice(ndigit);
                         break;
+                    }
 
                     case 34:
+                    {
                         if(len(value) < 2 || ! commaOrPeriod(value[0]) || value[1] < '0' || '9' < value[1])
                         {
                             // Fractional second omitted.
@@ -1749,6 +1768,7 @@ namespace golang::time
                         std::tie(nsec, rangeErrString, err) = parseNanoseconds(value, 1 + i);
                         value = value.make_slice(1 + i);
                         break;
+                    }
                 }
             }
             if(rangeErrString != ""_s)

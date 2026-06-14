@@ -96,12 +96,14 @@ namespace golang::time
                     return {b, errors::New("year outside of range [0,9999]"_s)};
                     break;
                 case 1:
+                {
                     auto c = b[len(b) - len("Z07:00"_s)];
                     if(('0' <= c && c <= '9') || num2(b.make_slice(len(b) - len("07:00"_s))) >= 24)
                     {
                         return {b, errors::New("timezone hour outside of range [0,23]"_s)};
                     }
                     break;
+                }
             }
         }
         return {b, nullptr};

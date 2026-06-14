@@ -528,6 +528,7 @@ namespace golang::runtime
                 switch(conditionId)
                 {
                     case 0:
+                    {
                         if(t->Kind_ & kindMask == kindUnsafePointer)
                         {
                             // We don't know the type of the element.
@@ -537,6 +538,7 @@ namespace golang::runtime
                         cgoCheckArg(pt->Elem, p, true, false, cgoCheckPointerFail);
                         return;
                         break;
+                    }
                     case 1:
                         // Check the slice rather than the pointer.
                         ep = aep;
@@ -595,6 +597,7 @@ namespace golang::runtime
                     go_throw("can't happen"_s);
                     break;
                 case 0:
+                {
                     auto at = (runtime::arraytype*)(gocpp::unsafe_pointer(t));
                     if(! indir)
                     {
@@ -611,6 +614,7 @@ namespace golang::runtime
                         p = add(p, at->Elem->Size_);
                     }
                     break;
+                }
                 case 1:
                 case 2:
                     // These types contain internal pointers that will
@@ -630,6 +634,7 @@ namespace golang::runtime
                     gocpp::panic(errorString(msg));
                     break;
                 case 4:
+                {
                     auto it = *(runtime::_type**)(p);
                     if(it == nullptr)
                     {
@@ -653,7 +658,9 @@ namespace golang::runtime
                     }
                     cgoCheckArg(it, p, it->Kind_ & kindDirectIface == 0, false, msg);
                     break;
+                }
                 case 5:
+                {
                     auto st = (runtime::slicetype*)(gocpp::unsafe_pointer(t));
                     auto s = (slice*)(p);
                     p = s->array;
@@ -675,7 +682,9 @@ namespace golang::runtime
                         p = add(p, st->Elem->Size_);
                     }
                     break;
+                }
                 case 6:
+                {
                     auto ss = (stringStruct*)(p);
                     if(! cgoIsGoPointer(ss->str))
                     {
@@ -686,7 +695,9 @@ namespace golang::runtime
                         gocpp::panic(errorString(msg));
                     }
                     break;
+                }
                 case 7:
+                {
                     auto st = (runtime::structtype*)(gocpp::unsafe_pointer(t));
                     if(! indir)
                     {
@@ -706,6 +717,7 @@ namespace golang::runtime
                         cgoCheckArg(f.Typ, add(p, f.Offset), true, top, msg);
                     }
                     break;
+                }
                 case 8:
                 case 9:
                     if(indir)

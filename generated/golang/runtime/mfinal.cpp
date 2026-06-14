@@ -378,6 +378,7 @@ namespace golang::runtime
                                 *(gocpp::unsafe_pointer*)(r) = f->arg;
                                 break;
                             case 1:
+                            {
                                 auto ityp = (runtime::interfacetype*)(gocpp::unsafe_pointer(f->fint));
                                 // set up with empty interface
                                 (eface*)(r)->_type = & f->ot->Type;
@@ -389,6 +390,7 @@ namespace golang::runtime
                                     (iface*)(r)->tab = assertE2I(ityp, (eface*)(r)->_type);
                                 }
                                 break;
+                            }
                             default:
                                 go_throw("bad kind in runfinq"_s);
                                 break;
@@ -658,6 +660,7 @@ namespace golang::runtime
                     }
                     break;
                 case 2:
+                {
                     auto ityp = (runtime::interfacetype*)(gocpp::unsafe_pointer(fint));
                     if(len(ityp->Methods) == 0)
                     {
@@ -669,6 +672,7 @@ namespace golang::runtime
                         goto okarg;
                     }
                     break;
+                }
             }
         }
         go_throw("runtime.SetFinalizer: cannot pass "_s + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer "_s + rec::string(gocpp::recv(toRType(ftyp))));

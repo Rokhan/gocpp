@@ -270,6 +270,7 @@ namespace golang::runtime
                     break;
 
                 default:
+                {
                     // the rest is scanning goroutine stacks
                     workCounter = & gcController.stackScanWork;
                     if(i < work.baseStacks || work.baseEnd <= i)
@@ -329,6 +330,7 @@ namespace golang::runtime
                         }
                     });
                     break;
+                }
             }
         }
         if(workCounter != nullptr && workDone != 0)

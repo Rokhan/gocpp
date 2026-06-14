@@ -362,6 +362,7 @@ namespace golang::reflect
                     return rec::assignIntN(gocpp::recv(a), offset, goarch::PtrSize, 3, 0b001);
                     break;
                 case 24:
+                {
                     auto tt = (reflect::arrayType*)(gocpp::unsafe_pointer(t));
                     //Go switch emulation
                     {
@@ -386,7 +387,9 @@ namespace golang::reflect
                         }
                     }
                     break;
+                }
                 case 25:
+                {
                     auto st = (structType*)(gocpp::unsafe_pointer(t));
                     for(auto [i, gocpp_ignored] : st->StructType.Fields)
                     {
@@ -398,6 +401,7 @@ namespace golang::reflect
                     }
                     return true;
                     break;
+                }
                 default:
                     print("t.Kind == "_s, rec::Kind(gocpp::recv(t)), "\n"_s);
                     gocpp::panic("unknown type kind"_s);

@@ -1760,16 +1760,19 @@ namespace golang::time
 
                 // Special case: d is a multiple of 1 second.
                 case 1:
+                {
                     auto d1 = int64_t(d / Second);
                     qmod2 = int(sec / d1) & 1;
                     r = Duration(sec % d1) * Second + Duration(nsec);
                     break;
+                }
 
                 // General case.
                 // This could be faster if more cleverness were applied,
                 // but it's really only here to avoid special case restrictions in the API.
                 // No one will care about these cases.
                 default:
+                {
                     // Compute nanoseconds as 128-bit number.
                     auto sec_tmp = uint64_t(sec);
                     auto& sec = sec_tmp;
@@ -1820,6 +1823,7 @@ namespace golang::time
                     }
                     r = Duration(u0);
                     break;
+                }
             }
         }
 

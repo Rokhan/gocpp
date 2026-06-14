@@ -1154,6 +1154,7 @@ namespace golang::binary
                     break;
 
                 case 1:
+                {
                     auto t = rec::Type(gocpp::recv(v));
                     if(auto [size, ok] = rec::Load(gocpp::recv(structSize), t); ok)
                     {
@@ -1163,6 +1164,7 @@ namespace golang::binary
                     rec::Store(gocpp::recv(structSize), t, size);
                     return size;
                     break;
+                }
 
                 default:
                     if(rec::IsValid(gocpp::recv(v)))
@@ -1208,6 +1210,7 @@ namespace golang::binary
                     break;
 
                 case 1:
+                {
                     auto sum = 0;
                     for(auto [i, n] = std::tuple{0, rec::NumField(gocpp::recv(t))}; i < n; i++)
                     {
@@ -1220,6 +1223,7 @@ namespace golang::binary
                     }
                     return sum;
                     break;
+                }
 
                 case 2:
                 case 3:
@@ -1414,14 +1418,17 @@ namespace golang::binary
             switch(conditionId)
             {
                 case 0:
+                {
                     auto l = rec::Len(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
                     {
                         rec::value(gocpp::recv(d), rec::Index(gocpp::recv(v), i));
                     }
                     break;
+                }
 
                 case 1:
+                {
                     auto t = rec::Type(gocpp::recv(v));
                     auto l = rec::NumField(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
@@ -1444,14 +1451,17 @@ namespace golang::binary
                         }
                     }
                     break;
+                }
 
                 case 2:
+                {
                     auto l = rec::Len(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
                     {
                         rec::value(gocpp::recv(d), rec::Index(gocpp::recv(v), i));
                     }
                     break;
+                }
 
                 case 3:
                     rec::SetBool(gocpp::recv(v), rec::bool(gocpp::recv(d)));
@@ -1528,14 +1538,17 @@ namespace golang::binary
             switch(conditionId)
             {
                 case 0:
+                {
                     auto l = rec::Len(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
                     {
                         rec::value(gocpp::recv(e), rec::Index(gocpp::recv(v), i));
                     }
                     break;
+                }
 
                 case 1:
+                {
                     auto t = rec::Type(gocpp::recv(v));
                     auto l = rec::NumField(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
@@ -1554,14 +1567,17 @@ namespace golang::binary
                         }
                     }
                     break;
+                }
 
                 case 2:
+                {
                     auto l = rec::Len(gocpp::recv(v));
                     for(auto i = 0; i < l; i++)
                     {
                         rec::value(gocpp::recv(e), rec::Index(gocpp::recv(v), i));
                     }
                     break;
+                }
 
                 case 3:
                     rec::bool(gocpp::recv(e), rec::Bool(gocpp::recv(v)));
@@ -1661,15 +1677,19 @@ namespace golang::binary
                         switch(conditionId)
                         {
                             case 0:
+                            {
                                 auto x = rec::Complex(gocpp::recv(v));
                                 rec::uint32(gocpp::recv(e), math::Float32bits(float(real(x))));
                                 rec::uint32(gocpp::recv(e), math::Float32bits(float(imag(x))));
                                 break;
+                            }
                             case 1:
+                            {
                                 auto x = rec::Complex(gocpp::recv(v));
                                 rec::uint64(gocpp::recv(e), math::Float64bits(real(x)));
                                 rec::uint64(gocpp::recv(e), math::Float64bits(imag(x)));
                                 break;
+                            }
                         }
                     }
                     break;

@@ -3794,10 +3794,10 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 
 			if hasReceiv {
 				varListStr := strings.Join(lambdaVarNames, ", ")
-				return GetCppExprFunc(ExprPrintf("[&](%s){ return %srec::%s(%s); }%s", declLisStr, ns, selector, varListStr, debugStr))
+				return ExprPrintf("[&](%s){ return %srec::%s(%s); }%s", declLisStr, ns, selector, varListStr, debugStr)
 			} else {
 				varListStr := JoinWithPrefix(lambdaVarNames, ", ")
-				return GetCppExprFunc(ExprPrintf("[&](%s){ return %srec::%s(%s%s); }%s", declLisStr, ns, selector, name, varListStr, debugStr))
+				return ExprPrintf("[&](%s){ return %srec::%s(%s%s); }%s", declLisStr, ns, selector, name, varListStr, debugStr)
 			}
 		} else {
 			var fieldPath string
@@ -3834,9 +3834,9 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 
 			// TODO: use only IsExprPtr ?
 			if cv.isPtr(name.str) || cv.IsExprPtr(n.X) {
-				return GetCppExprFunc(ExprPrintf("%s->%s%s", name, fieldPath, cv.convertExpr(n.Sel)))
+				return ExprPrintf("%s->%s%s", name, fieldPath, cv.convertExpr(n.Sel))
 			} else {
-				return GetCppExprFunc(ExprPrintf("%s.%s%s", name, fieldPath, cv.convertExpr(n.Sel)))
+				return ExprPrintf("%s.%s%s", name, fieldPath, cv.convertExpr(n.Sel))
 			}
 		}
 

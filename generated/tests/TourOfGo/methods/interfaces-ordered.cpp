@@ -46,8 +46,8 @@ namespace golang::main
         return os;
     }
 
-    template<typename T, typename StoreT>
-    double Abser::AbserImpl<T, StoreT>::vAbs()
+    template<typename T, typename TStore, typename TInterface>
+    double Abser::AbserImpl<T, TStore, TInterface>::vAbs()
     {
         return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
     }

@@ -11,7 +11,7 @@
 
 namespace golang::syscall
 {
-    struct RawConn : gocpp::Interface
+    struct RawConn : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -56,8 +56,8 @@ namespace golang::syscall
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct RawConnImpl : IRawConn
+        template<typename T, typename TStore, typename TInterface = IRawConn>
+        struct RawConnImpl : virtual TInterface
         {
             explicit RawConnImpl(T* ptr)
             {
@@ -75,7 +75,7 @@ namespace golang::syscall
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IRawConn> value;
@@ -94,7 +94,7 @@ namespace golang::syscall
     }
 
     std::ostream& operator<<(std::ostream& os, const struct RawConn& value);
-    struct Conn : gocpp::Interface
+    struct Conn : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -125,8 +125,8 @@ namespace golang::syscall
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ConnImpl : IConn
+        template<typename T, typename TStore, typename TInterface = IConn>
+        struct ConnImpl : virtual TInterface
         {
             explicit ConnImpl(T* ptr)
             {
@@ -140,7 +140,7 @@ namespace golang::syscall
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IConn> value;

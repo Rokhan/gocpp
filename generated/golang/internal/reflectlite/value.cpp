@@ -353,8 +353,8 @@ namespace golang::reflectlite
                             return os;
                         }
 
-                        template<typename T, typename StoreT>
-                        void gocpp_id_3::gocpp_id_3Impl<T, StoreT>::vM()
+                        template<typename T, typename TStore, typename TInterface>
+                        void gocpp_id_3::gocpp_id_3Impl<T, TStore, TInterface>::vM()
                         {
                             return rec::M(gocpp::PtrRecv<T, false>(value.get()));
                         }
@@ -460,8 +460,8 @@ namespace golang::reflectlite
                 return os;
             }
 
-            template<typename T, typename StoreT>
-            void gocpp_id_4::gocpp_id_4Impl<T, StoreT>::vM()
+            template<typename T, typename TStore, typename TInterface>
+            void gocpp_id_4::gocpp_id_4Impl<T, TStore, TInterface>::vM()
             {
                 return rec::M(gocpp::PtrRecv<T, false>(value.get()));
             }

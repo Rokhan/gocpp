@@ -105,23 +105,23 @@ namespace golang::fmt
         return os;
     }
 
-    template<typename T, typename StoreT>
-    std::tuple<int, struct gocpp::error> State::StateImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char> b)
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<int, struct gocpp::error> State::StateImpl<T, TStore, TInterface>::vWrite(gocpp::slice<unsigned char> b)
     {
         return rec::Write(gocpp::PtrRecv<T, false>(value.get()), b);
     }
-    template<typename T, typename StoreT>
-    std::tuple<int, bool> State::StateImpl<T, StoreT>::vWidth()
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<int, bool> State::StateImpl<T, TStore, TInterface>::vWidth()
     {
         return rec::Width(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    std::tuple<int, bool> State::StateImpl<T, StoreT>::vPrecision()
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<int, bool> State::StateImpl<T, TStore, TInterface>::vPrecision()
     {
         return rec::Precision(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    bool State::StateImpl<T, StoreT>::vFlag(int c)
+    template<typename T, typename TStore, typename TInterface>
+    bool State::StateImpl<T, TStore, TInterface>::vFlag(int c)
     {
         return rec::Flag(gocpp::PtrRecv<T, false>(value.get()), c);
     }
@@ -201,8 +201,8 @@ namespace golang::fmt
         return os;
     }
 
-    template<typename T, typename StoreT>
-    void Formatter::FormatterImpl<T, StoreT>::vFormat(struct State f, gocpp::rune verb)
+    template<typename T, typename TStore, typename TInterface>
+    void Formatter::FormatterImpl<T, TStore, TInterface>::vFormat(struct State f, gocpp::rune verb)
     {
         return rec::Format(gocpp::PtrRecv<T, false>(value.get()), f, verb);
     }
@@ -254,8 +254,8 @@ namespace golang::fmt
         return os;
     }
 
-    template<typename T, typename StoreT>
-    gocpp::string Stringer::StringerImpl<T, StoreT>::vString()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string Stringer::StringerImpl<T, TStore, TInterface>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -306,8 +306,8 @@ namespace golang::fmt
         return os;
     }
 
-    template<typename T, typename StoreT>
-    gocpp::string GoStringer::GoStringerImpl<T, StoreT>::vGoString()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string GoStringer::GoStringerImpl<T, TStore, TInterface>::vGoString()
     {
         return rec::GoString(gocpp::PtrRecv<T, false>(value.get()));
     }

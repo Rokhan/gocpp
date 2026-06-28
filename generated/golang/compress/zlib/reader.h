@@ -38,7 +38,7 @@ namespace golang::zlib
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
-    struct Resetter : gocpp::Interface
+    struct Resetter : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -70,8 +70,8 @@ namespace golang::zlib
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ResetterImpl : IResetter
+        template<typename T, typename TStore, typename TInterface = IResetter>
+        struct ResetterImpl : virtual TInterface
         {
             explicit ResetterImpl(T* ptr)
             {
@@ -85,7 +85,7 @@ namespace golang::zlib
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IResetter> value;

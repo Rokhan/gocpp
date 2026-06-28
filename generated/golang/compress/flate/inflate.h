@@ -53,7 +53,7 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct WriteError& value);
-    struct Resetter : gocpp::Interface
+    struct Resetter : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -85,8 +85,8 @@ namespace golang::flate
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ResetterImpl : IResetter
+        template<typename T, typename TStore, typename TInterface = IResetter>
+        struct ResetterImpl : virtual TInterface
         {
             explicit ResetterImpl(T* ptr)
             {
@@ -100,7 +100,7 @@ namespace golang::flate
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IResetter> value;
@@ -132,7 +132,7 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanDecoder& value);
-    struct Reader : gocpp::Interface
+    struct Reader : virtual gocpp::Interface, io::Reader, io::ByteReader
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -156,15 +156,15 @@ namespace golang::flate
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IReader
+        struct IReader: virtual io::Reader::IReader, virtual io::ByteReader::IByteReader
         {
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReaderImpl : IReader
+        template<typename T, typename TStore, typename TInterface = IReader>
+        struct ReaderImpl : virtual TInterface, virtual io::Reader::ReaderImpl<T, TStore, TInterface>, virtual io::ByteReader::ByteReaderImpl<T, TStore, TInterface>
         {
-            explicit ReaderImpl(T* ptr)
+            explicit ReaderImpl(T* ptr): io::Reader::ReaderImpl<T, TStore, TInterface>(ptr), io::ByteReader::ByteReaderImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -174,14 +174,20 @@ namespace golang::flate
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReader> value;
     };
 
     namespace rec
-    {    }
+    {
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct Reader, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct Reader>& self, gocpp::slice<unsigned char> p);
+
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct Reader, false>& self);
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct Reader>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
     extern gocpp::array<int, 19> codeOrder;

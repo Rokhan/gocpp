@@ -12,7 +12,7 @@
 
 namespace golang::sort
 {
-    struct Interface : gocpp::Interface
+    struct Interface : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -58,8 +58,8 @@ namespace golang::sort
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct InterfaceImpl : IInterface
+        template<typename T, typename TStore, typename TInterface = IInterface>
+        struct InterfaceImpl : virtual TInterface
         {
             explicit InterfaceImpl(T* ptr)
             {
@@ -77,7 +77,7 @@ namespace golang::sort
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IInterface> value;
@@ -147,6 +147,18 @@ namespace golang::sort
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        int Len(const gocpp::PtrRecv<struct reverse, false>& self);
+        int Len(const gocpp::ObjRecv<struct reverse>& self);
+
+        bool Less(const gocpp::PtrRecv<struct reverse, false>& self, int i, int j);
+        bool Less(const gocpp::ObjRecv<struct reverse>& self, int i, int j);
+
+        void Swap(const gocpp::PtrRecv<struct reverse, false>& self, int i, int j);
+        void Swap(const gocpp::ObjRecv<struct reverse>& self, int i, int j);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct reverse& value);
 

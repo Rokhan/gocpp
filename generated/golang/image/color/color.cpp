@@ -44,8 +44,8 @@ namespace golang::color
         return os;
     }
 
-    template<typename T, typename StoreT>
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> Color::ColorImpl<T, StoreT>::vRGBA()
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> Color::ColorImpl<T, TStore, TInterface>::vRGBA()
     {
         return rec::RGBA(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -489,8 +489,8 @@ namespace golang::color
         return os;
     }
 
-    template<typename T, typename StoreT>
-    struct Color Model::ModelImpl<T, StoreT>::vConvert(struct Color c)
+    template<typename T, typename TStore, typename TInterface>
+    struct Color Model::ModelImpl<T, TStore, TInterface>::vConvert(struct Color c)
     {
         return rec::Convert(gocpp::PtrRecv<T, false>(value.get()), c);
     }

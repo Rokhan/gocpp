@@ -7003,7 +7003,7 @@ namespace golang::unicode
     RangeTable* White_Space = _White_Space;
     // CaseRanges is the table describing case mappings for all letters with
     // non-self mappings.
-    gocpp::slice<unicode::CaseRange> CaseRanges = _CaseRanges;
+    gocpp::slice<CaseRange> CaseRanges = _CaseRanges;
     gocpp::slice<CaseRange> _CaseRanges = gocpp::slice<CaseRange> {
         {0x0041, 0x005A, d {0, 32, 0}},
         {0x0061, 0x007A, d {- 32, 0, - 32}},

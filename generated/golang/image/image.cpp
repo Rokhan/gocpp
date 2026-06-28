@@ -119,18 +119,18 @@ namespace golang::image
         return os;
     }
 
-    template<typename T, typename StoreT>
-    color::Model Image::ImageImpl<T, StoreT>::vColorModel()
+    template<typename T, typename TStore, typename TInterface>
+    color::Model Image::ImageImpl<T, TStore, TInterface>::vColorModel()
     {
         return rec::ColorModel(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    struct Rectangle Image::ImageImpl<T, StoreT>::vBounds()
+    template<typename T, typename TStore, typename TInterface>
+    struct Rectangle Image::ImageImpl<T, TStore, TInterface>::vBounds()
     {
         return rec::Bounds(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    color::Color Image::ImageImpl<T, StoreT>::vAt(int x, int y)
+    template<typename T, typename TStore, typename TInterface>
+    color::Color Image::ImageImpl<T, TStore, TInterface>::vAt(int x, int y)
     {
         return rec::At(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
@@ -199,8 +199,8 @@ namespace golang::image
         return os;
     }
 
-    template<typename T, typename StoreT>
-    color::RGBA64 RGBA64Image::RGBA64ImageImpl<T, StoreT>::vRGBA64At(int x, int y)
+    template<typename T, typename TStore, typename TInterface>
+    color::RGBA64 RGBA64Image::RGBA64ImageImpl<T, TStore, TInterface>::vRGBA64At(int x, int y)
     {
         return rec::RGBA64At(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
@@ -215,6 +215,36 @@ namespace golang::image
         color::RGBA64 RGBA64At(const gocpp::ObjRecv<struct RGBA64Image>& self, int x, int y)
         {
             return self.obj.value->vRGBA64At(x, y);
+        }
+
+        color::Color At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int x, int y)
+        {
+            return self.ptr->value->vAt(x, y);
+        }
+
+        color::Color At(const gocpp::ObjRecv<struct RGBA64Image>& self, int x, int y)
+        {
+            return self.obj.value->vAt(x, y);
+        }
+
+        Rectangle Bounds(const gocpp::PtrRecv<struct RGBA64Image, false>& self)
+        {
+            return self.ptr->value->vBounds();
+        }
+
+        Rectangle Bounds(const gocpp::ObjRecv<struct RGBA64Image>& self)
+        {
+            return self.obj.value->vBounds();
+        }
+
+        color::Model ColorModel(const gocpp::PtrRecv<struct RGBA64Image, false>& self)
+        {
+            return self.ptr->value->vColorModel();
+        }
+
+        color::Model ColorModel(const gocpp::ObjRecv<struct RGBA64Image>& self)
+        {
+            return self.obj.value->vColorModel();
         }
     }
 
@@ -252,8 +282,8 @@ namespace golang::image
         return os;
     }
 
-    template<typename T, typename StoreT>
-    uint8_t PalettedImage::PalettedImageImpl<T, StoreT>::vColorIndexAt(int x, int y)
+    template<typename T, typename TStore, typename TInterface>
+    uint8_t PalettedImage::PalettedImageImpl<T, TStore, TInterface>::vColorIndexAt(int x, int y)
     {
         return rec::ColorIndexAt(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
@@ -268,6 +298,36 @@ namespace golang::image
         uint8_t ColorIndexAt(const gocpp::ObjRecv<struct PalettedImage>& self, int x, int y)
         {
             return self.obj.value->vColorIndexAt(x, y);
+        }
+
+        color::Color At(const gocpp::PtrRecv<struct PalettedImage, false>& self, int x, int y)
+        {
+            return self.ptr->value->vAt(x, y);
+        }
+
+        color::Color At(const gocpp::ObjRecv<struct PalettedImage>& self, int x, int y)
+        {
+            return self.obj.value->vAt(x, y);
+        }
+
+        Rectangle Bounds(const gocpp::PtrRecv<struct PalettedImage, false>& self)
+        {
+            return self.ptr->value->vBounds();
+        }
+
+        Rectangle Bounds(const gocpp::ObjRecv<struct PalettedImage>& self)
+        {
+            return self.obj.value->vBounds();
+        }
+
+        color::Model ColorModel(const gocpp::PtrRecv<struct PalettedImage, false>& self)
+        {
+            return self.ptr->value->vColorModel();
+        }
+
+        color::Model ColorModel(const gocpp::ObjRecv<struct PalettedImage>& self)
+        {
+            return self.obj.value->vColorModel();
         }
     }
 

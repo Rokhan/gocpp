@@ -44,8 +44,8 @@ namespace golang::main
         return os;
     }
 
-    template<typename T, typename StoreT>
-    std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetcher::FetcherImpl<T, StoreT>::vFetch(gocpp::string url)
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetcher::FetcherImpl<T, TStore, TInterface>::vFetch(gocpp::string url)
     {
         return rec::Fetch(gocpp::PtrRecv<T, false>(value.get()), url);
     }

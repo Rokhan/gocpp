@@ -13,7 +13,7 @@
 
 namespace golang::hash
 {
-    struct Hash : gocpp::Interface
+    struct Hash : virtual gocpp::Interface, io::Writer
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -37,7 +37,7 @@ namespace golang::hash
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IHash
+        struct IHash: virtual io::Writer::IWriter
         {
             // Sum appends the current hash to b and returns the resulting slice.
             // It does not change the underlying hash state.
@@ -54,10 +54,10 @@ namespace golang::hash
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct HashImpl : IHash
+        template<typename T, typename TStore, typename TInterface = IHash>
+        struct HashImpl : virtual TInterface, virtual io::Writer::WriterImpl<T, TStore, TInterface>
         {
-            explicit HashImpl(T* ptr)
+            explicit HashImpl(T* ptr): io::Writer::WriterImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -75,7 +75,7 @@ namespace golang::hash
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IHash> value;
@@ -94,10 +94,13 @@ namespace golang::hash
 
         int BlockSize(const gocpp::PtrRecv<struct Hash, false>& self);
         int BlockSize(const gocpp::ObjRecv<struct Hash>& self);
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Hash, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Hash>& self, gocpp::slice<unsigned char> p);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash& value);
-    struct Hash32 : gocpp::Interface
+    struct Hash32 : virtual gocpp::Interface, Hash
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -121,16 +124,16 @@ namespace golang::hash
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IHash32
+        struct IHash32: virtual Hash::IHash
         {
             virtual uint32_t vSum32() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct Hash32Impl : IHash32
+        template<typename T, typename TStore, typename TInterface = IHash32>
+        struct Hash32Impl : virtual TInterface, virtual Hash::HashImpl<T, TStore, TInterface>
         {
-            explicit Hash32Impl(T* ptr)
+            explicit Hash32Impl(T* ptr): Hash::HashImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -142,7 +145,7 @@ namespace golang::hash
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IHash32> value;
@@ -152,10 +155,25 @@ namespace golang::hash
     {
         uint32_t Sum32(const gocpp::PtrRecv<struct Hash32, false>& self);
         uint32_t Sum32(const gocpp::ObjRecv<struct Hash32>& self);
+
+        int BlockSize(const gocpp::PtrRecv<struct Hash32, false>& self);
+        int BlockSize(const gocpp::ObjRecv<struct Hash32>& self);
+
+        void Reset(const gocpp::PtrRecv<struct Hash32, false>& self);
+        void Reset(const gocpp::ObjRecv<struct Hash32>& self);
+
+        int Size(const gocpp::PtrRecv<struct Hash32, false>& self);
+        int Size(const gocpp::ObjRecv<struct Hash32>& self);
+
+        gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<struct Hash32, false>& self, gocpp::slice<unsigned char> b);
+        gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<struct Hash32>& self, gocpp::slice<unsigned char> b);
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Hash32, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Hash32>& self, gocpp::slice<unsigned char> p);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash32& value);
-    struct Hash64 : gocpp::Interface
+    struct Hash64 : virtual gocpp::Interface, Hash
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -179,16 +197,16 @@ namespace golang::hash
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IHash64
+        struct IHash64: virtual Hash::IHash
         {
             virtual uint64_t vSum64() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct Hash64Impl : IHash64
+        template<typename T, typename TStore, typename TInterface = IHash64>
+        struct Hash64Impl : virtual TInterface, virtual Hash::HashImpl<T, TStore, TInterface>
         {
-            explicit Hash64Impl(T* ptr)
+            explicit Hash64Impl(T* ptr): Hash::HashImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -200,7 +218,7 @@ namespace golang::hash
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IHash64> value;
@@ -210,6 +228,21 @@ namespace golang::hash
     {
         uint64_t Sum64(const gocpp::PtrRecv<struct Hash64, false>& self);
         uint64_t Sum64(const gocpp::ObjRecv<struct Hash64>& self);
+
+        int BlockSize(const gocpp::PtrRecv<struct Hash64, false>& self);
+        int BlockSize(const gocpp::ObjRecv<struct Hash64>& self);
+
+        void Reset(const gocpp::PtrRecv<struct Hash64, false>& self);
+        void Reset(const gocpp::ObjRecv<struct Hash64>& self);
+
+        int Size(const gocpp::PtrRecv<struct Hash64, false>& self);
+        int Size(const gocpp::ObjRecv<struct Hash64>& self);
+
+        gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<struct Hash64, false>& self, gocpp::slice<unsigned char> b);
+        gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<struct Hash64>& self, gocpp::slice<unsigned char> b);
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Hash64, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Hash64>& self, gocpp::slice<unsigned char> p);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash64& value);

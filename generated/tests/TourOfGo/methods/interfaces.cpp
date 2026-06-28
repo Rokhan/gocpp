@@ -45,8 +45,8 @@ namespace golang::main
         return os;
     }
 
-    template<typename T, typename StoreT>
-    double Abser::AbserImpl<T, StoreT>::vAbs()
+    template<typename T, typename TStore, typename TInterface>
+    double Abser::AbserImpl<T, TStore, TInterface>::vAbs()
     {
         return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -67,6 +67,228 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Abser& value)
     {
         return value.PrintTo(os);
+    }
+
+    
+    template<typename T>
+    Adder::Adder(T& ref)
+    {
+        value.reset(new AdderImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    Adder::Adder(const T& ref)
+    {
+        value.reset(new AdderImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    Adder::Adder(T* ptr)
+    {
+        value.reset(new AdderImpl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& Adder::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename TStore, typename TInterface>
+    void Adder::AdderImpl<T, TStore, TInterface>::vAdd(int f)
+    {
+        return rec::Add(gocpp::PtrRecv<T, false>(value.get()), f);
+    }
+
+    namespace rec
+    {
+        void Add(const gocpp::PtrRecv<struct Adder, false>& self, int f)
+        {
+            return self.ptr->value->vAdd(f);
+        }
+
+        void Add(const gocpp::ObjRecv<struct Adder>& self, int f)
+        {
+            return self.obj.value->vAdd(f);
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Adder& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T>
+    Multiplier::Multiplier(T& ref)
+    {
+        value.reset(new MultiplierImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    Multiplier::Multiplier(const T& ref)
+    {
+        value.reset(new MultiplierImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    Multiplier::Multiplier(T* ptr)
+    {
+        value.reset(new MultiplierImpl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& Multiplier::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename TStore, typename TInterface>
+    void Multiplier::MultiplierImpl<T, TStore, TInterface>::vMul(int f)
+    {
+        return rec::Mul(gocpp::PtrRecv<T, false>(value.get()), f);
+    }
+
+    namespace rec
+    {
+        void Mul(const gocpp::PtrRecv<struct Multiplier, false>& self, int f)
+        {
+            return self.ptr->value->vMul(f);
+        }
+
+        void Mul(const gocpp::ObjRecv<struct Multiplier>& self, int f)
+        {
+            return self.obj.value->vMul(f);
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Multiplier& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T>
+    MultAdder::MultAdder(T& ref)
+    {
+        value.reset(new MultAdderImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    MultAdder::MultAdder(const T& ref)
+    {
+        value.reset(new MultAdderImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    MultAdder::MultAdder(T* ptr)
+    {
+        value.reset(new MultAdderImpl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& MultAdder::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename TStore, typename TInterface>
+    void MultAdder::MultAdderImpl<T, TStore, TInterface>::vPrint()
+    {
+        return rec::Print(gocpp::PtrRecv<T, false>(value.get()));
+    }
+
+    namespace rec
+    {
+        void Print(const gocpp::PtrRecv<struct MultAdder, false>& self)
+        {
+            return self.ptr->value->vPrint();
+        }
+
+        void Print(const gocpp::ObjRecv<struct MultAdder>& self)
+        {
+            return self.obj.value->vPrint();
+        }
+
+        void Add(const gocpp::PtrRecv<struct MultAdder, false>& self, int f)
+        {
+            return self.ptr->value->vAdd(f);
+        }
+
+        void Add(const gocpp::ObjRecv<struct MultAdder>& self, int f)
+        {
+            return self.obj.value->vAdd(f);
+        }
+
+        void Mul(const gocpp::PtrRecv<struct MultAdder, false>& self, int f)
+        {
+            return self.ptr->value->vMul(f);
+        }
+
+        void Mul(const gocpp::ObjRecv<struct MultAdder>& self, int f)
+        {
+            return self.obj.value->vMul(f);
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct MultAdder& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    num::operator T()
+    {
+        T result;
+        result.value = this->value;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool num::operator==(const T& ref) const
+    {
+        if (value != ref.value) return false;
+        return true;
+    }
+
+    std::ostream& num::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << value;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct num& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    void rec::Add(golang::main::num* n, int f)
+    {
+        n->value += f;
+    }
+
+    void rec::Mul(golang::main::num* n, int f)
+    {
+        n->value *= f;
+    }
+
+    void rec::Print(golang::main::num* n)
+    {
+        mocklib::Println(n->value);
+    }
+
+    void testAddMul()
+    {
+        auto n = num {10};
+        rec::Add(gocpp::recv(n), 5);
+        rec::Mul(gocpp::recv(n), 2);
+        rec::Print(gocpp::recv(n));
+
+        MultAdder iNum = {};
+        iNum = new num {11};
+        rec::Add(gocpp::recv(iNum), 6);
+        rec::Mul(gocpp::recv(iNum), 3);
+        rec::Print(gocpp::recv(iNum));
     }
 
     // Check interface declaration with method with nameless parameter
@@ -94,8 +316,8 @@ namespace golang::main
         return os;
     }
 
-    template<typename T, typename StoreT>
-    bool dummy::dummyImpl<T, StoreT>::vAs(go_any _1)
+    template<typename T, typename TStore, typename TInterface>
+    bool dummy::dummyImpl<T, TStore, TInterface>::vAs(go_any _1)
     {
         return rec::As(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
@@ -135,8 +357,10 @@ namespace golang::main
         // Interface can be compared with nil.
         if(a != nullptr || a == nullptr)
         {
-            mocklib::Println(rec::Abs(gocpp::recv(a)));
+            mocklib::Println(rec::Abs(gocpp::recv(a)) + 0.00001);
         }
+
+        testAddMul();
     }
 
     double rec::Abs(golang::main::MyFloat f)

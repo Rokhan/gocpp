@@ -13,7 +13,7 @@
 
 namespace golang::runtime
 {
-    struct Error : gocpp::Interface
+    struct Error : virtual gocpp::Interface, error
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -37,7 +37,7 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IError
+        struct IError: virtual error::Ierror
         {
             // RuntimeError is a no-op function but
             // serves to distinguish types that are run time
@@ -47,10 +47,10 @@ namespace golang::runtime
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ErrorImpl : IError
+        template<typename T, typename TStore, typename TInterface = IError>
+        struct ErrorImpl : virtual TInterface, virtual error::errorImpl<T, TStore, TInterface>
         {
-            explicit ErrorImpl(T* ptr)
+            explicit ErrorImpl(T* ptr): error::errorImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -62,7 +62,7 @@ namespace golang::runtime
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IError> value;
@@ -72,6 +72,9 @@ namespace golang::runtime
     {
         void RuntimeError(const gocpp::PtrRecv<struct Error, false>& self);
         void RuntimeError(const gocpp::ObjRecv<struct Error>& self);
+
+        gocpp::string Error(const gocpp::PtrRecv<struct Error, false>& self);
+        gocpp::string Error(const gocpp::ObjRecv<struct Error>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Error& value);
@@ -138,7 +141,7 @@ namespace golang::runtime
     extern gocpp::array<gocpp::string, 9> boundsErrorFmts;
     extern gocpp::array<gocpp::string, 8> boundsNegErrorFmts;
     gocpp::slice<unsigned char> appendIntStr(gocpp::slice<unsigned char> b, int64_t v, bool go_signed);
-    struct stringer : gocpp::Interface
+    struct stringer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -168,8 +171,8 @@ namespace golang::runtime
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct stringerImpl : Istringer
+        template<typename T, typename TStore, typename TInterface = Istringer>
+        struct stringerImpl : virtual TInterface
         {
             explicit stringerImpl(T* ptr)
             {
@@ -183,7 +186,7 @@ namespace golang::runtime
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Istringer> value;

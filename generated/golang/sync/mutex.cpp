@@ -102,13 +102,13 @@ namespace golang::sync
         return os;
     }
 
-    template<typename T, typename StoreT>
-    void Locker::LockerImpl<T, StoreT>::vLock()
+    template<typename T, typename TStore, typename TInterface>
+    void Locker::LockerImpl<T, TStore, TInterface>::vLock()
     {
         return rec::Lock(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    void Locker::LockerImpl<T, StoreT>::vUnlock()
+    template<typename T, typename TStore, typename TInterface>
+    void Locker::LockerImpl<T, TStore, TInterface>::vUnlock()
     {
         return rec::Unlock(gocpp::PtrRecv<T, false>(value.get()));
     }

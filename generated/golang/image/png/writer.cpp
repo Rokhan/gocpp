@@ -112,13 +112,13 @@ namespace golang::png
         return os;
     }
 
-    template<typename T, typename StoreT>
-    struct EncoderBuffer* EncoderBufferPool::EncoderBufferPoolImpl<T, StoreT>::vGet()
+    template<typename T, typename TStore, typename TInterface>
+    struct EncoderBuffer* EncoderBufferPool::EncoderBufferPoolImpl<T, TStore, TInterface>::vGet()
     {
         return rec::Get(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    void EncoderBufferPool::EncoderBufferPoolImpl<T, StoreT>::vPut(struct EncoderBuffer* _1)
+    template<typename T, typename TStore, typename TInterface>
+    void EncoderBufferPool::EncoderBufferPoolImpl<T, TStore, TInterface>::vPut(struct EncoderBuffer* _1)
     {
         return rec::Put(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
@@ -242,8 +242,8 @@ namespace golang::png
         return os;
     }
 
-    template<typename T, typename StoreT>
-    bool opaquer::opaquerImpl<T, StoreT>::vOpaque()
+    template<typename T, typename TStore, typename TInterface>
+    bool opaquer::opaquerImpl<T, TStore, TInterface>::vOpaque()
     {
         return rec::Opaque(gocpp::PtrRecv<T, false>(value.get()));
     }

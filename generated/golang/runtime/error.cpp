@@ -57,8 +57,8 @@ namespace golang::runtime
         return os;
     }
 
-    template<typename T, typename StoreT>
-    void Error::ErrorImpl<T, StoreT>::vRuntimeError()
+    template<typename T, typename TStore, typename TInterface>
+    void Error::ErrorImpl<T, TStore, TInterface>::vRuntimeError()
     {
         return rec::RuntimeError(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -73,6 +73,16 @@ namespace golang::runtime
         void RuntimeError(const gocpp::ObjRecv<struct Error>& self)
         {
             return self.obj.value->vRuntimeError();
+        }
+
+        gocpp::string Error(const gocpp::PtrRecv<struct Error, false>& self)
+        {
+            return self.ptr->value->vError();
+        }
+
+        gocpp::string Error(const gocpp::ObjRecv<struct Error>& self)
+        {
+            return self.obj.value->vError();
         }
     }
 
@@ -392,8 +402,8 @@ namespace golang::runtime
         return os;
     }
 
-    template<typename T, typename StoreT>
-    gocpp::string stringer::stringerImpl<T, StoreT>::vString()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string stringer::stringerImpl<T, TStore, TInterface>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }

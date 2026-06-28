@@ -113,8 +113,8 @@ namespace golang::image
         return os;
     }
 
-    template<typename T, typename StoreT>
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> reader::readerImpl<T, StoreT>::vPeek(int _1)
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> reader::readerImpl<T, TStore, TInterface>::vPeek(int _1)
     {
         return rec::Peek(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
@@ -129,6 +129,16 @@ namespace golang::image
         std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int _1)
         {
             return self.obj.value->vPeek(_1);
+        }
+
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct reader, false>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.ptr->value->vRead(p);
+        }
+
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct reader>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.obj.value->vRead(p);
         }
     }
 

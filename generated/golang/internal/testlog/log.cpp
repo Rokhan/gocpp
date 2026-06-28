@@ -52,23 +52,23 @@ namespace golang::testlog
         return os;
     }
 
-    template<typename T, typename StoreT>
-    void Interface::InterfaceImpl<T, StoreT>::vGetenv(gocpp::string key)
+    template<typename T, typename TStore, typename TInterface>
+    void Interface::InterfaceImpl<T, TStore, TInterface>::vGetenv(gocpp::string key)
     {
         return rec::Getenv(gocpp::PtrRecv<T, false>(value.get()), key);
     }
-    template<typename T, typename StoreT>
-    void Interface::InterfaceImpl<T, StoreT>::vStat(gocpp::string file)
+    template<typename T, typename TStore, typename TInterface>
+    void Interface::InterfaceImpl<T, TStore, TInterface>::vStat(gocpp::string file)
     {
         return rec::Stat(gocpp::PtrRecv<T, false>(value.get()), file);
     }
-    template<typename T, typename StoreT>
-    void Interface::InterfaceImpl<T, StoreT>::vOpen(gocpp::string file)
+    template<typename T, typename TStore, typename TInterface>
+    void Interface::InterfaceImpl<T, TStore, TInterface>::vOpen(gocpp::string file)
     {
         return rec::Open(gocpp::PtrRecv<T, false>(value.get()), file);
     }
-    template<typename T, typename StoreT>
-    void Interface::InterfaceImpl<T, StoreT>::vChdir(gocpp::string dir)
+    template<typename T, typename TStore, typename TInterface>
+    void Interface::InterfaceImpl<T, TStore, TInterface>::vChdir(gocpp::string dir)
     {
         return rec::Chdir(gocpp::PtrRecv<T, false>(value.get()), dir);
     }

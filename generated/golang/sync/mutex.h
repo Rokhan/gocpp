@@ -31,7 +31,7 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Mutex& value);
-    struct Locker : gocpp::Interface
+    struct Locker : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -62,8 +62,8 @@ namespace golang::sync
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct LockerImpl : ILocker
+        template<typename T, typename TStore, typename TInterface = ILocker>
+        struct LockerImpl : virtual TInterface
         {
             explicit LockerImpl(T* ptr)
             {
@@ -79,7 +79,7 @@ namespace golang::sync
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<ILocker> value;

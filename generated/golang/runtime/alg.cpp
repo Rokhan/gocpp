@@ -583,8 +583,8 @@ namespace golang::runtime
         return os;
     }
 
-    template<typename T, typename StoreT>
-    void gocpp_id_0::gocpp_id_0Impl<T, StoreT>::vF()
+    template<typename T, typename TStore, typename TInterface>
+    void gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vF()
     {
         return rec::F(gocpp::PtrRecv<T, false>(value.get()));
     }

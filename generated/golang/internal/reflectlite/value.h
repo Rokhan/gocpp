@@ -85,7 +85,7 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
-    struct gocpp_id_3 : gocpp::Interface
+    struct gocpp_id_3 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -115,8 +115,8 @@ namespace golang::reflectlite
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct gocpp_id_3Impl : Igocpp_id_3
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_3>
+        struct gocpp_id_3Impl : virtual TInterface
         {
             explicit gocpp_id_3Impl(T* ptr)
             {
@@ -130,7 +130,7 @@ namespace golang::reflectlite
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Igocpp_id_3> value;
@@ -144,7 +144,7 @@ namespace golang::reflectlite
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
     go_any valueInterface(struct Value v);
-    struct gocpp_id_4 : gocpp::Interface
+    struct gocpp_id_4 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -174,8 +174,8 @@ namespace golang::reflectlite
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct gocpp_id_4Impl : Igocpp_id_4
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_4>
+        struct gocpp_id_4Impl : virtual TInterface
         {
             explicit gocpp_id_4Impl(T* ptr)
             {
@@ -189,7 +189,7 @@ namespace golang::reflectlite
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Igocpp_id_4> value;

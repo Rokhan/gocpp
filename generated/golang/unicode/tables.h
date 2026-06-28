@@ -505,7 +505,7 @@ namespace golang::unicode
     extern RangeTable* Unified_Ideograph;
     extern RangeTable* Variation_Selector;
     extern RangeTable* White_Space;
-    extern gocpp::slice<unicode::CaseRange> CaseRanges;
+    extern gocpp::slice<CaseRange> CaseRanges;
     extern gocpp::map<gocpp::string, RangeTable*> FoldCategory;
     extern gocpp::map<gocpp::string, RangeTable*> FoldScript;
     extern gocpp::map<gocpp::string, RangeTable*> Categories;

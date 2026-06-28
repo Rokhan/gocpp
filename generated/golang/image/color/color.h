@@ -11,7 +11,7 @@
 
 namespace golang::color
 {
-    struct Color : gocpp::Interface
+    struct Color : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -47,8 +47,8 @@ namespace golang::color
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ColorImpl : IColor
+        template<typename T, typename TStore, typename TInterface = IColor>
+        struct ColorImpl : virtual TInterface
         {
             explicit ColorImpl(T* ptr)
             {
@@ -62,7 +62,7 @@ namespace golang::color
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IColor> value;
@@ -215,7 +215,7 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Gray16& value);
-    struct Model : gocpp::Interface
+    struct Model : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -245,8 +245,8 @@ namespace golang::color
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ModelImpl : IModel
+        template<typename T, typename TStore, typename TInterface = IModel>
+        struct ModelImpl : virtual TInterface
         {
             explicit ModelImpl(T* ptr)
             {
@@ -260,7 +260,7 @@ namespace golang::color
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IModel> value;

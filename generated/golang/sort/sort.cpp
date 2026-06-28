@@ -48,18 +48,18 @@ namespace golang::sort
         return os;
     }
 
-    template<typename T, typename StoreT>
-    int Interface::InterfaceImpl<T, StoreT>::vLen()
+    template<typename T, typename TStore, typename TInterface>
+    int Interface::InterfaceImpl<T, TStore, TInterface>::vLen()
     {
         return rec::Len(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    bool Interface::InterfaceImpl<T, StoreT>::vLess(int i, int j)
+    template<typename T, typename TStore, typename TInterface>
+    bool Interface::InterfaceImpl<T, TStore, TInterface>::vLess(int i, int j)
     {
         return rec::Less(gocpp::PtrRecv<T, false>(value.get()), i, j);
     }
-    template<typename T, typename StoreT>
-    void Interface::InterfaceImpl<T, StoreT>::vSwap(int i, int j)
+    template<typename T, typename TStore, typename TInterface>
+    void Interface::InterfaceImpl<T, TStore, TInterface>::vSwap(int i, int j)
     {
         return rec::Swap(gocpp::PtrRecv<T, false>(value.get()), i, j);
     }
@@ -192,6 +192,39 @@ namespace golang::sort
         os << "" << Interface;
         os << '}';
         return os;
+    }
+
+    namespace rec
+    {
+        int Len(const gocpp::PtrRecv<struct reverse, false>& self)
+        {
+            return rec::Len(self.ptr->Interface);
+        }
+
+        int Len(const gocpp::ObjRecv<struct reverse>& self)
+        {
+            return rec::Len(self.obj.Interface);
+        }
+
+        bool Less(const gocpp::PtrRecv<struct reverse, false>& self, int i, int j)
+        {
+            return rec::Less(self.ptr->Interface, i, j);
+        }
+
+        bool Less(const gocpp::ObjRecv<struct reverse>& self, int i, int j)
+        {
+            return rec::Less(self.obj.Interface, i, j);
+        }
+
+        void Swap(const gocpp::PtrRecv<struct reverse, false>& self, int i, int j)
+        {
+            return rec::Swap(self.ptr->Interface, i, j);
+        }
+
+        void Swap(const gocpp::ObjRecv<struct reverse>& self, int i, int j)
+        {
+            return rec::Swap(self.obj.Interface, i, j);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reverse& value)

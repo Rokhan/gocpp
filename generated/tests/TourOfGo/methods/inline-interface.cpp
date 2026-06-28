@@ -91,8 +91,8 @@ namespace golang::main
             return os;
         }
 
-        template<typename T, typename StoreT>
-        double gocpp_id_0::gocpp_id_0Impl<T, StoreT>::vAbs()
+        template<typename T, typename TStore, typename TInterface>
+        double gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vAbs()
         {
             return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
         }
@@ -155,8 +155,8 @@ namespace golang::main
         return os;
     }
 
-    template<typename T, typename StoreT>
-    double gocpp_id_1::gocpp_id_1Impl<T, StoreT>::vAbs()
+    template<typename T, typename TStore, typename TInterface>
+    double gocpp_id_1::gocpp_id_1Impl<T, TStore, TInterface>::vAbs()
     {
         return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
     }

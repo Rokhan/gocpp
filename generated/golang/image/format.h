@@ -41,7 +41,7 @@ namespace golang::image
     extern mocklib::Mutex formatsMu;
     extern atomic::Value atomicFormats;
     void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig);
-    struct reader : gocpp::Interface
+    struct reader : virtual gocpp::Interface, io::Reader
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -65,16 +65,16 @@ namespace golang::image
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Ireader
+        struct Ireader: virtual io::Reader::IReader
         {
             virtual std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> vPeek(int _1) = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct readerImpl : Ireader
+        template<typename T, typename TStore, typename TInterface = Ireader>
+        struct readerImpl : virtual TInterface, virtual io::Reader::ReaderImpl<T, TStore, TInterface>
         {
-            explicit readerImpl(T* ptr)
+            explicit readerImpl(T* ptr): io::Reader::ReaderImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -86,7 +86,7 @@ namespace golang::image
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Ireader> value;
@@ -96,6 +96,9 @@ namespace golang::image
     {
         std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int _1);
         std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int _1);
+
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct reader, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct reader>& self, gocpp::slice<unsigned char> p);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);

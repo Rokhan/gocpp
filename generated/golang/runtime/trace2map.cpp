@@ -232,7 +232,7 @@ namespace golang::runtime
         // Write barriers may theoretically call into the tracer and acquire
         // the lock again, and this lock ordering is expressed in the static
         // lock ranking checker.
-        memclrNoHeapPointers(gocpp::unsafe_pointer(gocpp::make_array_ptr(tab->tab)), gocpp::Sizeof<atomic::UnsafePointer, 8192>>());
+        memclrNoHeapPointers(gocpp::unsafe_pointer(gocpp::make_array_ptr(tab->tab)), gocpp::Sizeof<gocpp::array<atomic::UnsafePointer, 8192>>());
     }
 
 }

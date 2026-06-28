@@ -88,7 +88,7 @@ namespace golang::os
     std::tuple<struct File*, struct gocpp::error> Open(gocpp::string name);
     std::tuple<struct File*, struct gocpp::error> Create(gocpp::string name);
     std::tuple<struct File*, struct gocpp::error> OpenFile(gocpp::string name, int flag, golang::os::FileMode perm);
-    extern fs::FileInfo, gocpp::error> (gocpp::string)> lstat;
+    extern std::function<std::tuple<fs::FileInfo, gocpp::error> (gocpp::string)> lstat;
     struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath);
     std::tuple<gocpp::string, struct gocpp::error> Readlink(gocpp::string name);
     std::tuple<int, struct gocpp::error> fixCount(int n, struct gocpp::error err);

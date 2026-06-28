@@ -7,6 +7,10 @@
 namespace golang::main
 {
     struct Abser;
+    struct Adder;
+    struct Multiplier;
+    struct MultAdder;
+    struct num;
     struct dummy;
     using MyFloat = double;
     struct Vertex;

@@ -19,7 +19,7 @@
 
 namespace golang::rand
 {
-    struct Source : gocpp::Interface
+    struct Source : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -50,8 +50,8 @@ namespace golang::rand
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct SourceImpl : ISource
+        template<typename T, typename TStore, typename TInterface = ISource>
+        struct SourceImpl : virtual TInterface
         {
             explicit SourceImpl(T* ptr)
             {
@@ -67,7 +67,7 @@ namespace golang::rand
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<ISource> value;
@@ -83,7 +83,7 @@ namespace golang::rand
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Source& value);
-    struct Source64 : gocpp::Interface
+    struct Source64 : virtual gocpp::Interface, Source
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -107,16 +107,16 @@ namespace golang::rand
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct ISource64
+        struct ISource64: virtual Source::ISource
         {
             virtual uint64_t vUint64() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct Source64Impl : ISource64
+        template<typename T, typename TStore, typename TInterface = ISource64>
+        struct Source64Impl : virtual TInterface, virtual Source::SourceImpl<T, TStore, TInterface>
         {
-            explicit Source64Impl(T* ptr)
+            explicit Source64Impl(T* ptr): Source::SourceImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -128,7 +128,7 @@ namespace golang::rand
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<ISource64> value;
@@ -138,6 +138,12 @@ namespace golang::rand
     {
         uint64_t Uint64(const gocpp::PtrRecv<struct Source64, false>& self);
         uint64_t Uint64(const gocpp::ObjRecv<struct Source64>& self);
+
+        int64_t Int63(const gocpp::PtrRecv<struct Source64, false>& self);
+        int64_t Int63(const gocpp::ObjRecv<struct Source64>& self);
+
+        void Seed(const gocpp::PtrRecv<struct Source64, false>& self, int64_t seed);
+        void Seed(const gocpp::ObjRecv<struct Source64>& self, int64_t seed);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Source64& value);

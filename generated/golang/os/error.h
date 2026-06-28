@@ -22,7 +22,7 @@ namespace golang::os
     extern gocpp::error ErrDeadlineExceeded;
     struct gocpp::error errNoDeadline();
     struct gocpp::error errDeadlineExceeded();
-    struct timeout : gocpp::Interface
+    struct timeout : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -52,8 +52,8 @@ namespace golang::os
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct timeoutImpl : Itimeout
+        template<typename T, typename TStore, typename TInterface = Itimeout>
+        struct timeoutImpl : virtual TInterface
         {
             explicit timeoutImpl(T* ptr)
             {
@@ -67,7 +67,7 @@ namespace golang::os
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Itimeout> value;

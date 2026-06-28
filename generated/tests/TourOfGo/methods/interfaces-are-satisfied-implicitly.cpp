@@ -44,8 +44,8 @@ namespace golang::main
         return os;
     }
 
-    template<typename T, typename StoreT>
-    void I::IImpl<T, StoreT>::vM()
+    template<typename T, typename TStore, typename TInterface>
+    void I::IImpl<T, TStore, TInterface>::vM()
     {
         return rec::M(gocpp::PtrRecv<T, false>(value.get()));
     }

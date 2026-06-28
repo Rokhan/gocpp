@@ -736,8 +736,8 @@ namespace golang::bisect
         return os;
     }
 
-    template<typename T, typename StoreT>
-    std::tuple<int, struct gocpp::error> Writer::WriterImpl<T, StoreT>::vWrite(gocpp::slice<unsigned char> _1)
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<int, struct gocpp::error> Writer::WriterImpl<T, TStore, TInterface>::vWrite(gocpp::slice<unsigned char> _1)
     {
         return rec::Write(gocpp::PtrRecv<T, false>(value.get()), _1);
     }

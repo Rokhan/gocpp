@@ -24,7 +24,7 @@
 
 namespace golang::png
 {
-    struct EncoderBufferPool : gocpp::Interface
+    struct EncoderBufferPool : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -55,8 +55,8 @@ namespace golang::png
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct EncoderBufferPoolImpl : IEncoderBufferPool
+        template<typename T, typename TStore, typename TInterface = IEncoderBufferPool>
+        struct EncoderBufferPoolImpl : virtual TInterface
         {
             explicit EncoderBufferPoolImpl(T* ptr)
             {
@@ -72,7 +72,7 @@ namespace golang::png
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IEncoderBufferPool> value;
@@ -116,7 +116,7 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct encoder& value);
-    struct opaquer : gocpp::Interface
+    struct opaquer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -146,8 +146,8 @@ namespace golang::png
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct opaquerImpl : Iopaquer
+        template<typename T, typename TStore, typename TInterface = Iopaquer>
+        struct opaquerImpl : virtual TInterface
         {
             explicit opaquerImpl(T* ptr)
             {
@@ -161,7 +161,7 @@ namespace golang::png
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Iopaquer> value;

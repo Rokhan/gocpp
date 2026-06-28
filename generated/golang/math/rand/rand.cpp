@@ -74,13 +74,13 @@ namespace golang::rand
         return os;
     }
 
-    template<typename T, typename StoreT>
-    int64_t Source::SourceImpl<T, StoreT>::vInt63()
+    template<typename T, typename TStore, typename TInterface>
+    int64_t Source::SourceImpl<T, TStore, TInterface>::vInt63()
     {
         return rec::Int63(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    void Source::SourceImpl<T, StoreT>::vSeed(int64_t seed)
+    template<typename T, typename TStore, typename TInterface>
+    void Source::SourceImpl<T, TStore, TInterface>::vSeed(int64_t seed)
     {
         return rec::Seed(gocpp::PtrRecv<T, false>(value.get()), seed);
     }
@@ -143,8 +143,8 @@ namespace golang::rand
         return os;
     }
 
-    template<typename T, typename StoreT>
-    uint64_t Source64::Source64Impl<T, StoreT>::vUint64()
+    template<typename T, typename TStore, typename TInterface>
+    uint64_t Source64::Source64Impl<T, TStore, TInterface>::vUint64()
     {
         return rec::Uint64(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -159,6 +159,26 @@ namespace golang::rand
         uint64_t Uint64(const gocpp::ObjRecv<struct Source64>& self)
         {
             return self.obj.value->vUint64();
+        }
+
+        int64_t Int63(const gocpp::PtrRecv<struct Source64, false>& self)
+        {
+            return self.ptr->value->vInt63();
+        }
+
+        int64_t Int63(const gocpp::ObjRecv<struct Source64>& self)
+        {
+            return self.obj.value->vInt63();
+        }
+
+        void Seed(const gocpp::PtrRecv<struct Source64, false>& self, int64_t seed)
+        {
+            return self.ptr->value->vSeed(seed);
+        }
+
+        void Seed(const gocpp::ObjRecv<struct Source64>& self, int64_t seed)
+        {
+            return self.obj.value->vSeed(seed);
         }
     }
 

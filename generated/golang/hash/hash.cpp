@@ -60,23 +60,23 @@ namespace golang::hash
         return os;
     }
 
-    template<typename T, typename StoreT>
-    gocpp::slice<unsigned char> Hash::HashImpl<T, StoreT>::vSum(gocpp::slice<unsigned char> b)
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::slice<unsigned char> Hash::HashImpl<T, TStore, TInterface>::vSum(gocpp::slice<unsigned char> b)
     {
         return rec::Sum(gocpp::PtrRecv<T, false>(value.get()), b);
     }
-    template<typename T, typename StoreT>
-    void Hash::HashImpl<T, StoreT>::vReset()
+    template<typename T, typename TStore, typename TInterface>
+    void Hash::HashImpl<T, TStore, TInterface>::vReset()
     {
         return rec::Reset(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    int Hash::HashImpl<T, StoreT>::vSize()
+    template<typename T, typename TStore, typename TInterface>
+    int Hash::HashImpl<T, TStore, TInterface>::vSize()
     {
         return rec::Size(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    int Hash::HashImpl<T, StoreT>::vBlockSize()
+    template<typename T, typename TStore, typename TInterface>
+    int Hash::HashImpl<T, TStore, TInterface>::vBlockSize()
     {
         return rec::BlockSize(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -122,6 +122,16 @@ namespace golang::hash
         {
             return self.obj.value->vBlockSize();
         }
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Hash, false>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.ptr->value->vWrite(p);
+        }
+
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Hash>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.obj.value->vWrite(p);
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash& value)
@@ -154,8 +164,8 @@ namespace golang::hash
         return os;
     }
 
-    template<typename T, typename StoreT>
-    uint32_t Hash32::Hash32Impl<T, StoreT>::vSum32()
+    template<typename T, typename TStore, typename TInterface>
+    uint32_t Hash32::Hash32Impl<T, TStore, TInterface>::vSum32()
     {
         return rec::Sum32(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -170,6 +180,56 @@ namespace golang::hash
         uint32_t Sum32(const gocpp::ObjRecv<struct Hash32>& self)
         {
             return self.obj.value->vSum32();
+        }
+
+        int BlockSize(const gocpp::PtrRecv<struct Hash32, false>& self)
+        {
+            return self.ptr->value->vBlockSize();
+        }
+
+        int BlockSize(const gocpp::ObjRecv<struct Hash32>& self)
+        {
+            return self.obj.value->vBlockSize();
+        }
+
+        void Reset(const gocpp::PtrRecv<struct Hash32, false>& self)
+        {
+            return self.ptr->value->vReset();
+        }
+
+        void Reset(const gocpp::ObjRecv<struct Hash32>& self)
+        {
+            return self.obj.value->vReset();
+        }
+
+        int Size(const gocpp::PtrRecv<struct Hash32, false>& self)
+        {
+            return self.ptr->value->vSize();
+        }
+
+        int Size(const gocpp::ObjRecv<struct Hash32>& self)
+        {
+            return self.obj.value->vSize();
+        }
+
+        gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<struct Hash32, false>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.ptr->value->vSum(b);
+        }
+
+        gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<struct Hash32>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.obj.value->vSum(b);
+        }
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Hash32, false>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.ptr->value->vWrite(p);
+        }
+
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Hash32>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.obj.value->vWrite(p);
         }
     }
 
@@ -203,8 +263,8 @@ namespace golang::hash
         return os;
     }
 
-    template<typename T, typename StoreT>
-    uint64_t Hash64::Hash64Impl<T, StoreT>::vSum64()
+    template<typename T, typename TStore, typename TInterface>
+    uint64_t Hash64::Hash64Impl<T, TStore, TInterface>::vSum64()
     {
         return rec::Sum64(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -219,6 +279,56 @@ namespace golang::hash
         uint64_t Sum64(const gocpp::ObjRecv<struct Hash64>& self)
         {
             return self.obj.value->vSum64();
+        }
+
+        int BlockSize(const gocpp::PtrRecv<struct Hash64, false>& self)
+        {
+            return self.ptr->value->vBlockSize();
+        }
+
+        int BlockSize(const gocpp::ObjRecv<struct Hash64>& self)
+        {
+            return self.obj.value->vBlockSize();
+        }
+
+        void Reset(const gocpp::PtrRecv<struct Hash64, false>& self)
+        {
+            return self.ptr->value->vReset();
+        }
+
+        void Reset(const gocpp::ObjRecv<struct Hash64>& self)
+        {
+            return self.obj.value->vReset();
+        }
+
+        int Size(const gocpp::PtrRecv<struct Hash64, false>& self)
+        {
+            return self.ptr->value->vSize();
+        }
+
+        int Size(const gocpp::ObjRecv<struct Hash64>& self)
+        {
+            return self.obj.value->vSize();
+        }
+
+        gocpp::slice<unsigned char> Sum(const gocpp::PtrRecv<struct Hash64, false>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.ptr->value->vSum(b);
+        }
+
+        gocpp::slice<unsigned char> Sum(const gocpp::ObjRecv<struct Hash64>& self, gocpp::slice<unsigned char> b)
+        {
+            return self.obj.value->vSum(b);
+        }
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Hash64, false>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.ptr->value->vWrite(p);
+        }
+
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Hash64>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.obj.value->vWrite(p);
         }
     }
 

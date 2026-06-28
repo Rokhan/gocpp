@@ -53,8 +53,8 @@ namespace golang::errors
             return os;
         }
 
-        template<typename T, typename StoreT>
-        struct gocpp::error gocpp_id_0::gocpp_id_0Impl<T, StoreT>::vUnwrap()
+        template<typename T, typename TStore, typename TInterface>
+        struct gocpp::error gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vUnwrap()
         {
             return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
         }
@@ -146,8 +146,8 @@ namespace golang::errors
                 return os;
             }
 
-            template<typename T, typename StoreT>
-            bool gocpp_id_1::gocpp_id_1Impl<T, StoreT>::vIs(struct gocpp::error _1)
+            template<typename T, typename TStore, typename TInterface>
+            bool gocpp_id_1::gocpp_id_1Impl<T, TStore, TInterface>::vIs(struct gocpp::error _1)
             {
                 return rec::Is(gocpp::PtrRecv<T, false>(value.get()), _1);
             }
@@ -195,8 +195,8 @@ namespace golang::errors
                     return os;
                 }
 
-                template<typename T, typename StoreT>
-                struct gocpp::error gocpp_id_3::gocpp_id_3Impl<T, StoreT>::vUnwrap()
+                template<typename T, typename TStore, typename TInterface>
+                struct gocpp::error gocpp_id_3::gocpp_id_3Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
@@ -244,8 +244,8 @@ namespace golang::errors
                     return os;
                 }
 
-                template<typename T, typename StoreT>
-                gocpp::slice<gocpp::error> gocpp_id_4::gocpp_id_4Impl<T, StoreT>::vUnwrap()
+                template<typename T, typename TStore, typename TInterface>
+                gocpp::slice<gocpp::error> gocpp_id_4::gocpp_id_4Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
@@ -388,8 +388,8 @@ namespace golang::errors
                 return os;
             }
 
-            template<typename T, typename StoreT>
-            bool gocpp_id_5::gocpp_id_5Impl<T, StoreT>::vAs(go_any _1)
+            template<typename T, typename TStore, typename TInterface>
+            bool gocpp_id_5::gocpp_id_5Impl<T, TStore, TInterface>::vAs(go_any _1)
             {
                 return rec::As(gocpp::PtrRecv<T, false>(value.get()), _1);
             }
@@ -437,8 +437,8 @@ namespace golang::errors
                     return os;
                 }
 
-                template<typename T, typename StoreT>
-                struct gocpp::error gocpp_id_7::gocpp_id_7Impl<T, StoreT>::vUnwrap()
+                template<typename T, typename TStore, typename TInterface>
+                struct gocpp::error gocpp_id_7::gocpp_id_7Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
@@ -486,8 +486,8 @@ namespace golang::errors
                     return os;
                 }
 
-                template<typename T, typename StoreT>
-                gocpp::slice<gocpp::error> gocpp_id_8::gocpp_id_8Impl<T, StoreT>::vUnwrap()
+                template<typename T, typename TStore, typename TInterface>
+                gocpp::slice<gocpp::error> gocpp_id_8::gocpp_id_8Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }

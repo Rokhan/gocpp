@@ -60,8 +60,8 @@ namespace golang::fs
         return os;
     }
 
-    template<typename T, typename StoreT>
-    std::tuple<struct File, struct gocpp::error> FS::FSImpl<T, StoreT>::vOpen(gocpp::string name)
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<struct File, struct gocpp::error> FS::FSImpl<T, TStore, TInterface>::vOpen(gocpp::string name)
     {
         return rec::Open(gocpp::PtrRecv<T, false>(value.get()), name);
     }
@@ -160,18 +160,18 @@ namespace golang::fs
         return os;
     }
 
-    template<typename T, typename StoreT>
-    std::tuple<struct FileInfo, struct gocpp::error> File::FileImpl<T, StoreT>::vStat()
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<struct FileInfo, struct gocpp::error> File::FileImpl<T, TStore, TInterface>::vStat()
     {
         return rec::Stat(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    std::tuple<int, struct gocpp::error> File::FileImpl<T, StoreT>::vRead(gocpp::slice<unsigned char> _1)
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<int, struct gocpp::error> File::FileImpl<T, TStore, TInterface>::vRead(gocpp::slice<unsigned char> _1)
     {
         return rec::Read(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
-    template<typename T, typename StoreT>
-    struct gocpp::error File::FileImpl<T, StoreT>::vClose()
+    template<typename T, typename TStore, typename TInterface>
+    struct gocpp::error File::FileImpl<T, TStore, TInterface>::vClose()
     {
         return rec::Close(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -240,23 +240,23 @@ namespace golang::fs
         return os;
     }
 
-    template<typename T, typename StoreT>
-    gocpp::string DirEntry::DirEntryImpl<T, StoreT>::vName()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string DirEntry::DirEntryImpl<T, TStore, TInterface>::vName()
     {
         return rec::Name(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    bool DirEntry::DirEntryImpl<T, StoreT>::vIsDir()
+    template<typename T, typename TStore, typename TInterface>
+    bool DirEntry::DirEntryImpl<T, TStore, TInterface>::vIsDir()
     {
         return rec::IsDir(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    fs::FileMode DirEntry::DirEntryImpl<T, StoreT>::vType()
+    template<typename T, typename TStore, typename TInterface>
+    fs::FileMode DirEntry::DirEntryImpl<T, TStore, TInterface>::vType()
     {
         return rec::Type(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    std::tuple<struct FileInfo, struct gocpp::error> DirEntry::DirEntryImpl<T, StoreT>::vInfo()
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<struct FileInfo, struct gocpp::error> DirEntry::DirEntryImpl<T, TStore, TInterface>::vInfo()
     {
         return rec::Info(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -337,8 +337,8 @@ namespace golang::fs
         return os;
     }
 
-    template<typename T, typename StoreT>
-    std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDirFile::ReadDirFileImpl<T, StoreT>::vReadDir(int n)
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDirFile::ReadDirFileImpl<T, TStore, TInterface>::vReadDir(int n)
     {
         return rec::ReadDir(gocpp::PtrRecv<T, false>(value.get()), n);
     }
@@ -353,6 +353,36 @@ namespace golang::fs
         std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::ObjRecv<struct ReadDirFile>& self, int n)
         {
             return self.obj.value->vReadDir(n);
+        }
+
+        gocpp::error Close(const gocpp::PtrRecv<struct ReadDirFile, false>& self)
+        {
+            return self.ptr->value->vClose();
+        }
+
+        gocpp::error Close(const gocpp::ObjRecv<struct ReadDirFile>& self)
+        {
+            return self.obj.value->vClose();
+        }
+
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadDirFile, false>& self, gocpp::slice<unsigned char> param0)
+        {
+            return self.ptr->value->vRead(param0);
+        }
+
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadDirFile>& self, gocpp::slice<unsigned char> param0)
+        {
+            return self.obj.value->vRead(param0);
+        }
+
+        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct ReadDirFile, false>& self)
+        {
+            return self.ptr->value->vStat();
+        }
+
+        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct ReadDirFile>& self)
+        {
+            return self.obj.value->vStat();
         }
     }
 
@@ -419,33 +449,33 @@ namespace golang::fs
         return os;
     }
 
-    template<typename T, typename StoreT>
-    gocpp::string FileInfo::FileInfoImpl<T, StoreT>::vName()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string FileInfo::FileInfoImpl<T, TStore, TInterface>::vName()
     {
         return rec::Name(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    int64_t FileInfo::FileInfoImpl<T, StoreT>::vSize()
+    template<typename T, typename TStore, typename TInterface>
+    int64_t FileInfo::FileInfoImpl<T, TStore, TInterface>::vSize()
     {
         return rec::Size(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    fs::FileMode FileInfo::FileInfoImpl<T, StoreT>::vMode()
+    template<typename T, typename TStore, typename TInterface>
+    fs::FileMode FileInfo::FileInfoImpl<T, TStore, TInterface>::vMode()
     {
         return rec::Mode(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    mocklib::Date FileInfo::FileInfoImpl<T, StoreT>::vModTime()
+    template<typename T, typename TStore, typename TInterface>
+    mocklib::Date FileInfo::FileInfoImpl<T, TStore, TInterface>::vModTime()
     {
         return rec::ModTime(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    bool FileInfo::FileInfoImpl<T, StoreT>::vIsDir()
+    template<typename T, typename TStore, typename TInterface>
+    bool FileInfo::FileInfoImpl<T, TStore, TInterface>::vIsDir()
     {
         return rec::IsDir(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    go_any FileInfo::FileInfoImpl<T, StoreT>::vSys()
+    template<typename T, typename TStore, typename TInterface>
+    go_any FileInfo::FileInfoImpl<T, TStore, TInterface>::vSys()
     {
         return rec::Sys(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -662,8 +692,8 @@ namespace golang::fs
             return os;
         }
 
-        template<typename T, typename StoreT>
-        bool gocpp_id_0::gocpp_id_0Impl<T, StoreT>::vTimeout()
+        template<typename T, typename TStore, typename TInterface>
+        bool gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vTimeout()
         {
             return rec::Timeout(gocpp::PtrRecv<T, false>(value.get()));
         }

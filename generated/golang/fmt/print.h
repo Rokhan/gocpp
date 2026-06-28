@@ -32,7 +32,7 @@ namespace golang::fmt
     extern gocpp::string badPrecString;
     extern gocpp::string noVerbString;
     extern gocpp::string invReflectString;
-    struct State : gocpp::Interface
+    struct State : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -69,8 +69,8 @@ namespace golang::fmt
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct StateImpl : IState
+        template<typename T, typename TStore, typename TInterface = IState>
+        struct StateImpl : virtual TInterface
         {
             explicit StateImpl(T* ptr)
             {
@@ -90,7 +90,7 @@ namespace golang::fmt
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IState> value;
@@ -112,7 +112,7 @@ namespace golang::fmt
     }
 
     std::ostream& operator<<(std::ostream& os, const struct State& value);
-    struct Formatter : gocpp::Interface
+    struct Formatter : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -142,8 +142,8 @@ namespace golang::fmt
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct FormatterImpl : IFormatter
+        template<typename T, typename TStore, typename TInterface = IFormatter>
+        struct FormatterImpl : virtual TInterface
         {
             explicit FormatterImpl(T* ptr)
             {
@@ -157,7 +157,7 @@ namespace golang::fmt
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IFormatter> value;
@@ -170,7 +170,7 @@ namespace golang::fmt
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Formatter& value);
-    struct Stringer : gocpp::Interface
+    struct Stringer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -200,8 +200,8 @@ namespace golang::fmt
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct StringerImpl : IStringer
+        template<typename T, typename TStore, typename TInterface = IStringer>
+        struct StringerImpl : virtual TInterface
         {
             explicit StringerImpl(T* ptr)
             {
@@ -215,7 +215,7 @@ namespace golang::fmt
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IStringer> value;
@@ -228,7 +228,7 @@ namespace golang::fmt
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Stringer& value);
-    struct GoStringer : gocpp::Interface
+    struct GoStringer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -258,8 +258,8 @@ namespace golang::fmt
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct GoStringerImpl : IGoStringer
+        template<typename T, typename TStore, typename TInterface = IGoStringer>
+        struct GoStringerImpl : virtual TInterface
         {
             explicit GoStringerImpl(T* ptr)
             {
@@ -273,7 +273,7 @@ namespace golang::fmt
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IGoStringer> value;

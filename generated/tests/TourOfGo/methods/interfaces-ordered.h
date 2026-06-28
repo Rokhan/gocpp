@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    struct Abser : gocpp::Interface
+    struct Abser : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -42,8 +42,8 @@ namespace golang::main
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct AbserImpl : IAbser
+        template<typename T, typename TStore, typename TInterface = IAbser>
+        struct AbserImpl : virtual TInterface
         {
             explicit AbserImpl(T* ptr)
             {
@@ -57,7 +57,7 @@ namespace golang::main
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IAbser> value;

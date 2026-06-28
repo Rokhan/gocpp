@@ -160,8 +160,8 @@ namespace golang::flate
         return os;
     }
 
-    template<typename T, typename StoreT>
-    struct gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
+    template<typename T, typename TStore, typename TInterface>
+    struct gocpp::error Resetter::ResetterImpl<T, TStore, TInterface>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
     {
         return rec::Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
     }
@@ -428,7 +428,27 @@ namespace golang::flate
 
 
     namespace rec
-    {    }
+    {
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct Reader, false>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.ptr->value->vRead(p);
+        }
+
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct Reader>& self, gocpp::slice<unsigned char> p)
+        {
+            return self.obj.value->vRead(p);
+        }
+
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct Reader, false>& self)
+        {
+            return self.ptr->value->vReadByte();
+        }
+
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct Reader>& self)
+        {
+            return self.obj.value->vReadByte();
+        }
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value)
     {

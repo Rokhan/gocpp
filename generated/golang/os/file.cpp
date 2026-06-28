@@ -628,7 +628,7 @@ namespace golang::os
     }
 
     // lstat is overridden in tests.
-    fs::FileInfo, gocpp::error> (gocpp::string)> lstat = Lstat;
+    std::function<std::tuple<fs::FileInfo, gocpp::error> (gocpp::string)> lstat = Lstat;
     // Rename renames (moves) oldpath to newpath.
     // If newpath already exists and is not a directory, Rename replaces it.
     // OS-specific restrictions may apply when oldpath and newpath are in different directories.
@@ -1076,7 +1076,7 @@ namespace golang::os
                 x.Err = err;
             }))};
         }
-        fs::DirEntry> entries;
+        gocpp::slice<fs::DirEntry> entries;
         std::tie(entries, err) = os::ReadDir(fullname);
         if(err != nullptr)
         {

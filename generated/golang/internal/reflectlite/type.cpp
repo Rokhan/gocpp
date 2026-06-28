@@ -85,58 +85,58 @@ namespace golang::reflectlite
         return os;
     }
 
-    template<typename T, typename StoreT>
-    gocpp::string Type::TypeImpl<T, StoreT>::vName()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string Type::TypeImpl<T, TStore, TInterface>::vName()
     {
         return rec::Name(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    gocpp::string Type::TypeImpl<T, StoreT>::vPkgPath()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string Type::TypeImpl<T, TStore, TInterface>::vPkgPath()
     {
         return rec::PkgPath(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    uintptr_t Type::TypeImpl<T, StoreT>::vSize()
+    template<typename T, typename TStore, typename TInterface>
+    uintptr_t Type::TypeImpl<T, TStore, TInterface>::vSize()
     {
         return rec::Size(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    reflectlite::Kind Type::TypeImpl<T, StoreT>::vKind()
+    template<typename T, typename TStore, typename TInterface>
+    reflectlite::Kind Type::TypeImpl<T, TStore, TInterface>::vKind()
     {
         return rec::Kind(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    bool Type::TypeImpl<T, StoreT>::vImplements(struct Type u)
+    template<typename T, typename TStore, typename TInterface>
+    bool Type::TypeImpl<T, TStore, TInterface>::vImplements(struct Type u)
     {
         return rec::Implements(gocpp::PtrRecv<T, false>(value.get()), u);
     }
-    template<typename T, typename StoreT>
-    bool Type::TypeImpl<T, StoreT>::vAssignableTo(struct Type u)
+    template<typename T, typename TStore, typename TInterface>
+    bool Type::TypeImpl<T, TStore, TInterface>::vAssignableTo(struct Type u)
     {
         return rec::AssignableTo(gocpp::PtrRecv<T, false>(value.get()), u);
     }
-    template<typename T, typename StoreT>
-    bool Type::TypeImpl<T, StoreT>::vComparable()
+    template<typename T, typename TStore, typename TInterface>
+    bool Type::TypeImpl<T, TStore, TInterface>::vComparable()
     {
         return rec::Comparable(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    gocpp::string Type::TypeImpl<T, StoreT>::vString()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string Type::TypeImpl<T, TStore, TInterface>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    struct Type Type::TypeImpl<T, StoreT>::vElem()
+    template<typename T, typename TStore, typename TInterface>
+    struct Type Type::TypeImpl<T, TStore, TInterface>::vElem()
     {
         return rec::Elem(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    abi::Type* Type::TypeImpl<T, StoreT>::vcommon()
+    template<typename T, typename TStore, typename TInterface>
+    abi::Type* Type::TypeImpl<T, TStore, TInterface>::vcommon()
     {
         return rec::common(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    reflectlite::uncommonType* Type::TypeImpl<T, StoreT>::vuncommon()
+    template<typename T, typename TStore, typename TInterface>
+    reflectlite::uncommonType* Type::TypeImpl<T, TStore, TInterface>::vuncommon()
     {
         return rec::uncommon(gocpp::PtrRecv<T, false>(value.get()));
     }

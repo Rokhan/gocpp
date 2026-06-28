@@ -21,7 +21,7 @@
 
 namespace golang::reflect
 {
-    struct Type : gocpp::Interface
+    struct Type : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -185,8 +185,8 @@ namespace golang::reflect
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct TypeImpl : IType
+        template<typename T, typename TStore, typename TInterface = IType>
+        struct TypeImpl : virtual TInterface
         {
             explicit TypeImpl(T* ptr)
             {
@@ -260,7 +260,7 @@ namespace golang::reflect
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IType> value;

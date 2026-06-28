@@ -14,7 +14,7 @@ namespace golang::main
 {
     void toto();
     int totoInt();
-    struct III : gocpp::Interface
+    struct III : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -44,8 +44,8 @@ namespace golang::main
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct IIIImpl : IIII
+        template<typename T, typename TStore, typename TInterface = IIII>
+        struct IIIImpl : virtual TInterface
         {
             explicit IIIImpl(T* ptr)
             {
@@ -59,7 +59,7 @@ namespace golang::main
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IIII> value;

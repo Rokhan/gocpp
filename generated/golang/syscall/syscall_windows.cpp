@@ -1027,8 +1027,8 @@ namespace golang::syscall
         return os;
     }
 
-    template<typename T, typename StoreT>
-    std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> Sockaddr::SockaddrImpl<T, StoreT>::vsockaddr()
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<gocpp::unsafe_pointer, int32_t, struct gocpp::error> Sockaddr::SockaddrImpl<T, TStore, TInterface>::vsockaddr()
     {
         return rec::sockaddr(gocpp::PtrRecv<T, false>(value.get()));
     }

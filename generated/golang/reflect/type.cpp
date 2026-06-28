@@ -114,158 +114,158 @@ namespace golang::reflect
         return os;
     }
 
-    template<typename T, typename StoreT>
-    int Type::TypeImpl<T, StoreT>::vAlign()
+    template<typename T, typename TStore, typename TInterface>
+    int Type::TypeImpl<T, TStore, TInterface>::vAlign()
     {
         return rec::Align(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    int Type::TypeImpl<T, StoreT>::vFieldAlign()
+    template<typename T, typename TStore, typename TInterface>
+    int Type::TypeImpl<T, TStore, TInterface>::vFieldAlign()
     {
         return rec::FieldAlign(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    struct Method Type::TypeImpl<T, StoreT>::vMethod(int _1)
+    template<typename T, typename TStore, typename TInterface>
+    struct Method Type::TypeImpl<T, TStore, TInterface>::vMethod(int _1)
     {
         return rec::Method(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
-    template<typename T, typename StoreT>
-    std::tuple<struct Method, bool> Type::TypeImpl<T, StoreT>::vMethodByName(gocpp::string _1)
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<struct Method, bool> Type::TypeImpl<T, TStore, TInterface>::vMethodByName(gocpp::string _1)
     {
         return rec::MethodByName(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
-    template<typename T, typename StoreT>
-    int Type::TypeImpl<T, StoreT>::vNumMethod()
+    template<typename T, typename TStore, typename TInterface>
+    int Type::TypeImpl<T, TStore, TInterface>::vNumMethod()
     {
         return rec::NumMethod(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    gocpp::string Type::TypeImpl<T, StoreT>::vName()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string Type::TypeImpl<T, TStore, TInterface>::vName()
     {
         return rec::Name(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    gocpp::string Type::TypeImpl<T, StoreT>::vPkgPath()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string Type::TypeImpl<T, TStore, TInterface>::vPkgPath()
     {
         return rec::PkgPath(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    uintptr_t Type::TypeImpl<T, StoreT>::vSize()
+    template<typename T, typename TStore, typename TInterface>
+    uintptr_t Type::TypeImpl<T, TStore, TInterface>::vSize()
     {
         return rec::Size(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    gocpp::string Type::TypeImpl<T, StoreT>::vString()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string Type::TypeImpl<T, TStore, TInterface>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    reflect::Kind Type::TypeImpl<T, StoreT>::vKind()
+    template<typename T, typename TStore, typename TInterface>
+    reflect::Kind Type::TypeImpl<T, TStore, TInterface>::vKind()
     {
         return rec::Kind(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    bool Type::TypeImpl<T, StoreT>::vImplements(struct Type u)
+    template<typename T, typename TStore, typename TInterface>
+    bool Type::TypeImpl<T, TStore, TInterface>::vImplements(struct Type u)
     {
         return rec::Implements(gocpp::PtrRecv<T, false>(value.get()), u);
     }
-    template<typename T, typename StoreT>
-    bool Type::TypeImpl<T, StoreT>::vAssignableTo(struct Type u)
+    template<typename T, typename TStore, typename TInterface>
+    bool Type::TypeImpl<T, TStore, TInterface>::vAssignableTo(struct Type u)
     {
         return rec::AssignableTo(gocpp::PtrRecv<T, false>(value.get()), u);
     }
-    template<typename T, typename StoreT>
-    bool Type::TypeImpl<T, StoreT>::vConvertibleTo(struct Type u)
+    template<typename T, typename TStore, typename TInterface>
+    bool Type::TypeImpl<T, TStore, TInterface>::vConvertibleTo(struct Type u)
     {
         return rec::ConvertibleTo(gocpp::PtrRecv<T, false>(value.get()), u);
     }
-    template<typename T, typename StoreT>
-    bool Type::TypeImpl<T, StoreT>::vComparable()
+    template<typename T, typename TStore, typename TInterface>
+    bool Type::TypeImpl<T, TStore, TInterface>::vComparable()
     {
         return rec::Comparable(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    int Type::TypeImpl<T, StoreT>::vBits()
+    template<typename T, typename TStore, typename TInterface>
+    int Type::TypeImpl<T, TStore, TInterface>::vBits()
     {
         return rec::Bits(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    reflect::ChanDir Type::TypeImpl<T, StoreT>::vChanDir()
+    template<typename T, typename TStore, typename TInterface>
+    reflect::ChanDir Type::TypeImpl<T, TStore, TInterface>::vChanDir()
     {
         return rec::ChanDir(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    bool Type::TypeImpl<T, StoreT>::vIsVariadic()
+    template<typename T, typename TStore, typename TInterface>
+    bool Type::TypeImpl<T, TStore, TInterface>::vIsVariadic()
     {
         return rec::IsVariadic(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    struct Type Type::TypeImpl<T, StoreT>::vElem()
+    template<typename T, typename TStore, typename TInterface>
+    struct Type Type::TypeImpl<T, TStore, TInterface>::vElem()
     {
         return rec::Elem(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    struct StructField Type::TypeImpl<T, StoreT>::vField(int i)
+    template<typename T, typename TStore, typename TInterface>
+    struct StructField Type::TypeImpl<T, TStore, TInterface>::vField(int i)
     {
         return rec::Field(gocpp::PtrRecv<T, false>(value.get()), i);
     }
-    template<typename T, typename StoreT>
-    struct StructField Type::TypeImpl<T, StoreT>::vFieldByIndex(gocpp::slice<int> index)
+    template<typename T, typename TStore, typename TInterface>
+    struct StructField Type::TypeImpl<T, TStore, TInterface>::vFieldByIndex(gocpp::slice<int> index)
     {
         return rec::FieldByIndex(gocpp::PtrRecv<T, false>(value.get()), index);
     }
-    template<typename T, typename StoreT>
-    std::tuple<struct StructField, bool> Type::TypeImpl<T, StoreT>::vFieldByName(gocpp::string name)
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<struct StructField, bool> Type::TypeImpl<T, TStore, TInterface>::vFieldByName(gocpp::string name)
     {
         return rec::FieldByName(gocpp::PtrRecv<T, false>(value.get()), name);
     }
-    template<typename T, typename StoreT>
-    std::tuple<struct StructField, bool> Type::TypeImpl<T, StoreT>::vFieldByNameFunc(std::function<bool (gocpp::string _1)> match)
+    template<typename T, typename TStore, typename TInterface>
+    std::tuple<struct StructField, bool> Type::TypeImpl<T, TStore, TInterface>::vFieldByNameFunc(std::function<bool (gocpp::string _1)> match)
     {
         return rec::FieldByNameFunc(gocpp::PtrRecv<T, false>(value.get()), match);
     }
-    template<typename T, typename StoreT>
-    struct Type Type::TypeImpl<T, StoreT>::vIn(int i)
+    template<typename T, typename TStore, typename TInterface>
+    struct Type Type::TypeImpl<T, TStore, TInterface>::vIn(int i)
     {
         return rec::In(gocpp::PtrRecv<T, false>(value.get()), i);
     }
-    template<typename T, typename StoreT>
-    struct Type Type::TypeImpl<T, StoreT>::vKey()
+    template<typename T, typename TStore, typename TInterface>
+    struct Type Type::TypeImpl<T, TStore, TInterface>::vKey()
     {
         return rec::Key(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    int Type::TypeImpl<T, StoreT>::vLen()
+    template<typename T, typename TStore, typename TInterface>
+    int Type::TypeImpl<T, TStore, TInterface>::vLen()
     {
         return rec::Len(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    int Type::TypeImpl<T, StoreT>::vNumField()
+    template<typename T, typename TStore, typename TInterface>
+    int Type::TypeImpl<T, TStore, TInterface>::vNumField()
     {
         return rec::NumField(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    int Type::TypeImpl<T, StoreT>::vNumIn()
+    template<typename T, typename TStore, typename TInterface>
+    int Type::TypeImpl<T, TStore, TInterface>::vNumIn()
     {
         return rec::NumIn(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    int Type::TypeImpl<T, StoreT>::vNumOut()
+    template<typename T, typename TStore, typename TInterface>
+    int Type::TypeImpl<T, TStore, TInterface>::vNumOut()
     {
         return rec::NumOut(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    struct Type Type::TypeImpl<T, StoreT>::vOut(int i)
+    template<typename T, typename TStore, typename TInterface>
+    struct Type Type::TypeImpl<T, TStore, TInterface>::vOut(int i)
     {
         return rec::Out(gocpp::PtrRecv<T, false>(value.get()), i);
     }
-    template<typename T, typename StoreT>
-    abi::Type* Type::TypeImpl<T, StoreT>::vcommon()
+    template<typename T, typename TStore, typename TInterface>
+    abi::Type* Type::TypeImpl<T, TStore, TInterface>::vcommon()
     {
         return rec::common(gocpp::PtrRecv<T, false>(value.get()));
     }
-    template<typename T, typename StoreT>
-    reflect::uncommonType* Type::TypeImpl<T, StoreT>::vuncommon()
+    template<typename T, typename TStore, typename TInterface>
+    reflect::uncommonType* Type::TypeImpl<T, TStore, TInterface>::vuncommon()
     {
         return rec::uncommon(gocpp::PtrRecv<T, false>(value.get()));
     }

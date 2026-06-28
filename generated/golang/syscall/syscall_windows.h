@@ -116,7 +116,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RawSockaddr& value);
-    struct Sockaddr : gocpp::Interface
+    struct Sockaddr : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -146,8 +146,8 @@ namespace golang::syscall
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct SockaddrImpl : ISockaddr
+        template<typename T, typename TStore, typename TInterface = ISockaddr>
+        struct SockaddrImpl : virtual TInterface
         {
             explicit SockaddrImpl(T* ptr)
             {
@@ -161,7 +161,7 @@ namespace golang::syscall
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<ISockaddr> value;

@@ -20,7 +20,7 @@
 
 namespace golang::binary
 {
-    struct ByteOrder : gocpp::Interface
+    struct ByteOrder : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -56,8 +56,8 @@ namespace golang::binary
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ByteOrderImpl : IByteOrder
+        template<typename T, typename TStore, typename TInterface = IByteOrder>
+        struct ByteOrderImpl : virtual TInterface
         {
             explicit ByteOrderImpl(T* ptr)
             {
@@ -83,7 +83,7 @@ namespace golang::binary
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IByteOrder> value;
@@ -114,7 +114,7 @@ namespace golang::binary
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ByteOrder& value);
-    struct AppendByteOrder : gocpp::Interface
+    struct AppendByteOrder : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -147,8 +147,8 @@ namespace golang::binary
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct AppendByteOrderImpl : IAppendByteOrder
+        template<typename T, typename TStore, typename TInterface = IAppendByteOrder>
+        struct AppendByteOrderImpl : virtual TInterface
         {
             explicit AppendByteOrderImpl(T* ptr)
             {
@@ -168,7 +168,7 @@ namespace golang::binary
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IAppendByteOrder> value;

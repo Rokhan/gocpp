@@ -13,7 +13,7 @@
 
 namespace golang::testlog
 {
-    struct Interface : gocpp::Interface
+    struct Interface : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -46,8 +46,8 @@ namespace golang::testlog
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct InterfaceImpl : IInterface
+        template<typename T, typename TStore, typename TInterface = IInterface>
+        struct InterfaceImpl : virtual TInterface
         {
             explicit InterfaceImpl(T* ptr)
             {
@@ -67,7 +67,7 @@ namespace golang::testlog
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IInterface> value;

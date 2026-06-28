@@ -13,7 +13,7 @@
 namespace golang::main
 {
     void main();
-    struct gocpp_id_0 : gocpp::Interface
+    struct gocpp_id_0 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -43,8 +43,8 @@ namespace golang::main
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct gocpp_id_0Impl : Igocpp_id_0
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_0>
+        struct gocpp_id_0Impl : virtual TInterface
         {
             explicit gocpp_id_0Impl(T* ptr)
             {
@@ -58,7 +58,7 @@ namespace golang::main
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Igocpp_id_0> value;

@@ -11,10 +11,11 @@
 
 namespace golang::cmp
 {
-    struct Ordered : gocpp::Interface
+    struct Ordered : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
+        /* Union type not implemented: ~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr | ~float32 | ~float64 | ~string */
 
         Ordered(){}
         Ordered(Ordered& i) = default;
@@ -40,8 +41,8 @@ namespace golang::cmp
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct OrderedImpl : IOrdered
+        template<typename T, typename TStore, typename TInterface = IOrdered>
+        struct OrderedImpl : virtual TInterface
         {
             explicit OrderedImpl(T* ptr)
             {
@@ -53,7 +54,7 @@ namespace golang::cmp
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IOrdered> value;

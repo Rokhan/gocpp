@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    struct Fetcher : gocpp::Interface
+    struct Fetcher : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -44,8 +44,8 @@ namespace golang::main
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct FetcherImpl : IFetcher
+        template<typename T, typename TStore, typename TInterface = IFetcher>
+        struct FetcherImpl : virtual TInterface
         {
             explicit FetcherImpl(T* ptr)
             {
@@ -59,7 +59,7 @@ namespace golang::main
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IFetcher> value;

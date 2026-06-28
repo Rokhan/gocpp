@@ -14,7 +14,7 @@
 
 namespace golang::fs
 {
-    struct FS : gocpp::Interface
+    struct FS : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -51,8 +51,8 @@ namespace golang::fs
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct FSImpl : IFS
+        template<typename T, typename TStore, typename TInterface = IFS>
+        struct FSImpl : virtual TInterface
         {
             explicit FSImpl(T* ptr)
             {
@@ -66,7 +66,7 @@ namespace golang::fs
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IFS> value;
@@ -80,7 +80,7 @@ namespace golang::fs
 
     std::ostream& operator<<(std::ostream& os, const struct FS& value);
     bool ValidPath(gocpp::string name);
-    struct File : gocpp::Interface
+    struct File : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -112,8 +112,8 @@ namespace golang::fs
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct FileImpl : IFile
+        template<typename T, typename TStore, typename TInterface = IFile>
+        struct FileImpl : virtual TInterface
         {
             explicit FileImpl(T* ptr)
             {
@@ -131,7 +131,7 @@ namespace golang::fs
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IFile> value;
@@ -150,7 +150,7 @@ namespace golang::fs
     }
 
     std::ostream& operator<<(std::ostream& os, const struct File& value);
-    struct DirEntry : gocpp::Interface
+    struct DirEntry : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -195,8 +195,8 @@ namespace golang::fs
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct DirEntryImpl : IDirEntry
+        template<typename T, typename TStore, typename TInterface = IDirEntry>
+        struct DirEntryImpl : virtual TInterface
         {
             explicit DirEntryImpl(T* ptr)
             {
@@ -216,7 +216,7 @@ namespace golang::fs
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IDirEntry> value;
@@ -238,7 +238,7 @@ namespace golang::fs
     }
 
     std::ostream& operator<<(std::ostream& os, const struct DirEntry& value);
-    struct ReadDirFile : gocpp::Interface
+    struct ReadDirFile : virtual gocpp::Interface, File
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -262,7 +262,7 @@ namespace golang::fs
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IReadDirFile
+        struct IReadDirFile: virtual File::IFile
         {
             // ReadDir reads the contents of the directory and returns
             // a slice of up to n DirEntry values in directory order.
@@ -281,10 +281,10 @@ namespace golang::fs
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReadDirFileImpl : IReadDirFile
+        template<typename T, typename TStore, typename TInterface = IReadDirFile>
+        struct ReadDirFileImpl : virtual TInterface, virtual File::FileImpl<T, TStore, TInterface>
         {
-            explicit ReadDirFileImpl(T* ptr)
+            explicit ReadDirFileImpl(T* ptr): File::FileImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -296,7 +296,7 @@ namespace golang::fs
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReadDirFile> value;
@@ -306,6 +306,15 @@ namespace golang::fs
     {
         std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::PtrRecv<struct ReadDirFile, false>& self, int n);
         std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(const gocpp::ObjRecv<struct ReadDirFile>& self, int n);
+
+        gocpp::error Close(const gocpp::PtrRecv<struct ReadDirFile, false>& self);
+        gocpp::error Close(const gocpp::ObjRecv<struct ReadDirFile>& self);
+
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadDirFile, false>& self, gocpp::slice<unsigned char> param0);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadDirFile>& self, gocpp::slice<unsigned char> param0);
+
+        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct ReadDirFile, false>& self);
+        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct ReadDirFile>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadDirFile& value);
@@ -319,7 +328,7 @@ namespace golang::fs
     struct gocpp::error errExist();
     struct gocpp::error errNotExist();
     struct gocpp::error errClosed();
-    struct FileInfo : gocpp::Interface
+    struct FileInfo : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -354,8 +363,8 @@ namespace golang::fs
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct FileInfoImpl : IFileInfo
+        template<typename T, typename TStore, typename TInterface = IFileInfo>
+        struct FileInfoImpl : virtual TInterface
         {
             explicit FileInfoImpl(T* ptr)
             {
@@ -379,7 +388,7 @@ namespace golang::fs
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IFileInfo> value;
@@ -425,7 +434,7 @@ namespace golang::fs
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PathError& value);
-    struct gocpp_id_0 : gocpp::Interface
+    struct gocpp_id_0 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -455,8 +464,8 @@ namespace golang::fs
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct gocpp_id_0Impl : Igocpp_id_0
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_0>
+        struct gocpp_id_0Impl : virtual TInterface
         {
             explicit gocpp_id_0Impl(T* ptr)
             {
@@ -470,7 +479,7 @@ namespace golang::fs
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Igocpp_id_0> value;

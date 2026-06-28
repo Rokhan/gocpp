@@ -33,7 +33,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Config& value);
-    struct Image : gocpp::Interface
+    struct Image : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -71,8 +71,8 @@ namespace golang::image
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ImageImpl : IImage
+        template<typename T, typename TStore, typename TInterface = IImage>
+        struct ImageImpl : virtual TInterface
         {
             explicit ImageImpl(T* ptr)
             {
@@ -90,7 +90,7 @@ namespace golang::image
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IImage> value;
@@ -109,7 +109,7 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Image& value);
-    struct RGBA64Image : gocpp::Interface
+    struct RGBA64Image : virtual gocpp::Interface, Image
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -133,7 +133,7 @@ namespace golang::image
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IRGBA64Image
+        struct IRGBA64Image: virtual Image::IImage
         {
             // RGBA64At returns the RGBA64 color of the pixel at (x, y). It is
             // equivalent to calling At(x, y).RGBA() and converting the resulting
@@ -143,10 +143,10 @@ namespace golang::image
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct RGBA64ImageImpl : IRGBA64Image
+        template<typename T, typename TStore, typename TInterface = IRGBA64Image>
+        struct RGBA64ImageImpl : virtual TInterface, virtual Image::ImageImpl<T, TStore, TInterface>
         {
-            explicit RGBA64ImageImpl(T* ptr)
+            explicit RGBA64ImageImpl(T* ptr): Image::ImageImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -158,7 +158,7 @@ namespace golang::image
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IRGBA64Image> value;
@@ -168,10 +168,19 @@ namespace golang::image
     {
         color::RGBA64 RGBA64At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int x, int y);
         color::RGBA64 RGBA64At(const gocpp::ObjRecv<struct RGBA64Image>& self, int x, int y);
+
+        color::Color At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int x, int y);
+        color::Color At(const gocpp::ObjRecv<struct RGBA64Image>& self, int x, int y);
+
+        Rectangle Bounds(const gocpp::PtrRecv<struct RGBA64Image, false>& self);
+        Rectangle Bounds(const gocpp::ObjRecv<struct RGBA64Image>& self);
+
+        color::Model ColorModel(const gocpp::PtrRecv<struct RGBA64Image, false>& self);
+        color::Model ColorModel(const gocpp::ObjRecv<struct RGBA64Image>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct RGBA64Image& value);
-    struct PalettedImage : gocpp::Interface
+    struct PalettedImage : virtual gocpp::Interface, Image
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -195,17 +204,17 @@ namespace golang::image
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IPalettedImage
+        struct IPalettedImage: virtual Image::IImage
         {
             // ColorIndexAt returns the palette index of the pixel at (x, y).
             virtual uint8_t vColorIndexAt(int x, int y) = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct PalettedImageImpl : IPalettedImage
+        template<typename T, typename TStore, typename TInterface = IPalettedImage>
+        struct PalettedImageImpl : virtual TInterface, virtual Image::ImageImpl<T, TStore, TInterface>
         {
-            explicit PalettedImageImpl(T* ptr)
+            explicit PalettedImageImpl(T* ptr): Image::ImageImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -217,7 +226,7 @@ namespace golang::image
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IPalettedImage> value;
@@ -227,6 +236,15 @@ namespace golang::image
     {
         uint8_t ColorIndexAt(const gocpp::PtrRecv<struct PalettedImage, false>& self, int x, int y);
         uint8_t ColorIndexAt(const gocpp::ObjRecv<struct PalettedImage>& self, int x, int y);
+
+        color::Color At(const gocpp::PtrRecv<struct PalettedImage, false>& self, int x, int y);
+        color::Color At(const gocpp::ObjRecv<struct PalettedImage>& self, int x, int y);
+
+        Rectangle Bounds(const gocpp::PtrRecv<struct PalettedImage, false>& self);
+        Rectangle Bounds(const gocpp::ObjRecv<struct PalettedImage>& self);
+
+        color::Model ColorModel(const gocpp::PtrRecv<struct PalettedImage, false>& self);
+        color::Model ColorModel(const gocpp::ObjRecv<struct PalettedImage>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct PalettedImage& value);

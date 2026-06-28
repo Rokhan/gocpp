@@ -78,8 +78,8 @@ namespace golang::os
         return os;
     }
 
-    template<typename T, typename StoreT>
-    bool timeout::timeoutImpl<T, StoreT>::vTimeout()
+    template<typename T, typename TStore, typename TInterface>
+    bool timeout::timeoutImpl<T, TStore, TInterface>::vTimeout()
     {
         return rec::Timeout(gocpp::PtrRecv<T, false>(value.get()));
     }

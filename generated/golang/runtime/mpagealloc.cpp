@@ -378,7 +378,7 @@ namespace golang::runtime
             if(p->chunks[rec::l1(gocpp::recv(c))] == nullptr)
             {
                 // Create the necessary l2 entry.
-                auto l2Size = gocpp::Sizeof<gocpp::array<runtime::pallocData, 8192>>();
+                auto l2Size = gocpp::Sizeof<gocpp::array<pallocData, 8192>>();
                 auto r = runtime::sysAlloc(l2Size, p->sysStat);
                 if(r == nullptr)
                 {
@@ -454,7 +454,7 @@ namespace golang::runtime
             {
                 // N.B. We can assume that p.chunks[i] is non-nil and in a mapped part of p.chunks
                 // because it's derived from inUse, which never shrinks.
-                sysHugePage(gocpp::unsafe_pointer(p->chunks[i]), gocpp::Sizeof<gocpp::array<runtime::pallocData, 8192>>());
+                sysHugePage(gocpp::unsafe_pointer(p->chunks[i]), gocpp::Sizeof<gocpp::array<pallocData, 8192>>());
             }
         }
     }

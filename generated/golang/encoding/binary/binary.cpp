@@ -97,38 +97,38 @@ namespace golang::binary
         return os;
     }
 
-    template<typename T, typename StoreT>
-    uint16_t ByteOrder::ByteOrderImpl<T, StoreT>::vUint16(gocpp::slice<unsigned char> _1)
+    template<typename T, typename TStore, typename TInterface>
+    uint16_t ByteOrder::ByteOrderImpl<T, TStore, TInterface>::vUint16(gocpp::slice<unsigned char> _1)
     {
         return rec::Uint16(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
-    template<typename T, typename StoreT>
-    uint32_t ByteOrder::ByteOrderImpl<T, StoreT>::vUint32(gocpp::slice<unsigned char> _1)
+    template<typename T, typename TStore, typename TInterface>
+    uint32_t ByteOrder::ByteOrderImpl<T, TStore, TInterface>::vUint32(gocpp::slice<unsigned char> _1)
     {
         return rec::Uint32(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
-    template<typename T, typename StoreT>
-    uint64_t ByteOrder::ByteOrderImpl<T, StoreT>::vUint64(gocpp::slice<unsigned char> _1)
+    template<typename T, typename TStore, typename TInterface>
+    uint64_t ByteOrder::ByteOrderImpl<T, TStore, TInterface>::vUint64(gocpp::slice<unsigned char> _1)
     {
         return rec::Uint64(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
-    template<typename T, typename StoreT>
-    void ByteOrder::ByteOrderImpl<T, StoreT>::vPutUint16(gocpp::slice<unsigned char> _1, uint16_t _2)
+    template<typename T, typename TStore, typename TInterface>
+    void ByteOrder::ByteOrderImpl<T, TStore, TInterface>::vPutUint16(gocpp::slice<unsigned char> _1, uint16_t _2)
     {
         return rec::PutUint16(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
-    template<typename T, typename StoreT>
-    void ByteOrder::ByteOrderImpl<T, StoreT>::vPutUint32(gocpp::slice<unsigned char> _1, uint32_t _2)
+    template<typename T, typename TStore, typename TInterface>
+    void ByteOrder::ByteOrderImpl<T, TStore, TInterface>::vPutUint32(gocpp::slice<unsigned char> _1, uint32_t _2)
     {
         return rec::PutUint32(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
-    template<typename T, typename StoreT>
-    void ByteOrder::ByteOrderImpl<T, StoreT>::vPutUint64(gocpp::slice<unsigned char> _1, uint64_t _2)
+    template<typename T, typename TStore, typename TInterface>
+    void ByteOrder::ByteOrderImpl<T, TStore, TInterface>::vPutUint64(gocpp::slice<unsigned char> _1, uint64_t _2)
     {
         return rec::PutUint64(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
-    template<typename T, typename StoreT>
-    gocpp::string ByteOrder::ByteOrderImpl<T, StoreT>::vString()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string ByteOrder::ByteOrderImpl<T, TStore, TInterface>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -239,23 +239,23 @@ namespace golang::binary
         return os;
     }
 
-    template<typename T, typename StoreT>
-    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vAppendUint16(gocpp::slice<unsigned char> _1, uint16_t _2)
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, TStore, TInterface>::vAppendUint16(gocpp::slice<unsigned char> _1, uint16_t _2)
     {
         return rec::AppendUint16(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
-    template<typename T, typename StoreT>
-    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vAppendUint32(gocpp::slice<unsigned char> _1, uint32_t _2)
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, TStore, TInterface>::vAppendUint32(gocpp::slice<unsigned char> _1, uint32_t _2)
     {
         return rec::AppendUint32(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
-    template<typename T, typename StoreT>
-    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vAppendUint64(gocpp::slice<unsigned char> _1, uint64_t _2)
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::slice<unsigned char> AppendByteOrder::AppendByteOrderImpl<T, TStore, TInterface>::vAppendUint64(gocpp::slice<unsigned char> _1, uint64_t _2)
     {
         return rec::AppendUint64(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
     }
-    template<typename T, typename StoreT>
-    gocpp::string AppendByteOrder::AppendByteOrderImpl<T, StoreT>::vString()
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string AppendByteOrder::AppendByteOrderImpl<T, TStore, TInterface>::vString()
     {
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }

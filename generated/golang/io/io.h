@@ -20,7 +20,7 @@ namespace golang::io
     extern gocpp::error go_EOF;
     extern gocpp::error ErrUnexpectedEOF;
     extern gocpp::error ErrNoProgress;
-    struct Reader : gocpp::Interface
+    struct Reader : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -50,8 +50,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReaderImpl : IReader
+        template<typename T, typename TStore, typename TInterface = IReader>
+        struct ReaderImpl : virtual TInterface
         {
             explicit ReaderImpl(T* ptr)
             {
@@ -65,7 +65,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReader> value;
@@ -78,7 +78,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
-    struct Writer : gocpp::Interface
+    struct Writer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -108,8 +108,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct WriterImpl : IWriter
+        template<typename T, typename TStore, typename TInterface = IWriter>
+        struct WriterImpl : virtual TInterface
         {
             explicit WriterImpl(T* ptr)
             {
@@ -123,7 +123,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IWriter> value;
@@ -136,7 +136,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
-    struct Closer : gocpp::Interface
+    struct Closer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -166,8 +166,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct CloserImpl : ICloser
+        template<typename T, typename TStore, typename TInterface = ICloser>
+        struct CloserImpl : virtual TInterface
         {
             explicit CloserImpl(T* ptr)
             {
@@ -181,7 +181,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<ICloser> value;
@@ -194,7 +194,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Closer& value);
-    struct Seeker : gocpp::Interface
+    struct Seeker : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -224,8 +224,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct SeekerImpl : ISeeker
+        template<typename T, typename TStore, typename TInterface = ISeeker>
+        struct SeekerImpl : virtual TInterface
         {
             explicit SeekerImpl(T* ptr)
             {
@@ -239,7 +239,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<ISeeker> value;
@@ -252,7 +252,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Seeker& value);
-    struct ReadWriter : gocpp::Interface
+    struct ReadWriter : virtual gocpp::Interface, Reader, Writer
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -276,15 +276,15 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IReadWriter
+        struct IReadWriter: virtual Reader::IReader, virtual Writer::IWriter
         {
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReadWriterImpl : IReadWriter
+        template<typename T, typename TStore, typename TInterface = IReadWriter>
+        struct ReadWriterImpl : virtual TInterface, virtual Reader::ReaderImpl<T, TStore, TInterface>, virtual Writer::WriterImpl<T, TStore, TInterface>
         {
-            explicit ReadWriterImpl(T* ptr)
+            explicit ReadWriterImpl(T* ptr): Reader::ReaderImpl<T, TStore, TInterface>(ptr), Writer::WriterImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -294,17 +294,23 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReadWriter> value;
     };
 
     namespace rec
-    {    }
+    {
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadWriter, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadWriter>& self, gocpp::slice<unsigned char> p);
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct ReadWriter, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct ReadWriter>& self, gocpp::slice<unsigned char> p);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadWriter& value);
-    struct ReadCloser : gocpp::Interface
+    struct ReadCloser : virtual gocpp::Interface, Reader, Closer
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -328,15 +334,15 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IReadCloser
+        struct IReadCloser: virtual Reader::IReader, virtual Closer::ICloser
         {
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReadCloserImpl : IReadCloser
+        template<typename T, typename TStore, typename TInterface = IReadCloser>
+        struct ReadCloserImpl : virtual TInterface, virtual Reader::ReaderImpl<T, TStore, TInterface>, virtual Closer::CloserImpl<T, TStore, TInterface>
         {
-            explicit ReadCloserImpl(T* ptr)
+            explicit ReadCloserImpl(T* ptr): Reader::ReaderImpl<T, TStore, TInterface>(ptr), Closer::CloserImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -346,17 +352,23 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReadCloser> value;
     };
 
     namespace rec
-    {    }
+    {
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadCloser, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadCloser>& self, gocpp::slice<unsigned char> p);
+
+        gocpp::error Close(const gocpp::PtrRecv<struct ReadCloser, false>& self);
+        gocpp::error Close(const gocpp::ObjRecv<struct ReadCloser>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadCloser& value);
-    struct WriteCloser : gocpp::Interface
+    struct WriteCloser : virtual gocpp::Interface, Writer, Closer
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -380,15 +392,15 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IWriteCloser
+        struct IWriteCloser: virtual Writer::IWriter, virtual Closer::ICloser
         {
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct WriteCloserImpl : IWriteCloser
+        template<typename T, typename TStore, typename TInterface = IWriteCloser>
+        struct WriteCloserImpl : virtual TInterface, virtual Writer::WriterImpl<T, TStore, TInterface>, virtual Closer::CloserImpl<T, TStore, TInterface>
         {
-            explicit WriteCloserImpl(T* ptr)
+            explicit WriteCloserImpl(T* ptr): Writer::WriterImpl<T, TStore, TInterface>(ptr), Closer::CloserImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -398,17 +410,23 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IWriteCloser> value;
     };
 
     namespace rec
-    {    }
+    {
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct WriteCloser, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct WriteCloser>& self, gocpp::slice<unsigned char> p);
+
+        gocpp::error Close(const gocpp::PtrRecv<struct WriteCloser, false>& self);
+        gocpp::error Close(const gocpp::ObjRecv<struct WriteCloser>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct WriteCloser& value);
-    struct ReadWriteCloser : gocpp::Interface
+    struct ReadWriteCloser : virtual gocpp::Interface, Reader, Writer, Closer
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -432,15 +450,15 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IReadWriteCloser
+        struct IReadWriteCloser: virtual Reader::IReader, virtual Writer::IWriter, virtual Closer::ICloser
         {
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReadWriteCloserImpl : IReadWriteCloser
+        template<typename T, typename TStore, typename TInterface = IReadWriteCloser>
+        struct ReadWriteCloserImpl : virtual TInterface, virtual Reader::ReaderImpl<T, TStore, TInterface>, virtual Writer::WriterImpl<T, TStore, TInterface>, virtual Closer::CloserImpl<T, TStore, TInterface>
         {
-            explicit ReadWriteCloserImpl(T* ptr)
+            explicit ReadWriteCloserImpl(T* ptr): Reader::ReaderImpl<T, TStore, TInterface>(ptr), Writer::WriterImpl<T, TStore, TInterface>(ptr), Closer::CloserImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -450,17 +468,26 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReadWriteCloser> value;
     };
 
     namespace rec
-    {    }
+    {
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadWriteCloser, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadWriteCloser>& self, gocpp::slice<unsigned char> p);
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct ReadWriteCloser, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct ReadWriteCloser>& self, gocpp::slice<unsigned char> p);
+
+        gocpp::error Close(const gocpp::PtrRecv<struct ReadWriteCloser, false>& self);
+        gocpp::error Close(const gocpp::ObjRecv<struct ReadWriteCloser>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadWriteCloser& value);
-    struct ReadSeeker : gocpp::Interface
+    struct ReadSeeker : virtual gocpp::Interface, Reader, Seeker
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -484,15 +511,15 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IReadSeeker
+        struct IReadSeeker: virtual Reader::IReader, virtual Seeker::ISeeker
         {
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReadSeekerImpl : IReadSeeker
+        template<typename T, typename TStore, typename TInterface = IReadSeeker>
+        struct ReadSeekerImpl : virtual TInterface, virtual Reader::ReaderImpl<T, TStore, TInterface>, virtual Seeker::SeekerImpl<T, TStore, TInterface>
         {
-            explicit ReadSeekerImpl(T* ptr)
+            explicit ReadSeekerImpl(T* ptr): Reader::ReaderImpl<T, TStore, TInterface>(ptr), Seeker::SeekerImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -502,17 +529,23 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReadSeeker> value;
     };
 
     namespace rec
-    {    }
+    {
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadSeeker, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadSeeker>& self, gocpp::slice<unsigned char> p);
+
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct ReadSeeker, false>& self, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct ReadSeeker>& self, int64_t offset, int whence);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadSeeker& value);
-    struct ReadSeekCloser : gocpp::Interface
+    struct ReadSeekCloser : virtual gocpp::Interface, Reader, Seeker, Closer
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -536,15 +569,15 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IReadSeekCloser
+        struct IReadSeekCloser: virtual Reader::IReader, virtual Seeker::ISeeker, virtual Closer::ICloser
         {
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReadSeekCloserImpl : IReadSeekCloser
+        template<typename T, typename TStore, typename TInterface = IReadSeekCloser>
+        struct ReadSeekCloserImpl : virtual TInterface, virtual Reader::ReaderImpl<T, TStore, TInterface>, virtual Seeker::SeekerImpl<T, TStore, TInterface>, virtual Closer::CloserImpl<T, TStore, TInterface>
         {
-            explicit ReadSeekCloserImpl(T* ptr)
+            explicit ReadSeekCloserImpl(T* ptr): Reader::ReaderImpl<T, TStore, TInterface>(ptr), Seeker::SeekerImpl<T, TStore, TInterface>(ptr), Closer::CloserImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -554,17 +587,26 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReadSeekCloser> value;
     };
 
     namespace rec
-    {    }
+    {
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadSeekCloser, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadSeekCloser>& self, gocpp::slice<unsigned char> p);
+
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct ReadSeekCloser, false>& self, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct ReadSeekCloser>& self, int64_t offset, int whence);
+
+        gocpp::error Close(const gocpp::PtrRecv<struct ReadSeekCloser, false>& self);
+        gocpp::error Close(const gocpp::ObjRecv<struct ReadSeekCloser>& self);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadSeekCloser& value);
-    struct WriteSeeker : gocpp::Interface
+    struct WriteSeeker : virtual gocpp::Interface, Writer, Seeker
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -588,15 +630,15 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IWriteSeeker
+        struct IWriteSeeker: virtual Writer::IWriter, virtual Seeker::ISeeker
         {
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct WriteSeekerImpl : IWriteSeeker
+        template<typename T, typename TStore, typename TInterface = IWriteSeeker>
+        struct WriteSeekerImpl : virtual TInterface, virtual Writer::WriterImpl<T, TStore, TInterface>, virtual Seeker::SeekerImpl<T, TStore, TInterface>
         {
-            explicit WriteSeekerImpl(T* ptr)
+            explicit WriteSeekerImpl(T* ptr): Writer::WriterImpl<T, TStore, TInterface>(ptr), Seeker::SeekerImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -606,17 +648,23 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IWriteSeeker> value;
     };
 
     namespace rec
-    {    }
+    {
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct WriteSeeker, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct WriteSeeker>& self, gocpp::slice<unsigned char> p);
+
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct WriteSeeker, false>& self, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct WriteSeeker>& self, int64_t offset, int whence);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct WriteSeeker& value);
-    struct ReadWriteSeeker : gocpp::Interface
+    struct ReadWriteSeeker : virtual gocpp::Interface, Reader, Writer, Seeker
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -640,15 +688,15 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IReadWriteSeeker
+        struct IReadWriteSeeker: virtual Reader::IReader, virtual Writer::IWriter, virtual Seeker::ISeeker
         {
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReadWriteSeekerImpl : IReadWriteSeeker
+        template<typename T, typename TStore, typename TInterface = IReadWriteSeeker>
+        struct ReadWriteSeekerImpl : virtual TInterface, virtual Reader::ReaderImpl<T, TStore, TInterface>, virtual Writer::WriterImpl<T, TStore, TInterface>, virtual Seeker::SeekerImpl<T, TStore, TInterface>
         {
-            explicit ReadWriteSeekerImpl(T* ptr)
+            explicit ReadWriteSeekerImpl(T* ptr): Reader::ReaderImpl<T, TStore, TInterface>(ptr), Writer::WriterImpl<T, TStore, TInterface>(ptr), Seeker::SeekerImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -658,17 +706,26 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReadWriteSeeker> value;
     };
 
     namespace rec
-    {    }
+    {
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadWriteSeeker, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadWriteSeeker>& self, gocpp::slice<unsigned char> p);
+
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct ReadWriteSeeker, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct ReadWriteSeeker>& self, gocpp::slice<unsigned char> p);
+
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct ReadWriteSeeker, false>& self, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct ReadWriteSeeker>& self, int64_t offset, int whence);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadWriteSeeker& value);
-    struct ReaderFrom : gocpp::Interface
+    struct ReaderFrom : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -698,8 +755,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReaderFromImpl : IReaderFrom
+        template<typename T, typename TStore, typename TInterface = IReaderFrom>
+        struct ReaderFromImpl : virtual TInterface
         {
             explicit ReaderFromImpl(T* ptr)
             {
@@ -713,7 +770,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReaderFrom> value;
@@ -726,7 +783,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ReaderFrom& value);
-    struct WriterTo : gocpp::Interface
+    struct WriterTo : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -756,8 +813,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct WriterToImpl : IWriterTo
+        template<typename T, typename TStore, typename TInterface = IWriterTo>
+        struct WriterToImpl : virtual TInterface
         {
             explicit WriterToImpl(T* ptr)
             {
@@ -771,7 +828,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IWriterTo> value;
@@ -784,7 +841,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct WriterTo& value);
-    struct ReaderAt : gocpp::Interface
+    struct ReaderAt : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -814,8 +871,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ReaderAtImpl : IReaderAt
+        template<typename T, typename TStore, typename TInterface = IReaderAt>
+        struct ReaderAtImpl : virtual TInterface
         {
             explicit ReaderAtImpl(T* ptr)
             {
@@ -829,7 +886,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IReaderAt> value;
@@ -842,7 +899,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ReaderAt& value);
-    struct WriterAt : gocpp::Interface
+    struct WriterAt : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -872,8 +929,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct WriterAtImpl : IWriterAt
+        template<typename T, typename TStore, typename TInterface = IWriterAt>
+        struct WriterAtImpl : virtual TInterface
         {
             explicit WriterAtImpl(T* ptr)
             {
@@ -887,7 +944,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IWriterAt> value;
@@ -900,7 +957,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct WriterAt& value);
-    struct ByteReader : gocpp::Interface
+    struct ByteReader : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -930,8 +987,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ByteReaderImpl : IByteReader
+        template<typename T, typename TStore, typename TInterface = IByteReader>
+        struct ByteReaderImpl : virtual TInterface
         {
             explicit ByteReaderImpl(T* ptr)
             {
@@ -945,7 +1002,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IByteReader> value;
@@ -958,7 +1015,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ByteReader& value);
-    struct ByteScanner : gocpp::Interface
+    struct ByteScanner : virtual gocpp::Interface, ByteReader
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -982,16 +1039,16 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IByteScanner
+        struct IByteScanner: virtual ByteReader::IByteReader
         {
             virtual struct gocpp::error vUnreadByte() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ByteScannerImpl : IByteScanner
+        template<typename T, typename TStore, typename TInterface = IByteScanner>
+        struct ByteScannerImpl : virtual TInterface, virtual ByteReader::ByteReaderImpl<T, TStore, TInterface>
         {
-            explicit ByteScannerImpl(T* ptr)
+            explicit ByteScannerImpl(T* ptr): ByteReader::ByteReaderImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -1003,7 +1060,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IByteScanner> value;
@@ -1013,10 +1070,13 @@ namespace golang::io
     {
         struct gocpp::error UnreadByte(const gocpp::PtrRecv<struct ByteScanner, false>& self);
         struct gocpp::error UnreadByte(const gocpp::ObjRecv<struct ByteScanner>& self);
+
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct ByteScanner, false>& self);
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct ByteScanner>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ByteScanner& value);
-    struct ByteWriter : gocpp::Interface
+    struct ByteWriter : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -1046,8 +1106,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct ByteWriterImpl : IByteWriter
+        template<typename T, typename TStore, typename TInterface = IByteWriter>
+        struct ByteWriterImpl : virtual TInterface
         {
             explicit ByteWriterImpl(T* ptr)
             {
@@ -1061,7 +1121,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IByteWriter> value;
@@ -1074,7 +1134,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ByteWriter& value);
-    struct RuneReader : gocpp::Interface
+    struct RuneReader : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -1104,8 +1164,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct RuneReaderImpl : IRuneReader
+        template<typename T, typename TStore, typename TInterface = IRuneReader>
+        struct RuneReaderImpl : virtual TInterface
         {
             explicit RuneReaderImpl(T* ptr)
             {
@@ -1119,7 +1179,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IRuneReader> value;
@@ -1132,7 +1192,7 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct RuneReader& value);
-    struct RuneScanner : gocpp::Interface
+    struct RuneScanner : virtual gocpp::Interface, RuneReader
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -1156,16 +1216,16 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IRuneScanner
+        struct IRuneScanner: virtual RuneReader::IRuneReader
         {
             virtual struct gocpp::error vUnreadRune() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct RuneScannerImpl : IRuneScanner
+        template<typename T, typename TStore, typename TInterface = IRuneScanner>
+        struct RuneScannerImpl : virtual TInterface, virtual RuneReader::RuneReaderImpl<T, TStore, TInterface>
         {
-            explicit RuneScannerImpl(T* ptr)
+            explicit RuneScannerImpl(T* ptr): RuneReader::RuneReaderImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -1177,7 +1237,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IRuneScanner> value;
@@ -1187,10 +1247,13 @@ namespace golang::io
     {
         struct gocpp::error UnreadRune(const gocpp::PtrRecv<struct RuneScanner, false>& self);
         struct gocpp::error UnreadRune(const gocpp::ObjRecv<struct RuneScanner>& self);
+
+        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct RuneScanner, false>& self);
+        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct RuneScanner>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct RuneScanner& value);
-    struct StringWriter : gocpp::Interface
+    struct StringWriter : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -1220,8 +1283,8 @@ namespace golang::io
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct StringWriterImpl : IStringWriter
+        template<typename T, typename TStore, typename TInterface = IStringWriter>
+        struct StringWriterImpl : virtual TInterface
         {
             explicit StringWriterImpl(T* ptr)
             {
@@ -1235,7 +1298,7 @@ namespace golang::io
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IStringWriter> value;
@@ -1368,6 +1431,12 @@ namespace golang::io
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    namespace rec
+    {
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct nopCloser, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct nopCloser>& self, gocpp::slice<unsigned char> p);
+    }
+
     std::ostream& operator<<(std::ostream& os, const struct nopCloser& value);
     struct nopCloserWriterTo
     {
@@ -1383,6 +1452,12 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    namespace rec
+    {
+        std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct nopCloserWriterTo, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct nopCloserWriterTo>& self, gocpp::slice<unsigned char> p);
+    }
 
     std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value);
 

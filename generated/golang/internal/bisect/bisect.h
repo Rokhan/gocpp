@@ -50,7 +50,7 @@ namespace golang::bisect
     std::ostream& operator<<(std::ostream& os, const struct cond& value);
     struct gocpp::error printFileLine(struct Writer w, uint64_t h, gocpp::string file, int line);
     gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, gocpp::string file, int line);
-    struct Writer : gocpp::Interface
+    struct Writer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -80,8 +80,8 @@ namespace golang::bisect
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct WriterImpl : IWriter
+        template<typename T, typename TStore, typename TInterface = IWriter>
+        struct WriterImpl : virtual TInterface
         {
             explicit WriterImpl(T* ptr)
             {
@@ -95,7 +95,7 @@ namespace golang::bisect
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IWriter> value;

@@ -125,8 +125,8 @@ namespace golang::zlib
         return os;
     }
 
-    template<typename T, typename StoreT>
-    struct gocpp::error Resetter::ResetterImpl<T, StoreT>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
+    template<typename T, typename TStore, typename TInterface>
+    struct gocpp::error Resetter::ResetterImpl<T, TStore, TInterface>::vReset(io::Reader r, gocpp::slice<unsigned char> dict)
     {
         return rec::Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
     }

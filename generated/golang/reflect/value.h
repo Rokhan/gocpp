@@ -135,7 +135,7 @@ namespace golang::reflect
     uintptr_t align(uintptr_t x, uintptr_t n);
     void callMethod(struct methodValue* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs);
     gocpp::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value> _1)> f);
-    struct gocpp_id_5 : gocpp::Interface
+    struct gocpp_id_5 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -165,8 +165,8 @@ namespace golang::reflect
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct gocpp_id_5Impl : Igocpp_id_5
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_5>
+        struct gocpp_id_5Impl : virtual TInterface
         {
             explicit gocpp_id_5Impl(T* ptr)
             {
@@ -180,7 +180,7 @@ namespace golang::reflect
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Igocpp_id_5> value;
@@ -195,7 +195,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
     extern abi::Type* uint8Type;
     go_any valueInterface(struct Value v, bool safe);
-    struct gocpp_id_6 : gocpp::Interface
+    struct gocpp_id_6 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -225,8 +225,8 @@ namespace golang::reflect
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct gocpp_id_6Impl : Igocpp_id_6
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_6>
+        struct gocpp_id_6Impl : virtual TInterface
         {
             explicit gocpp_id_6Impl(T* ptr)
             {
@@ -240,7 +240,7 @@ namespace golang::reflect
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Igocpp_id_6> value;

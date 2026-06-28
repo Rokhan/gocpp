@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    struct Abser : gocpp::Interface
+    struct Abser : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -42,8 +42,8 @@ namespace golang::main
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct AbserImpl : IAbser
+        template<typename T, typename TStore, typename TInterface = IAbser>
+        struct AbserImpl : virtual TInterface
         {
             explicit AbserImpl(T* ptr)
             {
@@ -57,7 +57,7 @@ namespace golang::main
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<IAbser> value;
@@ -70,7 +70,204 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Abser& value);
-    struct dummy : gocpp::Interface
+    struct Adder : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        Adder(){}
+        Adder(Adder& i) = default;
+        Adder(const Adder& i) = default;
+        Adder& operator=(Adder& i) = default;
+        Adder& operator=(const Adder& i) = default;
+
+        template<typename T>
+        Adder(T& ref);
+
+        template<typename T>
+        Adder(const T& ref);
+
+        template<typename T>
+        Adder(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IAdder
+        {
+            virtual void vAdd(int f) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IAdder>
+        struct AdderImpl : virtual TInterface
+        {
+            explicit AdderImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            void vAdd(int f) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        std::shared_ptr<IAdder> value;
+    };
+
+    namespace rec
+    {
+        void Add(const gocpp::PtrRecv<struct Adder, false>& self, int f);
+        void Add(const gocpp::ObjRecv<struct Adder>& self, int f);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Adder& value);
+    struct Multiplier : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        Multiplier(){}
+        Multiplier(Multiplier& i) = default;
+        Multiplier(const Multiplier& i) = default;
+        Multiplier& operator=(Multiplier& i) = default;
+        Multiplier& operator=(const Multiplier& i) = default;
+
+        template<typename T>
+        Multiplier(T& ref);
+
+        template<typename T>
+        Multiplier(const T& ref);
+
+        template<typename T>
+        Multiplier(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IMultiplier
+        {
+            virtual void vMul(int f) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IMultiplier>
+        struct MultiplierImpl : virtual TInterface
+        {
+            explicit MultiplierImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            void vMul(int f) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        std::shared_ptr<IMultiplier> value;
+    };
+
+    namespace rec
+    {
+        void Mul(const gocpp::PtrRecv<struct Multiplier, false>& self, int f);
+        void Mul(const gocpp::ObjRecv<struct Multiplier>& self, int f);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Multiplier& value);
+    struct MultAdder : virtual gocpp::Interface, Adder, Multiplier
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        MultAdder(){}
+        MultAdder(MultAdder& i) = default;
+        MultAdder(const MultAdder& i) = default;
+        MultAdder& operator=(MultAdder& i) = default;
+        MultAdder& operator=(const MultAdder& i) = default;
+
+        template<typename T>
+        MultAdder(T& ref);
+
+        template<typename T>
+        MultAdder(const T& ref);
+
+        template<typename T>
+        MultAdder(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IMultAdder: virtual Adder::IAdder, virtual Multiplier::IMultiplier
+        {
+            virtual void vPrint() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IMultAdder>
+        struct MultAdderImpl : virtual TInterface, virtual Adder::AdderImpl<T, TStore, TInterface>, virtual Multiplier::MultiplierImpl<T, TStore, TInterface>
+        {
+            explicit MultAdderImpl(T* ptr): Adder::AdderImpl<T, TStore, TInterface>(ptr), Multiplier::MultiplierImpl<T, TStore, TInterface>(ptr)
+            {
+                value.reset(ptr);
+            }
+
+            void vPrint() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        std::shared_ptr<IMultAdder> value;
+    };
+
+    namespace rec
+    {
+        void Print(const gocpp::PtrRecv<struct MultAdder, false>& self);
+        void Print(const gocpp::ObjRecv<struct MultAdder>& self);
+
+        void Add(const gocpp::PtrRecv<struct MultAdder, false>& self, int f);
+        void Add(const gocpp::ObjRecv<struct MultAdder>& self, int f);
+
+        void Mul(const gocpp::PtrRecv<struct MultAdder, false>& self, int f);
+        void Mul(const gocpp::ObjRecv<struct MultAdder>& self, int f);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct MultAdder& value);
+    struct num
+    {
+        int value;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct num& value);
+    void testAddMul();
+    struct dummy : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -100,8 +297,8 @@ namespace golang::main
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename StoreT>
-        struct dummyImpl : Idummy
+        template<typename T, typename TStore, typename TInterface = Idummy>
+        struct dummyImpl : virtual TInterface
         {
             explicit dummyImpl(T* ptr)
             {
@@ -115,7 +312,7 @@ namespace golang::main
                 return value.get();
             }
 
-            StoreT value;
+            TStore value;
         };
 
         std::shared_ptr<Idummy> value;
@@ -149,6 +346,9 @@ namespace golang::main
 
     namespace rec
     {
+        void Add(golang::main::num* n, int f);
+        void Mul(golang::main::num* n, int f);
+        void Print(golang::main::num* n);
         double Abs(golang::main::MyFloat f);
         double Abs(golang::main::Vertex* v);
     }

@@ -117,6 +117,23 @@ func (cv *parsingInfos) IsExprArray(expr ast.Expr) bool {
 	}
 }
 
+func (cv *parsingInfos) IsExprInterface(expr ast.Expr) bool {
+	goType := cv.convertExprToType(expr)
+
+	for {
+		switch t := goType.(type) {
+		case *types.Interface:
+			return true
+
+		case *types.Named:
+			goType = t.Underlying()
+
+		default:
+			return false
+		}
+	}
+}
+
 func (cv *parsingInfos) IsSelectorExprSignature(expr *ast.SelectorExpr) (isFunc bool, hasReceiv bool, nbPrams int) {
 	exprGoType := cv.convertExprToType(expr)
 	selectorGoType := cv.typeInfo.TypeOf(expr.Sel)

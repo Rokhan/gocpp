@@ -296,7 +296,7 @@ func (cv *cppConverter) isAmbiguousName(name string) bool {
 // Get the cpp type parameters from an expression
 func (cv *cppConverter) GetCppTypeParameters(expr ast.Expr) []string {
 	goTypes := cv.GetExprTypeParameters(expr)
-	cppTypes := convertGoToCppTypes(goTypes, cv.Position(expr))
+	cppTypes := convertGoToCppTypes(goTypes, cv.namespace, cv.Position(expr))
 	cppTypes = cv.convertNamespaces(cppTypes)
 	return cppTypes
 }
@@ -958,11 +958,17 @@ func (cv *cppConverter) ignoreKnownError(funcName string, knownErrors []*errorFi
 	return false
 }
 
-func (cv *cppConverter) readFields(fields *ast.FieldList) (params typeNames) {
-	return cv.readFieldsCtx(fields, ctContext{})
+func (cv *cppConverter) readFields(fields *ast.FieldList) (fieldInfo typeNames) {
+	fieldInfo, _ = cv.readFieldsAndParentsCtx(fields, ctContext{})
+	return
 }
 
-func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (params typeNames) {
+func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (fieldInfo typeNames) {
+	fieldInfo, _ = cv.readFieldsAndParentsCtx(fields, ctx)
+	return
+}
+
+func (cv *cppConverter) readFieldsAndParentsCtx(fields *ast.FieldList, ctx ctContext) (fieldInfo typeNames, pts parentTypes) {
 	if fields == nil {
 		return
 	}
@@ -979,6 +985,12 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 		param.doc = field.Doc
 		param.comment = field.Comment
 		param.Type = cv.convertTypeExpr(field.Type, ctx)
+		if len(field.Names) == 0 && cv.IsExprInterface(field.Type) {
+			newPt, err := cv.convertInterfaceField(field.Type)
+			if err == nil {
+				pts = append(pts, newPt)
+			}
+		}
 		if len(field.Names) == 0 && ctx.ensureHasTypeName {
 			newName := param.Type.getTypeBasedName()
 			param.names = append(param.names, newName)
@@ -986,7 +998,7 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 		if len(field.Names) == 0 && ctx.ensureHasBlankName {
 			param.names = append(param.names, "_")
 		}
-		params = append(params, param)
+		fieldInfo = append(fieldInfo, param)
 		for _, name := range param.names {
 			cv.declareVar(name, false)
 		}
@@ -994,8 +1006,8 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 	cv.endScope()
 
 	counter := 1
-	for i := range params {
-		for j, cppName := range params[i].names {
+	for i := range fieldInfo {
+		for j, cppName := range fieldInfo[i].names {
 			if cppName != "_" {
 				continue
 			}
@@ -1003,7 +1015,7 @@ func (cv *cppConverter) readFieldsCtx(fields *ast.FieldList, ctx ctContext) (par
 				newName := fmt.Sprintf("_%d", counter)
 				counter++
 				if !usedNames[newName] {
-					params[i].names[j] = newName
+					fieldInfo[i].names[j] = newName
 					usedNames[newName] = true
 					break
 				}
@@ -1019,9 +1031,43 @@ type method struct {
 	result string
 	commentInfo
 	params typeNames
+	parent *parentType
 }
 
-func (cv *cppConverter) readMethods(fields *ast.FieldList, ctx ctContext) (methods []method) {
+type parentType struct {
+	namespace string
+	name      string
+	nodeType  types.Type
+}
+
+type parentTypes []parentType
+
+func (pt parentType) String() string {
+	if pt.namespace == "" {
+		return pt.name
+	}
+	return fmt.Sprintf("%s::%s", pt.namespace, pt.name)
+}
+
+// NB: First implicit param in format is parentType::name
+func (pt parentType) Format(format string, params ...any) string {
+	if pt.namespace == "" {
+		tmpParams := append([]any{pt.name}, params...)
+		return fmt.Sprintf(format, tmpParams...)
+	}
+	return fmt.Sprintf("%s::%s", pt.namespace, fmt.Sprintf(format, pt.name))
+}
+
+// NB: First implicit param in format is parentType::name
+func (pts parentTypes) Format(format string, params ...any) []string {
+	var strs []string
+	for _, pt := range pts {
+		strs = append(strs, pt.Format(format, params...))
+	}
+	return strs
+}
+
+func (cv *cppConverter) readMethods(fields *ast.FieldList, ctx ctContext) (methods []method, pts parentTypes, errors []error) {
 	if fields == nil {
 		return
 	}
@@ -1029,7 +1075,83 @@ func (cv *cppConverter) readMethods(fields *ast.FieldList, ctx ctContext) (metho
 	for _, field := range fields.List {
 		for _, name := range field.Names {
 			outPrm, inPrm := cv.convertMethodExpr(field.Type, ctx)
-			methods = append(methods, method{GetCppName(name.Name), outPrm, commentInfo{field.Doc, field.Comment}, inPrm})
+			methods = append(methods, method{GetCppName(name.Name), outPrm, commentInfo{field.Doc, field.Comment}, inPrm, nil})
+		}
+		if field.Names == nil {
+			newPt, err := cv.convertInterfaceField(field.Type)
+			if err == nil {
+				pts = append(pts, newPt)
+			} else {
+				errors = append(errors, err)
+			}
+		}
+	}
+	return
+}
+
+func (cv *cppConverter) parentMethods(pts parentTypes) (methods []method) {
+	for _, pt := range pts {
+		if pt.nodeType == nil {
+			continue
+		}
+		methods = append(methods, cv.parentMethod(pt)...)
+	}
+	return
+}
+
+func (cv *cppConverter) parentMethod(pt parentType) (methods []method) {
+	// Get the underlying type (handle named types that wrap interfaces)
+	baseType := pt.nodeType
+	if named, ok := pt.nodeType.(*types.Named); ok {
+		baseType = named.Underlying()
+	}
+
+	// Extract methods from interface types
+	if iface, ok := baseType.(*types.Interface); ok {
+		for i := 0; i < iface.NumMethods(); i++ {
+			methodObj := iface.Method(i)
+			sig, ok := methodObj.Type().(*types.Signature)
+			if !ok {
+				continue
+			}
+
+			// Convert signature results to outType string
+			var resultTypes []outType
+			if sig.Results() != nil {
+				for j := 0; j < sig.Results().Len(); j++ {
+					resultTypes = append(resultTypes, outType{
+						str:       cv.convertGoToCppType(sig.Results().At(j).Type(), token.Position{}),
+						isStruct:  false,
+						typenames: nil,
+					})
+				}
+			}
+			resultTypeStr := buildOutType(resultTypes, nil)
+
+			// Convert signature params to typeNames
+			var params typeNames
+			if sig.Params() != nil {
+				for j := 0; j < sig.Params().Len(); j++ {
+					param := sig.Params().At(j)
+					paramName := param.Name()
+					if paramName == "" {
+						paramName = fmt.Sprintf("param%d", j)
+					}
+					paramType := cv.convertGoToCppType(param.Type(), token.Position{})
+					params = append(params, typeName{
+						names: []string{paramName},
+						Type:  mkCppType(paramType, nil),
+					})
+				}
+			}
+
+			methods = append(methods, method{
+				name:        GetCppName(methodObj.Name()),
+				result:      resultTypeStr,
+				commentInfo: commentInfo{nil, nil},
+				params:      params,
+				parent:      &pt,
+			})
 		}
 	}
 	return
@@ -2741,6 +2863,31 @@ func (cv *cppConverter) convertMethodExpr(node ast.Expr, ctx ctContext) (string,
 	}
 }
 
+func (cv *cppConverter) convertInterfaceField(node ast.Expr) (pt parentType, err error) {
+	if node == nil {
+		panic("node is nil")
+	}
+
+	nodeType := cv.typeInfo.Types[node].Type
+
+	switch n := node.(type) {
+	case *ast.Ident:
+		return parentType{"", n.Name, nodeType}, nil
+	case *ast.SelectorExpr:
+		return parentType{cv.convertExpr(n.X).str, n.Sel.Name, nodeType}, nil
+	case *ast.BinaryExpr:
+		if n.Op == token.OR {
+			return parentType{}, fmt.Errorf("Union type not implemented: %s", types.ExprString(n))
+		} else {
+			cv.Panicf("convertInterfaceField, unmanaged token%s, type %T, position %v", n.Op, n, cv.Position(n))
+		}
+	default:
+		cv.Panicf("convertInterfaceField, unmanaged type %T, position %v", n, cv.Position(n))
+	}
+
+	panic("convertExprCppType, bug, unreacheable code reached !")
+}
+
 func (cv *cppConverter) convertArrayTypeExpr(node *ast.ArrayType, ctx ctContext) cppType {
 	elt := cv.convertTypeExpr(node.Elt, ctx)
 
@@ -2867,15 +3014,15 @@ func convertInlinedComment(comment *ast.CommentGroup, indent string) string {
 
 func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms map[string][]string, param genStructParam) (cppStruct string, places []place) {
 	buf := new(bytes.Buffer)
-	fields := cv.readFieldsCtx(node.Fields, ctContext{inDeclaration: true, ensureHasTypeName: true, namespace: cv.namespace})
+	fields, parents := cv.readFieldsAndParentsCtx(node.Fields, ctContext{inDeclaration: true, ensureHasTypeName: true, namespace: cv.namespace})
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
 		templatePrmList = fmt.Sprintf("<%s>", strings.Join(maps.Keys(templatePrms), ", "))
 	}
 
-	for _, param := range fields {
-		places = append(places, param.Type.defs...)
+	for _, field := range fields {
+		places = append(places, field.Type.defs...)
 	}
 
 	data := cv.computeGenStructData(param, templatePrmList)
@@ -3011,6 +3158,43 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 		cv.Panicf("unmanaged GenOutputType value %v", param.output)
 	}
 
+	methods := cv.parentMethods(parents)
+
+	// Can't be created inline for the moment, as stream operators
+	if param.streamOp == with && len(methods) != 0 {
+		fmt.Fprintf(buf, "\n%snamespace %s\n", data.out.Indent(), recNs)
+		fmt.Fprintf(buf, "%s{", data.out.Indent())
+		data.out.indent++
+
+		for _, method := range methods {
+			endParams := ""
+			endParamNames := ""
+			if method.params != nil {
+				endParams = fmt.Sprintf(", %s", method.params)
+				endParamNames = fmt.Sprintf(", %s", method.params.NamesStr())
+			}
+
+			fmt.Fprintf(buf, "\n")
+
+			fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s)%s\n", data.out.Indent(), method.result, method.name, param.name, endParams, data.declEnd)
+			if data.needBody {
+				fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+				fmt.Fprintf(buf, "%s    return rec::%s(self.ptr->%s%s);\n", data.out.Indent(), method.name, method.parent.name, endParamNames)
+				fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+				fmt.Fprintf(buf, "\n")
+			}
+
+			fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<struct %s>& self%s)%s\n", data.out.Indent(), method.result, method.name, param.name, endParams, data.declEnd)
+			if data.needBody {
+				fmt.Fprintf(buf, "%s{\n", data.out.Indent())
+				fmt.Fprintf(buf, "%s    return rec::%s(self.obj.%s%s);\n", data.out.Indent(), method.name, method.parent.name, endParamNames)
+				fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+			}
+		}
+		data.out.indent--
+		fmt.Fprintf(buf, "%s}\n", data.out.Indent())
+	}
+
 	if param.streamOp == with {
 		fmt.Fprintf(buf, "\n")
 
@@ -3073,7 +3257,7 @@ func getAnotherLambdaParamName(excludedNames []string) string {
 
 func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms map[string][]string, param genStructParam) string {
 	buf := new(bytes.Buffer)
-	methods := cv.readMethods(node.Methods, ctContext{ensureHasBlankName: true})
+	methods, parents, errors := cv.readMethods(node.Methods, ctContext{ensureHasBlankName: true})
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
@@ -3085,10 +3269,14 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 
 	switch param.output {
 	case all, decl:
-		fmt.Fprintf(buf, "struct %s : gocpp::Interface\n", structName)
+		parentsStr := JoinWithPrefix(parents.Format("%s"), ", ")
+		fmt.Fprintf(buf, "struct %s : virtual gocpp::Interface%s\n", structName, parentsStr)
 		fmt.Fprintf(buf, "%s{\n", data.out.Indent())
 		fmt.Fprintf(buf, "%s    using gocpp::Interface::operator==;\n", data.out.Indent())
 		fmt.Fprintf(buf, "%s    using gocpp::Interface::operator!=;\n", data.out.Indent())
+		for _, err := range errors {
+			fmt.Fprintf(buf, "%s    /* %s */\n", data.out.Indent(), err)
+		}
 		fmt.Fprintf(buf, "\n")
 		fmt.Fprintf(buf, "%s    %s(){}\n", data.out.Indent(), structName)
 		fmt.Fprintf(buf, "%s    %[2]s(%[2]s& i) = default;\n", data.out.Indent(), structName)
@@ -3143,7 +3331,10 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 
 	switch param.output {
 	case all, decl:
-		fmt.Fprintf(buf, "%s    struct I%s\n", data.out.Indent(), structName)
+		parentsStrs := FormatStrings("virtual %s", parents.Format("%[1]s::I%[1]s"))
+		parentsStr := strings.Join(parentsStrs, ", ")
+		parentsStr = Prefix(parentsStr, ": ")
+		fmt.Fprintf(buf, "%s    struct I%s%s\n", data.out.Indent(), structName, parentsStr)
 		fmt.Fprintf(buf, "%s    {\n", data.out.Indent())
 		data.out.indent++
 		for _, method := range methods {
@@ -3162,8 +3353,10 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		fmt.Fprintf(buf, "%s    };\n", data.out.Indent())
 
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%s    template<typename T, typename StoreT>\n", data.out.Indent())
-		fmt.Fprintf(buf, "%s    struct %[2]sImpl : I%[2]s\n", data.out.Indent(), structName)
+		parentsStrs = FormatStrings("virtual %s", parents.Format("%[1]s::%[1]sImpl<T, TStore, TInterface>"))
+		parentsStr = JoinWithPrefix(parentsStrs, ", ")
+		fmt.Fprintf(buf, "%s    template<typename T, typename TStore, typename TInterface = I%s>\n", data.out.Indent(), structName)
+		fmt.Fprintf(buf, "%s    struct %[2]sImpl : virtual TInterface%s\n", data.out.Indent(), structName, parentsStr)
 		fmt.Fprintf(buf, "%s    {\n", data.out.Indent())
 		// ** Maybe be needed if we decide to store values insstead of pointer at some point **
 		// fmt.Fprintf(buf, "%s        //%sImpl(T& ref)\n", data.out.Indent(), structName)
@@ -3171,7 +3364,10 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		// fmt.Fprintf(buf, "%s        //    value = &ref;\n", data.out.Indent())
 		// fmt.Fprintf(buf, "%s        //}\n", data.out.Indent())
 		// fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%s        explicit %sImpl(T* ptr)\n", data.out.Indent(), structName)
+		parentsStrs = parents.Format("%[1]s::%[1]sImpl<T, TStore, TInterface>(ptr)")
+		parentsStr = strings.Join(parentsStrs, ", ")
+		parentsStr = Prefix(parentsStr, ": ")
+		fmt.Fprintf(buf, "%s        explicit %sImpl(T* ptr)%s\n", data.out.Indent(), structName, parentsStr)
 		fmt.Fprintf(buf, "%s        {\n", data.out.Indent())
 		fmt.Fprintf(buf, "%s            value.reset(ptr);\n", data.out.Indent())
 		fmt.Fprintf(buf, "%s        }\n", data.out.Indent())
@@ -3195,14 +3391,14 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 
 		data.out.indent--
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%s        StoreT value;\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s        TStore value;\n", data.out.Indent())
 		fmt.Fprintf(buf, "%s    };\n", data.out.Indent())
 
 	case implem:
 		for _, method := range methods {
 			forwardParams := JoinWithPrefix(method.params.Names(), ", ")
-			fmt.Fprintf(buf, "%[1]s    template<typename T, typename StoreT>\n", data.out.Indent())
-			fmt.Fprintf(buf, "%[1]s    %[2]s %[5]s::%[5]sImpl<T, StoreT>::v%[3]s(%[4]s)\n", data.out.Indent(), method.result, method.name, method.params, structName)
+			fmt.Fprintf(buf, "%[1]s    template<typename T, typename TStore, typename TInterface>\n", data.out.Indent())
+			fmt.Fprintf(buf, "%[1]s    %[2]s %[5]s::%[5]sImpl<T, TStore, TInterface>::v%[3]s(%[4]s)\n", data.out.Indent(), method.result, method.name, method.params, structName)
 			fmt.Fprintf(buf, "%[1]s    {\n", data.out.Indent())
 			fmt.Fprintf(buf, "%[1]s        return %s::%s(gocpp::PtrRecv<T, false>(value.get())%s);\n", data.out.Indent(), recNs, method.name, forwardParams)
 			fmt.Fprintf(buf, "%[1]s    }\n", data.out.Indent())
@@ -3223,6 +3419,8 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 	fmt.Fprintf(buf, "\n%snamespace %s\n", data.out.Indent(), recNs)
 	fmt.Fprintf(buf, "%s{", data.out.Indent())
 	data.out.indent++
+
+	methods = append(methods, cv.parentMethods(parents)...)
 
 	for _, method := range methods {
 		endParams := ""
@@ -3360,10 +3558,10 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 	// NB, name are confusing (convertTypeExpr, convertExprToType, convertGoToCppType, etc ...)
 	exprType := cv.convertExprToType(node)
 	if exprType != nil {
-		typeStr := convertGoToCppType(exprType, cv.Position(node))
+		typeStr := cv.convertGoToCppType(exprType, cv.Position(node))
 		// Probably this steps should only be done for named types
 		// Move code to 'GetCppGoType' ?
-		typeStr = cv.convertNamespace(typeStr)
+		typeStr = convertNamespace(typeStr, cv.namespace)
 		cppType := mkCppType(typeStr, nil)
 
 		switch typeStr {
@@ -3382,7 +3580,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 	panic("convertExprCppType, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) apply(slice []string, f func(string) string) []string {
+func apply(slice []string, f func(string) string) []string {
 	for i, v := range slice {
 		slice[i] = f(v)
 	}
@@ -3390,11 +3588,11 @@ func (cv *cppConverter) apply(slice []string, f func(string) string) []string {
 }
 
 func (cv *cppConverter) convertNamespaces(typeStrs []string) []string {
-	return cv.apply(typeStrs, cv.convertNamespace)
+	return apply(typeStrs, func(s string) string { return convertNamespace(s, cv.namespace) })
 }
 
-func (cv *cppConverter) convertNamespace(typeStr string) string {
-	typeStr = strings.TrimPrefix(typeStr, cv.namespace+".")
+func convertNamespace(typeStr string, namespace string) string {
+	typeStr = strings.TrimPrefix(typeStr, namespace+".")
 	typeStr = strings.ReplaceAll(typeStr, ".", "::")
 	typeStr, _ = Last(strings.Split(typeStr, "/"))
 	return typeStr
@@ -3405,32 +3603,37 @@ func (cv *cppConverter) convertNamespace(typeStr string) string {
 //	-> convertGoToCppType(goType types.Type, position token.Position) string
 //	-> convertTypeExpr(node ast.Expr) cppType
 //	-> convertTypeSpec(node *ast.TypeSpec, end string) cppType
-func convertGoToCppType(goType types.Type, position token.Position) string {
+
+func (cv *cppConverter) convertGoToCppType(goType types.Type, position token.Position) string {
+	return convertGoToCppType(goType, cv.namespace, position)
+}
+
+func convertGoToCppType(goType types.Type, namespace string, position token.Position) string {
 	if goType == nil {
 		panic("convertGoToCppType, Cannot convert nil type.")
 	}
 
 	switch subType := goType.(type) {
 	case *types.Array:
-		return fmt.Sprintf("gocpp::array<%s, %d>", GetCppGoType(subType.Elem()), subType.Len())
+		return fmt.Sprintf("gocpp::array<%s, %d>", GetCppGoType(subType.Elem(), namespace), subType.Len())
 
 	case *types.Basic:
-		return GetCppGoType(subType)
+		return GetCppGoType(subType, namespace)
 
 	case *types.Chan:
-		return fmt.Sprintf("gocpp::channel<%s>", GetCppGoType(subType.Elem()))
+		return fmt.Sprintf("gocpp::channel<%s>", GetCppGoType(subType.Elem(), namespace))
 
 	case *types.Map:
-		return fmt.Sprintf("gocpp::map<%s, %s>", GetCppGoType(subType.Key()), GetCppGoType(subType.Elem()))
+		return fmt.Sprintf("gocpp::map<%s, %s>", GetCppGoType(subType.Key(), namespace), GetCppGoType(subType.Elem(), namespace))
 
 	case *types.Named:
-		return GetCppGoType(subType)
+		return GetCppGoType(subType, namespace)
 
 	case *types.Pointer:
-		return fmt.Sprintf("%s*", GetCppGoType(subType.Elem()))
+		return fmt.Sprintf("%s*", GetCppGoType(subType.Elem(), namespace))
 
 	case *types.Slice:
-		return fmt.Sprintf("gocpp::slice<%s>", GetCppGoType(subType.Elem()))
+		return fmt.Sprintf("gocpp::slice<%s>", GetCppGoType(subType.Elem(), namespace))
 
 	case *types.Struct:
 		fmt.Printf("convertGoToCppType, struct type [%v], position[%v]\n", subType, position)
@@ -3449,9 +3652,9 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 
 	case *types.Signature:
 		if subType.Results().Len() <= 1 {
-			return fmt.Sprintf("std::function<%s (%s)>", GetCppGoType(subType.Results()), GetCppGoType(subType.Params()))
+			return fmt.Sprintf("std::function<%s (%s)>", GetCppGoType(subType.Results(), namespace), GetCppGoType(subType.Params(), namespace))
 		} else {
-			return fmt.Sprintf("std::function<std::tuple<%s> (%s)>", GetCppGoType(subType.Results()), GetCppGoType(subType.Params()))
+			return fmt.Sprintf("std::function<std::tuple<%s> (%s)>", GetCppGoType(subType.Results(), namespace), GetCppGoType(subType.Params(), namespace))
 		}
 
 	case *types.Interface:
@@ -3466,10 +3669,10 @@ func convertGoToCppType(goType types.Type, position token.Position) string {
 	}
 }
 
-func convertGoToCppTypes(goType []types.Type, position token.Position) []string {
+func convertGoToCppTypes(goType []types.Type, namespace string, position token.Position) []string {
 	res := []string{}
 	for _, subType := range goType {
-		res = append(res, convertGoToCppType(subType, position))
+		res = append(res, convertGoToCppType(subType, namespace, position))
 	}
 	return res
 }

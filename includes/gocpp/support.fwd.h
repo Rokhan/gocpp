@@ -38,10 +38,12 @@ namespace gocpp
     template<typename K, typename V> struct map;    
     template<typename T, typename E> struct result_or_error;
 
+    // TODO: chose a clear naming scheme ...
     struct complex128;
     struct Defer;
     struct GoPanic;
     struct go_any;
+    struct Interface;
     struct string;
 
     using rune = int;
@@ -54,7 +56,7 @@ namespace gocpp
 
     inline constexpr long len(const std::string& input)
     {
-        return input.length();
+        return (long)input.length();
     }
 
     // sadly not a constexpr because of the use of reinterpret_cast

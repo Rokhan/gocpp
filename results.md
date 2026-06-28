@@ -68,7 +68,7 @@
 | [TourOfGo/methods/indirection.go](tests/TourOfGo/methods/indirection.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection.cpp)) | ❌ |
 | [TourOfGo/methods/indirection-values.go](tests/TourOfGo/methods/indirection-values.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/indirection-values.cpp)) | ❌ |
 | [TourOfGo/methods/inline-interface.go](tests/TourOfGo/methods/inline-interface.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/inline-interface.cpp)) | ❌ |
-| [TourOfGo/methods/interfaces.go](tests/TourOfGo/methods/interfaces.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces.cpp)) | ❌ |
+| [TourOfGo/methods/interfaces.go](tests/TourOfGo/methods/interfaces.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces.cpp)) | ✔️ |
 | [TourOfGo/methods/interfaces-are-satisfied-implicitly.go](tests/TourOfGo/methods/interfaces-are-satisfied-implicitly.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-are-satisfied-implicitly.cpp)) | ✔️ |
 | [TourOfGo/methods/interfaces-cast.go](tests/TourOfGo/methods/interfaces-cast.go) | ✔️ | ✔️ | ❌ | ❌ |
 | [TourOfGo/methods/interfaces-ordered.go](tests/TourOfGo/methods/interfaces-ordered.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/methods/interfaces-ordered.cpp)) | ❌ |
@@ -114,6 +114,7 @@
 | [TourOfGo/moretypes/struct-literals.go](tests/TourOfGo/moretypes/struct-literals.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-literals.cpp)) | ✔️ |
 | [TourOfGo/moretypes/struct-pointers.go](tests/TourOfGo/moretypes/struct-pointers.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/struct-pointers.cpp)) | ✔️ |
 | [TourOfGo/moretypes/structs.go](tests/TourOfGo/moretypes/structs.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/structs.cpp)) | ✔️ |
+| [TourOfGo/moretypes/structs-interface.go](tests/TourOfGo/moretypes/structs-interface.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/structs-interface.cpp)) | ❌ |
 | [TourOfGo/moretypes/typedef.go](tests/TourOfGo/moretypes/typedef.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/moretypes/typedef.cpp)) | ✔️ |
 | [TourOfGo/welcome/hello.go](tests/TourOfGo/welcome/hello.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/welcome/hello.cpp)) | ✔️ |
 | [TourOfGo/welcome/sandbox.go](tests/TourOfGo/welcome/sandbox.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/welcome/sandbox.cpp)) | ❌ |
@@ -138,7 +139,7 @@
 | $(ImportDir)/encoding/base64/base64.go | ✔️ ([cpp](generated/golang/encoding/base64/base64.cpp), [h](generated/golang/encoding/base64/base64.h))| ❌ |
 | $(ImportDir)/encoding/binary/binary.go | ✔️ ([cpp](generated/golang/encoding/binary/binary.cpp), [h](generated/golang/encoding/binary/binary.h))| ❌ |
 | $(ImportDir)/encoding/binary/native_endian_little.go | ✔️ ([cpp](generated/golang/encoding/binary/native_endian_little.cpp), [h](generated/golang/encoding/binary/native_endian_little.h))| ❌ |
-| $(ImportDir)/encoding/hex/hex.go | ✔️ ([cpp](generated/golang/encoding/hex/hex.cpp), [h](generated/golang/encoding/hex/hex.h))| ❌ |
+| $(ImportDir)/encoding/hex/hex.go | ✔️ ([cpp](generated/golang/encoding/hex/hex.cpp), [h](generated/golang/encoding/hex/hex.h))| ✔️ |
 | $(ImportDir)/errors/errors.go | ✔️ ([cpp](generated/golang/errors/errors.cpp), [h](generated/golang/errors/errors.h))| ✔️ |
 | $(ImportDir)/errors/wrap.go | ✔️ ([cpp](generated/golang/errors/wrap.cpp), [h](generated/golang/errors/wrap.h))| ✔️ |
 | $(ImportDir)/fmt/errors.go | ✔️ ([cpp](generated/golang/fmt/errors.cpp), [h](generated/golang/fmt/errors.h))| ❌ |
@@ -412,7 +413,7 @@
 | $(ImportDir)/slices/zsortanyfunc.go | ✔️ ([cpp](generated/golang/slices/zsortanyfunc.cpp), [h](generated/golang/slices/zsortanyfunc.h))| ✔️ |
 | $(ImportDir)/slices/zsortordered.go | ✔️ ([cpp](generated/golang/slices/zsortordered.cpp), [h](generated/golang/slices/zsortordered.h))| ✔️ |
 | $(ImportDir)/sort/slice.go | ✔️ ([cpp](generated/golang/sort/slice.cpp), [h](generated/golang/sort/slice.h))| ✔️ |
-| $(ImportDir)/sort/sort.go | ✔️ ([cpp](generated/golang/sort/sort.cpp), [h](generated/golang/sort/sort.h))| ❌ |
+| $(ImportDir)/sort/sort.go | ✔️ ([cpp](generated/golang/sort/sort.cpp), [h](generated/golang/sort/sort.h))| ✔️ |
 | $(ImportDir)/sort/sort_impl_go121.go | ✔️ ([cpp](generated/golang/sort/sort_impl_go121.cpp), [h](generated/golang/sort/sort_impl_go121.h))| ✔️ |
 | $(ImportDir)/sort/zsortfunc.go | ✔️ ([cpp](generated/golang/sort/zsortfunc.cpp), [h](generated/golang/sort/zsortfunc.h))| ✔️ |
 | $(ImportDir)/sort/zsortinterface.go | ✔️ ([cpp](generated/golang/sort/zsortinterface.cpp), [h](generated/golang/sort/zsortinterface.h))| ✔️ |

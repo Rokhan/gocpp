@@ -50,3 +50,5 @@ log/
 # dev temp dir
 .tmp/
 /.vscode/launch.json
+/**/.vs
+/generated.build/

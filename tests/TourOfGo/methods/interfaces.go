@@ -12,6 +12,49 @@ type Abser interface {
 	Abs() float64
 }
 
+type Adder interface {
+	Add(f int)
+}
+
+type Multiplier interface {
+	Mul(f int)
+}
+
+type MultAdder interface {
+	Adder
+	Multiplier
+	Print()
+}
+
+type num struct {
+	value int
+}
+
+func (n *num) Add(f int) {
+	n.value += f
+}
+
+func (n *num) Mul(f int) {
+	n.value *= f
+}
+
+func (n *num) Print() {
+	fmt.Println(n.value)
+}
+
+func testAddMul() {
+	n := num{10}
+	n.Add(5)
+	n.Mul(2)
+	n.Print()
+
+	var iNum MultAdder
+	iNum = &num{11}
+	iNum.Add(6)
+	iNum.Mul(3)
+	iNum.Print()
+}
+
 // Check interface declaration with method with nameless parameter
 type dummy interface{ As(any) bool }
 
@@ -29,8 +72,10 @@ func main() {
 
 	// Interface can be compared with nil.
 	if a != nil || a == nil {
-		fmt.Println(a.Abs())
+		fmt.Println(a.Abs() + 0.00001)
 	}
+
+	testAddMul()
 }
 
 type MyFloat float64

@@ -143,8 +143,8 @@ namespace gocpp
     template <typename T>
     class IsGoInterface<T, typename CheckType<typename T::isGoInterface>::type> : public std::true_type { };
 
-    template<typename T>
-    concept GoInterface = IsGoInterface<T>::value;
+    template<typename TInterface>
+    concept GoInterface = IsGoInterface<TInterface>::value && std::derived_from<TInterface, gocpp::Interface>;
 
     template<typename T, typename AliasType>
     struct alias : T
@@ -296,9 +296,9 @@ namespace gocpp
     template <typename T>
     struct ptr
     {
-        void reset(T* p) { ptr = p; }
-        T* get() { return ptr; }
-        T* ptr = nullptr;
+        void reset(T* p) { _ptr = p; }
+        T* get() { return _ptr; }
+        T* _ptr = nullptr;
     };
 
     struct unsafe_pointer
@@ -1007,8 +1007,8 @@ namespace gocpp
             auto operator * () const { return std::tie(index, *iter); }
         };
 
-        template <typename, int> friend class array;
-        template <typename> friend class slice;
+        template <typename, int> friend struct array;
+        template <typename> friend struct slice;
 
         size_t size() const
         {
@@ -1549,6 +1549,13 @@ namespace gocpp
             //return std::string("invalid value cast to type '") + typeid(T).name() + "' from type '" + value.type().name() + "'" };
         }
     };
+
+    template <GoInterface TInterface, typename TSource>
+        requires std::convertible_to<TSource, TInterface>
+                 && GoStruct<TSource>
+        result_or_error<TInterface, ErrInvalidValueCast<TInterface>> getValue(const TSource& src) {
+        return std::make_pair(TInterface(src), true);
+    }
 
     template <typename T>
     result_or_error<T, ErrInvalidValueCast<T>> getValue(std::any value)

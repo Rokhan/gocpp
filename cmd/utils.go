@@ -59,7 +59,7 @@ func GetCppOutType(goType outType) string {
 	}
 }
 
-func GetCppGoType(goType types.Type) string {
+func GetCppGoType(goType types.Type, namespace string) string {
 	switch t := goType.(type) {
 	case *types.Tuple:
 		if t.Len() == 0 {
@@ -68,9 +68,13 @@ func GetCppGoType(goType types.Type) string {
 
 		var strs []string
 		for i := 0; i < t.Len(); i++ {
-			strs = append(strs, GetCppGoType(t.At(i).Type()))
+			strs = append(strs, GetCppGoType(t.At(i).Type(), namespace))
 		}
 		return strings.Join(strs, ", ")
+
+	case *types.Named:
+		typeStr := GetCppType(goType.String())
+		return convertNamespace(typeStr, namespace)
 
 	default:
 		return GetCppType(goType.String())
@@ -181,6 +185,14 @@ func (tns typeNames) Names() []string {
 		strs = append(strs, tn.names...)
 	}
 	return strs
+}
+
+// Prefix add a prefix to non-empty strings
+func Prefix(str string, prefix string) string {
+	if str == "" {
+		return ""
+	}
+	return prefix + str
 }
 
 // Transform a slice of strings, applying a pattern to each element

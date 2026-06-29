@@ -683,7 +683,7 @@ namespace golang::runtime
     }
 
     // union returns the union of the two sets as a new set.
-    runtime::statDepSet rec::union(golang::runtime::statDepSet s, golang::runtime::statDepSet b)
+    runtime::statDepSet rec::go_union(golang::runtime::statDepSet s, golang::runtime::statDepSet b)
     {
         runtime::statDepSet c = {};
         for(auto [i, gocpp_ignored] : s)
@@ -1058,7 +1058,7 @@ namespace golang::runtime
                 }
             }
         }
-        a->ensured = rec::union(gocpp::recv(a->ensured), missing);
+        a->ensured = rec::go_union(gocpp::recv(a->ensured), missing);
     }
 
     // metricKind is a runtime copy of runtime/metrics.ValueKind and

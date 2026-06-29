@@ -225,7 +225,7 @@ namespace golang::binary
     int Size(go_any v);
     extern sync::Map structSize;
     int dataSize(reflect::Value v);
-    int sizeof(reflect::Type t);
+    int go_sizeof(reflect::Type t);
     int intDataSize(go_any data);
     extern littleEndian LittleEndian;
     extern bigEndian BigEndian;

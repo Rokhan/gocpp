@@ -1147,7 +1147,7 @@ namespace golang::binary
             switch(conditionId)
             {
                 case 0:
-                    if(auto s = sizeof(rec::Elem(gocpp::recv(rec::Type(gocpp::recv(v))))); s >= 0)
+                    if(auto s = go_sizeof(rec::Elem(gocpp::recv(rec::Type(gocpp::recv(v))))); s >= 0)
                     {
                         return s * rec::Len(gocpp::recv(v));
                     }
@@ -1160,7 +1160,7 @@ namespace golang::binary
                     {
                         return gocpp::getValue<int>(size);
                     }
-                    auto size = sizeof(t);
+                    auto size = go_sizeof(t);
                     rec::Store(gocpp::recv(structSize), t, size);
                     return size;
                     break;
@@ -1169,7 +1169,7 @@ namespace golang::binary
                 default:
                     if(rec::IsValid(gocpp::recv(v)))
                     {
-                        return sizeof(rec::Type(gocpp::recv(v)));
+                        return go_sizeof(rec::Type(gocpp::recv(v)));
                     }
                     break;
             }
@@ -1179,7 +1179,7 @@ namespace golang::binary
     }
 
     // sizeof returns the size >= 0 of variables for the given type or -1 if the type is not acceptable.
-    int sizeof(reflect::Type t)
+    int go_sizeof(reflect::Type t)
     {
         //Go switch emulation
         {
@@ -1203,7 +1203,7 @@ namespace golang::binary
             switch(conditionId)
             {
                 case 0:
-                    if(auto s = sizeof(rec::Elem(gocpp::recv(t))); s >= 0)
+                    if(auto s = go_sizeof(rec::Elem(gocpp::recv(t))); s >= 0)
                     {
                         return s * rec::Len(gocpp::recv(t));
                     }
@@ -1214,7 +1214,7 @@ namespace golang::binary
                     auto sum = 0;
                     for(auto [i, n] = std::tuple{0, rec::NumField(gocpp::recv(t))}; i < n; i++)
                     {
-                        auto s = sizeof(rec::Field(gocpp::recv(t), i).Type);
+                        auto s = go_sizeof(rec::Field(gocpp::recv(t), i).Type);
                         if(s < 0)
                         {
                             return - 1;

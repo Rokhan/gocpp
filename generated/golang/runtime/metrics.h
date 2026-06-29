@@ -252,7 +252,7 @@ namespace golang::runtime
     {
         void compute(golang::runtime::metricReader f, struct statAggregate* _1, struct metricValue* out);
         runtime::statDepSet difference(golang::runtime::statDepSet s, golang::runtime::statDepSet b);
-        runtime::statDepSet union(golang::runtime::statDepSet s, golang::runtime::statDepSet b);
+        runtime::statDepSet go_union(golang::runtime::statDepSet s, golang::runtime::statDepSet b);
         bool empty(gocpp::array_ptr<golang::runtime::statDepSet> s);
         bool has(gocpp::array_ptr<golang::runtime::statDepSet> s, golang::runtime::statDep d);
         void compute(golang::runtime::heapStatsAggregate* a);

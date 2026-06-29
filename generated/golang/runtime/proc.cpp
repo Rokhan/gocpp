@@ -500,7 +500,7 @@ namespace golang::runtime
             // If the central cache is empty, allocate a new one.
             if(len(pp->sudogcache) == 0)
             {
-                pp->sudogcache = append(pp->sudogcache, new(sudog));
+                pp->sudogcache = append(pp->sudogcache, new sudog{});
             }
         }
         auto n = len(pp->sudogcache);
@@ -1111,7 +1111,7 @@ namespace golang::runtime
         // Allocate memory to hold a cgo traceback if the cgo call crashes.
         if(iscgo || GOOS == "solaris"_s || GOOS == "illumos"_s || GOOS == "windows"_s)
         {
-            mp->cgoCallers = new(cgoCallers);
+            mp->cgoCallers = new cgoCallers{};
         }
     }
 
@@ -2542,7 +2542,7 @@ namespace golang::runtime
             unlock(& sched.lock);
         }
 
-        auto mp = new(m);
+        auto mp = new m{};
         mp->mstartfn = fn;
         mcommoninit(mp, id);
 
@@ -5687,7 +5687,7 @@ namespace golang::runtime
     // Allocate a new g, with a stack big enough for stacksize bytes.
     struct g* malg(int32_t stacksize)
     {
-        auto newg = new(g);
+        auto newg = new g{};
         if(stacksize >= 0)
         {
             stacksize = round2(stackSystem + stacksize);
@@ -5883,7 +5883,7 @@ namespace golang::runtime
             x.gopc = callergp->gopc;
         });
 
-        auto ancestorsp = new(gocpp::Tag<gocpp::slice<ancestorInfo>>());
+        auto ancestorsp = new gocpp::slice<ancestorInfo>{};
         *ancestorsp = ancestors;
         return ancestorsp;
     }
@@ -6687,7 +6687,7 @@ namespace golang::runtime
             auto pp = allp[i];
             if(pp == nullptr)
             {
-                pp = new(p);
+                pp = new p{};
             }
             rec::init(gocpp::recv(pp), i);
             atomicstorep(gocpp::unsafe_pointer(& allp[i]), gocpp::unsafe_pointer(pp));

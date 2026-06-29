@@ -201,7 +201,7 @@ namespace golang::runtime
     //go:linkname godebug_setUpdate internal/godebug.setUpdate
     void godebug_setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update)
     {
-        auto p = new(gocpp::Tag<std::function<void (gocpp::string _1, gocpp::string _2)>>());
+        auto p = new std::function<void (gocpp::string, gocpp::string)>{};
         *p = update;
         rec::Store<std::function<void (gocpp::string, gocpp::string)>>(gocpp::recv(godebugUpdate), p);
         godebugNotify(false);
@@ -210,7 +210,7 @@ namespace golang::runtime
     //go:linkname godebug_setNewIncNonDefault internal/godebug.setNewIncNonDefault
     void godebug_setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault)
     {
-        auto p = new(gocpp::Tag<std::function<std::function<void ()> (gocpp::string _1)>>());
+        auto p = new std::function<func() (gocpp::string)>{};
         *p = newIncNonDefault;
         rec::Store<std::function<func() (gocpp::string)>>(gocpp::recv(godebugNewIncNonDefault), p);
     }
@@ -260,7 +260,7 @@ namespace golang::runtime
             {
                 return;
             }
-            inc = new(gocpp::Tag<std::function<void ()>>());
+            inc = new std::function<void (void)>{};
             *inc = (golang::runtime::newInc*)(g->name);
             if(raceenabled)
             {
@@ -302,7 +302,7 @@ namespace golang::runtime
         setenv_c(key, value);
         if(key == "GODEBUG"_s)
         {
-            auto p = new(string);
+            auto p = new gocpp::string{};
             *p = value;
             rec::Store<gocpp::string>(gocpp::recv(godebugEnv), p);
             godebugNotify(true);

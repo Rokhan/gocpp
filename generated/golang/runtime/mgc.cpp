@@ -1473,7 +1473,7 @@ namespace golang::runtime
         // the stack (see gopark). Prevent deadlock from recursively
         // starting GC by disabling preemption.
         gp->m->preemptoff = "GC worker init"_s;
-        auto node = new(gcBgMarkWorkerNode);
+        auto node = new gcBgMarkWorkerNode{};
         gp->m->preemptoff = ""_s;
 
         rec::set(gocpp::recv(node->gp), gp);

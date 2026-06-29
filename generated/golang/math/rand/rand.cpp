@@ -562,7 +562,7 @@ namespace golang::rand
         if(rec::Value(gocpp::recv(randautoseed)) == "0"_s)
         {
             rec::IncNonDefault(gocpp::recv(randautoseed));
-            r = New(new(lockedSource));
+            r = New(new lockedSource{});
             rec::Seed(gocpp::recv(r), 1);
         }
         else
@@ -683,7 +683,7 @@ namespace golang::rand
         // 2) orig is already a runtimeSource, in which case we need to change
         // to a lockedSource.
         // Either way we do the same thing.
-        auto r = New(new(lockedSource));
+        auto r = New(new lockedSource{});
         rec::Seed(gocpp::recv(r), seed);
 
         if(! rec::CompareAndSwap<Rand>(gocpp::recv(globalRandGenerator), orig, r))

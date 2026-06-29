@@ -810,7 +810,7 @@ namespace golang::runtime
     // Only one goroutine may call modulesinit at a time.
     void modulesinit()
     {
-        auto modules = new(gocpp::Tag<gocpp::slice<moduledata*>>());
+        auto modules = new gocpp::slice<*runtime::moduledata>{};
         for(auto md = & firstmoduledata; md != nullptr; md = md->next)
         {
             if(md->bad)

@@ -298,7 +298,7 @@ namespace golang::runtime
         }
         tags = i;
 
-        auto b = new(profBuf);
+        auto b = new profBuf{};
         b->hdrsize = uintptr_t(hdrsize);
         b->data = gocpp::make(gocpp::Tag<gocpp::slice<uint64_t>>(), bufwords);
         b->tags = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::unsafe_pointer>>(), tags);

@@ -1265,7 +1265,7 @@ namespace golang::syscall
                 case 0:
                 {
                     auto pp = (RawSockaddrUnix*)(gocpp::unsafe_pointer(rsa));
-                    auto sa = new(SockaddrUnix);
+                    auto sa = new SockaddrUnix{};
                     if(pp->Path[0] == 0)
                     {
                         // "Abstract" Unix domain socket.
@@ -1293,7 +1293,7 @@ namespace golang::syscall
                 case 1:
                 {
                     auto pp = (RawSockaddrInet4*)(gocpp::unsafe_pointer(rsa));
-                    auto sa = new(SockaddrInet4);
+                    auto sa = new SockaddrInet4{};
                     auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& pp->Port));
                     sa->Port = (int(p[0]) << 8) + int(p[1]);
                     sa->Addr = pp->Addr;
@@ -1304,7 +1304,7 @@ namespace golang::syscall
                 case 2:
                 {
                     auto pp = (RawSockaddrInet6*)(gocpp::unsafe_pointer(rsa));
-                    auto sa = new(SockaddrInet6);
+                    auto sa = new SockaddrInet6{};
                     auto p = (gocpp::array_ptr<gocpp::array<unsigned char, 2>>)(gocpp::unsafe_pointer(& pp->Port));
                     sa->Port = (int(p[0]) << 8) + int(p[1]);
                     sa->ZoneId = pp->Scope_id;

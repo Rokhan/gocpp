@@ -1149,7 +1149,7 @@ namespace golang::runtime
         else
         {
             v->kind = metricKindFloat64Histogram;
-            hist = new(metricFloat64Histogram);
+            hist = new metricFloat64Histogram{};
             v->pointer = gocpp::unsafe_pointer(hist);
         }
         hist->buckets = buckets;

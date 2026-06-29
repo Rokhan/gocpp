@@ -208,7 +208,7 @@ namespace golang::runtime
                     break;
                 default:
                     // Elements contain pointers.
-                    c = new(hchan);
+                    c = new hchan{};
                     c->buf = mallocgc(mem, elem, true);
                     break;
             }

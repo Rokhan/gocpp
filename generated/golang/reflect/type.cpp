@@ -3715,7 +3715,7 @@ namespace golang::reflect
 
             if(len(methods) == 0)
             {
-                auto t = new(structTypeUncommon);
+                auto t = new structTypeUncommon{};
                 typ = & t->structType;
                 ut = & t->u;
             }
@@ -3898,7 +3898,7 @@ namespace golang::reflect
             else
             {
                 typ->StructType.Type.Kind_ &^= kindGCProg;
-                auto bv = new(bitVector);
+                auto bv = new bitVector{};
                 addTypeBits(bv, 0, & typ->StructType.Type);
                 if(len(bv->data) > 0)
                 {

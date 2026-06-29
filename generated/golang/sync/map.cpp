@@ -121,7 +121,7 @@ namespace golang::sync
 
     // expunged is an arbitrary pointer that marks entries which have been deleted
     // from the dirty map.
-    go_any* expunged = new(go_any);
+    go_any* expunged = new gocpp::go_any{};
     // An entry is a slot in the map corresponding to a particular key.
     
     template<typename T> requires gocpp::GoStruct<T>

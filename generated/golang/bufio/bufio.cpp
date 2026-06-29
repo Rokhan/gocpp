@@ -97,7 +97,7 @@ namespace golang::bufio
         {
             return b;
         }
-        auto r = new(Reader);
+        auto r = new Reader{};
         rec::reset(gocpp::recv(r), gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), gocpp::max(size, minReadBufferSize)), rd);
         return r;
     }

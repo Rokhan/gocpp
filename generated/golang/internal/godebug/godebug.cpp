@@ -275,7 +275,7 @@ namespace golang::godebug
         {
             return gocpp::getValue<setting*>(v);
         }
-        auto s = new(setting);
+        auto s = new setting{};
         s->info = godebugs::Lookup(name);
         rec::Store<value>(gocpp::recv(s->value), & empty);
         if(auto [v, loaded] = rec::LoadOrStore(gocpp::recv(cache), name, s); loaded)

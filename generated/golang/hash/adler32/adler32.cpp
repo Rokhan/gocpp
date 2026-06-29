@@ -49,7 +49,7 @@ namespace golang::adler32
     // state of the hash.
     hash::Hash32 New()
     {
-        auto d = new(digest);
+        auto d = new digest{};
         rec::Reset(gocpp::recv(d));
         return d;
     }

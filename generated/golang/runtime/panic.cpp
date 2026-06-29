@@ -565,7 +565,7 @@ namespace golang::runtime
         d->sp = getcallersp();
 
         d->rangefunc = true;
-        d->head = new(atomic::Pointer[_defer]);
+        d->head = new atomic::Pointer[runtime::_defer]{};
 
         return d->head;
     }
@@ -718,7 +718,7 @@ namespace golang::runtime
         if(d == nullptr)
         {
             // Allocate new defer.
-            d = new(_defer);
+            d = new _defer{};
         }
         d->heap = true;
         return d;
@@ -1018,7 +1018,7 @@ namespace golang::runtime
         {
             if(rec::Load(gocpp::recv(debug.panicnil)) != 1)
             {
-                e = new(PanicNilError);
+                e = new PanicNilError{};
             }
             else
             {

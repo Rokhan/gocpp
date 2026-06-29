@@ -81,7 +81,7 @@ namespace golang::main
 
     void newFunction()
     {
-        auto tt = new(toto);
+        auto tt = new toto{};
         mocklib::Println("tt:"_s, tt);
     }
 

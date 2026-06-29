@@ -1360,10 +1360,10 @@ namespace golang::runtime
     // newWakeableSleep initializes a new wakeableSleep and returns it.
     struct wakeableSleep* newWakeableSleep()
     {
-        auto s = new(wakeableSleep);
+        auto s = new wakeableSleep{};
         lockInit(& s->lock, lockRankWakeableSleep);
         s->wakeup = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_6>>(), 1);
-        s->timer = new(timer);
+        s->timer = new timer{};
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {

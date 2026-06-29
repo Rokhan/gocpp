@@ -186,7 +186,7 @@ namespace golang::runtime
                 {
                     auto len = (slice*)(e->data)->len;
                     auto et = (runtime::slicetype*)(gocpp::unsafe_pointer(t))->Elem;
-                    auto sl = new(slice);
+                    auto sl = new slice{};
                     *sl = slice {makeslicecopy(et, len, len, (slice*)(e->data)->array), len, len};
                     auto xe = efaceOf(& x);
                     xe->_type = t;
@@ -297,7 +297,7 @@ namespace golang::runtime
     // newUserArena creates a new userArena ready to be used.
     struct userArena* newUserArena()
     {
-        auto a = new(userArena);
+        auto a = new userArena{};
         SetFinalizer(a, [=](struct userArena* a) mutable -> void
         {
             // If arena handle is dropped without being freed, then call

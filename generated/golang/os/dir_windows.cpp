@@ -143,7 +143,7 @@ namespace golang::os
                 });
                 return {names, dirents, infos, err};
             }
-            file->file.dirinfo = new(dirInfo);
+            file->file.dirinfo = new dirInfo{};
             file->file.dirinfo->buf = gocpp::getValue<gocpp::slice<unsigned char>*>(rec::Get(gocpp::recv(dirBufPool)));
             file->file.dirinfo->vol = vol;
             if(allowReadDirFileID && flags & windows::FILE_SUPPORTS_OPEN_BY_FILE_ID != 0)

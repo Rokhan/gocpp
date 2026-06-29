@@ -86,7 +86,7 @@ namespace golang::base64
             gocpp::panic("encoding alphabet is not 64-bytes long"_s);
         }
 
-        auto e = new(Encoding);
+        auto e = new Encoding{};
         e->padChar = StdPadding;
         copy(e->encode.make_slice(0), encoder);
         copy(e->decodeMap.make_slice(0), decodeMapInitialize);

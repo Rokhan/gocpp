@@ -351,7 +351,7 @@ namespace golang::runtime
         lockInit(& s->lock, lockRankScavenge);
         s->g = getg();
 
-        s->timer = new(timer);
+        s->timer = new timer{};
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {

@@ -590,7 +590,7 @@ namespace golang::reflect
         auto spill = uintptr_t(0);
 
         // Compute gc program & stack bitmap for stack arguments
-        auto stackPtrs = new(bitVector);
+        auto stackPtrs = new bitVector{};
 
         // Compute the stack frame pointer bitmap and register
         // pointer bitmap for arguments.

@@ -731,7 +731,7 @@ namespace golang::runtime
 
         auto godebug = gogetenv("GODEBUG"_s);
 
-        auto p = new(string);
+        auto p = new gocpp::string{};
         *p = godebug;
         rec::Store<gocpp::string>(gocpp::recv(godebugEnv), p);
 

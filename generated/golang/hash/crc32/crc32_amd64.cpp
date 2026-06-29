@@ -55,8 +55,8 @@ namespace golang::crc32
         {
             gocpp::panic("arch-specific Castagnoli not available"_s);
         }
-        castagnoliSSE42TableK1 = new(sse42Table);
-        castagnoliSSE42TableK2 = new(sse42Table);
+        castagnoliSSE42TableK1 = new sse42Table{};
+        castagnoliSSE42TableK2 = new sse42Table{};
         // See description in updateCastagnoli.
         // t[0][i] = CRC(i000, O)
         // t[1][i] = CRC(0i00, O)

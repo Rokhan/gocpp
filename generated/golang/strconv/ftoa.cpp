@@ -281,7 +281,7 @@ namespace golang::strconv
     // bigFtoa uses multiprecision computations to format a float.
     gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt)
     {
-        auto d = new(decimal);
+        auto d = new decimal{};
         rec::Assign(gocpp::recv(d), mant);
         rec::Shift(gocpp::recv(d), exp - int(flt->mantbits));
         decimalSlice digs = {};
@@ -452,7 +452,7 @@ namespace golang::strconv
         // d = mant << (exp - mantbits)
         // Next highest floating point number is mant+1 << exp-mantbits.
         // Our upper bound is halfway between, mant*2+1 << exp-mantbits-1.
-        auto upper = new(decimal);
+        auto upper = new decimal{};
         rec::Assign(gocpp::recv(upper), mant * 2 + 1);
         rec::Shift(gocpp::recv(upper), exp - int(flt->mantbits) - 1);
 
@@ -474,7 +474,7 @@ namespace golang::strconv
             mantlo = mant * 2 - 1;
             explo = exp - 1;
         }
-        auto lower = new(decimal);
+        auto lower = new decimal{};
         rec::Assign(gocpp::recv(lower), mantlo * 2 + 1);
         rec::Shift(gocpp::recv(lower), explo - int(flt->mantbits) - 1);
 

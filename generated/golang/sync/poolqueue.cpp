@@ -365,7 +365,7 @@ namespace golang::sync
             // Initialize the chain.
             // Must be a power of 2
             auto initSize = 8;
-            d = new(poolChainElt);
+            d = new poolChainElt{};
             d->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), initSize);
             c->head = d;
             storePoolChainElt(& c->tail, d);

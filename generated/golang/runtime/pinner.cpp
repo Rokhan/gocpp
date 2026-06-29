@@ -130,7 +130,7 @@ namespace golang::runtime
             if(p->pinner == nullptr)
             {
                 // Didn't get anything from the pinner cache.
-                p->pinner = new(pinner);
+                p->pinner = new pinner{};
                 p->pinner.refs = p->pinner.refStore.make_slice(0, 0);
 
                 // We set this finalizer once and never clear it. Thus, if the

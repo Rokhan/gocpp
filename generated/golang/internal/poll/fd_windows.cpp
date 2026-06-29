@@ -877,7 +877,7 @@ namespace golang::poll
             {
                 if(o->rsa == nullptr)
                 {
-                    o->rsa = new(syscall::RawSockaddrAny);
+                    o->rsa = new syscall::RawSockaddrAny{};
                 }
                 o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
                 return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
@@ -921,7 +921,7 @@ namespace golang::poll
             {
                 if(o->rsa == nullptr)
                 {
-                    o->rsa = new(syscall::RawSockaddrAny);
+                    o->rsa = new syscall::RawSockaddrAny{};
                 }
                 o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
                 return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
@@ -965,7 +965,7 @@ namespace golang::poll
             {
                 if(o->rsa == nullptr)
                 {
-                    o->rsa = new(syscall::RawSockaddrAny);
+                    o->rsa = new syscall::RawSockaddrAny{};
                 }
                 o->rsan = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
                 return syscall::WSARecvFrom(o->fd->Sysfd, & o->buf, 1, & o->qty, & o->flags, o->rsa, & o->rsan, & o->o, nullptr);
@@ -1773,7 +1773,7 @@ namespace golang::poll
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
-                o->rsa = new(syscall::RawSockaddrAny);
+                o->rsa = new syscall::RawSockaddrAny{};
             }
             o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
             o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
@@ -1817,7 +1817,7 @@ namespace golang::poll
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
-                o->rsa = new(syscall::RawSockaddrAny);
+                o->rsa = new syscall::RawSockaddrAny{};
             }
             o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
             o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
@@ -1860,7 +1860,7 @@ namespace golang::poll
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
-                o->rsa = new(syscall::RawSockaddrAny);
+                o->rsa = new syscall::RawSockaddrAny{};
             }
             o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
             o->msg.Namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
@@ -1905,7 +1905,7 @@ namespace golang::poll
             {
                 if(o->rsa == nullptr)
                 {
-                    o->rsa = new(syscall::RawSockaddrAny);
+                    o->rsa = new syscall::RawSockaddrAny{};
                 }
                 auto [len, err] = sockaddrToRaw(o->rsa, sa);
                 if(err != nullptr)
@@ -1948,7 +1948,7 @@ namespace golang::poll
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
-                o->rsa = new(syscall::RawSockaddrAny);
+                o->rsa = new syscall::RawSockaddrAny{};
             }
             auto len = sockaddrInet4ToRaw(o->rsa, sa);
             o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));
@@ -1986,7 +1986,7 @@ namespace golang::poll
             rec::InitMsg(gocpp::recv(o), p, oob);
             if(o->rsa == nullptr)
             {
-                o->rsa = new(syscall::RawSockaddrAny);
+                o->rsa = new syscall::RawSockaddrAny{};
             }
             auto len = sockaddrInet6ToRaw(o->rsa, sa);
             o->msg.Name = (syscall::Pointer)(gocpp::unsafe_pointer(o->rsa));

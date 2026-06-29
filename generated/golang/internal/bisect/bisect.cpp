@@ -220,7 +220,7 @@ namespace golang::bisect
             return {nullptr, nullptr};
         }
 
-        auto m = new(Matcher);
+        auto m = new Matcher{};
 
         auto p = pattern;
         // Special case for leading 'q' so that 'qn' quietly disables, e.g. fmahash=qn to disable fma
@@ -680,7 +680,7 @@ namespace golang::bisect
                 {
                     break;
                 }
-                d = new(dedup);
+                d = new dedup{};
                 if(rec::CompareAndSwap(gocpp::recv(m->dedup), nullptr, d))
                 {
                     break;

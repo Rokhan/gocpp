@@ -168,7 +168,7 @@ namespace golang::zlib
     // The ReadCloser returned by NewReaderDict also implements [Resetter].
     std::tuple<io::ReadCloser, struct gocpp::error> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict)
     {
-        auto z = new(reader);
+        auto z = new reader{};
         auto err = rec::Reset(gocpp::recv(z), r, dict);
         if(err != nullptr)
         {

@@ -3852,7 +3852,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 	case *ast.CallExpr:
 		buf := mkCppBuffer()
 		var sep = ""
-		var isSizeOf bool = false
+		var convertAsType bool = false
 		var isOffsetOf bool = false
 		var closeStr string = ")"
 		switch fun := n.Fun.(type) {
@@ -3863,7 +3863,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 				// Need a special case for unsafe::Sizeof to avoid difficulties with constexpr
 				switch funcName.str {
 				case "gocpp::Sizeof":
-					isSizeOf = true
+					convertAsType = true
 					cv.BuffExprPrintf(buf, "%v<", funcName)
 					closeStr = ">()"
 				case "gocpp::Offsetof":
@@ -3902,9 +3902,17 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			cv.BuffExprPrintf(buf, "%v(", cv.convertTypeExpr(fun, ctContext{}))
 
 		case *ast.Ident:
-			if fun.Name == "recover" {
+			switch fun.Name {
+
+			case "recover":
 				cv.BuffExprPrintf(buf, "gocpp::recover(")
-			} else {
+
+			case "new":
+				convertAsType = true
+				cv.BuffExprPrintf(buf, "new ")
+				closeStr = "{}"
+
+			default:
 				needNamespace := false
 				// Allow to call function from current namespace in methods if there is a method with the same name
 				if obj, ok := cv.typeInfo.Uses[fun]; ok {
@@ -3938,7 +3946,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 
 		if !isOffsetOf {
 			for _, arg := range n.Args {
-				if isSizeOf {
+				if convertAsType {
 					cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExprCppType(arg))
 				} else {
 					cv.BuffExprPrintf(buf, "%s%s", sep, cv.convertExpr(arg))

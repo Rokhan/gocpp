@@ -69,26 +69,45 @@ var cppKeyWordsMapping = map[string]string{
 	// map go keywords to C++ keywords
 	"nil": "nullptr",
 
-	// avoid C++ keywords conflicts
+	// Avoid C++ keywords conflicts, some of them are not really a problem
+	// as they are also go keyword and won't appears anywhere.
 	"any":       "go_any",       // just to avoid confusion with std::any used in support lib
-	"class":     "go_class",     // keyword
+	"auto":      "go_auto",      // keyword
+	"break":     "go_break",     // keyword
+	"case":      "go_case",      // keyword
+	"catch":     "go_catch",     // keyword
 	"char":      "go_char",      // keyword
+	"class":     "go_class",     // keyword
+	"const":     "go_const",     // keyword
+	"concept":   "go_concept",   // C++20 keyword
+	"consteval": "go_consteval", // C++20 keyword
+	"constexpr": "go_constexpr", // keyword
+	"constinit": "go_constinit", // C++20 keyword
 	"do":        "go_do",        // keyword
 	"delete":    "go_delete",    // keyword
 	"enum":      "go_enum",      // keyword
+	"extern":    "go_extern",    // keyword
+	"friend":    "go_friend",    // keyword
+	"inline":    "go_inline",    // keyword
+	"mutable":   "go_mutable",   // keyword
 	"new":       "go_new",       // keyword
 	"private":   "go_private",   // keyword
 	"protected": "go_protected", // keyword
 	"public":    "go_public",    // keyword
 	"register":  "go_register",  // keyword
 	"signed":    "go_signed",    // keyword
+	"sizeof":    "go_sizeof",    // keyword
+	"static":    "go_static",    // keyword
 	"template":  "go_template",  // keyword
+	"this":      "go_this",      // keyword
 	"throw":     "go_throw",     // keyword
+	"try":       "go_try",       // keyword
 	"typeid":    "go_typeid",    // keyword
+	"union":     "go_union",     // keyword
 	"unsigned":  "go_unsigned",  // keyword
+	"virtual":   "go_virtual",   // keyword
+	"void":      "go_void",      // keyword
 	"while":     "go_while",     // keyword
-	"break":     "go_break",     // keyword
-	"case":      "go_case",      // keyword
 
 	"EOF":    "go_EOF",    // Macro of <cstdio>
 	"stdin":  "go_stdin",  // Macro of <cstdio>

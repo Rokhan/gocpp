@@ -12,7 +12,6 @@
 
 namespace golang::os
 {
-    extern gocpp::string DevNull;
     struct gocpp::error Truncate(gocpp::string name, int64_t size);
     struct gocpp::error Remove(gocpp::string name);
     struct gocpp::error rename(gocpp::string oldname, gocpp::string newname);

@@ -167,7 +167,6 @@ namespace golang::os
 
     // DevNull is the name of the operating system's “null device.”
     // On Unix-like systems, it is "/dev/null"; on Windows, "NUL".
-    gocpp::string DevNull = "NUL"_s;
     // openFileNolog is the Windows implementation of OpenFile.
     std::tuple<struct File*, struct gocpp::error> openFileNolog(gocpp::string name, int flag, golang::os::FileMode perm)
     {

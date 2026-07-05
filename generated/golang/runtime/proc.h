@@ -75,8 +75,6 @@ namespace golang::runtime
     void dropm();
     void cgoBindM();
     uintptr_t getm();
-    extern gocpp::string failthreadcreate;
-    extern gocpp::string failallocatestack;
     void startTemplateThread();
     void templateThread();
     void stopm();

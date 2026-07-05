@@ -64,7 +64,6 @@ namespace golang::adler32
         return 4;
     }
 
-    gocpp::string magic = "adl\x01"_s;
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(golang::adler32::digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);

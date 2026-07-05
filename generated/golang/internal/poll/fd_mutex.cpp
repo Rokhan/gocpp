@@ -71,7 +71,6 @@ namespace golang::poll
     // 20 bits - total number of references (read+write+misc).
     // 20 bits - number of outstanding read waiters.
     // 20 bits - number of outstanding write waiters.
-    gocpp::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)"_s;
     // incref adds a reference to mu.
     // It reports whether mu is available for reading or writing.
     bool rec::incref(golang::poll::fdMutex* mu)

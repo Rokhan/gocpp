@@ -3,3 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::unicode
+{
+    const gocpp::string Version = "15.0.0"_s;
+}

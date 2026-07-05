@@ -86,7 +86,6 @@ namespace golang::strconv
     }
 
     gocpp::string smallsString = "00010203040506070809"_s + "10111213141516171819"_s + "20212223242526272829"_s + "30313233343536373839"_s + "40414243444546474849"_s + "50515253545556575859"_s + "60616263646566676869"_s + "70717273747576777879"_s + "80818283848586878889"_s + "90919293949596979899"_s;
-    gocpp::string digits = "0123456789abcdefghijklmnopqrstuvwxyz"_s;
     // formatBits computes the string representation of u in the given base.
     // If neg is set, u is treated as negative int64 value. If append_ is
     // set, the string is appended to dst and the resulting byte slice is

@@ -17,6 +17,5 @@ namespace golang::goos
     {
     }
 
-    gocpp::string GOOS = "windows"_s;
 }
 

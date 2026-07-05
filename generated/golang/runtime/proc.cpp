@@ -3061,8 +3061,6 @@ namespace golang::runtime
     rwmutex execLock;
     // These errors are reported (via writeErrStr) by some OS-specific
     // versions of newosproc and newosproc0.
-    gocpp::string failthreadcreate = "runtime: failed to create new OS thread\n"_s;
-    gocpp::string failallocatestack = "runtime: failed to allocate stack for the new OS thread\n"_s;
     struct gocpp_id_1
     {
         mutex lock;

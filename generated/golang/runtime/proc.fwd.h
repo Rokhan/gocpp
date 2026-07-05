@@ -10,6 +10,8 @@ namespace golang::runtime
     const long freezeStopWait = 0x7fffffff;
     using stwReason = uint8_t;
     struct worldStop;
+    const gocpp::string failthreadcreate = "runtime: failed to create new OS thread\n"_s;
+    const gocpp::string failallocatestack = "runtime: failed to allocate stack for the new OS thread\n"_s;
     struct gocpp_id_1;
     struct gocpp_id_8;
     struct sysmontick;

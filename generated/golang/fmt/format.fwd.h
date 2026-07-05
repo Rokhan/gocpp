@@ -6,6 +6,8 @@
 
 namespace golang::fmt
 {
+    const gocpp::string ldigits = "0123456789abcdefx"_s;
+    const gocpp::string udigits = "0123456789ABCDEFX"_s;
     const bool go_signed = true;
     const bool go_unsigned = false;
     struct fmtFlags;

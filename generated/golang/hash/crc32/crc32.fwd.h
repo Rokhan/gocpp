@@ -13,5 +13,6 @@ namespace golang::crc32
     struct GoTag_Table;
     using Table = gocpp::alias<gocpp::array<uint32_t, 256>, GoTag_Table>;
     struct digest;
+    const gocpp::string magic = "crc\x01"_s;
     const int marshaledSize = len(magic) + 4 + 4;
 }

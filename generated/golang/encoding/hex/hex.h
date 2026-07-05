@@ -12,7 +12,6 @@
 
 namespace golang::hex
 {
-    extern gocpp::string hextable;
     extern gocpp::string reverseHexTable;
     int EncodedLen(int n);
     int Encode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);

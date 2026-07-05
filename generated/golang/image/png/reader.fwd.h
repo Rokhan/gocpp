@@ -42,6 +42,7 @@ namespace golang::png
     const int dsSeentRNS = 3;
     const int dsSeenIDAT = 4;
     const int dsSeenIEND = 5;
+    const gocpp::string pngHeader = "\x89PNG\r\n\x1a\n"_s;
     using FormatError = gocpp::string;
     using UnsupportedError = gocpp::string;
 }

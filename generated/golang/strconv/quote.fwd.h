@@ -3,3 +3,9 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::strconv
+{
+    const gocpp::string lowerhex = "0123456789abcdef"_s;
+    const gocpp::string upperhex = "0123456789ABCDEF"_s;
+}

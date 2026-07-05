@@ -6,6 +6,7 @@
 
 namespace golang::goarch
 {
+    const gocpp::string GOARCH = "amd64"_s;
     const long Is386 = 0;
     const long IsAmd64 = 1;
     const long IsAmd64p32 = 0;

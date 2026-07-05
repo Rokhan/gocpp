@@ -33,7 +33,6 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct interlaceScan& value);
-    extern gocpp::string pngHeader;
     extern FormatError chunkOrderError;
     void init();
     extern gocpp::slice<interlaceScan> interlacing;

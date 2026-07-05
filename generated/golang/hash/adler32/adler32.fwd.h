@@ -10,5 +10,6 @@ namespace golang::adler32
     const long nmax = 5552;
     const long Size = 4;
     using digest = uint32_t;
+    const gocpp::string magic = "adl\x01"_s;
     const int marshaledSize = len(magic) + 4;
 }

@@ -3,3 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::runtime
+{
+    const gocpp::string cgoWriteBarrierFail = "unpinned Go pointer stored into non-Go memory"_s;
+}

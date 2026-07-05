@@ -12,8 +12,6 @@
 
 namespace golang::strconv
 {
-    extern gocpp::string lowerhex;
-    extern gocpp::string upperhex;
     bool contains(gocpp::string s, unsigned char c);
     gocpp::string quoteWith(gocpp::string s, unsigned char quote, bool ASCIIonly, bool graphicOnly);
     gocpp::string quoteRuneWith(gocpp::rune r, unsigned char quote, bool ASCIIonly, bool graphicOnly);

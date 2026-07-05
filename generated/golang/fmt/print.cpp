@@ -64,20 +64,6 @@ namespace golang::fmt
 
     // Strings for use with buffer.WriteString.
     // This is less overhead than using buffer.Write with byte arrays.
-    gocpp::string commaSpaceString = ", "_s;
-    gocpp::string nilAngleString = "<nil>"_s;
-    gocpp::string nilParenString = "(nil)"_s;
-    gocpp::string nilString = "nil"_s;
-    gocpp::string mapString = "map["_s;
-    gocpp::string percentBangString = "%!"_s;
-    gocpp::string missingString = "(MISSING)"_s;
-    gocpp::string badIndexString = "(BADINDEX)"_s;
-    gocpp::string panicString = "(PANIC="_s;
-    gocpp::string extraString = "%!(EXTRA "_s;
-    gocpp::string badWidthString = "%!(BADWIDTH)"_s;
-    gocpp::string badPrecString = "%!(BADPREC)"_s;
-    gocpp::string noVerbString = "%!(NOVERB)"_s;
-    gocpp::string invReflectString = "<invalid reflect.Value>"_s;
     // State represents the printer state passed to custom formatters.
     // It provides access to the io.Writer interface plus information about
     // the flags and options for the operand's format specifier.

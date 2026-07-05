@@ -22,8 +22,6 @@ namespace golang::fmt
     {
     }
 
-    gocpp::string ldigits = "0123456789abcdefx"_s;
-    gocpp::string udigits = "0123456789ABCDEFX"_s;
     // flags placed in a separate struct for easy clearing.
     
     template<typename T> requires gocpp::GoStruct<T>

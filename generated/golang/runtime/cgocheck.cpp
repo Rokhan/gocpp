@@ -55,7 +55,6 @@ namespace golang::runtime
     {
     }
 
-    gocpp::string cgoWriteBarrierFail = "unpinned Go pointer stored into non-Go memory"_s;
     // cgoCheckPtrWrite is called whenever a pointer is stored into memory.
     // It throws if the program is storing an unpinned Go pointer into non-Go
     // memory.

@@ -12,20 +12,6 @@
 
 namespace golang::fmt
 {
-    extern gocpp::string commaSpaceString;
-    extern gocpp::string nilAngleString;
-    extern gocpp::string nilParenString;
-    extern gocpp::string nilString;
-    extern gocpp::string mapString;
-    extern gocpp::string percentBangString;
-    extern gocpp::string missingString;
-    extern gocpp::string badIndexString;
-    extern gocpp::string panicString;
-    extern gocpp::string extraString;
-    extern gocpp::string badWidthString;
-    extern gocpp::string badPrecString;
-    extern gocpp::string noVerbString;
-    extern gocpp::string invReflectString;
     struct State : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;

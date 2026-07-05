@@ -6,6 +6,20 @@
 
 namespace golang::fmt
 {
+    const gocpp::string commaSpaceString = ", "_s;
+    const gocpp::string nilAngleString = "<nil>"_s;
+    const gocpp::string nilParenString = "(nil)"_s;
+    const gocpp::string nilString = "nil"_s;
+    const gocpp::string mapString = "map["_s;
+    const gocpp::string percentBangString = "%!"_s;
+    const gocpp::string missingString = "(MISSING)"_s;
+    const gocpp::string badIndexString = "(BADINDEX)"_s;
+    const gocpp::string panicString = "(PANIC="_s;
+    const gocpp::string extraString = "%!(EXTRA "_s;
+    const gocpp::string badWidthString = "%!(BADWIDTH)"_s;
+    const gocpp::string badPrecString = "%!(BADPREC)"_s;
+    const gocpp::string noVerbString = "%!(NOVERB)"_s;
+    const gocpp::string invReflectString = "<invalid reflect.Value>"_s;
     struct State;
     struct Formatter;
     struct Stringer;

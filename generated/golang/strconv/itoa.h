@@ -19,7 +19,6 @@ namespace golang::strconv
     gocpp::slice<unsigned char> AppendUint(gocpp::slice<unsigned char> dst, uint64_t i, int base);
     gocpp::string small(int i);
     extern gocpp::string smallsString;
-    extern gocpp::string digits;
     std::tuple<gocpp::slice<unsigned char>, gocpp::string> formatBits(gocpp::slice<unsigned char> dst, uint64_t u, int base, bool neg, bool append_);
     bool isPowerOfTwo(int x);
 

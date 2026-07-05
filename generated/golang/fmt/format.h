@@ -12,8 +12,6 @@
 
 namespace golang::fmt
 {
-    extern gocpp::string ldigits;
-    extern gocpp::string udigits;
     struct fmtFlags
     {
         bool widPresent;

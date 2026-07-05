@@ -16,4 +16,5 @@ namespace golang::poll
     const int mutexRMask = ((1 << 20) - 1) << 23;
     const int mutexWWait = 1 << 43;
     const int mutexWMask = ((1 << 20) - 1) << 43;
+    const gocpp::string overflowMsg = "too many concurrent operations on a single file or socket (max 1048575)"_s;
 }

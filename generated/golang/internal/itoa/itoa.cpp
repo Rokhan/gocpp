@@ -50,7 +50,6 @@ namespace golang::itoa
         return gocpp::string(buf.make_slice(i));
     }
 
-    gocpp::string hex = "0123456789abcdef"_s;
     // Uitox converts val (a uint) to a hexadecimal string.
     gocpp::string Uitox(unsigned int val)
     {

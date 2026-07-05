@@ -9,10 +9,8 @@
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 #include "gocpp/support.h"
 
-
 namespace golang::goarch
 {
-    extern gocpp::string GOARCH;
 
     namespace rec
     {

@@ -3,3 +3,8 @@
 
 #include "gocpp/support.fwd.h"
 
+
+namespace golang::itoa
+{
+    const gocpp::string hex = "0123456789abcdef"_s;
+}

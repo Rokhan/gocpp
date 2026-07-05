@@ -202,7 +202,6 @@ namespace golang::crc32
         d->crc = 0;
     }
 
-    gocpp::string magic = "crc\x01"_s;
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(golang::crc32::digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);

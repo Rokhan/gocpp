@@ -20,8 +20,6 @@ namespace golang::strconv
     {
     }
 
-    gocpp::string lowerhex = "0123456789abcdef"_s;
-    gocpp::string upperhex = "0123456789ABCDEF"_s;
     // contains reports whether the string contains the byte c.
     bool contains(gocpp::string s, unsigned char c)
     {

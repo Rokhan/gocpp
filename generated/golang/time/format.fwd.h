@@ -6,6 +6,25 @@
 
 namespace golang::time
 {
+    const gocpp::string Layout = "01/02 03:04:05PM '06 -0700"_s;
+    const gocpp::string ANSIC = "Mon Jan _2 15:04:05 2006"_s;
+    const gocpp::string UnixDate = "Mon Jan _2 15:04:05 MST 2006"_s;
+    const gocpp::string RubyDate = "Mon Jan 02 15:04:05 -0700 2006"_s;
+    const gocpp::string RFC822 = "02 Jan 06 15:04 MST"_s;
+    const gocpp::string RFC822Z = "02 Jan 06 15:04 -0700"_s;
+    const gocpp::string RFC850 = "Monday, 02-Jan-06 15:04:05 MST"_s;
+    const gocpp::string RFC1123 = "Mon, 02 Jan 2006 15:04:05 MST"_s;
+    const gocpp::string RFC1123Z = "Mon, 02 Jan 2006 15:04:05 -0700"_s;
+    const gocpp::string RFC3339 = "2006-01-02T15:04:05Z07:00"_s;
+    const gocpp::string RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"_s;
+    const gocpp::string Kitchen = "3:04PM"_s;
+    const gocpp::string Stamp = "Jan _2 15:04:05"_s;
+    const gocpp::string StampMilli = "Jan _2 15:04:05.000"_s;
+    const gocpp::string StampMicro = "Jan _2 15:04:05.000000"_s;
+    const gocpp::string StampNano = "Jan _2 15:04:05.000000000"_s;
+    const gocpp::string DateTime = "2006-01-02 15:04:05"_s;
+    const gocpp::string DateOnly = "2006-01-02"_s;
+    const gocpp::string TimeOnly = "15:04:05"_s;
     const int stdTZ = 23;
     const int stdISO8601TZ = 24;
     const int stdISO8601SecondsTZ = 25;
@@ -24,6 +43,7 @@ namespace golang::time
     const long stdArgShift = 16;
     const long stdSeparatorShift = 28;
     struct ParseError;
+    const gocpp::string lowerhex = "0123456789abcdef"_s;
     const long runeSelf = 0x80;
     const char runeError = '\uFFFD';
     const int stdLongMonth = 1 + stdNeedDate;

@@ -17,6 +17,5 @@ namespace golang::goarch
     {
     }
 
-    gocpp::string GOARCH = "amd64"_s;
 }
 

@@ -30,7 +30,6 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fdMutex& value);
-    extern gocpp::string overflowMsg;
     void runtime_Semacquire(uint32_t* sema);
     void runtime_Semrelease(uint32_t* sema);
 }

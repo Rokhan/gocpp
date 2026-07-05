@@ -116,7 +116,6 @@ namespace golang::png
     // multiple IDAT chunks, and IDAT chunks must be sequential (i.e. they may not
     // have any other chunks between them).
     // https://www.w3.org/TR/PNG/#5ChunkOrdering
-    gocpp::string pngHeader = "\x89PNG\r\n\x1a\n"_s;
     
     template<typename T> requires gocpp::GoStruct<T>
     decoder::operator T()

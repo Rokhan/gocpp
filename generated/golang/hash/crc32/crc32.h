@@ -35,7 +35,6 @@ namespace golang::crc32
     };
 
     std::ostream& operator<<(std::ostream& os, const struct digest& value);
-    extern gocpp::string magic;
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
     uint32_t ChecksumIEEE(gocpp::slice<unsigned char> data);

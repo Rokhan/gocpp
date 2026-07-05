@@ -7,6 +7,7 @@
 namespace golang::os
 {
     const long _UTIME_OMIT = - 1;
+    const gocpp::string DevNull = "NUL"_s;
 }
 #include "golang/internal/poll/fd_windows.fwd.h"
 #include "golang/os/dir_windows.fwd.h"

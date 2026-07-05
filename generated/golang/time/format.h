@@ -12,25 +12,6 @@
 
 namespace golang::time
 {
-    extern gocpp::string Layout;
-    extern gocpp::string ANSIC;
-    extern gocpp::string UnixDate;
-    extern gocpp::string RubyDate;
-    extern gocpp::string RFC822;
-    extern gocpp::string RFC822Z;
-    extern gocpp::string RFC850;
-    extern gocpp::string RFC1123;
-    extern gocpp::string RFC1123Z;
-    extern gocpp::string RFC3339;
-    extern gocpp::string RFC3339Nano;
-    extern gocpp::string Kitchen;
-    extern gocpp::string Stamp;
-    extern gocpp::string StampMilli;
-    extern gocpp::string StampMicro;
-    extern gocpp::string StampNano;
-    extern gocpp::string DateTime;
-    extern gocpp::string DateOnly;
-    extern gocpp::string TimeOnly;
     extern gocpp::array<int, 6> std0x;
     bool startsWithLowerCase(gocpp::string str);
     std::tuple<gocpp::string, int, gocpp::string> nextStdChunk(gocpp::string layout);
@@ -69,7 +50,6 @@ namespace golang::time
 
     std::ostream& operator<<(std::ostream& os, const struct ParseError& value);
     gocpp::string cloneString(gocpp::string s);
-    extern gocpp::string lowerhex;
     gocpp::string quote(gocpp::string s);
     
     template<typename bytes>

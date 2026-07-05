@@ -115,25 +115,6 @@ namespace golang::time
     // Some valid layouts are invalid time values for time.Parse, due to formats
     // such as _ for space padding and Z for zone information.
     // Handy time stamps.
-    gocpp::string Layout = "01/02 03:04:05PM '06 -0700"_s;
-    gocpp::string ANSIC = "Mon Jan _2 15:04:05 2006"_s;
-    gocpp::string UnixDate = "Mon Jan _2 15:04:05 MST 2006"_s;
-    gocpp::string RubyDate = "Mon Jan 02 15:04:05 -0700 2006"_s;
-    gocpp::string RFC822 = "02 Jan 06 15:04 MST"_s;
-    gocpp::string RFC822Z = "02 Jan 06 15:04 -0700"_s;
-    gocpp::string RFC850 = "Monday, 02-Jan-06 15:04:05 MST"_s;
-    gocpp::string RFC1123 = "Mon, 02 Jan 2006 15:04:05 MST"_s;
-    gocpp::string RFC1123Z = "Mon, 02 Jan 2006 15:04:05 -0700"_s;
-    gocpp::string RFC3339 = "2006-01-02T15:04:05Z07:00"_s;
-    gocpp::string RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"_s;
-    gocpp::string Kitchen = "3:04PM"_s;
-    gocpp::string Stamp = "Jan _2 15:04:05"_s;
-    gocpp::string StampMilli = "Jan _2 15:04:05.000"_s;
-    gocpp::string StampMicro = "Jan _2 15:04:05.000000"_s;
-    gocpp::string StampNano = "Jan _2 15:04:05.000000000"_s;
-    gocpp::string DateTime = "2006-01-02 15:04:05"_s;
-    gocpp::string DateOnly = "2006-01-02"_s;
-    gocpp::string TimeOnly = "15:04:05"_s;
     int gocpp_id_0 = 0;
     // std0x records the std values for "01", "02", ..., "06".
     gocpp::array<int, 6> std0x = gocpp::array<int, 6> {stdZeroMonth, stdZeroDay, stdZeroHour12, stdZeroMinute, stdZeroSecond, stdYear};
@@ -1116,7 +1097,6 @@ namespace golang::time
 
     // These are borrowed from unicode/utf8 and strconv and replicate behavior in
     // that package, since we can't take a dependency on either.
-    gocpp::string lowerhex = "0123456789abcdef"_s;
     gocpp::string quote(gocpp::string s)
     {
         // slice will be at least len(s) + quotes

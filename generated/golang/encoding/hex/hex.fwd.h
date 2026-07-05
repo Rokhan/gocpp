@@ -6,6 +6,7 @@
 
 namespace golang::hex
 {
+    const gocpp::string hextable = "0123456789abcdef"_s;
     using InvalidByteError = unsigned char;
     const long bufferSize = 1024;
 }

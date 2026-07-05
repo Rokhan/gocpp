@@ -9,4 +9,5 @@ namespace golang::strconv
     const bool fastSmalls = true;
     const long nSmalls = 100;
     const bool host32bit = (~ (unsigned int)(0) >> 32) == 0;
+    const gocpp::string digits = "0123456789abcdefghijklmnopqrstuvwxyz"_s;
 }

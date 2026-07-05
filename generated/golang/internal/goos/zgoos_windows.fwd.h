@@ -6,6 +6,7 @@
 
 namespace golang::goos
 {
+    const gocpp::string GOOS = "windows"_s;
     const long IsAix = 0;
     const long IsAndroid = 0;
     const long IsDarwin = 0;

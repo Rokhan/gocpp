@@ -562,8 +562,6 @@ namespace golang::runtime
         cgoCheckArg(t, ep->data, t->Kind_ & kindDirectIface == 0, top, cgoCheckPointerFail);
     }
 
-    gocpp::string cgoCheckPointerFail = "cgo argument has Go pointer to unpinned Go pointer"_s;
-    gocpp::string cgoResultFail = "cgo result is unpinned Go pointer or points to unpinned Go pointer"_s;
     // cgoCheckArg is the real work of cgoCheckPointer. The argument p
     // is either a pointer to the value (of type t), or the value itself,
     // depending on indir. The top parameter is whether we are at the top

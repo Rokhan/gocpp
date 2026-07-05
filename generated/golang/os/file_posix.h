@@ -9,28 +9,28 @@
 #include "golang/os/file_posix.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
-#include "golang/internal/poll/fd_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
-#include "golang/io/fs/fs.h"
-#include "golang/os/dir_windows.h"
-#include "golang/os/file_windows.h"
+
+namespace golang::os
+{
+    struct gocpp::error Chown(gocpp::string name, int uid, int gid);
+    struct gocpp::error Lchown(gocpp::string name, int uid, int gid);
+    struct gocpp::error ignoringEINTR(std::function<struct gocpp::error ()> fn);
+}
 #include "golang/os/types.h"
-#include "golang/sync/mutex.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::os
 {
     uint32_t syscallMode(golang::os::FileMode i);
     struct gocpp::error chmod(gocpp::string name, golang::os::FileMode mode);
-    struct gocpp::error Chown(gocpp::string name, int uid, int gid);
-    struct gocpp::error Lchown(gocpp::string name, int uid, int gid);
     struct gocpp::error Chtimes(gocpp::string name, mocklib::Date atime, mocklib::Date mtime);
-    struct gocpp::error ignoringEINTR(std::function<struct gocpp::error ()> fn);
+}
+
+#include "golang/os/types.h"
+#include "golang/time/time.h"
+
+namespace golang::os
+{
 
     namespace rec
     {

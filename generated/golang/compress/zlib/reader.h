@@ -10,6 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/compress/flate/inflate.h"
+#include "golang/errors/errors.h"
 #include "golang/hash/hash.h"
 #include "golang/io/io.h"
 
@@ -100,6 +101,12 @@ namespace golang::zlib
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value);
     std::tuple<io::ReadCloser, struct gocpp::error> NewReader(io::Reader r);
     std::tuple<io::ReadCloser, struct gocpp::error> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
+}
+
+#include "golang/io/io.h"
+
+namespace golang::zlib
+{
 
     namespace rec
     {

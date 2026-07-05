@@ -9,6 +9,11 @@
 #include "tests/TourOfGo/concurrency/mutex-counter.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::main
+{
+    void main();
+}
 #include "golang/sync/mutex.h"
 
 namespace golang::main
@@ -30,7 +35,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SafeCounter& value);
-    void main();
 
     namespace rec
     {

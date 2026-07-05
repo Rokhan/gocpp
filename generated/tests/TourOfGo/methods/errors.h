@@ -9,8 +9,13 @@
 #include "tests/TourOfGo/methods/errors.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::main
+{
+    struct gocpp::error run();
+    void main();
+}
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::main
 {
@@ -31,8 +36,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MyError& value);
-    struct gocpp::error run();
-    void main();
 
     namespace rec
     {

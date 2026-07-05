@@ -9,6 +9,7 @@
 #include "golang/internal/bytealg/compare_native.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::bytealg
 {
     int Compare(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);

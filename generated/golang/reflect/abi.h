@@ -9,15 +9,9 @@
 #include "golang/reflect/abi.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/type.h"
-#include "golang/reflect/type.h"
 
 namespace golang::reflect
 {
-    extern int intArgRegs;
-    extern int floatArgRegs;
-    extern uintptr_t floatRegSize;
     struct abiStep
     {
         golang::reflect::abiStepKind kind;
@@ -42,12 +36,6 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiStep& value);
-    void dumpPtrBitMap(abi::IntArgRegBitmap b);
-    struct abiDesc newAbiDesc(golang::reflect::funcType* t, abi::Type* rcvr);
-    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
-    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
-    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
-    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
     struct abiSeq
     {
         // steps is the set of instructions.
@@ -79,6 +67,25 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiSeq& value);
+}
+#include "golang/internal/abi/abi.h"
+#include "golang/internal/abi/abi_amd64.h"
+
+namespace golang::reflect
+{
+    extern int intArgRegs;
+    extern int floatArgRegs;
+    extern uintptr_t floatRegSize;
+    void dumpPtrBitMap(abi::IntArgRegBitmap b);
+    void intFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
+    void intToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
+    void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
+    void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
+}
+#include "golang/reflect/type.h"
+
+namespace golang::reflect
+{
     struct abiDesc
     {
         // call and ret represent the translation steps for
@@ -123,6 +130,18 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
+}
+#include "golang/internal/abi/type.h"
+
+namespace golang::reflect
+{
+    struct abiDesc newAbiDesc(golang::reflect::funcType* t, abi::Type* rcvr);
+}
+
+#include "golang/internal/abi/type.h"
+
+namespace golang::reflect
+{
 
     namespace rec
     {

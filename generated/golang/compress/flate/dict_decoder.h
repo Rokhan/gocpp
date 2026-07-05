@@ -9,6 +9,7 @@
 #include "golang/compress/flate/dict_decoder.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::flate
 {
     struct dictDecoder

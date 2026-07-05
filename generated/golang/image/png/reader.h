@@ -9,11 +9,6 @@
 #include "golang/image/png/reader.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/hash/hash.h"
-#include "golang/image/color/color.h"
-#include "golang/image/geom.h"
-#include "golang/image/image.h"
-#include "golang/io/io.h"
 
 namespace golang::png
 {
@@ -39,6 +34,17 @@ namespace golang::png
 
     std::ostream& operator<<(std::ostream& os, const struct interlaceScan& value);
     extern gocpp::string pngHeader;
+    extern FormatError chunkOrderError;
+    void init();
+    extern gocpp::slice<interlaceScan> interlacing;
+}
+#include "golang/hash/hash.h"
+#include "golang/image/color/color.h"
+#include "golang/image/image.h"
+#include "golang/io/io.h"
+
+namespace golang::png
+{
     struct decoder
     {
         io::Reader r;
@@ -70,11 +76,15 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decoder& value);
-    extern FormatError chunkOrderError;
     std::tuple<image::Image, struct gocpp::error> Decode(io::Reader r);
     std::tuple<image::Config, struct gocpp::error> DecodeConfig(io::Reader r);
-    void init();
-    extern gocpp::slice<interlaceScan> interlacing;
+}
+
+#include "golang/image/image.h"
+#include "golang/io/io.h"
+
+namespace golang::png
+{
 
     namespace rec
     {

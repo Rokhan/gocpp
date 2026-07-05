@@ -10,7 +10,6 @@
 #include "gocpp/support.h"
 
 #include "golang/image/color/color.h"
-#include "golang/image/color/ycbcr.h"
 #include "golang/image/geom.h"
 
 namespace golang::image
@@ -109,6 +108,229 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Image& value);
+    int pixelBufferLength(int bytesPerPixel, struct Rectangle r, gocpp::string imageTypeName);
+    struct RGBA
+    {
+        // Pix holds the image's pixels, in R, G, B, A order. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
+        gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int Stride;
+        // Rect is the image's bounds.
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct RGBA& value);
+    struct RGBA64
+    {
+        // Pix holds the image's pixels, in R, G, B, A order and big-endian format. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8].
+        gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int Stride;
+        // Rect is the image's bounds.
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct RGBA64& value);
+    struct NRGBA
+    {
+        // Pix holds the image's pixels, in R, G, B, A order. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
+        gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int Stride;
+        // Rect is the image's bounds.
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct NRGBA& value);
+    struct NRGBA64
+    {
+        // Pix holds the image's pixels, in R, G, B, A order and big-endian format. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8].
+        gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int Stride;
+        // Rect is the image's bounds.
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct NRGBA64& value);
+    struct Alpha
+    {
+        // Pix holds the image's pixels, as alpha values. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
+        gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int Stride;
+        // Rect is the image's bounds.
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Alpha& value);
+    struct Alpha16
+    {
+        // Pix holds the image's pixels, as alpha values in big-endian format. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2].
+        gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int Stride;
+        // Rect is the image's bounds.
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Alpha16& value);
+    struct Gray
+    {
+        // Pix holds the image's pixels, as gray values. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
+        gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int Stride;
+        // Rect is the image's bounds.
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Gray& value);
+    struct Gray16
+    {
+        // Pix holds the image's pixels, as gray values in big-endian format. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2].
+        gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int Stride;
+        // Rect is the image's bounds.
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Gray16& value);
+    struct CMYK
+    {
+        // Pix holds the image's pixels, in C, M, Y, K order. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
+        gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int Stride;
+        // Rect is the image's bounds.
+        Rectangle Rect;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
+    struct Paletted
+    {
+        // Pix holds the image's pixels, as palette indices. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
+        gocpp::slice<uint8_t> Pix;
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int Stride;
+        // Rect is the image's bounds.
+        Rectangle Rect;
+        // Palette is the image's palette.
+        color::Palette Palette;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Paletted& value);
     struct RGBA64Image : virtual gocpp::Interface, Image
     {
         using gocpp::Interface::operator==;
@@ -248,239 +470,24 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct PalettedImage& value);
-    int pixelBufferLength(int bytesPerPixel, struct Rectangle r, gocpp::string imageTypeName);
-    struct RGBA
-    {
-        // Pix holds the image's pixels, in R, G, B, A order. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
-        gocpp::slice<uint8_t> Pix;
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride;
-        // Rect is the image's bounds.
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct RGBA& value);
     struct RGBA* NewRGBA(struct Rectangle r);
-    struct RGBA64
-    {
-        // Pix holds the image's pixels, in R, G, B, A order and big-endian format. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8].
-        gocpp::slice<uint8_t> Pix;
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride;
-        // Rect is the image's bounds.
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct RGBA64& value);
     struct RGBA64* NewRGBA64(struct Rectangle r);
-    struct NRGBA
-    {
-        // Pix holds the image's pixels, in R, G, B, A order. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
-        gocpp::slice<uint8_t> Pix;
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride;
-        // Rect is the image's bounds.
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct NRGBA& value);
     struct NRGBA* NewNRGBA(struct Rectangle r);
-    struct NRGBA64
-    {
-        // Pix holds the image's pixels, in R, G, B, A order and big-endian format. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*8].
-        gocpp::slice<uint8_t> Pix;
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride;
-        // Rect is the image's bounds.
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct NRGBA64& value);
     struct NRGBA64* NewNRGBA64(struct Rectangle r);
-    struct Alpha
-    {
-        // Pix holds the image's pixels, as alpha values. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
-        gocpp::slice<uint8_t> Pix;
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride;
-        // Rect is the image's bounds.
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Alpha& value);
     struct Alpha* NewAlpha(struct Rectangle r);
-    struct Alpha16
-    {
-        // Pix holds the image's pixels, as alpha values in big-endian format. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2].
-        gocpp::slice<uint8_t> Pix;
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride;
-        // Rect is the image's bounds.
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Alpha16& value);
     struct Alpha16* NewAlpha16(struct Rectangle r);
-    struct Gray
-    {
-        // Pix holds the image's pixels, as gray values. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
-        gocpp::slice<uint8_t> Pix;
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride;
-        // Rect is the image's bounds.
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Gray& value);
     struct Gray* NewGray(struct Rectangle r);
-    struct Gray16
-    {
-        // Pix holds the image's pixels, as gray values in big-endian format. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*2].
-        gocpp::slice<uint8_t> Pix;
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride;
-        // Rect is the image's bounds.
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Gray16& value);
     struct Gray16* NewGray16(struct Rectangle r);
-    struct CMYK
-    {
-        // Pix holds the image's pixels, in C, M, Y, K order. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
-        gocpp::slice<uint8_t> Pix;
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride;
-        // Rect is the image's bounds.
-        Rectangle Rect;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
     struct CMYK* NewCMYK(struct Rectangle r);
-    struct Paletted
-    {
-        // Pix holds the image's pixels, as palette indices. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
-        gocpp::slice<uint8_t> Pix;
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int Stride;
-        // Rect is the image's bounds.
-        Rectangle Rect;
-        // Palette is the image's palette.
-        color::Palette Palette;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Paletted& value);
     struct Paletted* NewPaletted(struct Rectangle r, color::Palette p);
+}
+
+#include "golang/image/color/color.h"
+#include "golang/image/color/ycbcr.h"
+#include "golang/image/geom.h"
+
+namespace golang::image
+{
 
     namespace rec
     {

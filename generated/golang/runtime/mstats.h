@@ -9,9 +9,6 @@
 #include "golang/runtime/mstats.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -42,45 +39,11 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     void init();
-    void ReadMemStats(struct MemStats* m);
     extern bool doubleCheckReadMemStats;
-    void readmemstats_m(struct MemStats* stats);
     void readGCStats(gocpp::slice<uint64_t>* pauses);
     void readGCStats_m(gocpp::slice<uint64_t>* pauses);
     void flushmcache(int i);
     void flushallmcaches();
-    struct heapStatsDelta
-    {
-        // Memory stats.
-        int64_t committed; // byte delta of memory committed
-        int64_t released; // byte delta of released memory generated
-        int64_t inHeap; // byte delta of memory placed in the heap
-        int64_t inStacks; // byte delta of memory reserved for stacks
-        int64_t inWorkBufs; // byte delta of memory reserved for work bufs
-        int64_t inPtrScalarBits; // byte delta of memory reserved for unrolled GC prog bits
-        // Allocator stats.
-        // These are all uint64 because they're cumulative, and could quickly wrap
-        // around otherwise.
-        uint64_t tinyAllocCount; // number of tiny allocations
-        uint64_t largeAlloc; // bytes allocated for large objects
-        uint64_t largeAllocCount; // number of large object allocations
-        gocpp::array<uint64_t, _NumSizeClasses> smallAllocCount; // number of allocs for small objects
-        uint64_t largeFree; // bytes freed for large objects (>maxSmallSize)
-        uint64_t largeFreeCount; // number of frees for large objects (>maxSmallSize)
-        gocpp::array<uint64_t, _NumSizeClasses> smallFreeCount; // number of frees for small objects (<=maxSmallSize)
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct heapStatsDelta& value);
     struct cpuStats
     {
         int64_t gcAssistTime; // GC assists
@@ -288,6 +251,51 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MemStats& value);
+}
+#include "golang/runtime/sizeclasses.h"
+
+namespace golang::runtime
+{
+    struct heapStatsDelta
+    {
+        // Memory stats.
+        int64_t committed; // byte delta of memory committed
+        int64_t released; // byte delta of released memory generated
+        int64_t inHeap; // byte delta of memory placed in the heap
+        int64_t inStacks; // byte delta of memory reserved for stacks
+        int64_t inWorkBufs; // byte delta of memory reserved for work bufs
+        int64_t inPtrScalarBits; // byte delta of memory reserved for unrolled GC prog bits
+        // Allocator stats.
+        // These are all uint64 because they're cumulative, and could quickly wrap
+        // around otherwise.
+        uint64_t tinyAllocCount; // number of tiny allocations
+        uint64_t largeAlloc; // bytes allocated for large objects
+        uint64_t largeAllocCount; // number of large object allocations
+        gocpp::array<uint64_t, _NumSizeClasses> smallAllocCount; // number of allocs for small objects
+        uint64_t largeFree; // bytes freed for large objects (>maxSmallSize)
+        uint64_t largeFreeCount; // number of frees for large objects (>maxSmallSize)
+        gocpp::array<uint64_t, _NumSizeClasses> smallFreeCount; // number of frees for small objects (<=maxSmallSize)
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct heapStatsDelta& value);
+    void ReadMemStats(struct MemStats* m);
+    void readmemstats_m(struct MemStats* stats);
+}
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct consistentHeapStats
     {
         // stats is a ring buffer of heapStatsDelta values.

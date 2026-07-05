@@ -9,6 +9,7 @@
 #include "golang/cmp/cmp.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::cmp
 {
     struct Ordered : virtual gocpp::Interface

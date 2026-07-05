@@ -9,27 +9,9 @@
 #include "golang/os/file.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
-#include "golang/internal/poll/fd_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
-#include "golang/io/fs/fs.h"
-#include "golang/io/io.h"
-#include "golang/os/dir_windows.h"
-#include "golang/os/file_windows.h"
-#include "golang/os/types.h"
-#include "golang/sync/mutex.h"
-#include "golang/syscall/net.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
-#include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::os
 {
-    extern File* Stdin;
-    extern File* Stdout;
-    extern File* Stderr;
     struct LinkError
     {
         gocpp::string Op;
@@ -64,8 +46,6 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noReadFrom& value);
-    std::tuple<int64_t, struct gocpp::error> genericReadFrom(struct File* f, io::Reader r);
-    extern gocpp::error errWriteAtInAppendMode;
     struct noWriteTo
     {
 
@@ -81,14 +61,8 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noWriteTo& value);
-    std::tuple<int64_t, struct gocpp::error> genericWriteTo(struct File* f, io::Writer w);
-    struct gocpp::error Mkdir(gocpp::string name, golang::os::FileMode perm);
     struct gocpp::error setStickyBit(gocpp::string name);
     struct gocpp::error Chdir(gocpp::string dir);
-    std::tuple<struct File*, struct gocpp::error> Open(gocpp::string name);
-    std::tuple<struct File*, struct gocpp::error> Create(gocpp::string name);
-    std::tuple<struct File*, struct gocpp::error> OpenFile(gocpp::string name, int flag, golang::os::FileMode perm);
-    extern std::function<std::tuple<fs::FileInfo, gocpp::error> (gocpp::string)> lstat;
     struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath);
     std::tuple<gocpp::string, struct gocpp::error> Readlink(gocpp::string name);
     std::tuple<int, struct gocpp::error> fixCount(int n, struct gocpp::error err);
@@ -97,10 +71,21 @@ namespace golang::os
     std::tuple<gocpp::string, struct gocpp::error> UserCacheDir();
     std::tuple<gocpp::string, struct gocpp::error> UserConfigDir();
     std::tuple<gocpp::string, struct gocpp::error> UserHomeDir();
-    struct gocpp::error Chmod(gocpp::string name, golang::os::FileMode mode);
-    fs::FS DirFS(gocpp::string dir);
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadFile(gocpp::string name);
-    struct gocpp::error WriteFile(gocpp::string name, gocpp::slice<unsigned char> data, golang::os::FileMode perm);
+}
+#include "golang/errors/errors.h"
+#include "golang/io/fs/fs.h"
+#include "golang/io/io.h"
+#include "golang/os/file_windows.h"
+#include "golang/os/stat.h"
+#include "golang/os/types.h"
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::os
+{
+    extern File* Stdin;
+    extern File* Stdout;
+    extern File* Stderr;
     struct fileWithoutReadFrom
     {
         noReadFrom noReadFrom;
@@ -118,6 +103,8 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileWithoutReadFrom& value);
+    std::tuple<int64_t, struct gocpp::error> genericReadFrom(struct File* f, io::Reader r);
+    extern gocpp::error errWriteAtInAppendMode;
     struct fileWithoutWriteTo
     {
         noWriteTo noWriteTo;
@@ -135,6 +122,25 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileWithoutWriteTo& value);
+    std::tuple<int64_t, struct gocpp::error> genericWriteTo(struct File* f, io::Writer w);
+    struct gocpp::error Mkdir(gocpp::string name, golang::os::FileMode perm);
+    std::tuple<struct File*, struct gocpp::error> Open(gocpp::string name);
+    std::tuple<struct File*, struct gocpp::error> Create(gocpp::string name);
+    std::tuple<struct File*, struct gocpp::error> OpenFile(gocpp::string name, int flag, golang::os::FileMode perm);
+    extern std::function<std::tuple<fs::FileInfo, gocpp::error> (gocpp::string)> lstat;
+    struct gocpp::error Chmod(gocpp::string name, golang::os::FileMode mode);
+    fs::FS DirFS(gocpp::string dir);
+    struct gocpp::error WriteFile(gocpp::string name, gocpp::slice<unsigned char> data, golang::os::FileMode perm);
+}
+
+#include "golang/io/fs/fs.h"
+#include "golang/io/io.h"
+#include "golang/os/types.h"
+#include "golang/syscall/net.h"
+#include "golang/time/time.h"
+
+namespace golang::os
+{
 
     namespace rec
     {

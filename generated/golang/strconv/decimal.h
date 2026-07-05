@@ -9,6 +9,7 @@
 #include "golang/strconv/decimal.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::strconv
 {
     struct decimal
@@ -32,8 +33,6 @@ namespace golang::strconv
 
     std::ostream& operator<<(std::ostream& os, const struct decimal& value);
     int digitZero(gocpp::slice<unsigned char> dst);
-    void trim(struct decimal* a);
-    void rightShift(struct decimal* a, unsigned int k);
     struct leftCheat
     {
         int delta; // number of new digits
@@ -52,9 +51,11 @@ namespace golang::strconv
 
     std::ostream& operator<<(std::ostream& os, const struct leftCheat& value);
     bool prefixIsLessThan(gocpp::slice<unsigned char> b, gocpp::string s);
+    void trim(struct decimal* a);
+    void rightShift(struct decimal* a, unsigned int k);
+    extern gocpp::slice<leftCheat> leftcheats;
     void leftShift(struct decimal* a, unsigned int k);
     bool shouldRoundUp(struct decimal* a, int nd);
-    extern gocpp::slice<leftCheat> leftcheats;
 
     namespace rec
     {

@@ -9,30 +9,9 @@
 #include "golang/internal/abi/switch.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
 
 namespace golang::abi
 {
-    struct InterfaceSwitch
-    {
-        InterfaceSwitchCache* Cache;
-        int NCases;
-        // Array of NCases elements.
-        // Each case must be a non-empty interface type.
-        gocpp::array<InterfaceType*, 1> Cases;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitch& value);
     struct InterfaceSwitchCacheEntry
     {
         // type of source value (a *Type)
@@ -55,24 +34,6 @@ namespace golang::abi
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitchCacheEntry& value);
     bool UseInterfaceSwitchCache(gocpp::string goarch);
-    struct TypeAssert
-    {
-        TypeAssertCache* Cache;
-        InterfaceType* Inter;
-        bool CanFail;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct TypeAssert& value);
     struct TypeAssertCacheEntry
     {
         // type of source value (a *runtime._type)
@@ -127,6 +88,49 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertCache& value);
+}
+#include "golang/internal/abi/type.h"
+
+namespace golang::abi
+{
+    struct InterfaceSwitch
+    {
+        InterfaceSwitchCache* Cache;
+        int NCases;
+        // Array of NCases elements.
+        // Each case must be a non-empty interface type.
+        gocpp::array<InterfaceType*, 1> Cases;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitch& value);
+    struct TypeAssert
+    {
+        TypeAssertCache* Cache;
+        InterfaceType* Inter;
+        bool CanFail;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct TypeAssert& value);
 
     namespace rec
     {

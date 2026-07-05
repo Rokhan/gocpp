@@ -9,6 +9,7 @@
 #include "golang/math/hypot_asm.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::math
 {
     double archHypot(double p, double q);

@@ -9,7 +9,6 @@
 #include "golang/runtime/mgclimit.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
 
 namespace golang::runtime
 {
@@ -35,22 +34,11 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     runtime::limiterEventStamp makeLimiterEventStamp(golang::runtime::limiterEventType typ, int64_t now);
-    struct limiterEvent
-    {
-        atomic::Uint64 stamp; // Stores a limiterEventStamp.
+}
+#include "golang/runtime/internal/atomic/types.h"
 
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value);
+namespace golang::runtime
+{
     struct gcCPULimiterState
     {
         atomic::Uint32 lock;
@@ -97,6 +85,22 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcCPULimiterState& value);
+    struct limiterEvent
+    {
+        atomic::Uint64 stamp; // Stores a limiterEventStamp.
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value);
     extern gcCPULimiterState gcCPULimiter;
 
     namespace rec

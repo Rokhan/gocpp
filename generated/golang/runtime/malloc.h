@@ -9,40 +9,6 @@
 #include "golang/runtime/malloc.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/internal/cpu/cpu.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mcentral.h"
-#include "golang/runtime/mcheckmark.h"
-#include "golang/runtime/mfixalloc.h"
-#include "golang/runtime/mgcscavenge.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mpagealloc.h"
-#include "golang/runtime/mpallocbits.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/mspanset.h"
-#include "golang/runtime/mstats.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -52,16 +18,7 @@ namespace golang::runtime
     void mallocinit();
     std::tuple<gocpp::unsafe_pointer, uintptr_t> sysReserveAligned(gocpp::unsafe_pointer v, uintptr_t size, uintptr_t align);
     extern uintptr_t zerobase;
-    runtime::gclinkptr nextFreeFast(struct mspan* s);
-    gocpp::unsafe_pointer mallocgc(uintptr_t size, golang::runtime::_type* typ, bool needzero);
-    struct g* deductAssistCredit(uintptr_t size);
     void memclrNoHeapPointersChunked(uintptr_t size, gocpp::unsafe_pointer x);
-    gocpp::unsafe_pointer newobject(golang::runtime::_type* typ);
-    gocpp::unsafe_pointer reflect_unsafe_New(golang::runtime::_type* typ);
-    gocpp::unsafe_pointer reflectlite_unsafe_New(golang::runtime::_type* typ);
-    gocpp::unsafe_pointer newarray(golang::runtime::_type* typ, int n);
-    gocpp::unsafe_pointer reflect_unsafe_NewArray(golang::runtime::_type* typ, int n);
-    void profilealloc(struct m* mp, gocpp::unsafe_pointer x, uintptr_t size);
     uintptr_t nextSample();
     int32_t fastexprand(int mean);
     uintptr_t nextSampleNoFP();
@@ -82,8 +39,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct persistentAlloc& value);
-    gocpp::unsafe_pointer persistentalloc(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
-    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
     bool inPersistentAlloc(uintptr_t p);
     struct linearAlloc
     {
@@ -104,6 +59,28 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct linearAlloc& value);
+    uintptr_t computeRZlog(uintptr_t userSize);
+}
+#include "golang/runtime/internal/sys/nih.h"
+#include "golang/runtime/mcache.h"
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/mstats.h"
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
+    runtime::gclinkptr nextFreeFast(struct mspan* s);
+    gocpp::unsafe_pointer mallocgc(uintptr_t size, golang::runtime::_type* typ, bool needzero);
+    struct g* deductAssistCredit(uintptr_t size);
+    gocpp::unsafe_pointer newobject(golang::runtime::_type* typ);
+    gocpp::unsafe_pointer reflect_unsafe_New(golang::runtime::_type* typ);
+    gocpp::unsafe_pointer reflectlite_unsafe_New(golang::runtime::_type* typ);
+    gocpp::unsafe_pointer newarray(golang::runtime::_type* typ, int n);
+    gocpp::unsafe_pointer reflect_unsafe_NewArray(golang::runtime::_type* typ, int n);
+    void profilealloc(struct m* mp, gocpp::unsafe_pointer x, uintptr_t size);
+    extern gocpp_id_0 globalAlloc;
+    gocpp::unsafe_pointer persistentalloc(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
     struct notInHeap
     {
         sys::NotInHeap _1;
@@ -120,9 +97,16 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notInHeap& value);
-    uintptr_t computeRZlog(uintptr_t userSize);
-    extern gocpp_id_0 globalAlloc;
     extern notInHeap* persistentChunks;
+    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
+}
+
+#include "golang/runtime/mcache.h"
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/mstats.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

@@ -9,6 +9,7 @@
 #include "golang/internal/syscall/windows/memory_windows.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::windows
 {
     struct MemoryBasicInformation

@@ -9,11 +9,9 @@
 #include "golang/internal/bisect/bisect.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/mutex.h"
 
 namespace golang::bisect
 {
-    std::tuple<struct Matcher*, struct gocpp::error> New(gocpp::string pattern);
     struct atomicPointerDedup
     {
         gocpp::unsafe_pointer p;
@@ -48,7 +46,6 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cond& value);
-    struct gocpp::error printFileLine(struct Writer w, uint64_t h, gocpp::string file, int line);
     gocpp::slice<unsigned char> appendFileLine(gocpp::slice<unsigned char> dst, gocpp::string file, int line);
     struct Writer : virtual gocpp::Interface
     {
@@ -108,8 +105,6 @@ namespace golang::bisect
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
-    struct gocpp::error PrintMarker(struct Writer w, uint64_t h);
-    struct gocpp::error printStack(struct Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
     gocpp::string Marker(uint64_t id);
     gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id);
     std::tuple<gocpp::string, uint64_t, bool> CutMarker(gocpp::string line);
@@ -146,26 +141,6 @@ namespace golang::bisect
     uint64_t fnvString(uint64_t h, gocpp::string x);
     uint64_t fnvUint64(uint64_t h, uint64_t x);
     uint64_t fnvUint32(uint64_t h, uint32_t x);
-    struct dedup
-    {
-        // 128-entry 4-way, lossy cache for seenLossy
-        gocpp::array<gocpp::array<uint64_t, 4>, 128> recent;
-        // complete history for seen
-        mocklib::Mutex mu;
-        gocpp::map<uint64_t, bool> m;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct dedup& value);
     struct Matcher
     {
         bool verbose; // annotate reporting with human-helpful information
@@ -186,6 +161,35 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Matcher& value);
+    struct gocpp::error printFileLine(struct Writer w, uint64_t h, gocpp::string file, int line);
+    struct gocpp::error PrintMarker(struct Writer w, uint64_t h);
+    struct gocpp::error printStack(struct Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
+}
+#include "golang/sync/mutex.h"
+
+namespace golang::bisect
+{
+    struct dedup
+    {
+        // 128-entry 4-way, lossy cache for seenLossy
+        gocpp::array<gocpp::array<uint64_t, 4>, 128> recent;
+        // complete history for seen
+        mocklib::Mutex mu;
+        gocpp::map<uint64_t, bool> m;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct dedup& value);
+    std::tuple<struct Matcher*, struct gocpp::error> New(gocpp::string pattern);
 
     namespace rec
     {

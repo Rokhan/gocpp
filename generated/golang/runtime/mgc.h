@@ -9,41 +9,6 @@
 #include "golang/runtime/mgc.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/internal/cpu/cpu.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lfstack.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mgclimit.h"
-#include "golang/runtime/mgcwork.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mpagecache.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/mstats.h"
-#include "golang/runtime/mwbbuf.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/pagetrace_off.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/pinner.h"
-#include "golang/runtime/proc.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -56,6 +21,64 @@ namespace golang::runtime
     void setGCPhase(uint32_t x);
     extern gocpp::array<gocpp::string, 4> gcMarkWorkerModeStrings;
     bool pollFractionalWorkerExit();
+    void GC();
+    void gcWaitOnMark(uint32_t n);
+    struct gcTrigger
+    {
+        golang::runtime::gcTriggerKind kind;
+        int64_t now; // gcTriggerTime: current time
+        uint32_t n; // gcTriggerCycle: cycle number to start
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
+    extern uint32_t gcMarkDoneFlushed;
+    void gcMarkDone();
+    void gcBgMarkStartWorkers();
+    void gcBgMarkPrepare();
+    void gcBgMarkWorker();
+    void gcMark(int64_t startTime);
+    bool gcSweep(golang::runtime::gcMode mode);
+    void gcResetMarkState();
+    extern gocpp::slice<gocpp::unsafe_pointer> boringCaches;
+    void boring_registerCache(gocpp::unsafe_pointer p);
+    void clearpools();
+    gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int dec);
+    gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns);
+    void gcTestMoveStackOnNextCall();
+    uint64_t gcTestIsReachable(gocpp::slice<gocpp::unsafe_pointer> ptrs);
+    
+    template<typename... Args>
+    uint64_t gcTestIsReachable(Args... ptrs)
+    {
+        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(ptrs...));
+    }
+    
+    template<typename... Args>
+    uint64_t gcTestIsReachable(gocpp::unsafe_pointer value, Args... ptrs)
+    {
+        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(value, ptrs...));
+    }
+    gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p);
+    void gcStart(struct gcTrigger trigger);
+    extern std::function<void ()> poolcleanup;
+    void sync_runtime_registerPoolCleanup(std::function<void ()> f);
+}
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/proc.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct gocpp_id_1
     {
         mutex lock;
@@ -112,32 +135,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
-    void GC();
-    void gcWaitOnMark(uint32_t n);
-    struct gcTrigger
-    {
-        golang::runtime::gcTriggerKind kind;
-        int64_t now; // gcTriggerTime: current time
-        uint32_t n; // gcTriggerCycle: cycle number to start
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
-    void gcStart(struct gcTrigger trigger);
-    extern uint32_t gcMarkDoneFlushed;
-    void gcMarkDone();
     void gcMarkTermination(struct worldStop stw);
-    void gcBgMarkStartWorkers();
-    void gcBgMarkPrepare();
     struct gcBgMarkWorkerNode
     {
         // Unused workers are managed in a lock-free stack. This field must be first.
@@ -161,33 +159,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcBgMarkWorkerNode& value);
-    void gcBgMarkWorker();
     bool gcMarkWorkAvailable(struct p* p);
-    void gcMark(int64_t startTime);
-    bool gcSweep(golang::runtime::gcMode mode);
-    void gcResetMarkState();
-    extern std::function<void ()> poolcleanup;
-    extern gocpp::slice<gocpp::unsafe_pointer> boringCaches;
-    void sync_runtime_registerPoolCleanup(std::function<void ()> f);
-    void boring_registerCache(gocpp::unsafe_pointer p);
-    void clearpools();
-    gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int dec);
-    gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns);
-    void gcTestMoveStackOnNextCall();
-    uint64_t gcTestIsReachable(gocpp::slice<gocpp::unsafe_pointer> ptrs);
-    
-    template<typename... Args>
-    uint64_t gcTestIsReachable(Args... ptrs)
-    {
-        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(ptrs...));
-    }
-    
-    template<typename... Args>
-    uint64_t gcTestIsReachable(gocpp::unsafe_pointer value, Args... ptrs)
-    {
-        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(value, ptrs...));
-    }
-    gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p);
+}
+#include "golang/internal/cpu/cpu.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/lfstack.h"
+#include "golang/runtime/mstats.h"
+
+namespace golang::runtime
+{
     struct workType
     {
         golang::runtime::lfstack full; // lock-free list of full blocks workbuf

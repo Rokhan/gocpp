@@ -9,53 +9,15 @@
 #include "golang/runtime/proc.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mgc.h"
-#include "golang/runtime/mgclimit.h"
-#include "golang/runtime/mgcwork.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mpagecache.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/mwbbuf.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/pagetrace_off.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/pinner.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/rwmutex.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
     extern gocpp::string modinfo;
-    extern m m0;
-    extern g g0;
-    extern mcache* mcache0;
     extern uintptr_t raceprocctx0;
-    extern mutex raceFiniLock;
     extern gocpp::channel<bool> main_init_done;
     void main_main();
     extern bool mainStarted;
     extern int64_t runtimeInitTime;
-    extern sigset initSigmask;
     void main();
     void os_beforeExit(int exitCode);
     void init();
@@ -63,53 +25,19 @@ namespace golang::runtime
     void Gosched();
     void goschedguarded();
     void goschedIfBusy();
-    void gopark(std::function<bool (struct g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip);
-    void goparkunlock(struct mutex* lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip);
-    void goready(struct g* gp, int traceskip);
-    struct sudog* acquireSudog();
-    void releaseSudog(struct sudog* s);
-    void badmcall(std::function<void (struct g* _1)> fn);
-    void badmcall2(std::function<void (struct g* _1)> fn);
     void badreflectcall();
     void badmorestackg0();
     void badmorestackgsignal();
     void badctxt();
-    extern g gcrash;
-    extern atomic::Pointer<g> crashingG;
-    void switchToCrashStack(std::function<void ()> fn);
-    extern bool crashStackImplemented;
-    void switchToCrashStack0(std::function<void ()> fn);
     bool lockedOSThread();
-    extern mutex allglock;
-    extern gocpp::slice<g*> allgs;
     extern uintptr_t allglen;
-    extern g** allgptr;
-    void allgadd(struct g* gp);
-    gocpp::slice<g*> allGsSnapshot();
-    std::tuple<struct g**, uintptr_t> atomicAllG();
-    struct g* atomicAllGIndex(struct g** ptr, uintptr_t i);
-    void forEachG(std::function<void (struct g* gp)> fn);
-    void forEachGRace(std::function<void (struct g* gp)> fn);
     void cpuinit(gocpp::string env);
     gocpp::string getGodebugEarly();
     void schedinit();
-    void dumpgstatus(struct g* gp);
     void checkmcount();
     int64_t mReserveID();
-    void mcommoninit(struct m* mp, int64_t id);
-    extern bool osHasLowResTimer;
-    void ready(struct g* gp, int traceskip, bool next);
-    extern atomic::Bool freezing;
     void freezetheworld();
-    uint32_t readgstatus(struct g* gp);
-    void casfrom_Gscanstatus(struct g* gp, uint32_t oldval, uint32_t newval);
-    bool castogscanstatus(struct g* gp, uint32_t oldval, uint32_t newval);
     extern bool casgstatusAlwaysTrack;
-    void casgstatus(struct g* gp, uint32_t oldval, uint32_t newval);
-    void casGToWaiting(struct g* gp, uint32_t old, golang::runtime::waitReason reason);
-    uint32_t casgcopystack(struct g* gp);
-    void casGToPreemptScan(struct g* gp, uint32_t old, uint32_t go_new);
-    bool casGFromPreempted(struct g* gp, uint32_t old, uint32_t go_new);
     extern gocpp::array<gocpp::string, 17> stwReasonStrings;
     struct worldStop
     {
@@ -128,14 +56,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct worldStop& value);
-    struct worldStop stopTheWorld(golang::runtime::stwReason reason);
-    void startTheWorld(struct worldStop w);
-    struct worldStop stopTheWorldGC(golang::runtime::stwReason reason);
-    void startTheWorldGC(struct worldStop w);
     extern uint32_t worldsema;
     extern uint32_t gcsema;
-    struct worldStop stopTheWorldWithSema(golang::runtime::stwReason reason);
-    int64_t startTheWorldWithSema(int64_t now, struct worldStop w);
     bool usesLibcall();
     bool mStackIsSystemAllocated();
     void mstart();
@@ -144,29 +66,8 @@ namespace golang::runtime
     void mstartm0();
     void mPark();
     void mexit(bool osStack);
-    void forEachP(golang::runtime::waitReason reason, std::function<void (struct p* _1)> fn);
-    void forEachPInternal(std::function<void (struct p* _1)> fn);
     void runSafePointFn();
     extern gocpp::unsafe_pointer cgoThreadStart;
-    struct cgothreadstart
-    {
-        golang::runtime::guintptr g;
-        uint64_t* tls;
-        gocpp::unsafe_pointer fn;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct cgothreadstart& value);
-    struct m* allocm(struct p* pp, std::function<void ()> fn, int64_t id);
     void needm(bool signal);
     void needAndBindM();
     void newextram();
@@ -174,57 +75,22 @@ namespace golang::runtime
     void dropm();
     void cgoBindM();
     uintptr_t getm();
-    extern atomic::Uintptr extraM;
-    extern atomic::Uint32 extraMLength;
-    extern atomic::Uint32 extraMWaiters;
-    extern atomic::Uint32 extraMInUse;
-    struct m* lockextra(bool nilokay);
-    void unlockextra(struct m* mp, int32_t delta);
-    std::tuple<struct m*, bool> getExtraM();
-    void putExtraM(struct m* mp);
-    void addExtraM(struct m* mp);
-    extern rwmutex allocmLock;
-    extern rwmutex execLock;
     extern gocpp::string failthreadcreate;
     extern gocpp::string failallocatestack;
-    extern gocpp_id_1 newmHandoff;
-    void newm(std::function<void ()> fn, struct p* pp, int64_t id);
-    void newm1(struct m* mp);
     void startTemplateThread();
     void templateThread();
     void stopm();
     void mspinning();
-    void startm(struct p* pp, bool spinning, bool lockheld);
-    void handoffp(struct p* pp);
     void wakep();
     void stoplockedm();
-    void startlockedm(struct g* gp);
     void gcstopm();
-    void execute(struct g* gp, bool inheritTime);
-    std::tuple<struct g*, bool, bool> findRunnable();
     bool pollWork();
-    std::tuple<struct g*, bool, int64_t, int64_t, bool> stealWork(int64_t now);
-    struct p* checkRunqsNoP(gocpp::slice<p*> allpSnapshot, pMask idlepMaskSnapshot);
-    int64_t checkTimersNoP(gocpp::slice<p*> allpSnapshot, pMask timerpMaskSnapshot, int64_t pollUntil);
-    std::tuple<struct p*, struct g*> checkIdleGCNoP();
     void wakeNetPoller(int64_t when);
     void resetspinning();
-    void injectglist(struct gList* glist);
     void schedule();
     void dropg();
-    std::tuple<int64_t, int64_t, bool> checkTimers(struct p* pp, int64_t now);
-    bool parkunlock_c(struct g* gp, gocpp::unsafe_pointer lock);
-    void park_m(struct g* gp);
-    void goschedImpl(struct g* gp, bool preempted);
-    void gosched_m(struct g* gp);
-    void goschedguarded_m(struct g* gp);
-    void gopreempt_m(struct g* gp);
-    void preemptPark(struct g* gp);
     void goyield();
-    void goyield_m(struct g* gp);
     void goexit1();
-    void goexit0(struct g* gp);
-    void gdestroy(struct g* gp);
     void save(uintptr_t pc, uintptr_t sp);
     void reentersyscall(uintptr_t pc, uintptr_t sp);
     void entersyscall();
@@ -233,24 +99,13 @@ namespace golang::runtime
     void entersyscallblock();
     void entersyscallblock_handoff();
     void exitsyscall();
-    bool exitsyscallfast(struct p* oldp);
-    void exitsyscallfast_reacquired(struct traceLocker trace);
     bool exitsyscallfast_pidle();
-    void exitsyscall0(struct g* gp);
     void syscall_runtime_BeforeFork();
     void syscall_runtime_AfterFork();
     extern bool inForkedChild;
     void syscall_runtime_AfterForkInChild();
-    extern atomic::Int32 pendingPreemptSignals;
     void syscall_runtime_BeforeExec();
     void syscall_runtime_AfterExec();
-    struct g* malg(int32_t stacksize);
-    void newproc(struct funcval* fn);
-    struct g* newproc1(struct funcval* fn, struct g* callergp, uintptr_t callerpc);
-    gocpp::slice<ancestorInfo>* saveAncestors(struct g* callergp);
-    void gfput(struct p* pp, struct g* gp);
-    struct g* gfget(struct p* pp);
-    void gfpurge(struct p* pp);
     void Breakpoint();
     void dolockOSThread();
     void LockOSThread();
@@ -261,7 +116,6 @@ namespace golang::runtime
     void badunlockosthread();
     int32_t gcount();
     int32_t mcount();
-    extern gocpp_id_8 prof;
     void _System();
     void _ExternalCode();
     void _LostExternalCode();
@@ -269,13 +123,7 @@ namespace golang::runtime
     void _LostSIGPROFDuringAtomic64();
     void _LostContendedRuntimeLock();
     void _VDSO();
-    void sigprof(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, struct m* mp);
     void setcpuprofilerate(int32_t hz);
-    struct p* procresize(int32_t nprocs);
-    void acquirep(struct p* pp);
-    void wirep(struct p* pp);
-    struct p* releasep();
-    struct p* releasepNoTrace();
     void incidlelocked(int32_t v);
     void checkdead();
     extern int64_t forcegcperiod;
@@ -302,64 +150,11 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct sysmontick& value);
     uint32_t retake(int64_t now);
     bool preemptall();
-    bool preemptone(struct p* pp);
     extern int64_t starttime;
     void schedtrace(bool detailed);
     void schedEnableUser(bool enable);
-    bool schedEnabled(struct g* gp);
-    void mput(struct m* mp);
-    struct m* mget();
-    void globrunqput(struct g* gp);
-    void globrunqputhead(struct g* gp);
-    void globrunqputbatch(struct gQueue* batch, int32_t n);
-    struct g* globrunqget(struct p* pp, int32_t max);
     struct GoTag_pMask { };
     using pMask = gocpp::alias<gocpp::slice<uint32_t>, GoTag_pMask>;
-    void updateTimerPMask(struct p* pp);
-    int64_t pidleput(struct p* pp, int64_t now);
-    std::tuple<struct p*, int64_t> pidleget(int64_t now);
-    std::tuple<struct p*, int64_t> pidlegetSpinning(int64_t now);
-    bool runqempty(struct p* pp);
-    void runqput(struct p* pp, struct g* gp, bool next);
-    bool runqputslow(struct p* pp, struct g* gp, uint32_t h, uint32_t t);
-    void runqputbatch(struct p* pp, struct gQueue* q, int qsize);
-    std::tuple<struct g*, bool> runqget(struct p* pp);
-    std::tuple<struct gQueue, uint32_t> runqdrain(struct p* pp);
-    uint32_t runqgrab(struct p* pp, gocpp::array_ptr<gocpp::array<golang::runtime::guintptr, 256>> batch, uint32_t batchHead, bool stealRunNextG);
-    struct g* runqsteal(struct p* pp, struct p* p2, bool stealRunNextG);
-    struct gQueue
-    {
-        golang::runtime::guintptr head;
-        golang::runtime::guintptr tail;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gQueue& value);
-    struct gList
-    {
-        golang::runtime::guintptr head;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gList& value);
     int setMaxThreads(int in);
     int procPin();
     void procUnpin();
@@ -442,12 +237,201 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tracestat& value);
-    void doInit(gocpp::slice<initTask*> ts);
-    void doInit1(struct initTask* t);
     extern gocpp::slice<initTask*> runtime_inittasks;
+    void switchToCrashStack(std::function<void ()> fn);
+    void switchToCrashStack0(std::function<void ()> fn);
     extern worldStop stopTheWorldContext;
+    struct worldStop stopTheWorld(golang::runtime::stwReason reason);
+    void startTheWorld(struct worldStop w);
+    struct worldStop stopTheWorldGC(golang::runtime::stwReason reason);
+    void startTheWorldGC(struct worldStop w);
+    struct worldStop stopTheWorldWithSema(golang::runtime::stwReason reason);
+    int64_t startTheWorldWithSema(int64_t now, struct worldStop w);
     extern randomOrder stealOrder;
     extern tracestat inittrace;
+    void doInit(gocpp::slice<initTask*> ts);
+    void doInit1(struct initTask* t);
+}
+#include "golang/runtime/extern.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/mcache.h"
+#include "golang/runtime/os_windows.h"
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/rwmutex.h"
+#include "golang/runtime/trace2runtime.h"
+
+namespace golang::runtime
+{
+    extern m m0;
+    extern g g0;
+    extern mcache* mcache0;
+    extern mutex raceFiniLock;
+    extern sigset initSigmask;
+    void gopark(std::function<bool (struct g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip);
+    void goparkunlock(struct mutex* lock, golang::runtime::waitReason reason, golang::runtime::traceBlockReason traceReason, int traceskip);
+    void goready(struct g* gp, int traceskip);
+    struct sudog* acquireSudog();
+    void releaseSudog(struct sudog* s);
+    void badmcall(std::function<void (struct g* _1)> fn);
+    void badmcall2(std::function<void (struct g* _1)> fn);
+    extern g gcrash;
+    extern atomic::Pointer<g> crashingG;
+    extern bool crashStackImplemented;
+    extern mutex allglock;
+    extern gocpp::slice<g*> allgs;
+    extern g** allgptr;
+    void allgadd(struct g* gp);
+    gocpp::slice<g*> allGsSnapshot();
+    std::tuple<struct g**, uintptr_t> atomicAllG();
+    struct g* atomicAllGIndex(struct g** ptr, uintptr_t i);
+    void dumpgstatus(struct g* gp);
+    void mcommoninit(struct m* mp, int64_t id);
+    extern bool osHasLowResTimer;
+    void ready(struct g* gp, int traceskip, bool next);
+    extern atomic::Bool freezing;
+    uint32_t readgstatus(struct g* gp);
+    void casfrom_Gscanstatus(struct g* gp, uint32_t oldval, uint32_t newval);
+    bool castogscanstatus(struct g* gp, uint32_t oldval, uint32_t newval);
+    void casgstatus(struct g* gp, uint32_t oldval, uint32_t newval);
+    void casGToWaiting(struct g* gp, uint32_t old, golang::runtime::waitReason reason);
+    uint32_t casgcopystack(struct g* gp);
+    void casGToPreemptScan(struct g* gp, uint32_t old, uint32_t go_new);
+    bool casGFromPreempted(struct g* gp, uint32_t old, uint32_t go_new);
+    void forEachP(golang::runtime::waitReason reason, std::function<void (struct p* _1)> fn);
+    void forEachPInternal(std::function<void (struct p* _1)> fn);
+    struct cgothreadstart
+    {
+        golang::runtime::guintptr g;
+        uint64_t* tls;
+        gocpp::unsafe_pointer fn;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct cgothreadstart& value);
+    struct m* allocm(struct p* pp, std::function<void ()> fn, int64_t id);
+    extern atomic::Uintptr extraM;
+    extern atomic::Uint32 extraMLength;
+    extern atomic::Uint32 extraMWaiters;
+    extern atomic::Uint32 extraMInUse;
+    struct m* lockextra(bool nilokay);
+    void unlockextra(struct m* mp, int32_t delta);
+    std::tuple<struct m*, bool> getExtraM();
+    void putExtraM(struct m* mp);
+    void addExtraM(struct m* mp);
+    extern rwmutex allocmLock;
+    extern rwmutex execLock;
+    void newm(std::function<void ()> fn, struct p* pp, int64_t id);
+    void newm1(struct m* mp);
+    void startm(struct p* pp, bool spinning, bool lockheld);
+    void handoffp(struct p* pp);
+    void startlockedm(struct g* gp);
+    void execute(struct g* gp, bool inheritTime);
+    std::tuple<struct g*, bool, bool> findRunnable();
+    std::tuple<struct g*, bool, int64_t, int64_t, bool> stealWork(int64_t now);
+    struct p* checkRunqsNoP(gocpp::slice<p*> allpSnapshot, pMask idlepMaskSnapshot);
+    int64_t checkTimersNoP(gocpp::slice<p*> allpSnapshot, pMask timerpMaskSnapshot, int64_t pollUntil);
+    std::tuple<struct p*, struct g*> checkIdleGCNoP();
+    std::tuple<int64_t, int64_t, bool> checkTimers(struct p* pp, int64_t now);
+    bool parkunlock_c(struct g* gp, gocpp::unsafe_pointer lock);
+    void park_m(struct g* gp);
+    void goschedImpl(struct g* gp, bool preempted);
+    void gosched_m(struct g* gp);
+    void goschedguarded_m(struct g* gp);
+    void gopreempt_m(struct g* gp);
+    void preemptPark(struct g* gp);
+    void goyield_m(struct g* gp);
+    void goexit0(struct g* gp);
+    void gdestroy(struct g* gp);
+    bool exitsyscallfast(struct p* oldp);
+    void exitsyscallfast_reacquired(struct traceLocker trace);
+    void exitsyscall0(struct g* gp);
+    extern atomic::Int32 pendingPreemptSignals;
+    struct g* malg(int32_t stacksize);
+    void newproc(struct funcval* fn);
+    struct g* newproc1(struct funcval* fn, struct g* callergp, uintptr_t callerpc);
+    gocpp::slice<ancestorInfo>* saveAncestors(struct g* callergp);
+    void gfput(struct p* pp, struct g* gp);
+    struct g* gfget(struct p* pp);
+    void gfpurge(struct p* pp);
+    extern gocpp_id_8 prof;
+    void sigprof(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, struct m* mp);
+    struct p* procresize(int32_t nprocs);
+    void acquirep(struct p* pp);
+    void wirep(struct p* pp);
+    struct p* releasep();
+    struct p* releasepNoTrace();
+    bool preemptone(struct p* pp);
+    bool schedEnabled(struct g* gp);
+    void mput(struct m* mp);
+    struct m* mget();
+    void globrunqput(struct g* gp);
+    void globrunqputhead(struct g* gp);
+    struct g* globrunqget(struct p* pp, int32_t max);
+    void updateTimerPMask(struct p* pp);
+    int64_t pidleput(struct p* pp, int64_t now);
+    std::tuple<struct p*, int64_t> pidleget(int64_t now);
+    std::tuple<struct p*, int64_t> pidlegetSpinning(int64_t now);
+    bool runqempty(struct p* pp);
+    void runqput(struct p* pp, struct g* gp, bool next);
+    bool runqputslow(struct p* pp, struct g* gp, uint32_t h, uint32_t t);
+    std::tuple<struct g*, bool> runqget(struct p* pp);
+    uint32_t runqgrab(struct p* pp, gocpp::array_ptr<gocpp::array<golang::runtime::guintptr, 256>> batch, uint32_t batchHead, bool stealRunNextG);
+    struct g* runqsteal(struct p* pp, struct p* p2, bool stealRunNextG);
+    struct gQueue
+    {
+        golang::runtime::guintptr head;
+        golang::runtime::guintptr tail;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gQueue& value);
+    struct gList
+    {
+        golang::runtime::guintptr head;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gList& value);
+    void forEachG(std::function<void (struct g* gp)> fn);
+    void forEachGRace(std::function<void (struct g* gp)> fn);
+    extern gocpp_id_1 newmHandoff;
+    void injectglist(struct gList* glist);
+    void globrunqputbatch(struct gQueue* batch, int32_t n);
+    void runqputbatch(struct p* pp, struct gQueue* q, int qsize);
+    std::tuple<struct gQueue, uint32_t> runqdrain(struct p* pp);
+}
+
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

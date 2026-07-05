@@ -9,13 +9,6 @@
 #include "golang/math/rand/rand.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/bisect/bisect.h"
-#include "golang/internal/godebug/godebug.h"
-#include "golang/internal/godebugs/table.h"
-#include "golang/math/rand/rng.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
-#include "golang/sync/once.h"
 
 namespace golang::rand
 {
@@ -83,6 +76,23 @@ namespace golang::rand
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Source& value);
+    uint64_t runtime_rand();
+    void Seed(int64_t seed);
+    int64_t Int63();
+    uint32_t Uint32();
+    uint64_t Uint64();
+    int32_t Int31();
+    int Int();
+    int64_t Int63n(int64_t n);
+    int32_t Int31n(int32_t n);
+    int Intn(int n);
+    double Float64();
+    double Float32();
+    gocpp::slice<int> Perm(int n);
+    void Shuffle(int n, std::function<void (int i, int j)> swap);
+    std::tuple<int, struct gocpp::error> Read(gocpp::slice<unsigned char> p);
+    double NormFloat64();
+    double ExpFloat64();
     struct Source64 : virtual gocpp::Interface, Source
     {
         using gocpp::Interface::operator==;
@@ -148,12 +158,14 @@ namespace golang::rand
 
     std::ostream& operator<<(std::ostream& os, const struct Source64& value);
     struct Source NewSource(int64_t seed);
-    struct rngSource* newSource(int64_t seed);
-    struct Rand* New(struct Source src);
     std::tuple<int, struct gocpp::error> read(gocpp::slice<unsigned char> p, struct Source src, int64_t* readVal, int8_t* readPos);
-    extern godebug::Setting* randautoseed;
-    struct Rand* globalRand();
-    uint64_t runtime_rand();
+}
+#include "golang/math/rand/rng.h"
+#include "golang/sync/mutex.h"
+
+namespace golang::rand
+{
+    struct rngSource* newSource(int64_t seed);
     struct runtimeSource
     {
         // The mutex is used to avoid race conditions in Read.
@@ -171,22 +183,6 @@ namespace golang::rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeSource& value);
-    void Seed(int64_t seed);
-    int64_t Int63();
-    uint32_t Uint32();
-    uint64_t Uint64();
-    int32_t Int31();
-    int Int();
-    int64_t Int63n(int64_t n);
-    int32_t Int31n(int32_t n);
-    int Intn(int n);
-    double Float64();
-    double Float32();
-    gocpp::slice<int> Perm(int n);
-    void Shuffle(int n, std::function<void (int i, int j)> swap);
-    std::tuple<int, struct gocpp::error> Read(gocpp::slice<unsigned char> p);
-    double NormFloat64();
-    double ExpFloat64();
     struct lockedSource
     {
         mocklib::Mutex lk;
@@ -229,7 +225,20 @@ namespace golang::rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Rand& value);
+    struct Rand* New(struct Source src);
+    struct Rand* globalRand();
+}
+#include "golang/sync/atomic/type.h"
+
+namespace golang::rand
+{
     extern atomic::Pointer<Rand> globalRandGenerator;
+}
+#include "golang/internal/godebug/godebug.h"
+
+namespace golang::rand
+{
+    extern godebug::Setting* randautoseed;
 
     namespace rec
     {

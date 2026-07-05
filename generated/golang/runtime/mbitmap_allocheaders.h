@@ -9,15 +9,6 @@
 #include "golang/runtime/mbitmap_allocheaders.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
 
 namespace golang::runtime
 {
@@ -37,6 +28,52 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct heapArenaPtrScalar& value);
+    uintptr_t bswapIfBigEndian(uintptr_t x);
+    struct writeUserArenaHeapBits
+    {
+        uintptr_t offset; // offset in span that the low bit of mask represents the pointer state of.
+        uintptr_t mask; // some pointer bits starting at the address addr.
+        uintptr_t valid; // number of bits in buf that are valid (including low)
+        uintptr_t low; // number of low-order bits to not overwrite
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct writeUserArenaHeapBits& value);
+    gocpp::slice<uintptr_t> heapBitsSlice(uintptr_t spanBase, uintptr_t spanSize);
+    gocpp::slice<unsigned char> getgcmask(go_any ep);
+    void writeHeapBitsForAddr();
+    struct heapBits
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct heapBits& value);
+    struct heapBits heapBitsForAddr(uintptr_t addr, uintptr_t size);
+}
+#include "golang/internal/abi/type.h"
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
     struct typePointers
     {
         // elem is the address of the current array element of type typ being iterated over.
@@ -69,52 +106,20 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct typePointers& value);
     void bulkBarrierPreWrite(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
     void bulkBarrierPreWriteSrcOnly(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
-    uintptr_t bswapIfBigEndian(uintptr_t x);
-    struct writeUserArenaHeapBits
-    {
-        uintptr_t offset; // offset in span that the low bit of mask represents the pointer state of.
-        uintptr_t mask; // some pointer bits starting at the address addr.
-        uintptr_t valid; // number of bits in buf that are valid (including low)
-        uintptr_t low; // number of low-order bits to not overwrite
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct writeUserArenaHeapBits& value);
-    gocpp::slice<uintptr_t> heapBitsSlice(uintptr_t spanBase, uintptr_t spanSize);
     void heapBitsSetType(uintptr_t x, uintptr_t size, uintptr_t dataSize, golang::runtime::_type* typ);
     uintptr_t heapSetType(uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ, golang::runtime::_type** header, struct mspan* span);
     void doubleCheckHeapPointers(uintptr_t x, uintptr_t dataSize, golang::runtime::_type* typ, golang::runtime::_type** header, struct mspan* span);
     void doubleCheckHeapPointersInterior(uintptr_t x, uintptr_t interior, uintptr_t size, uintptr_t dataSize, golang::runtime::_type* typ, golang::runtime::_type** header, struct mspan* span);
     void doubleCheckTypePointersOfType(struct mspan* s, golang::runtime::_type* typ, uintptr_t addr, uintptr_t size);
-    void dumpTypePointers(struct typePointers tp);
-    gocpp::slice<unsigned char> getgcmask(go_any ep);
     void userArenaHeapBitsSetType(golang::runtime::_type* typ, gocpp::unsafe_pointer ptr, struct mspan* s);
-    void writeHeapBitsForAddr();
-    struct heapBits
-    {
+    void dumpTypePointers(struct typePointers tp);
+}
 
-        using isGoStruct = void;
+#include "golang/internal/abi/type.h"
+#include "golang/runtime/mheap.h"
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct heapBits& value);
-    struct heapBits heapBitsForAddr(uintptr_t addr, uintptr_t size);
+namespace golang::runtime
+{
 
     namespace rec
     {

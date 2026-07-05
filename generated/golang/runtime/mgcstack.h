@@ -9,6 +9,11 @@
 #include "golang/runtime/mgcstack.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    void init();
+}
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/runtime2.h"
@@ -52,7 +57,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectBufHdr& value);
-    void init();
     struct stackObject
     {
         sys::NotInHeap _1;
@@ -113,25 +117,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackScanState& value);
-    std::tuple<struct stackObject*, struct stackObjectBuf*, int> binarySearchTree(struct stackObjectBuf* x, int idx, int n);
-    struct stackWorkBuf
-    {
-        sys::NotInHeap _1;
-        stackWorkBufHdr stackWorkBufHdr;
-        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackWorkBufHdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stackWorkBuf& value);
     struct stackObjectBuf
     {
         sys::NotInHeap _1;
@@ -150,6 +135,36 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectBuf& value);
+}
+#include "golang/internal/goarch/goarch.h"
+
+namespace golang::runtime
+{
+    struct stackWorkBuf
+    {
+        sys::NotInHeap _1;
+        stackWorkBufHdr stackWorkBufHdr;
+        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackWorkBufHdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackWorkBuf& value);
+    std::tuple<struct stackObject*, struct stackObjectBuf*, int> binarySearchTree(struct stackObjectBuf* x, int idx, int n);
+}
+
+#include "golang/runtime/stack.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

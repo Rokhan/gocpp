@@ -9,7 +9,20 @@
 #include "golang/sync/pool.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/atomic/type.h"
+
+namespace golang::sync
+{
+    uint32_t runtime_randn(uint32_t n);
+    extern gocpp::array<uint64_t, 128> poolRaceHash;
+    gocpp::unsafe_pointer poolRaceAddr(go_any x);
+    void poolCleanup();
+    void init();
+    int runtime_procPin();
+    void runtime_procUnpin();
+    uintptr_t runtime_LoadAcquintptr(uintptr_t* ptr);
+    uintptr_t runtime_StoreReluintptr(uintptr_t* ptr, uintptr_t val);
+    void runtime_registerPoolCleanup(std::function<void ()> cleanup);
+}
 #include "golang/sync/cond.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/poolqueue.h"
@@ -57,18 +70,7 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
-    uint32_t runtime_randn(uint32_t n);
-    extern gocpp::array<uint64_t, 128> poolRaceHash;
-    gocpp::unsafe_pointer poolRaceAddr(go_any x);
-    void poolCleanup();
     extern Mutex allPoolsMu;
-    void init();
-    struct poolLocal* indexLocal(gocpp::unsafe_pointer l, int i);
-    void runtime_registerPoolCleanup(std::function<void ()> cleanup);
-    int runtime_procPin();
-    void runtime_procUnpin();
-    uintptr_t runtime_LoadAcquintptr(uintptr_t* ptr);
-    uintptr_t runtime_StoreReluintptr(uintptr_t* ptr, uintptr_t val);
     struct poolLocal
     {
         poolLocalInternal poolLocalInternal;
@@ -90,6 +92,7 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct poolLocal& value);
     extern gocpp::slice<Pool*> allPools;
     extern gocpp::slice<Pool*> oldPools;
+    struct poolLocal* indexLocal(gocpp::unsafe_pointer l, int i);
 
     namespace rec
     {

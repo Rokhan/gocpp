@@ -9,6 +9,12 @@
 #include "golang/runtime/profbuf.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    int countSub(uint32_t x, uint32_t y);
+    extern gocpp::array<gocpp::unsafe_pointer, 1> overflowTag;
+}
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/runtime2.h"
 
@@ -43,9 +49,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct profBuf& value);
-    int countSub(uint32_t x, uint32_t y);
     struct profBuf* newProfBuf(int hdrsize, int bufwords, int tags);
-    extern gocpp::array<gocpp::unsafe_pointer, 1> overflowTag;
 
     namespace rec
     {

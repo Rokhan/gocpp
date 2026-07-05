@@ -9,18 +9,26 @@
 #include "golang/os/file_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
+
+namespace golang::os
+{
+    extern gocpp::string DevNull;
+    struct gocpp::error Truncate(gocpp::string name, int64_t size);
+    struct gocpp::error Remove(gocpp::string name);
+    struct gocpp::error rename(gocpp::string oldname, gocpp::string newname);
+    extern bool useGetTempPath2;
+    gocpp::string tempDir();
+    struct gocpp::error Link(gocpp::string oldname, gocpp::string newname);
+    struct gocpp::error Symlink(gocpp::string oldname, gocpp::string newname);
+    std::tuple<gocpp::string, struct gocpp::error> normaliseLinkPath(gocpp::string path);
+    std::tuple<gocpp::string, struct gocpp::error> readReparseLink(gocpp::string path);
+    std::tuple<gocpp::string, struct gocpp::error> readlink(gocpp::string name);
+}
 #include "golang/internal/poll/fd_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
-#include "golang/io/fs/fs.h"
 #include "golang/os/dir_windows.h"
 #include "golang/os/types.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 #include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 
 namespace golang::os
 {
@@ -47,21 +55,16 @@ namespace golang::os
     struct File* newConsoleFile(syscall::Handle h, gocpp::string name);
     struct File* NewFile(uintptr_t fd, gocpp::string name);
     void epipecheck(struct File* file, struct gocpp::error e);
-    extern gocpp::string DevNull;
     std::tuple<struct File*, struct gocpp::error> openFileNolog(gocpp::string name, int flag, golang::os::FileMode perm);
-    struct gocpp::error Truncate(gocpp::string name, int64_t size);
-    struct gocpp::error Remove(gocpp::string name);
-    struct gocpp::error rename(gocpp::string oldname, gocpp::string newname);
     std::tuple<struct File*, struct File*, struct gocpp::error> Pipe();
     extern sync::Once useGetTempPath2Once;
-    extern bool useGetTempPath2;
-    gocpp::string tempDir();
-    struct gocpp::error Link(gocpp::string oldname, gocpp::string newname);
-    struct gocpp::error Symlink(gocpp::string oldname, gocpp::string newname);
     std::tuple<syscall::Handle, struct gocpp::error> openSymlink(gocpp::string path);
-    std::tuple<gocpp::string, struct gocpp::error> normaliseLinkPath(gocpp::string path);
-    std::tuple<gocpp::string, struct gocpp::error> readReparseLink(gocpp::string path);
-    std::tuple<gocpp::string, struct gocpp::error> readlink(gocpp::string name);
+}
+
+#include "golang/os/types.h"
+
+namespace golang::os
+{
 
     namespace rec
     {

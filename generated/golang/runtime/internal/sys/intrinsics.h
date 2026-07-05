@@ -9,6 +9,7 @@
 #include "golang/runtime/internal/sys/intrinsics.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::sys
 {
     extern gocpp::array<unsigned char, 32> deBruijn32tab;

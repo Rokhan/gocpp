@@ -35,9 +35,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pos& value);
-    extern std::function<void (void)> funcVar1;
-    extern std::function<int (int)> funcVar2;
-    extern std::function<std::tuple<int, gocpp::string> (int)> funcVar3;
     void main();
     std::tuple<int, gocpp::string> withNamedResults();
     void inlineAssign(int i);
@@ -47,6 +44,14 @@ namespace golang::main
     void go_while();
     void go_template();
     void go_class();
+}
+#include "golang/fmt/print.h"
+
+namespace golang::main
+{
+    extern std::function<void (void)> funcVar1;
+    extern std::function<int (int)> funcVar2;
+    extern std::function<std::tuple<int, gocpp::string> (int)> funcVar3;
 
     namespace rec
     {

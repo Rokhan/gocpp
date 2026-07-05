@@ -9,31 +9,6 @@
 #include "golang/runtime/panic.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/symtab.h"
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/plugin.h"
-#include "golang/runtime/proc.h"
-#include "golang/runtime/runtime.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/stack.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -73,32 +48,17 @@ namespace golang::runtime
     void panicSlice3C(int x, int y);
     void panicSlice3CU(unsigned int x, int y);
     void panicSliceConvert(int x, int y);
-    extern gocpp::error shiftError;
     void panicshift();
-    extern gocpp::error divideError;
     void panicdivide();
-    extern gocpp::error overflowError;
     void panicoverflow();
-    extern gocpp::error floatError;
     void panicfloat();
-    extern gocpp::error memoryError;
     void panicmem();
     void panicmemAddr(uintptr_t addr);
-    void deferproc(std::function<void ()> fn);
-    extern gocpp::error rangeExitError;
     void panicrangeexit();
     go_any deferrangefunc();
-    struct _defer* badDefer();
-    void deferprocat(std::function<void ()> fn, go_any frame);
-    struct _defer* deferconvert(struct _defer* d);
-    void deferprocStack(struct _defer* d);
-    struct _defer* newdefer();
-    void freedefer(struct _defer* d);
     void freedeferfn();
     void deferreturn();
     void Goexit();
-    void preprintpanics(struct _panic* p);
-    void printpanics(struct _panic* p);
     std::tuple<uint32_t, gocpp::unsafe_pointer> readvarintUnsafe(gocpp::unsafe_pointer fd);
     struct PanicNilError
     {
@@ -122,26 +82,56 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PanicNilError& value);
-    extern godebugInc* panicnil;
     void gopanic(go_any e);
     go_any gorecover(uintptr_t argp);
     void sync_throw(gocpp::string s);
     void sync_fatal(gocpp::string s);
     void go_throw(gocpp::string s);
     void fatal(gocpp::string s);
+    void fatalthrow(golang::runtime::throwType t);
+    bool startpanic_m();
+    extern bool didothers;
+    bool canpanic();
+    bool isAbortPC(uintptr_t pc);
+    void deferproc(std::function<void ()> fn);
+    void deferprocat(std::function<void ()> fn, go_any frame);
+}
+#include "golang/runtime/error.h"
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/runtime.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    extern gocpp::error shiftError;
+    extern gocpp::error divideError;
+    extern gocpp::error overflowError;
+    extern gocpp::error floatError;
+    extern gocpp::error memoryError;
+    extern gocpp::error rangeExitError;
+    struct _defer* badDefer();
+    struct _defer* deferconvert(struct _defer* d);
+    void deferprocStack(struct _defer* d);
+    struct _defer* newdefer();
+    void freedefer(struct _defer* d);
+    void preprintpanics(struct _panic* p);
+    void printpanics(struct _panic* p);
+    extern godebugInc* panicnil;
     extern atomic::Uint32 runningPanicDefers;
     extern atomic::Uint32 panicking;
     extern mutex paniclk;
     void recovery(struct g* gp);
-    void fatalthrow(golang::runtime::throwType t);
     void fatalpanic(struct _panic* msgs);
-    bool startpanic_m();
-    extern bool didothers;
     extern mutex deadlock;
     bool dopanic_m(struct g* gp, uintptr_t pc, uintptr_t sp);
-    bool canpanic();
     bool shouldPushSigpanic(struct g* gp, uintptr_t pc, uintptr_t lr);
-    bool isAbortPC(uintptr_t pc);
+}
+
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/symtab.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

@@ -9,7 +9,6 @@
 #include "golang/runtime/metrics.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/mstats.h"
 
 namespace golang::runtime
 {
@@ -20,55 +19,9 @@ namespace golang::runtime
     void metricsLock();
     void metricsUnlock();
     void initMetrics();
-    void compute0(struct statAggregate* _1, struct metricValue* out);
     void godebug_registerMetric(gocpp::string name, std::function<uint64_t ()> read);
     struct GoTag_statDepSet { };
     using statDepSet = gocpp::alias<gocpp::array<uint64_t, 1>, GoTag_statDepSet>;
-    runtime::statDepSet makeStatDepSet(gocpp::slice<golang::runtime::statDep> deps);
-    
-    template<typename... Args>
-    runtime::statDepSet makeStatDepSet(Args... deps)
-    {
-        return makeStatDepSet(gocpp::ToSlice<golang::runtime::statDep>(deps...));
-    }
-    
-    template<typename... Args>
-    runtime::statDepSet makeStatDepSet(golang::runtime::statDep value, Args... deps)
-    {
-        return makeStatDepSet(gocpp::ToSlice<golang::runtime::statDep>(value, deps...));
-    }
-    struct heapStatsAggregate
-    {
-        heapStatsDelta heapStatsDelta;
-        // inObjects is the bytes of memory occupied by objects,
-        uint64_t inObjects;
-        // numObjects is the number of live objects in the heap.
-        uint64_t numObjects;
-        // totalAllocated is the total bytes of heap objects allocated
-        // over the lifetime of the program.
-        uint64_t totalAllocated;
-        // totalFreed is the total bytes of heap objects freed
-        // over the lifetime of the program.
-        uint64_t totalFreed;
-        // totalAllocs is the number of heap objects allocated over
-        // the lifetime of the program.
-        uint64_t totalAllocs;
-        // totalFrees is the number of heap objects freed over
-        // the lifetime of the program.
-        uint64_t totalFrees;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct heapStatsAggregate& value);
     struct sysStatsAggregate
     {
         uint64_t stacksSys;
@@ -95,22 +48,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sysStatsAggregate& value);
-    struct cpuStatsAggregate
-    {
-        cpuStats cpuStats;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct cpuStatsAggregate& value);
     struct gcStatsAggregate
     {
         uint64_t heapScan;
@@ -208,6 +145,90 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricData& value);
+    runtime::statDepSet makeStatDepSet(gocpp::slice<golang::runtime::statDep> deps);
+    
+    template<typename... Args>
+    runtime::statDepSet makeStatDepSet(Args... deps)
+    {
+        return makeStatDepSet(gocpp::ToSlice<golang::runtime::statDep>(deps...));
+    }
+    
+    template<typename... Args>
+    runtime::statDepSet makeStatDepSet(golang::runtime::statDep value, Args... deps)
+    {
+        return makeStatDepSet(gocpp::ToSlice<golang::runtime::statDep>(value, deps...));
+    }
+    struct metricSample
+    {
+        gocpp::string name;
+        metricValue value;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricSample& value);
+}
+#include "golang/runtime/mstats.h"
+
+namespace golang::runtime
+{
+    struct heapStatsAggregate
+    {
+        heapStatsDelta heapStatsDelta;
+        // inObjects is the bytes of memory occupied by objects,
+        uint64_t inObjects;
+        // numObjects is the number of live objects in the heap.
+        uint64_t numObjects;
+        // totalAllocated is the total bytes of heap objects allocated
+        // over the lifetime of the program.
+        uint64_t totalAllocated;
+        // totalFreed is the total bytes of heap objects freed
+        // over the lifetime of the program.
+        uint64_t totalFreed;
+        // totalAllocs is the number of heap objects allocated over
+        // the lifetime of the program.
+        uint64_t totalAllocs;
+        // totalFrees is the number of heap objects freed over
+        // the lifetime of the program.
+        uint64_t totalFrees;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct heapStatsAggregate& value);
+    struct cpuStatsAggregate
+    {
+        cpuStats cpuStats;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct cpuStatsAggregate& value);
+    extern gocpp::map<gocpp::string, metricData> metrics;
     struct statAggregate
     {
         golang::runtime::statDepSet ensured;
@@ -228,24 +249,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct statAggregate& value);
-    struct metricSample
-    {
-        gocpp::string name;
-        metricValue value;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricSample& value);
-    extern gocpp::map<gocpp::string, metricData> metrics;
+    void compute0(struct statAggregate* _1, struct metricValue* out);
     extern statAggregate agg;
 
     namespace rec

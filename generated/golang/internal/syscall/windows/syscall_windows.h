@@ -9,15 +9,111 @@
 #include "golang/internal/syscall/windows/syscall_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
+
+namespace golang::windows
+{
+    gocpp::string UTF16PtrToString(uint16_t* p);
+    struct SecurityAttributes
+    {
+        uint16_t Length;
+        uintptr_t SecurityDescriptor;
+        bool InheritHandle;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SecurityAttributes& value);
+    struct FILE_BASIC_INFO
+    {
+        int64_t CreationTime;
+        int64_t LastAccessTime;
+        int64_t LastWriteTime;
+        int64_t ChangedTime;
+        uint32_t FileAttributes;
+        // Pad out to 8-byte alignment.
+        // Without this padding, TestChmod fails due to an argument validation error
+        // in SetFileInformationByHandle on windows/386.
+        // https://learn.microsoft.com/en-us/cpp/build/reference/zp-struct-member-alignment?view=msvc-170
+        // says that “The C/C++ headers in the Windows SDK assume the platform's
+        // default alignment is used.” What we see here is padding rather than
+        // alignment, but maybe it is related.
+        uint32_t _1;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct FILE_BASIC_INFO& value);
+    struct gocpp::error loadWSASendRecvMsg();
+    struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath);
+    struct SHARE_INFO_2
+    {
+        uint16_t* Netname;
+        uint32_t Type;
+        uint16_t* Remark;
+        uint32_t Permissions;
+        uint32_t MaxUses;
+        uint32_t CurrentUses;
+        uint16_t* Path;
+        uint16_t* Passwd;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SHARE_INFO_2& value);
+    struct gocpp::error ErrorLoadingGetTempPath2();
+    struct SERVICE_STATUS
+    {
+        uint32_t ServiceType;
+        uint32_t CurrentState;
+        uint32_t ControlsAccepted;
+        uint32_t Win32ExitCode;
+        uint32_t ServiceSpecificExitCode;
+        uint32_t CheckPoint;
+        uint32_t WaitHint;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SERVICE_STATUS& value);
+}
 #include "golang/sync/once.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 
 namespace golang::windows
 {
-    gocpp::string UTF16PtrToString(uint16_t* p);
     struct SocketAddress
     {
         syscall::RawSockaddrAny* Sockaddr;
@@ -70,52 +166,6 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterAddresses& value);
-    struct SecurityAttributes
-    {
-        uint16_t Length;
-        uintptr_t SecurityDescriptor;
-        bool InheritHandle;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SecurityAttributes& value);
-    struct FILE_BASIC_INFO
-    {
-        int64_t CreationTime;
-        int64_t LastAccessTime;
-        int64_t LastWriteTime;
-        int64_t ChangedTime;
-        uint32_t FileAttributes;
-        // Pad out to 8-byte alignment.
-        // Without this padding, TestChmod fails due to an argument validation error
-        // in SetFileInformationByHandle on windows/386.
-        // https://learn.microsoft.com/en-us/cpp/build/reference/zp-struct-member-alignment?view=msvc-170
-        // says that “The C/C++ headers in the Windows SDK assume the platform's
-        // default alignment is used.” What we see here is padding rather than
-        // alignment, but maybe it is related.
-        uint32_t _1;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct FILE_BASIC_INFO& value);
     struct ModuleEntry32
     {
         uint32_t Size;
@@ -165,34 +215,6 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct WSAMsg& value);
-    struct gocpp::error loadWSASendRecvMsg();
-    struct gocpp::error WSASendMsg(syscall::Handle fd, struct WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine);
-    struct gocpp::error WSARecvMsg(syscall::Handle fd, struct WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine);
-    struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath);
-    struct SHARE_INFO_2
-    {
-        uint16_t* Netname;
-        uint32_t Type;
-        uint16_t* Remark;
-        uint32_t Permissions;
-        uint32_t MaxUses;
-        uint32_t CurrentUses;
-        uint16_t* Path;
-        uint16_t* Passwd;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SHARE_INFO_2& value);
-    struct gocpp::error ErrorLoadingGetTempPath2();
     struct FILE_ID_BOTH_DIR_INFO
     {
         uint32_t NextEntryOffset;
@@ -250,28 +272,6 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FILE_FULL_DIR_INFO& value);
-    struct SERVICE_STATUS
-    {
-        uint32_t ServiceType;
-        uint32_t CurrentState;
-        uint32_t ControlsAccepted;
-        uint32_t Win32ExitCode;
-        uint32_t ServiceSpecificExitCode;
-        uint32_t CheckPoint;
-        uint32_t WaitHint;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SERVICE_STATUS& value);
     struct IpAdapterUnicastAddress
     {
         uint32_t Length;
@@ -375,6 +375,8 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterPrefix& value);
+    struct gocpp::error WSASendMsg(syscall::Handle fd, struct WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine);
+    struct gocpp::error WSARecvMsg(syscall::Handle fd, struct WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine);
 
     namespace rec
     {

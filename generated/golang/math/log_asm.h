@@ -9,6 +9,7 @@
 #include "golang/math/log_asm.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::math
 {
     double archLog(double x);

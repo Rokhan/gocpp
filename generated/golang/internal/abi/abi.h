@@ -13,6 +13,11 @@
 namespace golang::abi
 {
     struct GoTag_IntArgRegBitmap { };
+}
+#include "golang/internal/abi/abi_amd64.h"
+
+namespace golang::abi
+{
     using IntArgRegBitmap = gocpp::alias<gocpp::array<uint8_t, (IntArgRegs + 7) / 8>, GoTag_IntArgRegBitmap>;
     struct RegArgs
     {

@@ -9,82 +9,10 @@
 #include "golang/internal/reflectlite/value.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/reflectlite/type.h"
 
 namespace golang::reflectlite
 {
-    struct Value
-    {
-        // typ_ holds the type of the value represented by a Value.
-        // Access using the typ method to avoid escape of v.
-        abi::Type* typ_;
-        // Pointer-valued data or, if flagIndir is set, pointer to data.
-        // Valid when either flagIndir is set or typ.pointers() is true.
-        gocpp::unsafe_pointer ptr;
-        // flag holds metadata about the value.
-        // The lowest bits are flag bits:
-        // - flagStickyRO: obtained via unexported not embedded field, so read-only
-        // - flagEmbedRO: obtained via unexported embedded field, so read-only
-        // - flagIndir: val holds a pointer to the data
-        // - flagAddr: v.CanAddr is true (implies flagIndir)
-        // Value cannot represent method values.
-        // The next five bits give the Kind of the value.
-        // This repeats typ.Kind() except for method values.
-        // The remaining 23+ bits give a method number for method values.
-        // If flag.kind() != Func, code can assume that flagMethod is unset.
-        // If ifaceIndir(typ), code can assume that flagIndir is set.
-        golang::reflectlite::flag flag;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Value& value);
-    go_any packEface(struct Value v);
-    struct Value unpackEface(go_any i);
-    struct ValueError
-    {
-        gocpp::string Method;
-        golang::reflectlite::Kind Kind;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
     gocpp::string methodName();
-    struct emptyInterface
-    {
-        abi::Type* typ;
-        gocpp::unsafe_pointer word;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
     struct gocpp_id_3 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -143,7 +71,6 @@ namespace golang::reflectlite
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
-    go_any valueInterface(struct Value v);
     struct gocpp_id_4 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -204,14 +131,98 @@ namespace golang::reflectlite
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
     int chanlen(gocpp::unsafe_pointer);
     int maplen(gocpp::unsafe_pointer);
-    gocpp::unsafe_pointer unsafe_New(abi::Type*);
-    struct Value ValueOf(go_any i);
     gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int i, uintptr_t eltSize, gocpp::string whySafe);
-    void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);
-    void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     void escapes(go_any x);
     extern gocpp_id_5 dummy;
     gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
+}
+#include "golang/internal/abi/type.h"
+#include "golang/internal/reflectlite/type.h"
+
+namespace golang::reflectlite
+{
+    struct Value
+    {
+        // typ_ holds the type of the value represented by a Value.
+        // Access using the typ method to avoid escape of v.
+        abi::Type* typ_;
+        // Pointer-valued data or, if flagIndir is set, pointer to data.
+        // Valid when either flagIndir is set or typ.pointers() is true.
+        gocpp::unsafe_pointer ptr;
+        // flag holds metadata about the value.
+        // The lowest bits are flag bits:
+        // - flagStickyRO: obtained via unexported not embedded field, so read-only
+        // - flagEmbedRO: obtained via unexported embedded field, so read-only
+        // - flagIndir: val holds a pointer to the data
+        // - flagAddr: v.CanAddr is true (implies flagIndir)
+        // Value cannot represent method values.
+        // The next five bits give the Kind of the value.
+        // This repeats typ.Kind() except for method values.
+        // The remaining 23+ bits give a method number for method values.
+        // If flag.kind() != Func, code can assume that flagMethod is unset.
+        // If ifaceIndir(typ), code can assume that flagIndir is set.
+        golang::reflectlite::flag flag;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Value& value);
+    struct ValueError
+    {
+        gocpp::string Method;
+        golang::reflectlite::Kind Kind;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
+    struct emptyInterface
+    {
+        abi::Type* typ;
+        gocpp::unsafe_pointer word;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
+    gocpp::unsafe_pointer unsafe_New(abi::Type*);
+    void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);
+    void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
+    go_any packEface(struct Value v);
+    struct Value unpackEface(go_any i);
+    go_any valueInterface(struct Value v);
+    struct Value ValueOf(go_any i);
+}
+
+#include "golang/internal/abi/type.h"
+#include "golang/internal/reflectlite/type.h"
+
+namespace golang::reflectlite
+{
 
     namespace rec
     {

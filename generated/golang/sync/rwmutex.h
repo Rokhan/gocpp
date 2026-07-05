@@ -35,6 +35,12 @@ namespace golang::sync
 
     std::ostream& operator<<(std::ostream& os, const struct RWMutex& value);
     bool syscall_hasWaitingReaders(struct RWMutex* rw);
+}
+
+#include "golang/sync/mutex.h"
+
+namespace golang::sync
+{
 
     namespace rec
     {

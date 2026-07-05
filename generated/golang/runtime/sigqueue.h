@@ -9,12 +9,9 @@
 #include "golang/runtime/sigqueue.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
-    extern gocpp_id_0 sig;
     bool sigsend(uint32_t s);
     uint32_t signal_recv();
     void signalWaitUntilIdle();
@@ -23,6 +20,14 @@ namespace golang::runtime
     void signal_ignore(uint32_t s);
     void sigInitIgnored(uint32_t s);
     bool signal_ignored(uint32_t s);
+}
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/os_windows.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    extern gocpp_id_0 sig;
 
     namespace rec
     {

@@ -9,14 +9,20 @@
 #include "golang/internal/syscall/windows/registry/zsyscall_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/mutex.h"
-#include "golang/syscall/dll_windows.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 
 namespace golang::registry
 {
     extern gocpp::unsafe_pointer _;
+    std::tuple<uint32_t, struct gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size);
+}
+#include "golang/internal/syscall/windows/sysdll/sysdll.h"
+#include "golang/syscall/dll_windows.h"
+#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/types_windows.h"
+#include "golang/syscall/zerrors_windows.h"
+
+namespace golang::registry
+{
     extern gocpp::error errERROR_IO_PENDING;
     extern gocpp::error errERROR_EINVAL;
     struct gocpp::error errnoErr(syscall::Errno e);
@@ -28,7 +34,6 @@ namespace golang::registry
     struct gocpp::error regEnumValue(syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen);
     struct gocpp::error regLoadMUIString(syscall::Handle key, uint16_t* name, uint16_t* buf, uint32_t buflen, uint32_t* buflenCopied, uint32_t flags, uint16_t* dir);
     struct gocpp::error regSetValueEx(syscall::Handle key, uint16_t* valueName, uint32_t reserved, uint32_t vtype, unsigned char* buf, uint32_t bufsize);
-    std::tuple<uint32_t, struct gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size);
     extern syscall::LazyProc* procRegCreateKeyExW;
     extern syscall::LazyProc* procRegDeleteKeyW;
     extern syscall::LazyProc* procRegDeleteValueW;

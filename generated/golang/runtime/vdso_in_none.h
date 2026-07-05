@@ -9,6 +9,7 @@
 #include "golang/runtime/vdso_in_none.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::runtime
 {
     bool inVDSOPage(uintptr_t pc);

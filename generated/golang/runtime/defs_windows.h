@@ -9,7 +9,6 @@
 #include "golang/runtime/defs_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/defs_windows_amd64.h"
 
 namespace golang::runtime
 {
@@ -38,23 +37,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct systeminfo& value);
-    struct exceptionpointers
-    {
-        exceptionrecord* record;
-        context* context;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct exceptionpointers& value);
     struct exceptionrecord
     {
         uint32_t exceptioncode;
@@ -117,6 +99,28 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct memoryBasicInformation& value);
+}
+#include "golang/runtime/defs_windows_amd64.h"
+
+namespace golang::runtime
+{
+    struct exceptionpointers
+    {
+        exceptionrecord* record;
+        context* context;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct exceptionpointers& value);
 
     namespace rec
     {

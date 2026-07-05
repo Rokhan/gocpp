@@ -9,10 +9,28 @@
 #include "golang/runtime/iface.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    void itabsinit();
+    struct GoTag_sliceInterfacePtr { };
+    using sliceInterfacePtr = gocpp::alias<gocpp::slice<unsigned char>, GoTag_sliceInterfacePtr>;
+    extern go_any uint16Eface;
+    extern go_any uint32Eface;
+    extern go_any uint64Eface;
+    extern go_any stringEface;
+    gocpp::unsafe_pointer convT16(uint16_t val);
+    gocpp::unsafe_pointer convT32(uint32_t val);
+    gocpp::unsafe_pointer convT64(uint64_t val);
+    gocpp::unsafe_pointer convTstring(gocpp::string val);
+    gocpp::unsafe_pointer convTslice(gocpp::slice<unsigned char> val);
+    extern gocpp::array<uint64_t, 256> staticuint64s;
+    void unreachableMethod();
+    extern go_any sliceEface;
+}
 #include "golang/internal/abi/switch.h"
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
@@ -38,23 +56,15 @@ namespace golang::runtime
     uintptr_t itabHashFunc(golang::runtime::interfacetype* inter, golang::runtime::_type* typ);
     struct itab* getitab(golang::runtime::interfacetype* inter, golang::runtime::_type* typ, bool canfail);
     void itabAdd(struct itab* m);
-    void itabsinit();
     void panicdottypeE(golang::runtime::_type* have, golang::runtime::_type* want, golang::runtime::_type* iface);
     void panicdottypeI(struct itab* have, golang::runtime::_type* want, golang::runtime::_type* iface);
     void panicnildottype(golang::runtime::_type* want);
-    struct GoTag_sliceInterfacePtr { };
-    using sliceInterfacePtr = gocpp::alias<gocpp::slice<unsigned char>, GoTag_sliceInterfacePtr>;
-    extern go_any uint16Eface;
-    extern go_any uint32Eface;
-    extern go_any uint64Eface;
-    extern go_any stringEface;
+    extern runtime::_type* uint16Type;
+    extern runtime::_type* uint32Type;
+    extern runtime::_type* uint64Type;
+    extern runtime::_type* stringType;
     gocpp::unsafe_pointer convT(golang::runtime::_type* t, gocpp::unsafe_pointer v);
     gocpp::unsafe_pointer convTnoptr(golang::runtime::_type* t, gocpp::unsafe_pointer v);
-    gocpp::unsafe_pointer convT16(uint16_t val);
-    gocpp::unsafe_pointer convT32(uint32_t val);
-    gocpp::unsafe_pointer convT64(uint64_t val);
-    gocpp::unsafe_pointer convTstring(gocpp::string val);
-    gocpp::unsafe_pointer convTslice(gocpp::slice<unsigned char> val);
     struct itab* assertE2I(golang::runtime::interfacetype* inter, golang::runtime::_type* t);
     struct itab* assertE2I2(golang::runtime::interfacetype* inter, golang::runtime::_type* t);
     struct itab* typeAssert(abi::TypeAssert* s, golang::runtime::_type* t);
@@ -66,16 +76,15 @@ namespace golang::runtime
     void reflect_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst);
     void reflectlite_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst);
     void iterate_itabs(std::function<void (struct itab* _1)> fn);
-    extern gocpp::array<uint64_t, 256> staticuint64s;
-    void unreachableMethod();
     extern itabTableType itabTableInit;
-    extern go_any sliceEface;
-    extern runtime::_type* uint16Type;
-    extern runtime::_type* uint32Type;
-    extern runtime::_type* uint64Type;
-    extern runtime::_type* stringType;
-    extern itabTableType* itabTable;
     extern runtime::_type* sliceType;
+    extern itabTableType* itabTable;
+}
+
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

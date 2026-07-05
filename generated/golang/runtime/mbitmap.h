@@ -9,15 +9,6 @@
 #include "golang/runtime/mbitmap.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
 
 namespace golang::runtime
 {
@@ -43,21 +34,35 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct markBits& value);
-    struct markBits markBitsForAddr(uintptr_t p);
-    struct markBits markBitsForSpan(uintptr_t base);
-    void badPointer(struct mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff);
-    std::tuple<uintptr_t, struct mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     bool reflect_verifyNotInHeapPtr(uintptr_t p);
     void bulkBarrierBitmap(uintptr_t dst, uintptr_t src, uintptr_t size, uintptr_t maskOffset, uint8_t* bits);
-    void typeBitsBulkBarrier(golang::runtime::_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
     uintptr_t readUintptr(unsigned char* p);
-    extern gocpp_id_0 debugPtrmask;
-    struct bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
     uintptr_t runGCProg(unsigned char* prog, unsigned char* dst);
-    struct mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog);
-    void dematerializeGCProg(struct mspan* s);
     void dumpGCProg(unsigned char* p);
     gocpp::slice<unsigned char> reflect_gcbits(go_any x);
+    struct markBits markBitsForAddr(uintptr_t p);
+    struct markBits markBitsForSpan(uintptr_t base);
+}
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/stack.h"
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
+    void badPointer(struct mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff);
+    std::tuple<uintptr_t, struct mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff);
+    void typeBitsBulkBarrier(golang::runtime::_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
+    extern gocpp_id_0 debugPtrmask;
+    struct bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
+    struct mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog);
+    void dematerializeGCProg(struct mspan* s);
+}
+
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

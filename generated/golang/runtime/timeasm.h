@@ -9,6 +9,7 @@
 #include "golang/runtime/timeasm.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::runtime
 {
     std::tuple<int64_t, int32_t, int64_t> time_now();

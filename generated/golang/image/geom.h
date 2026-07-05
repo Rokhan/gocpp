@@ -9,7 +9,6 @@
 #include "golang/image/geom.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/image/color/color.h"
 
 namespace golang::image
 {
@@ -30,11 +29,10 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Point& value);
-    struct Point Pt(int X, int Y);
-    struct Rectangle Rect(int x0, int y0, int x1, int y1);
     int mul3NonNeg(int x, int y, int z);
     int add2NonNeg(int x, int y);
     extern Point ZP;
+    struct Point Pt(int X, int Y);
     struct Rectangle
     {
         Point Min;
@@ -53,6 +51,13 @@ namespace golang::image
 
     std::ostream& operator<<(std::ostream& os, const struct Rectangle& value);
     extern Rectangle ZR;
+    struct Rectangle Rect(int x0, int y0, int x1, int y1);
+}
+
+#include "golang/image/color/color.h"
+
+namespace golang::image
+{
 
     namespace rec
     {

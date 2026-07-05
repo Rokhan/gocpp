@@ -10,10 +10,6 @@
 #include "gocpp/support.h"
 
 #include "golang/compress/flate/deflate.h"
-#include "golang/compress/flate/deflatefast.h"
-#include "golang/compress/flate/huffman_bit_writer.h"
-#include "golang/compress/flate/huffman_code.h"
-#include "golang/compress/flate/token.h"
 #include "golang/hash/hash.h"
 #include "golang/io/io.h"
 
@@ -45,6 +41,12 @@ namespace golang::zlib
     struct Writer* NewWriter(io::Writer w);
     std::tuple<struct Writer*, struct gocpp::error> NewWriterLevel(io::Writer w, int level);
     std::tuple<struct Writer*, struct gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
+}
+
+#include "golang/io/io.h"
+
+namespace golang::zlib
+{
 
     namespace rec
     {

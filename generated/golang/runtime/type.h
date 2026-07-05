@@ -9,29 +9,9 @@
 #include "golang/runtime/type.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
-    struct rtype
-    {
-        abi::Type* Type; // embedding is okay here (unlike reflect) because none of this is public
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
-    extern gocpp_id_0 reflectOffs;
     void reflectOffsLock();
     void reflectOffsUnlock();
     runtime::name resolveNameOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::nameOff off);
@@ -55,7 +35,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _typePair& value);
-    struct rtype toRType(abi::Type* t);
     struct gocpp_id_2
     {
 
@@ -72,6 +51,30 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
     bool typesEqual(golang::runtime::_type* t, golang::runtime::_type* v, gocpp::map<_typePair, gocpp_id_2> seen);
+}
+#include "golang/internal/abi/type.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    struct rtype
+    {
+        abi::Type* Type; // embedding is okay here (unlike reflect) because none of this is public
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
+    extern gocpp_id_0 reflectOffs;
+    struct rtype toRType(abi::Type* t);
 
     namespace rec
     {

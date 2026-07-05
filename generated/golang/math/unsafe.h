@@ -9,6 +9,7 @@
 #include "golang/math/unsafe.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::math
 {
     uint32_t Float32bits(double f);

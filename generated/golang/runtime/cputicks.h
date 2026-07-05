@@ -9,6 +9,7 @@
 #include "golang/runtime/cputicks.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::runtime
 {
     int64_t cputicks();

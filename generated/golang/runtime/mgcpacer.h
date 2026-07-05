@@ -9,41 +9,18 @@
 #include "golang/runtime/mgcpacer.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
+
+namespace golang::runtime
+{
+    int32_t setGCPercent(int32_t in);
+    int32_t readGOGC();
+    int64_t setMemoryLimit(int64_t in);
+    int64_t readGOMEMLIMIT();
+    void gcControllerCommit();
+}
 #include "golang/internal/cpu/cpu.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mgc.h"
-#include "golang/runtime/mgclimit.h"
-#include "golang/runtime/mgcwork.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mpagecache.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/mranges.h"
 #include "golang/runtime/mstats.h"
-#include "golang/runtime/mwbbuf.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/pagetrace_off.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/pinner.h"
-#include "golang/runtime/proc.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -276,12 +253,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcControllerState& value);
-    int32_t setGCPercent(int32_t in);
-    int32_t readGOGC();
-    int64_t setMemoryLimit(int64_t in);
-    int64_t readGOMEMLIMIT();
-    void gcControllerCommit();
     extern gcControllerState gcController;
+}
+
+#include "golang/runtime/mgc.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

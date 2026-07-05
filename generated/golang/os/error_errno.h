@@ -9,8 +9,6 @@
 #include "golang/os/error_errno.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/syscall_windows.h"
-
 namespace golang::os
 {
 

@@ -9,20 +9,21 @@
 #include "golang/reflect/makefunc.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::reflect
+{
+    void makeFuncStub();
+    uintptr_t methodValueCallCodePtr();
+    void methodValueCall();
+}
 #include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/type.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
-#include "golang/sync/cond.h"
-#include "golang/sync/pool.h"
 
 namespace golang::reflect
 {
     struct Value MakeFunc(struct Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn);
-    void makeFuncStub();
     struct Value makeMethodValue(gocpp::string op, struct Value v);
-    uintptr_t methodValueCallCodePtr();
-    void methodValueCall();
     struct makeFuncCtxt
     {
         uintptr_t fn;
@@ -42,7 +43,6 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct makeFuncCtxt& value);
-    void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, abi::RegArgs* args);
     struct makeFuncImpl
     {
         makeFuncCtxt makeFuncCtxt;
@@ -79,6 +79,7 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct methodValue& value);
+    void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, abi::RegArgs* args);
 
     namespace rec
     {

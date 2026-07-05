@@ -18,6 +18,12 @@ namespace golang::runtime
     gocpp::string GOROOT();
     extern gocpp::string buildVersion;
     gocpp::string Version();
+}
+#include "golang/internal/goarch/zgoarch_amd64.h"
+#include "golang/internal/goos/zgoos_windows.h"
+
+namespace golang::runtime
+{
     extern gocpp::string GOOS;
     extern gocpp::string GOARCH;
 

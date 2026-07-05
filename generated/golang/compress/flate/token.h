@@ -9,6 +9,7 @@
 #include "golang/compress/flate/token.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::flate
 {
     extern gocpp::array<uint32_t, 256> lengthCodes;

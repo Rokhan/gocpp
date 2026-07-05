@@ -9,14 +9,6 @@
 #include "golang/encoding/binary/binary.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/encoding/binary/native_endian_little.h"
-#include "golang/internal/abi/type.h"
-#include "golang/io/io.h"
-#include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/map.h"
-#include "golang/sync/mutex.h"
 
 namespace golang::binary
 {
@@ -220,12 +212,7 @@ namespace golang::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct bigEndian& value);
-    struct gocpp::error Read(io::Reader r, struct ByteOrder order, go_any data);
-    struct gocpp::error Write(io::Writer w, struct ByteOrder order, go_any data);
     int Size(go_any v);
-    extern sync::Map structSize;
-    int dataSize(reflect::Value v);
-    int go_sizeof(reflect::Type t);
     int intDataSize(go_any data);
     extern littleEndian LittleEndian;
     extern bigEndian BigEndian;
@@ -247,6 +234,26 @@ namespace golang::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct coder& value);
+}
+#include "golang/io/io.h"
+#include "golang/reflect/type.h"
+#include "golang/reflect/value.h"
+#include "golang/sync/map.h"
+
+namespace golang::binary
+{
+    struct gocpp::error Read(io::Reader r, struct ByteOrder order, go_any data);
+    struct gocpp::error Write(io::Writer w, struct ByteOrder order, go_any data);
+    extern sync::Map structSize;
+    int dataSize(reflect::Value v);
+    int go_sizeof(reflect::Type t);
+}
+
+#include "golang/encoding/binary/native_endian_little.h"
+#include "golang/reflect/value.h"
+
+namespace golang::binary
+{
 
     namespace rec
     {

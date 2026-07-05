@@ -9,27 +9,23 @@
 #include "golang/runtime/mfinal.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
+
+namespace golang::runtime
+{
+    extern gocpp::array<unsigned char, 5> finalizer1;
+    void lockRankMayQueueFinalizer();
+    void createfing();
+    void runfinq();
+    bool isGoPointerWithoutSpan(gocpp::unsafe_pointer p);
+    bool blockUntilEmptyFinalizerQueue(int64_t timeout);
+    void SetFinalizer(go_any obj, go_any finalizer);
+    void KeepAlive(go_any x);
+}
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
+#include "golang/runtime/mgc.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
+#include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
@@ -57,18 +53,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct finalizer& value);
-    extern gocpp::array<unsigned char, 5> finalizer1;
-    void lockRankMayQueueFinalizer();
     void queuefinalizer(gocpp::unsafe_pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
     void iterate_finq(std::function<void (struct funcval* _1, gocpp::unsafe_pointer _2, uintptr_t _3, golang::runtime::_type* _4, golang::runtime::ptrtype* _5)> callback);
     struct g* wakefing();
-    void createfing();
     bool finalizercommit(struct g* gp, gocpp::unsafe_pointer lock);
-    void runfinq();
-    bool isGoPointerWithoutSpan(gocpp::unsafe_pointer p);
-    bool blockUntilEmptyFinalizerQueue(int64_t timeout);
-    void SetFinalizer(go_any obj, go_any finalizer);
-    void KeepAlive(go_any x);
+}
+#include "golang/runtime/internal/sys/nih.h"
+
+namespace golang::runtime
+{
     struct finblock
     {
         sys::NotInHeap _1;

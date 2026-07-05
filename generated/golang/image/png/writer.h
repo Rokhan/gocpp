@@ -9,18 +9,6 @@
 #include "golang/image/png/writer.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/bufio/bufio.h"
-#include "golang/compress/flate/deflate.h"
-#include "golang/compress/flate/deflatefast.h"
-#include "golang/compress/flate/huffman_bit_writer.h"
-#include "golang/compress/flate/huffman_code.h"
-#include "golang/compress/flate/token.h"
-#include "golang/compress/zlib/writer.h"
-#include "golang/hash/hash.h"
-#include "golang/image/color/color.h"
-#include "golang/image/geom.h"
-#include "golang/image/image.h"
-#include "golang/io/io.h"
 
 namespace golang::png
 {
@@ -88,34 +76,6 @@ namespace golang::png
     }
 
     std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value);
-    struct encoder
-    {
-        Encoder* enc;
-        io::Writer w;
-        image::Image m;
-        int cb;
-        gocpp::error err;
-        gocpp::array<unsigned char, 8> header;
-        gocpp::array<unsigned char, 4> footer;
-        gocpp::array<unsigned char, 4 * 256> tmp;
-        gocpp::array<gocpp::slice<uint8_t>, nFilter> cr;
-        gocpp::slice<uint8_t> pr;
-        zlib::Writer* zw;
-        int zwLevel;
-        bufio::Writer* bw;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct encoder& value);
     struct opaquer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -174,12 +134,9 @@ namespace golang::png
     }
 
     std::ostream& operator<<(std::ostream& os, const struct opaquer& value);
-    bool opaque(image::Image m);
     int abs8(uint8_t d);
-    int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp);
     void zeroMemory(gocpp::slice<uint8_t> v);
     int levelToZlib(golang::png::CompressionLevel l);
-    struct gocpp::error Encode(io::Writer w, image::Image m);
     struct Encoder
     {
         golang::png::CompressionLevel CompressionLevel;
@@ -199,6 +156,54 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
+}
+#include "golang/bufio/bufio.h"
+#include "golang/compress/zlib/writer.h"
+#include "golang/image/image.h"
+#include "golang/image/png/reader.h"
+#include "golang/io/io.h"
+
+namespace golang::png
+{
+    struct encoder
+    {
+        Encoder* enc;
+        io::Writer w;
+        image::Image m;
+        int cb;
+        gocpp::error err;
+        gocpp::array<unsigned char, 8> header;
+        gocpp::array<unsigned char, 4> footer;
+        gocpp::array<unsigned char, 4 * 256> tmp;
+        gocpp::array<gocpp::slice<uint8_t>, nFilter> cr;
+        gocpp::slice<uint8_t> pr;
+        zlib::Writer* zw;
+        int zwLevel;
+        bufio::Writer* bw;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct encoder& value);
+    bool opaque(image::Image m);
+    int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp);
+    struct gocpp::error Encode(io::Writer w, image::Image m);
+}
+
+#include "golang/image/color/color.h"
+#include "golang/image/image.h"
+#include "golang/io/io.h"
+
+namespace golang::png
+{
 
     namespace rec
     {

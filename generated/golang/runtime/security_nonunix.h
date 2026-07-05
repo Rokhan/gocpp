@@ -9,6 +9,7 @@
 #include "golang/runtime/security_nonunix.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::runtime
 {
     bool isSecureMode();

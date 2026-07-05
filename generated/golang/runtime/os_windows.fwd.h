@@ -6,10 +6,10 @@
 
 namespace golang::runtime
 {
-    const long _NSIG = 65;
+    const long go__NSIG = 65;
     using stdFunction = gocpp::unsafe_pointer;
     struct sigset;
-    const long _MAX_PATH = 260;
+    const long go__MAX_PATH = 260;
     const uintptr_t currentProcess = ~ uintptr_t(0);
     const uintptr_t currentThread = ~ uintptr_t(1);
     const double osRelaxMinNS = 60 * 1e6;

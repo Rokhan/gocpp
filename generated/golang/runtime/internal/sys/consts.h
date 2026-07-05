@@ -9,7 +9,6 @@
 #include "golang/runtime/internal/sys/consts.fwd.h"
 #include "gocpp/support.h"
 
-
 namespace golang::sys
 {
 

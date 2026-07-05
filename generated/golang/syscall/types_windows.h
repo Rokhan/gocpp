@@ -9,7 +9,6 @@
 #include "golang/syscall/types_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/syscall_windows.h"
 
 namespace golang::syscall
 {
@@ -34,7 +33,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Timeval& value);
-    struct Timeval NsecToTimeval(int64_t nsec);
     struct SecurityAttributes
     {
         uint32_t Length;
@@ -53,26 +51,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SecurityAttributes& value);
-    struct Overlapped
-    {
-        uintptr_t Internal;
-        uintptr_t InternalHigh;
-        uint32_t Offset;
-        uint32_t OffsetHigh;
-        golang::syscall::Handle HEvent;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Overlapped& value);
     struct FileNotifyInformation
     {
         uint32_t NextEntryOffset;
@@ -109,41 +87,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Filetime& value);
-    struct Filetime NsecToFiletime(int64_t nsec);
-    void copyFindData(struct Win32finddata* dst, struct win32finddata1* src);
-    struct StartupInfo
-    {
-        uint32_t Cb;
-        uint16_t* _1;
-        uint16_t* Desktop;
-        uint16_t* Title;
-        uint32_t X;
-        uint32_t Y;
-        uint32_t XSize;
-        uint32_t YSize;
-        uint32_t XCountChars;
-        uint32_t YCountChars;
-        uint32_t FillAttribute;
-        uint32_t Flags;
-        uint16_t ShowWindow;
-        uint16_t _2;
-        unsigned char* _3;
-        golang::syscall::Handle StdInput;
-        golang::syscall::Handle StdOutput;
-        golang::syscall::Handle StdErr;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct StartupInfo& value);
     struct _PROC_THREAD_ATTRIBUTE_LIST
     {
         gocpp::array<unsigned char, 1> _1;
@@ -160,25 +103,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _PROC_THREAD_ATTRIBUTE_LIST& value);
-    struct ProcessInformation
-    {
-        golang::syscall::Handle Process;
-        golang::syscall::Handle Thread;
-        uint32_t ProcessId;
-        uint32_t ThreadId;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ProcessInformation& value);
     struct ProcessEntry32
     {
         uint32_t Size;
@@ -467,26 +391,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CertInfo& value);
-    struct CertContext
-    {
-        uint32_t EncodingType;
-        unsigned char* EncodedCert;
-        uint32_t Length;
-        CertInfo* CertInfo;
-        golang::syscall::Handle Store;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CertContext& value);
     struct CertTrustListInfo
     {
 
@@ -768,6 +672,8 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reparseDataBuffer& value);
+    struct Timeval NsecToTimeval(int64_t nsec);
+    struct Filetime NsecToFiletime(int64_t nsec);
     struct Win32finddata
     {
         uint32_t FileAttributes;
@@ -864,23 +770,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Win32FileAttributeData& value);
-    struct _STARTUPINFOEXW
-    {
-        StartupInfo StartupInfo;
-        _PROC_THREAD_ATTRIBUTE_LIST* ProcThreadAttributeList;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct _STARTUPINFOEXW& value);
     struct Timezoneinformation
     {
         int32_t Bias;
@@ -1061,6 +950,121 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct WSAProtocolInfo& value);
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::syscall
+{
+    struct Overlapped
+    {
+        uintptr_t Internal;
+        uintptr_t InternalHigh;
+        uint32_t Offset;
+        uint32_t OffsetHigh;
+        golang::syscall::Handle HEvent;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Overlapped& value);
+    struct StartupInfo
+    {
+        uint32_t Cb;
+        uint16_t* _1;
+        uint16_t* Desktop;
+        uint16_t* Title;
+        uint32_t X;
+        uint32_t Y;
+        uint32_t XSize;
+        uint32_t YSize;
+        uint32_t XCountChars;
+        uint32_t YCountChars;
+        uint32_t FillAttribute;
+        uint32_t Flags;
+        uint16_t ShowWindow;
+        uint16_t _2;
+        unsigned char* _3;
+        golang::syscall::Handle StdInput;
+        golang::syscall::Handle StdOutput;
+        golang::syscall::Handle StdErr;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct StartupInfo& value);
+    struct ProcessInformation
+    {
+        golang::syscall::Handle Process;
+        golang::syscall::Handle Thread;
+        uint32_t ProcessId;
+        uint32_t ThreadId;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ProcessInformation& value);
+    struct CertContext
+    {
+        uint32_t EncodingType;
+        unsigned char* EncodedCert;
+        uint32_t Length;
+        CertInfo* CertInfo;
+        golang::syscall::Handle Store;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CertContext& value);
+    void copyFindData(struct Win32finddata* dst, struct win32finddata1* src);
+    struct _STARTUPINFOEXW
+    {
+        StartupInfo StartupInfo;
+        _PROC_THREAD_ATTRIBUTE_LIST* ProcThreadAttributeList;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct _STARTUPINFOEXW& value);
     struct IpAdapterInfo
     {
         IpAdapterInfo* Next;

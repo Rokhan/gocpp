@@ -9,8 +9,6 @@
 #include "golang/runtime/trace2region.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/malloc.h"
 
 namespace golang::runtime
 {
@@ -31,6 +29,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceRegionAlloc& value);
+}
+#include "golang/internal/goarch/goarch.h"
+#include "golang/runtime/internal/sys/nih.h"
+
+namespace golang::runtime
+{
     struct traceRegionAllocBlock
     {
         sys::NotInHeap _1;
@@ -49,6 +53,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceRegionAllocBlock& value);
+}
+
+#include "golang/runtime/malloc.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

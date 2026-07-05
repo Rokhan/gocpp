@@ -9,8 +9,6 @@
 #include "golang/runtime/mgcwork.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -59,6 +57,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcWork& value);
+    void prepareFreeWorkbufs();
+    bool freeSomeWbufs(bool preemptible);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct workbufhdr
     {
         lfnode node; // must be first
@@ -76,13 +81,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct workbufhdr& value);
-    struct workbuf* getempty();
-    void putempty(struct workbuf* b);
-    void putfull(struct workbuf* b);
-    struct workbuf* trygetfull();
-    struct workbuf* handoff(struct workbuf* b);
-    void prepareFreeWorkbufs();
-    bool freeSomeWbufs(bool preemptible);
+}
+#include "golang/internal/goarch/goarch.h"
+#include "golang/runtime/internal/sys/nih.h"
+
+namespace golang::runtime
+{
     struct workbuf
     {
         sys::NotInHeap _1;
@@ -102,6 +106,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct workbuf& value);
+    struct workbuf* getempty();
+    void putempty(struct workbuf* b);
+    void putfull(struct workbuf* b);
+    struct workbuf* trygetfull();
+    struct workbuf* handoff(struct workbuf* b);
 
     namespace rec
     {

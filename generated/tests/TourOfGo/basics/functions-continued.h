@@ -13,10 +13,10 @@
 namespace golang::main
 {
     int add(int x, int y);
-    gocpp::unsafe_pointer toto1(int x, int y);
     extern int* Pointer;
-    gocpp::unsafe_pointer toto2(int x, int y);
     void main();
+    gocpp::unsafe_pointer toto1(int x, int y);
+    gocpp::unsafe_pointer toto2(int x, int y);
 
     namespace rec
     {

@@ -9,6 +9,7 @@
 #include "golang/syscall/net.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::syscall
 {
     struct RawConn : virtual gocpp::Interface

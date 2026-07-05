@@ -9,6 +9,7 @@
 #include "golang/math/exp2_noasm.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::math
 {
     double archExp2(double x);

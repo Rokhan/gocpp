@@ -35,10 +35,10 @@ namespace golang::runtime
     struct gocpp_id_0
     {
         note note;
-        gocpp::array<uint32_t, (_NSIG + 31) / 32> mask;
-        gocpp::array<uint32_t, (_NSIG + 31) / 32> wanted;
-        gocpp::array<uint32_t, (_NSIG + 31) / 32> ignored;
-        gocpp::array<uint32_t, (_NSIG + 31) / 32> recv;
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> mask;
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> wanted;
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> ignored;
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> recv;
         atomic::Uint32 state;
         atomic::Uint32 delivering;
         bool inuse;
@@ -206,7 +206,7 @@ namespace golang::runtime
         for(; ; )
         {
             // Serve any signals from local copy.
-            for(auto i = uint32_t(0); i < _NSIG; i++)
+            for(auto i = uint32_t(0); i < go__NSIG; i++)
             {
                 if(sig.recv[i / 32] & (1 << (i & 31)) != 0)
                 {

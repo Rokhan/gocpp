@@ -9,18 +9,19 @@
 #include "golang/runtime/plugin.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/internal/sys/nih.h"
+
+namespace golang::runtime
+{
+    bool inRange(uintptr_t r0, uintptr_t r1, uintptr_t v0, uintptr_t v1);
+}
 #include "golang/runtime/proc.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
 #include "golang/runtime/symtab.h"
+#include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
     std::tuple<gocpp::string, gocpp::map<gocpp::string, go_any>, gocpp::slice<initTask*>, gocpp::string> plugin_lastmoduleinit();
     void pluginftabverify(struct moduledata* md);
-    bool inRange(uintptr_t r0, uintptr_t r1, uintptr_t v0, uintptr_t v1);
     struct ptabEntry
     {
         golang::runtime::nameOff name;

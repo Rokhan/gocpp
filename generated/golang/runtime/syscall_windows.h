@@ -9,9 +9,6 @@
 #include "golang/runtime/syscall_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -37,26 +34,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiPart& value);
-    struct winCallbackKey
-    {
-        funcval* fn;
-        bool cdecl;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct winCallbackKey& value);
     void callbackasm();
     uintptr_t callbackasmAddr(int i);
-    uintptr_t compileCallback(struct eface fn, bool cdecl);
     struct callbackArgs
     {
         uintptr_t index;
@@ -85,7 +64,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct callbackArgs& value);
-    void callbackWrap(struct callbackArgs* a);
     std::tuple<uintptr_t, uintptr_t> syscall_loadsystemlibrary(uint16_t* filename);
     std::tuple<uintptr_t, uintptr_t> syscall_loadlibrary(uint16_t* filename);
     std::tuple<uintptr_t, uintptr_t> syscall_getprocaddress(uintptr_t handle, unsigned char* procname);
@@ -131,6 +109,30 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
+    void callbackWrap(struct callbackArgs* a);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    struct winCallbackKey
+    {
+        funcval* fn;
+        bool cdecl;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct winCallbackKey& value);
+    uintptr_t compileCallback(struct eface fn, bool cdecl);
     struct winCallback
     {
         funcval* fn; // Go function
@@ -149,6 +151,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct winCallback& value);
+}
+#include "golang/runtime/zcallback_windows.h"
+
+namespace golang::runtime
+{
     extern gocpp_id_0 cbs;
 
     namespace rec

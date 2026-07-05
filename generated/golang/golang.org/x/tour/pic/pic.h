@@ -9,13 +9,15 @@
 #include "golang/golang.org/x/tour/pic/pic.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/image/color/color.h"
-#include "golang/image/geom.h"
-#include "golang/image/image.h"
 
 namespace golang::pic
 {
     void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int dx, int dy)> f);
+}
+#include "golang/image/image.h"
+
+namespace golang::pic
+{
     void ShowImage(image::Image m);
 
     namespace rec

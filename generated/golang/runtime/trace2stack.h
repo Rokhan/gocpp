@@ -9,33 +9,37 @@
 #include "golang/runtime/trace2stack.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/symtab.h"
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/plugin.h"
-#include "golang/runtime/proc.h"
+
+namespace golang::runtime
+{
+    struct traceFrame
+    {
+        uintptr_t PC;
+        uint64_t funcID;
+        uint64_t fileID;
+        uint64_t line;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct traceFrame& value);
+    bool tracefpunwindoff();
+    int fpTracebackPCs(gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf);
+    gocpp::slice<uintptr_t> fpunwindExpand(gocpp::slice<uintptr_t> pcBuf);
+    uintptr_t startPCForTrace(uintptr_t pc);
+    gocpp::slice<traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs);
+}
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/stack.h"
 #include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
 #include "golang/runtime/trace2map.h"
-#include "golang/runtime/trace2region.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -56,31 +60,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceStackTable& value);
-    gocpp::slice<traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs);
-    struct traceFrame
-    {
-        uintptr_t PC;
-        uint64_t funcID;
-        uint64_t fileID;
-        uint64_t line;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct traceFrame& value);
     struct traceFrame makeTraceFrame(uintptr_t gen, struct Frame f);
-    bool tracefpunwindoff();
-    int fpTracebackPCs(gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf);
-    gocpp::slice<uintptr_t> fpunwindExpand(gocpp::slice<uintptr_t> pcBuf);
-    uintptr_t startPCForTrace(uintptr_t pc);
 
     namespace rec
     {

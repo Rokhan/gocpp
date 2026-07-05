@@ -10,8 +10,6 @@
 #include "gocpp/support.h"
 
 #include "golang/io/fs/fs.h"
-#include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::fs
 {

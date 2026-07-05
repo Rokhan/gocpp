@@ -9,15 +9,9 @@
 #include "golang/runtime/mcentral.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mcache.h"
 #include "golang/runtime/mheap.h"
-#include "golang/runtime/mranges.h"
 #include "golang/runtime/mspanset.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -56,6 +50,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mcentral& value);
+}
+
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/mspanset.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

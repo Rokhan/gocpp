@@ -9,19 +9,23 @@
 #include "golang/runtime/mem.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/mstats.h"
 
 namespace golang::runtime
 {
-    gocpp::unsafe_pointer sysAlloc(uintptr_t n, golang::runtime::sysMemStat* sysStat);
     void sysUnused(gocpp::unsafe_pointer v, uintptr_t n);
     void sysUsed(gocpp::unsafe_pointer v, uintptr_t n, uintptr_t prepared);
     void sysHugePage(gocpp::unsafe_pointer v, uintptr_t n);
     void sysNoHugePage(gocpp::unsafe_pointer v, uintptr_t n);
     void sysHugePageCollapse(gocpp::unsafe_pointer v, uintptr_t n);
-    void sysFree(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat);
     void sysFault(gocpp::unsafe_pointer v, uintptr_t n);
     gocpp::unsafe_pointer sysReserve(gocpp::unsafe_pointer v, uintptr_t n);
+}
+#include "golang/runtime/mstats.h"
+
+namespace golang::runtime
+{
+    gocpp::unsafe_pointer sysAlloc(uintptr_t n, golang::runtime::sysMemStat* sysStat);
+    void sysFree(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat);
     void sysMap(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat);
 
     namespace rec

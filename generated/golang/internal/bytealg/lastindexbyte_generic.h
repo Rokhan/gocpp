@@ -9,6 +9,7 @@
 #include "golang/internal/bytealg/lastindexbyte_generic.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::bytealg
 {
     int LastIndexByte(gocpp::slice<unsigned char> s, unsigned char c);

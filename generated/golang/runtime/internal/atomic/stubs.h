@@ -9,6 +9,7 @@
 #include "golang/runtime/internal/atomic/stubs.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::atomic
 {
     bool Cas(uint32_t* ptr, uint32_t old, uint32_t go_new);

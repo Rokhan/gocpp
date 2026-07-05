@@ -9,12 +9,6 @@
 #include "golang/internal/poll/fd_mutex.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/poll/fd_poll_runtime.h"
-#include "golang/internal/poll/fd_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
-#include "golang/sync/mutex.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 
 namespace golang::poll
 {
@@ -39,6 +33,12 @@ namespace golang::poll
     extern gocpp::string overflowMsg;
     void runtime_Semacquire(uint32_t* sema);
     void runtime_Semrelease(uint32_t* sema);
+}
+
+#include "golang/internal/poll/fd_windows.h"
+
+namespace golang::poll
+{
 
     namespace rec
     {

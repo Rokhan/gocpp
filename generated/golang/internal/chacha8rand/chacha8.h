@@ -9,6 +9,7 @@
 #include "golang/internal/chacha8rand/chacha8.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::chacha8rand
 {
     void block(gocpp::array_ptr<gocpp::array<uint64_t, 4>> seed, gocpp::array_ptr<gocpp::array<uint64_t, 32>> blocks, uint32_t counter);
@@ -32,7 +33,6 @@ namespace golang::chacha8rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct State& value);
-    gocpp::slice<unsigned char> Marshal(struct State* s);
     struct errUnmarshalChaCha8
     {
 
@@ -48,11 +48,12 @@ namespace golang::chacha8rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct errUnmarshalChaCha8& value);
-    struct gocpp::error Unmarshal(struct State* s, gocpp::slice<unsigned char> data);
     uint64_t beUint64(gocpp::slice<unsigned char> b);
     void bePutUint64(gocpp::slice<unsigned char> b, uint64_t v);
     uint64_t leUint64(gocpp::slice<unsigned char> b);
     void lePutUint64(gocpp::slice<unsigned char> b, uint64_t v);
+    gocpp::slice<unsigned char> Marshal(struct State* s);
+    struct gocpp::error Unmarshal(struct State* s, gocpp::slice<unsigned char> data);
 
     namespace rec
     {

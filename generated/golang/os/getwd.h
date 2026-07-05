@@ -9,12 +9,16 @@
 #include "golang/os/getwd.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::os
+{
+    std::tuple<gocpp::string, struct gocpp::error> Getwd();
+}
 #include "golang/sync/mutex.h"
 
 namespace golang::os
 {
     extern gocpp_id_0 getwdCache;
-    std::tuple<gocpp::string, struct gocpp::error> Getwd();
 
     namespace rec
     {

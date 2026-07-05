@@ -9,12 +9,6 @@
 #include "golang/fmt/print.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/format.h"
-#include "golang/internal/abi/type.h"
-#include "golang/io/io.h"
-#include "golang/reflect/value.h"
-#include "golang/sync/cond.h"
-#include "golang/sync/pool.h"
 
 namespace golang::fmt
 {
@@ -286,23 +280,8 @@ namespace golang::fmt
     }
 
     std::ostream& operator<<(std::ostream& os, const struct GoStringer& value);
-    gocpp::string FormatString(struct State state, gocpp::rune verb);
     struct GoTag_buffer { };
     using buffer = gocpp::alias<gocpp::slice<unsigned char>, GoTag_buffer>;
-    struct pp* newPrinter();
-    std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a);
-    
-    template<typename... Args>
-    std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, gocpp::string format, Args... a)
-    {
-        return Fprintf(w, format, gocpp::ToSlice<go_any>(a...));
-    }
-    
-    template<typename... Args>
-    std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, gocpp::string format, go_any value, Args... a)
-    {
-        return Fprintf(w, format, gocpp::ToSlice<go_any>(value, a...));
-    }
     std::tuple<int, struct gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a);
     
     template<typename... Args>
@@ -341,19 +320,6 @@ namespace golang::fmt
     gocpp::slice<unsigned char> Appendf(gocpp::slice<unsigned char> b, gocpp::string format, go_any value, Args... a)
     {
         return Appendf(b, format, gocpp::ToSlice<go_any>(value, a...));
-    }
-    std::tuple<int, struct gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a);
-    
-    template<typename... Args>
-    std::tuple<int, struct gocpp::error> Fprint(io::Writer w, Args... a)
-    {
-        return Fprint(w, gocpp::ToSlice<go_any>(a...));
-    }
-    
-    template<typename... Args>
-    std::tuple<int, struct gocpp::error> Fprint(io::Writer w, go_any value, Args... a)
-    {
-        return Fprint(w, gocpp::ToSlice<go_any>(value, a...));
     }
     std::tuple<int, struct gocpp::error> Print(gocpp::slice<go_any> a);
     
@@ -394,19 +360,6 @@ namespace golang::fmt
     {
         return Append(b, gocpp::ToSlice<go_any>(value, a...));
     }
-    std::tuple<int, struct gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a);
-    
-    template<typename... Args>
-    std::tuple<int, struct gocpp::error> Fprintln(io::Writer w, Args... a)
-    {
-        return Fprintln(w, gocpp::ToSlice<go_any>(a...));
-    }
-    
-    template<typename... Args>
-    std::tuple<int, struct gocpp::error> Fprintln(io::Writer w, go_any value, Args... a)
-    {
-        return Fprintln(w, gocpp::ToSlice<go_any>(value, a...));
-    }
     std::tuple<int, struct gocpp::error> Println(gocpp::slice<go_any> a);
     
     template<typename... Args>
@@ -446,11 +399,18 @@ namespace golang::fmt
     {
         return Appendln(b, gocpp::ToSlice<go_any>(value, a...));
     }
-    reflect::Value getField(reflect::Value v, int i);
     bool tooLarge(int x);
     std::tuple<int, bool, int> parsenum(gocpp::string s, int start, int end);
     std::tuple<int, bool, int> intFromArg(gocpp::slice<go_any> a, int argNum);
     std::tuple<int, int, bool> parseArgNumber(gocpp::string format);
+    gocpp::string FormatString(struct State state, gocpp::rune verb);
+}
+#include "golang/fmt/format.h"
+#include "golang/io/io.h"
+#include "golang/reflect/value.h"
+
+namespace golang::fmt
+{
     struct pp
     {
         golang::fmt::buffer buf;
@@ -485,7 +445,59 @@ namespace golang::fmt
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pp& value);
+    std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a);
+    
+    template<typename... Args>
+    std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, gocpp::string format, Args... a)
+    {
+        return Fprintf(w, format, gocpp::ToSlice<go_any>(a...));
+    }
+    
+    template<typename... Args>
+    std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, gocpp::string format, go_any value, Args... a)
+    {
+        return Fprintf(w, format, gocpp::ToSlice<go_any>(value, a...));
+    }
+    std::tuple<int, struct gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a);
+    
+    template<typename... Args>
+    std::tuple<int, struct gocpp::error> Fprint(io::Writer w, Args... a)
+    {
+        return Fprint(w, gocpp::ToSlice<go_any>(a...));
+    }
+    
+    template<typename... Args>
+    std::tuple<int, struct gocpp::error> Fprint(io::Writer w, go_any value, Args... a)
+    {
+        return Fprint(w, gocpp::ToSlice<go_any>(value, a...));
+    }
+    std::tuple<int, struct gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a);
+    
+    template<typename... Args>
+    std::tuple<int, struct gocpp::error> Fprintln(io::Writer w, Args... a)
+    {
+        return Fprintln(w, gocpp::ToSlice<go_any>(a...));
+    }
+    
+    template<typename... Args>
+    std::tuple<int, struct gocpp::error> Fprintln(io::Writer w, go_any value, Args... a)
+    {
+        return Fprintln(w, gocpp::ToSlice<go_any>(value, a...));
+    }
+    reflect::Value getField(reflect::Value v, int i);
+    struct pp* newPrinter();
+}
+#include "golang/sync/pool.h"
+
+namespace golang::fmt
+{
     extern sync::Pool ppFree;
+}
+
+#include "golang/reflect/value.h"
+
+namespace golang::fmt
+{
 
     namespace rec
     {

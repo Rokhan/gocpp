@@ -9,6 +9,7 @@
 #include "golang/sync/atomic/doc.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::atomic
 {
     int32_t SwapInt32(int32_t* addr, int32_t go_new);

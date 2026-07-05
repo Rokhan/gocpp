@@ -111,8 +111,8 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
-    struct entry* newEntry(go_any i);
     void main();
+    struct entry* newEntry(go_any i);
 
     namespace rec
     {

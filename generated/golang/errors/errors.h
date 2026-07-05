@@ -9,6 +9,7 @@
 #include "golang/errors/errors.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::errors
 {
     struct gocpp::error New(gocpp::string text);

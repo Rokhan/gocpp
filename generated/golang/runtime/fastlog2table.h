@@ -9,6 +9,7 @@
 #include "golang/runtime/fastlog2table.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::runtime
 {
     extern gocpp::array<double, (1 << fastlogNumBits) + 1> fastlog2Table;

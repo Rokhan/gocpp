@@ -12,6 +12,30 @@
 
 namespace golang::syscall
 {
+    struct Servent
+    {
+        unsigned char* Name;
+        unsigned char** Aliases;
+        unsigned char* Proto;
+        uint16_t Port;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Servent& value);
+}
+#include "golang/syscall/types_windows.h"
+
+namespace golang::syscall
+{
     struct WSAData
     {
         uint16_t Version;
@@ -34,25 +58,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct WSAData& value);
-    struct Servent
-    {
-        unsigned char* Name;
-        unsigned char** Aliases;
-        unsigned char* Proto;
-        uint16_t Port;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Servent& value);
 
     namespace rec
     {

@@ -9,15 +9,29 @@
 #include "golang/runtime/mspanset.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
+
+namespace golang::runtime
+{
+    struct spanSetSpinePointer
+    {
+        gocpp::unsafe_pointer p;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct spanSetSpinePointer& value);
+    runtime::headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail);
+}
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/lfstack.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -37,22 +51,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicSpanSetSpinePointer& value);
-    struct spanSetSpinePointer
-    {
-        gocpp::unsafe_pointer p;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct spanSetSpinePointer& value);
     struct spanSetBlockAlloc
     {
         golang::runtime::lfstack stack;
@@ -69,7 +67,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSetBlockAlloc& value);
-    runtime::headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail);
     struct atomicHeadTailIndex
     {
         atomic::Uint64 u;
@@ -102,6 +99,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicMSpanPointer& value);
+    extern spanSetBlockAlloc spanSetBlockPool;
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct spanSet
     {
         mutex spineLock;
@@ -155,7 +158,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSetBlock& value);
-    extern spanSetBlockAlloc spanSetBlockPool;
+}
+
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

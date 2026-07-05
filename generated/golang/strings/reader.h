@@ -9,7 +9,6 @@
 #include "golang/strings/reader.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/io.h"
 
 namespace golang::strings
 {
@@ -32,6 +31,12 @@ namespace golang::strings
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
     struct Reader* NewReader(gocpp::string s);
+}
+
+#include "golang/io/io.h"
+
+namespace golang::strings
+{
 
     namespace rec
     {

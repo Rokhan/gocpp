@@ -9,26 +9,12 @@
 #include "golang/runtime/coro.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
+
+namespace golang::runtime
+{
+    void corostart();
+}
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -49,11 +35,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct coro& value);
+    void coroswitch_m(struct g* gp);
     struct coro* newcoro(std::function<void (struct coro* _1)> f);
-    void corostart();
     void coroexit(struct coro* c);
     void coroswitch(struct coro* c);
-    void coroswitch_m(struct g* gp);
 
     namespace rec
     {

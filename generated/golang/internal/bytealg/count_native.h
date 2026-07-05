@@ -9,6 +9,7 @@
 #include "golang/internal/bytealg/count_native.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::bytealg
 {
     int Count(gocpp::slice<unsigned char> b, unsigned char c);

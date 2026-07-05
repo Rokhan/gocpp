@@ -9,7 +9,6 @@
 #include "golang/fmt/format.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/print.h"
 
 namespace golang::fmt
 {
@@ -42,6 +41,11 @@ namespace golang::fmt
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fmtFlags& value);
+}
+#include "golang/fmt/print.h"
+
+namespace golang::fmt
+{
     struct fmt
     {
         buffer* buf;
@@ -64,6 +68,12 @@ namespace golang::fmt
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fmt& value);
+}
+
+#include "golang/fmt/print.h"
+
+namespace golang::fmt
+{
 
     namespace rec
     {

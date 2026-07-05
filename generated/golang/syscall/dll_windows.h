@@ -9,8 +9,6 @@
 #include "golang/syscall/dll_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/mutex.h"
-#include "golang/syscall/syscall_windows.h"
 
 namespace golang::syscall
 {
@@ -32,6 +30,30 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct DLLError& value);
+    struct Proc
+    {
+        DLL* Dll;
+        gocpp::string Name;
+        uintptr_t addr;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Proc& value);
+}
+#include "golang/sync/mutex.h"
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::syscall
+{
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> Syscall(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3);
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> Syscall6(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
     std::tuple<uintptr_t, uintptr_t, syscall::Errno> Syscall9(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9);
@@ -71,26 +93,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct DLL& value);
-    std::tuple<struct DLL*, struct gocpp::error> LoadDLL(gocpp::string name);
-    struct DLL* MustLoadDLL(gocpp::string name);
-    struct Proc
-    {
-        DLL* Dll;
-        gocpp::string Name;
-        uintptr_t addr;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Proc& value);
     struct LazyDLL
     {
         mocklib::Mutex mu;
@@ -109,7 +111,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LazyDLL& value);
-    struct LazyDLL* NewLazyDLL(gocpp::string name);
     struct LazyProc
     {
         mocklib::Mutex mu;
@@ -129,6 +130,9 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LazyProc& value);
+    std::tuple<struct DLL*, struct gocpp::error> LoadDLL(gocpp::string name);
+    struct DLL* MustLoadDLL(gocpp::string name);
+    struct LazyDLL* NewLazyDLL(gocpp::string name);
 
     namespace rec
     {

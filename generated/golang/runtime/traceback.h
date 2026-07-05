@@ -9,90 +9,14 @@
 #include "golang/runtime/traceback.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/symtab.h"
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/plugin.h"
-#include "golang/runtime/proc.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/stack.h"
-#include "golang/runtime/stkframe.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
-    struct unwinder
-    {
-        // frame is the current physical stack frame, or all 0s if
-        // there is no frame.
-        stkframe frame;
-        // g is the G who's stack is being unwound. If the
-        // unwindJumpStack flag is set and the unwinder jumps stacks,
-        // this will be different from the initial G.
-        golang::runtime::guintptr g;
-        // cgoCtxt is the index into g.cgoCtxt of the next frame on the cgo stack.
-        // The cgo stack is unwound in tandem with the Go stack as we find marker frames.
-        int cgoCtxt;
-        // calleeFuncID is the function ID of the caller of the current
-        // frame.
-        abi::FuncID calleeFuncID;
-        // flags are the flags to this unwind. Some of these are updated as we
-        // unwind (see the flags documentation).
-        golang::runtime::unwindFlags flags;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct unwinder& value);
-    int tracebackPCs(struct unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
-    void printArgs(struct funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc);
     std::tuple<gocpp::string, gocpp::string, gocpp::string> funcNamePiecesForPrint(gocpp::string name);
     gocpp::string funcNameForPrint(gocpp::string name);
     void printFuncName(gocpp::string name);
-    void printcreatedby(struct g* gp);
-    void printcreatedby1(struct funcInfo f, uintptr_t pc, uint64_t goid);
-    void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
-    void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
-    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, golang::runtime::unwindFlags flags);
-    std::tuple<int, int> traceback2(struct unwinder* u, bool showRuntime, int skip, int max);
-    void printAncestorTraceback(struct ancestorInfo ancestor);
-    void printAncestorTracebackFuncInfo(struct funcInfo f, uintptr_t pc);
     int callers(int skip, gocpp::slice<uintptr_t> pcbuf);
-    int gcallers(struct g* gp, int skip, gocpp::slice<uintptr_t> pcbuf);
-    bool showframe(struct srcFunc sf, struct g* gp, bool firstFrame, abi::FuncID calleeID);
-    bool showfuncinfo(struct srcFunc sf, bool firstFrame, abi::FuncID calleeID);
     bool isExportedRuntime(gocpp::string name);
-    bool elideWrapperCalling(abi::FuncID id);
-    extern gocpp::array<gocpp::string, 10> gStatusStrings;
-    void goroutineheader(struct g* gp);
-    void tracebackothers(struct g* me);
-    void tracebackHexdump(struct stack stk, struct stkframe* frame, uintptr_t bad);
-    bool isSystemGoroutine(struct g* gp, bool fixed);
     void SetCgoTraceback(int version, gocpp::unsafe_pointer traceback, gocpp::unsafe_pointer context, gocpp::unsafe_pointer symbolizer);
     extern gocpp::unsafe_pointer cgoTraceback;
     extern gocpp::unsafe_pointer cgoContext;
@@ -154,10 +78,75 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cgoSymbolizerArg& value);
-    void printCgoTraceback(gocpp::array_ptr<cgoCallers> callers);
+    void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf);
     bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, struct cgoSymbolizerArg* arg);
     void callCgoSymbolizer(struct cgoSymbolizerArg* arg);
-    void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf);
+}
+#include "golang/internal/abi/symtab.h"
+#include "golang/runtime/cgocall.h"
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/stkframe.h"
+#include "golang/runtime/symtab.h"
+
+namespace golang::runtime
+{
+    struct unwinder
+    {
+        // frame is the current physical stack frame, or all 0s if
+        // there is no frame.
+        stkframe frame;
+        // g is the G who's stack is being unwound. If the
+        // unwindJumpStack flag is set and the unwinder jumps stacks,
+        // this will be different from the initial G.
+        golang::runtime::guintptr g;
+        // cgoCtxt is the index into g.cgoCtxt of the next frame on the cgo stack.
+        // The cgo stack is unwound in tandem with the Go stack as we find marker frames.
+        int cgoCtxt;
+        // calleeFuncID is the function ID of the caller of the current
+        // frame.
+        abi::FuncID calleeFuncID;
+        // flags are the flags to this unwind. Some of these are updated as we
+        // unwind (see the flags documentation).
+        golang::runtime::unwindFlags flags;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct unwinder& value);
+    void printArgs(struct funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc);
+    void printcreatedby(struct g* gp);
+    void printcreatedby1(struct funcInfo f, uintptr_t pc, uint64_t goid);
+    void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
+    void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
+    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, golang::runtime::unwindFlags flags);
+    void printAncestorTraceback(struct ancestorInfo ancestor);
+    void printAncestorTracebackFuncInfo(struct funcInfo f, uintptr_t pc);
+    int gcallers(struct g* gp, int skip, gocpp::slice<uintptr_t> pcbuf);
+    bool showframe(struct srcFunc sf, struct g* gp, bool firstFrame, abi::FuncID calleeID);
+    bool showfuncinfo(struct srcFunc sf, bool firstFrame, abi::FuncID calleeID);
+    bool elideWrapperCalling(abi::FuncID id);
+    extern gocpp::array<gocpp::string, 10> gStatusStrings;
+    void goroutineheader(struct g* gp);
+    void tracebackothers(struct g* me);
+    void tracebackHexdump(struct stack stk, struct stkframe* frame, uintptr_t bad);
+    bool isSystemGoroutine(struct g* gp, bool fixed);
+    void printCgoTraceback(gocpp::array_ptr<cgoCallers> callers);
+    int tracebackPCs(struct unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
+    std::tuple<int, int> traceback2(struct unwinder* u, bool showRuntime, int skip, int max);
+}
+
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

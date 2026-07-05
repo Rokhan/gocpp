@@ -9,7 +9,6 @@
 #include "golang/encoding/hex/hex.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/io.h"
 
 namespace golang::hex
 {
@@ -18,13 +17,20 @@ namespace golang::hex
     int EncodedLen(int n);
     int Encode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     gocpp::slice<unsigned char> AppendEncode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
-    extern gocpp::error ErrLength;
     int DecodedLen(int x);
     std::tuple<int, struct gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> AppendDecode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     gocpp::string EncodeToString(gocpp::slice<unsigned char> src);
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> DecodeString(gocpp::string s);
     gocpp::string Dump(gocpp::slice<unsigned char> data);
+    unsigned char toChar(unsigned char b);
+}
+#include "golang/errors/errors.h"
+#include "golang/io/io.h"
+
+namespace golang::hex
+{
+    extern gocpp::error ErrLength;
     struct encoder
     {
         io::Writer w;
@@ -86,7 +92,6 @@ namespace golang::hex
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dumper& value);
-    unsigned char toChar(unsigned char b);
 
     namespace rec
     {

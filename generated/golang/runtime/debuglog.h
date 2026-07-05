@@ -9,29 +9,9 @@
 #include "golang/runtime/debuglog.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
 
 namespace golang::runtime
 {
-    struct dlogger* dlog();
-    struct debugLogBuf
-    {
-        sys::NotInHeap _1;
-        gocpp::array<unsigned char, debugLogBytes> b;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct debugLogBuf& value);
     struct debugLogReader
     {
         debugLogBuf* data;
@@ -57,6 +37,28 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct debugLogReader& value);
     void printDebugLog();
     void printDebugLogPC(uintptr_t pc, bool returnPC);
+}
+#include "golang/runtime/internal/sys/nih.h"
+
+namespace golang::runtime
+{
+    struct debugLogBuf
+    {
+        sys::NotInHeap _1;
+        gocpp::array<unsigned char, debugLogBytes> b;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct debugLogBuf& value);
     struct debugLogWriter
     {
         sys::NotInHeap _1;
@@ -86,6 +88,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct debugLogWriter& value);
+}
+#include "golang/runtime/internal/atomic/types.h"
+
+namespace golang::runtime
+{
     struct dlogger
     {
         sys::NotInHeap _1;
@@ -108,6 +115,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dlogger& value);
+    struct dlogger* dlog();
     extern dlogger* allDloggers;
 
     namespace rec

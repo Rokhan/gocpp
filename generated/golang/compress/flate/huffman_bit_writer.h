@@ -9,9 +9,6 @@
 #include "golang/compress/flate/huffman_bit_writer.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/compress/flate/huffman_code.h"
-#include "golang/compress/flate/token.h"
-#include "golang/io/io.h"
 
 namespace golang::flate
 {
@@ -20,6 +17,14 @@ namespace golang::flate
     extern gocpp::slice<int8_t> offsetExtraBits;
     extern gocpp::slice<uint32_t> offsetBase;
     extern gocpp::slice<uint32_t> codegenOrder;
+    void init();
+    void histogram(gocpp::slice<unsigned char> b, gocpp::slice<int32_t> h);
+}
+#include "golang/compress/flate/huffman_code.h"
+#include "golang/io/io.h"
+
+namespace golang::flate
+{
     struct huffmanBitWriter
     {
         // writer is the underlying writer.
@@ -54,10 +59,16 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanBitWriter& value);
-    struct huffmanBitWriter* newHuffmanBitWriter(io::Writer w);
     extern huffmanEncoder* huffOffset;
-    void init();
-    void histogram(gocpp::slice<unsigned char> b, gocpp::slice<int32_t> h);
+    struct huffmanBitWriter* newHuffmanBitWriter(io::Writer w);
+}
+
+#include "golang/compress/flate/huffman_code.h"
+#include "golang/compress/flate/token.h"
+#include "golang/io/io.h"
+
+namespace golang::flate
+{
 
     namespace rec
     {

@@ -9,13 +9,33 @@
 #include "golang/runtime/symtabinl.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    struct inlineFrame
+    {
+        // pc is the PC giving the file/line metadata of the current frame. This is
+        // always a "call PC" (not a "return PC"). This is 0 when the iterator is
+        // exhausted.
+        uintptr_t pc;
+        // index is the index of the current record in inlTree, or -1 if we are in
+        // the outermost function.
+        int32_t index;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct inlineFrame& value);
+}
 #include "golang/internal/abi/symtab.h"
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/plugin.h"
-#include "golang/runtime/proc.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
 #include "golang/runtime/symtab.h"
 
 namespace golang::runtime
@@ -57,29 +77,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct inlineUnwinder& value);
-    struct inlineFrame
-    {
-        // pc is the PC giving the file/line metadata of the current frame. This is
-        // always a "call PC" (not a "return PC"). This is 0 when the iterator is
-        // exhausted.
-        uintptr_t pc;
-        // index is the index of the current record in inlTree, or -1 if we are in
-        // the outermost function.
-        int32_t index;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct inlineFrame& value);
     std::tuple<struct inlineUnwinder, struct inlineFrame> newInlineUnwinder(struct funcInfo f, uintptr_t pc);
+}
+
+#include "golang/runtime/symtab.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

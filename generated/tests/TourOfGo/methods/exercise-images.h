@@ -9,8 +9,6 @@
 #include "tests/TourOfGo/methods/exercise-images.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/image/color/color.h"
-#include "golang/image/geom.h"
 
 namespace golang::main
 {
@@ -30,6 +28,13 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct Image& value);
     void main();
+}
+
+#include "golang/image/color/color.h"
+#include "golang/image/geom.h"
+
+namespace golang::main
+{
 
     namespace rec
     {

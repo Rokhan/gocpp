@@ -9,8 +9,6 @@
 #include "golang/internal/syscall/windows/registry/syscall.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/syscall_windows.h"
-
 namespace golang::registry
 {
 

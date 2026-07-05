@@ -12,8 +12,6 @@
 
 namespace golang::atomic
 {
-    void storePointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new);
-    bool casPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
     struct noCopy
     {
 
@@ -217,6 +215,8 @@ namespace golang::atomic
 
     template<typename T>
     std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
+    void storePointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer go_new);
+    bool casPointer(gocpp::unsafe_pointer* ptr, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
 
     namespace rec
     {

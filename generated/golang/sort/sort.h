@@ -96,7 +96,6 @@ namespace golang::sort
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
-    void Sort(struct Interface data);
     unsigned int nextPowerOfTwo(int length);
     struct lessSwap
     {
@@ -115,8 +114,6 @@ namespace golang::sort
     };
 
     std::ostream& operator<<(std::ostream& os, const struct lessSwap& value);
-    struct Interface Reverse(struct Interface data);
-    bool IsSorted(struct Interface data);
     struct GoTag_IntSlice { };
     using IntSlice = gocpp::alias<gocpp::slice<int>, GoTag_IntSlice>;
     struct GoTag_Float64Slice { };
@@ -130,7 +127,7 @@ namespace golang::sort
     bool IntsAreSorted(gocpp::slice<int> x);
     bool Float64sAreSorted(gocpp::slice<double> x);
     bool StringsAreSorted(gocpp::slice<gocpp::string> x);
-    void Stable(struct Interface data);
+    void Sort(struct Interface data);
     struct reverse
     {
         // This embedded Interface permits Reverse to use the methods of
@@ -161,6 +158,9 @@ namespace golang::sort
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reverse& value);
+    struct Interface Reverse(struct Interface data);
+    bool IsSorted(struct Interface data);
+    void Stable(struct Interface data);
 
     namespace rec
     {

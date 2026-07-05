@@ -9,52 +9,33 @@
 #include "golang/runtime/mgcmark.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/symtab.h"
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mgcstack.h"
-#include "golang/runtime/mgcwork.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/plugin.h"
-#include "golang/runtime/proc.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/stack.h"
-#include "golang/runtime/stkframe.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
     void gcMarkRootPrepare();
     void gcMarkRootCheck();
     extern gocpp::array<uint8_t, 1> oneptrmask;
-    int64_t markroot(struct gcWork* gcw, uint32_t i, bool flushBgCredit);
-    int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, struct gcWork* gcw, int shard);
     void markrootFreeGStacks();
-    void markrootSpans(struct gcWork* gcw, int shard);
-    void gcAssistAlloc(struct g* gp);
-    void gcAssistAlloc1(struct g* gp, int64_t scanWork);
     void gcWakeAllAssists();
     bool gcParkAssist();
     void gcFlushBgCredit(int64_t scanWork);
+    void shade(uintptr_t b);
+    void gcDumpObject(gocpp::string label, uintptr_t obj, uintptr_t off);
+    void gcMarkTinyAllocs();
+}
+#include "golang/runtime/mgcstack.h"
+#include "golang/runtime/mgcwork.h"
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/stkframe.h"
+
+namespace golang::runtime
+{
+    int64_t markroot(struct gcWork* gcw, uint32_t i, bool flushBgCredit);
+    int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, struct gcWork* gcw, int shard);
+    void markrootSpans(struct gcWork* gcw, int shard);
+    void gcAssistAlloc(struct g* gp);
+    void gcAssistAlloc1(struct g* gp, int64_t scanWork);
     int64_t scanstack(struct g* gp, struct gcWork* gcw);
     void scanframeworker(struct stkframe* frame, struct stackScanState* state, struct gcWork* gcw);
     void gcDrainMarkWorkerIdle(struct gcWork* gcw);
@@ -65,11 +46,8 @@ namespace golang::runtime
     void scanblock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* stk);
     void scanobject(uintptr_t b, struct gcWork* gcw);
     void scanConservative(uintptr_t b, uintptr_t n, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* state);
-    void shade(uintptr_t b);
     void greyobject(uintptr_t obj, uintptr_t base, uintptr_t off, struct mspan* span, struct gcWork* gcw, uintptr_t objIndex);
-    void gcDumpObject(gocpp::string label, uintptr_t obj, uintptr_t off);
     void gcmarknewobject(struct mspan* span, uintptr_t obj);
-    void gcMarkTinyAllocs();
 
     namespace rec
     {

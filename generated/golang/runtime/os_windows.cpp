@@ -260,7 +260,7 @@ namespace golang::runtime
         return stdFunction(gocpp::unsafe_pointer(f));
     }
 
-    gocpp::array<unsigned char, _MAX_PATH + 1> sysDirectory;
+    gocpp::array<unsigned char, go__MAX_PATH + 1> sysDirectory;
     uintptr_t sysDirectoryLen;
     void initSysDirectory()
     {
@@ -498,7 +498,7 @@ namespace golang::runtime
     bool canUseLongPaths;
     // We want this to be large enough to hold the contents of sysDirectory, *plus*
     // a slash and another component that itself is greater than MAX_PATH.
-    gocpp::array<unsigned char, (_MAX_PATH + 1) * 2 + 1> longFileName;
+    gocpp::array<unsigned char, (go__MAX_PATH + 1) * 2 + 1> longFileName;
     // initLongPathSupport initializes the canUseLongPaths variable, which is
     // linked into os.canUseLongPaths for determining whether or not long paths
     // need to be fixed up. In the best case, this function is running on newer

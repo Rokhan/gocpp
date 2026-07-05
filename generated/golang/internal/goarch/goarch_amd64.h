@@ -9,8 +9,6 @@
 #include "golang/internal/goarch/goarch_amd64.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/goarch/goarch.h"
-
 namespace golang::goarch
 {
 

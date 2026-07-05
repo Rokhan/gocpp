@@ -9,38 +9,26 @@
 #include "golang/runtime/trace2runtime.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
+
+namespace golang::runtime
+{
+    void traceLockInit();
+    void lockRankMayTraceFlush();
+    extern gocpp::array<gocpp::string, 15> traceBlockReasonStrings;
+    extern gocpp::array<gocpp::string, 3> traceGoStopReasonStrings;
+    bool traceEnabled();
+    bool traceShuttingDown();
+    void traceExitingSyscall();
+    void traceExitedSyscall();
+    void trace_userTaskCreate(uint64_t id, uint64_t parentID, gocpp::string taskType);
+    void trace_userTaskEnd(uint64_t id);
+    void trace_userRegion(uint64_t id, uint64_t mode, gocpp::string name);
+    void trace_userLog(uint64_t id, gocpp::string category, gocpp::string message);
+}
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mgc.h"
-#include "golang/runtime/mgclimit.h"
-#include "golang/runtime/mgcwork.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mpagecache.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/mwbbuf.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/pagetrace_off.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/pinner.h"
-#include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
 #include "golang/runtime/trace2buf.h"
 #include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -106,12 +94,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pTraceState& value);
-    void traceLockInit();
-    void lockRankMayTraceFlush();
-    extern gocpp::array<gocpp::string, 15> traceBlockReasonStrings;
-    extern gocpp::array<gocpp::string, 3> traceGoStopReasonStrings;
-    bool traceEnabled();
-    bool traceShuttingDown();
     struct traceLocker
     {
         m* mp;
@@ -129,17 +111,18 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceLocker& value);
+    void traceProcFree(struct p* _1);
+    void traceThreadDestroy(struct m* mp);
     struct traceLocker traceAcquire();
     struct traceLocker traceAcquireEnabled();
     void traceRelease(struct traceLocker tl);
-    void traceExitingSyscall();
-    void traceExitedSyscall();
-    void trace_userTaskCreate(uint64_t id, uint64_t parentID, gocpp::string taskType);
-    void trace_userTaskEnd(uint64_t id);
-    void trace_userRegion(uint64_t id, uint64_t mode, gocpp::string name);
-    void trace_userLog(uint64_t id, gocpp::string category, gocpp::string message);
-    void traceProcFree(struct p* _1);
-    void traceThreadDestroy(struct m* mp);
+}
+
+#include "golang/runtime/proc.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

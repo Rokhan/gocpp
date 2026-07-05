@@ -13,23 +13,6 @@
 namespace golang::cpu
 {
     extern bool DebugOptions;
-    struct CacheLinePad
-    {
-        gocpp::array<unsigned char, CacheLinePadSize> _1;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CacheLinePad& value);
-    extern uintptr_t CacheLineSize;
     void Initialize(gocpp::string env);
     struct option
     {
@@ -52,13 +35,35 @@ namespace golang::cpu
     std::ostream& operator<<(std::ostream& os, const struct option& value);
     void processOptions(gocpp::string env);
     int indexByte(gocpp::string s, unsigned char c);
+    extern gocpp::slice<option> options;
+}
+#include "golang/internal/cpu/cpu_x86.h"
+
+namespace golang::cpu
+{
+    struct CacheLinePad
+    {
+        gocpp::array<unsigned char, CacheLinePadSize> _1;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CacheLinePad& value);
+    extern uintptr_t CacheLineSize;
     extern gocpp_id_0 X86;
     extern gocpp_id_1 ARM;
     extern gocpp_id_2 ARM64;
     extern gocpp_id_3 MIPS64X;
     extern gocpp_id_4 PPC64;
     extern gocpp_id_5 S390X;
-    extern gocpp::slice<option> options;
 
     namespace rec
     {

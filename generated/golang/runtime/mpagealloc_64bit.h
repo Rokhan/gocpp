@@ -9,20 +9,22 @@
 #include "golang/runtime/mpagealloc_64bit.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mgcscavenge.h"
+#include "golang/runtime/malloc.h"
 #include "golang/runtime/mpagealloc.h"
-#include "golang/runtime/mpallocbits.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/mstats.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
     extern gocpp::array<unsigned int, summaryLevels> levelBits;
     extern gocpp::array<unsigned int, summaryLevels> levelShift;
     extern gocpp::array<unsigned int, summaryLevels> levelLogPages;
+}
+
+#include "golang/runtime/mgcscavenge.h"
+#include "golang/runtime/mpagealloc.h"
+#include "golang/runtime/mstats.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

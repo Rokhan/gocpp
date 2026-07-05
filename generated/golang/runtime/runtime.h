@@ -9,8 +9,27 @@
 #include "golang/runtime/runtime.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    int64_t ticksPerSecond();
+    extern gocpp::slice<gocpp::string> envs;
+    extern gocpp::slice<gocpp::string> argslice;
+    gocpp::slice<gocpp::string> syscall_runtime_envs();
+    int syscall_Getpagesize();
+    gocpp::slice<gocpp::string> os_runtime_args();
+    void syscall_Exit(int code);
+    extern gocpp::string godebugDefault;
+    void godebug_setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update);
+    void godebug_setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
+    void godebugNotify(bool envChanged);
+    void syscall_runtimeSetenv(gocpp::string key, gocpp::string value);
+    void syscall_runtimeUnsetenv(gocpp::string key);
+    void writeErrStr(gocpp::string s);
+    extern gocpp::slice<uintptr_t> auxv;
+    gocpp::slice<uintptr_t> getAuxv();
+}
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
@@ -35,19 +54,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ticksType& value);
-    int64_t ticksPerSecond();
-    extern gocpp::slice<gocpp::string> envs;
-    extern gocpp::slice<gocpp::string> argslice;
-    gocpp::slice<gocpp::string> syscall_runtime_envs();
-    int syscall_Getpagesize();
-    gocpp::slice<gocpp::string> os_runtime_args();
-    void syscall_Exit(int code);
-    extern gocpp::string godebugDefault;
     extern atomic::Pointer<std::function<void (gocpp::string _1, gocpp::string _2)>> godebugUpdate;
     extern atomic::Pointer<gocpp::string> godebugEnv;
     extern atomic::Pointer<std::function<std::function<void ()> (gocpp::string _1)>> godebugNewIncNonDefault;
-    void godebug_setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update);
-    void godebug_setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
     struct godebugInc
     {
         gocpp::string name;
@@ -65,12 +74,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct godebugInc& value);
-    void godebugNotify(bool envChanged);
-    void syscall_runtimeSetenv(gocpp::string key, gocpp::string value);
-    void syscall_runtimeUnsetenv(gocpp::string key);
-    void writeErrStr(gocpp::string s);
-    extern gocpp::slice<uintptr_t> auxv;
-    gocpp::slice<uintptr_t> getAuxv();
     extern ticksType ticks;
 
     namespace rec

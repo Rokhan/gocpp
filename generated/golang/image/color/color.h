@@ -9,6 +9,7 @@
 #include "golang/image/color/color.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::color
 {
     struct Color : virtual gocpp::Interface
@@ -273,17 +274,9 @@ namespace golang::color
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Model& value);
-    struct Model ModelFunc(std::function<struct Color (struct Color _1)> f);
-    struct Color rgbaModel(struct Color c);
-    struct Color rgba64Model(struct Color c);
-    struct Color nrgbaModel(struct Color c);
-    struct Color nrgba64Model(struct Color c);
-    struct Color alphaModel(struct Color c);
-    struct Color alpha16Model(struct Color c);
-    struct Color grayModel(struct Color c);
-    struct Color gray16Model(struct Color c);
     struct GoTag_Palette { };
     uint32_t sqDiff(uint32_t x, uint32_t y);
+    struct Model ModelFunc(std::function<struct Color (struct Color _1)> f);
     struct modelFunc
     {
         std::function<struct Color (struct Color _1)> f;
@@ -300,6 +293,19 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct modelFunc& value);
+    struct Color rgbaModel(struct Color c);
+    struct Color rgba64Model(struct Color c);
+    struct Color nrgbaModel(struct Color c);
+    struct Color nrgba64Model(struct Color c);
+    struct Color alphaModel(struct Color c);
+    struct Color alpha16Model(struct Color c);
+    struct Color grayModel(struct Color c);
+    struct Color gray16Model(struct Color c);
+    using Palette = gocpp::alias<gocpp::slice<Color>, GoTag_Palette>;
+    extern Gray16 Black;
+    extern Gray16 White;
+    extern Alpha16 Transparent;
+    extern Alpha16 Opaque;
     extern Model RGBAModel;
     extern Model RGBA64Model;
     extern Model NRGBAModel;
@@ -308,11 +314,6 @@ namespace golang::color
     extern Model Alpha16Model;
     extern Model GrayModel;
     extern Model Gray16Model;
-    using Palette = gocpp::alias<gocpp::slice<Color>, GoTag_Palette>;
-    extern Gray16 Black;
-    extern Gray16 White;
-    extern Alpha16 Transparent;
-    extern Alpha16 Opaque;
 
     namespace rec
     {

@@ -9,9 +9,6 @@
 #include "golang/runtime/slice.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/malloc.h"
 
 namespace golang::runtime
 {
@@ -33,6 +30,18 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct slice& value);
+    void panicmakeslicelen();
+    void panicmakeslicecap();
+    int nextslicecap(int newLen, int oldCap);
+    bool isPowerOfTwo(uintptr_t x);
+    int slicecopy(gocpp::unsafe_pointer toPtr, int toLen, gocpp::unsafe_pointer fromPtr, int fromLen, uintptr_t width);
+    gocpp::slice<unsigned char> bytealg_MakeNoZero(int len);
+}
+#include "golang/runtime/malloc.h"
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
     struct notInHeapSlice
     {
         notInHeap* array;
@@ -51,17 +60,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notInHeapSlice& value);
-    void panicmakeslicelen();
-    void panicmakeslicecap();
     gocpp::unsafe_pointer makeslicecopy(golang::runtime::_type* et, int tolen, int fromlen, gocpp::unsafe_pointer from);
     gocpp::unsafe_pointer makeslice(golang::runtime::_type* et, int len, int cap);
     gocpp::unsafe_pointer makeslice64(golang::runtime::_type* et, int64_t len64, int64_t cap64);
     struct slice growslice(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, golang::runtime::_type* et);
-    int nextslicecap(int newLen, int oldCap);
     struct slice reflect_growslice(golang::runtime::_type* et, struct slice old, int num);
-    bool isPowerOfTwo(uintptr_t x);
-    int slicecopy(gocpp::unsafe_pointer toPtr, int toLen, gocpp::unsafe_pointer fromPtr, int fromLen, uintptr_t width);
-    gocpp::slice<unsigned char> bytealg_MakeNoZero(int len);
 
     namespace rec
     {

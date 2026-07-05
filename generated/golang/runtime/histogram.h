@@ -9,8 +9,14 @@
 #include "golang/runtime/histogram.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    double float64Inf();
+    double float64NegInf();
+    gocpp::slice<double> timeHistogramMetricsBuckets();
+}
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/metrics.h"
 
 namespace golang::runtime
 {
@@ -39,9 +45,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct timeHistogram& value);
-    double float64Inf();
-    double float64NegInf();
-    gocpp::slice<double> timeHistogramMetricsBuckets();
+}
+
+#include "golang/runtime/metrics.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

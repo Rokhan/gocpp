@@ -9,7 +9,6 @@
 #include "golang/slices/sort.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/cmp/cmp.h"
 
 namespace golang::slices
 {

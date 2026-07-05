@@ -9,27 +9,6 @@
 #include "golang/runtime/runtime1.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -47,6 +26,24 @@ namespace golang::runtime
     extern uint64_t test_x64;
     void testAtomic64();
     void check();
+    void parsedebugvars();
+    void reparsedebugvars(gocpp::string env);
+    void parsegodebug(gocpp::string godebug, gocpp::map<gocpp::string, bool> seen);
+    void setTraceback(gocpp::string level);
+    int32_t timediv(int64_t v, int32_t div, int32_t* rem);
+    std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks();
+    gocpp::unsafe_pointer reflect_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
+    gocpp::unsafe_pointer reflect_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
+    gocpp::unsafe_pointer reflect_resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off);
+    gocpp::unsafe_pointer reflectlite_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
+    gocpp::unsafe_pointer reflectlite_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
+    int32_t reflect_addReflectOff(gocpp::unsafe_pointer ptr);
+}
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct dbgVar
     {
         gocpp::string name;
@@ -67,20 +64,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct dbgVar& value);
     extern gocpp_id_0 debug;
-    void parsedebugvars();
-    void reparsedebugvars(gocpp::string env);
-    void parsegodebug(gocpp::string godebug, gocpp::map<gocpp::string, bool> seen);
-    void setTraceback(gocpp::string level);
-    int32_t timediv(int64_t v, int32_t div, int32_t* rem);
     struct m* acquirem();
     void releasem(struct m* mp);
-    std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks();
-    gocpp::unsafe_pointer reflect_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
-    gocpp::unsafe_pointer reflect_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
-    gocpp::unsafe_pointer reflect_resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off);
-    gocpp::unsafe_pointer reflectlite_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
-    gocpp::unsafe_pointer reflectlite_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
-    int32_t reflect_addReflectOff(gocpp::unsafe_pointer ptr);
     extern gocpp::slice<dbgVar*> dbgvars;
 
     namespace rec

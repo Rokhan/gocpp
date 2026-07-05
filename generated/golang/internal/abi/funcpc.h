@@ -9,6 +9,7 @@
 #include "golang/internal/abi/funcpc.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::abi
 {
     uintptr_t FuncPCABI0(std::any f);

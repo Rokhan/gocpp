@@ -11,7 +11,6 @@
 
 #include "golang/time/sleep.h"
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::time
 {
@@ -32,8 +31,14 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Ticker& value);
-    struct Ticker* NewTicker(golang::time::Duration d);
     gocpp::channel<Time> Tick(golang::time::Duration d);
+    struct Ticker* NewTicker(golang::time::Duration d);
+}
+
+#include "golang/time/time.h"
+
+namespace golang::time
+{
 
     namespace rec
     {

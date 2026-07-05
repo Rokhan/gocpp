@@ -9,8 +9,12 @@
 #include "golang/image/format.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/image/color/color.h"
-#include "golang/image/geom.h"
+
+namespace golang::image
+{
+    bool match(gocpp::string magic, gocpp::slice<unsigned char> b);
+}
+#include "golang/errors/errors.h"
 #include "golang/image/image.h"
 #include "golang/io/io.h"
 #include "golang/sync/atomic/value.h"
@@ -102,11 +106,10 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
-    struct reader asReader(io::Reader r);
-    bool match(gocpp::string magic, gocpp::slice<unsigned char> b);
-    struct format sniff(struct reader r);
     std::tuple<struct Image, gocpp::string, struct gocpp::error> Decode(io::Reader r);
     std::tuple<struct Config, gocpp::string, struct gocpp::error> DecodeConfig(io::Reader r);
+    struct reader asReader(io::Reader r);
+    struct format sniff(struct reader r);
 
     namespace rec
     {

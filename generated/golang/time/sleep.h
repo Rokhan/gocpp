@@ -9,12 +9,9 @@
 #include "golang/time/sleep.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::time
 {
-    void Sleep(golang::time::Duration d);
     struct runtimeTimer
     {
         uintptr_t pp;
@@ -38,16 +35,19 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeTimer& value);
-    int64_t when(golang::time::Duration d);
+    void sendTime(go_any c, uintptr_t seq);
+    void goFunc(go_any arg, uintptr_t seq);
     void startTimer(runtimeTimer*);
     bool stopTimer(runtimeTimer*);
     bool resetTimer(runtimeTimer*, int64_t);
     void modTimer(struct runtimeTimer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
-    struct Timer* NewTimer(golang::time::Duration d);
-    void sendTime(go_any c, uintptr_t seq);
-    gocpp::channel<Time> After(golang::time::Duration d);
-    struct Timer* AfterFunc(golang::time::Duration d, std::function<void ()> f);
-    void goFunc(go_any arg, uintptr_t seq);
+}
+#include "golang/time/time.h"
+
+namespace golang::time
+{
+    void Sleep(golang::time::Duration d);
+    int64_t when(golang::time::Duration d);
     struct Timer
     {
         gocpp::channel<Time> C;
@@ -65,6 +65,15 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Timer& value);
+    gocpp::channel<Time> After(golang::time::Duration d);
+    struct Timer* NewTimer(golang::time::Duration d);
+    struct Timer* AfterFunc(golang::time::Duration d, std::function<void ()> f);
+}
+
+#include "golang/time/time.h"
+
+namespace golang::time
+{
 
     namespace rec
     {

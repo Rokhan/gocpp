@@ -9,6 +9,7 @@
 #include "golang/internal/syscall/windows/psapi_windows.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::windows
 {
     struct PROCESS_MEMORY_COUNTERS

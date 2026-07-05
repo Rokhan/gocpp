@@ -14,7 +14,6 @@ namespace golang::main
 {
     extern bool ToBe;
     extern uint64_t MaxInt;
-    extern gocpp::complex128 z;
     void DummyPrintList(gocpp::string format, gocpp::slice<std::any> elts);
     void DummyPrintf(gocpp::string format, gocpp::slice<std::any> a);
     
@@ -30,6 +29,12 @@ namespace golang::main
         return DummyPrintf(format, gocpp::ToSlice<std::any>(value, a...));
     }
     void main();
+}
+#include "golang/math/cmplx/sqrt.h"
+
+namespace golang::main
+{
+    extern gocpp::complex128 z;
 
     namespace rec
     {

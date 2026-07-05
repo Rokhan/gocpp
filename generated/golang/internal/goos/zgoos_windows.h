@@ -9,6 +9,7 @@
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::goos
 {
     extern gocpp::string GOOS;

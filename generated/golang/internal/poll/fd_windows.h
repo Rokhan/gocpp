@@ -9,12 +9,6 @@
 #include "golang/internal/poll/fd_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
-#include "golang/sync/mutex.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 
 namespace golang::poll
 {
@@ -23,6 +17,14 @@ namespace golang::poll
     extern bool useSetFileCompletionNotificationModes;
     void checkSetFileCompletionNotificationModes();
     void init();
+}
+#include "golang/internal/syscall/windows/syscall_windows.h"
+#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/types_windows.h"
+#include "golang/syscall/zsyscall_windows.h"
+
+namespace golang::poll
+{
     struct operation
     {
         // Used by IOCP interface, it must be first field
@@ -56,13 +58,20 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct operation& value);
-    std::tuple<int, struct gocpp::error> execIO(struct operation* o, std::function<struct gocpp::error (struct operation* o)> submit);
     extern std::function<gocpp::error (syscall::Handle, *uint16, uint32_t, *uint32, *byte)> ReadConsole;
     int32_t sockaddrInet4ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
     int32_t sockaddrInet6ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
     void rawToSockaddrInet4(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
     void rawToSockaddrInet6(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
     std::tuple<int32_t, struct gocpp::error> sockaddrToRaw(syscall::RawSockaddrAny* rsa, syscall::Sockaddr sa);
+    std::tuple<int, struct gocpp::error> execIO(struct operation* o, std::function<struct gocpp::error (struct operation* o)> submit);
+}
+#include "golang/internal/poll/fd_mutex.h"
+#include "golang/internal/poll/fd_poll_runtime.h"
+#include "golang/sync/mutex.h"
+
+namespace golang::poll
+{
     struct FD
     {
         // Lock sysfd and serialize access to Read and Write methods.
@@ -109,6 +118,13 @@ namespace golang::poll
 
     std::ostream& operator<<(std::ostream& os, const struct FD& value);
     extern std::function<void (gocpp::string net, struct FD* fd, struct gocpp::error err)> logInitFD;
+}
+
+#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/types_windows.h"
+
+namespace golang::poll
+{
 
     namespace rec
     {

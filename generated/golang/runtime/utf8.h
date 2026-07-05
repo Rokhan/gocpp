@@ -9,6 +9,7 @@
 #include "golang/runtime/utf8.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::runtime
 {
     int countrunes(gocpp::string s);

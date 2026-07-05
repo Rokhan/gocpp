@@ -9,7 +9,6 @@
 #include "golang/sync/poolqueue.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/atomic/type.h"
 
 namespace golang::sync
 {
@@ -51,8 +50,11 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolChain& value);
-    void storePoolChainElt(struct poolChainElt** pp, struct poolChainElt* v);
-    struct poolChainElt* loadPoolChainElt(struct poolChainElt** pp);
+}
+#include "golang/sync/atomic/type.h"
+
+namespace golang::sync
+{
     struct poolDequeue
     {
         // headTail packs together a 32-bit head index and a 32-bit
@@ -114,6 +116,8 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value);
+    void storePoolChainElt(struct poolChainElt** pp, struct poolChainElt* v);
+    struct poolChainElt* loadPoolChainElt(struct poolChainElt** pp);
 
     namespace rec
     {

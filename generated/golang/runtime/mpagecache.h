@@ -9,14 +9,6 @@
 #include "golang/runtime/mpagecache.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mgcscavenge.h"
-#include "golang/runtime/mpagealloc.h"
-#include "golang/runtime/mpallocbits.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/mstats.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -38,6 +30,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pageCache& value);
+}
+
+#include "golang/runtime/mpagealloc.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

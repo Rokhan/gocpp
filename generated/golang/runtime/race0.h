@@ -9,32 +9,9 @@
 #include "golang/runtime/race0.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
-    void raceReadObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
-    void raceWriteObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
     std::tuple<uintptr_t, uintptr_t> raceinit();
     void racefini();
     uintptr_t raceproccreate();
@@ -45,20 +22,28 @@ namespace golang::runtime
     void racereadrangepc(gocpp::unsafe_pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc);
     void racewriterangepc(gocpp::unsafe_pointer addr, uintptr_t sz, uintptr_t callerpc, uintptr_t pc);
     void raceacquire(gocpp::unsafe_pointer addr);
-    void raceacquireg(struct g* gp, gocpp::unsafe_pointer addr);
     void raceacquirectx(uintptr_t racectx, gocpp::unsafe_pointer addr);
     void racerelease(gocpp::unsafe_pointer addr);
-    void racereleaseg(struct g* gp, gocpp::unsafe_pointer addr);
     void racereleaseacquire(gocpp::unsafe_pointer addr);
-    void racereleaseacquireg(struct g* gp, gocpp::unsafe_pointer addr);
     void racereleasemerge(gocpp::unsafe_pointer addr);
-    void racereleasemergeg(struct g* gp, gocpp::unsafe_pointer addr);
     void racefingo();
     void racemalloc(gocpp::unsafe_pointer p, uintptr_t sz);
     void racefree(gocpp::unsafe_pointer p, uintptr_t sz);
     uintptr_t racegostart(uintptr_t pc);
     void racegoend();
     void racectxend(uintptr_t racectx);
+}
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
+    void raceReadObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void raceWriteObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void raceacquireg(struct g* gp, gocpp::unsafe_pointer addr);
+    void racereleaseg(struct g* gp, gocpp::unsafe_pointer addr);
+    void racereleaseacquireg(struct g* gp, gocpp::unsafe_pointer addr);
+    void racereleasemergeg(struct g* gp, gocpp::unsafe_pointer addr);
 
     namespace rec
     {

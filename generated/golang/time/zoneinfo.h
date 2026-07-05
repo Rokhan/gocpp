@@ -9,10 +9,6 @@
 #include "golang/time/zoneinfo.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
-#include "golang/sync/once.h"
-#include "golang/time/time.h"
 
 namespace golang::time
 {
@@ -53,10 +49,6 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct zoneTrans& value);
-    extern sync::Once localOnce;
-    extern sync::Once unnamedFixedZonesOnce;
-    struct Location* FixedZone(gocpp::string name, int offset);
-    struct Location* fixedZone(gocpp::string name, int offset);
     std::tuple<gocpp::string, int, int64_t, int64_t, bool, bool> tzset(gocpp::string s, int64_t lastTxSec, int64_t sec);
     std::tuple<gocpp::string, gocpp::string, bool> tzsetName(gocpp::string s);
     std::tuple<int, gocpp::string, bool> tzsetOffset(gocpp::string s);
@@ -80,13 +72,8 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rule& value);
-    std::tuple<struct rule, gocpp::string, bool> tzsetRule(gocpp::string s);
     std::tuple<int, gocpp::string, bool> tzsetNum(gocpp::string s, int min, int max);
-    int tzruleTime(int year, struct rule r, int off);
-    extern gocpp::error errLocation;
     extern gocpp::string* zoneinfo;
-    extern sync::Once zoneinfoOnce;
-    std::tuple<struct Location*, struct gocpp::error> LoadLocation(gocpp::string name);
     bool containsDotDot(gocpp::string s);
     struct Location
     {
@@ -124,9 +111,24 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Location& value);
+    std::tuple<struct rule, gocpp::string, bool> tzsetRule(gocpp::string s);
+    int tzruleTime(int year, struct rule r, int off);
+}
+#include "golang/errors/errors.h"
+#include "golang/sync/once.h"
+
+namespace golang::time
+{
+    extern sync::Once localOnce;
+    extern sync::Once unnamedFixedZonesOnce;
+    extern gocpp::error errLocation;
+    extern sync::Once zoneinfoOnce;
     extern Location utcLoc;
     extern Location localLoc;
     extern gocpp::slice<Location*> unnamedFixedZones;
+    struct Location* FixedZone(gocpp::string name, int offset);
+    struct Location* fixedZone(gocpp::string name, int offset);
+    std::tuple<struct Location*, struct gocpp::error> LoadLocation(gocpp::string name);
     extern Location* UTC;
     extern Location* Local;
 

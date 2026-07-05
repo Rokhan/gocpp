@@ -9,6 +9,11 @@
 #include "tests/TourOfGo/methods/exercise-rot-reader.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::main
+{
+    void main();
+}
 #include "golang/io/io.h"
 
 namespace golang::main
@@ -29,7 +34,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rot13Reader& value);
-    void main();
 
     namespace rec
     {

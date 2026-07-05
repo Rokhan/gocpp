@@ -9,12 +9,9 @@
 #include "golang/sync/cond.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/mutex.h"
-#include "golang/sync/runtime2.h"
 
 namespace golang::sync
 {
-    struct Cond* NewCond(struct Locker l);
     struct noCopy
     {
 
@@ -30,6 +27,12 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noCopy& value);
+}
+#include "golang/sync/mutex.h"
+#include "golang/sync/runtime2.h"
+
+namespace golang::sync
+{
     struct Cond
     {
         noCopy noCopy;
@@ -50,6 +53,7 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Cond& value);
+    struct Cond* NewCond(struct Locker l);
 
     namespace rec
     {

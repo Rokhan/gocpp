@@ -9,8 +9,6 @@
 #include "golang/slices/zsortordered.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/cmp/cmp.h"
-#include "golang/slices/sort.h"
 
 namespace golang::slices
 {
@@ -40,9 +38,6 @@ namespace golang::slices
     void breakPatternsOrdered(gocpp::slice<E> data, int a, int b);
     
     template<typename E>
-    std::tuple<int, slices::sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b);
-    
-    template<typename E>
     std::tuple<int, int> order2Ordered(gocpp::slice<E> data, int a, int b, int* swaps);
     
     template<typename E>
@@ -65,6 +60,14 @@ namespace golang::slices
     
     template<typename E>
     void rotateOrdered(gocpp::slice<E> data, int a, int m, int b);
+}
+#include "golang/slices/sort.h"
+
+namespace golang::slices
+{
+    
+    template<typename E>
+    std::tuple<int, slices::sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b);
 
     namespace rec
     {

@@ -14,6 +14,12 @@
 namespace golang::runtime
 {
     runtime::taggedPointer taggedPointerPack(gocpp::unsafe_pointer ptr, uintptr_t tag);
+}
+
+#include "golang/runtime/tagptr.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

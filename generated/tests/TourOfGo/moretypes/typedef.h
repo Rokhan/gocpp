@@ -31,8 +31,8 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     void UseTypedefPtr1(golang::main::vvvv1* t);
     void UseTypedefPtr2(golang::main::vvvv2* t);
-    void UseStructPtr(golang::main::Vertex* t);
     void main();
+    void UseStructPtr(golang::main::Vertex* t);
 
     namespace rec
     {

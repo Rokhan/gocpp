@@ -9,6 +9,7 @@
 #include "golang/runtime/lockrank.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::runtime
 {
     extern gocpp::slice<gocpp::string> lockNames;

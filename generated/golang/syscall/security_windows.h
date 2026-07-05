@@ -47,8 +47,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SID& value);
-    std::tuple<struct SID*, struct gocpp::error> StringToSid(gocpp::string s);
-    std::tuple<struct SID*, gocpp::string, uint32_t, struct gocpp::error> LookupSID(gocpp::string system, gocpp::string account);
     struct SIDAndAttributes
     {
         SID* Sid;
@@ -83,6 +81,8 @@ namespace golang::syscall
 
     std::ostream& operator<<(std::ostream& os, const struct Tokenprimarygroup& value);
     std::tuple<syscall::Token, struct gocpp::error> OpenCurrentProcessToken();
+    std::tuple<struct SID*, struct gocpp::error> StringToSid(gocpp::string s);
+    std::tuple<struct SID*, gocpp::string, uint32_t, struct gocpp::error> LookupSID(gocpp::string system, gocpp::string account);
     struct Tokenuser
     {
         SIDAndAttributes User;

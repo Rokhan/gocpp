@@ -9,11 +9,10 @@
 #include "golang/runtime/error.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
 
 namespace golang::runtime
 {
-    struct Error : virtual gocpp::Interface, error
+    struct Error : virtual gocpp::Interface, gocpp::error
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
@@ -37,7 +36,7 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct IError: virtual error::Ierror
+        struct IError: virtual gocpp::error::Ierror
         {
             // RuntimeError is a no-op function but
             // serves to distinguish types that are run time
@@ -48,9 +47,9 @@ namespace golang::runtime
         };
 
         template<typename T, typename TStore, typename TInterface = IError>
-        struct ErrorImpl : virtual TInterface, virtual error::errorImpl<T, TStore, TInterface>
+        struct ErrorImpl : virtual TInterface, virtual gocpp::error::errorImpl<T, TStore, TInterface>
         {
-            explicit ErrorImpl(T* ptr): error::errorImpl<T, TStore, TInterface>(ptr)
+            explicit ErrorImpl(T* ptr): gocpp::error::errorImpl<T, TStore, TInterface>(ptr)
             {
                 value.reset(ptr);
             }
@@ -78,25 +77,6 @@ namespace golang::runtime
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Error& value);
-    struct TypeAssertionError
-    {
-        golang::runtime::_type* _interface;
-        golang::runtime::_type* concrete;
-        golang::runtime::_type* asserted;
-        gocpp::string missingMethod; // one method needed by Interface, missing from Concrete
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct TypeAssertionError& value);
     gocpp::slice<unsigned char> itoa(gocpp::slice<unsigned char> buf, uint64_t val);
     struct errorAddressString
     {
@@ -202,6 +182,30 @@ namespace golang::runtime
     void printany(go_any i);
     void printanycustomtype(go_any i);
     void panicwrap();
+}
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
+    struct TypeAssertionError
+    {
+        golang::runtime::_type* _interface;
+        golang::runtime::_type* concrete;
+        golang::runtime::_type* asserted;
+        gocpp::string missingMethod; // one method needed by Interface, missing from Concrete
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct TypeAssertionError& value);
 
     namespace rec
     {

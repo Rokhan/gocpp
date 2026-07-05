@@ -9,8 +9,6 @@
 #include "golang/io/fs/fs.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::fs
 {
@@ -238,6 +236,87 @@ namespace golang::fs
     }
 
     std::ostream& operator<<(std::ostream& os, const struct DirEntry& value);
+    struct gocpp::error errInvalid();
+    struct gocpp::error errPermission();
+    struct gocpp::error errExist();
+    struct gocpp::error errNotExist();
+    struct gocpp::error errClosed();
+    struct PathError
+    {
+        gocpp::string Op;
+        gocpp::string Path;
+        gocpp::error Err;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct PathError& value);
+    struct gocpp_id_0 : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        gocpp_id_0(){}
+        gocpp_id_0(gocpp_id_0& i) = default;
+        gocpp_id_0(const gocpp_id_0& i) = default;
+        gocpp_id_0& operator=(gocpp_id_0& i) = default;
+        gocpp_id_0& operator=(const gocpp_id_0& i) = default;
+
+        template<typename T>
+        gocpp_id_0(T& ref);
+
+        template<typename T>
+        gocpp_id_0(const T& ref);
+
+        template<typename T>
+        gocpp_id_0(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct Igocpp_id_0
+        {
+            virtual bool vTimeout() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = Igocpp_id_0>
+        struct gocpp_id_0Impl : virtual TInterface
+        {
+            explicit gocpp_id_0Impl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            bool vTimeout() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        std::shared_ptr<Igocpp_id_0> value;
+    };
+
+    namespace rec
+    {
+        bool Timeout(const gocpp::PtrRecv<struct gocpp_id_0, false>& self);
+        bool Timeout(const gocpp::ObjRecv<struct gocpp_id_0>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct ReadDirFile : virtual gocpp::Interface, File
     {
         using gocpp::Interface::operator==;
@@ -323,11 +402,11 @@ namespace golang::fs
     extern gocpp::error ErrExist;
     extern gocpp::error ErrNotExist;
     extern gocpp::error ErrClosed;
-    struct gocpp::error errInvalid();
-    struct gocpp::error errPermission();
-    struct gocpp::error errExist();
-    struct gocpp::error errNotExist();
-    struct gocpp::error errClosed();
+}
+#include "golang/time/time.h"
+
+namespace golang::fs
+{
     struct FileInfo : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -416,82 +495,6 @@ namespace golang::fs
     }
 
     std::ostream& operator<<(std::ostream& os, const struct FileInfo& value);
-    struct PathError
-    {
-        gocpp::string Op;
-        gocpp::string Path;
-        gocpp::error Err;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct PathError& value);
-    struct gocpp_id_0 : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        gocpp_id_0(){}
-        gocpp_id_0(gocpp_id_0& i) = default;
-        gocpp_id_0(const gocpp_id_0& i) = default;
-        gocpp_id_0& operator=(gocpp_id_0& i) = default;
-        gocpp_id_0& operator=(const gocpp_id_0& i) = default;
-
-        template<typename T>
-        gocpp_id_0(T& ref);
-
-        template<typename T>
-        gocpp_id_0(const T& ref);
-
-        template<typename T>
-        gocpp_id_0(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct Igocpp_id_0
-        {
-            virtual bool vTimeout() = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_0>
-        struct gocpp_id_0Impl : virtual TInterface
-        {
-            explicit gocpp_id_0Impl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            bool vTimeout() override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        std::shared_ptr<Igocpp_id_0> value;
-    };
-
-    namespace rec
-    {
-        bool Timeout(const gocpp::PtrRecv<struct gocpp_id_0, false>& self);
-        bool Timeout(const gocpp::ObjRecv<struct gocpp_id_0>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
 
     namespace rec
     {

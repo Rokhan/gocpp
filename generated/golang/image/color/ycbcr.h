@@ -9,7 +9,6 @@
 #include "golang/image/color/ycbcr.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/image/color/color.h"
 
 namespace golang::color
 {
@@ -33,10 +32,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct YCbCr& value);
-    extern Model YCbCrModel;
-    struct Color yCbCrModel(struct Color c);
-    extern Model NYCbCrAModel;
-    struct Color nYCbCrAModel(struct Color c);
     std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> RGBToCMYK(uint8_t r, uint8_t g, uint8_t b);
     std::tuple<uint8_t, uint8_t, uint8_t> CMYKToRGB(uint8_t c, uint8_t m, uint8_t y, uint8_t k);
     struct CMYK
@@ -58,8 +53,6 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
-    extern Model CMYKModel;
-    struct Color cmykModel(struct Color c);
     struct NYCbCrA
     {
         YCbCr YCbCr;
@@ -77,6 +70,17 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NYCbCrA& value);
+}
+#include "golang/image/color/color.h"
+
+namespace golang::color
+{
+    struct Color yCbCrModel(struct Color c);
+    struct Color nYCbCrAModel(struct Color c);
+    struct Color cmykModel(struct Color c);
+    extern Model YCbCrModel;
+    extern Model NYCbCrAModel;
+    extern Model CMYKModel;
 
     namespace rec
     {

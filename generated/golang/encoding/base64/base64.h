@@ -9,7 +9,6 @@
 #include "golang/encoding/base64/base64.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/io.h"
 
 namespace golang::base64
 {
@@ -33,9 +32,15 @@ namespace golang::base64
 
     std::ostream& operator<<(std::ostream& os, const struct Encoding& value);
     extern gocpp::string decodeMapInitialize;
+    std::tuple<uint32_t, bool> assemble32(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4);
+    std::tuple<uint64_t, bool> assemble64(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4, unsigned char n5, unsigned char n6, unsigned char n7, unsigned char n8);
+    int decodedLen(int n, gocpp::rune padChar);
     struct Encoding* NewEncoding(gocpp::string encoder);
-    extern Encoding* StdEncoding;
-    extern Encoding* URLEncoding;
+}
+#include "golang/io/io.h"
+
+namespace golang::base64
+{
     struct encoder
     {
         gocpp::error err;
@@ -81,8 +86,6 @@ namespace golang::base64
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decoder& value);
-    std::tuple<uint32_t, bool> assemble32(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4);
-    std::tuple<uint64_t, bool> assemble64(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4, unsigned char n5, unsigned char n6, unsigned char n7, unsigned char n8);
     struct newlineFilteringReader
     {
         io::Reader wrapped;
@@ -100,7 +103,8 @@ namespace golang::base64
 
     std::ostream& operator<<(std::ostream& os, const struct newlineFilteringReader& value);
     io::Reader NewDecoder(struct Encoding* enc, io::Reader r);
-    int decodedLen(int n, gocpp::rune padChar);
+    extern Encoding* StdEncoding;
+    extern Encoding* URLEncoding;
     extern Encoding* RawStdEncoding;
     extern Encoding* RawURLEncoding;
 

@@ -9,22 +9,13 @@
 #include "golang/syscall/exec_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
-#include "golang/sync/rwmutex.h"
-#include "golang/syscall/security_windows.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 
 namespace golang::syscall
 {
-    extern sync::RWMutex ForkLock;
     gocpp::string EscapeArg(gocpp::string s);
     gocpp::slice<unsigned char> appendEscapeArg(gocpp::slice<unsigned char> b, gocpp::string s);
     gocpp::string makeCmdLine(gocpp::slice<gocpp::string> args);
     std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<gocpp::string> envv);
-    void CloseOnExec(golang::syscall::Handle fd);
-    struct gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking);
     std::tuple<gocpp::string, struct gocpp::error> FullPath(gocpp::string name);
     bool isSlash(uint8_t c);
     std::tuple<gocpp::string, struct gocpp::error> normalizeDir(gocpp::string dir);
@@ -49,6 +40,20 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ProcAttr& value);
+    struct gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv);
+    extern ProcAttr zeroProcAttr;
+    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, struct ProcAttr* attr);
+}
+#include "golang/sync/rwmutex.h"
+#include "golang/syscall/security_windows.h"
+#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/types_windows.h"
+
+namespace golang::syscall
+{
+    extern sync::RWMutex ForkLock;
+    void CloseOnExec(golang::syscall::Handle fd);
+    struct gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking);
     struct SysProcAttr
     {
         bool HideWindow;
@@ -73,9 +78,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SysProcAttr& value);
-    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, struct ProcAttr* attr);
-    struct gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv);
-    extern ProcAttr zeroProcAttr;
     extern SysProcAttr zeroSysProcAttr;
 
     namespace rec

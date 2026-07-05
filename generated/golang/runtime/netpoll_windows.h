@@ -9,14 +9,19 @@
 #include "golang/runtime/netpoll_windows.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    extern uintptr_t iocphandle;
+    void netpollinit();
+    bool netpollIsPollDescriptor(uintptr_t fd);
+    int32_t netpollclose(uintptr_t fd);
+    void netpollBreak();
+}
 #include "golang/runtime/defs_windows.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/netpoll.h"
 #include "golang/runtime/proc.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/time.h"
 
 namespace golang::runtime
 {
@@ -61,14 +66,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct overlappedEntry& value);
-    extern uintptr_t iocphandle;
     extern atomic::Uint32 netpollWakeSig;
-    void netpollinit();
-    bool netpollIsPollDescriptor(uintptr_t fd);
     int32_t netpollopen(uintptr_t fd, struct pollDesc* pd);
-    int32_t netpollclose(uintptr_t fd);
     void netpollarm(struct pollDesc* pd, int mode);
-    void netpollBreak();
     std::tuple<struct gList, int32_t> netpoll(int64_t delay);
     int32_t handlecompletion(struct gList* toRun, struct net_op* op, int32_t errno, uint32_t qty);
 

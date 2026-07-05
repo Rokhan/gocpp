@@ -11,7 +11,6 @@
 
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/trace2region.h"
 

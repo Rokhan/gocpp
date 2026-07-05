@@ -9,6 +9,7 @@
 #include "golang/internal/syscall/windows/sysdll/sysdll.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::sysdll
 {
     extern gocpp::map<gocpp::string, bool> IsSystemDLL;

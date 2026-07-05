@@ -9,28 +9,23 @@
 #include "golang/runtime/netpoll.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
+
+namespace golang::runtime
+{
+    void poll_runtime_pollServerInit();
+    void netpollGenericInit();
+    bool netpollinited();
+    bool poll_runtime_isPollServerDescriptor(uintptr_t fd);
+    void netpollDeadline(go_any arg, uintptr_t seq);
+    void netpollReadDeadline(go_any arg, uintptr_t seq);
+    void netpollWriteDeadline(go_any arg, uintptr_t seq);
+    bool netpollAnyWaiters();
+    void netpollAdjustWaiters(int32_t delta);
+}
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
 #include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -103,10 +98,9 @@ namespace golang::runtime
     extern mutex netpollInitLock;
     extern atomic::Uint32 netpollInited;
     extern atomic::Uint32 netpollWaiters;
-    void poll_runtime_pollServerInit();
-    void netpollGenericInit();
-    bool netpollinited();
-    bool poll_runtime_isPollServerDescriptor(uintptr_t fd);
+    bool netpollblockcommit(struct g* gp, gocpp::unsafe_pointer gpp);
+    void netpollgoready(struct g* gp, int traceskip);
+    extern pollCache pollcache;
     std::tuple<struct pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd);
     void poll_runtime_pollClose(struct pollDesc* pd);
     int poll_runtime_pollReset(struct pollDesc* pd, int mode);
@@ -114,20 +108,22 @@ namespace golang::runtime
     void poll_runtime_pollWaitCanceled(struct pollDesc* pd, int mode);
     void poll_runtime_pollSetDeadline(struct pollDesc* pd, int64_t d, int mode);
     void poll_runtime_pollUnblock(struct pollDesc* pd);
-    int32_t netpollready(struct gList* toRun, struct pollDesc* pd, int32_t mode);
     int netpollcheckerr(struct pollDesc* pd, int32_t mode);
-    bool netpollblockcommit(struct g* gp, gocpp::unsafe_pointer gpp);
-    void netpollgoready(struct g* gp, int traceskip);
     bool netpollblock(struct pollDesc* pd, int32_t mode, bool waitio);
     struct g* netpollunblock(struct pollDesc* pd, int32_t mode, bool ioready, int32_t* delta);
     void netpolldeadlineimpl(struct pollDesc* pd, uintptr_t seq, bool read, bool write);
-    void netpollDeadline(go_any arg, uintptr_t seq);
-    void netpollReadDeadline(go_any arg, uintptr_t seq);
-    void netpollWriteDeadline(go_any arg, uintptr_t seq);
-    bool netpollAnyWaiters();
-    void netpollAdjustWaiters(int32_t delta);
-    extern pollCache pollcache;
     extern go_any pdEface;
+}
+#include "golang/runtime/proc.h"
+
+namespace golang::runtime
+{
+    int32_t netpollready(struct gList* toRun, struct pollDesc* pd, int32_t mode);
+}
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
     extern runtime::_type* pdType;
 
     namespace rec

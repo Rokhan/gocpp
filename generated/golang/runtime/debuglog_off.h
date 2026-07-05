@@ -9,9 +9,6 @@
 #include "golang/runtime/debuglog_off.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/debuglog.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
 
 namespace golang::runtime
 {
@@ -30,6 +27,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dlogPerM& value);
+}
+#include "golang/runtime/debuglog.h"
+
+namespace golang::runtime
+{
     struct dlogger* getCachedDlogger();
     bool putCachedDlogger(struct dlogger* l);
 

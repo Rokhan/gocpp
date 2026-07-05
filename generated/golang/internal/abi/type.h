@@ -9,6 +9,7 @@
 #include "golang/internal/abi/type.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::abi
 {
     struct Type
@@ -117,7 +118,6 @@ namespace golang::abi
 
     std::ostream& operator<<(std::ostream& os, const struct Name& value);
     int writeVarint(gocpp::slice<unsigned char> buf, int n);
-    struct Name NewName(gocpp::string n, gocpp::string tag, bool exported, bool embedded);
     struct ArrayType
     {
         Type Type;
@@ -268,6 +268,7 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct StructField& value);
+    struct Name NewName(gocpp::string n, gocpp::string tag, bool exported, bool embedded);
     struct StructType
     {
         Type Type;

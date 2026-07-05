@@ -9,6 +9,7 @@
 #include "golang/math/stubs.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::math
 {
     double archAcos(double x);

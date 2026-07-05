@@ -9,11 +9,16 @@
 #include "golang/unicode/tables.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unicode/letter.h"
 
 namespace golang::unicode
 {
     extern gocpp::string Version;
+}
+#include "golang/unicode/graphic.h"
+#include "golang/unicode/letter.h"
+
+namespace golang::unicode
+{
     extern RangeTable* _C;
     extern RangeTable* _Cc;
     extern RangeTable* _Cf;

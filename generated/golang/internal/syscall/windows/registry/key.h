@@ -9,13 +9,17 @@
 #include "golang/internal/syscall/windows/registry/key.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/types_windows.h"
 
 namespace golang::registry
 {
     std::tuple<registry::Key, struct gocpp::error> OpenKey(golang::registry::Key k, gocpp::string path, uint32_t access);
     std::tuple<registry::Key, bool, struct gocpp::error> CreateKey(golang::registry::Key k, gocpp::string path, uint32_t access);
     struct gocpp::error DeleteKey(golang::registry::Key k, gocpp::string path);
+}
+#include "golang/syscall/types_windows.h"
+
+namespace golang::registry
+{
     struct KeyInfo
     {
         uint32_t SubKeyCount;

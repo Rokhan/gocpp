@@ -9,6 +9,7 @@
 #include "golang/os/path_windows.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::os
 {
     bool IsPathSeparator(uint8_t c);

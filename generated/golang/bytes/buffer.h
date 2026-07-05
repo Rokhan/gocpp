@@ -9,7 +9,6 @@
 #include "golang/bytes/buffer.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/io.h"
 
 namespace golang::bytes
 {
@@ -31,12 +30,23 @@ namespace golang::bytes
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Buffer& value);
-    extern gocpp::error ErrTooLarge;
-    extern gocpp::error errNegativeRead;
     gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int n);
-    extern gocpp::error errUnreadByte;
     struct Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
     struct Buffer* NewBufferString(gocpp::string s);
+}
+#include "golang/errors/errors.h"
+
+namespace golang::bytes
+{
+    extern gocpp::error ErrTooLarge;
+    extern gocpp::error errNegativeRead;
+    extern gocpp::error errUnreadByte;
+}
+
+#include "golang/io/io.h"
+
+namespace golang::bytes
+{
 
     namespace rec
     {

@@ -9,9 +9,15 @@
 #include "golang/runtime/mbarrier.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    void memclrHasPointers(gocpp::unsafe_pointer ptr, uintptr_t n);
+}
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/slice.h"
+#include "golang/runtime/type.h"
 
 namespace golang::runtime
 {
@@ -27,7 +33,6 @@ namespace golang::runtime
     void reflect_typedmemclr(golang::runtime::_type* typ, gocpp::unsafe_pointer ptr);
     void reflect_typedmemclrpartial(golang::runtime::_type* typ, gocpp::unsafe_pointer ptr, uintptr_t off, uintptr_t size);
     void reflect_typedarrayclear(golang::runtime::_type* typ, gocpp::unsafe_pointer ptr, int len);
-    void memclrHasPointers(gocpp::unsafe_pointer ptr, uintptr_t n);
 
     namespace rec
     {

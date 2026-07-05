@@ -9,7 +9,6 @@
 #include "golang/slices/zsortanyfunc.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/slices/sort.h"
 
 namespace golang::slices
 {
@@ -39,9 +38,6 @@ namespace golang::slices
     void breakPatternsCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
     
     template<typename E>
-    std::tuple<int, slices::sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
-    
-    template<typename E>
     std::tuple<int, int> order2CmpFunc(gocpp::slice<E> data, int a, int b, int* swaps, std::function<int (E a, E b)> cmp);
     
     template<typename E>
@@ -64,6 +60,14 @@ namespace golang::slices
     
     template<typename E>
     void rotateCmpFunc(gocpp::slice<E> data, int a, int m, int b, std::function<int (E a, E b)> cmp);
+}
+#include "golang/slices/sort.h"
+
+namespace golang::slices
+{
+    
+    template<typename E>
+    std::tuple<int, slices::sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
 
     namespace rec
     {

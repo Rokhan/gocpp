@@ -9,54 +9,9 @@
 #include "golang/runtime/mprof.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
-    extern mutex profInsertLock;
-    extern mutex profBlockLock;
-    extern mutex profMemActiveLock;
-    struct bucket
-    {
-        sys::NotInHeap _1;
-        bucket* next;
-        bucket* allnext;
-        golang::runtime::bucketType typ; // memBucket or blockBucket (includes mutexProfile)
-        uintptr_t hash;
-        uintptr_t size;
-        uintptr_t nstk;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct bucket& value);
     struct memRecordCycle
     {
         uintptr_t allocs;
@@ -93,82 +48,18 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct blockRecord& value);
-    extern atomic::UnsafePointer mbuckets;
-    extern atomic::UnsafePointer bbuckets;
-    extern atomic::UnsafePointer xbuckets;
-    extern atomic::UnsafePointer buckhash;
     struct GoTag_buckhashArray { };
-    using buckhashArray = gocpp::alias<gocpp::array<atomic::UnsafePointer, buckHashSize>, GoTag_buckhashArray>;
-    struct mProfCycleHolder
-    {
-        atomic::Uint32 value;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct mProfCycleHolder& value);
-    struct bucket* newBucket(golang::runtime::bucketType typ, int nstk);
-    struct bucket* stkbucket(golang::runtime::bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc);
     bool eqslice(gocpp::slice<uintptr_t> x, gocpp::slice<uintptr_t> y);
     void mProf_NextCycle();
     void mProf_Flush();
     void mProf_FlushLocked(uint32_t index);
     void mProf_PostSweep();
     void mProf_Malloc(gocpp::unsafe_pointer p, uintptr_t size);
-    void mProf_Free(struct bucket* b, uintptr_t size);
     extern uint64_t blockprofilerate;
     void SetBlockProfileRate(int rate);
     void blockevent(int64_t cycles, int skip);
     bool blocksampled(int64_t cycles, int64_t rate);
     void saveblockevent(int64_t cycles, int64_t rate, int skip, golang::runtime::bucketType which);
-    struct lockTimer
-    {
-        mutex* lock;
-        int64_t timeRate;
-        int64_t timeStart;
-        int64_t tickStart;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct lockTimer& value);
-    struct mLockProfile
-    {
-        atomic::Int64 waitTime; // total nanoseconds spent waiting in runtime.lockWithRank
-        gocpp::array<uintptr_t, maxStack> stack; // stack that experienced contention in runtime.lockWithRank
-        uintptr_t pending; // *mutex that experienced contention (to be traceback-ed)
-        int64_t cycles; // cycles attributable to "pending" (if set), otherwise to "stack"
-        int64_t cyclesLost; // contention for which we weren't able to record a call stack
-        bool disabled; // attribute all time to "lost"
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct mLockProfile& value);
     void saveBlockEventStack(int64_t cycles, int64_t rate, gocpp::slice<uintptr_t> stk, golang::runtime::bucketType which);
     extern uint64_t mutexprofilerate;
     int SetMutexProfileFraction(int rate);
@@ -211,24 +102,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MemProfileRecord& value);
-    std::tuple<int, bool> MemProfile(gocpp::slice<MemProfileRecord> p, bool inuseZero);
-    void record(struct MemProfileRecord* r, struct bucket* b);
-    void iterate_memprof(std::function<void (struct bucket* _1, uintptr_t _2, uintptr_t* _3, uintptr_t _4, uintptr_t _5, uintptr_t _6)> fn);
-    std::tuple<int, bool> BlockProfile(gocpp::slice<BlockProfileRecord> p);
-    std::tuple<int, bool> MutexProfile(gocpp::slice<BlockProfileRecord> p);
-    std::tuple<int, bool> ThreadCreateProfile(gocpp::slice<StackRecord> p);
-    std::tuple<int, bool> runtime_goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
-    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
-    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
-    void tryRecordGoroutineProfileWB(struct g* gp1);
-    void tryRecordGoroutineProfile(struct g* gp1, std::function<void ()> yield);
-    void doRecordGoroutineProfile(struct g* gp1);
-    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
-    std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p);
-    void saveg(uintptr_t pc, uintptr_t sp, struct g* gp, struct StackRecord* r);
     int Stack(gocpp::slice<unsigned char> buf, bool all);
-    extern mutex tracelock;
-    void tracealloc(gocpp::unsafe_pointer p, uintptr_t size, golang::runtime::_type* typ);
     void tracefree(gocpp::unsafe_pointer p, uintptr_t size);
     void tracegc();
     struct memRecord
@@ -259,7 +133,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct memRecord& value);
-    extern mProfCycleHolder mProfCycle;
+    std::tuple<int, bool> MemProfile(gocpp::slice<MemProfileRecord> p, bool inuseZero);
     struct BlockProfileRecord
     {
         int64_t Count;
@@ -278,8 +152,128 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct BlockProfileRecord& value);
+    std::tuple<int, bool> ThreadCreateProfile(gocpp::slice<StackRecord> p);
+    std::tuple<int, bool> runtime_goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> goroutineProfileWithLabels(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> goroutineProfileWithLabelsConcurrent(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> goroutineProfileWithLabelsSync(gocpp::slice<StackRecord> p, gocpp::slice<gocpp::unsafe_pointer> labels);
+    std::tuple<int, bool> GoroutineProfile(gocpp::slice<StackRecord> p);
+}
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/nih.h"
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
+    extern mutex profInsertLock;
+    extern mutex profBlockLock;
+    extern mutex profMemActiveLock;
+    struct bucket
+    {
+        sys::NotInHeap _1;
+        bucket* next;
+        bucket* allnext;
+        golang::runtime::bucketType typ; // memBucket or blockBucket (includes mutexProfile)
+        uintptr_t hash;
+        uintptr_t size;
+        uintptr_t nstk;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct bucket& value);
+    extern atomic::UnsafePointer mbuckets;
+    extern atomic::UnsafePointer bbuckets;
+    extern atomic::UnsafePointer xbuckets;
+    extern atomic::UnsafePointer buckhash;
+    using buckhashArray = gocpp::alias<gocpp::array<atomic::UnsafePointer, buckHashSize>, GoTag_buckhashArray>;
+    struct mProfCycleHolder
+    {
+        atomic::Uint32 value;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct mProfCycleHolder& value);
+    struct lockTimer
+    {
+        mutex* lock;
+        int64_t timeRate;
+        int64_t timeStart;
+        int64_t tickStart;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct lockTimer& value);
+    struct mLockProfile
+    {
+        atomic::Int64 waitTime; // total nanoseconds spent waiting in runtime.lockWithRank
+        gocpp::array<uintptr_t, maxStack> stack; // stack that experienced contention in runtime.lockWithRank
+        uintptr_t pending; // *mutex that experienced contention (to be traceback-ed)
+        int64_t cycles; // cycles attributable to "pending" (if set), otherwise to "stack"
+        int64_t cyclesLost; // contention for which we weren't able to record a call stack
+        bool disabled; // attribute all time to "lost"
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct mLockProfile& value);
     extern gocpp_id_0 goroutineProfile;
+    void tryRecordGoroutineProfileWB(struct g* gp1);
+    void tryRecordGoroutineProfile(struct g* gp1, std::function<void ()> yield);
+    void doRecordGoroutineProfile(struct g* gp1);
+    void saveg(uintptr_t pc, uintptr_t sp, struct g* gp, struct StackRecord* r);
+    extern mutex tracelock;
+    void tracealloc(gocpp::unsafe_pointer p, uintptr_t size, golang::runtime::_type* typ);
     extern gocpp::array<mutex, len(memRecord {}.future)> profMemFutureLock;
+    extern mProfCycleHolder mProfCycle;
+    struct bucket* newBucket(golang::runtime::bucketType typ, int nstk);
+    struct bucket* stkbucket(golang::runtime::bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc);
+    void mProf_Free(struct bucket* b, uintptr_t size);
+    void record(struct MemProfileRecord* r, struct bucket* b);
+    void iterate_memprof(std::function<void (struct bucket* _1, uintptr_t _2, uintptr_t* _3, uintptr_t _4, uintptr_t _5, uintptr_t _6)> fn);
+    std::tuple<int, bool> BlockProfile(gocpp::slice<BlockProfileRecord> p);
+    std::tuple<int, bool> MutexProfile(gocpp::slice<BlockProfileRecord> p);
+}
+
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

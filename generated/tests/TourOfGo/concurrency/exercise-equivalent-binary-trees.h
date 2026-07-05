@@ -9,13 +9,17 @@
 #include "tests/TourOfGo/concurrency/exercise-equivalent-binary-trees.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::main
+{
+    void main();
+}
 #include "golang/golang.org/x/tour/tree/tree.h"
 
 namespace golang::main
 {
     void Walk(tree::Tree* t, gocpp::channel<int> ch);
     bool Same(tree::Tree* t1, tree::Tree* t2);
-    void main();
 
     namespace rec
     {

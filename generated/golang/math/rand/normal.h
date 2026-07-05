@@ -9,7 +9,6 @@
 #include "golang/math/rand/normal.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/rand/rand.h"
 
 namespace golang::rand
 {
@@ -17,6 +16,12 @@ namespace golang::rand
     extern gocpp::array<uint32_t, 128> kn;
     extern gocpp::array<float, 128> wn;
     extern gocpp::array<float, 128> fn;
+}
+
+#include "golang/math/rand/rand.h"
+
+namespace golang::rand
+{
 
     namespace rec
     {

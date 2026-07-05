@@ -9,26 +9,6 @@
 #include "golang/runtime/os_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -96,8 +76,94 @@ namespace golang::runtime
     extern gocpp::array<uint16_t, 13> powrprofdll;
     extern gocpp::array<uint16_t, 10> winmmdll;
     extern gocpp::array<uint16_t, 11> ws2_32dll;
-    void tstart_stdcall(struct m* newm);
     void wintls();
+    int32_t open(unsigned char* name, int32_t mode, int32_t perm);
+    int32_t closefd(int32_t fd);
+    int32_t read(int32_t fd, gocpp::unsafe_pointer p, int32_t n);
+    struct sigset
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct sigset& value);
+    void asmstdcall(gocpp::unsafe_pointer fn);
+    extern gocpp::unsafe_pointer asmstdcallAddr;
+    runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
+    extern gocpp::array<unsigned char, go__MAX_PATH + 1> sysDirectory;
+    extern uintptr_t sysDirectoryLen;
+    void initSysDirectory();
+    gocpp::string windows_GetSystemDirectory();
+    uintptr_t windowsLoadSystemLib(gocpp::slice<uint16_t> name);
+    void loadOptionalSyscalls();
+    void monitorSuspendResume();
+    uintptr_t getLoadLibrary();
+    uintptr_t getLoadLibraryEx();
+    uintptr_t getGetProcAddress();
+    int32_t getproccount();
+    uintptr_t getPageSize();
+    uint32_t getlasterror();
+    extern uint32_t timeBeginPeriodRetValue;
+    uint32_t osRelax(bool relax);
+    extern bool haveHighResTimer;
+    uintptr_t createHighResTimer();
+    void initHighResTimer();
+    extern bool canUseLongPaths;
+    extern gocpp::array<unsigned char, (go__MAX_PATH + 1) * 2 + 1> longFileName;
+    void initLongPathSupport();
+    void osinit();
+    int readRandom(gocpp::slice<unsigned char> r);
+    void goenvs();
+    extern uint32_t exiting;
+    void exit(int32_t code);
+    int32_t write1(uintptr_t fd, gocpp::unsafe_pointer buf, int32_t n);
+    extern gocpp::array<uint16_t, 1000> utf16ConsoleBack;
+    int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen);
+    void writeConsoleUTF16(uintptr_t handle, gocpp::slice<uint16_t> b);
+    int32_t semasleep(int64_t ns);
+    void clearSignalHandlers();
+    void sigblock(bool exiting);
+    void minit();
+    void unminit();
+    void asmstdcall_trampoline(gocpp::unsafe_pointer args);
+    uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args);
+    uintptr_t stdcall(golang::runtime::stdFunction fn);
+    uintptr_t stdcall0(golang::runtime::stdFunction fn);
+    uintptr_t stdcall1(golang::runtime::stdFunction fn, uintptr_t a0);
+    uintptr_t stdcall2(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1);
+    uintptr_t stdcall3(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2);
+    uintptr_t stdcall4(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3);
+    uintptr_t stdcall5(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4);
+    uintptr_t stdcall6(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5);
+    uintptr_t stdcall7(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
+    uintptr_t stdcall8(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7);
+    void osyield_no_g();
+    void osyield();
+    void usleep_no_g(uint32_t us);
+    void usleep(uint32_t us);
+    uintptr_t ctrlHandler(uint32_t _type);
+    void callbackasm1();
+    extern uintptr_t profiletimer;
+    void profileLoop();
+    void setProcessCPUProfiler(int32_t hz);
+    void setThreadCPUProfiler(int32_t hz);
+    void sigsave(struct sigset* p);
+    void msigrestore(struct sigset sigmask);
+}
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    void tstart_stdcall(struct m* newm);
     struct mOS
     {
         mutex threadLock; // protects "thread" and prevents closing
@@ -137,96 +203,16 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mOS& value);
-    int32_t open(unsigned char* name, int32_t mode, int32_t perm);
-    int32_t closefd(int32_t fd);
-    int32_t read(int32_t fd, gocpp::unsafe_pointer p, int32_t n);
-    struct sigset
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct sigset& value);
-    void asmstdcall(gocpp::unsafe_pointer fn);
-    extern gocpp::unsafe_pointer asmstdcallAddr;
-    runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
-    extern gocpp::array<unsigned char, _MAX_PATH + 1> sysDirectory;
-    extern uintptr_t sysDirectoryLen;
-    void initSysDirectory();
-    gocpp::string windows_GetSystemDirectory();
-    uintptr_t windowsLoadSystemLib(gocpp::slice<uint16_t> name);
-    void loadOptionalSyscalls();
-    void monitorSuspendResume();
-    uintptr_t getLoadLibrary();
-    uintptr_t getLoadLibraryEx();
-    uintptr_t getGetProcAddress();
-    int32_t getproccount();
-    uintptr_t getPageSize();
-    uint32_t getlasterror();
-    extern uint32_t timeBeginPeriodRetValue;
-    uint32_t osRelax(bool relax);
-    extern bool haveHighResTimer;
-    uintptr_t createHighResTimer();
-    void initHighResTimer();
-    extern bool canUseLongPaths;
-    extern gocpp::array<unsigned char, (_MAX_PATH + 1) * 2 + 1> longFileName;
-    void initLongPathSupport();
-    void osinit();
-    int readRandom(gocpp::slice<unsigned char> r);
-    void goenvs();
-    extern uint32_t exiting;
-    void exit(int32_t code);
-    int32_t write1(uintptr_t fd, gocpp::unsafe_pointer buf, int32_t n);
-    extern gocpp::array<uint16_t, 1000> utf16ConsoleBack;
     extern mutex utf16ConsoleBackLock;
-    int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen);
-    void writeConsoleUTF16(uintptr_t handle, gocpp::slice<uint16_t> b);
-    int32_t semasleep(int64_t ns);
     void semawakeup(struct m* mp);
     void semacreate(struct m* mp);
     void newosproc(struct m* mp);
     void newosproc0(struct m* mp, gocpp::unsafe_pointer stk);
     void exitThread(atomic::Uint32* wait);
     void mpreinit(struct m* mp);
-    void sigsave(struct sigset* p);
-    void msigrestore(struct sigset sigmask);
-    void clearSignalHandlers();
-    void sigblock(bool exiting);
-    void minit();
-    void unminit();
     void mdestroy(struct m* mp);
-    void asmstdcall_trampoline(gocpp::unsafe_pointer args);
-    uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args);
-    uintptr_t stdcall(golang::runtime::stdFunction fn);
-    uintptr_t stdcall0(golang::runtime::stdFunction fn);
-    uintptr_t stdcall1(golang::runtime::stdFunction fn, uintptr_t a0);
-    uintptr_t stdcall2(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1);
-    uintptr_t stdcall3(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2);
-    uintptr_t stdcall4(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3);
-    uintptr_t stdcall5(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4);
-    uintptr_t stdcall6(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5);
-    uintptr_t stdcall7(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
-    uintptr_t stdcall8(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7);
-    void osyield_no_g();
-    void osyield();
-    void usleep_no_g(uint32_t us);
-    void usleep(uint32_t us);
-    uintptr_t ctrlHandler(uint32_t _type);
-    void callbackasm1();
-    extern uintptr_t profiletimer;
     void profilem(struct m* mp, uintptr_t thread);
     struct g* gFromSP(struct m* mp, uintptr_t sp);
-    void profileLoop();
-    void setProcessCPUProfiler(int32_t hz);
-    void setThreadCPUProfiler(int32_t hz);
     extern mutex suspendLock;
     void preemptM(struct m* mp);
     void osPreemptExtEnter(struct m* mp);

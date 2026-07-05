@@ -9,7 +9,6 @@
 #include "golang/internal/syscall/windows/security_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/security_windows.h"
 
 namespace golang::windows
 {
@@ -30,7 +29,45 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LUID& value);
-    struct gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, struct TOKEN_PRIVILEGES* newstate, uint32_t buflen, struct TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
+    struct LocalGroupUserInfo0
+    {
+        uint16_t* Name;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct LocalGroupUserInfo0& value);
+    gocpp::string GetSystemDirectory();
+    struct LUID_AND_ATTRIBUTES
+    {
+        LUID Luid;
+        uint32_t Attributes;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct LUID_AND_ATTRIBUTES& value);
+}
+#include "golang/syscall/security_windows.h"
+
+namespace golang::windows
+{
     struct SID_AND_ATTRIBUTES
     {
         syscall::SID* Sid;
@@ -48,22 +85,6 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SID_AND_ATTRIBUTES& value);
-    struct LocalGroupUserInfo0
-    {
-        uint16_t* Name;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct LocalGroupUserInfo0& value);
     struct UserInfo4
     {
         uint16_t* Name;
@@ -108,40 +129,6 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UserInfo4& value);
-    gocpp::string GetSystemDirectory();
-    struct LUID_AND_ATTRIBUTES
-    {
-        LUID Luid;
-        uint32_t Attributes;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct LUID_AND_ATTRIBUTES& value);
-    struct TOKEN_MANDATORY_LABEL
-    {
-        SID_AND_ATTRIBUTES Label;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct TOKEN_MANDATORY_LABEL& value);
     struct TOKEN_PRIVILEGES
     {
         uint32_t PrivilegeCount;
@@ -159,6 +146,23 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TOKEN_PRIVILEGES& value);
+    struct TOKEN_MANDATORY_LABEL
+    {
+        SID_AND_ATTRIBUTES Label;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct TOKEN_MANDATORY_LABEL& value);
+    struct gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, struct TOKEN_PRIVILEGES* newstate, uint32_t buflen, struct TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
 
     namespace rec
     {

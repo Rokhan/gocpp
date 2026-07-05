@@ -9,15 +9,25 @@
 #include "golang/internal/syscall/windows/registry/value.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/syscall/windows/registry/key.h"
-#include "golang/syscall/syscall_windows.h"
+
+namespace golang::registry
+{
+    std::tuple<gocpp::string, struct gocpp::error> ExpandString(gocpp::string value);
+}
+#include "golang/errors/errors.h"
+#include "golang/syscall/types_windows.h"
 
 namespace golang::registry
 {
     extern syscall::Errno ErrShortBuffer;
     extern syscall::Errno ErrNotExist;
     extern gocpp::error ErrUnexpectedType;
-    std::tuple<gocpp::string, struct gocpp::error> ExpandString(gocpp::string value);
+}
+
+#include "golang/internal/syscall/windows/registry/key.h"
+
+namespace golang::registry
+{
 
     namespace rec
     {

@@ -9,9 +9,9 @@
 #include "golang/runtime/float.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::runtime
 {
-    extern double inf;
     bool isNaN(double f);
     bool isFinite(double f);
     bool isInf(double f);
@@ -19,6 +19,7 @@ namespace golang::runtime
     double copysign(double x, double y);
     uint64_t float64bits(double f);
     double float64frombits(uint64_t b);
+    extern double inf;
 
     namespace rec
     {

@@ -9,7 +9,6 @@
 #include "golang/compress/flate/deflatefast.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/compress/flate/token.h"
 
 namespace golang::flate
 {
@@ -33,8 +32,6 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tableEntry& value);
-    struct deflateFast* newDeflateFast();
-    gocpp::slice<flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit);
     struct deflateFast
     {
         gocpp::array<tableEntry, tableSize> table;
@@ -53,6 +50,19 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct deflateFast& value);
+}
+#include "golang/compress/flate/token.h"
+
+namespace golang::flate
+{
+    gocpp::slice<flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit);
+    struct deflateFast* newDeflateFast();
+}
+
+#include "golang/compress/flate/token.h"
+
+namespace golang::flate
+{
 
     namespace rec
     {

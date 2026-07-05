@@ -9,17 +9,9 @@
 #include "golang/os/error.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/fs/fs.h"
 
 namespace golang::os
 {
-    extern gocpp::error ErrInvalid;
-    extern gocpp::error ErrPermission;
-    extern gocpp::error ErrExist;
-    extern gocpp::error ErrNotExist;
-    extern gocpp::error ErrClosed;
-    extern gocpp::error ErrNoDeadline;
-    extern gocpp::error ErrDeadlineExceeded;
     struct gocpp::error errNoDeadline();
     struct gocpp::error errDeadlineExceeded();
     struct timeout : virtual gocpp::Interface
@@ -104,6 +96,18 @@ namespace golang::os
     bool IsTimeout(struct gocpp::error err);
     bool underlyingErrorIs(struct gocpp::error err, struct gocpp::error target);
     struct gocpp::error underlyingError(struct gocpp::error err);
+    extern gocpp::error ErrNoDeadline;
+    extern gocpp::error ErrDeadlineExceeded;
+}
+#include "golang/io/fs/fs.h"
+
+namespace golang::os
+{
+    extern gocpp::error ErrInvalid;
+    extern gocpp::error ErrPermission;
+    extern gocpp::error ErrExist;
+    extern gocpp::error ErrNotExist;
+    extern gocpp::error ErrClosed;
 
     namespace rec
     {

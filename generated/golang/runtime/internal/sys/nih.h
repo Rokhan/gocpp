@@ -9,6 +9,7 @@
 #include "golang/runtime/internal/sys/nih.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::sys
 {
     struct nih

@@ -9,16 +9,9 @@
 #include "golang/compress/flate/inflate.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/bufio/bufio.h"
-#include "golang/compress/flate/dict_decoder.h"
-#include "golang/io/io.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
-#include "golang/sync/once.h"
 
 namespace golang::flate
 {
-    extern sync::Once fixedOnce;
     struct ReadError
     {
         int64_t Offset; // byte offset where error occurred
@@ -53,6 +46,36 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct WriteError& value);
+    struct huffmanDecoder
+    {
+        int min; // the minimum code length
+        gocpp::array<uint32_t, huffmanNumChunks> chunks; // chunks as described above
+        gocpp::slice<gocpp::slice<uint32_t>> links; // overflow links
+        uint32_t linkMask; // mask the width of the link table
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct huffmanDecoder& value);
+    extern gocpp::array<int, 19> codeOrder;
+    struct gocpp::error noEOF(struct gocpp::error e);
+    void fixedHuffmanDecoderInit();
+    extern huffmanDecoder fixedHuffmanDecoder;
+}
+#include "golang/io/io.h"
+#include "golang/sync/once.h"
+
+namespace golang::flate
+{
+    extern sync::Once fixedOnce;
     struct Resetter : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -113,25 +136,6 @@ namespace golang::flate
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value);
-    struct huffmanDecoder
-    {
-        int min; // the minimum code length
-        gocpp::array<uint32_t, huffmanNumChunks> chunks; // chunks as described above
-        gocpp::slice<gocpp::slice<uint32_t>> links; // overflow links
-        uint32_t linkMask; // mask the width of the link table
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct huffmanDecoder& value);
     struct Reader : virtual gocpp::Interface, io::Reader, io::ByteReader
     {
         using gocpp::Interface::operator==;
@@ -190,12 +194,14 @@ namespace golang::flate
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
-    extern gocpp::array<int, 19> codeOrder;
-    struct gocpp::error noEOF(struct gocpp::error e);
-    void fixedHuffmanDecoderInit();
     io::ReadCloser NewReader(io::Reader r);
     io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
-    extern huffmanDecoder fixedHuffmanDecoder;
+}
+#include "golang/bufio/bufio.h"
+#include "golang/compress/flate/dict_decoder.h"
+
+namespace golang::flate
+{
     struct decompressor
     {
         // Input source.
@@ -239,6 +245,12 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decompressor& value);
+}
+
+#include "golang/io/io.h"
+
+namespace golang::flate
+{
 
     namespace rec
     {

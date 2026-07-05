@@ -9,8 +9,6 @@
 #include "golang/hash/crc32/crc32_amd64.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/hash/crc32/crc32.h"
-#include "golang/hash/crc32/crc32_generic.h"
 
 namespace golang::crc32
 {
@@ -18,17 +16,23 @@ namespace golang::crc32
     std::tuple<uint32_t, uint32_t, uint32_t> castagnoliSSE42Triple(uint32_t crcA, uint32_t crcB, uint32_t crcC, gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, gocpp::slice<unsigned char> c, uint32_t rounds);
     uint32_t ieeeCLMUL(uint32_t crc, gocpp::slice<unsigned char> p);
     struct GoTag_sse42Table { };
-    using sse42Table = gocpp::alias<gocpp::array<Table, 4>, GoTag_sse42Table>;
     bool archAvailableCastagnoli();
     void archInitCastagnoli();
-    uint32_t castagnoliShift(gocpp::array_ptr<golang::crc32::sse42Table> table, uint32_t crc);
     uint32_t archUpdateCastagnoli(uint32_t crc, gocpp::slice<unsigned char> p);
     bool archAvailableIEEE();
-    extern gocpp::array_ptr<slicing8Table> archIeeeTable8;
     void archInitIEEE();
     uint32_t archUpdateIEEE(uint32_t crc, gocpp::slice<unsigned char> p);
+}
+#include "golang/hash/crc32/crc32.h"
+#include "golang/hash/crc32/crc32_generic.h"
+
+namespace golang::crc32
+{
+    using sse42Table = gocpp::alias<gocpp::array<Table, 4>, GoTag_sse42Table>;
+    extern gocpp::array_ptr<slicing8Table> archIeeeTable8;
     extern gocpp::array_ptr<crc32::sse42Table> castagnoliSSE42TableK1;
     extern gocpp::array_ptr<crc32::sse42Table> castagnoliSSE42TableK2;
+    uint32_t castagnoliShift(gocpp::array_ptr<golang::crc32::sse42Table> table, uint32_t crc);
 
     namespace rec
     {

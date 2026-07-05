@@ -9,24 +9,26 @@
 #include "golang/runtime/mpagealloc.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    runtime::chunkIdx chunkIndex(uintptr_t p);
+    uintptr_t chunkBase(golang::runtime::chunkIdx ci);
+    unsigned int chunkPageIndex(uintptr_t p);
+    std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit);
+    std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi);
+    runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
+    runtime::pallocSum mergeSummaries(gocpp::slice<golang::runtime::pallocSum> sums, unsigned int logMaxPagesPerSum);
+}
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/mgcscavenge.h"
-#include "golang/runtime/mpallocbits.h"
 #include "golang/runtime/mranges.h"
-#include "golang/runtime/mstats.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
     struct offAddr maxSearchAddr();
-    runtime::chunkIdx chunkIndex(uintptr_t p);
-    uintptr_t chunkBase(golang::runtime::chunkIdx ci);
-    unsigned int chunkPageIndex(uintptr_t p);
     int offAddrToLevelIndex(int level, struct offAddr addr);
     struct offAddr levelIndexToOffAddr(int level, int idx);
-    std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit);
-    std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi);
     struct gocpp_id_0
     {
         // index is an efficient index of chunks that have pages available to
@@ -51,8 +53,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
-    runtime::pallocSum mergeSummaries(gocpp::slice<golang::runtime::pallocSum> sums, unsigned int logMaxPagesPerSum);
+}
+#include "golang/runtime/mpagealloc_64bit.h"
+#include "golang/runtime/mpallocbits.h"
+#include "golang/runtime/mstats.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct pageAlloc
     {
         // Radix tree of summaries.
@@ -152,6 +160,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pageAlloc& value);
+}
+
+#include "golang/runtime/mpallocbits.h"
+#include "golang/runtime/mranges.h"
+#include "golang/runtime/mstats.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

@@ -9,6 +9,29 @@
 #include "golang/internal/reflectlite/type.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::reflectlite
+{
+    struct name
+    {
+        unsigned char* bytes;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct name& value);
+    gocpp::unsafe_pointer resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
+    gocpp::unsafe_pointer resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
+    gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
+}
 #include "golang/internal/abi/type.h"
 
 namespace golang::reflectlite
@@ -167,35 +190,7 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rtype& value);
-    struct name
-    {
-        unsigned char* bytes;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct name& value);
     gocpp::string pkgPath(abi::Name n);
-    gocpp::unsafe_pointer resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
-    gocpp::unsafe_pointer resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
-    struct rtype toRType(abi::Type* t);
-    abi::Type* elem(abi::Type* t);
-    gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
-    struct Type TypeOf(go_any i);
-    bool implements(abi::Type* T, abi::Type* V);
-    bool directlyAssignable(abi::Type* T, abi::Type* V);
-    bool haveIdenticalType(abi::Type* T, abi::Type* V, bool cmpTags);
-    bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
-    struct Type toType(abi::Type* t);
-    bool ifaceIndir(abi::Type* t);
     struct mapType
     {
         rtype rtype;
@@ -221,6 +216,21 @@ namespace golang::reflectlite
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mapType& value);
+    struct rtype toRType(abi::Type* t);
+    abi::Type* elem(abi::Type* t);
+    struct Type TypeOf(go_any i);
+    bool implements(abi::Type* T, abi::Type* V);
+    bool directlyAssignable(abi::Type* T, abi::Type* V);
+    bool haveIdenticalType(abi::Type* T, abi::Type* V, bool cmpTags);
+    bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
+    struct Type toType(abi::Type* t);
+    bool ifaceIndir(abi::Type* t);
+}
+
+#include "golang/internal/abi/type.h"
+
+namespace golang::reflectlite
+{
 
     namespace rec
     {

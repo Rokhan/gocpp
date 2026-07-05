@@ -9,6 +9,28 @@
 #include "golang/sync/map.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::sync
+{
+    struct readOnly
+    {
+        gocpp::map<go_any, entry*> m;
+        bool amended; // true if the dirty map contains some key not in m.
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct readOnly& value);
+    extern go_any* expunged;
+}
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
 
@@ -53,24 +75,6 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Map& value);
-    struct readOnly
-    {
-        gocpp::map<go_any, entry*> m;
-        bool amended; // true if the dirty map contains some key not in m.
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct readOnly& value);
-    extern go_any* expunged;
     struct entry
     {
         // p points to the interface{} value stored for the entry.

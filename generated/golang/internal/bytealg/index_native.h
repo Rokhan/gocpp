@@ -9,6 +9,7 @@
 #include "golang/internal/bytealg/index_native.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::bytealg
 {
     int Index(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);

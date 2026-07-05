@@ -9,6 +9,7 @@
 #include "golang/internal/unsafeheader/unsafeheader.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::unsafeheader
 {
     struct Slice

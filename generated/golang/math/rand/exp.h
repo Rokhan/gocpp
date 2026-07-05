@@ -9,13 +9,18 @@
 #include "golang/math/rand/exp.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/rand/rand.h"
 
 namespace golang::rand
 {
     extern gocpp::array<uint32_t, 256> ke;
     extern gocpp::array<float, 256> we;
     extern gocpp::array<float, 256> fe;
+}
+
+#include "golang/math/rand/rand.h"
+
+namespace golang::rand
+{
 
     namespace rec
     {

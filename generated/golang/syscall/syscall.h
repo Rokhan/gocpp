@@ -9,8 +9,6 @@
 #include "golang/syscall/syscall.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 
 namespace golang::syscall
 {
@@ -23,6 +21,13 @@ namespace golang::syscall
     void Exit(int code);
     void runtimeSetenv(gocpp::string k, gocpp::string v);
     void runtimeUnsetenv(gocpp::string k);
+}
+
+#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/types_windows.h"
+
+namespace golang::syscall
+{
 
     namespace rec
     {

@@ -113,7 +113,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
-    void inlineStructDef(gocpp_id_2 dummy);
     void embededStructDef();
     void main();
     struct Dummy2
@@ -134,6 +133,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Dummy2& value);
+    void inlineStructDef(gocpp_id_2 dummy);
     struct Dummy3
     {
         Dummy2 Dummy2;

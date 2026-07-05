@@ -9,16 +9,6 @@
 #include "golang/internal/poll/fd_poll_runtime.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
-#include "golang/sync/once.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
-#include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::poll
 {
@@ -48,10 +38,24 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
-    extern sync::Once serverInit;
     struct gocpp::error convertErr(int res, bool isFile);
-    struct gocpp::error setDeadlineImpl(struct FD* fd, mocklib::Date t, int mode);
     bool IsPollDescriptor(uintptr_t fd);
+}
+#include "golang/internal/poll/fd_windows.h"
+#include "golang/sync/once.h"
+#include "golang/time/time.h"
+
+namespace golang::poll
+{
+    extern sync::Once serverInit;
+    struct gocpp::error setDeadlineImpl(struct FD* fd, mocklib::Date t, int mode);
+}
+
+#include "golang/internal/poll/fd_windows.h"
+#include "golang/time/time.h"
+
+namespace golang::poll
+{
 
     namespace rec
     {

@@ -9,132 +9,12 @@
 #include "golang/reflect/value.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/type.h"
-#include "golang/internal/unsafeheader/unsafeheader.h"
-#include "golang/reflect/makefunc.h"
-#include "golang/reflect/type.h"
-#include "golang/sync/cond.h"
-#include "golang/sync/pool.h"
 
 namespace golang::reflect
 {
-    struct Value
-    {
-        // typ_ holds the type of the value represented by a Value.
-        // Access using the typ method to avoid escape of v.
-        abi::Type* typ_;
-        // Pointer-valued data or, if flagIndir is set, pointer to data.
-        // Valid when either flagIndir is set or typ.pointers() is true.
-        gocpp::unsafe_pointer ptr;
-        // flag holds metadata about the value.
-        // The lowest five bits give the Kind of the value, mirroring typ.Kind().
-        // The next set of bits are flag bits:
-        // - flagStickyRO: obtained via unexported not embedded field, so read-only
-        // - flagEmbedRO: obtained via unexported embedded field, so read-only
-        // - flagIndir: val holds a pointer to the data
-        // - flagAddr: v.CanAddr is true (implies flagIndir and ptr is non-nil)
-        // - flagMethod: v is a method value.
-        // If ifaceIndir(typ), code can assume that flagIndir is set.
-        // The remaining 22+ bits give a method number for method values.
-        // If flag.kind() != Func, code can assume that flagMethod is unset.
-        golang::reflect::flag flag;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Value& value);
-    go_any packEface(struct Value v);
-    struct Value unpackEface(go_any i);
-    struct ValueError
-    {
-        gocpp::string Method;
-        golang::reflect::Kind Kind;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
     gocpp::string valueMethodName();
-    struct emptyInterface
-    {
-        abi::Type* typ;
-        gocpp::unsafe_pointer word;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
-    struct gocpp_id_0
-    {
-        abi::Type* ityp; // static interface type
-        abi::Type* typ; // dynamic concrete type
-        uint32_t hash; // copy of typ.hash
-        gocpp::array<unsigned char, 4> _1;
-        gocpp::array<gocpp::unsafe_pointer, 100000> fun; // method table
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    struct nonEmptyInterface
-    {
-        // see ../runtime/iface.go:/Itab
-        gocpp_id_0* itab;
-        gocpp::unsafe_pointer word;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct nonEmptyInterface& value);
-    extern abi::Type* bytesType;
     extern bool callGC;
-    void callReflect(struct makeFuncImpl* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs);
-    std::tuple<abi::Type*, reflect::funcType*, gocpp::unsafe_pointer> methodReceiver(gocpp::string op, struct Value v, int methodIndex);
-    void storeRcvr(struct Value v, gocpp::unsafe_pointer p);
     uintptr_t align(uintptr_t x, uintptr_t n);
-    void callMethod(struct methodValue* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs);
-    gocpp::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value> _1)> f);
     struct gocpp_id_5 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -193,8 +73,6 @@ namespace golang::reflect
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
-    extern abi::Type* uint8Type;
-    go_any valueInterface(struct Value v, bool safe);
     struct gocpp_id_6 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -254,7 +132,6 @@ namespace golang::reflect
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value);
     bool isZero(gocpp::slice<unsigned char> b);
-    extern abi::Type* stringType;
     struct hiter
     {
         gocpp::unsafe_pointer key;
@@ -285,7 +162,6 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct hiter& value);
-    struct Value copyVal(abi::Type* typ, golang::reflect::flag fl, gocpp::unsafe_pointer ptr);
     bool overflowFloat32(double x);
     struct StringHeader
     {
@@ -322,23 +198,144 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SliceHeader& value);
-    void typesMustMatch(gocpp::string what, struct Type t1, struct Type t2);
     gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int i, uintptr_t eltSize, gocpp::string whySafe);
-    struct Value Append(struct Value s, gocpp::slice<Value> x);
-    
-    template<typename... Args>
-    struct Value Append(struct Value s, Args... x)
+    int chancap(gocpp::unsafe_pointer ch);
+    void chanclose(gocpp::unsafe_pointer ch);
+    int chanlen(gocpp::unsafe_pointer ch);
+    std::tuple<bool, bool> chanrecv(gocpp::unsafe_pointer ch, bool nb, gocpp::unsafe_pointer val);
+    bool chansend0(gocpp::unsafe_pointer ch, gocpp::unsafe_pointer val, bool nb);
+    bool chansend(gocpp::unsafe_pointer ch, gocpp::unsafe_pointer val, bool nb);
+    int maplen(gocpp::unsafe_pointer m);
+    void memmove(gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t size);
+    bool verifyNotInHeapPtr(uintptr_t p);
+    void escapes(go_any x);
+    extern gocpp_id_7 dummy;
+    void contentEscapes(gocpp::unsafe_pointer x);
+    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
+    gocpp::unsafe_pointer mapiterkey(struct hiter* it);
+    gocpp::unsafe_pointer mapiterelem(struct hiter* it);
+    void mapiternext(struct hiter* it);
+}
+#include "golang/internal/abi/abi.h"
+#include "golang/internal/abi/map.h"
+#include "golang/internal/abi/type.h"
+#include "golang/internal/unsafeheader/unsafeheader.h"
+#include "golang/reflect/makefunc.h"
+#include "golang/reflect/type.h"
+
+namespace golang::reflect
+{
+    struct Value
     {
-        return Append(s, gocpp::ToSlice<Value>(x...));
-    }
-    
-    template<typename... Args>
-    struct Value Append(struct Value s, Value value, Args... x)
+        // typ_ holds the type of the value represented by a Value.
+        // Access using the typ method to avoid escape of v.
+        abi::Type* typ_;
+        // Pointer-valued data or, if flagIndir is set, pointer to data.
+        // Valid when either flagIndir is set or typ.pointers() is true.
+        gocpp::unsafe_pointer ptr;
+        // flag holds metadata about the value.
+        // The lowest five bits give the Kind of the value, mirroring typ.Kind().
+        // The next set of bits are flag bits:
+        // - flagStickyRO: obtained via unexported not embedded field, so read-only
+        // - flagEmbedRO: obtained via unexported embedded field, so read-only
+        // - flagIndir: val holds a pointer to the data
+        // - flagAddr: v.CanAddr is true (implies flagIndir and ptr is non-nil)
+        // - flagMethod: v is a method value.
+        // If ifaceIndir(typ), code can assume that flagIndir is set.
+        // The remaining 22+ bits give a method number for method values.
+        // If flag.kind() != Func, code can assume that flagMethod is unset.
+        golang::reflect::flag flag;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Value& value);
+    struct ValueError
     {
-        return Append(s, gocpp::ToSlice<Value>(value, x...));
-    }
-    struct Value AppendSlice(struct Value s, struct Value t);
-    int Copy(struct Value dst, struct Value src);
+        gocpp::string Method;
+        golang::reflect::Kind Kind;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
+    struct emptyInterface
+    {
+        abi::Type* typ;
+        gocpp::unsafe_pointer word;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct emptyInterface& value);
+    struct gocpp_id_0
+    {
+        abi::Type* ityp; // static interface type
+        abi::Type* typ; // dynamic concrete type
+        uint32_t hash; // copy of typ.hash
+        gocpp::array<unsigned char, 4> _1;
+        gocpp::array<gocpp::unsafe_pointer, 100000> fun; // method table
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    struct nonEmptyInterface
+    {
+        // see ../runtime/iface.go:/Itab
+        gocpp_id_0* itab;
+        gocpp::unsafe_pointer word;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct nonEmptyInterface& value);
+    extern abi::Type* bytesType;
+    void callReflect(struct makeFuncImpl* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs);
+    void callMethod(struct methodValue* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs);
+    extern abi::Type* uint8Type;
+    extern abi::Type* stringType;
+    void typesMustMatch(gocpp::string what, struct Type t1, struct Type t2);
     struct runtimeSelect
     {
         golang::reflect::SelectDir dir; // SelectSend, SelectRecv or SelectDefault
@@ -358,10 +355,88 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeSelect& value);
-    std::tuple<int, bool> rselect(gocpp::slice<runtimeSelect>);
-    std::tuple<int, struct Value, bool> Select(gocpp::slice<SelectCase> cases);
     gocpp::unsafe_pointer unsafe_New(abi::Type*);
     gocpp::unsafe_pointer unsafe_NewArray(abi::Type*, int);
+    extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
+    gocpp::unsafe_pointer makechan(abi::Type* typ, int size);
+    gocpp::unsafe_pointer makemap(abi::Type* t, int cap);
+    gocpp::unsafe_pointer mapaccess(abi::Type* t, gocpp::unsafe_pointer m, gocpp::unsafe_pointer key);
+    gocpp::unsafe_pointer mapaccess_faststr(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key);
+    void mapassign0(abi::Type* t, gocpp::unsafe_pointer m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer val);
+    void mapassign(abi::Type* t, gocpp::unsafe_pointer m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer val);
+    void mapassign_faststr0(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key, gocpp::unsafe_pointer val);
+    void mapassign_faststr(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key, gocpp::unsafe_pointer val);
+    void mapdelete(abi::Type* t, gocpp::unsafe_pointer m, gocpp::unsafe_pointer key);
+    void mapdelete_faststr(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key);
+    void mapiterinit(abi::Type* t, gocpp::unsafe_pointer m, struct hiter* it);
+    void mapclear(abi::Type* t, gocpp::unsafe_pointer m);
+    void call(abi::Type* stackArgsType, gocpp::unsafe_pointer f, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
+    void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);
+    void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
+    void typedmemclr(abi::Type* t, gocpp::unsafe_pointer ptr);
+    void typedmemclrpartial(abi::Type* t, gocpp::unsafe_pointer ptr, uintptr_t off, uintptr_t size);
+    int typedslicecopy(abi::Type* t, unsafeheader::Slice dst, unsafeheader::Slice src);
+    void typedarrayclear(abi::Type* elemType, gocpp::unsafe_pointer ptr, int len);
+    uintptr_t typehash(abi::Type* t, gocpp::unsafe_pointer p, uintptr_t h);
+    unsafeheader::Slice growslice(abi::Type* t, unsafeheader::Slice old, int num);
+    go_any packEface(struct Value v);
+    struct Value unpackEface(go_any i);
+    std::tuple<abi::Type*, reflect::funcType*, gocpp::unsafe_pointer> methodReceiver(gocpp::string op, struct Value v, int methodIndex);
+    void storeRcvr(struct Value v, gocpp::unsafe_pointer p);
+    gocpp::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value> _1)> f);
+    go_any valueInterface(struct Value v, bool safe);
+    struct MapIter
+    {
+        Value m;
+        hiter hiter;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct MapIter& value);
+    struct Value copyVal(abi::Type* typ, golang::reflect::flag fl, gocpp::unsafe_pointer ptr);
+    struct Value Append(struct Value s, gocpp::slice<Value> x);
+    
+    template<typename... Args>
+    struct Value Append(struct Value s, Args... x)
+    {
+        return Append(s, gocpp::ToSlice<Value>(x...));
+    }
+    
+    template<typename... Args>
+    struct Value Append(struct Value s, Value value, Args... x)
+    {
+        return Append(s, gocpp::ToSlice<Value>(value, x...));
+    }
+    struct Value AppendSlice(struct Value s, struct Value t);
+    int Copy(struct Value dst, struct Value src);
+    std::tuple<int, bool> rselect(gocpp::slice<runtimeSelect>);
+    struct SelectCase
+    {
+        golang::reflect::SelectDir Dir; // direction of case
+        Value Chan; // channel to use (for send or receive)
+        Value Send; // value to send (for send)
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SelectCase& value);
     struct Value MakeSlice(struct Type typ, int len, int cap);
     struct Value MakeChan(struct Type typ, int buffer);
     struct Value MakeMap(struct Type typ);
@@ -369,7 +444,6 @@ namespace golang::reflect
     struct Value Indirect(struct Value v);
     struct Value ValueOf(go_any i);
     struct Value Zero(struct Type typ);
-    extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
     struct Value New(struct Type typ);
     struct Value NewAt(struct Type typ, gocpp::unsafe_pointer p);
     std::function<struct Value (struct Value _1, struct Type _2)> convertOp(abi::Type* dst, abi::Type* src);
@@ -399,78 +473,14 @@ namespace golang::reflect
     struct Value cvtDirect(struct Value v, struct Type typ);
     struct Value cvtT2I(struct Value v, struct Type typ);
     struct Value cvtI2I(struct Value v, struct Type typ);
-    int chancap(gocpp::unsafe_pointer ch);
-    void chanclose(gocpp::unsafe_pointer ch);
-    int chanlen(gocpp::unsafe_pointer ch);
-    std::tuple<bool, bool> chanrecv(gocpp::unsafe_pointer ch, bool nb, gocpp::unsafe_pointer val);
-    bool chansend0(gocpp::unsafe_pointer ch, gocpp::unsafe_pointer val, bool nb);
-    bool chansend(gocpp::unsafe_pointer ch, gocpp::unsafe_pointer val, bool nb);
-    gocpp::unsafe_pointer makechan(abi::Type* typ, int size);
-    gocpp::unsafe_pointer makemap(abi::Type* t, int cap);
-    gocpp::unsafe_pointer mapaccess(abi::Type* t, gocpp::unsafe_pointer m, gocpp::unsafe_pointer key);
-    gocpp::unsafe_pointer mapaccess_faststr(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key);
-    void mapassign0(abi::Type* t, gocpp::unsafe_pointer m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer val);
-    void mapassign(abi::Type* t, gocpp::unsafe_pointer m, gocpp::unsafe_pointer key, gocpp::unsafe_pointer val);
-    void mapassign_faststr0(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key, gocpp::unsafe_pointer val);
-    void mapassign_faststr(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key, gocpp::unsafe_pointer val);
-    void mapdelete(abi::Type* t, gocpp::unsafe_pointer m, gocpp::unsafe_pointer key);
-    void mapdelete_faststr(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key);
-    void mapiterinit(abi::Type* t, gocpp::unsafe_pointer m, struct hiter* it);
-    gocpp::unsafe_pointer mapiterkey(struct hiter* it);
-    gocpp::unsafe_pointer mapiterelem(struct hiter* it);
-    void mapiternext(struct hiter* it);
-    int maplen(gocpp::unsafe_pointer m);
-    void mapclear(abi::Type* t, gocpp::unsafe_pointer m);
-    void call(abi::Type* stackArgsType, gocpp::unsafe_pointer f, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
-    void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);
-    void memmove(gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t size);
-    void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
-    void typedmemclr(abi::Type* t, gocpp::unsafe_pointer ptr);
-    void typedmemclrpartial(abi::Type* t, gocpp::unsafe_pointer ptr, uintptr_t off, uintptr_t size);
-    int typedslicecopy(abi::Type* t, unsafeheader::Slice dst, unsafeheader::Slice src);
-    void typedarrayclear(abi::Type* elemType, gocpp::unsafe_pointer ptr, int len);
-    uintptr_t typehash(abi::Type* t, gocpp::unsafe_pointer p, uintptr_t h);
-    bool verifyNotInHeapPtr(uintptr_t p);
-    unsafeheader::Slice growslice(abi::Type* t, unsafeheader::Slice old, int num);
-    void escapes(go_any x);
-    extern gocpp_id_7 dummy;
-    void contentEscapes(gocpp::unsafe_pointer x);
-    gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
-    struct MapIter
-    {
-        Value m;
-        hiter hiter;
+    std::tuple<int, struct Value, bool> Select(gocpp::slice<SelectCase> cases);
+}
 
-        using isGoStruct = void;
+#include "golang/internal/abi/type.h"
+#include "golang/reflect/type.h"
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct MapIter& value);
-    struct SelectCase
-    {
-        golang::reflect::SelectDir Dir; // direction of case
-        Value Chan; // channel to use (for send or receive)
-        Value Send; // value to send (for send)
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SelectCase& value);
+namespace golang::reflect
+{
 
     namespace rec
     {

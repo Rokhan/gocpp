@@ -9,12 +9,9 @@
 #include "golang/runtime/mranges.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/mstats.h"
 
 namespace golang::runtime
 {
-    struct addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
     struct offAddr
     {
         // a is just the virtual address, but should never be used
@@ -33,23 +30,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct offAddr& value);
-    struct atomicOffAddr
-    {
-        // a contains the offset address, unlike offAddr.
-        atomic::Int64 a;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
     struct addrRange
     {
         // base and limit together represent the region of address space
@@ -72,8 +52,38 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct addrRange& value);
+}
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/malloc.h"
+#include "golang/runtime/stack.h"
+
+namespace golang::runtime
+{
     extern offAddr minOffAddr;
     extern offAddr maxOffAddr;
+    struct atomicOffAddr
+    {
+        // a contains the offset address, unlike offAddr.
+        atomic::Int64 a;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
+    struct addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
+}
+#include "golang/runtime/mstats.h"
+
+namespace golang::runtime
+{
     struct addrRanges
     {
         // ranges is a slice of ranges sorted by base.
@@ -96,6 +106,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct addrRanges& value);
+}
+
+#include "golang/runtime/mstats.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

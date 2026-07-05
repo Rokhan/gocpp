@@ -56,6 +56,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mlink& value);
+}
+
+#include "golang/runtime/mstats.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

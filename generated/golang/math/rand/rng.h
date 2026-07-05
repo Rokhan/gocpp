@@ -9,6 +9,7 @@
 #include "golang/math/rand/rng.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::rand
 {
     extern gocpp::array<int64_t, rngLen> rngCooked;

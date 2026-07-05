@@ -9,6 +9,7 @@
 #include "golang/internal/godebugs/table.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::godebugs
 {
     struct Info
@@ -31,8 +32,8 @@ namespace golang::godebugs
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Info& value);
-    struct Info* Lookup(gocpp::string name);
     extern gocpp::slice<Info> All;
+    struct Info* Lookup(gocpp::string name);
 
     namespace rec
     {

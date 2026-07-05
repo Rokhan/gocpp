@@ -9,22 +9,6 @@
 #include "golang/os/dir_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
-#include "golang/internal/poll/fd_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
-#include "golang/io/fs/fs.h"
-#include "golang/os/dir.h"
-#include "golang/os/file_windows.h"
-#include "golang/os/types.h"
-#include "golang/os/types_windows.h"
-#include "golang/sync/cond.h"
-#include "golang/sync/mutex.h"
-#include "golang/sync/pool.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
-#include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::os
 {
@@ -51,8 +35,14 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dirInfo& value);
-    extern sync::Pool dirBufPool;
     extern bool allowReadDirFileID;
+}
+#include "golang/os/types_windows.h"
+#include "golang/sync/pool.h"
+
+namespace golang::os
+{
+    extern sync::Pool dirBufPool;
     struct dirEntry
     {
         fileStat* fs;
@@ -69,6 +59,13 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dirEntry& value);
+}
+
+#include "golang/os/dir.h"
+#include "golang/os/types.h"
+
+namespace golang::os
+{
 
     namespace rec
     {

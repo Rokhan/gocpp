@@ -9,38 +9,16 @@
 #include "golang/runtime/time.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
+
+namespace golang::runtime
+{
+    void timeSleep(int64_t ns);
+    void goroutineReady(go_any arg, uintptr_t seq);
+    int64_t timeSleepUntil();
+    void badTimer();
+}
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mgc.h"
-#include "golang/runtime/mgclimit.h"
-#include "golang/runtime/mgcwork.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mpagecache.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/mwbbuf.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/pagetrace_off.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/pinner.h"
-#include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -76,35 +54,31 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct timer& value);
-    void timeSleep(int64_t ns);
     bool resetForSleep(struct g* gp, gocpp::unsafe_pointer ut);
-    void startTimer(struct timer* t);
-    bool stopTimer(struct timer* t);
-    bool resetTimer(struct timer* t, int64_t when);
-    void modTimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
-    void goroutineReady(go_any arg, uintptr_t seq);
-    void addtimer(struct timer* t);
-    void doaddtimer(struct p* pp, struct timer* t);
-    bool deltimer(struct timer* t);
     int dodeltimer(struct p* pp, int i);
     void dodeltimer0(struct p* pp);
-    bool modtimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
-    bool resettimer(struct timer* t, int64_t when);
     void cleantimers(struct p* pp);
-    void moveTimers(struct p* pp, gocpp::slice<timer*> timers);
     void adjusttimers(struct p* pp, int64_t now);
-    void addAdjustedTimers(struct p* pp, gocpp::slice<timer*> moved);
     int64_t nobarrierWakeTime(struct p* pp);
     int64_t runtimer(struct p* pp, int64_t now);
-    void runOneTimer(struct p* pp, struct timer* t, int64_t now);
     void clearDeletedTimers(struct p* pp);
     void verifyTimerHeap(struct p* pp);
     void updateTimer0When(struct p* pp);
     void updateTimerModifiedEarliest(struct p* pp, int64_t nextwhen);
-    int64_t timeSleepUntil();
+    void startTimer(struct timer* t);
+    bool stopTimer(struct timer* t);
+    bool resetTimer(struct timer* t, int64_t when);
+    void modTimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
+    void addtimer(struct timer* t);
+    void doaddtimer(struct p* pp, struct timer* t);
+    bool deltimer(struct timer* t);
+    bool modtimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
+    bool resettimer(struct timer* t, int64_t when);
+    void moveTimers(struct p* pp, gocpp::slice<timer*> timers);
+    void addAdjustedTimers(struct p* pp, gocpp::slice<timer*> moved);
+    void runOneTimer(struct p* pp, struct timer* t, int64_t now);
     int siftupTimer(gocpp::slice<timer*> t, int i);
     void siftdownTimer(gocpp::slice<timer*> t, int i);
-    void badTimer();
 
     namespace rec
     {

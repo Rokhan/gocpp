@@ -9,6 +9,7 @@
 #include "golang/image/png/paeth.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::png
 {
     int abs(int x);

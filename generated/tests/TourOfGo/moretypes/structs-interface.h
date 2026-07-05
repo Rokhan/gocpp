@@ -186,6 +186,40 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Closer& value);
+    struct myReader
+    {
+        int val;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct myReader& value);
+    struct myReaderWriterTo
+    {
+        int val;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct myReaderWriterTo& value);
+    void testCloser();
+    void main();
     struct ReadCloser : virtual gocpp::Interface, Reader, Closer
     {
         using gocpp::Interface::operator==;
@@ -244,41 +278,6 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadCloser& value);
-    struct ReadCloser NopCloser(struct Reader r);
-    struct myReader
-    {
-        int val;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct myReader& value);
-    struct myReaderWriterTo
-    {
-        int val;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct myReaderWriterTo& value);
-    void testCloser();
-    void main();
     struct nopCloser
     {
         Reader Reader;
@@ -323,6 +322,7 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value);
+    struct ReadCloser NopCloser(struct Reader r);
 
     namespace rec
     {

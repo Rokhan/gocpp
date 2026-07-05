@@ -9,8 +9,6 @@
 #include "golang/runtime/map.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/slice.h"
 
 namespace golang::runtime
 {
@@ -87,6 +85,46 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct bmap& value);
+    uintptr_t bucketShift(uint8_t b);
+    uintptr_t bucketMask(uint8_t b);
+    uint8_t tophash(uintptr_t hash);
+    bool overLoadFactor(int count, uint8_t B);
+    bool tooManyOverflowBuckets(uint16_t noverflow, uint8_t B);
+    struct evacDst
+    {
+        bmap* b; // current destination bucket
+        int i; // key/elem index into b
+        gocpp::unsafe_pointer k; // pointer to current key storage
+        gocpp::unsafe_pointer e; // pointer to current elem storage
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct evacDst& value);
+    void mapinitnoop();
+    go_any mapclone(go_any m);
+    void keys(go_any m, gocpp::unsafe_pointer p);
+    void values(go_any m, gocpp::unsafe_pointer p);
+    extern uintptr_t dataOffset;
+    bool evacuated(struct bmap* b);
+    struct hmap* makemap_small();
+    int reflect_maplen(struct hmap* h);
+    int reflectlite_maplen(struct hmap* h);
+}
+#include "golang/internal/abi/map.h"
+#include "golang/runtime/slice.h"
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
     struct hiter
     {
         gocpp::unsafe_pointer key; // Must be in first position.  Write nil to indicate iteration end (see cmd/compile/internal/walk/range.go).
@@ -117,12 +155,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct hiter& value);
-    uintptr_t bucketShift(uint8_t b);
-    uintptr_t bucketMask(uint8_t b);
-    uint8_t tophash(uintptr_t hash);
-    bool evacuated(struct bmap* b);
     struct hmap* makemap64(golang::runtime::maptype* t, int64_t hint, struct hmap* h);
-    struct hmap* makemap_small();
     struct hmap* makemap(golang::runtime::maptype* t, int hint, struct hmap* h);
     std::tuple<gocpp::unsafe_pointer, struct bmap*> makeBucketArray(golang::runtime::maptype* t, uint8_t b, gocpp::unsafe_pointer dirtyalloc);
     gocpp::unsafe_pointer mapaccess1(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key);
@@ -132,33 +165,10 @@ namespace golang::runtime
     std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_fat(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer zero);
     gocpp::unsafe_pointer mapassign(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key);
     void mapdelete(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key);
-    void mapiterinit(golang::runtime::maptype* t, struct hmap* h, struct hiter* it);
-    void mapiternext(struct hiter* it);
     void mapclear(golang::runtime::maptype* t, struct hmap* h);
     void hashGrow(golang::runtime::maptype* t, struct hmap* h);
-    bool overLoadFactor(int count, uint8_t B);
-    bool tooManyOverflowBuckets(uint16_t noverflow, uint8_t B);
     void growWork(golang::runtime::maptype* t, struct hmap* h, uintptr_t bucket);
     bool bucketEvacuated(golang::runtime::maptype* t, struct hmap* h, uintptr_t bucket);
-    struct evacDst
-    {
-        bmap* b; // current destination bucket
-        int i; // key/elem index into b
-        gocpp::unsafe_pointer k; // pointer to current key storage
-        gocpp::unsafe_pointer e; // pointer to current elem storage
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct evacDst& value);
     void evacuate(golang::runtime::maptype* t, struct hmap* h, uintptr_t oldbucket);
     void advanceEvacuationMark(struct hmap* h, golang::runtime::maptype* t, uintptr_t newbit);
     struct hmap* reflect_makemap(golang::runtime::maptype* t, int cap);
@@ -168,23 +178,18 @@ namespace golang::runtime
     void reflect_mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key, gocpp::unsafe_pointer elem);
     void reflect_mapdelete(golang::runtime::maptype* t, struct hmap* h, gocpp::unsafe_pointer key);
     void reflect_mapdelete_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string key);
+    void reflect_mapclear(golang::runtime::maptype* t, struct hmap* h);
+    extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
+    std::tuple<struct bmap*, int> moveToBmap(golang::runtime::maptype* t, struct hmap* h, struct bmap* dst, int pos, struct bmap* src);
+    struct hmap* mapclone2(golang::runtime::maptype* t, struct hmap* src);
+    void copyKeys(golang::runtime::maptype* t, struct hmap* h, struct bmap* b, struct slice* s, uint8_t offset);
+    void copyValues(golang::runtime::maptype* t, struct hmap* h, struct bmap* b, struct slice* s, uint8_t offset);
+    void mapiterinit(golang::runtime::maptype* t, struct hmap* h, struct hiter* it);
+    void mapiternext(struct hiter* it);
     void reflect_mapiterinit(golang::runtime::maptype* t, struct hmap* h, struct hiter* it);
     void reflect_mapiternext(struct hiter* it);
     gocpp::unsafe_pointer reflect_mapiterkey(struct hiter* it);
     gocpp::unsafe_pointer reflect_mapiterelem(struct hiter* it);
-    int reflect_maplen(struct hmap* h);
-    void reflect_mapclear(golang::runtime::maptype* t, struct hmap* h);
-    int reflectlite_maplen(struct hmap* h);
-    extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
-    void mapinitnoop();
-    go_any mapclone(go_any m);
-    std::tuple<struct bmap*, int> moveToBmap(golang::runtime::maptype* t, struct hmap* h, struct bmap* dst, int pos, struct bmap* src);
-    struct hmap* mapclone2(golang::runtime::maptype* t, struct hmap* src);
-    void keys(go_any m, gocpp::unsafe_pointer p);
-    void copyKeys(golang::runtime::maptype* t, struct hmap* h, struct bmap* b, struct slice* s, uint8_t offset);
-    void values(go_any m, gocpp::unsafe_pointer p);
-    void copyValues(golang::runtime::maptype* t, struct hmap* h, struct bmap* b, struct slice* s, uint8_t offset);
-    extern uintptr_t dataOffset;
 
     namespace rec
     {

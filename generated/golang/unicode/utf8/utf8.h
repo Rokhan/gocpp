@@ -9,6 +9,7 @@
 #include "golang/unicode/utf8/utf8.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::utf8
 {
     extern gocpp::array<uint8_t, 256> first;

@@ -9,7 +9,6 @@
 #include "golang/sync/runtime.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/runtime2.h"
 
 namespace golang::sync
 {
@@ -18,15 +17,20 @@ namespace golang::sync
     void runtime_SemacquireRWMutexR(uint32_t* s, bool lifo, int skipframes);
     void runtime_SemacquireRWMutex(uint32_t* s, bool lifo, int skipframes);
     void runtime_Semrelease(uint32_t* s, bool handoff, int skipframes);
-    uint32_t runtime_notifyListAdd(struct notifyList* l);
-    void runtime_notifyListWait(struct notifyList* l, uint32_t t);
-    void runtime_notifyListNotifyAll(struct notifyList* l);
-    void runtime_notifyListNotifyOne(struct notifyList* l);
     void runtime_notifyListCheck(uintptr_t size);
     void init();
     bool runtime_canSpin(int i);
     void runtime_doSpin();
     int64_t runtime_nanotime();
+}
+#include "golang/sync/runtime2.h"
+
+namespace golang::sync
+{
+    uint32_t runtime_notifyListAdd(struct notifyList* l);
+    void runtime_notifyListWait(struct notifyList* l, uint32_t t);
+    void runtime_notifyListNotifyAll(struct notifyList* l);
+    void runtime_notifyListNotifyOne(struct notifyList* l);
 
     namespace rec
     {

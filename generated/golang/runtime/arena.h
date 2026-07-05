@@ -9,25 +9,6 @@
 #include "golang/runtime/arena.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/cpu/cpu.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/mbitmap_allocheaders.h"
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mcentral.h"
-#include "golang/runtime/mcheckmark.h"
-#include "golang/runtime/mfixalloc.h"
-#include "golang/runtime/mgcscavenge.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mpagealloc.h"
-#include "golang/runtime/mpallocbits.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/mspanset.h"
-#include "golang/runtime/mstats.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -38,6 +19,14 @@ namespace golang::runtime
     go_any arena_heapify(go_any s);
     void init();
     uintptr_t userArenaChunkReserveBytes();
+    bool inUserArenaChunk(uintptr_t p);
+}
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/mheap.h"
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
     struct userArena
     {
         // full is a list of full chunks that have not enough free memory left, and
@@ -70,7 +59,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct userArena& value);
-    struct userArena* newUserArena();
     struct liveUserArenaChunk
     {
         mspan* mspan; // Must represent a user arena chunk.
@@ -91,9 +79,20 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct liveUserArenaChunk& value);
     void userArenaHeapBitsSetSliceType(golang::runtime::_type* typ, int n, gocpp::unsafe_pointer ptr, struct mspan* s);
     std::tuple<gocpp::unsafe_pointer, struct mspan*> newUserArenaChunk();
-    bool inUserArenaChunk(uintptr_t p);
     void freeUserArenaChunk(struct mspan* s, gocpp::unsafe_pointer x);
+    struct userArena* newUserArena();
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     extern gocpp_id_0 userArenaState;
+}
+
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

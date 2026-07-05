@@ -9,6 +9,7 @@
 #include "golang/unicode/utf16/utf16.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::utf16
 {
     bool IsSurrogate(gocpp::rune r);

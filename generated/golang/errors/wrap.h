@@ -9,9 +9,6 @@
 #include "golang/errors/wrap.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/reflectlite/type.h"
-#include "golang/internal/reflectlite/value.h"
 
 namespace golang::errors
 {
@@ -251,7 +248,6 @@ namespace golang::errors
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
     bool As(struct gocpp::error err, go_any target);
-    bool as(struct gocpp::error err, go_any target, reflectlite::Value targetVal, reflectlite::Type targetType);
     struct gocpp_id_5 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -426,6 +422,13 @@ namespace golang::errors
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value);
+}
+#include "golang/internal/reflectlite/type.h"
+#include "golang/internal/reflectlite/value.h"
+
+namespace golang::errors
+{
+    bool as(struct gocpp::error err, go_any target, reflectlite::Value targetVal, reflectlite::Type targetType);
     extern reflectlite::Type errorType;
 
     namespace rec

@@ -9,7 +9,6 @@
 #include "golang/internal/testlog/log.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/sync/atomic/value.h"
 
 namespace golang::testlog
 {
@@ -89,12 +88,17 @@ namespace golang::testlog
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
-    extern atomic::Value logger;
-    void SetLogger(struct Interface impl);
-    struct Interface Logger();
     void Getenv(gocpp::string name);
     void Open(gocpp::string name);
     void Stat(gocpp::string name);
+    void SetLogger(struct Interface impl);
+    struct Interface Logger();
+}
+#include "golang/sync/atomic/value.h"
+
+namespace golang::testlog
+{
+    extern atomic::Value logger;
 
     namespace rec
     {

@@ -9,6 +9,34 @@
 #include "golang/internal/godebug/godebug.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::godebug
+{
+    void setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update);
+    void registerMetric(gocpp::string name, std::function<uint64_t ()> read);
+    void init();
+    void update(gocpp::string def, gocpp::string env);
+    void parse(gocpp::map<gocpp::string, bool> did, gocpp::string s);
+    struct runtimeStderr
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct runtimeStderr& value);
+    int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
+    void setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
+    std::function<void ()> newIncNonDefault(gocpp::string name);
+    extern runtimeStderr go_stderr;
+}
 #include "golang/internal/bisect/bisect.h"
 #include "golang/internal/godebugs/table.h"
 #include "golang/sync/atomic/type.h"
@@ -72,35 +100,11 @@ namespace golang::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct value& value);
-    struct Setting* New(gocpp::string name);
     extern sync::Map cache;
-    struct setting* lookup(gocpp::string name);
-    void setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update);
-    void registerMetric(gocpp::string name, std::function<uint64_t ()> read);
-    void setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
-    void init();
-    std::function<void ()> newIncNonDefault(gocpp::string name);
     extern mocklib::Mutex updateMu;
-    void update(gocpp::string def, gocpp::string env);
-    void parse(gocpp::map<gocpp::string, bool> did, gocpp::string s);
-    struct runtimeStderr
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct runtimeStderr& value);
-    int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
+    struct Setting* New(gocpp::string name);
     extern value empty;
-    extern runtimeStderr go_stderr;
+    struct setting* lookup(gocpp::string name);
 
     namespace rec
     {

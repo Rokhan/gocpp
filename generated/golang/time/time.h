@@ -9,6 +9,25 @@
 #include "golang/time/time.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::time
+{
+    time::Weekday absWeekday(uint64_t abs);
+    std::tuple<int, int, int> absClock(uint64_t abs);
+    std::tuple<int, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int prec);
+    int fmtInt(gocpp::slice<unsigned char> buf, uint64_t v);
+    bool lessThanHalf(golang::time::Duration x, golang::time::Duration y);
+    time::Duration subMono(int64_t t, int64_t u);
+    std::tuple<int, time::Month, int, int> absDate(uint64_t abs, bool full);
+    extern gocpp::array<int32_t, 13> daysBefore;
+    int daysIn(golang::time::Month m, int year);
+    uint64_t daysSinceEpoch(int year);
+    std::tuple<int64_t, int32_t, int64_t> now();
+    int64_t runtimeNano();
+    bool isLeap(int year);
+    std::tuple<int, int> norm(int hi, int lo, int base);
+    extern int64_t startNano;
+}
 #include "golang/time/zoneinfo.h"
 
 namespace golang::time
@@ -46,30 +65,21 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Time& value);
-    time::Weekday absWeekday(uint64_t abs);
-    std::tuple<int, int, int> absClock(uint64_t abs);
-    std::tuple<int, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int prec);
-    int fmtInt(gocpp::slice<unsigned char> buf, uint64_t v);
-    bool lessThanHalf(golang::time::Duration x, golang::time::Duration y);
-    time::Duration subMono(int64_t t, int64_t u);
     time::Duration Since(struct Time t);
     time::Duration Until(struct Time t);
-    std::tuple<int, time::Month, int, int> absDate(uint64_t abs, bool full);
-    extern gocpp::array<int32_t, 13> daysBefore;
-    int daysIn(golang::time::Month m, int year);
-    uint64_t daysSinceEpoch(int year);
-    std::tuple<int64_t, int32_t, int64_t> now();
-    int64_t runtimeNano();
-    extern int64_t startNano;
     struct Time Now();
     struct Time unixTime(int64_t sec, int32_t nsec);
     struct Time Unix(int64_t sec, int64_t nsec);
     struct Time UnixMilli(int64_t msec);
     struct Time UnixMicro(int64_t usec);
-    bool isLeap(int year);
-    std::tuple<int, int> norm(int hi, int lo, int base);
     struct Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, struct Location* loc);
     std::tuple<int, time::Duration> div(struct Time t, golang::time::Duration d);
+}
+
+#include "golang/time/zoneinfo.h"
+
+namespace golang::time
+{
 
     namespace rec
     {

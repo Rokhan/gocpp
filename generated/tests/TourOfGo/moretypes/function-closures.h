@@ -9,18 +9,12 @@
 #include "tests/TourOfGo/moretypes/function-closures.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unicode/letter.h"
 
 namespace golang::main
 {
     std::function<int (int _1)> adder();
-    gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s);
     struct GoTag_SpecialCase { };
-    using SpecialCase = gocpp::alias<gocpp::slice<unicode::CaseRange>, GoTag_SpecialCase>;
     gocpp::rune ToUpper(gocpp::rune r);
-    gocpp::slice<unsigned char> TestLambda0(golang::main::SpecialCase c, gocpp::slice<unsigned char> s);
-    gocpp::slice<unsigned char> TestLambda1(golang::main::SpecialCase c, gocpp::slice<unsigned char> s);
-    gocpp::slice<unsigned char> TestLambda2(golang::main::SpecialCase x, gocpp::slice<unsigned char> y);
     struct compressor
     {
         std::function<void (gocpp::slice<unsigned char> _1, gocpp::slice<uint32_t> _2)> bulkHasher;
@@ -40,6 +34,16 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct compressor& value);
     void main();
+    gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s);
+}
+#include "golang/unicode/letter.h"
+
+namespace golang::main
+{
+    using SpecialCase = gocpp::alias<gocpp::slice<unicode::CaseRange>, GoTag_SpecialCase>;
+    gocpp::slice<unsigned char> TestLambda0(golang::main::SpecialCase c, gocpp::slice<unsigned char> s);
+    gocpp::slice<unsigned char> TestLambda1(golang::main::SpecialCase c, gocpp::slice<unsigned char> s);
+    gocpp::slice<unsigned char> TestLambda2(golang::main::SpecialCase x, gocpp::slice<unsigned char> y);
 
     namespace rec
     {

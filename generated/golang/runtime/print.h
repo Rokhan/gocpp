@@ -9,9 +9,6 @@
 #include "golang/runtime/print.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -19,7 +16,6 @@ namespace golang::runtime
     extern gocpp::array<unsigned char, 512> printBacklog;
     extern int printBacklogIndex;
     void recordForPanic(gocpp::slice<unsigned char> b);
-    extern mutex debuglock;
     void printlock();
     void printunlock();
     void gwrite(gocpp::slice<unsigned char> b);
@@ -36,9 +32,15 @@ namespace golang::runtime
     void printuintptr(uintptr_t p);
     void printstring(gocpp::string s);
     void printslice(gocpp::slice<unsigned char> s);
+    void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t _1)> mark);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    extern mutex debuglock;
     void printeface(struct eface e);
     void printiface(struct iface i);
-    void hexdumpWords(uintptr_t p, uintptr_t end, std::function<unsigned char (uintptr_t _1)> mark);
 
     namespace rec
     {

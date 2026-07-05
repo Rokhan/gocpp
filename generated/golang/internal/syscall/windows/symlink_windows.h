@@ -9,7 +9,6 @@
 #include "golang/internal/syscall/windows/symlink_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/syscall/syscall_windows.h"
 
 namespace golang::windows
 {

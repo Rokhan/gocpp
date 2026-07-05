@@ -9,29 +9,6 @@
 #include "golang/runtime/mcache.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -68,10 +45,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackfreelist& value);
-    extern mspan emptymspan;
-    struct mcache* allocmcache();
-    void freemcache(struct mcache* c);
-    struct mcache* getMCache(struct m* mp);
+}
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/internal/sys/nih.h"
+#include "golang/runtime/malloc.h"
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
     struct mcache
     {
         sys::NotInHeap _1;
@@ -109,6 +90,21 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mcache& value);
+    extern mspan emptymspan;
+    struct mcache* allocmcache();
+    void freemcache(struct mcache* c);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    struct mcache* getMCache(struct m* mp);
+}
+
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

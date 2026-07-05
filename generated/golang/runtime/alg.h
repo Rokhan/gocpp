@@ -9,8 +9,6 @@
 #include "golang/runtime/alg.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -31,10 +29,6 @@ namespace golang::runtime
     uintptr_t c128hash(gocpp::unsafe_pointer p, uintptr_t h);
     uintptr_t interhash(gocpp::unsafe_pointer p, uintptr_t h);
     uintptr_t nilinterhash(gocpp::unsafe_pointer p, uintptr_t h);
-    uintptr_t typehash(golang::runtime::_type* t, gocpp::unsafe_pointer p, uintptr_t h);
-    struct gocpp::error mapKeyError(golang::runtime::maptype* t, gocpp::unsafe_pointer p);
-    struct gocpp::error mapKeyError2(golang::runtime::_type* t, gocpp::unsafe_pointer p);
-    uintptr_t reflect_typehash(golang::runtime::_type* t, gocpp::unsafe_pointer p, uintptr_t h);
     bool memequal0(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
     bool memequal8(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
     bool memequal16(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
@@ -48,8 +42,6 @@ namespace golang::runtime
     bool strequal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
     bool interequal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
     bool nilinterequal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
-    bool efaceeq(golang::runtime::_type* t, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
-    bool ifaceeq(struct itab* tab, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
     uintptr_t stringHash(gocpp::string s, uintptr_t seed);
     uintptr_t bytesHash(gocpp::slice<unsigned char> b, uintptr_t seed);
     uintptr_t int32Hash(uint32_t i, uintptr_t seed);
@@ -120,6 +112,18 @@ namespace golang::runtime
     void initAlgAES();
     uint32_t readUnaligned32(gocpp::unsafe_pointer p);
     uint64_t readUnaligned64(gocpp::unsafe_pointer p);
+}
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
+    uintptr_t typehash(golang::runtime::_type* t, gocpp::unsafe_pointer p, uintptr_t h);
+    struct gocpp::error mapKeyError(golang::runtime::maptype* t, gocpp::unsafe_pointer p);
+    struct gocpp::error mapKeyError2(golang::runtime::_type* t, gocpp::unsafe_pointer p);
+    uintptr_t reflect_typehash(golang::runtime::_type* t, gocpp::unsafe_pointer p, uintptr_t h);
+    bool efaceeq(golang::runtime::_type* t, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
+    bool ifaceeq(struct itab* tab, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
 
     namespace rec
     {

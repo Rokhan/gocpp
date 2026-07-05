@@ -9,7 +9,16 @@
 #include "golang/runtime/mcheckmark.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    extern bool useCheckmark;
+    void startCheckmarks();
+    void endCheckmarks();
+}
+#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/sys/nih.h"
+#include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
 
 namespace golang::runtime
@@ -31,9 +40,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct checkmarksMap& value);
-    extern bool useCheckmark;
-    void startCheckmarks();
-    void endCheckmarks();
     bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, struct markBits mbits);
 
     namespace rec

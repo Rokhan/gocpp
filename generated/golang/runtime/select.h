@@ -9,27 +9,15 @@
 #include "golang/runtime/select.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
+
+namespace golang::runtime
+{
+    void selectsetpc(uintptr_t* pc);
+    void block();
+}
+#include "golang/internal/abi/funcpc.h"
 #include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -52,12 +40,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct scase& value);
     extern uintptr_t chansendpc;
     extern uintptr_t chanrecvpc;
-    void selectsetpc(uintptr_t* pc);
-    void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
-    void selunlock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
     bool selparkcommit(struct g* gp, gocpp::unsafe_pointer _1);
-    void block();
-    std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block);
     struct runtimeSelect
     {
         golang::runtime::selectDir dir;
@@ -77,7 +60,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeSelect& value);
+    void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
+    void selunlock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
+    std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block);
     std::tuple<int, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases);
+}
+
+#include "golang/runtime/chan.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

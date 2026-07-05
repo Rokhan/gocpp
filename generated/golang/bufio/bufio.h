@@ -9,6 +9,28 @@
 #include "golang/bufio/bufio.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::bufio
+{
+    struct ReadWriter
+    {
+        Reader* Reader;
+        Writer* Writer;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ReadWriter& value);
+}
+#include "golang/errors/errors.h"
 #include "golang/io/io.h"
 
 namespace golang::bufio
@@ -39,8 +61,6 @@ namespace golang::bufio
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
-    struct Reader* NewReaderSize(io::Reader rd, int size);
-    struct Reader* NewReader(io::Reader rd);
     extern gocpp::error errNegativeRead;
     extern gocpp::error errNegativeWrite;
     struct Writer
@@ -62,26 +82,17 @@ namespace golang::bufio
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
+    struct Reader* NewReaderSize(io::Reader rd, int size);
+    struct Reader* NewReader(io::Reader rd);
     struct Writer* NewWriterSize(io::Writer w, int size);
     struct Writer* NewWriter(io::Writer w);
-    struct ReadWriter
-    {
-        Reader* Reader;
-        Writer* Writer;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ReadWriter& value);
     struct ReadWriter* NewReadWriter(struct Reader* r, struct Writer* w);
+}
+
+#include "golang/io/io.h"
+
+namespace golang::bufio
+{
 
     namespace rec
     {

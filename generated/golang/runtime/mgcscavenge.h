@@ -9,56 +9,14 @@
 #include "golang/runtime/mgcscavenge.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mpagealloc.h"
-#include "golang/runtime/mpallocbits.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/mranges.h"
-#include "golang/runtime/mstats.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
     uint64_t heapRetained();
     void gcPaceScavenger(int64_t memoryLimit, uint64_t heapGoal, uint64_t lastHeapGoal);
-    extern gocpp_id_0 scavenge;
     void bgscavenge(gocpp::channel<int> c);
     void printScavTrace(uintptr_t releasedBg, uintptr_t releasedEager, bool forced);
     uint64_t fillAligned(uint64_t x, unsigned int m);
-    struct atomicScavChunkData
-    {
-        atomic::Uint64 value;
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
     struct scavChunkData
     {
         // inUse indicates how many pages in this chunk are currently
@@ -88,7 +46,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
-    struct scavChunkData unpackScavChunkData(uint64_t sc);
     struct piController
     {
         double kp; // Proportional constant.
@@ -113,6 +70,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct piController& value);
+    struct scavChunkData unpackScavChunkData(uint64_t sc);
+}
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/time.h"
+
+namespace golang::runtime
+{
+    extern gocpp_id_0 scavenge;
     struct scavengerState
     {
         // lock protects all fields below.
@@ -182,6 +148,28 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavengerState& value);
+    struct atomicScavChunkData
+    {
+        atomic::Uint64 value;
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
+    extern scavengerState scavenger;
+}
+#include "golang/runtime/mranges.h"
+
+namespace golang::runtime
+{
     struct scavengeIndex
     {
         // chunks is a scavChunkData-per-chunk structure that indicates the presence of pages
@@ -242,7 +230,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavengeIndex& value);
-    extern scavengerState scavenger;
+}
+
+#include "golang/runtime/mpagealloc.h"
+#include "golang/runtime/mpallocbits.h"
+#include "golang/runtime/mstats.h"
+
+namespace golang::runtime
+{
 
     namespace rec
     {

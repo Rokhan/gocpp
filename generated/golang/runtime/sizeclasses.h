@@ -9,6 +9,7 @@
 #include "golang/runtime/sizeclasses.fwd.h"
 #include "gocpp/support.h"
 
+
 namespace golang::runtime
 {
     extern gocpp::array<uint16_t, _NumSizeClasses> class_to_size;

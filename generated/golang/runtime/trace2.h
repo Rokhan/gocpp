@@ -9,33 +9,6 @@
 #include "golang/runtime/trace2.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/profbuf.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
-#include "golang/runtime/trace2event.h"
-#include "golang/runtime/trace2map.h"
-#include "golang/runtime/trace2region.h"
-#include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2stack.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2string.h"
-#include "golang/runtime/trace2time.h"
 
 namespace golang::runtime
 {
@@ -63,8 +36,6 @@ namespace golang::runtime
     void traceRegisterLabelsAndReasons(uintptr_t gen);
     gocpp::slice<unsigned char> ReadTrace();
     std::tuple<gocpp::slice<unsigned char>, bool> readTrace0();
-    struct g* traceReader();
-    struct g* traceReaderAvailable();
     struct gocpp_id_2
     {
 
@@ -95,7 +66,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
-    struct wakeableSleep* newWakeableSleep();
     struct traceAdvancerState
     {
         wakeableSleep* timer;
@@ -113,6 +83,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceAdvancerState& value);
+}
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/time.h"
+
+namespace golang::runtime
+{
+    struct g* traceReader();
+    struct g* traceReaderAvailable();
     struct wakeableSleep
     {
         timer* timer;
@@ -132,8 +110,21 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct wakeableSleep& value);
-    extern gocpp_id_0 trace;
     extern traceAdvancerState traceAdvancer;
+    struct wakeableSleep* newWakeableSleep();
+}
+#include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/mgc.h"
+#include "golang/runtime/profbuf.h"
+#include "golang/runtime/trace2buf.h"
+#include "golang/runtime/trace2event.h"
+#include "golang/runtime/trace2runtime.h"
+#include "golang/runtime/trace2stack.h"
+#include "golang/runtime/trace2string.h"
+
+namespace golang::runtime
+{
+    extern gocpp_id_0 trace;
 
     namespace rec
     {

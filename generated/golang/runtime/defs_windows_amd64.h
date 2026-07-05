@@ -29,8 +29,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct m128a& value);
-    void prepareContextForSigResume(struct context* c);
-    void dumpregs(struct context* r);
     struct _DISPATCHER_CONTEXT
     {
         uint64_t controlPc;
@@ -115,6 +113,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct context& value);
+    void prepareContextForSigResume(struct context* c);
+    void dumpregs(struct context* r);
 
     namespace rec
     {

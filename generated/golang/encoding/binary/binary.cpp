@@ -1281,14 +1281,14 @@ namespace golang::binary
         return value.PrintTo(os);
     }
 
-    bool rec::bool(golang::binary::decoder* d)
+    bool rec::go_bool(golang::binary::decoder* d)
     {
         auto x = d->buf[d->offset];
         d->offset++;
         return x != 0;
     }
 
-    void rec::bool(golang::binary::encoder* e, bool x)
+    void rec::go_bool(golang::binary::encoder* e, bool x)
     {
         if(x)
         {
@@ -1464,7 +1464,7 @@ namespace golang::binary
                 }
 
                 case 3:
-                    rec::SetBool(gocpp::recv(v), rec::bool(gocpp::recv(d)));
+                    rec::SetBool(gocpp::recv(v), rec::go_bool(gocpp::recv(d)));
                     break;
 
                 case 4:
@@ -1580,7 +1580,7 @@ namespace golang::binary
                 }
 
                 case 3:
-                    rec::bool(gocpp::recv(e), rec::Bool(gocpp::recv(v)));
+                    rec::go_bool(gocpp::recv(e), rec::Bool(gocpp::recv(v)));
                     break;
 
                 case 4:

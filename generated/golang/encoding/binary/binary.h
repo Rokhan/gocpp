@@ -281,8 +281,8 @@ namespace golang::binary
         gocpp::string GoString(golang::binary::bigEndian);
         gocpp::string String(golang::binary::nativeEndian);
         gocpp::string GoString(golang::binary::nativeEndian);
-        bool bool(golang::binary::decoder* d);
-        void bool(golang::binary::encoder* e, bool x);
+        bool go_bool(golang::binary::decoder* d);
+        void go_bool(golang::binary::encoder* e, bool x);
         uint8_t uint8(golang::binary::decoder* d);
         void uint8(golang::binary::encoder* e, uint8_t x);
         uint16_t uint16(golang::binary::decoder* d);

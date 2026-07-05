@@ -39,12 +39,21 @@ func Assertf(ok bool, format string, a ...interface{}) {
 }
 
 func GetCppType(goType string) string {
+	return GetNsCppType(goType).String()
+}
+
+func GetNsCppType(goType string) nsType {
+	nsVal, ok := stdNsTypeMapping[goType]
+	if ok {
+		return nsVal
+	}
+
 	goType = GetCppName(goType)
 	val, ok := stdTypeMapping[goType]
 	if ok {
-		return val
+		return nsType{name: val}
 	} else {
-		return goType
+		return nsType{name: goType}
 	}
 }
 
@@ -246,18 +255,11 @@ func (of *outFile) Indent() string {
 	return strings.Repeat(baseIndent, of.indent)
 }
 
-func (pkgInfo *pkgInfo) baseName() string {
-	return strings.TrimSuffix(filepath.Base(pkgInfo.filePath), ".go")
-}
-
-func (pkgInfo *pkgInfo) basePath() string {
-	if pkgInfo != nil {
-		return fmt.Sprintf("%v/%v", pkgInfo.pkgPath, pkgInfo.baseName())
-	}
-	return "### UNDEFINED PATH ###"
-}
-
 func Ptr[T any](value T) *T {
+	return &value
+}
+
+func ArrayPtr[T any](value ...T) *[]T {
 	return &value
 }
 
@@ -586,9 +588,10 @@ const (
 type tagType int
 
 const (
-	UnknwonTag tagType = 0
+	UnknownTag tagType = 0
 	UsesTag    tagType = 1
 	DefsTag    tagType = 2
+	NoneTag    tagType = 9999
 )
 
 type pkgInfo struct {
@@ -597,6 +600,25 @@ type pkgInfo struct {
 	filePath string
 	tag      tagType
 	fileType pkgType
+}
+
+func (pkgInfo *pkgInfo) baseName() string {
+	return strings.TrimSuffix(filepath.Base(pkgInfo.filePath), ".go")
+}
+
+func (pkgInfo *pkgInfo) pkgName() string {
+	return fmt.Sprintf("%v/%v", pkgInfo.pkgPath, pkgInfo.fileName())
+}
+
+func (pkgInfo *pkgInfo) fileName() string {
+	return filepath.Base(pkgInfo.baseName())
+}
+
+func (pkgInfo *pkgInfo) basePath() string {
+	if pkgInfo != nil {
+		return fmt.Sprintf("%v/%v", pkgInfo.pkgPath, pkgInfo.baseName())
+	}
+	return "### UNDEFINED PATH ###"
 }
 
 type depInfo struct {
@@ -688,7 +710,23 @@ func ComputeDeps(toDo map[string]types.Type, dm depMode) map[string]types.Type {
 					}
 				}
 
-			case nil, *types.Alias, *types.Basic, *types.Interface, *types.Named, *types.TypeParam:
+			case *types.Interface:
+				if dm == DecDepend {
+					for i := 0; i < t.NumEmbeddeds(); i++ {
+						embeddedType := t.EmbeddedType(i)
+						toDo[embeddedType.String()] = embeddedType
+					}
+				}
+
+			case *types.Union:
+				if dm == DecDepend {
+					for i := 0; i < t.Len(); i++ {
+						termType := t.Term(i).Type()
+						toDo[termType.String()] = termType
+					}
+				}
+
+			case nil, *types.Alias, *types.Basic, *types.Named, *types.TypeParam:
 				// Nothing to do
 
 			default:
@@ -715,11 +753,11 @@ type place struct {
 	// when type/declaration need to be generated outline function
 	outline *string
 	// when type/declaration need to be in header
-	header *string
+	header *[]string
 	// when type/declaration need to be at end of header
 	headerEnd *string
 	// when type/declaration need to be in forward declarations header
-	fwdHeader *string
+	fwdHeader *[]string
 	isInclude bool
 
 	// -> Currently it's a fixed value chosen at creation but ultimately
@@ -730,11 +768,18 @@ type place struct {
 	//packages
 	pkgInfo *pkgInfo
 
-	// source node, for debug message
+	// source node
+	//   - for debug message
+	//   - for computing dependencies later on
 	node ast.Node
 
 	// used receivers
 	receiver receiverDesc
+}
+
+func (place place) SetPkgInfo(pkgInfo *pkgInfo) place {
+	place.pkgInfo = pkgInfo
+	return place
 }
 
 func (place place) DepInfoTypeStr() string {
@@ -744,11 +789,11 @@ func (place place) DepInfoTypeStr() string {
 	return ""
 }
 
-func getHeader(place place) string {
+func getHeader(place place) []string {
 	return *place.header
 }
 
-func getFwdHeader(place place) string {
+func getFwdHeader(place place) []string {
 	return *place.fwdHeader
 }
 
@@ -769,7 +814,7 @@ func outlineStr(str string, node ast.Node) place {
 }
 
 func headerStr(str string, node ast.Node) place {
-	return place{nil, nil, &str, nil, nil, false, depInfo{}, nil, node, nil}
+	return place{nil, nil, ArrayPtr(str), nil, nil, false, depInfo{}, nil, node, nil}
 }
 
 func headerEndStr(str string) place {
@@ -777,15 +822,16 @@ func headerEndStr(str string) place {
 }
 
 func fwdHeaderStr(str string, node ast.Node, depInfo depInfo) place {
-	return place{nil, nil, nil, nil, &str, false, depInfo, nil, node, nil}
+	return place{nil, nil, nil, nil, ArrayPtr(str), false, depInfo, nil, node, nil}
 }
 
+// Maybe create one version for headers and one for fwd headers.
 func includeStr(str string, depInfo depInfo) place {
-	return place{nil, nil, nil, nil, &str, true, depInfo, nil, nil, nil}
+	return place{nil, nil, ArrayPtr(str), nil, ArrayPtr(str), true, depInfo, nil, nil, nil}
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType, node ast.Node) place {
-	return place{nil, nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, CleanPath(pkgPath), filePath, UnknwonTag, pkgType}, node, nil}
+	return place{nil, nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, CleanPath(pkgPath), filePath, UnknownTag, pkgType}, node, nil}
 }
 
 func inlineStrf(node ast.Node, format string, params ...any) []place {
@@ -987,6 +1033,20 @@ func isIdentifierUsed(identifier string, expr ast.Expr) bool {
 	gi := &UseIdentfier{identifier, false}
 	ast.Walk(gi, expr)
 	return gi.used
+}
+
+// appendMap merges all entries from src into target.
+// target is initialized if needed.
+func appendMap[K comparable, V any](target *map[K]V, src map[K]V) {
+	if src == nil {
+		panic("appendMap: src map is nil")
+	}
+	if *target == nil {
+		*target = make(map[K]V)
+	}
+	for k, v := range src {
+		(*target)[k] = v
+	}
 }
 
 type set[T comparable] map[T]bool

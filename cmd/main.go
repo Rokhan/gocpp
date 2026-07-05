@@ -143,7 +143,7 @@ func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, 
 	return toSortedList(nsSet)
 }
 
-func (cv *cppConverter) includeFwdHeaderDependencies(pkgInfos []*pkgInfo, suffix string, order int) (result []*place) {
+func (cv *cppConverter) includeHeaderDependencies(pkgInfos []*pkgInfo, suffix string, order int) (results []*place) {
 	globalSubDir := cv.shared.globalSubDir
 	if pkgInfos == nil {
 		return nil
@@ -167,10 +167,10 @@ func (cv *cppConverter) includeFwdHeaderDependencies(pkgInfos []*pkgInfo, suffix
 		switch pkgInfo.fileType {
 		case GoFiles, CompiledGoFiles:
 			str := fmt.Sprintf("#include \"%v%v%v\"\n", globalSubDir, pkgInfo.basePath(), suffix)
-			result = append(result, Ptr(includeStr(str, di)))
+			results = append(results, Ptr(includeStr(str, di).SetPkgInfo(pkgInfo)))
 		case Ignored:
 			str := fmt.Sprintf("// #include \"%v%v%v\" [Ignored, known errors]\n", globalSubDir, pkgInfo.basePath(), suffix)
-			result = append(result, Ptr(includeStr(str, di)))
+			results = append(results, Ptr(includeStr(str, di).SetPkgInfo(pkgInfo)))
 		}
 	}
 	return
@@ -397,6 +397,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	var headerElts []*place
 	var fwdHeaderElts []*place
 	var receiversElts = set[string]{}
+	var headerEndElts []*place
 	var headerEnds []string
 	hdrInitialOrder := 0
 	fwdInitialOrder := 0
@@ -414,6 +415,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 			}
 			if place.headerEnd != nil {
 				headerEnds = append(headerEnds, *place.headerEnd)
+				headerEndElts = append(headerEndElts, &place)
 			}
 			if place.receiver != nil {
 				receiversElts.addOpt(place.receiver.getFullReceiverName(cv))
@@ -426,7 +428,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	}
 
 	printFwdIntro(cv)
-	printHppIntro(cv, usedPkgInfos)
+	printHppIntro(cv)
 	printCppIntro(cv, usedPkgInfos, receiversElts)
 
 	for i := 0; i < len(allOutPlaces); i++ {
@@ -435,29 +437,57 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 				fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), *place.outline)
 			}
 		}
-		fmt.Fprintf(cv.fwd.out, "%s", allFwdOut[i])
-		fmt.Fprintf(cv.hpp.out, "%s", allHppOut[i])
+		// All should be stored in headerElts and fwdHeaderElts, we should not have any direct output at this point.
+		if allFwdOut[i] != "" {
+			cv.Panicf("BUG: allFwdOut[%d] should be empty at this point. position %s\n", i, cv.Position(allOutPlaces[i][0].node))
+		}
+		if allHppOut[i] != "" {
+			cv.Panicf("BUG: allHppOut[%d] should be empty at this point. position %s\n", i, cv.Position(allOutPlaces[i][0].node))
+		}
 		fmt.Fprintf(cv.cpp.out, "%s", allCppOut[i])
 	}
 
 	// Try to compute dependencies for header to avoid to specify them at each "headerStr" call
-	for _, headerElt := range headerElts {
-		initialOrder := headerElt.depInfo.initialOrder
-		switch spec := headerElt.node.(type) {
-		case *ast.TypeSpec:
-			headerElt.depInfo = cv.getTypeDepInfo(spec)
-		case *ast.ValueSpec:
-			// TODO: manage all name declared, not just the first
-			headerElt.depInfo = cv.getValueDepInfo(spec, 0)
-		case *ast.StructType:
-			headerElt.depInfo = cv.getStructDepInfo(spec)
+	cv.computeDepInfos(headerElts)
+
+	headerElts = append(headerElts, cv.includeHeaderDependencies(usedPkgInfos, ".h", hdrInitialOrder)...)
+	hdrInNamespace := cv.generateSortedHeader(headerElts, getHeader, DecDepend, cv.hpp, false, DefsTag)
+
+	// Compute dependencies for recievers defined at end of the header file.
+	cv.computeDepInfos(headerEndElts)
+
+	// Collect all depency informations for headerEndElts.
+	headerEndPkgs := set[string]{}
+	for _, place := range headerEndElts {
+		for depPkg := range place.depInfo.depPkgs {
+			cv.Logf("headerEndElts: depPkg: %v, place: %v\n", depPkg, cv.Position(place.node))
+			headerEndPkgs.add(depPkg)
 		}
-		headerElt.depInfo.initialOrder = initialOrder
 	}
 
-	// TODO: change 'includeFwdHeaderDependencies' name as it is not only for fwd header
-	//headerElts = append(headerElts, cv.includeFwdHeaderDependencies(usedPkgInfos, ".h", hdrInitialOrder)...)
-	cv.generateSortedHeader(headerElts, getHeader, DecDepend, cv.hpp, true)
+	// Filter usedPkgInfos to keep only those that are in headerEndPkgs
+	var usedPkgInfosHeaderEnd []*pkgInfo
+	for _, pkgInfo := range usedPkgInfos {
+		cv.Logf("usedPkgInfosHeaderEnd: pkgInfo: %v, filePath: %v\n", pkgInfo.pkgName(), pkgInfo.filePath)
+		if headerEndPkgs.has(pkgInfo.pkgName()) {
+			usedPkgInfosHeaderEnd = append(usedPkgInfosHeaderEnd, pkgInfo)
+			cv.Logf("usedPkgInfosHeaderEnd: pkgInfo: %v, filePath: %v, added\n", pkgInfo.pkgName(), pkgInfo.filePath)
+		}
+	}
+
+	if len(headerEndElts) > 0 {
+		// using io.Discard: just couting the dependencies for headerEndElts
+		deps := includeDependencies(io.Discard, cv.shared, usedPkgInfosHeaderEnd, DefsTag, ".h")
+		if len(deps) > 0 {
+			fmt.Fprintf(cv.hpp.out, "}\n\n")
+			includeDependencies(cv.hpp.out, cv.shared, usedPkgInfosHeaderEnd, DefsTag, ".h")
+			hdrInNamespace = false
+		}
+	}
+
+	if !hdrInNamespace {
+		fmt.Fprintf(cv.hpp.out, "namespace golang::%v\n{\n", cv.namespace)
+	}
 
 	// nb, we want to have always a rec namespace even if empty
 	fmt.Fprintf(cv.hpp.out, "\n%snamespace %s\n", cv.hpp.Indent(), recNs)
@@ -469,8 +499,8 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.hpp.indent--
 	fmt.Fprintf(cv.hpp.out, "%s}\n", cv.hpp.Indent())
 
-	fwdHeaderElts = append(fwdHeaderElts, cv.includeFwdHeaderDependencies(usedPkgInfos, ".fwd.h", fwdInitialOrder)...)
-	fwdInNamespace := cv.generateSortedHeader(fwdHeaderElts, getFwdHeader, FwdDepend, cv.fwd, false)
+	fwdHeaderElts = append(fwdHeaderElts, cv.includeHeaderDependencies(usedPkgInfos, ".fwd.h", fwdInitialOrder)...)
+	fwdInNamespace := cv.generateSortedHeader(fwdHeaderElts, getFwdHeader, FwdDepend, cv.fwd, false, NoneTag)
 
 	if cv.genMakeFile {
 		fmt.Fprintf(cv.makeFile.out, "\t g++ -std=c++20 -I. -I../includes -I../thirdparty/includes %s.cpp -o ../%s/%s.exe\n", cv.baseName, cv.binOutDir, cv.baseName)
@@ -492,6 +522,24 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	}
 
 	return
+}
+
+func (cv *cppConverter) computeDepInfos(headerElts []*place) {
+	for _, headerElt := range headerElts {
+		initialOrder := headerElt.depInfo.initialOrder
+		switch spec := headerElt.node.(type) {
+		case *ast.FuncDecl:
+			headerElt.depInfo = cv.getFunDeclDepInfo(spec)
+		case *ast.StructType:
+			headerElt.depInfo = cv.getStructDepInfo(spec)
+		case *ast.TypeSpec:
+			headerElt.depInfo = cv.getTypeDepInfo(spec)
+		case *ast.ValueSpec:
+			// TODO: manage all name declared, not just the first
+			headerElt.depInfo = cv.getValueDepInfo(spec, 0)
+		}
+		headerElt.depInfo.initialOrder = initialOrder
+	}
 }
 
 // Still need to generate "Doc" comments for Fields
@@ -527,7 +575,7 @@ func (rec mockReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
 	return Ptr(string(rec))
 }
 
-func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(place) string, dm depMode, outFile outFile, inNamespace bool) bool {
+func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(place) []string, dm depMode, outFile outFile, inNamespace bool, keepTag tagType) bool {
 	indent := ""
 	if inNamespace {
 		indent = outFile.Indent()
@@ -553,8 +601,8 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 		for i, place := range headerElts {
 
 			// Skip includes not needed by any definitions
-			if i > maxDecIndex {
-				break
+			if i > maxDecIndex && keepTag != place.pkgInfo.tag {
+				continue
 			}
 
 			// Close namespace for includes
@@ -571,7 +619,9 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 				indent = outFile.Indent()
 			}
 
-			fmt.Fprintf(outFile.out, "%s%s", indent, getter(*place))
+			for _, line := range getter(*place) {
+				fmt.Fprintf(outFile.out, "%s%s", indent, line)
+			}
 
 			di := &place.depInfo
 			cv.Logf("'%s' decl info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
@@ -580,9 +630,9 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 	return inNamespace
 }
 
-func (cv *cppConverter) ComparePlace(x *place, y *place, getter func(place) string, logPrefix string) int {
-	xstr := strings.TrimSpace(getter(*x))
-	ystr := strings.TrimSpace(getter(*y))
+func (cv *cppConverter) ComparePlace(x *place, y *place, getter func(place) []string, logPrefix string) int {
+	xstr := strings.TrimSpace(getter(*x)[0])
+	ystr := strings.TrimSpace(getter(*y)[0])
 
 	xstr = strings.SplitN(xstr, "\n", 2)[0]
 	ystr = strings.SplitN(ystr, "\n", 2)[0]
@@ -622,17 +672,23 @@ func (cv *cppConverter) ComparePlace(x *place, y *place, getter func(place) stri
 
 	// TODO: find a way to do include/imports as late as possible
 
+	if cv.shared.verbose {
+		cv.Logf("'%s' sort: '%v' and '%v' are independant, ranks: %v, %v\n", logPrefix, xstr, ystr, x.depInfo.rank, y.depInfo.rank)
+	}
+
 	return 0
 	//return cmp.Compare(x.depInfo.initialOrder, y.depInfo.initialOrder)
 }
 
-// Probably not an efficient toposort algorithm
 // Custom toposort with additional constraints
 //
 //	-> that preserve initial order if possible
 //	-> push import as late as possible
 //	-> push declaration as soon as possible
-func (cv *cppConverter) topoSort(headerElts []*place, getter func(place) string, logPrfix string) {
+//
+// nb: - probably not an efficient toposort algorithm
+//   - getter is used only for logs
+func (cv *cppConverter) topoSort(headerElts []*place, getter func(place) []string, logPrfix string) {
 	var maxIndex int = 0
 	elts := map[int]map[*place]bool{}
 	elts[maxIndex] = map[*place]bool{}
@@ -1034,15 +1090,19 @@ type method struct {
 	parent *parentType
 }
 
-type parentType struct {
+type nsType struct {
 	namespace string
 	name      string
-	nodeType  types.Type
+}
+
+type parentType struct {
+	nsType
+	nodeType types.Type
 }
 
 type parentTypes []parentType
 
-func (pt parentType) String() string {
+func (pt nsType) String() string {
 	if pt.namespace == "" {
 		return pt.name
 	}
@@ -1292,6 +1352,11 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			appendStrf(&funcDef, "    return %s(%s);\n", name, callParams2)
 			appendStrf(&funcDef, "}\n")
 
+		}
+
+		// TODO: merge elements and add node to the merged element.
+		for i := range funcDef {
+			funcDef[i].node = d
 		}
 
 		cv.printOrKeepPlaces(funcDef, &outPlaces, nil)
@@ -2499,7 +2564,7 @@ func (cv *cppConverter) getAllUsedPackages(expr ast.Expr) map[string]bool {
 	for ident := range getAllIdentifiers(expr) {
 		defObj := cv.typeInfo.Uses[ident]
 		if defObj != nil {
-			pkg := cv.getPackageFromType(defObj, UnknwonTag)
+			pkg := cv.getPackageFromType(defObj, UnknownTag)
 			if pkg != nil {
 				result[pkg.basePath()] = true
 			}
@@ -2514,6 +2579,56 @@ func (cv *cppConverter) getAllUsedNames(expr ast.Expr) map[string]bool {
 		result[ident.Name] = true
 	}
 	return result
+}
+
+func (cv *cppConverter) appendDepExpr(di *depInfo, expr ast.Expr) {
+	if expr == nil {
+		return
+	}
+
+	appendMap(&di.depPkgs, cv.getAllUsedPackages(expr))
+	appendMap(&di.depIdents, cv.getAllUsedNames(expr))
+
+	if t := cv.typeInfo.Types[expr].Type; t != nil {
+		if di.dependencies == nil {
+			di.dependencies = map[string]types.Type{}
+		}
+		di.dependencies[t.String()] = t
+	}
+}
+
+func (cv *cppConverter) appendFieldListDeps(di *depInfo, fields *ast.FieldList) {
+	if fields == nil {
+		return
+	}
+	for _, field := range fields.List {
+		cv.appendDepExpr(di, field.Type)
+	}
+}
+
+func (cv *cppConverter) getFunDeclDepInfo(n *ast.FuncDecl) depInfo {
+	di := depInfo{
+		dependencies: map[string]types.Type{},
+		depIdents:    make(map[string]bool),
+		depPkgs:      make(map[string]bool),
+		decIdent:     n.Name.Name,
+	}
+
+	if def := cv.typeInfo.Defs[n.Name]; def != nil {
+		di.decType = def.Type()
+	}
+
+	cv.appendFieldListDeps(&di, n.Recv)
+	if n.Type != nil {
+		cv.appendFieldListDeps(&di, n.Type.Params)
+		cv.appendFieldListDeps(&di, n.Type.Results)
+
+		if sigType := cv.typeInfo.Types[n.Type].Type; sigType != nil {
+			di.dependencies[sigType.String()] = sigType
+		}
+	}
+
+	return di
 }
 
 func (cv *cppConverter) getTypeDepInfo(n *ast.TypeSpec) depInfo {
@@ -2872,9 +2987,9 @@ func (cv *cppConverter) convertInterfaceField(node ast.Expr) (pt parentType, err
 
 	switch n := node.(type) {
 	case *ast.Ident:
-		return parentType{"", n.Name, nodeType}, nil
+		return parentType{GetNsCppType(n.Name), nodeType}, nil
 	case *ast.SelectorExpr:
-		return parentType{cv.convertExpr(n.X).str, n.Sel.Name, nodeType}, nil
+		return parentType{nsType{cv.convertExpr(n.X).str, n.Sel.Name}, nodeType}, nil
 	case *ast.BinaryExpr:
 		if n.Op == token.OR {
 			return parentType{}, fmt.Errorf("Union type not implemented: %s", types.ExprString(n))

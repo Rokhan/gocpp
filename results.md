@@ -310,7 +310,7 @@
 | $(ImportDir)/runtime/internal/sys/nih.go | ✔️ ([cpp](generated/golang/runtime/internal/sys/nih.cpp), [h](generated/golang/runtime/internal/sys/nih.h))| ✔️ |
 | $(ImportDir)/runtime/lfstack.go | ✔️ ([cpp](generated/golang/runtime/lfstack.cpp), [h](generated/golang/runtime/lfstack.h))| ❌ |
 | $(ImportDir)/runtime/lock_sema.go | ✔️ ([cpp](generated/golang/runtime/lock_sema.cpp), [h](generated/golang/runtime/lock_sema.h))| ❌ |
-| $(ImportDir)/runtime/lockrank.go | ✔️ ([cpp](generated/golang/runtime/lockrank.cpp), [h](generated/golang/runtime/lockrank.h))| ❌ |
+| $(ImportDir)/runtime/lockrank.go | ✔️ ([cpp](generated/golang/runtime/lockrank.cpp), [h](generated/golang/runtime/lockrank.h))| ✔️ |
 | $(ImportDir)/runtime/lockrank_off.go | ✔️ ([cpp](generated/golang/runtime/lockrank_off.cpp), [h](generated/golang/runtime/lockrank_off.h))| ❌ |
 | $(ImportDir)/runtime/malloc.go | ✔️ ([cpp](generated/golang/runtime/malloc.cpp), [h](generated/golang/runtime/malloc.h))| ❌ |
 | $(ImportDir)/runtime/map.go | ✔️ ([cpp](generated/golang/runtime/map.cpp), [h](generated/golang/runtime/map.h))| ❌ |
@@ -451,7 +451,7 @@
 | $(ImportDir)/syscall/syscall.go | ✔️ ([cpp](generated/golang/syscall/syscall.cpp), [h](generated/golang/syscall/syscall.h))| ✔️ |
 | $(ImportDir)/syscall/syscall_windows.go | ✔️ ([cpp](generated/golang/syscall/syscall_windows.cpp), [h](generated/golang/syscall/syscall_windows.h))| ❌ |
 | $(ImportDir)/syscall/types_windows.go | ✔️ ([cpp](generated/golang/syscall/types_windows.cpp), [h](generated/golang/syscall/types_windows.h))| ❌ |
-| $(ImportDir)/syscall/types_windows_amd64.go | ✔️ ([cpp](generated/golang/syscall/types_windows_amd64.cpp), [h](generated/golang/syscall/types_windows_amd64.h))| ❌ |
+| $(ImportDir)/syscall/types_windows_amd64.go | ✔️ ([cpp](generated/golang/syscall/types_windows_amd64.cpp), [h](generated/golang/syscall/types_windows_amd64.h))| ✔️ |
 | $(ImportDir)/syscall/wtf8_windows.go | ✔️ ([cpp](generated/golang/syscall/wtf8_windows.cpp), [h](generated/golang/syscall/wtf8_windows.h))| ✔️ |
 | $(ImportDir)/syscall/zerrors_windows.go | ✔️ ([cpp](generated/golang/syscall/zerrors_windows.cpp), [h](generated/golang/syscall/zerrors_windows.h))| ✔️ |
 | $(ImportDir)/syscall/zsyscall_windows.go | ✔️ ([cpp](generated/golang/syscall/zsyscall_windows.cpp), [h](generated/golang/syscall/zsyscall_windows.h))| ✔️ |

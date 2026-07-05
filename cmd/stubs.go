@@ -69,7 +69,7 @@ func printCppOutro(cv *cppConverter) {
 	}
 }
 
-func printHppIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
+func printHppIntro(cv *cppConverter) {
 	out := cv.hpp.out
 	generatedMessage(out, cv)
 	//temporarily blindly add "includes" and "using"
@@ -84,12 +84,6 @@ func printHppIntro(cv *cppConverter, pkgInfos []*pkgInfo) {
 	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.shared.supportHeader)
 	fmt.Fprintf(out, "\n")
 
-	// Can we do something with ".fwd.h" in some situations ?
-	includeDependencies(out, cv.shared, pkgInfos, DefsTag, ".h")
-
-	// Put everything generated in "golang" namespace
-	fmt.Fprintf(out, "namespace golang::%v\n", cv.namespace)
-	fmt.Fprintf(out, "{\n")
 	cv.hpp.indent++
 }
 

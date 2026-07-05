@@ -30,20 +30,10 @@ namespace golang
         struct m {};
 
         struct sudog{};
-        struct stack{};
         struct funcInfo{};
-        struct gclinkptr{};
-        struct lfnode{};
         struct metricValue{};
-        struct lockRank{};
         struct traceMap{};
         struct Frame{};
-        struct traceBlockReason{};
-    }
-    
-    namespace cpu
-    {
-        struct CacheLinePad{};
     }
 
     namespace tree
@@ -780,6 +770,17 @@ namespace gocpp
 
         // Temporary mock, need to find a more generic solution
         error(golang::poll::DeadlineExceededError* t) : optional(golang::poll::rec::Error(t)) {}
+
+
+        // Mock generated interface inheritance
+        struct Ierror { };
+
+        template<typename T, typename TStore, typename TInterface = Ierror>
+        struct errorImpl : virtual Ierror
+        {
+            explicit errorImpl(T* ptr) { }
+        };
+
 
         error& operator=(const std::string& msg)
         {

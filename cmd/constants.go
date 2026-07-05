@@ -50,8 +50,11 @@ var stdTypeMapping = map[string]string{
 	"untyped int":     "int",
 	"untyped rune":    "gocpp::rune",
 	"untyped string":  cpp_string_type,
+}
+
+var stdNsTypeMapping = map[string]nsType{
 	// predefined types. To do: need a way to map them to type defined in "golang/runtime"
-	"error": "gocpp::error",
+	"error": nsType{"gocpp", "error"},
 }
 
 type fullName struct {
@@ -113,6 +116,9 @@ var cppKeyWordsMapping = map[string]string{
 	"stdin":  "go_stdin",  // Macro of <cstdio>
 	"stdout": "go_stdout", // Macro of <cstdio>
 	"stderr": "go_stderr", // Macro of <cstdio>
+
+	"_NSIG":     "go__NSIG",     // Misc Macro
+	"_MAX_PATH": "go__MAX_PATH", // Misc Macro
 
 	"SIGHUP":  "go_SIGHUP",  // Unix Macro
 	"SIGINT":  "go_SIGINT",  // Unix Macro

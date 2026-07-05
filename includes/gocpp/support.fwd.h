@@ -45,6 +45,7 @@ namespace gocpp
     struct go_any;
     struct Interface;
     struct string;
+    struct unsafe_pointer;
 
     using rune = int;
 

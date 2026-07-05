@@ -376,78 +376,28 @@ namespace gocpp
         }
     };
 
+    constexpr inline string::string(const rune& src) : std::string(mocklib::RuneToString(src)) { }
 
-    struct string : std::string
+    constexpr inline string& string::operator=(const rune& r)
     {
-        using std::string::string;
+        std::string::operator=(mocklib::RuneToString(r));
+        return *this;
+    }
 
-        inline string(const string& src) : std::string(src) { }
-        inline string(string&& src) : std::string(std::move(src)) { }
+    // (index, value) iterator
+    struct string::range_iterator
+    {
+        size_t index;
+        transform_iterator<string_iterator, int> iter;
 
-        inline string(const std::string& src) : std::string(src) { }
-        inline string(std::string&& src) : std::string(std::move(src)) { }
-
-        inline string(const rune& src) : std::string(mocklib::RuneToString(src)) { }
-
-        inline string make_slice(size_t low) const
-        {
-            return string(this->substr(low));
-        }
-
-        // Assignment operators
-        inline string& operator=(const string& src)
-        {
-            std::string::operator=(src);
-            return *this;
-        }
-
-        inline string& operator=(string&& src) noexcept
-        {
-            std::string::operator=(std::move(src));
-            return *this;
-        }
-
-        inline string& operator=(const std::string& src)
-        {
-            std::string::operator=(src);
-            return *this;
-        }
-
-        inline string& operator=(std::string&& src) noexcept
-        {
-            std::string::operator=(std::move(src));
-            return *this;
-        }
-
-        inline string& operator=(const char* s)
-        {
-            std::string::operator=(s ? s : "");
-            return *this;
-        }
-
-        inline string& operator=(const rune& r)
-        {
-            std::string::operator=(mocklib::RuneToString(r));
-            return *this;
-        }
-
-        using string_iterator = typename std::string::iterator;
-
-        // (index, value) iterator
-        struct range_iterator
-        {
-            size_t index;
-            transform_iterator<string_iterator, int> iter;
-
-            bool operator != (const range_iterator& other) const { return iter != other.iter; }
-            range_iterator operator ++ () { ++index; ++iter; return *this; }
-            range_iterator operator + (int n) { return { index + n, iter + n }; }
-            auto operator * () const { return std::make_tuple(index, *iter); }
-        };
-
-        range_iterator begin() { return { 0, std::string::begin() }; }
-        range_iterator end() { return { std::string::size(), std::string::end() }; }
+        bool operator != (const range_iterator& other) const { return iter != other.iter; }
+        range_iterator operator ++ () { ++index; ++iter; return *this; }
+        range_iterator operator + (int n) { return { index + n, iter + n }; }
+        auto operator * () const { return std::make_tuple(index, *iter); }
     };
+
+    string::range_iterator string::begin() { return { 0, std::string::begin() }; }
+    string::range_iterator string::end() { return { std::string::size(), std::string::end() }; }
 
     template<typename T>
     inline T max(T a)
@@ -1617,11 +1567,6 @@ namespace std
 
 namespace golang
 {
-    constexpr gocpp::string operator""_s(const char* src, std::size_t)
-    {
-        return gocpp::string(src);
-    }
-
     template<gocpp::GoInterface T, gocpp::GoStruct U>
     bool operator==(const T& iRef, U* uPtr)
     {

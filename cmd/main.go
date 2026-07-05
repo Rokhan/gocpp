@@ -3634,7 +3634,6 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 			basicLit = "char"
 		case token.STRING:
 			basicLit = cpp_string_type
-			canFwd = false
 		default:
 			cv.Panicf("Unmanaged token in convert type %v, token %v, position %v", reflect.TypeOf(node), n.Kind, cv.Position(n))
 		}

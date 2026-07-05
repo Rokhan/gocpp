@@ -70,4 +70,73 @@ namespace gocpp
         T* obj = reinterpret_cast<T*>(buf);
         return reinterpret_cast<char*>(&(obj->*member)) - reinterpret_cast<char*>(obj);
     }
+
+    struct string : std::string
+    {
+        using std::string::string;
+
+        constexpr  inline string(const string& src) : std::string(src) { }
+        constexpr inline string(string&& src) : std::string(std::move(src)) { }
+
+        constexpr inline string(const std::string& src) : std::string(src) { }
+        constexpr inline string(std::string&& src) : std::string(std::move(src)) { }
+
+        constexpr inline string(const rune& src);
+
+        constexpr inline string make_slice(size_t low) const
+        {
+            return string(this->substr(low));
+        }
+
+        // Assignment operators
+        constexpr inline string& operator=(const string& src)
+        {
+            std::string::operator=(src);
+            return *this;
+        }
+
+        constexpr inline string& operator=(string&& src) noexcept
+        {
+            std::string::operator=(std::move(src));
+            return *this;
+        }
+
+        constexpr inline string& operator=(const std::string& src)
+        {
+            std::string::operator=(src);
+            return *this;
+        }
+
+        constexpr inline string& operator=(std::string&& src) noexcept
+        {
+            std::string::operator=(std::move(src));
+            return *this;
+        }
+
+        constexpr inline string& operator=(const char* s)
+        {
+            std::string::operator=(s ? s : "");
+            return *this;
+        }
+
+        constexpr inline string& operator=(const rune& r);
+
+        using string_iterator = typename std::string::iterator;
+
+        // (index, value) iterator
+        struct range_iterator;
+
+        range_iterator begin();
+        range_iterator end();
+    };
+}
+
+namespace golang
+{
+    constexpr gocpp::string operator""_s(const char* src, std::size_t)
+    {
+        return gocpp::string(src);
+    }
+
+    using gocpp::len;
 }

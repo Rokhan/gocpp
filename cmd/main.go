@@ -3168,7 +3168,7 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 				if cv.ignoreKnownError(fieldAndType, knownIncomplete) {
 					fmt.Fprintf(buf, "%s/* %s %s; [Known incomplete type] */%s\n", data.out.Indent(), field.Type.str, name, comment)
 				} else {
-					fmt.Fprintf(buf, "%s%s %s;%s\n", data.out.Indent(), field.Type.str, name, comment)
+					fmt.Fprintf(buf, "%s%s %s{};%s\n", data.out.Indent(), field.Type.str, name, comment)
 				}
 				comment = ""
 			}

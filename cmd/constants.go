@@ -50,6 +50,10 @@ var stdTypeMapping = map[string]string{
 	"untyped int":     "int",
 	"untyped rune":    "gocpp::rune",
 	"untyped string":  cpp_string_type,
+
+	// Type that are keywords in c++, we want to change them always but restore the original name
+	// when we know that this is really a type and not an identifier.
+	"go_bool": "bool",
 }
 
 var stdNsTypeMapping = map[string]nsType{
@@ -76,6 +80,7 @@ var cppKeyWordsMapping = map[string]string{
 	// as they are also go keyword and won't appears anywhere.
 	"any":       "go_any",       // just to avoid confusion with std::any used in support lib
 	"auto":      "go_auto",      // keyword
+	"bool":      "go_bool",      // keyword
 	"break":     "go_break",     // keyword
 	"case":      "go_case",      // keyword
 	"catch":     "go_catch",     // keyword

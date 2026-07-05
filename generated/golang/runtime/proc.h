@@ -41,8 +41,8 @@ namespace golang::runtime
     extern gocpp::array<gocpp::string, 17> stwReasonStrings;
     struct worldStop
     {
-        golang::runtime::stwReason reason;
-        int64_t start;
+        golang::runtime::stwReason reason{};
+        int64_t start{};
 
         using isGoStruct = void;
 
@@ -129,10 +129,10 @@ namespace golang::runtime
     void sysmon();
     struct sysmontick
     {
-        uint32_t schedtick;
-        int64_t schedwhen;
-        uint32_t syscalltick;
-        int64_t syscallwhen;
+        uint32_t schedtick{};
+        int64_t schedwhen{};
+        uint32_t syscalltick{};
+        int64_t syscallwhen{};
 
         using isGoStruct = void;
 
@@ -164,8 +164,8 @@ namespace golang::runtime
     void sync_runtime_doSpin();
     struct randomOrder
     {
-        uint32_t count;
-        gocpp::slice<uint32_t> coprimes;
+        uint32_t count{};
+        gocpp::slice<uint32_t> coprimes{};
 
         using isGoStruct = void;
 
@@ -181,10 +181,10 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct randomOrder& value);
     struct randomEnum
     {
-        uint32_t i;
-        uint32_t count;
-        uint32_t pos;
-        uint32_t inc;
+        uint32_t i{};
+        uint32_t count{};
+        uint32_t pos{};
+        uint32_t inc{};
 
         using isGoStruct = void;
 
@@ -201,8 +201,8 @@ namespace golang::runtime
     uint32_t gcd(uint32_t a, uint32_t b);
     struct initTask
     {
-        uint32_t state; // 0 = uninitialized, 1 = in progress, 2 = done
-        uint32_t nfns;
+        uint32_t state{}; // 0 = uninitialized, 1 = in progress, 2 = done
+        uint32_t nfns{};
 
         using isGoStruct = void;
 
@@ -218,10 +218,10 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct initTask& value);
     struct tracestat
     {
-        bool active; // init tracing activation status
-        uint64_t id; // init goroutine id
-        uint64_t allocs; // heap allocations
-        uint64_t bytes; // heap allocated bytes
+        bool active{}; // init tracing activation status
+        uint64_t id{}; // init goroutine id
+        uint64_t allocs{}; // heap allocations
+        uint64_t bytes{}; // heap allocated bytes
 
         using isGoStruct = void;
 
@@ -299,9 +299,9 @@ namespace golang::runtime
     void forEachPInternal(std::function<void (struct p* _1)> fn);
     struct cgothreadstart
     {
-        golang::runtime::guintptr g;
-        uint64_t* tls;
-        gocpp::unsafe_pointer fn;
+        golang::runtime::guintptr g{};
+        uint64_t* tls{};
+        gocpp::unsafe_pointer fn{};
 
         using isGoStruct = void;
 
@@ -386,8 +386,8 @@ namespace golang::runtime
     struct g* runqsteal(struct p* pp, struct p* p2, bool stealRunNextG);
     struct gQueue
     {
-        golang::runtime::guintptr head;
-        golang::runtime::guintptr tail;
+        golang::runtime::guintptr head{};
+        golang::runtime::guintptr tail{};
 
         using isGoStruct = void;
 
@@ -403,7 +403,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gQueue& value);
     struct gList
     {
-        golang::runtime::guintptr head;
+        golang::runtime::guintptr head{};
 
         using isGoStruct = void;
 

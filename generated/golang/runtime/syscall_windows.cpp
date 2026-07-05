@@ -55,10 +55,10 @@ namespace golang::runtime
 
     struct gocpp_id_0
     {
-        mutex lock; // use cbsLock / cbsUnlock for race instrumentation.
-        gocpp::array<winCallback, cb_max> ctxt;
-        gocpp::map<winCallbackKey, int> index;
-        int n;
+        mutex lock{}; // use cbsLock / cbsUnlock for race instrumentation.
+        gocpp::array<winCallback, cb_max> ctxt{};
+        gocpp::map<winCallbackKey, int> index{};
+        int n{};
 
         using isGoStruct = void;
 
@@ -739,9 +739,9 @@ namespace golang::runtime
 
     struct gocpp_id_1
         {
-            uint16_t* lpFileName;
-            uintptr_t hFile; // always 0
-            uint32_t flags;
+            uint16_t* lpFileName{};
+            uintptr_t hFile{}; // always 0
+            uint32_t flags{};
 
             using isGoStruct = void;
 

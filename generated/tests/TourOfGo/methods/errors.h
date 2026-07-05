@@ -21,8 +21,8 @@ namespace golang::main
 {
     struct MyError
     {
-        mocklib::Date When;
-        gocpp::string What;
+        mocklib::Date When{};
+        gocpp::string What{};
 
         using isGoStruct = void;
 

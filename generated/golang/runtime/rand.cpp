@@ -55,10 +55,10 @@ namespace golang::runtime
     gocpp::slice<unsigned char> startupRand;
     struct gocpp_id_0
     {
-        mutex lock;
-        gocpp::array<unsigned char, 32> seed;
-        chacha8rand::State state;
-        bool init;
+        mutex lock{};
+        gocpp::array<unsigned char, 32> seed{};
+        chacha8rand::State state{};
+        bool init{};
 
         using isGoStruct = void;
 

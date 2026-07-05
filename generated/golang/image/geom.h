@@ -14,8 +14,8 @@ namespace golang::image
 {
     struct Point
     {
-        int X;
-        int Y;
+        int X{};
+        int Y{};
 
         using isGoStruct = void;
 
@@ -35,8 +35,8 @@ namespace golang::image
     struct Point Pt(int X, int Y);
     struct Rectangle
     {
-        Point Min;
-        Point Max;
+        Point Min{};
+        Point Max{};
 
         using isGoStruct = void;
 

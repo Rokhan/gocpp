@@ -14,8 +14,8 @@ namespace golang::sync
 {
     struct eface
     {
-        gocpp::unsafe_pointer typ;
-        gocpp::unsafe_pointer val;
+        gocpp::unsafe_pointer typ{};
+        gocpp::unsafe_pointer val{};
 
         using isGoStruct = void;
 
@@ -33,10 +33,10 @@ namespace golang::sync
     {
         // head is the poolDequeue to push to. This is only accessed
         // by the producer, so doesn't need to be synchronized.
-        poolChainElt* head;
+        poolChainElt* head{};
         // tail is the poolDequeue to popTail from. This is accessed
         // by consumers, so reads and writes must be atomic.
-        poolChainElt* tail;
+        poolChainElt* tail{};
 
         using isGoStruct = void;
 
@@ -68,7 +68,7 @@ namespace golang::sync
         // The head index is stored in the most-significant bits so
         // that we can atomically add to it and the overflow is
         // harmless.
-        atomic::Uint64 headTail;
+        atomic::Uint64 headTail{};
         // vals is a ring buffer of interface{} values stored in this
         // dequeue. The size of this must be a power of 2.
         // vals[i].typ is nil if the slot is empty and non-nil
@@ -76,7 +76,7 @@ namespace golang::sync
         // index has moved beyond it and typ has been set to nil. This
         // is set to nil atomically by the consumer and read
         // atomically by the producer.
-        gocpp::slice<eface> vals;
+        gocpp::slice<eface> vals{};
 
         using isGoStruct = void;
 
@@ -92,7 +92,7 @@ namespace golang::sync
     std::ostream& operator<<(std::ostream& os, const struct poolDequeue& value);
     struct poolChainElt
     {
-        poolDequeue poolDequeue;
+        poolDequeue poolDequeue{};
         // next and prev link to the adjacent poolChainElts in this
         // poolChain.
         // next is written atomically by the producer and read
@@ -101,8 +101,8 @@ namespace golang::sync
         // prev is written atomically by the consumer and read
         // atomically by the producer. It only transitions from
         // non-nil to nil.
-        poolChainElt* next;
-        poolChainElt* prev;
+        poolChainElt* next{};
+        poolChainElt* prev{};
 
         using isGoStruct = void;
 

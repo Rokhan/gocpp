@@ -26,8 +26,8 @@ namespace golang::main
     });
     struct gocpp_id_0
         {
-            int i;
-            bool b;
+            int i{};
+            bool b{};
 
             using isGoStruct = void;
 

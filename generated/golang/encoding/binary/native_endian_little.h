@@ -15,7 +15,7 @@ namespace golang::binary
 {
     struct nativeEndian
     {
-        littleEndian littleEndian;
+        littleEndian littleEndian{};
 
         using isGoStruct = void;
 

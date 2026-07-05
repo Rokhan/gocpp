@@ -72,7 +72,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct I& value);
     struct T
     {
-        gocpp::string S;
+        gocpp::string S{};
 
         using isGoStruct = void;
 

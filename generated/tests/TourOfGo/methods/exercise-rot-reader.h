@@ -20,7 +20,7 @@ namespace golang::main
 {
     struct rot13Reader
     {
-        io::Reader r;
+        io::Reader r{};
 
         using isGoStruct = void;
 

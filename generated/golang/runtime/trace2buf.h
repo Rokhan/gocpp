@@ -14,8 +14,8 @@ namespace golang::runtime
 {
     struct traceBufQueue
     {
-        traceBuf* head;
-        traceBuf* tail;
+        traceBuf* head{};
+        traceBuf* tail{};
 
         using isGoStruct = void;
 
@@ -37,8 +37,8 @@ namespace golang::runtime
 {
     struct traceWriter
     {
-        traceLocker traceLocker;
-        traceBuf* traceBuf;
+        traceLocker traceLocker{};
+        traceBuf* traceBuf{};
 
         using isGoStruct = void;
 
@@ -54,10 +54,10 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct traceWriter& value);
     struct traceBufHeader
     {
-        traceBuf* link; // in trace.empty/full
-        golang::runtime::traceTime lastTime; // when we wrote the last event
-        int pos; // next write offset in arr
-        int lenPos; // position of batch length value
+        traceBuf* link{}; // in trace.empty/full
+        golang::runtime::traceTime lastTime{}; // when we wrote the last event
+        int pos{}; // next write offset in arr
+        int lenPos{}; // position of batch length value
 
         using isGoStruct = void;
 
@@ -78,9 +78,9 @@ namespace golang::runtime
 {
     struct traceBuf
     {
-        sys::NotInHeap _1;
-        traceBufHeader traceBufHeader;
-        gocpp::array<unsigned char, (64 << 10) - gocpp::Sizeof<golang::runtime::traceBufHeader>()> arr; // underlying buffer for traceBufHeader.buf
+        sys::NotInHeap _1{};
+        traceBufHeader traceBufHeader{};
+        gocpp::array<unsigned char, (64 << 10) - gocpp::Sizeof<golang::runtime::traceBufHeader>()> arr{}; // underlying buffer for traceBufHeader.buf
 
         using isGoStruct = void;
 

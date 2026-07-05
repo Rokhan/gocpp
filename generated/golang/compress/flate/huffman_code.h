@@ -14,8 +14,8 @@ namespace golang::flate
 {
     struct hcode
     {
-        uint16_t code;
-        uint16_t len;
+        uint16_t code{};
+        uint16_t len{};
 
         using isGoStruct = void;
 
@@ -31,8 +31,8 @@ namespace golang::flate
     std::ostream& operator<<(std::ostream& os, const struct hcode& value);
     struct literalNode
     {
-        uint16_t literal;
-        int32_t freq;
+        uint16_t literal{};
+        int32_t freq{};
 
         using isGoStruct = void;
 
@@ -49,17 +49,17 @@ namespace golang::flate
     struct levelInfo
     {
         // Our level.  for better printing
-        int32_t level;
+        int32_t level{};
         // The frequency of the last node at this level
-        int32_t lastFreq;
+        int32_t lastFreq{};
         // The frequency of the next character to add to this level
-        int32_t nextCharFreq;
+        int32_t nextCharFreq{};
         // The frequency of the next pair (from level below) to add to this level.
         // Only valid if the "needed" value of the next lower level is 0.
-        int32_t nextPairFreq;
+        int32_t nextPairFreq{};
         // The number of chains remaining to generate for this level before moving
         // up to the next level
-        int32_t needed;
+        int32_t needed{};
 
         using isGoStruct = void;
 
@@ -81,11 +81,11 @@ namespace golang::flate
     using byFreq = gocpp::alias<gocpp::slice<literalNode>, GoTag_byFreq>;
     struct huffmanEncoder
     {
-        gocpp::slice<hcode> codes;
-        gocpp::slice<literalNode> freqcache;
-        gocpp::array<int32_t, 17> bitCount;
-        byLiteral lns; // stored to avoid repeated allocation in generate
-        byFreq lfs; // stored to avoid repeated allocation in generate
+        gocpp::slice<hcode> codes{};
+        gocpp::slice<literalNode> freqcache{};
+        gocpp::array<int32_t, 17> bitCount{};
+        byLiteral lns{}; // stored to avoid repeated allocation in generate
+        byFreq lfs{}; // stored to avoid repeated allocation in generate
 
         using isGoStruct = void;
 

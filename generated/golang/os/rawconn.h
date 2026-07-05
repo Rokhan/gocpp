@@ -15,7 +15,7 @@ namespace golang::os
 {
     struct rawConn
     {
-        File* file;
+        File* file{};
 
         using isGoStruct = void;
 

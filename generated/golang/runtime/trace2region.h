@@ -14,8 +14,8 @@ namespace golang::runtime
 {
     struct traceRegionAlloc
     {
-        traceRegionAllocBlock* head;
-        uintptr_t off;
+        traceRegionAllocBlock* head{};
+        uintptr_t off{};
 
         using isGoStruct = void;
 
@@ -37,9 +37,9 @@ namespace golang::runtime
 {
     struct traceRegionAllocBlock
     {
-        sys::NotInHeap _1;
-        traceRegionAllocBlock* next;
-        gocpp::array<unsigned char, (64 << 10) - goarch::PtrSize> data;
+        sys::NotInHeap _1{};
+        traceRegionAllocBlock* next{};
+        gocpp::array<unsigned char, (64 << 10) - goarch::PtrSize> data{};
 
         using isGoStruct = void;
 

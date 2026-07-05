@@ -14,9 +14,9 @@ namespace golang::main
 {
     struct Vertex
     {
-        int X;
-        int Y;
-        int Z;
+        int X{};
+        int Y{};
+        int Z{};
 
         using isGoStruct = void;
 
@@ -34,8 +34,8 @@ namespace golang::main
     void main();
     struct Segment
     {
-        Vertex Start;
-        Vertex End;
+        Vertex Start{};
+        Vertex End{};
 
         using isGoStruct = void;
 

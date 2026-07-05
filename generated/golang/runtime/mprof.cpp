@@ -1555,11 +1555,11 @@ namespace golang::runtime
 
     struct gocpp_id_0
     {
-        uint32_t sema;
-        bool active;
-        atomic::Int64 offset;
-        gocpp::slice<StackRecord> records;
-        gocpp::slice<gocpp::unsafe_pointer> labels;
+        uint32_t sema{};
+        bool active{};
+        atomic::Int64 offset{};
+        gocpp::slice<StackRecord> records{};
+        gocpp::slice<gocpp::unsafe_pointer> labels{};
 
         using isGoStruct = void;
 

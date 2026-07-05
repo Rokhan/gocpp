@@ -14,9 +14,9 @@ namespace golang::runtime
 {
     struct slice
     {
-        gocpp::unsafe_pointer array;
-        int len;
-        int cap;
+        gocpp::unsafe_pointer array{};
+        int len{};
+        int cap{};
 
         using isGoStruct = void;
 
@@ -44,9 +44,9 @@ namespace golang::runtime
 {
     struct notInHeapSlice
     {
-        notInHeap* array;
-        int len;
-        int cap;
+        notInHeap* array{};
+        int len{};
+        int cap{};
 
         using isGoStruct = void;
 

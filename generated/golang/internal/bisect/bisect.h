@@ -14,7 +14,7 @@ namespace golang::bisect
 {
     struct atomicPointerDedup
     {
-        gocpp::unsafe_pointer p;
+        gocpp::unsafe_pointer p{};
 
         using isGoStruct = void;
 
@@ -30,9 +30,9 @@ namespace golang::bisect
     std::ostream& operator<<(std::ostream& os, const struct atomicPointerDedup& value);
     struct cond
     {
-        uint64_t mask;
-        uint64_t bits;
-        bool result;
+        uint64_t mask{};
+        uint64_t bits{};
+        bool result{};
 
         using isGoStruct = void;
 
@@ -123,7 +123,7 @@ namespace golang::bisect
     }
     struct parseError
     {
-        gocpp::string text;
+        gocpp::string text{};
 
         using isGoStruct = void;
 
@@ -143,11 +143,11 @@ namespace golang::bisect
     uint64_t fnvUint32(uint64_t h, uint32_t x);
     struct Matcher
     {
-        bool verbose; // annotate reporting with human-helpful information
-        bool quiet; // disables all reporting.  reset if verbose is true. use case is -d=fmahash=qn
-        bool enable; // when true, list is for “enable and report” (when false, “disable and report”)
-        gocpp::slice<cond> list; // conditions; later ones win over earlier ones
-        atomicPointerDedup dedup;
+        bool verbose{}; // annotate reporting with human-helpful information
+        bool quiet{}; // disables all reporting.  reset if verbose is true. use case is -d=fmahash=qn
+        bool enable{}; // when true, list is for “enable and report” (when false, “disable and report”)
+        gocpp::slice<cond> list{}; // conditions; later ones win over earlier ones
+        atomicPointerDedup dedup{};
 
         using isGoStruct = void;
 
@@ -172,10 +172,10 @@ namespace golang::bisect
     struct dedup
     {
         // 128-entry 4-way, lossy cache for seenLossy
-        gocpp::array<gocpp::array<uint64_t, 4>, 128> recent;
+        gocpp::array<gocpp::array<uint64_t, 4>, 128> recent{};
         // complete history for seen
-        mocklib::Mutex mu;
-        gocpp::map<uint64_t, bool> m;
+        mocklib::Mutex mu{};
+        gocpp::map<uint64_t, bool> m{};
 
         using isGoStruct = void;
 

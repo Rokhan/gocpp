@@ -23,10 +23,10 @@ namespace golang::runtime
     extern gocpp::unsafe_pointer cgoSymbolizer;
     struct cgoTracebackArg
     {
-        uintptr_t context;
-        uintptr_t sigContext;
-        uintptr_t* buf;
-        uintptr_t max;
+        uintptr_t context{};
+        uintptr_t sigContext{};
+        uintptr_t* buf{};
+        uintptr_t max{};
 
         using isGoStruct = void;
 
@@ -42,7 +42,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct cgoTracebackArg& value);
     struct cgoContextArg
     {
-        uintptr_t context;
+        uintptr_t context{};
 
         using isGoStruct = void;
 
@@ -58,13 +58,13 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct cgoContextArg& value);
     struct cgoSymbolizerArg
     {
-        uintptr_t pc;
-        unsigned char* file;
-        uintptr_t lineno;
-        unsigned char* funcName;
-        uintptr_t entry;
-        uintptr_t more;
-        uintptr_t data;
+        uintptr_t pc{};
+        unsigned char* file{};
+        uintptr_t lineno{};
+        unsigned char* funcName{};
+        uintptr_t entry{};
+        uintptr_t more{};
+        uintptr_t data{};
 
         using isGoStruct = void;
 
@@ -94,20 +94,20 @@ namespace golang::runtime
     {
         // frame is the current physical stack frame, or all 0s if
         // there is no frame.
-        stkframe frame;
+        stkframe frame{};
         // g is the G who's stack is being unwound. If the
         // unwindJumpStack flag is set and the unwinder jumps stacks,
         // this will be different from the initial G.
-        golang::runtime::guintptr g;
+        golang::runtime::guintptr g{};
         // cgoCtxt is the index into g.cgoCtxt of the next frame on the cgo stack.
         // The cgo stack is unwound in tandem with the Go stack as we find marker frames.
-        int cgoCtxt;
+        int cgoCtxt{};
         // calleeFuncID is the function ID of the caller of the current
         // frame.
-        abi::FuncID calleeFuncID;
+        abi::FuncID calleeFuncID{};
         // flags are the flags to this unwind. Some of these are updated as we
         // unwind (see the flags documentation).
-        golang::runtime::unwindFlags flags;
+        golang::runtime::unwindFlags flags{};
 
         using isGoStruct = void;
 

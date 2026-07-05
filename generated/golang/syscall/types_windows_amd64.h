@@ -14,10 +14,10 @@ namespace golang::syscall
 {
     struct Servent
     {
-        unsigned char* Name;
-        unsigned char** Aliases;
-        unsigned char* Proto;
-        uint16_t Port;
+        unsigned char* Name{};
+        unsigned char** Aliases{};
+        unsigned char* Proto{};
+        uint16_t Port{};
 
         using isGoStruct = void;
 
@@ -38,13 +38,13 @@ namespace golang::syscall
 {
     struct WSAData
     {
-        uint16_t Version;
-        uint16_t HighVersion;
-        uint16_t MaxSockets;
-        uint16_t MaxUdpDg;
-        unsigned char* VendorInfo;
-        gocpp::array<unsigned char, WSADESCRIPTION_LEN + 1> Description;
-        gocpp::array<unsigned char, WSASYS_STATUS_LEN + 1> SystemStatus;
+        uint16_t Version{};
+        uint16_t HighVersion{};
+        uint16_t MaxSockets{};
+        uint16_t MaxUdpDg{};
+        unsigned char* VendorInfo{};
+        gocpp::array<unsigned char, WSADESCRIPTION_LEN + 1> Description{};
+        gocpp::array<unsigned char, WSASYS_STATUS_LEN + 1> SystemStatus{};
 
         using isGoStruct = void;
 

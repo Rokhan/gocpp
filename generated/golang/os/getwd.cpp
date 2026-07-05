@@ -43,8 +43,8 @@ namespace golang::os
 
     struct gocpp_id_0
     {
-        mocklib::Mutex Mutex;
-        gocpp::string dir;
+        mocklib::Mutex Mutex{};
+        gocpp::string dir{};
 
         using isGoStruct = void;
 

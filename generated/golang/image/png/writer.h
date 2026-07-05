@@ -139,10 +139,10 @@ namespace golang::png
     int levelToZlib(golang::png::CompressionLevel l);
     struct Encoder
     {
-        golang::png::CompressionLevel CompressionLevel;
+        golang::png::CompressionLevel CompressionLevel{};
         // BufferPool optionally specifies a buffer pool to get temporary
         // EncoderBuffers when encoding an image.
-        EncoderBufferPool BufferPool;
+        EncoderBufferPool BufferPool{};
 
         using isGoStruct = void;
 
@@ -167,19 +167,19 @@ namespace golang::png
 {
     struct encoder
     {
-        Encoder* enc;
-        io::Writer w;
-        image::Image m;
-        int cb;
-        gocpp::error err;
-        gocpp::array<unsigned char, 8> header;
-        gocpp::array<unsigned char, 4> footer;
-        gocpp::array<unsigned char, 4 * 256> tmp;
-        gocpp::array<gocpp::slice<uint8_t>, nFilter> cr;
-        gocpp::slice<uint8_t> pr;
-        zlib::Writer* zw;
-        int zwLevel;
-        bufio::Writer* bw;
+        Encoder* enc{};
+        io::Writer w{};
+        image::Image m{};
+        int cb{};
+        gocpp::error err{};
+        gocpp::array<unsigned char, 8> header{};
+        gocpp::array<unsigned char, 4> footer{};
+        gocpp::array<unsigned char, 4 * 256> tmp{};
+        gocpp::array<gocpp::slice<uint8_t>, nFilter> cr{};
+        gocpp::slice<uint8_t> pr{};
+        zlib::Writer* zw{};
+        int zwLevel{};
+        bufio::Writer* bw{};
 
         using isGoStruct = void;
 

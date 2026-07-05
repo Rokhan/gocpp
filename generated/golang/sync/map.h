@@ -14,8 +14,8 @@ namespace golang::sync
 {
     struct readOnly
     {
-        gocpp::map<go_any, entry*> m;
-        bool amended; // true if the dirty map contains some key not in m.
+        gocpp::map<go_any, entry*> m{};
+        bool amended{}; // true if the dirty map contains some key not in m.
 
         using isGoStruct = void;
 
@@ -38,7 +38,7 @@ namespace golang::sync
 {
     struct Map
     {
-        Mutex mu;
+        Mutex mu{};
         // read contains the portion of the map's contents that are safe for
         // concurrent access (with or without mu held).
         // The read field itself is always safe to load, but must only be stored with
@@ -46,7 +46,7 @@ namespace golang::sync
         // Entries stored in read may be updated concurrently without mu, but updating
         // a previously-expunged entry requires that the entry be copied to the dirty
         // map and unexpunged with mu held.
-        atomic::Pointer<readOnly> read;
+        atomic::Pointer<readOnly> read{};
         // dirty contains the portion of the map's contents that require mu to be
         // held. To ensure that the dirty map can be promoted to the read map quickly,
         // it also includes all of the non-expunged entries in the read map.
@@ -55,13 +55,13 @@ namespace golang::sync
         // can be stored to it.
         // If the dirty map is nil, the next write to the map will initialize it by
         // making a shallow copy of the clean map, omitting stale entries.
-        gocpp::map<go_any, entry*> dirty;
+        gocpp::map<go_any, entry*> dirty{};
         // misses counts the number of loads since the read map was last updated that
         // needed to lock mu to determine whether the key was present.
         // Once enough misses have occurred to cover the cost of copying the dirty
         // map, the dirty map will be promoted to the read map (in the unamended
         // state) and the next store to the map will make a new dirty copy.
-        int misses;
+        int misses{};
 
         using isGoStruct = void;
 
@@ -91,7 +91,7 @@ namespace golang::sync
         // p != expunged. If p == expunged, an entry's associated value can be updated
         // only after first setting m.dirty[key] = e so that lookups using the dirty
         // map find the entry.
-        atomic::Pointer<go_any> p;
+        atomic::Pointer<go_any> p{};
 
         using isGoStruct = void;
 

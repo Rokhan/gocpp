@@ -15,8 +15,8 @@ namespace golang::runtime
     void addExitHook(std::function<void ()> f, bool runOnNonZeroExit);
     struct exitHook
     {
-        std::function<void ()> f; // func to run
-        bool runOnNonZeroExit; // whether to run on non-zero exit code
+        std::function<void ()> f{}; // func to run
+        bool runOnNonZeroExit{}; // whether to run on non-zero exit code
 
         using isGoStruct = void;
 

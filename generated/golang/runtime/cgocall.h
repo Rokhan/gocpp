@@ -16,8 +16,8 @@ namespace golang::runtime
     using cgoCallers = gocpp::alias<gocpp::array<uintptr_t, 32>, GoTag_cgoCallers>;
     struct argset
     {
-        gocpp::unsafe_pointer args;
-        uintptr_t retval;
+        gocpp::unsafe_pointer args{};
+        uintptr_t retval{};
 
         using isGoStruct = void;
 

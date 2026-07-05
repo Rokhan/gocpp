@@ -99,8 +99,8 @@ namespace golang::sort
     unsigned int nextPowerOfTwo(int length);
     struct lessSwap
     {
-        std::function<bool (int i, int j)> Less;
-        std::function<void (int i, int j)> Swap;
+        std::function<bool (int i, int j)> Less{};
+        std::function<void (int i, int j)> Swap{};
 
         using isGoStruct = void;
 
@@ -132,7 +132,7 @@ namespace golang::sort
     {
         // This embedded Interface permits Reverse to use the methods of
         // another Interface implementation.
-        Interface Interface;
+        Interface Interface{};
 
         using isGoStruct = void;
 

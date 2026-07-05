@@ -16,11 +16,11 @@ namespace golang::sync
 {
     struct RWMutex
     {
-        Mutex w; // held if there are pending writers
-        uint32_t writerSem; // semaphore for writers to wait for completing readers
-        uint32_t readerSem; // semaphore for readers to wait for completing writers
-        atomic::Int32 readerCount; // number of pending readers
-        atomic::Int32 readerWait; // number of departing readers
+        Mutex w{}; // held if there are pending writers
+        uint32_t writerSem{}; // semaphore for writers to wait for completing readers
+        uint32_t readerSem{}; // semaphore for readers to wait for completing writers
+        atomic::Int32 readerCount{}; // number of pending readers
+        atomic::Int32 readerWait{}; // number of departing readers
 
         using isGoStruct = void;
 

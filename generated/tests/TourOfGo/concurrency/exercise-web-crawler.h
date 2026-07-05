@@ -77,8 +77,8 @@ namespace golang::main
     using fakeFetcher = gocpp::alias<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
     struct fakeResult
     {
-        gocpp::string body;
-        gocpp::slice<gocpp::string> urls;
+        gocpp::string body{};
+        gocpp::slice<gocpp::string> urls{};
 
         using isGoStruct = void;
 

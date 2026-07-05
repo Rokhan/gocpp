@@ -78,10 +78,10 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct Color& value);
     struct RGBA
     {
-        uint8_t R;
-        uint8_t G;
-        uint8_t B;
-        uint8_t A;
+        uint8_t R{};
+        uint8_t G{};
+        uint8_t B{};
+        uint8_t A{};
 
         using isGoStruct = void;
 
@@ -97,10 +97,10 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct RGBA& value);
     struct RGBA64
     {
-        uint16_t R;
-        uint16_t G;
-        uint16_t B;
-        uint16_t A;
+        uint16_t R{};
+        uint16_t G{};
+        uint16_t B{};
+        uint16_t A{};
 
         using isGoStruct = void;
 
@@ -116,10 +116,10 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct RGBA64& value);
     struct NRGBA
     {
-        uint8_t R;
-        uint8_t G;
-        uint8_t B;
-        uint8_t A;
+        uint8_t R{};
+        uint8_t G{};
+        uint8_t B{};
+        uint8_t A{};
 
         using isGoStruct = void;
 
@@ -135,10 +135,10 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct NRGBA& value);
     struct NRGBA64
     {
-        uint16_t R;
-        uint16_t G;
-        uint16_t B;
-        uint16_t A;
+        uint16_t R{};
+        uint16_t G{};
+        uint16_t B{};
+        uint16_t A{};
 
         using isGoStruct = void;
 
@@ -154,7 +154,7 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct NRGBA64& value);
     struct Alpha
     {
-        uint8_t A;
+        uint8_t A{};
 
         using isGoStruct = void;
 
@@ -170,7 +170,7 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct Alpha& value);
     struct Alpha16
     {
-        uint16_t A;
+        uint16_t A{};
 
         using isGoStruct = void;
 
@@ -186,7 +186,7 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct Alpha16& value);
     struct Gray
     {
-        uint8_t Y;
+        uint8_t Y{};
 
         using isGoStruct = void;
 
@@ -202,7 +202,7 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct Gray& value);
     struct Gray16
     {
-        uint16_t Y;
+        uint16_t Y{};
 
         using isGoStruct = void;
 
@@ -279,7 +279,7 @@ namespace golang::color
     struct Model ModelFunc(std::function<struct Color (struct Color _1)> f);
     struct modelFunc
     {
-        std::function<struct Color (struct Color _1)> f;
+        std::function<struct Color (struct Color _1)> f{};
 
         using isGoStruct = void;
 

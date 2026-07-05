@@ -51,8 +51,8 @@ namespace golang::wc
 
     struct gocpp_id_0
     {
-        gocpp::string in;
-        gocpp::map<gocpp::string, int> want;
+        gocpp::string in{};
+        gocpp::map<gocpp::string, int> want{};
 
         using isGoStruct = void;
 

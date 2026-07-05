@@ -14,9 +14,9 @@ namespace golang::unsafeheader
 {
     struct Slice
     {
-        gocpp::unsafe_pointer Data;
-        int Len;
-        int Cap;
+        gocpp::unsafe_pointer Data{};
+        int Len{};
+        int Cap{};
 
         using isGoStruct = void;
 
@@ -32,8 +32,8 @@ namespace golang::unsafeheader
     std::ostream& operator<<(std::ostream& os, const struct Slice& value);
     struct String
     {
-        gocpp::unsafe_pointer Data;
-        int Len;
+        gocpp::unsafe_pointer Data{};
+        int Len{};
 
         using isGoStruct = void;
 

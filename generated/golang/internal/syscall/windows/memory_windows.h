@@ -15,21 +15,21 @@ namespace golang::windows
     struct MemoryBasicInformation
     {
         // A pointer to the base address of the region of pages.
-        uintptr_t BaseAddress;
+        uintptr_t BaseAddress{};
         // A pointer to the base address of a range of pages allocated by the VirtualAlloc function.
         // The page pointed to by the BaseAddress member is contained within this allocation range.
-        uintptr_t AllocationBase;
+        uintptr_t AllocationBase{};
         // The memory protection option when the region was initially allocated
-        uint32_t AllocationProtect;
-        uint16_t PartitionId;
+        uint32_t AllocationProtect{};
+        uint16_t PartitionId{};
         // The size of the region beginning at the base address in which all pages have identical attributes, in bytes.
-        uintptr_t RegionSize;
+        uintptr_t RegionSize{};
         // The state of the pages in the region.
-        uint32_t State;
+        uint32_t State{};
         // The access protection of the pages in the region.
-        uint32_t Protect;
+        uint32_t Protect{};
         // The type of pages in the region.
-        uint32_t Type;
+        uint32_t Type{};
 
         using isGoStruct = void;
 

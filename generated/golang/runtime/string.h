@@ -19,8 +19,8 @@ namespace golang::runtime
     gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array_ptr<gocpp::array<gocpp::rune, tmpStringBufSize>> buf, gocpp::string s);
     struct stringStruct
     {
-        gocpp::unsafe_pointer str;
-        int len;
+        gocpp::unsafe_pointer str{};
+        int len{};
 
         using isGoStruct = void;
 
@@ -36,8 +36,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct stringStruct& value);
     struct stringStructDWARF
     {
-        unsigned char* str;
-        int len;
+        unsigned char* str{};
+        int len{};
 
         using isGoStruct = void;
 

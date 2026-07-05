@@ -188,7 +188,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Multiplier& value);
     struct num
     {
-        int value;
+        int value{};
 
         using isGoStruct = void;
 
@@ -264,8 +264,8 @@ namespace golang::main
     void main();
     struct Vertex
     {
-        double X;
-        double Y;
+        double X{};
+        double Y{};
 
         using isGoStruct = void;
 

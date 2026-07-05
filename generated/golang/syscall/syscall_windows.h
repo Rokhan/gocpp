@@ -47,10 +47,10 @@ namespace golang::syscall
     extern bool SocketDisableIPv6;
     struct RawSockaddrInet4
     {
-        uint16_t Family;
-        uint16_t Port;
-        gocpp::array<unsigned char, 4> Addr; // in_addr
-        gocpp::array<uint8_t, 8> Zero;
+        uint16_t Family{};
+        uint16_t Port{};
+        gocpp::array<unsigned char, 4> Addr{}; // in_addr
+        gocpp::array<uint8_t, 8> Zero{};
 
         using isGoStruct = void;
 
@@ -66,11 +66,11 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct RawSockaddrInet4& value);
     struct RawSockaddrInet6
     {
-        uint16_t Family;
-        uint16_t Port;
-        uint32_t Flowinfo;
-        gocpp::array<unsigned char, 16> Addr; // in6_addr
-        uint32_t Scope_id;
+        uint16_t Family{};
+        uint16_t Port{};
+        uint32_t Flowinfo{};
+        gocpp::array<unsigned char, 16> Addr{}; // in6_addr
+        uint32_t Scope_id{};
 
         using isGoStruct = void;
 
@@ -86,8 +86,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct RawSockaddrInet6& value);
     struct RawSockaddr
     {
-        uint16_t Family;
-        gocpp::array<int8_t, 14> Data;
+        uint16_t Family{};
+        gocpp::array<int8_t, 14> Data{};
 
         using isGoStruct = void;
 
@@ -167,7 +167,7 @@ namespace golang::syscall
     struct gocpp::error LoadConnectEx();
     struct WaitStatus
     {
-        uint32_t ExitCode;
+        uint32_t ExitCode{};
 
         using isGoStruct = void;
 
@@ -183,8 +183,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct WaitStatus& value);
     struct Timespec
     {
-        int64_t Sec;
-        int64_t Nsec;
+        int64_t Sec{};
+        int64_t Nsec{};
 
         using isGoStruct = void;
 
@@ -200,8 +200,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Timespec& value);
     struct Linger
     {
-        int32_t Onoff;
-        int32_t Linger;
+        int32_t Onoff{};
+        int32_t Linger{};
 
         using isGoStruct = void;
 
@@ -217,8 +217,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Linger& value);
     struct sysLinger
     {
-        uint16_t Onoff;
-        uint16_t Linger;
+        uint16_t Onoff{};
+        uint16_t Linger{};
 
         using isGoStruct = void;
 
@@ -234,8 +234,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct sysLinger& value);
     struct IPMreq
     {
-        gocpp::array<unsigned char, 4> Multiaddr; // in_addr
-        gocpp::array<unsigned char, 4> Interface; // in_addr
+        gocpp::array<unsigned char, 4> Multiaddr{}; // in_addr
+        gocpp::array<unsigned char, 4> Interface{}; // in_addr
 
         using isGoStruct = void;
 
@@ -251,8 +251,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct IPMreq& value);
     struct IPv6Mreq
     {
-        gocpp::array<unsigned char, 16> Multiaddr; // in6_addr
-        uint32_t Interface;
+        gocpp::array<unsigned char, 16> Multiaddr{}; // in6_addr
+        uint32_t Interface{};
 
         using isGoStruct = void;
 
@@ -289,8 +289,8 @@ namespace golang::syscall
     struct gocpp::error UtimesNano(gocpp::string path, gocpp::slice<Timespec> ts);
     struct RawSockaddrAny
     {
-        RawSockaddr Addr;
-        gocpp::array<int8_t, 100> Pad;
+        RawSockaddr Addr{};
+        gocpp::array<int8_t, 100> Pad{};
 
         using isGoStruct = void;
 
@@ -306,9 +306,9 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct RawSockaddrAny& value);
     struct SockaddrInet4
     {
-        int Port;
-        gocpp::array<unsigned char, 4> Addr;
-        RawSockaddrInet4 raw;
+        int Port{};
+        gocpp::array<unsigned char, 4> Addr{};
+        RawSockaddrInet4 raw{};
 
         using isGoStruct = void;
 
@@ -324,10 +324,10 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct SockaddrInet4& value);
     struct SockaddrInet6
     {
-        int Port;
-        uint32_t ZoneId;
-        gocpp::array<unsigned char, 16> Addr;
-        RawSockaddrInet6 raw;
+        int Port{};
+        uint32_t ZoneId{};
+        gocpp::array<unsigned char, 16> Addr{};
+        RawSockaddrInet6 raw{};
 
         using isGoStruct = void;
 
@@ -372,8 +372,8 @@ namespace golang::syscall
     struct gocpp::error Utimes(gocpp::string path, gocpp::slice<Timeval> tv);
     struct RawSockaddrUnix
     {
-        uint16_t Family;
-        gocpp::array<int8_t, UNIX_PATH_MAX> Path;
+        uint16_t Family{};
+        gocpp::array<int8_t, UNIX_PATH_MAX> Path{};
 
         using isGoStruct = void;
 
@@ -393,10 +393,10 @@ namespace golang::syscall
     struct gocpp::error ConnectEx(golang::syscall::Handle fd, struct Sockaddr sa, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, struct Overlapped* overlapped);
     struct Rusage
     {
-        Filetime CreationTime;
-        Filetime ExitTime;
-        Filetime KernelTime;
-        Filetime UserTime;
+        Filetime CreationTime{};
+        Filetime ExitTime{};
+        Filetime KernelTime{};
+        Filetime UserTime{};
 
         using isGoStruct = void;
 
@@ -421,8 +421,8 @@ namespace golang::syscall
     struct gocpp::error GetStartupInfo(struct StartupInfo* startupInfo);
     struct SockaddrUnix
     {
-        gocpp::string Name;
-        RawSockaddrUnix raw;
+        gocpp::string Name{};
+        RawSockaddrUnix raw{};
 
         using isGoStruct = void;
 

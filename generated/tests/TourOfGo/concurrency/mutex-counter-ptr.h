@@ -20,8 +20,8 @@ namespace golang::main
 {
     struct SafeCounter
     {
-        mocklib::Mutex mu;
-        gocpp::map<gocpp::string, int> v;
+        mocklib::Mutex mu{};
+        gocpp::map<gocpp::string, int> v{};
 
         using isGoStruct = void;
 

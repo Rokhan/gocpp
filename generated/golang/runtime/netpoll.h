@@ -31,10 +31,10 @@ namespace golang::runtime
 {
     struct pollDesc
     {
-        sys::NotInHeap _1;
-        pollDesc* link; // in pollcache, protected by pollcache.lock
-        uintptr_t fd; // constant for pollDesc usage lifetime
-        atomic::Uintptr fdseq; // protects against stale pollDesc
+        sys::NotInHeap _1{};
+        pollDesc* link{}; // in pollcache, protected by pollcache.lock
+        uintptr_t fd{}; // constant for pollDesc usage lifetime
+        atomic::Uintptr fdseq{}; // protects against stale pollDesc
         // atomicInfo holds bits from closing, rd, and wd,
         // which are only ever written while holding the lock,
         // summarized for use by netpollcheckerr,
@@ -50,21 +50,21 @@ namespace golang::runtime
         // atomicInfo also holds the eventErr bit,
         // recording whether a poll event on the fd got an error;
         // atomicInfo is the only source of truth for that bit.
-        atomic::Uint32 atomicInfo; // atomic pollInfo
+        atomic::Uint32 atomicInfo{}; // atomic pollInfo
         // rg, wg are accessed atomically and hold g pointers.
         // (Using atomic.Uintptr here is similar to using guintptr elsewhere.)
-        atomic::Uintptr rg; // pdReady, pdWait, G waiting for read or pdNil
-        atomic::Uintptr wg; // pdReady, pdWait, G waiting for write or pdNil
-        mutex lock; // protects the following fields
-        bool closing;
-        uint32_t user; // user settable cookie
-        uintptr_t rseq; // protects from stale read timers
-        timer rt; // read deadline timer (set if rt.f != nil)
-        int64_t rd; // read deadline (a nanotime in the future, -1 when expired)
-        uintptr_t wseq; // protects from stale write timers
-        timer wt; // write deadline timer
-        int64_t wd; // write deadline (a nanotime in the future, -1 when expired)
-        pollDesc* self; // storage for indirect interface. See (*pollDesc).makeArg.
+        atomic::Uintptr rg{}; // pdReady, pdWait, G waiting for read or pdNil
+        atomic::Uintptr wg{}; // pdReady, pdWait, G waiting for write or pdNil
+        mutex lock{}; // protects the following fields
+        bool closing{};
+        uint32_t user{}; // user settable cookie
+        uintptr_t rseq{}; // protects from stale read timers
+        timer rt{}; // read deadline timer (set if rt.f != nil)
+        int64_t rd{}; // read deadline (a nanotime in the future, -1 when expired)
+        uintptr_t wseq{}; // protects from stale write timers
+        timer wt{}; // write deadline timer
+        int64_t wd{}; // write deadline (a nanotime in the future, -1 when expired)
+        pollDesc* self{}; // storage for indirect interface. See (*pollDesc).makeArg.
 
         using isGoStruct = void;
 
@@ -80,8 +80,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
     struct pollCache
     {
-        mutex lock;
-        pollDesc* first;
+        mutex lock{};
+        pollDesc* first{};
 
         using isGoStruct = void;
 

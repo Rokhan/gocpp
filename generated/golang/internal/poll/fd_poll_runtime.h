@@ -24,7 +24,7 @@ namespace golang::poll
     bool runtime_isPollServerDescriptor(uintptr_t fd);
     struct pollDesc
     {
-        uintptr_t runtimeCtx;
+        uintptr_t runtimeCtx{};
 
         using isGoStruct = void;
 

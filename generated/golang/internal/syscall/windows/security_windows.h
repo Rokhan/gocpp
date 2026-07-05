@@ -14,8 +14,8 @@ namespace golang::windows
 {
     struct LUID
     {
-        uint32_t LowPart;
-        int32_t HighPart;
+        uint32_t LowPart{};
+        int32_t HighPart{};
 
         using isGoStruct = void;
 
@@ -31,7 +31,7 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct LUID& value);
     struct LocalGroupUserInfo0
     {
-        uint16_t* Name;
+        uint16_t* Name{};
 
         using isGoStruct = void;
 
@@ -48,8 +48,8 @@ namespace golang::windows
     gocpp::string GetSystemDirectory();
     struct LUID_AND_ATTRIBUTES
     {
-        LUID Luid;
-        uint32_t Attributes;
+        LUID Luid{};
+        uint32_t Attributes{};
 
         using isGoStruct = void;
 
@@ -70,8 +70,8 @@ namespace golang::windows
 {
     struct SID_AND_ATTRIBUTES
     {
-        syscall::SID* Sid;
-        uint32_t Attributes;
+        syscall::SID* Sid{};
+        uint32_t Attributes{};
 
         using isGoStruct = void;
 
@@ -87,35 +87,35 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct SID_AND_ATTRIBUTES& value);
     struct UserInfo4
     {
-        uint16_t* Name;
-        uint16_t* Password;
-        uint32_t PasswordAge;
-        uint32_t Priv;
-        uint16_t* HomeDir;
-        uint16_t* Comment;
-        uint32_t Flags;
-        uint16_t* ScriptPath;
-        uint32_t AuthFlags;
-        uint16_t* FullName;
-        uint16_t* UsrComment;
-        uint16_t* Parms;
-        uint16_t* Workstations;
-        uint32_t LastLogon;
-        uint32_t LastLogoff;
-        uint32_t AcctExpires;
-        uint32_t MaxStorage;
-        uint32_t UnitsPerWeek;
-        unsigned char* LogonHours;
-        uint32_t BadPwCount;
-        uint32_t NumLogons;
-        uint16_t* LogonServer;
-        uint32_t CountryCode;
-        uint32_t CodePage;
-        syscall::SID* UserSid;
-        uint32_t PrimaryGroupID;
-        uint16_t* Profile;
-        uint16_t* HomeDirDrive;
-        uint32_t PasswordExpired;
+        uint16_t* Name{};
+        uint16_t* Password{};
+        uint32_t PasswordAge{};
+        uint32_t Priv{};
+        uint16_t* HomeDir{};
+        uint16_t* Comment{};
+        uint32_t Flags{};
+        uint16_t* ScriptPath{};
+        uint32_t AuthFlags{};
+        uint16_t* FullName{};
+        uint16_t* UsrComment{};
+        uint16_t* Parms{};
+        uint16_t* Workstations{};
+        uint32_t LastLogon{};
+        uint32_t LastLogoff{};
+        uint32_t AcctExpires{};
+        uint32_t MaxStorage{};
+        uint32_t UnitsPerWeek{};
+        unsigned char* LogonHours{};
+        uint32_t BadPwCount{};
+        uint32_t NumLogons{};
+        uint16_t* LogonServer{};
+        uint32_t CountryCode{};
+        uint32_t CodePage{};
+        syscall::SID* UserSid{};
+        uint32_t PrimaryGroupID{};
+        uint16_t* Profile{};
+        uint16_t* HomeDirDrive{};
+        uint32_t PasswordExpired{};
 
         using isGoStruct = void;
 
@@ -131,8 +131,8 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct UserInfo4& value);
     struct TOKEN_PRIVILEGES
     {
-        uint32_t PrivilegeCount;
-        gocpp::array<LUID_AND_ATTRIBUTES, 1> Privileges;
+        uint32_t PrivilegeCount{};
+        gocpp::array<LUID_AND_ATTRIBUTES, 1> Privileges{};
 
         using isGoStruct = void;
 
@@ -148,7 +148,7 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct TOKEN_PRIVILEGES& value);
     struct TOKEN_MANDATORY_LABEL
     {
-        SID_AND_ATTRIBUTES Label;
+        SID_AND_ATTRIBUTES Label{};
 
         using isGoStruct = void;
 

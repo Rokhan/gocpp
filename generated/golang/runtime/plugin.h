@@ -24,8 +24,8 @@ namespace golang::runtime
     void pluginftabverify(struct moduledata* md);
     struct ptabEntry
     {
-        golang::runtime::nameOff name;
-        golang::runtime::typeOff typ;
+        golang::runtime::nameOff name{};
+        golang::runtime::typeOff typ{};
 
         using isGoStruct = void;
 

@@ -18,10 +18,10 @@ namespace golang::runtime
     struct traceStringTable
     {
         // lock protects buf.
-        mutex lock;
-        traceBuf* buf; // string batches to write out to the trace.
+        mutex lock{};
+        traceBuf* buf{}; // string batches to write out to the trace.
         // tab is a mapping of string -> unique ID.
-        traceMap tab;
+        traceMap tab{};
 
         using isGoStruct = void;
 

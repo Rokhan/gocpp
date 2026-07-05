@@ -976,8 +976,8 @@ namespace golang::runtime
 
     struct gocpp_id_0
             {
-                uint64_t tick;
-                int i;
+                uint64_t tick{};
+                int i{};
 
                 using isGoStruct = void;
 
@@ -1045,10 +1045,10 @@ namespace golang::runtime
         // Prepare read state for all logs.
         struct readState
         {
-            debugLogReader debugLogReader;
-            bool first;
-            uint64_t lost;
-            uint64_t nextTick;
+            debugLogReader debugLogReader{};
+            bool first{};
+            uint64_t lost{};
+            uint64_t nextTick{};
 
             using isGoStruct = void;
 

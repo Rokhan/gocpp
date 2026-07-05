@@ -74,8 +74,8 @@ namespace golang::os
     std::ostream& operator<<(std::ostream& os, const struct timeout& value);
     struct SyscallError
     {
-        gocpp::string Syscall;
-        gocpp::error Err;
+        gocpp::string Syscall{};
+        gocpp::error Err{};
 
         using isGoStruct = void;
 

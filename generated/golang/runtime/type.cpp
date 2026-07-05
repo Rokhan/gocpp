@@ -155,10 +155,10 @@ namespace golang::runtime
 
     struct gocpp_id_0
     {
-        mutex lock;
-        int32_t next;
-        gocpp::map<int32_t, gocpp::unsafe_pointer> m;
-        gocpp::map<gocpp::unsafe_pointer, int32_t> minv;
+        mutex lock{};
+        int32_t next{};
+        gocpp::map<int32_t, gocpp::unsafe_pointer> m{};
+        gocpp::map<gocpp::unsafe_pointer, int32_t> minv{};
 
         using isGoStruct = void;
 

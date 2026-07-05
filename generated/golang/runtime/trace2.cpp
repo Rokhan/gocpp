@@ -104,7 +104,7 @@ namespace golang::runtime
     {
         // trace.lock must only be acquired on the system stack where
         // stack splits cannot happen while it is held.
-        mutex lock;
+        mutex lock{};
         // Trace buffer management.
         // First we check the empty list for any free buffers. If not, buffers
         // are allocated directly from the OS. Once they're filled up and/or
@@ -113,26 +113,26 @@ namespace golang::runtime
         // places them into reading until they're finished being read from.
         // Then they're placed onto the empty list.
         // Protected by trace.lock.
-        traceBuf* reading; // buffer currently handed off to user
-        traceBuf* empty; // stack of empty buffers
-        gocpp::array<traceBufQueue, 2> full;
-        atomic::Bool workAvailable;
+        traceBuf* reading{}; // buffer currently handed off to user
+        traceBuf* empty{}; // stack of empty buffers
+        gocpp::array<traceBufQueue, 2> full{};
+        atomic::Bool workAvailable{};
         // State for the trace reader goroutine.
         // Protected by trace.lock.
-        atomic::Uintptr readerGen; // the generation the reader is currently reading for
-        atomic::Uintptr flushedGen; // the last completed generation
-        bool headerWritten; // whether ReadTrace has emitted trace header
+        atomic::Uintptr readerGen{}; // the generation the reader is currently reading for
+        atomic::Uintptr flushedGen{}; // the last completed generation
+        bool headerWritten{}; // whether ReadTrace has emitted trace header
         // doneSema is used to synchronize the reader and traceAdvance. Specifically,
         // it notifies traceAdvance that the reader is done with a generation.
         // Both semaphores are 0 by default (so, acquires block). traceAdvance
         // attempts to acquire for gen%2 after flushing the last buffers for gen.
         // Meanwhile the reader releases the sema for gen%2 when it has finished
         // processing gen.
-        gocpp::array<uint32_t, 2> doneSema;
+        gocpp::array<uint32_t, 2> doneSema{};
         // Trace data tables for deduplicating data going into the trace.
         // There are 2 of each: one for gen%2, one for 1-gen%2.
-        gocpp::array<traceStackTable, 2> stackTab; // maps stack traces to unique ids
-        gocpp::array<traceStringTable, 2> stringTab; // maps strings to unique ids
+        gocpp::array<traceStackTable, 2> stackTab{}; // maps stack traces to unique ids
+        gocpp::array<traceStringTable, 2> stringTab{}; // maps strings to unique ids
         // cpuLogRead accepts CPU profile samples from the signal handler where
         // they're generated. There are two profBufs here: one for gen%2, one for
         // 1-gen%2. These profBufs use a three-word header to hold the IDs of the P, G,
@@ -145,29 +145,29 @@ namespace golang::runtime
         // the active G directly in the second field, even though that will be 0
         // when sampling g0.
         // Initialization and teardown of these fields is protected by traceAdvanceSema.
-        gocpp::array<profBuf*, 2> cpuLogRead;
-        atomic::Uint32 signalLock; // protects use of the following member, only usable in signal handlers
-        gocpp::array<atomic::Pointer<profBuf>, 2> cpuLogWrite; // copy of cpuLogRead for use in signal handlers, set without signalLock
-        wakeableSleep* cpuSleep;
-        gocpp::channel<gocpp_id_1> cpuLogDone;
-        gocpp::array<traceBuf*, 2> cpuBuf;
-        atomic::Pointer<g> reader; // goroutine that called ReadTrace, or nil
+        gocpp::array<profBuf*, 2> cpuLogRead{};
+        atomic::Uint32 signalLock{}; // protects use of the following member, only usable in signal handlers
+        gocpp::array<atomic::Pointer<profBuf>, 2> cpuLogWrite{}; // copy of cpuLogRead for use in signal handlers, set without signalLock
+        wakeableSleep* cpuSleep{};
+        gocpp::channel<gocpp_id_1> cpuLogDone{};
+        gocpp::array<traceBuf*, 2> cpuBuf{};
+        atomic::Pointer<g> reader{}; // goroutine that called ReadTrace, or nil
         // Fast mappings from enumerations to string IDs that are prepopulated
         // in the trace.
-        gocpp::array<gocpp::array<golang::runtime::traceArg, len(gcMarkWorkerModeStrings)>, 2> markWorkerLabels;
-        gocpp::array<gocpp::array<golang::runtime::traceArg, len(traceGoStopReasonStrings)>, 2> goStopReasons;
-        gocpp::array<gocpp::array<golang::runtime::traceArg, len(traceBlockReasonStrings)>, 2> goBlockReasons;
+        gocpp::array<gocpp::array<golang::runtime::traceArg, len(gcMarkWorkerModeStrings)>, 2> markWorkerLabels{};
+        gocpp::array<gocpp::array<golang::runtime::traceArg, len(traceGoStopReasonStrings)>, 2> goStopReasons{};
+        gocpp::array<gocpp::array<golang::runtime::traceArg, len(traceBlockReasonStrings)>, 2> goBlockReasons{};
         // Trace generation counter.
-        atomic::Uintptr gen;
-        uintptr_t lastNonZeroGen; // last non-zero value of gen
+        atomic::Uintptr gen{};
+        uintptr_t lastNonZeroGen{}; // last non-zero value of gen
         // shutdown is set when we are waiting for trace reader to finish after setting gen to 0
         // Writes protected by trace.lock.
-        atomic::Bool shutdown;
+        atomic::Bool shutdown{};
         // Number of goroutines in syscall exiting slow path.
-        atomic::Int32 exitingSyscall;
+        atomic::Int32 exitingSyscall{};
         // seqGC is the sequence counter for GC begin/end.
         // Mutated only during stop-the-world.
-        uint64_t seqGC;
+        uint64_t seqGC{};
 
         using isGoStruct = void;
 
@@ -449,12 +449,12 @@ namespace golang::runtime
         // Collect all the untraced Gs.
         struct untracedG
         {
-            g* gp;
-            uint64_t goid;
-            int64_t mid;
-            uint32_t status;
-            golang::runtime::waitReason waitreason;
-            bool inMarkAssist;
+            g* gp{};
+            uint64_t goid{};
+            int64_t mid{};
+            uint32_t status{};
+            golang::runtime::waitReason waitreason{};
+            bool inMarkAssist{};
 
             using isGoStruct = void;
 

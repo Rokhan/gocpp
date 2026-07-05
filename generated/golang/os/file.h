@@ -14,10 +14,10 @@ namespace golang::os
 {
     struct LinkError
     {
-        gocpp::string Op;
-        gocpp::string Old;
-        gocpp::string New;
-        gocpp::error Err;
+        gocpp::string Op{};
+        gocpp::string Old{};
+        gocpp::string New{};
+        gocpp::error Err{};
 
         using isGoStruct = void;
 
@@ -88,8 +88,8 @@ namespace golang::os
     extern File* Stderr;
     struct fileWithoutReadFrom
     {
-        noReadFrom noReadFrom;
-        File* File;
+        noReadFrom noReadFrom{};
+        File* File{};
 
         using isGoStruct = void;
 
@@ -107,8 +107,8 @@ namespace golang::os
     extern gocpp::error errWriteAtInAppendMode;
     struct fileWithoutWriteTo
     {
-        noWriteTo noWriteTo;
-        File* File;
+        noWriteTo noWriteTo{};
+        File* File{};
 
         using isGoStruct = void;
 

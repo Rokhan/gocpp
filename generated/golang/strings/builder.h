@@ -14,8 +14,8 @@ namespace golang::strings
 {
     struct Builder
     {
-        Builder* addr; // of receiver, to detect copies by value
-        gocpp::slice<unsigned char> buf;
+        Builder* addr{}; // of receiver, to detect copies by value
+        gocpp::slice<unsigned char> buf{};
 
         using isGoStruct = void;
 

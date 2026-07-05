@@ -14,8 +14,8 @@ namespace golang::flate
 {
     struct ReadError
     {
-        int64_t Offset; // byte offset where error occurred
-        gocpp::error Err; // error returned by underlying Read
+        int64_t Offset{}; // byte offset where error occurred
+        gocpp::error Err{}; // error returned by underlying Read
 
         using isGoStruct = void;
 
@@ -31,8 +31,8 @@ namespace golang::flate
     std::ostream& operator<<(std::ostream& os, const struct ReadError& value);
     struct WriteError
     {
-        int64_t Offset; // byte offset where error occurred
-        gocpp::error Err; // error returned by underlying Write
+        int64_t Offset{}; // byte offset where error occurred
+        gocpp::error Err{}; // error returned by underlying Write
 
         using isGoStruct = void;
 
@@ -48,10 +48,10 @@ namespace golang::flate
     std::ostream& operator<<(std::ostream& os, const struct WriteError& value);
     struct huffmanDecoder
     {
-        int min; // the minimum code length
-        gocpp::array<uint32_t, huffmanNumChunks> chunks; // chunks as described above
-        gocpp::slice<gocpp::slice<uint32_t>> links; // overflow links
-        uint32_t linkMask; // mask the width of the link table
+        int min{}; // the minimum code length
+        gocpp::array<uint32_t, huffmanNumChunks> chunks{}; // chunks as described above
+        gocpp::slice<gocpp::slice<uint32_t>> links{}; // overflow links
+        uint32_t linkMask{}; // mask the width of the link table
 
         using isGoStruct = void;
 
@@ -205,33 +205,33 @@ namespace golang::flate
     struct decompressor
     {
         // Input source.
-        Reader r;
-        bufio::Reader* rBuf; // created if provided io.Reader does not implement io.ByteReader
-        int64_t roffset;
+        Reader r{};
+        bufio::Reader* rBuf{}; // created if provided io.Reader does not implement io.ByteReader
+        int64_t roffset{};
         // Input bits, in top of b.
-        uint32_t b;
-        unsigned int nb;
+        uint32_t b{};
+        unsigned int nb{};
         // Huffman decoders for literal/length, distance.
-        huffmanDecoder h1;
-        huffmanDecoder h2;
+        huffmanDecoder h1{};
+        huffmanDecoder h2{};
         // Length arrays used to define Huffman codes.
-        gocpp::array_ptr<gocpp::array<int, maxNumLit + maxNumDist>> bits;
-        gocpp::array_ptr<gocpp::array<int, numCodes>> codebits;
+        gocpp::array_ptr<gocpp::array<int, maxNumLit + maxNumDist>> bits{};
+        gocpp::array_ptr<gocpp::array<int, numCodes>> codebits{};
         // Output history, buffer.
-        dictDecoder dict;
+        dictDecoder dict{};
         // Temporary buffer (avoids repeated allocation).
-        gocpp::array<unsigned char, 4> buf;
+        gocpp::array<unsigned char, 4> buf{};
         // Next step in the decompression,
         // and decompression state.
-        std::function<void (struct decompressor* _1)> step;
-        int stepState;
-        bool final;
-        gocpp::error err;
-        gocpp::slice<unsigned char> toRead;
-        huffmanDecoder* hl;
-        huffmanDecoder* hd;
-        int copyLen;
-        int copyDist;
+        std::function<void (struct decompressor* _1)> step{};
+        int stepState{};
+        bool final{};
+        gocpp::error err{};
+        gocpp::slice<unsigned char> toRead{};
+        huffmanDecoder* hl{};
+        huffmanDecoder* hd{};
+        int copyLen{};
+        int copyDist{};
 
         using isGoStruct = void;
 

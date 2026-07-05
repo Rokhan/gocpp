@@ -14,9 +14,9 @@ namespace golang::unicode
 {
     struct Range16
     {
-        uint16_t Lo;
-        uint16_t Hi;
-        uint16_t Stride;
+        uint16_t Lo{};
+        uint16_t Hi{};
+        uint16_t Stride{};
 
         using isGoStruct = void;
 
@@ -32,9 +32,9 @@ namespace golang::unicode
     std::ostream& operator<<(std::ostream& os, const struct Range16& value);
     struct Range32
     {
-        uint32_t Lo;
-        uint32_t Hi;
-        uint32_t Stride;
+        uint32_t Lo{};
+        uint32_t Hi{};
+        uint32_t Stride{};
 
         using isGoStruct = void;
 
@@ -60,8 +60,8 @@ namespace golang::unicode
     gocpp::rune ToTitle(gocpp::rune r);
     struct foldPair
     {
-        uint16_t From;
-        uint16_t To;
+        uint16_t From{};
+        uint16_t To{};
 
         using isGoStruct = void;
 
@@ -78,9 +78,9 @@ namespace golang::unicode
     gocpp::rune SimpleFold(gocpp::rune r);
     struct RangeTable
     {
-        gocpp::slice<Range16> R16;
-        gocpp::slice<Range32> R32;
-        int LatinOffset; // number of entries in R16 with Hi <= MaxLatin1
+        gocpp::slice<Range16> R16{};
+        gocpp::slice<Range32> R32{};
+        int LatinOffset{}; // number of entries in R16 with Hi <= MaxLatin1
 
         using isGoStruct = void;
 
@@ -96,9 +96,9 @@ namespace golang::unicode
     std::ostream& operator<<(std::ostream& os, const struct RangeTable& value);
     struct CaseRange
     {
-        uint32_t Lo;
-        uint32_t Hi;
-        d Delta;
+        uint32_t Lo{};
+        uint32_t Hi{};
+        d Delta{};
 
         using isGoStruct = void;
 

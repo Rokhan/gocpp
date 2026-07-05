@@ -25,10 +25,10 @@ namespace golang::image
     extern gocpp::error ErrFormat;
     struct format
     {
-        gocpp::string name;
-        gocpp::string magic;
-        std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode;
-        std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig;
+        gocpp::string name{};
+        gocpp::string magic{};
+        std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode{};
+        std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig{};
 
         using isGoStruct = void;
 

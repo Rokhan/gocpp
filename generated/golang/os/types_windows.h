@@ -18,25 +18,25 @@ namespace golang::os
 {
     struct fileStat
     {
-        gocpp::string name;
+        gocpp::string name{};
         // from ByHandleFileInformation, Win32FileAttributeData, Win32finddata, and GetFileInformationByHandleEx
-        uint32_t FileAttributes;
-        syscall::Filetime CreationTime;
-        syscall::Filetime LastAccessTime;
-        syscall::Filetime LastWriteTime;
-        uint32_t FileSizeHigh;
-        uint32_t FileSizeLow;
+        uint32_t FileAttributes{};
+        syscall::Filetime CreationTime{};
+        syscall::Filetime LastAccessTime{};
+        syscall::Filetime LastWriteTime{};
+        uint32_t FileSizeHigh{};
+        uint32_t FileSizeLow{};
         // from Win32finddata and GetFileInformationByHandleEx
-        uint32_t ReparseTag;
+        uint32_t ReparseTag{};
         // what syscall.GetFileType returns
-        uint32_t filetype;
+        uint32_t filetype{};
         // used to implement SameFile
-        mocklib::Mutex Mutex;
-        gocpp::string path;
-        uint32_t vol;
-        uint32_t idxhi;
-        uint32_t idxlo;
-        bool appendNameToPath;
+        mocklib::Mutex Mutex{};
+        gocpp::string path{};
+        uint32_t vol{};
+        uint32_t idxhi{};
+        uint32_t idxlo{};
+        bool appendNameToPath{};
 
         using isGoStruct = void;
 

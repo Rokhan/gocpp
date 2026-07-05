@@ -14,11 +14,11 @@ namespace golang::godebugs
 {
     struct Info
     {
-        gocpp::string Name; // name of the setting ("panicnil")
-        gocpp::string Package; // package that uses the setting ("runtime")
-        int Changed; // minor version when default changed, if any; 21 means Go 1.21
-        gocpp::string Old; // value that restores behavior prior to Changed
-        bool Opaque; // setting does not export information to runtime/metrics using [internal/godebug.Setting.IncNonDefault]
+        gocpp::string Name{}; // name of the setting ("panicnil")
+        gocpp::string Package{}; // package that uses the setting ("runtime")
+        int Changed{}; // minor version when default changed, if any; 21 means Go 1.21
+        gocpp::string Old{}; // value that restores behavior prior to Changed
+        bool Opaque{}; // setting does not export information to runtime/metrics using [internal/godebug.Setting.IncNonDefault]
 
         using isGoStruct = void;
 

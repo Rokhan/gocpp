@@ -14,18 +14,18 @@ namespace golang::fmt
 {
     struct fmtFlags
     {
-        bool widPresent;
-        bool precPresent;
-        bool minus;
-        bool plus;
-        bool sharp;
-        bool space;
-        bool zero;
+        bool widPresent{};
+        bool precPresent{};
+        bool minus{};
+        bool plus{};
+        bool sharp{};
+        bool space{};
+        bool zero{};
         // For the formats %+v %#v, we set the plusV/sharpV flags
         // and clear the plus/sharp flags since %+v and %#v are in effect
         // different, flagless formats set at the top level.
-        bool plusV;
-        bool sharpV;
+        bool plusV{};
+        bool sharpV{};
 
         using isGoStruct = void;
 
@@ -46,13 +46,13 @@ namespace golang::fmt
 {
     struct fmt
     {
-        buffer* buf;
-        fmtFlags fmtFlags;
-        int wid; // width
-        int prec; // precision
+        buffer* buf{};
+        fmtFlags fmtFlags{};
+        int wid{}; // width
+        int prec{}; // precision
         // intbuf is large enough to store %b of an int64 with a sign and
         // avoids padding at the end of the struct on 32 bit architectures.
-        gocpp::array<unsigned char, 68> intbuf;
+        gocpp::array<unsigned char, 68> intbuf{};
 
         using isGoStruct = void;
 

@@ -17,14 +17,14 @@ namespace golang::runtime
 {
     struct rwmutex
     {
-        mutex rLock; // protects readers, readerPass, writer
-        golang::runtime::muintptr readers; // list of pending readers
-        uint32_t readerPass; // number of pending readers to skip readers list
-        mutex wLock; // serializes writers
-        golang::runtime::muintptr writer; // pending writer waiting for completing readers
-        atomic::Int32 readerCount; // number of pending readers
-        atomic::Int32 readerWait; // number of departing readers
-        golang::runtime::lockRank readRank; // semantic lock rank for read locking
+        mutex rLock{}; // protects readers, readerPass, writer
+        golang::runtime::muintptr readers{}; // list of pending readers
+        uint32_t readerPass{}; // number of pending readers to skip readers list
+        mutex wLock{}; // serializes writers
+        golang::runtime::muintptr writer{}; // pending writer waiting for completing readers
+        atomic::Int32 readerCount{}; // number of pending readers
+        atomic::Int32 readerWait{}; // number of departing readers
+        golang::runtime::lockRank readRank{}; // semantic lock rank for read locking
 
         using isGoStruct = void;
 

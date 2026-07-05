@@ -2446,10 +2446,10 @@ namespace golang::reflect
 
     struct gocpp_id_3
     {
-        mocklib::Mutex Mutex; // Guards stores (but not loads) on m.
+        mocklib::Mutex Mutex{}; // Guards stores (but not loads) on m.
         // m is a map[uint32][]*rtype keyed by the hash calculated in FuncOf.
         // Elements of m are append-only and thus safe for concurrent reading.
-        sync::Map m;
+        sync::Map m{};
 
         using isGoStruct = void;
 
@@ -3261,10 +3261,10 @@ namespace golang::reflect
 
     struct gocpp_id_10
     {
-        mocklib::Mutex Mutex; // Guards stores (but not loads) on m.
+        mocklib::Mutex Mutex{}; // Guards stores (but not loads) on m.
         // m is a map[uint32][]Type keyed by the hash calculated in StructOf.
         // Elements in m are append-only and thus safe for concurrent reading.
-        sync::Map m;
+        sync::Map m{};
 
         using isGoStruct = void;
 

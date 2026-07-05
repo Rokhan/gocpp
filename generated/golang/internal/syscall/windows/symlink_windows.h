@@ -14,8 +14,8 @@ namespace golang::windows
 {
     struct FILE_ATTRIBUTE_TAG_INFO
     {
-        uint32_t FileAttributes;
-        uint32_t ReparseTag;
+        uint32_t FileAttributes{};
+        uint32_t ReparseTag{};
 
         using isGoStruct = void;
 

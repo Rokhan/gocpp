@@ -614,8 +614,8 @@ namespace golang::bytes
         // The start index is inclusive and the end index is exclusive.
         struct span
         {
-            int start;
-            int end;
+            int start{};
+            int end{};
 
             using isGoStruct = void;
 

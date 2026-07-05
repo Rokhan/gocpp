@@ -15,7 +15,7 @@ namespace golang::runtime
 {
     struct traceEventWriter
     {
-        traceWriter w;
+        traceWriter w{};
 
         using isGoStruct = void;
 

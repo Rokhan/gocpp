@@ -14,11 +14,11 @@ namespace golang::flate
 {
     struct dictDecoder
     {
-        gocpp::slice<unsigned char> hist; // Sliding window history
+        gocpp::slice<unsigned char> hist{}; // Sliding window history
         // Invariant: 0 <= rdPos <= wrPos <= len(hist)
-        int wrPos; // Current output position in buffer
-        int rdPos; // Have emitted hist[:rdPos] already
-        bool full; // Has a full window length been written yet?
+        int wrPos{}; // Current output position in buffer
+        int rdPos{}; // Have emitted hist[:rdPos] already
+        bool full{}; // Has a full window length been written yet?
 
         using isGoStruct = void;
 

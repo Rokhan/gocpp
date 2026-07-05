@@ -16,10 +16,10 @@ namespace golang::cpu
     void Initialize(gocpp::string env);
     struct option
     {
-        gocpp::string Name;
-        bool* Feature;
-        bool Specified; // whether feature value was specified in GODEBUG
-        bool Enable; // whether feature should be enabled
+        gocpp::string Name{};
+        bool* Feature{};
+        bool Specified{}; // whether feature value was specified in GODEBUG
+        bool Enable{}; // whether feature should be enabled
 
         using isGoStruct = void;
 
@@ -43,7 +43,7 @@ namespace golang::cpu
 {
     struct CacheLinePad
     {
-        gocpp::array<unsigned char, CacheLinePadSize> _1;
+        gocpp::array<unsigned char, CacheLinePadSize> _1{};
 
         using isGoStruct = void;
 

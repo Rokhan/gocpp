@@ -14,8 +14,8 @@ namespace golang::bufio
 {
     struct ReadWriter
     {
-        Reader* Reader;
-        Writer* Writer;
+        Reader* Reader{};
+        Writer* Writer{};
 
         using isGoStruct = void;
 
@@ -41,13 +41,13 @@ namespace golang::bufio
     extern gocpp::error ErrNegativeCount;
     struct Reader
     {
-        gocpp::slice<unsigned char> buf;
-        io::Reader rd; // reader provided by the client
-        int r; // buf read and write positions
-        int w;
-        gocpp::error err;
-        int lastByte; // last byte read for UnreadByte; -1 means invalid
-        int lastRuneSize; // size of last rune read for UnreadRune; -1 means invalid
+        gocpp::slice<unsigned char> buf{};
+        io::Reader rd{}; // reader provided by the client
+        int r{}; // buf read and write positions
+        int w{};
+        gocpp::error err{};
+        int lastByte{}; // last byte read for UnreadByte; -1 means invalid
+        int lastRuneSize{}; // size of last rune read for UnreadRune; -1 means invalid
 
         using isGoStruct = void;
 
@@ -65,10 +65,10 @@ namespace golang::bufio
     extern gocpp::error errNegativeWrite;
     struct Writer
     {
-        gocpp::error err;
-        gocpp::slice<unsigned char> buf;
-        int n;
-        io::Writer wr;
+        gocpp::error err{};
+        gocpp::slice<unsigned char> buf{};
+        int n{};
+        io::Writer wr{};
 
         using isGoStruct = void;
 

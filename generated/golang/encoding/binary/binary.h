@@ -218,9 +218,9 @@ namespace golang::binary
     extern bigEndian BigEndian;
     struct coder
     {
-        ByteOrder order;
-        gocpp::slice<unsigned char> buf;
-        int offset;
+        ByteOrder order{};
+        gocpp::slice<unsigned char> buf{};
+        int offset{};
 
         using isGoStruct = void;
 

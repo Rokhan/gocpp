@@ -14,9 +14,9 @@ namespace golang::strconv
 {
     struct floatInfo
     {
-        unsigned int mantbits;
-        unsigned int expbits;
-        int bias;
+        unsigned int mantbits{};
+        unsigned int expbits{};
+        int bias{};
 
         using isGoStruct = void;
 
@@ -35,9 +35,9 @@ namespace golang::strconv
     gocpp::slice<unsigned char> genericFtoa(gocpp::slice<unsigned char> dst, double val, unsigned char fmt, int prec, int bitSize);
     struct decimalSlice
     {
-        gocpp::slice<unsigned char> d;
-        int nd;
-        int dp;
+        gocpp::slice<unsigned char> d{};
+        int nd{};
+        int dp{};
 
         using isGoStruct = void;
 

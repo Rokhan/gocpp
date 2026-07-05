@@ -31,10 +31,10 @@ namespace golang::runtime
     uintptr_t bswapIfBigEndian(uintptr_t x);
     struct writeUserArenaHeapBits
     {
-        uintptr_t offset; // offset in span that the low bit of mask represents the pointer state of.
-        uintptr_t mask; // some pointer bits starting at the address addr.
-        uintptr_t valid; // number of bits in buf that are valid (including low)
-        uintptr_t low; // number of low-order bits to not overwrite
+        uintptr_t offset{}; // offset in span that the low bit of mask represents the pointer state of.
+        uintptr_t mask{}; // some pointer bits starting at the address addr.
+        uintptr_t valid{}; // number of bits in buf that are valid (including low)
+        uintptr_t low{}; // number of low-order bits to not overwrite
 
         using isGoStruct = void;
 
@@ -79,18 +79,18 @@ namespace golang::runtime
         // elem is the address of the current array element of type typ being iterated over.
         // Objects that are not arrays are treated as single-element arrays, in which case
         // this value does not change.
-        uintptr_t elem;
+        uintptr_t elem{};
         // addr is the address the iterator is currently working from and describes
         // the address of the first word referenced by mask.
-        uintptr_t addr;
+        uintptr_t addr{};
         // mask is a bitmask where each bit corresponds to pointer-words after addr.
         // Bit 0 is the pointer-word at addr, Bit 1 is the next word, and so on.
         // If a bit is 1, then there is a pointer at that word.
         // nextFast and next mask out bits in this mask as their pointers are processed.
-        uintptr_t mask;
+        uintptr_t mask{};
         // typ is a pointer to the type information for the heap object's type.
         // This may be nil if the object is in a span where heapBitsInSpan(span.elemsize) is true.
-        golang::runtime::_type* typ;
+        golang::runtime::_type* typ{};
 
         using isGoStruct = void;
 

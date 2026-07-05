@@ -630,8 +630,8 @@ namespace golang::runtime
 
     struct gocpp_id_0
     {
-        mutex lock;
-        unsigned char* data;
+        mutex lock{};
+        unsigned char* data{};
 
         using isGoStruct = void;
 

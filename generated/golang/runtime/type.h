@@ -20,8 +20,8 @@ namespace golang::runtime
     void typelinksinit();
     struct _typePair
     {
-        golang::runtime::_type* t1;
-        golang::runtime::_type* t2;
+        golang::runtime::_type* t1{};
+        golang::runtime::_type* t2{};
 
         using isGoStruct = void;
 
@@ -59,7 +59,7 @@ namespace golang::runtime
 {
     struct rtype
     {
-        abi::Type* Type; // embedding is okay here (unlike reflect) because none of this is public
+        abi::Type* Type{}; // embedding is okay here (unlike reflect) because none of this is public
 
         using isGoStruct = void;
 

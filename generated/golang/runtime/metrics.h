@@ -24,17 +24,17 @@ namespace golang::runtime
     using statDepSet = gocpp::alias<gocpp::array<uint64_t, 1>, GoTag_statDepSet>;
     struct sysStatsAggregate
     {
-        uint64_t stacksSys;
-        uint64_t mSpanSys;
-        uint64_t mSpanInUse;
-        uint64_t mCacheSys;
-        uint64_t mCacheInUse;
-        uint64_t buckHashSys;
-        uint64_t gcMiscSys;
-        uint64_t otherSys;
-        uint64_t heapGoal;
-        uint64_t gcCyclesDone;
-        uint64_t gcCyclesForced;
+        uint64_t stacksSys{};
+        uint64_t mSpanSys{};
+        uint64_t mSpanInUse{};
+        uint64_t mCacheSys{};
+        uint64_t mCacheInUse{};
+        uint64_t buckHashSys{};
+        uint64_t gcMiscSys{};
+        uint64_t otherSys{};
+        uint64_t heapGoal{};
+        uint64_t gcCyclesDone{};
+        uint64_t gcCyclesForced{};
 
         using isGoStruct = void;
 
@@ -50,10 +50,10 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct sysStatsAggregate& value);
     struct gcStatsAggregate
     {
-        uint64_t heapScan;
-        uint64_t stackScan;
-        uint64_t globalsScan;
-        uint64_t totalScan;
+        uint64_t heapScan{};
+        uint64_t stackScan{};
+        uint64_t globalsScan{};
+        uint64_t totalScan{};
 
         using isGoStruct = void;
 
@@ -70,9 +70,9 @@ namespace golang::runtime
     double nsToSec(int64_t ns);
     struct metricValue
     {
-        golang::runtime::metricKind kind;
-        uint64_t scalar; // contains scalar values for scalar Kinds.
-        gocpp::unsafe_pointer pointer; // contains non-scalar values.
+        golang::runtime::metricKind kind{};
+        uint64_t scalar{}; // contains scalar values for scalar Kinds.
+        gocpp::unsafe_pointer pointer{}; // contains non-scalar values.
 
         using isGoStruct = void;
 
@@ -88,8 +88,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct metricValue& value);
     struct metricFloat64Histogram
     {
-        gocpp::slice<uint64_t> counts;
-        gocpp::slice<double> buckets;
+        gocpp::slice<uint64_t> counts{};
+        gocpp::slice<double> buckets{};
 
         using isGoStruct = void;
 
@@ -105,8 +105,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct metricFloat64Histogram& value);
     struct metricName
     {
-        gocpp::string name;
-        golang::runtime::metricKind kind;
+        gocpp::string name{};
+        golang::runtime::metricKind kind{};
 
         using isGoStruct = void;
 
@@ -128,10 +128,10 @@ namespace golang::runtime
         // deps is the set of runtime statistics that this metric
         // depends on. Before compute is called, the statAggregate
         // which will be passed must ensure() these dependencies.
-        statDepSet deps;
+        statDepSet deps{};
         // compute is a function that populates a metricValue
         // given a populated statAggregate structure.
-        std::function<void (struct statAggregate* in, struct metricValue* out)> compute;
+        std::function<void (struct statAggregate* in, struct metricValue* out)> compute{};
 
         using isGoStruct = void;
 
@@ -160,8 +160,8 @@ namespace golang::runtime
     }
     struct metricSample
     {
-        gocpp::string name;
-        metricValue value;
+        gocpp::string name{};
+        metricValue value{};
 
         using isGoStruct = void;
 
@@ -182,23 +182,23 @@ namespace golang::runtime
 {
     struct heapStatsAggregate
     {
-        heapStatsDelta heapStatsDelta;
+        heapStatsDelta heapStatsDelta{};
         // inObjects is the bytes of memory occupied by objects,
-        uint64_t inObjects;
+        uint64_t inObjects{};
         // numObjects is the number of live objects in the heap.
-        uint64_t numObjects;
+        uint64_t numObjects{};
         // totalAllocated is the total bytes of heap objects allocated
         // over the lifetime of the program.
-        uint64_t totalAllocated;
+        uint64_t totalAllocated{};
         // totalFreed is the total bytes of heap objects freed
         // over the lifetime of the program.
-        uint64_t totalFreed;
+        uint64_t totalFreed{};
         // totalAllocs is the number of heap objects allocated over
         // the lifetime of the program.
-        uint64_t totalAllocs;
+        uint64_t totalAllocs{};
         // totalFrees is the number of heap objects freed over
         // the lifetime of the program.
-        uint64_t totalFrees;
+        uint64_t totalFrees{};
 
         using isGoStruct = void;
 
@@ -214,7 +214,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct heapStatsAggregate& value);
     struct cpuStatsAggregate
     {
-        cpuStats cpuStats;
+        cpuStats cpuStats{};
 
         using isGoStruct = void;
 
@@ -231,11 +231,11 @@ namespace golang::runtime
     extern gocpp::map<gocpp::string, metricData> metrics;
     struct statAggregate
     {
-        golang::runtime::statDepSet ensured;
-        heapStatsAggregate heapStats;
-        sysStatsAggregate sysStats;
-        cpuStatsAggregate cpuStats;
-        gcStatsAggregate gcStats;
+        golang::runtime::statDepSet ensured{};
+        heapStatsAggregate heapStats{};
+        sysStatsAggregate sysStats{};
+        cpuStatsAggregate cpuStats{};
+        gcStatsAggregate gcStats{};
 
         using isGoStruct = void;
 

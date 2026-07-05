@@ -53,8 +53,8 @@ namespace golang::main
 
     struct gocpp_id_0
     {
-        int32_t first;
-        int16_t second;
+        int32_t first{};
+        int16_t second{};
 
         using isGoStruct = void;
 
@@ -327,8 +327,8 @@ namespace golang::main
 
         struct span
         {
-            int start;
-            int end;
+            int start{};
+            int end{};
 
             using isGoStruct = void;
 
@@ -424,8 +424,8 @@ namespace golang::main
 
     struct gocpp_id_5
         {
-            int i;
-            int j;
+            int i{};
+            int j{};
 
             using isGoStruct = void;
 
@@ -464,8 +464,8 @@ namespace golang::main
 
     struct gocpp_id_6
         {
-            int i;
-            int j;
+            int i{};
+            int j{};
 
             using isGoStruct = void;
 
@@ -504,8 +504,8 @@ namespace golang::main
 
     struct gocpp_id_7
         {
-            int i;
-            int j;
+            int i{};
+            int j{};
 
             using isGoStruct = void;
 
@@ -544,7 +544,7 @@ namespace golang::main
 
     struct gocpp_id_8
         {
-            int a;
+            int a{};
 
             using isGoStruct = void;
 

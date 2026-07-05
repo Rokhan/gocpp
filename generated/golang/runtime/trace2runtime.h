@@ -34,7 +34,7 @@ namespace golang::runtime
 {
     struct gTraceState
     {
-        traceSchedResourceState traceSchedResourceState;
+        traceSchedResourceState traceSchedResourceState{};
 
         using isGoStruct = void;
 
@@ -50,9 +50,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gTraceState& value);
     struct mTraceState
     {
-        atomic::Uintptr seqlock; // seqlock indicating that this M is writing to a trace buffer.
-        gocpp::array<traceBuf*, 2> buf; // Per-M traceBuf for writing. Indexed by trace.gen%2.
-        m* link; // Snapshot of alllink or freelink.
+        atomic::Uintptr seqlock{}; // seqlock indicating that this M is writing to a trace buffer.
+        gocpp::array<traceBuf*, 2> buf{}; // Per-M traceBuf for writing. Indexed by trace.gen%2.
+        m* link{}; // Snapshot of alllink or freelink.
 
         using isGoStruct = void;
 
@@ -68,19 +68,19 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct mTraceState& value);
     struct pTraceState
     {
-        traceSchedResourceState traceSchedResourceState;
+        traceSchedResourceState traceSchedResourceState{};
         // mSyscallID is the ID of the M this was bound to before entering a syscall.
-        int64_t mSyscallID;
+        int64_t mSyscallID{};
         // maySweep indicates the sweep events should be traced.
         // This is used to defer the sweep start event until a span
         // has actually been swept.
-        bool maySweep;
+        bool maySweep{};
         // inSweep indicates that at least one sweep event has been traced.
-        bool inSweep;
+        bool inSweep{};
         // swept and reclaimed track the number of bytes swept and reclaimed
         // by sweeping in the current sweep loop (while maySweep was true).
-        uintptr_t swept;
-        uintptr_t reclaimed;
+        uintptr_t swept{};
+        uintptr_t reclaimed{};
 
         using isGoStruct = void;
 
@@ -96,8 +96,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct pTraceState& value);
     struct traceLocker
     {
-        m* mp;
-        uintptr_t gen;
+        m* mp{};
+        uintptr_t gen{};
 
         using isGoStruct = void;
 

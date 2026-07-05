@@ -243,9 +243,9 @@ namespace golang::fs
     struct gocpp::error errClosed();
     struct PathError
     {
-        gocpp::string Op;
-        gocpp::string Path;
-        gocpp::error Err;
+        gocpp::string Op{};
+        gocpp::string Path{};
+        gocpp::error Err{};
 
         using isGoStruct = void;
 

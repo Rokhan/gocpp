@@ -529,10 +529,10 @@ namespace golang::windows
     });
     struct gocpp_id_0
     {
-        sync::Once once;
-        uintptr_t sendAddr;
-        uintptr_t recvAddr;
-        gocpp::error err;
+        sync::Once once{};
+        uintptr_t sendAddr{};
+        uintptr_t recvAddr{};
+        gocpp::error err{};
 
         using isGoStruct = void;
 

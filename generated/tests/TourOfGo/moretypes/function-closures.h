@@ -17,9 +17,9 @@ namespace golang::main
     gocpp::rune ToUpper(gocpp::rune r);
     struct compressor
     {
-        std::function<void (gocpp::slice<unsigned char> _1, gocpp::slice<uint32_t> _2)> bulkHasher;
-        std::function<int (struct compressor* _1, gocpp::slice<unsigned char> _2)> fill; // copy data to window
-        std::function<void (struct compressor* _1)> step; // process window
+        std::function<void (gocpp::slice<unsigned char> _1, gocpp::slice<uint32_t> _2)> bulkHasher{};
+        std::function<int (struct compressor* _1, gocpp::slice<unsigned char> _2)> fill{}; // copy data to window
+        std::function<void (struct compressor* _1)> step{}; // process window
 
         using isGoStruct = void;
 

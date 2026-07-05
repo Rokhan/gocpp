@@ -29,22 +29,22 @@ namespace golang::poll
     {
         // Used by IOCP interface, it must be first field
         // of the struct, as our code rely on it.
-        syscall::Overlapped o;
+        syscall::Overlapped o{};
         // fields used by runtime.netpoll
-        uintptr_t runtimeCtx;
-        int32_t mode;
-        int32_t errno;
-        uint32_t qty;
+        uintptr_t runtimeCtx{};
+        int32_t mode{};
+        int32_t errno{};
+        uint32_t qty{};
         // fields used only by net package
-        FD* fd;
-        syscall::WSABuf buf;
-        windows::WSAMsg msg;
-        syscall::Sockaddr sa;
-        syscall::RawSockaddrAny* rsa;
-        int32_t rsan;
-        syscall::Handle handle;
-        uint32_t flags;
-        gocpp::slice<syscall::WSABuf> bufs;
+        FD* fd{};
+        syscall::WSABuf buf{};
+        windows::WSAMsg msg{};
+        syscall::Sockaddr sa{};
+        syscall::RawSockaddrAny* rsa{};
+        int32_t rsan{};
+        syscall::Handle handle{};
+        uint32_t flags{};
+        gocpp::slice<syscall::WSABuf> bufs{};
 
         using isGoStruct = void;
 
@@ -75,35 +75,35 @@ namespace golang::poll
     struct FD
     {
         // Lock sysfd and serialize access to Read and Write methods.
-        fdMutex fdmu;
+        fdMutex fdmu{};
         // System file descriptor. Immutable until Close.
-        syscall::Handle Sysfd;
+        syscall::Handle Sysfd{};
         // Read operation.
-        operation rop;
+        operation rop{};
         // Write operation.
-        operation wop;
+        operation wop{};
         // I/O poller.
-        pollDesc pd;
+        pollDesc pd{};
         // Used to implement pread/pwrite.
-        mocklib::Mutex l;
+        mocklib::Mutex l{};
         // For console I/O.
-        gocpp::slice<unsigned char> lastbits; // first few bytes of the last incomplete rune in last write
-        gocpp::slice<uint16_t> readuint16; // buffer to hold uint16s obtained with ReadConsole
-        gocpp::slice<unsigned char> readbyte; // buffer to hold decoding of readuint16 from utf16 to utf8
-        int readbyteOffset; // readbyte[readOffset:] is yet to be consumed with file.Read
+        gocpp::slice<unsigned char> lastbits{}; // first few bytes of the last incomplete rune in last write
+        gocpp::slice<uint16_t> readuint16{}; // buffer to hold uint16s obtained with ReadConsole
+        gocpp::slice<unsigned char> readbyte{}; // buffer to hold decoding of readuint16 from utf16 to utf8
+        int readbyteOffset{}; // readbyte[readOffset:] is yet to be consumed with file.Read
         // Semaphore signaled when file is closed.
-        uint32_t csema;
-        bool skipSyncNotif;
+        uint32_t csema{};
+        bool skipSyncNotif{};
         // Whether this is a streaming descriptor, as opposed to a
         // packet-based descriptor like a UDP socket.
-        bool IsStream;
+        bool IsStream{};
         // Whether a zero byte read indicates EOF. This is false for a
         // message based socket connection.
-        bool ZeroReadIsEOF;
+        bool ZeroReadIsEOF{};
         // Whether this is a file rather than a network socket.
-        bool isFile;
+        bool isFile{};
         // The kind of this file.
-        golang::poll::fileKind kind;
+        golang::poll::fileKind kind{};
 
         using isGoStruct = void;
 

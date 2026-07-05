@@ -68,8 +68,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
     struct traceAdvancerState
     {
-        wakeableSleep* timer;
-        gocpp::channel<gocpp_id_2> done;
+        wakeableSleep* timer{};
+        gocpp::channel<gocpp_id_2> done{};
 
         using isGoStruct = void;
 
@@ -93,10 +93,10 @@ namespace golang::runtime
     struct g* traceReaderAvailable();
     struct wakeableSleep
     {
-        timer* timer;
+        timer* timer{};
         // lock protects access to wakeup, but not send/recv on it.
-        mutex lock;
-        gocpp::channel<gocpp_id_5> wakeup;
+        mutex lock{};
+        gocpp::channel<gocpp_id_5> wakeup{};
 
         using isGoStruct = void;
 

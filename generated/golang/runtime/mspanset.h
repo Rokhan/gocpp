@@ -14,7 +14,7 @@ namespace golang::runtime
 {
     struct spanSetSpinePointer
     {
-        gocpp::unsafe_pointer p;
+        gocpp::unsafe_pointer p{};
 
         using isGoStruct = void;
 
@@ -37,7 +37,7 @@ namespace golang::runtime
 {
     struct atomicSpanSetSpinePointer
     {
-        atomic::UnsafePointer a;
+        atomic::UnsafePointer a{};
 
         using isGoStruct = void;
 
@@ -53,7 +53,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct atomicSpanSetSpinePointer& value);
     struct spanSetBlockAlloc
     {
-        golang::runtime::lfstack stack;
+        golang::runtime::lfstack stack{};
 
         using isGoStruct = void;
 
@@ -69,7 +69,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct spanSetBlockAlloc& value);
     struct atomicHeadTailIndex
     {
-        atomic::Uint64 u;
+        atomic::Uint64 u{};
 
         using isGoStruct = void;
 
@@ -85,7 +85,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct atomicHeadTailIndex& value);
     struct atomicMSpanPointer
     {
-        atomic::UnsafePointer p;
+        atomic::UnsafePointer p{};
 
         using isGoStruct = void;
 
@@ -107,10 +107,10 @@ namespace golang::runtime
 {
     struct spanSet
     {
-        mutex spineLock;
-        atomicSpanSetSpinePointer spine; // *[N]atomic.Pointer[spanSetBlock]
-        atomic::Uintptr spineLen; // Spine array length
-        uintptr_t spineCap; // Spine array cap, accessed under spineLock
+        mutex spineLock{};
+        atomicSpanSetSpinePointer spine{}; // *[N]atomic.Pointer[spanSetBlock]
+        atomic::Uintptr spineLen{}; // Spine array length
+        uintptr_t spineCap{}; // Spine array cap, accessed under spineLock
         // index is the head and tail of the spanSet in a single field.
         // The head and the tail both represent an index into the logical
         // concatenation of all blocks, with the head always behind or
@@ -121,7 +121,7 @@ namespace golang::runtime
         // span in the heap were stored in this set, and each span were
         // the minimum size (1 runtime page, 8 KiB), then roughly the
         // smallest heap which would be unrepresentable is 32 TiB in size.
-        atomicHeadTailIndex index;
+        atomicHeadTailIndex index{};
 
         using isGoStruct = void;
 
@@ -138,13 +138,13 @@ namespace golang::runtime
     struct spanSetBlock
     {
         // Free spanSetBlocks are managed via a lock-free stack.
-        lfnode lfnode;
+        lfnode lfnode{};
         // popped is the number of pop operations that have occurred on
         // this block. This number is used to help determine when a block
         // may be safely recycled.
-        atomic::Uint32 popped;
+        atomic::Uint32 popped{};
         // spans is the set of spans in this block.
-        gocpp::array<atomicMSpanPointer, spanSetBlockEntries> spans;
+        gocpp::array<atomicMSpanPointer, spanSetBlockEntries> spans{};
 
         using isGoStruct = void;
 

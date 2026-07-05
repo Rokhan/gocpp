@@ -44,14 +44,14 @@ namespace golang::time
         // If the hasMonotonic bit is 1, then the 33-bit field holds a 33-bit
         // unsigned wall seconds since Jan 1 year 1885, and ext holds a
         // signed 64-bit monotonic clock reading, nanoseconds since process start.
-        uint64_t wall;
-        int64_t ext;
+        uint64_t wall{};
+        int64_t ext{};
         // loc specifies the Location that should be used to
         // determine the minute, hour, month, day, and year
         // that correspond to this Time.
         // The nil location means UTC.
         // All UTC times are represented with loc==nil, never loc==&utcLoc.
-        Location* loc;
+        Location* loc{};
 
         using isGoStruct = void;
 

@@ -89,8 +89,8 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct T& value);
     struct Vertex
     {
-        double Lat;
-        double Long;
+        double Lat{};
+        double Long{};
 
         using isGoStruct = void;
 

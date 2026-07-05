@@ -17,11 +17,11 @@ namespace golang::os
         // buf is a slice pointer so the slice header
         // does not escape to the heap when returning
         // buf to dirBufPool.
-        gocpp::slice<unsigned char>* buf; // buffer for directory I/O
-        int bufp; // location of next record in buf
-        uint32_t vol;
-        uint32_t go_class; // type of entries in buf
-        gocpp::string path; // absolute directory path, empty if the file system supports FILE_ID_BOTH_DIR_INFO
+        gocpp::slice<unsigned char>* buf{}; // buffer for directory I/O
+        int bufp{}; // location of next record in buf
+        uint32_t vol{};
+        uint32_t go_class{}; // type of entries in buf
+        gocpp::string path{}; // absolute directory path, empty if the file system supports FILE_ID_BOTH_DIR_INFO
 
         using isGoStruct = void;
 
@@ -45,7 +45,7 @@ namespace golang::os
     extern sync::Pool dirBufPool;
     struct dirEntry
     {
-        fileStat* fs;
+        fileStat* fs{};
 
         using isGoStruct = void;
 

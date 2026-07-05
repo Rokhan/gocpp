@@ -22,12 +22,12 @@ namespace golang::registry
 {
     struct KeyInfo
     {
-        uint32_t SubKeyCount;
-        uint32_t MaxSubKeyLen; // size of the key's subkey with the longest name, in Unicode characters, not including the terminating zero byte
-        uint32_t ValueCount;
-        uint32_t MaxValueNameLen; // size of the key's longest value name, in Unicode characters, not including the terminating zero byte
-        uint32_t MaxValueLen; // longest data component among the key's values, in bytes
-        syscall::Filetime lastWriteTime;
+        uint32_t SubKeyCount{};
+        uint32_t MaxSubKeyLen{}; // size of the key's subkey with the longest name, in Unicode characters, not including the terminating zero byte
+        uint32_t ValueCount{};
+        uint32_t MaxValueNameLen{}; // size of the key's longest value name, in Unicode characters, not including the terminating zero byte
+        uint32_t MaxValueLen{}; // longest data component among the key's values, in bytes
+        syscall::Filetime lastWriteTime{};
 
         using isGoStruct = void;
 

@@ -16,7 +16,7 @@ namespace golang::runtime
     {
         // a is just the virtual address, but should never be used
         // directly. Call addr() to get this value instead.
-        uintptr_t a;
+        uintptr_t a{};
 
         using isGoStruct = void;
 
@@ -37,8 +37,8 @@ namespace golang::runtime
         // These are address over an offset view of the address space on
         // platforms with a segmented address space, that is, on platforms
         // where arenaBaseOffset != 0.
-        offAddr base;
-        offAddr limit;
+        offAddr base{};
+        offAddr limit{};
 
         using isGoStruct = void;
 
@@ -64,7 +64,7 @@ namespace golang::runtime
     struct atomicOffAddr
     {
         // a contains the offset address, unlike offAddr.
-        atomic::Int64 a;
+        atomic::Int64 a{};
 
         using isGoStruct = void;
 
@@ -87,12 +87,12 @@ namespace golang::runtime
     struct addrRanges
     {
         // ranges is a slice of ranges sorted by base.
-        gocpp::slice<addrRange> ranges;
+        gocpp::slice<addrRange> ranges{};
         // totalBytes is the total amount of address space in bytes counted by
         // this addrRanges.
-        uintptr_t totalBytes;
+        uintptr_t totalBytes{};
         // sysStat is the stat to track allocations by this type
-        golang::runtime::sysMemStat* sysStat;
+        golang::runtime::sysMemStat* sysStat{};
 
         using isGoStruct = void;
 

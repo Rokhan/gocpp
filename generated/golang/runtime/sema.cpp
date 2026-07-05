@@ -99,8 +99,8 @@ namespace golang::runtime
     // Prime to not correlate with any user patterns.
     struct gocpp_id_0
     {
-        semaRoot root;
-        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<semaRoot>()> pad;
+        semaRoot root{};
+        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<semaRoot>()> pad{};
 
         using isGoStruct = void;
 

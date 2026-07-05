@@ -68,7 +68,7 @@ namespace golang::runtime
         // This avoids any accidental conversions being possible
         // between this struct and some other struct sharing the same fields,
         // like happened in go.dev/issue/56603.
-        gocpp::array<PanicNilError*, 0> _1;
+        gocpp::array<PanicNilError*, 0> _1{};
 
         using isGoStruct = void;
 

@@ -14,9 +14,9 @@ namespace golang::tree
 {
     struct Tree
     {
-        Tree* Left;
-        int Value;
-        Tree* Right;
+        Tree* Left{};
+        int Value{};
+        Tree* Right{};
 
         using isGoStruct = void;
 

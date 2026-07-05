@@ -24,9 +24,9 @@ namespace golang::runtime
 {
     struct cpuProfile
     {
-        mutex lock;
-        bool on; // profiling is on
-        profBuf* log; // profile events written here
+        mutex lock{};
+        bool on{}; // profiling is on
+        profBuf* log{}; // profile events written here
         // extra holds extra stacks accumulated in addNonGo
         // corresponding to profiling signals arriving on
         // non-Go-created threads. Those stacks are written
@@ -38,10 +38,10 @@ namespace golang::runtime
         // 300 words per second.
         // Hopefully a normal Go thread will get the profiling
         // signal at least once every few seconds.
-        gocpp::array<uintptr_t, 1000> extra;
-        int numExtra;
-        uint64_t lostExtra; // count of frames lost because extra is full
-        uint64_t lostAtomic; // count of frames lost because of being in atomic64 on mips/arm; updated racily
+        gocpp::array<uintptr_t, 1000> extra{};
+        int numExtra{};
+        uint64_t lostExtra{}; // count of frames lost because extra is full
+        uint64_t lostAtomic{}; // count of frames lost because of being in atomic64 on mips/arm; updated racily
 
         using isGoStruct = void;
 

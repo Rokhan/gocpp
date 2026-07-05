@@ -330,8 +330,8 @@ namespace golang::runtime
         auto _DEVICE_NOTIFY_CALLBACK = 2;
         struct _DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS
         {
-            uintptr_t callback;
-            uintptr_t context;
+            uintptr_t callback{};
+            uintptr_t context{};
 
             using isGoStruct = void;
 

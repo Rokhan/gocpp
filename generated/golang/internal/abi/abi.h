@@ -28,17 +28,17 @@ namespace golang::abi
         // directly represented, but some architectures treat narrow
         // width floating point values specially (e.g. they're promoted
         // first, or they need to be NaN-boxed).
-        gocpp::array<uintptr_t, IntArgRegs> Ints; // untyped integer registers
-        gocpp::array<uint64_t, FloatArgRegs> Floats; // untyped float registers
+        gocpp::array<uintptr_t, IntArgRegs> Ints{}; // untyped integer registers
+        gocpp::array<uint64_t, FloatArgRegs> Floats{}; // untyped float registers
         // Ptrs is a space that duplicates Ints but with pointer type,
         // used to make pointers passed or returned  in registers
         // visible to the GC by making the type unsafe.Pointer.
-        gocpp::array<gocpp::unsafe_pointer, IntArgRegs> Ptrs;
+        gocpp::array<gocpp::unsafe_pointer, IntArgRegs> Ptrs{};
         // ReturnIsPtr is a bitmap that indicates which registers
         // contain or will contain pointers on the return path from
         // a reflectcall. The i'th bit indicates whether the i'th
         // register contains or will contain a valid Go pointer.
-        IntArgRegBitmap ReturnIsPtr;
+        IntArgRegBitmap ReturnIsPtr{};
 
         using isGoStruct = void;
 

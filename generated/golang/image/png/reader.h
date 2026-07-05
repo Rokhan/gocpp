@@ -16,10 +16,10 @@ namespace golang::png
     bool cbTrueColor(int cb);
     struct interlaceScan
     {
-        int xFactor;
-        int yFactor;
-        int xOffset;
-        int yOffset;
+        int xFactor{};
+        int yFactor{};
+        int xOffset{};
+        int yOffset{};
 
         using isGoStruct = void;
 
@@ -46,22 +46,22 @@ namespace golang::png
 {
     struct decoder
     {
-        io::Reader r;
-        image::Image img;
-        hash::Hash32 crc;
-        int width;
-        int height;
-        int depth;
-        color::Palette palette;
-        int cb;
-        int stage;
-        uint32_t idatLength;
-        gocpp::array<unsigned char, 3 * 256> tmp;
-        int interlace;
+        io::Reader r{};
+        image::Image img{};
+        hash::Hash32 crc{};
+        int width{};
+        int height{};
+        int depth{};
+        color::Palette palette{};
+        int cb{};
+        int stage{};
+        uint32_t idatLength{};
+        gocpp::array<unsigned char, 3 * 256> tmp{};
+        int interlace{};
         // useTransparent and transparent are used for grayscale and truecolor
         // transparency, as opposed to palette transparency.
-        bool useTransparent;
-        gocpp::array<unsigned char, 6> transparent;
+        bool useTransparent{};
+        gocpp::array<unsigned char, 6> transparent{};
 
         using isGoStruct = void;
 

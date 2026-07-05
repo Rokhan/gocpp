@@ -18,7 +18,7 @@ namespace golang::main
     template<typename T> 
     struct Wrapper
     {
-        T value;
+        T value{};
 
         using isGoStruct = void;
 
@@ -97,7 +97,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
     struct entry
     {
-        golang::main::Pointer<go_any> p;
+        golang::main::Pointer<go_any> p{};
 
         using isGoStruct = void;
 

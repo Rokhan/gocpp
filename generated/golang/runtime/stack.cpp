@@ -122,8 +122,8 @@ namespace golang::runtime
     // stackPoisonMin is the lowest allowed stack poison value.
     struct gocpp_id_0
     {
-        stackpoolItem item;
-        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1;
+        stackpoolItem item{};
+        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1{};
 
         using isGoStruct = void;
 
@@ -204,8 +204,8 @@ namespace golang::runtime
 
     struct gocpp_id_1
     {
-        mutex lock;
-        gocpp::array<mSpanList, heapAddrBits - pageShift> free; // free lists by log_2(s.npages)
+        mutex lock{};
+        gocpp::array<mSpanList, heapAddrBits - pageShift> free{}; // free lists by log_2(s.npages)
 
         using isGoStruct = void;
 

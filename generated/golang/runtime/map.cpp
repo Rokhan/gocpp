@@ -46,8 +46,8 @@ namespace golang::runtime
 
     struct gocpp_id_0
     {
-        bmap b;
-        int64_t v;
+        bmap b{};
+        int64_t v{};
 
         using isGoStruct = void;
 

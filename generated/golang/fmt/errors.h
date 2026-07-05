@@ -27,8 +27,8 @@ namespace golang::fmt
     }
     struct wrapError
     {
-        gocpp::string msg;
-        gocpp::error err;
+        gocpp::string msg{};
+        gocpp::error err{};
 
         using isGoStruct = void;
 
@@ -44,8 +44,8 @@ namespace golang::fmt
     std::ostream& operator<<(std::ostream& os, const struct wrapError& value);
     struct wrapErrors
     {
-        gocpp::string msg;
-        gocpp::slice<gocpp::error> errs;
+        gocpp::string msg{};
+        gocpp::slice<gocpp::error> errs{};
 
         using isGoStruct = void;
 

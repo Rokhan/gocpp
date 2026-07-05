@@ -14,14 +14,14 @@ namespace golang::time
 {
     struct runtimeTimer
     {
-        uintptr_t pp;
-        int64_t when;
-        int64_t period;
-        std::function<void (go_any _1, uintptr_t _2)> f; // NOTE: must not be closure
-        go_any arg;
-        uintptr_t seq;
-        int64_t nextwhen;
-        uint32_t status;
+        uintptr_t pp{};
+        int64_t when{};
+        int64_t period{};
+        std::function<void (go_any _1, uintptr_t _2)> f{}; // NOTE: must not be closure
+        go_any arg{};
+        uintptr_t seq{};
+        int64_t nextwhen{};
+        uint32_t status{};
 
         using isGoStruct = void;
 
@@ -50,8 +50,8 @@ namespace golang::time
     int64_t when(golang::time::Duration d);
     struct Timer
     {
-        gocpp::channel<Time> C;
-        runtimeTimer r;
+        gocpp::channel<Time> C{};
+        runtimeTimer r{};
 
         using isGoStruct = void;
 

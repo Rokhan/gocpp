@@ -30,20 +30,20 @@ namespace golang::runtime
         // popping from and wbuf2 is the buffer that will be discarded
         // next.
         // Invariant: Both wbuf1 and wbuf2 are nil or neither are.
-        workbuf* wbuf1;
-        workbuf* wbuf2;
+        workbuf* wbuf1{};
+        workbuf* wbuf2{};
         // Bytes marked (blackened) on this gcWork. This is aggregated
         // into work.bytesMarked by dispose.
-        uint64_t bytesMarked;
+        uint64_t bytesMarked{};
         // Heap scan work performed on this gcWork. This is aggregated into
         // gcController by dispose and may also be flushed by callers.
         // Other types of scan work are flushed immediately.
-        int64_t heapScanWork;
+        int64_t heapScanWork{};
         // flushedWork indicates that a non-empty work buffer was
         // flushed to the global work list since the last gcMarkDone
         // termination check. Specifically, this indicates that this
         // gcWork may have communicated work to another gcWork.
-        bool flushedWork;
+        bool flushedWork{};
 
         using isGoStruct = void;
 
@@ -66,8 +66,8 @@ namespace golang::runtime
 {
     struct workbufhdr
     {
-        lfnode node; // must be first
-        int nobj;
+        lfnode node{}; // must be first
+        int nobj{};
 
         using isGoStruct = void;
 
@@ -89,8 +89,8 @@ namespace golang::runtime
 {
     struct workbuf
     {
-        sys::NotInHeap _1;
-        workbufhdr workbufhdr;
+        sys::NotInHeap _1{};
+        workbufhdr workbufhdr{};
         // account for the above fields
         /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::workbufhdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
 

@@ -14,7 +14,7 @@ namespace golang::runtime
 {
     struct Pinner
     {
-        pinner* pinner;
+        pinner* pinner{};
 
         using isGoStruct = void;
 
@@ -31,8 +31,8 @@ namespace golang::runtime
     extern uintptr_t pinnerRefStoreSize;
     struct pinner
     {
-        gocpp::slice<gocpp::unsafe_pointer> refs;
-        gocpp::array<gocpp::unsafe_pointer, pinnerRefStoreSize> refStore;
+        gocpp::slice<gocpp::unsafe_pointer> refs{};
+        gocpp::array<gocpp::unsafe_pointer, pinnerRefStoreSize> refStore{};
 
         using isGoStruct = void;
 
@@ -51,9 +51,9 @@ namespace golang::runtime
     bool setPinned(gocpp::unsafe_pointer ptr, bool pin);
     struct pinState
     {
-        uint8_t* bytep;
-        uint8_t byteVal;
-        uint8_t mask;
+        uint8_t* bytep{};
+        uint8_t byteVal{};
+        uint8_t mask{};
 
         using isGoStruct = void;
 

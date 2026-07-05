@@ -16,9 +16,9 @@ namespace golang::color
     std::tuple<uint8_t, uint8_t, uint8_t> YCbCrToRGB(uint8_t y, uint8_t cb, uint8_t cr);
     struct YCbCr
     {
-        uint8_t Y;
-        uint8_t Cb;
-        uint8_t Cr;
+        uint8_t Y{};
+        uint8_t Cb{};
+        uint8_t Cr{};
 
         using isGoStruct = void;
 
@@ -36,10 +36,10 @@ namespace golang::color
     std::tuple<uint8_t, uint8_t, uint8_t> CMYKToRGB(uint8_t c, uint8_t m, uint8_t y, uint8_t k);
     struct CMYK
     {
-        uint8_t C;
-        uint8_t M;
-        uint8_t Y;
-        uint8_t K;
+        uint8_t C{};
+        uint8_t M{};
+        uint8_t Y{};
+        uint8_t K{};
 
         using isGoStruct = void;
 
@@ -55,8 +55,8 @@ namespace golang::color
     std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
     struct NYCbCrA
     {
-        YCbCr YCbCr;
-        uint8_t A;
+        YCbCr YCbCr{};
+        uint8_t A{};
 
         using isGoStruct = void;
 

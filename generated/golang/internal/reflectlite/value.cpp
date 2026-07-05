@@ -777,8 +777,8 @@ namespace golang::reflectlite
 
     struct gocpp_id_5
     {
-        bool b;
-        go_any x;
+        bool b{};
+        go_any x{};
 
         using isGoStruct = void;
 

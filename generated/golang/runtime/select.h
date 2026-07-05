@@ -23,8 +23,8 @@ namespace golang::runtime
 {
     struct scase
     {
-        hchan* c; // chan
-        gocpp::unsafe_pointer elem; // data element
+        hchan* c{}; // chan
+        gocpp::unsafe_pointer elem{}; // data element
 
         using isGoStruct = void;
 
@@ -43,10 +43,10 @@ namespace golang::runtime
     bool selparkcommit(struct g* gp, gocpp::unsafe_pointer _1);
     struct runtimeSelect
     {
-        golang::runtime::selectDir dir;
-        gocpp::unsafe_pointer typ; // channel type (not used here)
-        hchan* ch; // channel
-        gocpp::unsafe_pointer val; // ptr to data (SendDir) or ptr to receive buffer (RecvDir)
+        golang::runtime::selectDir dir{};
+        gocpp::unsafe_pointer typ{}; // channel type (not used here)
+        hchan* ch{}; // channel
+        gocpp::unsafe_pointer val{}; // ptr to data (SendDir) or ptr to receive buffer (RecvDir)
 
         using isGoStruct = void;
 

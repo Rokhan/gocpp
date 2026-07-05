@@ -14,7 +14,7 @@ namespace golang::reflectlite
 {
     struct name
     {
-        unsigned char* bytes;
+        unsigned char* bytes{};
 
         using isGoStruct = void;
 
@@ -176,7 +176,7 @@ namespace golang::reflectlite
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
     struct rtype
     {
-        abi::Type* Type;
+        abi::Type* Type{};
 
         using isGoStruct = void;
 
@@ -193,16 +193,16 @@ namespace golang::reflectlite
     gocpp::string pkgPath(abi::Name n);
     struct mapType
     {
-        rtype rtype;
-        abi::Type* Key; // map key type
-        abi::Type* Elem; // map element (value) type
-        abi::Type* Bucket; // internal bucket structure
+        rtype rtype{};
+        abi::Type* Key{}; // map key type
+        abi::Type* Elem{}; // map element (value) type
+        abi::Type* Bucket{}; // internal bucket structure
         // function for hashing keys (ptr to key, seed) -> hash
-        std::function<uintptr_t (gocpp::unsafe_pointer _1, uintptr_t _2)> Hasher;
-        uint8_t KeySize; // size of key slot
-        uint8_t ValueSize; // size of value slot
-        uint16_t BucketSize; // size of bucket
-        uint32_t Flags;
+        std::function<uintptr_t (gocpp::unsafe_pointer _1, uintptr_t _2)> Hasher{};
+        uint8_t KeySize{}; // size of key slot
+        uint8_t ValueSize{}; // size of value slot
+        uint16_t BucketSize{}; // size of bucket
+        uint32_t Flags{};
 
         using isGoStruct = void;
 

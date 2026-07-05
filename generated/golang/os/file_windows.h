@@ -33,10 +33,10 @@ namespace golang::os
 {
     struct file
     {
-        poll::FD pfd;
-        gocpp::string name;
-        dirInfo* dirinfo; // nil unless directory being read
-        bool appendMode; // whether file is opened for appending
+        poll::FD pfd{};
+        gocpp::string name{};
+        dirInfo* dirinfo{}; // nil unless directory being read
+        bool appendMode{}; // whether file is opened for appending
 
         using isGoStruct = void;
 

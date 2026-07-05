@@ -15,10 +15,10 @@ namespace golang::syscall
     std::tuple<gocpp::string, struct gocpp::error> TranslateAccountName(gocpp::string username, uint32_t from, uint32_t to, int initSize);
     struct UserInfo10
     {
-        uint16_t* Name;
-        uint16_t* Comment;
-        uint16_t* UsrComment;
-        uint16_t* FullName;
+        uint16_t* Name{};
+        uint16_t* Comment{};
+        uint16_t* UsrComment{};
+        uint16_t* FullName{};
 
         using isGoStruct = void;
 
@@ -49,8 +49,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct SID& value);
     struct SIDAndAttributes
     {
-        SID* Sid;
-        uint32_t Attributes;
+        SID* Sid{};
+        uint32_t Attributes{};
 
         using isGoStruct = void;
 
@@ -66,7 +66,7 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct SIDAndAttributes& value);
     struct Tokenprimarygroup
     {
-        SID* PrimaryGroup;
+        SID* PrimaryGroup{};
 
         using isGoStruct = void;
 
@@ -85,7 +85,7 @@ namespace golang::syscall
     std::tuple<struct SID*, gocpp::string, uint32_t, struct gocpp::error> LookupSID(gocpp::string system, gocpp::string account);
     struct Tokenuser
     {
-        SIDAndAttributes User;
+        SIDAndAttributes User{};
 
         using isGoStruct = void;
 

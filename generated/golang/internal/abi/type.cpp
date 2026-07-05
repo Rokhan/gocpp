@@ -497,8 +497,8 @@ namespace golang::abi
                 case 1:
                     struct u
                     {
-                        PtrType PtrType;
-                        UncommonType u;
+                        PtrType PtrType{};
+                        UncommonType u{};
 
                         using isGoStruct = void;
 
@@ -516,8 +516,8 @@ namespace golang::abi
                 case 2:
                     struct u
                     {
-                        FuncType FuncType;
-                        UncommonType u;
+                        FuncType FuncType{};
+                        UncommonType u{};
 
                         using isGoStruct = void;
 
@@ -535,8 +535,8 @@ namespace golang::abi
                 case 3:
                     struct u
                     {
-                        SliceType SliceType;
-                        UncommonType u;
+                        SliceType SliceType{};
+                        UncommonType u{};
 
                         using isGoStruct = void;
 
@@ -554,8 +554,8 @@ namespace golang::abi
                 case 4:
                     struct u
                     {
-                        ArrayType ArrayType;
-                        UncommonType u;
+                        ArrayType ArrayType{};
+                        UncommonType u{};
 
                         using isGoStruct = void;
 
@@ -573,8 +573,8 @@ namespace golang::abi
                 case 5:
                     struct u
                     {
-                        ChanType ChanType;
-                        UncommonType u;
+                        ChanType ChanType{};
+                        UncommonType u{};
 
                         using isGoStruct = void;
 
@@ -592,8 +592,8 @@ namespace golang::abi
                 case 6:
                     struct u
                     {
-                        MapType MapType;
-                        UncommonType u;
+                        MapType MapType{};
+                        UncommonType u{};
 
                         using isGoStruct = void;
 
@@ -611,8 +611,8 @@ namespace golang::abi
                 case 7:
                     struct u
                     {
-                        InterfaceType InterfaceType;
-                        UncommonType u;
+                        InterfaceType InterfaceType{};
+                        UncommonType u{};
 
                         using isGoStruct = void;
 
@@ -630,8 +630,8 @@ namespace golang::abi
                 default:
                     struct u
                     {
-                        Type Type;
-                        UncommonType u;
+                        Type Type{};
+                        UncommonType u{};
 
                         using isGoStruct = void;
 

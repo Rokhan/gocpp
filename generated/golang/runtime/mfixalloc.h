@@ -16,16 +16,16 @@ namespace golang::runtime
 {
     struct fixalloc
     {
-        uintptr_t size;
-        std::function<void (gocpp::unsafe_pointer arg, gocpp::unsafe_pointer p)> first; // called first time p is returned
-        gocpp::unsafe_pointer arg;
-        mlink* list;
-        uintptr_t chunk; // use uintptr instead of unsafe.Pointer to avoid write barriers
-        uint32_t nchunk; // bytes remaining in current chunk
-        uint32_t nalloc; // size of new chunks in bytes
-        uintptr_t inuse; // in-use bytes now
-        golang::runtime::sysMemStat* stat;
-        bool zero; // zero allocations
+        uintptr_t size{};
+        std::function<void (gocpp::unsafe_pointer arg, gocpp::unsafe_pointer p)> first{}; // called first time p is returned
+        gocpp::unsafe_pointer arg{};
+        mlink* list{};
+        uintptr_t chunk{}; // use uintptr instead of unsafe.Pointer to avoid write barriers
+        uint32_t nchunk{}; // bytes remaining in current chunk
+        uint32_t nalloc{}; // size of new chunks in bytes
+        uintptr_t inuse{}; // in-use bytes now
+        golang::runtime::sysMemStat* stat{};
+        bool zero{}; // zero allocations
 
         using isGoStruct = void;
 
@@ -41,8 +41,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct fixalloc& value);
     struct mlink
     {
-        sys::NotInHeap _1;
-        mlink* next;
+        sys::NotInHeap _1{};
+        mlink* next{};
 
         using isGoStruct = void;
 

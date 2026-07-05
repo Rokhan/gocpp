@@ -1665,8 +1665,8 @@ namespace golang::runtime
 
     struct gocpp_id_0
     {
-        mutex mutex;
-        persistentAlloc persistentAlloc;
+        mutex mutex{};
+        persistentAlloc persistentAlloc{};
 
         using isGoStruct = void;
 

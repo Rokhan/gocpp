@@ -357,9 +357,9 @@ namespace golang::runtime
     bool doubleCheckReadMemStats = false;
     struct gocpp_id_1
         {
-            uint32_t Size;
-            uint64_t Mallocs;
-            uint64_t Frees;
+            uint32_t Size{};
+            uint64_t Mallocs{};
+            uint64_t Frees{};
 
             using isGoStruct = void;
 

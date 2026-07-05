@@ -34,14 +34,14 @@ namespace golang::runtime
 
     struct gocpp_id_0
     {
-        note note;
-        gocpp::array<uint32_t, (go__NSIG + 31) / 32> mask;
-        gocpp::array<uint32_t, (go__NSIG + 31) / 32> wanted;
-        gocpp::array<uint32_t, (go__NSIG + 31) / 32> ignored;
-        gocpp::array<uint32_t, (go__NSIG + 31) / 32> recv;
-        atomic::Uint32 state;
-        atomic::Uint32 delivering;
-        bool inuse;
+        note note{};
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> mask{};
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> wanted{};
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> ignored{};
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> recv{};
+        atomic::Uint32 state{};
+        atomic::Uint32 delivering{};
+        bool inuse{};
 
         using isGoStruct = void;
 

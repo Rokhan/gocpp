@@ -21,8 +21,8 @@ namespace golang::reflect
     gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
     struct fieldScan
     {
-        structType* typ;
-        gocpp::slice<int> index;
+        structType* typ{};
+        gocpp::slice<int> index{};
 
         using isGoStruct = void;
 
@@ -57,8 +57,8 @@ namespace golang::reflect
     gocpp::slice<unsigned char> appendVarint(gocpp::slice<unsigned char> x, uintptr_t v);
     struct bitVector
     {
-        uint32_t n; // number of bits
-        gocpp::slice<unsigned char> data;
+        uint32_t n{}; // number of bits
+        gocpp::slice<unsigned char> data{};
 
         using isGoStruct = void;
 
@@ -425,7 +425,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct Type& value);
     struct common
     {
-        abi::Type Type;
+        abi::Type Type{};
 
         using isGoStruct = void;
 
@@ -441,7 +441,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct common& value);
     struct rtype
     {
-        abi::Type t;
+        abi::Type t{};
 
         using isGoStruct = void;
 
@@ -457,7 +457,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     struct interfaceType
     {
-        abi::InterfaceType InterfaceType; // can embed directly because not a public type.
+        abi::InterfaceType InterfaceType{}; // can embed directly because not a public type.
 
         using isGoStruct = void;
 
@@ -473,7 +473,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct interfaceType& value);
     struct mapType
     {
-        abi::MapType MapType;
+        abi::MapType MapType{};
 
         using isGoStruct = void;
 
@@ -489,7 +489,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct mapType& value);
     struct ptrType
     {
-        abi::PtrType PtrType;
+        abi::PtrType PtrType{};
 
         using isGoStruct = void;
 
@@ -505,7 +505,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct ptrType& value);
     struct sliceType
     {
-        abi::SliceType SliceType;
+        abi::SliceType SliceType{};
 
         using isGoStruct = void;
 
@@ -521,7 +521,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct sliceType& value);
     struct structType
     {
-        abi::StructType StructType;
+        abi::StructType StructType{};
 
         using isGoStruct = void;
 
@@ -542,10 +542,10 @@ namespace golang::reflect
     extern sync::Map lookupCache;
     struct cacheKey
     {
-        golang::reflect::Kind kind;
-        abi::Type* t1;
-        abi::Type* t2;
-        uintptr_t extra;
+        golang::reflect::Kind kind{};
+        abi::Type* t1{};
+        abi::Type* t2{};
+        uintptr_t extra{};
 
         using isGoStruct = void;
 
@@ -564,8 +564,8 @@ namespace golang::reflect
     extern gocpp_id_10 structLookupCache;
     struct layoutKey
     {
-        golang::reflect::funcType* ftyp; // function signature
-        abi::Type* rcvr; // receiver type, or nil if none
+        golang::reflect::funcType* ftyp{}; // function signature
+        abi::Type* rcvr{}; // receiver type, or nil if none
 
         using isGoStruct = void;
 
@@ -581,9 +581,9 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct layoutKey& value);
     struct layoutType
     {
-        abi::Type* t;
-        sync::Pool* framePool;
-        abiDesc abid;
+        abi::Type* t{};
+        sync::Pool* framePool{};
+        abiDesc abid{};
 
         using isGoStruct = void;
 
@@ -609,16 +609,16 @@ namespace golang::reflect
     struct StructField
     {
         // Name is the field name.
-        gocpp::string Name;
+        gocpp::string Name{};
         // PkgPath is the package path that qualifies a lower case (unexported)
         // field name. It is empty for upper case (exported) field names.
         // See https://golang.org/ref/spec#Uniqueness_of_identifiers
-        gocpp::string PkgPath;
-        Type Type; // field type
-        golang::reflect::StructTag Tag; // field tag string
-        uintptr_t Offset; // offset within struct, in bytes
-        gocpp::slice<int> Index; // index sequence for Type.FieldByIndex
-        bool Anonymous; // is an embedded field
+        gocpp::string PkgPath{};
+        Type Type{}; // field type
+        golang::reflect::StructTag Tag{}; // field tag string
+        uintptr_t Offset{}; // offset within struct, in bytes
+        gocpp::slice<int> Index{}; // index sequence for Type.FieldByIndex
+        bool Anonymous{}; // is an embedded field
 
         using isGoStruct = void;
 
@@ -659,8 +659,8 @@ namespace golang::reflect
     struct Type SliceOf(struct Type t);
     struct structTypeUncommon
     {
-        structType structType;
-        golang::reflect::uncommonType u;
+        structType structType{};
+        golang::reflect::uncommonType u{};
 
         using isGoStruct = void;
 
@@ -691,16 +691,16 @@ namespace golang::reflect
     struct Method
     {
         // Name is the method name.
-        gocpp::string Name;
+        gocpp::string Name{};
         // PkgPath is the package path that qualifies a lower case (unexported)
         // method name. It is empty for upper case (exported) method names.
         // The combination of PkgPath and Name uniquely identifies a method
         // in a method set.
         // See https://golang.org/ref/spec#Uniqueness_of_identifiers
-        gocpp::string PkgPath;
-        Type Type; // method type
+        gocpp::string PkgPath{};
+        Type Type{}; // method type
         /* Value Func; [Known incomplete type] */ // func with receiver as first argument
-        int Index; // index for Type.Method
+        int Index{}; // index for Type.Method
 
         using isGoStruct = void;
 

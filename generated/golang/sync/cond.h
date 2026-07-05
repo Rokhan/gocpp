@@ -35,11 +35,11 @@ namespace golang::sync
 {
     struct Cond
     {
-        noCopy noCopy;
+        noCopy noCopy{};
         // L is held while observing or changing the condition
-        Locker L;
-        notifyList notify;
-        golang::sync::copyChecker checker;
+        Locker L{};
+        notifyList notify{};
+        golang::sync::copyChecker checker{};
 
         using isGoStruct = void;
 

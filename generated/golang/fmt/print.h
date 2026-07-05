@@ -399,25 +399,25 @@ namespace golang::fmt
 {
     struct pp
     {
-        golang::fmt::buffer buf;
+        golang::fmt::buffer buf{};
         // arg holds the current item, as an interface{}.
-        go_any arg;
+        go_any arg{};
         // value is used instead of arg for reflect values.
-        reflect::Value value;
+        reflect::Value value{};
         // fmt is used to format basic items such as integers or strings.
-        golang::fmt::fmt fmt;
+        golang::fmt::fmt fmt{};
         // reordered records whether the format string used argument reordering.
-        bool reordered;
+        bool reordered{};
         // goodArgNum records whether the most recent reordering directive was valid.
-        bool goodArgNum;
+        bool goodArgNum{};
         // panicking is set by catchPanic to avoid infinite panic, recover, panic, ... recursion.
-        bool panicking;
+        bool panicking{};
         // erroring is set when printing an error string to guard against calling handleMethods.
-        bool erroring;
+        bool erroring{};
         // wrapErrs is set when the format string may contain a %w verb.
-        bool wrapErrs;
+        bool wrapErrs{};
         // wrappedErrs records the targets of the %w verb.
-        gocpp::slice<int> wrappedErrs;
+        gocpp::slice<int> wrappedErrs{};
 
         using isGoStruct = void;
 

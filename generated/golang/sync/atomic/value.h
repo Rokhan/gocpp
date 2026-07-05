@@ -14,7 +14,7 @@ namespace golang::atomic
 {
     struct Value
     {
-        go_any v;
+        go_any v{};
 
         using isGoStruct = void;
 
@@ -30,8 +30,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
     struct efaceWords
     {
-        gocpp::unsafe_pointer typ;
-        gocpp::unsafe_pointer data;
+        gocpp::unsafe_pointer typ{};
+        gocpp::unsafe_pointer data{};
 
         using isGoStruct = void;
 

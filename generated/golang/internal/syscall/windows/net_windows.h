@@ -14,8 +14,8 @@ namespace golang::windows
 {
     struct TCP_INITIAL_RTO_PARAMETERS
     {
-        uint16_t Rtt;
-        uint8_t MaxSynRetransmissions;
+        uint16_t Rtt{};
+        uint8_t MaxSynRetransmissions{};
 
         using isGoStruct = void;
 

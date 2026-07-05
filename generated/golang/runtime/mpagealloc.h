@@ -33,13 +33,13 @@ namespace golang::runtime
     {
         // index is an efficient index of chunks that have pages available to
         // scavenge.
-        scavengeIndex index;
+        scavengeIndex index{};
         // releasedBg is the amount of memory released in the background this
         // scavenge cycle.
-        atomic::Uintptr releasedBg;
+        atomic::Uintptr releasedBg{};
         // releasedEager is the amount of memory released eagerly this scavenge
         // cycle.
-        atomic::Uintptr releasedEager;
+        atomic::Uintptr releasedEager{};
 
         using isGoStruct = void;
 
@@ -79,7 +79,7 @@ namespace golang::runtime
         // memory which is only Reserved which may result in a hard fault.
         // We may still get segmentation faults < len since some of that
         // memory may not be committed yet.
-        gocpp::array<gocpp::slice<golang::runtime::pallocSum>, summaryLevels> summary;
+        gocpp::array<gocpp::slice<golang::runtime::pallocSum>, summaryLevels> summary{};
         // chunks is a slice of bitmap chunks.
         // The total size of chunks is quite large on most 64-bit platforms
         // (O(GiB) or more) if flattened, so rather than making one large mapping
@@ -107,7 +107,7 @@ namespace golang::runtime
         // TODO(mknyszek): Consider changing the definition of the bitmap
         // such that 1 means free and 0 means in-use so that summaries and
         // the bitmaps align better on zero-values.
-        gocpp::array<gocpp::array_ptr<gocpp::array<pallocData, 1 << pallocChunksL2Bits>>, 1 << pallocChunksL1Bits> chunks;
+        gocpp::array<gocpp::array_ptr<gocpp::array<pallocData, 1 << pallocChunksL2Bits>>, 1 << pallocChunksL1Bits> chunks{};
         // The address to start an allocation search with. It must never
         // point to any memory that is not contained in inUse, i.e.
         // inUse.contains(searchAddr.addr()) must always be true. The one
@@ -115,13 +115,13 @@ namespace golang::runtime
         // maxOffAddr to indicate that the heap is exhausted.
         // We guarantee that all valid heap addresses below this value
         // are allocated and not worth searching.
-        offAddr searchAddr;
+        offAddr searchAddr{};
         // start and end represent the chunk indices
         // which pageAlloc knows about. It assumes
         // chunks in the range [start, end) are
         // currently ready to use.
-        golang::runtime::chunkIdx start;
-        golang::runtime::chunkIdx end;
+        golang::runtime::chunkIdx start{};
+        golang::runtime::chunkIdx end{};
         // inUse is a slice of ranges of address space which are
         // known by the page allocator to be currently in-use (passed
         // to grow).
@@ -129,24 +129,24 @@ namespace golang::runtime
         // and take additional measures to ensure that, so in nearly all
         // cases this should have just 1 element.
         // All access is protected by the mheapLock.
-        addrRanges inUse;
+        addrRanges inUse{};
         // scav stores the scavenger state.
-        gocpp_id_0 scav;
+        gocpp_id_0 scav{};
         // mheap_.lock. This level of indirection makes it possible
         // to test pageAlloc independently of the runtime allocator.
-        mutex* mheapLock;
+        mutex* mheapLock{};
         // sysStat is the runtime memstat to update when new system
         // memory is committed by the pageAlloc for allocation metadata.
-        golang::runtime::sysMemStat* sysStat;
+        golang::runtime::sysMemStat* sysStat{};
         // summaryMappedReady is the number of bytes mapped in the Ready state
         // in the summary structure. Used only for testing currently.
         // Protected by mheapLock.
-        uintptr_t summaryMappedReady;
+        uintptr_t summaryMappedReady{};
         // chunkHugePages indicates whether page bitmap chunks should be backed
         // by huge pages.
-        bool chunkHugePages;
+        bool chunkHugePages{};
         // Whether or not this struct is being used in tests.
-        bool test;
+        bool test{};
 
         using isGoStruct = void;
 

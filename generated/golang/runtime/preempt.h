@@ -23,16 +23,16 @@ namespace golang::runtime
 {
     struct suspendGState
     {
-        g* g;
+        g* g{};
         // dead indicates the goroutine was not suspended because it
         // is dead. This goroutine could be reused after the dead
         // state was observed, so the caller must not assume that it
         // remains dead.
-        bool dead;
+        bool dead{};
         // stopped indicates that this suspendG transitioned the G to
         // _Gwaiting via g.preemptStop and thus is responsible for
         // readying it when done.
-        bool stopped;
+        bool stopped{};
 
         using isGoStruct = void;
 

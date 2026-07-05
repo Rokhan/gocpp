@@ -2797,11 +2797,11 @@ namespace golang::runtime
 
     struct gocpp_id_4
     {
-        mutex lock;
-        gcBitsArena* free;
-        gcBitsArena* next; // Read atomically. Write atomically under lock.
-        gcBitsArena* current;
-        gcBitsArena* previous;
+        mutex lock{};
+        gcBitsArena* free{};
+        gcBitsArena* next{}; // Read atomically. Write atomically under lock.
+        gcBitsArena* current{};
+        gcBitsArena* previous{};
 
         using isGoStruct = void;
 

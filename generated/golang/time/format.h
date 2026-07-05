@@ -31,11 +31,11 @@ namespace golang::time
     gocpp::slice<unsigned char> appendNano(gocpp::slice<unsigned char> b, int nanosec, int std);
     struct ParseError
     {
-        gocpp::string Layout;
-        gocpp::string Value;
-        gocpp::string LayoutElem;
-        gocpp::string ValueElem;
-        gocpp::string Message;
+        gocpp::string Layout{};
+        gocpp::string Value{};
+        gocpp::string LayoutElem{};
+        gocpp::string ValueElem{};
+        gocpp::string Message{};
 
         using isGoStruct = void;
 

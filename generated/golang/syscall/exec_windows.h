@@ -23,10 +23,10 @@ namespace golang::syscall
     std::tuple<gocpp::string, struct gocpp::error> joinExeDirAndFName(gocpp::string dir, gocpp::string p);
     struct ProcAttr
     {
-        gocpp::string Dir;
-        gocpp::slice<gocpp::string> Env;
-        gocpp::slice<uintptr_t> Files;
-        SysProcAttr* Sys;
+        gocpp::string Dir{};
+        gocpp::slice<gocpp::string> Env{};
+        gocpp::slice<uintptr_t> Files{};
+        SysProcAttr* Sys{};
 
         using isGoStruct = void;
 
@@ -56,15 +56,15 @@ namespace golang::syscall
     struct gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking);
     struct SysProcAttr
     {
-        bool HideWindow;
-        gocpp::string CmdLine; // used if non-empty, else the windows command line is built by escaping the arguments passed to StartProcess
-        uint32_t CreationFlags;
-        golang::syscall::Token Token; // if set, runs new process in the security context represented by the token
-        SecurityAttributes* ProcessAttributes; // if set, applies these security attributes as the descriptor for the new process
-        SecurityAttributes* ThreadAttributes; // if set, applies these security attributes as the descriptor for the main thread of the new process
-        bool NoInheritHandles; // if set, no handles are inherited by the new process, not even the standard handles, contained in ProcAttr.Files, nor the ones contained in AdditionalInheritedHandles
-        gocpp::slice<golang::syscall::Handle> AdditionalInheritedHandles; // a list of additional handles, already marked as inheritable, that will be inherited by the new process
-        golang::syscall::Handle ParentProcess; // if non-zero, the new process regards the process given by this handle as its parent process, and AdditionalInheritedHandles, if set, should exist in this parent process
+        bool HideWindow{};
+        gocpp::string CmdLine{}; // used if non-empty, else the windows command line is built by escaping the arguments passed to StartProcess
+        uint32_t CreationFlags{};
+        golang::syscall::Token Token{}; // if set, runs new process in the security context represented by the token
+        SecurityAttributes* ProcessAttributes{}; // if set, applies these security attributes as the descriptor for the new process
+        SecurityAttributes* ThreadAttributes{}; // if set, applies these security attributes as the descriptor for the main thread of the new process
+        bool NoInheritHandles{}; // if set, no handles are inherited by the new process, not even the standard handles, contained in ProcAttr.Files, nor the ones contained in AdditionalInheritedHandles
+        gocpp::slice<golang::syscall::Handle> AdditionalInheritedHandles{}; // a list of additional handles, already marked as inheritable, that will be inherited by the new process
+        golang::syscall::Handle ParentProcess{}; // if non-zero, the new process regards the process given by this handle as its parent process, and AdditionalInheritedHandles, if set, should exist in this parent process
 
         using isGoStruct = void;
 

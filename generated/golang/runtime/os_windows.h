@@ -166,11 +166,11 @@ namespace golang::runtime
     void tstart_stdcall(struct m* newm);
     struct mOS
     {
-        mutex threadLock; // protects "thread" and prevents closing
-        uintptr_t thread; // thread handle
-        uintptr_t waitsema; // semaphore for parking on locks
-        uintptr_t resumesema; // semaphore to indicate suspend/resume
-        uintptr_t highResTimer; // high resolution timer handle used in usleep
+        mutex threadLock{}; // protects "thread" and prevents closing
+        uintptr_t thread{}; // thread handle
+        uintptr_t waitsema{}; // semaphore for parking on locks
+        uintptr_t resumesema{}; // semaphore to indicate suspend/resume
+        uintptr_t highResTimer{}; // high resolution timer handle used in usleep
         // preemptExtLock synchronizes preemptM with entry/exit from
         // external C code.
         // This protects against races between preemptM calling
@@ -189,7 +189,7 @@ namespace golang::runtime
         // TODO(austin): We may not need this if preemption were more
         // tightly synchronized on the G/P status and preemption
         // blocked transition into _Gsyscall/_Psyscall.
-        uint32_t preemptExtLock;
+        uint32_t preemptExtLock{};
 
         using isGoStruct = void;
 

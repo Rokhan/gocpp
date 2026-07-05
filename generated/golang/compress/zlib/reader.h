@@ -21,11 +21,11 @@ namespace golang::zlib
     extern gocpp::error ErrHeader;
     struct reader
     {
-        flate::Reader r;
-        io::ReadCloser decompressor;
-        hash::Hash32 digest;
-        gocpp::error err;
-        gocpp::array<unsigned char, 4> scratch;
+        flate::Reader r{};
+        io::ReadCloser decompressor{};
+        hash::Hash32 digest{};
+        gocpp::error err{};
+        gocpp::array<unsigned char, 4> scratch{};
 
         using isGoStruct = void;
 

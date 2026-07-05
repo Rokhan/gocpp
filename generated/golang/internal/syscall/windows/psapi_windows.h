@@ -14,16 +14,16 @@ namespace golang::windows
 {
     struct PROCESS_MEMORY_COUNTERS
     {
-        uint32_t CB;
-        uint32_t PageFaultCount;
-        uintptr_t PeakWorkingSetSize;
-        uintptr_t WorkingSetSize;
-        uintptr_t QuotaPeakPagedPoolUsage;
-        uintptr_t QuotaPagedPoolUsage;
-        uintptr_t QuotaPeakNonPagedPoolUsage;
-        uintptr_t QuotaNonPagedPoolUsage;
-        uintptr_t PagefileUsage;
-        uintptr_t PeakPagefileUsage;
+        uint32_t CB{};
+        uint32_t PageFaultCount{};
+        uintptr_t PeakWorkingSetSize{};
+        uintptr_t WorkingSetSize{};
+        uintptr_t QuotaPeakPagedPoolUsage{};
+        uintptr_t QuotaPagedPoolUsage{};
+        uintptr_t QuotaPeakNonPagedPoolUsage{};
+        uintptr_t QuotaNonPagedPoolUsage{};
+        uintptr_t PagefileUsage{};
+        uintptr_t PeakPagefileUsage{};
 
         using isGoStruct = void;
 

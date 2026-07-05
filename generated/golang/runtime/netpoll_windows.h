@@ -28,12 +28,12 @@ namespace golang::runtime
     struct net_op
     {
         // used by windows
-        overlapped o;
+        overlapped o{};
         // used by netpoll
-        pollDesc* pd;
-        int32_t mode;
-        int32_t errno;
-        uint32_t qty;
+        pollDesc* pd{};
+        int32_t mode{};
+        int32_t errno{};
+        uint32_t qty{};
 
         using isGoStruct = void;
 
@@ -49,10 +49,10 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct net_op& value);
     struct overlappedEntry
     {
-        pollDesc* key;
-        net_op* op; // In reality it's *overlapped, but we cast it to *net_op anyway.
-        uintptr_t internal;
-        uint32_t qty;
+        pollDesc* key{};
+        net_op* op{}; // In reality it's *overlapped, but we cast it to *net_op anyway.
+        uintptr_t internal{};
+        uint32_t qty{};
 
         using isGoStruct = void;
 

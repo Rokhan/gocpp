@@ -15,8 +15,8 @@ namespace golang::utf8
     extern gocpp::array<uint8_t, 256> first;
     struct acceptRange
     {
-        uint8_t lo; // lowest value for second byte.
-        uint8_t hi; // highest value for second byte.
+        uint8_t lo{}; // lowest value for second byte.
+        uint8_t hi{}; // highest value for second byte.
 
         using isGoStruct = void;
 

@@ -1328,8 +1328,8 @@ namespace golang::io
     struct Reader LimitReader(struct Reader r, int64_t n);
     struct LimitedReader
     {
-        Reader R; // underlying reader
-        int64_t N; // max bytes remaining
+        Reader R{}; // underlying reader
+        int64_t N{}; // max bytes remaining
 
         using isGoStruct = void;
 
@@ -1345,11 +1345,11 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct LimitedReader& value);
     struct SectionReader
     {
-        ReaderAt r; // constant after creation
-        int64_t base; // constant after creation
-        int64_t off;
-        int64_t limit; // constant after creation
-        int64_t n; // constant after creation
+        ReaderAt r{}; // constant after creation
+        int64_t base{}; // constant after creation
+        int64_t off{};
+        int64_t limit{}; // constant after creation
+        int64_t n{}; // constant after creation
 
         using isGoStruct = void;
 
@@ -1365,9 +1365,9 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct SectionReader& value);
     struct OffsetWriter
     {
-        WriterAt w;
-        int64_t base; // the original offset
-        int64_t off; // the current offset
+        WriterAt w{};
+        int64_t base{}; // the original offset
+        int64_t off{}; // the current offset
 
         using isGoStruct = void;
 
@@ -1384,8 +1384,8 @@ namespace golang::io
     struct Reader TeeReader(struct Reader r, struct Writer w);
     struct teeReader
     {
-        Reader r;
-        Writer w;
+        Reader r{};
+        Writer w{};
 
         using isGoStruct = void;
 
@@ -1403,7 +1403,7 @@ namespace golang::io
     extern ReaderFrom _;
     struct nopCloser
     {
-        Reader Reader;
+        Reader Reader{};
 
         using isGoStruct = void;
 
@@ -1425,7 +1425,7 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct nopCloser& value);
     struct nopCloserWriterTo
     {
-        Reader Reader;
+        Reader Reader{};
 
         using isGoStruct = void;
 

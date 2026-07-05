@@ -20,8 +20,8 @@ namespace golang::main
     extern int kk;
     struct pos
     {
-        int x;
-        int y;
+        int x{};
+        int y{};
 
         using isGoStruct = void;
 

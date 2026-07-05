@@ -25,8 +25,8 @@ namespace golang::runtime
 {
     struct checkmarksMap
     {
-        sys::NotInHeap _1;
-        gocpp::array<uint8_t, heapArenaBytes / goarch::PtrSize / 8> b;
+        sys::NotInHeap _1{};
+        gocpp::array<uint8_t, heapArenaBytes / goarch::PtrSize / 8> b{};
 
         using isGoStruct = void;
 

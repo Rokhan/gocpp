@@ -16,8 +16,8 @@ namespace golang::time
     extern std::function<std::tuple<gocpp::string, struct gocpp::error> (gocpp::string zipname)> loadFromEmbeddedTZData;
     struct dataIO
     {
-        gocpp::slice<unsigned char> p;
-        bool error;
+        gocpp::slice<unsigned char> p{};
+        bool error{};
 
         using isGoStruct = void;
 

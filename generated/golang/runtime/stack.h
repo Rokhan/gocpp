@@ -19,8 +19,8 @@ namespace golang::runtime
     extern gocpp::slice<gocpp::string> ptrnames;
     struct bitvector
     {
-        int32_t n; // # of bits
-        uint8_t* bytedata;
+        int32_t n{}; // # of bits
+        uint8_t* bytedata{};
 
         using isGoStruct = void;
 
@@ -43,10 +43,10 @@ namespace golang::runtime
         // offset in frame
         // if negative, offset from varp
         // if non-negative, offset from argp
-        int32_t off;
-        int32_t size;
-        int32_t _ptrdata; // ptrdata, or -ptrdata is GC prog is used
-        uint32_t gcdataoff; // offset to gcdata from moduledata.rodata
+        int32_t off{};
+        int32_t size{};
+        int32_t _ptrdata{}; // ptrdata, or -ptrdata is GC prog is used
+        uint32_t gcdataoff{}; // offset to gcdata from moduledata.rodata
 
         using isGoStruct = void;
 
@@ -75,9 +75,9 @@ namespace golang::runtime
 {
     struct stackpoolItem
     {
-        sys::NotInHeap _1;
-        mutex mu;
-        mSpanList span;
+        sys::NotInHeap _1{};
+        mutex mu{};
+        mSpanList span{};
 
         using isGoStruct = void;
 
@@ -101,10 +101,10 @@ namespace golang::runtime
     void stackfree(struct stack stk);
     struct adjustinfo
     {
-        stack old;
-        uintptr_t delta; // ptr distance from old to new stack (newbase - oldbase)
+        stack old{};
+        uintptr_t delta{}; // ptr distance from old to new stack (newbase - oldbase)
         // sghi is the highest sudog.elem on the stack.
-        uintptr_t sghi;
+        uintptr_t sghi{};
 
         using isGoStruct = void;
 

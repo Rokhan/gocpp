@@ -23,7 +23,7 @@ namespace golang::runtime
     {
         // fn is the function being run in this frame. If there is
         // inlining, this is the outermost function.
-        funcInfo fn;
+        funcInfo fn{};
         // pc is the program counter within fn.
         // The meaning of this is subtle:
         // - Typically, this frame performed a regular function call
@@ -44,19 +44,19 @@ namespace golang::runtime
         // instruction in a function. Conventionally, we use pc-1
         // for symbolic information, unless pc == fn.entry(), in
         // which case we use pc.
-        uintptr_t pc;
+        uintptr_t pc{};
         // continpc is the PC where execution will continue in fn, or
         // 0 if execution will not continue in this frame.
         // This is usually the same as pc, unless this frame "called"
         // sigpanic, in which case it's either the address of
         // deferreturn or 0 if this frame will never execute again.
         // This is the PC to use to look up GC liveness for this frame.
-        uintptr_t continpc;
-        uintptr_t lr; // program counter at caller aka link register
-        uintptr_t sp; // stack pointer at pc
-        uintptr_t fp; // stack pointer at caller aka frame pointer
-        uintptr_t varp; // top of local variables
-        uintptr_t argp; // pointer to function arguments
+        uintptr_t continpc{};
+        uintptr_t lr{}; // program counter at caller aka link register
+        uintptr_t sp{}; // stack pointer at pc
+        uintptr_t fp{}; // stack pointer at caller aka frame pointer
+        uintptr_t varp{}; // top of local variables
+        uintptr_t argp{}; // pointer to function arguments
 
         using isGoStruct = void;
 
@@ -72,9 +72,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct stkframe& value);
     struct reflectMethodValue
     {
-        uintptr_t fn;
-        bitvector* stack; // ptrmap for both args and results
-        uintptr_t argLen; // just args
+        uintptr_t fn{};
+        bitvector* stack{}; // ptrmap for both args and results
+        uintptr_t argLen{}; // just args
 
         using isGoStruct = void;
 

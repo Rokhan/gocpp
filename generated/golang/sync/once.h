@@ -21,8 +21,8 @@ namespace golang::sync
         // The hot path is inlined at every call site.
         // Placing done first allows more compact instructions on some architectures (amd64/386),
         // and fewer instructions (to calculate offset) on other architectures.
-        atomic::Uint32 done;
-        Mutex m;
+        atomic::Uint32 done{};
+        Mutex m{};
 
         using isGoStruct = void;
 

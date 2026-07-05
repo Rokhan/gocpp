@@ -14,8 +14,8 @@ namespace golang::time
 {
     struct abbr
     {
-        gocpp::string std;
-        gocpp::string dst;
+        gocpp::string std{};
+        gocpp::string dst{};
 
         using isGoStruct = void;
 

@@ -207,19 +207,19 @@ namespace golang::runtime
         // memory to the OS. This goal is derived from gcController.gcPercent
         // by choosing to retain enough memory to allocate heap memory up to
         // the heap goal.
-        atomic::Uint64 gcPercentGoal;
+        atomic::Uint64 gcPercentGoal{};
         // memoryLimitGoal is the amount of memory retained by the runtime (
         // measured by gcController.mappedReady) that the runtime will try to
         // maintain by returning memory to the OS. This goal is derived from
         // gcController.memoryLimit by choosing to target the memory limit or
         // some lower target to keep the scavenger working.
-        atomic::Uint64 memoryLimitGoal;
+        atomic::Uint64 memoryLimitGoal{};
         // assistTime is the time spent by the allocator scavenging in the last GC cycle.
         // This is reset once a GC cycle ends.
-        atomic::Int64 assistTime;
+        atomic::Int64 assistTime{};
         // backgroundTime is the time spent by the background scavenger in the last GC cycle.
         // This is reset once a GC cycle ends.
-        atomic::Int64 backgroundTime;
+        atomic::Int64 backgroundTime{};
 
         using isGoStruct = void;
 

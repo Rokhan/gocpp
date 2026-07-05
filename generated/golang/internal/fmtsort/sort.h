@@ -21,8 +21,8 @@ namespace golang::fmtsort
 {
     struct SortedMap
     {
-        gocpp::slice<reflect::Value> Key;
-        gocpp::slice<reflect::Value> Value;
+        gocpp::slice<reflect::Value> Key{};
+        gocpp::slice<reflect::Value> Value{};
 
         using isGoStruct = void;
 

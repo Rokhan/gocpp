@@ -14,10 +14,10 @@ namespace golang::runtime
 {
     struct traceFrame
     {
-        uintptr_t PC;
-        uint64_t funcID;
-        uint64_t fileID;
-        uint64_t line;
+        uintptr_t PC{};
+        uint64_t funcID{};
+        uint64_t fileID{};
+        uint64_t line{};
 
         using isGoStruct = void;
 
@@ -46,7 +46,7 @@ namespace golang::runtime
     uint64_t traceStack(int skip, struct m* mp, uintptr_t gen);
     struct traceStackTable
     {
-        traceMap tab;
+        traceMap tab{};
 
         using isGoStruct = void;
 

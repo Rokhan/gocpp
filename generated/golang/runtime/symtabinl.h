@@ -17,10 +17,10 @@ namespace golang::runtime
         // pc is the PC giving the file/line metadata of the current frame. This is
         // always a "call PC" (not a "return PC"). This is 0 when the iterator is
         // exhausted.
-        uintptr_t pc;
+        uintptr_t pc{};
         // index is the index of the current record in inlTree, or -1 if we are in
         // the outermost function.
-        int32_t index;
+        int32_t index{};
 
         using isGoStruct = void;
 
@@ -42,11 +42,11 @@ namespace golang::runtime
 {
     struct inlinedCall
     {
-        abi::FuncID funcID; // type of the called function
-        gocpp::array<unsigned char, 3> _1;
-        int32_t nameOff; // offset into pclntab for name of called function
-        int32_t parentPc; // position of an instruction whose source position is the call site (offset from entry)
-        int32_t startLine; // line number of start of function (func keyword/TEXT directive)
+        abi::FuncID funcID{}; // type of the called function
+        gocpp::array<unsigned char, 3> _1{};
+        int32_t nameOff{}; // offset into pclntab for name of called function
+        int32_t parentPc{}; // position of an instruction whose source position is the call site (offset from entry)
+        int32_t startLine{}; // line number of start of function (func keyword/TEXT directive)
 
         using isGoStruct = void;
 
@@ -62,8 +62,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct inlinedCall& value);
     struct inlineUnwinder
     {
-        funcInfo f;
-        gocpp::array_ptr<gocpp::array<inlinedCall, 1 << 20>> inlTree;
+        funcInfo f{};
+        gocpp::array_ptr<gocpp::array<inlinedCall, 1 << 20>> inlTree{};
 
         using isGoStruct = void;
 

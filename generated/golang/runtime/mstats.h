@@ -16,15 +16,15 @@ namespace golang::runtime
     {
         // Size is the maximum byte size of an object in this
         // size class.
-        uint32_t Size;
+        uint32_t Size{};
         // Mallocs is the cumulative count of heap objects
         // allocated in this size class. The cumulative bytes
         // of allocation is Size*Mallocs. The number of live
         // objects in this size class is Mallocs - Frees.
-        uint64_t Mallocs;
+        uint64_t Mallocs{};
         // Frees is the cumulative count of heap objects freed
         // in this size class.
-        uint64_t Frees;
+        uint64_t Frees{};
 
         using isGoStruct = void;
 
@@ -46,17 +46,17 @@ namespace golang::runtime
     void flushallmcaches();
     struct cpuStats
     {
-        int64_t gcAssistTime; // GC assists
-        int64_t gcDedicatedTime; // GC dedicated mark workers + pauses
-        int64_t gcIdleTime; // GC idle mark workers
-        int64_t gcPauseTime; // GC pauses (all GOMAXPROCS, even if just 1 is running)
-        int64_t gcTotalTime;
-        int64_t scavengeAssistTime; // background scavenger
-        int64_t scavengeBgTime; // scavenge assists
-        int64_t scavengeTotalTime;
-        int64_t idleTime; // Time Ps spent in _Pidle.
-        int64_t userTime; // Time Ps spent in _Prunning or _Psyscall that's not any of the above.
-        int64_t totalTime; // GOMAXPROCS * (monotonic wall clock time elapsed)
+        int64_t gcAssistTime{}; // GC assists
+        int64_t gcDedicatedTime{}; // GC dedicated mark workers + pauses
+        int64_t gcIdleTime{}; // GC idle mark workers
+        int64_t gcPauseTime{}; // GC pauses (all GOMAXPROCS, even if just 1 is running)
+        int64_t gcTotalTime{};
+        int64_t scavengeAssistTime{}; // background scavenger
+        int64_t scavengeBgTime{}; // scavenge assists
+        int64_t scavengeTotalTime{};
+        int64_t idleTime{}; // Time Ps spent in _Pidle.
+        int64_t userTime{}; // Time Ps spent in _Prunning or _Psyscall that's not any of the above.
+        int64_t totalTime{}; // GOMAXPROCS * (monotonic wall clock time elapsed)
 
         using isGoStruct = void;
 
@@ -74,12 +74,12 @@ namespace golang::runtime
     {
         // Alloc is bytes of allocated heap objects.
         // This is the same as HeapAlloc (see below).
-        uint64_t Alloc;
+        uint64_t Alloc{};
         // TotalAlloc is cumulative bytes allocated for heap objects.
         // TotalAlloc increases as heap objects are allocated, but
         // unlike Alloc and HeapAlloc, it does not decrease when
         // objects are freed.
-        uint64_t TotalAlloc;
+        uint64_t TotalAlloc{};
         // Sys is the total bytes of memory obtained from the OS.
         // Sys is the sum of the XSys fields below. Sys measures the
         // virtual address space reserved by the Go runtime for the
@@ -87,16 +87,16 @@ namespace golang::runtime
         // likely that not all of the virtual address space is backed
         // by physical memory at any given moment, though in general
         // it all was at some point.
-        uint64_t Sys;
+        uint64_t Sys{};
         // Lookups is the number of pointer lookups performed by the
         // runtime.
         // This is primarily useful for debugging runtime internals.
-        uint64_t Lookups;
+        uint64_t Lookups{};
         // Mallocs is the cumulative count of heap objects allocated.
         // The number of live objects is Mallocs - Frees.
-        uint64_t Mallocs;
+        uint64_t Mallocs{};
         // Frees is the cumulative count of heap objects freed.
-        uint64_t Frees;
+        uint64_t Frees{};
         // HeapAlloc is bytes of allocated heap objects.
         // "Allocated" heap objects include all reachable objects, as
         // well as unreachable objects that the garbage collector has
@@ -107,7 +107,7 @@ namespace golang::runtime
         // occur simultaneously, and as a result HeapAlloc tends to
         // change smoothly (in contrast with the sawtooth that is
         // typical of stop-the-world garbage collectors).
-        uint64_t HeapAlloc;
+        uint64_t HeapAlloc{};
         // HeapSys is bytes of heap memory obtained from the OS.
         // HeapSys measures the amount of virtual address space
         // reserved for the heap. This includes virtual address space
@@ -117,7 +117,7 @@ namespace golang::runtime
         // returned to the OS after it became unused (see HeapReleased
         // for a measure of the latter).
         // HeapSys estimates the largest size the heap has had.
-        uint64_t HeapSys;
+        uint64_t HeapSys{};
         // HeapIdle is bytes in idle (unused) spans.
         // Idle spans have no objects in them. These spans could be
         // (and may already have been) returned to the OS, or they can
@@ -129,7 +129,7 @@ namespace golang::runtime
         // memory from the OS. If this difference is significantly
         // larger than the heap size, it indicates there was a recent
         // transient spike in live heap size.
-        uint64_t HeapIdle;
+        uint64_t HeapIdle{};
         // HeapInuse is bytes in in-use spans.
         // In-use spans have at least one object in them. These spans
         // can only be used for other objects of roughly the same
@@ -139,22 +139,22 @@ namespace golang::runtime
         // not currently being used. This is an upper bound on
         // fragmentation, but in general this memory can be reused
         // efficiently.
-        uint64_t HeapInuse;
+        uint64_t HeapInuse{};
         // HeapReleased is bytes of physical memory returned to the OS.
         // This counts heap memory from idle spans that was returned
         // to the OS and has not yet been reacquired for the heap.
-        uint64_t HeapReleased;
+        uint64_t HeapReleased{};
         // HeapObjects is the number of allocated heap objects.
         // Like HeapAlloc, this increases as objects are allocated and
         // decreases as the heap is swept and unreachable objects are
         // freed.
-        uint64_t HeapObjects;
+        uint64_t HeapObjects{};
         // StackInuse is bytes in stack spans.
         // In-use stack spans have at least one stack in them. These
         // spans can only be used for other stacks of the same size.
         // There is no StackIdle because unused stack spans are
         // returned to the heap (and hence counted toward HeapIdle).
-        uint64_t StackInuse;
+        uint64_t StackInuse{};
         // StackSys is bytes of stack memory obtained from the OS.
         // StackSys is StackInuse, plus any memory obtained directly
         // from the OS for OS thread stacks.
@@ -166,56 +166,56 @@ namespace golang::runtime
         // c-shared and c-archive build modes and other sources of stacks from
         // the OS (notably, any allocated by C code) are not currently measured.
         // Note this too may change in the future.
-        uint64_t StackSys;
+        uint64_t StackSys{};
         // MSpanInuse is bytes of allocated mspan structures.
-        uint64_t MSpanInuse;
+        uint64_t MSpanInuse{};
         // MSpanSys is bytes of memory obtained from the OS for mspan
         // structures.
-        uint64_t MSpanSys;
+        uint64_t MSpanSys{};
         // MCacheInuse is bytes of allocated mcache structures.
-        uint64_t MCacheInuse;
+        uint64_t MCacheInuse{};
         // MCacheSys is bytes of memory obtained from the OS for
         // mcache structures.
-        uint64_t MCacheSys;
+        uint64_t MCacheSys{};
         // BuckHashSys is bytes of memory in profiling bucket hash tables.
-        uint64_t BuckHashSys;
+        uint64_t BuckHashSys{};
         // GCSys is bytes of memory in garbage collection metadata.
-        uint64_t GCSys;
+        uint64_t GCSys{};
         // OtherSys is bytes of memory in miscellaneous off-heap
         // runtime allocations.
-        uint64_t OtherSys;
+        uint64_t OtherSys{};
         // NextGC is the target heap size of the next GC cycle.
         // The garbage collector's goal is to keep HeapAlloc ≤ NextGC.
         // At the end of each GC cycle, the target for the next cycle
         // is computed based on the amount of reachable data and the
         // value of GOGC.
-        uint64_t NextGC;
+        uint64_t NextGC{};
         // LastGC is the time the last garbage collection finished, as
         // nanoseconds since 1970 (the UNIX epoch).
-        uint64_t LastGC;
+        uint64_t LastGC{};
         // PauseTotalNs is the cumulative nanoseconds in GC
         // stop-the-world pauses since the program started.
         // During a stop-the-world pause, all goroutines are paused
         // and only the garbage collector can run.
-        uint64_t PauseTotalNs;
+        uint64_t PauseTotalNs{};
         // PauseNs is a circular buffer of recent GC stop-the-world
         // pause times in nanoseconds.
         // The most recent pause is at PauseNs[(NumGC+255)%256]. In
         // general, PauseNs[N%256] records the time paused in the most
         // recent N%256th GC cycle. There may be multiple pauses per
         // GC cycle; this is the sum of all pauses during a cycle.
-        gocpp::array<uint64_t, 256> PauseNs;
+        gocpp::array<uint64_t, 256> PauseNs{};
         // PauseEnd is a circular buffer of recent GC pause end times,
         // as nanoseconds since 1970 (the UNIX epoch).
         // This buffer is filled the same way as PauseNs. There may be
         // multiple pauses per GC cycle; this records the end of the
         // last pause in a cycle.
-        gocpp::array<uint64_t, 256> PauseEnd;
+        gocpp::array<uint64_t, 256> PauseEnd{};
         // NumGC is the number of completed GC cycles.
-        uint32_t NumGC;
+        uint32_t NumGC{};
         // NumForcedGC is the number of GC cycles that were forced by
         // the application calling the GC function.
-        uint32_t NumForcedGC;
+        uint32_t NumForcedGC{};
         // GCCPUFraction is the fraction of this program's available
         // CPU time used by the GC since the program started.
         // GCCPUFraction is expressed as a number between 0 and 1,
@@ -227,17 +227,17 @@ namespace golang::runtime
         // does not include CPU time used for write barrier activity.
         // This is the same as the fraction of CPU reported by
         // GODEBUG=gctrace=1.
-        double GCCPUFraction;
+        double GCCPUFraction{};
         // EnableGC indicates that GC is enabled. It is always true,
         // even if GOGC=off.
-        bool EnableGC;
+        bool EnableGC{};
         // DebugGC is currently unused.
-        bool DebugGC;
+        bool DebugGC{};
         // BySize reports per-size class allocation statistics.
         // BySize[N] gives statistics for allocations of size S where
         // BySize[N-1].Size < S ≤ BySize[N].Size.
         // This does not report allocations larger than BySize[60].Size.
-        gocpp::array<gocpp_id_0, 61> BySize;
+        gocpp::array<gocpp_id_0, 61> BySize{};
 
         using isGoStruct = void;
 
@@ -259,22 +259,22 @@ namespace golang::runtime
     struct heapStatsDelta
     {
         // Memory stats.
-        int64_t committed; // byte delta of memory committed
-        int64_t released; // byte delta of released memory generated
-        int64_t inHeap; // byte delta of memory placed in the heap
-        int64_t inStacks; // byte delta of memory reserved for stacks
-        int64_t inWorkBufs; // byte delta of memory reserved for work bufs
-        int64_t inPtrScalarBits; // byte delta of memory reserved for unrolled GC prog bits
+        int64_t committed{}; // byte delta of memory committed
+        int64_t released{}; // byte delta of released memory generated
+        int64_t inHeap{}; // byte delta of memory placed in the heap
+        int64_t inStacks{}; // byte delta of memory reserved for stacks
+        int64_t inWorkBufs{}; // byte delta of memory reserved for work bufs
+        int64_t inPtrScalarBits{}; // byte delta of memory reserved for unrolled GC prog bits
         // Allocator stats.
         // These are all uint64 because they're cumulative, and could quickly wrap
         // around otherwise.
-        uint64_t tinyAllocCount; // number of tiny allocations
-        uint64_t largeAlloc; // bytes allocated for large objects
-        uint64_t largeAllocCount; // number of large object allocations
-        gocpp::array<uint64_t, _NumSizeClasses> smallAllocCount; // number of allocs for small objects
-        uint64_t largeFree; // bytes freed for large objects (>maxSmallSize)
-        uint64_t largeFreeCount; // number of frees for large objects (>maxSmallSize)
-        gocpp::array<uint64_t, _NumSizeClasses> smallFreeCount; // number of frees for small objects (<=maxSmallSize)
+        uint64_t tinyAllocCount{}; // number of tiny allocations
+        uint64_t largeAlloc{}; // bytes allocated for large objects
+        uint64_t largeAllocCount{}; // number of large object allocations
+        gocpp::array<uint64_t, _NumSizeClasses> smallAllocCount{}; // number of allocs for small objects
+        uint64_t largeFree{}; // bytes freed for large objects (>maxSmallSize)
+        uint64_t largeFreeCount{}; // number of frees for large objects (>maxSmallSize)
+        gocpp::array<uint64_t, _NumSizeClasses> smallFreeCount{}; // number of frees for small objects (<=maxSmallSize)
 
         using isGoStruct = void;
 
@@ -315,16 +315,16 @@ namespace golang::runtime
         // of 2: one is for the writers, one contains the most recent
         // data, and the last one is clear so writers can begin writing
         // to it the moment gen is updated.
-        gocpp::array<heapStatsDelta, 3> stats;
+        gocpp::array<heapStatsDelta, 3> stats{};
         // gen represents the current index into which writers
         // are writing, and can take on the value of 0, 1, or 2.
-        atomic::Uint32 gen;
+        atomic::Uint32 gen{};
         // noPLock is intended to provide mutual exclusion for updating
         // stats when no P is available. It does not block other writers
         // with a P, only other writers without a P and the reader. Because
         // stats are usually updated when a P is available, contention on
         // this lock should be minimal.
-        mutex noPLock;
+        mutex noPLock{};
 
         using isGoStruct = void;
 
@@ -341,28 +341,28 @@ namespace golang::runtime
     struct mstats
     {
         // Statistics about malloc heap.
-        consistentHeapStats heapStats;
+        consistentHeapStats heapStats{};
         // Statistics about stacks.
-        golang::runtime::sysMemStat stacks_sys; // only counts newosproc0 stack in mstats; differs from MemStats.StackSys
+        golang::runtime::sysMemStat stacks_sys{}; // only counts newosproc0 stack in mstats; differs from MemStats.StackSys
         // Statistics about allocation of low-level fixed-size structures.
-        golang::runtime::sysMemStat mspan_sys;
-        golang::runtime::sysMemStat mcache_sys;
-        golang::runtime::sysMemStat buckhash_sys; // profiling bucket hash table
+        golang::runtime::sysMemStat mspan_sys{};
+        golang::runtime::sysMemStat mcache_sys{};
+        golang::runtime::sysMemStat buckhash_sys{}; // profiling bucket hash table
         // Statistics about GC overhead.
-        golang::runtime::sysMemStat gcMiscSys; // updated atomically or during STW
+        golang::runtime::sysMemStat gcMiscSys{}; // updated atomically or during STW
         // Miscellaneous statistics.
-        golang::runtime::sysMemStat other_sys; // updated atomically or during STW
+        golang::runtime::sysMemStat other_sys{}; // updated atomically or during STW
         // Protected by mheap or worldsema during GC.
-        uint64_t last_gc_unix; // last gc (in unix time)
-        uint64_t pause_total_ns;
-        gocpp::array<uint64_t, 256> pause_ns; // circular buffer of recent gc pause lengths
-        gocpp::array<uint64_t, 256> pause_end; // circular buffer of recent gc end times (nanoseconds since 1970)
-        uint32_t numgc;
-        uint32_t numforcedgc; // number of user-forced GCs
-        double gc_cpu_fraction; // fraction of CPU time used by GC
-        uint64_t last_gc_nanotime; // last gc (monotonic time)
-        uint64_t lastHeapInUse; // heapInUse at mark termination of the previous GC
-        bool enablegc;
+        uint64_t last_gc_unix{}; // last gc (in unix time)
+        uint64_t pause_total_ns{};
+        gocpp::array<uint64_t, 256> pause_ns{}; // circular buffer of recent gc pause lengths
+        gocpp::array<uint64_t, 256> pause_end{}; // circular buffer of recent gc end times (nanoseconds since 1970)
+        uint32_t numgc{};
+        uint32_t numforcedgc{}; // number of user-forced GCs
+        double gc_cpu_fraction{}; // fraction of CPU time used by GC
+        uint64_t last_gc_nanotime{}; // last gc (monotonic time)
+        uint64_t lastHeapInUse{}; // heapInUse at mark termination of the previous GC
+        bool enablegc{};
 
         using isGoStruct = void;
 

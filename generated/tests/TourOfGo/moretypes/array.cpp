@@ -21,7 +21,7 @@ namespace golang::main
 
     struct gocpp_id_0
     {
-        int value;
+        int value{};
 
         using isGoStruct = void;
 
@@ -58,7 +58,7 @@ namespace golang::main
     // Array of struct
     struct gocpp_id_1
     {
-        int value;
+        int value{};
 
         using isGoStruct = void;
 

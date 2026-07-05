@@ -15,11 +15,11 @@ namespace golang::chacha8rand
     void block(gocpp::array_ptr<gocpp::array<uint64_t, 4>> seed, gocpp::array_ptr<gocpp::array<uint64_t, 32>> blocks, uint32_t counter);
     struct State
     {
-        gocpp::array<uint64_t, 32> buf;
-        gocpp::array<uint64_t, 4> seed;
-        uint32_t i;
-        uint32_t n;
-        uint32_t c;
+        gocpp::array<uint64_t, 32> buf{};
+        gocpp::array<uint64_t, 4> seed{};
+        uint32_t i{};
+        uint32_t n{};
+        uint32_t c{};
 
         using isGoStruct = void;
 

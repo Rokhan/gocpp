@@ -15,9 +15,9 @@ namespace golang::windows
     gocpp::string UTF16PtrToString(uint16_t* p);
     struct SecurityAttributes
     {
-        uint16_t Length;
-        uintptr_t SecurityDescriptor;
-        bool InheritHandle;
+        uint16_t Length{};
+        uintptr_t SecurityDescriptor{};
+        bool InheritHandle{};
 
         using isGoStruct = void;
 
@@ -33,11 +33,11 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct SecurityAttributes& value);
     struct FILE_BASIC_INFO
     {
-        int64_t CreationTime;
-        int64_t LastAccessTime;
-        int64_t LastWriteTime;
-        int64_t ChangedTime;
-        uint32_t FileAttributes;
+        int64_t CreationTime{};
+        int64_t LastAccessTime{};
+        int64_t LastWriteTime{};
+        int64_t ChangedTime{};
+        uint32_t FileAttributes{};
         // Pad out to 8-byte alignment.
         // Without this padding, TestChmod fails due to an argument validation error
         // in SetFileInformationByHandle on windows/386.
@@ -45,7 +45,7 @@ namespace golang::windows
         // says that “The C/C++ headers in the Windows SDK assume the platform's
         // default alignment is used.” What we see here is padding rather than
         // alignment, but maybe it is related.
-        uint32_t _1;
+        uint32_t _1{};
 
         using isGoStruct = void;
 
@@ -63,14 +63,14 @@ namespace golang::windows
     struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath);
     struct SHARE_INFO_2
     {
-        uint16_t* Netname;
-        uint32_t Type;
-        uint16_t* Remark;
-        uint32_t Permissions;
-        uint32_t MaxUses;
-        uint32_t CurrentUses;
-        uint16_t* Path;
-        uint16_t* Passwd;
+        uint16_t* Netname{};
+        uint32_t Type{};
+        uint16_t* Remark{};
+        uint32_t Permissions{};
+        uint32_t MaxUses{};
+        uint32_t CurrentUses{};
+        uint16_t* Path{};
+        uint16_t* Passwd{};
 
         using isGoStruct = void;
 
@@ -87,13 +87,13 @@ namespace golang::windows
     struct gocpp::error ErrorLoadingGetTempPath2();
     struct SERVICE_STATUS
     {
-        uint32_t ServiceType;
-        uint32_t CurrentState;
-        uint32_t ControlsAccepted;
-        uint32_t Win32ExitCode;
-        uint32_t ServiceSpecificExitCode;
-        uint32_t CheckPoint;
-        uint32_t WaitHint;
+        uint32_t ServiceType{};
+        uint32_t CurrentState{};
+        uint32_t ControlsAccepted{};
+        uint32_t Win32ExitCode{};
+        uint32_t ServiceSpecificExitCode{};
+        uint32_t CheckPoint{};
+        uint32_t WaitHint{};
 
         using isGoStruct = void;
 
@@ -116,8 +116,8 @@ namespace golang::windows
 {
     struct SocketAddress
     {
-        syscall::RawSockaddrAny* Sockaddr;
-        int32_t SockaddrLength;
+        syscall::RawSockaddrAny* Sockaddr{};
+        int32_t SockaddrLength{};
 
         using isGoStruct = void;
 
@@ -133,26 +133,26 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct SocketAddress& value);
     struct IpAdapterAddresses
     {
-        uint32_t Length;
-        uint32_t IfIndex;
-        IpAdapterAddresses* Next;
-        unsigned char* AdapterName;
-        IpAdapterUnicastAddress* FirstUnicastAddress;
-        IpAdapterAnycastAddress* FirstAnycastAddress;
-        IpAdapterMulticastAddress* FirstMulticastAddress;
-        IpAdapterDnsServerAdapter* FirstDnsServerAddress;
-        uint16_t* DnsSuffix;
-        uint16_t* Description;
-        uint16_t* FriendlyName;
-        gocpp::array<unsigned char, syscall::MAX_ADAPTER_ADDRESS_LENGTH> PhysicalAddress;
-        uint32_t PhysicalAddressLength;
-        uint32_t Flags;
-        uint32_t Mtu;
-        uint32_t IfType;
-        uint32_t OperStatus;
-        uint32_t Ipv6IfIndex;
-        gocpp::array<uint32_t, 16> ZoneIndices;
-        IpAdapterPrefix* FirstPrefix;
+        uint32_t Length{};
+        uint32_t IfIndex{};
+        IpAdapterAddresses* Next{};
+        unsigned char* AdapterName{};
+        IpAdapterUnicastAddress* FirstUnicastAddress{};
+        IpAdapterAnycastAddress* FirstAnycastAddress{};
+        IpAdapterMulticastAddress* FirstMulticastAddress{};
+        IpAdapterDnsServerAdapter* FirstDnsServerAddress{};
+        uint16_t* DnsSuffix{};
+        uint16_t* Description{};
+        uint16_t* FriendlyName{};
+        gocpp::array<unsigned char, syscall::MAX_ADAPTER_ADDRESS_LENGTH> PhysicalAddress{};
+        uint32_t PhysicalAddressLength{};
+        uint32_t Flags{};
+        uint32_t Mtu{};
+        uint32_t IfType{};
+        uint32_t OperStatus{};
+        uint32_t Ipv6IfIndex{};
+        gocpp::array<uint32_t, 16> ZoneIndices{};
+        IpAdapterPrefix* FirstPrefix{};
 
         using isGoStruct = void;
 
@@ -168,16 +168,16 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterAddresses& value);
     struct ModuleEntry32
     {
-        uint32_t Size;
-        uint32_t ModuleID;
-        uint32_t ProcessID;
-        uint32_t GlblcntUsage;
-        uint32_t ProccntUsage;
-        uintptr_t ModBaseAddr;
-        uint32_t ModBaseSize;
-        syscall::Handle ModuleHandle;
-        gocpp::array<uint16_t, MAX_MODULE_NAME32 + 1> Module;
-        gocpp::array<uint16_t, syscall::MAX_PATH> ExePath;
+        uint32_t Size{};
+        uint32_t ModuleID{};
+        uint32_t ProcessID{};
+        uint32_t GlblcntUsage{};
+        uint32_t ProccntUsage{};
+        uintptr_t ModBaseAddr{};
+        uint32_t ModBaseSize{};
+        syscall::Handle ModuleHandle{};
+        gocpp::array<uint16_t, MAX_MODULE_NAME32 + 1> Module{};
+        gocpp::array<uint16_t, syscall::MAX_PATH> ExePath{};
 
         using isGoStruct = void;
 
@@ -196,12 +196,12 @@ namespace golang::windows
     extern gocpp_id_0 sendRecvMsgFunc;
     struct WSAMsg
     {
-        syscall::Pointer Name;
-        int32_t Namelen;
-        syscall::WSABuf* Buffers;
-        uint32_t BufferCount;
-        syscall::WSABuf Control;
-        uint32_t Flags;
+        syscall::Pointer Name{};
+        int32_t Namelen{};
+        syscall::WSABuf* Buffers{};
+        uint32_t BufferCount{};
+        syscall::WSABuf Control{};
+        uint32_t Flags{};
 
         using isGoStruct = void;
 
@@ -217,21 +217,21 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct WSAMsg& value);
     struct FILE_ID_BOTH_DIR_INFO
     {
-        uint32_t NextEntryOffset;
-        uint32_t FileIndex;
-        syscall::Filetime CreationTime;
-        syscall::Filetime LastAccessTime;
-        syscall::Filetime LastWriteTime;
-        syscall::Filetime ChangeTime;
-        uint64_t EndOfFile;
-        uint64_t AllocationSize;
-        uint32_t FileAttributes;
-        uint32_t FileNameLength;
-        uint32_t EaSize;
-        uint32_t ShortNameLength;
-        gocpp::array<uint16_t, 12> ShortName;
-        uint64_t FileID;
-        gocpp::array<uint16_t, 1> FileName;
+        uint32_t NextEntryOffset{};
+        uint32_t FileIndex{};
+        syscall::Filetime CreationTime{};
+        syscall::Filetime LastAccessTime{};
+        syscall::Filetime LastWriteTime{};
+        syscall::Filetime ChangeTime{};
+        uint64_t EndOfFile{};
+        uint64_t AllocationSize{};
+        uint32_t FileAttributes{};
+        uint32_t FileNameLength{};
+        uint32_t EaSize{};
+        uint32_t ShortNameLength{};
+        gocpp::array<uint16_t, 12> ShortName{};
+        uint64_t FileID{};
+        gocpp::array<uint16_t, 1> FileName{};
 
         using isGoStruct = void;
 
@@ -247,18 +247,18 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct FILE_ID_BOTH_DIR_INFO& value);
     struct FILE_FULL_DIR_INFO
     {
-        uint32_t NextEntryOffset;
-        uint32_t FileIndex;
-        syscall::Filetime CreationTime;
-        syscall::Filetime LastAccessTime;
-        syscall::Filetime LastWriteTime;
-        syscall::Filetime ChangeTime;
-        uint64_t EndOfFile;
-        uint64_t AllocationSize;
-        uint32_t FileAttributes;
-        uint32_t FileNameLength;
-        uint32_t EaSize;
-        gocpp::array<uint16_t, 1> FileName;
+        uint32_t NextEntryOffset{};
+        uint32_t FileIndex{};
+        syscall::Filetime CreationTime{};
+        syscall::Filetime LastAccessTime{};
+        syscall::Filetime LastWriteTime{};
+        syscall::Filetime ChangeTime{};
+        uint64_t EndOfFile{};
+        uint64_t AllocationSize{};
+        uint32_t FileAttributes{};
+        uint32_t FileNameLength{};
+        uint32_t EaSize{};
+        gocpp::array<uint16_t, 1> FileName{};
 
         using isGoStruct = void;
 
@@ -274,17 +274,17 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct FILE_FULL_DIR_INFO& value);
     struct IpAdapterUnicastAddress
     {
-        uint32_t Length;
-        uint32_t Flags;
-        IpAdapterUnicastAddress* Next;
-        SocketAddress Address;
-        int32_t PrefixOrigin;
-        int32_t SuffixOrigin;
-        int32_t DadState;
-        uint32_t ValidLifetime;
-        uint32_t PreferredLifetime;
-        uint32_t LeaseLifetime;
-        uint8_t OnLinkPrefixLength;
+        uint32_t Length{};
+        uint32_t Flags{};
+        IpAdapterUnicastAddress* Next{};
+        SocketAddress Address{};
+        int32_t PrefixOrigin{};
+        int32_t SuffixOrigin{};
+        int32_t DadState{};
+        uint32_t ValidLifetime{};
+        uint32_t PreferredLifetime{};
+        uint32_t LeaseLifetime{};
+        uint8_t OnLinkPrefixLength{};
 
         using isGoStruct = void;
 
@@ -300,10 +300,10 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterUnicastAddress& value);
     struct IpAdapterAnycastAddress
     {
-        uint32_t Length;
-        uint32_t Flags;
-        IpAdapterAnycastAddress* Next;
-        SocketAddress Address;
+        uint32_t Length{};
+        uint32_t Flags{};
+        IpAdapterAnycastAddress* Next{};
+        SocketAddress Address{};
 
         using isGoStruct = void;
 
@@ -319,10 +319,10 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterAnycastAddress& value);
     struct IpAdapterMulticastAddress
     {
-        uint32_t Length;
-        uint32_t Flags;
-        IpAdapterMulticastAddress* Next;
-        SocketAddress Address;
+        uint32_t Length{};
+        uint32_t Flags{};
+        IpAdapterMulticastAddress* Next{};
+        SocketAddress Address{};
 
         using isGoStruct = void;
 
@@ -338,10 +338,10 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterMulticastAddress& value);
     struct IpAdapterDnsServerAdapter
     {
-        uint32_t Length;
-        uint32_t Reserved;
-        IpAdapterDnsServerAdapter* Next;
-        SocketAddress Address;
+        uint32_t Length{};
+        uint32_t Reserved{};
+        IpAdapterDnsServerAdapter* Next{};
+        SocketAddress Address{};
 
         using isGoStruct = void;
 
@@ -357,11 +357,11 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterDnsServerAdapter& value);
     struct IpAdapterPrefix
     {
-        uint32_t Length;
-        uint32_t Flags;
-        IpAdapterPrefix* Next;
-        SocketAddress Address;
-        uint32_t PrefixLength;
+        uint32_t Length{};
+        uint32_t Flags{};
+        IpAdapterPrefix* Next{};
+        SocketAddress Address{};
+        uint32_t PrefixLength{};
 
         using isGoStruct = void;
 

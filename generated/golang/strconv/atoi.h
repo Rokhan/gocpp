@@ -15,9 +15,9 @@ namespace golang::strconv
     unsigned char lower(unsigned char c);
     struct NumError
     {
-        gocpp::string Func; // the failing function (ParseBool, ParseInt, ParseUint, ParseFloat, ParseComplex)
-        gocpp::string Num; // the input
-        gocpp::error Err; // the reason the conversion failed (e.g. ErrRange, ErrSyntax, etc.)
+        gocpp::string Func{}; // the failing function (ParseBool, ParseInt, ParseUint, ParseFloat, ParseComplex)
+        gocpp::string Num{}; // the input
+        gocpp::error Err{}; // the reason the conversion failed (e.g. ErrRange, ErrSyntax, etc.)
 
         using isGoStruct = void;
 

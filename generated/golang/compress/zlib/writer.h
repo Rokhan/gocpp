@@ -17,14 +17,14 @@ namespace golang::zlib
 {
     struct Writer
     {
-        io::Writer w;
-        int level;
-        gocpp::slice<unsigned char> dict;
-        flate::Writer* compressor;
-        hash::Hash32 digest;
-        gocpp::error err;
-        gocpp::array<unsigned char, 4> scratch;
-        bool wroteHeader;
+        io::Writer w{};
+        int level{};
+        gocpp::slice<unsigned char> dict{};
+        flate::Writer* compressor{};
+        hash::Hash32 digest{};
+        gocpp::error err{};
+        gocpp::array<unsigned char, 4> scratch{};
+        bool wroteHeader{};
 
         using isGoStruct = void;
 

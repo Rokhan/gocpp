@@ -45,8 +45,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct align64& value);
     struct Bool
     {
-        noCopy _1;
-        uint32_t v;
+        noCopy _1{};
+        uint32_t v{};
 
         using isGoStruct = void;
 
@@ -66,9 +66,9 @@ namespace golang::atomic
         // Mention *T in a field to disallow conversion between Pointer types.
         // See go.dev/issue/56603 for more details.
         // Use *T, not T, to avoid spurious recursive type definition errors.
-        gocpp::array<T*, 0> _1;
-        noCopy _2;
-        gocpp::unsafe_pointer v;
+        gocpp::array<T*, 0> _1{};
+        noCopy _2{};
+        gocpp::unsafe_pointer v{};
 
         using isGoStruct = void;
 
@@ -85,8 +85,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
     struct Int32
     {
-        noCopy _1;
-        int32_t v;
+        noCopy _1{};
+        int32_t v{};
 
         using isGoStruct = void;
 
@@ -102,9 +102,9 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Int32& value);
     struct Int64
     {
-        noCopy _1;
-        align64 _2;
-        int64_t v;
+        noCopy _1{};
+        align64 _2{};
+        int64_t v{};
 
         using isGoStruct = void;
 
@@ -120,8 +120,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Int64& value);
     struct Uint32
     {
-        noCopy _1;
-        uint32_t v;
+        noCopy _1{};
+        uint32_t v{};
 
         using isGoStruct = void;
 
@@ -137,9 +137,9 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Uint32& value);
     struct Uint64
     {
-        noCopy _1;
-        align64 _2;
-        uint64_t v;
+        noCopy _1{};
+        align64 _2{};
+        uint64_t v{};
 
         using isGoStruct = void;
 
@@ -155,8 +155,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Uint64& value);
     struct Uintptr
     {
-        noCopy _1;
-        uintptr_t v;
+        noCopy _1{};
+        uintptr_t v{};
 
         using isGoStruct = void;
 

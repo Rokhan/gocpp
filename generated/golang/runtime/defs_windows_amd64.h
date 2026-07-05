@@ -14,8 +14,8 @@ namespace golang::runtime
 {
     struct m128a
     {
-        uint64_t low;
-        int64_t high;
+        uint64_t low{};
+        int64_t high{};
 
         using isGoStruct = void;
 
@@ -31,14 +31,14 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct m128a& value);
     struct _DISPATCHER_CONTEXT
     {
-        uint64_t controlPc;
-        uint64_t imageBase;
-        uintptr_t functionEntry;
-        uint64_t establisherFrame;
-        uint64_t targetIp;
-        context* context;
-        uintptr_t languageHandler;
-        uintptr_t handlerData;
+        uint64_t controlPc{};
+        uint64_t imageBase{};
+        uintptr_t functionEntry{};
+        uint64_t establisherFrame{};
+        uint64_t targetIp{};
+        context* context{};
+        uintptr_t languageHandler{};
+        uintptr_t handlerData{};
 
         using isGoStruct = void;
 
@@ -54,52 +54,52 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct _DISPATCHER_CONTEXT& value);
     struct context
     {
-        uint64_t p1home;
-        uint64_t p2home;
-        uint64_t p3home;
-        uint64_t p4home;
-        uint64_t p5home;
-        uint64_t p6home;
-        uint32_t contextflags;
-        uint32_t mxcsr;
-        uint16_t segcs;
-        uint16_t segds;
-        uint16_t seges;
-        uint16_t segfs;
-        uint16_t seggs;
-        uint16_t segss;
-        uint32_t eflags;
-        uint64_t dr0;
-        uint64_t dr1;
-        uint64_t dr2;
-        uint64_t dr3;
-        uint64_t dr6;
-        uint64_t dr7;
-        uint64_t rax;
-        uint64_t rcx;
-        uint64_t rdx;
-        uint64_t rbx;
-        uint64_t rsp;
-        uint64_t rbp;
-        uint64_t rsi;
-        uint64_t rdi;
-        uint64_t r8;
-        uint64_t r9;
-        uint64_t r10;
-        uint64_t r11;
-        uint64_t r12;
-        uint64_t r13;
-        uint64_t r14;
-        uint64_t r15;
-        uint64_t rip;
-        gocpp::array<unsigned char, 512> anon0;
-        gocpp::array<m128a, 26> vectorregister;
-        uint64_t vectorcontrol;
-        uint64_t debugcontrol;
-        uint64_t lastbranchtorip;
-        uint64_t lastbranchfromrip;
-        uint64_t lastexceptiontorip;
-        uint64_t lastexceptionfromrip;
+        uint64_t p1home{};
+        uint64_t p2home{};
+        uint64_t p3home{};
+        uint64_t p4home{};
+        uint64_t p5home{};
+        uint64_t p6home{};
+        uint32_t contextflags{};
+        uint32_t mxcsr{};
+        uint16_t segcs{};
+        uint16_t segds{};
+        uint16_t seges{};
+        uint16_t segfs{};
+        uint16_t seggs{};
+        uint16_t segss{};
+        uint32_t eflags{};
+        uint64_t dr0{};
+        uint64_t dr1{};
+        uint64_t dr2{};
+        uint64_t dr3{};
+        uint64_t dr6{};
+        uint64_t dr7{};
+        uint64_t rax{};
+        uint64_t rcx{};
+        uint64_t rdx{};
+        uint64_t rbx{};
+        uint64_t rsp{};
+        uint64_t rbp{};
+        uint64_t rsi{};
+        uint64_t rdi{};
+        uint64_t r8{};
+        uint64_t r9{};
+        uint64_t r10{};
+        uint64_t r11{};
+        uint64_t r12{};
+        uint64_t r13{};
+        uint64_t r14{};
+        uint64_t r15{};
+        uint64_t rip{};
+        gocpp::array<unsigned char, 512> anon0{};
+        gocpp::array<m128a, 26> vectorregister{};
+        uint64_t vectorcontrol{};
+        uint64_t debugcontrol{};
+        uint64_t lastbranchtorip{};
+        uint64_t lastbranchfromrip{};
+        uint64_t lastexceptiontorip{};
+        uint64_t lastexceptionfromrip{};
 
         using isGoStruct = void;
 

@@ -221,7 +221,7 @@ namespace golang::runtime
         gocpp::array<unsigned char, 4> m = {};
         struct x1t
         {
-            uint8_t x;
+            uint8_t x{};
 
             using isGoStruct = void;
 
@@ -235,8 +235,8 @@ namespace golang::runtime
         };
         struct y1t
         {
-            x1t x1;
-            uint8_t y;
+            x1t x1{};
+            uint8_t y{};
 
             using isGoStruct = void;
 
@@ -456,36 +456,36 @@ namespace golang::runtime
 
     struct gocpp_id_0
     {
-        int32_t cgocheck;
-        int32_t clobberfree;
-        int32_t disablethp;
-        int32_t dontfreezetheworld;
-        int32_t efence;
-        int32_t gccheckmark;
-        int32_t gcpacertrace;
-        int32_t gcshrinkstackoff;
-        int32_t gcstoptheworld;
-        int32_t gctrace;
-        int32_t invalidptr;
-        int32_t madvdontneed; // for Linux; issue 28466
-        atomic::Int32 runtimeContentionStacks;
-        int32_t scavtrace;
-        int32_t scheddetail;
-        int32_t schedtrace;
-        int32_t tracebackancestors;
-        int32_t asyncpreemptoff;
-        int32_t harddecommit;
-        int32_t adaptivestackstart;
-        int32_t tracefpunwindoff;
-        int32_t traceadvanceperiod;
+        int32_t cgocheck{};
+        int32_t clobberfree{};
+        int32_t disablethp{};
+        int32_t dontfreezetheworld{};
+        int32_t efence{};
+        int32_t gccheckmark{};
+        int32_t gcpacertrace{};
+        int32_t gcshrinkstackoff{};
+        int32_t gcstoptheworld{};
+        int32_t gctrace{};
+        int32_t invalidptr{};
+        int32_t madvdontneed{}; // for Linux; issue 28466
+        atomic::Int32 runtimeContentionStacks{};
+        int32_t scavtrace{};
+        int32_t scheddetail{};
+        int32_t schedtrace{};
+        int32_t tracebackancestors{};
+        int32_t asyncpreemptoff{};
+        int32_t harddecommit{};
+        int32_t adaptivestackstart{};
+        int32_t tracefpunwindoff{};
+        int32_t traceadvanceperiod{};
         // debug.malloc is used as a combined debug check
         // in the malloc function and should be set
         // if any of the below debug options is != 0.
-        bool malloc;
-        int32_t allocfreetrace;
-        int32_t inittrace;
-        int32_t sbrk;
-        atomic::Int32 panicnil;
+        bool malloc{};
+        int32_t allocfreetrace{};
+        int32_t inittrace{};
+        int32_t sbrk{};
+        atomic::Int32 panicnil{};
 
         using isGoStruct = void;
 

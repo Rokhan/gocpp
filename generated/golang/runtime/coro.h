@@ -20,8 +20,8 @@ namespace golang::runtime
 {
     struct coro
     {
-        golang::runtime::guintptr gp;
-        std::function<void (struct coro* _1)> f;
+        golang::runtime::guintptr gp{};
+        std::function<void (struct coro* _1)> f{};
 
         using isGoStruct = void;
 

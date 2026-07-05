@@ -17,8 +17,8 @@ namespace golang::runtime
     struct sweepLocker
     {
         // sweepGen is the sweep generation of the heap.
-        uint32_t sweepGen;
-        bool valid;
+        uint32_t sweepGen{};
+        bool valid{};
 
         using isGoStruct = void;
 
@@ -51,7 +51,7 @@ namespace golang::runtime
         // drained from the queue.
         // The rest of the bits are a counter, indicating the
         // number of outstanding concurrent sweepers.
-        atomic::Uint32 state;
+        atomic::Uint32 state{};
 
         using isGoStruct = void;
 
@@ -67,7 +67,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct activeSweep& value);
     struct sweepLocked
     {
-        mspan* mspan;
+        mspan* mspan{};
 
         using isGoStruct = void;
 
@@ -88,19 +88,19 @@ namespace golang::runtime
 {
     struct sweepdata
     {
-        mutex lock;
-        g* g;
-        bool parked;
+        mutex lock{};
+        g* g{};
+        bool parked{};
         // active tracks outstanding sweepers and the sweep
         // termination condition.
-        activeSweep active;
+        activeSweep active{};
         // centralIndex is the current unswept span class.
         // It represents an index into the mcentral span
         // sets. Accessed and updated via its load and
         // update methods. Not protected by a lock.
         // Reset at mark termination.
         // Used by mheap.nextSpanForSweep.
-        golang::runtime::sweepClass centralIndex;
+        golang::runtime::sweepClass centralIndex{};
 
         using isGoStruct = void;
 

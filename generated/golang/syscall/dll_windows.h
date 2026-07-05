@@ -14,9 +14,9 @@ namespace golang::syscall
 {
     struct DLLError
     {
-        gocpp::error Err;
-        gocpp::string ObjName;
-        gocpp::string Msg;
+        gocpp::error Err{};
+        gocpp::string ObjName{};
+        gocpp::string Msg{};
 
         using isGoStruct = void;
 
@@ -32,9 +32,9 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct DLLError& value);
     struct Proc
     {
-        DLL* Dll;
-        gocpp::string Name;
-        uintptr_t addr;
+        DLL* Dll{};
+        gocpp::string Name{};
+        uintptr_t addr{};
 
         using isGoStruct = void;
 
@@ -78,8 +78,8 @@ namespace golang::syscall
     std::tuple<uintptr_t, syscall::Errno> getprocaddress(uintptr_t handle, uint8_t* procname);
     struct DLL
     {
-        gocpp::string Name;
-        golang::syscall::Handle Handle;
+        gocpp::string Name{};
+        golang::syscall::Handle Handle{};
 
         using isGoStruct = void;
 
@@ -95,9 +95,9 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct DLL& value);
     struct LazyDLL
     {
-        mocklib::Mutex mu;
-        DLL* dll; // non nil once DLL is loaded
-        gocpp::string Name;
+        mocklib::Mutex mu{};
+        DLL* dll{}; // non nil once DLL is loaded
+        gocpp::string Name{};
 
         using isGoStruct = void;
 
@@ -113,10 +113,10 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct LazyDLL& value);
     struct LazyProc
     {
-        mocklib::Mutex mu;
-        gocpp::string Name;
-        LazyDLL* l;
-        Proc* proc;
+        mocklib::Mutex mu{};
+        gocpp::string Name{};
+        LazyDLL* l{};
+        Proc* proc{};
 
         using isGoStruct = void;
 

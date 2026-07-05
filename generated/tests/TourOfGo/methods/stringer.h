@@ -14,8 +14,8 @@ namespace golang::main
 {
     struct Person
     {
-        gocpp::string Name;
-        int Age;
+        gocpp::string Name{};
+        int Age{};
 
         using isGoStruct = void;
 

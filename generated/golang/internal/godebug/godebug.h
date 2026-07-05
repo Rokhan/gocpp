@@ -48,9 +48,9 @@ namespace golang::godebug
 {
     struct Setting
     {
-        gocpp::string name;
-        sync::Once once;
-        setting* setting;
+        gocpp::string name{};
+        sync::Once once{};
+        setting* setting{};
 
         using isGoStruct = void;
 
@@ -66,10 +66,10 @@ namespace golang::godebug
     std::ostream& operator<<(std::ostream& os, const struct Setting& value);
     struct setting
     {
-        atomic::Pointer<value> value;
-        sync::Once nonDefaultOnce;
-        atomic::Uint64 nonDefault;
-        godebugs::Info* info;
+        atomic::Pointer<value> value{};
+        sync::Once nonDefaultOnce{};
+        atomic::Uint64 nonDefault{};
+        godebugs::Info* info{};
 
         using isGoStruct = void;
 
@@ -85,8 +85,8 @@ namespace golang::godebug
     std::ostream& operator<<(std::ostream& os, const struct setting& value);
     struct value
     {
-        gocpp::string text;
-        bisect::Matcher* bisect;
+        gocpp::string text{};
+        bisect::Matcher* bisect{};
 
         using isGoStruct = void;
 

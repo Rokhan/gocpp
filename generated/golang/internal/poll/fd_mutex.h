@@ -14,9 +14,9 @@ namespace golang::poll
 {
     struct fdMutex
     {
-        uint64_t state;
-        uint32_t rsema;
-        uint32_t wsema;
+        uint64_t state{};
+        uint32_t rsema{};
+        uint32_t wsema{};
 
         using isGoStruct = void;
 

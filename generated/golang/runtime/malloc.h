@@ -24,8 +24,8 @@ namespace golang::runtime
     uintptr_t nextSampleNoFP();
     struct persistentAlloc
     {
-        notInHeap* base;
-        uintptr_t off;
+        notInHeap* base{};
+        uintptr_t off{};
 
         using isGoStruct = void;
 
@@ -42,10 +42,10 @@ namespace golang::runtime
     bool inPersistentAlloc(uintptr_t p);
     struct linearAlloc
     {
-        uintptr_t next; // next free byte
-        uintptr_t mapped; // one byte past end of mapped space
-        uintptr_t end; // end of reserved space
-        bool mapMemory; // transition memory from Reserved to Ready if true
+        uintptr_t next{}; // next free byte
+        uintptr_t mapped{}; // one byte past end of mapped space
+        uintptr_t end{}; // end of reserved space
+        bool mapMemory{}; // transition memory from Reserved to Ready if true
 
         using isGoStruct = void;
 
@@ -83,7 +83,7 @@ namespace golang::runtime
     gocpp::unsafe_pointer persistentalloc(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat);
     struct notInHeap
     {
-        sys::NotInHeap _1;
+        sys::NotInHeap _1{};
 
         using isGoStruct = void;
 

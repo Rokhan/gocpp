@@ -76,8 +76,8 @@ namespace golang::runtime
 
     struct gocpp_id_0
     {
-        gocpp::slice<exitHook> hooks;
-        bool runningExitHooks;
+        gocpp::slice<exitHook> hooks{};
+        bool runningExitHooks{};
 
         using isGoStruct = void;
 

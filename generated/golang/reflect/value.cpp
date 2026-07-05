@@ -6045,8 +6045,8 @@ namespace golang::reflect
 
     struct gocpp_id_7
     {
-        bool b;
-        go_any x;
+        bool b{};
+        go_any x{};
 
         using isGoStruct = void;
 

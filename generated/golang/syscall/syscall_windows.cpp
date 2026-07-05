@@ -1484,9 +1484,9 @@ namespace golang::syscall
 
     struct gocpp_id_4
     {
-        sync::Once once;
-        uintptr_t addr;
-        gocpp::error err;
+        sync::Once once{};
+        uintptr_t addr{};
+        gocpp::error err{};
 
         using isGoStruct = void;
 

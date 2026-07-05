@@ -644,8 +644,8 @@ namespace golang::runtime
 
     struct gocpp_id_1
         {
-            offAddr base;
-            offAddr bound;
+            offAddr base{};
+            offAddr bound{};
 
             using isGoStruct = void;
 

@@ -37,10 +37,10 @@ namespace golang::runtime
     struct ticksType
     {
         // lock protects access to start* and val.
-        mutex lock;
-        int64_t startTicks;
-        int64_t startTime;
-        atomic::Int64 val;
+        mutex lock{};
+        int64_t startTicks{};
+        int64_t startTime{};
+        atomic::Int64 val{};
 
         using isGoStruct = void;
 
@@ -59,8 +59,8 @@ namespace golang::runtime
     extern atomic::Pointer<std::function<std::function<void ()> (gocpp::string _1)>> godebugNewIncNonDefault;
     struct godebugInc
     {
-        gocpp::string name;
-        atomic::Pointer<std::function<void ()>> inc;
+        gocpp::string name{};
+        atomic::Pointer<std::function<void ()>> inc{};
 
         using isGoStruct = void;
 

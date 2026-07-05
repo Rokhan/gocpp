@@ -17,8 +17,8 @@ namespace golang::runtime
 {
     struct mcentral
     {
-        sys::NotInHeap _1;
-        golang::runtime::spanClass spanclass;
+        sys::NotInHeap _1{};
+        golang::runtime::spanClass spanclass{};
         // partial and full contain two mspan sets: one of swept in-use
         // spans, and one of unswept in-use spans. These two trade
         // roles on each GC cycle. The unswept set is drained either by
@@ -35,8 +35,8 @@ namespace golang::runtime
         // to the appropriate swept list. As a result, the parts of the
         // sweeper and mcentral that do consume from the unswept list may
         // encounter swept spans, and these should be ignored.
-        gocpp::array<spanSet, 2> partial; // list of spans with a free object
-        gocpp::array<spanSet, 2> full; // list of spans with no free objects
+        gocpp::array<spanSet, 2> partial{}; // list of spans with a free object
+        gocpp::array<spanSet, 2> full{}; // list of spans with no free objects
 
         using isGoStruct = void;
 

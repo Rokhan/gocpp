@@ -188,7 +188,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Closer& value);
     struct myReader
     {
-        int val;
+        int val{};
 
         using isGoStruct = void;
 
@@ -204,7 +204,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct myReader& value);
     struct myReaderWriterTo
     {
-        int val;
+        int val{};
 
         using isGoStruct = void;
 
@@ -280,7 +280,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct ReadCloser& value);
     struct nopCloser
     {
-        Reader Reader;
+        Reader Reader{};
 
         using isGoStruct = void;
 
@@ -302,7 +302,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct nopCloser& value);
     struct nopCloserWriterTo
     {
-        Reader Reader;
+        Reader Reader{};
 
         using isGoStruct = void;
 

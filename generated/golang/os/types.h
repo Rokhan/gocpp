@@ -21,7 +21,7 @@ namespace golang::os
 {
     struct File
     {
-        file* file; // os specific
+        file* file{}; // os specific
 
         using isGoStruct = void;
 

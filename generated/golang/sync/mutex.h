@@ -16,8 +16,8 @@ namespace golang::sync
     void fatal(gocpp::string);
     struct Mutex
     {
-        int32_t state;
-        uint32_t sema;
+        int32_t state{};
+        uint32_t sema{};
 
         using isGoStruct = void;
 

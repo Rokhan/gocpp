@@ -15,7 +15,7 @@ namespace golang::errors
     struct gocpp::error New(gocpp::string text);
     struct errorString
     {
-        gocpp::string s;
+        gocpp::string s{};
 
         using isGoStruct = void;
 

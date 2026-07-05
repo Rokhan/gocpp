@@ -22,8 +22,8 @@ namespace golang::runtime
     using pageBits = gocpp::alias<gocpp::array<uint64_t, pallocChunkPages / 64>, GoTag_pageBits>;
     struct pallocData
     {
-        golang::runtime::pallocBits pallocBits;
-        golang::runtime::pageBits scavenged;
+        golang::runtime::pallocBits pallocBits{};
+        golang::runtime::pageBits scavenged{};
 
         using isGoStruct = void;
 

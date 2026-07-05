@@ -18,9 +18,9 @@ namespace golang::runtime
     unsigned char* subtract1(unsigned char* p);
     struct markBits
     {
-        uint8_t* bytep;
-        uint8_t mask;
-        uintptr_t index;
+        uint8_t* bytep{};
+        uint8_t mask{};
+        uintptr_t index{};
 
         using isGoStruct = void;
 

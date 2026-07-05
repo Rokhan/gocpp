@@ -61,28 +61,28 @@ namespace golang::cpu
     uintptr_t CacheLineSize = CacheLinePadSize;
     struct gocpp_id_0
     {
-        CacheLinePad _1;
-        bool HasAES;
-        bool HasADX;
-        bool HasAVX;
-        bool HasAVX2;
-        bool HasAVX512F;
-        bool HasAVX512BW;
-        bool HasAVX512VL;
-        bool HasBMI1;
-        bool HasBMI2;
-        bool HasERMS;
-        bool HasFMA;
-        bool HasOSXSAVE;
-        bool HasPCLMULQDQ;
-        bool HasPOPCNT;
-        bool HasRDTSCP;
-        bool HasSHA;
-        bool HasSSE3;
-        bool HasSSSE3;
-        bool HasSSE41;
-        bool HasSSE42;
-        CacheLinePad _2;
+        CacheLinePad _1{};
+        bool HasAES{};
+        bool HasADX{};
+        bool HasAVX{};
+        bool HasAVX2{};
+        bool HasAVX512F{};
+        bool HasAVX512BW{};
+        bool HasAVX512VL{};
+        bool HasBMI1{};
+        bool HasBMI2{};
+        bool HasERMS{};
+        bool HasFMA{};
+        bool HasOSXSAVE{};
+        bool HasPCLMULQDQ{};
+        bool HasPOPCNT{};
+        bool HasRDTSCP{};
+        bool HasSHA{};
+        bool HasSSE3{};
+        bool HasSSSE3{};
+        bool HasSSE41{};
+        bool HasSSE42{};
+        CacheLinePad _2{};
 
         using isGoStruct = void;
 
@@ -186,11 +186,11 @@ namespace golang::cpu
     gocpp_id_0 X86;
     struct gocpp_id_1
     {
-        CacheLinePad _1;
-        bool HasVFPv4;
-        bool HasIDIVA;
-        bool HasV7Atomics;
-        CacheLinePad _2;
+        CacheLinePad _1{};
+        bool HasVFPv4{};
+        bool HasIDIVA{};
+        bool HasV7Atomics{};
+        CacheLinePad _2{};
 
         using isGoStruct = void;
 
@@ -241,17 +241,17 @@ namespace golang::cpu
     gocpp_id_1 ARM;
     struct gocpp_id_2
     {
-        CacheLinePad _1;
-        bool HasAES;
-        bool HasPMULL;
-        bool HasSHA1;
-        bool HasSHA2;
-        bool HasSHA512;
-        bool HasCRC32;
-        bool HasATOMICS;
-        bool HasCPUID;
-        bool IsNeoverse;
-        CacheLinePad _2;
+        CacheLinePad _1{};
+        bool HasAES{};
+        bool HasPMULL{};
+        bool HasSHA1{};
+        bool HasSHA2{};
+        bool HasSHA512{};
+        bool HasCRC32{};
+        bool HasATOMICS{};
+        bool HasCPUID{};
+        bool IsNeoverse{};
+        CacheLinePad _2{};
 
         using isGoStruct = void;
 
@@ -320,9 +320,9 @@ namespace golang::cpu
     gocpp_id_2 ARM64;
     struct gocpp_id_3
     {
-        CacheLinePad _1;
-        bool HasMSA; // MIPS SIMD architecture
-        CacheLinePad _2;
+        CacheLinePad _1{};
+        bool HasMSA{}; // MIPS SIMD architecture
+        CacheLinePad _2{};
 
         using isGoStruct = void;
 
@@ -365,13 +365,13 @@ namespace golang::cpu
     gocpp_id_3 MIPS64X;
     struct gocpp_id_4
     {
-        CacheLinePad _1;
-        bool HasDARN; // Hardware random number generator (requires kernel enablement)
-        bool HasSCV; // Syscall vectored (requires kernel enablement)
-        bool IsPOWER8; // ISA v2.07 (POWER8)
-        bool IsPOWER9; // ISA v3.00 (POWER9)
-        bool IsPOWER10; // ISA v3.1  (POWER10)
-        CacheLinePad _2;
+        CacheLinePad _1{};
+        bool HasDARN{}; // Hardware random number generator (requires kernel enablement)
+        bool HasSCV{}; // Syscall vectored (requires kernel enablement)
+        bool IsPOWER8{}; // ISA v2.07 (POWER8)
+        bool IsPOWER9{}; // ISA v3.00 (POWER9)
+        bool IsPOWER10{}; // ISA v3.1  (POWER10)
+        CacheLinePad _2{};
 
         using isGoStruct = void;
 
@@ -431,29 +431,29 @@ namespace golang::cpu
     gocpp_id_4 PPC64;
     struct gocpp_id_5
     {
-        CacheLinePad _1;
-        bool HasZARCH; // z architecture mode is active [mandatory]
-        bool HasSTFLE; // store facility list extended [mandatory]
-        bool HasLDISP; // long (20-bit) displacements [mandatory]
-        bool HasEIMM; // 32-bit immediates [mandatory]
-        bool HasDFP; // decimal floating point
-        bool HasETF3EH; // ETF-3 enhanced
-        bool HasMSA; // message security assist (CPACF)
-        bool HasAES; // KM-AES{128,192,256} functions
-        bool HasAESCBC; // KMC-AES{128,192,256} functions
-        bool HasAESCTR; // KMCTR-AES{128,192,256} functions
-        bool HasAESGCM; // KMA-GCM-AES{128,192,256} functions
-        bool HasGHASH; // KIMD-GHASH function
-        bool HasSHA1; // K{I,L}MD-SHA-1 functions
-        bool HasSHA256; // K{I,L}MD-SHA-256 functions
-        bool HasSHA512; // K{I,L}MD-SHA-512 functions
-        bool HasSHA3; // K{I,L}MD-SHA3-{224,256,384,512} and K{I,L}MD-SHAKE-{128,256} functions
-        bool HasVX; // vector facility. Note: the runtime sets this when it processes auxv records.
-        bool HasVXE; // vector-enhancements facility 1
-        bool HasKDSA; // elliptic curve functions
-        bool HasECDSA; // NIST curves
-        bool HasEDDSA; // Edwards curves
-        CacheLinePad _2;
+        CacheLinePad _1{};
+        bool HasZARCH{}; // z architecture mode is active [mandatory]
+        bool HasSTFLE{}; // store facility list extended [mandatory]
+        bool HasLDISP{}; // long (20-bit) displacements [mandatory]
+        bool HasEIMM{}; // 32-bit immediates [mandatory]
+        bool HasDFP{}; // decimal floating point
+        bool HasETF3EH{}; // ETF-3 enhanced
+        bool HasMSA{}; // message security assist (CPACF)
+        bool HasAES{}; // KM-AES{128,192,256} functions
+        bool HasAESCBC{}; // KMC-AES{128,192,256} functions
+        bool HasAESCTR{}; // KMCTR-AES{128,192,256} functions
+        bool HasAESGCM{}; // KMA-GCM-AES{128,192,256} functions
+        bool HasGHASH{}; // KIMD-GHASH function
+        bool HasSHA1{}; // K{I,L}MD-SHA-1 functions
+        bool HasSHA256{}; // K{I,L}MD-SHA-256 functions
+        bool HasSHA512{}; // K{I,L}MD-SHA-512 functions
+        bool HasSHA3{}; // K{I,L}MD-SHA3-{224,256,384,512} and K{I,L}MD-SHAKE-{128,256} functions
+        bool HasVX{}; // vector facility. Note: the runtime sets this when it processes auxv records.
+        bool HasVXE{}; // vector-enhancements facility 1
+        bool HasKDSA{}; // elliptic curve functions
+        bool HasECDSA{}; // NIST curves
+        bool HasEDDSA{}; // Edwards curves
+        CacheLinePad _2{};
 
         using isGoStruct = void;
 

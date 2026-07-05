@@ -18,8 +18,8 @@ namespace golang::syscall
     extern gocpp::slice<unsigned char> OID_SGC_NETSCAPE;
     struct Timeval
     {
-        int32_t Sec;
-        int32_t Usec;
+        int32_t Sec{};
+        int32_t Usec{};
 
         using isGoStruct = void;
 
@@ -35,9 +35,9 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Timeval& value);
     struct SecurityAttributes
     {
-        uint32_t Length;
-        uintptr_t SecurityDescriptor;
-        uint32_t InheritHandle;
+        uint32_t Length{};
+        uintptr_t SecurityDescriptor{};
+        uint32_t InheritHandle{};
 
         using isGoStruct = void;
 
@@ -53,10 +53,10 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct SecurityAttributes& value);
     struct FileNotifyInformation
     {
-        uint32_t NextEntryOffset;
-        uint32_t Action;
-        uint32_t FileNameLength;
-        uint16_t FileName;
+        uint32_t NextEntryOffset{};
+        uint32_t Action{};
+        uint32_t FileNameLength{};
+        uint16_t FileName{};
 
         using isGoStruct = void;
 
@@ -72,8 +72,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct FileNotifyInformation& value);
     struct Filetime
     {
-        uint32_t LowDateTime;
-        uint32_t HighDateTime;
+        uint32_t LowDateTime{};
+        uint32_t HighDateTime{};
 
         using isGoStruct = void;
 
@@ -89,7 +89,7 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Filetime& value);
     struct _PROC_THREAD_ATTRIBUTE_LIST
     {
-        gocpp::array<unsigned char, 1> _1;
+        gocpp::array<unsigned char, 1> _1{};
 
         using isGoStruct = void;
 
@@ -105,16 +105,16 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct _PROC_THREAD_ATTRIBUTE_LIST& value);
     struct ProcessEntry32
     {
-        uint32_t Size;
-        uint32_t Usage;
-        uint32_t ProcessID;
-        uintptr_t DefaultHeapID;
-        uint32_t ModuleID;
-        uint32_t Threads;
-        uint32_t ParentProcessID;
-        int32_t PriClassBase;
-        uint32_t Flags;
-        gocpp::array<uint16_t, MAX_PATH> ExeFile;
+        uint32_t Size{};
+        uint32_t Usage{};
+        uint32_t ProcessID{};
+        uintptr_t DefaultHeapID{};
+        uint32_t ModuleID{};
+        uint32_t Threads{};
+        uint32_t ParentProcessID{};
+        int32_t PriClassBase{};
+        uint32_t Flags{};
+        gocpp::array<uint16_t, MAX_PATH> ExeFile{};
 
         using isGoStruct = void;
 
@@ -130,14 +130,14 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct ProcessEntry32& value);
     struct Systemtime
     {
-        uint16_t Year;
-        uint16_t Month;
-        uint16_t DayOfWeek;
-        uint16_t Day;
-        uint16_t Hour;
-        uint16_t Minute;
-        uint16_t Second;
-        uint16_t Milliseconds;
+        uint16_t Year{};
+        uint16_t Month{};
+        uint16_t DayOfWeek{};
+        uint16_t Day{};
+        uint16_t Hour{};
+        uint16_t Minute{};
+        uint16_t Second{};
+        uint16_t Milliseconds{};
 
         using isGoStruct = void;
 
@@ -153,8 +153,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Systemtime& value);
     struct WSABuf
     {
-        uint32_t Len;
-        unsigned char* Buf;
+        uint32_t Len{};
+        unsigned char* Buf{};
 
         using isGoStruct = void;
 
@@ -170,11 +170,11 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct WSABuf& value);
     struct Hostent
     {
-        unsigned char* Name;
-        unsigned char** Aliases;
-        uint16_t AddrType;
-        uint16_t Length;
-        unsigned char** AddrList;
+        unsigned char* Name{};
+        unsigned char** Aliases{};
+        uint16_t AddrType{};
+        uint16_t Length{};
+        unsigned char** AddrList{};
 
         using isGoStruct = void;
 
@@ -190,9 +190,9 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Hostent& value);
     struct Protoent
     {
-        unsigned char* Name;
-        unsigned char** Aliases;
-        uint16_t Proto;
+        unsigned char* Name{};
+        unsigned char** Aliases{};
+        uint16_t Proto{};
 
         using isGoStruct = void;
 
@@ -208,11 +208,11 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Protoent& value);
     struct DNSSRVData
     {
-        uint16_t* Target;
-        uint16_t Priority;
-        uint16_t Weight;
-        uint16_t Port;
-        uint16_t Pad;
+        uint16_t* Target{};
+        uint16_t Priority{};
+        uint16_t Weight{};
+        uint16_t Port{};
+        uint16_t Pad{};
 
         using isGoStruct = void;
 
@@ -228,7 +228,7 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct DNSSRVData& value);
     struct DNSPTRData
     {
-        uint16_t* Host;
+        uint16_t* Host{};
 
         using isGoStruct = void;
 
@@ -244,9 +244,9 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct DNSPTRData& value);
     struct DNSMXData
     {
-        uint16_t* NameExchange;
-        uint16_t Preference;
-        uint16_t Pad;
+        uint16_t* NameExchange{};
+        uint16_t Preference{};
+        uint16_t Pad{};
 
         using isGoStruct = void;
 
@@ -262,8 +262,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct DNSMXData& value);
     struct DNSTXTData
     {
-        uint16_t StringCount;
-        gocpp::array<uint16_t*, 1> StringArray;
+        uint16_t StringCount{};
+        gocpp::array<uint16_t*, 1> StringArray{};
 
         using isGoStruct = void;
 
@@ -279,14 +279,14 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct DNSTXTData& value);
     struct DNSRecord
     {
-        DNSRecord* Next;
-        uint16_t* Name;
-        uint16_t Type;
-        uint16_t Length;
-        uint32_t Dw;
-        uint32_t Ttl;
-        uint32_t Reserved;
-        gocpp::array<unsigned char, 40> Data;
+        DNSRecord* Next{};
+        uint16_t* Name{};
+        uint16_t Type{};
+        uint16_t Length{};
+        uint32_t Dw{};
+        uint32_t Ttl{};
+        uint32_t Reserved{};
+        gocpp::array<unsigned char, 40> Data{};
 
         using isGoStruct = void;
 
@@ -302,10 +302,10 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct DNSRecord& value);
     struct TransmitFileBuffers
     {
-        uintptr_t Head;
-        uint32_t HeadLength;
-        uintptr_t Tail;
-        uint32_t TailLength;
+        uintptr_t Head{};
+        uint32_t HeadLength{};
+        uintptr_t Tail{};
+        uint32_t TailLength{};
 
         using isGoStruct = void;
 
@@ -323,7 +323,7 @@ namespace golang::syscall
     using SockaddrGen = gocpp::alias<gocpp::array<unsigned char, 24>, GoTag_SockaddrGen>;
     struct IpAddressString
     {
-        gocpp::array<unsigned char, 16> String;
+        gocpp::array<unsigned char, 16> String{};
 
         using isGoStruct = void;
 
@@ -339,30 +339,30 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct IpAddressString& value);
     struct MibIfRow
     {
-        gocpp::array<uint16_t, MAX_INTERFACE_NAME_LEN> Name;
-        uint32_t Index;
-        uint32_t Type;
-        uint32_t Mtu;
-        uint32_t Speed;
-        uint32_t PhysAddrLen;
-        gocpp::array<unsigned char, MAXLEN_PHYSADDR> PhysAddr;
-        uint32_t AdminStatus;
-        uint32_t OperStatus;
-        uint32_t LastChange;
-        uint32_t InOctets;
-        uint32_t InUcastPkts;
-        uint32_t InNUcastPkts;
-        uint32_t InDiscards;
-        uint32_t InErrors;
-        uint32_t InUnknownProtos;
-        uint32_t OutOctets;
-        uint32_t OutUcastPkts;
-        uint32_t OutNUcastPkts;
-        uint32_t OutDiscards;
-        uint32_t OutErrors;
-        uint32_t OutQLen;
-        uint32_t DescrLen;
-        gocpp::array<unsigned char, MAXLEN_IFDESCR> Descr;
+        gocpp::array<uint16_t, MAX_INTERFACE_NAME_LEN> Name{};
+        uint32_t Index{};
+        uint32_t Type{};
+        uint32_t Mtu{};
+        uint32_t Speed{};
+        uint32_t PhysAddrLen{};
+        gocpp::array<unsigned char, MAXLEN_PHYSADDR> PhysAddr{};
+        uint32_t AdminStatus{};
+        uint32_t OperStatus{};
+        uint32_t LastChange{};
+        uint32_t InOctets{};
+        uint32_t InUcastPkts{};
+        uint32_t InNUcastPkts{};
+        uint32_t InDiscards{};
+        uint32_t InErrors{};
+        uint32_t InUnknownProtos{};
+        uint32_t OutOctets{};
+        uint32_t OutUcastPkts{};
+        uint32_t OutNUcastPkts{};
+        uint32_t OutDiscards{};
+        uint32_t OutErrors{};
+        uint32_t OutQLen{};
+        uint32_t DescrLen{};
+        gocpp::array<unsigned char, MAXLEN_IFDESCR> Descr{};
 
         using isGoStruct = void;
 
@@ -423,13 +423,13 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct CertRevocationCrlInfo& value);
     struct CertRevocationInfo
     {
-        uint32_t Size;
-        uint32_t RevocationResult;
-        unsigned char* RevocationOid;
-        golang::syscall::Pointer OidSpecificInfo;
-        uint32_t HasFreshnessTime;
-        uint32_t FreshnessTime;
-        CertRevocationCrlInfo* CrlInfo;
+        uint32_t Size{};
+        uint32_t RevocationResult{};
+        unsigned char* RevocationOid{};
+        golang::syscall::Pointer OidSpecificInfo{};
+        uint32_t HasFreshnessTime{};
+        uint32_t FreshnessTime{};
+        CertRevocationCrlInfo* CrlInfo{};
 
         using isGoStruct = void;
 
@@ -445,8 +445,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct CertRevocationInfo& value);
     struct CertTrustStatus
     {
-        uint32_t ErrorStatus;
-        uint32_t InfoStatus;
+        uint32_t ErrorStatus{};
+        uint32_t InfoStatus{};
 
         using isGoStruct = void;
 
@@ -462,8 +462,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct CertTrustStatus& value);
     struct CertEnhKeyUsage
     {
-        uint32_t Length;
-        unsigned char** UsageIdentifiers;
+        uint32_t Length{};
+        unsigned char** UsageIdentifiers{};
 
         using isGoStruct = void;
 
@@ -479,9 +479,9 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct CertEnhKeyUsage& value);
     struct CertChainPolicyPara
     {
-        uint32_t Size;
-        uint32_t Flags;
-        golang::syscall::Pointer ExtraPolicyPara;
+        uint32_t Size{};
+        uint32_t Flags{};
+        golang::syscall::Pointer ExtraPolicyPara{};
 
         using isGoStruct = void;
 
@@ -497,10 +497,10 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct CertChainPolicyPara& value);
     struct SSLExtraCertChainPolicyPara
     {
-        uint32_t Size;
-        uint32_t AuthType;
-        uint32_t Checks;
-        uint16_t* ServerName;
+        uint32_t Size{};
+        uint32_t AuthType{};
+        uint32_t Checks{};
+        uint16_t* ServerName{};
 
         using isGoStruct = void;
 
@@ -516,11 +516,11 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct SSLExtraCertChainPolicyPara& value);
     struct CertChainPolicyStatus
     {
-        uint32_t Size;
-        uint32_t Error;
-        uint32_t ChainIndex;
-        uint32_t ElementIndex;
-        golang::syscall::Pointer ExtraPolicyStatus;
+        uint32_t Size{};
+        uint32_t Error{};
+        uint32_t ChainIndex{};
+        uint32_t ElementIndex{};
+        golang::syscall::Pointer ExtraPolicyStatus{};
 
         using isGoStruct = void;
 
@@ -536,14 +536,14 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct CertChainPolicyStatus& value);
     struct AddrinfoW
     {
-        int32_t Flags;
-        int32_t Family;
-        int32_t Socktype;
-        int32_t Protocol;
-        uintptr_t Addrlen;
-        uint16_t* Canonname;
-        golang::syscall::Pointer Addr;
-        AddrinfoW* Next;
+        int32_t Flags{};
+        int32_t Family{};
+        int32_t Socktype{};
+        int32_t Protocol{};
+        uintptr_t Addrlen{};
+        uint16_t* Canonname{};
+        golang::syscall::Pointer Addr{};
+        AddrinfoW* Next{};
 
         using isGoStruct = void;
 
@@ -559,10 +559,10 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct AddrinfoW& value);
     struct GUID
     {
-        uint32_t Data1;
-        uint16_t Data2;
-        uint16_t Data3;
-        gocpp::array<unsigned char, 8> Data4;
+        uint32_t Data1{};
+        uint16_t Data2{};
+        uint16_t Data3{};
+        gocpp::array<unsigned char, 8> Data4{};
 
         using isGoStruct = void;
 
@@ -578,8 +578,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct GUID& value);
     struct WSAProtocolChain
     {
-        int32_t ChainLen;
-        gocpp::array<uint32_t, MAX_PROTOCOL_CHAIN> ChainEntries;
+        int32_t ChainLen{};
+        gocpp::array<uint32_t, MAX_PROTOCOL_CHAIN> ChainEntries{};
 
         using isGoStruct = void;
 
@@ -595,9 +595,9 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct WSAProtocolChain& value);
     struct TCPKeepalive
     {
-        uint32_t OnOff;
-        uint32_t Time;
-        uint32_t Interval;
+        uint32_t OnOff{};
+        uint32_t Time{};
+        uint32_t Interval{};
 
         using isGoStruct = void;
 
@@ -613,12 +613,12 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct TCPKeepalive& value);
     struct symbolicLinkReparseBuffer
     {
-        uint16_t SubstituteNameOffset;
-        uint16_t SubstituteNameLength;
-        uint16_t PrintNameOffset;
-        uint16_t PrintNameLength;
-        uint32_t Flags;
-        gocpp::array<uint16_t, 1> PathBuffer;
+        uint16_t SubstituteNameOffset{};
+        uint16_t SubstituteNameLength{};
+        uint16_t PrintNameOffset{};
+        uint16_t PrintNameLength{};
+        uint32_t Flags{};
+        gocpp::array<uint16_t, 1> PathBuffer{};
 
         using isGoStruct = void;
 
@@ -634,11 +634,11 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct symbolicLinkReparseBuffer& value);
     struct mountPointReparseBuffer
     {
-        uint16_t SubstituteNameOffset;
-        uint16_t SubstituteNameLength;
-        uint16_t PrintNameOffset;
-        uint16_t PrintNameLength;
-        gocpp::array<uint16_t, 1> PathBuffer;
+        uint16_t SubstituteNameOffset{};
+        uint16_t SubstituteNameLength{};
+        uint16_t PrintNameOffset{};
+        uint16_t PrintNameLength{};
+        gocpp::array<uint16_t, 1> PathBuffer{};
 
         using isGoStruct = void;
 
@@ -654,11 +654,11 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct mountPointReparseBuffer& value);
     struct reparseDataBuffer
     {
-        uint32_t ReparseTag;
-        uint16_t ReparseDataLength;
-        uint16_t Reserved;
+        uint32_t ReparseTag{};
+        uint16_t ReparseDataLength{};
+        uint16_t Reserved{};
         // GenericReparseBuffer
-        unsigned char reparseBuffer;
+        unsigned char reparseBuffer{};
 
         using isGoStruct = void;
 
@@ -676,16 +676,16 @@ namespace golang::syscall
     struct Filetime NsecToFiletime(int64_t nsec);
     struct Win32finddata
     {
-        uint32_t FileAttributes;
-        Filetime CreationTime;
-        Filetime LastAccessTime;
-        Filetime LastWriteTime;
-        uint32_t FileSizeHigh;
-        uint32_t FileSizeLow;
-        uint32_t Reserved0;
-        uint32_t Reserved1;
-        gocpp::array<uint16_t, MAX_PATH - 1> FileName;
-        gocpp::array<uint16_t, 13> AlternateFileName;
+        uint32_t FileAttributes{};
+        Filetime CreationTime{};
+        Filetime LastAccessTime{};
+        Filetime LastWriteTime{};
+        uint32_t FileSizeHigh{};
+        uint32_t FileSizeLow{};
+        uint32_t Reserved0{};
+        uint32_t Reserved1{};
+        gocpp::array<uint16_t, MAX_PATH - 1> FileName{};
+        gocpp::array<uint16_t, 13> AlternateFileName{};
 
         using isGoStruct = void;
 
@@ -701,16 +701,16 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Win32finddata& value);
     struct win32finddata1
     {
-        uint32_t FileAttributes;
-        Filetime CreationTime;
-        Filetime LastAccessTime;
-        Filetime LastWriteTime;
-        uint32_t FileSizeHigh;
-        uint32_t FileSizeLow;
-        uint32_t Reserved0;
-        uint32_t Reserved1;
-        gocpp::array<uint16_t, MAX_PATH> FileName;
-        gocpp::array<uint16_t, 14> AlternateFileName;
+        uint32_t FileAttributes{};
+        Filetime CreationTime{};
+        Filetime LastAccessTime{};
+        Filetime LastWriteTime{};
+        uint32_t FileSizeHigh{};
+        uint32_t FileSizeLow{};
+        uint32_t Reserved0{};
+        uint32_t Reserved1{};
+        gocpp::array<uint16_t, MAX_PATH> FileName{};
+        gocpp::array<uint16_t, 14> AlternateFileName{};
 
         using isGoStruct = void;
 
@@ -726,16 +726,16 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct win32finddata1& value);
     struct ByHandleFileInformation
     {
-        uint32_t FileAttributes;
-        Filetime CreationTime;
-        Filetime LastAccessTime;
-        Filetime LastWriteTime;
-        uint32_t VolumeSerialNumber;
-        uint32_t FileSizeHigh;
-        uint32_t FileSizeLow;
-        uint32_t NumberOfLinks;
-        uint32_t FileIndexHigh;
-        uint32_t FileIndexLow;
+        uint32_t FileAttributes{};
+        Filetime CreationTime{};
+        Filetime LastAccessTime{};
+        Filetime LastWriteTime{};
+        uint32_t VolumeSerialNumber{};
+        uint32_t FileSizeHigh{};
+        uint32_t FileSizeLow{};
+        uint32_t NumberOfLinks{};
+        uint32_t FileIndexHigh{};
+        uint32_t FileIndexLow{};
 
         using isGoStruct = void;
 
@@ -751,12 +751,12 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct ByHandleFileInformation& value);
     struct Win32FileAttributeData
     {
-        uint32_t FileAttributes;
-        Filetime CreationTime;
-        Filetime LastAccessTime;
-        Filetime LastWriteTime;
-        uint32_t FileSizeHigh;
-        uint32_t FileSizeLow;
+        uint32_t FileAttributes{};
+        Filetime CreationTime{};
+        Filetime LastAccessTime{};
+        Filetime LastWriteTime{};
+        uint32_t FileSizeHigh{};
+        uint32_t FileSizeLow{};
 
         using isGoStruct = void;
 
@@ -772,13 +772,13 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Win32FileAttributeData& value);
     struct Timezoneinformation
     {
-        int32_t Bias;
-        gocpp::array<uint16_t, 32> StandardName;
-        Systemtime StandardDate;
-        int32_t StandardBias;
-        gocpp::array<uint16_t, 32> DaylightName;
-        Systemtime DaylightDate;
-        int32_t DaylightBias;
+        int32_t Bias{};
+        gocpp::array<uint16_t, 32> StandardName{};
+        Systemtime StandardDate{};
+        int32_t StandardBias{};
+        gocpp::array<uint16_t, 32> DaylightName{};
+        Systemtime DaylightDate{};
+        int32_t DaylightBias{};
 
         using isGoStruct = void;
 
@@ -794,10 +794,10 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Timezoneinformation& value);
     struct InterfaceInfo
     {
-        uint32_t Flags;
-        golang::syscall::SockaddrGen Address;
-        golang::syscall::SockaddrGen BroadcastAddress;
-        golang::syscall::SockaddrGen Netmask;
+        uint32_t Flags{};
+        golang::syscall::SockaddrGen Address{};
+        golang::syscall::SockaddrGen BroadcastAddress{};
+        golang::syscall::SockaddrGen Netmask{};
 
         using isGoStruct = void;
 
@@ -813,10 +813,10 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct InterfaceInfo& value);
     struct IpAddrString
     {
-        IpAddrString* Next;
-        IpAddressString IpAddress;
-        golang::syscall::IpMaskString IpMask;
-        uint32_t Context;
+        IpAddrString* Next{};
+        IpAddressString IpAddress{};
+        golang::syscall::IpMaskString IpMask{};
+        uint32_t Context{};
 
         using isGoStruct = void;
 
@@ -832,14 +832,14 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct IpAddrString& value);
     struct CertChainContext
     {
-        uint32_t Size;
-        CertTrustStatus TrustStatus;
-        uint32_t ChainCount;
-        CertSimpleChain** Chains;
-        uint32_t LowerQualityChainCount;
-        CertChainContext** LowerQualityChains;
-        uint32_t HasRevocationFreshnessTime;
-        uint32_t RevocationFreshnessTime;
+        uint32_t Size{};
+        CertTrustStatus TrustStatus{};
+        uint32_t ChainCount{};
+        CertSimpleChain** Chains{};
+        uint32_t LowerQualityChainCount{};
+        CertChainContext** LowerQualityChains{};
+        uint32_t HasRevocationFreshnessTime{};
+        uint32_t RevocationFreshnessTime{};
 
         using isGoStruct = void;
 
@@ -855,13 +855,13 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct CertChainContext& value);
     struct CertSimpleChain
     {
-        uint32_t Size;
-        CertTrustStatus TrustStatus;
-        uint32_t NumElements;
-        CertChainElement** Elements;
-        CertTrustListInfo* TrustListInfo;
-        uint32_t HasRevocationFreshnessTime;
-        uint32_t RevocationFreshnessTime;
+        uint32_t Size{};
+        CertTrustStatus TrustStatus{};
+        uint32_t NumElements{};
+        CertChainElement** Elements{};
+        CertTrustListInfo* TrustListInfo{};
+        uint32_t HasRevocationFreshnessTime{};
+        uint32_t RevocationFreshnessTime{};
 
         using isGoStruct = void;
 
@@ -877,13 +877,13 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct CertSimpleChain& value);
     struct CertChainElement
     {
-        uint32_t Size;
-        CertContext* CertContext;
-        CertTrustStatus TrustStatus;
-        CertRevocationInfo* RevocationInfo;
-        CertEnhKeyUsage* IssuanceUsage;
-        CertEnhKeyUsage* ApplicationUsage;
-        uint16_t* ExtendedErrorInfo;
+        uint32_t Size{};
+        CertContext* CertContext{};
+        CertTrustStatus TrustStatus{};
+        CertRevocationInfo* RevocationInfo{};
+        CertEnhKeyUsage* IssuanceUsage{};
+        CertEnhKeyUsage* ApplicationUsage{};
+        uint16_t* ExtendedErrorInfo{};
 
         using isGoStruct = void;
 
@@ -899,8 +899,8 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct CertChainElement& value);
     struct CertUsageMatch
     {
-        uint32_t Type;
-        CertEnhKeyUsage Usage;
+        uint32_t Type{};
+        CertEnhKeyUsage Usage{};
 
         using isGoStruct = void;
 
@@ -917,26 +917,26 @@ namespace golang::syscall
     extern GUID WSAID_CONNECTEX;
     struct WSAProtocolInfo
     {
-        uint32_t ServiceFlags1;
-        uint32_t ServiceFlags2;
-        uint32_t ServiceFlags3;
-        uint32_t ServiceFlags4;
-        uint32_t ProviderFlags;
-        GUID ProviderId;
-        uint32_t CatalogEntryId;
-        WSAProtocolChain ProtocolChain;
-        int32_t Version;
-        int32_t AddressFamily;
-        int32_t MaxSockAddr;
-        int32_t MinSockAddr;
-        int32_t SocketType;
-        int32_t Protocol;
-        int32_t ProtocolMaxOffset;
-        int32_t NetworkByteOrder;
-        int32_t SecurityScheme;
-        uint32_t MessageSize;
-        uint32_t ProviderReserved;
-        gocpp::array<uint16_t, WSAPROTOCOL_LEN + 1> ProtocolName;
+        uint32_t ServiceFlags1{};
+        uint32_t ServiceFlags2{};
+        uint32_t ServiceFlags3{};
+        uint32_t ServiceFlags4{};
+        uint32_t ProviderFlags{};
+        GUID ProviderId{};
+        uint32_t CatalogEntryId{};
+        WSAProtocolChain ProtocolChain{};
+        int32_t Version{};
+        int32_t AddressFamily{};
+        int32_t MaxSockAddr{};
+        int32_t MinSockAddr{};
+        int32_t SocketType{};
+        int32_t Protocol{};
+        int32_t ProtocolMaxOffset{};
+        int32_t NetworkByteOrder{};
+        int32_t SecurityScheme{};
+        uint32_t MessageSize{};
+        uint32_t ProviderReserved{};
+        gocpp::array<uint16_t, WSAPROTOCOL_LEN + 1> ProtocolName{};
 
         using isGoStruct = void;
 
@@ -957,11 +957,11 @@ namespace golang::syscall
 {
     struct Overlapped
     {
-        uintptr_t Internal;
-        uintptr_t InternalHigh;
-        uint32_t Offset;
-        uint32_t OffsetHigh;
-        golang::syscall::Handle HEvent;
+        uintptr_t Internal{};
+        uintptr_t InternalHigh{};
+        uint32_t Offset{};
+        uint32_t OffsetHigh{};
+        golang::syscall::Handle HEvent{};
 
         using isGoStruct = void;
 
@@ -977,24 +977,24 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct Overlapped& value);
     struct StartupInfo
     {
-        uint32_t Cb;
-        uint16_t* _1;
-        uint16_t* Desktop;
-        uint16_t* Title;
-        uint32_t X;
-        uint32_t Y;
-        uint32_t XSize;
-        uint32_t YSize;
-        uint32_t XCountChars;
-        uint32_t YCountChars;
-        uint32_t FillAttribute;
-        uint32_t Flags;
-        uint16_t ShowWindow;
-        uint16_t _2;
-        unsigned char* _3;
-        golang::syscall::Handle StdInput;
-        golang::syscall::Handle StdOutput;
-        golang::syscall::Handle StdErr;
+        uint32_t Cb{};
+        uint16_t* _1{};
+        uint16_t* Desktop{};
+        uint16_t* Title{};
+        uint32_t X{};
+        uint32_t Y{};
+        uint32_t XSize{};
+        uint32_t YSize{};
+        uint32_t XCountChars{};
+        uint32_t YCountChars{};
+        uint32_t FillAttribute{};
+        uint32_t Flags{};
+        uint16_t ShowWindow{};
+        uint16_t _2{};
+        unsigned char* _3{};
+        golang::syscall::Handle StdInput{};
+        golang::syscall::Handle StdOutput{};
+        golang::syscall::Handle StdErr{};
 
         using isGoStruct = void;
 
@@ -1010,10 +1010,10 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct StartupInfo& value);
     struct ProcessInformation
     {
-        golang::syscall::Handle Process;
-        golang::syscall::Handle Thread;
-        uint32_t ProcessId;
-        uint32_t ThreadId;
+        golang::syscall::Handle Process{};
+        golang::syscall::Handle Thread{};
+        uint32_t ProcessId{};
+        uint32_t ThreadId{};
 
         using isGoStruct = void;
 
@@ -1029,11 +1029,11 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct ProcessInformation& value);
     struct CertContext
     {
-        uint32_t EncodingType;
-        unsigned char* EncodedCert;
-        uint32_t Length;
-        CertInfo* CertInfo;
-        golang::syscall::Handle Store;
+        uint32_t EncodingType{};
+        unsigned char* EncodedCert{};
+        uint32_t Length{};
+        CertInfo* CertInfo{};
+        golang::syscall::Handle Store{};
 
         using isGoStruct = void;
 
@@ -1050,8 +1050,8 @@ namespace golang::syscall
     void copyFindData(struct Win32finddata* dst, struct win32finddata1* src);
     struct _STARTUPINFOEXW
     {
-        StartupInfo StartupInfo;
-        _PROC_THREAD_ATTRIBUTE_LIST* ProcThreadAttributeList;
+        StartupInfo StartupInfo{};
+        _PROC_THREAD_ATTRIBUTE_LIST* ProcThreadAttributeList{};
 
         using isGoStruct = void;
 
@@ -1067,24 +1067,24 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct _STARTUPINFOEXW& value);
     struct IpAdapterInfo
     {
-        IpAdapterInfo* Next;
-        uint32_t ComboIndex;
-        gocpp::array<unsigned char, MAX_ADAPTER_NAME_LENGTH + 4> AdapterName;
-        gocpp::array<unsigned char, MAX_ADAPTER_DESCRIPTION_LENGTH + 4> Description;
-        uint32_t AddressLength;
-        gocpp::array<unsigned char, MAX_ADAPTER_ADDRESS_LENGTH> Address;
-        uint32_t Index;
-        uint32_t Type;
-        uint32_t DhcpEnabled;
-        IpAddrString* CurrentIpAddress;
-        IpAddrString IpAddressList;
-        IpAddrString GatewayList;
-        IpAddrString DhcpServer;
-        bool HaveWins;
-        IpAddrString PrimaryWinsServer;
-        IpAddrString SecondaryWinsServer;
-        int64_t LeaseObtained;
-        int64_t LeaseExpires;
+        IpAdapterInfo* Next{};
+        uint32_t ComboIndex{};
+        gocpp::array<unsigned char, MAX_ADAPTER_NAME_LENGTH + 4> AdapterName{};
+        gocpp::array<unsigned char, MAX_ADAPTER_DESCRIPTION_LENGTH + 4> Description{};
+        uint32_t AddressLength{};
+        gocpp::array<unsigned char, MAX_ADAPTER_ADDRESS_LENGTH> Address{};
+        uint32_t Index{};
+        uint32_t Type{};
+        uint32_t DhcpEnabled{};
+        IpAddrString* CurrentIpAddress{};
+        IpAddrString IpAddressList{};
+        IpAddrString GatewayList{};
+        IpAddrString DhcpServer{};
+        bool HaveWins{};
+        IpAddrString PrimaryWinsServer{};
+        IpAddrString SecondaryWinsServer{};
+        int64_t LeaseObtained{};
+        int64_t LeaseExpires{};
 
         using isGoStruct = void;
 
@@ -1100,13 +1100,13 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterInfo& value);
     struct CertChainPara
     {
-        uint32_t Size;
-        CertUsageMatch RequestedUsage;
-        CertUsageMatch RequstedIssuancePolicy;
-        uint32_t URLRetrievalTimeout;
-        uint32_t CheckRevocationFreshnessTime;
-        uint32_t RevocationFreshnessTime;
-        Filetime* CacheResync;
+        uint32_t Size{};
+        CertUsageMatch RequestedUsage{};
+        CertUsageMatch RequstedIssuancePolicy{};
+        uint32_t URLRetrievalTimeout{};
+        uint32_t CheckRevocationFreshnessTime{};
+        uint32_t RevocationFreshnessTime{};
+        Filetime* CacheResync{};
 
         using isGoStruct = void;
 

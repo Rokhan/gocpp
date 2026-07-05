@@ -14,9 +14,9 @@ namespace golang::runtime
 {
     struct pageCache
     {
-        uintptr_t base; // base address of the chunk
-        uint64_t cache; // 64-bit bitmap representing free pages (1 means free)
-        uint64_t scav; // 64-bit bitmap representing scavenged pages (1 means scavenged)
+        uintptr_t base{}; // base address of the chunk
+        uint64_t cache{}; // 64-bit bitmap representing free pages (1 means free)
+        uint64_t scav{}; // 64-bit bitmap representing scavenged pages (1 means scavenged)
 
         using isGoStruct = void;
 

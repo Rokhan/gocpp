@@ -14,9 +14,9 @@ namespace golang::time
 {
     struct zone
     {
-        gocpp::string name; // abbreviated name, "CET"
-        int offset; // seconds east of UTC
-        bool isDST; // is this zone Daylight Savings Time?
+        gocpp::string name{}; // abbreviated name, "CET"
+        int offset{}; // seconds east of UTC
+        bool isDST{}; // is this zone Daylight Savings Time?
 
         using isGoStruct = void;
 
@@ -32,10 +32,10 @@ namespace golang::time
     std::ostream& operator<<(std::ostream& os, const struct zone& value);
     struct zoneTrans
     {
-        int64_t when; // transition time, in seconds since 1970 GMT
-        uint8_t index; // the index of the zone that goes into effect at that time
-        bool isstd; // ignored - no idea what these mean
-        bool isutc;
+        int64_t when{}; // transition time, in seconds since 1970 GMT
+        uint8_t index{}; // the index of the zone that goes into effect at that time
+        bool isstd{}; // ignored - no idea what these mean
+        bool isutc{};
 
         using isGoStruct = void;
 
@@ -54,11 +54,11 @@ namespace golang::time
     std::tuple<int, gocpp::string, bool> tzsetOffset(gocpp::string s);
     struct rule
     {
-        golang::time::ruleKind kind;
-        int day;
-        int week;
-        int mon;
-        int time; // transition time
+        golang::time::ruleKind kind{};
+        int day{};
+        int week{};
+        int mon{};
+        int time{}; // transition time
 
         using isGoStruct = void;
 
@@ -77,15 +77,15 @@ namespace golang::time
     bool containsDotDot(gocpp::string s);
     struct Location
     {
-        gocpp::string name;
-        gocpp::slice<zone> zone;
-        gocpp::slice<zoneTrans> tx;
+        gocpp::string name{};
+        gocpp::slice<zone> zone{};
+        gocpp::slice<zoneTrans> tx{};
         // The tzdata information can be followed by a string that describes
         // how to handle DST transitions not recorded in zoneTrans.
         // The format is the TZ environment variable without a colon; see
         // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html.
         // Example string, for America/Los_Angeles: PST8PDT,M3.2.0,M11.1.0
-        gocpp::string extend;
+        gocpp::string extend{};
         // Most lookups will be for the current time.
         // To avoid the binary search through tx, keep a
         // static one-element cache that gives the correct
@@ -95,9 +95,9 @@ namespace golang::time
         // The units for cacheStart and cacheEnd are seconds
         // since January 1, 1970 UTC, to match the argument
         // to lookup.
-        int64_t cacheStart;
-        int64_t cacheEnd;
-        golang::time::zone* cacheZone;
+        int64_t cacheStart{};
+        int64_t cacheEnd{};
+        golang::time::zone* cacheZone{};
 
         using isGoStruct = void;
 

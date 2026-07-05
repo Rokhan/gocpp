@@ -44,8 +44,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct align64& value);
     struct Int32
     {
-        noCopy noCopy;
-        int32_t value;
+        noCopy noCopy{};
+        int32_t value{};
 
         using isGoStruct = void;
 
@@ -61,9 +61,9 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Int32& value);
     struct Int64
     {
-        noCopy noCopy;
-        align64 _1;
-        int64_t value;
+        noCopy noCopy{};
+        align64 _1{};
+        int64_t value{};
 
         using isGoStruct = void;
 
@@ -79,8 +79,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Int64& value);
     struct Uint8
     {
-        noCopy noCopy;
-        uint8_t value;
+        noCopy noCopy{};
+        uint8_t value{};
 
         using isGoStruct = void;
 
@@ -96,8 +96,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Uint8& value);
     struct Uint32
     {
-        noCopy noCopy;
-        uint32_t value;
+        noCopy noCopy{};
+        uint32_t value{};
 
         using isGoStruct = void;
 
@@ -113,9 +113,9 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Uint32& value);
     struct Uint64
     {
-        noCopy noCopy;
-        align64 _1;
-        uint64_t value;
+        noCopy noCopy{};
+        align64 _1{};
+        uint64_t value{};
 
         using isGoStruct = void;
 
@@ -131,8 +131,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Uint64& value);
     struct Uintptr
     {
-        noCopy noCopy;
-        uintptr_t value;
+        noCopy noCopy{};
+        uintptr_t value{};
 
         using isGoStruct = void;
 
@@ -148,8 +148,8 @@ namespace golang::atomic
     std::ostream& operator<<(std::ostream& os, const struct Uintptr& value);
     struct UnsafePointer
     {
-        noCopy noCopy;
-        gocpp::unsafe_pointer value;
+        noCopy noCopy{};
+        gocpp::unsafe_pointer value{};
 
         using isGoStruct = void;
 
@@ -166,7 +166,7 @@ namespace golang::atomic
     struct Bool
     {
         // Inherits noCopy from Uint8.
-        Uint8 u;
+        Uint8 u{};
 
         using isGoStruct = void;
 
@@ -183,7 +183,7 @@ namespace golang::atomic
     struct Float64
     {
         // Inherits noCopy and align64 from Uint64.
-        Uint64 u;
+        Uint64 u{};
 
         using isGoStruct = void;
 
@@ -200,7 +200,7 @@ namespace golang::atomic
     template<typename T> 
     struct Pointer
     {
-        UnsafePointer u;
+        UnsafePointer u{};
 
         using isGoStruct = void;
 

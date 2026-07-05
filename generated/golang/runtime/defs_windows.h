@@ -14,16 +14,16 @@ namespace golang::runtime
 {
     struct systeminfo
     {
-        gocpp::array<unsigned char, 4> anon0;
-        uint32_t dwpagesize;
-        unsigned char* lpminimumapplicationaddress;
-        unsigned char* lpmaximumapplicationaddress;
-        uintptr_t dwactiveprocessormask;
-        uint32_t dwnumberofprocessors;
-        uint32_t dwprocessortype;
-        uint32_t dwallocationgranularity;
-        uint16_t wprocessorlevel;
-        uint16_t wprocessorrevision;
+        gocpp::array<unsigned char, 4> anon0{};
+        uint32_t dwpagesize{};
+        unsigned char* lpminimumapplicationaddress{};
+        unsigned char* lpmaximumapplicationaddress{};
+        uintptr_t dwactiveprocessormask{};
+        uint32_t dwnumberofprocessors{};
+        uint32_t dwprocessortype{};
+        uint32_t dwallocationgranularity{};
+        uint16_t wprocessorlevel{};
+        uint16_t wprocessorrevision{};
 
         using isGoStruct = void;
 
@@ -39,12 +39,12 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct systeminfo& value);
     struct exceptionrecord
     {
-        uint32_t exceptioncode;
-        uint32_t exceptionflags;
-        exceptionrecord* exceptionrecord;
-        uintptr_t exceptionaddress;
-        uint32_t numberparameters;
-        gocpp::array<uintptr_t, 15> exceptioninformation;
+        uint32_t exceptioncode{};
+        uint32_t exceptionflags{};
+        exceptionrecord* exceptionrecord{};
+        uintptr_t exceptionaddress{};
+        uint32_t numberparameters{};
+        gocpp::array<uintptr_t, 15> exceptioninformation{};
 
         using isGoStruct = void;
 
@@ -60,10 +60,10 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct exceptionrecord& value);
     struct overlapped
     {
-        uintptr_t internal;
-        uintptr_t internalhigh;
-        gocpp::array<unsigned char, 8> anon0;
-        unsigned char* hevent;
+        uintptr_t internal{};
+        uintptr_t internalhigh{};
+        gocpp::array<unsigned char, 8> anon0{};
+        unsigned char* hevent{};
 
         using isGoStruct = void;
 
@@ -79,13 +79,13 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct overlapped& value);
     struct memoryBasicInformation
     {
-        uintptr_t baseAddress;
-        uintptr_t allocationBase;
-        uint32_t allocationProtect;
-        uintptr_t regionSize;
-        uint32_t state;
-        uint32_t protect;
-        uint32_t type_;
+        uintptr_t baseAddress{};
+        uintptr_t allocationBase{};
+        uint32_t allocationProtect{};
+        uintptr_t regionSize{};
+        uint32_t state{};
+        uint32_t protect{};
+        uint32_t type_{};
 
         using isGoStruct = void;
 
@@ -106,8 +106,8 @@ namespace golang::runtime
 {
     struct exceptionpointers
     {
-        exceptionrecord* record;
-        context* context;
+        exceptionrecord* record{};
+        context* context{};
 
         using isGoStruct = void;
 

@@ -14,10 +14,10 @@ namespace golang::base64
 {
     struct Encoding
     {
-        gocpp::array<unsigned char, 64> encode; // mapping of symbol index to symbol byte value
-        gocpp::array<uint8_t, 256> decodeMap; // mapping of symbol byte value to symbol index
-        gocpp::rune padChar;
-        bool strict;
+        gocpp::array<unsigned char, 64> encode{}; // mapping of symbol index to symbol byte value
+        gocpp::array<uint8_t, 256> decodeMap{}; // mapping of symbol byte value to symbol index
+        gocpp::rune padChar{};
+        bool strict{};
 
         using isGoStruct = void;
 
@@ -43,12 +43,12 @@ namespace golang::base64
 {
     struct encoder
     {
-        gocpp::error err;
-        Encoding* enc;
-        io::Writer w;
-        gocpp::array<unsigned char, 3> buf; // buffered data waiting to be encoded
-        int nbuf; // number of bytes in buf
-        gocpp::array<unsigned char, 1024> out; // output buffer
+        gocpp::error err{};
+        Encoding* enc{};
+        io::Writer w{};
+        gocpp::array<unsigned char, 3> buf{}; // buffered data waiting to be encoded
+        int nbuf{}; // number of bytes in buf
+        gocpp::array<unsigned char, 1024> out{}; // output buffer
 
         using isGoStruct = void;
 
@@ -65,14 +65,14 @@ namespace golang::base64
     io::WriteCloser NewEncoder(struct Encoding* enc, io::Writer w);
     struct decoder
     {
-        gocpp::error err;
-        gocpp::error readErr; // error from r.Read
-        Encoding* enc;
-        io::Reader r;
-        gocpp::array<unsigned char, 1024> buf; // leftover input
-        int nbuf;
-        gocpp::slice<unsigned char> out; // leftover decoded output
-        gocpp::array<unsigned char, 1024 / 4 * 3> outbuf;
+        gocpp::error err{};
+        gocpp::error readErr{}; // error from r.Read
+        Encoding* enc{};
+        io::Reader r{};
+        gocpp::array<unsigned char, 1024> buf{}; // leftover input
+        int nbuf{};
+        gocpp::slice<unsigned char> out{}; // leftover decoded output
+        gocpp::array<unsigned char, 1024 / 4 * 3> outbuf{};
 
         using isGoStruct = void;
 
@@ -88,7 +88,7 @@ namespace golang::base64
     std::ostream& operator<<(std::ostream& os, const struct decoder& value);
     struct newlineFilteringReader
     {
-        io::Reader wrapped;
+        io::Reader wrapped{};
 
         using isGoStruct = void;
 

@@ -20,8 +20,8 @@ namespace golang::crc32
     void ieeeInit();
     struct digest
     {
-        uint32_t crc;
-        gocpp::array_ptr<golang::crc32::Table> tab;
+        uint32_t crc{};
+        gocpp::array_ptr<golang::crc32::Table> tab{};
 
         using isGoStruct = void;
 

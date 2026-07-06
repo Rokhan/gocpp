@@ -134,8 +134,8 @@
 | $(ImportDir)/compress/flate/huffman_code.go | ✔️ ([cpp](generated/golang/compress/flate/huffman_code.cpp), [h](generated/golang/compress/flate/huffman_code.h))| ✔️ |
 | $(ImportDir)/compress/flate/inflate.go | ✔️ ([cpp](generated/golang/compress/flate/inflate.cpp), [h](generated/golang/compress/flate/inflate.h))| ✔️ |
 | $(ImportDir)/compress/flate/token.go | ✔️ ([cpp](generated/golang/compress/flate/token.cpp), [h](generated/golang/compress/flate/token.h))| ✔️ |
-| $(ImportDir)/compress/zlib/reader.go | ✔️ ([cpp](generated/golang/compress/zlib/reader.cpp), [h](generated/golang/compress/zlib/reader.h))| ❌ |
-| $(ImportDir)/compress/zlib/writer.go | ✔️ ([cpp](generated/golang/compress/zlib/writer.cpp), [h](generated/golang/compress/zlib/writer.h))| ❌ |
+| $(ImportDir)/compress/zlib/reader.go | ✔️ ([cpp](generated/golang/compress/zlib/reader.cpp), [h](generated/golang/compress/zlib/reader.h))| ✔️ |
+| $(ImportDir)/compress/zlib/writer.go | ✔️ ([cpp](generated/golang/compress/zlib/writer.cpp), [h](generated/golang/compress/zlib/writer.h))| ✔️ |
 | $(ImportDir)/encoding/base64/base64.go | ✔️ ([cpp](generated/golang/encoding/base64/base64.cpp), [h](generated/golang/encoding/base64/base64.h))| ❌ |
 | $(ImportDir)/encoding/binary/binary.go | ✔️ ([cpp](generated/golang/encoding/binary/binary.cpp), [h](generated/golang/encoding/binary/binary.h))| ❌ |
 | $(ImportDir)/encoding/binary/native_endian_little.go | ✔️ ([cpp](generated/golang/encoding/binary/native_endian_little.cpp), [h](generated/golang/encoding/binary/native_endian_little.h))| ✔️ |

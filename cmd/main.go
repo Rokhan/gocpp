@@ -558,18 +558,57 @@ func (cv *cppConverter) ConvertDoc(doc *ast.CommentGroup) {
 	}
 }
 
-func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
-	pkg := cv.typeInfo.Uses[rec.Sel].Pkg()
-	if pkg == nil {
-		cv.Logf("WARNING: getFullReceiverName, nil pkg for rec: %v\n", rec.Sel.Name)
+func (cv *cppConverter) getPkgFromExprType(expr ast.Expr) (pkg *types.Package) {
+	typ := cv.typeInfo.Types[expr].Type
+	if typ == nil {
 		return nil
 	}
-	var pkgName = pkg.Name()
+
+	switch t := typ.(type) {
+	case *types.Named:
+		pkg = t.Obj().Pkg()
+	case *types.Pointer:
+		if named, ok := t.Elem().(*types.Named); ok {
+			pkg = named.Obj().Pkg()
+		}
+	default:
+	}
+	return pkg
+}
+
+func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
+	var pkg *types.Package
+	if cv.IsExprInterface(rec.X) {
+		pkg = cv.getPkgFromExprType(rec.X)
+	}
+	if pkg == nil {
+		pkg = cv.typeInfo.Uses[rec.Sel].Pkg()
+		if pkg == nil {
+			cv.Logf("WARNING: getFullReceiverName, nil pkg for rec: %v\n", rec.Sel.Name)
+			return nil
+		}
+	}
+
+	pkgName := pkg.Name()
 	if pkgName != cv.namespace {
 		return Ptr(GetCppFunc(fmt.Sprintf("%s::%s::%s", pkgName, recNs, rec.Sel.Name)))
 	}
 	return nil
 }
+
+// func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
+// 	pkg := cv.typeInfo.Uses[rec.Sel].Pkg()
+// 	if pkg == nil {
+// 		cv.Logf("WARNING: getFullReceiverName, nil pkg for rec: %v\n", rec.Sel.Name)
+// 		return nil
+// 	}
+
+// 	pkgName := pkg.Name()
+// 	if pkgName != cv.namespace {
+// 		return Ptr(GetCppFunc(fmt.Sprintf("%s::%s::%s", pkgName, recNs, rec.Sel.Name)))
+// 	}
+// 	return nil
+// }
 
 func (rec mockReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
 	return Ptr(string(rec))

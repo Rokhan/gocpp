@@ -33,6 +33,7 @@ namespace golang::png
         using binary::rec::Uint32;
         using hash::rec::Reset;
         using hash::rec::Sum32;
+        using hash::rec::Write;
         using image::rec::Bounds;
         using image::rec::SetColorIndex;
         using image::rec::SetGray;
@@ -42,7 +43,6 @@ namespace golang::png
         using image::rec::SetRGBA64;
         using io::rec::Close;
         using io::rec::Read;
-        using io::rec::Write;
         using mocklib::rec::Error;
     }
 

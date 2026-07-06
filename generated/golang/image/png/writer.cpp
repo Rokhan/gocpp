@@ -39,6 +39,7 @@ namespace golang::png
         using color::rec::Convert;
         using color::rec::RGBA;
         using hash::rec::Sum32;
+        using hash::rec::Write;
         using image::rec::At;
         using image::rec::Bounds;
         using image::rec::ColorIndexAt;

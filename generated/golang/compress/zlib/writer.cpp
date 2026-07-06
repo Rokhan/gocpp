@@ -34,6 +34,7 @@ namespace golang::zlib
         using flate::rec::Write;
         using hash::rec::Reset;
         using hash::rec::Sum32;
+        using hash::rec::Write;
         using io::rec::Write;
     }
 

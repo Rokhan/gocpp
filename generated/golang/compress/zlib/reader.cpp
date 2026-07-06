@@ -46,9 +46,9 @@ namespace golang::zlib
         using binary::rec::Uint32;
         using flate::rec::Reset;
         using hash::rec::Sum32;
+        using hash::rec::Write;
         using io::rec::Close;
         using io::rec::Read;
-        using io::rec::Write;
     }
 
     // ErrChecksum is returned when reading ZLIB data that has an invalid checksum.

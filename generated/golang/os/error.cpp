@@ -233,6 +233,7 @@ namespace golang::os
         //Go type switch emulation
         {
             const auto& gocpp_id_0 = gocpp::type_info(err);
+            const auto& err_ref = err;
             int conditionId = -1;
             if(gocpp_id_0 == typeid(fs::PathError*)) { conditionId = 0; }
             else if(gocpp_id_0 == typeid(LinkError*)) { conditionId = 1; }
@@ -241,19 +242,19 @@ namespace golang::os
             {
                 case 0:
                 {
-                    fs::PathError* err = gocpp::any_cast<fs::PathError*>(err);
+                    fs::PathError* err = gocpp::any_cast<fs::PathError*>(err_ref);
                     return err->Err;
                     break;
                 }
                 case 1:
                 {
-                    LinkError* err = gocpp::any_cast<LinkError*>(err);
+                    LinkError* err = gocpp::any_cast<LinkError*>(err_ref);
                     return err->Err;
                     break;
                 }
                 case 2:
                 {
-                    SyscallError* err = gocpp::any_cast<SyscallError*>(err);
+                    SyscallError* err = gocpp::any_cast<SyscallError*>(err_ref);
                     return err->Err;
                     break;
                 }

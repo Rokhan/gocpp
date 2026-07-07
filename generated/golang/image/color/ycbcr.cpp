@@ -386,6 +386,7 @@ namespace golang::color
         //Go type switch emulation
         {
             const auto& gocpp_id_2 = gocpp::type_info(c);
+            const auto& c_ref = c;
             int conditionId = -1;
             if(gocpp_id_2 == typeid(NYCbCrA)) { conditionId = 0; }
             else if(gocpp_id_2 == typeid(YCbCr)) { conditionId = 1; }
@@ -393,13 +394,13 @@ namespace golang::color
             {
                 case 0:
                 {
-                    NYCbCrA c = gocpp::any_cast<NYCbCrA>(c);
+                    NYCbCrA c = gocpp::any_cast<NYCbCrA>(c_ref);
                     return c;
                     break;
                 }
                 case 1:
                 {
-                    YCbCr c = gocpp::any_cast<YCbCr>(c);
+                    YCbCr c = gocpp::any_cast<YCbCr>(c_ref);
                     return NYCbCrA {c, 0xff};
                     break;
                 }

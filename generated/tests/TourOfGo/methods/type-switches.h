@@ -13,6 +13,7 @@
 namespace golang::main
 {
     void go_do(std::any i);
+    void do_WithNameReused(std::any v);
     void main();
 
     namespace rec

@@ -956,6 +956,7 @@ namespace golang::bisect
             //Go type switch emulation
             {
                 const auto& gocpp_id_3 = gocpp::type_info(v);
+                const auto& v_ref = v;
                 int conditionId = -1;
                 if(gocpp_id_3 == typeid(gocpp::string)) { conditionId = 0; }
                 else if(gocpp_id_3 == typeid(unsigned char)) { conditionId = 1; }
@@ -979,7 +980,7 @@ namespace golang::bisect
                 {
                     default:
                     {
-                        auto v = v;
+                        auto v = v_ref;
                         // Note: Not printing the type, because reflect.ValueOf(v)
                         // would make the interfaces prepared by the caller escape
                         // and therefore allocate. This way, Hash(file, line) runs
@@ -990,61 +991,61 @@ namespace golang::bisect
                     }
                     case 0:
                     {
-                        gocpp::string v = gocpp::any_cast<gocpp::string>(v);
+                        gocpp::string v = gocpp::any_cast<gocpp::string>(v_ref);
                         h = fnvString(h, v);
                         break;
                     }
                     case 1:
                     {
-                        unsigned char v = gocpp::any_cast<unsigned char>(v);
+                        unsigned char v = gocpp::any_cast<unsigned char>(v_ref);
                         h = fnv(h, v);
                         break;
                     }
                     case 2:
                     {
-                        int v = gocpp::any_cast<int>(v);
+                        int v = gocpp::any_cast<int>(v_ref);
                         h = fnvUint64(h, uint64_t(v));
                         break;
                     }
                     case 3:
                     {
-                        unsigned int v = gocpp::any_cast<unsigned int>(v);
+                        unsigned int v = gocpp::any_cast<unsigned int>(v_ref);
                         h = fnvUint64(h, uint64_t(v));
                         break;
                     }
                     case 4:
                     {
-                        int32_t v = gocpp::any_cast<int32_t>(v);
+                        int32_t v = gocpp::any_cast<int32_t>(v_ref);
                         h = fnvUint32(h, uint32_t(v));
                         break;
                     }
                     case 5:
                     {
-                        uint32_t v = gocpp::any_cast<uint32_t>(v);
+                        uint32_t v = gocpp::any_cast<uint32_t>(v_ref);
                         h = fnvUint32(h, v);
                         break;
                     }
                     case 6:
                     {
-                        int64_t v = gocpp::any_cast<int64_t>(v);
+                        int64_t v = gocpp::any_cast<int64_t>(v_ref);
                         h = fnvUint64(h, uint64_t(v));
                         break;
                     }
                     case 7:
                     {
-                        uint64_t v = gocpp::any_cast<uint64_t>(v);
+                        uint64_t v = gocpp::any_cast<uint64_t>(v_ref);
                         h = fnvUint64(h, v);
                         break;
                     }
                     case 8:
                     {
-                        uintptr_t v = gocpp::any_cast<uintptr_t>(v);
+                        uintptr_t v = gocpp::any_cast<uintptr_t>(v_ref);
                         h = fnvUint64(h, uint64_t(v));
                         break;
                     }
                     case 9:
                     {
-                        gocpp::slice<gocpp::string> v = gocpp::any_cast<gocpp::slice<gocpp::string>>(v);
+                        gocpp::slice<gocpp::string> v = gocpp::any_cast<gocpp::slice<gocpp::string>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvString(h, x);
@@ -1053,7 +1054,7 @@ namespace golang::bisect
                     }
                     case 10:
                     {
-                        gocpp::slice<unsigned char> v = gocpp::any_cast<gocpp::slice<unsigned char>>(v);
+                        gocpp::slice<unsigned char> v = gocpp::any_cast<gocpp::slice<unsigned char>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnv(h, x);
@@ -1062,7 +1063,7 @@ namespace golang::bisect
                     }
                     case 11:
                     {
-                        gocpp::slice<int> v = gocpp::any_cast<gocpp::slice<int>>(v);
+                        gocpp::slice<int> v = gocpp::any_cast<gocpp::slice<int>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, uint64_t(x));
@@ -1071,7 +1072,7 @@ namespace golang::bisect
                     }
                     case 12:
                     {
-                        gocpp::slice<unsigned int> v = gocpp::any_cast<gocpp::slice<unsigned int>>(v);
+                        gocpp::slice<unsigned int> v = gocpp::any_cast<gocpp::slice<unsigned int>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, uint64_t(x));
@@ -1080,7 +1081,7 @@ namespace golang::bisect
                     }
                     case 13:
                     {
-                        gocpp::slice<int32_t> v = gocpp::any_cast<gocpp::slice<int32_t>>(v);
+                        gocpp::slice<int32_t> v = gocpp::any_cast<gocpp::slice<int32_t>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint32(h, uint32_t(x));
@@ -1089,7 +1090,7 @@ namespace golang::bisect
                     }
                     case 14:
                     {
-                        gocpp::slice<uint32_t> v = gocpp::any_cast<gocpp::slice<uint32_t>>(v);
+                        gocpp::slice<uint32_t> v = gocpp::any_cast<gocpp::slice<uint32_t>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint32(h, x);
@@ -1098,7 +1099,7 @@ namespace golang::bisect
                     }
                     case 15:
                     {
-                        gocpp::slice<int64_t> v = gocpp::any_cast<gocpp::slice<int64_t>>(v);
+                        gocpp::slice<int64_t> v = gocpp::any_cast<gocpp::slice<int64_t>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, uint64_t(x));
@@ -1107,7 +1108,7 @@ namespace golang::bisect
                     }
                     case 16:
                     {
-                        gocpp::slice<uint64_t> v = gocpp::any_cast<gocpp::slice<uint64_t>>(v);
+                        gocpp::slice<uint64_t> v = gocpp::any_cast<gocpp::slice<uint64_t>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, x);
@@ -1116,7 +1117,7 @@ namespace golang::bisect
                     }
                     case 17:
                     {
-                        gocpp::slice<uintptr_t> v = gocpp::any_cast<gocpp::slice<uintptr_t>>(v);
+                        gocpp::slice<uintptr_t> v = gocpp::any_cast<gocpp::slice<uintptr_t>>(v_ref);
                         for(auto [gocpp_ignored, x] : v)
                         {
                             h = fnvUint64(h, uint64_t(x));

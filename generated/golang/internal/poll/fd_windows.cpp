@@ -1723,6 +1723,7 @@ namespace golang::poll
         //Go type switch emulation
         {
             const auto& gocpp_id_4 = gocpp::type_info(sa);
+            const auto& sa_ref = sa;
             int conditionId = -1;
             if(gocpp_id_4 == typeid(syscall::SockaddrInet4*)) { conditionId = 0; }
             else if(gocpp_id_4 == typeid(syscall::SockaddrInet6*)) { conditionId = 1; }
@@ -1730,21 +1731,21 @@ namespace golang::poll
             {
                 case 0:
                 {
-                    syscall::SockaddrInet4* sa = gocpp::any_cast<syscall::SockaddrInet4*>(sa);
+                    syscall::SockaddrInet4* sa = gocpp::any_cast<syscall::SockaddrInet4*>(sa_ref);
                     auto sz = sockaddrInet4ToRaw(rsa, sa);
                     return {sz, nullptr};
                     break;
                 }
                 case 1:
                 {
-                    syscall::SockaddrInet6* sa = gocpp::any_cast<syscall::SockaddrInet6*>(sa);
+                    syscall::SockaddrInet6* sa = gocpp::any_cast<syscall::SockaddrInet6*>(sa_ref);
                     auto sz = sockaddrInet6ToRaw(rsa, sa);
                     return {sz, nullptr};
                     break;
                 }
                 default:
                 {
-                    auto sa = sa;
+                    auto sa = sa_ref;
                     return {0, gocpp::error(syscall::go_EWINDOWS)};
                     break;
                 }

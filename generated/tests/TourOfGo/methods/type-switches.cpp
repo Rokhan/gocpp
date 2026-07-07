@@ -51,11 +51,48 @@ namespace golang::main
         }
     }
 
+    void do_WithNameReused(std::any v)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_1 = gocpp::type_info(v);
+            const auto& v_ref = v;
+            int conditionId = -1;
+            if(gocpp_id_1 == typeid(int)) { conditionId = 0; }
+            else if(gocpp_id_1 == typeid(gocpp::string)) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    int v = gocpp::any_cast<int>(v_ref);
+                    mocklib::Printf("Twice %v is %v\n"_s, v, v * 2);
+                    break;
+                }
+                case 1:
+                {
+                    gocpp::string v = gocpp::any_cast<gocpp::string>(v_ref);
+                    mocklib::Printf("%q is %v bytes long\n"_s, v, len(v));
+                    break;
+                }
+                default:
+                {
+                    auto v = v_ref;
+                    mocklib::Printf("I don't know about type %T!\n"_s, v);
+                    break;
+                }
+            }
+        }
+    }
+
     void main()
     {
         go_do(21);
         go_do("hello"_s);
         go_do(true);
+
+        do_WithNameReused(21);
+        do_WithNameReused("hello"_s);
+        do_WithNameReused(true);
     }
 
 }

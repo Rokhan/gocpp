@@ -1903,8 +1903,16 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		}
 
 		env.isTypeSwitch = true
-		env.typeSwitchVarName = inputVarName.str
-		env.switchVarName = switchExpr.str
+
+		if inputVarName.str != switchExpr.str {
+			env.typeSwitchVarName = inputVarName.str
+			env.switchVarName = switchExpr.str
+		} else {
+			env.switchVarName = switchExpr.str + "_ref" // TODO, generate a guaranteed unique name
+			env.typeSwitchVarName = inputVarName.str
+			cv.WritterExprPrintf(cppOut, "%sconst auto& %s = %s;\n", cv.cpp.Indent(), env.switchVarName, env.typeSwitchVarName)
+		}
+
 		outPlaces = cv.convertSwitchBody(env, s.Body, "conditionId", switchVarName)
 
 		if s.Init != nil {

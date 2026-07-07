@@ -933,11 +933,25 @@ namespace gocpp
     template <typename T>
     PtrRecv<T> recv(T& t) { return PtrRecv<T>(&t); }
 
+    namespace details
+    {
+        struct bool_wrapper
+        {
+            bool value = false;
+            bool_wrapper() = default;
+            constexpr bool_wrapper(bool b) : value(b) {}
+            constexpr operator bool() const { return value; }
+        };
+    }
+
+    template <typename T>
+    using safe_vector = std::vector<std::conditional_t<std::is_same_v<T, bool>, details::bool_wrapper, T>>;
+
     template<typename T>
     struct array_base
     {
         using element_type = T;
-        using store_type = std::vector<T>;
+        using store_type = safe_vector<T>;
         using vect_iterator = typename store_type::iterator;
         using const_vect_iterator = typename store_type::iterator;
 

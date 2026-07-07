@@ -136,7 +136,7 @@
 | $(ImportDir)/compress/flate/token.go | ✔️ ([cpp](generated/golang/compress/flate/token.cpp), [h](generated/golang/compress/flate/token.h))| ✔️ |
 | $(ImportDir)/compress/zlib/reader.go | ✔️ ([cpp](generated/golang/compress/zlib/reader.cpp), [h](generated/golang/compress/zlib/reader.h))| ✔️ |
 | $(ImportDir)/compress/zlib/writer.go | ✔️ ([cpp](generated/golang/compress/zlib/writer.cpp), [h](generated/golang/compress/zlib/writer.h))| ✔️ |
-| $(ImportDir)/encoding/base64/base64.go | ✔️ ([cpp](generated/golang/encoding/base64/base64.cpp), [h](generated/golang/encoding/base64/base64.h))| ❌ |
+| $(ImportDir)/encoding/base64/base64.go | ✔️ ([cpp](generated/golang/encoding/base64/base64.cpp), [h](generated/golang/encoding/base64/base64.h))| ✔️ |
 | $(ImportDir)/encoding/binary/binary.go | ✔️ ([cpp](generated/golang/encoding/binary/binary.cpp), [h](generated/golang/encoding/binary/binary.h))| ❌ |
 | $(ImportDir)/encoding/binary/native_endian_little.go | ✔️ ([cpp](generated/golang/encoding/binary/native_endian_little.cpp), [h](generated/golang/encoding/binary/native_endian_little.h))| ✔️ |
 | $(ImportDir)/encoding/hex/hex.go | ✔️ ([cpp](generated/golang/encoding/hex/hex.cpp), [h](generated/golang/encoding/hex/hex.h))| ✔️ |
@@ -404,7 +404,7 @@
 | $(ImportDir)/runtime/traceback.go | ✔️ ([cpp](generated/golang/runtime/traceback.cpp), [h](generated/golang/runtime/traceback.h))| ❌ |
 | $(ImportDir)/runtime/type.go | ✔️ ([cpp](generated/golang/runtime/type.cpp), [h](generated/golang/runtime/type.h))| ❌ |
 | $(ImportDir)/runtime/typekind.go | ✔️ ([cpp](generated/golang/runtime/typekind.cpp), [h](generated/golang/runtime/typekind.h))| ❌ |
-| $(ImportDir)/runtime/utf8.go | ✔️ ([cpp](generated/golang/runtime/utf8.cpp), [h](generated/golang/runtime/utf8.h))| ❌ |
+| $(ImportDir)/runtime/utf8.go | ✔️ ([cpp](generated/golang/runtime/utf8.cpp), [h](generated/golang/runtime/utf8.h))| ✔️ |
 | $(ImportDir)/runtime/vdso_in_none.go | ✔️ ([cpp](generated/golang/runtime/vdso_in_none.cpp), [h](generated/golang/runtime/vdso_in_none.h))| ✔️ |
 | $(ImportDir)/runtime/write_err.go | ✔️ ([cpp](generated/golang/runtime/write_err.cpp), [h](generated/golang/runtime/write_err.h))| ✔️ |
 | $(ImportDir)/runtime/zcallback_windows.go | ✔️ ([cpp](generated/golang/runtime/zcallback_windows.cpp), [h](generated/golang/runtime/zcallback_windows.h))| ✔️ |

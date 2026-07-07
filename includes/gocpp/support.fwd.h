@@ -49,6 +49,13 @@ namespace gocpp
 
     using rune = int;
 
+    struct ValueSink
+    {
+        template <typename T>
+        constexpr void operator=(T&&) const noexcept {}
+    };
+    inline constexpr ValueSink _{};
+
     template<typename T> 
     constexpr int Sizeof()
     {
@@ -139,4 +146,5 @@ namespace golang
     }
 
     using gocpp::len;
+    using gocpp::_;
 }

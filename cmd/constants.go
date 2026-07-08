@@ -25,6 +25,7 @@ const cpp_cplx128_type = "gocpp::complex128"
 //	=> "go\types\universe.go"
 var stdTypeMapping = map[string]string{
 	"byte":       "unsigned char",
+	"complex":    cpp_cplx128_type,
 	"complex64":  cpp_cplx64_type,
 	"complex128": cpp_cplx128_type,
 	"float":      "double",
@@ -339,6 +340,7 @@ var stdFuncMapping = map[string]string{
 
 	// type conversions
 	"byte":       "(unsigned char)",
+	"complex":    cpp_cplx128_type,
 	"complex64":  cpp_cplx64_type,
 	"complex128": cpp_cplx128_type,
 	"float":      "double",

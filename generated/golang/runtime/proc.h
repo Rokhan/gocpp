@@ -152,7 +152,7 @@ namespace golang::runtime
     void schedtrace(bool detailed);
     void schedEnableUser(bool enable);
     struct GoTag_pMask { };
-    using pMask = gocpp::alias<gocpp::slice<uint32_t>, GoTag_pMask>;
+    using pMask = gocpp::defined<gocpp::slice<uint32_t>, GoTag_pMask>;
     int setMaxThreads(int in);
     int procPin();
     void procUnpin();

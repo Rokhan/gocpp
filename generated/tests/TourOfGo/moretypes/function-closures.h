@@ -40,7 +40,7 @@ namespace golang::main
 
 namespace golang::main
 {
-    using SpecialCase = gocpp::alias<gocpp::slice<unicode::CaseRange>, GoTag_SpecialCase>;
+    using SpecialCase = gocpp::defined<gocpp::slice<unicode::CaseRange>, GoTag_SpecialCase>;
     gocpp::slice<unsigned char> TestLambda0(golang::main::SpecialCase c, gocpp::slice<unsigned char> s);
     gocpp::slice<unsigned char> TestLambda1(golang::main::SpecialCase c, gocpp::slice<unsigned char> s);
     gocpp::slice<unsigned char> TestLambda2(golang::main::SpecialCase x, gocpp::slice<unsigned char> y);

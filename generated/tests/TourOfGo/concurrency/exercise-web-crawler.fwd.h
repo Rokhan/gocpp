@@ -9,5 +9,5 @@ namespace golang::main
     struct Fetcher;
     struct GoTag_fakeFetcher;
     struct fakeResult;
-    using fakeFetcher = gocpp::alias<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
+    using fakeFetcher = gocpp::defined<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
 }

@@ -12,7 +12,7 @@ namespace golang::runtime
     using uint64InterfacePtr = uint64_t;
     using stringInterfacePtr = gocpp::string;
     struct GoTag_sliceInterfacePtr;
-    using sliceInterfacePtr = gocpp::alias<gocpp::slice<unsigned char>, GoTag_sliceInterfacePtr>;
+    using sliceInterfacePtr = gocpp::defined<gocpp::slice<unsigned char>, GoTag_sliceInterfacePtr>;
 }
 #include "golang/runtime/runtime2.fwd.h"
 

@@ -33,7 +33,7 @@ namespace golang::runtime
 namespace golang::runtime
 {
     struct bucket;
-    using buckhashArray = gocpp::alias<gocpp::array<atomic::UnsafePointer, buckHashSize>, GoTag_buckhashArray>;
+    using buckhashArray = gocpp::defined<gocpp::array<atomic::UnsafePointer, buckHashSize>, GoTag_buckhashArray>;
     struct mProfCycleHolder;
     struct lockTimer;
     struct mLockProfile;

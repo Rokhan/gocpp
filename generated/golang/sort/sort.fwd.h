@@ -12,11 +12,11 @@ namespace golang::sort
     struct lessSwap;
     struct reverse;
     struct GoTag_IntSlice;
-    using IntSlice = gocpp::alias<gocpp::slice<int>, GoTag_IntSlice>;
+    using IntSlice = gocpp::defined<gocpp::slice<int>, GoTag_IntSlice>;
     struct GoTag_Float64Slice;
-    using Float64Slice = gocpp::alias<gocpp::slice<double>, GoTag_Float64Slice>;
+    using Float64Slice = gocpp::defined<gocpp::slice<double>, GoTag_Float64Slice>;
     struct GoTag_StringSlice;
-    using StringSlice = gocpp::alias<gocpp::slice<gocpp::string>, GoTag_StringSlice>;
+    using StringSlice = gocpp::defined<gocpp::slice<gocpp::string>, GoTag_StringSlice>;
     const sort::sortedHint unknownHint = 0;
     const sort::sortedHint increasingHint = 1;
     const sort::sortedHint decreasingHint = 2;

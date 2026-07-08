@@ -21,7 +21,7 @@ namespace golang::runtime
     void initMetrics();
     void godebug_registerMetric(gocpp::string name, std::function<uint64_t ()> read);
     struct GoTag_statDepSet { };
-    using statDepSet = gocpp::alias<gocpp::array<uint64_t, 1>, GoTag_statDepSet>;
+    using statDepSet = gocpp::defined<gocpp::array<uint64_t, 1>, GoTag_statDepSet>;
     struct sysStatsAggregate
     {
         uint64_t stacksSys{};

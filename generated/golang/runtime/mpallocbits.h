@@ -13,13 +13,15 @@
 namespace golang::runtime
 {
     struct GoTag_pageBits { };
+    struct GoTag_pallocBits { };
     unsigned int findBitRange64(uint64_t c, unsigned int n);
 }
 #include "golang/runtime/mpagealloc.h"
 
 namespace golang::runtime
 {
-    using pageBits = gocpp::alias<gocpp::array<uint64_t, pallocChunkPages / 64>, GoTag_pageBits>;
+    using pageBits = gocpp::defined<gocpp::array<uint64_t, pallocChunkPages / 64>, GoTag_pageBits>;
+    using pallocBits = gocpp::defined<runtime::pageBits, GoTag_pallocBits>;
     struct pallocData
     {
         golang::runtime::pallocBits pallocBits{};

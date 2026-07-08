@@ -18,5 +18,5 @@ namespace golang::color
     struct Model;
     struct modelFunc;
     struct GoTag_Palette;
-    using Palette = gocpp::alias<gocpp::slice<Color>, GoTag_Palette>;
+    using Palette = gocpp::defined<gocpp::slice<Color>, GoTag_Palette>;
 }

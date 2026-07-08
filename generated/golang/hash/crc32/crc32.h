@@ -13,7 +13,7 @@
 namespace golang::crc32
 {
     struct GoTag_Table { };
-    using Table = gocpp::alias<gocpp::array<uint32_t, 256>, GoTag_Table>;
+    using Table = gocpp::defined<gocpp::array<uint32_t, 256>, GoTag_Table>;
     extern std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
     void castagnoliInit();
     extern std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateIEEE;

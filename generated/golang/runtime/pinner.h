@@ -67,12 +67,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pinState& value);
+    struct GoTag_pinnerBits { };
     uintptr_t* pinnerGetPinCounter(gocpp::unsafe_pointer addr);
 }
 #include "golang/runtime/error.h"
+#include "golang/runtime/mheap.h"
 
 namespace golang::runtime
 {
+    using pinnerBits = gocpp::defined<gcBits, GoTag_pinnerBits>;
     extern std::function<void (void)> pinnerLeakPanic;
 }
 

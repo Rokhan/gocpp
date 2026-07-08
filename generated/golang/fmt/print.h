@@ -267,7 +267,7 @@ namespace golang::fmt
 
     std::ostream& operator<<(std::ostream& os, const struct GoStringer& value);
     struct GoTag_buffer { };
-    using buffer = gocpp::alias<gocpp::slice<unsigned char>, GoTag_buffer>;
+    using buffer = gocpp::defined<gocpp::slice<unsigned char>, GoTag_buffer>;
     std::tuple<int, struct gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a);
     
     template<typename... Args>

@@ -8,6 +8,7 @@ namespace golang::png
 {
     struct Encoder;
     struct EncoderBufferPool;
+    struct GoTag_EncoderBuffer;
     using CompressionLevel = int;
     struct opaquer;
     const png::CompressionLevel DefaultCompression = 0;
@@ -24,5 +25,5 @@ namespace golang::png
 namespace golang::png
 {
     struct encoder;
-    using EncoderBuffer = encoder;
+    using EncoderBuffer = gocpp::defined<encoder, GoTag_EncoderBuffer>;
 }

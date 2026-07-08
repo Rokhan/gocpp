@@ -18,7 +18,7 @@ namespace golang::abi
 
 namespace golang::abi
 {
-    using IntArgRegBitmap = gocpp::alias<gocpp::array<uint8_t, (IntArgRegs + 7) / 8>, GoTag_IntArgRegBitmap>;
+    using IntArgRegBitmap = gocpp::defined<gocpp::array<uint8_t, (IntArgRegs + 7) / 8>, GoTag_IntArgRegBitmap>;
     struct RegArgs
     {
         // Values in these slots should be precisely the bit-by-bit

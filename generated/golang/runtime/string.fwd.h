@@ -8,7 +8,7 @@ namespace golang::runtime
 {
     const long tmpStringBufSize = 32;
     struct GoTag_tmpBuf;
-    using tmpBuf = gocpp::alias<gocpp::array<unsigned char, tmpStringBufSize>, GoTag_tmpBuf>;
+    using tmpBuf = gocpp::defined<gocpp::array<unsigned char, tmpStringBufSize>, GoTag_tmpBuf>;
     struct stringStruct;
     struct stringStructDWARF;
     const uint64_t maxUint64 = ~ uint64_t(0);

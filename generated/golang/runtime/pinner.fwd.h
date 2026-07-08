@@ -10,10 +10,11 @@ namespace golang::runtime
     const long pinnerSize = 64;
     struct pinner;
     struct pinState;
+    struct GoTag_pinnerBits;
 }
 #include "golang/runtime/mheap.fwd.h"
 
 namespace golang::runtime
 {
-    using pinnerBits = gcBits;
+    using pinnerBits = gocpp::defined<gcBits, GoTag_pinnerBits>;
 }

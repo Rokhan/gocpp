@@ -7,12 +7,13 @@
 namespace golang::runtime
 {
     struct GoTag_pageBits;
+    struct GoTag_pallocBits;
     struct pallocData;
 }
 #include "golang/runtime/mpagealloc.fwd.h"
 
 namespace golang::runtime
 {
-    using pageBits = gocpp::alias<gocpp::array<uint64_t, pallocChunkPages / 64>, GoTag_pageBits>;
-    using pallocBits = runtime::pageBits;
+    using pageBits = gocpp::defined<gocpp::array<uint64_t, pallocChunkPages / 64>, GoTag_pageBits>;
+    using pallocBits = gocpp::defined<runtime::pageBits, GoTag_pallocBits>;
 }

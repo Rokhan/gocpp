@@ -320,7 +320,7 @@ namespace golang::syscall
 
     std::ostream& operator<<(std::ostream& os, const struct TransmitFileBuffers& value);
     struct GoTag_SockaddrGen { };
-    using SockaddrGen = gocpp::alias<gocpp::array<unsigned char, 24>, GoTag_SockaddrGen>;
+    using SockaddrGen = gocpp::defined<gocpp::array<unsigned char, 24>, GoTag_SockaddrGen>;
     struct IpAddressString
     {
         gocpp::array<unsigned char, 16> String{};
@@ -337,6 +337,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IpAddressString& value);
+    struct GoTag_IpMaskString { };
     struct MibIfRow
     {
         gocpp::array<uint16_t, MAX_INTERFACE_NAME_LEN> Name{};
@@ -811,25 +812,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceInfo& value);
-    struct IpAddrString
-    {
-        IpAddrString* Next{};
-        IpAddressString IpAddress{};
-        golang::syscall::IpMaskString IpMask{};
-        uint32_t Context{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct IpAddrString& value);
+    using IpMaskString = gocpp::defined<IpAddressString, GoTag_IpMaskString>;
     struct CertChainContext
     {
         uint32_t Size{};
@@ -1065,6 +1048,47 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _STARTUPINFOEXW& value);
+    struct IpAddrString
+    {
+        IpAddrString* Next{};
+        IpAddressString IpAddress{};
+        golang::syscall::IpMaskString IpMask{};
+        uint32_t Context{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAddrString& value);
+    struct CertChainPara
+    {
+        uint32_t Size{};
+        CertUsageMatch RequestedUsage{};
+        CertUsageMatch RequstedIssuancePolicy{};
+        uint32_t URLRetrievalTimeout{};
+        uint32_t CheckRevocationFreshnessTime{};
+        uint32_t RevocationFreshnessTime{};
+        Filetime* CacheResync{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CertChainPara& value);
     struct IpAdapterInfo
     {
         IpAdapterInfo* Next{};
@@ -1098,28 +1122,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterInfo& value);
-    struct CertChainPara
-    {
-        uint32_t Size{};
-        CertUsageMatch RequestedUsage{};
-        CertUsageMatch RequstedIssuancePolicy{};
-        uint32_t URLRetrievalTimeout{};
-        uint32_t CheckRevocationFreshnessTime{};
-        uint32_t RevocationFreshnessTime{};
-        Filetime* CacheResync{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CertChainPara& value);
 
     namespace rec
     {

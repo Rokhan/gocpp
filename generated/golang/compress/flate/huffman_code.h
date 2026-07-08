@@ -77,8 +77,8 @@ namespace golang::flate
     struct GoTag_byFreq { };
     uint16_t reverseBits(uint16_t number, unsigned char bitLength);
     struct literalNode maxNode();
-    using byLiteral = gocpp::alias<gocpp::slice<literalNode>, GoTag_byLiteral>;
-    using byFreq = gocpp::alias<gocpp::slice<literalNode>, GoTag_byFreq>;
+    using byLiteral = gocpp::defined<gocpp::slice<literalNode>, GoTag_byLiteral>;
+    using byFreq = gocpp::defined<gocpp::slice<literalNode>, GoTag_byFreq>;
     struct huffmanEncoder
     {
         gocpp::slice<hcode> codes{};

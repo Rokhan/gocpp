@@ -213,6 +213,8 @@ namespace golang::binary
 
     std::ostream& operator<<(std::ostream& os, const struct bigEndian& value);
     int Size(go_any v);
+    struct GoTag_decoder { };
+    struct GoTag_encoder { };
     int intDataSize(go_any data);
     extern littleEndian LittleEndian;
     extern bigEndian BigEndian;
@@ -247,6 +249,8 @@ namespace golang::binary
     extern sync::Map structSize;
     int dataSize(reflect::Value v);
     int go_sizeof(reflect::Type t);
+    using decoder = gocpp::defined<coder, GoTag_decoder>;
+    using encoder = gocpp::defined<coder, GoTag_encoder>;
 }
 
 #include "golang/encoding/binary/native_endian_little.h"

@@ -13,5 +13,5 @@ namespace golang::main
 
 namespace golang::main
 {
-    using SpecialCase = gocpp::alias<gocpp::slice<unicode::CaseRange>, GoTag_SpecialCase>;
+    using SpecialCase = gocpp::defined<gocpp::slice<unicode::CaseRange>, GoTag_SpecialCase>;
 }

@@ -49,7 +49,7 @@ namespace golang::bytes
     gocpp::slice<unsigned char> TrimPrefix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> prefix);
     gocpp::slice<unsigned char> TrimSuffix(gocpp::slice<unsigned char> s, gocpp::slice<unsigned char> suffix);
     struct GoTag_asciiSet { };
-    using asciiSet = gocpp::alias<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
+    using asciiSet = gocpp::defined<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
     bool containsRune(gocpp::string s, gocpp::rune r);
     gocpp::slice<unsigned char> Trim(gocpp::slice<unsigned char> s, gocpp::string cutset);
     gocpp::slice<unsigned char> TrimLeft(gocpp::slice<unsigned char> s, gocpp::string cutset);

@@ -11,7 +11,7 @@ namespace golang::crc32
     const long Castagnoli = 0x82f63b78;
     const long Koopman = 0xeb31d82e;
     struct GoTag_Table;
-    using Table = gocpp::alias<gocpp::array<uint32_t, 256>, GoTag_Table>;
+    using Table = gocpp::defined<gocpp::array<uint32_t, 256>, GoTag_Table>;
     struct digest;
     const gocpp::string magic = "crc\x01"_s;
     const int marshaledSize = len(magic) + 4 + 4;

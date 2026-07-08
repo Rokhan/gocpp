@@ -28,7 +28,7 @@ namespace golang::crc32
 
 namespace golang::crc32
 {
-    using sse42Table = gocpp::alias<gocpp::array<Table, 4>, GoTag_sse42Table>;
+    using sse42Table = gocpp::defined<gocpp::array<Table, 4>, GoTag_sse42Table>;
     extern gocpp::array_ptr<slicing8Table> archIeeeTable8;
     extern gocpp::array_ptr<crc32::sse42Table> castagnoliSSE42TableK1;
     extern gocpp::array_ptr<crc32::sse42Table> castagnoliSSE42TableK2;

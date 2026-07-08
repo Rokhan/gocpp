@@ -91,7 +91,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    using semTable = gocpp::alias<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;
+    using semTable = gocpp::defined<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;
     extern semTable semtable;
 }
 

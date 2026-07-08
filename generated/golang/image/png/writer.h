@@ -76,6 +76,7 @@ namespace golang::png
     }
 
     std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value);
+    struct GoTag_EncoderBuffer { };
     struct opaquer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -196,6 +197,7 @@ namespace golang::png
     bool opaque(image::Image m);
     int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp);
     struct gocpp::error Encode(io::Writer w, image::Image m);
+    using EncoderBuffer = gocpp::defined<encoder, GoTag_EncoderBuffer>;
 }
 
 #include "golang/image/color/color.h"

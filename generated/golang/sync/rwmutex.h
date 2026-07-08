@@ -9,6 +9,11 @@
 #include "golang/sync/rwmutex.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::sync
+{
+    struct GoTag_rlocker { };
+}
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
 
@@ -35,6 +40,7 @@ namespace golang::sync
 
     std::ostream& operator<<(std::ostream& os, const struct RWMutex& value);
     bool syscall_hasWaitingReaders(struct RWMutex* rw);
+    using rlocker = gocpp::defined<RWMutex, GoTag_rlocker>;
 }
 
 #include "golang/sync/mutex.h"

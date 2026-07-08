@@ -14,7 +14,7 @@ namespace golang::runtime
 {
     void itabsinit();
     struct GoTag_sliceInterfacePtr { };
-    using sliceInterfacePtr = gocpp::alias<gocpp::slice<unsigned char>, GoTag_sliceInterfacePtr>;
+    using sliceInterfacePtr = gocpp::defined<gocpp::slice<unsigned char>, GoTag_sliceInterfacePtr>;
     extern go_any uint16Eface;
     extern go_any uint32Eface;
     extern go_any uint64Eface;

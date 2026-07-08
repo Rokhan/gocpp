@@ -74,7 +74,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Fetcher& value);
     void main();
     struct GoTag_fakeFetcher { };
-    using fakeFetcher = gocpp::alias<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
+    using fakeFetcher = gocpp::defined<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
     struct fakeResult
     {
         gocpp::string body{};

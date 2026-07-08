@@ -11,6 +11,8 @@ namespace golang::binary
     struct littleEndian;
     struct bigEndian;
     struct coder;
-    using decoder = coder;
-    using encoder = coder;
+    struct GoTag_decoder;
+    struct GoTag_encoder;
+    using decoder = gocpp::defined<coder, GoTag_decoder>;
+    using encoder = gocpp::defined<coder, GoTag_encoder>;
 }

@@ -25,7 +25,7 @@ namespace golang::fmt
     struct Stringer;
     struct GoStringer;
     struct GoTag_buffer;
-    using buffer = gocpp::alias<gocpp::slice<unsigned char>, GoTag_buffer>;
+    using buffer = gocpp::defined<gocpp::slice<unsigned char>, GoTag_buffer>;
 }
 #include "golang/fmt/format.fwd.h"
 #include "golang/reflect/value.fwd.h"

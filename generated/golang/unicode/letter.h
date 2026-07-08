@@ -50,7 +50,7 @@ namespace golang::unicode
     std::ostream& operator<<(std::ostream& os, const struct Range32& value);
     struct GoTag_SpecialCase { };
     struct GoTag_d { };
-    using d = gocpp::alias<gocpp::array<gocpp::rune, MaxCase>, GoTag_d>;
+    using d = gocpp::defined<gocpp::array<gocpp::rune, MaxCase>, GoTag_d>;
     bool IsUpper(gocpp::rune r);
     bool IsLower(gocpp::rune r);
     bool IsTitle(gocpp::rune r);
@@ -114,7 +114,7 @@ namespace golang::unicode
     std::ostream& operator<<(std::ostream& os, const struct CaseRange& value);
     bool is16(gocpp::slice<Range16> ranges, uint16_t r);
     bool is32(gocpp::slice<Range32> ranges, uint32_t r);
-    using SpecialCase = gocpp::alias<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
+    using SpecialCase = gocpp::defined<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
     bool Is(struct RangeTable* rangeTab, gocpp::rune r);
     bool isExcludingLatin(struct RangeTable* rangeTab, gocpp::rune r);
     std::tuple<gocpp::rune, bool> to(int _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange);

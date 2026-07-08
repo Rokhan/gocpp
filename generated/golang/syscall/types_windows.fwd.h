@@ -371,9 +371,10 @@ namespace golang::syscall
     const long IFF_MULTICAST = 16;
     const long SIO_GET_INTERFACE_LIST = 0x4004747F;
     struct GoTag_SockaddrGen;
-    using SockaddrGen = gocpp::alias<gocpp::array<unsigned char, 24>, GoTag_SockaddrGen>;
+    using SockaddrGen = gocpp::defined<gocpp::array<unsigned char, 24>, GoTag_SockaddrGen>;
     struct InterfaceInfo;
     struct IpAddressString;
+    struct GoTag_IpMaskString;
     struct IpAddrString;
     const long MAX_ADAPTER_NAME_LENGTH = 256;
     const long MAX_ADAPTER_DESCRIPTION_LENGTH = 128;
@@ -480,7 +481,7 @@ namespace golang::syscall
     const int IOC_INOUT = IOC_IN | IOC_OUT;
     const int SIO_KEEPALIVE_VALS = IOC_IN | IOC_VENDOR | 4;
     const int SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
-    using IpMaskString = IpAddressString;
+    using IpMaskString = gocpp::defined<IpAddressString, GoTag_IpMaskString>;
     const int REG_DWORD = REG_DWORD_LITTLE_ENDIAN;
     const int REG_QWORD = REG_QWORD_LITTLE_ENDIAN;
 }

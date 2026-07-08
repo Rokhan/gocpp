@@ -13,7 +13,7 @@
 namespace golang::runtime
 {
     struct GoTag_tmpBuf { };
-    using tmpBuf = gocpp::alias<gocpp::array<unsigned char, tmpStringBufSize>, GoTag_tmpBuf>;
+    using tmpBuf = gocpp::defined<gocpp::array<unsigned char, tmpStringBufSize>, GoTag_tmpBuf>;
     bool stringDataOnStack(gocpp::string s);
     gocpp::string slicebytetostringtmp(unsigned char* ptr, int n);
     gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array_ptr<gocpp::array<gocpp::rune, tmpStringBufSize>> buf, gocpp::string s);

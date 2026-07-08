@@ -7,5 +7,5 @@
 namespace golang::bytes
 {
     struct GoTag_asciiSet;
-    using asciiSet = gocpp::alias<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
+    using asciiSet = gocpp::defined<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
 }

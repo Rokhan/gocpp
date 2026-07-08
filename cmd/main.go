@@ -2527,17 +2527,18 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		isAlias := false
 
 		cv.Logf("New typedef. Name %v, type: %v", name, cppType)
-		cv.typedefs.add(cv.typeInfo.Defs[node.Name].Type())
+		definitionType := cv.typeInfo.Defs[node.Name].Type()
+		cv.typedefs.add(definitionType)
 
 		if cv.ignoreKnownError(name, knownMissingDeps) {
 			usingDec = fmt.Sprintf("/* %susing %s = %s */%s", templateDec, name, cppType.str, end)
 		} else {
-			if canBeAliased(node.Type) {
+			if canBeAliased(node.Type, definitionType) && node.Assign == token.NoPos {
 				tagName := fmt.Sprintf("GoTag_%s", name)
-				fwdAliasDec = fmt.Sprintf("%susing %s = gocpp::alias<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
+				fwdAliasDec = fmt.Sprintf("%susing %s = gocpp::defined<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
 				fwdTagAliasDec = fmt.Sprintf("%sstruct %s%s", templateDec, tagName, end)
 				tagAliasDec = fmt.Sprintf("%sstruct %s { }%s", templateDec, tagName, end)
-				usingDec = fmt.Sprintf("%susing %s = gocpp::alias<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
+				usingDec = fmt.Sprintf("%susing %s = gocpp::defined<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
 				isAlias = true
 			} else {
 				usingDec = fmt.Sprintf("%susing %s = %s%s", templateDec, name, cppType.str, end)

@@ -136,15 +136,18 @@ namespace gocpp
     template<typename TInterface>
     concept GoInterface = IsGoInterface<TInterface>::value && std::derived_from<TInterface, gocpp::Interface>;
 
-    template<typename T, typename AliasType>
-    struct alias : T
+    template<typename T, typename DefTag>
+    struct defined : T
     {
         using T::T;
 
-        alias() = default;
-        explicit alias(const T& t) : T(t) { }
+        defined() = default;
+        explicit defined(const T& t) : T(t) { }
     };
-    
+
+    template<typename T, typename DefTag> requires GoStruct<T>
+    struct defined<T, DefTag> : T { };
+
 
     [[noreturn]] void panic(const gocpp::string& message);
     [[noreturn]] void panic(const char* const message);
@@ -894,16 +897,16 @@ namespace gocpp
         operator array_ptr<const array<T, N>>() const { return ptr; }
     };
 
-    template <typename T, int N, typename AliasType>
-    struct PtrRecv<alias<array<T, N>, AliasType>>
+    template <typename T, int N, typename DefTag>
+    struct PtrRecv<defined<array<T, N>, DefTag>>
     {
-        alias<array<T, N>, AliasType>* ptr;
+        defined<array<T, N>, DefTag>* ptr;
 
-        PtrRecv(alias<array<T, N>, AliasType>* t) : ptr(t) { }
+        PtrRecv(defined<array<T, N>, DefTag>* t) : ptr(t) { }
 
         operator const array<T, N>& () const { return *ptr; }
-        operator array_ptr<alias<array<T, N>, AliasType>>() { return ptr; }
-        operator array_ptr<alias<const array<T, N>, AliasType>>() const { return ptr; }
+        operator array_ptr<defined<array<T, N>, DefTag>>() { return ptr; }
+        operator array_ptr<defined<const array<T, N>, DefTag>>() const { return ptr; }
     };
 
 

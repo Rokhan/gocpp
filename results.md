@@ -137,7 +137,7 @@
 | $(ImportDir)/compress/zlib/reader.go | ✔️ ([cpp](generated/golang/compress/zlib/reader.cpp), [h](generated/golang/compress/zlib/reader.h))| ✔️ |
 | $(ImportDir)/compress/zlib/writer.go | ✔️ ([cpp](generated/golang/compress/zlib/writer.cpp), [h](generated/golang/compress/zlib/writer.h))| ✔️ |
 | $(ImportDir)/encoding/base64/base64.go | ✔️ ([cpp](generated/golang/encoding/base64/base64.cpp), [h](generated/golang/encoding/base64/base64.h))| ✔️ |
-| $(ImportDir)/encoding/binary/binary.go | ✔️ ([cpp](generated/golang/encoding/binary/binary.cpp), [h](generated/golang/encoding/binary/binary.h))| ❌ |
+| $(ImportDir)/encoding/binary/binary.go | ✔️ ([cpp](generated/golang/encoding/binary/binary.cpp), [h](generated/golang/encoding/binary/binary.h))| ✔️ |
 | $(ImportDir)/encoding/binary/native_endian_little.go | ✔️ ([cpp](generated/golang/encoding/binary/native_endian_little.cpp), [h](generated/golang/encoding/binary/native_endian_little.h))| ✔️ |
 | $(ImportDir)/encoding/hex/hex.go | ✔️ ([cpp](generated/golang/encoding/hex/hex.cpp), [h](generated/golang/encoding/hex/hex.h))| ✔️ |
 | $(ImportDir)/errors/errors.go | ✔️ ([cpp](generated/golang/errors/errors.cpp), [h](generated/golang/errors/errors.h))| ✔️ |
@@ -440,7 +440,7 @@
 | $(ImportDir)/sync/poolqueue.go | ✔️ ([cpp](generated/golang/sync/poolqueue.cpp), [h](generated/golang/sync/poolqueue.h))| ❌ |
 | $(ImportDir)/sync/runtime.go | ✔️ ([cpp](generated/golang/sync/runtime.cpp), [h](generated/golang/sync/runtime.h))| ✔️ |
 | $(ImportDir)/sync/runtime2.go | ✔️ ([cpp](generated/golang/sync/runtime2.cpp), [h](generated/golang/sync/runtime2.h))| ✔️ |
-| $(ImportDir)/sync/rwmutex.go | ✔️ ([cpp](generated/golang/sync/rwmutex.cpp), [h](generated/golang/sync/rwmutex.h))| ❌ |
+| $(ImportDir)/sync/rwmutex.go | ✔️ ([cpp](generated/golang/sync/rwmutex.cpp), [h](generated/golang/sync/rwmutex.h))| ✔️ |
 | $(ImportDir)/syscall/asan0.go | ✔️ ([cpp](generated/golang/syscall/asan0.cpp), [h](generated/golang/syscall/asan0.h))| ✔️ |
 | $(ImportDir)/syscall/dll_windows.go | ✔️ ([cpp](generated/golang/syscall/dll_windows.cpp), [h](generated/golang/syscall/dll_windows.h))| ❌ |
 | $(ImportDir)/syscall/env_windows.go | ✔️ ([cpp](generated/golang/syscall/env_windows.cpp), [h](generated/golang/syscall/env_windows.h))| ❌ |

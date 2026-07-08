@@ -1502,10 +1502,10 @@ namespace golang::binary
                     break;
 
                 case 14:
-                    rec::SetComplex(gocpp::recv(v), complex(double(math::Float32frombits(rec::uint32(gocpp::recv(d)))), double(math::Float32frombits(rec::uint32(gocpp::recv(d))))));
+                    rec::SetComplex(gocpp::recv(v), gocpp::complex128(double(math::Float32frombits(rec::uint32(gocpp::recv(d)))), double(math::Float32frombits(rec::uint32(gocpp::recv(d))))));
                     break;
                 case 15:
-                    rec::SetComplex(gocpp::recv(v), complex(math::Float64frombits(rec::uint64(gocpp::recv(d))), math::Float64frombits(rec::uint64(gocpp::recv(d)))));
+                    rec::SetComplex(gocpp::recv(v), gocpp::complex128(math::Float64frombits(rec::uint64(gocpp::recv(d))), math::Float64frombits(rec::uint64(gocpp::recv(d)))));
                     break;
             }
         }

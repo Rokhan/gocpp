@@ -32,28 +32,28 @@ namespace golang::cmplx
             // Ensure that imag(r) has the same sign as imag(x) for imag(x) == signed zero.
             if(real(x) == 0)
             {
-                return complex(0, imag(x));
+                return gocpp::complex128(0, imag(x));
             }
             if(real(x) < 0)
             {
-                return complex(0, math::Copysign(std::sqrt(- real(x)), imag(x)));
+                return gocpp::complex128(0, math::Copysign(std::sqrt(- real(x)), imag(x)));
             }
-            return complex(std::sqrt(real(x)), imag(x));
+            return gocpp::complex128(std::sqrt(real(x)), imag(x));
         }
         else
         if(math::IsInf(imag(x), 0))
         {
-            return complex(math::Inf(1.0), imag(x));
+            return gocpp::complex128(math::Inf(1.0), imag(x));
         }
         if(real(x) == 0)
         {
             if(imag(x) < 0)
             {
                 auto r = std::sqrt(- 0.5 * imag(x));
-                return complex(r, - r);
+                return gocpp::complex128(r, - r);
             }
             auto r = std::sqrt(0.5 * imag(x));
-            return complex(r, r);
+            return gocpp::complex128(r, r);
         }
         auto a = real(x);
         auto b = imag(x);
@@ -89,9 +89,9 @@ namespace golang::cmplx
         }
         if(b < 0)
         {
-            return complex(t, - r);
+            return gocpp::complex128(t, - r);
         }
-        return complex(t, r);
+        return gocpp::complex128(t, r);
     }
 
 }

@@ -453,27 +453,8 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	headerElts = append(headerElts, cv.includeHeaderDependencies(usedPkgInfos, ".h", hdrInitialOrder)...)
 	hdrInNamespace := cv.generateSortedHeader(headerElts, getHeader, DecDepend, cv.hpp, false, DefsTag)
 
-	// Compute dependencies for recievers defined at end of the header file.
-	cv.computeDepInfos(headerEndElts)
-
-	// Collect all depency informations for headerEndElts.
-	headerEndPkgs := set[string]{}
-	for _, place := range headerEndElts {
-		for depPkg := range place.depInfo.depPkgs {
-			cv.Logf("headerEndElts: depPkg: %v, place: %v\n", depPkg, cv.Position(place.node))
-			headerEndPkgs.add(depPkg)
-		}
-	}
-
-	// Filter usedPkgInfos to keep only those that are in headerEndPkgs
-	var usedPkgInfosHeaderEnd []*pkgInfo
-	for _, pkgInfo := range usedPkgInfos {
-		cv.Logf("usedPkgInfosHeaderEnd: pkgInfo: %v, filePath: %v\n", pkgInfo.pkgName(), pkgInfo.filePath)
-		if headerEndPkgs.has(pkgInfo.pkgName()) {
-			usedPkgInfosHeaderEnd = append(usedPkgInfosHeaderEnd, pkgInfo)
-			cv.Logf("usedPkgInfosHeaderEnd: pkgInfo: %v, filePath: %v, added\n", pkgInfo.pkgName(), pkgInfo.filePath)
-		}
-	}
+	// Compute packages used by recievers defined at end of the header file.
+	usedPkgInfosHeaderEnd := cv.getPackagesUsedByHeaderEnd(headerEndElts, usedPkgInfos)
 
 	if len(headerEndElts) > 0 {
 		// using io.Discard: just couting the dependencies for headerEndElts
@@ -522,6 +503,31 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	}
 
 	return
+}
+
+func (cv *cppConverter) getPackagesUsedByHeaderEnd(headerEndElts []*place, usedPkgInfos []*pkgInfo) []*pkgInfo {
+	// Compute dependencies for recievers defined at end of the header file.
+	cv.computeDepInfos(headerEndElts)
+
+	// Collect all depency informations for headerEndElts.
+	headerEndPkgs := set[string]{}
+	for _, place := range headerEndElts {
+		for depPkg := range place.depInfo.depPkgs {
+			cv.Logf("headerEndElts: depPkg: %v, place: %v\n", depPkg, cv.Position(place.node))
+			headerEndPkgs.add(depPkg)
+		}
+	}
+
+	// Filter usedPkgInfos to keep only those that are in headerEndPkgs
+	var usedPkgInfosHeaderEnd []*pkgInfo
+	for _, pkgInfo := range usedPkgInfos {
+		cv.Logf("usedPkgInfosHeaderEnd: pkgInfo: %v, filePath: %v\n", pkgInfo.pkgName(), pkgInfo.filePath)
+		if headerEndPkgs.has(pkgInfo.pkgName()) {
+			usedPkgInfosHeaderEnd = append(usedPkgInfosHeaderEnd, pkgInfo)
+			cv.Logf("usedPkgInfosHeaderEnd: pkgInfo: %v, filePath: %v, added\n", pkgInfo.pkgName(), pkgInfo.filePath)
+		}
+	}
+	return usedPkgInfosHeaderEnd
 }
 
 func (cv *cppConverter) computeDepInfos(headerElts []*place) {

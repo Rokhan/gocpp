@@ -1137,20 +1137,24 @@ func canBeDefined(node ast.Expr, defType types.Type) bool {
 	case *ast.ChanType:
 		return true
 	case *ast.Ident:
-		switch dt := defType.(type) {
-		case *types.Array:
-			return true
-		case *types.Map:
-			return true
-		case *types.Chan:
-			return true
-		case *types.Struct:
-			return true
-		case *types.Named:
-			return canBeDefined(node, dt.Underlying())
-		default:
-			return false
-		}
+		return typeCanBeDefined(defType)
+	default:
+		return false
+	}
+}
+
+func typeCanBeDefined(defType types.Type) bool {
+	switch dt := defType.(type) {
+	case *types.Array:
+		return true
+	case *types.Map:
+		return true
+	case *types.Chan:
+		return true
+	case *types.Struct:
+		return true
+	case *types.Named:
+		return typeCanBeDefined(dt.Underlying())
 	default:
 		return false
 	}

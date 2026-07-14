@@ -2536,10 +2536,10 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		cppType := cv.convertTypeExpr(n, ctContext{})
 		name := GetCppName(node.Name.Name)
 		var usingDec string
-		var tagAliasDec string
-		var fwdAliasDec string
-		var fwdTagAliasDec string
-		isAlias := false
+		var tagDefineDec string
+		var fwdDefineDec string
+		var fwdTagDefineDec string
+		isDefine := false
 
 		cv.Logf("New typedef. Name %v, type: %v", name, cppType)
 		definitionType := cv.typeInfo.Defs[node.Name].Type()
@@ -2548,13 +2548,13 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		if cv.ignoreKnownError(name, knownMissingDeps) {
 			usingDec = fmt.Sprintf("/* %susing %s = %s */%s", templateDec, name, cppType.str, end)
 		} else {
-			if canBeAliased(node.Type, definitionType) && node.Assign == token.NoPos {
+			if canBeDefined(node.Type, definitionType) && node.Assign == token.NoPos {
 				tagName := fmt.Sprintf("GoTag_%s", name)
-				fwdAliasDec = fmt.Sprintf("%susing %s = gocpp::defined<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
-				fwdTagAliasDec = fmt.Sprintf("%sstruct %s%s", templateDec, tagName, end)
-				tagAliasDec = fmt.Sprintf("%sstruct %s { }%s", templateDec, tagName, end)
+				fwdDefineDec = fmt.Sprintf("%susing %s = gocpp::defined<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
+				fwdTagDefineDec = fmt.Sprintf("%sstruct %s%s", templateDec, tagName, end)
+				tagDefineDec = fmt.Sprintf("%sstruct %s { }%s", templateDec, tagName, end)
 				usingDec = fmt.Sprintf("%susing %s = gocpp::defined<%s, %s>%s", templateDec, name, cppType.str, tagName, end)
-				isAlias = true
+				isDefine = true
 			} else {
 				usingDec = fmt.Sprintf("%susing %s = %s%s", templateDec, name, cppType.str, end)
 			}
@@ -2562,10 +2562,10 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 
 		cv.declareType(name)
 		if isNamespace {
-			if isAlias {
-				cppType.defs = append(cppType.defs, fwdHeaderStr(fwdTagAliasDec, node, depInfo{}))
-				cppType.defs = append(cppType.defs, fwdHeaderStr(fwdAliasDec, node, cv.getTypeDepInfo(node)))
-				cppType.defs = append(cppType.defs, headerStr(tagAliasDec, nil))
+			if isDefine {
+				cppType.defs = append(cppType.defs, fwdHeaderStr(fwdTagDefineDec, node, depInfo{}))
+				cppType.defs = append(cppType.defs, fwdHeaderStr(fwdDefineDec, node, cv.getTypeDepInfo(node)))
+				cppType.defs = append(cppType.defs, headerStr(tagDefineDec, nil))
 				cppType.defs = append(cppType.defs, headerStr(usingDec, node))
 				return mkCppType("", cppType.defs)
 			}

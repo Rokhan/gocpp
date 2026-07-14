@@ -1128,7 +1128,7 @@ func hasDeclarations(stmts []ast.Stmt) bool {
 	return false
 }
 
-func canBeAliased(node ast.Expr, defType types.Type) bool {
+func canBeDefined(node ast.Expr, defType types.Type) bool {
 	switch node.(type) {
 	case *ast.ArrayType:
 		return true
@@ -1147,7 +1147,7 @@ func canBeAliased(node ast.Expr, defType types.Type) bool {
 		case *types.Struct:
 			return true
 		case *types.Named:
-			return canBeAliased(node, dt.Underlying())
+			return canBeDefined(node, dt.Underlying())
 		default:
 			return false
 		}

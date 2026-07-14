@@ -1306,7 +1306,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		cv.ConvertDoc(d.Doc)
 
 		typeParams := cv.GetFuncTypeParameters(d)
-		ctx := ctContext{inDeclaration: true, namespace: cv.namespace, typeParams: typeParams, isInReceiverDecl: true}
+		ctx := ctContext{inDeclaration: true, namespace: cv.namespace, typeParams: typeParams, isInReceiverDecl: true, keepDebug: true}
 		params := cv.readFieldsCtx(d.Recv, ctx)
 		params.setIsRecv()
 		ctx.isInReceiverDecl = false
@@ -1316,11 +1316,15 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		cv.startScope()
 		cv.declareVars(params)
 		usedTypeParams := []string{}
+		debugComments := []string{}
 		for _, param := range params {
 			for _, place := range param.Type.defs {
 				cv.printOrKeepPlace(place, &outPlaces, nil)
 			}
 			usedTypeParams = append(usedTypeParams, param.Type.typenames...)
+			if cv.shared.debugMode && param.Type.dbg != "" {
+				debugComments = append(usedTypeParams, fmt.Sprintf("/* %s: */%s", param.names, param.Type.dbg))
+			}
 		}
 
 		for _, outType := range outTypes {
@@ -1359,6 +1363,10 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		} else {
 			appendStrf = appendHeaderEndStrf
 			prefix = recNs + "::"
+		}
+
+		for _, debugComment := range debugComments {
+			appendStrf(&funcDef, "%s\n", debugComment)
 		}
 
 		if cv.ignoreKnownError(name, knownNameConflicts) {
@@ -3202,7 +3210,8 @@ func convertInlinedComment(comment *ast.CommentGroup, indent string) string {
 
 func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms map[string][]string, param genStructParam) (cppStruct string, places []place) {
 	buf := new(bytes.Buffer)
-	fields, parents := cv.readFieldsAndParentsCtx(node.Fields, ctContext{inDeclaration: true, ensureHasTypeName: true, namespace: cv.namespace})
+	ctx := ctContext{inDeclaration: true, ensureHasTypeName: true, namespace: cv.namespace, keepDebug: true}
+	fields, parents := cv.readFieldsAndParentsCtx(node.Fields, ctx)
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
@@ -3237,6 +3246,10 @@ func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms
 				comment = " " + convertComment(field.comment, data.out.Indent())
 			}
 			for _, name := range field.names {
+				if field.Type.dbg != "" {
+					fmt.Fprintf(buf, "%s/* %s */%s\n", data.out.Indent(), field.names, field.Type.dbg)
+				}
+
 				fieldAndType := fmt.Sprintf("%s::%s", param.name, name)
 				if cv.ignoreKnownError(fieldAndType, knownIncomplete) {
 					fmt.Fprintf(buf, "%s/* %s %s; [Known incomplete type] */%s\n", data.out.Indent(), field.Type.str, name, comment)

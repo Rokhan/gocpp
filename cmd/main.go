@@ -103,12 +103,13 @@ func (cv *cppConverter) GenerateId() (id string) {
 	return id
 }
 
-func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, pkgInfos []*pkgInfo, tag tagType, suffix string) []string {
+func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, pkgInfos []*pkgInfo, tag tagType, incType includeType) []string {
 	if pkgInfos == nil {
 		return nil
 	}
 	var globalSubDir = convSharedData.globalSubDir
 	var debugMode = convSharedData.debugMode
+	suffix := getIncludeSuffix(incType)
 
 	var alreadyIncluded set[string] = make(set[string])
 	var nsSet set[string] = make(set[string])
@@ -143,12 +144,13 @@ func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, 
 	return toSortedList(nsSet)
 }
 
-func (cv *cppConverter) includeHeaderDependencies(pkgInfos []*pkgInfo, suffix string, order int) (results []*place) {
+func (cv *cppConverter) includeHeaderDependencies(pkgInfos []*pkgInfo, incType includeType, order *int) (results []*place) {
 	globalSubDir := cv.shared.globalSubDir
 	if pkgInfos == nil {
 		return nil
 	}
 
+	suffix := getIncludeSuffix(incType)
 	var alreadyIncluded map[string]bool = make(map[string]bool)
 
 	slices.SortFunc(pkgInfos, func(p1 *pkgInfo, p2 *pkgInfo) int {
@@ -161,16 +163,16 @@ func (cv *cppConverter) includeHeaderDependencies(pkgInfos []*pkgInfo, suffix st
 		}
 		alreadyIncluded[pkgInfo.filePath] = true
 
-		order++
-		di := depInfo{nil, map[string]types.Type{}, "", map[string]bool{}, pkgInfo.basePath(), map[string]bool{}, order, 0}
+		*order++
+		di := depInfo{nil, map[string]types.Type{}, "", map[string]bool{}, pkgInfo.basePath(), map[string]bool{}, *order, 0}
 
 		switch pkgInfo.fileType {
 		case GoFiles, CompiledGoFiles:
 			str := fmt.Sprintf("#include \"%v%v%v\"\n", globalSubDir, pkgInfo.basePath(), suffix)
-			results = append(results, Ptr(includeStr(str, di).SetPkgInfo(pkgInfo)))
+			results = append(results, Ptr(includeStr(str, di, pkgInfo, incType)))
 		case Ignored:
 			str := fmt.Sprintf("// #include \"%v%v%v\" [Ignored, known errors]\n", globalSubDir, pkgInfo.basePath(), suffix)
-			results = append(results, Ptr(includeStr(str, di).SetPkgInfo(pkgInfo)))
+			results = append(results, Ptr(includeStr(str, di, pkgInfo, incType)))
 		}
 	}
 	return
@@ -473,7 +475,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	// Try to compute dependencies for header to avoid to specify them at each "headerStr" call
 	cv.computeDepInfos(headerElts)
 
-	headerElts = append(headerElts, cv.includeHeaderDependencies(usedPkgInfos, ".h", hdrInitialOrder)...)
+	headerElts = append(headerElts, cv.includeHeaderDependencies(usedPkgInfos, HdrInclude, &hdrInitialOrder)...)
 	hdrInNamespace := cv.generateSortedHeader(headerElts, getHeader, DecDepend, cv.hpp, false, DefsTag)
 
 	// Compute packages used by recievers defined at end of the header file.
@@ -481,10 +483,10 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
 	if len(headerEndElts) > 0 {
 		// using io.Discard: just couting the dependencies for headerEndElts
-		deps := includeDependencies(io.Discard, cv.shared, usedPkgInfosHeaderEnd, DefsTag, ".h")
+		deps := includeDependencies(io.Discard, cv.shared, usedPkgInfosHeaderEnd, DefsTag, HdrInclude)
 		if len(deps) > 0 {
 			fmt.Fprintf(cv.hpp.out, "}\n\n")
-			includeDependencies(cv.hpp.out, cv.shared, usedPkgInfosHeaderEnd, DefsTag, ".h")
+			includeDependencies(cv.hpp.out, cv.shared, usedPkgInfosHeaderEnd, DefsTag, HdrInclude)
 			hdrInNamespace = false
 		}
 	}
@@ -503,7 +505,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.hpp.indent--
 	fmt.Fprintf(cv.hpp.out, "%s}\n", cv.hpp.Indent())
 
-	fwdHeaderElts = append(fwdHeaderElts, cv.includeHeaderDependencies(usedPkgInfos, ".fwd.h", fwdInitialOrder)...)
+	fwdHeaderElts = append(fwdHeaderElts, cv.includeHeaderDependencies(usedPkgInfos, FwdInclude, &fwdInitialOrder)...)
 	fwdInNamespace := cv.generateSortedHeader(fwdHeaderElts, getFwdHeader, FwdDepend, cv.fwd, false, NoneTag)
 
 	if cv.genMakeFile {
@@ -661,7 +663,7 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 
 		maxDecIndex := -1
 		for i, place := range headerElts {
-			if !place.isInclude {
+			if !place.isInclude() {
 				maxDecIndex = i
 			}
 		}
@@ -674,14 +676,14 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 			}
 
 			// Close namespace for includes
-			if place.isInclude && inNamespace {
+			if place.isInclude() && inNamespace {
 				fmt.Fprintf(outFile.out, "}\n")
 				inNamespace = false
 				indent = ""
 			}
 
 			// Open namespace for declarartions
-			if !place.isInclude && !inNamespace {
+			if !place.isInclude() && !inNamespace {
 				fmt.Fprintf(outFile.out, "\nnamespace golang::%v\n{\n", cv.namespace)
 				inNamespace = true
 				indent = outFile.Indent()
@@ -4696,6 +4698,8 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 	return
 }
 
+var gorootSrc string
+
 func main() {
 
 	inputName := flag.String("input", "tests/HelloWorld.go", "The file to parse, when converting only one file")
@@ -4735,7 +4739,7 @@ func main() {
 	pcShared := &sharedParsingContext{}
 	pcShared.fileSet = fset
 
-	gorootSrc := JoinPath(CleanPath(runtime.GOROOT()), "src", "")
+	gorootSrc = JoinPath(CleanPath(runtime.GOROOT()), "src", "")
 
 	cv := new(cppConverter)
 	cv.shared = shared
@@ -4766,6 +4770,7 @@ func main() {
 	cv.Logf("pkgPath: %s\n", pkgPath)
 	cv.Logf("astPackageName: %s\n", cv.astFile.Name.Name)
 	cv.Logf("packageDir: %s\n", cv.packageDir)
+	cv.Logf("gorootSrc: %s\n", gorootSrc)
 
 	if err := cv.LoadAndCheckDefs(pkgPath, fset, astFiles...); err != nil {
 		panic(err) // type error

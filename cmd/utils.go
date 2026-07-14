@@ -606,6 +606,7 @@ func (pkgInfo *pkgInfo) baseName() string {
 	return strings.TrimSuffix(filepath.Base(pkgInfo.filePath), ".go")
 }
 
+// Bug ? seems strange to have both this method and basePath()
 func (pkgInfo *pkgInfo) pkgName() string {
 	return fmt.Sprintf("%v/%v", pkgInfo.pkgPath, pkgInfo.fileName())
 }
@@ -747,6 +748,25 @@ type receiverDesc interface {
 type goReceiverDesc ast.SelectorExpr
 type mockReceiverDesc string
 
+type includeType int
+
+const (
+	NotInclude includeType = 0
+	HdrInclude includeType = 1
+	FwdInclude includeType = 2
+)
+
+func getIncludeSuffix(incTyp includeType) string {
+	switch incTyp {
+	case HdrInclude:
+		return ".h"
+	case FwdInclude:
+		return ".fwd.h"
+	default:
+		panic("unmanaged extencion type")
+	}
+}
+
 type place struct {
 	// when type/declaration need be generated inlined
 	inline *string
@@ -757,8 +777,8 @@ type place struct {
 	// when type/declaration need to be at end of header
 	headerEnd *string
 	// when type/declaration need to be in forward declarations header
-	fwdHeader *[]string
-	isInclude bool
+	fwdHeader   *[]string
+	includeType includeType
 
 	// -> Currently it's a fixed value chosen at creation but ultimately
 	// this should be computed by looking at dependency graph.
@@ -777,16 +797,15 @@ type place struct {
 	receiver receiverDesc
 }
 
-func (place place) SetPkgInfo(pkgInfo *pkgInfo) place {
-	place.pkgInfo = pkgInfo
-	return place
-}
-
 func (place place) DepInfoTypeStr() string {
 	if place.depInfo.decType != nil {
 		return place.depInfo.decType.String()
 	}
 	return ""
+}
+
+func (place place) isInclude() bool {
+	return place.includeType != NotInclude
 }
 
 func getHeader(place place) []string {
@@ -798,40 +817,40 @@ func getFwdHeader(place place) []string {
 }
 
 func inlineStr(str string, node ast.Node) place {
-	return place{&str, nil, nil, nil, nil, false, depInfo{}, nil, node, nil}
+	return place{&str, nil, nil, nil, nil, NotInclude, depInfo{}, nil, node, nil}
 }
 
 func goReceiver(rec ast.SelectorExpr) place {
-	return place{nil, nil, nil, nil, nil, false, depInfo{}, nil, nil, goReceiverDesc(rec)}
+	return place{nil, nil, nil, nil, nil, NotInclude, depInfo{}, nil, nil, goReceiverDesc(rec)}
 }
 
 func mockReceiver(rec string) place {
-	return place{nil, nil, nil, nil, nil, false, depInfo{}, nil, nil, mockReceiverDesc(rec)}
+	return place{nil, nil, nil, nil, nil, NotInclude, depInfo{}, nil, nil, mockReceiverDesc(rec)}
 }
 
 func outlineStr(str string, node ast.Node) place {
-	return place{nil, &str, nil, nil, nil, false, depInfo{}, nil, node, nil}
+	return place{nil, &str, nil, nil, nil, NotInclude, depInfo{}, nil, node, nil}
 }
 
 func headerStr(str string, node ast.Node) place {
-	return place{nil, nil, ArrayPtr(str), nil, nil, false, depInfo{}, nil, node, nil}
+	return place{nil, nil, ArrayPtr(str), nil, nil, NotInclude, depInfo{}, nil, node, nil}
 }
 
 func headerEndStr(str string) place {
-	return place{nil, nil, nil, &str, nil, false, depInfo{}, nil, nil, nil}
+	return place{nil, nil, nil, &str, nil, NotInclude, depInfo{}, nil, nil, nil}
 }
 
 func fwdHeaderStr(str string, node ast.Node, depInfo depInfo) place {
-	return place{nil, nil, nil, nil, ArrayPtr(str), false, depInfo, nil, node, nil}
+	return place{nil, nil, nil, nil, ArrayPtr(str), NotInclude, depInfo, nil, node, nil}
 }
 
 // Maybe create one version for headers and one for fwd headers.
-func includeStr(str string, depInfo depInfo) place {
-	return place{nil, nil, ArrayPtr(str), nil, ArrayPtr(str), true, depInfo, nil, nil, nil}
+func includeStr(str string, depInfo depInfo, pkgInfo *pkgInfo, incType includeType) place {
+	return place{nil, nil, ArrayPtr(str), nil, ArrayPtr(str), incType, depInfo, pkgInfo, nil, nil}
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType, node ast.Node) place {
-	return place{nil, nil, nil, nil, nil, false, depInfo{}, &pkgInfo{name, CleanPath(pkgPath), filePath, UnknownTag, pkgType}, node, nil}
+	return place{nil, nil, nil, nil, nil, NotInclude, depInfo{}, &pkgInfo{name, CleanPath(pkgPath), filePath, UnknownTag, pkgType}, node, nil}
 }
 
 func inlineStrf(node ast.Node, format string, params ...any) []place {

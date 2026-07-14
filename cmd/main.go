@@ -209,21 +209,34 @@ func (cv *cppConverter) InitAndParse() {
 	}
 }
 
+type scopeType int
+
+const (
+	ScopeNamespace scopeType = 0
+	ScopeFunction  scopeType = 1
+	ScopeBlock     scopeType = 2
+)
+
 type scope struct {
-	vars  map[string]bool
-	types map[string]bool
+	scopeType scopeType
+	vars      map[string]bool
+	types     map[string]bool
 }
 
-func makeScope() scope {
-	return scope{vars: make(map[string]bool), types: make(map[string]bool)}
+func makeScope(scopeType scopeType) scope {
+	return scope{scopeType: scopeType, vars: make(map[string]bool), types: make(map[string]bool)}
 }
 
-func (cv *cppConverter) startScope() {
-	cv.scopes.PushBack(makeScope())
+func (cv *cppConverter) startScope(scopeType scopeType) {
+	cv.scopes.PushBack(makeScope(scopeType))
 }
 
 func (cv *cppConverter) endScope() {
 	cv.scopes.Remove(cv.scopes.Back())
+}
+
+func (cv *cppConverter) getScopeType() scopeType {
+	return cv.scopes.Back().Value.(scope).scopeType
 }
 
 func (cv *cppConverter) declareVar(name string, isPtr bool) {
@@ -271,6 +284,7 @@ func (cv *cppConverter) isPtr(name string) bool {
 	return false
 }
 
+// Type defined in current scope
 func (cv *cppConverter) isLocalType(name string) bool {
 	for elt := cv.scopes.Back(); elt != nil; elt = elt.Prev() {
 		scope := elt.Value.(scope)
@@ -357,7 +371,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.Logf(" !!!>> Start converting file: %v <<!!!\n", cv.inputName)
 	defer cv.Logf(" !!!>> End converting file: %v <<!!!\n", cv.inputName)
 
-	cv.startScope()
+	cv.startScope(ScopeNamespace)
 
 	cv.cpp = createOutputExt(shared.cppOutDir, cv.baseName, "cpp")
 	cv.hpp = createOutputExt(shared.cppOutDir, cv.baseName, "h")
@@ -1082,7 +1096,8 @@ func (cv *cppConverter) readFieldsAndParentsCtx(fields *ast.FieldList, ctx ctCon
 	if fields == nil {
 		return
 	}
-	cv.startScope()
+	// start a scope but keep same scope type
+	cv.startScope(cv.getScopeType())
 	usedNames := make(map[string]bool)
 
 	for _, field := range fields.List {
@@ -1313,7 +1328,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		params = append(params, cv.readFieldsCtx(d.Type.Params, ctx)...)
 		outNames, outTypes := cv.getResultInfos(d.Type)
 
-		cv.startScope()
+		cv.startScope(ScopeFunction)
 		cv.declareVars(params)
 		usedTypeParams := []string{}
 		debugComments := []string{}
@@ -1484,7 +1499,7 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 			fmt.Fprintf(cv.cpp.out, "%s%s\n", cv.cpp.Indent(), convertComment(cg, cv.cpp.Indent()))
 		}
 	}
-	cv.startScope()
+	cv.startScope(ScopeBlock)
 	env.startVarScope()
 	fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
 	cv.cpp.indent++
@@ -1772,7 +1787,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		cv.WritterExprPrintf(cppOut, "%s%s.send(%s);\n", cv.cpp.Indent(), cv.convertExpr(s.Chan), cv.convertExpr(s.Value))
 
 	case *ast.ForStmt:
-		cv.startScope()
+		cv.startScope(ScopeBlock)
 		env.startVarScope()
 		initExpr, initNeedScope := cv.inlineStmt(s.Init, env)
 		postExpr, postNeedScope := cv.inlineStmt(s.Post, env)
@@ -1887,7 +1902,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		cv.cpp.indent++
 
 		if s.Init != nil {
-			cv.startScope()
+			cv.startScope(ScopeBlock)
 			env.startVarScope()
 			initExpr, _ := cv.inlineStmt(s.Init, env)
 			cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), initExpr)
@@ -1911,7 +1926,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		cv.cpp.indent++
 
 		if s.Init != nil {
-			cv.startScope()
+			cv.startScope(ScopeBlock)
 			env.startVarScope()
 			initExpr, _ := cv.inlineStmt(s.Init, env)
 			cv.WritterExprPrintf(cppOut, "%s%s;\n", cv.cpp.Indent(), initExpr)
@@ -2603,6 +2618,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 		}
 
 		structDecl, places := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, all, without, true})
+		cv.declareType(name)
 		defs = append(defs, places...)
 		return mkCppType(structDecl, defs)
 
@@ -2763,58 +2779,40 @@ func (cv *cppConverter) checkStructType(expr ast.Expr, cppType *cppType) {
 
 func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 
-	tv := cv.typeInfo.Types[id].Type
+	idType := cv.typeInfo.Types[id].Type
 	pkg := cv.typeInfo.Uses[id].Pkg()
 
-	if cv.typedefs.has(tv) {
-		cv.Logf("isTypedef[true], found typedef for %v, type: %v, pkg:%v\n", types.ExprString(id), tv, pkg)
-		return true, pkg.Name()
-	}
-
-	switch tv.(type) {
-	case *types.Named:
-		switch tv.Underlying().(type) {
-		case *types.Basic:
-			cv.Logf("isTypedef[true], found typedef for %v, type: %v, pkg:%v\n", types.ExprString(id), tv, pkg)
-			return true, pkg.Name()
-		}
-	}
-
-	// var pkg *types.Package
-	// if ident, ok := expr.(*ast.Ident); ok {
-	// 	if def := cv.typeInfo.Defs[ident]; def != nil {
-	// 		pkg = def.Pkg()
-	// 	} else if def := cv.typeInfo.Uses[ident]; def != nil {
-	// 		pkg = def.Pkg()
-	// 	}
-	// }
-
-	cv.Logf("isTypedef, %v, isAlias: %v, pos:%v \n", types.ExprString(id), cv.typedefs.has(tv), cv.Position(id))
-	cv.Logf("isTypedef, %v, type: %v, pkg:%v\n", types.ExprString(id), tv, pkg)
-
-	if tv != nil {
-		exprStr := types.ExprString(id)
-		typStr := tv.String()
-
-		if pkg != nil {
-			if !strings.Contains(exprStr, ".") {
-				exprStr = pkg.Name() + "." + exprStr
-			}
-			nsExprStr := fmt.Sprintf("%s%s", cv.packageDir, exprStr)
-
-			cv.Logf("isTypedef[%v], exprStr: %v, nsExprStr:%s, typeStr: %v\n", typStr != exprStr, exprStr, nsExprStr, typStr)
-			if typStr != exprStr && typStr != nsExprStr {
-				return true, pkg.Name()
-			}
-		}
-	}
-
-	cv.Logf("isTypedef[false], exprStr: %v, typeStr: %v\n", id.Name, pkg)
+	pkgName := ""
 	if pkg != nil {
-		return false, pkg.Name()
+		pkgName = pkg.Name()
 	}
 
-	return false, ""
+	// We should probably remove 'cv.typedefs` and all its usages as it make the code dependent on declaration order.
+	if cv.typedefs.has(idType) {
+		cv.Logf("isTypedef[true], found typedef for %v, type: %v, pkg:%v\n", types.ExprString(id), idType, pkg)
+		return true, pkgName
+	}
+
+	if typeCanBeDefined(idType) {
+		return true, pkgName
+	} else {
+		switch idType.(type) {
+		case *types.Alias:
+			cv.Logf("isTypedef[true], found typedef for %v, type: %v, pkg:%v\n", types.ExprString(id), idType, pkg)
+			return true, pkgName
+		case *types.Named:
+			switch idType.Underlying().(type) {
+			case *types.Basic:
+				cv.Logf("isTypedef[true], found typedef for %v, type: %v, pkg:%v\n", types.ExprString(id), idType, pkg)
+				return true, pkgName
+			}
+		}
+	}
+
+	if pkg == nil {
+		cv.Logf("isTypedef[false], pkg is nil for %v, type: %v\n", types.ExprString(id), idType)
+	}
+	return false, pkgName
 }
 
 func (cv *cppConverter) checkCanFwd(cppType *cppType) {
@@ -2876,33 +2874,30 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		isTD, pkg := cv.isTypedef(n)
 		isParam, _ := cv.isParam(n)
 		identType = mkCppType(GetCppType(n.Name), nil)
-		if isTD && !isParam {
-			isLocal := cv.isLocalType(identType.str)
-			identType.dbg = cv.DbgSprintf("/* is local, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v, isLocal:%v */", ctx.namespace, pkg, isTD, isParam, identType.str, isLocal)
-			if !isLocal && !ctx.ignoreNameSpace {
-				if pkg != ctx.namespace && !cv.isAmbiguousName(identType.str) {
-					identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
-				} else {
-					identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
-				}
-			} else if cv.isNameUsebyMethods(identType.str) {
+
+		addNamespace := func() {
+			if cv.isAmbiguousName(pkg) {
+				identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
+			} else {
 				identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
 			}
+		}
 
+		if isTD && !isParam {
+			// Check we are in a function and that the type is defined in current scope
+			isFuctionLocal := cv.isLocalType(identType.str) && cv.getScopeType() != ScopeNamespace
+			identType.dbg = cv.DbgSprintf("/* is local, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v, isLocal:%v */", ctx.namespace, pkg, isTD, isParam, identType.str, isFuctionLocal)
+			if !isFuctionLocal && !ctx.ignoreNameSpace {
+				if pkg != ctx.namespace || cv.isAmbiguousName(identType.str) || cv.isNameUsebyMethods(identType.str) {
+					addNamespace()
+				}
+			}
 		} else if cv.isAmbiguousName(identType.str) && !isParam && !ctx.ignoreNameSpace {
 			identType.dbg = cv.DbgSprintf("/* is ambiguous, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v */", ctx.namespace, pkg, isTD, isParam, identType.str)
-			if cv.isAmbiguousName(pkg) {
-				identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
-			} else {
-				identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
-			}
+			addNamespace()
 		} else if ctx.isInReceiverDecl && !isParam && !ctx.ignoreNameSpace {
 			identType.dbg = cv.DbgSprintf("/* in receiver declaration, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v */", ctx.namespace, pkg, isTD, isParam, identType.str)
-			if cv.isAmbiguousName(pkg) {
-				identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
-			} else {
-				identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
-			}
+			addNamespace()
 		} else {
 			cv.checkStructType(n, &identType)
 			identType.dbg = cv.DbgSprintf("/*default, ctx.namespace: %s, pkg:%s, isStruct: %v, isTD:%v, isParam:%v*/", ctx.namespace, pkg, identType.isStruct, isTD, isParam)
@@ -4004,7 +3999,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			resultType := buildOutType(outTypes, nil)
 			captureExpr := cv.getCaptureExpr()
 
-			cv.startScope()
+			cv.startScope(ScopeFunction)
 			cv.declareVars(params)
 
 			fmt.Fprintf(cv.cpp.out, "%s(%s) mutable -> %s\n", captureExpr, params, resultType)

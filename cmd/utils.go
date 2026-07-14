@@ -430,7 +430,7 @@ func (env *stmtEnv) generateId(prefix string) (id string) {
 
 func (env *stmtEnv) localVarScope(cv *cppConverter, todo func()) {
 	//clear already declared var names at start of scope
-	cv.startScope()
+	cv.startScope(ScopeBlock)
 	outVarNames := env.varNames
 	env.varNames = &[]string{}
 	todo()

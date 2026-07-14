@@ -293,6 +293,15 @@ func (cv *cppConverter) isAmbiguousName(name string) bool {
 	return false
 }
 
+func (cv *cppConverter) isNameUsebyMethods(name string) bool {
+	// TODO, maybe slow, can be optimized by caching.
+	methods := cv.GetPackageMethodsNames()
+	if slices.Contains(methods, name) {
+		return true
+	}
+	return false
+}
+
 // Get the cpp type parameters from an expression
 func (cv *cppConverter) GetCppTypeParameters(expr ast.Expr) []string {
 	goTypes := cv.GetExprTypeParameters(expr)
@@ -2551,6 +2560,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 			}
 		}
 
+		cv.declareType(name)
 		if isNamespace {
 			if isAlias {
 				cppType.defs = append(cppType.defs, fwdHeaderStr(fwdTagAliasDec, node, depInfo{}))
@@ -2561,7 +2571,6 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 			}
 			return mkCppType("", append(cppType.defs, fwdHeaderStr(usingDec, node, cv.getTypeDepInfo(node))))
 		} else {
-			cv.declareType(name)
 			return mkCppType("", append(cppType.defs, inlineStr(usingDec, node)))
 		}
 
@@ -2842,6 +2851,8 @@ type ctContext struct {
 	namespace          string
 	typeParams         typeParams
 	isInReceiverDecl   bool
+	keepDebug          bool
+	ignoreNameSpace    bool
 }
 
 // Maybe merge this function with "convertExprToType" in future ?
@@ -2860,22 +2871,25 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		if isTD && !isParam {
 			isLocal := cv.isLocalType(identType.str)
 			identType.dbg = cv.DbgSprintf("/* is local, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v, isLocal:%v */", ctx.namespace, pkg, isTD, isParam, identType.str, isLocal)
-			if !isLocal {
+			if !isLocal && !ctx.ignoreNameSpace {
 				if pkg != ctx.namespace && !cv.isAmbiguousName(identType.str) {
 					identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
 				} else {
 					identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
 				}
+			} else if cv.isNameUsebyMethods(identType.str) {
+				identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
 			}
-		} else if cv.isAmbiguousName(identType.str) && !isParam {
-			identType.dbg = cv.DbgSprintf("/* is ambiguous */")
+
+		} else if cv.isAmbiguousName(identType.str) && !isParam && !ctx.ignoreNameSpace {
+			identType.dbg = cv.DbgSprintf("/* is ambiguous, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v */", ctx.namespace, pkg, isTD, isParam, identType.str)
 			if cv.isAmbiguousName(pkg) {
 				identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
 			} else {
 				identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
 			}
-		} else if ctx.isInReceiverDecl && !isParam {
-			identType.dbg = cv.DbgSprintf("/* in receiver declaration */")
+		} else if ctx.isInReceiverDecl && !isParam && !ctx.ignoreNameSpace {
+			identType.dbg = cv.DbgSprintf("/* in receiver declaration, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v */", ctx.namespace, pkg, isTD, isParam, identType.str)
 			if cv.isAmbiguousName(pkg) {
 				identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
 			} else {
@@ -2883,7 +2897,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 			}
 		} else {
 			cv.checkStructType(n, &identType)
-			identType.dbg = cv.DbgSprintf("/* isStruct: %v, isTD:%v, isParam:%v*/", identType.isStruct, isTD, isParam)
+			identType.dbg = cv.DbgSprintf("/*default, ctx.namespace: %s, pkg:%s, isStruct: %v, isTD:%v, isParam:%v*/", ctx.namespace, pkg, identType.isStruct, isTD, isParam)
 		}
 
 		cv.checkCanFwd(&identType)
@@ -2892,7 +2906,10 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		if deps, ok := ctx.typeParams[identType.str]; ok && len(deps) != 0 {
 			identType.str = fmt.Sprintf("%s<%s>", identType.str, strings.Join(deps, ", "))
 		}
-		identType.str = fmt.Sprintf("%s%s", identType.dbg, identType.str)
+		if !ctx.keepDebug {
+			identType.str = fmt.Sprintf("%s%s", identType.dbg, identType.str)
+			identType.dbg = ""
+		}
 		return identType
 
 	case *ast.ArrayType:
@@ -2926,9 +2943,11 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 
 	case *ast.SelectorExpr:
 		namespace := cv.convertExpr(n.X)
+		ctx.keepDebug = true
+		ctx.ignoreNameSpace = true
 		field := cv.convertTypeExpr(n.Sel, ctx)
 		typeName := GetCppExprFunc(ExprPrintf("%s::%s", namespace, field))
-		cppType := cppType{cppExpr: cppExpr{str: typeName.str}, canFwd: true}
+		cppType := cppType{cppExpr: cppExpr{str: field.dbg + typeName.str}, canFwd: true}
 		cppType.isStruct = field.isStruct
 		return cppType
 
@@ -4606,7 +4625,7 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 
 		// Don't need to type check a second time already analysed files
 		if _, done := shared.parsedFiles[pkgInfo.filePath]; !done {
-			astFiles[pkgInfo.name] = append(astFiles[pkgInfo.name], cv.astFile)
+			astFiles[pkgInfo.pkgPath] = append(astFiles[pkgInfo.pkgPath], cv.astFile)
 
 			// Ignored file will not be converted
 			if pkgInfo.fileType != Ignored {
@@ -4618,12 +4637,12 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		}
 	}
 
-	for pkgName, files := range astFiles {
-		if err := parentCv.LoadAndCheckDefs(pkgName, piShared.fileSet, files...); err != nil {
+	for pkgPath, files := range astFiles {
+		if err := parentCv.LoadAndCheckDefs(pkgPath, piShared.fileSet, files...); err != nil {
 			parentCv.Panicf("%v", err) // type error
 		}
 
-		parentCv.Logf("LoadAndCheckDefs, %v\n", pkgName)
+		parentCv.Logf("LoadAndCheckDefs, %v\n", pkgPath)
 		for _, file := range files {
 			parentCv.Logf("    - %v\n", parentCv.Position(file.Name))
 		}

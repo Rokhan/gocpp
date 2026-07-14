@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"go/types"
 	"reflect"
+	"strings"
 
 	"golang.org/x/tools/go/ast/astutil"
 )
@@ -17,10 +19,76 @@ type parsingInfos struct {
 	commentMap ast.CommentMap
 }
 
+func convertGoToCppTypes(goType []types.Type, namespace string, position token.Position) []string {
+	res := []string{}
+	for _, subType := range goType {
+		res = append(res, convertGoToCppType(subType, namespace, position))
+	}
+	return res
+}
+
+func convertCommentLines(comment *ast.CommentGroup) []string {
+	if comment == nil {
+		return nil
+	}
+	lines := []string{}
+	for _, c := range strings.Split(comment.Text(), "\n") {
+		line := strings.TrimSpace(c)
+		if line != "" {
+			lines = append(lines, line)
+		}
+	}
+	return lines
+}
+
+func convertComment(comment *ast.CommentGroup, indent string) string {
+	lines := convertCommentLines(comment)
+	sep := "\n" + indent + "// "
+	return fmt.Sprintf("// %s", strings.Join(lines, sep))
+}
+
+func convertInlinedComment(comment *ast.CommentGroup, indent string) string {
+	lines := convertCommentLines(comment)
+	sep := "\n" + indent
+	return fmt.Sprintf("/* %s */", strings.Join(lines, sep))
+}
+
+func getArrayLen(goType types.Type, position token.Position) int64 {
+	if goType == nil {
+		panic("getArrayLen. Cannot convert nil type.")
+	}
+
+	switch subType := goType.(type) {
+	case *types.Array:
+		return subType.Len()
+	}
+
+	Panicf("getArrayLen. Unmanaged type, type [%v], position[%v]", reflect.TypeOf(goType), position)
+	return 0
+}
+
 // Get the type parameters from an expression
 func (cv *parsingInfos) GetExprTypeParameters(expr ast.Expr) []types.Type {
 	goType := cv.convertExprToType(expr)
 	return cv.GetTypeParameters(goType, expr)
+}
+
+func (cv *parsingInfos) getPkgFromExprType(expr ast.Expr) (pkg *types.Package) {
+	typ := cv.typeInfo.Types[expr].Type
+	if typ == nil {
+		return nil
+	}
+
+	switch t := typ.(type) {
+	case *types.Named:
+		pkg = t.Obj().Pkg()
+	case *types.Pointer:
+		if named, ok := t.Elem().(*types.Named); ok {
+			pkg = named.Obj().Pkg()
+		}
+	default:
+	}
+	return pkg
 }
 
 func (cv *parsingInfos) GetTypeParameters(goType types.Type, expr ast.Expr) []types.Type {
@@ -197,6 +265,88 @@ func (cv *parsingInfos) IsTypeMap(goType types.Type) bool {
 
 	default:
 		return false
+	}
+}
+
+func (cv *parsingInfos) getReferencedTypesFor(file string) (usedTypes map[types.Object]tagType) {
+	usedTypes = make(map[types.Object]tagType)
+
+	/*
+	 * We need to manage dependencies in header and cpp like we do in forward header.
+	 * Once it will be done, all "tags" used to know if we need include in header or source file will be useless.
+	 */
+
+	types := cv.typeInfo.Types
+	cv.filterTypes(types, file, usedTypes, UsesTag)
+	uses := cv.typeInfo.Uses
+	cv.filterUsedObjects(uses, file, usedTypes, UsesTag)
+	defs := cv.typeInfo.Defs
+	cv.filterUsedObjects(defs, file, usedTypes, DefsTag)
+	// selections := cv.typeInfo.Selections
+	// cv.filterSelections(selections, file, usedTypes, UsesTag)
+	return
+}
+
+// func (cv *cppConverter) filterSelections(srcSelections map[*ast.SelectorExpr]*types.Selection, file string, usedTypes map[types.Object]tagType, tag tagType) {
+// 	for sel, selection := range srcSelections {
+// 		var filePos = cv.Position(sel)
+// 		if file != filePos.Filename {
+// 			continue
+// 		}
+// 		usedTypes[selection.Obj()] |= tag
+// 	}
+// }
+
+func (cv *parsingInfos) filterTypes(srcTypes map[ast.Expr]types.TypeAndValue, file string, usedTypes map[types.Object]tagType, tag tagType) {
+	for expr, typeAndValue := range srcTypes {
+		var filePos = cv.Position(expr)
+		if file != filePos.Filename {
+			continue
+		}
+
+		for _, o := range GetObjectsOfType(typeAndValue.Type) {
+			usedTypes[o] |= tag
+		}
+	}
+}
+
+func (cv *parsingInfos) filterUsedObjects(objs map[*ast.Ident]types.Object, file string, usedTypes map[types.Object]tagType, tag tagType) {
+	for id, obj := range objs {
+		var filePos = cv.Position(id)
+		if file != filePos.Filename {
+			continue
+		}
+
+		switch t := obj.(type) {
+		case *types.TypeName, *types.Const:
+			usedTypes[t] |= tag
+			for _, o := range GetObjectsOfType(t.Type()) {
+				usedTypes[o] |= tag
+			}
+
+		case *types.Func:
+			usedTypes[t] |= tag
+			for _, o := range GetObjectsOfType(t.Type()) {
+				usedTypes[o] |= tag
+			}
+
+		case *types.Var:
+			switch tag {
+			case DefsTag:
+				scopeCount := getScopeCounts(obj)
+				// len(scopeCount) == 0  --> member of structs
+				// len(scopeCount) == 1  --> ? ? ?
+				// len(scopeCount) == 2  --> global variable
+				if len(scopeCount) <= 2 {
+					for _, o := range GetObjectsOfType(t.Type()) {
+						usedTypes[o] |= tag
+					}
+				}
+			default:
+				// We will probably need need at some point.
+				// usedTypes[t] |= tag
+			}
+		}
 	}
 }
 

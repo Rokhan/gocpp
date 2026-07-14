@@ -748,6 +748,34 @@ type receiverDesc interface {
 type goReceiverDesc ast.SelectorExpr
 type mockReceiverDesc string
 
+func extractParamDefs(srcParams ...any) ([]place, []any, []string) {
+	defs := []place{}
+	params := []any{}
+	typeNames := []string{}
+
+	for _, srcParam := range srcParams {
+		switch prm := srcParam.(type) {
+		case cppType:
+			defs = append(defs, prm.defs...)
+			params = append(params, prm.str)
+			typeNames = append(typeNames, prm.typenames...)
+		case cppExpr:
+			defs = append(defs, prm.defs...)
+			params = append(params, prm.str)
+			typeNames = append(typeNames, prm.typenames...)
+		default:
+			params = append(params, srcParam)
+		}
+	}
+	return defs, params, typeNames
+}
+
+// Sprintf formats according to a format specifier and returns the resulting string.
+func ExprPrintf(format string, srcParams ...any) cppExpr {
+	defs, params, typeNames := extractParamDefs(srcParams...)
+	return cppExpr{fmt.Sprintf(format, params...), "", defs, typeNames}
+}
+
 type includeType int
 
 const (

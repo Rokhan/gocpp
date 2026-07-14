@@ -589,24 +589,6 @@ func (cv *cppConverter) ConvertDoc(doc *ast.CommentGroup) {
 	}
 }
 
-func (cv *cppConverter) getPkgFromExprType(expr ast.Expr) (pkg *types.Package) {
-	typ := cv.typeInfo.Types[expr].Type
-	if typ == nil {
-		return nil
-	}
-
-	switch t := typ.(type) {
-	case *types.Named:
-		pkg = t.Obj().Pkg()
-	case *types.Pointer:
-		if named, ok := t.Elem().(*types.Named); ok {
-			pkg = named.Obj().Pkg()
-		}
-	default:
-	}
-	return pkg
-}
-
 func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
 	var pkg *types.Package
 	if cv.IsExprInterface(rec.X) {
@@ -945,88 +927,6 @@ func (cv *cppConverter) getPackageFromType(usedType types.Object, tag tagType) *
 		cv.Logf("pkginfo, nil pkg, file: %v, usedTypeName: %v, tag:%v ---\n", file, usedType.Name(), tag)
 	}
 	return nil
-}
-
-func (cv *cppConverter) getReferencedTypesFor(file string) (usedTypes map[types.Object]tagType) {
-	usedTypes = make(map[types.Object]tagType)
-
-	/*
-	 * We need to manage dependencies in header and cpp like we do in forward header.
-	 * Once it will be done, all "tags" used to know if we need include in header or source file will be useless.
-	 */
-
-	types := cv.typeInfo.Types
-	cv.filterTypes(types, file, usedTypes, UsesTag)
-	uses := cv.typeInfo.Uses
-	cv.filterUsedObjects(uses, file, usedTypes, UsesTag)
-	defs := cv.typeInfo.Defs
-	cv.filterUsedObjects(defs, file, usedTypes, DefsTag)
-	// selections := cv.typeInfo.Selections
-	// cv.filterSelections(selections, file, usedTypes, UsesTag)
-	return
-}
-
-// func (cv *cppConverter) filterSelections(srcSelections map[*ast.SelectorExpr]*types.Selection, file string, usedTypes map[types.Object]tagType, tag tagType) {
-// 	for sel, selection := range srcSelections {
-// 		var filePos = cv.Position(sel)
-// 		if file != filePos.Filename {
-// 			continue
-// 		}
-// 		usedTypes[selection.Obj()] |= tag
-// 	}
-// }
-
-func (cv *cppConverter) filterTypes(srcTypes map[ast.Expr]types.TypeAndValue, file string, usedTypes map[types.Object]tagType, tag tagType) {
-	for expr, typeAndValue := range srcTypes {
-		var filePos = cv.Position(expr)
-		if file != filePos.Filename {
-			continue
-		}
-
-		for _, o := range GetObjectsOfType(typeAndValue.Type) {
-			usedTypes[o] |= tag
-		}
-	}
-}
-
-func (cv *cppConverter) filterUsedObjects(objs map[*ast.Ident]types.Object, file string, usedTypes map[types.Object]tagType, tag tagType) {
-	for id, obj := range objs {
-		var filePos = cv.Position(id)
-		if file != filePos.Filename {
-			continue
-		}
-
-		switch t := obj.(type) {
-		case *types.TypeName, *types.Const:
-			usedTypes[t] |= tag
-			for _, o := range GetObjectsOfType(t.Type()) {
-				usedTypes[o] |= tag
-			}
-
-		case *types.Func:
-			usedTypes[t] |= tag
-			for _, o := range GetObjectsOfType(t.Type()) {
-				usedTypes[o] |= tag
-			}
-
-		case *types.Var:
-			switch tag {
-			case DefsTag:
-				scopeCount := getScopeCounts(obj)
-				// len(scopeCount) == 0  --> member of structs
-				// len(scopeCount) == 1  --> ? ? ?
-				// len(scopeCount) == 2  --> global variable
-				if len(scopeCount) <= 2 {
-					for _, o := range GetObjectsOfType(t.Type()) {
-						usedTypes[o] |= tag
-					}
-				}
-			default:
-				// We will probably need need at some point.
-				// usedTypes[t] |= tag
-			}
-		}
-	}
 }
 
 func (cv *cppConverter) logReferencedTypesFrom(usedTypes map[types.Object]tagType, name string) {
@@ -3179,32 +3079,6 @@ func (cv *cppConverter) computeGenStructData(param genStructParam, templatePrmLi
 	return res
 }
 
-func convertCommentLines(comment *ast.CommentGroup) []string {
-	if comment == nil {
-		return nil
-	}
-	lines := []string{}
-	for _, c := range strings.Split(comment.Text(), "\n") {
-		line := strings.TrimSpace(c)
-		if line != "" {
-			lines = append(lines, line)
-		}
-	}
-	return lines
-}
-
-func convertComment(comment *ast.CommentGroup, indent string) string {
-	lines := convertCommentLines(comment)
-	sep := "\n" + indent + "// "
-	return fmt.Sprintf("// %s", strings.Join(lines, sep))
-}
-
-func convertInlinedComment(comment *ast.CommentGroup, indent string) string {
-	lines := convertCommentLines(comment)
-	sep := "\n" + indent
-	return fmt.Sprintf("/* %s */", strings.Join(lines, sep))
-}
-
 func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms map[string][]string, param genStructParam) (cppStruct string, places []place) {
 	buf := new(bytes.Buffer)
 	ctx := ctContext{inDeclaration: true, ensureHasTypeName: true, namespace: cv.namespace, keepDebug: true}
@@ -3864,56 +3738,6 @@ func convertGoToCppType(goType types.Type, namespace string, position token.Posi
 	default:
 		panic(fmt.Sprintf("Unmanaged subType in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), position))
 	}
-}
-
-func convertGoToCppTypes(goType []types.Type, namespace string, position token.Position) []string {
-	res := []string{}
-	for _, subType := range goType {
-		res = append(res, convertGoToCppType(subType, namespace, position))
-	}
-	return res
-}
-
-func getArrayLen(goType types.Type, position token.Position) int64 {
-	if goType == nil {
-		panic("getArrayLen. Cannot convert nil type.")
-	}
-
-	switch subType := goType.(type) {
-	case *types.Array:
-		return subType.Len()
-	}
-
-	Panicf("getArrayLen. Unmanaged type, type [%v], position[%v]", reflect.TypeOf(goType), position)
-	return 0
-}
-
-func extractParamDefs(srcParams ...any) ([]place, []any, []string) {
-	defs := []place{}
-	params := []any{}
-	typeNames := []string{}
-
-	for _, srcParam := range srcParams {
-		switch prm := srcParam.(type) {
-		case cppType:
-			defs = append(defs, prm.defs...)
-			params = append(params, prm.str)
-			typeNames = append(typeNames, prm.typenames...)
-		case cppExpr:
-			defs = append(defs, prm.defs...)
-			params = append(params, prm.str)
-			typeNames = append(typeNames, prm.typenames...)
-		default:
-			params = append(params, srcParam)
-		}
-	}
-	return defs, params, typeNames
-}
-
-// Sprintf formats according to a format specifier and returns the resulting string.
-func ExprPrintf(format string, srcParams ...any) cppExpr {
-	defs, params, typeNames := extractParamDefs(srcParams...)
-	return cppExpr{fmt.Sprintf(format, params...), "", defs, typeNames}
 }
 
 // Sprintf formats according to a format specifier and returns the resulting string.

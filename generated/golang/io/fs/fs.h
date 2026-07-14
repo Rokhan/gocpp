@@ -182,7 +182,7 @@ namespace golang::fs
             virtual bool vIsDir() = 0;
             // Type returns the type bits for the entry.
             // The type bits are a subset of the usual FileMode bits, those returned by the FileMode.Type method.
-            virtual fs::FileMode vType() = 0;
+            virtual golang::fs::FileMode vType() = 0;
             // Info returns the FileInfo for the file or subdirectory described by the entry.
             // The returned FileInfo may be from the time of the original directory read
             // or from the time of the call to Info. If the file has been removed or renamed
@@ -205,7 +205,7 @@ namespace golang::fs
 
             bool vIsDir() override;
 
-            fs::FileMode vType() override;
+            golang::fs::FileMode vType() override;
 
             std::tuple<struct FileInfo, struct gocpp::error> vInfo() override;
 
@@ -228,8 +228,8 @@ namespace golang::fs
         bool IsDir(const gocpp::PtrRecv<struct DirEntry, false>& self);
         bool IsDir(const gocpp::ObjRecv<struct DirEntry>& self);
 
-        fs::FileMode Type(const gocpp::PtrRecv<struct DirEntry, false>& self);
-        fs::FileMode Type(const gocpp::ObjRecv<struct DirEntry>& self);
+        golang::fs::FileMode Type(const gocpp::PtrRecv<struct DirEntry, false>& self);
+        golang::fs::FileMode Type(const gocpp::ObjRecv<struct DirEntry>& self);
 
         std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::PtrRecv<struct DirEntry, false>& self);
         std::tuple<struct FileInfo, struct gocpp::error> Info(const gocpp::ObjRecv<struct DirEntry>& self);
@@ -392,8 +392,8 @@ namespace golang::fs
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadDirFile, false>& self, gocpp::slice<unsigned char> param0);
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadDirFile>& self, gocpp::slice<unsigned char> param0);
 
-        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct ReadDirFile, false>& self);
-        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct ReadDirFile>& self);
+        std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct ReadDirFile, false>& self);
+        std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct ReadDirFile>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadDirFile& value);
@@ -435,7 +435,7 @@ namespace golang::fs
         {
             virtual gocpp::string vName() = 0; // base name of the file
             virtual int64_t vSize() = 0; // length in bytes for regular files; system-dependent for others
-            virtual fs::FileMode vMode() = 0; // file mode bits
+            virtual golang::fs::FileMode vMode() = 0; // file mode bits
             virtual mocklib::Date vModTime() = 0; // modification time
             virtual bool vIsDir() = 0; // abbreviation for Mode().IsDir()
             virtual go_any vSys() = 0; // underlying data source (can return nil)
@@ -454,7 +454,7 @@ namespace golang::fs
 
             int64_t vSize() override;
 
-            fs::FileMode vMode() override;
+            golang::fs::FileMode vMode() override;
 
             mocklib::Date vModTime() override;
 
@@ -481,8 +481,8 @@ namespace golang::fs
         int64_t Size(const gocpp::PtrRecv<struct FileInfo, false>& self);
         int64_t Size(const gocpp::ObjRecv<struct FileInfo>& self);
 
-        fs::FileMode Mode(const gocpp::PtrRecv<struct FileInfo, false>& self);
-        fs::FileMode Mode(const gocpp::ObjRecv<struct FileInfo>& self);
+        golang::fs::FileMode Mode(const gocpp::PtrRecv<struct FileInfo, false>& self);
+        golang::fs::FileMode Mode(const gocpp::ObjRecv<struct FileInfo>& self);
 
         mocklib::Date ModTime(const gocpp::PtrRecv<struct FileInfo, false>& self);
         mocklib::Date ModTime(const gocpp::ObjRecv<struct FileInfo>& self);
@@ -498,14 +498,14 @@ namespace golang::fs
 
     namespace rec
     {
-        gocpp::string String(golang::fs::FileMode m);
-        bool IsDir(golang::fs::FileMode m);
-        bool IsRegular(golang::fs::FileMode m);
-        fs::FileMode Perm(golang::fs::FileMode m);
-        fs::FileMode Type(golang::fs::FileMode m);
-        gocpp::string Error(golang::fs::PathError* e);
-        struct gocpp::error Unwrap(golang::fs::PathError* e);
-        bool Timeout(golang::fs::PathError* e);
+        gocpp::string String(FileMode m);
+        bool IsDir(FileMode m);
+        bool IsRegular(FileMode m);
+        golang::fs::FileMode Perm(FileMode m);
+        golang::fs::FileMode Type(FileMode m);
+        gocpp::string Error(PathError* e);
+        struct gocpp::error Unwrap(PathError* e);
+        bool Timeout(PathError* e);
     }
 }
 

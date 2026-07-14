@@ -167,17 +167,17 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct markBits rec::allocBitsForIndex(golang::runtime::mspan* s, uintptr_t allocBitIndex)
+    golang::runtime::markBits rec::allocBitsForIndex(mspan* s, uintptr_t allocBitIndex)
     {
         auto [bytep, mask] = rec::bitp(gocpp::recv(s->allocBits), allocBitIndex);
-        return markBits {bytep, mask, allocBitIndex};
+        return golang::runtime::markBits {bytep, mask, allocBitIndex};
     }
 
     // refillAllocCache takes 8 bytes s.allocBits starting at whichByte
     // and negates them so that ctz (count trailing zeros) instructions
     // can be used. It then places these 8 bytes into the cached 64 bit
     // s.allocCache.
-    void rec::refillAllocCache(golang::runtime::mspan* s, uint16_t whichByte)
+    void rec::refillAllocCache(mspan* s, uint16_t whichByte)
     {
         auto bytes = (gocpp::array_ptr<gocpp::array<uint8_t, 8>>)(gocpp::unsafe_pointer(rec::bytep(gocpp::recv(s->allocBits), uintptr_t(whichByte))));
         auto aCache = uint64_t(0);
@@ -196,7 +196,7 @@ namespace golang::runtime
     // or after s.freeindex.
     // There are hardware instructions that can be used to make this
     // faster if profiling warrants it.
-    uint16_t rec::nextFreeIndex(golang::runtime::mspan* s)
+    uint16_t rec::nextFreeIndex(mspan* s)
     {
         auto sfreeindex = s->freeindex;
         auto snelems = s->nelems;
@@ -258,7 +258,7 @@ namespace golang::runtime
     // The caller must ensure s.state is mSpanInUse, and there must have
     // been no preemption points since ensuring this (which could allow a
     // GC transition, which would allow the state to change).
-    bool rec::isFree(golang::runtime::mspan* s, uintptr_t index)
+    bool rec::isFree(mspan* s, uintptr_t index)
     {
         if(index < uintptr_t(s->freeIndexForScan))
         {
@@ -276,7 +276,7 @@ namespace golang::runtime
     // nosplit, because it is called by objIndex, which is nosplit
     //
     //go:nosplit
-    uintptr_t rec::divideByElemSize(golang::runtime::mspan* s, uintptr_t n)
+    uintptr_t rec::divideByElemSize(mspan* s, uintptr_t n)
     {
         auto doubleCheck = false;
 
@@ -294,37 +294,37 @@ namespace golang::runtime
     // nosplit, because it is called by other nosplit code like findObject
     //
     //go:nosplit
-    uintptr_t rec::objIndex(golang::runtime::mspan* s, uintptr_t p)
+    uintptr_t rec::objIndex(mspan* s, uintptr_t p)
     {
         return rec::divideByElemSize(gocpp::recv(s), p - rec::base(gocpp::recv(s)));
     }
 
-    struct markBits markBitsForAddr(uintptr_t p)
+    golang::runtime::markBits markBitsForAddr(uintptr_t p)
     {
         auto s = spanOf(p);
         auto objIndex = rec::objIndex(gocpp::recv(s), p);
         return rec::markBitsForIndex(gocpp::recv(s), objIndex);
     }
 
-    struct markBits rec::markBitsForIndex(golang::runtime::mspan* s, uintptr_t objIndex)
+    golang::runtime::markBits rec::markBitsForIndex(mspan* s, uintptr_t objIndex)
     {
         auto [bytep, mask] = rec::bitp(gocpp::recv(s->gcmarkBits), objIndex);
-        return markBits {bytep, mask, objIndex};
+        return golang::runtime::markBits {bytep, mask, objIndex};
     }
 
-    struct markBits rec::markBitsForBase(golang::runtime::mspan* s)
+    golang::runtime::markBits rec::markBitsForBase(mspan* s)
     {
-        return markBits {& s->gcmarkBits->x, uint8_t(1), 0};
+        return golang::runtime::markBits {& s->gcmarkBits->x, uint8_t(1), 0};
     }
 
     // isMarked reports whether mark bit m is set.
-    bool rec::isMarked(golang::runtime::markBits m)
+    bool rec::isMarked(markBits m)
     {
         return *m.bytep & m.mask != 0;
     }
 
     // setMarked sets the marked bit in the markbits, atomically.
-    void rec::setMarked(golang::runtime::markBits m)
+    void rec::setMarked(markBits m)
     {
         // Might be racing with other updates, so use atomic update always.
         // We used to be clever here and use a non-atomic update in certain
@@ -333,13 +333,13 @@ namespace golang::runtime
     }
 
     // setMarkedNonAtomic sets the marked bit in the markbits, non-atomically.
-    void rec::setMarkedNonAtomic(golang::runtime::markBits m)
+    void rec::setMarkedNonAtomic(markBits m)
     {
         *m.bytep |= m.mask;
     }
 
     // clearMarked clears the marked bit in the markbits, atomically.
-    void rec::clearMarked(golang::runtime::markBits m)
+    void rec::clearMarked(markBits m)
     {
         // Might be racing with other updates, so use atomic update always.
         // We used to be clever here and use a non-atomic update in certain
@@ -348,9 +348,9 @@ namespace golang::runtime
     }
 
     // markBitsForSpan returns the markBits for the span base address base.
-    struct markBits markBitsForSpan(uintptr_t base)
+    golang::runtime::markBits markBitsForSpan(uintptr_t base)
     {
-        struct markBits mbits;
+        golang::runtime::markBits mbits;
         mbits = markBitsForAddr(base);
         if(mbits.mask != 1)
         {
@@ -360,7 +360,7 @@ namespace golang::runtime
     }
 
     // advance advances the markBits to the next object in the span.
-    void rec::advance(golang::runtime::markBits* m)
+    void rec::advance(markBits* m)
     {
         if(m->mask == (1 << 7))
         {
@@ -377,7 +377,7 @@ namespace golang::runtime
     // clobberdeadPtr is a special value that is used by the compiler to
     // clobber dead stack slots, when -clobberdead flag is set.
     // badPointer throws bad pointer in heap panic.
-    void badPointer(struct mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff)
+    void badPointer(mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff)
     {
         // Typically this indicates an incorrect use
         // of unsafe or cgo to store a bad pointer in
@@ -426,10 +426,10 @@ namespace golang::runtime
     // Since p is a uintptr, it would not be adjusted if the stack were to move.
     //
     //go:nosplit
-    std::tuple<uintptr_t, struct mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff)
+    std::tuple<uintptr_t, golang::runtime::mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff)
     {
         uintptr_t base;
-        struct mspan* s;
+        golang::runtime::mspan* s;
         uintptr_t objIndex;
         s = spanOf(p);
         // If s is nil, the virtual address has never been part of the heap.
@@ -545,7 +545,7 @@ namespace golang::runtime
     // Callers must perform cgo checks if goexperiment.CgoCheck2.
     //
     //go:nosplit
-    void typeBitsBulkBarrier(golang::runtime::_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size)
+    void typeBitsBulkBarrier(_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size)
     {
         if(typ == nullptr)
         {
@@ -592,7 +592,7 @@ namespace golang::runtime
 
     // countAlloc returns the number of objects allocated in span s by
     // scanning the mark bitmap.
-    int rec::countAlloc(golang::runtime::mspan* s)
+    int rec::countAlloc(mspan* s)
     {
         auto count = 0;
         auto bytes = divRoundUp(uintptr_t(s->nelems), 8);
@@ -672,7 +672,7 @@ namespace golang::runtime
     // progToPointerMask returns the 1-bit pointer mask output by the GC program prog.
     // size the size of the region described by prog, in bytes.
     // The resulting bitvector will have no more than size/goarch.PtrSize bits.
-    struct bitvector progToPointerMask(unsigned char* prog, uintptr_t size)
+    golang::runtime::bitvector progToPointerMask(unsigned char* prog, uintptr_t size)
     {
         auto n = (size / goarch::PtrSize + 7) / 8;
         auto x = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(persistentalloc(n + 1, 1, & memstats.buckhash_sys)).make_slice(0, n + 1);
@@ -683,7 +683,7 @@ namespace golang::runtime
         {
             go_throw("progToPointerMask: overflow"_s);
         }
-        return bitvector {int32_t(n), & x[0]};
+        return golang::runtime::bitvector {int32_t(n), & x[0]};
     }
 
     // runGCProg returns the number of 1-bit entries written to memory.
@@ -924,7 +924,7 @@ namespace golang::runtime
     // pointer bitmask specified by the program prog.
     // The bitmask starts at s.startAddr.
     // The result must be deallocated with dematerializeGCProg.
-    struct mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog)
+    golang::runtime::mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog)
     {
         // Each word of ptrdata needs one bit in the bitmap.
         auto bitmapBytes = divRoundUp(ptrdata, 8 * goarch::PtrSize);
@@ -935,7 +935,7 @@ namespace golang::runtime
         return s;
     }
 
-    void dematerializeGCProg(struct mspan* s)
+    void dematerializeGCProg(mspan* s)
     {
         rec::freeManual(gocpp::recv(mheap_), s, spanAllocPtrScalarBits);
     }

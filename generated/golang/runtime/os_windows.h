@@ -12,65 +12,65 @@
 
 namespace golang::runtime
 {
-    extern runtime::stdFunction _AddVectoredContinueHandler;
-    extern runtime::stdFunction _AddVectoredExceptionHandler;
-    extern runtime::stdFunction _CloseHandle;
-    extern runtime::stdFunction _CreateEventA;
-    extern runtime::stdFunction _CreateFileA;
-    extern runtime::stdFunction _CreateIoCompletionPort;
-    extern runtime::stdFunction _CreateThread;
-    extern runtime::stdFunction _CreateWaitableTimerA;
-    extern runtime::stdFunction _CreateWaitableTimerExW;
-    extern runtime::stdFunction _DuplicateHandle;
-    extern runtime::stdFunction _ExitProcess;
-    extern runtime::stdFunction _FreeEnvironmentStringsW;
-    extern runtime::stdFunction _GetConsoleMode;
-    extern runtime::stdFunction _GetCurrentThreadId;
-    extern runtime::stdFunction _GetEnvironmentStringsW;
-    extern runtime::stdFunction _GetErrorMode;
-    extern runtime::stdFunction _GetProcAddress;
-    extern runtime::stdFunction _GetProcessAffinityMask;
-    extern runtime::stdFunction _GetQueuedCompletionStatusEx;
-    extern runtime::stdFunction _GetStdHandle;
-    extern runtime::stdFunction _GetSystemDirectoryA;
-    extern runtime::stdFunction _GetSystemInfo;
-    extern runtime::stdFunction _GetThreadContext;
-    extern runtime::stdFunction _SetThreadContext;
-    extern runtime::stdFunction _LoadLibraryExW;
-    extern runtime::stdFunction _LoadLibraryW;
-    extern runtime::stdFunction _PostQueuedCompletionStatus;
-    extern runtime::stdFunction _QueryPerformanceCounter;
-    extern runtime::stdFunction _RaiseFailFastException;
-    extern runtime::stdFunction _ResumeThread;
-    extern runtime::stdFunction _RtlLookupFunctionEntry;
-    extern runtime::stdFunction _RtlVirtualUnwind;
-    extern runtime::stdFunction _SetConsoleCtrlHandler;
-    extern runtime::stdFunction _SetErrorMode;
-    extern runtime::stdFunction _SetEvent;
-    extern runtime::stdFunction _SetProcessPriorityBoost;
-    extern runtime::stdFunction _SetThreadPriority;
-    extern runtime::stdFunction _SetUnhandledExceptionFilter;
-    extern runtime::stdFunction _SetWaitableTimer;
-    extern runtime::stdFunction _SuspendThread;
-    extern runtime::stdFunction _SwitchToThread;
-    extern runtime::stdFunction _TlsAlloc;
-    extern runtime::stdFunction _VirtualAlloc;
-    extern runtime::stdFunction _VirtualFree;
-    extern runtime::stdFunction _VirtualQuery;
-    extern runtime::stdFunction _WaitForSingleObject;
-    extern runtime::stdFunction _WaitForMultipleObjects;
-    extern runtime::stdFunction _WerGetFlags;
-    extern runtime::stdFunction _WerSetFlags;
-    extern runtime::stdFunction _WriteConsoleW;
-    extern runtime::stdFunction _WriteFile;
-    extern runtime::stdFunction _;
-    extern runtime::stdFunction _ProcessPrng;
-    extern runtime::stdFunction _RtlGetCurrentPeb;
-    extern runtime::stdFunction _RtlGetNtVersionNumbers;
-    extern runtime::stdFunction _timeBeginPeriod;
-    extern runtime::stdFunction _timeEndPeriod;
-    extern runtime::stdFunction _WSAGetOverlappedResult;
-    extern runtime::stdFunction _;
+    extern golang::runtime::stdFunction _AddVectoredContinueHandler;
+    extern golang::runtime::stdFunction _AddVectoredExceptionHandler;
+    extern golang::runtime::stdFunction _CloseHandle;
+    extern golang::runtime::stdFunction _CreateEventA;
+    extern golang::runtime::stdFunction _CreateFileA;
+    extern golang::runtime::stdFunction _CreateIoCompletionPort;
+    extern golang::runtime::stdFunction _CreateThread;
+    extern golang::runtime::stdFunction _CreateWaitableTimerA;
+    extern golang::runtime::stdFunction _CreateWaitableTimerExW;
+    extern golang::runtime::stdFunction _DuplicateHandle;
+    extern golang::runtime::stdFunction _ExitProcess;
+    extern golang::runtime::stdFunction _FreeEnvironmentStringsW;
+    extern golang::runtime::stdFunction _GetConsoleMode;
+    extern golang::runtime::stdFunction _GetCurrentThreadId;
+    extern golang::runtime::stdFunction _GetEnvironmentStringsW;
+    extern golang::runtime::stdFunction _GetErrorMode;
+    extern golang::runtime::stdFunction _GetProcAddress;
+    extern golang::runtime::stdFunction _GetProcessAffinityMask;
+    extern golang::runtime::stdFunction _GetQueuedCompletionStatusEx;
+    extern golang::runtime::stdFunction _GetStdHandle;
+    extern golang::runtime::stdFunction _GetSystemDirectoryA;
+    extern golang::runtime::stdFunction _GetSystemInfo;
+    extern golang::runtime::stdFunction _GetThreadContext;
+    extern golang::runtime::stdFunction _SetThreadContext;
+    extern golang::runtime::stdFunction _LoadLibraryExW;
+    extern golang::runtime::stdFunction _LoadLibraryW;
+    extern golang::runtime::stdFunction _PostQueuedCompletionStatus;
+    extern golang::runtime::stdFunction _QueryPerformanceCounter;
+    extern golang::runtime::stdFunction _RaiseFailFastException;
+    extern golang::runtime::stdFunction _ResumeThread;
+    extern golang::runtime::stdFunction _RtlLookupFunctionEntry;
+    extern golang::runtime::stdFunction _RtlVirtualUnwind;
+    extern golang::runtime::stdFunction _SetConsoleCtrlHandler;
+    extern golang::runtime::stdFunction _SetErrorMode;
+    extern golang::runtime::stdFunction _SetEvent;
+    extern golang::runtime::stdFunction _SetProcessPriorityBoost;
+    extern golang::runtime::stdFunction _SetThreadPriority;
+    extern golang::runtime::stdFunction _SetUnhandledExceptionFilter;
+    extern golang::runtime::stdFunction _SetWaitableTimer;
+    extern golang::runtime::stdFunction _SuspendThread;
+    extern golang::runtime::stdFunction _SwitchToThread;
+    extern golang::runtime::stdFunction _TlsAlloc;
+    extern golang::runtime::stdFunction _VirtualAlloc;
+    extern golang::runtime::stdFunction _VirtualFree;
+    extern golang::runtime::stdFunction _VirtualQuery;
+    extern golang::runtime::stdFunction _WaitForSingleObject;
+    extern golang::runtime::stdFunction _WaitForMultipleObjects;
+    extern golang::runtime::stdFunction _WerGetFlags;
+    extern golang::runtime::stdFunction _WerSetFlags;
+    extern golang::runtime::stdFunction _WriteConsoleW;
+    extern golang::runtime::stdFunction _WriteFile;
+    extern golang::runtime::stdFunction _;
+    extern golang::runtime::stdFunction _ProcessPrng;
+    extern golang::runtime::stdFunction _RtlGetCurrentPeb;
+    extern golang::runtime::stdFunction _RtlGetNtVersionNumbers;
+    extern golang::runtime::stdFunction _timeBeginPeriod;
+    extern golang::runtime::stdFunction _timeEndPeriod;
+    extern golang::runtime::stdFunction _WSAGetOverlappedResult;
+    extern golang::runtime::stdFunction _;
     extern gocpp::array<uint16_t, 21> bcryptprimitivesdll;
     extern gocpp::array<uint16_t, 10> ntdlldll;
     extern gocpp::array<uint16_t, 13> powrprofdll;
@@ -97,7 +97,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct sigset& value);
     void asmstdcall(gocpp::unsafe_pointer fn);
     extern gocpp::unsafe_pointer asmstdcallAddr;
-    runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
+    golang::runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name);
     extern gocpp::array<unsigned char, go__MAX_PATH + 1> sysDirectory;
     extern uintptr_t sysDirectoryLen;
     void initSysDirectory();
@@ -134,17 +134,17 @@ namespace golang::runtime
     void minit();
     void unminit();
     void asmstdcall_trampoline(gocpp::unsafe_pointer args);
-    uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args);
-    uintptr_t stdcall(golang::runtime::stdFunction fn);
-    uintptr_t stdcall0(golang::runtime::stdFunction fn);
-    uintptr_t stdcall1(golang::runtime::stdFunction fn, uintptr_t a0);
-    uintptr_t stdcall2(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1);
-    uintptr_t stdcall3(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2);
-    uintptr_t stdcall4(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3);
-    uintptr_t stdcall5(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4);
-    uintptr_t stdcall6(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5);
-    uintptr_t stdcall7(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
-    uintptr_t stdcall8(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7);
+    uintptr_t stdcall_no_g(stdFunction fn, int n, uintptr_t args);
+    uintptr_t stdcall(stdFunction fn);
+    uintptr_t stdcall0(stdFunction fn);
+    uintptr_t stdcall1(stdFunction fn, uintptr_t a0);
+    uintptr_t stdcall2(stdFunction fn, uintptr_t a0, uintptr_t a1);
+    uintptr_t stdcall3(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2);
+    uintptr_t stdcall4(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3);
+    uintptr_t stdcall5(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4);
+    uintptr_t stdcall6(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5);
+    uintptr_t stdcall7(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
+    uintptr_t stdcall8(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7);
     void osyield_no_g();
     void osyield();
     void usleep_no_g(uint32_t us);
@@ -155,15 +155,15 @@ namespace golang::runtime
     void profileLoop();
     void setProcessCPUProfiler(int32_t hz);
     void setThreadCPUProfiler(int32_t hz);
-    void sigsave(struct sigset* p);
-    void msigrestore(struct sigset sigmask);
+    void sigsave(sigset* p);
+    void msigrestore(sigset sigmask);
 }
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
-    void tstart_stdcall(struct m* newm);
+    void tstart_stdcall(m* newm);
     struct mOS
     {
         mutex threadLock{}; // protects "thread" and prevents closing
@@ -203,20 +203,20 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mOS& value);
-    extern mutex utf16ConsoleBackLock;
-    void semawakeup(struct m* mp);
-    void semacreate(struct m* mp);
-    void newosproc(struct m* mp);
-    void newosproc0(struct m* mp, gocpp::unsafe_pointer stk);
+    extern golang::runtime::mutex utf16ConsoleBackLock;
+    void semawakeup(m* mp);
+    void semacreate(m* mp);
+    void newosproc(m* mp);
+    void newosproc0(m* mp, gocpp::unsafe_pointer stk);
     void exitThread(atomic::Uint32* wait);
-    void mpreinit(struct m* mp);
-    void mdestroy(struct m* mp);
-    void profilem(struct m* mp, uintptr_t thread);
-    struct g* gFromSP(struct m* mp, uintptr_t sp);
-    extern mutex suspendLock;
-    void preemptM(struct m* mp);
-    void osPreemptExtEnter(struct m* mp);
-    void osPreemptExtExit(struct m* mp);
+    void mpreinit(m* mp);
+    void mdestroy(m* mp);
+    void profilem(m* mp, uintptr_t thread);
+    golang::runtime::g* gFromSP(m* mp, uintptr_t sp);
+    extern golang::runtime::mutex suspendLock;
+    void preemptM(m* mp);
+    void osPreemptExtEnter(m* mp);
+    void osPreemptExtExit(m* mp);
 
     namespace rec
     {

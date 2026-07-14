@@ -13,6 +13,6 @@ namespace golang::flate
     const long maxBitsLimit = 16;
     struct GoTag_byLiteral;
     struct GoTag_byFreq;
-    using byLiteral = gocpp::defined<gocpp::slice<literalNode>, GoTag_byLiteral>;
-    using byFreq = gocpp::defined<gocpp::slice<literalNode>, GoTag_byFreq>;
+    using byLiteral = gocpp::defined<gocpp::slice<golang::flate::literalNode>, GoTag_byLiteral>;
+    using byFreq = gocpp::defined<gocpp::slice<golang::flate::literalNode>, GoTag_byFreq>;
 }

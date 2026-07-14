@@ -26,8 +26,8 @@ namespace golang::unicode
 
 namespace golang::unicode
 {
-    extern gocpp::slice<RangeTable*> GraphicRanges;
-    extern gocpp::slice<RangeTable*> PrintRanges;
+    extern gocpp::slice<golang::unicode::RangeTable*> GraphicRanges;
+    extern gocpp::slice<golang::unicode::RangeTable*> PrintRanges;
     bool IsOneOf(gocpp::slice<RangeTable*> ranges, gocpp::rune r);
     bool In(gocpp::rune r, gocpp::slice<RangeTable*> ranges);
     

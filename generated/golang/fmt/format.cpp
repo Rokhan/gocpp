@@ -121,7 +121,7 @@ namespace golang::fmt
 
     void rec::clearflags(golang::fmt::fmt* f)
     {
-        f->fmtFlags = fmtFlags {};
+        f->fmtFlags = golang::fmt::fmtFlags {};
     }
 
     void rec::init(golang::fmt::fmt* f, buffer* buf)

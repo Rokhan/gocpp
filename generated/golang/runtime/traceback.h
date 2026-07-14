@@ -79,8 +79,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct cgoSymbolizerArg& value);
     void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf);
-    bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, struct cgoSymbolizerArg* arg);
-    void callCgoSymbolizer(struct cgoSymbolizerArg* arg);
+    bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, cgoSymbolizerArg* arg);
+    void callCgoSymbolizer(cgoSymbolizerArg* arg);
 }
 #include "golang/internal/abi/symtab.h"
 #include "golang/runtime/cgocall.h"
@@ -107,7 +107,7 @@ namespace golang::runtime
         abi::FuncID calleeFuncID{};
         // flags are the flags to this unwind. Some of these are updated as we
         // unwind (see the flags documentation).
-        golang::runtime::unwindFlags flags{};
+        unwindFlags flags{};
 
         using isGoStruct = void;
 
@@ -121,26 +121,26 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct unwinder& value);
-    void printArgs(struct funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc);
-    void printcreatedby(struct g* gp);
-    void printcreatedby1(struct funcInfo f, uintptr_t pc, uint64_t goid);
-    void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
-    void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp);
-    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, struct g* gp, golang::runtime::unwindFlags flags);
-    void printAncestorTraceback(struct ancestorInfo ancestor);
-    void printAncestorTracebackFuncInfo(struct funcInfo f, uintptr_t pc);
-    int gcallers(struct g* gp, int skip, gocpp::slice<uintptr_t> pcbuf);
-    bool showframe(struct srcFunc sf, struct g* gp, bool firstFrame, abi::FuncID calleeID);
-    bool showfuncinfo(struct srcFunc sf, bool firstFrame, abi::FuncID calleeID);
+    void printArgs(golang::runtime::funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc);
+    void printcreatedby(g* gp);
+    void printcreatedby1(golang::runtime::funcInfo f, uintptr_t pc, uint64_t goid);
+    void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp);
+    void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp);
+    void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp, unwindFlags flags);
+    void printAncestorTraceback(ancestorInfo ancestor);
+    void printAncestorTracebackFuncInfo(golang::runtime::funcInfo f, uintptr_t pc);
+    int gcallers(g* gp, int skip, gocpp::slice<uintptr_t> pcbuf);
+    bool showframe(golang::runtime::srcFunc sf, g* gp, bool firstFrame, abi::FuncID calleeID);
+    bool showfuncinfo(golang::runtime::srcFunc sf, bool firstFrame, abi::FuncID calleeID);
     bool elideWrapperCalling(abi::FuncID id);
     extern gocpp::array<gocpp::string, 10> gStatusStrings;
-    void goroutineheader(struct g* gp);
-    void tracebackothers(struct g* me);
-    void tracebackHexdump(struct stack stk, struct stkframe* frame, uintptr_t bad);
-    bool isSystemGoroutine(struct g* gp, bool fixed);
-    void printCgoTraceback(gocpp::array_ptr<cgoCallers> callers);
-    int tracebackPCs(struct unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
-    std::tuple<int, int> traceback2(struct unwinder* u, bool showRuntime, int skip, int max);
+    void goroutineheader(g* gp);
+    void tracebackothers(g* me);
+    void tracebackHexdump(golang::runtime::stack stk, stkframe* frame, uintptr_t bad);
+    bool isSystemGoroutine(g* gp, bool fixed);
+    void printCgoTraceback(gocpp::array_ptr<golang::runtime::cgoCallers> callers);
+    int tracebackPCs(unwinder* u, int skip, gocpp::slice<uintptr_t> pcBuf);
+    std::tuple<int, int> traceback2(unwinder* u, bool showRuntime, int skip, int max);
 }
 
 #include "golang/runtime/runtime2.h"
@@ -150,14 +150,14 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(golang::runtime::unwinder* u, struct g* gp, golang::runtime::unwindFlags flags);
-        void initAt(golang::runtime::unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, struct g* gp, golang::runtime::unwindFlags flags);
-        bool valid(golang::runtime::unwinder* u);
-        void resolveInternal(golang::runtime::unwinder* u, bool innermost, bool isSyscall);
-        void next(golang::runtime::unwinder* u);
-        void finishInternal(golang::runtime::unwinder* u);
-        uintptr_t symPC(golang::runtime::unwinder* u);
-        int cgoCallers(golang::runtime::unwinder* u, gocpp::slice<uintptr_t> pcBuf);
+        void init(unwinder* u, g* gp, unwindFlags flags);
+        void initAt(unwinder* u, uintptr_t pc0, uintptr_t sp0, uintptr_t lr0, g* gp, unwindFlags flags);
+        bool valid(unwinder* u);
+        void resolveInternal(unwinder* u, bool innermost, bool isSyscall);
+        void next(unwinder* u);
+        void finishInternal(unwinder* u);
+        uintptr_t symPC(unwinder* u);
+        int cgoCallers(unwinder* u, gocpp::slice<uintptr_t> pcBuf);
     }
 }
 

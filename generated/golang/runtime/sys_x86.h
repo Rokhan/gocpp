@@ -13,7 +13,7 @@
 
 namespace golang::runtime
 {
-    void gostartcall(struct gobuf* buf, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer ctxt);
+    void gostartcall(gobuf* buf, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer ctxt);
 
     namespace rec
     {

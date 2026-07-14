@@ -14,12 +14,12 @@
 
 namespace golang::runtime
 {
-    gocpp::unsafe_pointer mapaccess1_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string ky);
-    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string ky);
-    gocpp::unsafe_pointer mapassign_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string s);
-    void mapdelete_faststr(golang::runtime::maptype* t, struct hmap* h, gocpp::string ky);
-    void growWork_faststr(golang::runtime::maptype* t, struct hmap* h, uintptr_t bucket);
-    void evacuate_faststr(golang::runtime::maptype* t, struct hmap* h, uintptr_t oldbucket);
+    gocpp::unsafe_pointer mapaccess1_faststr(maptype* t, hmap* h, gocpp::string ky);
+    std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_faststr(maptype* t, hmap* h, gocpp::string ky);
+    gocpp::unsafe_pointer mapassign_faststr(maptype* t, hmap* h, gocpp::string s);
+    void mapdelete_faststr(maptype* t, hmap* h, gocpp::string ky);
+    void growWork_faststr(maptype* t, hmap* h, uintptr_t bucket);
+    void evacuate_faststr(maptype* t, hmap* h, uintptr_t oldbucket);
 
     namespace rec
     {

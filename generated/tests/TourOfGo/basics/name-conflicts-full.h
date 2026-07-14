@@ -34,7 +34,7 @@ namespace golang::main
         double Pi(golang::main::toto t);
         double Pi2(golang::main::toto t);
         double toto(golang::main::toto t);
-        struct toto create(golang::main::toto t);
+        golang::main::toto create(golang::main::toto t);
     }
 }
 

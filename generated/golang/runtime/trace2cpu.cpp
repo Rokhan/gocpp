@@ -354,7 +354,7 @@ namespace golang::runtime
     // traceCPUSample writes a CPU profile sample stack to the execution tracer's
     // profiling buffer. It is called from a signal handler, so is limited in what
     // it can do. mp must be the thread that is currently stopped in a signal.
-    void traceCPUSample(struct g* gp, struct m* mp, struct p* pp, gocpp::slice<uintptr_t> stk)
+    void traceCPUSample(g* gp, m* mp, golang::runtime::p* pp, gocpp::slice<uintptr_t> stk)
     {
         if(! traceEnabled())
         {

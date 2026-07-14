@@ -88,7 +88,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    gocpp::slice<compressionLevel> levels = gocpp::slice<compressionLevel> {
+    gocpp::slice<golang::flate::compressionLevel> levels = gocpp::slice<golang::flate::compressionLevel> {
         {0, 0, 0, 0, 0, /* NoCompression. */ 0},
         {1, 0, 0, 0, 0, /* BestSpeed uses a custom algorithm; see deflatefast.go. */ 0},
         // For levels 2-3 we don't bother trying with lazy matches.
@@ -195,7 +195,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    int rec::fillDeflate(golang::flate::compressor* d, gocpp::slice<unsigned char> b)
+    int rec::fillDeflate(compressor* d, gocpp::slice<unsigned char> b)
     {
         if(d->index >= 2 * windowSize - (minMatchLength + maxMatchLength))
         {
@@ -249,7 +249,7 @@ namespace golang::flate
         return n;
     }
 
-    struct gocpp::error rec::writeBlock(golang::flate::compressor* d, gocpp::slice<golang::flate::token> tokens, int index)
+    struct gocpp::error rec::writeBlock(compressor* d, gocpp::slice<golang::flate::token> tokens, int index)
     {
         if(index > 0)
         {
@@ -269,7 +269,7 @@ namespace golang::flate
     // dictionary and calculate all hashes.
     // This is much faster than doing a full encode.
     // Should only be used after a reset.
-    void rec::fillWindow(golang::flate::compressor* d, gocpp::slice<unsigned char> b)
+    void rec::fillWindow(compressor* d, gocpp::slice<unsigned char> b)
     {
         // Do not fill window if we are in store-only mode.
         if(d->compressionLevel.level < 2)
@@ -327,7 +327,7 @@ namespace golang::flate
 
     // Try to find a match starting at index whose length is greater than prevSize.
     // We only look at chainCount possibilities before giving up.
-    std::tuple<int, int, bool> rec::findMatch(golang::flate::compressor* d, int pos, int prevHead, int prevLength, int lookahead)
+    std::tuple<int, int, bool> rec::findMatch(compressor* d, int pos, int prevHead, int prevLength, int lookahead)
     {
         int length;
         int offset;
@@ -392,7 +392,7 @@ namespace golang::flate
         return {length, offset, ok};
     }
 
-    struct gocpp::error rec::writeStoredBlock(golang::flate::compressor* d, gocpp::slice<unsigned char> buf)
+    struct gocpp::error rec::writeStoredBlock(compressor* d, gocpp::slice<unsigned char> buf)
     {
         if(rec::writeStoredHeader(gocpp::recv(d->w), len(buf), false); d->w->err != nullptr)
         {
@@ -448,7 +448,7 @@ namespace golang::flate
     // encSpeed will compress and store the currently added data,
     // if enough has been accumulated or we at the end of the stream.
     // Any error that occurred will be in d.err
-    void rec::encSpeed(golang::flate::compressor* d)
+    void rec::encSpeed(compressor* d)
     {
         // We only compress if we have maxStoreBlockSize.
         if(d->windowEnd < maxStoreBlockSize)
@@ -501,11 +501,11 @@ namespace golang::flate
         d->windowEnd = 0;
     }
 
-    void rec::initDeflate(golang::flate::compressor* d)
+    void rec::initDeflate(compressor* d)
     {
         d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 2 * windowSize);
         d->hashOffset = 1;
-        d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<flate::token>>(), 0, maxFlateBlockTokens + 1);
+        d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<golang::flate::token>>(), 0, maxFlateBlockTokens + 1);
         d->length = minMatchLength - 1;
         d->offset = 0;
         d->byteAvailable = false;
@@ -514,7 +514,7 @@ namespace golang::flate
         d->bulkHasher = bulkHash4;
     }
 
-    void rec::deflate(golang::flate::compressor* d)
+    void rec::deflate(compressor* d)
     {
         if(d->windowEnd - d->index < minMatchLength + maxMatchLength && ! d->sync)
         {
@@ -687,14 +687,14 @@ namespace golang::flate
         }
     }
 
-    int rec::fillStore(golang::flate::compressor* d, gocpp::slice<unsigned char> b)
+    int rec::fillStore(compressor* d, gocpp::slice<unsigned char> b)
     {
         auto n = copy(d->window.make_slice(d->windowEnd), b);
         d->windowEnd += n;
         return n;
     }
 
-    void rec::store(golang::flate::compressor* d)
+    void rec::store(compressor* d)
     {
         if(d->windowEnd > 0 && (d->windowEnd == maxStoreBlockSize || d->sync))
         {
@@ -706,7 +706,7 @@ namespace golang::flate
     // storeHuff compresses and stores the currently added data
     // when the d.window is full or we are at the end of the stream.
     // Any error that occurred will be in d.err
-    void rec::storeHuff(golang::flate::compressor* d)
+    void rec::storeHuff(compressor* d)
     {
         if(d->windowEnd < len(d->window) && ! d->sync || d->windowEnd == 0)
         {
@@ -717,7 +717,7 @@ namespace golang::flate
         d->windowEnd = 0;
     }
 
-    std::tuple<int, struct gocpp::error> rec::write(golang::flate::compressor* d, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
@@ -738,7 +738,7 @@ namespace golang::flate
         return {n, nullptr};
     }
 
-    struct gocpp::error rec::syncFlush(golang::flate::compressor* d)
+    struct gocpp::error rec::syncFlush(compressor* d)
     {
         if(d->err != nullptr)
         {
@@ -756,7 +756,7 @@ namespace golang::flate
         return d->err;
     }
 
-    struct gocpp::error rec::init(golang::flate::compressor* d, io::Writer w, int level)
+    struct gocpp::error rec::init(compressor* d, io::Writer w, int level)
     {
         struct gocpp::error err;
         d->w = newHuffmanBitWriter(w);
@@ -787,7 +787,7 @@ namespace golang::flate
                     d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
                     d->step = [&](auto x){ return rec::encSpeed(x); };
                     d->bestSpeed = newDeflateFast();
-                    d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<flate::token>>(), maxStoreBlockSize);
+                    d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<golang::flate::token>>(), maxStoreBlockSize);
                     break;
                 case 3:
                     level = 6;
@@ -805,7 +805,7 @@ namespace golang::flate
         return nullptr;
     }
 
-    void rec::reset(golang::flate::compressor* d, io::Writer w)
+    void rec::reset(compressor* d, io::Writer w)
     {
         rec::reset(gocpp::recv(d->w), w);
         d->sync = false;
@@ -848,7 +848,7 @@ namespace golang::flate
         }
     }
 
-    struct gocpp::error rec::close(golang::flate::compressor* d)
+    struct gocpp::error rec::close(compressor* d)
     {
         if(d->err == errWriterClosed)
         {
@@ -889,9 +889,9 @@ namespace golang::flate
     //
     // If level is in the range [-2, 9] then the error returned will be nil.
     // Otherwise the error returned will be non-nil.
-    std::tuple<struct Writer*, struct gocpp::error> NewWriter(io::Writer w, int level)
+    std::tuple<golang::flate::Writer*, struct gocpp::error> NewWriter(io::Writer w, int level)
     {
-        Writer dw = {};
+        golang::flate::Writer dw = {};
         if(auto err = rec::init(gocpp::recv(dw.d), w, level); err != nullptr)
         {
             return {nullptr, err};
@@ -905,9 +905,9 @@ namespace golang::flate
     // any compressed output. The compressed data written to w
     // can only be decompressed by a [Reader] initialized with the
     // same dictionary.
-    std::tuple<struct Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
+    std::tuple<golang::flate::Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
     {
-        auto dw = new dictWriter {w};
+        auto dw = new golang::flate::dictWriter {w};
         auto [zw, err] = NewWriter(dw, level);
         if(err != nullptr)
         {
@@ -948,7 +948,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(golang::flate::dictWriter* w, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::Write(dictWriter* w, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
@@ -992,7 +992,7 @@ namespace golang::flate
 
     // Write writes data to w, which will eventually write the
     // compressed form of data to its underlying writer.
-    std::tuple<int, struct gocpp::error> rec::Write(golang::flate::Writer* w, gocpp::slice<unsigned char> data)
+    std::tuple<int, struct gocpp::error> rec::Write(Writer* w, gocpp::slice<unsigned char> data)
     {
         int n;
         struct gocpp::error err;
@@ -1008,7 +1008,7 @@ namespace golang::flate
     // If the underlying writer returns an error, Flush returns that error.
     //
     // In the terminology of the zlib library, Flush is equivalent to Z_SYNC_FLUSH.
-    struct gocpp::error rec::Flush(golang::flate::Writer* w)
+    struct gocpp::error rec::Flush(Writer* w)
     {
         // For more about flushing:
         // https://www.bolet.org/~pornin/deflate-flush.html
@@ -1016,7 +1016,7 @@ namespace golang::flate
     }
 
     // Close flushes and closes the writer.
-    struct gocpp::error rec::Close(golang::flate::Writer* w)
+    struct gocpp::error rec::Close(Writer* w)
     {
         return rec::close(gocpp::recv(w->d));
     }
@@ -1024,9 +1024,9 @@ namespace golang::flate
     // Reset discards the writer's state and makes it equivalent to
     // the result of [NewWriter] or [NewWriterDict] called with dst
     // and w's level and dictionary.
-    void rec::Reset(golang::flate::Writer* w, io::Writer dst)
+    void rec::Reset(Writer* w, io::Writer dst)
     {
-        if(auto [dw, ok] = gocpp::getValue<dictWriter*>(w->d.w->writer); ok)
+        if(auto [dw, ok] = gocpp::getValue<golang::flate::dictWriter*>(w->d.w->writer); ok)
         {
             // w was created with NewWriterDict
             dw->w = dst;

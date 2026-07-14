@@ -104,7 +104,7 @@ namespace golang::runtime
         // Instead, we keep track of whether x should be interpreted as signed or unsigned.
         // y is known to be nonnegative and to fit in an int.
         bool go_signed{};
-        golang::runtime::boundsErrorCode code{};
+        boundsErrorCode code{};
 
         using isGoStruct = void;
 
@@ -189,9 +189,9 @@ namespace golang::runtime
 {
     struct TypeAssertionError
     {
-        golang::runtime::_type* _interface{};
-        golang::runtime::_type* concrete{};
-        golang::runtime::_type* asserted{};
+        _type* _interface{};
+        _type* concrete{};
+        _type* asserted{};
         gocpp::string missingMethod{}; // one method needed by Interface, missing from Concrete
 
         using isGoStruct = void;
@@ -209,17 +209,17 @@ namespace golang::runtime
 
     namespace rec
     {
-        void RuntimeError(golang::runtime::TypeAssertionError*);
-        gocpp::string Error(golang::runtime::TypeAssertionError* e);
+        void RuntimeError(TypeAssertionError*);
+        gocpp::string Error(TypeAssertionError* e);
         void RuntimeError(golang::runtime::errorString e);
         gocpp::string Error(golang::runtime::errorString e);
-        void RuntimeError(golang::runtime::errorAddressString e);
-        gocpp::string Error(golang::runtime::errorAddressString e);
-        uintptr_t Addr(golang::runtime::errorAddressString e);
-        void RuntimeError(golang::runtime::plainError e);
-        gocpp::string Error(golang::runtime::plainError e);
-        void RuntimeError(golang::runtime::boundsError e);
-        gocpp::string Error(golang::runtime::boundsError e);
+        void RuntimeError(errorAddressString e);
+        gocpp::string Error(errorAddressString e);
+        uintptr_t Addr(errorAddressString e);
+        void RuntimeError(plainError e);
+        gocpp::string Error(plainError e);
+        void RuntimeError(boundsError e);
+        gocpp::string Error(boundsError e);
     }
 }
 

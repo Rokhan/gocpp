@@ -80,9 +80,9 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tokenprimarygroup& value);
-    std::tuple<syscall::Token, struct gocpp::error> OpenCurrentProcessToken();
-    std::tuple<struct SID*, struct gocpp::error> StringToSid(gocpp::string s);
-    std::tuple<struct SID*, gocpp::string, uint32_t, struct gocpp::error> LookupSID(gocpp::string system, gocpp::string account);
+    std::tuple<golang::syscall::Token, struct gocpp::error> OpenCurrentProcessToken();
+    std::tuple<golang::syscall::SID*, struct gocpp::error> StringToSid(gocpp::string s);
+    std::tuple<golang::syscall::SID*, gocpp::string, uint32_t, struct gocpp::error> LookupSID(gocpp::string system, gocpp::string account);
     struct Tokenuser
     {
         SIDAndAttributes User{};
@@ -102,14 +102,14 @@ namespace golang::syscall
 
     namespace rec
     {
-        std::tuple<gocpp::string, struct gocpp::error> String(golang::syscall::SID* sid);
-        int Len(golang::syscall::SID* sid);
-        std::tuple<struct SID*, struct gocpp::error> Copy(golang::syscall::SID* sid);
-        std::tuple<gocpp::string, gocpp::string, uint32_t, struct gocpp::error> LookupAccount(golang::syscall::SID* sid, gocpp::string system);
+        std::tuple<gocpp::string, struct gocpp::error> String(SID* sid);
+        int Len(SID* sid);
+        std::tuple<golang::syscall::SID*, struct gocpp::error> Copy(SID* sid);
+        std::tuple<gocpp::string, gocpp::string, uint32_t, struct gocpp::error> LookupAccount(SID* sid, gocpp::string system);
         struct gocpp::error Close(golang::syscall::Token t);
         std::tuple<gocpp::unsafe_pointer, struct gocpp::error> getInfo(golang::syscall::Token t, uint32_t go_class, int initSize);
-        std::tuple<struct Tokenuser*, struct gocpp::error> GetTokenUser(golang::syscall::Token t);
-        std::tuple<struct Tokenprimarygroup*, struct gocpp::error> GetTokenPrimaryGroup(golang::syscall::Token t);
+        std::tuple<golang::syscall::Tokenuser*, struct gocpp::error> GetTokenUser(golang::syscall::Token t);
+        std::tuple<golang::syscall::Tokenprimarygroup*, struct gocpp::error> GetTokenPrimaryGroup(golang::syscall::Token t);
         std::tuple<gocpp::string, struct gocpp::error> GetUserProfileDirectory(golang::syscall::Token t);
     }
 }

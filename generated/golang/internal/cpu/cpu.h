@@ -35,7 +35,7 @@ namespace golang::cpu
     std::ostream& operator<<(std::ostream& os, const struct option& value);
     void processOptions(gocpp::string env);
     int indexByte(gocpp::string s, unsigned char c);
-    extern gocpp::slice<option> options;
+    extern gocpp::slice<golang::cpu::option> options;
 }
 #include "golang/internal/cpu/cpu_x86.h"
 

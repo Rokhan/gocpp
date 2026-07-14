@@ -22,7 +22,7 @@ namespace golang::unicode
 
     // Version is the Unicode edition from which the tables are derived.
     // Categories is the set of Unicode category tables.
-    gocpp::map<gocpp::string, RangeTable*> Categories = gocpp::map<gocpp::string, RangeTable*> {
+    gocpp::map<gocpp::string, golang::unicode::RangeTable*> Categories = gocpp::map<gocpp::string, golang::unicode::RangeTable*> {
         { "C"_s, C },
         { "Cc"_s, Cc },
         { "Cf"_s, Cf },
@@ -60,8 +60,8 @@ namespace golang::unicode
         { "Zp"_s, Zp },
         { "Zs"_s, Zs }
     };
-    RangeTable* _C = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _C = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0000, 0x001f, 1},
             {0x007f, 0x009f, 1},
             {0x00ad, 0x0600, 1363},
@@ -78,7 +78,7 @@ namespace golang::unicode
             {0xfeff, 0xfff9, 250},
             {0xfffa, 0xfffb, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x110bd, 0x110cd, 16},
             {0x13430, 0x1343f, 1},
             {0x1bca0, 0x1bca3, 1},
@@ -90,15 +90,15 @@ namespace golang::unicode
         };
         x.LatinOffset = 2;
     });
-    RangeTable* _Cc = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Cc = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0000, 0x001f, 1},
             {0x007f, 0x009f, 1}
         };
         x.LatinOffset = 2;
     });
-    RangeTable* _Cf = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Cf = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x00ad, 0x0600, 1363},
             {0x0601, 0x0605, 1},
             {0x061c, 0x06dd, 193},
@@ -112,7 +112,7 @@ namespace golang::unicode
             {0xfeff, 0xfff9, 250},
             {0xfffa, 0xfffb, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x110bd, 0x110cd, 16},
             {0x13430, 0x1343f, 1},
             {0x1bca0, 0x1bca3, 1},
@@ -121,22 +121,22 @@ namespace golang::unicode
             {0xe0021, 0xe007f, 1}
         };
     });
-    RangeTable* _Co = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Co = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xe000, 0xf8ff, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0xf0000, 0xffffd, 1},
             {0x100000, 0x10fffd, 1}
         };
     });
-    RangeTable* _Cs = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Cs = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xd800, 0xdfff, 1}
         };
     });
-    RangeTable* _L = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _L = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0041, 0x005a, 1},
             {0x0061, 0x007a, 1},
             {0x00aa, 0x00b5, 11},
@@ -497,7 +497,7 @@ namespace golang::unicode
             {0xffd2, 0xffd7, 1},
             {0xffda, 0xffdc, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10000, 0x1000b, 1},
             {0x1000d, 0x10026, 1},
             {0x10028, 0x1003a, 1},
@@ -765,8 +765,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 6;
     });
-    RangeTable* _Ll = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Ll = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0061, 0x007a, 1},
             {0x00b5, 0x00df, 42},
             {0x00e0, 0x00f6, 1},
@@ -890,7 +890,7 @@ namespace golang::unicode
             {0xfb13, 0xfb17, 1},
             {0xff41, 0xff5a, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10428, 0x1044f, 1},
             {0x104d8, 0x104fb, 1},
             {0x10597, 0x105a1, 1},
@@ -935,8 +935,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 4;
     });
-    RangeTable* _Lm = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Lm = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x02b0, 0x02c1, 1},
             {0x02c6, 0x02d1, 1},
             {0x02e0, 0x02e4, 1},
@@ -979,7 +979,7 @@ namespace golang::unicode
             {0xab69, 0xff70, 21511},
             {0xff9e, 0xff9f, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10780, 0x10785, 1},
             {0x10787, 0x107b0, 1},
             {0x107b2, 0x107ba, 1},
@@ -995,8 +995,8 @@ namespace golang::unicode
             {0x1e4eb, 0x1e94b, 1120}
         };
     });
-    RangeTable* _Lo = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Lo = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x00aa, 0x00ba, 16},
             {0x01bb, 0x01c0, 5},
             {0x01c1, 0x01c3, 1},
@@ -1277,7 +1277,7 @@ namespace golang::unicode
             {0xffd2, 0xffd7, 1},
             {0xffda, 0xffdc, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10000, 0x1000b, 1},
             {0x1000d, 0x10026, 1},
             {0x10028, 0x1003a, 1},
@@ -1486,8 +1486,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 1;
     });
-    RangeTable* _Lt = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Lt = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x01c5, 0x01cb, 3},
             {0x01f2, 0x1f88, 7574},
             {0x1f89, 0x1f8f, 1},
@@ -1497,8 +1497,8 @@ namespace golang::unicode
             {0x1ffc, 0x1ffc, 1}
         };
     });
-    RangeTable* _Lu = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Lu = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0041, 0x005a, 1},
             {0x00c0, 0x00d6, 1},
             {0x00d8, 0x00de, 1},
@@ -1609,7 +1609,7 @@ namespace golang::unicode
             {0xa7f5, 0xff21, 22316},
             {0xff22, 0xff3a, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10400, 0x10427, 1},
             {0x104b0, 0x104d3, 1},
             {0x10570, 0x1057a, 1},
@@ -1653,8 +1653,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 3;
     });
-    RangeTable* _M = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _M = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0300, 0x036f, 1},
             {0x0483, 0x0489, 1},
             {0x0591, 0x05bd, 1},
@@ -1838,7 +1838,7 @@ namespace golang::unicode
             {0xfe01, 0xfe0f, 1},
             {0xfe20, 0xfe2f, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x101fd, 0x102e0, 227},
             {0x10376, 0x1037a, 1},
             {0x10a01, 0x10a03, 1},
@@ -1958,8 +1958,8 @@ namespace golang::unicode
             {0xe0100, 0xe01ef, 1}
         };
     });
-    RangeTable* _Mc = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Mc = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0903, 0x093b, 56},
             {0x093e, 0x0940, 1},
             {0x0949, 0x094c, 1},
@@ -2059,7 +2059,7 @@ namespace golang::unicode
             {0xabe7, 0xabe9, 2},
             {0xabea, 0xabec, 2}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11000, 0x11002, 2},
             {0x11082, 0x110b0, 46},
             {0x110b1, 0x110b2, 1},
@@ -2122,8 +2122,8 @@ namespace golang::unicode
             {0x1d16d, 0x1d172, 1}
         };
     });
-    RangeTable* _Me = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Me = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0488, 0x0489, 1},
             {0x1abe, 0x20dd, 1567},
             {0x20de, 0x20e0, 1},
@@ -2131,8 +2131,8 @@ namespace golang::unicode
             {0xa670, 0xa672, 1}
         };
     });
-    RangeTable* _Mn = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Mn = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0300, 0x036f, 1},
             {0x0483, 0x0487, 1},
             {0x0591, 0x05bd, 1},
@@ -2317,7 +2317,7 @@ namespace golang::unicode
             {0xfe00, 0xfe0f, 1},
             {0xfe20, 0xfe2f, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x101fd, 0x102e0, 227},
             {0x10376, 0x1037a, 1},
             {0x10a01, 0x10a03, 1},
@@ -2445,8 +2445,8 @@ namespace golang::unicode
             {0xe0100, 0xe01ef, 1}
         };
     });
-    RangeTable* _N = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _N = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0030, 0x0039, 1},
             {0x00b2, 0x00b3, 1},
             {0x00b9, 0x00bc, 3},
@@ -2514,7 +2514,7 @@ namespace golang::unicode
             {0xabf0, 0xabf9, 1},
             {0xff10, 0xff19, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10107, 0x10133, 1},
             {0x10140, 0x10178, 1},
             {0x1018a, 0x1018b, 1},
@@ -2587,8 +2587,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 4;
     });
-    RangeTable* _Nd = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Nd = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0030, 0x0039, 1},
             {0x0660, 0x0669, 1},
             {0x06f0, 0x06f9, 1},
@@ -2627,7 +2627,7 @@ namespace golang::unicode
             {0xabf0, 0xabf9, 1},
             {0xff10, 0xff19, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x104a0, 0x104a9, 1},
             {0x10d30, 0x10d39, 1},
             {0x11066, 0x1106f, 1},
@@ -2658,8 +2658,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 1;
     });
-    RangeTable* _Nl = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Nl = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x16ee, 0x16f0, 1},
             {0x2160, 0x2182, 1},
             {0x2185, 0x2188, 1},
@@ -2668,15 +2668,15 @@ namespace golang::unicode
             {0x3038, 0x303a, 1},
             {0xa6e6, 0xa6ef, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10140, 0x10174, 1},
             {0x10341, 0x1034a, 9},
             {0x103d1, 0x103d5, 1},
             {0x12400, 0x1246e, 1}
         };
     });
-    RangeTable* _No = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _No = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x00b2, 0x00b3, 1},
             {0x00b9, 0x00bc, 3},
             {0x00bd, 0x00be, 1},
@@ -2706,7 +2706,7 @@ namespace golang::unicode
             {0x32b1, 0x32bf, 1},
             {0xa830, 0xa835, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10107, 0x10133, 1},
             {0x10175, 0x10178, 1},
             {0x1018a, 0x1018b, 1},
@@ -2753,8 +2753,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 3;
     });
-    RangeTable* _P = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _P = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0021, 0x0023, 1},
             {0x0025, 0x002a, 1},
             {0x002c, 0x002f, 1},
@@ -2871,7 +2871,7 @@ namespace golang::unicode
             {0xff5d, 0xff5f, 2},
             {0xff60, 0xff65, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10100, 0x10102, 1},
             {0x1039f, 0x103d0, 49},
             {0x1056f, 0x10857, 744},
@@ -2927,8 +2927,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 11;
     });
-    RangeTable* _Pc = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Pc = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x005f, 0x203f, 8160},
             {0x2040, 0x2054, 20},
             {0xfe33, 0xfe34, 1},
@@ -2936,8 +2936,8 @@ namespace golang::unicode
             {0xff3f, 0xff3f, 1}
         };
     });
-    RangeTable* _Pd = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Pd = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x002d, 0x058a, 1373},
             {0x05be, 0x1400, 3650},
             {0x1806, 0x2010, 2058},
@@ -2950,12 +2950,12 @@ namespace golang::unicode
             {0xfe32, 0xfe58, 38},
             {0xfe63, 0xff0d, 170}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10ead, 0x10ead, 1}
         };
     });
-    RangeTable* _Pe = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Pe = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0029, 0x005d, 52},
             {0x007d, 0x0f3b, 3774},
             {0x0f3d, 0x169c, 1887},
@@ -2982,8 +2982,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 1;
     });
-    RangeTable* _Pf = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Pf = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x00bb, 0x2019, 8030},
             {0x201d, 0x203a, 29},
             {0x2e03, 0x2e05, 2},
@@ -2991,8 +2991,8 @@ namespace golang::unicode
             {0x2e1d, 0x2e21, 4}
         };
     });
-    RangeTable* _Pi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Pi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x00ab, 0x2018, 8045},
             {0x201b, 0x201c, 1},
             {0x201f, 0x2039, 26},
@@ -3001,8 +3001,8 @@ namespace golang::unicode
             {0x2e1c, 0x2e20, 4}
         };
     });
-    RangeTable* _Po = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Po = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0021, 0x0023, 1},
             {0x0025, 0x0027, 1},
             {0x002a, 0x002e, 2},
@@ -3117,7 +3117,7 @@ namespace golang::unicode
             {0xff61, 0xff64, 3},
             {0xff65, 0xff65, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10100, 0x10102, 1},
             {0x1039f, 0x103d0, 49},
             {0x1056f, 0x10857, 744},
@@ -3172,8 +3172,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 8;
     });
-    RangeTable* _Ps = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Ps = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0028, 0x005b, 51},
             {0x007b, 0x0f3a, 3775},
             {0x0f3c, 0x169b, 1887},
@@ -3203,8 +3203,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 1;
     });
-    RangeTable* _S = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _S = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0024, 0x002b, 7},
             {0x003c, 0x003e, 1},
             {0x005e, 0x0060, 2},
@@ -3335,7 +3335,7 @@ namespace golang::unicode
             {0xffe8, 0xffee, 1},
             {0xfffc, 0xfffd, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10137, 0x1013f, 1},
             {0x10179, 0x10189, 1},
             {0x1018c, 0x1018e, 1},
@@ -3411,8 +3411,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 10;
     });
-    RangeTable* _Sc = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Sc = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0024, 0x00a2, 126},
             {0x00a3, 0x00a5, 1},
             {0x058f, 0x060b, 124},
@@ -3427,14 +3427,14 @@ namespace golang::unicode
             {0xffe0, 0xffe1, 1},
             {0xffe5, 0xffe6, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11fdd, 0x11fe0, 1},
             {0x1e2ff, 0x1ecb0, 2481}
         };
         x.LatinOffset = 2;
     });
-    RangeTable* _Sk = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Sk = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x005e, 0x0060, 2},
             {0x00a8, 0x00af, 7},
             {0x00b4, 0x00b8, 4},
@@ -3461,13 +3461,13 @@ namespace golang::unicode
             {0xff3e, 0xff40, 2},
             {0xffe3, 0xffe3, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1f3fb, 0x1f3ff, 1}
         };
         x.LatinOffset = 3;
     });
-    RangeTable* _Sm = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Sm = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x002b, 0x003c, 17},
             {0x003d, 0x003e, 1},
             {0x007c, 0x007e, 2},
@@ -3512,7 +3512,7 @@ namespace golang::unicode
             {0xffe2, 0xffe9, 7},
             {0xffea, 0xffec, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1d6c1, 0x1d6db, 26},
             {0x1d6fb, 0x1d715, 26},
             {0x1d735, 0x1d74f, 26},
@@ -3522,8 +3522,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 5;
     });
-    RangeTable* _So = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _So = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x00a6, 0x00a9, 3},
             {0x00ae, 0x00b0, 2},
             {0x0482, 0x058d, 267},
@@ -3624,7 +3624,7 @@ namespace golang::unicode
             {0xffed, 0xffee, 1},
             {0xfffc, 0xfffd, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10137, 0x1013f, 1},
             {0x10179, 0x10189, 1},
             {0x1018c, 0x1018e, 1},
@@ -3695,8 +3695,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 2;
     });
-    RangeTable* _Z = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Z = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0020, 0x00a0, 128},
             {0x1680, 0x2000, 2432},
             {0x2001, 0x200a, 1},
@@ -3706,18 +3706,18 @@ namespace golang::unicode
         };
         x.LatinOffset = 1;
     });
-    RangeTable* _Zl = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Zl = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x2028, 0x2028, 1}
         };
     });
-    RangeTable* _Zp = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Zp = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x2029, 0x2029, 1}
         };
     });
-    RangeTable* _Zs = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Zs = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0020, 0x00a0, 128},
             {0x1680, 0x2000, 2432},
             {0x2001, 0x200a, 1},
@@ -3775,7 +3775,7 @@ namespace golang::unicode
     RangeTable* Zp = _Zp;
     RangeTable* Zs = _Zs;
     // Scripts is the set of Unicode script tables.
-    gocpp::map<gocpp::string, RangeTable*> Scripts = gocpp::map<gocpp::string, RangeTable*> {
+    gocpp::map<gocpp::string, golang::unicode::RangeTable*> Scripts = gocpp::map<gocpp::string, golang::unicode::RangeTable*> {
         { "Adlam"_s, Adlam },
         { "Ahom"_s, Ahom },
         { "Anatolian_Hieroglyphs"_s, Anatolian_Hieroglyphs },
@@ -3940,30 +3940,30 @@ namespace golang::unicode
         { "Yi"_s, Yi },
         { "Zanabazar_Square"_s, Zanabazar_Square }
     };
-    RangeTable* _Adlam = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Adlam = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1e900, 0x1e94b, 1},
             {0x1e950, 0x1e959, 1},
             {0x1e95e, 0x1e95f, 1}
         };
     });
-    RangeTable* _Ahom = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Ahom = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11700, 0x1171a, 1},
             {0x1171d, 0x1172b, 1},
             {0x11730, 0x11746, 1}
         };
     });
-    RangeTable* _Anatolian_Hieroglyphs = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Anatolian_Hieroglyphs = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x14400, 0x14646, 1}
         };
     });
-    RangeTable* _Arabic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Arabic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0600, 0x0604, 1},
             {0x0606, 0x060b, 1},
             {0x060d, 0x061a, 1},
@@ -3987,7 +3987,7 @@ namespace golang::unicode
             {0xfe70, 0xfe74, 1},
             {0xfe76, 0xfefc, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10e60, 0x10e7e, 1},
             {0x10efd, 0x10eff, 1},
             {0x1ee00, 0x1ee03, 1},
@@ -4017,50 +4017,50 @@ namespace golang::unicode
             {0x1eef0, 0x1eef1, 1}
         };
     });
-    RangeTable* _Armenian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Armenian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0531, 0x0556, 1},
             {0x0559, 0x058a, 1},
             {0x058d, 0x058f, 1},
             {0xfb13, 0xfb17, 1}
         };
     });
-    RangeTable* _Avestan = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Avestan = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10b00, 0x10b35, 1},
             {0x10b39, 0x10b3f, 1}
         };
     });
-    RangeTable* _Balinese = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Balinese = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1b00, 0x1b4c, 1},
             {0x1b50, 0x1b7e, 1}
         };
     });
-    RangeTable* _Bamum = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Bamum = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xa6a0, 0xa6f7, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16800, 0x16a38, 1}
         };
     });
-    RangeTable* _Bassa_Vah = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Bassa_Vah = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16ad0, 0x16aed, 1},
             {0x16af0, 0x16af5, 1}
         };
     });
-    RangeTable* _Batak = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Batak = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1bc0, 0x1bf3, 1},
             {0x1bfc, 0x1bff, 1}
         };
     });
-    RangeTable* _Bengali = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Bengali = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0980, 0x0983, 1},
             {0x0985, 0x098c, 1},
             {0x098f, 0x0990, 1},
@@ -4077,98 +4077,98 @@ namespace golang::unicode
             {0x09e6, 0x09fe, 1}
         };
     });
-    RangeTable* _Bhaiksuki = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Bhaiksuki = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11c00, 0x11c08, 1},
             {0x11c0a, 0x11c36, 1},
             {0x11c38, 0x11c45, 1},
             {0x11c50, 0x11c6c, 1}
         };
     });
-    RangeTable* _Bopomofo = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Bopomofo = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x02ea, 0x02eb, 1},
             {0x3105, 0x312f, 1},
             {0x31a0, 0x31bf, 1}
         };
     });
-    RangeTable* _Brahmi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Brahmi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11000, 0x1104d, 1},
             {0x11052, 0x11075, 1},
             {0x1107f, 0x1107f, 1}
         };
     });
-    RangeTable* _Braille = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Braille = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x2800, 0x28ff, 1}
         };
     });
-    RangeTable* _Buginese = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Buginese = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1a00, 0x1a1b, 1},
             {0x1a1e, 0x1a1f, 1}
         };
     });
-    RangeTable* _Buhid = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Buhid = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1740, 0x1753, 1}
         };
     });
-    RangeTable* _Canadian_Aboriginal = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Canadian_Aboriginal = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1400, 0x167f, 1},
             {0x18b0, 0x18f5, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11ab0, 0x11abf, 1}
         };
     });
-    RangeTable* _Carian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Carian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x102a0, 0x102d0, 1}
         };
     });
-    RangeTable* _Caucasian_Albanian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Caucasian_Albanian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10530, 0x10563, 1},
             {0x1056f, 0x1056f, 1}
         };
     });
-    RangeTable* _Chakma = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Chakma = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11100, 0x11134, 1},
             {0x11136, 0x11147, 1}
         };
     });
-    RangeTable* _Cham = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Cham = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xaa00, 0xaa36, 1},
             {0xaa40, 0xaa4d, 1},
             {0xaa50, 0xaa59, 1},
             {0xaa5c, 0xaa5f, 1}
         };
     });
-    RangeTable* _Cherokee = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Cherokee = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x13a0, 0x13f5, 1},
             {0x13f8, 0x13fd, 1},
             {0xab70, 0xabbf, 1}
         };
     });
-    RangeTable* _Chorasmian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Chorasmian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10fb0, 0x10fcb, 1}
         };
     });
-    RangeTable* _Common = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Common = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0000, 0x0040, 1},
             {0x005b, 0x0060, 1},
             {0x007b, 0x00a9, 1},
@@ -4252,7 +4252,7 @@ namespace golang::unicode
             {0xffe8, 0xffee, 1},
             {0xfff9, 0xfffd, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10100, 0x10102, 1},
             {0x10107, 0x10133, 1},
             {0x10137, 0x1013f, 1},
@@ -4338,25 +4338,25 @@ namespace golang::unicode
         };
         x.LatinOffset = 6;
     });
-    RangeTable* _Coptic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Coptic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x03e2, 0x03ef, 1},
             {0x2c80, 0x2cf3, 1},
             {0x2cf9, 0x2cff, 1}
         };
     });
-    RangeTable* _Cuneiform = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Cuneiform = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x12000, 0x12399, 1},
             {0x12400, 0x1246e, 1},
             {0x12470, 0x12474, 1},
             {0x12480, 0x12543, 1}
         };
     });
-    RangeTable* _Cypriot = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Cypriot = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10800, 0x10805, 1},
             {0x10808, 0x1080a, 2},
             {0x1080b, 0x10835, 1},
@@ -4364,14 +4364,14 @@ namespace golang::unicode
             {0x1083c, 0x1083f, 3}
         };
     });
-    RangeTable* _Cypro_Minoan = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Cypro_Minoan = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x12f90, 0x12ff2, 1}
         };
     });
-    RangeTable* _Cyrillic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Cyrillic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0400, 0x0484, 1},
             {0x0487, 0x052f, 1},
             {0x1c80, 0x1c88, 1},
@@ -4380,31 +4380,31 @@ namespace golang::unicode
             {0xa640, 0xa69f, 1},
             {0xfe2e, 0xfe2f, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1e030, 0x1e06d, 1},
             {0x1e08f, 0x1e08f, 1}
         };
     });
-    RangeTable* _Deseret = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Deseret = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10400, 0x1044f, 1}
         };
     });
-    RangeTable* _Devanagari = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Devanagari = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0900, 0x0950, 1},
             {0x0955, 0x0963, 1},
             {0x0966, 0x097f, 1},
             {0xa8e0, 0xa8ff, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11b00, 0x11b09, 1}
         };
     });
-    RangeTable* _Dives_Akuru = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Dives_Akuru = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11900, 0x11906, 1},
             {0x11909, 0x1190c, 3},
             {0x1190d, 0x11913, 1},
@@ -4415,15 +4415,15 @@ namespace golang::unicode
             {0x11950, 0x11959, 1}
         };
     });
-    RangeTable* _Dogra = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Dogra = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11800, 0x1183b, 1}
         };
     });
-    RangeTable* _Duployan = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Duployan = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1bc00, 0x1bc6a, 1},
             {0x1bc70, 0x1bc7c, 1},
             {0x1bc80, 0x1bc88, 1},
@@ -4431,26 +4431,26 @@ namespace golang::unicode
             {0x1bc9c, 0x1bc9f, 1}
         };
     });
-    RangeTable* _Egyptian_Hieroglyphs = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Egyptian_Hieroglyphs = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x13000, 0x13455, 1}
         };
     });
-    RangeTable* _Elbasan = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Elbasan = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10500, 0x10527, 1}
         };
     });
-    RangeTable* _Elymaic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Elymaic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10fe0, 0x10ff6, 1}
         };
     });
-    RangeTable* _Ethiopic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Ethiopic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1200, 0x1248, 1},
             {0x124a, 0x124d, 1},
             {0x1250, 0x1256, 1},
@@ -4484,15 +4484,15 @@ namespace golang::unicode
             {0xab20, 0xab26, 1},
             {0xab28, 0xab2e, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1e7e0, 0x1e7e6, 1},
             {0x1e7e8, 0x1e7eb, 1},
             {0x1e7ed, 0x1e7ee, 1},
             {0x1e7f0, 0x1e7fe, 1}
         };
     });
-    RangeTable* _Georgian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Georgian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x10a0, 0x10c5, 1},
             {0x10c7, 0x10cd, 6},
             {0x10d0, 0x10fa, 1},
@@ -4503,11 +4503,11 @@ namespace golang::unicode
             {0x2d27, 0x2d2d, 6}
         };
     });
-    RangeTable* _Glagolitic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Glagolitic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x2c00, 0x2c5f, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1e000, 0x1e006, 1},
             {0x1e008, 0x1e018, 1},
             {0x1e01b, 0x1e021, 1},
@@ -4515,15 +4515,15 @@ namespace golang::unicode
             {0x1e026, 0x1e02a, 1}
         };
     });
-    RangeTable* _Gothic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Gothic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10330, 0x1034a, 1}
         };
     });
-    RangeTable* _Grantha = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Grantha = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11300, 0x11303, 1},
             {0x11305, 0x1130c, 1},
             {0x1130f, 0x11310, 1},
@@ -4540,8 +4540,8 @@ namespace golang::unicode
             {0x11370, 0x11374, 1}
         };
     });
-    RangeTable* _Greek = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Greek = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0370, 0x0373, 1},
             {0x0375, 0x0377, 1},
             {0x037a, 0x037d, 1},
@@ -4572,14 +4572,14 @@ namespace golang::unicode
             {0x1ff6, 0x1ffe, 1},
             {0x2126, 0xab65, 35391}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10140, 0x1018e, 1},
             {0x101a0, 0x1d200, 53344},
             {0x1d201, 0x1d245, 1}
         };
     });
-    RangeTable* _Gujarati = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Gujarati = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0a81, 0x0a83, 1},
             {0x0a85, 0x0a8d, 1},
             {0x0a8f, 0x0a91, 1},
@@ -4596,9 +4596,9 @@ namespace golang::unicode
             {0x0af9, 0x0aff, 1}
         };
     });
-    RangeTable* _Gunjala_Gondi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Gunjala_Gondi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11d60, 0x11d65, 1},
             {0x11d67, 0x11d68, 1},
             {0x11d6a, 0x11d8e, 1},
@@ -4607,8 +4607,8 @@ namespace golang::unicode
             {0x11da0, 0x11da9, 1}
         };
     });
-    RangeTable* _Gurmukhi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Gurmukhi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0a01, 0x0a03, 1},
             {0x0a05, 0x0a0a, 1},
             {0x0a0f, 0x0a10, 1},
@@ -4627,8 +4627,8 @@ namespace golang::unicode
             {0x0a67, 0x0a76, 1}
         };
     });
-    RangeTable* _Han = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Han = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x2e80, 0x2e99, 1},
             {0x2e9b, 0x2ef3, 1},
             {0x2f00, 0x2fd5, 1},
@@ -4640,7 +4640,7 @@ namespace golang::unicode
             {0xf900, 0xfa6d, 1},
             {0xfa70, 0xfad9, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16fe2, 0x16fe3, 1},
             {0x16ff0, 0x16ff1, 1},
             {0x20000, 0x2a6df, 1},
@@ -4653,8 +4653,8 @@ namespace golang::unicode
             {0x31350, 0x323af, 1}
         };
     });
-    RangeTable* _Hangul = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Hangul = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1100, 0x11ff, 1},
             {0x302e, 0x302f, 1},
             {0x3131, 0x318e, 1},
@@ -4671,28 +4671,28 @@ namespace golang::unicode
             {0xffda, 0xffdc, 1}
         };
     });
-    RangeTable* _Hanifi_Rohingya = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Hanifi_Rohingya = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10d00, 0x10d27, 1},
             {0x10d30, 0x10d39, 1}
         };
     });
-    RangeTable* _Hanunoo = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Hanunoo = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1720, 0x1734, 1}
         };
     });
-    RangeTable* _Hatran = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Hatran = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x108e0, 0x108f2, 1},
             {0x108f4, 0x108f5, 1},
             {0x108fb, 0x108ff, 1}
         };
     });
-    RangeTable* _Hebrew = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Hebrew = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0591, 0x05c7, 1},
             {0x05d0, 0x05ea, 1},
             {0x05ef, 0x05f4, 1},
@@ -4704,27 +4704,27 @@ namespace golang::unicode
             {0xfb47, 0xfb4f, 1}
         };
     });
-    RangeTable* _Hiragana = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Hiragana = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x3041, 0x3096, 1},
             {0x309d, 0x309f, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1b001, 0x1b11f, 1},
             {0x1b132, 0x1b150, 30},
             {0x1b151, 0x1b152, 1},
             {0x1f200, 0x1f200, 1}
         };
     });
-    RangeTable* _Imperial_Aramaic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Imperial_Aramaic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10840, 0x10855, 1},
             {0x10857, 0x1085f, 1}
         };
     });
-    RangeTable* _Inherited = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Inherited = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0300, 0x036f, 1},
             {0x0485, 0x0486, 1},
             {0x064b, 0x0655, 1},
@@ -4744,7 +4744,7 @@ namespace golang::unicode
             {0xfe00, 0xfe0f, 1},
             {0xfe20, 0xfe2d, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x101fd, 0x102e0, 227},
             {0x1133b, 0x1cf00, 48069},
             {0x1cf01, 0x1cf2d, 1},
@@ -4756,36 +4756,36 @@ namespace golang::unicode
             {0xe0100, 0xe01ef, 1}
         };
     });
-    RangeTable* _Inscriptional_Pahlavi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Inscriptional_Pahlavi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10b60, 0x10b72, 1},
             {0x10b78, 0x10b7f, 1}
         };
     });
-    RangeTable* _Inscriptional_Parthian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Inscriptional_Parthian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10b40, 0x10b55, 1},
             {0x10b58, 0x10b5f, 1}
         };
     });
-    RangeTable* _Javanese = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Javanese = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xa980, 0xa9cd, 1},
             {0xa9d0, 0xa9d9, 1},
             {0xa9de, 0xa9df, 1}
         };
     });
-    RangeTable* _Kaithi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Kaithi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11080, 0x110c2, 1},
             {0x110cd, 0x110cd, 1}
         };
     });
-    RangeTable* _Kannada = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Kannada = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0c80, 0x0c8c, 1},
             {0x0c8e, 0x0c90, 1},
             {0x0c92, 0x0ca8, 1},
@@ -4801,8 +4801,8 @@ namespace golang::unicode
             {0x0cf1, 0x0cf3, 1}
         };
     });
-    RangeTable* _Katakana = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Katakana = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x30a1, 0x30fa, 1},
             {0x30fd, 0x30ff, 1},
             {0x31f0, 0x31ff, 1},
@@ -4811,7 +4811,7 @@ namespace golang::unicode
             {0xff66, 0xff6f, 1},
             {0xff71, 0xff9d, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1aff0, 0x1aff3, 1},
             {0x1aff5, 0x1affb, 1},
             {0x1affd, 0x1affe, 1},
@@ -4821,23 +4821,23 @@ namespace golang::unicode
             {0x1b165, 0x1b167, 1}
         };
     });
-    RangeTable* _Kawi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Kawi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11f00, 0x11f10, 1},
             {0x11f12, 0x11f3a, 1},
             {0x11f3e, 0x11f59, 1}
         };
     });
-    RangeTable* _Kayah_Li = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Kayah_Li = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xa900, 0xa92d, 1},
             {0xa92f, 0xa92f, 1}
         };
     });
-    RangeTable* _Kharoshthi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Kharoshthi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10a00, 0x10a03, 1},
             {0x10a05, 0x10a06, 1},
             {0x10a0c, 0x10a13, 1},
@@ -4848,37 +4848,37 @@ namespace golang::unicode
             {0x10a50, 0x10a58, 1}
         };
     });
-    RangeTable* _Khitan_Small_Script = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Khitan_Small_Script = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16fe4, 0x18b00, 6940},
             {0x18b01, 0x18cd5, 1}
         };
     });
-    RangeTable* _Khmer = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Khmer = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1780, 0x17dd, 1},
             {0x17e0, 0x17e9, 1},
             {0x17f0, 0x17f9, 1},
             {0x19e0, 0x19ff, 1}
         };
     });
-    RangeTable* _Khojki = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Khojki = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11200, 0x11211, 1},
             {0x11213, 0x11241, 1}
         };
     });
-    RangeTable* _Khudawadi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Khudawadi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x112b0, 0x112ea, 1},
             {0x112f0, 0x112f9, 1}
         };
     });
-    RangeTable* _Lao = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Lao = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0e81, 0x0e82, 1},
             {0x0e84, 0x0e86, 2},
             {0x0e87, 0x0e8a, 1},
@@ -4892,8 +4892,8 @@ namespace golang::unicode
             {0x0edc, 0x0edf, 1}
         };
     });
-    RangeTable* _Latin = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Latin = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0041, 0x005a, 1},
             {0x0061, 0x007a, 1},
             {0x00aa, 0x00ba, 16},
@@ -4926,7 +4926,7 @@ namespace golang::unicode
             {0xff21, 0xff3a, 1},
             {0xff41, 0xff5a, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10780, 0x10785, 1},
             {0x10787, 0x107b0, 1},
             {0x107b2, 0x107ba, 1},
@@ -4935,15 +4935,15 @@ namespace golang::unicode
         };
         x.LatinOffset = 5;
     });
-    RangeTable* _Lepcha = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Lepcha = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1c00, 0x1c37, 1},
             {0x1c3b, 0x1c49, 1},
             {0x1c4d, 0x1c4f, 1}
         };
     });
-    RangeTable* _Limbu = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Limbu = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1900, 0x191e, 1},
             {0x1920, 0x192b, 1},
             {0x1930, 0x193b, 1},
@@ -4951,17 +4951,17 @@ namespace golang::unicode
             {0x1945, 0x194f, 1}
         };
     });
-    RangeTable* _Linear_A = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Linear_A = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10600, 0x10736, 1},
             {0x10740, 0x10755, 1},
             {0x10760, 0x10767, 1}
         };
     });
-    RangeTable* _Linear_B = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Linear_B = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10000, 0x1000b, 1},
             {0x1000d, 0x10026, 1},
             {0x10028, 0x1003a, 1},
@@ -4971,41 +4971,41 @@ namespace golang::unicode
             {0x10080, 0x100fa, 1}
         };
     });
-    RangeTable* _Lisu = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Lisu = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xa4d0, 0xa4ff, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11fb0, 0x11fb0, 1}
         };
     });
-    RangeTable* _Lycian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Lycian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10280, 0x1029c, 1}
         };
     });
-    RangeTable* _Lydian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Lydian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10920, 0x10939, 1},
             {0x1093f, 0x1093f, 1}
         };
     });
-    RangeTable* _Mahajani = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Mahajani = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11150, 0x11176, 1}
         };
     });
-    RangeTable* _Makasar = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Makasar = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11ee0, 0x11ef8, 1}
         };
     });
-    RangeTable* _Malayalam = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Malayalam = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0d00, 0x0d0c, 1},
             {0x0d0e, 0x0d10, 1},
             {0x0d12, 0x0d44, 1},
@@ -5015,30 +5015,30 @@ namespace golang::unicode
             {0x0d66, 0x0d7f, 1}
         };
     });
-    RangeTable* _Mandaic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Mandaic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0840, 0x085b, 1},
             {0x085e, 0x085e, 1}
         };
     });
-    RangeTable* _Manichaean = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Manichaean = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10ac0, 0x10ae6, 1},
             {0x10aeb, 0x10af6, 1}
         };
     });
-    RangeTable* _Marchen = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Marchen = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11c70, 0x11c8f, 1},
             {0x11c92, 0x11ca7, 1},
             {0x11ca9, 0x11cb6, 1}
         };
     });
-    RangeTable* _Masaram_Gondi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Masaram_Gondi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11d00, 0x11d06, 1},
             {0x11d08, 0x11d09, 1},
             {0x11d0b, 0x11d36, 1},
@@ -5048,78 +5048,78 @@ namespace golang::unicode
             {0x11d50, 0x11d59, 1}
         };
     });
-    RangeTable* _Medefaidrin = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Medefaidrin = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16e40, 0x16e9a, 1}
         };
     });
-    RangeTable* _Meetei_Mayek = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Meetei_Mayek = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xaae0, 0xaaf6, 1},
             {0xabc0, 0xabed, 1},
             {0xabf0, 0xabf9, 1}
         };
     });
-    RangeTable* _Mende_Kikakui = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Mende_Kikakui = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1e800, 0x1e8c4, 1},
             {0x1e8c7, 0x1e8d6, 1}
         };
     });
-    RangeTable* _Meroitic_Cursive = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Meroitic_Cursive = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x109a0, 0x109b7, 1},
             {0x109bc, 0x109cf, 1},
             {0x109d2, 0x109ff, 1}
         };
     });
-    RangeTable* _Meroitic_Hieroglyphs = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Meroitic_Hieroglyphs = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10980, 0x1099f, 1}
         };
     });
-    RangeTable* _Miao = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Miao = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16f00, 0x16f4a, 1},
             {0x16f4f, 0x16f87, 1},
             {0x16f8f, 0x16f9f, 1}
         };
     });
-    RangeTable* _Modi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Modi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11600, 0x11644, 1},
             {0x11650, 0x11659, 1}
         };
     });
-    RangeTable* _Mongolian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Mongolian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1800, 0x1801, 1},
             {0x1804, 0x1806, 2},
             {0x1807, 0x1819, 1},
             {0x1820, 0x1878, 1},
             {0x1880, 0x18aa, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11660, 0x1166c, 1}
         };
     });
-    RangeTable* _Mro = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Mro = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16a40, 0x16a5e, 1},
             {0x16a60, 0x16a69, 1},
             {0x16a6e, 0x16a6f, 1}
         };
     });
-    RangeTable* _Multani = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Multani = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11280, 0x11286, 1},
             {0x11288, 0x1128a, 2},
             {0x1128b, 0x1128d, 1},
@@ -5127,141 +5127,141 @@ namespace golang::unicode
             {0x1129f, 0x112a9, 1}
         };
     });
-    RangeTable* _Myanmar = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Myanmar = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1000, 0x109f, 1},
             {0xa9e0, 0xa9fe, 1},
             {0xaa60, 0xaa7f, 1}
         };
     });
-    RangeTable* _Nabataean = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Nabataean = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10880, 0x1089e, 1},
             {0x108a7, 0x108af, 1}
         };
     });
-    RangeTable* _Nag_Mundari = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Nag_Mundari = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1e4d0, 0x1e4f9, 1}
         };
     });
-    RangeTable* _Nandinagari = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Nandinagari = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x119a0, 0x119a7, 1},
             {0x119aa, 0x119d7, 1},
             {0x119da, 0x119e4, 1}
         };
     });
-    RangeTable* _New_Tai_Lue = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _New_Tai_Lue = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1980, 0x19ab, 1},
             {0x19b0, 0x19c9, 1},
             {0x19d0, 0x19da, 1},
             {0x19de, 0x19df, 1}
         };
     });
-    RangeTable* _Newa = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Newa = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11400, 0x1145b, 1},
             {0x1145d, 0x11461, 1}
         };
     });
-    RangeTable* _Nko = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Nko = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x07c0, 0x07fa, 1},
             {0x07fd, 0x07ff, 1}
         };
     });
-    RangeTable* _Nushu = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Nushu = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16fe1, 0x1b170, 16783},
             {0x1b171, 0x1b2fb, 1}
         };
     });
-    RangeTable* _Nyiakeng_Puachue_Hmong = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Nyiakeng_Puachue_Hmong = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1e100, 0x1e12c, 1},
             {0x1e130, 0x1e13d, 1},
             {0x1e140, 0x1e149, 1},
             {0x1e14e, 0x1e14f, 1}
         };
     });
-    RangeTable* _Ogham = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Ogham = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1680, 0x169c, 1}
         };
     });
-    RangeTable* _Ol_Chiki = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Ol_Chiki = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1c50, 0x1c7f, 1}
         };
     });
-    RangeTable* _Old_Hungarian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Old_Hungarian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10c80, 0x10cb2, 1},
             {0x10cc0, 0x10cf2, 1},
             {0x10cfa, 0x10cff, 1}
         };
     });
-    RangeTable* _Old_Italic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Old_Italic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10300, 0x10323, 1},
             {0x1032d, 0x1032f, 1}
         };
     });
-    RangeTable* _Old_North_Arabian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Old_North_Arabian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10a80, 0x10a9f, 1}
         };
     });
-    RangeTable* _Old_Permic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Old_Permic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10350, 0x1037a, 1}
         };
     });
-    RangeTable* _Old_Persian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Old_Persian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x103a0, 0x103c3, 1},
             {0x103c8, 0x103d5, 1}
         };
     });
-    RangeTable* _Old_Sogdian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Old_Sogdian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10f00, 0x10f27, 1}
         };
     });
-    RangeTable* _Old_South_Arabian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Old_South_Arabian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10a60, 0x10a7f, 1}
         };
     });
-    RangeTable* _Old_Turkic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Old_Turkic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10c00, 0x10c48, 1}
         };
     });
-    RangeTable* _Old_Uyghur = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Old_Uyghur = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10f70, 0x10f89, 1}
         };
     });
-    RangeTable* _Oriya = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Oriya = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0b01, 0x0b03, 1},
             {0x0b05, 0x0b0c, 1},
             {0x0b0f, 0x0b10, 1},
@@ -5278,23 +5278,23 @@ namespace golang::unicode
             {0x0b66, 0x0b77, 1}
         };
     });
-    RangeTable* _Osage = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Osage = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x104b0, 0x104d3, 1},
             {0x104d8, 0x104fb, 1}
         };
     });
-    RangeTable* _Osmanya = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Osmanya = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10480, 0x1049d, 1},
             {0x104a0, 0x104a9, 1}
         };
     });
-    RangeTable* _Pahawh_Hmong = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Pahawh_Hmong = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16b00, 0x16b45, 1},
             {0x16b50, 0x16b59, 1},
             {0x16b5b, 0x16b61, 1},
@@ -5302,91 +5302,91 @@ namespace golang::unicode
             {0x16b7d, 0x16b8f, 1}
         };
     });
-    RangeTable* _Palmyrene = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Palmyrene = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10860, 0x1087f, 1}
         };
     });
-    RangeTable* _Pau_Cin_Hau = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Pau_Cin_Hau = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11ac0, 0x11af8, 1}
         };
     });
-    RangeTable* _Phags_Pa = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Phags_Pa = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xa840, 0xa877, 1}
         };
     });
-    RangeTable* _Phoenician = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Phoenician = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10900, 0x1091b, 1},
             {0x1091f, 0x1091f, 1}
         };
     });
-    RangeTable* _Psalter_Pahlavi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Psalter_Pahlavi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10b80, 0x10b91, 1},
             {0x10b99, 0x10b9c, 1},
             {0x10ba9, 0x10baf, 1}
         };
     });
-    RangeTable* _Rejang = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Rejang = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xa930, 0xa953, 1},
             {0xa95f, 0xa95f, 1}
         };
     });
-    RangeTable* _Runic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Runic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x16a0, 0x16ea, 1},
             {0x16ee, 0x16f8, 1}
         };
     });
-    RangeTable* _Samaritan = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Samaritan = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0800, 0x082d, 1},
             {0x0830, 0x083e, 1}
         };
     });
-    RangeTable* _Saurashtra = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Saurashtra = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xa880, 0xa8c5, 1},
             {0xa8ce, 0xa8d9, 1}
         };
     });
-    RangeTable* _Sharada = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Sharada = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11180, 0x111df, 1}
         };
     });
-    RangeTable* _Shavian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Shavian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10450, 0x1047f, 1}
         };
     });
-    RangeTable* _Siddham = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Siddham = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11580, 0x115b5, 1},
             {0x115b8, 0x115dd, 1}
         };
     });
-    RangeTable* _SignWriting = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _SignWriting = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1d800, 0x1da8b, 1},
             {0x1da9b, 0x1da9f, 1},
             {0x1daa1, 0x1daaf, 1}
         };
     });
-    RangeTable* _Sinhala = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Sinhala = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0d81, 0x0d83, 1},
             {0x0d85, 0x0d96, 1},
             {0x0d9a, 0x0db1, 1},
@@ -5400,69 +5400,69 @@ namespace golang::unicode
             {0x0de6, 0x0def, 1},
             {0x0df2, 0x0df4, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x111e1, 0x111f4, 1}
         };
     });
-    RangeTable* _Sogdian = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Sogdian = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10f30, 0x10f59, 1}
         };
     });
-    RangeTable* _Sora_Sompeng = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Sora_Sompeng = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x110d0, 0x110e8, 1},
             {0x110f0, 0x110f9, 1}
         };
     });
-    RangeTable* _Soyombo = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Soyombo = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11a50, 0x11aa2, 1}
         };
     });
-    RangeTable* _Sundanese = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Sundanese = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1b80, 0x1bbf, 1},
             {0x1cc0, 0x1cc7, 1}
         };
     });
-    RangeTable* _Syloti_Nagri = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Syloti_Nagri = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xa800, 0xa82c, 1}
         };
     });
-    RangeTable* _Syriac = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Syriac = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0700, 0x070d, 1},
             {0x070f, 0x074a, 1},
             {0x074d, 0x074f, 1},
             {0x0860, 0x086a, 1}
         };
     });
-    RangeTable* _Tagalog = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Tagalog = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1700, 0x1715, 1},
             {0x171f, 0x171f, 1}
         };
     });
-    RangeTable* _Tagbanwa = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Tagbanwa = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1760, 0x176c, 1},
             {0x176e, 0x1770, 1},
             {0x1772, 0x1773, 1}
         };
     });
-    RangeTable* _Tai_Le = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Tai_Le = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1950, 0x196d, 1},
             {0x1970, 0x1974, 1}
         };
     });
-    RangeTable* _Tai_Tham = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Tai_Tham = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1a20, 0x1a5e, 1},
             {0x1a60, 0x1a7c, 1},
             {0x1a7f, 0x1a89, 1},
@@ -5470,21 +5470,21 @@ namespace golang::unicode
             {0x1aa0, 0x1aad, 1}
         };
     });
-    RangeTable* _Tai_Viet = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Tai_Viet = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xaa80, 0xaac2, 1},
             {0xaadb, 0xaadf, 1}
         };
     });
-    RangeTable* _Takri = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Takri = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11680, 0x116b9, 1},
             {0x116c0, 0x116c9, 1}
         };
     });
-    RangeTable* _Tamil = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Tamil = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0b82, 0x0b83, 1},
             {0x0b85, 0x0b8a, 1},
             {0x0b8e, 0x0b90, 1},
@@ -5501,29 +5501,29 @@ namespace golang::unicode
             {0x0bd0, 0x0bd7, 7},
             {0x0be6, 0x0bfa, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11fc0, 0x11ff1, 1},
             {0x11fff, 0x11fff, 1}
         };
     });
-    RangeTable* _Tangsa = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Tangsa = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16a70, 0x16abe, 1},
             {0x16ac0, 0x16ac9, 1}
         };
     });
-    RangeTable* _Tangut = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Tangut = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16fe0, 0x17000, 32},
             {0x17001, 0x187f7, 1},
             {0x18800, 0x18aff, 1},
             {0x18d00, 0x18d08, 1}
         };
     });
-    RangeTable* _Telugu = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Telugu = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0c00, 0x0c0c, 1},
             {0x0c0e, 0x0c10, 1},
             {0x0c12, 0x0c28, 1},
@@ -5539,19 +5539,19 @@ namespace golang::unicode
             {0x0c77, 0x0c7f, 1}
         };
     });
-    RangeTable* _Thaana = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Thaana = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0780, 0x07b1, 1}
         };
     });
-    RangeTable* _Thai = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Thai = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0e01, 0x0e3a, 1},
             {0x0e40, 0x0e5b, 1}
         };
     });
-    RangeTable* _Tibetan = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Tibetan = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0f00, 0x0f47, 1},
             {0x0f49, 0x0f6c, 1},
             {0x0f71, 0x0f97, 1},
@@ -5561,41 +5561,41 @@ namespace golang::unicode
             {0x0fd9, 0x0fda, 1}
         };
     });
-    RangeTable* _Tifinagh = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Tifinagh = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x2d30, 0x2d67, 1},
             {0x2d6f, 0x2d70, 1},
             {0x2d7f, 0x2d7f, 1}
         };
     });
-    RangeTable* _Tirhuta = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Tirhuta = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11480, 0x114c7, 1},
             {0x114d0, 0x114d9, 1}
         };
     });
-    RangeTable* _Toto = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Toto = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1e290, 0x1e2ae, 1}
         };
     });
-    RangeTable* _Ugaritic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Ugaritic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10380, 0x1039d, 1},
             {0x1039f, 0x1039f, 1}
         };
     });
-    RangeTable* _Vai = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Vai = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xa500, 0xa62b, 1}
         };
     });
-    RangeTable* _Vithkuqi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Vithkuqi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10570, 0x1057a, 1},
             {0x1057c, 0x1058a, 1},
             {0x1058c, 0x10592, 1},
@@ -5606,37 +5606,37 @@ namespace golang::unicode
             {0x105bb, 0x105bc, 1}
         };
     });
-    RangeTable* _Wancho = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Wancho = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1e2c0, 0x1e2f9, 1},
             {0x1e2ff, 0x1e2ff, 1}
         };
     });
-    RangeTable* _Warang_Citi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Warang_Citi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x118a0, 0x118f2, 1},
             {0x118ff, 0x118ff, 1}
         };
     });
-    RangeTable* _Yezidi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Yezidi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10e80, 0x10ea9, 1},
             {0x10eab, 0x10ead, 1},
             {0x10eb0, 0x10eb1, 1}
         };
     });
-    RangeTable* _Yi = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Yi = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xa000, 0xa48c, 1},
             {0xa490, 0xa4c6, 1}
         };
     });
-    RangeTable* _Zanabazar_Square = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Zanabazar_Square = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x11a00, 0x11a47, 1}
         };
     });
@@ -5805,7 +5805,7 @@ namespace golang::unicode
     RangeTable* Yi = _Yi;
     RangeTable* Zanabazar_Square = _Zanabazar_Square;
     // Properties is the set of Unicode property tables.
-    gocpp::map<gocpp::string, RangeTable*> Properties = gocpp::map<gocpp::string, RangeTable*> {
+    gocpp::map<gocpp::string, golang::unicode::RangeTable*> Properties = gocpp::map<gocpp::string, golang::unicode::RangeTable*> {
         { "ASCII_Hex_Digit"_s, ASCII_Hex_Digit },
         { "Bidi_Control"_s, Bidi_Control },
         { "Dash"_s, Dash },
@@ -5842,24 +5842,24 @@ namespace golang::unicode
         { "Variation_Selector"_s, Variation_Selector },
         { "White_Space"_s, White_Space }
     };
-    RangeTable* _ASCII_Hex_Digit = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _ASCII_Hex_Digit = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0030, 0x0039, 1},
             {0x0041, 0x0046, 1},
             {0x0061, 0x0066, 1}
         };
         x.LatinOffset = 3;
     });
-    RangeTable* _Bidi_Control = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Bidi_Control = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x061c, 0x200e, 6642},
             {0x200f, 0x202a, 27},
             {0x202b, 0x202e, 1},
             {0x2066, 0x2069, 1}
         };
     });
-    RangeTable* _Dash = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Dash = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x002d, 0x058a, 1373},
             {0x05be, 0x1400, 3650},
             {0x1806, 0x2010, 2058},
@@ -5874,24 +5874,24 @@ namespace golang::unicode
             {0xfe32, 0xfe58, 38},
             {0xfe63, 0xff0d, 170}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10ead, 0x10ead, 1}
         };
     });
-    RangeTable* _Deprecated = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Deprecated = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0149, 0x0673, 1322},
             {0x0f77, 0x0f79, 2},
             {0x17a3, 0x17a4, 1},
             {0x206a, 0x206f, 1},
             {0x2329, 0x232a, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0xe0001, 0xe0001, 1}
         };
     });
-    RangeTable* _Diacritic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Diacritic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x005e, 0x0060, 2},
             {0x00a8, 0x00af, 7},
             {0x00b4, 0x00b7, 3},
@@ -6003,7 +6003,7 @@ namespace golang::unicode
             {0xff70, 0xff9e, 46},
             {0xff9f, 0xffe3, 68}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x102e0, 0x10780, 1184},
             {0x10781, 0x10785, 1},
             {0x10787, 0x107b0, 1},
@@ -6060,8 +6060,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 3;
     });
-    RangeTable* _Extender = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Extender = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x00b7, 0x02d0, 537},
             {0x02d1, 0x0640, 879},
             {0x07fa, 0x0b55, 859},
@@ -6078,7 +6078,7 @@ namespace golang::unicode
             {0xaaf3, 0xaaf4, 1},
             {0xff70, 0xff70, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10781, 0x10782, 1},
             {0x1135d, 0x115c6, 617},
             {0x115c7, 0x115c8, 1},
@@ -6089,8 +6089,8 @@ namespace golang::unicode
             {0x1e944, 0x1e946, 1}
         };
     });
-    RangeTable* _Hex_Digit = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Hex_Digit = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0030, 0x0039, 1},
             {0x0041, 0x0046, 1},
             {0x0061, 0x0066, 1},
@@ -6100,8 +6100,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 3;
     });
-    RangeTable* _Hyphen = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Hyphen = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x002d, 0x00ad, 128},
             {0x058a, 0x1806, 4732},
             {0x2010, 0x2011, 1},
@@ -6111,19 +6111,19 @@ namespace golang::unicode
         };
         x.LatinOffset = 1;
     });
-    RangeTable* _IDS_Binary_Operator = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _IDS_Binary_Operator = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x2ff0, 0x2ff1, 1},
             {0x2ff4, 0x2ffb, 1}
         };
     });
-    RangeTable* _IDS_Trinary_Operator = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _IDS_Trinary_Operator = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x2ff2, 0x2ff3, 1}
         };
     });
-    RangeTable* _Ideographic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Ideographic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x3006, 0x3007, 1},
             {0x3021, 0x3029, 1},
             {0x3038, 0x303a, 1},
@@ -6132,7 +6132,7 @@ namespace golang::unicode
             {0xf900, 0xfa6d, 1},
             {0xfa70, 0xfad9, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x16fe4, 0x17000, 28},
             {0x17001, 0x187f7, 1},
             {0x18800, 0x18cd5, 1},
@@ -6148,13 +6148,13 @@ namespace golang::unicode
             {0x31350, 0x323af, 1}
         };
     });
-    RangeTable* _Join_Control = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Join_Control = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x200c, 0x200d, 1}
         };
     });
-    RangeTable* _Logical_Order_Exception = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Logical_Order_Exception = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0e40, 0x0e44, 1},
             {0x0ec0, 0x0ec4, 1},
             {0x19b5, 0x19b7, 1},
@@ -6163,12 +6163,12 @@ namespace golang::unicode
             {0xaabb, 0xaabc, 1}
         };
     });
-    RangeTable* _Noncharacter_Code_Point = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Noncharacter_Code_Point = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0xfdd0, 0xfdef, 1},
             {0xfffe, 0xffff, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1fffe, 0x1ffff, 1},
             {0x2fffe, 0x2ffff, 1},
             {0x3fffe, 0x3ffff, 1},
@@ -6187,8 +6187,8 @@ namespace golang::unicode
             {0x10fffe, 0x10ffff, 1}
         };
     });
-    RangeTable* _Other_Alphabetic = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Other_Alphabetic = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0345, 0x05b0, 619},
             {0x05b1, 0x05bd, 1},
             {0x05bf, 0x05c1, 2},
@@ -6338,7 +6338,7 @@ namespace golang::unicode
             {0xabe4, 0xabea, 1},
             {0xfb1e, 0xfb1e, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10376, 0x1037a, 1},
             {0x10a01, 0x10a03, 1},
             {0x10a05, 0x10a06, 1},
@@ -6423,23 +6423,23 @@ namespace golang::unicode
             {0x1f170, 0x1f189, 1}
         };
     });
-    RangeTable* _Other_Default_Ignorable_Code_Point = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Other_Default_Ignorable_Code_Point = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x034f, 0x115f, 3600},
             {0x1160, 0x17b4, 1620},
             {0x17b5, 0x2065, 2224},
             {0x3164, 0xffa0, 52796},
             {0xfff0, 0xfff8, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0xe0000, 0xe0002, 2},
             {0xe0003, 0xe001f, 1},
             {0xe0080, 0xe00ff, 1},
             {0xe01f0, 0xe0fff, 1}
         };
     });
-    RangeTable* _Other_Grapheme_Extend = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Other_Grapheme_Extend = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x09be, 0x09d7, 25},
             {0x0b3e, 0x0b57, 25},
             {0x0bbe, 0x0bd7, 25},
@@ -6451,7 +6451,7 @@ namespace golang::unicode
             {0x302f, 0xff9e, 53103},
             {0xff9f, 0xff9f, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1133e, 0x11357, 25},
             {0x114b0, 0x114bd, 13},
             {0x115af, 0x11930, 897},
@@ -6460,22 +6460,22 @@ namespace golang::unicode
             {0xe0020, 0xe007f, 1}
         };
     });
-    RangeTable* _Other_ID_Continue = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Other_ID_Continue = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x00b7, 0x0387, 720},
             {0x1369, 0x1371, 1},
             {0x19da, 0x19da, 1}
         };
     });
-    RangeTable* _Other_ID_Start = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Other_ID_Start = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x1885, 0x1886, 1},
             {0x2118, 0x212e, 22},
             {0x309b, 0x309c, 1}
         };
     });
-    RangeTable* _Other_Lowercase = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Other_Lowercase = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x00aa, 0x00ba, 16},
             {0x02b0, 0x02b8, 1},
             {0x02c0, 0x02c1, 1},
@@ -6497,7 +6497,7 @@ namespace golang::unicode
             {0xab5c, 0xab5f, 1},
             {0xab69, 0xab69, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10780, 0x10783, 3},
             {0x10784, 0x10785, 1},
             {0x10787, 0x107b0, 1},
@@ -6506,8 +6506,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 1;
     });
-    RangeTable* _Other_Math = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Other_Math = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x005e, 0x03d0, 882},
             {0x03d1, 0x03d2, 1},
             {0x03d5, 0x03f0, 27},
@@ -6572,7 +6572,7 @@ namespace golang::unicode
             {0xfe68, 0xff3c, 212},
             {0xff3e, 0xff3e, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1d400, 0x1d454, 1},
             {0x1d456, 0x1d49c, 1},
             {0x1d49e, 0x1d49f, 1},
@@ -6630,19 +6630,19 @@ namespace golang::unicode
             {0x1eeab, 0x1eebb, 1}
         };
     });
-    RangeTable* _Other_Uppercase = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Other_Uppercase = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x2160, 0x216f, 1},
             {0x24b6, 0x24cf, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1f130, 0x1f149, 1},
             {0x1f150, 0x1f169, 1},
             {0x1f170, 0x1f189, 1}
         };
     });
-    RangeTable* _Pattern_Syntax = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Pattern_Syntax = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0021, 0x002f, 1},
             {0x003a, 0x0040, 1},
             {0x005b, 0x005e, 1},
@@ -6670,8 +6670,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 10;
     });
-    RangeTable* _Pattern_White_Space = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Pattern_White_Space = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0009, 0x000d, 1},
             {0x0020, 0x0085, 101},
             {0x200e, 0x200f, 1},
@@ -6679,19 +6679,19 @@ namespace golang::unicode
         };
         x.LatinOffset = 2;
     });
-    RangeTable* _Prepended_Concatenation_Mark = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Prepended_Concatenation_Mark = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0600, 0x0605, 1},
             {0x06dd, 0x070f, 50},
             {0x0890, 0x0891, 1},
             {0x08e2, 0x08e2, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x110bd, 0x110cd, 16}
         };
     });
-    RangeTable* _Quotation_Mark = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Quotation_Mark = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0022, 0x0027, 5},
             {0x00ab, 0x00bb, 16},
             {0x2018, 0x201f, 1},
@@ -6705,21 +6705,21 @@ namespace golang::unicode
         };
         x.LatinOffset = 2;
     });
-    RangeTable* _Radical = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Radical = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x2e80, 0x2e99, 1},
             {0x2e9b, 0x2ef3, 1},
             {0x2f00, 0x2fd5, 1}
         };
     });
-    RangeTable* _Regional_Indicator = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {};
-        x.R32 = gocpp::slice<Range32> {
+    golang::unicode::RangeTable* _Regional_Indicator = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {};
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1f1e6, 0x1f1ff, 1}
         };
     });
-    RangeTable* _Sentence_Terminal = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Sentence_Terminal = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0021, 0x002e, 13},
             {0x003f, 0x0589, 1354},
             {0x061d, 0x061f, 1},
@@ -6759,7 +6759,7 @@ namespace golang::unicode
             {0xff01, 0xff0e, 13},
             {0xff1f, 0xff61, 66}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10a56, 0x10a57, 1},
             {0x10f55, 0x10f59, 1},
             {0x10f86, 0x10f89, 1},
@@ -6790,8 +6790,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 1;
     });
-    RangeTable* _Soft_Dotted = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Soft_Dotted = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0069, 0x006a, 1},
             {0x012f, 0x0249, 282},
             {0x0268, 0x029d, 53},
@@ -6803,7 +6803,7 @@ namespace golang::unicode
             {0x2071, 0x2148, 215},
             {0x2149, 0x2c7c, 2867}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1d422, 0x1d423, 1},
             {0x1d456, 0x1d457, 1},
             {0x1d48a, 0x1d48b, 1},
@@ -6822,8 +6822,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 1;
     });
-    RangeTable* _Terminal_Punctuation = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Terminal_Punctuation = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0021, 0x002c, 11},
             {0x002e, 0x003a, 12},
             {0x003b, 0x003f, 4},
@@ -6880,7 +6880,7 @@ namespace golang::unicode
             {0xff1b, 0xff1f, 4},
             {0xff61, 0xff64, 3}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x1039f, 0x103d0, 49},
             {0x10857, 0x1091f, 200},
             {0x10a56, 0x10a57, 1},
@@ -6921,8 +6921,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 3;
     });
-    RangeTable* _Unified_Ideograph = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Unified_Ideograph = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x3400, 0x4dbf, 1},
             {0x4e00, 0x9fff, 1},
             {0xfa0e, 0xfa0f, 1},
@@ -6932,7 +6932,7 @@ namespace golang::unicode
             {0xfa24, 0xfa27, 3},
             {0xfa28, 0xfa29, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x20000, 0x2a6df, 1},
             {0x2a700, 0x2b739, 1},
             {0x2b740, 0x2b81d, 1},
@@ -6942,18 +6942,18 @@ namespace golang::unicode
             {0x31350, 0x323af, 1}
         };
     });
-    RangeTable* _Variation_Selector = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _Variation_Selector = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x180b, 0x180d, 1},
             {0x180f, 0xfe00, 58865},
             {0xfe01, 0xfe0f, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0xe0100, 0xe01ef, 1}
         };
     });
-    RangeTable* _White_Space = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* _White_Space = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0009, 0x000d, 1},
             {0x0020, 0x0085, 101},
             {0x00a0, 0x1680, 5600},
@@ -7003,335 +7003,335 @@ namespace golang::unicode
     // CaseRanges is the table describing case mappings for all letters with
     // non-self mappings.
     gocpp::slice<CaseRange> CaseRanges = _CaseRanges;
-    gocpp::slice<CaseRange> _CaseRanges = gocpp::slice<CaseRange> {
-        {0x0041, 0x005A, d {0, 32, 0}},
-        {0x0061, 0x007A, d {- 32, 0, - 32}},
-        {0x00B5, 0x00B5, d {743, 0, 743}},
-        {0x00C0, 0x00D6, d {0, 32, 0}},
-        {0x00D8, 0x00DE, d {0, 32, 0}},
-        {0x00E0, 0x00F6, d {- 32, 0, - 32}},
-        {0x00F8, 0x00FE, d {- 32, 0, - 32}},
-        {0x00FF, 0x00FF, d {121, 0, 121}},
-        {0x0100, 0x012F, d {UpperLower, UpperLower, UpperLower}},
-        {0x0130, 0x0130, d {0, - 199, 0}},
-        {0x0131, 0x0131, d {- 232, 0, - 232}},
-        {0x0132, 0x0137, d {UpperLower, UpperLower, UpperLower}},
-        {0x0139, 0x0148, d {UpperLower, UpperLower, UpperLower}},
-        {0x014A, 0x0177, d {UpperLower, UpperLower, UpperLower}},
-        {0x0178, 0x0178, d {0, - 121, 0}},
-        {0x0179, 0x017E, d {UpperLower, UpperLower, UpperLower}},
-        {0x017F, 0x017F, d {- 300, 0, - 300}},
-        {0x0180, 0x0180, d {195, 0, 195}},
-        {0x0181, 0x0181, d {0, 210, 0}},
-        {0x0182, 0x0185, d {UpperLower, UpperLower, UpperLower}},
-        {0x0186, 0x0186, d {0, 206, 0}},
-        {0x0187, 0x0188, d {UpperLower, UpperLower, UpperLower}},
-        {0x0189, 0x018A, d {0, 205, 0}},
-        {0x018B, 0x018C, d {UpperLower, UpperLower, UpperLower}},
-        {0x018E, 0x018E, d {0, 79, 0}},
-        {0x018F, 0x018F, d {0, 202, 0}},
-        {0x0190, 0x0190, d {0, 203, 0}},
-        {0x0191, 0x0192, d {UpperLower, UpperLower, UpperLower}},
-        {0x0193, 0x0193, d {0, 205, 0}},
-        {0x0194, 0x0194, d {0, 207, 0}},
-        {0x0195, 0x0195, d {97, 0, 97}},
-        {0x0196, 0x0196, d {0, 211, 0}},
-        {0x0197, 0x0197, d {0, 209, 0}},
-        {0x0198, 0x0199, d {UpperLower, UpperLower, UpperLower}},
-        {0x019A, 0x019A, d {163, 0, 163}},
-        {0x019C, 0x019C, d {0, 211, 0}},
-        {0x019D, 0x019D, d {0, 213, 0}},
-        {0x019E, 0x019E, d {130, 0, 130}},
-        {0x019F, 0x019F, d {0, 214, 0}},
-        {0x01A0, 0x01A5, d {UpperLower, UpperLower, UpperLower}},
-        {0x01A6, 0x01A6, d {0, 218, 0}},
-        {0x01A7, 0x01A8, d {UpperLower, UpperLower, UpperLower}},
-        {0x01A9, 0x01A9, d {0, 218, 0}},
-        {0x01AC, 0x01AD, d {UpperLower, UpperLower, UpperLower}},
-        {0x01AE, 0x01AE, d {0, 218, 0}},
-        {0x01AF, 0x01B0, d {UpperLower, UpperLower, UpperLower}},
-        {0x01B1, 0x01B2, d {0, 217, 0}},
-        {0x01B3, 0x01B6, d {UpperLower, UpperLower, UpperLower}},
-        {0x01B7, 0x01B7, d {0, 219, 0}},
-        {0x01B8, 0x01B9, d {UpperLower, UpperLower, UpperLower}},
-        {0x01BC, 0x01BD, d {UpperLower, UpperLower, UpperLower}},
-        {0x01BF, 0x01BF, d {56, 0, 56}},
-        {0x01C4, 0x01C4, d {0, 2, 1}},
-        {0x01C5, 0x01C5, d {- 1, 1, 0}},
-        {0x01C6, 0x01C6, d {- 2, 0, - 1}},
-        {0x01C7, 0x01C7, d {0, 2, 1}},
-        {0x01C8, 0x01C8, d {- 1, 1, 0}},
-        {0x01C9, 0x01C9, d {- 2, 0, - 1}},
-        {0x01CA, 0x01CA, d {0, 2, 1}},
-        {0x01CB, 0x01CB, d {- 1, 1, 0}},
-        {0x01CC, 0x01CC, d {- 2, 0, - 1}},
-        {0x01CD, 0x01DC, d {UpperLower, UpperLower, UpperLower}},
-        {0x01DD, 0x01DD, d {- 79, 0, - 79}},
-        {0x01DE, 0x01EF, d {UpperLower, UpperLower, UpperLower}},
-        {0x01F1, 0x01F1, d {0, 2, 1}},
-        {0x01F2, 0x01F2, d {- 1, 1, 0}},
-        {0x01F3, 0x01F3, d {- 2, 0, - 1}},
-        {0x01F4, 0x01F5, d {UpperLower, UpperLower, UpperLower}},
-        {0x01F6, 0x01F6, d {0, - 97, 0}},
-        {0x01F7, 0x01F7, d {0, - 56, 0}},
-        {0x01F8, 0x021F, d {UpperLower, UpperLower, UpperLower}},
-        {0x0220, 0x0220, d {0, - 130, 0}},
-        {0x0222, 0x0233, d {UpperLower, UpperLower, UpperLower}},
-        {0x023A, 0x023A, d {0, 10795, 0}},
-        {0x023B, 0x023C, d {UpperLower, UpperLower, UpperLower}},
-        {0x023D, 0x023D, d {0, - 163, 0}},
-        {0x023E, 0x023E, d {0, 10792, 0}},
-        {0x023F, 0x0240, d {10815, 0, 10815}},
-        {0x0241, 0x0242, d {UpperLower, UpperLower, UpperLower}},
-        {0x0243, 0x0243, d {0, - 195, 0}},
-        {0x0244, 0x0244, d {0, 69, 0}},
-        {0x0245, 0x0245, d {0, 71, 0}},
-        {0x0246, 0x024F, d {UpperLower, UpperLower, UpperLower}},
-        {0x0250, 0x0250, d {10783, 0, 10783}},
-        {0x0251, 0x0251, d {10780, 0, 10780}},
-        {0x0252, 0x0252, d {10782, 0, 10782}},
-        {0x0253, 0x0253, d {- 210, 0, - 210}},
-        {0x0254, 0x0254, d {- 206, 0, - 206}},
-        {0x0256, 0x0257, d {- 205, 0, - 205}},
-        {0x0259, 0x0259, d {- 202, 0, - 202}},
-        {0x025B, 0x025B, d {- 203, 0, - 203}},
-        {0x025C, 0x025C, d {42319, 0, 42319}},
-        {0x0260, 0x0260, d {- 205, 0, - 205}},
-        {0x0261, 0x0261, d {42315, 0, 42315}},
-        {0x0263, 0x0263, d {- 207, 0, - 207}},
-        {0x0265, 0x0265, d {42280, 0, 42280}},
-        {0x0266, 0x0266, d {42308, 0, 42308}},
-        {0x0268, 0x0268, d {- 209, 0, - 209}},
-        {0x0269, 0x0269, d {- 211, 0, - 211}},
-        {0x026A, 0x026A, d {42308, 0, 42308}},
-        {0x026B, 0x026B, d {10743, 0, 10743}},
-        {0x026C, 0x026C, d {42305, 0, 42305}},
-        {0x026F, 0x026F, d {- 211, 0, - 211}},
-        {0x0271, 0x0271, d {10749, 0, 10749}},
-        {0x0272, 0x0272, d {- 213, 0, - 213}},
-        {0x0275, 0x0275, d {- 214, 0, - 214}},
-        {0x027D, 0x027D, d {10727, 0, 10727}},
-        {0x0280, 0x0280, d {- 218, 0, - 218}},
-        {0x0282, 0x0282, d {42307, 0, 42307}},
-        {0x0283, 0x0283, d {- 218, 0, - 218}},
-        {0x0287, 0x0287, d {42282, 0, 42282}},
-        {0x0288, 0x0288, d {- 218, 0, - 218}},
-        {0x0289, 0x0289, d {- 69, 0, - 69}},
-        {0x028A, 0x028B, d {- 217, 0, - 217}},
-        {0x028C, 0x028C, d {- 71, 0, - 71}},
-        {0x0292, 0x0292, d {- 219, 0, - 219}},
-        {0x029D, 0x029D, d {42261, 0, 42261}},
-        {0x029E, 0x029E, d {42258, 0, 42258}},
-        {0x0345, 0x0345, d {84, 0, 84}},
-        {0x0370, 0x0373, d {UpperLower, UpperLower, UpperLower}},
-        {0x0376, 0x0377, d {UpperLower, UpperLower, UpperLower}},
-        {0x037B, 0x037D, d {130, 0, 130}},
-        {0x037F, 0x037F, d {0, 116, 0}},
-        {0x0386, 0x0386, d {0, 38, 0}},
-        {0x0388, 0x038A, d {0, 37, 0}},
-        {0x038C, 0x038C, d {0, 64, 0}},
-        {0x038E, 0x038F, d {0, 63, 0}},
-        {0x0391, 0x03A1, d {0, 32, 0}},
-        {0x03A3, 0x03AB, d {0, 32, 0}},
-        {0x03AC, 0x03AC, d {- 38, 0, - 38}},
-        {0x03AD, 0x03AF, d {- 37, 0, - 37}},
-        {0x03B1, 0x03C1, d {- 32, 0, - 32}},
-        {0x03C2, 0x03C2, d {- 31, 0, - 31}},
-        {0x03C3, 0x03CB, d {- 32, 0, - 32}},
-        {0x03CC, 0x03CC, d {- 64, 0, - 64}},
-        {0x03CD, 0x03CE, d {- 63, 0, - 63}},
-        {0x03CF, 0x03CF, d {0, 8, 0}},
-        {0x03D0, 0x03D0, d {- 62, 0, - 62}},
-        {0x03D1, 0x03D1, d {- 57, 0, - 57}},
-        {0x03D5, 0x03D5, d {- 47, 0, - 47}},
-        {0x03D6, 0x03D6, d {- 54, 0, - 54}},
-        {0x03D7, 0x03D7, d {- 8, 0, - 8}},
-        {0x03D8, 0x03EF, d {UpperLower, UpperLower, UpperLower}},
-        {0x03F0, 0x03F0, d {- 86, 0, - 86}},
-        {0x03F1, 0x03F1, d {- 80, 0, - 80}},
-        {0x03F2, 0x03F2, d {7, 0, 7}},
-        {0x03F3, 0x03F3, d {- 116, 0, - 116}},
-        {0x03F4, 0x03F4, d {0, - 60, 0}},
-        {0x03F5, 0x03F5, d {- 96, 0, - 96}},
-        {0x03F7, 0x03F8, d {UpperLower, UpperLower, UpperLower}},
-        {0x03F9, 0x03F9, d {0, - 7, 0}},
-        {0x03FA, 0x03FB, d {UpperLower, UpperLower, UpperLower}},
-        {0x03FD, 0x03FF, d {0, - 130, 0}},
-        {0x0400, 0x040F, d {0, 80, 0}},
-        {0x0410, 0x042F, d {0, 32, 0}},
-        {0x0430, 0x044F, d {- 32, 0, - 32}},
-        {0x0450, 0x045F, d {- 80, 0, - 80}},
-        {0x0460, 0x0481, d {UpperLower, UpperLower, UpperLower}},
-        {0x048A, 0x04BF, d {UpperLower, UpperLower, UpperLower}},
-        {0x04C0, 0x04C0, d {0, 15, 0}},
-        {0x04C1, 0x04CE, d {UpperLower, UpperLower, UpperLower}},
-        {0x04CF, 0x04CF, d {- 15, 0, - 15}},
-        {0x04D0, 0x052F, d {UpperLower, UpperLower, UpperLower}},
-        {0x0531, 0x0556, d {0, 48, 0}},
-        {0x0561, 0x0586, d {- 48, 0, - 48}},
-        {0x10A0, 0x10C5, d {0, 7264, 0}},
-        {0x10C7, 0x10C7, d {0, 7264, 0}},
-        {0x10CD, 0x10CD, d {0, 7264, 0}},
-        {0x10D0, 0x10FA, d {3008, 0, 0}},
-        {0x10FD, 0x10FF, d {3008, 0, 0}},
-        {0x13A0, 0x13EF, d {0, 38864, 0}},
-        {0x13F0, 0x13F5, d {0, 8, 0}},
-        {0x13F8, 0x13FD, d {- 8, 0, - 8}},
-        {0x1C80, 0x1C80, d {- 6254, 0, - 6254}},
-        {0x1C81, 0x1C81, d {- 6253, 0, - 6253}},
-        {0x1C82, 0x1C82, d {- 6244, 0, - 6244}},
-        {0x1C83, 0x1C84, d {- 6242, 0, - 6242}},
-        {0x1C85, 0x1C85, d {- 6243, 0, - 6243}},
-        {0x1C86, 0x1C86, d {- 6236, 0, - 6236}},
-        {0x1C87, 0x1C87, d {- 6181, 0, - 6181}},
-        {0x1C88, 0x1C88, d {35266, 0, 35266}},
-        {0x1C90, 0x1CBA, d {0, - 3008, 0}},
-        {0x1CBD, 0x1CBF, d {0, - 3008, 0}},
-        {0x1D79, 0x1D79, d {35332, 0, 35332}},
-        {0x1D7D, 0x1D7D, d {3814, 0, 3814}},
-        {0x1D8E, 0x1D8E, d {35384, 0, 35384}},
-        {0x1E00, 0x1E95, d {UpperLower, UpperLower, UpperLower}},
-        {0x1E9B, 0x1E9B, d {- 59, 0, - 59}},
-        {0x1E9E, 0x1E9E, d {0, - 7615, 0}},
-        {0x1EA0, 0x1EFF, d {UpperLower, UpperLower, UpperLower}},
-        {0x1F00, 0x1F07, d {8, 0, 8}},
-        {0x1F08, 0x1F0F, d {0, - 8, 0}},
-        {0x1F10, 0x1F15, d {8, 0, 8}},
-        {0x1F18, 0x1F1D, d {0, - 8, 0}},
-        {0x1F20, 0x1F27, d {8, 0, 8}},
-        {0x1F28, 0x1F2F, d {0, - 8, 0}},
-        {0x1F30, 0x1F37, d {8, 0, 8}},
-        {0x1F38, 0x1F3F, d {0, - 8, 0}},
-        {0x1F40, 0x1F45, d {8, 0, 8}},
-        {0x1F48, 0x1F4D, d {0, - 8, 0}},
-        {0x1F51, 0x1F51, d {8, 0, 8}},
-        {0x1F53, 0x1F53, d {8, 0, 8}},
-        {0x1F55, 0x1F55, d {8, 0, 8}},
-        {0x1F57, 0x1F57, d {8, 0, 8}},
-        {0x1F59, 0x1F59, d {0, - 8, 0}},
-        {0x1F5B, 0x1F5B, d {0, - 8, 0}},
-        {0x1F5D, 0x1F5D, d {0, - 8, 0}},
-        {0x1F5F, 0x1F5F, d {0, - 8, 0}},
-        {0x1F60, 0x1F67, d {8, 0, 8}},
-        {0x1F68, 0x1F6F, d {0, - 8, 0}},
-        {0x1F70, 0x1F71, d {74, 0, 74}},
-        {0x1F72, 0x1F75, d {86, 0, 86}},
-        {0x1F76, 0x1F77, d {100, 0, 100}},
-        {0x1F78, 0x1F79, d {128, 0, 128}},
-        {0x1F7A, 0x1F7B, d {112, 0, 112}},
-        {0x1F7C, 0x1F7D, d {126, 0, 126}},
-        {0x1F80, 0x1F87, d {8, 0, 8}},
-        {0x1F88, 0x1F8F, d {0, - 8, 0}},
-        {0x1F90, 0x1F97, d {8, 0, 8}},
-        {0x1F98, 0x1F9F, d {0, - 8, 0}},
-        {0x1FA0, 0x1FA7, d {8, 0, 8}},
-        {0x1FA8, 0x1FAF, d {0, - 8, 0}},
-        {0x1FB0, 0x1FB1, d {8, 0, 8}},
-        {0x1FB3, 0x1FB3, d {9, 0, 9}},
-        {0x1FB8, 0x1FB9, d {0, - 8, 0}},
-        {0x1FBA, 0x1FBB, d {0, - 74, 0}},
-        {0x1FBC, 0x1FBC, d {0, - 9, 0}},
-        {0x1FBE, 0x1FBE, d {- 7205, 0, - 7205}},
-        {0x1FC3, 0x1FC3, d {9, 0, 9}},
-        {0x1FC8, 0x1FCB, d {0, - 86, 0}},
-        {0x1FCC, 0x1FCC, d {0, - 9, 0}},
-        {0x1FD0, 0x1FD1, d {8, 0, 8}},
-        {0x1FD8, 0x1FD9, d {0, - 8, 0}},
-        {0x1FDA, 0x1FDB, d {0, - 100, 0}},
-        {0x1FE0, 0x1FE1, d {8, 0, 8}},
-        {0x1FE5, 0x1FE5, d {7, 0, 7}},
-        {0x1FE8, 0x1FE9, d {0, - 8, 0}},
-        {0x1FEA, 0x1FEB, d {0, - 112, 0}},
-        {0x1FEC, 0x1FEC, d {0, - 7, 0}},
-        {0x1FF3, 0x1FF3, d {9, 0, 9}},
-        {0x1FF8, 0x1FF9, d {0, - 128, 0}},
-        {0x1FFA, 0x1FFB, d {0, - 126, 0}},
-        {0x1FFC, 0x1FFC, d {0, - 9, 0}},
-        {0x2126, 0x2126, d {0, - 7517, 0}},
-        {0x212A, 0x212A, d {0, - 8383, 0}},
-        {0x212B, 0x212B, d {0, - 8262, 0}},
-        {0x2132, 0x2132, d {0, 28, 0}},
-        {0x214E, 0x214E, d {- 28, 0, - 28}},
-        {0x2160, 0x216F, d {0, 16, 0}},
-        {0x2170, 0x217F, d {- 16, 0, - 16}},
-        {0x2183, 0x2184, d {UpperLower, UpperLower, UpperLower}},
-        {0x24B6, 0x24CF, d {0, 26, 0}},
-        {0x24D0, 0x24E9, d {- 26, 0, - 26}},
-        {0x2C00, 0x2C2F, d {0, 48, 0}},
-        {0x2C30, 0x2C5F, d {- 48, 0, - 48}},
-        {0x2C60, 0x2C61, d {UpperLower, UpperLower, UpperLower}},
-        {0x2C62, 0x2C62, d {0, - 10743, 0}},
-        {0x2C63, 0x2C63, d {0, - 3814, 0}},
-        {0x2C64, 0x2C64, d {0, - 10727, 0}},
-        {0x2C65, 0x2C65, d {- 10795, 0, - 10795}},
-        {0x2C66, 0x2C66, d {- 10792, 0, - 10792}},
-        {0x2C67, 0x2C6C, d {UpperLower, UpperLower, UpperLower}},
-        {0x2C6D, 0x2C6D, d {0, - 10780, 0}},
-        {0x2C6E, 0x2C6E, d {0, - 10749, 0}},
-        {0x2C6F, 0x2C6F, d {0, - 10783, 0}},
-        {0x2C70, 0x2C70, d {0, - 10782, 0}},
-        {0x2C72, 0x2C73, d {UpperLower, UpperLower, UpperLower}},
-        {0x2C75, 0x2C76, d {UpperLower, UpperLower, UpperLower}},
-        {0x2C7E, 0x2C7F, d {0, - 10815, 0}},
-        {0x2C80, 0x2CE3, d {UpperLower, UpperLower, UpperLower}},
-        {0x2CEB, 0x2CEE, d {UpperLower, UpperLower, UpperLower}},
-        {0x2CF2, 0x2CF3, d {UpperLower, UpperLower, UpperLower}},
-        {0x2D00, 0x2D25, d {- 7264, 0, - 7264}},
-        {0x2D27, 0x2D27, d {- 7264, 0, - 7264}},
-        {0x2D2D, 0x2D2D, d {- 7264, 0, - 7264}},
-        {0xA640, 0xA66D, d {UpperLower, UpperLower, UpperLower}},
-        {0xA680, 0xA69B, d {UpperLower, UpperLower, UpperLower}},
-        {0xA722, 0xA72F, d {UpperLower, UpperLower, UpperLower}},
-        {0xA732, 0xA76F, d {UpperLower, UpperLower, UpperLower}},
-        {0xA779, 0xA77C, d {UpperLower, UpperLower, UpperLower}},
-        {0xA77D, 0xA77D, d {0, - 35332, 0}},
-        {0xA77E, 0xA787, d {UpperLower, UpperLower, UpperLower}},
-        {0xA78B, 0xA78C, d {UpperLower, UpperLower, UpperLower}},
-        {0xA78D, 0xA78D, d {0, - 42280, 0}},
-        {0xA790, 0xA793, d {UpperLower, UpperLower, UpperLower}},
-        {0xA794, 0xA794, d {48, 0, 48}},
-        {0xA796, 0xA7A9, d {UpperLower, UpperLower, UpperLower}},
-        {0xA7AA, 0xA7AA, d {0, - 42308, 0}},
-        {0xA7AB, 0xA7AB, d {0, - 42319, 0}},
-        {0xA7AC, 0xA7AC, d {0, - 42315, 0}},
-        {0xA7AD, 0xA7AD, d {0, - 42305, 0}},
-        {0xA7AE, 0xA7AE, d {0, - 42308, 0}},
-        {0xA7B0, 0xA7B0, d {0, - 42258, 0}},
-        {0xA7B1, 0xA7B1, d {0, - 42282, 0}},
-        {0xA7B2, 0xA7B2, d {0, - 42261, 0}},
-        {0xA7B3, 0xA7B3, d {0, 928, 0}},
-        {0xA7B4, 0xA7C3, d {UpperLower, UpperLower, UpperLower}},
-        {0xA7C4, 0xA7C4, d {0, - 48, 0}},
-        {0xA7C5, 0xA7C5, d {0, - 42307, 0}},
-        {0xA7C6, 0xA7C6, d {0, - 35384, 0}},
-        {0xA7C7, 0xA7CA, d {UpperLower, UpperLower, UpperLower}},
-        {0xA7D0, 0xA7D1, d {UpperLower, UpperLower, UpperLower}},
-        {0xA7D6, 0xA7D9, d {UpperLower, UpperLower, UpperLower}},
-        {0xA7F5, 0xA7F6, d {UpperLower, UpperLower, UpperLower}},
-        {0xAB53, 0xAB53, d {- 928, 0, - 928}},
-        {0xAB70, 0xABBF, d {- 38864, 0, - 38864}},
-        {0xFF21, 0xFF3A, d {0, 32, 0}},
-        {0xFF41, 0xFF5A, d {- 32, 0, - 32}},
-        {0x10400, 0x10427, d {0, 40, 0}},
-        {0x10428, 0x1044F, d {- 40, 0, - 40}},
-        {0x104B0, 0x104D3, d {0, 40, 0}},
-        {0x104D8, 0x104FB, d {- 40, 0, - 40}},
-        {0x10570, 0x1057A, d {0, 39, 0}},
-        {0x1057C, 0x1058A, d {0, 39, 0}},
-        {0x1058C, 0x10592, d {0, 39, 0}},
-        {0x10594, 0x10595, d {0, 39, 0}},
-        {0x10597, 0x105A1, d {- 39, 0, - 39}},
-        {0x105A3, 0x105B1, d {- 39, 0, - 39}},
-        {0x105B3, 0x105B9, d {- 39, 0, - 39}},
-        {0x105BB, 0x105BC, d {- 39, 0, - 39}},
-        {0x10C80, 0x10CB2, d {0, 64, 0}},
-        {0x10CC0, 0x10CF2, d {- 64, 0, - 64}},
-        {0x118A0, 0x118BF, d {0, 32, 0}},
-        {0x118C0, 0x118DF, d {- 32, 0, - 32}},
-        {0x16E40, 0x16E5F, d {0, 32, 0}},
-        {0x16E60, 0x16E7F, d {- 32, 0, - 32}},
-        {0x1E900, 0x1E921, d {0, 34, 0}},
-        {0x1E922, 0x1E943, d {- 34, 0, - 34}}
+    gocpp::slice<golang::unicode::CaseRange> _CaseRanges = gocpp::slice<golang::unicode::CaseRange> {
+        {0x0041, 0x005A, golang::unicode::d {0, 32, 0}},
+        {0x0061, 0x007A, golang::unicode::d {- 32, 0, - 32}},
+        {0x00B5, 0x00B5, golang::unicode::d {743, 0, 743}},
+        {0x00C0, 0x00D6, golang::unicode::d {0, 32, 0}},
+        {0x00D8, 0x00DE, golang::unicode::d {0, 32, 0}},
+        {0x00E0, 0x00F6, golang::unicode::d {- 32, 0, - 32}},
+        {0x00F8, 0x00FE, golang::unicode::d {- 32, 0, - 32}},
+        {0x00FF, 0x00FF, golang::unicode::d {121, 0, 121}},
+        {0x0100, 0x012F, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0130, 0x0130, golang::unicode::d {0, - 199, 0}},
+        {0x0131, 0x0131, golang::unicode::d {- 232, 0, - 232}},
+        {0x0132, 0x0137, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0139, 0x0148, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x014A, 0x0177, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0178, 0x0178, golang::unicode::d {0, - 121, 0}},
+        {0x0179, 0x017E, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x017F, 0x017F, golang::unicode::d {- 300, 0, - 300}},
+        {0x0180, 0x0180, golang::unicode::d {195, 0, 195}},
+        {0x0181, 0x0181, golang::unicode::d {0, 210, 0}},
+        {0x0182, 0x0185, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0186, 0x0186, golang::unicode::d {0, 206, 0}},
+        {0x0187, 0x0188, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0189, 0x018A, golang::unicode::d {0, 205, 0}},
+        {0x018B, 0x018C, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x018E, 0x018E, golang::unicode::d {0, 79, 0}},
+        {0x018F, 0x018F, golang::unicode::d {0, 202, 0}},
+        {0x0190, 0x0190, golang::unicode::d {0, 203, 0}},
+        {0x0191, 0x0192, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0193, 0x0193, golang::unicode::d {0, 205, 0}},
+        {0x0194, 0x0194, golang::unicode::d {0, 207, 0}},
+        {0x0195, 0x0195, golang::unicode::d {97, 0, 97}},
+        {0x0196, 0x0196, golang::unicode::d {0, 211, 0}},
+        {0x0197, 0x0197, golang::unicode::d {0, 209, 0}},
+        {0x0198, 0x0199, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x019A, 0x019A, golang::unicode::d {163, 0, 163}},
+        {0x019C, 0x019C, golang::unicode::d {0, 211, 0}},
+        {0x019D, 0x019D, golang::unicode::d {0, 213, 0}},
+        {0x019E, 0x019E, golang::unicode::d {130, 0, 130}},
+        {0x019F, 0x019F, golang::unicode::d {0, 214, 0}},
+        {0x01A0, 0x01A5, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x01A6, 0x01A6, golang::unicode::d {0, 218, 0}},
+        {0x01A7, 0x01A8, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x01A9, 0x01A9, golang::unicode::d {0, 218, 0}},
+        {0x01AC, 0x01AD, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x01AE, 0x01AE, golang::unicode::d {0, 218, 0}},
+        {0x01AF, 0x01B0, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x01B1, 0x01B2, golang::unicode::d {0, 217, 0}},
+        {0x01B3, 0x01B6, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x01B7, 0x01B7, golang::unicode::d {0, 219, 0}},
+        {0x01B8, 0x01B9, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x01BC, 0x01BD, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x01BF, 0x01BF, golang::unicode::d {56, 0, 56}},
+        {0x01C4, 0x01C4, golang::unicode::d {0, 2, 1}},
+        {0x01C5, 0x01C5, golang::unicode::d {- 1, 1, 0}},
+        {0x01C6, 0x01C6, golang::unicode::d {- 2, 0, - 1}},
+        {0x01C7, 0x01C7, golang::unicode::d {0, 2, 1}},
+        {0x01C8, 0x01C8, golang::unicode::d {- 1, 1, 0}},
+        {0x01C9, 0x01C9, golang::unicode::d {- 2, 0, - 1}},
+        {0x01CA, 0x01CA, golang::unicode::d {0, 2, 1}},
+        {0x01CB, 0x01CB, golang::unicode::d {- 1, 1, 0}},
+        {0x01CC, 0x01CC, golang::unicode::d {- 2, 0, - 1}},
+        {0x01CD, 0x01DC, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x01DD, 0x01DD, golang::unicode::d {- 79, 0, - 79}},
+        {0x01DE, 0x01EF, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x01F1, 0x01F1, golang::unicode::d {0, 2, 1}},
+        {0x01F2, 0x01F2, golang::unicode::d {- 1, 1, 0}},
+        {0x01F3, 0x01F3, golang::unicode::d {- 2, 0, - 1}},
+        {0x01F4, 0x01F5, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x01F6, 0x01F6, golang::unicode::d {0, - 97, 0}},
+        {0x01F7, 0x01F7, golang::unicode::d {0, - 56, 0}},
+        {0x01F8, 0x021F, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0220, 0x0220, golang::unicode::d {0, - 130, 0}},
+        {0x0222, 0x0233, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x023A, 0x023A, golang::unicode::d {0, 10795, 0}},
+        {0x023B, 0x023C, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x023D, 0x023D, golang::unicode::d {0, - 163, 0}},
+        {0x023E, 0x023E, golang::unicode::d {0, 10792, 0}},
+        {0x023F, 0x0240, golang::unicode::d {10815, 0, 10815}},
+        {0x0241, 0x0242, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0243, 0x0243, golang::unicode::d {0, - 195, 0}},
+        {0x0244, 0x0244, golang::unicode::d {0, 69, 0}},
+        {0x0245, 0x0245, golang::unicode::d {0, 71, 0}},
+        {0x0246, 0x024F, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0250, 0x0250, golang::unicode::d {10783, 0, 10783}},
+        {0x0251, 0x0251, golang::unicode::d {10780, 0, 10780}},
+        {0x0252, 0x0252, golang::unicode::d {10782, 0, 10782}},
+        {0x0253, 0x0253, golang::unicode::d {- 210, 0, - 210}},
+        {0x0254, 0x0254, golang::unicode::d {- 206, 0, - 206}},
+        {0x0256, 0x0257, golang::unicode::d {- 205, 0, - 205}},
+        {0x0259, 0x0259, golang::unicode::d {- 202, 0, - 202}},
+        {0x025B, 0x025B, golang::unicode::d {- 203, 0, - 203}},
+        {0x025C, 0x025C, golang::unicode::d {42319, 0, 42319}},
+        {0x0260, 0x0260, golang::unicode::d {- 205, 0, - 205}},
+        {0x0261, 0x0261, golang::unicode::d {42315, 0, 42315}},
+        {0x0263, 0x0263, golang::unicode::d {- 207, 0, - 207}},
+        {0x0265, 0x0265, golang::unicode::d {42280, 0, 42280}},
+        {0x0266, 0x0266, golang::unicode::d {42308, 0, 42308}},
+        {0x0268, 0x0268, golang::unicode::d {- 209, 0, - 209}},
+        {0x0269, 0x0269, golang::unicode::d {- 211, 0, - 211}},
+        {0x026A, 0x026A, golang::unicode::d {42308, 0, 42308}},
+        {0x026B, 0x026B, golang::unicode::d {10743, 0, 10743}},
+        {0x026C, 0x026C, golang::unicode::d {42305, 0, 42305}},
+        {0x026F, 0x026F, golang::unicode::d {- 211, 0, - 211}},
+        {0x0271, 0x0271, golang::unicode::d {10749, 0, 10749}},
+        {0x0272, 0x0272, golang::unicode::d {- 213, 0, - 213}},
+        {0x0275, 0x0275, golang::unicode::d {- 214, 0, - 214}},
+        {0x027D, 0x027D, golang::unicode::d {10727, 0, 10727}},
+        {0x0280, 0x0280, golang::unicode::d {- 218, 0, - 218}},
+        {0x0282, 0x0282, golang::unicode::d {42307, 0, 42307}},
+        {0x0283, 0x0283, golang::unicode::d {- 218, 0, - 218}},
+        {0x0287, 0x0287, golang::unicode::d {42282, 0, 42282}},
+        {0x0288, 0x0288, golang::unicode::d {- 218, 0, - 218}},
+        {0x0289, 0x0289, golang::unicode::d {- 69, 0, - 69}},
+        {0x028A, 0x028B, golang::unicode::d {- 217, 0, - 217}},
+        {0x028C, 0x028C, golang::unicode::d {- 71, 0, - 71}},
+        {0x0292, 0x0292, golang::unicode::d {- 219, 0, - 219}},
+        {0x029D, 0x029D, golang::unicode::d {42261, 0, 42261}},
+        {0x029E, 0x029E, golang::unicode::d {42258, 0, 42258}},
+        {0x0345, 0x0345, golang::unicode::d {84, 0, 84}},
+        {0x0370, 0x0373, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0376, 0x0377, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x037B, 0x037D, golang::unicode::d {130, 0, 130}},
+        {0x037F, 0x037F, golang::unicode::d {0, 116, 0}},
+        {0x0386, 0x0386, golang::unicode::d {0, 38, 0}},
+        {0x0388, 0x038A, golang::unicode::d {0, 37, 0}},
+        {0x038C, 0x038C, golang::unicode::d {0, 64, 0}},
+        {0x038E, 0x038F, golang::unicode::d {0, 63, 0}},
+        {0x0391, 0x03A1, golang::unicode::d {0, 32, 0}},
+        {0x03A3, 0x03AB, golang::unicode::d {0, 32, 0}},
+        {0x03AC, 0x03AC, golang::unicode::d {- 38, 0, - 38}},
+        {0x03AD, 0x03AF, golang::unicode::d {- 37, 0, - 37}},
+        {0x03B1, 0x03C1, golang::unicode::d {- 32, 0, - 32}},
+        {0x03C2, 0x03C2, golang::unicode::d {- 31, 0, - 31}},
+        {0x03C3, 0x03CB, golang::unicode::d {- 32, 0, - 32}},
+        {0x03CC, 0x03CC, golang::unicode::d {- 64, 0, - 64}},
+        {0x03CD, 0x03CE, golang::unicode::d {- 63, 0, - 63}},
+        {0x03CF, 0x03CF, golang::unicode::d {0, 8, 0}},
+        {0x03D0, 0x03D0, golang::unicode::d {- 62, 0, - 62}},
+        {0x03D1, 0x03D1, golang::unicode::d {- 57, 0, - 57}},
+        {0x03D5, 0x03D5, golang::unicode::d {- 47, 0, - 47}},
+        {0x03D6, 0x03D6, golang::unicode::d {- 54, 0, - 54}},
+        {0x03D7, 0x03D7, golang::unicode::d {- 8, 0, - 8}},
+        {0x03D8, 0x03EF, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x03F0, 0x03F0, golang::unicode::d {- 86, 0, - 86}},
+        {0x03F1, 0x03F1, golang::unicode::d {- 80, 0, - 80}},
+        {0x03F2, 0x03F2, golang::unicode::d {7, 0, 7}},
+        {0x03F3, 0x03F3, golang::unicode::d {- 116, 0, - 116}},
+        {0x03F4, 0x03F4, golang::unicode::d {0, - 60, 0}},
+        {0x03F5, 0x03F5, golang::unicode::d {- 96, 0, - 96}},
+        {0x03F7, 0x03F8, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x03F9, 0x03F9, golang::unicode::d {0, - 7, 0}},
+        {0x03FA, 0x03FB, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x03FD, 0x03FF, golang::unicode::d {0, - 130, 0}},
+        {0x0400, 0x040F, golang::unicode::d {0, 80, 0}},
+        {0x0410, 0x042F, golang::unicode::d {0, 32, 0}},
+        {0x0430, 0x044F, golang::unicode::d {- 32, 0, - 32}},
+        {0x0450, 0x045F, golang::unicode::d {- 80, 0, - 80}},
+        {0x0460, 0x0481, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x048A, 0x04BF, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x04C0, 0x04C0, golang::unicode::d {0, 15, 0}},
+        {0x04C1, 0x04CE, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x04CF, 0x04CF, golang::unicode::d {- 15, 0, - 15}},
+        {0x04D0, 0x052F, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x0531, 0x0556, golang::unicode::d {0, 48, 0}},
+        {0x0561, 0x0586, golang::unicode::d {- 48, 0, - 48}},
+        {0x10A0, 0x10C5, golang::unicode::d {0, 7264, 0}},
+        {0x10C7, 0x10C7, golang::unicode::d {0, 7264, 0}},
+        {0x10CD, 0x10CD, golang::unicode::d {0, 7264, 0}},
+        {0x10D0, 0x10FA, golang::unicode::d {3008, 0, 0}},
+        {0x10FD, 0x10FF, golang::unicode::d {3008, 0, 0}},
+        {0x13A0, 0x13EF, golang::unicode::d {0, 38864, 0}},
+        {0x13F0, 0x13F5, golang::unicode::d {0, 8, 0}},
+        {0x13F8, 0x13FD, golang::unicode::d {- 8, 0, - 8}},
+        {0x1C80, 0x1C80, golang::unicode::d {- 6254, 0, - 6254}},
+        {0x1C81, 0x1C81, golang::unicode::d {- 6253, 0, - 6253}},
+        {0x1C82, 0x1C82, golang::unicode::d {- 6244, 0, - 6244}},
+        {0x1C83, 0x1C84, golang::unicode::d {- 6242, 0, - 6242}},
+        {0x1C85, 0x1C85, golang::unicode::d {- 6243, 0, - 6243}},
+        {0x1C86, 0x1C86, golang::unicode::d {- 6236, 0, - 6236}},
+        {0x1C87, 0x1C87, golang::unicode::d {- 6181, 0, - 6181}},
+        {0x1C88, 0x1C88, golang::unicode::d {35266, 0, 35266}},
+        {0x1C90, 0x1CBA, golang::unicode::d {0, - 3008, 0}},
+        {0x1CBD, 0x1CBF, golang::unicode::d {0, - 3008, 0}},
+        {0x1D79, 0x1D79, golang::unicode::d {35332, 0, 35332}},
+        {0x1D7D, 0x1D7D, golang::unicode::d {3814, 0, 3814}},
+        {0x1D8E, 0x1D8E, golang::unicode::d {35384, 0, 35384}},
+        {0x1E00, 0x1E95, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x1E9B, 0x1E9B, golang::unicode::d {- 59, 0, - 59}},
+        {0x1E9E, 0x1E9E, golang::unicode::d {0, - 7615, 0}},
+        {0x1EA0, 0x1EFF, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x1F00, 0x1F07, golang::unicode::d {8, 0, 8}},
+        {0x1F08, 0x1F0F, golang::unicode::d {0, - 8, 0}},
+        {0x1F10, 0x1F15, golang::unicode::d {8, 0, 8}},
+        {0x1F18, 0x1F1D, golang::unicode::d {0, - 8, 0}},
+        {0x1F20, 0x1F27, golang::unicode::d {8, 0, 8}},
+        {0x1F28, 0x1F2F, golang::unicode::d {0, - 8, 0}},
+        {0x1F30, 0x1F37, golang::unicode::d {8, 0, 8}},
+        {0x1F38, 0x1F3F, golang::unicode::d {0, - 8, 0}},
+        {0x1F40, 0x1F45, golang::unicode::d {8, 0, 8}},
+        {0x1F48, 0x1F4D, golang::unicode::d {0, - 8, 0}},
+        {0x1F51, 0x1F51, golang::unicode::d {8, 0, 8}},
+        {0x1F53, 0x1F53, golang::unicode::d {8, 0, 8}},
+        {0x1F55, 0x1F55, golang::unicode::d {8, 0, 8}},
+        {0x1F57, 0x1F57, golang::unicode::d {8, 0, 8}},
+        {0x1F59, 0x1F59, golang::unicode::d {0, - 8, 0}},
+        {0x1F5B, 0x1F5B, golang::unicode::d {0, - 8, 0}},
+        {0x1F5D, 0x1F5D, golang::unicode::d {0, - 8, 0}},
+        {0x1F5F, 0x1F5F, golang::unicode::d {0, - 8, 0}},
+        {0x1F60, 0x1F67, golang::unicode::d {8, 0, 8}},
+        {0x1F68, 0x1F6F, golang::unicode::d {0, - 8, 0}},
+        {0x1F70, 0x1F71, golang::unicode::d {74, 0, 74}},
+        {0x1F72, 0x1F75, golang::unicode::d {86, 0, 86}},
+        {0x1F76, 0x1F77, golang::unicode::d {100, 0, 100}},
+        {0x1F78, 0x1F79, golang::unicode::d {128, 0, 128}},
+        {0x1F7A, 0x1F7B, golang::unicode::d {112, 0, 112}},
+        {0x1F7C, 0x1F7D, golang::unicode::d {126, 0, 126}},
+        {0x1F80, 0x1F87, golang::unicode::d {8, 0, 8}},
+        {0x1F88, 0x1F8F, golang::unicode::d {0, - 8, 0}},
+        {0x1F90, 0x1F97, golang::unicode::d {8, 0, 8}},
+        {0x1F98, 0x1F9F, golang::unicode::d {0, - 8, 0}},
+        {0x1FA0, 0x1FA7, golang::unicode::d {8, 0, 8}},
+        {0x1FA8, 0x1FAF, golang::unicode::d {0, - 8, 0}},
+        {0x1FB0, 0x1FB1, golang::unicode::d {8, 0, 8}},
+        {0x1FB3, 0x1FB3, golang::unicode::d {9, 0, 9}},
+        {0x1FB8, 0x1FB9, golang::unicode::d {0, - 8, 0}},
+        {0x1FBA, 0x1FBB, golang::unicode::d {0, - 74, 0}},
+        {0x1FBC, 0x1FBC, golang::unicode::d {0, - 9, 0}},
+        {0x1FBE, 0x1FBE, golang::unicode::d {- 7205, 0, - 7205}},
+        {0x1FC3, 0x1FC3, golang::unicode::d {9, 0, 9}},
+        {0x1FC8, 0x1FCB, golang::unicode::d {0, - 86, 0}},
+        {0x1FCC, 0x1FCC, golang::unicode::d {0, - 9, 0}},
+        {0x1FD0, 0x1FD1, golang::unicode::d {8, 0, 8}},
+        {0x1FD8, 0x1FD9, golang::unicode::d {0, - 8, 0}},
+        {0x1FDA, 0x1FDB, golang::unicode::d {0, - 100, 0}},
+        {0x1FE0, 0x1FE1, golang::unicode::d {8, 0, 8}},
+        {0x1FE5, 0x1FE5, golang::unicode::d {7, 0, 7}},
+        {0x1FE8, 0x1FE9, golang::unicode::d {0, - 8, 0}},
+        {0x1FEA, 0x1FEB, golang::unicode::d {0, - 112, 0}},
+        {0x1FEC, 0x1FEC, golang::unicode::d {0, - 7, 0}},
+        {0x1FF3, 0x1FF3, golang::unicode::d {9, 0, 9}},
+        {0x1FF8, 0x1FF9, golang::unicode::d {0, - 128, 0}},
+        {0x1FFA, 0x1FFB, golang::unicode::d {0, - 126, 0}},
+        {0x1FFC, 0x1FFC, golang::unicode::d {0, - 9, 0}},
+        {0x2126, 0x2126, golang::unicode::d {0, - 7517, 0}},
+        {0x212A, 0x212A, golang::unicode::d {0, - 8383, 0}},
+        {0x212B, 0x212B, golang::unicode::d {0, - 8262, 0}},
+        {0x2132, 0x2132, golang::unicode::d {0, 28, 0}},
+        {0x214E, 0x214E, golang::unicode::d {- 28, 0, - 28}},
+        {0x2160, 0x216F, golang::unicode::d {0, 16, 0}},
+        {0x2170, 0x217F, golang::unicode::d {- 16, 0, - 16}},
+        {0x2183, 0x2184, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x24B6, 0x24CF, golang::unicode::d {0, 26, 0}},
+        {0x24D0, 0x24E9, golang::unicode::d {- 26, 0, - 26}},
+        {0x2C00, 0x2C2F, golang::unicode::d {0, 48, 0}},
+        {0x2C30, 0x2C5F, golang::unicode::d {- 48, 0, - 48}},
+        {0x2C60, 0x2C61, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x2C62, 0x2C62, golang::unicode::d {0, - 10743, 0}},
+        {0x2C63, 0x2C63, golang::unicode::d {0, - 3814, 0}},
+        {0x2C64, 0x2C64, golang::unicode::d {0, - 10727, 0}},
+        {0x2C65, 0x2C65, golang::unicode::d {- 10795, 0, - 10795}},
+        {0x2C66, 0x2C66, golang::unicode::d {- 10792, 0, - 10792}},
+        {0x2C67, 0x2C6C, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x2C6D, 0x2C6D, golang::unicode::d {0, - 10780, 0}},
+        {0x2C6E, 0x2C6E, golang::unicode::d {0, - 10749, 0}},
+        {0x2C6F, 0x2C6F, golang::unicode::d {0, - 10783, 0}},
+        {0x2C70, 0x2C70, golang::unicode::d {0, - 10782, 0}},
+        {0x2C72, 0x2C73, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x2C75, 0x2C76, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x2C7E, 0x2C7F, golang::unicode::d {0, - 10815, 0}},
+        {0x2C80, 0x2CE3, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x2CEB, 0x2CEE, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x2CF2, 0x2CF3, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0x2D00, 0x2D25, golang::unicode::d {- 7264, 0, - 7264}},
+        {0x2D27, 0x2D27, golang::unicode::d {- 7264, 0, - 7264}},
+        {0x2D2D, 0x2D2D, golang::unicode::d {- 7264, 0, - 7264}},
+        {0xA640, 0xA66D, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA680, 0xA69B, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA722, 0xA72F, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA732, 0xA76F, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA779, 0xA77C, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA77D, 0xA77D, golang::unicode::d {0, - 35332, 0}},
+        {0xA77E, 0xA787, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA78B, 0xA78C, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA78D, 0xA78D, golang::unicode::d {0, - 42280, 0}},
+        {0xA790, 0xA793, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA794, 0xA794, golang::unicode::d {48, 0, 48}},
+        {0xA796, 0xA7A9, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA7AA, 0xA7AA, golang::unicode::d {0, - 42308, 0}},
+        {0xA7AB, 0xA7AB, golang::unicode::d {0, - 42319, 0}},
+        {0xA7AC, 0xA7AC, golang::unicode::d {0, - 42315, 0}},
+        {0xA7AD, 0xA7AD, golang::unicode::d {0, - 42305, 0}},
+        {0xA7AE, 0xA7AE, golang::unicode::d {0, - 42308, 0}},
+        {0xA7B0, 0xA7B0, golang::unicode::d {0, - 42258, 0}},
+        {0xA7B1, 0xA7B1, golang::unicode::d {0, - 42282, 0}},
+        {0xA7B2, 0xA7B2, golang::unicode::d {0, - 42261, 0}},
+        {0xA7B3, 0xA7B3, golang::unicode::d {0, 928, 0}},
+        {0xA7B4, 0xA7C3, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA7C4, 0xA7C4, golang::unicode::d {0, - 48, 0}},
+        {0xA7C5, 0xA7C5, golang::unicode::d {0, - 42307, 0}},
+        {0xA7C6, 0xA7C6, golang::unicode::d {0, - 35384, 0}},
+        {0xA7C7, 0xA7CA, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA7D0, 0xA7D1, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA7D6, 0xA7D9, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xA7F5, 0xA7F6, golang::unicode::d {UpperLower, UpperLower, UpperLower}},
+        {0xAB53, 0xAB53, golang::unicode::d {- 928, 0, - 928}},
+        {0xAB70, 0xABBF, golang::unicode::d {- 38864, 0, - 38864}},
+        {0xFF21, 0xFF3A, golang::unicode::d {0, 32, 0}},
+        {0xFF41, 0xFF5A, golang::unicode::d {- 32, 0, - 32}},
+        {0x10400, 0x10427, golang::unicode::d {0, 40, 0}},
+        {0x10428, 0x1044F, golang::unicode::d {- 40, 0, - 40}},
+        {0x104B0, 0x104D3, golang::unicode::d {0, 40, 0}},
+        {0x104D8, 0x104FB, golang::unicode::d {- 40, 0, - 40}},
+        {0x10570, 0x1057A, golang::unicode::d {0, 39, 0}},
+        {0x1057C, 0x1058A, golang::unicode::d {0, 39, 0}},
+        {0x1058C, 0x10592, golang::unicode::d {0, 39, 0}},
+        {0x10594, 0x10595, golang::unicode::d {0, 39, 0}},
+        {0x10597, 0x105A1, golang::unicode::d {- 39, 0, - 39}},
+        {0x105A3, 0x105B1, golang::unicode::d {- 39, 0, - 39}},
+        {0x105B3, 0x105B9, golang::unicode::d {- 39, 0, - 39}},
+        {0x105BB, 0x105BC, golang::unicode::d {- 39, 0, - 39}},
+        {0x10C80, 0x10CB2, golang::unicode::d {0, 64, 0}},
+        {0x10CC0, 0x10CF2, golang::unicode::d {- 64, 0, - 64}},
+        {0x118A0, 0x118BF, golang::unicode::d {0, 32, 0}},
+        {0x118C0, 0x118DF, golang::unicode::d {- 32, 0, - 32}},
+        {0x16E40, 0x16E5F, golang::unicode::d {0, 32, 0}},
+        {0x16E60, 0x16E7F, golang::unicode::d {- 32, 0, - 32}},
+        {0x1E900, 0x1E921, golang::unicode::d {0, 34, 0}},
+        {0x1E922, 0x1E943, golang::unicode::d {- 34, 0, - 34}}
     };
     gocpp::array<uint8_t, MaxLatin1 + 1> properties = gocpp::Init<gocpp::array<uint8_t, MaxLatin1 + 1>>([](auto& x) {
         x[0x00] = pC;
@@ -7721,7 +7721,7 @@ namespace golang::unicode
         0x007E,
         0x007F
     };
-    gocpp::slice<foldPair> caseOrbit = gocpp::slice<foldPair> {
+    gocpp::slice<golang::unicode::foldPair> caseOrbit = gocpp::slice<golang::unicode::foldPair> {
         {0x004B, 0x006B},
         {0x0053, 0x0073},
         {0x006B, 0x212A},
@@ -7815,7 +7815,7 @@ namespace golang::unicode
     // code points outside the category that are equivalent under
     // simple case folding to code points inside the category.
     // If there is no entry for a category name, there are no such points.
-    gocpp::map<gocpp::string, RangeTable*> FoldCategory = gocpp::map<gocpp::string, RangeTable*> {
+    gocpp::map<gocpp::string, golang::unicode::RangeTable*> FoldCategory = gocpp::map<gocpp::string, golang::unicode::RangeTable*> {
         { "L"_s, foldL },
         { "Ll"_s, foldLl },
         { "Lt"_s, foldLt },
@@ -7823,13 +7823,13 @@ namespace golang::unicode
         { "M"_s, foldM },
         { "Mn"_s, foldMn }
     };
-    RangeTable* foldL = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* foldL = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0345, 0x0345, 1}
         };
     });
-    RangeTable* foldLl = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* foldLl = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0041, 0x005a, 1},
             {0x00c0, 0x00d6, 1},
             {0x00d8, 0x00de, 1},
@@ -7939,7 +7939,7 @@ namespace golang::unicode
             {0xa7f5, 0xff21, 22316},
             {0xff22, 0xff3a, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10400, 0x10427, 1},
             {0x104b0, 0x104d3, 1},
             {0x10570, 0x1057a, 1},
@@ -7953,8 +7953,8 @@ namespace golang::unicode
         };
         x.LatinOffset = 3;
     });
-    RangeTable* foldLt = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* foldLt = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x01c4, 0x01c6, 2},
             {0x01c7, 0x01c9, 2},
             {0x01ca, 0x01cc, 2},
@@ -7966,8 +7966,8 @@ namespace golang::unicode
             {0x1ff3, 0x1ff3, 1}
         };
     });
-    RangeTable* foldLu = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* foldLu = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0061, 0x007a, 1},
             {0x00b5, 0x00df, 42},
             {0x00e0, 0x00f6, 1},
@@ -8078,7 +8078,7 @@ namespace golang::unicode
             {0xab71, 0xabbf, 1},
             {0xff41, 0xff5a, 1}
         };
-        x.R32 = gocpp::slice<Range32> {
+        x.R32 = gocpp::slice<golang::unicode::Range32> {
             {0x10428, 0x1044f, 1},
             {0x104d8, 0x104fb, 1},
             {0x10597, 0x105a1, 1},
@@ -8092,14 +8092,14 @@ namespace golang::unicode
         };
         x.LatinOffset = 4;
     });
-    RangeTable* foldM = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* foldM = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0399, 0x03b9, 32},
             {0x1fbe, 0x1fbe, 1}
         };
     });
-    RangeTable* foldMn = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* foldMn = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0399, 0x03b9, 32},
             {0x1fbe, 0x1fbe, 1}
         };
@@ -8108,23 +8108,23 @@ namespace golang::unicode
     // code points outside the script that are equivalent under
     // simple case folding to code points inside the script.
     // If there is no entry for a script name, there are no such points.
-    gocpp::map<gocpp::string, RangeTable*> FoldScript = gocpp::map<gocpp::string, RangeTable*> {
+    gocpp::map<gocpp::string, golang::unicode::RangeTable*> FoldScript = gocpp::map<gocpp::string, golang::unicode::RangeTable*> {
         { "Common"_s, foldCommon },
         { "Greek"_s, foldGreek },
         { "Inherited"_s, foldInherited }
     };
-    RangeTable* foldCommon = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* foldCommon = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x039c, 0x03bc, 32}
         };
     });
-    RangeTable* foldGreek = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* foldGreek = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x00b5, 0x0345, 656}
         };
     });
-    RangeTable* foldInherited = gocpp::InitPtr<RangeTable>([](auto& x) {
-        x.R16 = gocpp::slice<Range16> {
+    golang::unicode::RangeTable* foldInherited = gocpp::InitPtr<golang::unicode::RangeTable>([](auto& x) {
+        x.R16 = gocpp::slice<golang::unicode::Range16> {
             {0x0399, 0x03b9, 32},
             {0x1fbe, 0x1fbe            // Range entries: 3535 16-bit, 2031 32-bit, 5566 total.
             // Range bytes: 21210 16-bit, 24372 32-bit, 45582 total.

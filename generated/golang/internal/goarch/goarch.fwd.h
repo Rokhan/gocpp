@@ -8,17 +8,17 @@ namespace golang::goarch
 {
     using ArchFamilyType = int;
     const int PtrSize = 4 << (~ uintptr_t(0) >> 63);
-    const goarch::ArchFamilyType AMD64 = 0;
-    const goarch::ArchFamilyType ARM = 1;
-    const goarch::ArchFamilyType ARM64 = 2;
-    const goarch::ArchFamilyType I386 = 3;
-    const goarch::ArchFamilyType LOONG64 = 4;
-    const goarch::ArchFamilyType MIPS = 5;
-    const goarch::ArchFamilyType MIPS64 = 6;
-    const goarch::ArchFamilyType PPC64 = 7;
-    const goarch::ArchFamilyType RISCV64 = 8;
-    const goarch::ArchFamilyType S390X = 9;
-    const goarch::ArchFamilyType WASM = 10;
+    const golang::goarch::ArchFamilyType AMD64 = 0;
+    const golang::goarch::ArchFamilyType ARM = 1;
+    const golang::goarch::ArchFamilyType ARM64 = 2;
+    const golang::goarch::ArchFamilyType I386 = 3;
+    const golang::goarch::ArchFamilyType LOONG64 = 4;
+    const golang::goarch::ArchFamilyType MIPS = 5;
+    const golang::goarch::ArchFamilyType MIPS64 = 6;
+    const golang::goarch::ArchFamilyType PPC64 = 7;
+    const golang::goarch::ArchFamilyType RISCV64 = 8;
+    const golang::goarch::ArchFamilyType S390X = 9;
+    const golang::goarch::ArchFamilyType WASM = 10;
     const int Int64Align = PtrSize;
 }
 #include "golang/internal/goarch/goarch_amd64.fwd.h"
@@ -26,7 +26,7 @@ namespace golang::goarch
 
 namespace golang::goarch
 {
-    const goarch::ArchFamilyType ArchFamily = _ArchFamily;
+    const golang::goarch::ArchFamilyType ArchFamily = _ArchFamily;
     const bool BigEndian = IsArmbe | IsArm64be | IsMips | IsMips64 | IsPpc | IsPpc64 | IsS390 | IsS390x | IsSparc | IsSparc64 == 1;
     const int DefaultPhysPageSize = _DefaultPhysPageSize;
     const int PCQuantum = _PCQuantum;

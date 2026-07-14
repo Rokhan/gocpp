@@ -14,8 +14,8 @@ namespace golang::flate
 {
     extern gocpp::array<uint32_t, 256> lengthCodes;
     extern gocpp::array<uint32_t, 256> offsetCodes;
-    flate::token literalToken(uint32_t literal);
-    flate::token matchToken(uint32_t xlength, uint32_t xoffset);
+    golang::flate::token literalToken(uint32_t literal);
+    golang::flate::token matchToken(uint32_t xlength, uint32_t xoffset);
     uint32_t lengthCode(uint32_t len);
     uint32_t offsetCode(uint32_t off);
 

@@ -58,7 +58,7 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::String(golang::strconv::decimal* a)
+    gocpp::string rec::String(decimal* a)
     {
         auto n = 10 + a->nd;
         if(a->dp > 0)
@@ -124,7 +124,7 @@ namespace golang::strconv
     // trim trailing zeros from number.
     // (They are meaningless; the decimal point is tracked
     // independent of the number of digits.)
-    void trim(struct decimal* a)
+    void trim(decimal* a)
     {
         for(; a->nd > 0 && a->d[a->nd - 1] == '0'; )
         {
@@ -137,7 +137,7 @@ namespace golang::strconv
     }
 
     // Assign v to a.
-    void rec::Assign(golang::strconv::decimal* a, uint64_t v)
+    void rec::Assign(decimal* a, uint64_t v)
     {
         gocpp::array<unsigned char, 24> buf = {};
 
@@ -166,7 +166,7 @@ namespace golang::strconv
     // Maximum shift that we can do in one pass without overflow.
     // A uint has 32 or 64 bits, and we have to be able to accommodate 9<<k.
     // Binary shift right (/ 2) by k bits.  k <= maxShift to avoid overflow.
-    void rightShift(struct decimal* a, unsigned int k)
+    void rightShift(decimal* a, unsigned int k)
     {
         // read pointer
         auto r = 0;
@@ -264,7 +264,7 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    gocpp::slice<leftCheat> leftcheats = gocpp::slice<leftCheat> {
+    gocpp::slice<golang::strconv::leftCheat> leftcheats = gocpp::slice<golang::strconv::leftCheat> {
         // Leading digits of 1/2^i = 5^i.
         // 5^23 is not an exact 64-bit floating point number,
         // so have to use bc for the math.
@@ -356,7 +356,7 @@ namespace golang::strconv
     }
 
     // Binary shift left (* 2) by k bits.  k <= maxShift to avoid overflow.
-    void leftShift(struct decimal* a, unsigned int k)
+    void leftShift(decimal* a, unsigned int k)
     {
         auto delta = leftcheats[k].delta;
         if(prefixIsLessThan(a->d.make_slice(0, a->nd), leftcheats[k].cutoff))
@@ -417,7 +417,7 @@ namespace golang::strconv
     }
 
     // Binary shift left (k > 0) or right (k < 0).
-    void rec::Shift(golang::strconv::decimal* a, int k)
+    void rec::Shift(decimal* a, int k)
     {
         //Go switch emulation
         {
@@ -451,7 +451,7 @@ namespace golang::strconv
     }
 
     // If we chop a at nd digits, should we round up?
-    bool shouldRoundUp(struct decimal* a, int nd)
+    bool shouldRoundUp(decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -475,7 +475,7 @@ namespace golang::strconv
     // If nd is zero, it means we're rounding
     // just to the left of the digits, as in
     // 0.09 -> 0.1.
-    void rec::Round(golang::strconv::decimal* a, int nd)
+    void rec::Round(decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -492,7 +492,7 @@ namespace golang::strconv
     }
 
     // Round a down to nd digits (or fewer).
-    void rec::RoundDown(golang::strconv::decimal* a, int nd)
+    void rec::RoundDown(decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -503,7 +503,7 @@ namespace golang::strconv
     }
 
     // Round a up to nd digits (or fewer).
-    void rec::RoundUp(golang::strconv::decimal* a, int nd)
+    void rec::RoundUp(decimal* a, int nd)
     {
         if(nd < 0 || nd >= a->nd)
         {
@@ -532,7 +532,7 @@ namespace golang::strconv
 
     // Extract integer part, rounded appropriately.
     // No guarantees about overflow.
-    uint64_t rec::RoundedInteger(golang::strconv::decimal* a)
+    uint64_t rec::RoundedInteger(decimal* a)
     {
         if(a->dp > 20)
         {

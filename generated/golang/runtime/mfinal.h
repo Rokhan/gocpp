@@ -30,16 +30,16 @@ namespace golang::runtime
 namespace golang::runtime
 {
     extern atomic::Uint32 fingStatus;
-    extern mutex finlock;
-    extern g* fing;
+    extern golang::runtime::mutex finlock;
+    extern golang::runtime::g* fing;
     extern gocpp::array<unsigned char, _FinBlockSize / goarch::PtrSize / 8> finptrmask;
     struct finalizer
     {
         funcval* fn{}; // function to call (may be a heap pointer)
         gocpp::unsafe_pointer arg{}; // ptr to object (may be a heap pointer)
         uintptr_t nret{}; // bytes of return values from fn
-        golang::runtime::_type* fint{}; // type of first argument of fn
-        golang::runtime::ptrtype* ot{}; // type of ptr to object (may be a heap pointer)
+        _type* fint{}; // type of first argument of fn
+        ptrtype* ot{}; // type of ptr to object (may be a heap pointer)
 
         using isGoStruct = void;
 
@@ -53,10 +53,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct finalizer& value);
-    void queuefinalizer(gocpp::unsafe_pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot);
-    void iterate_finq(std::function<void (struct funcval* _1, gocpp::unsafe_pointer _2, uintptr_t _3, golang::runtime::_type* _4, golang::runtime::ptrtype* _5)> callback);
-    struct g* wakefing();
-    bool finalizercommit(struct g* gp, gocpp::unsafe_pointer lock);
+    void queuefinalizer(gocpp::unsafe_pointer p, funcval* fn, uintptr_t nret, _type* fint, ptrtype* ot);
+    void iterate_finq(std::function<void (funcval* _1, gocpp::unsafe_pointer _2, uintptr_t _3, _type* _4, ptrtype* _5)> callback);
+    golang::runtime::g* wakefing();
+    bool finalizercommit(g* gp, gocpp::unsafe_pointer lock);
 }
 #include "golang/runtime/internal/sys/nih.h"
 
@@ -69,7 +69,7 @@ namespace golang::runtime
         finblock* next{};
         uint32_t cnt{};
         int32_t _2{};
-        gocpp::array<finalizer, (_FinBlockSize - 2 * goarch::PtrSize - 2 * 4) / gocpp::Sizeof<finalizer>()> fin{};
+        gocpp::array<finalizer, (_FinBlockSize - 2 * goarch::PtrSize - 2 * 4) / gocpp::Sizeof<golang::runtime::finalizer>()> fin{};
 
         using isGoStruct = void;
 
@@ -83,9 +83,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct finblock& value);
-    extern finblock* finq;
-    extern finblock* finc;
-    extern finblock* allfin;
+    extern golang::runtime::finblock* finq;
+    extern golang::runtime::finblock* finc;
+    extern golang::runtime::finblock* allfin;
 
     namespace rec
     {

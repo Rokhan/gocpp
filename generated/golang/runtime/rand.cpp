@@ -244,7 +244,7 @@ namespace golang::runtime
     }
 
     // mrandinit initializes the random state of an m.
-    void mrandinit(struct m* mp)
+    void mrandinit(m* mp)
     {
         gocpp::array<uint64_t, 4> seed = {};
         for(auto [i, gocpp_ignored] : seed)

@@ -69,16 +69,16 @@ namespace golang::runtime
     int findnullw(uint16_t* s);
     gocpp::string gostringnocopy(unsigned char* str);
     gocpp::string gostringw(uint16_t* strw);
-    gocpp::string concatstrings(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::slice<gocpp::string> a);
-    gocpp::string concatstring2(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1);
-    gocpp::string concatstring3(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2);
-    gocpp::string concatstring4(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3);
-    gocpp::string concatstring5(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4);
-    gocpp::string slicebytetostring(gocpp::array_ptr<golang::runtime::tmpBuf> buf, unsigned char* ptr, int n);
-    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<golang::runtime::tmpBuf> buf, int l);
-    gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string s);
-    gocpp::string slicerunetostring(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::slice<gocpp::rune> a);
-    struct stringStruct* stringStructOf(gocpp::string* sp);
+    gocpp::string concatstrings(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::string> a);
+    gocpp::string concatstring2(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1);
+    gocpp::string concatstring3(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2);
+    gocpp::string concatstring4(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3);
+    gocpp::string concatstring5(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4);
+    gocpp::string slicebytetostring(gocpp::array_ptr<tmpBuf> buf, unsigned char* ptr, int n);
+    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<tmpBuf> buf, int l);
+    gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<tmpBuf> buf, gocpp::string s);
+    gocpp::string slicerunetostring(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::rune> a);
+    golang::runtime::stringStruct* stringStructOf(gocpp::string* sp);
 
     namespace rec
     {

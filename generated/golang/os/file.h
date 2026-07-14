@@ -103,7 +103,7 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileWithoutReadFrom& value);
-    std::tuple<int64_t, struct gocpp::error> genericReadFrom(struct File* f, io::Reader r);
+    std::tuple<int64_t, struct gocpp::error> genericReadFrom(File* f, io::Reader r);
     extern gocpp::error errWriteAtInAppendMode;
     struct fileWithoutWriteTo
     {
@@ -122,15 +122,15 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileWithoutWriteTo& value);
-    std::tuple<int64_t, struct gocpp::error> genericWriteTo(struct File* f, io::Writer w);
-    struct gocpp::error Mkdir(gocpp::string name, golang::os::FileMode perm);
-    std::tuple<struct File*, struct gocpp::error> Open(gocpp::string name);
-    std::tuple<struct File*, struct gocpp::error> Create(gocpp::string name);
-    std::tuple<struct File*, struct gocpp::error> OpenFile(gocpp::string name, int flag, golang::os::FileMode perm);
+    std::tuple<int64_t, struct gocpp::error> genericWriteTo(File* f, io::Writer w);
+    struct gocpp::error Mkdir(gocpp::string name, FileMode perm);
+    std::tuple<golang::os::File*, struct gocpp::error> Open(gocpp::string name);
+    std::tuple<golang::os::File*, struct gocpp::error> Create(gocpp::string name);
+    std::tuple<golang::os::File*, struct gocpp::error> OpenFile(gocpp::string name, int flag, FileMode perm);
     extern std::function<std::tuple<fs::FileInfo, gocpp::error> (gocpp::string)> lstat;
-    struct gocpp::error Chmod(gocpp::string name, golang::os::FileMode mode);
+    struct gocpp::error Chmod(gocpp::string name, FileMode mode);
     fs::FS DirFS(gocpp::string dir);
-    struct gocpp::error WriteFile(gocpp::string name, gocpp::slice<unsigned char> data, golang::os::FileMode perm);
+    struct gocpp::error WriteFile(gocpp::string name, gocpp::slice<unsigned char> data, FileMode perm);
 }
 
 #include "golang/io/fs/fs.h"
@@ -144,30 +144,30 @@ namespace golang::os
 
     namespace rec
     {
-        gocpp::string Name(golang::os::File* f);
-        gocpp::string Error(golang::os::LinkError* e);
-        struct gocpp::error Unwrap(golang::os::LinkError* e);
-        std::tuple<int, struct gocpp::error> Read(golang::os::File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> ReadAt(golang::os::File* f, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int64_t, struct gocpp::error> ReadFrom(golang::os::File* f, io::Reader r);
-        std::tuple<int64_t, struct gocpp::error> ReadFrom(golang::os::noReadFrom, io::Reader);
-        std::tuple<int, struct gocpp::error> Write(golang::os::File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> WriteAt(golang::os::File* f, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int64_t, struct gocpp::error> WriteTo(golang::os::File* f, io::Writer w);
-        std::tuple<int64_t, struct gocpp::error> WriteTo(golang::os::noWriteTo, io::Writer);
-        std::tuple<int64_t, struct gocpp::error> Seek(golang::os::File* f, int64_t offset, int whence);
-        std::tuple<int, struct gocpp::error> WriteString(golang::os::File* f, gocpp::string s);
-        struct gocpp::error wrapErr(golang::os::File* f, gocpp::string op, struct gocpp::error err);
-        struct gocpp::error Chmod(golang::os::File* f, golang::os::FileMode mode);
-        struct gocpp::error SetDeadline(golang::os::File* f, mocklib::Date t);
-        struct gocpp::error SetReadDeadline(golang::os::File* f, mocklib::Date t);
-        struct gocpp::error SetWriteDeadline(golang::os::File* f, mocklib::Date t);
-        std::tuple<syscall::RawConn, struct gocpp::error> SyscallConn(golang::os::File* f);
-        std::tuple<fs::File, struct gocpp::error> Open(golang::os::dirFS dir, gocpp::string name);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadFile(golang::os::dirFS dir, gocpp::string name);
-        std::tuple<gocpp::slice<os::DirEntry>, struct gocpp::error> ReadDir(golang::os::dirFS dir, gocpp::string name);
-        std::tuple<fs::FileInfo, struct gocpp::error> Stat(golang::os::dirFS dir, gocpp::string name);
-        std::tuple<gocpp::string, struct gocpp::error> join(golang::os::dirFS dir, gocpp::string name);
+        gocpp::string Name(File* f);
+        gocpp::string Error(LinkError* e);
+        struct gocpp::error Unwrap(LinkError* e);
+        std::tuple<int, struct gocpp::error> Read(File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> ReadAt(File* f, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int64_t, struct gocpp::error> ReadFrom(File* f, io::Reader r);
+        std::tuple<int64_t, struct gocpp::error> ReadFrom(noReadFrom, io::Reader);
+        std::tuple<int, struct gocpp::error> Write(File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> WriteAt(File* f, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int64_t, struct gocpp::error> WriteTo(File* f, io::Writer w);
+        std::tuple<int64_t, struct gocpp::error> WriteTo(noWriteTo, io::Writer);
+        std::tuple<int64_t, struct gocpp::error> Seek(File* f, int64_t offset, int whence);
+        std::tuple<int, struct gocpp::error> WriteString(File* f, gocpp::string s);
+        struct gocpp::error wrapErr(File* f, gocpp::string op, struct gocpp::error err);
+        struct gocpp::error Chmod(File* f, FileMode mode);
+        struct gocpp::error SetDeadline(File* f, mocklib::Date t);
+        struct gocpp::error SetReadDeadline(File* f, mocklib::Date t);
+        struct gocpp::error SetWriteDeadline(File* f, mocklib::Date t);
+        std::tuple<syscall::RawConn, struct gocpp::error> SyscallConn(File* f);
+        std::tuple<fs::File, struct gocpp::error> Open(dirFS dir, gocpp::string name);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadFile(dirFS dir, gocpp::string name);
+        std::tuple<gocpp::slice<DirEntry>, struct gocpp::error> ReadDir(dirFS dir, gocpp::string name);
+        std::tuple<fs::FileInfo, struct gocpp::error> Stat(dirFS dir, gocpp::string name);
+        std::tuple<gocpp::string, struct gocpp::error> join(dirFS dir, gocpp::string name);
     }
 }
 

@@ -64,7 +64,7 @@ namespace golang::registry
     // and returns the new key and an error.
     // The access parameter specifies desired access rights to the
     // key to be opened.
-    std::tuple<registry::Key, struct gocpp::error> OpenKey(golang::registry::Key k, gocpp::string path, uint32_t access)
+    std::tuple<golang::registry::Key, struct gocpp::error> OpenKey(golang::registry::Key k, gocpp::string path, uint32_t access)
     {
         auto [p, err] = syscall::UTF16PtrFromString(path);
         if(err != nullptr)
@@ -142,9 +142,9 @@ namespace golang::registry
     // whether the key already existed.
     // The access parameter specifies the access rights for the key
     // to be created.
-    std::tuple<registry::Key, bool, struct gocpp::error> CreateKey(golang::registry::Key k, gocpp::string path, uint32_t access)
+    std::tuple<golang::registry::Key, bool, struct gocpp::error> CreateKey(golang::registry::Key k, gocpp::string path, uint32_t access)
     {
-        registry::Key newk;
+        golang::registry::Key newk;
         bool openedExisting;
         struct gocpp::error err;
         syscall::Handle h = {};
@@ -209,9 +209,9 @@ namespace golang::registry
     }
 
     // Stat retrieves information about the open key k.
-    std::tuple<struct KeyInfo*, struct gocpp::error> rec::Stat(golang::registry::Key k)
+    std::tuple<golang::registry::KeyInfo*, struct gocpp::error> rec::Stat(golang::registry::Key k)
     {
-        KeyInfo ki = {};
+        golang::registry::KeyInfo ki = {};
         auto err = syscall::RegQueryInfoKey(syscall::Handle(k), nullptr, nullptr, nullptr, & ki.SubKeyCount, & ki.MaxSubKeyLen, nullptr, & ki.ValueCount, & ki.MaxValueNameLen, & ki.MaxValueLen, nullptr, & ki.lastWriteTime);
         if(err != nullptr)
         {

@@ -52,20 +52,20 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void rec::Scale(golang::main::Vertex* v, double f)
+    void rec::Scale(Vertex* v, double f)
     {
         v->X = v->X * f;
         v->Y = v->Y * f;
     }
 
-    double rec::Abs(golang::main::Vertex* v)
+    double rec::Abs(Vertex* v)
     {
         return std::sqrt(v->X * v->X + v->Y * v->Y);
     }
 
     void main()
     {
-        auto v = new Vertex {3, 4};
+        auto v = new golang::main::Vertex {3, 4};
         mocklib::Printf("Before scaling: %+v, Abs: %v\n"_s, v, rec::Abs(gocpp::recv(v)));
         rec::Scale(gocpp::recv(v), 5);
         mocklib::Printf("After scaling: %+v, Abs: %v\n"_s, v, rec::Abs(gocpp::recv(v)));

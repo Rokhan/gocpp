@@ -481,7 +481,7 @@ namespace golang::syscall
     const int IOC_INOUT = IOC_IN | IOC_OUT;
     const int SIO_KEEPALIVE_VALS = IOC_IN | IOC_VENDOR | 4;
     const int SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
-    using IpMaskString = gocpp::defined<IpAddressString, GoTag_IpMaskString>;
+    using IpMaskString = gocpp::defined<golang::syscall::IpAddressString, GoTag_IpMaskString>;
     const int REG_DWORD = REG_DWORD_LITTLE_ENDIAN;
     const int REG_QWORD = REG_QWORD_LITTLE_ENDIAN;
 }
@@ -489,29 +489,29 @@ namespace golang::syscall
 
 namespace golang::syscall
 {
-    const syscall::Errno ERROR_FILE_NOT_FOUND = 2;
-    const syscall::Errno ERROR_PATH_NOT_FOUND = 3;
-    const syscall::Errno ERROR_ACCESS_DENIED = 5;
-    const syscall::Errno ERROR_NO_MORE_FILES = 18;
-    const syscall::Errno ERROR_HANDLE_EOF = 38;
-    const syscall::Errno ERROR_NETNAME_DELETED = 64;
-    const syscall::Errno ERROR_FILE_EXISTS = 80;
-    const syscall::Errno ERROR_BROKEN_PIPE = 109;
-    const syscall::Errno ERROR_BUFFER_OVERFLOW = 111;
-    const syscall::Errno ERROR_INSUFFICIENT_BUFFER = 122;
-    const syscall::Errno ERROR_MOD_NOT_FOUND = 126;
-    const syscall::Errno ERROR_PROC_NOT_FOUND = 127;
-    const syscall::Errno ERROR_DIR_NOT_EMPTY = 145;
-    const syscall::Errno ERROR_ALREADY_EXISTS = 183;
-    const syscall::Errno ERROR_ENVVAR_NOT_FOUND = 203;
-    const syscall::Errno ERROR_MORE_DATA = 234;
-    const syscall::Errno ERROR_OPERATION_ABORTED = 995;
-    const syscall::Errno ERROR_IO_PENDING = 997;
-    const syscall::Errno ERROR_NOT_FOUND = 1168;
-    const syscall::Errno ERROR_PRIVILEGE_NOT_HELD = 1314;
-    const syscall::Errno WSAEACCES = 10013;
-    const syscall::Errno WSAECONNABORTED = 10053;
-    const syscall::Errno WSAECONNRESET = 10054;
+    const golang::syscall::Errno ERROR_FILE_NOT_FOUND = 2;
+    const golang::syscall::Errno ERROR_PATH_NOT_FOUND = 3;
+    const golang::syscall::Errno ERROR_ACCESS_DENIED = 5;
+    const golang::syscall::Errno ERROR_NO_MORE_FILES = 18;
+    const golang::syscall::Errno ERROR_HANDLE_EOF = 38;
+    const golang::syscall::Errno ERROR_NETNAME_DELETED = 64;
+    const golang::syscall::Errno ERROR_FILE_EXISTS = 80;
+    const golang::syscall::Errno ERROR_BROKEN_PIPE = 109;
+    const golang::syscall::Errno ERROR_BUFFER_OVERFLOW = 111;
+    const golang::syscall::Errno ERROR_INSUFFICIENT_BUFFER = 122;
+    const golang::syscall::Errno ERROR_MOD_NOT_FOUND = 126;
+    const golang::syscall::Errno ERROR_PROC_NOT_FOUND = 127;
+    const golang::syscall::Errno ERROR_DIR_NOT_EMPTY = 145;
+    const golang::syscall::Errno ERROR_ALREADY_EXISTS = 183;
+    const golang::syscall::Errno ERROR_ENVVAR_NOT_FOUND = 203;
+    const golang::syscall::Errno ERROR_MORE_DATA = 234;
+    const golang::syscall::Errno ERROR_OPERATION_ABORTED = 995;
+    const golang::syscall::Errno ERROR_IO_PENDING = 997;
+    const golang::syscall::Errno ERROR_NOT_FOUND = 1168;
+    const golang::syscall::Errno ERROR_PRIVILEGE_NOT_HELD = 1314;
+    const golang::syscall::Errno WSAEACCES = 10013;
+    const golang::syscall::Errno WSAECONNABORTED = 10053;
+    const golang::syscall::Errno WSAECONNRESET = 10054;
     const Signal go_SIGHUP = Signal(0x1);
     const Signal go_SIGINT = Signal(0x2);
     const Signal go_SIGQUIT = Signal(0x3);

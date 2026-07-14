@@ -607,9 +607,9 @@ namespace golang::bytes
     //
     // In most cases, new([Buffer]) (or just declaring a [Buffer] variable) is
     // sufficient to initialize a [Buffer].
-    struct Buffer* NewBuffer(gocpp::slice<unsigned char> buf)
+    golang::bytes::Buffer* NewBuffer(gocpp::slice<unsigned char> buf)
     {
-        return gocpp::InitPtr<Buffer>([=](auto& x) {
+        return gocpp::InitPtr<golang::bytes::Buffer>([=](auto& x) {
             x.buf = buf;
         });
     }
@@ -620,9 +620,9 @@ namespace golang::bytes
     //
     // In most cases, new([Buffer]) (or just declaring a [Buffer] variable) is
     // sufficient to initialize a [Buffer].
-    struct Buffer* NewBufferString(gocpp::string s)
+    golang::bytes::Buffer* NewBufferString(gocpp::string s)
     {
-        return gocpp::InitPtr<Buffer>([=](auto& x) {
+        return gocpp::InitPtr<golang::bytes::Buffer>([=](auto& x) {
             x.buf = gocpp::slice<unsigned char>(s);
         });
     }

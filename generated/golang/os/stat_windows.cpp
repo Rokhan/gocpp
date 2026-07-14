@@ -37,7 +37,7 @@ namespace golang::os
 
     // Stat returns the FileInfo structure describing file.
     // If there is an error, it will be of type *PathError.
-    std::tuple<os::FileInfo, struct gocpp::error> rec::Stat(golang::os::File* file)
+    std::tuple<struct FileInfo, struct gocpp::error> rec::Stat(File* file)
     {
         if(file == nullptr)
         {
@@ -47,14 +47,14 @@ namespace golang::os
     }
 
     // stat implements both Stat and Lstat of a file.
-    std::tuple<os::FileInfo, struct gocpp::error> stat(gocpp::string funcname, gocpp::string name, bool followSurrogates)
+    std::tuple<struct FileInfo, struct gocpp::error> stat(gocpp::string funcname, gocpp::string name, bool followSurrogates)
     {
         gocpp::Defer defer;
         try
         {
             if(len(name) == 0)
             {
-                return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
+                return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
                     x.Op = funcname;
                     x.Path = name;
                     x.Err = syscall::Errno(syscall::ERROR_PATH_NOT_FOUND);
@@ -63,7 +63,7 @@ namespace golang::os
             auto [namep, err] = syscall::UTF16PtrFromString(fixLongPath(name));
             if(err != nullptr)
             {
-                return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
+                return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
                     x.Op = funcname;
                     x.Path = name;
                     x.Err = err;
@@ -83,7 +83,7 @@ namespace golang::os
                 auto [sh, err] = syscall::FindFirstFile(namep, & fd);
                 if(err != nullptr)
                 {
-                    return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
+                    return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
                         x.Op = "FindFirstFile"_s;
                         x.Path = name;
                         x.Err = err;
@@ -106,7 +106,7 @@ namespace golang::os
             {
                 // Not a surrogate for another named entity, because it isn't any kind of reparse point.
                 // The information we got from GetFileAttributesEx is good enough for now.
-                auto fs = gocpp::InitPtr<fileStat>([=](auto& x) {
+                auto fs = gocpp::InitPtr<golang::os::fileStat>([=](auto& x) {
                     x.FileAttributes = fa.FileAttributes;
                     x.CreationTime = fa.CreationTime;
                     x.LastAccessTime = fa.LastAccessTime;
@@ -132,7 +132,7 @@ namespace golang::os
                 // Since CreateFile failed, we can't determine whether name refers to a
                 // name surrogate, or some other kind of reparse point. Since we can't return a
                 // FileInfo with a known-accurate Mode, we must return an error.
-                return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
+                return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
                     x.Op = "CreateFile"_s;
                     x.Path = name;
                     x.Err = err;
@@ -142,7 +142,7 @@ namespace golang::os
             fs::FileInfo fi;
             std::tie(fi, err) = statHandle(name, h);
             syscall::CloseHandle(h);
-            if(err == nullptr && followSurrogates && rec::isReparseTagNameSurrogate(gocpp::recv(gocpp::getValue<fileStat*>(fi))))
+            if(err == nullptr && followSurrogates && rec::isReparseTagNameSurrogate(gocpp::recv(gocpp::getValue<golang::os::fileStat*>(fi))))
             {
                 // To obtain information about the link target, we reopen the file without
                 // FILE_FLAG_OPEN_REPARSE_POINT and examine the resulting handle.
@@ -151,7 +151,7 @@ namespace golang::os
                 if(err != nullptr)
                 {
                     // name refers to a symlink, but we couldn't resolve the symlink target.
-                    return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
+                    return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
                         x.Op = "CreateFile"_s;
                         x.Path = name;
                         x.Err = err;
@@ -168,12 +168,12 @@ namespace golang::os
         }
     }
 
-    std::tuple<os::FileInfo, struct gocpp::error> statHandle(gocpp::string name, syscall::Handle h)
+    std::tuple<struct FileInfo, struct gocpp::error> statHandle(gocpp::string name, syscall::Handle h)
     {
         auto [ft, err] = syscall::GetFileType(h);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
                 x.Op = "GetFileType"_s;
                 x.Path = name;
                 x.Err = err;
@@ -189,7 +189,7 @@ namespace golang::os
             {
                 case 0:
                 case 1:
-                    return {gocpp::InitPtr<fileStat>([=](auto& x) {
+                    return {gocpp::InitPtr<golang::os::fileStat>([=](auto& x) {
                         x.name = basename(name);
                         x.filetype = ft;
                     }), nullptr};
@@ -207,13 +207,13 @@ namespace golang::os
     }
 
     // statNolog implements Stat for Windows.
-    std::tuple<os::FileInfo, struct gocpp::error> statNolog(gocpp::string name)
+    std::tuple<struct FileInfo, struct gocpp::error> statNolog(gocpp::string name)
     {
         return stat("Stat"_s, name, true);
     }
 
     // lstatNolog implements Lstat for Windows.
-    std::tuple<os::FileInfo, struct gocpp::error> lstatNolog(gocpp::string name)
+    std::tuple<struct FileInfo, struct gocpp::error> lstatNolog(gocpp::string name)
     {
         auto followSurrogates = false;
         if(name != ""_s && IsPathSeparator(name[len(name) - 1]))

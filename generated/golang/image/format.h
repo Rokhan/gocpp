@@ -28,7 +28,7 @@ namespace golang::image
         gocpp::string name{};
         gocpp::string magic{};
         std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode{};
-        std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig{};
+        std::function<std::tuple<golang::image::Config, struct gocpp::error> (io::Reader _1)> decodeConfig{};
 
         using isGoStruct = void;
 
@@ -44,7 +44,7 @@ namespace golang::image
     std::ostream& operator<<(std::ostream& os, const struct format& value);
     extern mocklib::Mutex formatsMu;
     extern atomic::Value atomicFormats;
-    void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig);
+    void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<golang::image::Config, struct gocpp::error> (io::Reader _1)> decodeConfig);
     struct reader : virtual gocpp::Interface, io::Reader
     {
         using gocpp::Interface::operator==;
@@ -107,9 +107,9 @@ namespace golang::image
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
     std::tuple<struct Image, gocpp::string, struct gocpp::error> Decode(io::Reader r);
-    std::tuple<struct Config, gocpp::string, struct gocpp::error> DecodeConfig(io::Reader r);
+    std::tuple<golang::image::Config, gocpp::string, struct gocpp::error> DecodeConfig(io::Reader r);
     struct reader asReader(io::Reader r);
-    struct format sniff(struct reader r);
+    golang::image::format sniff(struct reader r);
 
     namespace rec
     {

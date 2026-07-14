@@ -31,8 +31,8 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Ticker& value);
-    gocpp::channel<Time> Tick(golang::time::Duration d);
-    struct Ticker* NewTicker(golang::time::Duration d);
+    gocpp::channel<golang::time::Time> Tick(Duration d);
+    golang::time::Ticker* NewTicker(Duration d);
 }
 
 #include "golang/time/time.h"
@@ -42,8 +42,8 @@ namespace golang::time
 
     namespace rec
     {
-        void Stop(golang::time::Ticker* t);
-        void Reset(golang::time::Ticker* t, golang::time::Duration d);
+        void Stop(Ticker* t);
+        void Reset(Ticker* t, Duration d);
     }
 }
 

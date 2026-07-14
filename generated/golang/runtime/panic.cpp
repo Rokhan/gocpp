@@ -142,7 +142,7 @@ namespace golang::runtime
     void goPanicIndex(int x, int y)
     {
         panicCheck1(getcallerpc(), "index out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
@@ -154,7 +154,7 @@ namespace golang::runtime
     void goPanicIndexU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "index out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
@@ -168,7 +168,7 @@ namespace golang::runtime
     void goPanicSliceAlen(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
@@ -180,7 +180,7 @@ namespace golang::runtime
     void goPanicSliceAlenU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
@@ -192,7 +192,7 @@ namespace golang::runtime
     void goPanicSliceAcap(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
@@ -204,7 +204,7 @@ namespace golang::runtime
     void goPanicSliceAcapU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
@@ -218,7 +218,7 @@ namespace golang::runtime
     void goPanicSliceB(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
@@ -230,7 +230,7 @@ namespace golang::runtime
     void goPanicSliceBU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
@@ -242,7 +242,7 @@ namespace golang::runtime
     void goPanicSlice3Alen(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
@@ -253,7 +253,7 @@ namespace golang::runtime
     void goPanicSlice3AlenU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
@@ -264,7 +264,7 @@ namespace golang::runtime
     void goPanicSlice3Acap(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
@@ -275,7 +275,7 @@ namespace golang::runtime
     void goPanicSlice3AcapU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
@@ -287,7 +287,7 @@ namespace golang::runtime
     void goPanicSlice3B(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
@@ -298,7 +298,7 @@ namespace golang::runtime
     void goPanicSlice3BU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
@@ -310,7 +310,7 @@ namespace golang::runtime
     void goPanicSlice3C(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
@@ -321,7 +321,7 @@ namespace golang::runtime
     void goPanicSlice3CU(unsigned int x, int y)
     {
         panicCheck1(getcallerpc(), "slice bounds out of range"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = false;
             z.y = y;
@@ -333,7 +333,7 @@ namespace golang::runtime
     void goPanicSliceConvert(int x, int y)
     {
         panicCheck1(getcallerpc(), "slice length too short to convert to array or pointer to array"_s);
-        gocpp::panic(gocpp::Init<boundsError>([=](auto& z) {
+        gocpp::panic(gocpp::Init<golang::runtime::boundsError>([=](auto& z) {
             z.x = int64_t(x);
             z.go_signed = true;
             z.y = y;
@@ -434,7 +434,7 @@ namespace golang::runtime
     void panicmemAddr(uintptr_t addr)
     {
         panicCheck2("invalid memory address or nil pointer dereference"_s);
-        gocpp::panic(gocpp::Init<errorAddressString>([=](auto& x) {
+        gocpp::panic(gocpp::Init<golang::runtime::errorAddressString>([=](auto& x) {
             x.msg = "invalid memory address or nil pointer dereference"_s;
             x.addr = addr;
         }));
@@ -571,16 +571,16 @@ namespace golang::runtime
     }
 
     // badDefer returns a fixed bad defer pointer for poisoning an atomic defer list head.
-    struct _defer* badDefer()
+    golang::runtime::_defer* badDefer()
     {
-        return (_defer*)(gocpp::unsafe_pointer(uintptr_t(1)));
+        return (golang::runtime::_defer*)(gocpp::unsafe_pointer(uintptr_t(1)));
     }
 
     // deferprocat is like deferproc but adds to the atomic list represented by frame.
     // See the doc comment for deferrangefunc for details.
     void deferprocat(std::function<void ()> fn, go_any frame)
     {
-        auto head = gocpp::getValue<atomic::Pointer<_defer>*>(frame);
+        auto head = gocpp::getValue<atomic::Pointer<golang::runtime::_defer>*>(frame);
         if(raceenabled)
         {
             racewritepc(gocpp::unsafe_pointer(head), getcallerpc(), abi::FuncPCABIInternal(deferprocat));
@@ -606,7 +606,7 @@ namespace golang::runtime
 
     // deferconvert converts a rangefunc defer list into an ordinary list.
     // See the doc comment for deferrangefunc for details.
-    struct _defer* deferconvert(struct _defer* d)
+    golang::runtime::_defer* deferconvert(_defer* d)
     {
         auto head = d->head;
         if(raceenabled)
@@ -650,7 +650,7 @@ namespace golang::runtime
     // Nosplit because of the uninitialized pointer fields on the stack.
     //
     //go:nosplit
-    void deferprocStack(struct _defer* d)
+    void deferprocStack(_defer* d)
     {
         auto gp = getg();
         if(gp->m->curg != gp)
@@ -689,9 +689,9 @@ namespace golang::runtime
     // Allocate a Defer, usually using per-P pool.
     // Each defer must be released with freedefer.  The defer is not
     // added to any defer chain yet.
-    struct _defer* newdefer()
+    golang::runtime::_defer* newdefer()
     {
-        _defer* d = {};
+        golang::runtime::_defer* d = {};
         auto mp = acquirem();
         auto pp = rec::ptr(gocpp::recv(mp->p));
         if(len(pp->deferpool) == 0 && sched.deferpool != nullptr)
@@ -733,7 +733,7 @@ namespace golang::runtime
     // stack, d could then contain a stale pointer.
     //
     //go:nosplit
-    void freedefer(struct _defer* d)
+    void freedefer(_defer* d)
     {
         // After this point we can copy the stack.
         d->link = nullptr;
@@ -753,8 +753,8 @@ namespace golang::runtime
         if(len(pp->deferpool) == cap(pp->deferpool))
         {
             // Transfer half of local cache to the central cache.
-            _defer* first = {};
-            _defer* last = {};
+            golang::runtime::_defer* first = {};
+            golang::runtime::_defer* last = {};
             for(; len(pp->deferpool) > cap(pp->deferpool) / 2; )
             {
                 auto n = len(pp->deferpool);
@@ -777,7 +777,7 @@ namespace golang::runtime
             unlock(& sched.deferlock);
         }
 
-        *d = _defer {};
+        *d = golang::runtime::_defer {};
 
         pp->deferpool = append(pp->deferpool, d);
 
@@ -798,7 +798,7 @@ namespace golang::runtime
     // function which calls defer.
     void deferreturn()
     {
-        _panic p = {};
+        golang::runtime::_panic p = {};
         p.deferreturn = true;
 
         rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
@@ -825,7 +825,7 @@ namespace golang::runtime
     {
         // Create a panic object for Goexit, so we can recognize when it might be
         // bypassed by a recover().
-        _panic p = {};
+        golang::runtime::_panic p = {};
         p.goexit = true;
 
         rec::start(gocpp::recv(p), getcallerpc(), gocpp::unsafe_pointer(getcallersp()));
@@ -844,7 +844,7 @@ namespace golang::runtime
 
     // Call all Error and String methods before freezing the world.
     // Used when crashing with panicking.
-    void preprintpanics(struct _panic* p)
+    void preprintpanics(_panic* p)
     {
         gocpp::Defer defer;
         try
@@ -916,7 +916,7 @@ namespace golang::runtime
 
     // Print all currently active panics. Used when crashing.
     // Should only be called after preprintpanics.
-    void printpanics(struct _panic* p)
+    void printpanics(_panic* p)
     {
         if(p->link != nullptr)
         {
@@ -999,16 +999,16 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::runtime::PanicNilError*)
+    gocpp::string rec::Error(PanicNilError*)
     {
         return "panic called with nil argument"_s;
     }
 
-    void rec::RuntimeError(golang::runtime::PanicNilError*)
+    void rec::RuntimeError(PanicNilError*)
     {
     }
 
-    godebugInc* panicnil = gocpp::InitPtr<godebugInc>([](auto& x) {
+    golang::runtime::godebugInc* panicnil = gocpp::InitPtr<golang::runtime::godebugInc>([](auto& x) {
         x.name = "panicnil"_s;
     });
     // The implementation of the predeclared function panic.
@@ -1060,7 +1060,7 @@ namespace golang::runtime
             go_throw("panic holding locks"_s);
         }
 
-        _panic p = {};
+        golang::runtime::_panic p = {};
         p.arg = e;
 
         rec::Add(gocpp::recv(runningPanicDefers), 1);
@@ -1091,7 +1091,7 @@ namespace golang::runtime
     // start initializes a panic to start unwinding the stack.
     //
     // If p.goexit is true, then start may return multiple times.
-    void rec::start(golang::runtime::_panic* p, uintptr_t pc, gocpp::unsafe_pointer sp)
+    void rec::start(_panic* p, uintptr_t pc, gocpp::unsafe_pointer sp)
     {
         auto gp = getg();
 
@@ -1106,7 +1106,7 @@ namespace golang::runtime
         {
             p->sp = sp;
 
-            if(auto s = (savedOpenDeferState*)(gp->param); s != nullptr)
+            if(auto s = (golang::runtime::savedOpenDeferState*)(gp->param); s != nullptr)
             {
                 // recovery saved some state for us, so that we can resume
                 // calling open-coded defers without unwinding the stack.
@@ -1121,7 +1121,7 @@ namespace golang::runtime
         }
 
         p->link = gp->_panic;
-        gp->_panic = (_panic*)(noescape(gocpp::unsafe_pointer(p)));
+        gp->_panic = (golang::runtime::_panic*)(noescape(gocpp::unsafe_pointer(p)));
 
         // Initialize state machine, and find the first frame with a defer.
         // Note: We could use startPC and startSP here, but callers will
@@ -1137,7 +1137,7 @@ namespace golang::runtime
     //
     // Note: The "ok bool" result is necessary to correctly handle when
     // the deferred function itself was nil (e.g., "defer (func())(nil)").
-    std::tuple<std::function<void ()>, bool> rec::nextDefer(golang::runtime::_panic* p)
+    std::tuple<std::function<void ()>, bool> rec::nextDefer(_panic* p)
     {
         auto gp = getg();
 
@@ -1221,7 +1221,7 @@ namespace golang::runtime
     }
 
     // nextFrame finds the next frame that contains deferred calls, if any.
-    bool rec::nextFrame(golang::runtime::_panic* p)
+    bool rec::nextFrame(_panic* p)
     {
         bool ok;
         if(p->lr == 0)
@@ -1238,7 +1238,7 @@ namespace golang::runtime
                 limit = d->sp;
             }
 
-            unwinder u = {};
+            golang::runtime::unwinder u = {};
             rec::initAt(gocpp::recv(u), p->lr, uintptr_t(p->fp), 0, gp, 0);
             for(; ; )
             {
@@ -1278,7 +1278,7 @@ namespace golang::runtime
         return ok;
     }
 
-    bool rec::initOpenCodedDefers(golang::runtime::_panic* p, struct funcInfo fn, gocpp::unsafe_pointer varp)
+    bool rec::initOpenCodedDefers(_panic* p, golang::runtime::funcInfo fn, gocpp::unsafe_pointer varp)
     {
         auto fd = funcdata(fn, abi::FUNCDATA_OpenCodedDeferInfo);
         if(fd == nullptr)
@@ -1394,7 +1394,7 @@ namespace golang::runtime
     atomic::Uint32 panicking;
     // paniclk is held while printing the panic information and stack trace,
     // so that two concurrent panics don't overlap their output.
-    mutex paniclk;
+    golang::runtime::mutex paniclk;
     // Unwind the stack after a deferred function calls recover
     // after a panic. Then arrange to continue running as though
     // the caller of the deferred function returned normally.
@@ -1402,7 +1402,7 @@ namespace golang::runtime
     // However, if unwinding the stack would skip over a Goexit call, we
     // return into the Goexit loop instead, so it can continue processing
     // defers instead.
-    void recovery(struct g* gp)
+    void recovery(g* gp)
     {
         auto p = gp->_panic;
         auto [pc, sp, fp] = std::tuple{p->retpc, uintptr_t(p->sp), uintptr_t(p->fp)};
@@ -1453,7 +1453,7 @@ namespace golang::runtime
             // If we're returning to deferreturn and there are more open-coded
             // defers for it to call, save enough state for it to be able to
             // pick up where p0 left off.
-            gp->param = gocpp::unsafe_pointer(gocpp::InitPtr<savedOpenDeferState>([=](auto& x) {
+            gp->param = gocpp::unsafe_pointer(gocpp::InitPtr<golang::runtime::savedOpenDeferState>([=](auto& x) {
                 x.retpc = p0->retpc;
                 x.deferBitsOffset = uintptr_t(gocpp::unsafe_pointer(p0->deferBitsPtr)) - uintptr_t(p0->sp);
                 x.slotsOffset = uintptr_t(p0->slotsPtr) - uintptr_t(p0->sp);
@@ -1526,7 +1526,7 @@ namespace golang::runtime
     // process.
     //
     //go:nosplit
-    void fatalthrow(golang::runtime::throwType t)
+    void fatalthrow(throwType t)
     {
         auto pc = getcallerpc();
         auto sp = getcallersp();
@@ -1568,7 +1568,7 @@ namespace golang::runtime
     // runningPanicDefers once main is blocked from exiting.
     //
     //go:nosplit
-    void fatalpanic(struct _panic* msgs)
+    void fatalpanic(_panic* msgs)
     {
         auto pc = getcallerpc();
         auto sp = getcallersp();
@@ -1688,10 +1688,10 @@ namespace golang::runtime
     }
 
     bool didothers;
-    mutex deadlock;
+    golang::runtime::mutex deadlock;
     // gp is the crashing g running on this M, but may be a user G, while getg() is
     // always g0.
-    bool dopanic_m(struct g* gp, uintptr_t pc, uintptr_t sp)
+    bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp)
     {
         if(gp->sig != 0)
         {
@@ -1793,7 +1793,7 @@ namespace golang::runtime
     // left alone so that LR is used as sigpanic's return PC, effectively
     // replacing the top-most frame with sigpanic. This is used by
     // preparePanic.
-    bool shouldPushSigpanic(struct g* gp, uintptr_t pc, uintptr_t lr)
+    bool shouldPushSigpanic(g* gp, uintptr_t pc, uintptr_t lr)
     {
         if(pc == 0)
         {

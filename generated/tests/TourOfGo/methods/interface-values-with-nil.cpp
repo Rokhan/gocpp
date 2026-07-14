@@ -96,7 +96,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void rec::M(golang::main::T* t)
+    void rec::M(T* t)
     {
         if(t == nullptr)
         {
@@ -110,12 +110,12 @@ namespace golang::main
     {
         I i = {};
 
-        T* t = nullptr;
+        golang::main::T* t = nullptr;
         i = t;
         describe(i);
         rec::M(gocpp::recv(i));
 
-        i = new T {"hello"_s};
+        i = new golang::main::T {"hello"_s};
         describe(i);
         rec::M(gocpp::recv(i));
     }

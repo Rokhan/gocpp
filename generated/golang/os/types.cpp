@@ -83,12 +83,12 @@ namespace golang::os
     // The single letters are the abbreviations
     // used by the String method's formatting.
     // Mask for the type bits. For regular files, none will be set.
-    gocpp::string rec::Name(golang::os::fileStat* fs)
+    gocpp::string rec::Name(fileStat* fs)
     {
         return fs->name;
     }
 
-    bool rec::IsDir(golang::os::fileStat* fs)
+    bool rec::IsDir(fileStat* fs)
     {
         return rec::IsDir(gocpp::recv(rec::Mode(gocpp::recv(fs))));
     }
@@ -99,10 +99,10 @@ namespace golang::os
     // the decision may be based on the path names.
     // SameFile only applies to results returned by this package's Stat.
     // It returns false in other cases.
-    bool SameFile(golang::os::FileInfo fi1, golang::os::FileInfo fi2)
+    bool SameFile(FileInfo fi1, FileInfo fi2)
     {
-        auto [fs1, ok1] = gocpp::getValue<fileStat*>(fi1);
-        auto [fs2, ok2] = gocpp::getValue<fileStat*>(fi2);
+        auto [fs1, ok1] = gocpp::getValue<golang::os::fileStat*>(fi1);
+        auto [fs2, ok2] = gocpp::getValue<golang::os::fileStat*>(fi2);
         if(! ok1 || ! ok2)
         {
             return false;

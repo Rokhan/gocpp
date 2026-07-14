@@ -22,23 +22,23 @@ namespace golang::runtime
     struct randomEnum;
     struct initTask;
     struct tracestat;
-    const runtime::stwReason stwUnknown = 0;
-    const runtime::stwReason stwGCMarkTerm = 1;
-    const runtime::stwReason stwGCSweepTerm = 2;
-    const runtime::stwReason stwWriteHeapDump = 3;
-    const runtime::stwReason stwGoroutineProfile = 4;
-    const runtime::stwReason stwGoroutineProfileCleanup = 5;
-    const runtime::stwReason stwAllGoroutinesStack = 6;
-    const runtime::stwReason stwReadMemStats = 7;
-    const runtime::stwReason stwAllThreadsSyscall = 8;
-    const runtime::stwReason stwGOMAXPROCS = 9;
-    const runtime::stwReason stwStartTrace = 10;
-    const runtime::stwReason stwStopTrace = 11;
-    const runtime::stwReason stwForTestCountPagesInUse = 12;
-    const runtime::stwReason stwForTestReadMetricsSlow = 13;
-    const runtime::stwReason stwForTestReadMemStatsSlow = 14;
-    const runtime::stwReason stwForTestPageCachePagesLeaked = 15;
-    const runtime::stwReason stwForTestResetDebugLog = 16;
+    const golang::runtime::stwReason stwUnknown = 0;
+    const golang::runtime::stwReason stwGCMarkTerm = 1;
+    const golang::runtime::stwReason stwGCSweepTerm = 2;
+    const golang::runtime::stwReason stwWriteHeapDump = 3;
+    const golang::runtime::stwReason stwGoroutineProfile = 4;
+    const golang::runtime::stwReason stwGoroutineProfileCleanup = 5;
+    const golang::runtime::stwReason stwAllGoroutinesStack = 6;
+    const golang::runtime::stwReason stwReadMemStats = 7;
+    const golang::runtime::stwReason stwAllThreadsSyscall = 8;
+    const golang::runtime::stwReason stwGOMAXPROCS = 9;
+    const golang::runtime::stwReason stwStartTrace = 10;
+    const golang::runtime::stwReason stwStopTrace = 11;
+    const golang::runtime::stwReason stwForTestCountPagesInUse = 12;
+    const golang::runtime::stwReason stwForTestReadMetricsSlow = 13;
+    const golang::runtime::stwReason stwForTestReadMemStatsSlow = 14;
+    const golang::runtime::stwReason stwForTestPageCachePagesLeaked = 15;
+    const golang::runtime::stwReason stwForTestResetDebugLog = 16;
 }
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 #include "golang/runtime/race0.fwd.h"

@@ -51,11 +51,11 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    gocpp::map<gocpp::string, Vertex> m;
+    gocpp::map<gocpp::string, golang::main::Vertex> m;
     void main()
     {
-        m = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Vertex>>());
-        m["Bell Labs"_s] = Vertex {
+        m = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, golang::main::Vertex>>());
+        m["Bell Labs"_s] = golang::main::Vertex {
             40.68433, - 74.39967
         };
         mocklib::Println(m["Bell Labs"_s]);

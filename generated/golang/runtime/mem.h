@@ -24,9 +24,9 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    gocpp::unsafe_pointer sysAlloc(uintptr_t n, golang::runtime::sysMemStat* sysStat);
-    void sysFree(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat);
-    void sysMap(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat);
+    gocpp::unsafe_pointer sysAlloc(uintptr_t n, sysMemStat* sysStat);
+    void sysFree(gocpp::unsafe_pointer v, uintptr_t n, sysMemStat* sysStat);
+    void sysMap(gocpp::unsafe_pointer v, uintptr_t n, sysMemStat* sysStat);
 
     namespace rec
     {

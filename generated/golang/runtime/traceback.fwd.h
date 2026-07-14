@@ -12,10 +12,10 @@ namespace golang::runtime
     struct cgoTracebackArg;
     struct cgoContextArg;
     struct cgoSymbolizerArg;
-    const runtime::unwindFlags unwindPrintErrors = 1 << 0;
-    const runtime::unwindFlags unwindSilentErrors = 1 << 1;
-    const runtime::unwindFlags unwindTrap = 1 << 2;
-    const runtime::unwindFlags unwindJumpStack = 1 << 3;
+    const golang::runtime::unwindFlags unwindPrintErrors = 1 << 0;
+    const golang::runtime::unwindFlags unwindSilentErrors = 1 << 1;
+    const golang::runtime::unwindFlags unwindTrap = 1 << 2;
+    const golang::runtime::unwindFlags unwindJumpStack = 1 << 3;
 }
 #include "golang/internal/abi/symtab.fwd.h"
 #include "golang/runtime/internal/sys/consts.fwd.h"

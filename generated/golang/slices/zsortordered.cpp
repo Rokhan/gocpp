@@ -333,10 +333,10 @@ namespace golang::slices
     // [8,shortestNinther): uses the simple median-of-three method.
     // [shortestNinther,∞): uses the Tukey ninther method.
     template<typename E>
-    std::tuple<int, slices::sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b)
+    std::tuple<int, golang::slices::sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b)
     {
         int pivot;
-        slices::sortedHint hint;
+        golang::slices::sortedHint hint;
         auto shortestNinther = 50;
         auto maxSwaps = 4 * 3;
 

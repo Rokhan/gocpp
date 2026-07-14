@@ -21,7 +21,7 @@ namespace golang::runtime
     }
 
     // isDirectIface reports whether t is stored directly in an interface value.
-    bool isDirectIface(golang::runtime::_type* t)
+    bool isDirectIface(_type* t)
     {
         return t->Kind_ & kindDirectIface != 0;
     }

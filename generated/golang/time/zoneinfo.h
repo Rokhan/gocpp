@@ -54,7 +54,7 @@ namespace golang::time
     std::tuple<int, gocpp::string, bool> tzsetOffset(gocpp::string s);
     struct rule
     {
-        golang::time::ruleKind kind{};
+        ruleKind kind{};
         int day{};
         int week{};
         int mon{};
@@ -111,8 +111,8 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Location& value);
-    std::tuple<struct rule, gocpp::string, bool> tzsetRule(gocpp::string s);
-    int tzruleTime(int year, struct rule r, int off);
+    std::tuple<golang::time::rule, gocpp::string, bool> tzsetRule(gocpp::string s);
+    int tzruleTime(int year, rule r, int off);
 }
 #include "golang/errors/errors.h"
 #include "golang/sync/once.h"
@@ -123,18 +123,18 @@ namespace golang::time
     extern sync::Once unnamedFixedZonesOnce;
     extern gocpp::error errLocation;
     extern sync::Once zoneinfoOnce;
-    extern Location utcLoc;
-    extern Location localLoc;
-    extern gocpp::slice<Location*> unnamedFixedZones;
-    struct Location* FixedZone(gocpp::string name, int offset);
-    struct Location* fixedZone(gocpp::string name, int offset);
-    std::tuple<struct Location*, struct gocpp::error> LoadLocation(gocpp::string name);
-    extern Location* UTC;
-    extern Location* Local;
+    extern golang::time::Location utcLoc;
+    extern golang::time::Location localLoc;
+    extern gocpp::slice<golang::time::Location*> unnamedFixedZones;
+    golang::time::Location* FixedZone(gocpp::string name, int offset);
+    golang::time::Location* fixedZone(gocpp::string name, int offset);
+    std::tuple<golang::time::Location*, struct gocpp::error> LoadLocation(gocpp::string name);
+    extern golang::time::Location* UTC;
+    extern golang::time::Location* Local;
 
     namespace rec
     {
-        struct Location* get(golang::time::Location* l);
+        golang::time::Location* get(golang::time::Location* l);
         gocpp::string String(golang::time::Location* l);
         std::tuple<gocpp::string, int, int64_t, int64_t, bool> lookup(golang::time::Location* l, int64_t sec);
         int lookupFirstZone(golang::time::Location* l);

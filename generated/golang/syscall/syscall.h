@@ -31,10 +31,10 @@ namespace golang::syscall
 
     namespace rec
     {
-        std::tuple<int64_t, int64_t> Unix(golang::syscall::Timespec* ts);
-        std::tuple<int64_t, int64_t> Unix(golang::syscall::Timeval* tv);
-        int64_t Nano(golang::syscall::Timespec* ts);
-        int64_t Nano(golang::syscall::Timeval* tv);
+        std::tuple<int64_t, int64_t> Unix(Timespec* ts);
+        std::tuple<int64_t, int64_t> Unix(Timeval* tv);
+        int64_t Nano(Timespec* ts);
+        int64_t Nano(Timeval* tv);
     }
 }
 

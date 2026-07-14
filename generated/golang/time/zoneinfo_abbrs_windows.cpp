@@ -49,7 +49,7 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    gocpp::map<gocpp::string, abbr> abbrs = gocpp::map<gocpp::string, abbr> {
+    gocpp::map<gocpp::string, golang::time::abbr> abbrs = gocpp::map<gocpp::string, golang::time::abbr> {
         { "Egypt Standard Time"_s, {"EET"_s, /* Africa/Cairo */ "EEST"_s} },
         { "Morocco Standard Time"_s, {"+00"_s, /* Africa/Casablanca */ "+01"_s} },
         { "South Africa Standard Time"_s, {"SAST"_s, /* Africa/Johannesburg */ "SAST"_s} },

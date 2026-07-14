@@ -10,8 +10,8 @@ namespace golang::runtime
     struct gocpp_id_0;
     struct GoTag_semTable;
     using semaProfileFlags = int;
-    const runtime::semaProfileFlags semaBlockProfile = 1 << 0;
-    const runtime::semaProfileFlags semaMutexProfile = 1 << 1;
+    const golang::runtime::semaProfileFlags semaBlockProfile = 1 << 0;
+    const golang::runtime::semaProfileFlags semaMutexProfile = 1 << 1;
 }
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"

@@ -480,7 +480,7 @@ namespace golang::runtime
                 {
                     hintList = & mheap_.userArena.arenaHints;
                 }
-                auto hint = (arenaHint*)(rec::alloc(gocpp::recv(mheap_.arenaHintAlloc)));
+                auto hint = (golang::runtime::arenaHint*)(rec::alloc(gocpp::recv(mheap_.arenaHintAlloc)));
                 hint->addr = p;
                 std::tie(hint->next, *hintList) = std::tuple{*hintList, hint};
             }
@@ -500,7 +500,7 @@ namespace golang::runtime
             // contiguous.
             // 3. We try to stake out a reasonably large initial
             // heap reservation.
-            auto arenaMetaSize = (1 << arenaBits) * gocpp::Sizeof<heapArena>();
+            auto arenaMetaSize = (1 << arenaBits) * gocpp::Sizeof<golang::runtime::heapArena>();
             auto meta = uintptr_t(sysReserve(nullptr, arenaMetaSize));
             if(meta != 0)
             {
@@ -551,14 +551,14 @@ namespace golang::runtime
                     break;
                 }
             }
-            auto hint = (arenaHint*)(rec::alloc(gocpp::recv(mheap_.arenaHintAlloc)));
+            auto hint = (golang::runtime::arenaHint*)(rec::alloc(gocpp::recv(mheap_.arenaHintAlloc)));
             hint->addr = p;
             std::tie(hint->next, mheap_.arenaHints) = std::tuple{mheap_.arenaHints, hint};
 
             // Place the hint for user arenas just after the large reservation.
             // While this potentially competes with the hint above, in practice we probably
             // aren't going to be getting this far anyway on 32-bit platforms.
-            auto userArenaHint = (arenaHint*)(rec::alloc(gocpp::recv(mheap_.arenaHintAlloc)));
+            auto userArenaHint = (golang::runtime::arenaHint*)(rec::alloc(gocpp::recv(mheap_.arenaHintAlloc)));
             userArenaHint->addr = p;
             std::tie(userArenaHint->next, mheap_.userArena.arenaHints) = std::tuple{mheap_.userArena.arenaHints, userArenaHint};
         }
@@ -583,7 +583,7 @@ namespace golang::runtime
     // be transitioned to Prepared and then Ready before use.
     //
     // h must be locked.
-    std::tuple<gocpp::unsafe_pointer, uintptr_t> rec::sysAlloc(golang::runtime::mheap* h, uintptr_t n, struct arenaHint** hintList, bool go_register)
+    std::tuple<gocpp::unsafe_pointer, uintptr_t> rec::sysAlloc(mheap* h, uintptr_t n, arenaHint** hintList, bool go_register)
     {
         gocpp::unsafe_pointer v;
         uintptr_t size;
@@ -674,10 +674,10 @@ namespace golang::runtime
             }
 
             // Create new hints for extending this region.
-            auto hint = (arenaHint*)(rec::alloc(gocpp::recv(h->arenaHintAlloc)));
+            auto hint = (golang::runtime::arenaHint*)(rec::alloc(gocpp::recv(h->arenaHintAlloc)));
             std::tie(hint->addr, hint->down) = std::tuple{uintptr_t(v), true};
             std::tie(hint->next, mheap_.arenaHints) = std::tuple{mheap_.arenaHints, hint};
-            hint = (arenaHint*)(rec::alloc(gocpp::recv(h->arenaHintAlloc)));
+            hint = (golang::runtime::arenaHint*)(rec::alloc(gocpp::recv(h->arenaHintAlloc)));
             hint->addr = uintptr_t(v) + size;
             std::tie(hint->next, mheap_.arenaHints) = std::tuple{mheap_.arenaHints, hint};
         }
@@ -735,7 +735,7 @@ namespace golang::runtime
                 // is paged in is too expensive. Trying to account for the whole region means
                 // that it will appear like an enormous memory overhead in statistics, even though
                 // it is not.
-                l2 = (gocpp::array_ptr<gocpp::array<heapArena*, 1 << arenaL2Bits>>)(sysAllocOS(gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>()));
+                l2 = (gocpp::array_ptr<gocpp::array<golang::runtime::heapArena*, 1 << arenaL2Bits>>)(sysAllocOS(gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>()));
                 if(l2 == nullptr)
                 {
                     go_throw("out of memory allocating heap arena map"_s);
@@ -755,11 +755,11 @@ namespace golang::runtime
             {
                 go_throw("arena already initialized"_s);
             }
-            heapArena* r = {};
-            r = (heapArena*)(rec::alloc(gocpp::recv(h->heapArenaAlloc), gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
+            golang::runtime::heapArena* r = {};
+            r = (golang::runtime::heapArena*)(rec::alloc(gocpp::recv(h->heapArenaAlloc), gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
             if(r == nullptr)
             {
-                r = (heapArena*)(persistentalloc(gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
+                r = (golang::runtime::heapArena*)(persistentalloc(gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
                 if(r == nullptr)
                 {
                     go_throw("out of memory allocating heap arena metadata"_s);
@@ -776,13 +776,13 @@ namespace golang::runtime
                     {
                         size = physPageSize;
                     }
-                    auto newArray = (notInHeap*)(persistentalloc(size, goarch::PtrSize, & memstats.gcMiscSys));
+                    auto newArray = (golang::runtime::notInHeap*)(persistentalloc(size, goarch::PtrSize, & memstats.gcMiscSys));
                     if(newArray == nullptr)
                     {
                         go_throw("out of memory allocating allArenas"_s);
                     }
                     auto oldSlice = h->allArenas;
-                    *(notInHeapSlice*)(gocpp::unsafe_pointer(& h->allArenas)) = notInHeapSlice {newArray, len(h->allArenas), int(size / goarch::PtrSize)};
+                    *(golang::runtime::notInHeapSlice*)(gocpp::unsafe_pointer(& h->allArenas)) = golang::runtime::notInHeapSlice {newArray, len(h->allArenas), int(size / goarch::PtrSize)};
                     // Do not free the old backing array because
                     // there may be concurrent readers. Since we
                     // double the array each time, this can lead
@@ -888,7 +888,7 @@ namespace golang::runtime
     // Must be called on the system stack because it acquires the heap lock.
     //
     //go:systemstack
-    void rec::enableMetadataHugePages(golang::runtime::mheap* h)
+    void rec::enableMetadataHugePages(mheap* h)
     {
         // Enable huge pages for page structure.
         rec::enableChunkHugePages(gocpp::recv(h->pages));
@@ -909,7 +909,7 @@ namespace golang::runtime
         // just iterate over the whole thing.
         for(auto [i, gocpp_ignored] : h->arenas)
         {
-            auto l2 = (gocpp::array_ptr<gocpp::array<heapArena*, 1 << arenaL2Bits>>)(atomic::Loadp(gocpp::unsafe_pointer(& h->arenas[i])));
+            auto l2 = (gocpp::array_ptr<gocpp::array<golang::runtime::heapArena*, 1 << arenaL2Bits>>)(atomic::Loadp(gocpp::unsafe_pointer(& h->arenas[i])));
             if(l2 == nullptr)
             {
                 continue;
@@ -922,7 +922,7 @@ namespace golang::runtime
     uintptr_t zerobase;
     // nextFreeFast returns the next free object if one is quickly available.
     // Otherwise it returns 0.
-    runtime::gclinkptr nextFreeFast(struct mspan* s)
+    golang::runtime::gclinkptr nextFreeFast(mspan* s)
     {
         // Is there a free object in the allocCache?
         auto theBit = sys::TrailingZeros64(s->allocCache);
@@ -954,10 +954,10 @@ namespace golang::runtime
     //
     // Must run in a non-preemptible context since otherwise the owner of
     // c could change.
-    std::tuple<runtime::gclinkptr, struct mspan*, bool> rec::nextFree(golang::runtime::mcache* c, golang::runtime::spanClass spc)
+    std::tuple<golang::runtime::gclinkptr, golang::runtime::mspan*, bool> rec::nextFree(mcache* c, spanClass spc)
     {
-        runtime::gclinkptr v;
-        struct mspan* s;
+        golang::runtime::gclinkptr v;
+        golang::runtime::mspan* s;
         bool shouldhelpgc;
         s = c->alloc[spc];
         shouldhelpgc = false;
@@ -995,7 +995,7 @@ namespace golang::runtime
     // Allocate an object of size bytes.
     // Small objects are allocated from the per-P cache's free lists.
     // Large objects (> 32 kB) are allocated straight from the heap.
-    gocpp::unsafe_pointer mallocgc(uintptr_t size, golang::runtime::_type* typ, bool needzero)
+    gocpp::unsafe_pointer mallocgc(uintptr_t size, _type* typ, bool needzero)
     {
         if(gcphase == _GCmarktermination)
         {
@@ -1087,8 +1087,8 @@ namespace golang::runtime
         {
             go_throw("mallocgc called without a P or outside bootstrapping"_s);
         }
-        mspan* span = {};
-        runtime::_type** header = {};
+        golang::runtime::mspan* span = {};
+        golang::runtime::_type** header = {};
         gocpp::unsafe_pointer x = {};
         auto noscan = typ == nullptr || typ->PtrBytes == 0;
         // In some cases block zeroing can profitably (for latency reduction purposes)
@@ -1218,7 +1218,7 @@ namespace golang::runtime
                 }
                 if(goexperiment::AllocHeaders && hasHeader)
                 {
-                    header = (runtime::_type**)(x);
+                    header = (golang::runtime::_type**)(x);
                     x = add(x, mallocHeaderSize);
                     size -= mallocHeaderSize;
                 }
@@ -1399,7 +1399,7 @@ namespace golang::runtime
 
         if(shouldhelpgc)
         {
-            if(auto t = (gocpp::Init<gcTrigger>([=](auto& y) {
+            if(auto t = (gocpp::Init<golang::runtime::gcTrigger>([=](auto& y) {
                 y.kind = gcTriggerHeap;
             })); rec::test(gocpp::recv(t)))
             {
@@ -1433,9 +1433,9 @@ namespace golang::runtime
     // Caller must be preemptible.
     //
     // Returns the G for which the assist credit was accounted.
-    struct g* deductAssistCredit(uintptr_t size)
+    golang::runtime::g* deductAssistCredit(uintptr_t size)
     {
-        g* assistG = {};
+        golang::runtime::g* assistG = {};
         if(gcBlackenEnabled != 0)
         {
             // Charge the current user G for this allocation.
@@ -1493,25 +1493,25 @@ namespace golang::runtime
     // implementation of new builtin
     // compiler (both frontend and SSA backend) knows the signature
     // of this function.
-    gocpp::unsafe_pointer newobject(golang::runtime::_type* typ)
+    gocpp::unsafe_pointer newobject(_type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
     //go:linkname reflect_unsafe_New reflect.unsafe_New
-    gocpp::unsafe_pointer reflect_unsafe_New(golang::runtime::_type* typ)
+    gocpp::unsafe_pointer reflect_unsafe_New(_type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
     //go:linkname reflectlite_unsafe_New internal/reflectlite.unsafe_New
-    gocpp::unsafe_pointer reflectlite_unsafe_New(golang::runtime::_type* typ)
+    gocpp::unsafe_pointer reflectlite_unsafe_New(_type* typ)
     {
         return mallocgc(typ->Size_, typ, true);
     }
 
     // newarray allocates an array of n elements of type typ.
-    gocpp::unsafe_pointer newarray(golang::runtime::_type* typ, int n)
+    gocpp::unsafe_pointer newarray(_type* typ, int n)
     {
         if(n == 1)
         {
@@ -1526,12 +1526,12 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_unsafe_NewArray reflect.unsafe_NewArray
-    gocpp::unsafe_pointer reflect_unsafe_NewArray(golang::runtime::_type* typ, int n)
+    gocpp::unsafe_pointer reflect_unsafe_NewArray(_type* typ, int n)
     {
         return newarray(typ, n);
     }
 
-    void profilealloc(struct m* mp, gocpp::unsafe_pointer x, uintptr_t size)
+    void profilealloc(m* mp, gocpp::unsafe_pointer x, uintptr_t size)
     {
         auto c = getMCache(mp);
         if(c == nullptr)
@@ -1709,7 +1709,7 @@ namespace golang::runtime
     // persistentChunks is a list of all the persistent chunks we have
     // allocated. The list is maintained through the first word in the
     // persistent chunk. This is updated atomically.
-    notInHeap* persistentChunks;
+    golang::runtime::notInHeap* persistentChunks;
     // Wrapper around sysAlloc that can allocate small chunks.
     // There is no associated free operation.
     // Intended for things like function/type/debug-related persistent data.
@@ -1719,9 +1719,9 @@ namespace golang::runtime
     //
     // Consider marking persistentalloc'd types not in heap by embedding
     // runtime/internal/sys.NotInHeap.
-    gocpp::unsafe_pointer persistentalloc(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
+    gocpp::unsafe_pointer persistentalloc(uintptr_t size, uintptr_t align, sysMemStat* sysStat)
     {
-        notInHeap* p = {};
+        golang::runtime::notInHeap* p = {};
         systemstack([=]() mutable -> void
         {
             p = persistentalloc1(size, align, sysStat);
@@ -1733,7 +1733,7 @@ namespace golang::runtime
     // See issue 9174.
     //
     //go:systemstack
-    struct notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
+    golang::runtime::notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat)
     {
         auto maxBlock = 64 << 10;
 
@@ -1759,11 +1759,11 @@ namespace golang::runtime
 
         if(size >= maxBlock)
         {
-            return (notInHeap*)(sysAlloc(size, sysStat));
+            return (golang::runtime::notInHeap*)(sysAlloc(size, sysStat));
         }
 
         auto mp = acquirem();
-        persistentAlloc* persistent = {};
+        golang::runtime::persistentAlloc* persistent = {};
         if(mp != nullptr && mp->p != 0)
         {
             persistent = & rec::ptr(gocpp::recv(mp->p))->palloc;
@@ -1776,7 +1776,7 @@ namespace golang::runtime
         persistent->off = alignUp(persistent->off, align);
         if(persistent->off + size > persistentChunkSize || persistent->base == nullptr)
         {
-            persistent->base = (notInHeap*)(sysAlloc(persistentChunkSize, & memstats.other_sys));
+            persistent->base = (golang::runtime::notInHeap*)(sysAlloc(persistentChunkSize, & memstats.other_sys));
             if(persistent->base == nullptr)
             {
                 if(persistent == & globalAlloc.persistentAlloc)
@@ -1876,7 +1876,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(golang::runtime::linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory)
+    void rec::init(linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory)
     {
         if(base + size < base)
         {
@@ -1891,7 +1891,7 @@ namespace golang::runtime
         l->mapMemory = mapMemory;
     }
 
-    gocpp::unsafe_pointer rec::alloc(golang::runtime::linearAlloc* l, uintptr_t size, uintptr_t align, golang::runtime::sysMemStat* sysStat)
+    gocpp::unsafe_pointer rec::alloc(linearAlloc* l, uintptr_t size, uintptr_t align, sysMemStat* sysStat)
     {
         auto p = alignUp(l->next, align);
         if(p + size > l->end)
@@ -1950,9 +1950,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct notInHeap* rec::add(golang::runtime::notInHeap* p, uintptr_t bytes)
+    golang::runtime::notInHeap* rec::add(notInHeap* p, uintptr_t bytes)
     {
-        return (notInHeap*)(gocpp::unsafe_pointer(uintptr_t(gocpp::unsafe_pointer(p)) + bytes));
+        return (golang::runtime::notInHeap*)(gocpp::unsafe_pointer(uintptr_t(gocpp::unsafe_pointer(p)) + bytes));
     }
 
     // computeRZlog computes the size of the redzone.

@@ -40,7 +40,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct checkmarksMap& value);
-    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, struct markBits mbits);
+    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, markBits mbits);
 
     namespace rec
     {

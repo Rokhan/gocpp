@@ -55,13 +55,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cpuProfile& value);
-    extern cpuProfile cpuprof;
+    extern golang::runtime::cpuProfile cpuprof;
 
     namespace rec
     {
-        void add(golang::runtime::cpuProfile* p, gocpp::unsafe_pointer* tagPtr, gocpp::slice<uintptr_t> stk);
-        void addNonGo(golang::runtime::cpuProfile* p, gocpp::slice<uintptr_t> stk);
-        void addExtra(golang::runtime::cpuProfile* p);
+        void add(cpuProfile* p, gocpp::unsafe_pointer* tagPtr, gocpp::slice<uintptr_t> stk);
+        void addNonGo(cpuProfile* p, gocpp::slice<uintptr_t> stk);
+        void addExtra(cpuProfile* p);
     }
 }
 

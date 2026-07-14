@@ -673,8 +673,8 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reparseDataBuffer& value);
-    struct Timeval NsecToTimeval(int64_t nsec);
-    struct Filetime NsecToFiletime(int64_t nsec);
+    golang::syscall::Timeval NsecToTimeval(int64_t nsec);
+    golang::syscall::Filetime NsecToFiletime(int64_t nsec);
     struct Win32finddata
     {
         uint32_t FileAttributes{};
@@ -796,9 +796,9 @@ namespace golang::syscall
     struct InterfaceInfo
     {
         uint32_t Flags{};
-        golang::syscall::SockaddrGen Address{};
-        golang::syscall::SockaddrGen BroadcastAddress{};
-        golang::syscall::SockaddrGen Netmask{};
+        SockaddrGen Address{};
+        SockaddrGen BroadcastAddress{};
+        SockaddrGen Netmask{};
 
         using isGoStruct = void;
 
@@ -812,7 +812,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceInfo& value);
-    using IpMaskString = gocpp::defined<IpAddressString, GoTag_IpMaskString>;
+    using IpMaskString = gocpp::defined<golang::syscall::IpAddressString, GoTag_IpMaskString>;
     struct CertChainContext
     {
         uint32_t Size{};
@@ -897,7 +897,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CertUsageMatch& value);
-    extern GUID WSAID_CONNECTEX;
+    extern golang::syscall::GUID WSAID_CONNECTEX;
     struct WSAProtocolInfo
     {
         uint32_t ServiceFlags1{};
@@ -1030,7 +1030,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CertContext& value);
-    void copyFindData(struct Win32finddata* dst, struct win32finddata1* src);
+    void copyFindData(Win32finddata* dst, win32finddata1* src);
     struct _STARTUPINFOEXW
     {
         StartupInfo StartupInfo{};
@@ -1052,7 +1052,7 @@ namespace golang::syscall
     {
         IpAddrString* Next{};
         IpAddressString IpAddress{};
-        golang::syscall::IpMaskString IpMask{};
+        IpMaskString IpMask{};
         uint32_t Context{};
 
         using isGoStruct = void;
@@ -1125,8 +1125,8 @@ namespace golang::syscall
 
     namespace rec
     {
-        int64_t Nanoseconds(golang::syscall::Timeval* tv);
-        int64_t Nanoseconds(golang::syscall::Filetime* ft);
+        int64_t Nanoseconds(Timeval* tv);
+        int64_t Nanoseconds(Filetime* ft);
     }
 }
 

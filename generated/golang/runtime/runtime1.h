@@ -64,9 +64,9 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct dbgVar& value);
     extern gocpp_id_0 debug;
-    struct m* acquirem();
-    void releasem(struct m* mp);
-    extern gocpp::slice<dbgVar*> dbgvars;
+    golang::runtime::m* acquirem();
+    void releasem(m* mp);
+    extern gocpp::slice<golang::runtime::dbgVar*> dbgvars;
 
     namespace rec
     {

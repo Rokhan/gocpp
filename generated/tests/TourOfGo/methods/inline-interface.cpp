@@ -20,12 +20,12 @@ namespace golang::main
     {
     }
 
-    double rec::Abs(golang::main::MyInt i)
+    double rec::Abs(MyInt i)
     {
         return std::sqrt(double(i * i));
     }
 
-    double rec::Abs(golang::main::MyFloat f)
+    double rec::Abs(MyFloat f)
     {
         return std::sqrt(double(f * f));
     }
@@ -62,7 +62,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    double rec::Abs(golang::main::Vertex v)
+    double rec::Abs(Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
@@ -127,7 +127,7 @@ namespace golang::main
         i = MyFloat(42.0);
         describe(i);
 
-        i = Vertex {4, 2};
+        i = golang::main::Vertex {4, 2};
         describe(i);
     }
 

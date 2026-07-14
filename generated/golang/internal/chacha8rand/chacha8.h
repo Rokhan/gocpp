@@ -52,17 +52,17 @@ namespace golang::chacha8rand
     void bePutUint64(gocpp::slice<unsigned char> b, uint64_t v);
     uint64_t leUint64(gocpp::slice<unsigned char> b);
     void lePutUint64(gocpp::slice<unsigned char> b, uint64_t v);
-    gocpp::slice<unsigned char> Marshal(struct State* s);
-    struct gocpp::error Unmarshal(struct State* s, gocpp::slice<unsigned char> data);
+    gocpp::slice<unsigned char> Marshal(State* s);
+    struct gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data);
 
     namespace rec
     {
-        std::tuple<uint64_t, bool> Next(golang::chacha8rand::State* s);
-        void Init(golang::chacha8rand::State* s, gocpp::array<unsigned char, 32> seed);
-        void Init64(golang::chacha8rand::State* s, gocpp::array<uint64_t, 4> seed);
-        void Refill(golang::chacha8rand::State* s);
-        void Reseed(golang::chacha8rand::State* s);
-        gocpp::string Error(golang::chacha8rand::errUnmarshalChaCha8*);
+        std::tuple<uint64_t, bool> Next(State* s);
+        void Init(State* s, gocpp::array<unsigned char, 32> seed);
+        void Init64(State* s, gocpp::array<uint64_t, 4> seed);
+        void Refill(State* s);
+        void Reseed(State* s);
+        gocpp::string Error(errUnmarshalChaCha8*);
     }
 }
 

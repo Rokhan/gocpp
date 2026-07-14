@@ -49,16 +49,16 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void lockInit(struct mutex* l, golang::runtime::lockRank rank)
+    void lockInit(mutex* l, lockRank rank)
     {
     }
 
-    runtime::lockRank getLockRank(struct mutex* l)
+    golang::runtime::lockRank getLockRank(mutex* l)
     {
         return 0;
     }
 
-    void lockWithRank(struct mutex* l, golang::runtime::lockRank rank)
+    void lockWithRank(mutex* l, lockRank rank)
     {
         lock2(l);
     }
@@ -66,11 +66,11 @@ namespace golang::runtime
     // This function may be called in nosplit context and thus must be nosplit.
     //
     //go:nosplit
-    void acquireLockRank(golang::runtime::lockRank rank)
+    void acquireLockRank(lockRank rank)
     {
     }
 
-    void unlockWithRank(struct mutex* l)
+    void unlockWithRank(mutex* l)
     {
         unlock2(l);
     }
@@ -78,21 +78,21 @@ namespace golang::runtime
     // This function may be called in nosplit context and thus must be nosplit.
     //
     //go:nosplit
-    void releaseLockRank(golang::runtime::lockRank rank)
+    void releaseLockRank(lockRank rank)
     {
     }
 
-    void lockWithRankMayAcquire(struct mutex* l, golang::runtime::lockRank rank)
-    {
-    }
-
-    //go:nosplit
-    void assertLockHeld(struct mutex* l)
+    void lockWithRankMayAcquire(mutex* l, lockRank rank)
     {
     }
 
     //go:nosplit
-    void assertRankHeld(golang::runtime::lockRank r)
+    void assertLockHeld(mutex* l)
+    {
+    }
+
+    //go:nosplit
+    void assertRankHeld(lockRank r)
     {
     }
 
@@ -112,7 +112,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void assertWorldStoppedOrLockHeld(struct mutex* l)
+    void assertWorldStoppedOrLockHeld(mutex* l)
     {
     }
 

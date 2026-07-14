@@ -152,41 +152,41 @@ namespace golang::runtime
     // This unwinder uses non-strict handling of PC because it's assumed this is
     // only ever used for symbolic debugging. If things go really wrong, it'll just
     // fall back to the outermost frame.
-    std::tuple<struct inlineUnwinder, struct inlineFrame> newInlineUnwinder(struct funcInfo f, uintptr_t pc)
+    std::tuple<golang::runtime::inlineUnwinder, golang::runtime::inlineFrame> newInlineUnwinder(golang::runtime::funcInfo f, uintptr_t pc)
     {
         auto inldata = funcdata(f, abi::FUNCDATA_InlTree);
         if(inldata == nullptr)
         {
-            return {gocpp::Init<inlineUnwinder>([=](auto& x) {
+            return {gocpp::Init<golang::runtime::inlineUnwinder>([=](auto& x) {
                 x.f = f;
-            }), gocpp::Init<inlineFrame>([=](auto& x) {
+            }), gocpp::Init<golang::runtime::inlineFrame>([=](auto& x) {
                 x.pc = pc;
                 x.index = - 1;
             })};
         }
-        auto inlTree = (gocpp::array_ptr<gocpp::array<inlinedCall, 1 << 20>>)(inldata);
-        auto u = gocpp::Init<inlineUnwinder>([=](auto& x) {
+        auto inlTree = (gocpp::array_ptr<gocpp::array<golang::runtime::inlinedCall, 1 << 20>>)(inldata);
+        auto u = gocpp::Init<golang::runtime::inlineUnwinder>([=](auto& x) {
             x.f = f;
             x.inlTree = inlTree;
         });
         return {u, rec::resolveInternal(gocpp::recv(u), pc)};
     }
 
-    struct inlineFrame rec::resolveInternal(golang::runtime::inlineUnwinder* u, uintptr_t pc)
+    golang::runtime::inlineFrame rec::resolveInternal(inlineUnwinder* u, uintptr_t pc)
     {
-        return gocpp::Init<inlineFrame>([=](auto& x) {
+        return gocpp::Init<golang::runtime::inlineFrame>([=](auto& x) {
             x.pc = pc;
             x.index = pcdatavalue1(u->f, abi::PCDATA_InlTreeIndex, pc, false);
         });
     }
 
-    bool rec::valid(golang::runtime::inlineFrame uf)
+    bool rec::valid(inlineFrame uf)
     {
         return uf.pc != 0;
     }
 
     // next returns the frame representing uf's logical caller.
-    struct inlineFrame rec::next(golang::runtime::inlineUnwinder* u, struct inlineFrame uf)
+    golang::runtime::inlineFrame rec::next(inlineUnwinder* u, inlineFrame uf)
     {
         if(uf.index < 0)
         {
@@ -198,20 +198,20 @@ namespace golang::runtime
     }
 
     // isInlined returns whether uf is an inlined frame.
-    bool rec::isInlined(golang::runtime::inlineUnwinder* u, struct inlineFrame uf)
+    bool rec::isInlined(inlineUnwinder* u, inlineFrame uf)
     {
         return uf.index >= 0;
     }
 
     // srcFunc returns the srcFunc representing the given frame.
-    struct srcFunc rec::srcFunc(golang::runtime::inlineUnwinder* u, struct inlineFrame uf)
+    golang::runtime::srcFunc rec::srcFunc(inlineUnwinder* u, inlineFrame uf)
     {
         if(uf.index < 0)
         {
             return rec::srcFunc(gocpp::recv(u->f));
         }
         auto t = & u->inlTree[uf.index];
-        return srcFunc {
+        return golang::runtime::srcFunc {
             u->f.datap,
             t->nameOff,
             t->startLine,
@@ -225,7 +225,7 @@ namespace golang::runtime
     // physical function).
     //
     // It returns "?", 0 if something goes wrong.
-    std::tuple<gocpp::string, int> rec::fileLine(golang::runtime::inlineUnwinder* u, struct inlineFrame uf)
+    std::tuple<gocpp::string, int> rec::fileLine(inlineUnwinder* u, inlineFrame uf)
     {
         gocpp::string file;
         int line;

@@ -81,11 +81,11 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct g* getg();
-    void mcall(std::function<void (struct g* _1)> fn);
-    void gogo(struct gobuf* buf);
-    void setg(struct g* gg);
-    void reflectcall(golang::runtime::_type* stackArgsType, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
+    golang::runtime::g* getg();
+    void mcall(std::function<void (g* _1)> fn);
+    void gogo(gobuf* buf);
+    void setg(g* gg);
+    void reflectcall(_type* stackArgsType, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
     void call16(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
     void call32(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
     void call64(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);

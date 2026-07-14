@@ -69,9 +69,9 @@ namespace golang::runtime
     // makeAddrRange creates a new address range from two virtual addresses.
     //
     // Throws if the base and limit are not in the same memory segment.
-    struct addrRange makeAddrRange(uintptr_t base, uintptr_t limit)
+    golang::runtime::addrRange makeAddrRange(uintptr_t base, uintptr_t limit)
     {
-        auto r = addrRange {offAddr {base}, offAddr {limit}};
+        auto r = golang::runtime::addrRange {golang::runtime::offAddr {base}, golang::runtime::offAddr {limit}};
         if((base - arenaBaseOffset >= base) != (limit - arenaBaseOffset >= limit))
         {
             go_throw("addr range base and limit are not in the same memory segment"_s);
@@ -80,7 +80,7 @@ namespace golang::runtime
     }
 
     // size returns the size of the range represented in bytes.
-    uintptr_t rec::size(golang::runtime::addrRange a)
+    uintptr_t rec::size(addrRange a)
     {
         if(! rec::lessThan(gocpp::recv(a.base), a.limit))
         {
@@ -92,20 +92,20 @@ namespace golang::runtime
     }
 
     // contains returns whether or not the range contains a given address.
-    bool rec::contains(golang::runtime::addrRange a, uintptr_t addr)
+    bool rec::contains(addrRange a, uintptr_t addr)
     {
-        return rec::lessEqual(gocpp::recv(a.base), offAddr {addr}) && rec::lessThan(gocpp::recv((offAddr {addr})), a.limit);
+        return rec::lessEqual(gocpp::recv(a.base), golang::runtime::offAddr {addr}) && rec::lessThan(gocpp::recv((golang::runtime::offAddr {addr})), a.limit);
     }
 
     // subtract takes the addrRange toPrune and cuts out any overlap with
     // from, then returns the new range. subtract assumes that a and b
     // either don't overlap at all, only overlap on one side, or are equal.
     // If b is strictly contained in a, thus forcing a split, it will throw.
-    struct addrRange rec::subtract(golang::runtime::addrRange a, struct addrRange b)
+    golang::runtime::addrRange rec::subtract(addrRange a, addrRange b)
     {
         if(rec::lessEqual(gocpp::recv(b.base), a.base) && rec::lessEqual(gocpp::recv(a.limit), b.limit))
         {
-            return addrRange {};
+            return golang::runtime::addrRange {};
         }
         else
         if(rec::lessThan(gocpp::recv(a.base), b.base) && rec::lessThan(gocpp::recv(b.limit), a.limit))
@@ -128,40 +128,40 @@ namespace golang::runtime
     // takeFromFront takes len bytes from the front of the address range, aligning
     // the base to align first. On success, returns the aligned start of the region
     // taken and true.
-    std::tuple<uintptr_t, bool> rec::takeFromFront(golang::runtime::addrRange* a, uintptr_t len, uint8_t align)
+    std::tuple<uintptr_t, bool> rec::takeFromFront(addrRange* a, uintptr_t len, uint8_t align)
     {
         auto base = alignUp(rec::addr(gocpp::recv(a->base)), uintptr_t(align)) + len;
         if(base > rec::addr(gocpp::recv(a->limit)))
         {
             return {0, false};
         }
-        a->base = offAddr {base};
+        a->base = golang::runtime::offAddr {base};
         return {base - len, true};
     }
 
     // takeFromBack takes len bytes from the end of the address range, aligning
     // the limit to align after subtracting len. On success, returns the aligned
     // start of the region taken and true.
-    std::tuple<uintptr_t, bool> rec::takeFromBack(golang::runtime::addrRange* a, uintptr_t len, uint8_t align)
+    std::tuple<uintptr_t, bool> rec::takeFromBack(addrRange* a, uintptr_t len, uint8_t align)
     {
         auto limit = alignDown(rec::addr(gocpp::recv(a->limit)) - len, uintptr_t(align));
         if(rec::addr(gocpp::recv(a->base)) > limit)
         {
             return {0, false};
         }
-        a->limit = offAddr {limit};
+        a->limit = golang::runtime::offAddr {limit};
         return {limit, true};
     }
 
     // removeGreaterEqual removes all addresses in a greater than or equal
     // to addr and returns the new range.
-    struct addrRange rec::removeGreaterEqual(golang::runtime::addrRange a, uintptr_t addr)
+    golang::runtime::addrRange rec::removeGreaterEqual(addrRange a, uintptr_t addr)
     {
-        if(rec::lessEqual(gocpp::recv((offAddr {addr})), a.base))
+        if(rec::lessEqual(gocpp::recv((golang::runtime::offAddr {addr})), a.base))
         {
-            return addrRange {};
+            return golang::runtime::addrRange {};
         }
-        if(rec::lessEqual(gocpp::recv(a.limit), offAddr {addr}))
+        if(rec::lessEqual(gocpp::recv(a.limit), golang::runtime::offAddr {addr}))
         {
             return a;
         }
@@ -173,8 +173,8 @@ namespace golang::runtime
     // maxOffAddr is the maximum address in the offset address
     // space. It corresponds to the highest virtual address representable
     // by the page alloc chunk and heap arena maps.
-    offAddr minOffAddr = offAddr {arenaBaseOffset};
-    offAddr maxOffAddr = offAddr {(((1 << heapAddrBits) - 1) + arenaBaseOffset) & uintptrMask};
+    golang::runtime::offAddr minOffAddr = golang::runtime::offAddr {arenaBaseOffset};
+    golang::runtime::offAddr maxOffAddr = golang::runtime::offAddr {(((1 << heapAddrBits) - 1) + arenaBaseOffset) & uintptrMask};
     // offAddr represents an address in a contiguous view
     // of the address space on systems where the address space is
     // segmented. On other systems, it's just a normal address.
@@ -208,44 +208,44 @@ namespace golang::runtime
     }
 
     // add adds a uintptr offset to the offAddr.
-    struct offAddr rec::add(golang::runtime::offAddr l, uintptr_t bytes)
+    golang::runtime::offAddr rec::add(offAddr l, uintptr_t bytes)
     {
-        return gocpp::Init<offAddr>([=](auto& x) {
+        return gocpp::Init<golang::runtime::offAddr>([=](auto& x) {
             x.a = l.a + bytes;
         });
     }
 
     // sub subtracts a uintptr offset from the offAddr.
-    struct offAddr rec::sub(golang::runtime::offAddr l, uintptr_t bytes)
+    golang::runtime::offAddr rec::sub(offAddr l, uintptr_t bytes)
     {
-        return gocpp::Init<offAddr>([=](auto& x) {
+        return gocpp::Init<golang::runtime::offAddr>([=](auto& x) {
             x.a = l.a - bytes;
         });
     }
 
     // diff returns the amount of bytes in between the
     // two offAddrs.
-    uintptr_t rec::diff(golang::runtime::offAddr l1, struct offAddr l2)
+    uintptr_t rec::diff(offAddr l1, offAddr l2)
     {
         return l1.a - l2.a;
     }
 
     // lessThan returns true if l1 is less than l2 in the offset
     // address space.
-    bool rec::lessThan(golang::runtime::offAddr l1, struct offAddr l2)
+    bool rec::lessThan(offAddr l1, offAddr l2)
     {
         return (l1.a - arenaBaseOffset) < (l2.a - arenaBaseOffset);
     }
 
     // lessEqual returns true if l1 is less than or equal to l2 in
     // the offset address space.
-    bool rec::lessEqual(golang::runtime::offAddr l1, struct offAddr l2)
+    bool rec::lessEqual(offAddr l1, offAddr l2)
     {
         return (l1.a - arenaBaseOffset) <= (l2.a - arenaBaseOffset);
     }
 
     // equal returns true if the two offAddr values are equal.
-    bool rec::equal(golang::runtime::offAddr l1, struct offAddr l2)
+    bool rec::equal(offAddr l1, offAddr l2)
     {
         // No need to compare in the offset space, it
         // means the same thing.
@@ -253,7 +253,7 @@ namespace golang::runtime
     }
 
     // addr returns the virtual address for this offset address.
-    uintptr_t rec::addr(golang::runtime::offAddr l)
+    uintptr_t rec::addr(offAddr l)
     {
         return l.a;
     }
@@ -292,7 +292,7 @@ namespace golang::runtime
 
     // Clear attempts to store minOffAddr in atomicOffAddr. It may fail
     // if a marked value is placed in the box in the meanwhile.
-    void rec::Clear(golang::runtime::atomicOffAddr* b)
+    void rec::Clear(atomicOffAddr* b)
     {
         for(; ; )
         {
@@ -310,7 +310,7 @@ namespace golang::runtime
 
     // StoreMin stores addr if it's less than the current value in the
     // offset address space if the current value is not marked.
-    void rec::StoreMin(golang::runtime::atomicOffAddr* b, uintptr_t addr)
+    void rec::StoreMin(atomicOffAddr* b, uintptr_t addr)
     {
         auto go_new = int64_t(addr - arenaBaseOffset);
         for(; ; )
@@ -331,21 +331,21 @@ namespace golang::runtime
     // replace it with newAddr. markedAddr must be a marked address
     // returned by Load. This function will not store newAddr if the
     // box no longer contains markedAddr.
-    void rec::StoreUnmark(golang::runtime::atomicOffAddr* b, uintptr_t markedAddr, uintptr_t newAddr)
+    void rec::StoreUnmark(atomicOffAddr* b, uintptr_t markedAddr, uintptr_t newAddr)
     {
         rec::CompareAndSwap(gocpp::recv(b->a), - int64_t(markedAddr - arenaBaseOffset), int64_t(newAddr - arenaBaseOffset));
     }
 
     // StoreMarked stores addr but first converted to the offset address
     // space and then negated.
-    void rec::StoreMarked(golang::runtime::atomicOffAddr* b, uintptr_t addr)
+    void rec::StoreMarked(atomicOffAddr* b, uintptr_t addr)
     {
         rec::Store(gocpp::recv(b->a), - int64_t(addr - arenaBaseOffset));
     }
 
     // Load returns the address in the box as a virtual address. It also
     // returns if the value was marked or not.
-    std::tuple<uintptr_t, bool> rec::Load(golang::runtime::atomicOffAddr* b)
+    std::tuple<uintptr_t, bool> rec::Load(atomicOffAddr* b)
     {
         auto v = rec::Load(gocpp::recv(b->a));
         auto wasMarked = false;
@@ -402,21 +402,21 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(golang::runtime::addrRanges* a, golang::runtime::sysMemStat* sysStat)
+    void rec::init(addrRanges* a, sysMemStat* sysStat)
     {
-        auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
+        auto ranges = (golang::runtime::notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
         ranges->len = 0;
         ranges->cap = 16;
-        ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, sysStat));
+        ranges->array = (golang::runtime::notInHeap*)(persistentalloc(gocpp::Sizeof<golang::runtime::addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, sysStat));
         a->sysStat = sysStat;
         a->totalBytes = 0;
     }
 
     // findSucc returns the first index in a such that addr is
     // less than the base of the addrRange at that index.
-    int rec::findSucc(golang::runtime::addrRanges* a, uintptr_t addr)
+    int rec::findSucc(addrRanges* a, uintptr_t addr)
     {
-        auto base = offAddr {addr};
+        auto base = golang::runtime::offAddr {addr};
 
         // Narrow down the search space via a binary search
         // for large addrRanges until we have at most iterMax
@@ -467,7 +467,7 @@ namespace golang::runtime
     // then it returns addr. The second return value indicates whether
     // such an address exists for addr in a. That is, if addr is larger than
     // any address known to a, the second return value will be false.
-    std::tuple<uintptr_t, bool> rec::findAddrGreaterEqual(golang::runtime::addrRanges* a, uintptr_t addr)
+    std::tuple<uintptr_t, bool> rec::findAddrGreaterEqual(addrRanges* a, uintptr_t addr)
     {
         auto i = rec::findSucc(gocpp::recv(a), addr);
         if(i == 0)
@@ -486,7 +486,7 @@ namespace golang::runtime
     }
 
     // contains returns true if a covers the address addr.
-    bool rec::contains(golang::runtime::addrRanges* a, uintptr_t addr)
+    bool rec::contains(addrRanges* a, uintptr_t addr)
     {
         auto i = rec::findSucc(gocpp::recv(a), addr);
         if(i == 0)
@@ -499,7 +499,7 @@ namespace golang::runtime
     // add inserts a new address range to a.
     //
     // r must not overlap with any address range in a and r.size() must be > 0.
-    void rec::add(golang::runtime::addrRanges* a, struct addrRange r)
+    void rec::add(addrRanges* a, addrRange r)
     {
         // The copies in this function are potentially expensive, but this data
         // structure is meant to represent the Go heap. At worst, copying this
@@ -556,10 +556,10 @@ namespace golang::runtime
                 // 4 MiB arenas which are all discontiguous (both very conservative
                 // assumptions), this would waste at most 4 MiB of memory.
                 auto oldRanges = a->ranges;
-                auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
+                auto ranges = (golang::runtime::notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
                 ranges->len = len(oldRanges) + 1;
                 ranges->cap = cap(oldRanges) * 2;
-                ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, a->sysStat));
+                ranges->array = (golang::runtime::notInHeap*)(persistentalloc(gocpp::Sizeof<golang::runtime::addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, a->sysStat));
 
                 // Copy in the old array, but make space for the new range.
                 copy(a->ranges.make_slice(0, i), oldRanges.make_slice(0, i));
@@ -578,11 +578,11 @@ namespace golang::runtime
     // removeLast removes and returns the highest-addressed contiguous range
     // of a, or the last nBytes of that range, whichever is smaller. If a is
     // empty, it returns an empty range.
-    struct addrRange rec::removeLast(golang::runtime::addrRanges* a, uintptr_t nBytes)
+    golang::runtime::addrRange rec::removeLast(addrRanges* a, uintptr_t nBytes)
     {
         if(len(a->ranges) == 0)
         {
-            return addrRange {};
+            return golang::runtime::addrRange {};
         }
         auto r = a->ranges[len(a->ranges) - 1];
         auto size = rec::size(gocpp::recv(r));
@@ -591,7 +591,7 @@ namespace golang::runtime
             auto newEnd = rec::sub(gocpp::recv(r.limit), nBytes);
             a->ranges[len(a->ranges) - 1].limit = newEnd;
             a->totalBytes -= nBytes;
-            return addrRange {newEnd, r.limit};
+            return golang::runtime::addrRange {newEnd, r.limit};
         }
         a->ranges = a->ranges.make_slice(0, len(a->ranges) - 1);
         a->totalBytes -= size;
@@ -600,7 +600,7 @@ namespace golang::runtime
 
     // removeGreaterEqual removes the ranges of a which are above addr, and additionally
     // splits any range containing addr.
-    void rec::removeGreaterEqual(golang::runtime::addrRanges* a, uintptr_t addr)
+    void rec::removeGreaterEqual(addrRanges* a, uintptr_t addr)
     {
         auto pivot = rec::findSucc(gocpp::recv(a), addr);
         if(pivot == 0)
@@ -635,15 +635,15 @@ namespace golang::runtime
 
     // cloneInto makes a deep clone of a's state into b, re-using
     // b's ranges if able.
-    void rec::cloneInto(golang::runtime::addrRanges* a, struct addrRanges* b)
+    void rec::cloneInto(addrRanges* a, addrRanges* b)
     {
         if(len(a->ranges) > cap(b->ranges))
         {
             // Grow the array.
-            auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& b->ranges));
+            auto ranges = (golang::runtime::notInHeapSlice*)(gocpp::unsafe_pointer(& b->ranges));
             ranges->len = 0;
             ranges->cap = cap(a->ranges);
-            ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, b->sysStat));
+            ranges->array = (golang::runtime::notInHeap*)(persistentalloc(gocpp::Sizeof<golang::runtime::addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, b->sysStat));
         }
         b->ranges = b->ranges.make_slice(0, len(a->ranges));
         b->totalBytes = a->totalBytes;

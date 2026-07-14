@@ -120,12 +120,12 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    reflect::Kind rec::kind(golang::reflect::flag f)
+    golang::reflect::Kind rec::kind(flag f)
     {
         return Kind(f & flagKindMask);
     }
 
-    reflect::flag rec::ro(golang::reflect::flag f)
+    golang::reflect::flag rec::ro(flag f)
     {
         if(f & flagRO != 0)
         {
@@ -161,11 +161,11 @@ namespace golang::reflect
     }
 
     // packEface converts v to the empty interface.
-    go_any packEface(struct Value v)
+    go_any packEface(golang::reflect::Value v)
     {
         auto t = rec::typ(gocpp::recv(v));
         go_any i = {};
-        auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
+        auto e = (golang::reflect::emptyInterface*)(gocpp::unsafe_pointer(& i));
         // First, fill in the data portion of the interface.
         //Go switch emulation
         {
@@ -213,21 +213,21 @@ namespace golang::reflect
     }
 
     // unpackEface converts the empty interface i to a Value.
-    struct Value unpackEface(go_any i)
+    golang::reflect::Value unpackEface(go_any i)
     {
-        auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
+        auto e = (golang::reflect::emptyInterface*)(gocpp::unsafe_pointer(& i));
         // NOTE: don't read e.word until we know whether it is really a pointer or not.
         auto t = e->typ;
         if(t == nullptr)
         {
-            return Value {};
+            return golang::reflect::Value {};
         }
         auto f = flag(rec::Kind(gocpp::recv(t)));
         if(rec::IfaceIndir(gocpp::recv(t)))
         {
             f |= flagIndir;
         }
-        return Value {t, e->word, f};
+        return golang::reflect::Value {t, e->word, f};
     }
 
     // A ValueError occurs when a Value method is invoked on
@@ -265,7 +265,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::reflect::ValueError* e)
+    gocpp::string rec::Error(ValueError* e)
     {
         if(e->Kind == 0)
         {
@@ -412,18 +412,18 @@ namespace golang::reflect
     // the very clear v.mustBe(Bool) and have it compile into
     // v.flag.mustBe(Bool), which will only bother to copy the
     // single important word for the receiver.
-    void rec::mustBe(golang::reflect::flag f, golang::reflect::Kind expected)
+    void rec::mustBe(flag f, golang::reflect::Kind expected)
     {
         // TODO(mvdan): use f.kind() again once mid-stack inlining gets better
         if(Kind(f & flagKindMask) != expected)
         {
-            gocpp::panic(new ValueError {valueMethodName(), rec::kind(gocpp::recv(f))});
+            gocpp::panic(new golang::reflect::ValueError {valueMethodName(), rec::kind(gocpp::recv(f))});
         }
     }
 
     // mustBeExported panics if f records that the value was obtained using
     // an unexported field.
-    void rec::mustBeExported(golang::reflect::flag f)
+    void rec::mustBeExported(flag f)
     {
         if(f == 0 || f & flagRO != 0)
         {
@@ -431,11 +431,11 @@ namespace golang::reflect
         }
     }
 
-    void rec::mustBeExportedSlow(golang::reflect::flag f)
+    void rec::mustBeExportedSlow(flag f)
     {
         if(f == 0)
         {
-            gocpp::panic(new ValueError {valueMethodName(), Invalid});
+            gocpp::panic(new golang::reflect::ValueError {valueMethodName(), Invalid});
         }
         if(f & flagRO != 0)
         {
@@ -446,7 +446,7 @@ namespace golang::reflect
     // mustBeAssignable panics if f records that the value is not assignable,
     // which is to say that either it was obtained using an unexported field
     // or it is not addressable.
-    void rec::mustBeAssignable(golang::reflect::flag f)
+    void rec::mustBeAssignable(flag f)
     {
         if(f & flagRO != 0 || f & flagAddr == 0)
         {
@@ -454,11 +454,11 @@ namespace golang::reflect
         }
     }
 
-    void rec::mustBeAssignableSlow(golang::reflect::flag f)
+    void rec::mustBeAssignableSlow(flag f)
     {
         if(f == 0)
         {
-            gocpp::panic(new ValueError {valueMethodName(), Invalid});
+            gocpp::panic(new golang::reflect::ValueError {valueMethodName(), Invalid});
         }
         // Assignable if addressable and not read-only.
         if(f & flagRO != 0)
@@ -476,7 +476,7 @@ namespace golang::reflect
     // Addr is typically used to obtain a pointer to a struct field
     // or slice element in order to call a method that requires a
     // pointer receiver.
-    struct Value rec::Addr(golang::reflect::Value v)
+    golang::reflect::Value rec::Addr(golang::reflect::Value v)
     {
         if(v.flag & flagAddr == 0)
         {
@@ -485,7 +485,7 @@ namespace golang::reflect
         // Preserve flagRO instead of using v.flag.ro() so that
         // v.Addr().Elem() is equivalent to v (#32772)
         auto fl = v.flag & flagRO;
-        return Value {reflect::ptrTo(rec::typ(gocpp::recv(v))), v.ptr, fl | flag(Pointer)};
+        return golang::reflect::Value {reflect::ptrTo(rec::typ(gocpp::recv(v))), v.ptr, fl | flag(Pointer)};
     }
 
     // Bool returns v's underlying value.
@@ -549,13 +549,13 @@ namespace golang::reflect
                         gocpp::panic("reflect.Value.Bytes of unaddressable byte array"_s);
                     }
                     auto p = (unsigned char*)(v.ptr);
-                    auto n = int((reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))))->Len);
+                    auto n = int((golang::reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))))->Len);
                     return unsafe::Slice(p, n);
                     break;
                 }
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Bytes"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Bytes"_s, rec::kind(gocpp::recv(v))});
     }
 
     // runes returns v's underlying value.
@@ -599,7 +599,7 @@ namespace golang::reflect
     // type of the function's corresponding input parameter.
     // If v is a variadic function, Call creates the variadic slice parameter
     // itself, copying in the corresponding values.
-    gocpp::slice<Value> rec::Call(golang::reflect::Value v, gocpp::slice<Value> in)
+    gocpp::slice<golang::reflect::Value> rec::Call(golang::reflect::Value v, gocpp::slice<golang::reflect::Value> in)
     {
         rec::mustBe(gocpp::recv(v), Func);
         rec::mustBeExported(gocpp::recv(v));
@@ -613,7 +613,7 @@ namespace golang::reflect
     // It returns the output results as Values.
     // As in Go, each input argument must be assignable to the
     // type of the function's corresponding input parameter.
-    gocpp::slice<Value> rec::CallSlice(golang::reflect::Value v, gocpp::slice<Value> in)
+    gocpp::slice<golang::reflect::Value> rec::CallSlice(golang::reflect::Value v, gocpp::slice<golang::reflect::Value> in)
     {
         rec::mustBe(gocpp::recv(v), Func);
         rec::mustBeExported(gocpp::recv(v));
@@ -621,12 +621,12 @@ namespace golang::reflect
     }
 
     bool callGC;
-    gocpp::slice<Value> rec::call(golang::reflect::Value v, gocpp::string op, gocpp::slice<Value> in)
+    gocpp::slice<golang::reflect::Value> rec::call(golang::reflect::Value v, gocpp::string op, gocpp::slice<golang::reflect::Value> in)
     {
         // Get function pointer, type.
-        auto t = (reflect::funcType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+        auto t = (golang::reflect::funcType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
         gocpp::unsafe_pointer fn = {};
-        Value rcvr = {};
+        golang::reflect::Value rcvr = {};
         abi::Type* rcvrtype = {};
         if(v.flag & flagMethod != 0)
         {
@@ -712,7 +712,7 @@ namespace golang::reflect
                 rec::Set(gocpp::recv(rec::Index(gocpp::recv(slice), i)), x);
             }
             auto origIn = in;
-            in = gocpp::make(gocpp::Tag<gocpp::slice<Value>>(), n + 1);
+            in = gocpp::make(gocpp::Tag<gocpp::slice<golang::reflect::Value>>(), n + 1);
             copy(in.make_slice(0, n), origIn);
             in[n] = slice;
         }
@@ -906,7 +906,7 @@ namespace golang::reflect
             runtime::GC();
         }
 
-        gocpp::slice<Value> ret = {};
+        gocpp::slice<golang::reflect::Value> ret = {};
         if(nout == 0)
         {
             if(stackArgs != nullptr)
@@ -926,7 +926,7 @@ namespace golang::reflect
             }
 
             // Wrap Values around return values in args.
-            ret = gocpp::make(gocpp::Tag<gocpp::slice<Value>>(), nout);
+            ret = gocpp::make(gocpp::Tag<gocpp::slice<golang::reflect::Value>>(), nout);
             for(auto i = 0; i < nout; i++)
             {
                 auto tv = rec::Out(gocpp::recv(t), i);
@@ -944,7 +944,7 @@ namespace golang::reflect
                     // allocated, the entire value is according to the ABI. So
                     // just make an indirection into the allocated frame.
                     auto fl = flagIndir | flag(rec::Kind(gocpp::recv(tv)));
-                    ret[i] = Value {tv, reflect::add(stackArgs, st.stkOff, "tv.Size() != 0"_s), fl};
+                    ret[i] = golang::reflect::Value {tv, reflect::add(stackArgs, st.stkOff, "tv.Size() != 0"_s), fl};
                     // Note: this does introduce false sharing between results -
                     // if any result is live, they are all live.
                     // (And the space for the args is live as well, but as we've
@@ -962,7 +962,7 @@ namespace golang::reflect
                         print("kind="_s, steps[0].kind, ", type="_s, stringFor(tv), "\n"_s);
                         gocpp::panic("mismatch between ABI description and types"_s);
                     }
-                    ret[i] = Value {tv, regArgs.Ptrs[steps[0].ireg], flag(rec::Kind(gocpp::recv(tv)))};
+                    ret[i] = golang::reflect::Value {tv, regArgs.Ptrs[steps[0].ireg], flag(rec::Kind(gocpp::recv(tv)))};
                     continue;
                 }
 
@@ -1015,7 +1015,7 @@ namespace golang::reflect
                         }
                     }
                 }
-                ret[i] = Value {tv, s, flagIndir | flag(rec::Kind(gocpp::recv(tv)))};
+                ret[i] = golang::reflect::Value {tv, s, flagIndir | flag(rec::Kind(gocpp::recv(tv)))};
             }
         }
 
@@ -1042,7 +1042,7 @@ namespace golang::reflect
     //
     // regs contains the argument values passed in registers and will contain
     // the values returned from ctxt.fn in registers.
-    void callReflect(struct makeFuncImpl* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs)
+    void callReflect(makeFuncImpl* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs)
     {
         if(callGC)
         {
@@ -1060,7 +1060,7 @@ namespace golang::reflect
 
         // Copy arguments into Values.
         auto ptr = frame;
-        auto in = gocpp::make(gocpp::Tag<gocpp::slice<Value>>(), 0, int(ftyp->InCount));
+        auto in = gocpp::make(gocpp::Tag<gocpp::slice<golang::reflect::Value>>(), 0, int(ftyp->InCount));
         for(auto [i, typ] : rec::InSlice(gocpp::recv(ftyp)))
         {
             if(rec::Size(gocpp::recv(typ)) == 0)
@@ -1068,7 +1068,7 @@ namespace golang::reflect
                 in = append(in, Zero(toRType(typ)));
                 continue;
             }
-            auto v = Value {typ, nullptr, flag(rec::Kind(gocpp::recv(typ)))};
+            auto v = golang::reflect::Value {typ, nullptr, flag(rec::Kind(gocpp::recv(typ)))};
             auto steps = rec::stepsForValue(gocpp::recv(abid.call), i);
             if(auto st = steps[0]; st.kind == abiStepStack)
             {
@@ -1292,15 +1292,15 @@ namespace golang::reflect
     // The return value rcvrtype gives the method's actual receiver type.
     // The return value t gives the method type signature (without the receiver).
     // The return value fn is a pointer to the method code.
-    std::tuple<abi::Type*, reflect::funcType*, gocpp::unsafe_pointer> methodReceiver(gocpp::string op, struct Value v, int methodIndex)
+    std::tuple<abi::Type*, golang::reflect::funcType*, gocpp::unsafe_pointer> methodReceiver(gocpp::string op, golang::reflect::Value v, int methodIndex)
     {
         abi::Type* rcvrtype;
-        reflect::funcType* t;
+        golang::reflect::funcType* t;
         gocpp::unsafe_pointer fn;
         auto i = methodIndex;
         if(rec::Kind(gocpp::recv(rec::typ(gocpp::recv(v)))) == abi::Interface)
         {
-            auto tt = (interfaceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+            auto tt = (golang::reflect::interfaceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
             if((unsigned int)(i) >= (unsigned int)(len(tt->InterfaceType.Methods)))
             {
                 gocpp::panic("reflect: internal error: invalid method index"_s);
@@ -1310,14 +1310,14 @@ namespace golang::reflect
             {
                 gocpp::panic("reflect: "_s + op + " of unexported method"_s);
             }
-            auto iface = (nonEmptyInterface*)(v.ptr);
+            auto iface = (golang::reflect::nonEmptyInterface*)(v.ptr);
             if(iface->itab == nullptr)
             {
                 gocpp::panic("reflect: "_s + op + " of method on nil interface value"_s);
             }
             rcvrtype = iface->itab->typ;
             fn = gocpp::unsafe_pointer(& iface->itab->fun[i]);
-            t = (reflect::funcType*)(gocpp::unsafe_pointer(rec::typeOff(gocpp::recv(tt), m->Typ)));
+            t = (golang::reflect::funcType*)(gocpp::unsafe_pointer(rec::typeOff(gocpp::recv(tt), m->Typ)));
         }
         else
         {
@@ -1334,7 +1334,7 @@ namespace golang::reflect
             }
             auto ifn = textOffFor(rec::typ(gocpp::recv(v)), m.Ifn);
             fn = gocpp::unsafe_pointer(& ifn);
-            t = (reflect::funcType*)(gocpp::unsafe_pointer(typeOffFor(rec::typ(gocpp::recv(v)), m.Mtyp)));
+            t = (golang::reflect::funcType*)(gocpp::unsafe_pointer(typeOffFor(rec::typ(gocpp::recv(v)), m.Mtyp)));
         }
         return {rcvrtype, t, fn};
     }
@@ -1343,13 +1343,13 @@ namespace golang::reflect
     // encode that receiver at the start of the argument list.
     // Reflect uses the "interface" calling convention for
     // methods, which always uses one word to record the receiver.
-    void storeRcvr(struct Value v, gocpp::unsafe_pointer p)
+    void storeRcvr(golang::reflect::Value v, gocpp::unsafe_pointer p)
     {
         auto t = rec::typ(gocpp::recv(v));
         if(rec::Kind(gocpp::recv(t)) == abi::Interface)
         {
             // the interface data word becomes the receiver word
-            auto iface = (nonEmptyInterface*)(v.ptr);
+            auto iface = (golang::reflect::nonEmptyInterface*)(v.ptr);
             *(gocpp::unsafe_pointer*)(p) = iface->word;
         }
         else
@@ -1389,7 +1389,7 @@ namespace golang::reflect
     //
     // regs contains the argument values passed in registers and will contain
     // the values returned from ctxt.fn in registers.
-    void callMethod(struct methodValue* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs)
+    void callMethod(methodValue* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs)
     {
         auto rcvr = ctxt->rcvr;
         auto [rcvrType, valueFuncType, methodFn] = methodReceiver("call"_s, rcvr, ctxt->method);
@@ -1638,7 +1638,7 @@ namespace golang::reflect
     }
 
     // funcName returns the name of f, for use in error messages.
-    gocpp::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value> _1)> f)
+    gocpp::string funcName(std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> _1)> f)
     {
         auto pc = *(uintptr_t*)(gocpp::unsafe_pointer(& f));
         auto rf = runtime::FuncForPC(pc);
@@ -1688,7 +1688,7 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Cap"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Cap"_s, rec::kind(gocpp::recv(v))});
     }
 
     // Close closes the channel v.
@@ -1698,7 +1698,7 @@ namespace golang::reflect
     {
         rec::mustBe(gocpp::recv(v), Chan);
         rec::mustBeExported(gocpp::recv(v));
-        auto tt = (reflect::chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+        auto tt = (golang::reflect::chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
         if(ChanDir(tt->Dir) & SendDir == 0)
         {
             gocpp::panic("reflect: close of receive-only channel"_s);
@@ -1750,7 +1750,7 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Complex"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Complex"_s, rec::kind(gocpp::recv(v))});
     }
 
     
@@ -1806,7 +1806,7 @@ namespace golang::reflect
     // or that the pointer v points to.
     // It panics if v's Kind is not [Interface] or [Pointer].
     // It returns the zero Value if v is nil.
-    struct Value rec::Elem(golang::reflect::Value v)
+    golang::reflect::Value rec::Elem(golang::reflect::Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
@@ -1863,29 +1863,29 @@ namespace golang::reflect
                     // The returned value's address is v's value.
                     if(ptr == nullptr)
                     {
-                        return Value {};
+                        return golang::reflect::Value {};
                     }
-                    auto tt = (ptrType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (golang::reflect::ptrType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     auto typ = tt->PtrType.Elem;
                     auto fl = v.flag & flagRO | flagIndir | flagAddr;
                     fl |= flag(rec::Kind(gocpp::recv(typ)));
-                    return Value {typ, ptr, fl};
+                    return golang::reflect::Value {typ, ptr, fl};
                     break;
                 }
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Elem"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Elem"_s, rec::kind(gocpp::recv(v))});
     }
 
     // Field returns the i'th field of the struct v.
     // It panics if v's Kind is not [Struct] or i is out of range.
-    struct Value rec::Field(golang::reflect::Value v, int i)
+    golang::reflect::Value rec::Field(golang::reflect::Value v, int i)
     {
         if(rec::kind(gocpp::recv(v)) != Struct)
         {
-            gocpp::panic(new ValueError {"reflect.Value.Field"_s, rec::kind(gocpp::recv(v))});
+            gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Field"_s, rec::kind(gocpp::recv(v))});
         }
-        auto tt = (structType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+        auto tt = (golang::reflect::structType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
         if((unsigned int)(i) >= (unsigned int)(len(tt->StructType.Fields)))
         {
             gocpp::panic("reflect: Field index out of range"_s);
@@ -1913,13 +1913,13 @@ namespace golang::reflect
         // In the latter case, we must have field.offset = 0,
         // so v.ptr + field.offset is still the correct address.
         auto ptr = reflect::add(v.ptr, field->Offset, "same as non-reflect &v.field"_s);
-        return Value {typ, ptr, fl};
+        return golang::reflect::Value {typ, ptr, fl};
     }
 
     // FieldByIndex returns the nested field corresponding to index.
     // It panics if evaluation requires stepping through a nil
     // pointer or a field that is not a struct.
-    struct Value rec::FieldByIndex(golang::reflect::Value v, gocpp::slice<int> index)
+    golang::reflect::Value rec::FieldByIndex(golang::reflect::Value v, gocpp::slice<int> index)
     {
         if(len(index) == 1)
         {
@@ -1948,7 +1948,7 @@ namespace golang::reflect
     // It returns an error if evaluation requires stepping through a nil
     // pointer, but panics if it must step through a field that
     // is not a struct.
-    std::tuple<struct Value, struct gocpp::error> rec::FieldByIndexErr(golang::reflect::Value v, gocpp::slice<int> index)
+    std::tuple<golang::reflect::Value, struct gocpp::error> rec::FieldByIndexErr(golang::reflect::Value v, gocpp::slice<int> index)
     {
         if(len(index) == 1)
         {
@@ -1963,7 +1963,7 @@ namespace golang::reflect
                 {
                     if(rec::IsNil(gocpp::recv(v)))
                     {
-                        return {Value {}, errors::New("reflect: indirection through nil pointer to embedded struct field "_s + nameFor(rec::Elem(gocpp::recv(rec::typ(gocpp::recv(v))))))};
+                        return {golang::reflect::Value {}, errors::New("reflect: indirection through nil pointer to embedded struct field "_s + nameFor(rec::Elem(gocpp::recv(rec::typ(gocpp::recv(v))))))};
                     }
                     v = rec::Elem(gocpp::recv(v));
                 }
@@ -1976,27 +1976,27 @@ namespace golang::reflect
     // FieldByName returns the struct field with the given name.
     // It returns the zero Value if no field was found.
     // It panics if v's Kind is not [Struct].
-    struct Value rec::FieldByName(golang::reflect::Value v, gocpp::string name)
+    golang::reflect::Value rec::FieldByName(golang::reflect::Value v, gocpp::string name)
     {
         rec::mustBe(gocpp::recv(v), Struct);
         if(auto [f, ok] = rec::FieldByName(gocpp::recv(toRType(rec::typ(gocpp::recv(v)))), name); ok)
         {
             return rec::FieldByIndex(gocpp::recv(v), f.Index);
         }
-        return Value {};
+        return golang::reflect::Value {};
     }
 
     // FieldByNameFunc returns the struct field with a name
     // that satisfies the match function.
     // It panics if v's Kind is not [Struct].
     // It returns the zero Value if no field was found.
-    struct Value rec::FieldByNameFunc(golang::reflect::Value v, std::function<bool (gocpp::string _1)> match)
+    golang::reflect::Value rec::FieldByNameFunc(golang::reflect::Value v, std::function<bool (gocpp::string _1)> match)
     {
         if(auto [f, ok] = rec::FieldByNameFunc(gocpp::recv(toRType(rec::typ(gocpp::recv(v)))), match); ok)
         {
             return rec::FieldByIndex(gocpp::recv(v), f.Index);
         }
-        return Value {};
+        return golang::reflect::Value {};
     }
 
     // CanFloat reports whether [Value.Float] can be used without panicking.
@@ -2042,13 +2042,13 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Float"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Float"_s, rec::kind(gocpp::recv(v))});
     }
 
     abi::Type* uint8Type = rtypeOf(uint8_t(0));
     // Index returns v's i'th element.
     // It panics if v's Kind is not [Array], [Slice], or [String] or i is out of range.
-    struct Value rec::Index(golang::reflect::Value v, int i)
+    golang::reflect::Value rec::Index(golang::reflect::Value v, int i)
     {
         //Go switch emulation
         {
@@ -2061,7 +2061,7 @@ namespace golang::reflect
             {
                 case 0:
                 {
-                    auto tt = (reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (golang::reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     if((unsigned int)(i) >= (unsigned int)(tt->Len))
                     {
                         gocpp::panic("reflect: array index out of range"_s);
@@ -2076,7 +2076,7 @@ namespace golang::reflect
                     auto val = reflect::add(v.ptr, offset, "same as &v[i], i < tt.len"_s);
                     // bits same as overall array
                     auto fl = v.flag & (flagIndir | flagAddr) | rec::ro(gocpp::recv(v.flag)) | flag(rec::Kind(gocpp::recv(typ)));
-                    return Value {typ, val, fl};
+                    return golang::reflect::Value {typ, val, fl};
                     break;
                 }
 
@@ -2089,11 +2089,11 @@ namespace golang::reflect
                     {
                         gocpp::panic("reflect: slice index out of range"_s);
                     }
-                    auto tt = (sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (golang::reflect::sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     auto typ = tt->SliceType.Elem;
                     auto val = arrayAt(s->Data, i, rec::Size(gocpp::recv(typ)), "i < s.Len"_s);
                     auto fl = flagAddr | flagIndir | rec::ro(gocpp::recv(v.flag)) | flag(rec::Kind(gocpp::recv(typ)));
-                    return Value {typ, val, fl};
+                    return golang::reflect::Value {typ, val, fl};
                     break;
                 }
 
@@ -2106,12 +2106,12 @@ namespace golang::reflect
                     }
                     auto p = arrayAt(s->Data, i, 1, "i < s.Len"_s);
                     auto fl = rec::ro(gocpp::recv(v.flag)) | flag(Uint8) | flagIndir;
-                    return Value {uint8Type, p, fl};
+                    return golang::reflect::Value {uint8Type, p, fl};
                     break;
                 }
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Index"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Index"_s, rec::kind(gocpp::recv(v))});
     }
 
     // CanInt reports whether Int can be used without panicking.
@@ -2176,7 +2176,7 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Int"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Int"_s, rec::kind(gocpp::recv(v))});
     }
 
     // CanInterface reports whether [Value.Interface] can be used without panicking.
@@ -2184,7 +2184,7 @@ namespace golang::reflect
     {
         if(v.flag == 0)
         {
-            gocpp::panic(new ValueError {"reflect.Value.CanInterface"_s, Invalid});
+            gocpp::panic(new golang::reflect::ValueError {"reflect.Value.CanInterface"_s, Invalid});
         }
         return v.flag & flagRO == 0;
     }
@@ -2251,11 +2251,11 @@ namespace golang::reflect
             }
 
 
-    go_any valueInterface(struct Value v, bool safe)
+    go_any valueInterface(golang::reflect::Value v, bool safe)
     {
         if(v.flag == 0)
         {
-            gocpp::panic(new ValueError {"reflect.Value.Interface"_s, Invalid});
+            gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Interface"_s, Invalid});
         }
         if(safe && v.flag & flagRO != 0)
         {
@@ -2356,7 +2356,7 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.IsNil"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.IsNil"_s, rec::kind(gocpp::recv(v))});
     }
 
     // IsValid reports whether v represents a value.
@@ -2508,7 +2508,7 @@ namespace golang::reflect
                 default:
                     // This should never happen, but will act as a safeguard for later,
                     // as a default value doesn't makes sense here.
-                    gocpp::panic(new ValueError {"reflect.Value.IsZero"_s, rec::Kind(gocpp::recv(v))});
+                    gocpp::panic(new golang::reflect::ValueError {"reflect.Value.IsZero"_s, rec::Kind(gocpp::recv(v))});
                     break;
             }
         }
@@ -2660,7 +2660,7 @@ namespace golang::reflect
                     *(unsafeheader::Slice*)(v.ptr) = unsafeheader::Slice {};
                     break;
                 case 18:
-                    *(emptyInterface*)(v.ptr) = emptyInterface {};
+                    *(golang::reflect::emptyInterface*)(v.ptr) = golang::reflect::emptyInterface {};
                     break;
                 case 19:
                 case 20:
@@ -2676,7 +2676,7 @@ namespace golang::reflect
                 default:
                     // This should never happen, but will act as a safeguard for later,
                     // as a default value doesn't makes sense here.
-                    gocpp::panic(new ValueError {"reflect.Value.SetZero"_s, rec::Kind(gocpp::recv(v))});
+                    gocpp::panic(new golang::reflect::ValueError {"reflect.Value.SetZero"_s, rec::Kind(gocpp::recv(v))});
                     break;
             }
         }
@@ -2684,7 +2684,7 @@ namespace golang::reflect
 
     // Kind returns v's Kind.
     // If v is the zero Value ([Value.IsValid] returns false), Kind returns Invalid.
-    reflect::Kind rec::Kind(golang::reflect::Value v)
+    golang::reflect::Kind rec::Kind(golang::reflect::Value v)
     {
         return rec::kind(gocpp::recv(v));
     }
@@ -2717,7 +2717,7 @@ namespace golang::reflect
             {
                 case 0:
                 {
-                    auto tt = (reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (golang::reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     return int(tt->Len);
                     break;
                 }
@@ -2740,7 +2740,7 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Len"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Len"_s, rec::kind(gocpp::recv(v))});
     }
 
     abi::Type* stringType = rtypeOf(""_s);
@@ -2748,10 +2748,10 @@ namespace golang::reflect
     // It panics if v's Kind is not [Map].
     // It returns the zero Value if key is not found in the map or if v represents a nil map.
     // As in Go, the key's value must be assignable to the map's key type.
-    struct Value rec::MapIndex(golang::reflect::Value v, struct Value key)
+    golang::reflect::Value rec::MapIndex(golang::reflect::Value v, golang::reflect::Value key)
     {
         rec::mustBe(gocpp::recv(v), Map);
-        auto tt = (mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+        auto tt = (golang::reflect::mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
 
         // Do not require key to be exported, so that DeepEqual
         // and other programs can use all the keys returned by
@@ -2782,7 +2782,7 @@ namespace golang::reflect
         }
         if(e == nullptr)
         {
-            return Value {};
+            return golang::reflect::Value {};
         }
         auto typ = tt->MapType.Elem;
         auto fl = rec::ro(gocpp::recv((v.flag | key.flag)));
@@ -2794,10 +2794,10 @@ namespace golang::reflect
     // in unspecified order.
     // It panics if v's Kind is not [Map].
     // It returns an empty slice if v represents a nil map.
-    gocpp::slice<Value> rec::MapKeys(golang::reflect::Value v)
+    gocpp::slice<golang::reflect::Value> rec::MapKeys(golang::reflect::Value v)
     {
         rec::mustBe(gocpp::recv(v), Map);
-        auto tt = (mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+        auto tt = (golang::reflect::mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
         auto keyType = tt->MapType.Key;
 
         auto fl = rec::ro(gocpp::recv(v.flag)) | flag(rec::Kind(gocpp::recv(keyType)));
@@ -2808,9 +2808,9 @@ namespace golang::reflect
         {
             mlen = maplen(m);
         }
-        hiter it = {};
+        golang::reflect::hiter it = {};
         mapiterinit(rec::typ(gocpp::recv(v)), m, & it);
-        auto a = gocpp::make(gocpp::Tag<gocpp::slice<Value>>(), mlen);
+        auto a = gocpp::make(gocpp::Tag<gocpp::slice<golang::reflect::Value>>(), mlen);
         int i = {};
         for(i = 0; i < len(a); i++)
         {
@@ -2903,7 +2903,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    bool rec::initialized(golang::reflect::hiter* h)
+    bool rec::initialized(hiter* h)
     {
         return h->t != nullptr;
     }
@@ -2943,7 +2943,7 @@ namespace golang::reflect
     }
 
     // Key returns the key of iter's current map entry.
-    struct Value rec::Key(golang::reflect::MapIter* iter)
+    golang::reflect::Value rec::Key(MapIter* iter)
     {
         if(! rec::initialized(gocpp::recv(iter->hiter)))
         {
@@ -2955,7 +2955,7 @@ namespace golang::reflect
             gocpp::panic("MapIter.Key called on exhausted iterator"_s);
         }
 
-        auto t = (mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(iter->m))));
+        auto t = (golang::reflect::mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(iter->m))));
         auto ktype = t->MapType.Key;
         return copyVal(ktype, rec::ro(gocpp::recv(iter->m.flag)) | flag(rec::Kind(gocpp::recv(ktype))), iterkey);
     }
@@ -2964,7 +2964,7 @@ namespace golang::reflect
     // It is equivalent to v.Set(iter.Key()), but it avoids allocating a new Value.
     // As in Go, the key must be assignable to v's type and
     // must not be derived from an unexported field.
-    void rec::SetIterKey(golang::reflect::Value v, struct MapIter* iter)
+    void rec::SetIterKey(golang::reflect::Value v, MapIter* iter)
     {
         if(! rec::initialized(gocpp::recv(iter->hiter)))
         {
@@ -2983,18 +2983,18 @@ namespace golang::reflect
             target = v.ptr;
         }
 
-        auto t = (mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(iter->m))));
+        auto t = (golang::reflect::mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(iter->m))));
         auto ktype = t->MapType.Key;
 
         // do not let unexported m leak
         rec::mustBeExported(gocpp::recv(iter->m));
-        auto key = Value {ktype, iterkey, iter->m.flag | flag(rec::Kind(gocpp::recv(ktype))) | flagIndir};
+        auto key = golang::reflect::Value {ktype, iterkey, iter->m.flag | flag(rec::Kind(gocpp::recv(ktype))) | flagIndir};
         key = rec::assignTo(gocpp::recv(key), "reflect.MapIter.SetKey"_s, rec::typ(gocpp::recv(v)), target);
         typedmemmove(rec::typ(gocpp::recv(v)), v.ptr, key.ptr);
     }
 
     // Value returns the value of iter's current map entry.
-    struct Value rec::Value(golang::reflect::MapIter* iter)
+    golang::reflect::Value rec::Value(MapIter* iter)
     {
         if(! rec::initialized(gocpp::recv(iter->hiter)))
         {
@@ -3006,7 +3006,7 @@ namespace golang::reflect
             gocpp::panic("MapIter.Value called on exhausted iterator"_s);
         }
 
-        auto t = (mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(iter->m))));
+        auto t = (golang::reflect::mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(iter->m))));
         auto vtype = t->MapType.Elem;
         return copyVal(vtype, rec::ro(gocpp::recv(iter->m.flag)) | flag(rec::Kind(gocpp::recv(vtype))), iterelem);
     }
@@ -3015,7 +3015,7 @@ namespace golang::reflect
     // It is equivalent to v.Set(iter.Value()), but it avoids allocating a new Value.
     // As in Go, the value must be assignable to v's type and
     // must not be derived from an unexported field.
-    void rec::SetIterValue(golang::reflect::Value v, struct MapIter* iter)
+    void rec::SetIterValue(golang::reflect::Value v, MapIter* iter)
     {
         if(! rec::initialized(gocpp::recv(iter->hiter)))
         {
@@ -3034,12 +3034,12 @@ namespace golang::reflect
             target = v.ptr;
         }
 
-        auto t = (mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(iter->m))));
+        auto t = (golang::reflect::mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(iter->m))));
         auto vtype = t->MapType.Elem;
 
         // do not let unexported m leak
         rec::mustBeExported(gocpp::recv(iter->m));
-        auto elem = Value {vtype, iterelem, iter->m.flag | flag(rec::Kind(gocpp::recv(vtype))) | flagIndir};
+        auto elem = golang::reflect::Value {vtype, iterelem, iter->m.flag | flag(rec::Kind(gocpp::recv(vtype))) | flagIndir};
         elem = rec::assignTo(gocpp::recv(elem), "reflect.MapIter.SetValue"_s, rec::typ(gocpp::recv(v)), target);
         typedmemmove(rec::typ(gocpp::recv(v)), v.ptr, elem.ptr);
     }
@@ -3047,7 +3047,7 @@ namespace golang::reflect
     // Next advances the map iterator and reports whether there is another
     // entry. It returns false when iter is exhausted; subsequent
     // calls to [MapIter.Key], [MapIter.Value], or [MapIter.Next] will panic.
-    bool rec::Next(golang::reflect::MapIter* iter)
+    bool rec::Next(MapIter* iter)
     {
         if(! rec::IsValid(gocpp::recv(iter->m)))
         {
@@ -3072,14 +3072,14 @@ namespace golang::reflect
     // It panics if v's Kind is not [Map] and v is not the zero Value.
     // Reset(Value{}) causes iter to not to refer to any map,
     // which may allow the previously iterated-over map to be garbage collected.
-    void rec::Reset(golang::reflect::MapIter* iter, struct Value v)
+    void rec::Reset(MapIter* iter, golang::reflect::Value v)
     {
         if(rec::IsValid(gocpp::recv(v)))
         {
             rec::mustBe(gocpp::recv(v), Map);
         }
         iter->m = v;
-        iter->hiter = hiter {};
+        iter->hiter = golang::reflect::hiter {};
     }
 
     // MapRange returns a range iterator for a map.
@@ -3097,7 +3097,7 @@ namespace golang::reflect
     //		v := iter.Value()
     //		...
     //	}
-    struct MapIter* rec::MapRange(golang::reflect::Value v)
+    golang::reflect::MapIter* rec::MapRange(golang::reflect::Value v)
     {
         // This is inlinable to take advantage of "function outlining".
         // The allocation of MapIter can be stack allocated if the caller
@@ -3107,7 +3107,7 @@ namespace golang::reflect
         {
             rec::panicNotMap(gocpp::recv(v));
         }
-        return gocpp::InitPtr<MapIter>([=](auto& x) {
+        return gocpp::InitPtr<golang::reflect::MapIter>([=](auto& x) {
             x.m = v;
         });
     }
@@ -3117,14 +3117,14 @@ namespace golang::reflect
     // TODO: undo when the inliner is no longer bottom-up only.
     //
     //go:noinline
-    void rec::panicNotMap(golang::reflect::flag f)
+    void rec::panicNotMap(flag f)
     {
         rec::mustBe(gocpp::recv(f), Map);
     }
 
     // copyVal returns a Value containing the map key or value at ptr,
     // allocating a new variable as needed.
-    struct Value copyVal(abi::Type* typ, golang::reflect::flag fl, gocpp::unsafe_pointer ptr)
+    golang::reflect::Value copyVal(abi::Type* typ, flag fl, gocpp::unsafe_pointer ptr)
     {
         if(rec::IfaceIndir(gocpp::recv(typ)))
         {
@@ -3132,20 +3132,20 @@ namespace golang::reflect
             // won't change the underlying value.
             auto c = unsafe_New(typ);
             typedmemmove(typ, c, ptr);
-            return Value {typ, c, fl | flagIndir};
+            return golang::reflect::Value {typ, c, fl | flagIndir};
         }
-        return Value {typ, *(gocpp::unsafe_pointer*)(ptr), fl};
+        return golang::reflect::Value {typ, *(gocpp::unsafe_pointer*)(ptr), fl};
     }
 
     // Method returns a function value corresponding to v's i'th method.
     // The arguments to a Call on the returned function should not include
     // a receiver; the returned function will always use v as the receiver.
     // Method panics if i is out of range or if v is a nil interface value.
-    struct Value rec::Method(golang::reflect::Value v, int i)
+    golang::reflect::Value rec::Method(golang::reflect::Value v, int i)
     {
         if(rec::typ(gocpp::recv(v)) == nullptr)
         {
-            gocpp::panic(new ValueError {"reflect.Value.Method"_s, Invalid});
+            gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Method"_s, Invalid});
         }
         if(v.flag & flagMethod != 0 || (unsigned int)(i) >= (unsigned int)(rec::NumMethod(gocpp::recv(toRType(rec::typ(gocpp::recv(v)))))))
         {
@@ -3158,7 +3158,7 @@ namespace golang::reflect
         auto fl = rec::ro(gocpp::recv(v.flag)) | (v.flag & flagIndir);
         fl |= flag(Func);
         fl |= (flag(i) << flagMethodShift) | flagMethod;
-        return Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
+        return golang::reflect::Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
     }
 
     // NumMethod returns the number of methods in the value's method set.
@@ -3170,7 +3170,7 @@ namespace golang::reflect
     {
         if(rec::typ(gocpp::recv(v)) == nullptr)
         {
-            gocpp::panic(new ValueError {"reflect.Value.NumMethod"_s, Invalid});
+            gocpp::panic(new golang::reflect::ValueError {"reflect.Value.NumMethod"_s, Invalid});
         }
         if(v.flag & flagMethod != 0)
         {
@@ -3184,20 +3184,20 @@ namespace golang::reflect
     // The arguments to a Call on the returned function should not include
     // a receiver; the returned function will always use v as the receiver.
     // It returns the zero Value if no method was found.
-    struct Value rec::MethodByName(golang::reflect::Value v, gocpp::string name)
+    golang::reflect::Value rec::MethodByName(golang::reflect::Value v, gocpp::string name)
     {
         if(rec::typ(gocpp::recv(v)) == nullptr)
         {
-            gocpp::panic(new ValueError {"reflect.Value.MethodByName"_s, Invalid});
+            gocpp::panic(new golang::reflect::ValueError {"reflect.Value.MethodByName"_s, Invalid});
         }
         if(v.flag & flagMethod != 0)
         {
-            return Value {};
+            return golang::reflect::Value {};
         }
         auto [m, ok] = rec::MethodByName(gocpp::recv(toRType(rec::typ(gocpp::recv(v)))), name);
         if(! ok)
         {
-            return Value {};
+            return golang::reflect::Value {};
         }
         return rec::Method(gocpp::recv(v), m.Index);
     }
@@ -3207,7 +3207,7 @@ namespace golang::reflect
     int rec::NumField(golang::reflect::Value v)
     {
         rec::mustBe(gocpp::recv(v), Struct);
-        auto tt = (structType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+        auto tt = (golang::reflect::structType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
         return len(tt->StructType.Fields);
     }
 
@@ -3232,7 +3232,7 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.OverflowComplex"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.OverflowComplex"_s, rec::kind(gocpp::recv(v))});
     }
 
     // OverflowFloat reports whether the float64 x cannot be represented by v's type.
@@ -3256,7 +3256,7 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.OverflowFloat"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.OverflowFloat"_s, rec::kind(gocpp::recv(v))});
     }
 
     bool overflowFloat32(double x)
@@ -3297,7 +3297,7 @@ namespace golang::reflect
                 }
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.OverflowInt"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.OverflowInt"_s, rec::kind(gocpp::recv(v))});
     }
 
     // OverflowUint reports whether the uint64 x cannot be represented by v's type.
@@ -3332,7 +3332,7 @@ namespace golang::reflect
                 }
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.OverflowUint"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.OverflowUint"_s, rec::kind(gocpp::recv(v))});
     }
 
     // Pointer returns v's value as a uintptr.
@@ -3411,7 +3411,7 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Pointer"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Pointer"_s, rec::kind(gocpp::recv(v))});
     }
 
     // Recv receives and returns a value from the channel v.
@@ -3419,9 +3419,9 @@ namespace golang::reflect
     // The receive blocks until a value is ready.
     // The boolean value ok is true if the value x corresponds to a send
     // on the channel, false if it is a zero value received because the channel is closed.
-    std::tuple<struct Value, bool> rec::Recv(golang::reflect::Value v)
+    std::tuple<golang::reflect::Value, bool> rec::Recv(golang::reflect::Value v)
     {
-        struct Value x;
+        golang::reflect::Value x;
         bool ok;
         rec::mustBe(gocpp::recv(v), Chan);
         rec::mustBeExported(gocpp::recv(v));
@@ -3430,17 +3430,17 @@ namespace golang::reflect
 
     // internal recv, possibly non-blocking (nb).
     // v is known to be a channel.
-    std::tuple<struct Value, bool> rec::recv(golang::reflect::Value v, bool nb)
+    std::tuple<golang::reflect::Value, bool> rec::recv(golang::reflect::Value v, bool nb)
     {
-        struct Value val;
+        golang::reflect::Value val;
         bool ok;
-        auto tt = (reflect::chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+        auto tt = (golang::reflect::chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
         if(ChanDir(tt->Dir) & RecvDir == 0)
         {
             gocpp::panic("reflect: recv on send-only channel"_s);
         }
         auto t = tt->Elem;
-        val = Value {t, nullptr, flag(rec::Kind(gocpp::recv(t)))};
+        val = golang::reflect::Value {t, nullptr, flag(rec::Kind(gocpp::recv(t)))};
         gocpp::unsafe_pointer p = {};
         if(ifaceIndir(t))
         {
@@ -3456,7 +3456,7 @@ namespace golang::reflect
         std::tie(selected, ok) = chanrecv(rec::pointer(gocpp::recv(v)), nb, p);
         if(! selected)
         {
-            val = Value {};
+            val = golang::reflect::Value {};
         }
         return {val, ok};
     }
@@ -3464,7 +3464,7 @@ namespace golang::reflect
     // Send sends x on the channel v.
     // It panics if v's kind is not [Chan] or if x's type is not the same type as v's element type.
     // As in Go, x's value must be assignable to the channel's element type.
-    void rec::Send(golang::reflect::Value v, struct Value x)
+    void rec::Send(golang::reflect::Value v, golang::reflect::Value x)
     {
         rec::mustBe(gocpp::recv(v), Chan);
         rec::mustBeExported(gocpp::recv(v));
@@ -3473,10 +3473,10 @@ namespace golang::reflect
 
     // internal send, possibly non-blocking.
     // v is known to be a channel.
-    bool rec::send(golang::reflect::Value v, struct Value x, bool nb)
+    bool rec::send(golang::reflect::Value v, golang::reflect::Value x, bool nb)
     {
         bool selected;
-        auto tt = (reflect::chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+        auto tt = (golang::reflect::chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
         if(ChanDir(tt->Dir) & SendDir == 0)
         {
             gocpp::panic("reflect: send on recv-only channel"_s);
@@ -3499,7 +3499,7 @@ namespace golang::reflect
     // It panics if [Value.CanSet] returns false.
     // As in Go, x's value must be assignable to v's type and
     // must not be derived from an unexported field.
-    void rec::Set(golang::reflect::Value v, struct Value x)
+    void rec::Set(golang::reflect::Value v, golang::reflect::Value x)
     {
         rec::mustBeAssignable(gocpp::recv(v));
         // do not let unexported x leak
@@ -3578,7 +3578,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 default:
-                    gocpp::panic(new ValueError {"reflect.Value.SetComplex"_s, rec::kind(gocpp::recv(v))});
+                    gocpp::panic(new golang::reflect::ValueError {"reflect.Value.SetComplex"_s, rec::kind(gocpp::recv(v))});
                     break;
                 case 0:
                     *(gocpp::complex64*)(v.ptr) = gocpp::complex64(x);
@@ -3605,7 +3605,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 default:
-                    gocpp::panic(new ValueError {"reflect.Value.SetFloat"_s, rec::kind(gocpp::recv(v))});
+                    gocpp::panic(new golang::reflect::ValueError {"reflect.Value.SetFloat"_s, rec::kind(gocpp::recv(v))});
                     break;
                 case 0:
                     *(float*)(v.ptr) = float(x);
@@ -3635,7 +3635,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 default:
-                    gocpp::panic(new ValueError {"reflect.Value.SetInt"_s, rec::kind(gocpp::recv(v))});
+                    gocpp::panic(new golang::reflect::ValueError {"reflect.Value.SetInt"_s, rec::kind(gocpp::recv(v))});
                     break;
                 case 0:
                     *(int*)(v.ptr) = int(x);
@@ -3692,12 +3692,12 @@ namespace golang::reflect
     // Otherwise if v holds a nil map, SetMapIndex will panic.
     // As in Go, key's elem must be assignable to the map's key type,
     // and elem's value must be assignable to the map's elem type.
-    void rec::SetMapIndex(golang::reflect::Value v, struct Value key, struct Value elem)
+    void rec::SetMapIndex(golang::reflect::Value v, golang::reflect::Value key, golang::reflect::Value elem)
     {
         rec::mustBe(gocpp::recv(v), Map);
         rec::mustBeExported(gocpp::recv(v));
         rec::mustBeExported(gocpp::recv(key));
-        auto tt = (mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+        auto tt = (golang::reflect::mapType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
 
         if((tt->MapType.Key == stringType || rec::kind(gocpp::recv(key)) == String) && tt->MapType.Key == rec::typ(gocpp::recv(key)) && rec::Size(gocpp::recv(tt->MapType.Elem)) <= maxValSize)
         {
@@ -3770,7 +3770,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 default:
-                    gocpp::panic(new ValueError {"reflect.Value.SetUint"_s, rec::kind(gocpp::recv(v))});
+                    gocpp::panic(new golang::reflect::ValueError {"reflect.Value.SetUint"_s, rec::kind(gocpp::recv(v))});
                     break;
                 case 0:
                     *(unsigned int*)(v.ptr) = (unsigned int)(x);
@@ -3815,10 +3815,10 @@ namespace golang::reflect
     // Slice returns v[i:j].
     // It panics if v's Kind is not [Array], [Slice] or [String], or if v is an unaddressable array,
     // or if the indexes are out of bounds.
-    struct Value rec::Slice(golang::reflect::Value v, int i, int j)
+    golang::reflect::Value rec::Slice(golang::reflect::Value v, int i, int j)
     {
         int cap = {};
-        sliceType* typ = {};
+        golang::reflect::sliceType* typ = {};
         gocpp::unsafe_pointer base = {};
         //Go switch emulation
         {
@@ -3831,7 +3831,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 default:
-                    gocpp::panic(new ValueError {"reflect.Value.Slice"_s, rec::kind(gocpp::recv(v))});
+                    gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Slice"_s, rec::kind(gocpp::recv(v))});
                     break;
 
                 case 0:
@@ -3840,16 +3840,16 @@ namespace golang::reflect
                     {
                         gocpp::panic("reflect.Value.Slice: slice of unaddressable array"_s);
                     }
-                    auto tt = (reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (golang::reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     cap = int(tt->Len);
-                    typ = (sliceType*)(gocpp::unsafe_pointer(tt->Slice));
+                    typ = (golang::reflect::sliceType*)(gocpp::unsafe_pointer(tt->Slice));
                     base = v.ptr;
                     break;
                 }
 
                 case 1:
                 {
-                    typ = (sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    typ = (golang::reflect::sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     auto s = (unsafeheader::Slice*)(v.ptr);
                     base = s->Data;
                     cap = s->Cap;
@@ -3871,7 +3871,7 @@ namespace golang::reflect
                             x.Len = j - i;
                         });
                     }
-                    return Value {rec::typ(gocpp::recv(v)), gocpp::unsafe_pointer(& t), v.flag};
+                    return golang::reflect::Value {rec::typ(gocpp::recv(v)), gocpp::unsafe_pointer(& t), v.flag};
                     break;
                 }
             }
@@ -3900,16 +3900,16 @@ namespace golang::reflect
         }
 
         auto fl = rec::ro(gocpp::recv(v.flag)) | flagIndir | flag(Slice);
-        return Value {rec::Common(gocpp::recv(typ)), gocpp::unsafe_pointer(& x), fl};
+        return golang::reflect::Value {rec::Common(gocpp::recv(typ)), gocpp::unsafe_pointer(& x), fl};
     }
 
     // Slice3 is the 3-index form of the slice operation: it returns v[i:j:k].
     // It panics if v's Kind is not [Array] or [Slice], or if v is an unaddressable array,
     // or if the indexes are out of bounds.
-    struct Value rec::Slice3(golang::reflect::Value v, int i, int j, int k)
+    golang::reflect::Value rec::Slice3(golang::reflect::Value v, int i, int j, int k)
     {
         int cap = {};
-        sliceType* typ = {};
+        golang::reflect::sliceType* typ = {};
         gocpp::unsafe_pointer base = {};
         //Go switch emulation
         {
@@ -3921,7 +3921,7 @@ namespace golang::reflect
             switch(conditionId)
             {
                 default:
-                    gocpp::panic(new ValueError {"reflect.Value.Slice3"_s, rec::kind(gocpp::recv(v))});
+                    gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Slice3"_s, rec::kind(gocpp::recv(v))});
                     break;
 
                 case 0:
@@ -3930,16 +3930,16 @@ namespace golang::reflect
                     {
                         gocpp::panic("reflect.Value.Slice3: slice of unaddressable array"_s);
                     }
-                    auto tt = (reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (golang::reflect::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     cap = int(tt->Len);
-                    typ = (sliceType*)(gocpp::unsafe_pointer(tt->Slice));
+                    typ = (golang::reflect::sliceType*)(gocpp::unsafe_pointer(tt->Slice));
                     base = v.ptr;
                     break;
                 }
 
                 case 1:
                 {
-                    typ = (sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    typ = (golang::reflect::sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     auto s = (unsafeheader::Slice*)(v.ptr);
                     base = s->Data;
                     cap = s->Cap;
@@ -3972,7 +3972,7 @@ namespace golang::reflect
         }
 
         auto fl = rec::ro(gocpp::recv(v.flag)) | flagIndir | flag(Slice);
-        return Value {rec::Common(gocpp::recv(typ)), gocpp::unsafe_pointer(& x), fl};
+        return golang::reflect::Value {rec::Common(gocpp::recv(typ)), gocpp::unsafe_pointer(& x), fl};
     }
 
     // String returns the string v's underlying value, as a string.
@@ -4007,9 +4007,9 @@ namespace golang::reflect
     // If the receive delivers a value, x is the transferred value and ok is true.
     // If the receive cannot finish without blocking, x is the zero Value and ok is false.
     // If the channel is closed, x is the zero value for the channel's element type and ok is false.
-    std::tuple<struct Value, bool> rec::TryRecv(golang::reflect::Value v)
+    std::tuple<golang::reflect::Value, bool> rec::TryRecv(golang::reflect::Value v)
     {
-        struct Value x;
+        golang::reflect::Value x;
         bool ok;
         rec::mustBe(gocpp::recv(v), Chan);
         rec::mustBeExported(gocpp::recv(v));
@@ -4020,7 +4020,7 @@ namespace golang::reflect
     // It panics if v's Kind is not [Chan].
     // It reports whether the value was sent.
     // As in Go, x's value must be assignable to the channel's element type.
-    bool rec::TrySend(golang::reflect::Value v, struct Value x)
+    bool rec::TrySend(golang::reflect::Value v, golang::reflect::Value x)
     {
         rec::mustBe(gocpp::recv(v), Chan);
         rec::mustBeExported(gocpp::recv(v));
@@ -4033,7 +4033,7 @@ namespace golang::reflect
         if(v.flag != 0 && v.flag & flagMethod == 0)
         {
             // inline of toRType(v.typ()), for own inlining in inline test
-            return (rtype*)(noescape(gocpp::unsafe_pointer(v.typ_)));
+            return (golang::reflect::rtype*)(noescape(gocpp::unsafe_pointer(v.typ_)));
         }
         return rec::typeSlow(gocpp::recv(v));
     }
@@ -4042,7 +4042,7 @@ namespace golang::reflect
     {
         if(v.flag == 0)
         {
-            gocpp::panic(new ValueError {"reflect.Value.Type"_s, Invalid});
+            gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Type"_s, Invalid});
         }
 
         auto typ = rec::typ(gocpp::recv(v));
@@ -4057,7 +4057,7 @@ namespace golang::reflect
         if(rec::Kind(gocpp::recv(rec::typ(gocpp::recv(v)))) == abi::Interface)
         {
             // Method on interface.
-            auto tt = (interfaceType*)(gocpp::unsafe_pointer(typ));
+            auto tt = (golang::reflect::interfaceType*)(gocpp::unsafe_pointer(typ));
             if((unsigned int)(i) >= (unsigned int)(len(tt->InterfaceType.Methods)))
             {
                 gocpp::panic("reflect: internal error: invalid method index"_s);
@@ -4143,7 +4143,7 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Uint"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Uint"_s, rec::kind(gocpp::recv(v))});
     }
 
     // UnsafeAddr returns a pointer to v's data, as a uintptr.
@@ -4154,7 +4154,7 @@ namespace golang::reflect
     {
         if(rec::typ(gocpp::recv(v)) == nullptr)
         {
-            gocpp::panic(new ValueError {"reflect.Value.UnsafeAddr"_s, Invalid});
+            gocpp::panic(new golang::reflect::ValueError {"reflect.Value.UnsafeAddr"_s, Invalid});
         }
         if(v.flag & flagAddr == 0)
         {
@@ -4236,7 +4236,7 @@ namespace golang::reflect
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.UnsafePointer"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflect::ValueError {"reflect.Value.UnsafePointer"_s, rec::kind(gocpp::recv(v))});
     }
 
     // StringHeader is the runtime representation of a string.
@@ -4389,7 +4389,7 @@ namespace golang::reflect
     // does not change the length of the slice in place,
     // extendSlice returns a new slice value with the length
     // incremented by the number of specified elements.
-    struct Value rec::extendSlice(golang::reflect::Value v, int n)
+    golang::reflect::Value rec::extendSlice(golang::reflect::Value v, int n)
     {
         rec::mustBeExported(gocpp::recv(v));
         rec::mustBe(gocpp::recv(v), Slice);
@@ -4423,7 +4423,7 @@ namespace golang::reflect
                 case 0:
                 {
                     auto sh = *(unsafeheader::Slice*)(v.ptr);
-                    auto st = (sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    auto st = (golang::reflect::sliceType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     typedarrayclear(st->SliceType.Elem, sh.Data, sh.Len);
                     break;
                 }
@@ -4431,7 +4431,7 @@ namespace golang::reflect
                     mapclear(rec::typ(gocpp::recv(v)), rec::pointer(gocpp::recv(v)));
                     break;
                 default:
-                    gocpp::panic(new ValueError {"reflect.Value.Clear"_s, rec::Kind(gocpp::recv(v))});
+                    gocpp::panic(new golang::reflect::ValueError {"reflect.Value.Clear"_s, rec::Kind(gocpp::recv(v))});
                     break;
             }
         }
@@ -4439,7 +4439,7 @@ namespace golang::reflect
 
     // Append appends the values x to a slice s and returns the resulting slice.
     // As in Go, each x's value must be assignable to the slice's element type.
-    struct Value Append(struct Value s, gocpp::slice<Value> x)
+    golang::reflect::Value Append(golang::reflect::Value s, gocpp::slice<golang::reflect::Value> x)
     {
         rec::mustBe(gocpp::recv(s), Slice);
         auto n = rec::Len(gocpp::recv(s));
@@ -4453,7 +4453,7 @@ namespace golang::reflect
 
     // AppendSlice appends a slice t to a slice s and returns the resulting slice.
     // The slices s and t must have the same element type.
-    struct Value AppendSlice(struct Value s, struct Value t)
+    golang::reflect::Value AppendSlice(golang::reflect::Value s, golang::reflect::Value t)
     {
         rec::mustBe(gocpp::recv(s), Slice);
         rec::mustBe(gocpp::recv(t), Slice);
@@ -4472,12 +4472,12 @@ namespace golang::reflect
     // dst and src must have the same element type.
     //
     // As a special case, src can have kind [String] if the element type of dst is kind [Uint8].
-    int Copy(struct Value dst, struct Value src)
+    int Copy(golang::reflect::Value dst, golang::reflect::Value src)
     {
         auto dk = rec::kind(gocpp::recv(dst));
         if(dk != Array && dk != Slice)
         {
-            gocpp::panic(new ValueError {"reflect.Copy"_s, dk});
+            gocpp::panic(new golang::reflect::ValueError {"reflect.Copy"_s, dk});
         }
         if(dk == Array)
         {
@@ -4492,7 +4492,7 @@ namespace golang::reflect
             stringCopy = sk == String && rec::Kind(gocpp::recv(rec::Elem(gocpp::recv(rec::typ(gocpp::recv(dst)))))) == abi::Uint8;
             if(! stringCopy)
             {
-                gocpp::panic(new ValueError {"reflect.Copy"_s, sk});
+                gocpp::panic(new golang::reflect::ValueError {"reflect.Copy"_s, sk});
             }
         }
         rec::mustBeExported(gocpp::recv(src));
@@ -4652,10 +4652,10 @@ namespace golang::reflect
     // boolean indicating whether the value corresponds to a send on the channel
     // (as opposed to a zero value received because the channel is closed).
     // Select supports a maximum of 65536 cases.
-    std::tuple<int, struct Value, bool> Select(gocpp::slice<SelectCase> cases)
+    std::tuple<int, golang::reflect::Value, bool> Select(gocpp::slice<SelectCase> cases)
     {
         int chosen;
-        struct Value recv;
+        golang::reflect::Value recv;
         bool recvOK;
         if(len(cases) > 65536)
         {
@@ -4664,16 +4664,16 @@ namespace golang::reflect
         // NOTE: Do not trust that caller is not modifying cases data underfoot.
         // The range is safe because the caller cannot modify our copy of the len
         // and each iteration makes its own copy of the value c.
-        gocpp::slice<runtimeSelect> runcases = {};
+        gocpp::slice<golang::reflect::runtimeSelect> runcases = {};
         if(len(cases) > 4)
         {
             // Slice is heap allocated due to runtime dependent capacity.
-            runcases = gocpp::make(gocpp::Tag<gocpp::slice<runtimeSelect>>(), len(cases));
+            runcases = gocpp::make(gocpp::Tag<gocpp::slice<golang::reflect::runtimeSelect>>(), len(cases));
         }
         else
         {
             // Slice can be stack allocated due to constant capacity.
-            runcases = gocpp::make(gocpp::Tag<gocpp::slice<runtimeSelect>>(), len(cases), 4);
+            runcases = gocpp::make(gocpp::Tag<gocpp::slice<golang::reflect::runtimeSelect>>(), len(cases), 4);
         }
 
         auto haveDefault = false;
@@ -4719,7 +4719,7 @@ namespace golang::reflect
                         }
                         rec::mustBe(gocpp::recv(ch), Chan);
                         rec::mustBeExported(gocpp::recv(ch));
-                        auto tt = (reflect::chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(ch))));
+                        auto tt = (golang::reflect::chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(ch))));
                         if(ChanDir(tt->Dir) & SendDir == 0)
                         {
                             gocpp::panic("reflect.Select: SendDir case using recv-only channel"_s);
@@ -4760,7 +4760,7 @@ namespace golang::reflect
                         }
                         rec::mustBe(gocpp::recv(ch), Chan);
                         rec::mustBeExported(gocpp::recv(ch));
-                        auto tt = (reflect::chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(ch))));
+                        auto tt = (golang::reflect::chanType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(ch))));
                         if(ChanDir(tt->Dir) & RecvDir == 0)
                         {
                             gocpp::panic("reflect.Select: RecvDir case using send-only channel"_s);
@@ -4777,17 +4777,17 @@ namespace golang::reflect
         std::tie(chosen, recvOK) = rselect(runcases);
         if(runcases[chosen].dir == SelectRecv)
         {
-            auto tt = (reflect::chanType*)(gocpp::unsafe_pointer(runcases[chosen].typ));
+            auto tt = (golang::reflect::chanType*)(gocpp::unsafe_pointer(runcases[chosen].typ));
             auto t = tt->Elem;
             auto p = runcases[chosen].val;
             auto fl = flag(rec::Kind(gocpp::recv(t)));
             if(rec::IfaceIndir(gocpp::recv(t)))
             {
-                recv = Value {t, p, fl | flagIndir};
+                recv = golang::reflect::Value {t, p, fl | flagIndir};
             }
             else
             {
-                recv = Value {t, *(gocpp::unsafe_pointer*)(p), fl};
+                recv = golang::reflect::Value {t, *(gocpp::unsafe_pointer*)(p), fl};
             }
         }
         return {chosen, recv, recvOK};
@@ -4803,7 +4803,7 @@ namespace golang::reflect
 
     // MakeSlice creates a new zero-initialized slice value
     // for the specified slice type, length, and capacity.
-    struct Value MakeSlice(struct Type typ, int len, int cap)
+    golang::reflect::Value MakeSlice(struct Type typ, int len, int cap)
     {
         if(rec::Kind(gocpp::recv(typ)) != Slice)
         {
@@ -4823,15 +4823,15 @@ namespace golang::reflect
         }
 
         auto s = gocpp::Init<unsafeheader::Slice>([=](auto& x) {
-            x.Data = unsafe_NewArray(& (gocpp::getValue<rtype*>(rec::Elem(gocpp::recv(typ)))->t), cap);
+            x.Data = unsafe_NewArray(& (gocpp::getValue<golang::reflect::rtype*>(rec::Elem(gocpp::recv(typ)))->t), cap);
             x.Len = len;
             x.Cap = cap;
         });
-        return Value {& gocpp::getValue<rtype*>(typ)->t, gocpp::unsafe_pointer(& s), flagIndir | flag(Slice)};
+        return golang::reflect::Value {& gocpp::getValue<golang::reflect::rtype*>(typ)->t, gocpp::unsafe_pointer(& s), flagIndir | flag(Slice)};
     }
 
     // MakeChan creates a new channel with the specified type and buffer size.
-    struct Value MakeChan(struct Type typ, int buffer)
+    golang::reflect::Value MakeChan(struct Type typ, int buffer)
     {
         if(rec::Kind(gocpp::recv(typ)) != Chan)
         {
@@ -4847,18 +4847,18 @@ namespace golang::reflect
         }
         auto t = rec::common(gocpp::recv(typ));
         auto ch = makechan(t, buffer);
-        return Value {t, ch, flag(Chan)};
+        return golang::reflect::Value {t, ch, flag(Chan)};
     }
 
     // MakeMap creates a new map with the specified type.
-    struct Value MakeMap(struct Type typ)
+    golang::reflect::Value MakeMap(struct Type typ)
     {
         return MakeMapWithSize(typ, 0);
     }
 
     // MakeMapWithSize creates a new map with the specified type
     // and initial space for approximately n elements.
-    struct Value MakeMapWithSize(struct Type typ, int n)
+    golang::reflect::Value MakeMapWithSize(struct Type typ, int n)
     {
         if(rec::Kind(gocpp::recv(typ)) != Map)
         {
@@ -4866,13 +4866,13 @@ namespace golang::reflect
         }
         auto t = rec::common(gocpp::recv(typ));
         auto m = makemap(t, n);
-        return Value {t, m, flag(Map)};
+        return golang::reflect::Value {t, m, flag(Map)};
     }
 
     // Indirect returns the value that v points to.
     // If v is a nil pointer, Indirect returns a zero Value.
     // If v is not a pointer, Indirect returns v.
-    struct Value Indirect(struct Value v)
+    golang::reflect::Value Indirect(golang::reflect::Value v)
     {
         if(rec::Kind(gocpp::recv(v)) != Pointer)
         {
@@ -4883,11 +4883,11 @@ namespace golang::reflect
 
     // ValueOf returns a new Value initialized to the concrete value
     // stored in the interface i. ValueOf(nil) returns the zero Value.
-    struct Value ValueOf(go_any i)
+    golang::reflect::Value ValueOf(go_any i)
     {
         if(i == nullptr)
         {
-            return Value {};
+            return golang::reflect::Value {};
         }
         return unpackEface(i);
     }
@@ -4897,13 +4897,13 @@ namespace golang::reflect
     // which represents no value at all.
     // For example, Zero(TypeOf(42)) returns a Value with Kind [Int] and value 0.
     // The returned value is neither addressable nor settable.
-    struct Value Zero(struct Type typ)
+    golang::reflect::Value Zero(struct Type typ)
     {
         if(typ == nullptr)
         {
             gocpp::panic("reflect: Zero(nil)"_s);
         }
-        auto t = & gocpp::getValue<rtype*>(typ)->t;
+        auto t = & gocpp::getValue<golang::reflect::rtype*>(typ)->t;
         auto fl = flag(rec::Kind(gocpp::recv(t)));
         if(rec::IfaceIndir(gocpp::recv(t)))
         {
@@ -4916,22 +4916,22 @@ namespace golang::reflect
             {
                 p = unsafe_New(t);
             }
-            return Value {t, p, fl | flagIndir};
+            return golang::reflect::Value {t, p, fl | flagIndir};
         }
-        return Value {t, nullptr, fl};
+        return golang::reflect::Value {t, nullptr, fl};
     }
 
     //go:linkname zeroVal runtime.zeroVal
     gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
     // New returns a Value representing a pointer to a new zero value
     // for the specified type. That is, the returned Value's Type is PointerTo(typ).
-    struct Value New(struct Type typ)
+    golang::reflect::Value New(struct Type typ)
     {
         if(typ == nullptr)
         {
             gocpp::panic("reflect: New(nil)"_s);
         }
-        auto t = & gocpp::getValue<rtype*>(typ)->t;
+        auto t = & gocpp::getValue<golang::reflect::rtype*>(typ)->t;
         auto pt = ptrTo(t);
         if(ifaceIndir(pt))
         {
@@ -4940,16 +4940,16 @@ namespace golang::reflect
         }
         auto ptr = unsafe_New(t);
         auto fl = flag(Pointer);
-        return Value {pt, ptr, fl};
+        return golang::reflect::Value {pt, ptr, fl};
     }
 
     // NewAt returns a Value representing a pointer to a value of the
     // specified type, using p as that pointer.
-    struct Value NewAt(struct Type typ, gocpp::unsafe_pointer p)
+    golang::reflect::Value NewAt(struct Type typ, gocpp::unsafe_pointer p)
     {
         auto fl = flag(Pointer);
-        auto t = gocpp::getValue<rtype*>(typ);
-        return Value {rec::ptrTo(gocpp::recv(t)), p, fl};
+        auto t = gocpp::getValue<golang::reflect::rtype*>(typ);
+        return golang::reflect::Value {rec::ptrTo(gocpp::recv(t)), p, fl};
     }
 
     // assignTo returns a value v that can be assigned directly to dst.
@@ -4957,7 +4957,7 @@ namespace golang::reflect
     // For a conversion to an interface type, target, if not nil,
     // is a suggested scratch space to use.
     // target must be initialized memory (or nil).
-    struct Value rec::assignTo(golang::reflect::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target)
+    golang::reflect::Value rec::assignTo(golang::reflect::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target)
     {
         if(v.flag & flagMethod != 0)
         {
@@ -4977,7 +4977,7 @@ namespace golang::reflect
                     // Same memory layout, so no harm done.
                     auto fl = v.flag & (flagAddr | flagIndir) | rec::ro(gocpp::recv(v.flag));
                     fl |= flag(rec::Kind(gocpp::recv(dst)));
-                    return Value {dst, v.ptr, fl};
+                    return golang::reflect::Value {dst, v.ptr, fl};
                     break;
                 }
 
@@ -4988,7 +4988,7 @@ namespace golang::reflect
                         // A nil ReadWriter passed to nil Reader is OK,
                         // but using ifaceE2I below will panic.
                         // Avoid the panic by returning a nil dst (e.g., Reader) explicitly.
-                        return Value {dst, nullptr, flag(Interface)};
+                        return golang::reflect::Value {dst, nullptr, flag(Interface)};
                     }
                     auto x = valueInterface(v, false);
                     if(target == nullptr)
@@ -5003,7 +5003,7 @@ namespace golang::reflect
                     {
                         ifaceE2I(dst, x, target);
                     }
-                    return Value {dst, target, flagIndir | flag(Interface)};
+                    return golang::reflect::Value {dst, target, flagIndir | flag(Interface)};
                     break;
                 }
             }
@@ -5016,7 +5016,7 @@ namespace golang::reflect
     // Convert returns the value v converted to type t.
     // If the usual Go conversion rules do not allow conversion
     // of the value v to type t, or if converting v to type t panics, Convert panics.
-    struct Value rec::Convert(golang::reflect::Value v, struct Type t)
+    golang::reflect::Value rec::Convert(golang::reflect::Value v, struct Type t)
     {
         if(v.flag & flagMethod != 0)
         {
@@ -5146,7 +5146,7 @@ namespace golang::reflect
     // and report false if it finds non-equal elements.
     // During all comparisons, if values of the same type are compared,
     // and the type is not comparable, Equal will panic.
-    bool rec::Equal(golang::reflect::Value v, struct Value u)
+    bool rec::Equal(golang::reflect::Value v, golang::reflect::Value u)
     {
         if(rec::Kind(gocpp::recv(v)) == Interface)
         {
@@ -5286,7 +5286,7 @@ namespace golang::reflect
 
     // convertOp returns the function to convert a value of type src
     // to a value of type dst. If the conversion is illegal, convertOp returns nil.
-    std::function<struct Value (struct Value _1, struct Type _2)> convertOp(abi::Type* dst, abi::Type* src)
+    std::function<golang::reflect::Value (golang::reflect::Value _1, struct Type _2)> convertOp(abi::Type* dst, abi::Type* src)
     {
         //Go switch emulation
         {
@@ -5564,7 +5564,7 @@ namespace golang::reflect
 
     // makeInt returns a Value of type t equal to bits (possibly truncated),
     // where t is a signed or unsigned int type.
-    struct Value makeInt(golang::reflect::flag f, uint64_t bits, struct Type t)
+    golang::reflect::Value makeInt(flag f, uint64_t bits, struct Type t)
     {
         auto typ = rec::common(gocpp::recv(t));
         auto ptr = unsafe_New(typ);
@@ -5592,12 +5592,12 @@ namespace golang::reflect
                     break;
             }
         }
-        return Value {typ, ptr, f | flagIndir | flag(rec::Kind(gocpp::recv(typ)))};
+        return golang::reflect::Value {typ, ptr, f | flagIndir | flag(rec::Kind(gocpp::recv(typ)))};
     }
 
     // makeFloat returns a Value of type t equal to v (possibly truncated to float32),
     // where t is a float32 or float64 type.
-    struct Value makeFloat(golang::reflect::flag f, double v, struct Type t)
+    golang::reflect::Value makeFloat(flag f, double v, struct Type t)
     {
         auto typ = rec::common(gocpp::recv(t));
         auto ptr = unsafe_New(typ);
@@ -5617,21 +5617,21 @@ namespace golang::reflect
                     break;
             }
         }
-        return Value {typ, ptr, f | flagIndir | flag(rec::Kind(gocpp::recv(typ)))};
+        return golang::reflect::Value {typ, ptr, f | flagIndir | flag(rec::Kind(gocpp::recv(typ)))};
     }
 
     // makeFloat32 returns a Value of type t equal to v, where t is a float32 type.
-    struct Value makeFloat32(golang::reflect::flag f, double v, struct Type t)
+    golang::reflect::Value makeFloat32(flag f, double v, struct Type t)
     {
         auto typ = rec::common(gocpp::recv(t));
         auto ptr = unsafe_New(typ);
         *(float*)(ptr) = v;
-        return Value {typ, ptr, f | flagIndir | flag(rec::Kind(gocpp::recv(typ)))};
+        return golang::reflect::Value {typ, ptr, f | flagIndir | flag(rec::Kind(gocpp::recv(typ)))};
     }
 
     // makeComplex returns a Value of type t equal to v (possibly truncated to complex64),
     // where t is a complex64 or complex128 type.
-    struct Value makeComplex(golang::reflect::flag f, struct gocpp::complex128 v, struct Type t)
+    golang::reflect::Value makeComplex(flag f, struct gocpp::complex128 v, struct Type t)
     {
         auto typ = rec::common(gocpp::recv(t));
         auto ptr = unsafe_New(typ);
@@ -5651,10 +5651,10 @@ namespace golang::reflect
                     break;
             }
         }
-        return Value {typ, ptr, f | flagIndir | flag(rec::Kind(gocpp::recv(typ)))};
+        return golang::reflect::Value {typ, ptr, f | flagIndir | flag(rec::Kind(gocpp::recv(typ)))};
     }
 
-    struct Value makeString(golang::reflect::flag f, gocpp::string v, struct Type t)
+    golang::reflect::Value makeString(flag f, gocpp::string v, struct Type t)
     {
         auto ret = rec::Elem(gocpp::recv(New(t)));
         rec::SetString(gocpp::recv(ret), v);
@@ -5662,7 +5662,7 @@ namespace golang::reflect
         return ret;
     }
 
-    struct Value makeBytes(golang::reflect::flag f, gocpp::slice<unsigned char> v, struct Type t)
+    golang::reflect::Value makeBytes(flag f, gocpp::slice<unsigned char> v, struct Type t)
     {
         auto ret = rec::Elem(gocpp::recv(New(t)));
         rec::SetBytes(gocpp::recv(ret), v);
@@ -5670,7 +5670,7 @@ namespace golang::reflect
         return ret;
     }
 
-    struct Value makeRunes(golang::reflect::flag f, gocpp::slice<gocpp::rune> v, struct Type t)
+    golang::reflect::Value makeRunes(flag f, gocpp::slice<gocpp::rune> v, struct Type t)
     {
         auto ret = rec::Elem(gocpp::recv(New(t)));
         rec::setRunes(gocpp::recv(ret), v);
@@ -5679,43 +5679,43 @@ namespace golang::reflect
     }
 
     // convertOp: intXX -> [u]intXX
-    struct Value cvtInt(struct Value v, struct Type t)
+    golang::reflect::Value cvtInt(golang::reflect::Value v, struct Type t)
     {
         return makeInt(rec::ro(gocpp::recv(v.flag)), uint64_t(rec::Int(gocpp::recv(v))), t);
     }
 
     // convertOp: uintXX -> [u]intXX
-    struct Value cvtUint(struct Value v, struct Type t)
+    golang::reflect::Value cvtUint(golang::reflect::Value v, struct Type t)
     {
         return makeInt(rec::ro(gocpp::recv(v.flag)), rec::Uint(gocpp::recv(v)), t);
     }
 
     // convertOp: floatXX -> intXX
-    struct Value cvtFloatInt(struct Value v, struct Type t)
+    golang::reflect::Value cvtFloatInt(golang::reflect::Value v, struct Type t)
     {
         return makeInt(rec::ro(gocpp::recv(v.flag)), uint64_t(int64_t(rec::Float(gocpp::recv(v)))), t);
     }
 
     // convertOp: floatXX -> uintXX
-    struct Value cvtFloatUint(struct Value v, struct Type t)
+    golang::reflect::Value cvtFloatUint(golang::reflect::Value v, struct Type t)
     {
         return makeInt(rec::ro(gocpp::recv(v.flag)), uint64_t(rec::Float(gocpp::recv(v))), t);
     }
 
     // convertOp: intXX -> floatXX
-    struct Value cvtIntFloat(struct Value v, struct Type t)
+    golang::reflect::Value cvtIntFloat(golang::reflect::Value v, struct Type t)
     {
         return makeFloat(rec::ro(gocpp::recv(v.flag)), double(rec::Int(gocpp::recv(v))), t);
     }
 
     // convertOp: uintXX -> floatXX
-    struct Value cvtUintFloat(struct Value v, struct Type t)
+    golang::reflect::Value cvtUintFloat(golang::reflect::Value v, struct Type t)
     {
         return makeFloat(rec::ro(gocpp::recv(v.flag)), double(rec::Uint(gocpp::recv(v))), t);
     }
 
     // convertOp: floatXX -> floatXX
-    struct Value cvtFloat(struct Value v, struct Type t)
+    golang::reflect::Value cvtFloat(golang::reflect::Value v, struct Type t)
     {
         if(rec::Kind(gocpp::recv(rec::Type(gocpp::recv(v)))) == Float32 && rec::Kind(gocpp::recv(t)) == Float32)
         {
@@ -5728,13 +5728,13 @@ namespace golang::reflect
     }
 
     // convertOp: complexXX -> complexXX
-    struct Value cvtComplex(struct Value v, struct Type t)
+    golang::reflect::Value cvtComplex(golang::reflect::Value v, struct Type t)
     {
         return makeComplex(rec::ro(gocpp::recv(v.flag)), rec::Complex(gocpp::recv(v)), t);
     }
 
     // convertOp: intXX -> string
-    struct Value cvtIntString(struct Value v, struct Type t)
+    golang::reflect::Value cvtIntString(golang::reflect::Value v, struct Type t)
     {
         auto s = "\uFFFD"_s;
         if(auto x = rec::Int(gocpp::recv(v)); int64_t(gocpp::rune(x)) == x)
@@ -5745,7 +5745,7 @@ namespace golang::reflect
     }
 
     // convertOp: uintXX -> string
-    struct Value cvtUintString(struct Value v, struct Type t)
+    golang::reflect::Value cvtUintString(golang::reflect::Value v, struct Type t)
     {
         auto s = "\uFFFD"_s;
         if(auto x = rec::Uint(gocpp::recv(v)); uint64_t(gocpp::rune(x)) == x)
@@ -5756,31 +5756,31 @@ namespace golang::reflect
     }
 
     // convertOp: []byte -> string
-    struct Value cvtBytesString(struct Value v, struct Type t)
+    golang::reflect::Value cvtBytesString(golang::reflect::Value v, struct Type t)
     {
         return makeString(rec::ro(gocpp::recv(v.flag)), gocpp::string(rec::Bytes(gocpp::recv(v))), t);
     }
 
     // convertOp: string -> []byte
-    struct Value cvtStringBytes(struct Value v, struct Type t)
+    golang::reflect::Value cvtStringBytes(golang::reflect::Value v, struct Type t)
     {
         return makeBytes(rec::ro(gocpp::recv(v.flag)), gocpp::slice<unsigned char>(rec::String(gocpp::recv(v))), t);
     }
 
     // convertOp: []rune -> string
-    struct Value cvtRunesString(struct Value v, struct Type t)
+    golang::reflect::Value cvtRunesString(golang::reflect::Value v, struct Type t)
     {
         return makeString(rec::ro(gocpp::recv(v.flag)), gocpp::string(rec::runes(gocpp::recv(v))), t);
     }
 
     // convertOp: string -> []rune
-    struct Value cvtStringRunes(struct Value v, struct Type t)
+    golang::reflect::Value cvtStringRunes(golang::reflect::Value v, struct Type t)
     {
         return makeRunes(rec::ro(gocpp::recv(v.flag)), gocpp::slice<gocpp::rune>(rec::String(gocpp::recv(v))), t);
     }
 
     // convertOp: []T -> *[N]T
-    struct Value cvtSliceArrayPtr(struct Value v, struct Type t)
+    golang::reflect::Value cvtSliceArrayPtr(golang::reflect::Value v, struct Type t)
     {
         auto n = rec::Len(gocpp::recv(rec::Elem(gocpp::recv(t))));
         if(n > rec::Len(gocpp::recv(v)))
@@ -5788,11 +5788,11 @@ namespace golang::reflect
             gocpp::panic("reflect: cannot convert slice with length "_s + itoa::Itoa(rec::Len(gocpp::recv(v))) + " to pointer to array with length "_s + itoa::Itoa(n));
         }
         auto h = (unsafeheader::Slice*)(v.ptr);
-        return Value {rec::common(gocpp::recv(t)), h->Data, v.flag &^ (flagIndir | flagAddr | flagKindMask) | flag(Pointer)};
+        return golang::reflect::Value {rec::common(gocpp::recv(t)), h->Data, v.flag &^ (flagIndir | flagAddr | flagKindMask) | flag(Pointer)};
     }
 
     // convertOp: []T -> [N]T
-    struct Value cvtSliceArray(struct Value v, struct Type t)
+    golang::reflect::Value cvtSliceArray(golang::reflect::Value v, struct Type t)
     {
         auto n = rec::Len(gocpp::recv(t));
         if(n > rec::Len(gocpp::recv(v)))
@@ -5806,11 +5806,11 @@ namespace golang::reflect
         typedmemmove(typ, c, ptr);
         ptr = c;
 
-        return Value {typ, ptr, v.flag &^ (flagAddr | flagKindMask) | flag(Array)};
+        return golang::reflect::Value {typ, ptr, v.flag &^ (flagAddr | flagKindMask) | flag(Array)};
     }
 
     // convertOp: direct copy
-    struct Value cvtDirect(struct Value v, struct Type typ)
+    golang::reflect::Value cvtDirect(golang::reflect::Value v, struct Type typ)
     {
         auto f = v.flag;
         auto t = rec::common(gocpp::recv(typ));
@@ -5824,11 +5824,11 @@ namespace golang::reflect
             f &^= flagAddr;
         }
         // v.flag.ro()|f == f?
-        return Value {t, ptr, rec::ro(gocpp::recv(v.flag)) | f};
+        return golang::reflect::Value {t, ptr, rec::ro(gocpp::recv(v.flag)) | f};
     }
 
     // convertOp: concrete -> interface
-    struct Value cvtT2I(struct Value v, struct Type typ)
+    golang::reflect::Value cvtT2I(golang::reflect::Value v, struct Type typ)
     {
         auto target = unsafe_New(rec::common(gocpp::recv(typ)));
         auto x = valueInterface(v, false);
@@ -5840,11 +5840,11 @@ namespace golang::reflect
         {
             ifaceE2I(rec::common(gocpp::recv(typ)), x, target);
         }
-        return Value {rec::common(gocpp::recv(typ)), target, rec::ro(gocpp::recv(v.flag)) | flagIndir | flag(Interface)};
+        return golang::reflect::Value {rec::common(gocpp::recv(typ)), target, rec::ro(gocpp::recv(v.flag)) | flagIndir | flag(Interface)};
     }
 
     // convertOp: interface -> interface
-    struct Value cvtI2I(struct Value v, struct Type typ)
+    golang::reflect::Value cvtI2I(golang::reflect::Value v, struct Type typ)
     {
         if(rec::IsNil(gocpp::recv(v)))
         {
@@ -5928,19 +5928,19 @@ namespace golang::reflect
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    void mapiterinit(abi::Type* t, gocpp::unsafe_pointer m, struct hiter* it)
+    void mapiterinit(abi::Type* t, gocpp::unsafe_pointer m, hiter* it)
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    gocpp::unsafe_pointer mapiterkey(struct hiter* it)
+    gocpp::unsafe_pointer mapiterkey(hiter* it)
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    gocpp::unsafe_pointer mapiterelem(struct hiter* it)
+    gocpp::unsafe_pointer mapiterelem(hiter* it)
     /* convertBlockStmt, nil block */;
 
     //go:noescape
-    void mapiternext(struct hiter* it)
+    void mapiternext(hiter* it)
     /* convertBlockStmt, nil block */;
 
     //go:noescape

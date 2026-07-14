@@ -84,9 +84,9 @@ namespace golang::color
 
     namespace rec
     {
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::YCbCr c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::NYCbCrA c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::CMYK c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(YCbCr c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(NYCbCrA c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(CMYK c);
     }
 }
 

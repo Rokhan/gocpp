@@ -213,14 +213,14 @@ namespace golang::bisect
     // and false from ShouldPrint for all changes. Callers can avoid calling
     // [Hash], [Matcher.ShouldEnable], and [Matcher.ShouldPrint] entirely
     // when they recognize the nil Matcher.
-    std::tuple<struct Matcher*, struct gocpp::error> New(gocpp::string pattern)
+    std::tuple<golang::bisect::Matcher*, struct gocpp::error> New(gocpp::string pattern)
     {
         if(pattern == ""_s)
         {
             return {nullptr, nullptr};
         }
 
-        auto m = new Matcher{};
+        auto m = new bisect::Matcher{};
 
         auto p = pattern;
         // Special case for leading 'q' so that 'qn' quietly disables, e.g. fmahash=qn to disable fma
@@ -231,7 +231,7 @@ namespace golang::bisect
             p = p.make_slice(1);
             if(p == ""_s)
             {
-                return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
+                return {nullptr, gocpp::error(new golang::bisect::parseError {"invalid pattern syntax: "_s + pattern})};
             }
         }
         // Allow multiple v, so that “bisect cmd vPATTERN” can force verbose all the time.
@@ -242,7 +242,7 @@ namespace golang::bisect
             p = p.make_slice(1);
             if(p == ""_s)
             {
-                return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
+                return {nullptr, gocpp::error(new golang::bisect::parseError {"invalid pattern syntax: "_s + pattern})};
             }
         }
 
@@ -255,7 +255,7 @@ namespace golang::bisect
             p = p.make_slice(1);
             if(p == ""_s)
             {
-                return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
+                return {nullptr, gocpp::error(new golang::bisect::parseError {"invalid pattern syntax: "_s + pattern})};
             }
         }
 
@@ -319,7 +319,7 @@ namespace golang::bisect
                 switch(conditionId)
                 {
                     default:
-                        return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
+                        return {nullptr, gocpp::error(new golang::bisect::parseError {"invalid pattern syntax: "_s + pattern})};
                         break;
                     case 0:
                     case 1:
@@ -331,7 +331,7 @@ namespace golang::bisect
                     case 7:
                         if(wid != 4)
                         {
-                            return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
+                            return {nullptr, gocpp::error(new golang::bisect::parseError {"invalid pattern syntax: "_s + pattern})};
                         }
                     case 8:
                     case 9:
@@ -352,7 +352,7 @@ namespace golang::bisect
                     case 21:
                         if(wid != 4)
                         {
-                            return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
+                            return {nullptr, gocpp::error(new golang::bisect::parseError {"invalid pattern syntax: "_s + pattern})};
                         }
                         bits <<= 4;
                         bits |= uint64_t(c &^ 0x20 - 'A' + 10);
@@ -360,7 +360,7 @@ namespace golang::bisect
                     case 22:
                         if(i + 1 < len(p) && (p[i + 1] == '0' || p[i + 1] == '1'))
                         {
-                            return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
+                            return {nullptr, gocpp::error(new golang::bisect::parseError {"invalid pattern syntax: "_s + pattern})};
                         }
                         bits = 0;
                         break;
@@ -369,31 +369,31 @@ namespace golang::bisect
                         if(c == '+' && result == false)
                         {
                             // Have already seen a -. Should be - from here on.
-                            return {nullptr, gocpp::error(new parseError {"invalid pattern syntax (+ after -): "_s + pattern})};
+                            return {nullptr, gocpp::error(new golang::bisect::parseError {"invalid pattern syntax (+ after -): "_s + pattern})};
                         }
                         if(i > 0)
                         {
                             auto n = (i - start) * wid;
                             if(n > 64)
                             {
-                                return {nullptr, gocpp::error(new parseError {"pattern bits too long: "_s + pattern})};
+                                return {nullptr, gocpp::error(new golang::bisect::parseError {"pattern bits too long: "_s + pattern})};
                             }
                             if(n <= 0)
                             {
-                                return {nullptr, gocpp::error(new parseError {"invalid pattern syntax: "_s + pattern})};
+                                return {nullptr, gocpp::error(new golang::bisect::parseError {"invalid pattern syntax: "_s + pattern})};
                             }
                             if(p[start] == 'y')
                             {
                                 n = 0;
                             }
                             auto mask = (uint64_t(1) << n) - 1;
-                            m->list = append(m->list, cond {mask, bits, result});
+                            m->list = append(m->list, golang::bisect::cond {mask, bits, result});
                         }
                         else
                         if(c == '-')
                         {
                             // leading - subtracts from complete set
-                            m->list = append(m->list, cond {0, 0, true});
+                            m->list = append(m->list, golang::bisect::cond {0, 0, true});
                         }
                         bits = 0;
                         result = c == '+';
@@ -481,12 +481,12 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    struct dedup* rec::Load(golang::bisect::atomicPointerDedup* p)
+    golang::bisect::dedup* rec::Load(atomicPointerDedup* p)
     {
-        return (dedup*)(atomic::LoadPointer(& p->p));
+        return (golang::bisect::dedup*)(atomic::LoadPointer(& p->p));
     }
 
-    bool rec::CompareAndSwap(golang::bisect::atomicPointerDedup* p, struct dedup* old, struct dedup* go_new)
+    bool rec::CompareAndSwap(atomicPointerDedup* p, dedup* old, dedup* go_new)
     {
         return atomic::CompareAndSwapPointer(& p->p, gocpp::unsafe_pointer(old), gocpp::unsafe_pointer(go_new));
     }
@@ -532,13 +532,13 @@ namespace golang::bisect
     // a given change, omitting the identifying information.
     // MarkerOnly returns true when bisect is using the printed reports
     // only for an intermediate search step, not for showing to users.
-    bool rec::MarkerOnly(golang::bisect::Matcher* m)
+    bool rec::MarkerOnly(Matcher* m)
     {
         return ! m->verbose;
     }
 
     // ShouldEnable reports whether the change with the given id should be enabled.
-    bool rec::ShouldEnable(golang::bisect::Matcher* m, uint64_t id)
+    bool rec::ShouldEnable(Matcher* m, uint64_t id)
     {
         if(m == nullptr)
         {
@@ -548,7 +548,7 @@ namespace golang::bisect
     }
 
     // ShouldPrint reports whether to print identifying information about the change with the given id.
-    bool rec::ShouldPrint(golang::bisect::Matcher* m, uint64_t id)
+    bool rec::ShouldPrint(Matcher* m, uint64_t id)
     {
         if(m == nullptr || m->quiet)
         {
@@ -558,7 +558,7 @@ namespace golang::bisect
     }
 
     // matchResult returns the result from the first condition that matches id.
-    bool rec::matchResult(golang::bisect::Matcher* m, uint64_t id)
+    bool rec::matchResult(Matcher* m, uint64_t id)
     {
         for(auto i = len(m->list) - 1; i >= 0; i--)
         {
@@ -573,7 +573,7 @@ namespace golang::bisect
 
     // FileLine reports whether the change identified by file and line should be enabled.
     // If the change should be printed, FileLine prints a one-line report to w.
-    bool rec::FileLine(golang::bisect::Matcher* m, struct Writer w, gocpp::string file, int line)
+    bool rec::FileLine(Matcher* m, struct Writer w, gocpp::string file, int line)
     {
         if(m == nullptr)
         {
@@ -584,7 +584,7 @@ namespace golang::bisect
 
     // fileLine does the real work for FileLine.
     // This lets FileLine's body handle m == nil and potentially be inlined.
-    bool rec::fileLine(golang::bisect::Matcher* m, struct Writer w, gocpp::string file, int line)
+    bool rec::fileLine(Matcher* m, struct Writer w, gocpp::string file, int line)
     {
         auto h = Hash(file, line);
         if(rec::ShouldPrint(gocpp::recv(m), h))
@@ -640,7 +640,7 @@ namespace golang::bisect
     // MatchStack assigns the current call stack a change ID.
     // If the stack should be printed, MatchStack prints it.
     // Then MatchStack reports whether a change at the current call stack should be enabled.
-    bool rec::Stack(golang::bisect::Matcher* m, struct Writer w)
+    bool rec::Stack(Matcher* m, struct Writer w)
     {
         if(m == nullptr)
         {
@@ -651,7 +651,7 @@ namespace golang::bisect
 
     // stack does the real work for Stack.
     // This lets stack's body handle m == nil and potentially be inlined.
-    bool rec::stack(golang::bisect::Matcher* m, struct Writer w)
+    bool rec::stack(Matcher* m, struct Writer w)
     {
         auto maxStack = 16;
         gocpp::array<uintptr_t, maxStack> stk = {};
@@ -672,7 +672,7 @@ namespace golang::bisect
         auto h = Hash(stk.make_slice(0, n));
         if(rec::ShouldPrint(gocpp::recv(m), h))
         {
-            dedup* d = {};
+            golang::bisect::dedup* d = {};
             for(; ; )
             {
                 d = rec::Load(gocpp::recv(m->dedup));
@@ -680,7 +680,7 @@ namespace golang::bisect
                 {
                     break;
                 }
-                d = new dedup{};
+                d = new bisect::dedup{};
                 if(rec::CompareAndSwap(gocpp::recv(m->dedup), nullptr, d))
                 {
                     break;
@@ -1161,7 +1161,7 @@ namespace golang::bisect
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::bisect::parseError* e)
+    gocpp::string rec::Error(parseError* e)
     {
         return e->text;
     }
@@ -1249,7 +1249,7 @@ namespace golang::bisect
 
     // seen records that h has now been seen and reports whether it was seen before.
     // When seen returns false, the caller is expected to print a report for h.
-    bool rec::seen(golang::bisect::dedup* d, uint64_t h)
+    bool rec::seen(dedup* d, uint64_t h)
     {
         rec::Lock(gocpp::recv(d->mu));
         if(d->m == nullptr)
@@ -1266,7 +1266,7 @@ namespace golang::bisect
     // Each cache entry is N-way set-associative: h can appear in any of the slots.
     // If h does not appear in any of them, then it is inserted into a random slot,
     // overwriting whatever was there before.
-    bool rec::seenLossy(golang::bisect::dedup* d, uint64_t h)
+    bool rec::seenLossy(dedup* d, uint64_t h)
     {
         auto cache = gocpp::make_array_ptr(d->recent[(unsigned int)(h) % (unsigned int)(len(d->recent))]);
         for(auto i = 0; i < len(cache); i++)

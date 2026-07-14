@@ -51,20 +51,20 @@ namespace golang::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decimalSlice& value);
-    extern floatInfo float32info;
-    extern floatInfo float64info;
-    gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt);
-    gocpp::slice<unsigned char> formatDigits(gocpp::slice<unsigned char> dst, bool shortest, bool neg, struct decimalSlice digs, int prec, unsigned char fmt);
-    gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> dst, bool neg, struct decimalSlice d, int prec, unsigned char fmt);
-    gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> dst, bool neg, struct decimalSlice d, int prec);
-    gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp, struct floatInfo* flt);
-    gocpp::slice<unsigned char> fmtX(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt);
+    extern golang::strconv::floatInfo float32info;
+    extern golang::strconv::floatInfo float64info;
+    gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, floatInfo* flt);
+    gocpp::slice<unsigned char> formatDigits(gocpp::slice<unsigned char> dst, bool shortest, bool neg, decimalSlice digs, int prec, unsigned char fmt);
+    gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> dst, bool neg, decimalSlice d, int prec, unsigned char fmt);
+    gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> dst, bool neg, decimalSlice d, int prec);
+    gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp, floatInfo* flt);
+    gocpp::slice<unsigned char> fmtX(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, floatInfo* flt);
 }
 #include "golang/strconv/decimal.h"
 
 namespace golang::strconv
 {
-    void roundShortest(struct decimal* d, uint64_t mant, int exp, struct floatInfo* flt);
+    void roundShortest(decimal* d, uint64_t mant, int exp, floatInfo* flt);
 
     namespace rec
     {

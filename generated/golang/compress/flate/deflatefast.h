@@ -55,8 +55,8 @@ namespace golang::flate
 
 namespace golang::flate
 {
-    gocpp::slice<flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit);
-    struct deflateFast* newDeflateFast();
+    gocpp::slice<golang::flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit);
+    golang::flate::deflateFast* newDeflateFast();
 }
 
 #include "golang/compress/flate/token.h"
@@ -66,10 +66,10 @@ namespace golang::flate
 
     namespace rec
     {
-        gocpp::slice<flate::token> encode(golang::flate::deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src);
-        int32_t matchLen(golang::flate::deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src);
-        void reset(golang::flate::deflateFast* e);
-        void shiftOffsets(golang::flate::deflateFast* e);
+        gocpp::slice<golang::flate::token> encode(deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src);
+        int32_t matchLen(deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src);
+        void reset(deflateFast* e);
+        void shiftOffsets(deflateFast* e);
     }
 }
 

@@ -29,13 +29,13 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rawConn& value);
-    std::tuple<struct rawConn*, struct gocpp::error> newRawConn(struct File* file);
+    std::tuple<golang::os::rawConn*, struct gocpp::error> newRawConn(File* file);
 
     namespace rec
     {
-        struct gocpp::error Control(golang::os::rawConn* c, std::function<void (uintptr_t _1)> f);
-        struct gocpp::error Read(golang::os::rawConn* c, std::function<bool (uintptr_t _1)> f);
-        struct gocpp::error Write(golang::os::rawConn* c, std::function<bool (uintptr_t _1)> f);
+        struct gocpp::error Control(rawConn* c, std::function<void (uintptr_t _1)> f);
+        struct gocpp::error Read(rawConn* c, std::function<bool (uintptr_t _1)> f);
+        struct gocpp::error Write(rawConn* c, std::function<bool (uintptr_t _1)> f);
     }
 }
 

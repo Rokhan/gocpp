@@ -99,7 +99,7 @@ namespace golang::abi
         int NCases{};
         // Array of NCases elements.
         // Each case must be a non-empty interface type.
-        gocpp::array<InterfaceType*, 1> Cases{};
+        gocpp::array<golang::abi::InterfaceType*, 1> Cases{};
 
         using isGoStruct = void;
 
@@ -116,7 +116,7 @@ namespace golang::abi
     struct TypeAssert
     {
         TypeAssertCache* Cache{};
-        InterfaceType* Inter{};
+        golang::abi::InterfaceType* Inter{};
         bool CanFail{};
 
         using isGoStruct = void;

@@ -77,10 +77,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct liveUserArenaChunk& value);
-    void userArenaHeapBitsSetSliceType(golang::runtime::_type* typ, int n, gocpp::unsafe_pointer ptr, struct mspan* s);
-    std::tuple<gocpp::unsafe_pointer, struct mspan*> newUserArenaChunk();
-    void freeUserArenaChunk(struct mspan* s, gocpp::unsafe_pointer x);
-    struct userArena* newUserArena();
+    void userArenaHeapBitsSetSliceType(_type* typ, int n, gocpp::unsafe_pointer ptr, mspan* s);
+    std::tuple<gocpp::unsafe_pointer, golang::runtime::mspan*> newUserArenaChunk();
+    void freeUserArenaChunk(mspan* s, gocpp::unsafe_pointer x);
+    golang::runtime::userArena* newUserArena();
 }
 #include "golang/runtime/runtime2.h"
 
@@ -96,15 +96,15 @@ namespace golang::runtime
 
     namespace rec
     {
-        gocpp::unsafe_pointer go_new(golang::runtime::userArena* a, golang::runtime::_type* typ);
-        void slice(golang::runtime::userArena* a, go_any sl, int cap);
-        void free(golang::runtime::userArena* a);
-        gocpp::unsafe_pointer alloc(golang::runtime::userArena* a, golang::runtime::_type* typ, int cap);
-        struct mspan* refill(golang::runtime::userArena* a);
-        gocpp::unsafe_pointer userArenaNextFree(golang::runtime::mspan* s, golang::runtime::_type* typ, int cap);
-        bool isUnusedUserArenaChunk(golang::runtime::mspan* s);
-        void setUserArenaChunkToFault(golang::runtime::mspan* s);
-        struct mspan* allocUserArenaChunk(golang::runtime::mheap* h);
+        gocpp::unsafe_pointer go_new(userArena* a, _type* typ);
+        void slice(userArena* a, go_any sl, int cap);
+        void free(userArena* a);
+        gocpp::unsafe_pointer alloc(userArena* a, _type* typ, int cap);
+        golang::runtime::mspan* refill(userArena* a);
+        gocpp::unsafe_pointer userArenaNextFree(mspan* s, _type* typ, int cap);
+        bool isUnusedUserArenaChunk(mspan* s);
+        void setUserArenaChunkToFault(mspan* s);
+        golang::runtime::mspan* allocUserArenaChunk(mheap* h);
     }
 }
 

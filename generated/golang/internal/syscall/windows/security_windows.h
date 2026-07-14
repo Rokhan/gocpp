@@ -162,11 +162,11 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TOKEN_MANDATORY_LABEL& value);
-    struct gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, struct TOKEN_PRIVILEGES* newstate, uint32_t buflen, struct TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
+    struct gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
 
     namespace rec
     {
-        uint32_t Size(golang::windows::TOKEN_MANDATORY_LABEL* tml);
+        uint32_t Size(TOKEN_MANDATORY_LABEL* tml);
     }
 }
 

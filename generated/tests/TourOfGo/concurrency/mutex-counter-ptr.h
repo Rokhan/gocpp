@@ -38,8 +38,8 @@ namespace golang::main
 
     namespace rec
     {
-        void Inc(golang::main::SafeCounter* c, gocpp::string key);
-        int Value(golang::main::SafeCounter* c, gocpp::string key);
+        void Inc(SafeCounter* c, gocpp::string key);
+        int Value(SafeCounter* c, gocpp::string key);
     }
 }
 

@@ -53,19 +53,19 @@ namespace golang::sync
     /* convertBlockStmt, nil block */;
 
     // See runtime/sema.go for documentation.
-    uint32_t runtime_notifyListAdd(struct notifyList* l)
+    uint32_t runtime_notifyListAdd(notifyList* l)
     /* convertBlockStmt, nil block */;
 
     // See runtime/sema.go for documentation.
-    void runtime_notifyListWait(struct notifyList* l, uint32_t t)
+    void runtime_notifyListWait(notifyList* l, uint32_t t)
     /* convertBlockStmt, nil block */;
 
     // See runtime/sema.go for documentation.
-    void runtime_notifyListNotifyAll(struct notifyList* l)
+    void runtime_notifyListNotifyAll(notifyList* l)
     /* convertBlockStmt, nil block */;
 
     // See runtime/sema.go for documentation.
-    void runtime_notifyListNotifyOne(struct notifyList* l)
+    void runtime_notifyListNotifyOne(notifyList* l)
     /* convertBlockStmt, nil block */;
 
     // Ensure that sync and runtime agree on size of notifyList.
@@ -74,7 +74,7 @@ namespace golang::sync
 
     void init()
     {
-        notifyList n = {};
+        golang::sync::notifyList n = {};
         runtime_notifyListCheck(gocpp::Sizeof<notifyList>());
     }
 

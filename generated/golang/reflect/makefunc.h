@@ -22,8 +22,8 @@ namespace golang::reflect
 
 namespace golang::reflect
 {
-    struct Value MakeFunc(struct Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn);
-    struct Value makeMethodValue(gocpp::string op, struct Value v);
+    golang::reflect::Value MakeFunc(struct Type typ, std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> args)> fn);
+    golang::reflect::Value makeMethodValue(gocpp::string op, golang::reflect::Value v);
     struct makeFuncCtxt
     {
         uintptr_t fn{};
@@ -46,8 +46,8 @@ namespace golang::reflect
     struct makeFuncImpl
     {
         makeFuncCtxt makeFuncCtxt{};
-        golang::reflect::funcType* ftyp{};
-        std::function<gocpp::slice<Value> (gocpp::slice<Value> _1)> fn{};
+        funcType* ftyp{};
+        std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> _1)> fn{};
 
         using isGoStruct = void;
 
@@ -65,7 +65,7 @@ namespace golang::reflect
     {
         makeFuncCtxt makeFuncCtxt{};
         int method{};
-        /* Value rcvr; [Known incomplete type] */
+        /* golang::reflect::Value rcvr; [Known incomplete type] */
 
         using isGoStruct = void;
 
@@ -79,7 +79,7 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct methodValue& value);
-    void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, abi::RegArgs* args);
+    void moveMakeFuncArgPtrs(makeFuncCtxt* ctxt, abi::RegArgs* args);
 
     namespace rec
     {

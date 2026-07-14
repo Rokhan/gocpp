@@ -18,13 +18,13 @@ namespace golang::runtime
     struct rwmutex
     {
         mutex rLock{}; // protects readers, readerPass, writer
-        golang::runtime::muintptr readers{}; // list of pending readers
+        muintptr readers{}; // list of pending readers
         uint32_t readerPass{}; // number of pending readers to skip readers list
         mutex wLock{}; // serializes writers
-        golang::runtime::muintptr writer{}; // pending writer waiting for completing readers
+        muintptr writer{}; // pending writer waiting for completing readers
         atomic::Int32 readerCount{}; // number of pending readers
         atomic::Int32 readerWait{}; // number of departing readers
-        golang::runtime::lockRank readRank{}; // semantic lock rank for read locking
+        lockRank readRank{}; // semantic lock rank for read locking
 
         using isGoStruct = void;
 
@@ -47,11 +47,11 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(golang::runtime::rwmutex* rw, golang::runtime::lockRank readRank, golang::runtime::lockRank readRankInternal, golang::runtime::lockRank writeRank);
-        void rlock(golang::runtime::rwmutex* rw);
-        void runlock(golang::runtime::rwmutex* rw);
-        void lock(golang::runtime::rwmutex* rw);
-        void unlock(golang::runtime::rwmutex* rw);
+        void init(rwmutex* rw, lockRank readRank, lockRank readRankInternal, lockRank writeRank);
+        void rlock(rwmutex* rw);
+        void runlock(rwmutex* rw);
+        void lock(rwmutex* rw);
+        void unlock(rwmutex* rw);
     }
 }
 

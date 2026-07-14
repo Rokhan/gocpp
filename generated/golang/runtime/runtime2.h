@@ -296,7 +296,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct mutex& value);
     struct eface
     {
-        golang::runtime::_type* _type{};
+        _type* _type{};
         gocpp::unsafe_pointer data{};
 
         using isGoStruct = void;
@@ -354,7 +354,7 @@ namespace golang::runtime
     struct heldLockInfo
     {
         uintptr_t lockAddr{};
-        golang::runtime::lockRank rank{};
+        lockRank rank{};
 
         using isGoStruct = void;
 
@@ -377,7 +377,7 @@ namespace golang::runtime
         // stackguard1 is the stack pointer compared in the //go:systemstack stack growth prologue.
         // It is stack.lo+StackGuard on g0 and gsignal stacks.
         // It is ~0 on other goroutine stacks, to trigger a call to morestackc (and crash).
-        stack stack{}; // offset known to runtime/cgo
+        golang::runtime::stack stack{}; // offset known to runtime/cgo
         uintptr_t stackguard0{}; // offset known to liblink
         uintptr_t stackguard1{}; // offset known to liblink
         _panic* _panic{}; // innermost panic - offset known to liblink
@@ -406,7 +406,7 @@ namespace golang::runtime
         uint64_t goid{};
         golang::runtime::guintptr schedlink{};
         int64_t waitsince{}; // approx time when the g become blocked
-        golang::runtime::waitReason waitreason{}; // if status==Gwaiting
+        waitReason waitreason{}; // if status==Gwaiting
         bool preempt{}; // preemption signal, duplicates stackguard0 = stackpreempt
         bool preemptStop{}; // transition to _Gpreempted on preemption; otherwise, just deschedule
         bool preemptShrink{}; // shrink stack at synchronous safe point
@@ -436,7 +436,7 @@ namespace golang::runtime
         uint8_t trackingSeq{}; // used to decide whether to track this G
         int64_t trackingStamp{}; // timestamp of when the G last started being tracked
         int64_t runnableTime{}; // the amount of time spent runnable, cleared when running, only used when tracking
-        golang::runtime::muintptr lockedm{};
+        muintptr lockedm{};
         uint32_t sig{};
         gocpp::slice<unsigned char> writebuf{};
         uintptr_t sigcode0{};
@@ -569,8 +569,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct _func& value);
     struct itab
     {
-        golang::runtime::interfacetype* inter{};
-        golang::runtime::_type* _type{};
+        interfacetype* inter{};
+        _type* _type{};
         uint32_t hash{}; // copy of _type.hash. Used for type switches.
         gocpp::array<unsigned char, 4> _1{};
         gocpp::array<uintptr_t, 1> fun{}; // variable sized. fun[0]==0 means _type does not implement inter.
@@ -613,10 +613,10 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct _defer& value);
     extern pMask idlepMask;
     extern pMask timerpMask;
-    extern runtime::lfstack gcBgMarkWorkerPool;
+    extern golang::runtime::lfstack gcBgMarkWorkerPool;
     extern bool framepointer_enabled;
-    struct eface* efaceOf(go_any* ep);
-    void setGNoWB(struct g** gp, struct g* go_new);
+    golang::runtime::eface* efaceOf(go_any* ep);
+    void setGNoWB(g** gp, g* go_new);
     struct gocpp_id_3
     {
         mutex lock{};
@@ -654,7 +654,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct forcegcstate& value);
-    extern mutex allpLock;
+    extern golang::runtime::mutex allpLock;
 }
 #include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/runtime/cgocall.h"
@@ -690,12 +690,12 @@ namespace golang::runtime
         std::function<void ()> mstartfn{};
         g* curg{}; // current running goroutine
         golang::runtime::guintptr caughtsig{}; // goroutine running during fatal signal
-        golang::runtime::puintptr p{}; // attached p for executing go code (nil if not executing go code)
-        golang::runtime::puintptr nextp{};
-        golang::runtime::puintptr oldp{}; // the p that was attached before executing a syscall
+        puintptr p{}; // attached p for executing go code (nil if not executing go code)
+        puintptr nextp{};
+        puintptr oldp{}; // the p that was attached before executing a syscall
         int64_t id{};
         int32_t mallocing{};
-        golang::runtime::throwType throwing{};
+        throwType throwing{};
         gocpp::string preemptoff{}; // if != "", keep curg running on this m
         int32_t locks{};
         int32_t dying{};
@@ -714,21 +714,21 @@ namespace golang::runtime
         uint64_t ncgocall{}; // number of cgo calls in total
         int32_t ncgo{}; // number of cgo calls currently in progress
         atomic::Uint32 cgoCallersUse{}; // if non-zero, cgoCallers in use temporarily
-        gocpp::array_ptr<cgoCallers> cgoCallers{}; // cgo traceback if crashing in cgo call
+        gocpp::array_ptr<golang::runtime::cgoCallers> cgoCallers{}; // cgo traceback if crashing in cgo call
         note park{};
         m* alllink{}; // on allm
-        golang::runtime::muintptr schedlink{};
+        muintptr schedlink{};
         golang::runtime::guintptr lockedg{};
         gocpp::array<uintptr_t, 32> createstack{}; // stack that created this thread, it's used for StackRecord.Stack0, so it must align with it.
         uint32_t lockedExt{}; // tracking for external LockOSThread
         uint32_t lockedInt{}; // tracking for internal lockOSThread
-        golang::runtime::muintptr nextwaitm{}; // next m waiting for lock
+        muintptr nextwaitm{}; // next m waiting for lock
         mLockProfile mLockProfile{}; // fields relating to runtime.lock contention
         // wait* are used to carry arguments from gopark into park_m, because
         // there's no stack to put them on. That is their sole purpose.
-        std::function<bool (struct g* _1, gocpp::unsafe_pointer _2)> waitunlockf{};
+        std::function<bool (g* _1, gocpp::unsafe_pointer _2)> waitunlockf{};
         gocpp::unsafe_pointer waitlock{};
-        golang::runtime::traceBlockReason waitTraceBlockReason{};
+        traceBlockReason waitTraceBlockReason{};
         int waitTraceSkip{};
         uint32_t syscalltick{};
         m* freelink{}; // on sched.freem
@@ -774,11 +774,11 @@ namespace golang::runtime
     {
         int32_t id{};
         uint32_t status{}; // one of pidle/prunning/...
-        golang::runtime::puintptr link{};
+        puintptr link{};
         uint32_t schedtick{}; // incremented on every scheduler call
         uint32_t syscalltick{}; // incremented on every system call
         sysmontick sysmontick{}; // last tick observed by sysmon
-        golang::runtime::muintptr m{}; // back-link to associated m (nil if idle)
+        muintptr m{}; // back-link to associated m (nil if idle)
         mcache* mcache{};
         pageCache pcache{};
         uintptr_t raceprocctx{};
@@ -832,7 +832,7 @@ namespace golang::runtime
         // selected for immediate execution by
         // gcController.findRunnableGCWorker. When scheduling other goroutines,
         // this field must be set to gcMarkWorkerNotWorker.
-        golang::runtime::gcMarkWorkerMode gcMarkWorkerMode{};
+        gcMarkWorkerMode gcMarkWorkerMode{};
         // gcMarkWorkerStartTime is the nanotime() at which the most recent
         // mark worker started.
         int64_t gcMarkWorkerStartTime{};
@@ -891,10 +891,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct p& value);
-    void setMNoWB(struct m** mp, struct m* go_new);
-    extern m* allm;
-    extern forcegcstate forcegc;
-    extern gocpp::slice<p*> allp;
+    void setMNoWB(m** mp, m* go_new);
+    extern golang::runtime::m* allm;
+    extern golang::runtime::forcegcstate forcegc;
+    extern gocpp::slice<golang::runtime::p*> allp;
 }
 #include "golang/runtime/histogram.h"
 
@@ -906,7 +906,7 @@ namespace golang::runtime
         atomic::Int64 lastpoll{}; // time of last network poll, 0 if currently polling
         atomic::Int64 pollUntil{}; // time to which current poll is sleeping
         mutex lock{};
-        golang::runtime::muintptr midle{}; // idle m's waiting for work
+        muintptr midle{}; // idle m's waiting for work
         int32_t nmidle{}; // number of idle m's waiting for work
         int32_t nmidlelocked{}; // number of locked m's waiting for work
         int64_t mnext{}; // number of m's that have been created and next M ID
@@ -914,7 +914,7 @@ namespace golang::runtime
         int32_t nmsys{}; // number of system m's not counted for deadlock
         int64_t nmfreed{}; // cumulative number of freed m's
         atomic::Int32 ngsys{}; // number of system goroutines
-        golang::runtime::puintptr pidle{}; // idle p's
+        puintptr pidle{}; // idle p's
         atomic::Int32 npidle{};
         atomic::Int32 nmspinning{}; // See "Worker thread parking/unparking" comment in proc.go.
         atomic::Uint32 needspinning{}; // See "Delicate dance" comment in proc.go. Boolean. Must hold sched.lock to set to 1.
@@ -943,7 +943,7 @@ namespace golang::runtime
         note sysmonnote{};
         // safePointFn should be called on each P at the next GC
         // safepoint if p.runSafePointFn is set.
-        std::function<void (struct p* _1)> safePointFn{};
+        std::function<void (golang::runtime::p* _1)> safePointFn{};
         int32_t safePointWait{};
         note safePointNote{};
         int32_t profilehz{}; // cpu profiling rate
@@ -994,20 +994,20 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct schedt& value);
-    extern schedt sched;
+    extern golang::runtime::schedt sched;
 
     namespace rec
     {
-        struct g* ptr(golang::runtime::guintptr gp);
-        void set(golang::runtime::guintptr* gp, struct g* g);
+        golang::runtime::g* ptr(golang::runtime::guintptr gp);
+        void set(golang::runtime::guintptr* gp, g* g);
         bool cas(golang::runtime::guintptr* gp, golang::runtime::guintptr old, golang::runtime::guintptr go_new);
-        runtime::guintptr guintptr(golang::runtime::g* gp);
-        struct p* ptr(golang::runtime::puintptr pp);
-        void set(golang::runtime::puintptr* pp, struct p* p);
-        struct m* ptr(golang::runtime::muintptr mp);
-        void set(golang::runtime::muintptr* mp, struct m* m);
-        gocpp::string String(golang::runtime::waitReason w);
-        bool isMutexWait(golang::runtime::waitReason w);
+        golang::runtime::guintptr guintptr(g* gp);
+        golang::runtime::p* ptr(puintptr pp);
+        void set(puintptr* pp, golang::runtime::p* p);
+        golang::runtime::m* ptr(muintptr mp);
+        void set(muintptr* mp, m* m);
+        gocpp::string String(waitReason w);
+        bool isMutexWait(waitReason w);
     }
 }
 

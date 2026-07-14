@@ -30,10 +30,10 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     void main();
-    extern Vertex v1;
-    extern Vertex v2;
-    extern Vertex v3;
-    extern Vertex* p;
+    extern golang::main::Vertex v1;
+    extern golang::main::Vertex v2;
+    extern golang::main::Vertex v3;
+    extern golang::main::Vertex* p;
 
     namespace rec
     {

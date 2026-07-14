@@ -11,10 +11,10 @@ namespace golang::png
     struct GoTag_EncoderBuffer;
     using CompressionLevel = int;
     struct opaquer;
-    const png::CompressionLevel DefaultCompression = 0;
-    const png::CompressionLevel NoCompression = - 1;
-    const png::CompressionLevel BestSpeed = - 2;
-    const png::CompressionLevel BestCompression = - 3;
+    const golang::png::CompressionLevel DefaultCompression = 0;
+    const golang::png::CompressionLevel NoCompression = - 1;
+    const golang::png::CompressionLevel BestSpeed = - 2;
+    const golang::png::CompressionLevel BestCompression = - 3;
 }
 #include "golang/bufio/bufio.fwd.h"
 #include "golang/compress/zlib/writer.fwd.h"
@@ -25,5 +25,5 @@ namespace golang::png
 namespace golang::png
 {
     struct encoder;
-    using EncoderBuffer = gocpp::defined<encoder, GoTag_EncoderBuffer>;
+    using EncoderBuffer = gocpp::defined<golang::png::encoder, GoTag_EncoderBuffer>;
 }

@@ -1154,9 +1154,9 @@ namespace golang::bytes
     // is unused to avoid bounds checks in asciiSet.contains.
     // makeASCIISet creates a set of ASCII characters and reports whether all
     // characters in chars are ASCII.
-    std::tuple<bytes::asciiSet, bool> makeASCIISet(gocpp::string chars)
+    std::tuple<golang::bytes::asciiSet, bool> makeASCIISet(gocpp::string chars)
     {
-        bytes::asciiSet as;
+        golang::bytes::asciiSet as;
         bool ok;
         for(auto i = 0; i < len(chars); i++)
         {
@@ -1171,7 +1171,7 @@ namespace golang::bytes
     }
 
     // contains reports whether c is inside the set.
-    bool rec::contains(gocpp::array_ptr<golang::bytes::asciiSet> as, unsigned char c)
+    bool rec::contains(gocpp::array_ptr<asciiSet> as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
@@ -1253,7 +1253,7 @@ namespace golang::bytes
         return s;
     }
 
-    gocpp::slice<unsigned char> trimLeftASCII(gocpp::slice<unsigned char> s, gocpp::array_ptr<golang::bytes::asciiSet> as)
+    gocpp::slice<unsigned char> trimLeftASCII(gocpp::slice<unsigned char> s, gocpp::array_ptr<asciiSet> as)
     {
         for(; len(s) > 0; )
         {
@@ -1322,7 +1322,7 @@ namespace golang::bytes
         return s;
     }
 
-    gocpp::slice<unsigned char> trimRightASCII(gocpp::slice<unsigned char> s, gocpp::array_ptr<golang::bytes::asciiSet> as)
+    gocpp::slice<unsigned char> trimRightASCII(gocpp::slice<unsigned char> s, gocpp::array_ptr<asciiSet> as)
     {
         for(; len(s) > 0; )
         {

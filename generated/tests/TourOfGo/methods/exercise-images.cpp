@@ -48,24 +48,24 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    color::Model rec::ColorModel(golang::main::Image)
+    color::Model rec::ColorModel(Image)
     {
         gocpp::panic("not implemented"_s);
     }
 
-    image::Rectangle rec::Bounds(golang::main::Image)
+    image::Rectangle rec::Bounds(Image)
     {
         gocpp::panic("not implemented"_s);
     }
 
-    color::Color rec::At(golang::main::Image, int x, int y)
+    color::Color rec::At(Image, int x, int y)
     {
         gocpp::panic("not implemented"_s);
     }
 
     void main()
     {
-        auto m = Image {};
+        auto m = golang::main::Image {};
         mocklib::picShowImage(m);
     }
 

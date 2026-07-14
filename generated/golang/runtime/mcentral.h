@@ -18,7 +18,7 @@ namespace golang::runtime
     struct mcentral
     {
         sys::NotInHeap _1{};
-        golang::runtime::spanClass spanclass{};
+        spanClass spanclass{};
         // partial and full contain two mspan sets: one of swept in-use
         // spans, and one of unswept in-use spans. These two trade
         // roles on each GC cycle. The unswept set is drained either by
@@ -60,14 +60,14 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(golang::runtime::mcentral* c, golang::runtime::spanClass spc);
-        struct spanSet* partialUnswept(golang::runtime::mcentral* c, uint32_t sweepgen);
-        struct spanSet* partialSwept(golang::runtime::mcentral* c, uint32_t sweepgen);
-        struct spanSet* fullUnswept(golang::runtime::mcentral* c, uint32_t sweepgen);
-        struct spanSet* fullSwept(golang::runtime::mcentral* c, uint32_t sweepgen);
-        struct mspan* cacheSpan(golang::runtime::mcentral* c);
-        void uncacheSpan(golang::runtime::mcentral* c, struct mspan* s);
-        struct mspan* grow(golang::runtime::mcentral* c);
+        void init(mcentral* c, spanClass spc);
+        golang::runtime::spanSet* partialUnswept(mcentral* c, uint32_t sweepgen);
+        golang::runtime::spanSet* partialSwept(mcentral* c, uint32_t sweepgen);
+        golang::runtime::spanSet* fullUnswept(mcentral* c, uint32_t sweepgen);
+        golang::runtime::spanSet* fullSwept(mcentral* c, uint32_t sweepgen);
+        golang::runtime::mspan* cacheSpan(mcentral* c);
+        void uncacheSpan(mcentral* c, mspan* s);
+        golang::runtime::mspan* grow(mcentral* c);
     }
 }
 

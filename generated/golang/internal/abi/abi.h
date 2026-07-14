@@ -55,10 +55,10 @@ namespace golang::abi
 
     namespace rec
     {
-        void Dump(golang::abi::RegArgs* r);
-        gocpp::unsafe_pointer IntRegArgAddr(golang::abi::RegArgs* r, int reg, uintptr_t argSize);
-        void Set(gocpp::array_ptr<golang::abi::IntArgRegBitmap> b, int i);
-        bool Get(gocpp::array_ptr<golang::abi::IntArgRegBitmap> b, int i);
+        void Dump(RegArgs* r);
+        gocpp::unsafe_pointer IntRegArgAddr(RegArgs* r, int reg, uintptr_t argSize);
+        void Set(gocpp::array_ptr<IntArgRegBitmap> b, int i);
+        bool Get(gocpp::array_ptr<IntArgRegBitmap> b, int i);
     }
 }
 

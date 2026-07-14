@@ -111,11 +111,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceLocker& value);
-    void traceProcFree(struct p* _1);
-    void traceThreadDestroy(struct m* mp);
-    struct traceLocker traceAcquire();
-    struct traceLocker traceAcquireEnabled();
-    void traceRelease(struct traceLocker tl);
+    void traceProcFree(golang::runtime::p* _1);
+    void traceThreadDestroy(m* mp);
+    golang::runtime::traceLocker traceAcquire();
+    golang::runtime::traceLocker traceAcquireEnabled();
+    void traceRelease(traceLocker tl);
 }
 
 #include "golang/runtime/proc.h"
@@ -126,39 +126,39 @@ namespace golang::runtime
 
     namespace rec
     {
-        void reset(golang::runtime::gTraceState* s);
-        bool ok(golang::runtime::traceLocker tl);
-        void Gomaxprocs(golang::runtime::traceLocker tl, int32_t procs);
-        void ProcStart(golang::runtime::traceLocker tl);
-        void ProcStop(golang::runtime::traceLocker tl, struct p* pp);
-        void GCActive(golang::runtime::traceLocker tl);
-        void GCStart(golang::runtime::traceLocker tl);
-        void GCDone(golang::runtime::traceLocker tl);
-        void STWStart(golang::runtime::traceLocker tl, golang::runtime::stwReason reason);
-        void STWDone(golang::runtime::traceLocker tl);
-        void GCSweepStart(golang::runtime::traceLocker tl);
-        void GCSweepSpan(golang::runtime::traceLocker tl, uintptr_t bytesSwept);
-        void GCSweepDone(golang::runtime::traceLocker tl);
-        void GCMarkAssistStart(golang::runtime::traceLocker tl);
-        void GCMarkAssistDone(golang::runtime::traceLocker tl);
-        void GoCreate(golang::runtime::traceLocker tl, struct g* newg, uintptr_t pc);
-        void GoStart(golang::runtime::traceLocker tl);
-        void GoEnd(golang::runtime::traceLocker tl);
-        void GoSched(golang::runtime::traceLocker tl);
-        void GoPreempt(golang::runtime::traceLocker tl);
-        void GoStop(golang::runtime::traceLocker tl, golang::runtime::traceGoStopReason reason);
-        void GoPark(golang::runtime::traceLocker tl, golang::runtime::traceBlockReason reason, int skip);
-        void GoUnpark(golang::runtime::traceLocker tl, struct g* gp, int skip);
-        void GoSysCall(golang::runtime::traceLocker tl);
-        void GoSysExit(golang::runtime::traceLocker tl, bool lostP);
-        void ProcSteal(golang::runtime::traceLocker tl, struct p* pp, bool inSyscall);
-        void GoSysBlock(golang::runtime::traceLocker tl, struct p* pp);
-        void HeapAlloc(golang::runtime::traceLocker tl, uint64_t live);
-        void HeapGoal(golang::runtime::traceLocker tl);
-        void OneNewExtraM(golang::runtime::traceLocker tl, struct g* _1);
-        void GoCreateSyscall(golang::runtime::traceLocker tl, struct g* gp);
-        void GoDestroySyscall(golang::runtime::traceLocker tl);
-        void RecordSyscallExitedTime(golang::runtime::traceLocker _1, struct g* _1, struct p* _2);
+        void reset(gTraceState* s);
+        bool ok(traceLocker tl);
+        void Gomaxprocs(traceLocker tl, int32_t procs);
+        void ProcStart(traceLocker tl);
+        void ProcStop(traceLocker tl, golang::runtime::p* pp);
+        void GCActive(traceLocker tl);
+        void GCStart(traceLocker tl);
+        void GCDone(traceLocker tl);
+        void STWStart(traceLocker tl, stwReason reason);
+        void STWDone(traceLocker tl);
+        void GCSweepStart(traceLocker tl);
+        void GCSweepSpan(traceLocker tl, uintptr_t bytesSwept);
+        void GCSweepDone(traceLocker tl);
+        void GCMarkAssistStart(traceLocker tl);
+        void GCMarkAssistDone(traceLocker tl);
+        void GoCreate(traceLocker tl, g* newg, uintptr_t pc);
+        void GoStart(traceLocker tl);
+        void GoEnd(traceLocker tl);
+        void GoSched(traceLocker tl);
+        void GoPreempt(traceLocker tl);
+        void GoStop(traceLocker tl, traceGoStopReason reason);
+        void GoPark(traceLocker tl, traceBlockReason reason, int skip);
+        void GoUnpark(traceLocker tl, g* gp, int skip);
+        void GoSysCall(traceLocker tl);
+        void GoSysExit(traceLocker tl, bool lostP);
+        void ProcSteal(traceLocker tl, golang::runtime::p* pp, bool inSyscall);
+        void GoSysBlock(traceLocker tl, golang::runtime::p* pp);
+        void HeapAlloc(traceLocker tl, uint64_t live);
+        void HeapGoal(traceLocker tl);
+        void OneNewExtraM(traceLocker tl, g* _1);
+        void GoCreateSyscall(traceLocker tl, g* gp);
+        void GoDestroySyscall(traceLocker tl);
+        void RecordSyscallExitedTime(traceLocker _1, g* _1, golang::runtime::p* _2);
     }
 }
 

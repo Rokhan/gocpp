@@ -93,9 +93,9 @@ namespace golang::main
 
 
     // From bytes/bytes.go, simplified for tests
-    main::asciiSet makeASCIISet(gocpp::string chars)
+    golang::main::asciiSet makeASCIISet(gocpp::string chars)
     {
-        main::asciiSet as;
+        golang::main::asciiSet as;
         for(auto i = 0; i < len(chars); i++)
         {
             auto c = chars[i];
@@ -104,7 +104,7 @@ namespace golang::main
         return as;
     }
 
-    bool rec::contains(gocpp::array_ptr<golang::main::asciiSet> as, unsigned char c)
+    bool rec::contains(gocpp::array_ptr<asciiSet> as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
@@ -116,7 +116,7 @@ namespace golang::main
 
     void testPtrArray()
     {
-        main::asciiSet as1 = {};
+        asciiSet as1 = {};
         as1 = makeASCIISet("abc"_s);
         gocpp::array<uint32_t, 8> as2 = as1;
         mocklib::Println(rec::contains(gocpp::recv(as1), 'a'));
@@ -139,10 +139,10 @@ namespace golang::main
         auto ints = gocpp::array<int, 3> {1, 2, 3};
         mocklib::Println(ints);
 
-        auto st1 = main::semTable1 {{1}, {1}};
+        auto st1 = semTable1 {{1}, {1}};
         mocklib::Println(st1);
 
-        auto st2 = main::semTable2 {{1}, {1}};
+        auto st2 = semTable2 {{1}, {1}};
         mocklib::Println(st2);
 
         auto chars = gocpp::array<unsigned char, 5> {'H', 'e', 'l', 'l', 'o'};

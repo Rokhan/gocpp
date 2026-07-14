@@ -150,9 +150,9 @@ namespace golang::main
 
     namespace rec
     {
-        double Abs(golang::main::MyInt i);
-        double Abs(golang::main::MyFloat f);
-        double Abs(golang::main::Vertex v);
+        double Abs(MyInt i);
+        double Abs(MyFloat f);
+        double Abs(Vertex v);
     }
 }
 

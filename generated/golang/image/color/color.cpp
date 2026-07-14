@@ -171,7 +171,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::RGBA64 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(RGBA64 c)
     {
         uint32_t r;
         uint32_t g;
@@ -219,7 +219,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::NRGBA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(NRGBA c)
     {
         uint32_t r;
         uint32_t g;
@@ -282,7 +282,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::NRGBA64 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(NRGBA64 c)
     {
         uint32_t r;
         uint32_t g;
@@ -331,7 +331,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::Alpha c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(Alpha c)
     {
         uint32_t r;
         uint32_t g;
@@ -372,7 +372,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::Alpha16 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(Alpha16 c)
     {
         uint32_t r;
         uint32_t g;
@@ -412,7 +412,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::Gray c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(Gray c)
     {
         uint32_t r;
         uint32_t g;
@@ -453,7 +453,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::Gray16 c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(Gray16 c)
     {
         uint32_t r;
         uint32_t g;
@@ -521,7 +521,7 @@ namespace golang::color
         // like m == RGBAModel. This is not possible if
         // we use the func value directly, because funcs
         // are no longer comparable.
-        return new modelFunc {f};
+        return new golang::color::modelFunc {f};
     }
 
     
@@ -553,7 +553,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    struct Color rec::Convert(golang::color::modelFunc* m, struct Color c)
+    struct Color rec::Convert(modelFunc* m, struct Color c)
     {
         return m->f(c);
     }
@@ -569,91 +569,91 @@ namespace golang::color
     Model Gray16Model = ModelFunc(gray16Model);
     struct Color rgbaModel(struct Color c)
     {
-        if(auto [gocpp_id_0, ok] = gocpp::getValue<RGBA>(c); ok)
+        if(auto [gocpp_id_0, ok] = gocpp::getValue<golang::color::RGBA>(c); ok)
         {
             return c;
         }
         auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
-        return RGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), uint8_t(a >> 8)};
+        return golang::color::RGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), uint8_t(a >> 8)};
     }
 
     struct Color rgba64Model(struct Color c)
     {
-        if(auto [gocpp_id_1, ok] = gocpp::getValue<RGBA64>(c); ok)
+        if(auto [gocpp_id_1, ok] = gocpp::getValue<golang::color::RGBA64>(c); ok)
         {
             return c;
         }
         auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
-        return RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
+        return golang::color::RGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
     struct Color nrgbaModel(struct Color c)
     {
-        if(auto [gocpp_id_2, ok] = gocpp::getValue<NRGBA>(c); ok)
+        if(auto [gocpp_id_2, ok] = gocpp::getValue<golang::color::NRGBA>(c); ok)
         {
             return c;
         }
         auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
         if(a == 0xffff)
         {
-            return NRGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), 0xff};
+            return golang::color::NRGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), 0xff};
         }
         if(a == 0)
         {
-            return NRGBA {0, 0, 0, 0};
+            return golang::color::NRGBA {0, 0, 0, 0};
         }
         // Since Color.RGBA returns an alpha-premultiplied color, we should have r <= a && g <= a && b <= a.
         r = (r * 0xffff) / a;
         g = (g * 0xffff) / a;
         b = (b * 0xffff) / a;
-        return NRGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), uint8_t(a >> 8)};
+        return golang::color::NRGBA {uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8), uint8_t(a >> 8)};
     }
 
     struct Color nrgba64Model(struct Color c)
     {
-        if(auto [gocpp_id_3, ok] = gocpp::getValue<NRGBA64>(c); ok)
+        if(auto [gocpp_id_3, ok] = gocpp::getValue<golang::color::NRGBA64>(c); ok)
         {
             return c;
         }
         auto [r, g, b, a] = rec::RGBA(gocpp::recv(c));
         if(a == 0xffff)
         {
-            return NRGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), 0xffff};
+            return golang::color::NRGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), 0xffff};
         }
         if(a == 0)
         {
-            return NRGBA64 {0, 0, 0, 0};
+            return golang::color::NRGBA64 {0, 0, 0, 0};
         }
         // Since Color.RGBA returns an alpha-premultiplied color, we should have r <= a && g <= a && b <= a.
         r = (r * 0xffff) / a;
         g = (g * 0xffff) / a;
         b = (b * 0xffff) / a;
-        return NRGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
+        return golang::color::NRGBA64 {uint16_t(r), uint16_t(g), uint16_t(b), uint16_t(a)};
     }
 
     struct Color alphaModel(struct Color c)
     {
-        if(auto [gocpp_id_4, ok] = gocpp::getValue<Alpha>(c); ok)
+        if(auto [gocpp_id_4, ok] = gocpp::getValue<golang::color::Alpha>(c); ok)
         {
             return c;
         }
         auto [gocpp_id_5, gocpp_id_6, gocpp_id_7, a] = rec::RGBA(gocpp::recv(c));
-        return Alpha {uint8_t(a >> 8)};
+        return golang::color::Alpha {uint8_t(a >> 8)};
     }
 
     struct Color alpha16Model(struct Color c)
     {
-        if(auto [gocpp_id_8, ok] = gocpp::getValue<Alpha16>(c); ok)
+        if(auto [gocpp_id_8, ok] = gocpp::getValue<golang::color::Alpha16>(c); ok)
         {
             return c;
         }
         auto [gocpp_id_9, gocpp_id_10, gocpp_id_11, a] = rec::RGBA(gocpp::recv(c));
-        return Alpha16 {uint16_t(a)};
+        return golang::color::Alpha16 {uint16_t(a)};
     }
 
     struct Color grayModel(struct Color c)
     {
-        if(auto [gocpp_id_12, ok] = gocpp::getValue<Gray>(c); ok)
+        if(auto [gocpp_id_12, ok] = gocpp::getValue<golang::color::Gray>(c); ok)
         {
             return c;
         }
@@ -667,12 +667,12 @@ namespace golang::color
         // because the return value is 8 bit color, not 16 bit color.
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 24;
 
-        return Gray {uint8_t(y)};
+        return golang::color::Gray {uint8_t(y)};
     }
 
     struct Color gray16Model(struct Color c)
     {
-        if(auto [gocpp_id_14, ok] = gocpp::getValue<Gray16>(c); ok)
+        if(auto [gocpp_id_14, ok] = gocpp::getValue<golang::color::Gray16>(c); ok)
         {
             return c;
         }
@@ -684,12 +684,12 @@ namespace golang::color
         // Note that 19595 + 38470 + 7471 equals 65536.
         auto y = (19595 * r + 38470 * g + 7471 * b + (1 << 15)) >> 16;
 
-        return Gray16 {uint16_t(y)};
+        return golang::color::Gray16 {uint16_t(y)};
     }
 
     // Palette is a palette of colors.
     // Convert returns the palette color closest to c in Euclidean R,G,B space.
-    struct Color rec::Convert(golang::color::Palette p, struct Color c)
+    struct Color rec::Convert(Palette p, struct Color c)
     {
         if(len(p) == 0)
         {
@@ -700,7 +700,7 @@ namespace golang::color
 
     // Index returns the index of the palette color closest to c in Euclidean
     // R,G,B,A space.
-    int rec::Index(golang::color::Palette p, struct Color c)
+    int rec::Index(Palette p, struct Color c)
     {
         // A batch version of this computation is in image/draw/draw.go.
         auto [cr, cg, cb, ca] = rec::RGBA(gocpp::recv(c));
@@ -750,9 +750,9 @@ namespace golang::color
     }
 
     // Standard colors.
-    Gray16 Black = Gray16 {0};
-    Gray16 White = Gray16 {0xffff};
-    Alpha16 Transparent = Alpha16 {0};
-    Alpha16 Opaque = Alpha16 {0xffff};
+    golang::color::Gray16 Black = golang::color::Gray16 {0};
+    golang::color::Gray16 White = golang::color::Gray16 {0xffff};
+    golang::color::Alpha16 Transparent = golang::color::Alpha16 {0};
+    golang::color::Alpha16 Opaque = golang::color::Alpha16 {0xffff};
 }
 

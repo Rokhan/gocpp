@@ -106,7 +106,7 @@ namespace golang::main
     {
         Abser a = {};
         auto f = MyFloat(- mocklib::Sqrt2);
-        auto v = Vertex {3, 4};
+        auto v = golang::main::Vertex {3, 4};
 
         // a MyFloat implements Abser
         a = f;
@@ -117,7 +117,7 @@ namespace golang::main
         mocklib::Println(rec::Abs(gocpp::recv(a)));
     }
 
-    double rec::Abs(golang::main::MyFloat f)
+    double rec::Abs(MyFloat f)
     {
         if(f < 0)
         {
@@ -126,7 +126,7 @@ namespace golang::main
         return double(f);
     }
 
-    double rec::Abs(golang::main::Vertex* v)
+    double rec::Abs(Vertex* v)
     {
         return std::sqrt(v->X * v->X + v->Y * v->Y);
     }

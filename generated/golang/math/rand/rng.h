@@ -35,9 +35,9 @@ namespace golang::rand
 
     namespace rec
     {
-        void Seed(golang::rand::rngSource* rng, int64_t seed);
-        int64_t Int63(golang::rand::rngSource* rng);
-        uint64_t Uint64(golang::rand::rngSource* rng);
+        void Seed(rngSource* rng, int64_t seed);
+        int64_t Int63(rngSource* rng);
+        uint64_t Uint64(rngSource* rng);
     }
 }
 

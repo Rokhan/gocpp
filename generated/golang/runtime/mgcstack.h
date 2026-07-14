@@ -81,7 +81,7 @@ namespace golang::runtime
     struct stackScanState
     {
         // stack limits
-        stack stack{};
+        golang::runtime::stack stack{};
         // conservative indicates that the next frame must be scanned conservatively.
         // This applies only to the innermost frame at an async safe-point.
         bool conservative{};
@@ -121,7 +121,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1{};
         stackObjectBufHdr stackObjectBufHdr{};
-        gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj{};
+        gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackObjectBufHdr>()) / gocpp::Sizeof<golang::runtime::stackObject>()> obj{};
 
         using isGoStruct = void;
 
@@ -158,7 +158,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackWorkBuf& value);
-    std::tuple<struct stackObject*, struct stackObjectBuf*, int> binarySearchTree(struct stackObjectBuf* x, int idx, int n);
+    std::tuple<golang::runtime::stackObject*, golang::runtime::stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n);
 }
 
 #include "golang/runtime/stack.h"
@@ -168,12 +168,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        void setRecord(golang::runtime::stackObject* obj, struct stackObjectRecord* r);
-        void putPtr(golang::runtime::stackScanState* s, uintptr_t p, bool conservative);
-        std::tuple<uintptr_t, bool> getPtr(golang::runtime::stackScanState* s);
-        void addObject(golang::runtime::stackScanState* s, uintptr_t addr, struct stackObjectRecord* r);
-        void buildIndex(golang::runtime::stackScanState* s);
-        struct stackObject* findObject(golang::runtime::stackScanState* s, uintptr_t a);
+        void setRecord(stackObject* obj, stackObjectRecord* r);
+        void putPtr(stackScanState* s, uintptr_t p, bool conservative);
+        std::tuple<uintptr_t, bool> getPtr(stackScanState* s);
+        void addObject(stackScanState* s, uintptr_t addr, stackObjectRecord* r);
+        void buildIndex(stackScanState* s);
+        golang::runtime::stackObject* findObject(stackScanState* s, uintptr_t a);
     }
 }
 

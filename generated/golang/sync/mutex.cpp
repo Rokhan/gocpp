@@ -168,7 +168,7 @@ namespace golang::sync
     // Lock locks m.
     // If the lock is already in use, the calling goroutine
     // blocks until the mutex is available.
-    void rec::Lock(golang::sync::Mutex* m)
+    void rec::Lock(Mutex* m)
     {
         // Fast path: grab unlocked mutex.
         if(atomic::CompareAndSwapInt32(& m->state, 0, mutexLocked))
@@ -188,7 +188,7 @@ namespace golang::sync
     // Note that while correct uses of TryLock do exist, they are rare,
     // and use of TryLock is often a sign of a deeper problem
     // in a particular use of mutexes.
-    bool rec::TryLock(golang::sync::Mutex* m)
+    bool rec::TryLock(Mutex* m)
     {
         auto old = m->state;
         if(old & (mutexLocked | mutexStarving) != 0)
@@ -211,7 +211,7 @@ namespace golang::sync
         return true;
     }
 
-    void rec::lockSlow(golang::sync::Mutex* m)
+    void rec::lockSlow(Mutex* m)
     {
         int64_t waitStartTime = {};
         auto starving = false;
@@ -324,7 +324,7 @@ namespace golang::sync
     // A locked Mutex is not associated with a particular goroutine.
     // It is allowed for one goroutine to lock a Mutex and then
     // arrange for another goroutine to unlock it.
-    void rec::Unlock(golang::sync::Mutex* m)
+    void rec::Unlock(Mutex* m)
     {
         if(race::Enabled)
         {
@@ -342,7 +342,7 @@ namespace golang::sync
         }
     }
 
-    void rec::unlockSlow(golang::sync::Mutex* m, int32_t go_new)
+    void rec::unlockSlow(Mutex* m, int32_t go_new)
     {
         if((go_new + mutexLocked) & mutexLocked == 0)
         {

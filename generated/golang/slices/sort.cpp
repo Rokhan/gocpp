@@ -228,7 +228,7 @@ namespace golang::slices
 
     // // hint for pdqsort when choosing the pivot
     // xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
-    uint64_t rec::Next(golang::slices::xorshift* r)
+    uint64_t rec::Next(xorshift* r)
     {
         *r ^= *r << 13;
         *r ^= *r >> 17;

@@ -8,16 +8,16 @@ namespace golang::runtime
 {
     using traceGoStatus = uint8_t;
     using traceProcStatus = uint8_t;
-    const runtime::traceGoStatus traceGoBad = 0;
-    const runtime::traceGoStatus traceGoRunnable = 1;
-    const runtime::traceGoStatus traceGoRunning = 2;
-    const runtime::traceGoStatus traceGoSyscall = 3;
-    const runtime::traceGoStatus traceGoWaiting = 4;
-    const runtime::traceProcStatus traceProcBad = 0;
-    const runtime::traceProcStatus traceProcRunning = 1;
-    const runtime::traceProcStatus traceProcIdle = 2;
-    const runtime::traceProcStatus traceProcSyscall = 3;
-    const runtime::traceProcStatus traceProcSyscallAbandoned = 4;
+    const golang::runtime::traceGoStatus traceGoBad = 0;
+    const golang::runtime::traceGoStatus traceGoRunnable = 1;
+    const golang::runtime::traceGoStatus traceGoRunning = 2;
+    const golang::runtime::traceGoStatus traceGoSyscall = 3;
+    const golang::runtime::traceGoStatus traceGoWaiting = 4;
+    const golang::runtime::traceProcStatus traceProcBad = 0;
+    const golang::runtime::traceProcStatus traceProcRunning = 1;
+    const golang::runtime::traceProcStatus traceProcIdle = 2;
+    const golang::runtime::traceProcStatus traceProcSyscall = 3;
+    const golang::runtime::traceProcStatus traceProcSyscallAbandoned = 4;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 

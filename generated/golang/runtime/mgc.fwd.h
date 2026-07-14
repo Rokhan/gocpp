@@ -19,16 +19,16 @@ namespace golang::runtime
     using gcMode = int;
     struct gcTrigger;
     using gcTriggerKind = int;
-    const runtime::gcMarkWorkerMode gcMarkWorkerNotWorker = 0;
-    const runtime::gcMarkWorkerMode gcMarkWorkerDedicatedMode = 1;
-    const runtime::gcMarkWorkerMode gcMarkWorkerFractionalMode = 2;
-    const runtime::gcMarkWorkerMode gcMarkWorkerIdleMode = 3;
-    const runtime::gcMode gcBackgroundMode = 0;
-    const runtime::gcMode gcForceMode = 1;
-    const runtime::gcMode gcForceBlockMode = 2;
-    const runtime::gcTriggerKind gcTriggerHeap = 0;
-    const runtime::gcTriggerKind gcTriggerTime = 1;
-    const runtime::gcTriggerKind gcTriggerCycle = 2;
+    const golang::runtime::gcMarkWorkerMode gcMarkWorkerNotWorker = 0;
+    const golang::runtime::gcMarkWorkerMode gcMarkWorkerDedicatedMode = 1;
+    const golang::runtime::gcMarkWorkerMode gcMarkWorkerFractionalMode = 2;
+    const golang::runtime::gcMarkWorkerMode gcMarkWorkerIdleMode = 3;
+    const golang::runtime::gcMode gcBackgroundMode = 0;
+    const golang::runtime::gcMode gcForceMode = 1;
+    const golang::runtime::gcMode gcForceBlockMode = 2;
+    const golang::runtime::gcTriggerKind gcTriggerHeap = 0;
+    const golang::runtime::gcTriggerKind gcTriggerTime = 1;
+    const golang::runtime::gcTriggerKind gcTriggerCycle = 2;
 }
 #include "golang/internal/cpu/cpu.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"

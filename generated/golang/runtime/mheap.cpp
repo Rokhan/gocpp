@@ -346,7 +346,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    mheap mheap_;
+    golang::runtime::mheap mheap_;
     // A heapArena stores metadata for a heap arena. heapArenas are stored
     // outside of the Go heap and accessed via the mheap_.arenas index.
     
@@ -501,13 +501,13 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void rec::set(golang::runtime::mSpanStateBox* b, golang::runtime::mSpanState s)
+    void rec::set(mSpanStateBox* b, mSpanState s)
     {
         rec::Store(gocpp::recv(b->s), uint8_t(s));
     }
 
     //go:nosplit
-    runtime::mSpanState rec::get(golang::runtime::mSpanStateBox* b)
+    golang::runtime::mSpanState rec::get(mSpanStateBox* b)
     {
         return mSpanState(rec::Load(gocpp::recv(b->s)));
     }
@@ -658,12 +658,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uintptr_t rec::base(golang::runtime::mspan* s)
+    uintptr_t rec::base(mspan* s)
     {
         return s->startAddr;
     }
 
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> rec::layout(golang::runtime::mspan* s)
+    std::tuple<uintptr_t, uintptr_t, uintptr_t> rec::layout(mspan* s)
     {
         uintptr_t size;
         uintptr_t n;
@@ -692,8 +692,8 @@ namespace golang::runtime
     //go:nowritebarrierrec
     void recordspan(gocpp::unsafe_pointer vh, gocpp::unsafe_pointer p)
     {
-        auto h = (mheap*)(vh);
-        auto s = (mspan*)(p);
+        auto h = (golang::runtime::mheap*)(vh);
+        auto s = (golang::runtime::mspan*)(p);
 
         assertLockHeld(& h->lock);
 
@@ -704,8 +704,8 @@ namespace golang::runtime
             {
                 n = cap(h->allspans) * 3 / 2;
             }
-            gocpp::slice<mspan*> go_new = {};
-            auto sp = (slice*)(gocpp::unsafe_pointer(& go_new));
+            gocpp::slice<golang::runtime::mspan*> go_new = {};
+            auto sp = (golang::runtime::slice*)(gocpp::unsafe_pointer(& go_new));
             sp->array = sysAlloc(uintptr_t(n) * goarch::PtrSize, & memstats.other_sys);
             if(sp->array == nullptr)
             {
@@ -718,7 +718,7 @@ namespace golang::runtime
                 copy(go_new, h->allspans);
             }
             auto oldAllspans = h->allspans;
-            *(notInHeapSlice*)(gocpp::unsafe_pointer(& h->allspans)) = *(notInHeapSlice*)(gocpp::unsafe_pointer(& go_new));
+            *(golang::runtime::notInHeapSlice*)(gocpp::unsafe_pointer(& h->allspans)) = *(golang::runtime::notInHeapSlice*)(gocpp::unsafe_pointer(& go_new));
             if(len(oldAllspans) != 0)
             {
                 sysFree(gocpp::unsafe_pointer(& oldAllspans[0]), uintptr_t(cap(oldAllspans)) * gocpp::Sizeof<mspan*>(), & memstats.other_sys);
@@ -734,19 +734,19 @@ namespace golang::runtime
     // noscan spanClass contains only noscan objects, which do not contain
     // pointers and thus do not need to be scanned by the garbage
     // collector.
-    runtime::spanClass makeSpanClass(uint8_t sizeclass, bool noscan)
+    golang::runtime::spanClass makeSpanClass(uint8_t sizeclass, bool noscan)
     {
         return spanClass(sizeclass << 1) | spanClass(bool2int(noscan));
     }
 
     //go:nosplit
-    int8_t rec::sizeclass(golang::runtime::spanClass sc)
+    int8_t rec::sizeclass(spanClass sc)
     {
         return int8_t(sc >> 1);
     }
 
     //go:nosplit
-    bool rec::noscan(golang::runtime::spanClass sc)
+    bool rec::noscan(spanClass sc)
     {
         return sc & 1 != 0;
     }
@@ -763,14 +763,14 @@ namespace golang::runtime
     // nosplit functions.
     //
     //go:nosplit
-    runtime::arenaIdx arenaIndex(uintptr_t p)
+    golang::runtime::arenaIdx arenaIndex(uintptr_t p)
     {
         return arenaIdx((p - arenaBaseOffset) / heapArenaBytes);
     }
 
     // arenaBase returns the low address of the region covered by heap
     // arena i.
-    uintptr_t arenaBase(golang::runtime::arenaIdx i)
+    uintptr_t arenaBase(arenaIdx i)
     {
         return uintptr_t(i) * heapArenaBytes + arenaBaseOffset;
     }
@@ -781,7 +781,7 @@ namespace golang::runtime
     // functions.
     //
     //go:nosplit
-    unsigned int rec::l1(golang::runtime::arenaIdx i)
+    unsigned int rec::l1(arenaIdx i)
     {
         if(arenaL1Bits == 0)
         {
@@ -801,7 +801,7 @@ namespace golang::runtime
     // functions.
     //
     //go:nosplit
-    unsigned int rec::l2(golang::runtime::arenaIdx i)
+    unsigned int rec::l2(arenaIdx i)
     {
         if(arenaL1Bits == 0)
         {
@@ -866,7 +866,7 @@ namespace golang::runtime
     // Must be nosplit because it has callers that are nosplit.
     //
     //go:nosplit
-    struct mspan* spanOf(uintptr_t p)
+    golang::runtime::mspan* spanOf(uintptr_t p)
     {
         // This function looks big, but we use a lot of constant
         // folding around arenaL1Bits to get it under the inlining
@@ -910,7 +910,7 @@ namespace golang::runtime
     // Must be nosplit because it has callers that are nosplit.
     //
     //go:nosplit
-    struct mspan* spanOfUnchecked(uintptr_t p)
+    golang::runtime::mspan* spanOfUnchecked(uintptr_t p)
     {
         auto ai = arenaIndex(p);
         return mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))]->spans[(p / pageSize) % pagesPerArena];
@@ -922,7 +922,7 @@ namespace golang::runtime
     // Must be nosplit because it has callers that are nosplit.
     //
     //go:nosplit
-    struct mspan* spanOfHeap(uintptr_t p)
+    golang::runtime::mspan* spanOfHeap(uintptr_t p)
     {
         auto s = spanOf(p);
         // s is nil if it's never been allocated. Otherwise, we check
@@ -939,9 +939,9 @@ namespace golang::runtime
 
     // pageIndexOf returns the arena, page index, and page mask for pointer p.
     // The caller must ensure p is in the heap.
-    std::tuple<struct heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p)
+    std::tuple<golang::runtime::heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p)
     {
-        struct heapArena* arena;
+        golang::runtime::heapArena* arena;
         uintptr_t pageIdx;
         uint8_t pageMask;
         auto ai = arenaIndex(p);
@@ -952,18 +952,18 @@ namespace golang::runtime
     }
 
     // Initialize the heap.
-    void rec::init(golang::runtime::mheap* h)
+    void rec::init(mheap* h)
     {
         lockInit(& h->lock, lockRankMheap);
         lockInit(& h->speciallock, lockRankMheapSpecial);
 
-        rec::init(gocpp::recv(h->spanalloc), gocpp::Sizeof<mspan>(), recordspan, gocpp::unsafe_pointer(h), & memstats.mspan_sys);
-        rec::init(gocpp::recv(h->cachealloc), gocpp::Sizeof<mcache>(), nullptr, nullptr, & memstats.mcache_sys);
-        rec::init(gocpp::recv(h->specialfinalizeralloc), gocpp::Sizeof<specialfinalizer>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialprofilealloc), gocpp::Sizeof<specialprofile>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialReachableAlloc), gocpp::Sizeof<specialReachable>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialPinCounterAlloc), gocpp::Sizeof<specialPinCounter>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->arenaHintAlloc), gocpp::Sizeof<arenaHint>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->spanalloc), gocpp::Sizeof<golang::runtime::mspan>(), recordspan, gocpp::unsafe_pointer(h), & memstats.mspan_sys);
+        rec::init(gocpp::recv(h->cachealloc), gocpp::Sizeof<golang::runtime::mcache>(), nullptr, nullptr, & memstats.mcache_sys);
+        rec::init(gocpp::recv(h->specialfinalizeralloc), gocpp::Sizeof<golang::runtime::specialfinalizer>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialprofilealloc), gocpp::Sizeof<golang::runtime::specialprofile>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialReachableAlloc), gocpp::Sizeof<golang::runtime::specialReachable>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialPinCounterAlloc), gocpp::Sizeof<golang::runtime::specialPinCounter>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->arenaHintAlloc), gocpp::Sizeof<golang::runtime::arenaHint>(), nullptr, nullptr, & memstats.other_sys);
 
         // Don't zero mspan allocations. Background sweeping can
         // inspect a span concurrently with allocating it, so it's
@@ -988,7 +988,7 @@ namespace golang::runtime
     // reclaim implements the page-reclaimer half of the sweeper.
     //
     // h.lock must NOT be held.
-    void rec::reclaim(golang::runtime::mheap* h, uintptr_t npage)
+    void rec::reclaim(mheap* h, uintptr_t npage)
     {
         // TODO(austin): Half of the time spent freeing spans is in
         // locking/unlocking the heap (even with low contention). We
@@ -1081,7 +1081,7 @@ namespace golang::runtime
     // h.lock must be held and the caller must be non-preemptible. Note: h.lock may be
     // temporarily unlocked and re-locked in order to do sweeping or if tracing is
     // enabled.
-    uintptr_t rec::reclaimChunk(golang::runtime::mheap* h, gocpp::slice<golang::runtime::arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n)
+    uintptr_t rec::reclaimChunk(mheap* h, gocpp::slice<arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n)
     {
         // The heap lock must be held because this accesses the
         // heapArena.spans arrays using potentially non-live pointers.
@@ -1172,7 +1172,7 @@ namespace golang::runtime
     // spanAllocType represents the type of allocation to make, or
     // the type of allocation to be freed.
     // manual returns true if the span allocation is manually managed.
-    bool rec::manual(golang::runtime::spanAllocType s)
+    bool rec::manual(spanAllocType s)
     {
         return s != spanAllocHeap;
     }
@@ -1183,12 +1183,12 @@ namespace golang::runtime
     //
     // Returns a span that has been fully initialized. span.needzero indicates
     // whether the span has been zeroed. Note that it may not be.
-    struct mspan* rec::alloc(golang::runtime::mheap* h, uintptr_t npages, golang::runtime::spanClass spanclass)
+    golang::runtime::mspan* rec::alloc(mheap* h, uintptr_t npages, spanClass spanclass)
     {
         // Don't do any operations that lock the heap on the G stack.
         // It might trigger stack growth, and the stack growth code needs
         // to be able to allocate heap.
-        mspan* s = {};
+        golang::runtime::mspan* s = {};
         systemstack([=]() mutable -> void
         {
             // To prevent excessive heap growth, before allocating n pages
@@ -1219,7 +1219,7 @@ namespace golang::runtime
     // existing spanAllocType value and instead declare a new one.
     //
     //go:systemstack
-    struct mspan* rec::allocManual(golang::runtime::mheap* h, uintptr_t npages, golang::runtime::spanAllocType typ)
+    golang::runtime::mspan* rec::allocManual(mheap* h, uintptr_t npages, spanAllocType typ)
     {
         if(! rec::manual(gocpp::recv(typ)))
         {
@@ -1230,7 +1230,7 @@ namespace golang::runtime
 
     // setSpans modifies the span map so [spanOf(base), spanOf(base+npage*pageSize))
     // is s.
-    void rec::setSpans(golang::runtime::mheap* h, uintptr_t base, uintptr_t npage, struct mspan* s)
+    void rec::setSpans(mheap* h, uintptr_t base, uintptr_t npage, mspan* s)
     {
         auto p = base / pageSize;
         auto ai = arenaIndex(base);
@@ -1257,7 +1257,7 @@ namespace golang::runtime
     // critical for future page allocations.
     //
     // There are no locking constraints on this method.
-    bool rec::allocNeedsZero(golang::runtime::mheap* h, uintptr_t base, uintptr_t npage)
+    bool rec::allocNeedsZero(mheap* h, uintptr_t base, uintptr_t npage)
     {
         bool needZero;
         for(; npage > 0; )
@@ -1332,7 +1332,7 @@ namespace golang::runtime
     // may be relaxed if its use is necessary elsewhere.
     //
     //go:systemstack
-    struct mspan* rec::tryAllocMSpan(golang::runtime::mheap* h)
+    golang::runtime::mspan* rec::tryAllocMSpan(mheap* h)
     {
         auto pp = rec::ptr(gocpp::recv(getg()->m->p));
         // If we don't have a p or the cache is empty, we can't do
@@ -1357,7 +1357,7 @@ namespace golang::runtime
     // switch Ps during this function. See tryAllocMSpan for details.
     //
     //go:systemstack
-    struct mspan* rec::allocMSpanLocked(golang::runtime::mheap* h)
+    golang::runtime::mspan* rec::allocMSpanLocked(mheap* h)
     {
         assertLockHeld(& h->lock);
 
@@ -1365,7 +1365,7 @@ namespace golang::runtime
         if(pp == nullptr)
         {
             // We don't have a p so just do the normal thing.
-            return (mspan*)(rec::alloc(gocpp::recv(h->spanalloc)));
+            return (golang::runtime::mspan*)(rec::alloc(gocpp::recv(h->spanalloc)));
         }
         // Refill the cache if necessary.
         if(pp->mspancache.len == 0)
@@ -1373,7 +1373,7 @@ namespace golang::runtime
             auto refillCount = len(pp->mspancache.buf) / 2;
             for(auto i = 0; i < refillCount; i++)
             {
-                pp->mspancache.buf[i] = (mspan*)(rec::alloc(gocpp::recv(h->spanalloc)));
+                pp->mspancache.buf[i] = (golang::runtime::mspan*)(rec::alloc(gocpp::recv(h->spanalloc)));
             }
             pp->mspancache.len = refillCount;
         }
@@ -1393,7 +1393,7 @@ namespace golang::runtime
     // switch Ps during this function. See tryAllocMSpan for details.
     //
     //go:systemstack
-    void rec::freeMSpanLocked(golang::runtime::mheap* h, struct mspan* s)
+    void rec::freeMSpanLocked(mheap* h, mspan* s)
     {
         assertLockHeld(& h->lock);
 
@@ -1427,9 +1427,9 @@ namespace golang::runtime
     // the heap lock and because it must block GC transitions.
     //
     //go:systemstack
-    struct mspan* rec::allocSpan(golang::runtime::mheap* h, uintptr_t npages, golang::runtime::spanAllocType typ, golang::runtime::spanClass spanclass)
+    golang::runtime::mspan* rec::allocSpan(mheap* h, uintptr_t npages, spanAllocType typ, spanClass spanclass)
     {
-        struct mspan* s;
+        golang::runtime::mspan* s;
         // Function-global state.
         auto gp = getg();
         auto [base, scav] = std::tuple{uintptr_t(0), uintptr_t(0)};
@@ -1669,7 +1669,7 @@ namespace golang::runtime
 
     // initSpan initializes a blank span s which will represent the range
     // [base, base+npages*pageSize). typ is the type of span being allocated.
-    void rec::initSpan(golang::runtime::mheap* h, struct mspan* s, golang::runtime::spanAllocType typ, golang::runtime::spanClass spanclass, uintptr_t base, uintptr_t npages)
+    void rec::initSpan(mheap* h, mspan* s, spanAllocType typ, spanClass spanclass, uintptr_t base, uintptr_t npages)
     {
         // At this point, both s != nil and base != 0, and the heap
         // lock is no longer held. Initialize the span.
@@ -1768,7 +1768,7 @@ namespace golang::runtime
     // returning how much the heap grew by and whether it worked.
     //
     // h.lock must be held.
-    std::tuple<uintptr_t, bool> rec::grow(golang::runtime::mheap* h, uintptr_t npage)
+    std::tuple<uintptr_t, bool> rec::grow(mheap* h, uintptr_t npage)
     {
         assertLockHeld(& h->lock);
 
@@ -1859,7 +1859,7 @@ namespace golang::runtime
     }
 
     // Free the span back into the heap.
-    void rec::freeSpan(golang::runtime::mheap* h, struct mspan* s)
+    void rec::freeSpan(mheap* h, mspan* s)
     {
         systemstack([=]() mutable -> void
         {
@@ -1896,7 +1896,7 @@ namespace golang::runtime
     // the heap lock. See mheap for details.
     //
     //go:systemstack
-    void rec::freeManual(golang::runtime::mheap* h, struct mspan* s, golang::runtime::spanAllocType typ)
+    void rec::freeManual(mheap* h, mspan* s, spanAllocType typ)
     {
         pageTraceFree(rec::ptr(gocpp::recv(getg()->m->p)), 0, rec::base(gocpp::recv(s)), s->npages);
 
@@ -1906,7 +1906,7 @@ namespace golang::runtime
         runtime::unlock(& h->lock);
     }
 
-    void rec::freeSpanLocked(golang::runtime::mheap* h, struct mspan* s, golang::runtime::spanAllocType typ)
+    void rec::freeSpanLocked(mheap* h, mspan* s, spanAllocType typ)
     {
         assertLockHeld(& h->lock);
 
@@ -1998,7 +1998,7 @@ namespace golang::runtime
     // Must run on the system stack because it acquires the heap lock.
     //
     //go:systemstack
-    void rec::scavengeAll(golang::runtime::mheap* h)
+    void rec::scavengeAll(mheap* h)
     {
         // Disallow malloc or panic while holding the heap lock. We do
         // this here because this is a non-mallocgc entry-point to
@@ -2028,7 +2028,7 @@ namespace golang::runtime
     }
 
     // Initialize a new span with the given start and npages.
-    void rec::init(golang::runtime::mspan* span, uintptr_t base, uintptr_t npages)
+    void rec::init(mspan* span, uintptr_t base, uintptr_t npages)
     {
         // span is *not* zeroed.
         span->next = nullptr;
@@ -2051,19 +2051,19 @@ namespace golang::runtime
         lockInit(& span->speciallock, lockRankMspanSpecial);
     }
 
-    bool rec::inList(golang::runtime::mspan* span)
+    bool rec::inList(mspan* span)
     {
         return span->list != nullptr;
     }
 
     // Initialize an empty doubly-linked list.
-    void rec::init(golang::runtime::mSpanList* list)
+    void rec::init(mSpanList* list)
     {
         list->first = nullptr;
         list->last = nullptr;
     }
 
-    void rec::remove(golang::runtime::mSpanList* list, struct mspan* span)
+    void rec::remove(mSpanList* list, mspan* span)
     {
         if(span->list != list)
         {
@@ -2091,12 +2091,12 @@ namespace golang::runtime
         span->list = nullptr;
     }
 
-    bool rec::isEmpty(golang::runtime::mSpanList* list)
+    bool rec::isEmpty(mSpanList* list)
     {
         return list->first == nullptr;
     }
 
-    void rec::insert(golang::runtime::mSpanList* list, struct mspan* span)
+    void rec::insert(mSpanList* list, mspan* span)
     {
         if(span->next != nullptr || span->prev != nullptr || span->list != nullptr)
         {
@@ -2119,7 +2119,7 @@ namespace golang::runtime
         span->list = list;
     }
 
-    void rec::insertBack(golang::runtime::mSpanList* list, struct mspan* span)
+    void rec::insertBack(mSpanList* list, mspan* span)
     {
         if(span->next != nullptr || span->prev != nullptr || span->list != nullptr)
         {
@@ -2143,7 +2143,7 @@ namespace golang::runtime
 
     // takeAll removes all spans from other and inserts them at the front
     // of list.
-    void rec::takeAll(golang::runtime::mSpanList* list, struct mSpanList* other)
+    void rec::takeAll(mSpanList* list, mSpanList* other)
     {
         if(rec::isEmpty(gocpp::recv(other)))
         {
@@ -2215,7 +2215,7 @@ namespace golang::runtime
     }
 
     // spanHasSpecials marks a span as having specials in the arena bitmap.
-    void spanHasSpecials(struct mspan* s)
+    void spanHasSpecials(mspan* s)
     {
         auto arenaPage = (rec::base(gocpp::recv(s)) / pageSize) % pagesPerArena;
         auto ai = arenaIndex(rec::base(gocpp::recv(s)));
@@ -2224,7 +2224,7 @@ namespace golang::runtime
     }
 
     // spanHasNoSpecials marks a span as having no specials in the arena bitmap.
-    void spanHasNoSpecials(struct mspan* s)
+    void spanHasNoSpecials(mspan* s)
     {
         auto arenaPage = (rec::base(gocpp::recv(s)) / pageSize) % pagesPerArena;
         auto ai = arenaIndex(rec::base(gocpp::recv(s)));
@@ -2238,7 +2238,7 @@ namespace golang::runtime
     // Returns true if the special was successfully added, false otherwise.
     // (The add will fail only if a record with the same p and s->kind
     // already exists.)
-    bool addspecial(gocpp::unsafe_pointer p, struct special* s)
+    bool addspecial(gocpp::unsafe_pointer p, special* s)
     {
         auto span = spanOfHeap(uintptr_t(p));
         if(span == nullptr)
@@ -2277,7 +2277,7 @@ namespace golang::runtime
     // Removes the Special record of the given kind for the object p.
     // Returns the record if the record existed, nil otherwise.
     // The caller must FixAlloc_Free the result.
-    struct special* removespecial(gocpp::unsafe_pointer p, uint8_t kind)
+    golang::runtime::special* removespecial(gocpp::unsafe_pointer p, uint8_t kind)
     {
         auto span = spanOfHeap(uintptr_t(p));
         if(span == nullptr)
@@ -2293,7 +2293,7 @@ namespace golang::runtime
 
         auto offset = uintptr_t(p) - rec::base(gocpp::recv(span));
 
-        special* result = {};
+        golang::runtime::special* result = {};
         lock(& span->speciallock);
 
         auto [iter, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, kind);
@@ -2315,7 +2315,7 @@ namespace golang::runtime
     // Find a splice point in the sorted list and check for an already existing
     // record. Returns a pointer to the next-reference in the list predecessor.
     // Returns true, if the referenced item is an exact match.
-    std::tuple<struct special**, bool> rec::specialFindSplicePoint(golang::runtime::mspan* span, uintptr_t offset, unsigned char kind)
+    std::tuple<golang::runtime::special**, bool> rec::specialFindSplicePoint(mspan* span, uintptr_t offset, unsigned char kind)
     {
         // Find splice point, check for existing record.
         auto iter = & span->specials;
@@ -2390,10 +2390,10 @@ namespace golang::runtime
     }
 
     // Adds a finalizer to the object p. Returns true if it succeeded.
-    bool addfinalizer(gocpp::unsafe_pointer p, struct funcval* f, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot)
+    bool addfinalizer(gocpp::unsafe_pointer p, funcval* f, uintptr_t nret, _type* fint, ptrtype* ot)
     {
         lock(& mheap_.speciallock);
-        auto s = (specialfinalizer*)(rec::alloc(gocpp::recv(mheap_.specialfinalizeralloc)));
+        auto s = (golang::runtime::specialfinalizer*)(rec::alloc(gocpp::recv(mheap_.specialfinalizeralloc)));
         unlock(& mheap_.speciallock);
         s->special.kind = _KindSpecialFinalizer;
         s->fn = f;
@@ -2435,7 +2435,7 @@ namespace golang::runtime
     // Removes the finalizer (if any) from the object p.
     void removefinalizer(gocpp::unsafe_pointer p)
     {
-        auto s = (specialfinalizer*)(gocpp::unsafe_pointer(removespecial(p, _KindSpecialFinalizer)));
+        auto s = (golang::runtime::specialfinalizer*)(gocpp::unsafe_pointer(removespecial(p, _KindSpecialFinalizer)));
         if(s == nullptr)
         {
             // there wasn't a finalizer to remove
@@ -2483,10 +2483,10 @@ namespace golang::runtime
     }
 
     // Set the heap profile bucket associated with addr to b.
-    void setprofilebucket(gocpp::unsafe_pointer p, struct bucket* b)
+    void setprofilebucket(gocpp::unsafe_pointer p, golang::runtime::bucket* b)
     {
         lock(& mheap_.speciallock);
-        auto s = (specialprofile*)(rec::alloc(gocpp::recv(mheap_.specialprofilealloc)));
+        auto s = (golang::runtime::specialprofile*)(rec::alloc(gocpp::recv(mheap_.specialprofilealloc)));
         unlock(& mheap_.speciallock);
         s->special.kind = _KindSpecialProfile;
         s->b = b;
@@ -2599,17 +2599,17 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct specialsIter newSpecialsIter(struct mspan* span)
+    golang::runtime::specialsIter newSpecialsIter(mspan* span)
     {
-        return specialsIter {& span->specials, span->specials};
+        return golang::runtime::specialsIter {& span->specials, span->specials};
     }
 
-    bool rec::valid(golang::runtime::specialsIter* i)
+    bool rec::valid(specialsIter* i)
     {
         return i->s != nullptr;
     }
 
-    void rec::next(golang::runtime::specialsIter* i)
+    void rec::next(specialsIter* i)
     {
         i->pprev = & i->s->next;
         i->s = *i->pprev;
@@ -2617,7 +2617,7 @@ namespace golang::runtime
 
     // unlinkAndNext removes the current special from the list and moves
     // the iterator to the next special. It returns the unlinked special.
-    struct special* rec::unlinkAndNext(golang::runtime::specialsIter* i)
+    golang::runtime::special* rec::unlinkAndNext(specialsIter* i)
     {
         auto cur = i->s;
         i->s = cur->next;
@@ -2627,7 +2627,7 @@ namespace golang::runtime
 
     // freeSpecial performs any cleanup on special s and deallocates it.
     // s must already be unlinked from the specials list.
-    void freeSpecial(struct special* s, gocpp::unsafe_pointer p, uintptr_t size)
+    void freeSpecial(special* s, gocpp::unsafe_pointer p, uintptr_t size)
     {
         //Go switch emulation
         {
@@ -2641,7 +2641,7 @@ namespace golang::runtime
             {
                 case 0:
                 {
-                    auto sf = (specialfinalizer*)(gocpp::unsafe_pointer(s));
+                    auto sf = (golang::runtime::specialfinalizer*)(gocpp::unsafe_pointer(s));
                     queuefinalizer(p, sf->fn, sf->nret, sf->fint, sf->ot);
                     lock(& mheap_.speciallock);
                     rec::free(gocpp::recv(mheap_.specialfinalizeralloc), gocpp::unsafe_pointer(sf));
@@ -2650,7 +2650,7 @@ namespace golang::runtime
                 }
                 case 1:
                 {
-                    auto sp = (specialprofile*)(gocpp::unsafe_pointer(s));
+                    auto sp = (golang::runtime::specialprofile*)(gocpp::unsafe_pointer(s));
                     mProf_Free(sp->b, size);
                     lock(& mheap_.speciallock);
                     rec::free(gocpp::recv(mheap_.specialprofilealloc), gocpp::unsafe_pointer(sp));
@@ -2659,7 +2659,7 @@ namespace golang::runtime
                 }
                 case 2:
                 {
-                    auto sp = (specialReachable*)(gocpp::unsafe_pointer(s));
+                    auto sp = (golang::runtime::specialReachable*)(gocpp::unsafe_pointer(s));
                     sp->done = true;
                     break;
                 }
@@ -2711,14 +2711,14 @@ namespace golang::runtime
     }
 
     // bytep returns a pointer to the n'th byte of b.
-    uint8_t* rec::bytep(golang::runtime::gcBits* b, uintptr_t n)
+    uint8_t* rec::bytep(gcBits* b, uintptr_t n)
     {
         return addb(& b->x, n);
     }
 
     // bitp returns a pointer to the byte containing bit n and a mask for
     // selecting that bit from *bytep.
-    std::tuple<uint8_t*, uint8_t> rec::bitp(golang::runtime::gcBits* b, uintptr_t n)
+    std::tuple<uint8_t*, uint8_t> rec::bitp(gcBits* b, uintptr_t n)
     {
         uint8_t* bytep;
         uint8_t mask;
@@ -2850,7 +2850,7 @@ namespace golang::runtime
     gocpp_id_4 gcBitsArenas;
     // tryAlloc allocates from b or returns nil if b does not have enough room.
     // This is safe to call concurrently.
-    struct gcBits* rec::tryAlloc(golang::runtime::gcBitsArena* b, uintptr_t bytes)
+    golang::runtime::gcBits* rec::tryAlloc(gcBitsArena* b, uintptr_t bytes)
     {
         if(b == nullptr || atomic::Loaduintptr(& b->free) + bytes > uintptr_t(len(b->bits)))
         {
@@ -2869,13 +2869,13 @@ namespace golang::runtime
 
     // newMarkBits returns a pointer to 8 byte aligned bytes
     // to be used for a span's mark bits.
-    struct gcBits* newMarkBits(uintptr_t nelems)
+    golang::runtime::gcBits* newMarkBits(uintptr_t nelems)
     {
         auto blocksNeeded = (nelems + 63) / 64;
         auto bytesNeeded = blocksNeeded * 8;
 
         // Try directly allocating from the current head arena.
-        auto head = (gcBitsArena*)(atomic::Loadp(gocpp::unsafe_pointer(& gcBitsArenas.next)));
+        auto head = (golang::runtime::gcBitsArena*)(atomic::Loadp(gocpp::unsafe_pointer(& gcBitsArenas.next)));
         if(auto p = rec::tryAlloc(gocpp::recv(head), bytesNeeded); p != nullptr)
         {
             return p;
@@ -2930,7 +2930,7 @@ namespace golang::runtime
     // allocation bits. For spans not being initialized the
     // mark bits are repurposed as allocation bits when
     // the span is swept.
-    struct gcBits* newAllocBits(uintptr_t nelems)
+    golang::runtime::gcBits* newAllocBits(uintptr_t nelems)
     {
         return newMarkBits(nelems);
     }
@@ -2978,13 +2978,13 @@ namespace golang::runtime
 
     // newArenaMayUnlock allocates and zeroes a gcBits arena.
     // The caller must hold gcBitsArena.lock. This may temporarily release it.
-    struct gcBitsArena* newArenaMayUnlock()
+    golang::runtime::gcBitsArena* newArenaMayUnlock()
     {
-        gcBitsArena* result = {};
+        golang::runtime::gcBitsArena* result = {};
         if(gcBitsArenas.free == nullptr)
         {
             unlock(& gcBitsArenas.lock);
-            result = (gcBitsArena*)(sysAlloc(gcBitsChunkBytes, & memstats.gcMiscSys));
+            result = (golang::runtime::gcBitsArena*)(sysAlloc(gcBitsChunkBytes, & memstats.gcMiscSys));
             if(result == nullptr)
             {
                 go_throw("runtime: cannot allocate memory"_s);
@@ -3000,7 +3000,7 @@ namespace golang::runtime
         result->next = nullptr;
         // If result.bits is not 8 byte aligned adjust index so
         // that &result.bits[result.free] is 8 byte aligned.
-        if(gocpp::Offsetof<gcBitsArena>(&gcBitsArena::bits) & 7 == 0)
+        if(gocpp::Offsetof<golang::runtime::gcBitsArena>(&golang::runtime::gcBitsArena::bits) & 7 == 0)
         {
             result->free = 0;
         }

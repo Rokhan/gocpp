@@ -97,24 +97,24 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void rec::M(golang::main::F f)
+    void rec::M(F f)
     {
         mocklib::Println(f);
     }
 
     // This method means type T implements the interface I,
     // but we don't need to explicitly declare that it does so.
-    void rec::M(golang::main::T t)
+    void rec::M(T t)
     {
         mocklib::Println(t.S);
     }
 
     void main()
     {
-        I i = T {"hello"_s};
+        I i = golang::main::T {"hello"_s};
         rec::M(gocpp::recv(i));
 
-        auto t = T {"hello"_s};
+        auto t = golang::main::T {"hello"_s};
         I j = t;
         rec::M(gocpp::recv(j));
 
@@ -125,9 +125,9 @@ namespace golang::main
     {
         I i = {};
 
-        auto t1 = new T {"Hello1"_s};
-        auto t2 = new T {"Hello2"_s};
-        auto t3 = T {"Hello2"_s};
+        auto t1 = new golang::main::T {"Hello1"_s};
+        auto t2 = new golang::main::T {"Hello2"_s};
+        auto t3 = golang::main::T {"Hello2"_s};
         auto f = F(mocklib::Pi);
 
         i = t1;

@@ -126,7 +126,7 @@ namespace golang::runtime
     //   belongs.
     // - writeRank is placed in the lock order wherever a write lock of this
     //   rwmutex belongs.
-    void rec::init(golang::runtime::rwmutex* rw, golang::runtime::lockRank readRank, golang::runtime::lockRank readRankInternal, golang::runtime::lockRank writeRank)
+    void rec::init(rwmutex* rw, lockRank readRank, lockRank readRankInternal, lockRank writeRank)
     {
         rw->readRank = readRank;
 
@@ -135,7 +135,7 @@ namespace golang::runtime
     }
 
     // rlock locks rw for reading.
-    void rec::rlock(golang::runtime::rwmutex* rw)
+    void rec::rlock(rwmutex* rw)
     {
         // The reader must not be allowed to lose its P or else other
         // things blocking on the lock may consume all of the Ps and
@@ -174,7 +174,7 @@ namespace golang::runtime
     }
 
     // runlock undoes a single rlock call on rw.
-    void rec::runlock(golang::runtime::rwmutex* rw)
+    void rec::runlock(rwmutex* rw)
     {
         if(auto r = rec::Add(gocpp::recv(rw->readerCount), - 1); r < 0)
         {
@@ -200,7 +200,7 @@ namespace golang::runtime
     }
 
     // lock locks rw for writing.
-    void rec::lock(golang::runtime::rwmutex* rw)
+    void rec::lock(rwmutex* rw)
     {
         // Resolve competition with other writers and stick to our P.
         runtime::lock(& rw->wLock);
@@ -227,7 +227,7 @@ namespace golang::runtime
     }
 
     // unlock unlocks rw for writing.
-    void rec::unlock(golang::runtime::rwmutex* rw)
+    void rec::unlock(rwmutex* rw)
     {
         // Announce to readers that there is no active writer.
         auto r = rec::Add(gocpp::recv(rw->readerCount), rwmutexMaxReaders);

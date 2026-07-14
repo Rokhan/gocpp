@@ -26,9 +26,9 @@ namespace golang::registry
 {
     using Key = syscall::Handle;
     struct KeyInfo;
-    const Key CLASSES_ROOT = Key(syscall::HKEY_CLASSES_ROOT);
-    const Key CURRENT_USER = Key(syscall::HKEY_CURRENT_USER);
-    const Key LOCAL_MACHINE = Key(syscall::HKEY_LOCAL_MACHINE);
-    const Key USERS = Key(syscall::HKEY_USERS);
-    const Key CURRENT_CONFIG = Key(syscall::HKEY_CURRENT_CONFIG);
+    const registry::Key CLASSES_ROOT = Key(syscall::HKEY_CLASSES_ROOT);
+    const registry::Key CURRENT_USER = Key(syscall::HKEY_CURRENT_USER);
+    const registry::Key LOCAL_MACHINE = Key(syscall::HKEY_LOCAL_MACHINE);
+    const registry::Key USERS = Key(syscall::HKEY_USERS);
+    const registry::Key CURRENT_CONFIG = Key(syscall::HKEY_CURRENT_CONFIG);
 }

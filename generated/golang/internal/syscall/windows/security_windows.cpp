@@ -119,7 +119,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
-    struct gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, struct TOKEN_PRIVILEGES* newstate, uint32_t buflen, struct TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen)
+    struct gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen)
     {
         auto [ret, err] = adjustTokenPrivileges(token, disableAllPrivileges, newstate, buflen, prevstate, returnlen);
         if(ret == 0)
@@ -197,9 +197,9 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
-    uint32_t rec::Size(golang::windows::TOKEN_MANDATORY_LABEL* tml)
+    uint32_t rec::Size(TOKEN_MANDATORY_LABEL* tml)
     {
-        return uint32_t(gocpp::Sizeof<TOKEN_MANDATORY_LABEL>()) + syscall::GetLengthSid(tml->Label.Sid);
+        return uint32_t(gocpp::Sizeof<golang::windows::TOKEN_MANDATORY_LABEL>()) + syscall::GetLengthSid(tml->Label.Sid);
     }
 
     

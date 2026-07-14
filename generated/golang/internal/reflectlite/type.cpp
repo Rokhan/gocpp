@@ -101,7 +101,7 @@ namespace golang::reflectlite
         return rec::Size(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    reflectlite::Kind Type::TypeImpl<T, TStore, TInterface>::vKind()
+    golang::reflectlite::Kind Type::TypeImpl<T, TStore, TInterface>::vKind()
     {
         return rec::Kind(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -136,7 +136,7 @@ namespace golang::reflectlite
         return rec::common(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    reflectlite::uncommonType* Type::TypeImpl<T, TStore, TInterface>::vuncommon()
+    golang::reflectlite::uncommonType* Type::TypeImpl<T, TStore, TInterface>::vuncommon()
     {
         return rec::uncommon(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -173,12 +173,12 @@ namespace golang::reflectlite
             return self.obj.value->vSize();
         }
 
-        reflectlite::Kind Kind(const gocpp::PtrRecv<struct Type, false>& self)
+        golang::reflectlite::Kind Kind(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value->vKind();
         }
 
-        reflectlite::Kind Kind(const gocpp::ObjRecv<struct Type>& self)
+        golang::reflectlite::Kind Kind(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value->vKind();
         }
@@ -243,12 +243,12 @@ namespace golang::reflectlite
             return self.obj.value->vcommon();
         }
 
-        reflectlite::uncommonType* uncommon(const gocpp::PtrRecv<struct Type, false>& self)
+        golang::reflectlite::uncommonType* uncommon(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value->vuncommon();
         }
 
-        reflectlite::uncommonType* uncommon(const gocpp::ObjRecv<struct Type>& self)
+        golang::reflectlite::uncommonType* uncommon(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value->vuncommon();
         }
@@ -480,7 +480,7 @@ namespace golang::reflectlite
         // Note that this field may not be aligned in memory,
         // so we cannot use a direct int32 assignment here.
         copy((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& nameOff)).make_slice(0), (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"_s))).make_slice(0));
-        auto pkgPathName = name {(unsigned char*)(resolveTypeOff(gocpp::unsafe_pointer(n.Bytes), nameOff))};
+        auto pkgPathName = golang::reflectlite::name {(unsigned char*)(resolveTypeOff(gocpp::unsafe_pointer(n.Bytes), nameOff))};
         return rec::name(gocpp::recv(pkgPathName));
     }
 
@@ -500,24 +500,24 @@ namespace golang::reflectlite
     gocpp::unsafe_pointer resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off)
     /* convertBlockStmt, nil block */;
 
-    abi::Name rec::nameOff(golang::reflectlite::rtype t, golang::reflectlite::nameOff off)
+    abi::Name rec::nameOff(rtype t, golang::reflectlite::nameOff off)
     {
         return gocpp::Init<abi::Name>([=](auto& x) {
             x.Bytes = (unsigned char*)(resolveNameOff(gocpp::unsafe_pointer(t.Type), int32_t(off)));
         });
     }
 
-    abi::Type* rec::typeOff(golang::reflectlite::rtype t, golang::reflectlite::typeOff off)
+    abi::Type* rec::typeOff(rtype t, golang::reflectlite::typeOff off)
     {
         return (abi::Type*)(resolveTypeOff(gocpp::unsafe_pointer(t.Type), int32_t(off)));
     }
 
-    reflectlite::uncommonType* rec::uncommon(golang::reflectlite::rtype t)
+    golang::reflectlite::uncommonType* rec::uncommon(rtype t)
     {
         return rec::Uncommon(gocpp::recv(t));
     }
 
-    gocpp::string rec::String(golang::reflectlite::rtype t)
+    gocpp::string rec::String(rtype t)
     {
         auto s = rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), t.Type.Str)));
         if(t.Type.TFlag & abi::TFlagExtraStar != 0)
@@ -527,12 +527,12 @@ namespace golang::reflectlite
         return s;
     }
 
-    abi::Type* rec::common(golang::reflectlite::rtype t)
+    abi::Type* rec::common(rtype t)
     {
         return t.Type;
     }
 
-    gocpp::slice<abi::Method> rec::exportedMethods(golang::reflectlite::rtype t)
+    gocpp::slice<abi::Method> rec::exportedMethods(rtype t)
     {
         auto ut = rec::uncommon(gocpp::recv(t));
         if(ut == nullptr)
@@ -542,7 +542,7 @@ namespace golang::reflectlite
         return rec::ExportedMethods(gocpp::recv(ut));
     }
 
-    int rec::NumMethod(golang::reflectlite::rtype t)
+    int rec::NumMethod(rtype t)
     {
         auto tt = rec::InterfaceType(gocpp::recv(t.Type));
         if(tt != nullptr)
@@ -552,7 +552,7 @@ namespace golang::reflectlite
         return len(rec::exportedMethods(gocpp::recv(t)));
     }
 
-    gocpp::string rec::PkgPath(golang::reflectlite::rtype t)
+    gocpp::string rec::PkgPath(rtype t)
     {
         if(t.Type.TFlag & abi::TFlagNamed == 0)
         {
@@ -566,7 +566,7 @@ namespace golang::reflectlite
         return rec::Name(gocpp::recv(rec::nameOff(gocpp::recv(t), ut->PkgPath)));
     }
 
-    gocpp::string rec::Name(golang::reflectlite::rtype t)
+    gocpp::string rec::Name(rtype t)
     {
         if(! rec::HasName(gocpp::recv(t)))
         {
@@ -598,9 +598,9 @@ namespace golang::reflectlite
         return s.make_slice(i + 1);
     }
 
-    struct rtype toRType(abi::Type* t)
+    golang::reflectlite::rtype toRType(abi::Type* t)
     {
-        return rtype {t};
+        return golang::reflectlite::rtype {t};
     }
 
     abi::Type* elem(abi::Type* t)
@@ -613,12 +613,12 @@ namespace golang::reflectlite
         gocpp::panic("reflect: Elem of invalid type "_s + rec::String(gocpp::recv(toRType(t))));
     }
 
-    struct Type rec::Elem(golang::reflectlite::rtype t)
+    struct Type rec::Elem(rtype t)
     {
         return toType(elem(rec::common(gocpp::recv(t))));
     }
 
-    struct Type rec::In(golang::reflectlite::rtype t, int i)
+    struct Type rec::In(rtype t, int i)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -628,7 +628,7 @@ namespace golang::reflectlite
         return toType(rec::InSlice(gocpp::recv(tt))[i]);
     }
 
-    struct Type rec::Key(golang::reflectlite::rtype t)
+    struct Type rec::Key(rtype t)
     {
         auto tt = rec::MapType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -638,7 +638,7 @@ namespace golang::reflectlite
         return toType(tt->Key);
     }
 
-    int rec::Len(golang::reflectlite::rtype t)
+    int rec::Len(rtype t)
     {
         auto tt = rec::ArrayType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -648,7 +648,7 @@ namespace golang::reflectlite
         return int(tt->Len);
     }
 
-    int rec::NumField(golang::reflectlite::rtype t)
+    int rec::NumField(rtype t)
     {
         auto tt = rec::StructType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -658,7 +658,7 @@ namespace golang::reflectlite
         return len(tt->Fields);
     }
 
-    int rec::NumIn(golang::reflectlite::rtype t)
+    int rec::NumIn(rtype t)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -668,7 +668,7 @@ namespace golang::reflectlite
         return int(tt->InCount);
     }
 
-    int rec::NumOut(golang::reflectlite::rtype t)
+    int rec::NumOut(rtype t)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -678,7 +678,7 @@ namespace golang::reflectlite
         return rec::NumOut(gocpp::recv(tt));
     }
 
-    struct Type rec::Out(golang::reflectlite::rtype t, int i)
+    struct Type rec::Out(rtype t, int i)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -704,13 +704,13 @@ namespace golang::reflectlite
     // If i is a nil interface value, TypeOf returns nil.
     struct Type TypeOf(go_any i)
     {
-        auto eface = *(emptyInterface*)(gocpp::unsafe_pointer(& i));
+        auto eface = *(golang::reflectlite::emptyInterface*)(gocpp::unsafe_pointer(& i));
         // Noescape so this doesn't make i to escape. See the comment
         // at Value.typ for why this is safe.
         return toType((abi::Type*)(noescape(gocpp::unsafe_pointer(eface.typ))));
     }
 
-    bool rec::Implements(golang::reflectlite::rtype t, struct Type u)
+    bool rec::Implements(rtype t, struct Type u)
     {
         if(u == nullptr)
         {
@@ -723,7 +723,7 @@ namespace golang::reflectlite
         return implements(rec::common(gocpp::recv(u)), rec::common(gocpp::recv(t)));
     }
 
-    bool rec::AssignableTo(golang::reflectlite::rtype t, struct Type u)
+    bool rec::AssignableTo(rtype t, struct Type u)
     {
         if(u == nullptr)
         {
@@ -734,7 +734,7 @@ namespace golang::reflectlite
         return directlyAssignable(uu, tt) || implements(uu, tt);
     }
 
-    bool rec::Comparable(golang::reflectlite::rtype t)
+    bool rec::Comparable(rtype t)
     {
         return t.Type.Equal != nullptr;
     }
@@ -768,7 +768,7 @@ namespace golang::reflectlite
         // See also ../runtime/iface.go.
         if(rec::Kind(gocpp::recv(V)) == Interface)
         {
-            auto v = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(V));
+            auto v = (interfaceType*)(gocpp::unsafe_pointer(V));
             auto i = 0;
             for(auto j = 0; j < len(v->Methods); j++)
             {
@@ -937,8 +937,8 @@ namespace golang::reflectlite
 
                 case 2:
                 {
-                    auto t = (reflectlite::funcType*)(gocpp::unsafe_pointer(T));
-                    auto v = (reflectlite::funcType*)(gocpp::unsafe_pointer(V));
+                    auto t = (funcType*)(gocpp::unsafe_pointer(T));
+                    auto v = (funcType*)(gocpp::unsafe_pointer(V));
                     if(t->OutCount != v->OutCount || t->InCount != v->InCount)
                     {
                         return false;
@@ -963,8 +963,8 @@ namespace golang::reflectlite
 
                 case 3:
                 {
-                    auto t = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(T));
-                    auto v = (reflectlite::interfaceType*)(gocpp::unsafe_pointer(V));
+                    auto t = (interfaceType*)(gocpp::unsafe_pointer(T));
+                    auto v = (interfaceType*)(gocpp::unsafe_pointer(V));
                     if(len(t->Methods) == 0 && len(v->Methods) == 0)
                     {
                         return true;
@@ -986,8 +986,8 @@ namespace golang::reflectlite
 
                 case 7:
                 {
-                    auto t = (reflectlite::structType*)(gocpp::unsafe_pointer(T));
-                    auto v = (reflectlite::structType*)(gocpp::unsafe_pointer(V));
+                    auto t = (structType*)(gocpp::unsafe_pointer(T));
+                    auto v = (structType*)(gocpp::unsafe_pointer(V));
                     if(len(t->Fields) != len(v->Fields))
                     {
                         return false;

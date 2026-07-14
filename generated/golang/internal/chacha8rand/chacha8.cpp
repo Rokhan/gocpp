@@ -78,7 +78,7 @@ namespace golang::chacha8rand
     // Next is //go:nosplit to allow its use in the runtime
     // with per-m data without holding the per-m lock.
     //go:nosplit
-    std::tuple<uint64_t, bool> rec::Next(golang::chacha8rand::State* s)
+    std::tuple<uint64_t, bool> rec::Next(State* s)
     {
         auto i = s->i;
         if(i >= s->n)
@@ -91,7 +91,7 @@ namespace golang::chacha8rand
     }
 
     // Init seeds the State with the given seed value.
-    void rec::Init(golang::chacha8rand::State* s, gocpp::array<unsigned char, 32> seed)
+    void rec::Init(State* s, gocpp::array<unsigned char, 32> seed)
     {
         rec::Init64(gocpp::recv(s), gocpp::array<uint64_t, 4> {
             leUint64(seed.make_slice(0 * 8)),
@@ -102,7 +102,7 @@ namespace golang::chacha8rand
     }
 
     // Init64 seeds the state with the given seed value.
-    void rec::Init64(golang::chacha8rand::State* s, gocpp::array<uint64_t, 4> seed)
+    void rec::Init64(State* s, gocpp::array<uint64_t, 4> seed)
     {
         s->seed = seed;
         block(gocpp::make_array_ptr(s->seed), gocpp::make_array_ptr(s->buf), 0);
@@ -114,7 +114,7 @@ namespace golang::chacha8rand
     // Refill refills the state with more random values.
     // After a call to Refill, an immediate call to Next will succeed
     // (unless multiple goroutines are incorrectly sharing a state).
-    void rec::Refill(golang::chacha8rand::State* s)
+    void rec::Refill(State* s)
     {
         s->c += ctrInc;
         if(s->c == ctrMax)
@@ -145,7 +145,7 @@ namespace golang::chacha8rand
     // After a call to Reseed, any previously returned random values
     // have been erased from the memory of the state and cannot be
     // recovered.
-    void rec::Reseed(golang::chacha8rand::State* s)
+    void rec::Reseed(State* s)
     {
         gocpp::array<uint64_t, 4> seed = {};
         for(auto [i, gocpp_ignored] : seed)
@@ -169,7 +169,7 @@ namespace golang::chacha8rand
     // so that they will not be linked into the runtime
     // when it uses the State struct, since the runtime
     // does not need these.
-    gocpp::slice<unsigned char> Marshal(struct State* s)
+    gocpp::slice<unsigned char> Marshal(State* s)
     {
         auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 6 * 8);
         copy(data, "chacha8:"_s);
@@ -208,22 +208,22 @@ namespace golang::chacha8rand
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::chacha8rand::errUnmarshalChaCha8*)
+    gocpp::string rec::Error(errUnmarshalChaCha8*)
     {
         return "invalid ChaCha8 encoding"_s;
     }
 
     // Unmarshal unmarshals the state from a byte slice.
-    struct gocpp::error Unmarshal(struct State* s, gocpp::slice<unsigned char> data)
+    struct gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data)
     {
         if(len(data) != 6 * 8 || gocpp::string(data.make_slice(0, 8)) != "chacha8:"_s)
         {
-            return gocpp::error(new errUnmarshalChaCha8{});
+            return gocpp::error(new chacha8rand::errUnmarshalChaCha8{});
         }
         auto used = beUint64(data.make_slice(1 * 8));
         if(used > (ctrMax / ctrInc) * chunk - reseed)
         {
-            return gocpp::error(new errUnmarshalChaCha8{});
+            return gocpp::error(new chacha8rand::errUnmarshalChaCha8{});
         }
         for(auto [i, gocpp_ignored] : s->seed)
         {

@@ -18,7 +18,7 @@ namespace golang::main
 
     namespace rec
     {
-        gocpp::string String(golang::main::IPAddr ip);
+        gocpp::string String(IPAddr ip);
     }
 }
 

@@ -133,13 +133,13 @@ namespace golang::runtime
 
     // Initialize f to allocate objects of the given size,
     // using the allocator to obtain chunks of memory.
-    void rec::init(golang::runtime::fixalloc* f, uintptr_t size, std::function<void (gocpp::unsafe_pointer arg, gocpp::unsafe_pointer p)> first, gocpp::unsafe_pointer arg, golang::runtime::sysMemStat* stat)
+    void rec::init(fixalloc* f, uintptr_t size, std::function<void (gocpp::unsafe_pointer arg, gocpp::unsafe_pointer p)> first, gocpp::unsafe_pointer arg, sysMemStat* stat)
     {
         if(size > _FixAllocChunk)
         {
             go_throw("runtime: fixalloc size too large"_s);
         }
-        size = gocpp::max(size, gocpp::Sizeof<mlink>());
+        size = gocpp::max(size, gocpp::Sizeof<golang::runtime::mlink>());
 
         f->size = size;
         f->first = first;
@@ -154,7 +154,7 @@ namespace golang::runtime
         f->zero = true;
     }
 
-    gocpp::unsafe_pointer rec::alloc(golang::runtime::fixalloc* f)
+    gocpp::unsafe_pointer rec::alloc(fixalloc* f)
     {
         if(f->size == 0)
         {
@@ -190,10 +190,10 @@ namespace golang::runtime
         return v;
     }
 
-    void rec::free(golang::runtime::fixalloc* f, gocpp::unsafe_pointer p)
+    void rec::free(fixalloc* f, gocpp::unsafe_pointer p)
     {
         f->inuse -= f->size;
-        auto v = (mlink*)(p);
+        auto v = (golang::runtime::mlink*)(p);
         v->next = f->list;
         f->list = v;
     }

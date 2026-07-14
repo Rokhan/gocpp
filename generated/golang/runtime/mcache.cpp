@@ -169,9 +169,9 @@ namespace golang::runtime
     // ptr returns the *gclink form of p.
     // The result should be used for accessing fields, not stored
     // in other data structures.
-    struct gclink* rec::ptr(golang::runtime::gclinkptr p)
+    golang::runtime::gclink* rec::ptr(gclinkptr p)
     {
-        return (gclink*)(gocpp::unsafe_pointer(p));
+        return (golang::runtime::gclink*)(gocpp::unsafe_pointer(p));
     }
 
     
@@ -207,14 +207,14 @@ namespace golang::runtime
     }
 
     // dummy mspan that contains no free objects.
-    mspan emptymspan;
-    struct mcache* allocmcache()
+    golang::runtime::mspan emptymspan;
+    golang::runtime::mcache* allocmcache()
     {
-        mcache* c = {};
+        golang::runtime::mcache* c = {};
         systemstack([=]() mutable -> void
         {
             lock(& mheap_.lock);
-            c = (mcache*)(rec::alloc(gocpp::recv(mheap_.cachealloc)));
+            c = (golang::runtime::mcache*)(rec::alloc(gocpp::recv(mheap_.cachealloc)));
             rec::Store(gocpp::recv(c->flushGen), mheap_.sweepgen);
             unlock(& mheap_.lock);
         });
@@ -232,7 +232,7 @@ namespace golang::runtime
     // In some cases there is no way to simply release
     // resources, such as statistics, so donate them to
     // a different mcache (the recipient).
-    void freemcache(struct mcache* c)
+    void freemcache(mcache* c)
     {
         systemstack([=]() mutable -> void
         {
@@ -253,11 +253,11 @@ namespace golang::runtime
     //
     // Returns nil if we're not bootstrapping or we don't have a P. The caller's
     // P must not change, so we must be in a non-preemptible state.
-    struct mcache* getMCache(struct m* mp)
+    golang::runtime::mcache* getMCache(m* mp)
     {
         // Grab the mcache, since that's where stats live.
         auto pp = rec::ptr(gocpp::recv(mp->p));
-        mcache* c = {};
+        golang::runtime::mcache* c = {};
         if(pp == nullptr)
         {
             // We will be called without a P while bootstrapping,
@@ -278,7 +278,7 @@ namespace golang::runtime
     //
     // Must run in a non-preemptible context since otherwise the owner of
     // c could change.
-    void rec::refill(golang::runtime::mcache* c, golang::runtime::spanClass spc)
+    void rec::refill(mcache* c, spanClass spc)
     {
         // Return the current cached span to the central lists.
         auto s = c->alloc[spc];
@@ -354,7 +354,7 @@ namespace golang::runtime
     }
 
     // allocLarge allocates a span for a large object.
-    struct mspan* rec::allocLarge(golang::runtime::mcache* c, uintptr_t size, bool noscan)
+    golang::runtime::mspan* rec::allocLarge(mcache* c, uintptr_t size, bool noscan)
     {
         if(size + _PageSize < size)
         {
@@ -398,7 +398,7 @@ namespace golang::runtime
         return s;
     }
 
-    void rec::releaseAll(golang::runtime::mcache* c)
+    void rec::releaseAll(mcache* c)
     {
         // Take this opportunity to flush scanAlloc.
         auto scanAlloc = int64_t(c->scanAlloc);
@@ -454,7 +454,7 @@ namespace golang::runtime
     // prepareForSweep flushes c if the system has entered a new sweep phase
     // since c was populated. This must happen between the sweep phase
     // starting and the first allocation from c.
-    void rec::prepareForSweep(golang::runtime::mcache* c)
+    void rec::prepareForSweep(mcache* c)
     {
         // Alternatively, instead of making sure we do this on every P
         // between starting the world and allocating on that P, we

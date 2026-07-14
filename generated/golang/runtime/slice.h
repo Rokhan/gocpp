@@ -60,11 +60,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notInHeapSlice& value);
-    gocpp::unsafe_pointer makeslicecopy(golang::runtime::_type* et, int tolen, int fromlen, gocpp::unsafe_pointer from);
-    gocpp::unsafe_pointer makeslice(golang::runtime::_type* et, int len, int cap);
-    gocpp::unsafe_pointer makeslice64(golang::runtime::_type* et, int64_t len64, int64_t cap64);
-    struct slice growslice(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, golang::runtime::_type* et);
-    struct slice reflect_growslice(golang::runtime::_type* et, struct slice old, int num);
+    gocpp::unsafe_pointer makeslicecopy(_type* et, int tolen, int fromlen, gocpp::unsafe_pointer from);
+    gocpp::unsafe_pointer makeslice(_type* et, int len, int cap);
+    gocpp::unsafe_pointer makeslice64(_type* et, int64_t len64, int64_t cap64);
+    golang::runtime::slice growslice(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et);
+    golang::runtime::slice reflect_growslice(_type* et, golang::runtime::slice old, int num);
 
     namespace rec
     {

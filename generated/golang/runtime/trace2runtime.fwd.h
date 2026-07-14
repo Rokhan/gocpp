@@ -9,24 +9,24 @@ namespace golang::runtime
     using traceBlockReason = uint8_t;
     using traceGoStopReason = uint8_t;
     const bool debugTraceReentrancy = false;
-    const runtime::traceBlockReason traceBlockGeneric = 0;
-    const runtime::traceBlockReason traceBlockForever = 1;
-    const runtime::traceBlockReason traceBlockNet = 2;
-    const runtime::traceBlockReason traceBlockSelect = 3;
-    const runtime::traceBlockReason traceBlockCondWait = 4;
-    const runtime::traceBlockReason traceBlockSync = 5;
-    const runtime::traceBlockReason traceBlockChanSend = 6;
-    const runtime::traceBlockReason traceBlockChanRecv = 7;
-    const runtime::traceBlockReason traceBlockGCMarkAssist = 8;
-    const runtime::traceBlockReason traceBlockGCSweep = 9;
-    const runtime::traceBlockReason traceBlockSystemGoroutine = 10;
-    const runtime::traceBlockReason traceBlockPreempted = 11;
-    const runtime::traceBlockReason traceBlockDebugCall = 12;
-    const runtime::traceBlockReason traceBlockUntilGCEnds = 13;
-    const runtime::traceBlockReason traceBlockSleep = 14;
-    const runtime::traceGoStopReason traceGoStopGeneric = 0;
-    const runtime::traceGoStopReason traceGoStopGoSched = 1;
-    const runtime::traceGoStopReason traceGoStopPreempted = 2;
+    const golang::runtime::traceBlockReason traceBlockGeneric = 0;
+    const golang::runtime::traceBlockReason traceBlockForever = 1;
+    const golang::runtime::traceBlockReason traceBlockNet = 2;
+    const golang::runtime::traceBlockReason traceBlockSelect = 3;
+    const golang::runtime::traceBlockReason traceBlockCondWait = 4;
+    const golang::runtime::traceBlockReason traceBlockSync = 5;
+    const golang::runtime::traceBlockReason traceBlockChanSend = 6;
+    const golang::runtime::traceBlockReason traceBlockChanRecv = 7;
+    const golang::runtime::traceBlockReason traceBlockGCMarkAssist = 8;
+    const golang::runtime::traceBlockReason traceBlockGCSweep = 9;
+    const golang::runtime::traceBlockReason traceBlockSystemGoroutine = 10;
+    const golang::runtime::traceBlockReason traceBlockPreempted = 11;
+    const golang::runtime::traceBlockReason traceBlockDebugCall = 12;
+    const golang::runtime::traceBlockReason traceBlockUntilGCEnds = 13;
+    const golang::runtime::traceBlockReason traceBlockSleep = 14;
+    const golang::runtime::traceGoStopReason traceGoStopGeneric = 0;
+    const golang::runtime::traceGoStopReason traceGoStopGoSched = 1;
+    const golang::runtime::traceGoStopReason traceGoStopPreempted = 2;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"

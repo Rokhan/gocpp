@@ -117,8 +117,8 @@ namespace golang::windows
 
     namespace rec
     {
-        gocpp::string Path(golang::windows::SymbolicLinkReparseBuffer* rb);
-        gocpp::string Path(golang::windows::MountPointReparseBuffer* rb);
+        gocpp::string Path(SymbolicLinkReparseBuffer* rb);
+        gocpp::string Path(MountPointReparseBuffer* rb);
     }
 }
 

@@ -40,7 +40,7 @@ namespace golang::runtime
     //
     // The stack does not keep GC-visible pointers to nodes, so the caller
     // must ensure the nodes are allocated outside the Go heap.
-    void rec::push(golang::runtime::lfstack* head, struct lfnode* node)
+    void rec::push(lfstack* head, lfnode* node)
     {
         node->pushcnt++;
         auto go_new = lfstackPack(node, node->pushcnt);
@@ -60,7 +60,7 @@ namespace golang::runtime
         }
     }
 
-    gocpp::unsafe_pointer rec::pop(golang::runtime::lfstack* head)
+    gocpp::unsafe_pointer rec::pop(lfstack* head)
     {
         for(; ; )
         {
@@ -78,14 +78,14 @@ namespace golang::runtime
         }
     }
 
-    bool rec::empty(golang::runtime::lfstack* head)
+    bool rec::empty(lfstack* head)
     {
         return atomic::Load64((uint64_t*)(head)) == 0;
     }
 
     // lfnodeValidate panics if node is not a valid address for use with
     // lfstack.push. This only needs to be called when node is allocated.
-    void lfnodeValidate(struct lfnode* node)
+    void lfnodeValidate(lfnode* node)
     {
         if(auto [base, gocpp_id_0, gocpp_id_1] = findObject(uintptr_t(gocpp::unsafe_pointer(node)), 0, 0); base != 0)
         {
@@ -99,14 +99,14 @@ namespace golang::runtime
         }
     }
 
-    uint64_t lfstackPack(struct lfnode* node, uintptr_t cnt)
+    uint64_t lfstackPack(lfnode* node, uintptr_t cnt)
     {
         return uint64_t(taggedPointerPack(gocpp::unsafe_pointer(node), cnt));
     }
 
-    struct lfnode* lfstackUnpack(uint64_t val)
+    golang::runtime::lfnode* lfstackUnpack(uint64_t val)
     {
-        return (lfnode*)(rec::pointer(gocpp::recv(taggedPointer(val))));
+        return (golang::runtime::lfnode*)(rec::pointer(gocpp::recv(taggedPointer(val))));
     }
 
 }

@@ -123,7 +123,7 @@ namespace golang::runtime
     struct gocpp_id_0
     {
         stackpoolItem item{};
-        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1{};
+        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<golang::runtime::stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1{};
 
         using isGoStruct = void;
 
@@ -276,7 +276,7 @@ namespace golang::runtime
 
     // Allocates a stack from the free pool. Must be called with
     // stackpool[order].item.mu held.
-    runtime::gclinkptr stackpoolalloc(uint8_t order)
+    golang::runtime::gclinkptr stackpoolalloc(uint8_t order)
     {
         auto list = & stackpool[order].item.span;
         auto s = list->first;
@@ -323,7 +323,7 @@ namespace golang::runtime
     }
 
     // Adds stack x to the free pool. Must be called with stackpool[order].item.mu held.
-    void stackpoolfree(golang::runtime::gclinkptr x, uint8_t order)
+    void stackpoolfree(gclinkptr x, uint8_t order)
     {
         auto s = spanOfUnchecked(uintptr_t(x));
         if(rec::get(gocpp::recv(s->state)) != mSpanManual)
@@ -363,7 +363,7 @@ namespace golang::runtime
     // The pool is required to prevent unlimited growth of per-thread caches.
     //
     //go:systemstack
-    void stackcacherefill(struct mcache* c, uint8_t order)
+    void stackcacherefill(mcache* c, uint8_t order)
     {
         if(stackDebug >= 1)
         {
@@ -372,7 +372,7 @@ namespace golang::runtime
 
         // Grab some stacks from the global cache.
         // Grab half of the allowed capacity (to prevent thrashing).
-        runtime::gclinkptr list = {};
+        golang::runtime::gclinkptr list = {};
         uintptr_t size = {};
         lock(& stackpool[order].item.mu);
         for(; size < _StackCacheSize / 2; )
@@ -388,7 +388,7 @@ namespace golang::runtime
     }
 
     //go:systemstack
-    void stackcacherelease(struct mcache* c, uint8_t order)
+    void stackcacherelease(mcache* c, uint8_t order)
     {
         if(stackDebug >= 1)
         {
@@ -410,7 +410,7 @@ namespace golang::runtime
     }
 
     //go:systemstack
-    void stackcache_clear(struct mcache* c)
+    void stackcache_clear(mcache* c)
     {
         if(stackDebug >= 1)
         {
@@ -438,7 +438,7 @@ namespace golang::runtime
     // resources and must not split the stack.
     //
     //go:systemstack
-    struct stack stackalloc(uint32_t n)
+    golang::runtime::stack stackalloc(uint32_t n)
     {
         // Stackalloc must be called on scheduler stack, so that we
         // never try to grow the stack during the code that stackalloc runs.
@@ -465,7 +465,7 @@ namespace golang::runtime
             {
                 go_throw("out of memory (stackalloc)"_s);
             }
-            return stack {uintptr_t(v), uintptr_t(v) + uintptr_t(n)};
+            return golang::runtime::stack {uintptr_t(v), uintptr_t(v) + uintptr_t(n)};
         }
 
         // Small stacks are allocated with a fixed-size free-list allocator.
@@ -481,7 +481,7 @@ namespace golang::runtime
                 order++;
                 n2 >>= 1;
             }
-            runtime::gclinkptr x = {};
+            golang::runtime::gclinkptr x = {};
             if(stackNoCache != 0 || thisg->m->p == 0 || thisg->m->preemptoff != ""_s)
             {
                 // thisg.m.p == 0 can happen in the guts of exitsyscall
@@ -508,7 +508,7 @@ namespace golang::runtime
         }
         else
         {
-            mspan* s = {};
+            golang::runtime::mspan* s = {};
             auto npage = uintptr_t(n) >> _PageShift;
             auto log2npage = stacklog2(npage);
 
@@ -553,7 +553,7 @@ namespace golang::runtime
         {
             print("  allocated "_s, v, "\n"_s);
         }
-        return stack {uintptr_t(v), uintptr_t(v) + uintptr_t(n)};
+        return golang::runtime::stack {uintptr_t(v), uintptr_t(v) + uintptr_t(n)};
     }
 
     // stackfree frees an n byte stack allocation at stk.
@@ -562,7 +562,7 @@ namespace golang::runtime
     // resources and must not split the stack.
     //
     //go:systemstack
-    void stackfree(struct stack stk)
+    void stackfree(golang::runtime::stack stk)
     {
         auto gp = getg();
         auto v = gocpp::unsafe_pointer(stk.lo);
@@ -702,7 +702,7 @@ namespace golang::runtime
 
     // adjustpointer checks whether *vpp is in the old stack described by adjinfo.
     // If so, it rewrites *vpp to point into the new stack.
-    void adjustpointer(struct adjustinfo* adjinfo, gocpp::unsafe_pointer vpp)
+    void adjustpointer(adjustinfo* adjinfo, gocpp::unsafe_pointer vpp)
     {
         auto pp = (uintptr_t*)(vpp);
         auto p = *pp;
@@ -758,7 +758,7 @@ namespace golang::runtime
     // ptrbit is less efficient than iterating directly over bitvector bits,
     // and should only be used in non-performance-critical code.
     // See adjustpointers for an example of a high-efficiency walk of a bitvector.
-    uint8_t rec::ptrbit(golang::runtime::bitvector* bv, uintptr_t i)
+    uint8_t rec::ptrbit(bitvector* bv, uintptr_t i)
     {
         auto b = *(addb(bv->bytedata, i / 8));
         return (b >> (i % 8)) & 1;
@@ -766,7 +766,7 @@ namespace golang::runtime
 
     // bv describes the memory starting at address scanp.
     // Adjust any pointers contained therein.
-    void adjustpointers(gocpp::unsafe_pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f)
+    void adjustpointers(gocpp::unsafe_pointer scanp, bitvector* bv, adjustinfo* adjinfo, golang::runtime::funcInfo f)
     {
         auto minp = adjinfo->old.lo;
         auto maxp = adjinfo->old.hi;
@@ -827,7 +827,7 @@ namespace golang::runtime
     }
 
     // Note: the argument/return area is adjusted by the callee.
-    void adjustframe(struct stkframe* frame, struct adjustinfo* adjinfo)
+    void adjustframe(stkframe* frame, adjustinfo* adjinfo)
     {
         if(frame->continpc == 0)
         {
@@ -882,7 +882,7 @@ namespace golang::runtime
             {
                 print("      args\n"_s);
             }
-            adjustpointers(gocpp::unsafe_pointer(frame->argp), & args, adjinfo, funcInfo {});
+            adjustpointers(gocpp::unsafe_pointer(frame->argp), & args, adjinfo, golang::runtime::funcInfo {});
         }
 
         // Adjust pointers in all stack objects (whether they are live or not).
@@ -910,7 +910,7 @@ namespace golang::runtime
                 }
                 auto ptrdata = rec::ptrdata(gocpp::recv(obj));
                 auto gcdata = rec::gcdata(gocpp::recv(obj));
-                mspan* s = {};
+                golang::runtime::mspan* s = {};
                 if(rec::useGCProg(gocpp::recv(obj)))
                 {
                     // See comments in mgcmark.go:scanstack
@@ -932,7 +932,7 @@ namespace golang::runtime
         }
     }
 
-    void adjustctxt(struct g* gp, struct adjustinfo* adjinfo)
+    void adjustctxt(g* gp, adjustinfo* adjinfo)
     {
         adjustpointer(adjinfo, gocpp::unsafe_pointer(& gp->sched.ctxt));
         if(! framepointer_enabled)
@@ -964,7 +964,7 @@ namespace golang::runtime
         }
     }
 
-    void adjustdefers(struct g* gp, struct adjustinfo* adjinfo)
+    void adjustdefers(g* gp, adjustinfo* adjinfo)
     {
         // Adjust pointers in the Defer structs.
         // We need to do this first because we need to adjust the
@@ -978,14 +978,14 @@ namespace golang::runtime
         }
     }
 
-    void adjustpanics(struct g* gp, struct adjustinfo* adjinfo)
+    void adjustpanics(g* gp, adjustinfo* adjinfo)
     {
         // Panics are on stack and already adjusted.
         // Update pointer to head of list in G.
         adjustpointer(adjinfo, gocpp::unsafe_pointer(& gp->_panic));
     }
 
-    void adjustsudogs(struct g* gp, struct adjustinfo* adjinfo)
+    void adjustsudogs(g* gp, adjustinfo* adjinfo)
     {
         // the data elements pointed to by a SudoG structure
         // might be in the stack.
@@ -995,7 +995,7 @@ namespace golang::runtime
         }
     }
 
-    void fillstack(struct stack stk, unsigned char b)
+    void fillstack(golang::runtime::stack stk, unsigned char b)
     {
         for(auto p = stk.lo; p < stk.hi; p++)
         {
@@ -1003,7 +1003,7 @@ namespace golang::runtime
         }
     }
 
-    uintptr_t findsghi(struct g* gp, struct stack stk)
+    uintptr_t findsghi(g* gp, golang::runtime::stack stk)
     {
         uintptr_t sghi = {};
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
@@ -1020,7 +1020,7 @@ namespace golang::runtime
     // syncadjustsudogs adjusts gp's sudogs and copies the part of gp's
     // stack they refer to while synchronizing with concurrent channel
     // operations. It returns the number of bytes of stack copied.
-    uintptr_t syncadjustsudogs(struct g* gp, uintptr_t used, struct adjustinfo* adjinfo)
+    uintptr_t syncadjustsudogs(g* gp, uintptr_t used, adjustinfo* adjinfo)
     {
         if(gp->waiting == nullptr)
         {
@@ -1028,7 +1028,7 @@ namespace golang::runtime
         }
 
         // Lock channels to prevent concurrent send/receive.
-        hchan* lastc = {};
+        golang::runtime::hchan* lastc = {};
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
         {
             if(sg->c != lastc)
@@ -1078,7 +1078,7 @@ namespace golang::runtime
 
     // Copies gp's stack to a new stack of a different size.
     // Caller must have changed gp status to Gcopystack.
-    void copystack(struct g* gp, uintptr_t newsize)
+    void copystack(g* gp, uintptr_t newsize)
     {
         if(gp->syscallsp != 0)
         {
@@ -1108,7 +1108,7 @@ namespace golang::runtime
         }
 
         // Compute adjustment.
-        adjustinfo adjinfo = {};
+        golang::runtime::adjustinfo adjinfo = {};
         adjinfo.old = old;
         adjinfo.delta = go_new.hi - old.hi;
 
@@ -1164,7 +1164,7 @@ namespace golang::runtime
         gp->stktopsp += adjinfo.delta;
 
         // Adjust pointers in the new stack.
-        unwinder u = {};
+        golang::runtime::unwinder u = {};
         for(rec::init(gocpp::recv(u), gp, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
             adjustframe(& u.frame, & adjinfo);
@@ -1390,7 +1390,7 @@ namespace golang::runtime
 
     // adjust Gobuf as if it executed a call to fn
     // and then stopped before the first instruction in fn.
-    void gostartcallfn(struct gobuf* gobuf, struct funcval* fv)
+    void gostartcallfn(gobuf* gobuf, funcval* fv)
     {
         gocpp::unsafe_pointer fn = {};
         if(fv != nullptr)
@@ -1407,7 +1407,7 @@ namespace golang::runtime
     // isShrinkStackSafe returns whether it's safe to attempt to shrink
     // gp's stack. Shrinking the stack is only safe when we have precise
     // pointer maps for all frames on the stack.
-    bool isShrinkStackSafe(struct g* gp)
+    bool isShrinkStackSafe(g* gp)
     {
         // We can't copy the stack if we're in a syscall.
         // The syscall might have pointers into the stack and
@@ -1426,7 +1426,7 @@ namespace golang::runtime
     //
     // gp must be stopped and we must own its stack. It may be in
     // _Grunning, but only if this is our own user G.
-    void shrinkstack(struct g* gp)
+    void shrinkstack(g* gp)
     {
         if(gp->stack.lo == 0)
         {
@@ -1573,12 +1573,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool rec::useGCProg(golang::runtime::stackObjectRecord* r)
+    bool rec::useGCProg(stackObjectRecord* r)
     {
         return r->_ptrdata < 0;
     }
 
-    uintptr_t rec::ptrdata(golang::runtime::stackObjectRecord* r)
+    uintptr_t rec::ptrdata(stackObjectRecord* r)
     {
         auto x = r->_ptrdata;
         if(x < 0)
@@ -1589,10 +1589,10 @@ namespace golang::runtime
     }
 
     // gcdata returns pointer map or GC prog of the type.
-    unsigned char* rec::gcdata(golang::runtime::stackObjectRecord* r)
+    unsigned char* rec::gcdata(stackObjectRecord* r)
     {
         auto ptr = uintptr_t(gocpp::unsafe_pointer(r));
-        moduledata* mod = {};
+        golang::runtime::moduledata* mod = {};
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
         {
             if(datap->gofunc <= ptr && ptr < datap->end)

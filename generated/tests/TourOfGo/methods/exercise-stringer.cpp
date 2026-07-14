@@ -19,14 +19,14 @@ namespace golang::main
     {
     }
 
-    gocpp::string rec::String(golang::main::IPAddr ip)
+    gocpp::string rec::String(IPAddr ip)
     {
         return mocklib::Sprintf("%v.%v.%v.%v"_s, ip[0], ip[1], ip[2], ip[3]);
     }
 
     void main()
     {
-        auto hosts = gocpp::map<gocpp::string, main::IPAddr> {
+        auto hosts = gocpp::map<gocpp::string, IPAddr> {
             { "loopback"_s, {127, 0, 0, 1} },
             { "googleDNS"_s, {8, 8, 8, 8} }
         };

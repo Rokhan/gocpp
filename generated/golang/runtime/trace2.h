@@ -89,8 +89,8 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct g* traceReader();
-    struct g* traceReaderAvailable();
+    golang::runtime::g* traceReader();
+    golang::runtime::g* traceReaderAvailable();
     struct wakeableSleep
     {
         timer* timer{};
@@ -110,8 +110,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct wakeableSleep& value);
-    extern traceAdvancerState traceAdvancer;
-    struct wakeableSleep* newWakeableSleep();
+    extern golang::runtime::traceAdvancerState traceAdvancer;
+    golang::runtime::wakeableSleep* newWakeableSleep();
 }
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/mgc.h"
@@ -128,11 +128,11 @@ namespace golang::runtime
 
     namespace rec
     {
-        void start(golang::runtime::traceAdvancerState* s);
-        void stop(golang::runtime::traceAdvancerState* s);
-        void sleep(golang::runtime::wakeableSleep* s, int64_t ns);
-        void wake(golang::runtime::wakeableSleep* s);
-        void close(golang::runtime::wakeableSleep* s);
+        void start(traceAdvancerState* s);
+        void stop(traceAdvancerState* s);
+        void sleep(wakeableSleep* s, int64_t ns);
+        void wake(wakeableSleep* s);
+        void close(wakeableSleep* s);
     }
 }
 

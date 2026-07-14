@@ -60,7 +60,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Read(golang::main::rot13Reader r13, gocpp::slice<unsigned char> buf)
+    std::tuple<int, struct gocpp::error> rec::Read(rot13Reader r13, gocpp::slice<unsigned char> buf)
     {
         auto [n, err] = rec::Read(gocpp::recv(r13.r), buf);
         if(err != nullptr)
@@ -79,7 +79,7 @@ namespace golang::main
     void main()
     {
         auto s = strings::NewReader("Lbh penpxrq gur pbqr!"_s);
-        auto r = rot13Reader {s};
+        auto r = golang::main::rot13Reader {s};
         io::Copy(os::Stdout, & r);
     }
 

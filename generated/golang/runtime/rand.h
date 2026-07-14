@@ -34,7 +34,7 @@ namespace golang::runtime
 namespace golang::runtime
 {
     extern gocpp_id_0 globalRand;
-    void mrandinit(struct m* mp);
+    void mrandinit(m* mp);
 
     namespace rec
     {

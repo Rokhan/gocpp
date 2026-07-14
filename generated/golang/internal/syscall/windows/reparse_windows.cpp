@@ -138,7 +138,7 @@ namespace golang::windows
     }
 
     // Path returns path stored in rb.
-    gocpp::string rec::Path(golang::windows::SymbolicLinkReparseBuffer* rb)
+    gocpp::string rec::Path(SymbolicLinkReparseBuffer* rb)
     {
         auto n1 = rb->SubstituteNameOffset / 2;
         auto n2 = (rb->SubstituteNameOffset + rb->SubstituteNameLength) / 2;
@@ -187,7 +187,7 @@ namespace golang::windows
     }
 
     // Path returns path stored in rb.
-    gocpp::string rec::Path(golang::windows::MountPointReparseBuffer* rb)
+    gocpp::string rec::Path(MountPointReparseBuffer* rb)
     {
         auto n1 = rb->SubstituteNameOffset / 2;
         auto n2 = (rb->SubstituteNameOffset + rb->SubstituteNameLength) / 2;

@@ -35,7 +35,7 @@ namespace golang::runtime
     int fpTracebackPCs(gocpp::unsafe_pointer fp, gocpp::slice<uintptr_t> pcBuf);
     gocpp::slice<uintptr_t> fpunwindExpand(gocpp::slice<uintptr_t> pcBuf);
     uintptr_t startPCForTrace(uintptr_t pc);
-    gocpp::slice<traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs);
+    gocpp::slice<golang::runtime::traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs);
 }
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/symtab.h"
@@ -43,7 +43,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    uint64_t traceStack(int skip, struct m* mp, uintptr_t gen);
+    uint64_t traceStack(int skip, m* mp, uintptr_t gen);
     struct traceStackTable
     {
         traceMap tab{};
@@ -60,12 +60,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceStackTable& value);
-    struct traceFrame makeTraceFrame(uintptr_t gen, struct Frame f);
+    golang::runtime::traceFrame makeTraceFrame(uintptr_t gen, Frame f);
 
     namespace rec
     {
-        uint64_t put(golang::runtime::traceStackTable* t, gocpp::slice<uintptr_t> pcs);
-        void dump(golang::runtime::traceStackTable* t, uintptr_t gen);
+        uint64_t put(traceStackTable* t, gocpp::slice<uintptr_t> pcs);
+        void dump(traceStackTable* t, uintptr_t gen);
     }
 }
 

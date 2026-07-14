@@ -134,7 +134,7 @@ namespace golang::sync
     // dequeueNil is used in poolDequeue to represent interface{}(nil).
     // Since we use nil to represent empty slots, we need a sentinel value
     // to represent nil.
-    std::tuple<uint32_t, uint32_t> rec::unpack(golang::sync::poolDequeue* d, uint64_t ptrs)
+    std::tuple<uint32_t, uint32_t> rec::unpack(poolDequeue* d, uint64_t ptrs)
     {
         uint32_t head;
         uint32_t tail;
@@ -144,7 +144,7 @@ namespace golang::sync
         return {head, tail};
     }
 
-    uint64_t rec::pack(golang::sync::poolDequeue* d, uint32_t head, uint32_t tail)
+    uint64_t rec::pack(poolDequeue* d, uint32_t head, uint32_t tail)
     {
         auto mask = (1 << dequeueBits) - 1;
         return (uint64_t(head) << dequeueBits) | uint64_t(tail & mask);
@@ -152,7 +152,7 @@ namespace golang::sync
 
     // pushHead adds val at the head of the queue. It returns false if the
     // queue is full. It must only be called by a single producer.
-    bool rec::pushHead(golang::sync::poolDequeue* d, go_any val)
+    bool rec::pushHead(poolDequeue* d, go_any val)
     {
         auto ptrs = rec::Load(gocpp::recv(d->headTail));
         auto [head, tail] = rec::unpack(gocpp::recv(d), ptrs);
@@ -188,9 +188,9 @@ namespace golang::sync
     // popHead removes and returns the element at the head of the queue.
     // It returns false if the queue is empty. It must only be called by a
     // single producer.
-    std::tuple<go_any, bool> rec::popHead(golang::sync::poolDequeue* d)
+    std::tuple<go_any, bool> rec::popHead(poolDequeue* d)
     {
-        eface* slot = {};
+        golang::sync::eface* slot = {};
         for(; ; )
         {
             auto ptrs = rec::Load(gocpp::recv(d->headTail));
@@ -221,16 +221,16 @@ namespace golang::sync
         }
         // Zero the slot. Unlike popTail, this isn't racing with
         // pushHead, so we don't need to be careful here.
-        *slot = eface {};
+        *slot = golang::sync::eface {};
         return {val, true};
     }
 
     // popTail removes and returns the element at the tail of the queue.
     // It returns false if the queue is empty. It may be called by any
     // number of consumers.
-    std::tuple<go_any, bool> rec::popTail(golang::sync::poolDequeue* d)
+    std::tuple<go_any, bool> rec::popTail(poolDequeue* d)
     {
-        eface* slot = {};
+        golang::sync::eface* slot = {};
         for(; ; )
         {
             auto ptrs = rec::Load(gocpp::recv(d->headTail));
@@ -347,17 +347,17 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    void storePoolChainElt(struct poolChainElt** pp, struct poolChainElt* v)
+    void storePoolChainElt(poolChainElt** pp, poolChainElt* v)
     {
         atomic::StorePointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp)), gocpp::unsafe_pointer(v));
     }
 
-    struct poolChainElt* loadPoolChainElt(struct poolChainElt** pp)
+    golang::sync::poolChainElt* loadPoolChainElt(poolChainElt** pp)
     {
-        return (poolChainElt*)(atomic::LoadPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp))));
+        return (golang::sync::poolChainElt*)(atomic::LoadPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp))));
     }
 
-    void rec::pushHead(golang::sync::poolChain* c, go_any val)
+    void rec::pushHead(poolChain* c, go_any val)
     {
         auto d = c->head;
         if(d == nullptr)
@@ -366,7 +366,7 @@ namespace golang::sync
             // Must be a power of 2
             auto initSize = 8;
             d = new poolChainElt{};
-            d->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), initSize);
+            d->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<golang::sync::eface>>(), initSize);
             c->head = d;
             storePoolChainElt(& c->tail, d);
         }
@@ -385,16 +385,16 @@ namespace golang::sync
             newSize = dequeueLimit;
         }
 
-        auto d2 = gocpp::InitPtr<poolChainElt>([=](auto& x) {
+        auto d2 = gocpp::InitPtr<golang::sync::poolChainElt>([=](auto& x) {
             x.prev = d;
         });
-        d2->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), newSize);
+        d2->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<golang::sync::eface>>(), newSize);
         c->head = d2;
         storePoolChainElt(& d->next, d2);
         rec::pushHead(gocpp::recv(d2), val);
     }
 
-    std::tuple<go_any, bool> rec::popHead(golang::sync::poolChain* c)
+    std::tuple<go_any, bool> rec::popHead(poolChain* c)
     {
         auto d = c->head;
         for(; d != nullptr; )
@@ -410,7 +410,7 @@ namespace golang::sync
         return {nullptr, false};
     }
 
-    std::tuple<go_any, bool> rec::popTail(golang::sync::poolChain* c)
+    std::tuple<go_any, bool> rec::popTail(poolChain* c)
     {
         auto d = loadPoolChainElt(& c->tail);
         if(d == nullptr)

@@ -90,7 +90,7 @@ namespace golang::reflect
     //
     // The Examples section of the documentation includes an illustration
     // of how to use MakeFunc to build a swap function for different types.
-    struct Value MakeFunc(struct Type typ, std::function<gocpp::slice<Value> (gocpp::slice<Value> args)> fn)
+    golang::reflect::Value MakeFunc(struct Type typ, std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> args)> fn)
     {
         if(rec::Kind(gocpp::recv(typ)) != Func)
         {
@@ -98,15 +98,15 @@ namespace golang::reflect
         }
 
         auto t = rec::common(gocpp::recv(typ));
-        auto ftyp = (reflect::funcType*)(gocpp::unsafe_pointer(t));
+        auto ftyp = (golang::reflect::funcType*)(gocpp::unsafe_pointer(t));
 
         auto code = abi::FuncPCABI0(makeFuncStub);
 
         // makeFuncImpl contains a stack map for use by the runtime
         auto [gocpp_id_0, gocpp_id_1, abid] = funcLayout(ftyp, nullptr);
 
-        auto impl = gocpp::InitPtr<makeFuncImpl>([=](auto& x) {
-            x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([=](auto& x) {
+        auto impl = gocpp::InitPtr<golang::reflect::makeFuncImpl>([=](auto& x) {
+            x.makeFuncCtxt = gocpp::Init<golang::reflect::makeFuncCtxt>([=](auto& x) {
                 x.fn = code;
                 x.stack = abid.stackPtrs;
                 x.argLen = abid.stackCallArgsSize;
@@ -116,7 +116,7 @@ namespace golang::reflect
             x.fn = fn;
         });
 
-        return Value {t, gocpp::unsafe_pointer(impl), flag(Func)};
+        return golang::reflect::Value {t, gocpp::unsafe_pointer(impl), flag(Func)};
     }
 
     // makeFuncStub is an assembly function that is the code half of
@@ -172,7 +172,7 @@ namespace golang::reflect
     // semantically equivalent to the input as far as the user of package
     // reflect can tell, but the true func representation can be handled
     // by code like Convert and Interface and Assign.
-    struct Value makeMethodValue(gocpp::string op, struct Value v)
+    golang::reflect::Value makeMethodValue(gocpp::string op, golang::reflect::Value v)
     {
         if(v.flag & flagMethod == 0)
         {
@@ -182,17 +182,17 @@ namespace golang::reflect
         // Ignoring the flagMethod bit, v describes the receiver, not the method type.
         auto fl = v.flag & (flagRO | flagAddr | flagIndir);
         fl |= flag(rec::Kind(gocpp::recv(rec::typ(gocpp::recv(v)))));
-        auto rcvr = Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
+        auto rcvr = golang::reflect::Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
 
         // v.Type returns the actual type of the method value.
-        auto ftyp = (reflect::funcType*)(gocpp::unsafe_pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
+        auto ftyp = (golang::reflect::funcType*)(gocpp::unsafe_pointer(gocpp::getValue<golang::reflect::rtype*>(rec::Type(gocpp::recv(v)))));
 
         auto code = methodValueCallCodePtr();
 
         // methodValue contains a stack map for use by the runtime
         auto [gocpp_id_2, gocpp_id_3, abid] = funcLayout(ftyp, nullptr);
-        auto fv = gocpp::InitPtr<methodValue>([=](auto& x) {
-            x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([=](auto& x) {
+        auto fv = gocpp::InitPtr<golang::reflect::methodValue>([=](auto& x) {
+            x.makeFuncCtxt = gocpp::Init<golang::reflect::makeFuncCtxt>([=](auto& x) {
                 x.fn = code;
                 x.stack = abid.stackPtrs;
                 x.argLen = abid.stackCallArgsSize;
@@ -207,7 +207,7 @@ namespace golang::reflect
         // but we want Interface() and other operations to fail early.
         methodReceiver(op, fv->rcvr, fv->method);
 
-        return Value {rec::Common(gocpp::recv(ftyp)), gocpp::unsafe_pointer(fv), v.flag & flagRO | flag(Func)};
+        return golang::reflect::Value {rec::Common(gocpp::recv(ftyp)), gocpp::unsafe_pointer(fv), v.flag & flagRO | flag(Func)};
     }
 
     uintptr_t methodValueCallCodePtr()
@@ -274,7 +274,7 @@ namespace golang::reflect
     // memory.
     //
     //go:nosplit
-    void moveMakeFuncArgPtrs(struct makeFuncCtxt* ctxt, abi::RegArgs* args)
+    void moveMakeFuncArgPtrs(makeFuncCtxt* ctxt, abi::RegArgs* args)
     {
         for(auto [i, arg] : args->Ints)
         {

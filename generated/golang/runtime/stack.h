@@ -92,16 +92,16 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct stackpoolItem& value);
     extern gocpp_id_1 stackLarge;
-    runtime::gclinkptr stackpoolalloc(uint8_t order);
-    void stackpoolfree(golang::runtime::gclinkptr x, uint8_t order);
-    void stackcacherefill(struct mcache* c, uint8_t order);
-    void stackcacherelease(struct mcache* c, uint8_t order);
-    void stackcache_clear(struct mcache* c);
-    struct stack stackalloc(uint32_t n);
-    void stackfree(struct stack stk);
+    golang::runtime::gclinkptr stackpoolalloc(uint8_t order);
+    void stackpoolfree(gclinkptr x, uint8_t order);
+    void stackcacherefill(mcache* c, uint8_t order);
+    void stackcacherelease(mcache* c, uint8_t order);
+    void stackcache_clear(mcache* c);
+    golang::runtime::stack stackalloc(uint32_t n);
+    void stackfree(golang::runtime::stack stk);
     struct adjustinfo
     {
-        stack old{};
+        golang::runtime::stack old{};
         uintptr_t delta{}; // ptr distance from old to new stack (newbase - oldbase)
         // sghi is the highest sudog.elem on the stack.
         uintptr_t sghi{};
@@ -118,18 +118,18 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct adjustinfo& value);
-    void fillstack(struct stack stk, unsigned char b);
-    uintptr_t findsghi(struct g* gp, struct stack stk);
-    void copystack(struct g* gp, uintptr_t newsize);
-    void gostartcallfn(struct gobuf* gobuf, struct funcval* fv);
-    bool isShrinkStackSafe(struct g* gp);
-    void shrinkstack(struct g* gp);
-    void adjustpointer(struct adjustinfo* adjinfo, gocpp::unsafe_pointer vpp);
-    void adjustctxt(struct g* gp, struct adjustinfo* adjinfo);
-    void adjustdefers(struct g* gp, struct adjustinfo* adjinfo);
-    void adjustpanics(struct g* gp, struct adjustinfo* adjinfo);
-    void adjustsudogs(struct g* gp, struct adjustinfo* adjinfo);
-    uintptr_t syncadjustsudogs(struct g* gp, uintptr_t used, struct adjustinfo* adjinfo);
+    void fillstack(golang::runtime::stack stk, unsigned char b);
+    uintptr_t findsghi(g* gp, golang::runtime::stack stk);
+    void copystack(g* gp, uintptr_t newsize);
+    void gostartcallfn(gobuf* gobuf, funcval* fv);
+    bool isShrinkStackSafe(g* gp);
+    void shrinkstack(g* gp);
+    void adjustpointer(adjustinfo* adjinfo, gocpp::unsafe_pointer vpp);
+    void adjustctxt(g* gp, adjustinfo* adjinfo);
+    void adjustdefers(g* gp, adjustinfo* adjinfo);
+    void adjustpanics(g* gp, adjustinfo* adjinfo);
+    void adjustsudogs(g* gp, adjustinfo* adjinfo);
+    uintptr_t syncadjustsudogs(g* gp, uintptr_t used, adjustinfo* adjinfo);
 }
 #include "golang/internal/cpu/cpu_x86.h"
 #include "golang/runtime/stkframe.h"
@@ -138,15 +138,15 @@ namespace golang::runtime
 namespace golang::runtime
 {
     extern gocpp::array<gocpp_id_0, _NumStackOrders> stackpool;
-    void adjustpointers(gocpp::unsafe_pointer scanp, struct bitvector* bv, struct adjustinfo* adjinfo, struct funcInfo f);
-    void adjustframe(struct stkframe* frame, struct adjustinfo* adjinfo);
+    void adjustpointers(gocpp::unsafe_pointer scanp, bitvector* bv, adjustinfo* adjinfo, golang::runtime::funcInfo f);
+    void adjustframe(stkframe* frame, adjustinfo* adjinfo);
 
     namespace rec
     {
-        uint8_t ptrbit(golang::runtime::bitvector* bv, uintptr_t i);
-        bool useGCProg(golang::runtime::stackObjectRecord* r);
-        uintptr_t ptrdata(golang::runtime::stackObjectRecord* r);
-        unsigned char* gcdata(golang::runtime::stackObjectRecord* r);
+        uint8_t ptrbit(bitvector* bv, uintptr_t i);
+        bool useGCProg(stackObjectRecord* r);
+        uintptr_t ptrdata(stackObjectRecord* r);
+        unsigned char* gcdata(stackObjectRecord* r);
     }
 }
 

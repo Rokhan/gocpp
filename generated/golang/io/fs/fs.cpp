@@ -251,7 +251,7 @@ namespace golang::fs
         return rec::IsDir(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    fs::FileMode DirEntry::DirEntryImpl<T, TStore, TInterface>::vType()
+    golang::fs::FileMode DirEntry::DirEntryImpl<T, TStore, TInterface>::vType()
     {
         return rec::Type(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -283,12 +283,12 @@ namespace golang::fs
             return self.obj.value->vIsDir();
         }
 
-        fs::FileMode Type(const gocpp::PtrRecv<struct DirEntry, false>& self)
+        golang::fs::FileMode Type(const gocpp::PtrRecv<struct DirEntry, false>& self)
         {
             return self.ptr->value->vType();
         }
 
-        fs::FileMode Type(const gocpp::ObjRecv<struct DirEntry>& self)
+        golang::fs::FileMode Type(const gocpp::ObjRecv<struct DirEntry>& self)
         {
             return self.obj.value->vType();
         }
@@ -375,12 +375,12 @@ namespace golang::fs
             return self.obj.value->vRead(param0);
         }
 
-        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct ReadDirFile, false>& self)
+        std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct ReadDirFile, false>& self)
         {
             return self.ptr->value->vStat();
         }
 
-        std::tuple<FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct ReadDirFile>& self)
+        std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct ReadDirFile>& self)
         {
             return self.obj.value->vStat();
         }
@@ -460,7 +460,7 @@ namespace golang::fs
         return rec::Size(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    fs::FileMode FileInfo::FileInfoImpl<T, TStore, TInterface>::vMode()
+    golang::fs::FileMode FileInfo::FileInfoImpl<T, TStore, TInterface>::vMode()
     {
         return rec::Mode(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -502,12 +502,12 @@ namespace golang::fs
             return self.obj.value->vSize();
         }
 
-        fs::FileMode Mode(const gocpp::PtrRecv<struct FileInfo, false>& self)
+        golang::fs::FileMode Mode(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
             return self.ptr->value->vMode();
         }
 
-        fs::FileMode Mode(const gocpp::ObjRecv<struct FileInfo>& self)
+        golang::fs::FileMode Mode(const gocpp::ObjRecv<struct FileInfo>& self)
         {
             return self.obj.value->vMode();
         }
@@ -561,7 +561,7 @@ namespace golang::fs
     // The single letters are the abbreviations
     // used by the String method's formatting.
     // Mask for the type bits. For regular files, none will be set.
-    gocpp::string rec::String(golang::fs::FileMode m)
+    gocpp::string rec::String(FileMode m)
     {
         auto str = "dalTLDpSugct?"_s;
         // Mode is uint32.
@@ -598,26 +598,26 @@ namespace golang::fs
 
     // IsDir reports whether m describes a directory.
     // That is, it tests for the [ModeDir] bit being set in m.
-    bool rec::IsDir(golang::fs::FileMode m)
+    bool rec::IsDir(FileMode m)
     {
         return m & ModeDir != 0;
     }
 
     // IsRegular reports whether m describes a regular file.
     // That is, it tests that no mode type bits are set.
-    bool rec::IsRegular(golang::fs::FileMode m)
+    bool rec::IsRegular(FileMode m)
     {
         return m & ModeType == 0;
     }
 
     // Perm returns the Unix permission bits in m (m & [ModePerm]).
-    fs::FileMode rec::Perm(golang::fs::FileMode m)
+    golang::fs::FileMode rec::Perm(FileMode m)
     {
         return m & ModePerm;
     }
 
     // Type returns type bits in m (m & [ModeType]).
-    fs::FileMode rec::Type(golang::fs::FileMode m)
+    golang::fs::FileMode rec::Type(FileMode m)
     {
         return m & ModeType;
     }
@@ -658,12 +658,12 @@ namespace golang::fs
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::fs::PathError* e)
+    gocpp::string rec::Error(PathError* e)
     {
         return e->Op + " "_s + e->Path + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
-    struct gocpp::error rec::Unwrap(golang::fs::PathError* e)
+    struct gocpp::error rec::Unwrap(PathError* e)
     {
         return e->Err;
     }
@@ -718,7 +718,7 @@ namespace golang::fs
 
 
     // Timeout reports whether this error represents a timeout.
-    bool rec::Timeout(golang::fs::PathError* e)
+    bool rec::Timeout(PathError* e)
     {
         auto [t, ok] = gocpp::getValue<gocpp_id_0>(e->Err);
         return ok && rec::Timeout(gocpp::recv(t));

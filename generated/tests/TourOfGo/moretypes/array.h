@@ -22,11 +22,11 @@ namespace golang::main
     void testPtrArray();
     void main();
     int arrayLen(gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
-    main::asciiSet makeASCIISet(gocpp::string chars);
+    golang::main::asciiSet makeASCIISet(gocpp::string chars);
 
     namespace rec
     {
-        bool contains(gocpp::array_ptr<golang::main::asciiSet> as, unsigned char c);
+        bool contains(gocpp::array_ptr<asciiSet> as, unsigned char c);
     }
 }
 

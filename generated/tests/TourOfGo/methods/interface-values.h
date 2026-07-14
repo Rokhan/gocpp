@@ -91,8 +91,8 @@ namespace golang::main
 
     namespace rec
     {
-        void M(golang::main::T* t);
-        void M(golang::main::F f);
+        void M(T* t);
+        void M(F f);
     }
 }
 

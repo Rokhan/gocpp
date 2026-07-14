@@ -16,7 +16,7 @@ namespace golang::runtime
     void cbsUnlock();
     struct abiPart
     {
-        golang::runtime::abiPartKind kind{};
+        abiPartKind kind{};
         uintptr_t srcStackOffset{};
         uintptr_t dstStackOffset{}; // used if kind == abiPartStack
         int dstRegister{}; // used if kind == abiPartReg
@@ -109,7 +109,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
-    void callbackWrap(struct callbackArgs* a);
+    void callbackWrap(callbackArgs* a);
 }
 #include "golang/runtime/runtime2.h"
 
@@ -132,7 +132,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct winCallbackKey& value);
-    uintptr_t compileCallback(struct eface fn, bool cdecl);
+    uintptr_t compileCallback(eface fn, bool cdecl);
     struct winCallback
     {
         funcval* fn{}; // Go function
@@ -160,10 +160,10 @@ namespace golang::runtime
 
     namespace rec
     {
-        bool tryMerge(golang::runtime::abiPart* a, struct abiPart b);
-        void assignArg(golang::runtime::abiDesc* p, golang::runtime::_type* t);
-        bool tryRegAssignArg(golang::runtime::abiDesc* p, golang::runtime::_type* t, uintptr_t offset);
-        bool assignReg(golang::runtime::abiDesc* p, uintptr_t size, uintptr_t offset);
+        bool tryMerge(abiPart* a, abiPart b);
+        void assignArg(abiDesc* p, _type* t);
+        bool tryRegAssignArg(abiDesc* p, _type* t, uintptr_t offset);
+        bool assignReg(abiDesc* p, uintptr_t size, uintptr_t offset);
     }
 }
 

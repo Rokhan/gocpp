@@ -103,7 +103,7 @@ namespace golang::runtime
     }
 
     // alloc allocates n-byte block.
-    struct notInHeap* rec::alloc(golang::runtime::traceRegionAlloc* a, uintptr_t n)
+    golang::runtime::notInHeap* rec::alloc(traceRegionAlloc* a, uintptr_t n)
     {
         n = alignUp(n, goarch::PtrSize);
         if(a->head == nullptr || a->off + n > uintptr_t(len(a->head->data)))
@@ -112,7 +112,7 @@ namespace golang::runtime
             {
                 go_throw("traceRegion: alloc too large"_s);
             }
-            auto block = (traceRegionAllocBlock*)(runtime::sysAlloc(gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys));
+            auto block = (golang::runtime::traceRegionAllocBlock*)(runtime::sysAlloc(gocpp::Sizeof<golang::runtime::traceRegionAllocBlock>(), & memstats.other_sys));
             if(block == nullptr)
             {
                 go_throw("traceRegion: out of memory"_s);
@@ -123,17 +123,17 @@ namespace golang::runtime
         }
         auto p = & a->head->data[a->off];
         a->off += n;
-        return (notInHeap*)(gocpp::unsafe_pointer(p));
+        return (golang::runtime::notInHeap*)(gocpp::unsafe_pointer(p));
     }
 
     // drop frees all previously allocated memory and resets the allocator.
-    void rec::drop(golang::runtime::traceRegionAlloc* a)
+    void rec::drop(traceRegionAlloc* a)
     {
         for(; a->head != nullptr; )
         {
             auto block = a->head;
             a->head = block->next;
-            sysFree(gocpp::unsafe_pointer(block), gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys);
+            sysFree(gocpp::unsafe_pointer(block), gocpp::Sizeof<golang::runtime::traceRegionAllocBlock>(), & memstats.other_sys);
         }
     }
 

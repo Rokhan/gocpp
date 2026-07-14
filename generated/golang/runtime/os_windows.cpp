@@ -82,65 +82,65 @@ namespace golang::runtime
     // links wrong printf function to cgo executable (see issue
     // 12030 for details).
     // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
-    runtime::stdFunction _AddVectoredContinueHandler;
-    runtime::stdFunction _AddVectoredExceptionHandler;
-    runtime::stdFunction _CloseHandle;
-    runtime::stdFunction _CreateEventA;
-    runtime::stdFunction _CreateFileA;
-    runtime::stdFunction _CreateIoCompletionPort;
-    runtime::stdFunction _CreateThread;
-    runtime::stdFunction _CreateWaitableTimerA;
-    runtime::stdFunction _CreateWaitableTimerExW;
-    runtime::stdFunction _DuplicateHandle;
-    runtime::stdFunction _ExitProcess;
-    runtime::stdFunction _FreeEnvironmentStringsW;
-    runtime::stdFunction _GetConsoleMode;
-    runtime::stdFunction _GetCurrentThreadId;
-    runtime::stdFunction _GetEnvironmentStringsW;
-    runtime::stdFunction _GetErrorMode;
-    runtime::stdFunction _GetProcAddress;
-    runtime::stdFunction _GetProcessAffinityMask;
-    runtime::stdFunction _GetQueuedCompletionStatusEx;
-    runtime::stdFunction _GetStdHandle;
-    runtime::stdFunction _GetSystemDirectoryA;
-    runtime::stdFunction _GetSystemInfo;
-    runtime::stdFunction _GetThreadContext;
-    runtime::stdFunction _SetThreadContext;
-    runtime::stdFunction _LoadLibraryExW;
-    runtime::stdFunction _LoadLibraryW;
-    runtime::stdFunction _PostQueuedCompletionStatus;
-    runtime::stdFunction _QueryPerformanceCounter;
-    runtime::stdFunction _RaiseFailFastException;
-    runtime::stdFunction _ResumeThread;
-    runtime::stdFunction _RtlLookupFunctionEntry;
-    runtime::stdFunction _RtlVirtualUnwind;
-    runtime::stdFunction _SetConsoleCtrlHandler;
-    runtime::stdFunction _SetErrorMode;
-    runtime::stdFunction _SetEvent;
-    runtime::stdFunction _SetProcessPriorityBoost;
-    runtime::stdFunction _SetThreadPriority;
-    runtime::stdFunction _SetUnhandledExceptionFilter;
-    runtime::stdFunction _SetWaitableTimer;
-    runtime::stdFunction _SuspendThread;
-    runtime::stdFunction _SwitchToThread;
-    runtime::stdFunction _TlsAlloc;
-    runtime::stdFunction _VirtualAlloc;
-    runtime::stdFunction _VirtualFree;
-    runtime::stdFunction _VirtualQuery;
-    runtime::stdFunction _WaitForSingleObject;
-    runtime::stdFunction _WaitForMultipleObjects;
-    runtime::stdFunction _WerGetFlags;
-    runtime::stdFunction _WerSetFlags;
-    runtime::stdFunction _WriteConsoleW;
-    runtime::stdFunction _WriteFile;
-    runtime::stdFunction _;
-    runtime::stdFunction _ProcessPrng;
-    runtime::stdFunction _RtlGetCurrentPeb;
-    runtime::stdFunction _RtlGetNtVersionNumbers;
-    runtime::stdFunction _timeBeginPeriod;
-    runtime::stdFunction _timeEndPeriod;
-    runtime::stdFunction _WSAGetOverlappedResult;
-    runtime::stdFunction _;
+    golang::runtime::stdFunction _AddVectoredContinueHandler;
+    golang::runtime::stdFunction _AddVectoredExceptionHandler;
+    golang::runtime::stdFunction _CloseHandle;
+    golang::runtime::stdFunction _CreateEventA;
+    golang::runtime::stdFunction _CreateFileA;
+    golang::runtime::stdFunction _CreateIoCompletionPort;
+    golang::runtime::stdFunction _CreateThread;
+    golang::runtime::stdFunction _CreateWaitableTimerA;
+    golang::runtime::stdFunction _CreateWaitableTimerExW;
+    golang::runtime::stdFunction _DuplicateHandle;
+    golang::runtime::stdFunction _ExitProcess;
+    golang::runtime::stdFunction _FreeEnvironmentStringsW;
+    golang::runtime::stdFunction _GetConsoleMode;
+    golang::runtime::stdFunction _GetCurrentThreadId;
+    golang::runtime::stdFunction _GetEnvironmentStringsW;
+    golang::runtime::stdFunction _GetErrorMode;
+    golang::runtime::stdFunction _GetProcAddress;
+    golang::runtime::stdFunction _GetProcessAffinityMask;
+    golang::runtime::stdFunction _GetQueuedCompletionStatusEx;
+    golang::runtime::stdFunction _GetStdHandle;
+    golang::runtime::stdFunction _GetSystemDirectoryA;
+    golang::runtime::stdFunction _GetSystemInfo;
+    golang::runtime::stdFunction _GetThreadContext;
+    golang::runtime::stdFunction _SetThreadContext;
+    golang::runtime::stdFunction _LoadLibraryExW;
+    golang::runtime::stdFunction _LoadLibraryW;
+    golang::runtime::stdFunction _PostQueuedCompletionStatus;
+    golang::runtime::stdFunction _QueryPerformanceCounter;
+    golang::runtime::stdFunction _RaiseFailFastException;
+    golang::runtime::stdFunction _ResumeThread;
+    golang::runtime::stdFunction _RtlLookupFunctionEntry;
+    golang::runtime::stdFunction _RtlVirtualUnwind;
+    golang::runtime::stdFunction _SetConsoleCtrlHandler;
+    golang::runtime::stdFunction _SetErrorMode;
+    golang::runtime::stdFunction _SetEvent;
+    golang::runtime::stdFunction _SetProcessPriorityBoost;
+    golang::runtime::stdFunction _SetThreadPriority;
+    golang::runtime::stdFunction _SetUnhandledExceptionFilter;
+    golang::runtime::stdFunction _SetWaitableTimer;
+    golang::runtime::stdFunction _SuspendThread;
+    golang::runtime::stdFunction _SwitchToThread;
+    golang::runtime::stdFunction _TlsAlloc;
+    golang::runtime::stdFunction _VirtualAlloc;
+    golang::runtime::stdFunction _VirtualFree;
+    golang::runtime::stdFunction _VirtualQuery;
+    golang::runtime::stdFunction _WaitForSingleObject;
+    golang::runtime::stdFunction _WaitForMultipleObjects;
+    golang::runtime::stdFunction _WerGetFlags;
+    golang::runtime::stdFunction _WerSetFlags;
+    golang::runtime::stdFunction _WriteConsoleW;
+    golang::runtime::stdFunction _WriteFile;
+    golang::runtime::stdFunction _;
+    golang::runtime::stdFunction _ProcessPrng;
+    golang::runtime::stdFunction _RtlGetCurrentPeb;
+    golang::runtime::stdFunction _RtlGetNtVersionNumbers;
+    golang::runtime::stdFunction _timeBeginPeriod;
+    golang::runtime::stdFunction _timeEndPeriod;
+    golang::runtime::stdFunction _WSAGetOverlappedResult;
+    golang::runtime::stdFunction _;
     gocpp::array<uint16_t, 21> bcryptprimitivesdll = gocpp::array<uint16_t, 21> {'b', 'c', 'r', 'y', 'p', 't', 'p', 'r', 'i', 'm', 'i', 't', 'i', 'v', 'e', 's', '.', 'd', 'l', 'l', 0};
     gocpp::array<uint16_t, 10> ntdlldll = gocpp::array<uint16_t, 10> {'n', 't', 'd', 'l', 'l', '.', 'd', 'l', 'l', 0};
     gocpp::array<uint16_t, 13> powrprofdll = gocpp::array<uint16_t, 13> {'p', 'o', 'w', 'r', 'p', 'r', 'o', 'f', '.', 'd', 'l', 'l', 0};
@@ -148,7 +148,7 @@ namespace golang::runtime
     gocpp::array<uint16_t, 11> ws2_32dll = gocpp::array<uint16_t, 11> {'w', 's', '2', '_', '3', '2', '.', 'd', 'l', 'l', 0};
     // Function to be called by windows CreateThread
     // to start new os thread.
-    void tstart_stdcall(struct m* newm)
+    void tstart_stdcall(m* newm)
     /* convertBlockStmt, nil block */;
 
     // Init-time helper
@@ -250,7 +250,7 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     gocpp::unsafe_pointer asmstdcallAddr;
-    runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name)
+    golang::runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name)
     {
         if(name[len(name) - 1] != 0)
         {
@@ -359,7 +359,7 @@ namespace golang::runtime
         }
         go_any fn = [=](uintptr_t context, uint32_t changeType, uintptr_t setting) mutable -> uintptr_t
         {
-            for(auto mp = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm))); mp != nullptr; mp = mp->alllink)
+            for(auto mp = (golang::runtime::m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm))); mp != nullptr; mp = mp->alllink)
             {
                 if(mp->mOS.resumesema != 0)
                 {
@@ -415,14 +415,14 @@ namespace golang::runtime
             }
         }
         // use GetSystemInfo if GetProcessAffinityMask fails
-        systeminfo info = {};
+        golang::runtime::systeminfo info = {};
         stdcall1(_GetSystemInfo, uintptr_t(gocpp::unsafe_pointer(& info)));
         return int32_t(info.dwnumberofprocessors);
     }
 
     uintptr_t getPageSize()
     {
-        systeminfo info = {};
+        golang::runtime::systeminfo info = {};
         stdcall1(_GetSystemInfo, uintptr_t(gocpp::unsafe_pointer(& info)));
         return uintptr_t(info.dwpagesize);
     }
@@ -725,7 +725,7 @@ namespace golang::runtime
     }
 
     gocpp::array<uint16_t, 1000> utf16ConsoleBack;
-    mutex utf16ConsoleBackLock;
+    golang::runtime::mutex utf16ConsoleBackLock;
     // writeConsole writes bufLen bytes from buf to the console File.
     // It returns the number of bytes written.
     int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen)
@@ -867,7 +867,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void semawakeup(struct m* mp)
+    void semawakeup(m* mp)
     {
         if(stdcall1(_SetEvent, mp->mOS.waitsema) == 0)
         {
@@ -880,7 +880,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void semacreate(struct m* mp)
+    void semacreate(m* mp)
     {
         if(mp->mOS.waitsema != 0)
         {
@@ -914,7 +914,7 @@ namespace golang::runtime
     //
     //go:nowritebarrierrec
     //go:nosplit
-    void newosproc(struct m* mp)
+    void newosproc(m* mp)
     {
         // We pass 0 for the stack size to use the default for this binary.
         auto thandle = stdcall6(_CreateThread, 0, 0, abi::FuncPCABI0(tstart_stdcall), uintptr_t(gocpp::unsafe_pointer(mp)), 0, 0);
@@ -944,7 +944,7 @@ namespace golang::runtime
     //
     //go:nowritebarrierrec
     //go:nosplit
-    void newosproc0(struct m* mp, gocpp::unsafe_pointer stk)
+    void newosproc0(m* mp, gocpp::unsafe_pointer stk)
     {
         // TODO: this is completely broken. The args passed to newosproc0 (in asm_amd64.s)
         // are stacksize and function, not *m and stack.
@@ -961,17 +961,17 @@ namespace golang::runtime
 
     // Called to initialize a new m (including the bootstrap m).
     // Called on the parent thread (main thread in case of bootstrap), can allocate memory.
-    void mpreinit(struct m* mp)
+    void mpreinit(m* mp)
     {
     }
 
     //go:nosplit
-    void sigsave(struct sigset* p)
+    void sigsave(sigset* p)
     {
     }
 
     //go:nosplit
-    void msigrestore(struct sigset sigmask)
+    void msigrestore(sigset sigmask)
     {
     }
 
@@ -1016,7 +1016,7 @@ namespace golang::runtime
 
         // Query the true stack base from the OS. Currently we're
         // running on a small assumed stack.
-        memoryBasicInformation mbi = {};
+        golang::runtime::memoryBasicInformation mbi = {};
         auto res = stdcall3(_VirtualQuery, uintptr_t(gocpp::unsafe_pointer(& mbi)), uintptr_t(gocpp::unsafe_pointer(& mbi)), gocpp::Sizeof<memoryBasicInformation>());
         if(res == 0)
         {
@@ -1065,7 +1065,7 @@ namespace golang::runtime
     // resources in minit, semacreate, or elsewhere. Do not take locks after calling this.
     //
     //go:nosplit
-    void mdestroy(struct m* mp)
+    void mdestroy(m* mp)
     {
         if(mp->mOS.highResTimer != 0)
         {
@@ -1091,9 +1091,9 @@ namespace golang::runtime
     // stdcall_no_g calls asmstdcall on os stack without using g.
     //
     //go:nosplit
-    uintptr_t stdcall_no_g(golang::runtime::stdFunction fn, int n, uintptr_t args)
+    uintptr_t stdcall_no_g(stdFunction fn, int n, uintptr_t args)
     {
-        auto libcall_tmp = gocpp::Init<libcall>([=](auto& x) {
+        auto libcall_tmp = gocpp::Init<golang::runtime::libcall>([=](auto& x) {
             x.fn = uintptr_t(gocpp::unsafe_pointer(fn));
             x.n = uintptr_t(n);
             x.args = args;
@@ -1108,7 +1108,7 @@ namespace golang::runtime
     //
     //go:nowritebarrier
     //go:nosplit
-    uintptr_t stdcall(golang::runtime::stdFunction fn)
+    uintptr_t stdcall(stdFunction fn)
     {
         auto gp = getg();
         auto mp = gp->m;
@@ -1134,7 +1134,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    uintptr_t stdcall0(golang::runtime::stdFunction fn)
+    uintptr_t stdcall0(stdFunction fn)
     {
         auto mp = getg()->m;
         mp->libcall.n = 0;
@@ -1144,7 +1144,7 @@ namespace golang::runtime
 
     //go:nosplit
     //go:cgo_unsafe_args
-    uintptr_t stdcall1(golang::runtime::stdFunction fn, uintptr_t a0)
+    uintptr_t stdcall1(stdFunction fn, uintptr_t a0)
     {
         auto mp = getg()->m;
         mp->libcall.n = 1;
@@ -1154,7 +1154,7 @@ namespace golang::runtime
 
     //go:nosplit
     //go:cgo_unsafe_args
-    uintptr_t stdcall2(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1)
+    uintptr_t stdcall2(stdFunction fn, uintptr_t a0, uintptr_t a1)
     {
         auto mp = getg()->m;
         mp->libcall.n = 2;
@@ -1164,7 +1164,7 @@ namespace golang::runtime
 
     //go:nosplit
     //go:cgo_unsafe_args
-    uintptr_t stdcall3(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2)
+    uintptr_t stdcall3(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2)
     {
         auto mp = getg()->m;
         mp->libcall.n = 3;
@@ -1174,7 +1174,7 @@ namespace golang::runtime
 
     //go:nosplit
     //go:cgo_unsafe_args
-    uintptr_t stdcall4(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3)
+    uintptr_t stdcall4(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3)
     {
         auto mp = getg()->m;
         mp->libcall.n = 4;
@@ -1184,7 +1184,7 @@ namespace golang::runtime
 
     //go:nosplit
     //go:cgo_unsafe_args
-    uintptr_t stdcall5(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4)
+    uintptr_t stdcall5(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4)
     {
         auto mp = getg()->m;
         mp->libcall.n = 5;
@@ -1194,7 +1194,7 @@ namespace golang::runtime
 
     //go:nosplit
     //go:cgo_unsafe_args
-    uintptr_t stdcall6(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5)
+    uintptr_t stdcall6(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5)
     {
         auto mp = getg()->m;
         mp->libcall.n = 6;
@@ -1204,7 +1204,7 @@ namespace golang::runtime
 
     //go:nosplit
     //go:cgo_unsafe_args
-    uintptr_t stdcall7(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
+    uintptr_t stdcall7(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6)
     {
         auto mp = getg()->m;
         mp->libcall.n = 7;
@@ -1214,7 +1214,7 @@ namespace golang::runtime
 
     //go:nosplit
     //go:cgo_unsafe_args
-    uintptr_t stdcall8(golang::runtime::stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7)
+    uintptr_t stdcall8(stdFunction fn, uintptr_t a0, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7)
     {
         auto mp = getg()->m;
         mp->libcall.n = 8;
@@ -1323,12 +1323,12 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     uintptr_t profiletimer;
-    void profilem(struct m* mp, uintptr_t thread)
+    void profilem(m* mp, uintptr_t thread)
     {
         // Align Context to 16 bytes.
-        context* c = {};
+        golang::runtime::context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
-        c = (context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
+        c = (golang::runtime::context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
 
         c->contextflags = _CONTEXT_CONTROL;
         stdcall2(_GetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));
@@ -1338,7 +1338,7 @@ namespace golang::runtime
         sigprof(rec::ip(gocpp::recv(c)), rec::sp(gocpp::recv(c)), rec::lr(gocpp::recv(c)), gp, mp);
     }
 
-    struct g* gFromSP(struct m* mp, uintptr_t sp)
+    golang::runtime::g* gFromSP(m* mp, uintptr_t sp)
     {
         if(auto gp = mp->g0; gp != nullptr && gp->stack.lo < sp && sp < gp->stack.hi)
         {
@@ -1362,7 +1362,7 @@ namespace golang::runtime
         for(; ; )
         {
             stdcall2(_WaitForSingleObject, profiletimer, _INFINITE);
-            auto first = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm)));
+            auto first = (golang::runtime::m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm)));
             for(auto mp = first; mp != nullptr; mp = mp->alllink)
             {
                 if(mp == getg()->m)
@@ -1448,8 +1448,8 @@ namespace golang::runtime
 
     // suspendLock protects simultaneous SuspendThread operations from
     // suspending each other.
-    mutex suspendLock;
-    void preemptM(struct m* mp)
+    golang::runtime::mutex suspendLock;
+    void preemptM(m* mp)
     {
         if(mp == getg()->m)
         {
@@ -1484,9 +1484,9 @@ namespace golang::runtime
         unlock(& mp->mOS.threadLock);
 
         // Prepare thread context buffer. This must be aligned to 16 bytes.
-        context* c = {};
+        golang::runtime::context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
-        c = (context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
+        c = (golang::runtime::context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
         c->contextflags = _CONTEXT_CONTROL;
 
         // Serialize thread suspension. SuspendThread is asynchronous,
@@ -1605,7 +1605,7 @@ namespace golang::runtime
     // untyped stack slots, so the stack must not be grown or scanned.
     //
     //go:nosplit
-    void osPreemptExtEnter(struct m* mp)
+    void osPreemptExtEnter(m* mp)
     {
         // Asynchronous preemption is now blocked.
         for(; ! atomic::Cas(& mp->mOS.preemptExtLock, 0, 1); )
@@ -1628,7 +1628,7 @@ namespace golang::runtime
     // See osPreemptExtEnter for why this is nosplit.
     //
     //go:nosplit
-    void osPreemptExtExit(struct m* mp)
+    void osPreemptExtExit(m* mp)
     {
         atomic::Store(& mp->mOS.preemptExtLock, 0);
     }

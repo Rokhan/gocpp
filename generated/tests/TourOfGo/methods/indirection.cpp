@@ -51,13 +51,13 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void rec::Scale(golang::main::Vertex* v, double f)
+    void rec::Scale(Vertex* v, double f)
     {
         v->X = v->X * f;
         v->Y = v->Y * f;
     }
 
-    void ScaleFunc(struct Vertex* v, double f)
+    void ScaleFunc(Vertex* v, double f)
     {
         v->X = v->X * f;
         v->Y = v->Y * f;
@@ -65,11 +65,11 @@ namespace golang::main
 
     void main()
     {
-        auto v = Vertex {3, 4};
+        auto v = golang::main::Vertex {3, 4};
         rec::Scale(gocpp::recv(v), 2);
         ScaleFunc(& v, 10);
 
-        auto p = new Vertex {4, 3};
+        auto p = new golang::main::Vertex {4, 3};
         rec::Scale(gocpp::recv(p), 3);
         ScaleFunc(p, 8);
 

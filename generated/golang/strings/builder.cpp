@@ -69,7 +69,7 @@ namespace golang::strings
         return gocpp::unsafe_pointer(x ^ 0);
     }
 
-    void rec::copyCheck(golang::strings::Builder* b)
+    void rec::copyCheck(Builder* b)
     {
         if(b->addr == nullptr)
         {
@@ -78,7 +78,7 @@ namespace golang::strings
             // See issue 23382.
             // TODO: once issue 7921 is fixed, this should be reverted to
             // just "b.addr = b".
-            b->addr = (Builder*)(noescape(gocpp::unsafe_pointer(b)));
+            b->addr = (golang::strings::Builder*)(noescape(gocpp::unsafe_pointer(b)));
         }
         else
         if(b->addr != b)
@@ -88,13 +88,13 @@ namespace golang::strings
     }
 
     // String returns the accumulated string.
-    gocpp::string rec::String(golang::strings::Builder* b)
+    gocpp::string rec::String(Builder* b)
     {
         return unsafe::String(unsafe::SliceData(b->buf), len(b->buf));
     }
 
     // Len returns the number of accumulated bytes; b.Len() == len(b.String()).
-    int rec::Len(golang::strings::Builder* b)
+    int rec::Len(Builder* b)
     {
         return len(b->buf);
     }
@@ -102,13 +102,13 @@ namespace golang::strings
     // Cap returns the capacity of the builder's underlying byte slice. It is the
     // total space allocated for the string being built and includes any bytes
     // already written.
-    int rec::Cap(golang::strings::Builder* b)
+    int rec::Cap(Builder* b)
     {
         return cap(b->buf);
     }
 
     // Reset resets the [Builder] to be empty.
-    void rec::Reset(golang::strings::Builder* b)
+    void rec::Reset(Builder* b)
     {
         b->addr = nullptr;
         b->buf = nullptr;
@@ -116,7 +116,7 @@ namespace golang::strings
 
     // grow copies the buffer to a new, larger buffer so that there are at least n
     // bytes of capacity beyond len(b.buf).
-    void rec::grow(golang::strings::Builder* b, int n)
+    void rec::grow(Builder* b, int n)
     {
         auto buf = bytealg::MakeNoZero(2 * cap(b->buf) + n).make_slice(0, len(b->buf));
         copy(buf, b->buf);
@@ -126,7 +126,7 @@ namespace golang::strings
     // Grow grows b's capacity, if necessary, to guarantee space for
     // another n bytes. After Grow(n), at least n bytes can be written to b
     // without another allocation. If n is negative, Grow panics.
-    void rec::Grow(golang::strings::Builder* b, int n)
+    void rec::Grow(Builder* b, int n)
     {
         rec::copyCheck(gocpp::recv(b));
         if(n < 0)
@@ -141,7 +141,7 @@ namespace golang::strings
 
     // Write appends the contents of p to b's buffer.
     // Write always returns len(p), nil.
-    std::tuple<int, struct gocpp::error> rec::Write(golang::strings::Builder* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(Builder* b, gocpp::slice<unsigned char> p)
     {
         rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, p);
@@ -150,7 +150,7 @@ namespace golang::strings
 
     // WriteByte appends the byte c to b's buffer.
     // The returned error is always nil.
-    struct gocpp::error rec::WriteByte(golang::strings::Builder* b, unsigned char c)
+    struct gocpp::error rec::WriteByte(Builder* b, unsigned char c)
     {
         rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, c);
@@ -159,7 +159,7 @@ namespace golang::strings
 
     // WriteRune appends the UTF-8 encoding of Unicode code point r to b's buffer.
     // It returns the length of r and a nil error.
-    std::tuple<int, struct gocpp::error> rec::WriteRune(golang::strings::Builder* b, gocpp::rune r)
+    std::tuple<int, struct gocpp::error> rec::WriteRune(Builder* b, gocpp::rune r)
     {
         rec::copyCheck(gocpp::recv(b));
         auto n = len(b->buf);
@@ -169,7 +169,7 @@ namespace golang::strings
 
     // WriteString appends the contents of s to b's buffer.
     // It returns the length of s and a nil error.
-    std::tuple<int, struct gocpp::error> rec::WriteString(golang::strings::Builder* b, gocpp::string s)
+    std::tuple<int, struct gocpp::error> rec::WriteString(Builder* b, gocpp::string s)
     {
         rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, s);

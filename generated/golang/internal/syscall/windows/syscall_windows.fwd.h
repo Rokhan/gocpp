@@ -91,5 +91,5 @@ namespace golang::windows
     struct WSAMsg;
     struct FILE_ID_BOTH_DIR_INFO;
     struct FILE_FULL_DIR_INFO;
-    const uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<ModuleEntry32>();
+    const uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<golang::windows::ModuleEntry32>();
 }

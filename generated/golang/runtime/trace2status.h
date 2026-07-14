@@ -14,7 +14,7 @@
 
 namespace golang::runtime
 {
-    runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, golang::runtime::waitReason wr);
+    golang::runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, waitReason wr);
     struct traceSchedResourceState
     {
         // statusTraced indicates whether a status event was traced for this resource
@@ -54,14 +54,14 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct traceWriter writeGoStatus(golang::runtime::traceWriter w, uint64_t goid, int64_t mid, golang::runtime::traceGoStatus status, bool markAssist);
-        struct traceWriter writeProcStatusForP(golang::runtime::traceWriter w, struct p* pp, bool inSTW);
-        struct traceWriter writeProcStatus(golang::runtime::traceWriter w, uint64_t pid, golang::runtime::traceProcStatus status, bool inSweep);
-        bool acquireStatus(golang::runtime::traceSchedResourceState* r, uintptr_t gen);
-        void readyNextGen(golang::runtime::traceSchedResourceState* r, uintptr_t gen);
-        bool statusWasTraced(golang::runtime::traceSchedResourceState* r, uintptr_t gen);
-        void setStatusTraced(golang::runtime::traceSchedResourceState* r, uintptr_t gen);
-        runtime::traceArg nextSeq(golang::runtime::traceSchedResourceState* r, uintptr_t gen);
+        golang::runtime::traceWriter writeGoStatus(traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist);
+        golang::runtime::traceWriter writeProcStatusForP(traceWriter w, golang::runtime::p* pp, bool inSTW);
+        golang::runtime::traceWriter writeProcStatus(traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep);
+        bool acquireStatus(traceSchedResourceState* r, uintptr_t gen);
+        void readyNextGen(traceSchedResourceState* r, uintptr_t gen);
+        bool statusWasTraced(traceSchedResourceState* r, uintptr_t gen);
+        void setStatusTraced(traceSchedResourceState* r, uintptr_t gen);
+        golang::runtime::traceArg nextSeq(traceSchedResourceState* r, uintptr_t gen);
     }
 }
 

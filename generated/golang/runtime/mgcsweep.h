@@ -100,7 +100,7 @@ namespace golang::runtime
         // update methods. Not protected by a lock.
         // Reset at mark termination.
         // Used by mheap.nextSpanForSweep.
-        golang::runtime::sweepClass centralIndex{};
+        sweepClass centralIndex{};
 
         using isGoStruct = void;
 
@@ -114,7 +114,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sweepdata& value);
-    extern sweepdata sweep;
+    extern golang::runtime::sweepdata sweep;
 }
 
 #include "golang/runtime/mheap.h"
@@ -124,21 +124,21 @@ namespace golang::runtime
 
     namespace rec
     {
-        runtime::sweepClass load(golang::runtime::sweepClass* s);
-        void update(golang::runtime::sweepClass* s, golang::runtime::sweepClass sNew);
-        void clear(golang::runtime::sweepClass* s);
-        std::tuple<runtime::spanClass, bool> split(golang::runtime::sweepClass s);
-        struct mspan* nextSpanForSweep(golang::runtime::mheap* h);
-        struct sweepLocker begin(golang::runtime::activeSweep* a);
-        void end(golang::runtime::activeSweep* a, struct sweepLocker sl);
-        bool markDrained(golang::runtime::activeSweep* a);
-        uint32_t sweepers(golang::runtime::activeSweep* a);
-        bool isDone(golang::runtime::activeSweep* a);
-        void reset(golang::runtime::activeSweep* a);
-        std::tuple<struct sweepLocked, bool> tryAcquire(golang::runtime::sweepLocker* l, struct mspan* s);
-        void ensureSwept(golang::runtime::mspan* s);
-        bool sweep(golang::runtime::sweepLocked* sl, bool preserve);
-        void reportZombies(golang::runtime::mspan* s);
+        golang::runtime::sweepClass load(sweepClass* s);
+        void update(sweepClass* s, sweepClass sNew);
+        void clear(sweepClass* s);
+        std::tuple<golang::runtime::spanClass, bool> split(sweepClass s);
+        golang::runtime::mspan* nextSpanForSweep(mheap* h);
+        golang::runtime::sweepLocker begin(activeSweep* a);
+        void end(activeSweep* a, sweepLocker sl);
+        bool markDrained(activeSweep* a);
+        uint32_t sweepers(activeSweep* a);
+        bool isDone(activeSweep* a);
+        void reset(activeSweep* a);
+        std::tuple<golang::runtime::sweepLocked, bool> tryAcquire(sweepLocker* l, mspan* s);
+        void ensureSwept(mspan* s);
+        bool sweep(sweepLocked* sl, bool preserve);
+        void reportZombies(mspan* s);
     }
 }
 

@@ -59,7 +59,7 @@ namespace golang::runtime
     // If buf != nil, the compiler has determined that the result does not
     // escape the calling function, so the string data can be stored in buf
     // if small enough.
-    gocpp::string concatstrings(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::slice<gocpp::string> a)
+    gocpp::string concatstrings(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::string> a)
     {
         auto idx = 0;
         auto l = 0;
@@ -100,22 +100,22 @@ namespace golang::runtime
         return s;
     }
 
-    gocpp::string concatstring2(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1)
+    gocpp::string concatstring2(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1)
     {
         return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1});
     }
 
-    gocpp::string concatstring3(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2)
+    gocpp::string concatstring3(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2)
     {
         return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1, a2});
     }
 
-    gocpp::string concatstring4(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3)
+    gocpp::string concatstring4(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3)
     {
         return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1, a2, a3});
     }
 
-    gocpp::string concatstring5(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4)
+    gocpp::string concatstring5(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4)
     {
         return concatstrings(buf, gocpp::slice<gocpp::string> {a0, a1, a2, a3, a4});
     }
@@ -126,7 +126,7 @@ namespace golang::runtime
     // n is the length of the slice.
     // Buf is a fixed-size buffer for the result,
     // it is not nil if the result does not escape.
-    gocpp::string slicebytetostring(gocpp::array_ptr<golang::runtime::tmpBuf> buf, unsigned char* ptr, int n)
+    gocpp::string slicebytetostring(gocpp::array_ptr<tmpBuf> buf, unsigned char* ptr, int n)
     {
         if(n == 0)
         {
@@ -179,7 +179,7 @@ namespace golang::runtime
         return stk.lo <= ptr && ptr < stk.hi;
     }
 
-    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<golang::runtime::tmpBuf> buf, int l)
+    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<tmpBuf> buf, int l)
     {
         gocpp::string s;
         gocpp::slice<unsigned char> b;
@@ -226,12 +226,12 @@ namespace golang::runtime
         return unsafe::String(ptr, n);
     }
 
-    gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::string s)
+    gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<tmpBuf> buf, gocpp::string s)
     {
         gocpp::slice<unsigned char> b = {};
         if(buf != nullptr && len(s) <= len(buf))
         {
-            *buf = runtime::tmpBuf {};
+            *buf = tmpBuf {};
             b = buf.make_slice(0, len(s));
         }
         else
@@ -272,7 +272,7 @@ namespace golang::runtime
         return a;
     }
 
-    gocpp::string slicerunetostring(gocpp::array_ptr<golang::runtime::tmpBuf> buf, gocpp::slice<gocpp::rune> a)
+    gocpp::string slicerunetostring(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::rune> a)
     {
         if(raceenabled && len(a) > 0)
         {
@@ -371,9 +371,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct stringStruct* stringStructOf(gocpp::string* sp)
+    golang::runtime::stringStruct* stringStructOf(gocpp::string* sp)
     {
-        return (stringStruct*)(gocpp::unsafe_pointer(sp));
+        return (golang::runtime::stringStruct*)(gocpp::unsafe_pointer(sp));
     }
 
     gocpp::string intstring(gocpp::array_ptr<gocpp::array<unsigned char, 4>> buf, int64_t v)
@@ -420,7 +420,7 @@ namespace golang::runtime
             memclrNoHeapPointers(add(p, uintptr_t(size)), cap - uintptr_t(size));
         }
 
-        *(slice*)(gocpp::unsafe_pointer(& b)) = slice {p, size, int(cap)};
+        *(golang::runtime::slice*)(gocpp::unsafe_pointer(& b)) = golang::runtime::slice {p, size, int(cap)};
         return b;
     }
 
@@ -439,7 +439,7 @@ namespace golang::runtime
             memclrNoHeapPointers(add(p, uintptr_t(size) * 4), mem - uintptr_t(size) * 4);
         }
 
-        *(slice*)(gocpp::unsafe_pointer(& b)) = slice {p, size, int(mem / 4)};
+        *(golang::runtime::slice*)(gocpp::unsafe_pointer(& b)) = golang::runtime::slice {p, size, int(mem / 4)};
         return b;
     }
 
@@ -460,7 +460,7 @@ namespace golang::runtime
         auto bp = mallocgc(uintptr_t(n), nullptr, false);
         memmove(bp, gocpp::unsafe_pointer(p), uintptr_t(n));
 
-        *(slice*)(gocpp::unsafe_pointer(& b)) = slice {bp, n, n};
+        *(golang::runtime::slice*)(gocpp::unsafe_pointer(& b)) = golang::runtime::slice {bp, n, n};
         return b;
     }
 
@@ -739,7 +739,7 @@ namespace golang::runtime
 
         for(; ; )
         {
-            auto t = *(gocpp::string*)(gocpp::unsafe_pointer(new stringStruct {ptr, safeLen}));
+            auto t = *(gocpp::string*)(gocpp::unsafe_pointer(new golang::runtime::stringStruct {ptr, safeLen}));
             // Check one page at a time.
             if(auto i = bytealg::IndexByteString(t, 0); i != - 1)
             {
@@ -770,7 +770,7 @@ namespace golang::runtime
     //go:nosplit
     gocpp::string gostringnocopy(unsigned char* str)
     {
-        auto ss = gocpp::Init<stringStruct>([=](auto& x) {
+        auto ss = gocpp::Init<golang::runtime::stringStruct>([=](auto& x) {
             x.str = gocpp::unsafe_pointer(str);
             x.len = findnull(str);
         });

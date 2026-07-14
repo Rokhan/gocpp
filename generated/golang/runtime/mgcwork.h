@@ -106,25 +106,25 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct workbuf& value);
-    struct workbuf* getempty();
-    void putempty(struct workbuf* b);
-    void putfull(struct workbuf* b);
-    struct workbuf* trygetfull();
-    struct workbuf* handoff(struct workbuf* b);
+    golang::runtime::workbuf* getempty();
+    void putempty(workbuf* b);
+    void putfull(workbuf* b);
+    golang::runtime::workbuf* trygetfull();
+    golang::runtime::workbuf* handoff(workbuf* b);
 
     namespace rec
     {
-        void init(golang::runtime::gcWork* w);
-        void put(golang::runtime::gcWork* w, uintptr_t obj);
-        bool putFast(golang::runtime::gcWork* w, uintptr_t obj);
-        void putBatch(golang::runtime::gcWork* w, gocpp::slice<uintptr_t> obj);
-        uintptr_t tryGet(golang::runtime::gcWork* w);
-        uintptr_t tryGetFast(golang::runtime::gcWork* w);
-        void dispose(golang::runtime::gcWork* w);
-        void balance(golang::runtime::gcWork* w);
-        bool empty(golang::runtime::gcWork* w);
-        void checknonempty(golang::runtime::workbuf* b);
-        void checkempty(golang::runtime::workbuf* b);
+        void init(gcWork* w);
+        void put(gcWork* w, uintptr_t obj);
+        bool putFast(gcWork* w, uintptr_t obj);
+        void putBatch(gcWork* w, gocpp::slice<uintptr_t> obj);
+        uintptr_t tryGet(gcWork* w);
+        uintptr_t tryGetFast(gcWork* w);
+        void dispose(gcWork* w);
+        void balance(gcWork* w);
+        bool empty(gcWork* w);
+        void checknonempty(workbuf* b);
+        void checkempty(workbuf* b);
     }
 }
 

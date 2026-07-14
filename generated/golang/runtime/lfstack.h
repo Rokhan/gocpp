@@ -13,9 +13,9 @@
 
 namespace golang::runtime
 {
-    void lfnodeValidate(struct lfnode* node);
-    uint64_t lfstackPack(struct lfnode* node, uintptr_t cnt);
-    struct lfnode* lfstackUnpack(uint64_t val);
+    void lfnodeValidate(lfnode* node);
+    uint64_t lfstackPack(lfnode* node, uintptr_t cnt);
+    golang::runtime::lfnode* lfstackUnpack(uint64_t val);
 }
 
 #include "golang/runtime/runtime2.h"
@@ -25,9 +25,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        void push(golang::runtime::lfstack* head, struct lfnode* node);
-        gocpp::unsafe_pointer pop(golang::runtime::lfstack* head);
-        bool empty(golang::runtime::lfstack* head);
+        void push(lfstack* head, lfnode* node);
+        gocpp::unsafe_pointer pop(lfstack* head);
+        bool empty(lfstack* head);
     }
 }
 

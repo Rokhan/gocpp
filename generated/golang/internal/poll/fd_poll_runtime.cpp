@@ -96,7 +96,7 @@ namespace golang::poll
     }
 
     sync::Once serverInit;
-    struct gocpp::error rec::init(golang::poll::pollDesc* pd, struct FD* fd)
+    struct gocpp::error rec::init(pollDesc* pd, FD* fd)
     {
         rec::Do(gocpp::recv(serverInit), runtime_pollServerInit);
         auto [ctx, errno] = runtime_pollOpen(uintptr_t(fd->Sysfd));
@@ -108,7 +108,7 @@ namespace golang::poll
         return nullptr;
     }
 
-    void rec::close(golang::poll::pollDesc* pd)
+    void rec::close(pollDesc* pd)
     {
         if(pd->runtimeCtx == 0)
         {
@@ -119,7 +119,7 @@ namespace golang::poll
     }
 
     // Evict evicts fd from the pending list, unblocking any I/O running on fd.
-    void rec::evict(golang::poll::pollDesc* pd)
+    void rec::evict(pollDesc* pd)
     {
         if(pd->runtimeCtx == 0)
         {
@@ -128,7 +128,7 @@ namespace golang::poll
         runtime_pollUnblock(pd->runtimeCtx);
     }
 
-    struct gocpp::error rec::prepare(golang::poll::pollDesc* pd, int mode, bool isFile)
+    struct gocpp::error rec::prepare(pollDesc* pd, int mode, bool isFile)
     {
         if(pd->runtimeCtx == 0)
         {
@@ -138,17 +138,17 @@ namespace golang::poll
         return convertErr(res, isFile);
     }
 
-    struct gocpp::error rec::prepareRead(golang::poll::pollDesc* pd, bool isFile)
+    struct gocpp::error rec::prepareRead(pollDesc* pd, bool isFile)
     {
         return rec::prepare(gocpp::recv(pd), 'r', isFile);
     }
 
-    struct gocpp::error rec::prepareWrite(golang::poll::pollDesc* pd, bool isFile)
+    struct gocpp::error rec::prepareWrite(pollDesc* pd, bool isFile)
     {
         return rec::prepare(gocpp::recv(pd), 'w', isFile);
     }
 
-    struct gocpp::error rec::wait(golang::poll::pollDesc* pd, int mode, bool isFile)
+    struct gocpp::error rec::wait(pollDesc* pd, int mode, bool isFile)
     {
         if(pd->runtimeCtx == 0)
         {
@@ -158,17 +158,17 @@ namespace golang::poll
         return convertErr(res, isFile);
     }
 
-    struct gocpp::error rec::waitRead(golang::poll::pollDesc* pd, bool isFile)
+    struct gocpp::error rec::waitRead(pollDesc* pd, bool isFile)
     {
         return rec::wait(gocpp::recv(pd), 'r', isFile);
     }
 
-    struct gocpp::error rec::waitWrite(golang::poll::pollDesc* pd, bool isFile)
+    struct gocpp::error rec::waitWrite(pollDesc* pd, bool isFile)
     {
         return rec::wait(gocpp::recv(pd), 'w', isFile);
     }
 
-    void rec::waitCanceled(golang::poll::pollDesc* pd, int mode)
+    void rec::waitCanceled(pollDesc* pd, int mode)
     {
         if(pd->runtimeCtx == 0)
         {
@@ -177,7 +177,7 @@ namespace golang::poll
         runtime_pollWaitCanceled(pd->runtimeCtx, mode);
     }
 
-    bool rec::pollable(golang::poll::pollDesc* pd)
+    bool rec::pollable(pollDesc* pd)
     {
         return pd->runtimeCtx != 0;
     }
@@ -215,24 +215,24 @@ namespace golang::poll
     }
 
     // SetDeadline sets the read and write deadlines associated with fd.
-    struct gocpp::error rec::SetDeadline(golang::poll::FD* fd, mocklib::Date t)
+    struct gocpp::error rec::SetDeadline(FD* fd, mocklib::Date t)
     {
         return setDeadlineImpl(fd, t, 'r' + 'w');
     }
 
     // SetReadDeadline sets the read deadline associated with fd.
-    struct gocpp::error rec::SetReadDeadline(golang::poll::FD* fd, mocklib::Date t)
+    struct gocpp::error rec::SetReadDeadline(FD* fd, mocklib::Date t)
     {
         return setDeadlineImpl(fd, t, 'r');
     }
 
     // SetWriteDeadline sets the write deadline associated with fd.
-    struct gocpp::error rec::SetWriteDeadline(golang::poll::FD* fd, mocklib::Date t)
+    struct gocpp::error rec::SetWriteDeadline(FD* fd, mocklib::Date t)
     {
         return setDeadlineImpl(fd, t, 'w');
     }
 
-    struct gocpp::error setDeadlineImpl(struct FD* fd, mocklib::Date t, int mode)
+    struct gocpp::error setDeadlineImpl(FD* fd, mocklib::Date t, int mode)
     {
         gocpp::Defer defer;
         try

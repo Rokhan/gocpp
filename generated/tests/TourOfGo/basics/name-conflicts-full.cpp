@@ -60,9 +60,9 @@ namespace golang::main
         return 0 + 0;
     }
 
-    struct toto rec::create(golang::main::toto t)
+    golang::main::toto rec::create(golang::main::toto t)
     {
-        return toto {};
+        return golang::main::toto {};
     }
 
     void main()
@@ -75,10 +75,10 @@ namespace golang::main
         mocklib::Println("Go rules?"_s, Truth);
 
         mocklib::Println("Pi:"_s, Pi);
-        auto t = toto {};
+        auto t = golang::main::toto {};
         mocklib::Println("toto.Pi:"_s, rec::Pi(gocpp::recv(t)));
 
-        auto toto_tmp = toto {};
+        auto toto_tmp = golang::main::toto {};
         auto& toto = toto_tmp;
         mocklib::Println("toto.Pi:"_s, rec::Pi(gocpp::recv(toto)));
     }

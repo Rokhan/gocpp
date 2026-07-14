@@ -136,18 +136,18 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::os::SyscallError* e)
+    gocpp::string rec::Error(SyscallError* e)
     {
         return e->Syscall + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
-    struct gocpp::error rec::Unwrap(golang::os::SyscallError* e)
+    struct gocpp::error rec::Unwrap(SyscallError* e)
     {
         return e->Err;
     }
 
     // Timeout reports whether this error represents a timeout.
-    bool rec::Timeout(golang::os::SyscallError* e)
+    bool rec::Timeout(SyscallError* e)
     {
         auto [t, ok] = gocpp::getValue<timeout>(e->Err);
         return ok && rec::Timeout(gocpp::recv(t));
@@ -162,7 +162,7 @@ namespace golang::os
         {
             return nullptr;
         }
-        return gocpp::error(new SyscallError {syscall, err});
+        return gocpp::error(new golang::os::SyscallError {syscall, err});
     }
 
     // IsExist returns a boolean indicating whether the error is known to report
@@ -223,7 +223,7 @@ namespace golang::os
             return true;
         }
         // To preserve prior behavior, only examine syscall errors.
-        auto [e, ok] = gocpp::getValue<os::syscallErrorType>(err);
+        auto [e, ok] = gocpp::getValue<golang::os::syscallErrorType>(err);
         return ok && rec::Is(gocpp::recv(e), target);
     }
 

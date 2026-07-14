@@ -73,7 +73,7 @@ namespace golang::runtime
     //
     //go:nowritebarrierrec
     //go:nosplit
-    void wbZero(golang::runtime::_type* typ, gocpp::unsafe_pointer dst)
+    void wbZero(_type* typ, gocpp::unsafe_pointer dst)
     {
         // This always copies a full value of type typ so it's safe
         // to pass typ along as an optimization. See the comment on
@@ -87,7 +87,7 @@ namespace golang::runtime
     //
     //go:nowritebarrierrec
     //go:nosplit
-    void wbMove(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
+    void wbMove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
     {
         // This always copies a full value of type typ so it's safe to
         // pass a type here.
@@ -96,7 +96,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_typedmemmove reflect.typedmemmove
-    void reflect_typedmemmove(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
+    void reflect_typedmemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
     {
         if(raceenabled)
         {
@@ -117,7 +117,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflectlite_typedmemmove internal/reflectlite.typedmemmove
-    void reflectlite_typedmemmove(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
+    void reflectlite_typedmemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src)
     {
         reflect_typedmemmove(typ, dst, src);
     }
@@ -132,7 +132,7 @@ namespace golang::runtime
     // stack map of reflectcall is wrong.
     //
     //go:nosplit
-    void reflectcallmove(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t size, abi::RegArgs* regs)
+    void reflectcallmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t size, abi::RegArgs* regs)
     {
         if(writeBarrier.enabled && typ != nullptr && typ->PtrBytes != 0 && size >= goarch::PtrSize)
         {
@@ -154,7 +154,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    int typedslicecopy(golang::runtime::_type* typ, gocpp::unsafe_pointer dstPtr, int dstLen, gocpp::unsafe_pointer srcPtr, int srcLen)
+    int typedslicecopy(_type* typ, gocpp::unsafe_pointer dstPtr, int dstLen, gocpp::unsafe_pointer srcPtr, int srcLen)
     {
         auto n = dstLen;
         if(n > srcLen)
@@ -218,7 +218,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_typedslicecopy reflect.typedslicecopy
-    int reflect_typedslicecopy(golang::runtime::_type* elemType, struct slice dst, struct slice src)
+    int reflect_typedslicecopy(_type* elemType, golang::runtime::slice dst, golang::runtime::slice src)
     {
         if(elemType->PtrBytes == 0)
         {
@@ -238,7 +238,7 @@ namespace golang::runtime
     // TODO: A "go:nosplitrec" annotation would be perfect for this.
     //
     //go:nosplit
-    void typedmemclr(golang::runtime::_type* typ, gocpp::unsafe_pointer ptr)
+    void typedmemclr(_type* typ, gocpp::unsafe_pointer ptr)
     {
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
@@ -251,13 +251,13 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_typedmemclr reflect.typedmemclr
-    void reflect_typedmemclr(golang::runtime::_type* typ, gocpp::unsafe_pointer ptr)
+    void reflect_typedmemclr(_type* typ, gocpp::unsafe_pointer ptr)
     {
         typedmemclr(typ, ptr);
     }
 
     //go:linkname reflect_typedmemclrpartial reflect.typedmemclrpartial
-    void reflect_typedmemclrpartial(golang::runtime::_type* typ, gocpp::unsafe_pointer ptr, uintptr_t off, uintptr_t size)
+    void reflect_typedmemclrpartial(_type* typ, gocpp::unsafe_pointer ptr, uintptr_t off, uintptr_t size)
     {
         if(writeBarrier.enabled && typ->PtrBytes != 0)
         {
@@ -271,7 +271,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_typedarrayclear reflect.typedarrayclear
-    void reflect_typedarrayclear(golang::runtime::_type* typ, gocpp::unsafe_pointer ptr, int len)
+    void reflect_typedarrayclear(_type* typ, gocpp::unsafe_pointer ptr, int len)
     {
         auto size = typ->Size_ * uintptr_t(len);
         if(writeBarrier.enabled && typ->PtrBytes != 0)

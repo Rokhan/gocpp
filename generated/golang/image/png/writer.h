@@ -38,8 +38,8 @@ namespace golang::png
 
         struct IEncoderBufferPool
         {
-            virtual struct EncoderBuffer* vGet() = 0;
-            virtual void vPut(struct EncoderBuffer* _1) = 0;
+            virtual golang::png::EncoderBuffer* vGet() = 0;
+            virtual void vPut(golang::png::EncoderBuffer* _1) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -51,9 +51,9 @@ namespace golang::png
                 value.reset(ptr);
             }
 
-            struct EncoderBuffer* vGet() override;
+            golang::png::EncoderBuffer* vGet() override;
 
-            void vPut(struct EncoderBuffer* _1) override;
+            void vPut(golang::png::EncoderBuffer* _1) override;
 
             void* getPtr() override
             {
@@ -68,11 +68,11 @@ namespace golang::png
 
     namespace rec
     {
-        struct EncoderBuffer* Get(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self);
-        struct EncoderBuffer* Get(const gocpp::ObjRecv<struct EncoderBufferPool>& self);
+        golang::png::EncoderBuffer* Get(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self);
+        golang::png::EncoderBuffer* Get(const gocpp::ObjRecv<struct EncoderBufferPool>& self);
 
-        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, struct EncoderBuffer* _1);
-        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, struct EncoderBuffer* _1);
+        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, golang::png::EncoderBuffer* _1);
+        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, golang::png::EncoderBuffer* _1);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value);
@@ -137,10 +137,10 @@ namespace golang::png
     std::ostream& operator<<(std::ostream& os, const struct opaquer& value);
     int abs8(uint8_t d);
     void zeroMemory(gocpp::slice<uint8_t> v);
-    int levelToZlib(golang::png::CompressionLevel l);
+    int levelToZlib(CompressionLevel l);
     struct Encoder
     {
-        golang::png::CompressionLevel CompressionLevel{};
+        CompressionLevel CompressionLevel{};
         // BufferPool optionally specifies a buffer pool to get temporary
         // EncoderBuffers when encoding an image.
         EncoderBufferPool BufferPool{};
@@ -197,7 +197,7 @@ namespace golang::png
     bool opaque(image::Image m);
     int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp);
     struct gocpp::error Encode(io::Writer w, image::Image m);
-    using EncoderBuffer = gocpp::defined<encoder, GoTag_EncoderBuffer>;
+    using EncoderBuffer = gocpp::defined<golang::png::encoder, GoTag_EncoderBuffer>;
 }
 
 #include "golang/image/color/color.h"
@@ -209,14 +209,14 @@ namespace golang::png
 
     namespace rec
     {
-        void writeChunk(golang::png::encoder* e, gocpp::slice<unsigned char> b, gocpp::string name);
-        void writeIHDR(golang::png::encoder* e);
-        void writePLTEAndTRNS(golang::png::encoder* e, color::Palette p);
-        std::tuple<int, struct gocpp::error> Write(golang::png::encoder* e, gocpp::slice<unsigned char> b);
-        struct gocpp::error writeImage(golang::png::encoder* e, io::Writer w, image::Image m, int cb, int level);
-        void writeIDATs(golang::png::encoder* e);
-        void writeIEND(golang::png::encoder* e);
-        struct gocpp::error Encode(golang::png::Encoder* enc, io::Writer w, image::Image m);
+        void writeChunk(encoder* e, gocpp::slice<unsigned char> b, gocpp::string name);
+        void writeIHDR(encoder* e);
+        void writePLTEAndTRNS(encoder* e, color::Palette p);
+        std::tuple<int, struct gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> b);
+        struct gocpp::error writeImage(encoder* e, io::Writer w, image::Image m, int cb, int level);
+        void writeIDATs(encoder* e);
+        void writeIEND(encoder* e);
+        struct gocpp::error Encode(Encoder* enc, io::Writer w, image::Image m);
     }
 }
 

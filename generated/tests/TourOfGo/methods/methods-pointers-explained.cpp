@@ -52,12 +52,12 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    double Abs(struct Vertex v)
+    double Abs(Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
-    void Scale(struct Vertex* v, double f)
+    void Scale(Vertex* v, double f)
     {
         v->X = v->X * f;
         v->Y = v->Y * f;
@@ -65,7 +65,7 @@ namespace golang::main
 
     void main()
     {
-        auto v = Vertex {3, 4};
+        auto v = golang::main::Vertex {3, 4};
         Scale(& v, 10);
         mocklib::Println(Abs(v));
     }

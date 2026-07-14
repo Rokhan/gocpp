@@ -73,7 +73,7 @@ namespace golang::poll
     // 20 bits - number of outstanding write waiters.
     // incref adds a reference to mu.
     // It reports whether mu is available for reading or writing.
-    bool rec::incref(golang::poll::fdMutex* mu)
+    bool rec::incref(fdMutex* mu)
     {
         for(; ; )
         {
@@ -96,7 +96,7 @@ namespace golang::poll
 
     // increfAndClose sets the state of mu to closed.
     // It returns false if the file was already closed.
-    bool rec::increfAndClose(golang::poll::fdMutex* mu)
+    bool rec::increfAndClose(fdMutex* mu)
     {
         for(; ; )
         {
@@ -134,7 +134,7 @@ namespace golang::poll
 
     // decref removes a reference from mu.
     // It reports whether there is no remaining reference.
-    bool rec::decref(golang::poll::fdMutex* mu)
+    bool rec::decref(fdMutex* mu)
     {
         for(; ; )
         {
@@ -153,7 +153,7 @@ namespace golang::poll
 
     // lock adds a reference to mu and locks mu.
     // It reports whether mu is available for reading or writing.
-    bool rec::rwlock(golang::poll::fdMutex* mu, bool read)
+    bool rec::rwlock(fdMutex* mu, bool read)
     {
         uint64_t mutexBit = {};
         uint64_t mutexWait = {};
@@ -213,7 +213,7 @@ namespace golang::poll
 
     // unlock removes a reference from mu and unlocks mu.
     // It reports whether there is no remaining reference.
-    bool rec::rwunlock(golang::poll::fdMutex* mu, bool read)
+    bool rec::rwunlock(fdMutex* mu, bool read)
     {
         uint64_t mutexBit = {};
         uint64_t mutexWait = {};
@@ -266,7 +266,7 @@ namespace golang::poll
 
     // incref adds a reference to fd.
     // It returns an error when fd cannot be used.
-    struct gocpp::error rec::incref(golang::poll::FD* fd)
+    struct gocpp::error rec::incref(FD* fd)
     {
         if(! rec::incref(gocpp::recv(fd->fdmu)))
         {
@@ -278,7 +278,7 @@ namespace golang::poll
     // decref removes a reference from fd.
     // It also closes fd when the state of fd is set to closed and there
     // is no remaining reference.
-    struct gocpp::error rec::decref(golang::poll::FD* fd)
+    struct gocpp::error rec::decref(FD* fd)
     {
         if(rec::decref(gocpp::recv(fd->fdmu)))
         {
@@ -289,7 +289,7 @@ namespace golang::poll
 
     // readLock adds a reference to fd and locks fd for reading.
     // It returns an error when fd cannot be used for reading.
-    struct gocpp::error rec::readLock(golang::poll::FD* fd)
+    struct gocpp::error rec::readLock(FD* fd)
     {
         if(! rec::rwlock(gocpp::recv(fd->fdmu), true))
         {
@@ -301,7 +301,7 @@ namespace golang::poll
     // readUnlock removes a reference from fd and unlocks fd for reading.
     // It also closes fd when the state of fd is set to closed and there
     // is no remaining reference.
-    void rec::readUnlock(golang::poll::FD* fd)
+    void rec::readUnlock(FD* fd)
     {
         if(rec::rwunlock(gocpp::recv(fd->fdmu), true))
         {
@@ -311,7 +311,7 @@ namespace golang::poll
 
     // writeLock adds a reference to fd and locks fd for writing.
     // It returns an error when fd cannot be used for writing.
-    struct gocpp::error rec::writeLock(golang::poll::FD* fd)
+    struct gocpp::error rec::writeLock(FD* fd)
     {
         if(! rec::rwlock(gocpp::recv(fd->fdmu), false))
         {
@@ -323,7 +323,7 @@ namespace golang::poll
     // writeUnlock removes a reference from fd and unlocks fd for writing.
     // It also closes fd when the state of fd is set to closed and there
     // is no remaining reference.
-    void rec::writeUnlock(golang::poll::FD* fd)
+    void rec::writeUnlock(FD* fd)
     {
         if(rec::rwunlock(gocpp::recv(fd->fdmu), false))
         {

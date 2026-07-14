@@ -34,7 +34,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern mutex itabLock;
+    extern golang::runtime::mutex itabLock;
     struct itabTableType
     {
         uintptr_t size{}; // length of entries array. Always a power of 2.
@@ -53,31 +53,31 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct itabTableType& value);
-    uintptr_t itabHashFunc(golang::runtime::interfacetype* inter, golang::runtime::_type* typ);
-    struct itab* getitab(golang::runtime::interfacetype* inter, golang::runtime::_type* typ, bool canfail);
-    void itabAdd(struct itab* m);
-    void panicdottypeE(golang::runtime::_type* have, golang::runtime::_type* want, golang::runtime::_type* iface);
-    void panicdottypeI(struct itab* have, golang::runtime::_type* want, golang::runtime::_type* iface);
-    void panicnildottype(golang::runtime::_type* want);
-    extern runtime::_type* uint16Type;
-    extern runtime::_type* uint32Type;
-    extern runtime::_type* uint64Type;
-    extern runtime::_type* stringType;
-    gocpp::unsafe_pointer convT(golang::runtime::_type* t, gocpp::unsafe_pointer v);
-    gocpp::unsafe_pointer convTnoptr(golang::runtime::_type* t, gocpp::unsafe_pointer v);
-    struct itab* assertE2I(golang::runtime::interfacetype* inter, golang::runtime::_type* t);
-    struct itab* assertE2I2(golang::runtime::interfacetype* inter, golang::runtime::_type* t);
-    struct itab* typeAssert(abi::TypeAssert* s, golang::runtime::_type* t);
-    abi::TypeAssertCache* buildTypeAssertCache(abi::TypeAssertCache* oldC, golang::runtime::_type* typ, struct itab* tab);
+    uintptr_t itabHashFunc(interfacetype* inter, _type* typ);
+    golang::runtime::itab* getitab(interfacetype* inter, _type* typ, bool canfail);
+    void itabAdd(itab* m);
+    void panicdottypeE(_type* have, _type* want, _type* iface);
+    void panicdottypeI(itab* have, _type* want, _type* iface);
+    void panicnildottype(_type* want);
+    extern golang::runtime::_type* uint16Type;
+    extern golang::runtime::_type* uint32Type;
+    extern golang::runtime::_type* uint64Type;
+    extern golang::runtime::_type* stringType;
+    gocpp::unsafe_pointer convT(_type* t, gocpp::unsafe_pointer v);
+    gocpp::unsafe_pointer convTnoptr(_type* t, gocpp::unsafe_pointer v);
+    golang::runtime::itab* assertE2I(interfacetype* inter, _type* t);
+    golang::runtime::itab* assertE2I2(interfacetype* inter, _type* t);
+    golang::runtime::itab* typeAssert(abi::TypeAssert* s, _type* t);
+    abi::TypeAssertCache* buildTypeAssertCache(abi::TypeAssertCache* oldC, _type* typ, itab* tab);
     extern abi::TypeAssertCache emptyTypeAssertCache;
-    std::tuple<int, struct itab*> interfaceSwitch(abi::InterfaceSwitch* s, golang::runtime::_type* t);
-    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, golang::runtime::_type* typ, int case_, struct itab* tab);
+    std::tuple<int, golang::runtime::itab*> interfaceSwitch(abi::InterfaceSwitch* s, _type* t);
+    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, _type* typ, int case_, itab* tab);
     extern abi::InterfaceSwitchCache emptyInterfaceSwitchCache;
-    void reflect_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst);
-    void reflectlite_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst);
-    void iterate_itabs(std::function<void (struct itab* _1)> fn);
-    extern itabTableType itabTableInit;
-    extern runtime::_type* sliceType;
+    void reflect_ifaceE2I(interfacetype* inter, eface e, iface* dst);
+    void reflectlite_ifaceE2I(interfacetype* inter, eface e, iface* dst);
+    void iterate_itabs(std::function<void (itab* _1)> fn);
+    extern golang::runtime::itabTableType itabTableInit;
+    extern golang::runtime::_type* sliceType;
     extern itabTableType* itabTable;
 }
 
@@ -88,9 +88,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct itab* find(golang::runtime::itabTableType* t, golang::runtime::interfacetype* inter, golang::runtime::_type* typ);
-        void add(golang::runtime::itabTableType* t, struct itab* m);
-        gocpp::string init(golang::runtime::itab* m);
+        golang::runtime::itab* find(itabTableType* t, interfacetype* inter, _type* typ);
+        void add(itabTableType* t, itab* m);
+        gocpp::string init(itab* m);
     }
 }
 

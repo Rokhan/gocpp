@@ -14,7 +14,7 @@ namespace golang::runtime
 {
     struct gclink
     {
-        golang::runtime::gclinkptr next{};
+        gclinkptr next{};
 
         using isGoStruct = void;
 
@@ -30,7 +30,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gclink& value);
     struct stackfreelist
     {
-        golang::runtime::gclinkptr list{}; // linked list of free stacks
+        gclinkptr list{}; // linked list of free stacks
         uintptr_t size{}; // total size of stacks in list
 
         using isGoStruct = void;
@@ -90,15 +90,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mcache& value);
-    extern mspan emptymspan;
-    struct mcache* allocmcache();
-    void freemcache(struct mcache* c);
+    extern golang::runtime::mspan emptymspan;
+    golang::runtime::mcache* allocmcache();
+    void freemcache(mcache* c);
 }
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
-    struct mcache* getMCache(struct m* mp);
+    golang::runtime::mcache* getMCache(m* mp);
 }
 
 #include "golang/runtime/mheap.h"
@@ -108,11 +108,11 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct gclink* ptr(golang::runtime::gclinkptr p);
-        void refill(golang::runtime::mcache* c, golang::runtime::spanClass spc);
-        struct mspan* allocLarge(golang::runtime::mcache* c, uintptr_t size, bool noscan);
-        void releaseAll(golang::runtime::mcache* c);
-        void prepareForSweep(golang::runtime::mcache* c);
+        golang::runtime::gclink* ptr(gclinkptr p);
+        void refill(mcache* c, spanClass spc);
+        golang::runtime::mspan* allocLarge(mcache* c, uintptr_t size, bool noscan);
+        void releaseAll(mcache* c);
+        void prepareForSweep(mcache* c);
     }
 }
 

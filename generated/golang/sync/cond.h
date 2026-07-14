@@ -39,7 +39,7 @@ namespace golang::sync
         // L is held while observing or changing the condition
         Locker L{};
         notifyList notify{};
-        golang::sync::copyChecker checker{};
+        copyChecker checker{};
 
         using isGoStruct = void;
 
@@ -53,16 +53,16 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Cond& value);
-    struct Cond* NewCond(struct Locker l);
+    golang::sync::Cond* NewCond(struct Locker l);
 
     namespace rec
     {
-        void Wait(golang::sync::Cond* c);
-        void Signal(golang::sync::Cond* c);
-        void Broadcast(golang::sync::Cond* c);
-        void check(golang::sync::copyChecker* c);
-        void Lock(golang::sync::noCopy*);
-        void Unlock(golang::sync::noCopy*);
+        void Wait(Cond* c);
+        void Signal(Cond* c);
+        void Broadcast(Cond* c);
+        void check(copyChecker* c);
+        void Lock(noCopy*);
+        void Unlock(noCopy*);
     }
 }
 

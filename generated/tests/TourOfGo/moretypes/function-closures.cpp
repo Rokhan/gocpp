@@ -43,23 +43,23 @@ namespace golang::main
         return r;
     }
 
-    gocpp::rune rec::ToUpper(golang::main::SpecialCase special, gocpp::rune r)
+    gocpp::rune rec::ToUpper(SpecialCase special, gocpp::rune r)
     {
         // Do nothing, we just need the prototype of ToUpper function for the test
         return r;
     }
 
-    gocpp::slice<unsigned char> TestLambda0(golang::main::SpecialCase c, gocpp::slice<unsigned char> s)
+    gocpp::slice<unsigned char> TestLambda0(SpecialCase c, gocpp::slice<unsigned char> s)
     {
         return Map(ToUpper, s);
     }
 
-    gocpp::slice<unsigned char> TestLambda1(golang::main::SpecialCase c, gocpp::slice<unsigned char> s)
+    gocpp::slice<unsigned char> TestLambda1(SpecialCase c, gocpp::slice<unsigned char> s)
     {
         return Map([&](auto x){ return rec::ToUpper(c, x); }, s);
     }
 
-    gocpp::slice<unsigned char> TestLambda2(golang::main::SpecialCase x, gocpp::slice<unsigned char> y)
+    gocpp::slice<unsigned char> TestLambda2(SpecialCase x, gocpp::slice<unsigned char> y)
     {
         return Map([&](auto z){ return rec::ToUpper(x, z); }, y);
     }
@@ -99,17 +99,17 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    int rec::fillStore(golang::main::compressor* d, gocpp::slice<unsigned char> b)
+    int rec::fillStore(compressor* d, gocpp::slice<unsigned char> b)
     {
         mocklib::Println("fillStore called"_s);
         return 0;
     }
 
-    void rec::store(golang::main::compressor* d)
+    void rec::store(compressor* d)
     {
     }
 
-    struct gocpp::error rec::init(golang::main::compressor* d)
+    struct gocpp::error rec::init(compressor* d)
     {
         struct gocpp::error err;
         d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
@@ -117,7 +117,7 @@ namespace golang::main
         return nullptr;
     }
 
-    std::tuple<int, struct gocpp::error> rec::write(golang::main::compressor* d, gocpp::slice<unsigned char> b)
+    std::tuple<int, struct gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
     {
         int n;
         struct gocpp::error err;
@@ -133,7 +133,7 @@ namespace golang::main
             mocklib::Println(pos(i), neg(- 2 * i));
         }
 
-        auto writer = new compressor {};
+        auto writer = new golang::main::compressor {};
         rec::init(gocpp::recv(writer));
         rec::write(gocpp::recv(writer), gocpp::slice<unsigned char>("Hello, World!"_s));
     }

@@ -440,9 +440,9 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    ProcAttr zeroProcAttr;
-    SysProcAttr zeroSysProcAttr;
-    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, struct ProcAttr* attr)
+    golang::syscall::ProcAttr zeroProcAttr;
+    golang::syscall::SysProcAttr zeroSysProcAttr;
+    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr)
     {
         gocpp::Defer defer;
         try
@@ -534,7 +534,7 @@ namespace golang::syscall
             {
                 parentProcess = sys->ParentProcess;
             }
-            auto fd = gocpp::make(gocpp::Tag<gocpp::slice<syscall::Handle>>(), len(attr->Files));
+            auto fd = gocpp::make(gocpp::Tag<gocpp::slice<golang::syscall::Handle>>(), len(attr->Files));
             for(auto [i, gocpp_ignored] : attr->Files)
             {
                 if(attr->Files[i] > 0)

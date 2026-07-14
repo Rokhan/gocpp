@@ -64,7 +64,7 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    struct gocpp::error rec::Control(golang::os::rawConn* c, std::function<void (uintptr_t _1)> f)
+    struct gocpp::error rec::Control(rawConn* c, std::function<void (uintptr_t _1)> f)
     {
         if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Control"_s); err != nullptr)
         {
@@ -75,7 +75,7 @@ namespace golang::os
         return err;
     }
 
-    struct gocpp::error rec::Read(golang::os::rawConn* c, std::function<bool (uintptr_t _1)> f)
+    struct gocpp::error rec::Read(rawConn* c, std::function<bool (uintptr_t _1)> f)
     {
         if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Read"_s); err != nullptr)
         {
@@ -86,7 +86,7 @@ namespace golang::os
         return err;
     }
 
-    struct gocpp::error rec::Write(golang::os::rawConn* c, std::function<bool (uintptr_t _1)> f)
+    struct gocpp::error rec::Write(rawConn* c, std::function<bool (uintptr_t _1)> f)
     {
         if(auto err = rec::checkValid(gocpp::recv(c->file), "SyscallConn.Write"_s); err != nullptr)
         {
@@ -97,9 +97,9 @@ namespace golang::os
         return err;
     }
 
-    std::tuple<struct rawConn*, struct gocpp::error> newRawConn(struct File* file)
+    std::tuple<golang::os::rawConn*, struct gocpp::error> newRawConn(File* file)
     {
-        return {gocpp::InitPtr<rawConn>([=](auto& x) {
+        return {gocpp::InitPtr<golang::os::rawConn>([=](auto& x) {
             x.file = file;
         }), nullptr};
     }

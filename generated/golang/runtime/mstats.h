@@ -288,8 +288,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct heapStatsDelta& value);
-    void ReadMemStats(struct MemStats* m);
-    void readmemstats_m(struct MemStats* stats);
+    void ReadMemStats(MemStats* m);
+    void readmemstats_m(MemStats* stats);
 }
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/runtime2.h"
@@ -343,15 +343,15 @@ namespace golang::runtime
         // Statistics about malloc heap.
         consistentHeapStats heapStats{};
         // Statistics about stacks.
-        golang::runtime::sysMemStat stacks_sys{}; // only counts newosproc0 stack in mstats; differs from MemStats.StackSys
+        sysMemStat stacks_sys{}; // only counts newosproc0 stack in mstats; differs from MemStats.StackSys
         // Statistics about allocation of low-level fixed-size structures.
-        golang::runtime::sysMemStat mspan_sys{};
-        golang::runtime::sysMemStat mcache_sys{};
-        golang::runtime::sysMemStat buckhash_sys{}; // profiling bucket hash table
+        sysMemStat mspan_sys{};
+        sysMemStat mcache_sys{};
+        sysMemStat buckhash_sys{}; // profiling bucket hash table
         // Statistics about GC overhead.
-        golang::runtime::sysMemStat gcMiscSys{}; // updated atomically or during STW
+        sysMemStat gcMiscSys{}; // updated atomically or during STW
         // Miscellaneous statistics.
-        golang::runtime::sysMemStat other_sys{}; // updated atomically or during STW
+        sysMemStat other_sys{}; // updated atomically or during STW
         // Protected by mheap or worldsema during GC.
         uint64_t last_gc_unix{}; // last gc (in unix time)
         uint64_t pause_total_ns{};
@@ -376,19 +376,19 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mstats& value);
-    extern mstats memstats;
+    extern golang::runtime::mstats memstats;
 
     namespace rec
     {
-        uint64_t load(golang::runtime::sysMemStat* s);
-        void add(golang::runtime::sysMemStat* s, int64_t n);
-        void merge(golang::runtime::heapStatsDelta* a, struct heapStatsDelta* b);
-        struct heapStatsDelta* acquire(golang::runtime::consistentHeapStats* m);
-        void release(golang::runtime::consistentHeapStats* m);
-        void unsafeRead(golang::runtime::consistentHeapStats* m, struct heapStatsDelta* out);
-        void unsafeClear(golang::runtime::consistentHeapStats* m);
-        void read(golang::runtime::consistentHeapStats* m, struct heapStatsDelta* out);
-        void accumulate(golang::runtime::cpuStats* s, int64_t now, bool gcMarkPhase);
+        uint64_t load(sysMemStat* s);
+        void add(sysMemStat* s, int64_t n);
+        void merge(heapStatsDelta* a, heapStatsDelta* b);
+        golang::runtime::heapStatsDelta* acquire(consistentHeapStats* m);
+        void release(consistentHeapStats* m);
+        void unsafeRead(consistentHeapStats* m, heapStatsDelta* out);
+        void unsafeClear(consistentHeapStats* m);
+        void read(consistentHeapStats* m, heapStatsDelta* out);
+        void accumulate(cpuStats* s, int64_t now, bool gcMarkPhase);
     }
 }
 

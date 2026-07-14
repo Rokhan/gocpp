@@ -14,9 +14,9 @@ namespace golang::runtime
     const long _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
     struct gocpp_id_1;
     const long maxArgs = 42;
-    const runtime::abiPartKind abiPartBad = 0;
-    const runtime::abiPartKind abiPartStack = 1;
-    const runtime::abiPartKind abiPartReg = 2;
+    const golang::runtime::abiPartKind abiPartBad = 0;
+    const golang::runtime::abiPartKind abiPartStack = 1;
+    const golang::runtime::abiPartKind abiPartReg = 2;
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"

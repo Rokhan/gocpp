@@ -35,7 +35,7 @@ namespace golang::godebug
     int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
     void setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
     std::function<void ()> newIncNonDefault(gocpp::string name);
-    extern runtimeStderr go_stderr;
+    extern golang::godebug::runtimeStderr go_stderr;
 }
 #include "golang/internal/bisect/bisect.h"
 #include "golang/internal/godebugs/table.h"
@@ -102,19 +102,19 @@ namespace golang::godebug
     std::ostream& operator<<(std::ostream& os, const struct value& value);
     extern sync::Map cache;
     extern mocklib::Mutex updateMu;
-    struct Setting* New(gocpp::string name);
-    extern value empty;
-    struct setting* lookup(gocpp::string name);
+    golang::godebug::Setting* New(gocpp::string name);
+    extern golang::godebug::value empty;
+    golang::godebug::setting* lookup(gocpp::string name);
 
     namespace rec
     {
-        gocpp::string Name(golang::godebug::Setting* s);
-        bool Undocumented(golang::godebug::Setting* s);
-        gocpp::string String(golang::godebug::Setting* s);
-        void IncNonDefault(golang::godebug::Setting* s);
-        void go_register(golang::godebug::Setting* s);
-        gocpp::string Value(golang::godebug::Setting* s);
-        std::tuple<int, struct gocpp::error> Write(golang::godebug::runtimeStderr*, gocpp::slice<unsigned char> b);
+        gocpp::string Name(Setting* s);
+        bool Undocumented(Setting* s);
+        gocpp::string String(Setting* s);
+        void IncNonDefault(Setting* s);
+        void go_register(Setting* s);
+        gocpp::string Value(Setting* s);
+        std::tuple<int, struct gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
     }
 }
 

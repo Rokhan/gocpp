@@ -121,12 +121,12 @@ namespace golang::syscall
 
     // StringToSid converts a string-format security identifier
     // sid into a valid, functional sid.
-    std::tuple<struct SID*, struct gocpp::error> StringToSid(gocpp::string s)
+    std::tuple<golang::syscall::SID*, struct gocpp::error> StringToSid(gocpp::string s)
     {
         gocpp::Defer defer;
         try
         {
-            SID* sid = {};
+            golang::syscall::SID* sid = {};
             auto [p, e] = UTF16PtrFromString(s);
             if(e != nullptr)
             {
@@ -137,7 +137,7 @@ namespace golang::syscall
             {
                 return {nullptr, e};
             }
-            defer.push_back([=]{ LocalFree((syscall::Handle)(gocpp::unsafe_pointer(sid))); });
+            defer.push_back([=]{ LocalFree((golang::syscall::Handle)(gocpp::unsafe_pointer(sid))); });
             return rec::Copy(gocpp::recv(sid));
         }
         catch(gocpp::GoPanic& gp)
@@ -149,9 +149,9 @@ namespace golang::syscall
     // LookupSID retrieves a security identifier sid for the account
     // and the name of the domain on which the account was found.
     // System specify target computer to search.
-    std::tuple<struct SID*, gocpp::string, uint32_t, struct gocpp::error> LookupSID(gocpp::string system, gocpp::string account)
+    std::tuple<golang::syscall::SID*, gocpp::string, uint32_t, struct gocpp::error> LookupSID(gocpp::string system, gocpp::string account)
     {
-        struct SID* sid;
+        golang::syscall::SID* sid;
         gocpp::string domain;
         uint32_t accType;
         struct gocpp::error err;
@@ -179,7 +179,7 @@ namespace golang::syscall
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n);
             auto db = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), dn);
-            sid = (SID*)(gocpp::unsafe_pointer(& b[0]));
+            sid = (golang::syscall::SID*)(gocpp::unsafe_pointer(& b[0]));
             e = LookupAccountName(sys, acc, sid, & n, & db[0], & dn, & accType);
             if(e == nullptr)
             {
@@ -198,7 +198,7 @@ namespace golang::syscall
 
     // String converts sid to a string format
     // suitable for display, storage, or transmission.
-    std::tuple<gocpp::string, struct gocpp::error> rec::String(golang::syscall::SID* sid)
+    std::tuple<gocpp::string, struct gocpp::error> rec::String(SID* sid)
     {
         gocpp::Defer defer;
         try
@@ -209,7 +209,7 @@ namespace golang::syscall
             {
                 return {""_s, e};
             }
-            defer.push_back([=]{ LocalFree((syscall::Handle)(gocpp::unsafe_pointer(s))); });
+            defer.push_back([=]{ LocalFree((golang::syscall::Handle)(gocpp::unsafe_pointer(s))); });
             return {utf16PtrToString(s), nullptr};
         }
         catch(gocpp::GoPanic& gp)
@@ -219,16 +219,16 @@ namespace golang::syscall
     }
 
     // Len returns the length, in bytes, of a valid security identifier sid.
-    int rec::Len(golang::syscall::SID* sid)
+    int rec::Len(SID* sid)
     {
         return int(GetLengthSid(sid));
     }
 
     // Copy creates a duplicate of security identifier sid.
-    std::tuple<struct SID*, struct gocpp::error> rec::Copy(golang::syscall::SID* sid)
+    std::tuple<golang::syscall::SID*, struct gocpp::error> rec::Copy(SID* sid)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::Len(gocpp::recv(sid)));
-        auto sid2 = (SID*)(gocpp::unsafe_pointer(& b[0]));
+        auto sid2 = (golang::syscall::SID*)(gocpp::unsafe_pointer(& b[0]));
         auto e = CopySid(uint32_t(len(b)), sid2, sid);
         if(e != nullptr)
         {
@@ -240,7 +240,7 @@ namespace golang::syscall
     // LookupAccount retrieves the name of the account for this sid
     // and the name of the first domain on which this sid is found.
     // System specify target computer to search for.
-    std::tuple<gocpp::string, gocpp::string, uint32_t, struct gocpp::error> rec::LookupAccount(golang::syscall::SID* sid, gocpp::string system)
+    std::tuple<gocpp::string, gocpp::string, uint32_t, struct gocpp::error> rec::LookupAccount(SID* sid, gocpp::string system)
     {
         gocpp::string account;
         gocpp::string domain;
@@ -378,14 +378,14 @@ namespace golang::syscall
     // system-related operations on the local computer.
     // OpenCurrentProcessToken opens the access token
     // associated with current process.
-    std::tuple<syscall::Token, struct gocpp::error> OpenCurrentProcessToken()
+    std::tuple<golang::syscall::Token, struct gocpp::error> OpenCurrentProcessToken()
     {
         auto [p, e] = GetCurrentProcess();
         if(e != nullptr)
         {
             return {0, e};
         }
-        syscall::Token t = {};
+        Token t = {};
         e = OpenProcessToken(p, TOKEN_QUERY, & t);
         if(e != nullptr)
         {
@@ -424,27 +424,27 @@ namespace golang::syscall
     }
 
     // GetTokenUser retrieves access token t user account information.
-    std::tuple<struct Tokenuser*, struct gocpp::error> rec::GetTokenUser(golang::syscall::Token t)
+    std::tuple<golang::syscall::Tokenuser*, struct gocpp::error> rec::GetTokenUser(golang::syscall::Token t)
     {
         auto [i, e] = rec::getInfo(gocpp::recv(t), TokenUser, 50);
         if(e != nullptr)
         {
             return {nullptr, e};
         }
-        return {(Tokenuser*)(i), nullptr};
+        return {(golang::syscall::Tokenuser*)(i), nullptr};
     }
 
     // GetTokenPrimaryGroup retrieves access token t primary group information.
     // A pointer to a SID structure representing a group that will become
     // the primary group of any objects created by a process using this access token.
-    std::tuple<struct Tokenprimarygroup*, struct gocpp::error> rec::GetTokenPrimaryGroup(golang::syscall::Token t)
+    std::tuple<golang::syscall::Tokenprimarygroup*, struct gocpp::error> rec::GetTokenPrimaryGroup(golang::syscall::Token t)
     {
         auto [i, e] = rec::getInfo(gocpp::recv(t), TokenPrimaryGroup, 50);
         if(e != nullptr)
         {
             return {nullptr, e};
         }
-        return {(Tokenprimarygroup*)(i), nullptr};
+        return {(golang::syscall::Tokenprimarygroup*)(i), nullptr};
     }
 
     // GetUserProfileDirectory retrieves path to the

@@ -52,8 +52,8 @@ namespace golang::crc32
     // polynomial. MakeTable will always return this value when asked to make a
     // Castagnoli table so we can compare against it to find when the caller is
     // using this polynomial.
-    gocpp::array_ptr<crc32::Table> castagnoliTable;
-    gocpp::array_ptr<slicing8Table> castagnoliTable8;
+    gocpp::array_ptr<golang::crc32::Table> castagnoliTable;
+    gocpp::array_ptr<golang::crc32::slicing8Table> castagnoliTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
     sync::Once castagnoliOnce;
     atomic::Bool haveCastagnoli;
@@ -80,9 +80,9 @@ namespace golang::crc32
     }
 
     // IEEETable is the table for the [IEEE] polynomial.
-    Table* IEEETable = simpleMakeTable(IEEE);
+    crc32::Table* IEEETable = simpleMakeTable(IEEE);
     // ieeeTable8 is the slicing8Table for IEEE
-    gocpp::array_ptr<slicing8Table> ieeeTable8;
+    gocpp::array_ptr<golang::crc32::slicing8Table> ieeeTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateIEEE;
     sync::Once ieeeOnce;
     void ieeeInit()
@@ -105,7 +105,7 @@ namespace golang::crc32
 
     // MakeTable returns a [Table] constructed from the specified polynomial.
     // The contents of this [Table] must not be modified.
-    gocpp::array_ptr<crc32::Table> MakeTable(uint32_t poly)
+    gocpp::array_ptr<golang::crc32::Table> MakeTable(uint32_t poly)
     {
         //Go switch emulation
         {
@@ -168,13 +168,13 @@ namespace golang::crc32
     // value out in big-endian byte order. The returned Hash32 also
     // implements [encoding.BinaryMarshaler] and [encoding.BinaryUnmarshaler] to
     // marshal and unmarshal the internal state of the hash.
-    hash::Hash32 New(gocpp::array_ptr<golang::crc32::Table> tab)
+    hash::Hash32 New(gocpp::array_ptr<Table> tab)
     {
         if(tab == IEEETable)
         {
             rec::Do(gocpp::recv(ieeeOnce), ieeeInit);
         }
-        return new digest {0, tab};
+        return new golang::crc32::digest {0, tab};
     }
 
     // NewIEEE creates a new [hash.Hash32] computing the CRC-32 checksum using
@@ -187,22 +187,22 @@ namespace golang::crc32
         return New(IEEETable);
     }
 
-    int rec::Size(golang::crc32::digest* d)
+    int rec::Size(digest* d)
     {
         return Size;
     }
 
-    int rec::BlockSize(golang::crc32::digest* d)
+    int rec::BlockSize(digest* d)
     {
         return 1;
     }
 
-    void rec::Reset(golang::crc32::digest* d)
+    void rec::Reset(digest* d)
     {
         d->crc = 0;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(golang::crc32::digest* d)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -211,7 +211,7 @@ namespace golang::crc32
         return {b, nullptr};
     }
 
-    struct gocpp::error rec::UnmarshalBinary(golang::crc32::digest* d, gocpp::slice<unsigned char> b)
+    struct gocpp::error rec::UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || gocpp::string(b.make_slice(0, len(magic))) != magic)
         {
@@ -244,7 +244,7 @@ namespace golang::crc32
         return uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24);
     }
 
-    uint32_t update(uint32_t crc, gocpp::array_ptr<golang::crc32::Table> tab, gocpp::slice<unsigned char> p, bool checkInitIEEE)
+    uint32_t update(uint32_t crc, gocpp::array_ptr<Table> tab, gocpp::slice<unsigned char> p, bool checkInitIEEE)
     {
         //Go switch emulation
         {
@@ -271,14 +271,14 @@ namespace golang::crc32
     }
 
     // Update returns the result of adding the bytes in p to the crc.
-    uint32_t Update(uint32_t crc, gocpp::array_ptr<golang::crc32::Table> tab, gocpp::slice<unsigned char> p)
+    uint32_t Update(uint32_t crc, gocpp::array_ptr<Table> tab, gocpp::slice<unsigned char> p)
     {
         // Unfortunately, because IEEETable is exported, IEEE may be used without a
         // call to MakeTable. We have to make sure it gets initialized in that case.
         return update(crc, tab, p, true);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(golang::crc32::digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(digest* d, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -288,12 +288,12 @@ namespace golang::crc32
         return {len(p), nullptr};
     }
 
-    uint32_t rec::Sum32(golang::crc32::digest* d)
+    uint32_t rec::Sum32(digest* d)
     {
         return d->crc;
     }
 
-    gocpp::slice<unsigned char> rec::Sum(golang::crc32::digest* d, gocpp::slice<unsigned char> in)
+    gocpp::slice<unsigned char> rec::Sum(digest* d, gocpp::slice<unsigned char> in)
     {
         auto s = rec::Sum32(gocpp::recv(d));
         return append(in, (unsigned char)(s >> 24), (unsigned char)(s >> 16), (unsigned char)(s >> 8), (unsigned char)(s));
@@ -301,7 +301,7 @@ namespace golang::crc32
 
     // Checksum returns the CRC-32 checksum of data
     // using the polynomial represented by the [Table].
-    uint32_t Checksum(gocpp::slice<unsigned char> data, gocpp::array_ptr<golang::crc32::Table> tab)
+    uint32_t Checksum(gocpp::slice<unsigned char> data, gocpp::array_ptr<Table> tab)
     {
         return Update(0, tab, data);
     }
@@ -315,7 +315,7 @@ namespace golang::crc32
     }
 
     // tableSum returns the IEEE checksum of table t.
-    uint32_t tableSum(gocpp::array_ptr<golang::crc32::Table> t)
+    uint32_t tableSum(gocpp::array_ptr<Table> t)
     {
         gocpp::array<unsigned char, 1024> a = {};
         auto b = a.make_slice(0, 0);

@@ -47,12 +47,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct dlogger* getCachedDlogger()
+    golang::runtime::dlogger* getCachedDlogger()
     {
         return nullptr;
     }
 
-    bool putCachedDlogger(struct dlogger* l)
+    bool putCachedDlogger(dlogger* l)
     {
         return false;
     }

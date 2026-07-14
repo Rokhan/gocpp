@@ -58,7 +58,7 @@ namespace golang::main
     }
 
     // Inc increments the counter for the given key.
-    void rec::Inc(golang::main::SafeCounter* c, gocpp::string key)
+    void rec::Inc(SafeCounter* c, gocpp::string key)
     {
         rec::Lock(gocpp::recv(c->mu));
         // Lock so only one goroutine at a time can access the map c.v.
@@ -67,7 +67,7 @@ namespace golang::main
     }
 
     // Value returns the current value of the counter for the given key.
-    int rec::Value(golang::main::SafeCounter* c, gocpp::string key)
+    int rec::Value(SafeCounter* c, gocpp::string key)
     {
         gocpp::Defer defer;
         try
@@ -85,7 +85,7 @@ namespace golang::main
 
     void main()
     {
-        auto c = gocpp::Init<SafeCounter>([=](auto& x) {
+        auto c = gocpp::Init<golang::main::SafeCounter>([=](auto& x) {
             x.v = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
         });
         for(auto i = 0; i < 1000; i++)

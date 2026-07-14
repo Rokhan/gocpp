@@ -88,7 +88,7 @@ namespace golang::runtime
     void sync_fatal(gocpp::string s);
     void go_throw(gocpp::string s);
     void fatal(gocpp::string s);
-    void fatalthrow(golang::runtime::throwType t);
+    void fatalthrow(throwType t);
     bool startpanic_m();
     extern bool didothers;
     bool canpanic();
@@ -109,22 +109,22 @@ namespace golang::runtime
     extern gocpp::error floatError;
     extern gocpp::error memoryError;
     extern gocpp::error rangeExitError;
-    struct _defer* badDefer();
-    struct _defer* deferconvert(struct _defer* d);
-    void deferprocStack(struct _defer* d);
-    struct _defer* newdefer();
-    void freedefer(struct _defer* d);
-    void preprintpanics(struct _panic* p);
-    void printpanics(struct _panic* p);
-    extern godebugInc* panicnil;
+    golang::runtime::_defer* badDefer();
+    golang::runtime::_defer* deferconvert(_defer* d);
+    void deferprocStack(_defer* d);
+    golang::runtime::_defer* newdefer();
+    void freedefer(_defer* d);
+    void preprintpanics(_panic* p);
+    void printpanics(_panic* p);
+    extern golang::runtime::godebugInc* panicnil;
     extern atomic::Uint32 runningPanicDefers;
     extern atomic::Uint32 panicking;
-    extern mutex paniclk;
-    void recovery(struct g* gp);
-    void fatalpanic(struct _panic* msgs);
-    extern mutex deadlock;
-    bool dopanic_m(struct g* gp, uintptr_t pc, uintptr_t sp);
-    bool shouldPushSigpanic(struct g* gp, uintptr_t pc, uintptr_t lr);
+    extern golang::runtime::mutex paniclk;
+    void recovery(g* gp);
+    void fatalpanic(_panic* msgs);
+    extern golang::runtime::mutex deadlock;
+    bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp);
+    bool shouldPushSigpanic(g* gp, uintptr_t pc, uintptr_t lr);
 }
 
 #include "golang/runtime/runtime2.h"
@@ -135,12 +135,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        gocpp::string Error(golang::runtime::PanicNilError*);
-        void RuntimeError(golang::runtime::PanicNilError*);
-        void start(golang::runtime::_panic* p, uintptr_t pc, gocpp::unsafe_pointer sp);
-        std::tuple<std::function<void ()>, bool> nextDefer(golang::runtime::_panic* p);
-        bool nextFrame(golang::runtime::_panic* p);
-        bool initOpenCodedDefers(golang::runtime::_panic* p, struct funcInfo fn, gocpp::unsafe_pointer varp);
+        gocpp::string Error(PanicNilError*);
+        void RuntimeError(PanicNilError*);
+        void start(_panic* p, uintptr_t pc, gocpp::unsafe_pointer sp);
+        std::tuple<std::function<void ()>, bool> nextDefer(_panic* p);
+        bool nextFrame(_panic* p);
+        bool initOpenCodedDefers(_panic* p, golang::runtime::funcInfo fn, gocpp::unsafe_pointer varp);
     }
 }
 

@@ -27,7 +27,7 @@ namespace golang::runtime
         // If this timer is on a heap, which P's heap it is on.
         // puintptr rather than *p to match uintptr in the versions
         // of this struct defined in other packages.
-        golang::runtime::puintptr pp{};
+        puintptr pp{};
         // Timer wakes up at when, and then at when+period, ... (period > 0 only)
         // each time calling f(arg, now) in the timer goroutine, so f must be
         // a well-behaved function and not block.
@@ -54,29 +54,29 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct timer& value);
-    bool resetForSleep(struct g* gp, gocpp::unsafe_pointer ut);
-    int dodeltimer(struct p* pp, int i);
-    void dodeltimer0(struct p* pp);
-    void cleantimers(struct p* pp);
-    void adjusttimers(struct p* pp, int64_t now);
-    int64_t nobarrierWakeTime(struct p* pp);
-    int64_t runtimer(struct p* pp, int64_t now);
-    void clearDeletedTimers(struct p* pp);
-    void verifyTimerHeap(struct p* pp);
-    void updateTimer0When(struct p* pp);
-    void updateTimerModifiedEarliest(struct p* pp, int64_t nextwhen);
-    void startTimer(struct timer* t);
-    bool stopTimer(struct timer* t);
-    bool resetTimer(struct timer* t, int64_t when);
-    void modTimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
-    void addtimer(struct timer* t);
-    void doaddtimer(struct p* pp, struct timer* t);
-    bool deltimer(struct timer* t);
-    bool modtimer(struct timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
-    bool resettimer(struct timer* t, int64_t when);
-    void moveTimers(struct p* pp, gocpp::slice<timer*> timers);
-    void addAdjustedTimers(struct p* pp, gocpp::slice<timer*> moved);
-    void runOneTimer(struct p* pp, struct timer* t, int64_t now);
+    bool resetForSleep(g* gp, gocpp::unsafe_pointer ut);
+    int dodeltimer(golang::runtime::p* pp, int i);
+    void dodeltimer0(golang::runtime::p* pp);
+    void cleantimers(golang::runtime::p* pp);
+    void adjusttimers(golang::runtime::p* pp, int64_t now);
+    int64_t nobarrierWakeTime(golang::runtime::p* pp);
+    int64_t runtimer(golang::runtime::p* pp, int64_t now);
+    void clearDeletedTimers(golang::runtime::p* pp);
+    void verifyTimerHeap(golang::runtime::p* pp);
+    void updateTimer0When(golang::runtime::p* pp);
+    void updateTimerModifiedEarliest(golang::runtime::p* pp, int64_t nextwhen);
+    void startTimer(timer* t);
+    bool stopTimer(timer* t);
+    bool resetTimer(timer* t, int64_t when);
+    void modTimer(timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
+    void addtimer(timer* t);
+    void doaddtimer(golang::runtime::p* pp, timer* t);
+    bool deltimer(timer* t);
+    bool modtimer(timer* t, int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2)> f, go_any arg, uintptr_t seq);
+    bool resettimer(timer* t, int64_t when);
+    void moveTimers(golang::runtime::p* pp, gocpp::slice<timer*> timers);
+    void addAdjustedTimers(golang::runtime::p* pp, gocpp::slice<timer*> moved);
+    void runOneTimer(golang::runtime::p* pp, timer* t, int64_t now);
     int siftupTimer(gocpp::slice<timer*> t, int i);
     void siftdownTimer(gocpp::slice<timer*> t, int i);
 

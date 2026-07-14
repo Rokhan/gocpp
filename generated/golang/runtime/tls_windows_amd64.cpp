@@ -42,7 +42,7 @@ namespace golang::runtime
     // osSetupTLS is called by needm to set up TLS for non-Go threads.
     //
     // Defined in assembly.
-    void osSetupTLS(struct m* mp)
+    void osSetupTLS(m* mp)
     /* convertBlockStmt, nil block */;
 
 }

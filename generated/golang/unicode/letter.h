@@ -114,16 +114,16 @@ namespace golang::unicode
     std::ostream& operator<<(std::ostream& os, const struct CaseRange& value);
     bool is16(gocpp::slice<Range16> ranges, uint16_t r);
     bool is32(gocpp::slice<Range32> ranges, uint32_t r);
-    using SpecialCase = gocpp::defined<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
-    bool Is(struct RangeTable* rangeTab, gocpp::rune r);
-    bool isExcludingLatin(struct RangeTable* rangeTab, gocpp::rune r);
+    using SpecialCase = gocpp::defined<gocpp::slice<golang::unicode::CaseRange>, GoTag_SpecialCase>;
+    bool Is(RangeTable* rangeTab, gocpp::rune r);
+    bool isExcludingLatin(RangeTable* rangeTab, gocpp::rune r);
     std::tuple<gocpp::rune, bool> to(int _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange);
 
     namespace rec
     {
-        gocpp::rune ToUpper(golang::unicode::SpecialCase special, gocpp::rune r);
-        gocpp::rune ToTitle(golang::unicode::SpecialCase special, gocpp::rune r);
-        gocpp::rune ToLower(golang::unicode::SpecialCase special, gocpp::rune r);
+        gocpp::rune ToUpper(SpecialCase special, gocpp::rune r);
+        gocpp::rune ToTitle(SpecialCase special, gocpp::rune r);
+        gocpp::rune ToLower(SpecialCase special, gocpp::rune r);
     }
 }
 

@@ -33,7 +33,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    runtime::limiterEventStamp makeLimiterEventStamp(golang::runtime::limiterEventType typ, int64_t now);
+    golang::runtime::limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now);
 }
 #include "golang/runtime/internal/atomic/types.h"
 
@@ -101,27 +101,27 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value);
-    extern gcCPULimiterState gcCPULimiter;
+    extern golang::runtime::gcCPULimiterState gcCPULimiter;
 
     namespace rec
     {
-        bool limiting(golang::runtime::gcCPULimiterState* l);
-        void startGCTransition(golang::runtime::gcCPULimiterState* l, bool enableGC, int64_t now);
-        void finishGCTransition(golang::runtime::gcCPULimiterState* l, int64_t now);
-        bool needUpdate(golang::runtime::gcCPULimiterState* l, int64_t now);
-        void addAssistTime(golang::runtime::gcCPULimiterState* l, int64_t t);
-        void addIdleTime(golang::runtime::gcCPULimiterState* l, int64_t t);
-        void update(golang::runtime::gcCPULimiterState* l, int64_t now);
-        void updateLocked(golang::runtime::gcCPULimiterState* l, int64_t now);
-        void accumulate(golang::runtime::gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime);
-        bool tryLock(golang::runtime::gcCPULimiterState* l);
-        void unlock(golang::runtime::gcCPULimiterState* l);
-        void resetCapacity(golang::runtime::gcCPULimiterState* l, int64_t now, int32_t nprocs);
-        int64_t duration(golang::runtime::limiterEventStamp s, int64_t now);
-        runtime::limiterEventType typ(golang::runtime::limiterEventStamp s);
-        bool start(golang::runtime::limiterEvent* e, golang::runtime::limiterEventType typ, int64_t now);
-        std::tuple<runtime::limiterEventType, int64_t> consume(golang::runtime::limiterEvent* e, int64_t now);
-        void stop(golang::runtime::limiterEvent* e, golang::runtime::limiterEventType typ, int64_t now);
+        bool limiting(gcCPULimiterState* l);
+        void startGCTransition(gcCPULimiterState* l, bool enableGC, int64_t now);
+        void finishGCTransition(gcCPULimiterState* l, int64_t now);
+        bool needUpdate(gcCPULimiterState* l, int64_t now);
+        void addAssistTime(gcCPULimiterState* l, int64_t t);
+        void addIdleTime(gcCPULimiterState* l, int64_t t);
+        void update(gcCPULimiterState* l, int64_t now);
+        void updateLocked(gcCPULimiterState* l, int64_t now);
+        void accumulate(gcCPULimiterState* l, int64_t mutatorTime, int64_t gcTime);
+        bool tryLock(gcCPULimiterState* l);
+        void unlock(gcCPULimiterState* l);
+        void resetCapacity(gcCPULimiterState* l, int64_t now, int32_t nprocs);
+        int64_t duration(limiterEventStamp s, int64_t now);
+        golang::runtime::limiterEventType typ(limiterEventStamp s);
+        bool start(limiterEvent* e, limiterEventType typ, int64_t now);
+        std::tuple<golang::runtime::limiterEventType, int64_t> consume(limiterEvent* e, int64_t now);
+        void stop(limiterEvent* e, limiterEventType typ, int64_t now);
     }
 }
 

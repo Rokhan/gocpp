@@ -55,7 +55,7 @@ namespace golang::runtime
     gocpp::slice<unsigned char> bytes(gocpp::string s)
     {
         gocpp::slice<unsigned char> ret;
-        auto rp = (slice*)(gocpp::unsafe_pointer(& ret));
+        auto rp = (golang::runtime::slice*)(gocpp::unsafe_pointer(& ret));
         auto sp = stringStructOf(& s);
         rp->array = sp->str;
         rp->len = sp->len;
@@ -93,7 +93,7 @@ namespace golang::runtime
         printunlock();
     }
 
-    mutex debuglock;
+    golang::runtime::mutex debuglock;
     void printlock()
     {
         auto mp = getg()->m;
@@ -332,17 +332,17 @@ namespace golang::runtime
 
     void printslice(gocpp::slice<unsigned char> s)
     {
-        auto sp = (slice*)(gocpp::unsafe_pointer(& s));
+        auto sp = (golang::runtime::slice*)(gocpp::unsafe_pointer(& s));
         print("["_s, len(s), "/"_s, cap(s), "]"_s);
         printpointer(sp->array);
     }
 
-    void printeface(struct eface e)
+    void printeface(eface e)
     {
         print("("_s, e._type, ","_s, e.data, ")"_s);
     }
 
-    void printiface(struct iface i)
+    void printiface(iface i)
     {
         print("("_s, i.tab, ","_s, i.data, ")"_s);
     }

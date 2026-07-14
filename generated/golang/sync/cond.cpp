@@ -85,9 +85,9 @@ namespace golang::sync
     }
 
     // NewCond returns a new Cond with Locker l.
-    struct Cond* NewCond(struct Locker l)
+    golang::sync::Cond* NewCond(struct Locker l)
     {
-        return gocpp::InitPtr<Cond>([=](auto& x) {
+        return gocpp::InitPtr<golang::sync::Cond>([=](auto& x) {
             x.L = l;
         });
     }
@@ -107,7 +107,7 @@ namespace golang::sync
     //	}
     //	... make use of condition ...
     //	c.L.Unlock()
-    void rec::Wait(golang::sync::Cond* c)
+    void rec::Wait(Cond* c)
     {
         rec::check(gocpp::recv(c->checker));
         auto t = runtime_notifyListAdd(& c->notify);
@@ -123,7 +123,7 @@ namespace golang::sync
     //
     // Signal() does not affect goroutine scheduling priority; if other goroutines
     // are attempting to lock c.L, they may be awoken before a "waiting" goroutine.
-    void rec::Signal(golang::sync::Cond* c)
+    void rec::Signal(Cond* c)
     {
         rec::check(gocpp::recv(c->checker));
         runtime_notifyListNotifyOne(& c->notify);
@@ -133,14 +133,14 @@ namespace golang::sync
     //
     // It is allowed but not required for the caller to hold c.L
     // during the call.
-    void rec::Broadcast(golang::sync::Cond* c)
+    void rec::Broadcast(Cond* c)
     {
         rec::check(gocpp::recv(c->checker));
         runtime_notifyListNotifyAll(& c->notify);
     }
 
     // copyChecker holds back pointer to itself to detect object copying.
-    void rec::check(golang::sync::copyChecker* c)
+    void rec::check(copyChecker* c)
     {
         // Check if c has been copied in three steps:
         // 1. The first comparison is the fast-path. If c has been initialized and not copied, this will return immediately. Otherwise, c is either not initialized, or has been copied.
@@ -186,11 +186,11 @@ namespace golang::sync
     }
 
     // Lock is a no-op used by -copylocks checker from `go vet`.
-    void rec::Lock(golang::sync::noCopy*)
+    void rec::Lock(noCopy*)
     {
     }
 
-    void rec::Unlock(golang::sync::noCopy*)
+    void rec::Unlock(noCopy*)
     {
     }
 

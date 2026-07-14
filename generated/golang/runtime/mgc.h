@@ -25,7 +25,7 @@ namespace golang::runtime
     void gcWaitOnMark(uint32_t n);
     struct gcTrigger
     {
-        golang::runtime::gcTriggerKind kind{};
+        gcTriggerKind kind{};
         int64_t now{}; // gcTriggerTime: current time
         uint32_t n{}; // gcTriggerCycle: cycle number to start
 
@@ -47,7 +47,7 @@ namespace golang::runtime
     void gcBgMarkPrepare();
     void gcBgMarkWorker();
     void gcMark(int64_t startTime);
-    bool gcSweep(golang::runtime::gcMode mode);
+    bool gcSweep(gcMode mode);
     void gcResetMarkState();
     extern gocpp::slice<gocpp::unsafe_pointer> boringCaches;
     void boring_registerCache(gocpp::unsafe_pointer p);
@@ -69,7 +69,7 @@ namespace golang::runtime
         return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(value, ptrs...));
     }
     gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p);
-    void gcStart(struct gcTrigger trigger);
+    void gcStart(gcTrigger trigger);
     extern std::function<void ()> poolcleanup;
     void sync_runtime_registerPoolCleanup(std::function<void ()> f);
 }
@@ -135,7 +135,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
-    void gcMarkTermination(struct worldStop stw);
+    void gcMarkTermination(worldStop stw);
     struct gcBgMarkWorkerNode
     {
         // Unused workers are managed in a lock-free stack. This field must be first.
@@ -145,7 +145,7 @@ namespace golang::runtime
         // Release this m on park. This is used to communicate with the unlock
         // function, which cannot access the G's stack. It is unused outside of
         // gcBgMarkWorker().
-        golang::runtime::muintptr m{};
+        muintptr m{};
 
         using isGoStruct = void;
 
@@ -159,7 +159,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcBgMarkWorkerNode& value);
-    bool gcMarkWorkAvailable(struct p* p);
+    bool gcMarkWorkAvailable(golang::runtime::p* p);
 }
 #include "golang/internal/cpu/cpu.h"
 #include "golang/runtime/internal/atomic/types.h"
@@ -170,9 +170,9 @@ namespace golang::runtime
 {
     struct workType
     {
-        golang::runtime::lfstack full{}; // lock-free list of full blocks workbuf
+        lfstack full{}; // lock-free list of full blocks workbuf
         cpu::CacheLinePad _1{}; // prevents false-sharing between full and empty
-        golang::runtime::lfstack empty{}; // lock-free list of empty blocks workbuf
+        lfstack empty{}; // lock-free list of empty blocks workbuf
         cpu::CacheLinePad _2{}; // prevents false-sharing between empty and nproc/nwait
         gocpp_id_1 wbufSpans{};
         // Restore 64-bit alignment on 32-bit.
@@ -232,7 +232,7 @@ namespace golang::runtime
         note bgMarkReady{}; // signal background mark worker has started
         uint32_t bgMarkDone{}; // cas to 1 when at a background mark completion point
         // mode is the concurrency mode of the current GC cycle.
-        golang::runtime::gcMode mode{};
+        gcMode mode{};
         // userForced indicates the current GC cycle was forced by an
         // explicit user call.
         bool userForced{};
@@ -278,11 +278,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct workType& value);
-    extern workType work;
+    extern golang::runtime::workType work;
 
     namespace rec
     {
-        bool test(golang::runtime::gcTrigger t);
+        bool test(gcTrigger t);
     }
 }
 

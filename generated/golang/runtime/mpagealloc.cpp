@@ -69,7 +69,7 @@ namespace golang::runtime
     // It's a function (rather than a variable) because it needs to be
     // usable before package runtime's dynamic initialization is complete.
     // See #51913 for details.
-    struct offAddr maxSearchAddr()
+    golang::runtime::offAddr maxSearchAddr()
     {
         return maxOffAddr;
     }
@@ -81,13 +81,13 @@ namespace golang::runtime
     // space into chunks.
     // chunkIndex returns the global index of the palloc chunk containing the
     // pointer p.
-    runtime::chunkIdx chunkIndex(uintptr_t p)
+    golang::runtime::chunkIdx chunkIndex(uintptr_t p)
     {
         return chunkIdx((p - arenaBaseOffset) / pallocChunkBytes);
     }
 
     // chunkBase returns the base address of the palloc chunk at index ci.
-    uintptr_t chunkBase(golang::runtime::chunkIdx ci)
+    uintptr_t chunkBase(chunkIdx ci)
     {
         return uintptr_t(ci) * pallocChunkBytes + arenaBaseOffset;
     }
@@ -100,7 +100,7 @@ namespace golang::runtime
     }
 
     // l1 returns the index into the first level of (*pageAlloc).chunks.
-    unsigned int rec::l1(golang::runtime::chunkIdx i)
+    unsigned int rec::l1(chunkIdx i)
     {
         if(pallocChunksL1Bits == 0)
         {
@@ -115,7 +115,7 @@ namespace golang::runtime
     }
 
     // l2 returns the index into the second level of (*pageAlloc).chunks.
-    unsigned int rec::l2(golang::runtime::chunkIdx i)
+    unsigned int rec::l2(chunkIdx i)
     {
         if(pallocChunksL1Bits == 0)
         {
@@ -129,16 +129,16 @@ namespace golang::runtime
 
     // offAddrToLevelIndex converts an address in the offset address space
     // to the index into summary[level] containing addr.
-    int offAddrToLevelIndex(int level, struct offAddr addr)
+    int offAddrToLevelIndex(int level, offAddr addr)
     {
         return int((addr.a - arenaBaseOffset) >> levelShift[level]);
     }
 
     // levelIndexToOffAddr converts an index into summary[level] into
     // the corresponding address in the offset address space.
-    struct offAddr levelIndexToOffAddr(int level, int idx)
+    golang::runtime::offAddr levelIndexToOffAddr(int level, int idx)
     {
-        return offAddr {(uintptr_t(idx) << levelShift[level]) + arenaBaseOffset};
+        return golang::runtime::offAddr {(uintptr_t(idx) << levelShift[level]) + arenaBaseOffset};
     }
 
     // addrsToSummaryRange converts base and limit pointers into a range
@@ -270,7 +270,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::init(golang::runtime::pageAlloc* p, struct mutex* mheapLock, golang::runtime::sysMemStat* sysStat, bool test)
+    void rec::init(pageAlloc* p, mutex* mheapLock, sysMemStat* sysStat, bool test)
     {
         if(levelLogPages[0] > logMaxPackedValue)
         {
@@ -305,7 +305,7 @@ namespace golang::runtime
     // tryChunkOf returns the bitmap data for the given chunk.
     //
     // Returns nil if the chunk data has not been mapped.
-    struct pallocData* rec::tryChunkOf(golang::runtime::pageAlloc* p, golang::runtime::chunkIdx ci)
+    golang::runtime::pallocData* rec::tryChunkOf(pageAlloc* p, chunkIdx ci)
     {
         auto l2 = p->chunks[rec::l1(gocpp::recv(ci))];
         if(l2 == nullptr)
@@ -318,7 +318,7 @@ namespace golang::runtime
     // chunkOf returns the chunk at the given chunk index.
     //
     // The chunk index must be valid or this method may throw.
-    struct pallocData* rec::chunkOf(golang::runtime::pageAlloc* p, golang::runtime::chunkIdx ci)
+    golang::runtime::pallocData* rec::chunkOf(pageAlloc* p, chunkIdx ci)
     {
         return & p->chunks[rec::l1(gocpp::recv(ci))][rec::l2(gocpp::recv(ci))];
     }
@@ -327,7 +327,7 @@ namespace golang::runtime
     // It may allocate metadata, in which case *p.sysStat will be updated.
     //
     // p.mheapLock must be held.
-    void rec::grow(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t size)
+    void rec::grow(pageAlloc* p, uintptr_t base, uintptr_t size)
     {
         assertLockHeld(p->mheapLock);
 
@@ -364,7 +364,7 @@ namespace golang::runtime
         // A grow operation is a lot like a free operation, so if our
         // chunk ends up below p.searchAddr, update p.searchAddr to the
         // new address, just like in free.
-        if(auto b = (offAddr {base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
+        if(auto b = (golang::runtime::offAddr {base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
         {
             p->searchAddr = b;
         }
@@ -424,7 +424,7 @@ namespace golang::runtime
     // Must be called on the system stack because it acquires the heap lock.
     //
     //go:systemstack
-    void rec::enableChunkHugePages(golang::runtime::pageAlloc* p)
+    void rec::enableChunkHugePages(pageAlloc* p)
     {
         // Grab the heap lock to turn on huge pages for new chunks and clone the current
         // heap address space ranges.
@@ -439,7 +439,7 @@ namespace golang::runtime
             return;
         }
         p->chunkHugePages = true;
-        addrRanges inUse = {};
+        golang::runtime::addrRanges inUse = {};
         inUse.sysStat = p->sysStat;
         rec::cloneInto(gocpp::recv(p->inUse), & inUse);
         runtime::unlock(& mheap_.lock);
@@ -467,7 +467,7 @@ namespace golang::runtime
     // whether the operation performed was an allocation or a free.
     //
     // p.mheapLock must be held.
-    void rec::update(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc)
+    void rec::update(pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc)
     {
         assertLockHeld(p->mheapLock);
 
@@ -571,7 +571,7 @@ namespace golang::runtime
     // allocated range.
     //
     // p.mheapLock must be held.
-    uintptr_t rec::allocRange(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages)
+    uintptr_t rec::allocRange(pageAlloc* p, uintptr_t base, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
 
@@ -617,7 +617,7 @@ namespace golang::runtime
     // it returns maxOffAddr.
     //
     // p.mheapLock must be held.
-    struct offAddr rec::findMappedAddr(golang::runtime::pageAlloc* p, struct offAddr addr)
+    golang::runtime::offAddr rec::findMappedAddr(pageAlloc* p, offAddr addr)
     {
         assertLockHeld(p->mheapLock);
 
@@ -629,7 +629,7 @@ namespace golang::runtime
             auto [vAddr, ok] = rec::findAddrGreaterEqual(gocpp::recv(p->inUse), rec::addr(gocpp::recv(addr)));
             if(ok)
             {
-                return offAddr {vAddr};
+                return golang::runtime::offAddr {vAddr};
             }
             else
             {
@@ -698,7 +698,7 @@ namespace golang::runtime
     // searchAddr returned is invalid and must be ignored.
     //
     // p.mheapLock must be held.
-    std::tuple<uintptr_t, struct offAddr> rec::find(golang::runtime::pageAlloc* p, uintptr_t npages)
+    std::tuple<uintptr_t, golang::runtime::offAddr> rec::find(pageAlloc* p, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
 
@@ -749,7 +749,7 @@ namespace golang::runtime
         // pages on the root level and narrow that down if we descend into
         // that summary. But as soon as we need to iterate beyond that summary
         // in a level to find a large enough range, we'll stop narrowing.
-        auto foundFree = [=](struct offAddr addr, uintptr_t size) mutable -> void
+        auto foundFree = [=](golang::runtime::offAddr addr, uintptr_t size) mutable -> void
         {
             if(rec::lessEqual(gocpp::recv(firstFree.base), addr) && rec::lessEqual(gocpp::recv(rec::add(gocpp::recv(addr), size - 1)), firstFree.bound))
             {
@@ -920,7 +920,7 @@ namespace golang::runtime
         // Since we actually searched the chunk, we may have
         // found an even narrower free window.
         auto searchAddr = chunkBase(ci) + uintptr_t(searchIdx) * pageSize;
-        foundFree(offAddr {searchAddr}, chunkBase(ci + 1) - searchAddr);
+        foundFree(golang::runtime::offAddr {searchAddr}, chunkBase(ci + 1) - searchAddr);
         return {addr, rec::findMappedAddr(gocpp::recv(p), firstFree.base)};
     }
 
@@ -936,7 +936,7 @@ namespace golang::runtime
     // Must run on the system stack because p.mheapLock must be held.
     //
     //go:systemstack
-    std::tuple<uintptr_t, uintptr_t> rec::alloc(golang::runtime::pageAlloc* p, uintptr_t npages)
+    std::tuple<uintptr_t, uintptr_t> rec::alloc(pageAlloc* p, uintptr_t npages)
     {
         uintptr_t addr;
         uintptr_t scav;
@@ -966,7 +966,7 @@ namespace golang::runtime
                     go_throw("bad summary data"_s);
                 }
                 addr = chunkBase(i) + uintptr_t(j) * pageSize;
-                searchAddr = offAddr {chunkBase(i) + uintptr_t(searchIdx) * pageSize};
+                searchAddr = golang::runtime::offAddr {chunkBase(i) + uintptr_t(searchIdx) * pageSize};
                 goto Found;
             }
         }
@@ -1007,12 +1007,12 @@ namespace golang::runtime
     // Must run on the system stack because p.mheapLock must be held.
     //
     //go:systemstack
-    void rec::free(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t npages)
+    void rec::free(pageAlloc* p, uintptr_t base, uintptr_t npages)
     {
         assertLockHeld(p->mheapLock);
 
         // If we're freeing pages below the p.searchAddr, update searchAddr.
-        if(auto b = (offAddr {base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
+        if(auto b = (golang::runtime::offAddr {base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
         {
             p->searchAddr = b;
         }
@@ -1063,7 +1063,7 @@ namespace golang::runtime
     // 2^21 - 1, or all three may be equal to 2^21. The latter case is represented
     // by just setting the 64th bit.
     // packPallocSum takes a start, max, and end value and produces a pallocSum.
-    runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end)
+    golang::runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end)
     {
         if(max == maxPackedValue)
         {
@@ -1073,7 +1073,7 @@ namespace golang::runtime
     }
 
     // start extracts the start value from a packed sum.
-    unsigned int rec::start(golang::runtime::pallocSum p)
+    unsigned int rec::start(pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -1083,7 +1083,7 @@ namespace golang::runtime
     }
 
     // max extracts the max value from a packed sum.
-    unsigned int rec::max(golang::runtime::pallocSum p)
+    unsigned int rec::max(pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -1093,7 +1093,7 @@ namespace golang::runtime
     }
 
     // end extracts the end value from a packed sum.
-    unsigned int rec::end(golang::runtime::pallocSum p)
+    unsigned int rec::end(pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -1103,7 +1103,7 @@ namespace golang::runtime
     }
 
     // unpack unpacks all three values from the summary.
-    std::tuple<unsigned int, unsigned int, unsigned int> rec::unpack(golang::runtime::pallocSum p)
+    std::tuple<unsigned int, unsigned int, unsigned int> rec::unpack(pallocSum p)
     {
         if(uint64_t(p) & uint64_t(1 << 63) != 0)
         {
@@ -1114,7 +1114,7 @@ namespace golang::runtime
 
     // mergeSummaries merges consecutive summaries which may each represent at
     // most 1 << logMaxPagesPerSum pages each together into one.
-    runtime::pallocSum mergeSummaries(gocpp::slice<golang::runtime::pallocSum> sums, unsigned int logMaxPagesPerSum)
+    golang::runtime::pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, unsigned int logMaxPagesPerSum)
     {
         // Merge the summaries in sums into one.
         // We do this by keeping a running summary representing the merged

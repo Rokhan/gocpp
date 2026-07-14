@@ -606,7 +606,7 @@ namespace golang::strings
             n += len(elem);
         }
 
-        Builder b = {};
+        golang::strings::Builder b = {};
         rec::Grow(gocpp::recv(b), n);
         rec::WriteString(gocpp::recv(b), elems[0]);
         for(auto [gocpp_ignored, s] : elems.make_slice(1))
@@ -639,7 +639,7 @@ namespace golang::strings
         // fine. It could also shrink but that falls out naturally.
         // The output buffer b is initialized on demand, the first
         // time a character differs.
-        Builder b = {};
+        golang::strings::Builder b = {};
 
         for(auto [i, c] : s)
         {
@@ -767,7 +767,7 @@ namespace golang::strings
             }
         }
 
-        Builder b = {};
+        golang::strings::Builder b = {};
         rec::Grow(gocpp::recv(b), n);
         rec::WriteString(gocpp::recv(b), s);
         for(; rec::Len(gocpp::recv(b)) < n; )
@@ -808,7 +808,7 @@ namespace golang::strings
             {
                 return s;
             }
-            Builder b = {};
+            golang::strings::Builder b = {};
             int pos = {};
             rec::Grow(gocpp::recv(b), len(s));
             for(auto i = 0; i < len(s); i++)
@@ -856,7 +856,7 @@ namespace golang::strings
             {
                 return s;
             }
-            Builder b = {};
+            golang::strings::Builder b = {};
             int pos = {};
             rec::Grow(gocpp::recv(b), len(s));
             for(auto i = 0; i < len(s); i++)
@@ -914,7 +914,7 @@ namespace golang::strings
     // replaced by the replacement string, which may be empty.
     gocpp::string ToValidUTF8(gocpp::string s, gocpp::string replacement)
     {
-        Builder b = {};
+        golang::strings::Builder b = {};
 
         for(auto [i, c] : s)
         {
@@ -1127,9 +1127,9 @@ namespace golang::strings
     // is unused to avoid bounds checks in asciiSet.contains.
     // makeASCIISet creates a set of ASCII characters and reports whether all
     // characters in chars are ASCII.
-    std::tuple<strings::asciiSet, bool> makeASCIISet(gocpp::string chars)
+    std::tuple<golang::strings::asciiSet, bool> makeASCIISet(gocpp::string chars)
     {
-        strings::asciiSet as;
+        golang::strings::asciiSet as;
         bool ok;
         for(auto i = 0; i < len(chars); i++)
         {
@@ -1144,7 +1144,7 @@ namespace golang::strings
     }
 
     // contains reports whether c is inside the set.
-    bool rec::contains(gocpp::array_ptr<golang::strings::asciiSet> as, unsigned char c)
+    bool rec::contains(gocpp::array_ptr<asciiSet> as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
@@ -1198,7 +1198,7 @@ namespace golang::strings
         return s;
     }
 
-    gocpp::string trimLeftASCII(gocpp::string s, gocpp::array_ptr<golang::strings::asciiSet> as)
+    gocpp::string trimLeftASCII(gocpp::string s, gocpp::array_ptr<asciiSet> as)
     {
         for(; len(s) > 0; )
         {
@@ -1259,7 +1259,7 @@ namespace golang::strings
         return s;
     }
 
-    gocpp::string trimRightASCII(gocpp::string s, gocpp::array_ptr<golang::strings::asciiSet> as)
+    gocpp::string trimRightASCII(gocpp::string s, gocpp::array_ptr<asciiSet> as)
     {
         for(; len(s) > 0; )
         {
@@ -1382,7 +1382,7 @@ namespace golang::strings
         }
 
         // Apply replacements to buffer.
-        Builder b = {};
+        golang::strings::Builder b = {};
         rec::Grow(gocpp::recv(b), len(s) + n * (len(go_new) - len(old)));
         auto start = 0;
         for(auto i = 0; i < n; i++)

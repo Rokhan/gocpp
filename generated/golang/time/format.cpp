@@ -591,7 +591,7 @@ namespace golang::time
     // The returned string is meant for debugging; for a stable serialized
     // representation, use t.MarshalText, t.MarshalBinary, or t.Format
     // with an explicit format string.
-    gocpp::string rec::String(golang::time::Time t)
+    gocpp::string rec::String(Time t)
     {
         auto s = rec::Format(gocpp::recv(t), "2006-01-02 15:04:05.999999999 -0700 MST"_s);
 
@@ -628,7 +628,7 @@ namespace golang::time
 
     // GoString implements fmt.GoStringer and formats t to be printed in Go source
     // code.
-    gocpp::string rec::GoString(golang::time::Time t)
+    gocpp::string rec::GoString(Time t)
     {
         auto abs = rec::abs(gocpp::recv(t));
         auto [year, month, day, gocpp_id_1] = absDate(abs, true);
@@ -706,7 +706,7 @@ namespace golang::time
     //
     // The executable example for Time.Format demonstrates the working
     // of the layout string in detail and is a good reference.
-    gocpp::string rec::Format(golang::time::Time t, gocpp::string layout)
+    gocpp::string rec::Format(Time t, gocpp::string layout)
     {
         auto bufSize = 64;
         gocpp::slice<unsigned char> b = {};
@@ -726,7 +726,7 @@ namespace golang::time
 
     // AppendFormat is like Format but appends the textual
     // representation to b and returns the extended buffer.
-    gocpp::slice<unsigned char> rec::AppendFormat(golang::time::Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
+    gocpp::slice<unsigned char> rec::AppendFormat(Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
     {
         // Optimize for RFC3339 as it accounts for over half of all representations.
         //Go switch emulation
@@ -750,11 +750,11 @@ namespace golang::time
         }
     }
 
-    gocpp::slice<unsigned char> rec::appendFormat(golang::time::Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
+    gocpp::slice<unsigned char> rec::appendFormat(Time t, gocpp::slice<unsigned char> b, gocpp::string layout)
     {
         auto [name, offset, abs] = rec::locabs(gocpp::recv(t));
         int year = - 1;
-        time::Month month = - 1;
+        golang::time::Month month = - 1;
         int day = - 1;
         int yday = - 1;
         int hour = - 1;
@@ -1081,11 +1081,11 @@ namespace golang::time
 
     // newParseError creates a new ParseError.
     // The provided value and valueElem are cloned to avoid escaping their values.
-    struct ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message)
+    golang::time::ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message)
     {
         auto valueCopy = cloneString(value);
         auto valueElemCopy = cloneString(valueElem);
-        return new ParseError {layout, valueCopy, layoutElem, valueElemCopy, message};
+        return new golang::time::ParseError {layout, valueCopy, layoutElem, valueElemCopy, message};
     }
 
     // cloneString returns a string copy of s.
@@ -1146,7 +1146,7 @@ namespace golang::time
     }
 
     // Error returns the string representation of a ParseError.
-    gocpp::string rec::Error(golang::time::ParseError* e)
+    gocpp::string rec::Error(ParseError* e)
     {
         if(e->Message == ""_s)
         {
@@ -1282,7 +1282,7 @@ namespace golang::time
     // same layout losslessly, but the exact instant used in the representation will
     // differ by the actual zone offset. To avoid such problems, prefer time layouts
     // that use a numeric zone offset, or use ParseInLocation.
-    std::tuple<struct Time, struct gocpp::error> Parse(gocpp::string layout, gocpp::string value)
+    std::tuple<golang::time::Time, struct gocpp::error> Parse(gocpp::string layout, gocpp::string value)
     {
         // Optimize for RFC3339 as it accounts for over half of all representations.
         if(layout == RFC3339 || layout == RFC3339Nano)
@@ -1300,7 +1300,7 @@ namespace golang::time
     // ParseInLocation interprets the time as in the given location.
     // Second, when given a zone offset or abbreviation, Parse tries to match it
     // against the Local location; ParseInLocation uses the given location.
-    std::tuple<struct Time, struct gocpp::error> ParseInLocation(gocpp::string layout, gocpp::string value, struct Location* loc)
+    std::tuple<golang::time::Time, struct gocpp::error> ParseInLocation(gocpp::string layout, gocpp::string value, golang::time::Location* loc)
     {
         // Optimize for RFC3339 as it accounts for over half of all representations.
         if(layout == RFC3339 || layout == RFC3339Nano)
@@ -1313,7 +1313,7 @@ namespace golang::time
         return parse(layout, value, loc, loc);
     }
 
-    std::tuple<struct Time, struct gocpp::error> parse(gocpp::string layout, gocpp::string value, struct Location* defaultLocation, struct Location* local)
+    std::tuple<golang::time::Time, struct gocpp::error> parse(gocpp::string layout, gocpp::string value, golang::time::Location* defaultLocation, golang::time::Location* local)
     {
         auto [alayout, avalue] = std::tuple{layout, value};
         // set if a value is out of range
@@ -1332,7 +1332,7 @@ namespace golang::time
         int min = - 1;
         int sec = - 1;
         int nsec = - 1;
-        Location* z = - 1;
+        golang::time::Location* z = - 1;
         int zoneOffset = - 1;
         gocpp::string zoneName = - 1;
 
@@ -1345,13 +1345,13 @@ namespace golang::time
             std::tie(value, err) = skip(value, prefix);
             if(err != nullptr)
             {
-                return {Time {}, gocpp::error(newParseError(alayout, avalue, prefix, value, ""_s))};
+                return {golang::time::Time {}, gocpp::error(newParseError(alayout, avalue, prefix, value, ""_s))};
             }
             if(std == 0)
             {
                 if(len(value) != 0)
                 {
-                    return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": extra text: "_s + quote(value)))};
+                    return {golang::time::Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": extra text: "_s + quote(value)))};
                 }
                 break;
             }
@@ -1753,11 +1753,11 @@ namespace golang::time
             }
             if(rangeErrString != ""_s)
             {
-                return {Time {}, gocpp::error(newParseError(alayout, avalue, stdstr, value, ": "_s + rangeErrString + " out of range"_s))};
+                return {golang::time::Time {}, gocpp::error(newParseError(alayout, avalue, stdstr, value, ": "_s + rangeErrString + " out of range"_s))};
             }
             if(err != nullptr)
             {
-                return {Time {}, gocpp::error(newParseError(alayout, avalue, stdstr, hold, ""_s))};
+                return {golang::time::Time {}, gocpp::error(newParseError(alayout, avalue, stdstr, hold, ""_s))};
             }
         }
         if(pmSet && hour < 12)
@@ -1790,7 +1790,7 @@ namespace golang::time
             }
             if(yday < 1 || yday > 365)
             {
-                return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day-of-year out of range"_s))};
+                return {golang::time::Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day-of-year out of range"_s))};
             }
             if(m == 0)
             {
@@ -1805,12 +1805,12 @@ namespace golang::time
             // Otherwise, set them from m, d.
             if(month >= 0 && month != m)
             {
-                return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day-of-year does not match month"_s))};
+                return {golang::time::Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day-of-year does not match month"_s))};
             }
             month = m;
             if(day >= 0 && day != d)
             {
-                return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day-of-year does not match day"_s))};
+                return {golang::time::Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day-of-year does not match day"_s))};
             }
             day = d;
         }
@@ -1829,7 +1829,7 @@ namespace golang::time
         // Validate the day of the month.
         if(day < 1 || day > daysIn(Month(month), year))
         {
-            return {Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day out of range"_s))};
+            return {golang::time::Time {}, gocpp::error(newParseError(alayout, avalue, ""_s, value, ": day out of range"_s))};
         }
 
         if(z != nullptr)
@@ -2142,7 +2142,7 @@ namespace golang::time
     // decimal numbers, each with optional fraction and a unit suffix,
     // such as "300ms", "-1.5h" or "2h45m".
     // Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-    std::tuple<time::Duration, struct gocpp::error> ParseDuration(gocpp::string s)
+    std::tuple<golang::time::Duration, struct gocpp::error> ParseDuration(gocpp::string s)
     {
         // [-+]?([0-9]*(\.[0-9]*)?[a-z]+)+
         auto orig = s;

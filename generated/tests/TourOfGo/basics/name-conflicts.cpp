@@ -55,7 +55,7 @@ namespace golang::main
         return 0 + 0;
     }
 
-    main::titi rec::titi(golang::main::toto t, golang::main::titi d)
+    golang::main::titi rec::titi(golang::main::toto t, golang::main::titi d)
     {
         return d;
     }
@@ -70,7 +70,7 @@ namespace golang::main
         mocklib::Println("Go rules?"_s, Truth);
 
         mocklib::Println("Pi:"_s, Pi);
-        auto t = toto {};
+        auto t = golang::main::toto {};
         mocklib::Println("toto.Pi:"_s, rec::Pi(gocpp::recv(t)));
 
         auto go_new = "new"_s;

@@ -29,7 +29,7 @@ namespace golang::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct nativeEndian& value);
-    extern nativeEndian NativeEndian;
+    extern golang::binary::nativeEndian NativeEndian;
 
     namespace rec
     {

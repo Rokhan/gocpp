@@ -111,15 +111,15 @@ namespace golang::os
 
     // newFileStatFromGetFileInformationByHandle calls GetFileInformationByHandle
     // to gather all required information about the file handle h.
-    std::tuple<struct fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h)
+    std::tuple<golang::os::fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h)
     {
-        struct fileStat* fs;
+        golang::os::fileStat* fs;
         struct gocpp::error err;
         syscall::ByHandleFileInformation d = {};
         err = syscall::GetFileInformationByHandle(h, & d);
         if(err != nullptr)
         {
-            return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
                 x.Op = "GetFileInformationByHandle"_s;
                 x.Path = path;
                 x.Err = err;
@@ -140,7 +140,7 @@ namespace golang::os
             }
             else
             {
-                return {nullptr, gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
+                return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
                     x.Op = "GetFileInformationByHandleEx"_s;
                     x.Path = path;
                     x.Err = err;
@@ -148,7 +148,7 @@ namespace golang::os
             }
         }
 
-        return {gocpp::InitPtr<fileStat>([=](auto& x) {
+        return {gocpp::InitPtr<golang::os::fileStat>([=](auto& x) {
             x.name = basename(path);
             x.FileAttributes = d.FileAttributes;
             x.CreationTime = d.CreationTime;
@@ -165,13 +165,13 @@ namespace golang::os
 
     // newFileStatFromFileIDBothDirInfo copies all required information
     // from windows.FILE_ID_BOTH_DIR_INFO d into the newly created fileStat.
-    struct fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d)
+    golang::os::fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d)
     {
         // The FILE_ID_BOTH_DIR_INFO MSDN documentations isn't completely correct.
         // FileAttributes can contain any file attributes that is currently set on the file,
         // not just the ones documented.
         // EaSize contains the reparse tag if the file is a reparse point.
-        return gocpp::InitPtr<fileStat>([=](auto& x) {
+        return gocpp::InitPtr<golang::os::fileStat>([=](auto& x) {
             x.FileAttributes = d->FileAttributes;
             x.CreationTime = d->CreationTime;
             x.LastAccessTime = d->LastAccessTime;
@@ -186,9 +186,9 @@ namespace golang::os
 
     // newFileStatFromFileFullDirInfo copies all required information
     // from windows.FILE_FULL_DIR_INFO d into the newly created fileStat.
-    struct fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d)
+    golang::os::fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d)
     {
-        return gocpp::InitPtr<fileStat>([=](auto& x) {
+        return gocpp::InitPtr<golang::os::fileStat>([=](auto& x) {
             x.FileAttributes = d->FileAttributes;
             x.CreationTime = d->CreationTime;
             x.LastAccessTime = d->LastAccessTime;
@@ -201,9 +201,9 @@ namespace golang::os
 
     // newFileStatFromWin32finddata copies all required information
     // from syscall.Win32finddata d into the newly created fileStat.
-    struct fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d)
+    golang::os::fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d)
     {
-        auto fs = gocpp::InitPtr<fileStat>([=](auto& x) {
+        auto fs = gocpp::InitPtr<golang::os::fileStat>([=](auto& x) {
             x.FileAttributes = d->FileAttributes;
             x.CreationTime = d->CreationTime;
             x.LastAccessTime = d->LastAccessTime;
@@ -227,13 +227,13 @@ namespace golang::os
     //
     // See https://learn.microsoft.com/en-us/windows/win32/api/winnt/nf-winnt-isreparsetagnamesurrogate
     // and https://learn.microsoft.com/en-us/windows/win32/fileio/reparse-point-tags.
-    bool rec::isReparseTagNameSurrogate(golang::os::fileStat* fs)
+    bool rec::isReparseTagNameSurrogate(fileStat* fs)
     {
         // True for IO_REPARSE_TAG_SYMLINK and IO_REPARSE_TAG_MOUNT_POINT.
         return fs->ReparseTag & 0x20000000 != 0;
     }
 
-    bool rec::isSymlink(golang::os::fileStat* fs)
+    bool rec::isSymlink(fileStat* fs)
     {
         // As of https://go.dev/cl/86556, we treat MOUNT_POINT reparse points as
         // symlinks because otherwise certain directory junction tests in the
@@ -247,14 +247,14 @@ namespace golang::os
         return fs->ReparseTag == syscall::IO_REPARSE_TAG_SYMLINK || fs->ReparseTag == windows::IO_REPARSE_TAG_MOUNT_POINT;
     }
 
-    int64_t rec::Size(golang::os::fileStat* fs)
+    int64_t rec::Size(fileStat* fs)
     {
         return (int64_t(fs->FileSizeHigh) << 32) + int64_t(fs->FileSizeLow);
     }
 
-    os::FileMode rec::Mode(golang::os::fileStat* fs)
+    golang::os::FileMode rec::Mode(fileStat* fs)
     {
-        os::FileMode m;
+        golang::os::FileMode m;
         if(fs->FileAttributes & syscall::FILE_ATTRIBUTE_READONLY != 0)
         {
             m |= 0444;
@@ -322,13 +322,13 @@ namespace golang::os
         return m;
     }
 
-    mocklib::Date rec::ModTime(golang::os::fileStat* fs)
+    mocklib::Date rec::ModTime(fileStat* fs)
     {
         return time::Unix(0, rec::Nanoseconds(gocpp::recv(fs->LastWriteTime)));
     }
 
     // Sys returns syscall.Win32FileAttributeData for file fs.
-    go_any rec::Sys(golang::os::fileStat* fs)
+    go_any rec::Sys(fileStat* fs)
     {
         return gocpp::InitPtr<syscall::Win32FileAttributeData>([=](auto& x) {
             x.FileAttributes = fs->FileAttributes;
@@ -340,7 +340,7 @@ namespace golang::os
         });
     }
 
-    struct gocpp::error rec::loadFileId(golang::os::fileStat* fs)
+    struct gocpp::error rec::loadFileId(fileStat* fs)
     {
         gocpp::Defer defer;
         try
@@ -407,7 +407,7 @@ namespace golang::os
 
     // saveInfoFromPath saves full path of the file to be used by os.SameFile later,
     // and set name from path.
-    struct gocpp::error rec::saveInfoFromPath(golang::os::fileStat* fs, gocpp::string path)
+    struct gocpp::error rec::saveInfoFromPath(fileStat* fs, gocpp::string path)
     {
         fs->path = path;
         if(! isAbs(fs->path))
@@ -416,7 +416,7 @@ namespace golang::os
             std::tie(fs->path, err) = syscall::FullPath(fs->path);
             if(err != nullptr)
             {
-                return gocpp::error(gocpp::InitPtr<os::PathError>([=](auto& x) {
+                return gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
                     x.Op = "FullPath"_s;
                     x.Path = path;
                     x.Err = err;
@@ -427,7 +427,7 @@ namespace golang::os
         return nullptr;
     }
 
-    bool sameFile(struct fileStat* fs1, struct fileStat* fs2)
+    bool sameFile(fileStat* fs1, fileStat* fs2)
     {
         auto e = rec::loadFileId(gocpp::recv(fs1));
         if(e != nullptr)
@@ -443,7 +443,7 @@ namespace golang::os
     }
 
     // For testing.
-    mocklib::Date atime(golang::os::FileInfo fi)
+    mocklib::Date atime(struct FileInfo fi)
     {
         return time::Unix(0, rec::Nanoseconds(gocpp::recv(gocpp::getValue<syscall::Win32FileAttributeData*>(rec::Sys(gocpp::recv(fi)))->LastAccessTime)));
     }

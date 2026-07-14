@@ -69,7 +69,7 @@ namespace golang::time
     template<typename bytes>
     std::tuple<uint64_t, bytes, struct gocpp::error> leadingInt(bytes s);
     std::tuple<uint64_t, double, gocpp::string> leadingFraction(gocpp::string s);
-    struct ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message);
+    golang::time::ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message);
 }
 #include "golang/errors/errors.h"
 #include "golang/time/time.h"
@@ -79,12 +79,12 @@ namespace golang::time
 {
     extern gocpp::error errAtoi;
     extern gocpp::error errBad;
-    std::tuple<struct Time, struct gocpp::error> Parse(gocpp::string layout, gocpp::string value);
-    std::tuple<struct Time, struct gocpp::error> ParseInLocation(gocpp::string layout, gocpp::string value, struct Location* loc);
-    std::tuple<struct Time, struct gocpp::error> parse(gocpp::string layout, gocpp::string value, struct Location* defaultLocation, struct Location* local);
+    std::tuple<golang::time::Time, struct gocpp::error> Parse(gocpp::string layout, gocpp::string value);
+    std::tuple<golang::time::Time, struct gocpp::error> ParseInLocation(gocpp::string layout, gocpp::string value, golang::time::Location* loc);
+    std::tuple<golang::time::Time, struct gocpp::error> parse(gocpp::string layout, gocpp::string value, golang::time::Location* defaultLocation, golang::time::Location* local);
     extern gocpp::error errLeadingInt;
     extern gocpp::map<gocpp::string, uint64_t> unitMap;
-    std::tuple<time::Duration, struct gocpp::error> ParseDuration(gocpp::string s);
+    std::tuple<golang::time::Duration, struct gocpp::error> ParseDuration(gocpp::string s);
 }
 
 #include "golang/time/time.h"
@@ -94,12 +94,12 @@ namespace golang::time
 
     namespace rec
     {
-        gocpp::string String(golang::time::Time t);
-        gocpp::string GoString(golang::time::Time t);
-        gocpp::string Format(golang::time::Time t, gocpp::string layout);
-        gocpp::slice<unsigned char> AppendFormat(golang::time::Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
-        gocpp::slice<unsigned char> appendFormat(golang::time::Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
-        gocpp::string Error(golang::time::ParseError* e);
+        gocpp::string String(Time t);
+        gocpp::string GoString(Time t);
+        gocpp::string Format(Time t, gocpp::string layout);
+        gocpp::slice<unsigned char> AppendFormat(Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
+        gocpp::slice<unsigned char> appendFormat(Time t, gocpp::slice<unsigned char> b, gocpp::string layout);
+        gocpp::string Error(ParseError* e);
     }
 }
 

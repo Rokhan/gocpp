@@ -217,7 +217,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::YCbCr c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(YCbCr c)
     {
         // This code is a copy of the YCbCrToRGB function above, except that it
         // returns values in the range [0, 0xffff] instead of [0, 0xff]. There is a
@@ -284,13 +284,13 @@ namespace golang::color
     Model YCbCrModel = ModelFunc(yCbCrModel);
     struct Color yCbCrModel(struct Color c)
     {
-        if(auto [gocpp_id_0, ok] = gocpp::getValue<YCbCr>(c); ok)
+        if(auto [gocpp_id_0, ok] = gocpp::getValue<golang::color::YCbCr>(c); ok)
         {
             return c;
         }
         auto [r, g, b, gocpp_id_1] = rec::RGBA(gocpp::recv(c));
         auto [y, u, v] = RGBToYCbCr(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
-        return YCbCr {y, u, v};
+        return golang::color::YCbCr {y, u, v};
     }
 
     // NYCbCrA represents a non-alpha-premultiplied Y'CbCr-with-alpha color, having
@@ -327,7 +327,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::NYCbCrA c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(NYCbCrA c)
     {
         // The first part of this method is the same as YCbCr.RGBA.
         auto yy1 = int32_t(c.YCbCr.Y) * 0x10101;
@@ -388,20 +388,20 @@ namespace golang::color
             const auto& gocpp_id_2 = gocpp::type_info(c);
             const auto& c_ref = c;
             int conditionId = -1;
-            if(gocpp_id_2 == typeid(NYCbCrA)) { conditionId = 0; }
-            else if(gocpp_id_2 == typeid(YCbCr)) { conditionId = 1; }
+            if(gocpp_id_2 == typeid(color::NYCbCrA)) { conditionId = 0; }
+            else if(gocpp_id_2 == typeid(color::YCbCr)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    NYCbCrA c = gocpp::any_cast<NYCbCrA>(c_ref);
+                    color::NYCbCrA c = gocpp::any_cast<color::NYCbCrA>(c_ref);
                     return c;
                     break;
                 }
                 case 1:
                 {
-                    YCbCr c = gocpp::any_cast<YCbCr>(c_ref);
-                    return NYCbCrA {c, 0xff};
+                    color::YCbCr c = gocpp::any_cast<color::YCbCr>(c_ref);
+                    return golang::color::NYCbCrA {c, 0xff};
                     break;
                 }
             }
@@ -417,7 +417,7 @@ namespace golang::color
         }
 
         auto [y, u, v] = RGBToYCbCr(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
-        return NYCbCrA {gocpp::Init<YCbCr>([=](auto& x) {
+        return golang::color::NYCbCrA {gocpp::Init<golang::color::YCbCr>([=](auto& x) {
             x.Y = y;
             x.Cb = u;
             x.Cr = v;
@@ -501,7 +501,7 @@ namespace golang::color
         return value.PrintTo(os);
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(golang::color::CMYK c)
+    std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> rec::RGBA(CMYK c)
     {
         // This code is a copy of the CMYKToRGB function above, except that it
         // returns values in the range [0, 0xffff] instead of [0, 0xff].
@@ -516,13 +516,13 @@ namespace golang::color
     Model CMYKModel = ModelFunc(cmykModel);
     struct Color cmykModel(struct Color c)
     {
-        if(auto [gocpp_id_3, ok] = gocpp::getValue<CMYK>(c); ok)
+        if(auto [gocpp_id_3, ok] = gocpp::getValue<golang::color::CMYK>(c); ok)
         {
             return c;
         }
         auto [r, g, b, gocpp_id_4] = rec::RGBA(gocpp::recv(c));
         auto [cc, mm, yy, kk] = RGBToCMYK(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
-        return CMYK {cc, mm, yy, kk};
+        return golang::color::CMYK {cc, mm, yy, kk};
     }
 
 }

@@ -52,7 +52,7 @@ namespace golang::slices
 
     namespace rec
     {
-        uint64_t Next(golang::slices::xorshift* r);
+        uint64_t Next(xorshift* r);
     }
 }
 

@@ -36,7 +36,7 @@ namespace golang::flate
     uint32_t hash4(gocpp::slice<unsigned char> b);
     void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst);
     int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max);
-    extern gocpp::slice<compressionLevel> levels;
+    extern gocpp::slice<golang::flate::compressionLevel> levels;
 }
 #include "golang/compress/flate/deflatefast.h"
 #include "golang/compress/flate/huffman_bit_writer.h"
@@ -52,8 +52,8 @@ namespace golang::flate
         huffmanBitWriter* w{};
         std::function<void (gocpp::slice<unsigned char> _1, gocpp::slice<uint32_t> _2)> bulkHasher{};
         // compression algorithm
-        std::function<int (struct compressor* _1, gocpp::slice<unsigned char> _2)> fill{}; // copy data to window
-        std::function<void (struct compressor* _1)> step{}; // process window
+        std::function<int (compressor* _1, gocpp::slice<unsigned char> _2)> fill{}; // copy data to window
+        std::function<void (compressor* _1)> step{}; // process window
         bool sync{}; // requesting flush
         deflateFast* bestSpeed{}; // Encoder for BestSpeed
         // Input hash chains
@@ -127,8 +127,8 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
-    std::tuple<struct Writer*, struct gocpp::error> NewWriter(io::Writer w, int level);
-    std::tuple<struct Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
+    std::tuple<golang::flate::Writer*, struct gocpp::error> NewWriter(io::Writer w, int level);
+    std::tuple<golang::flate::Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
 }
 
 #include "golang/compress/flate/token.h"
@@ -139,27 +139,27 @@ namespace golang::flate
 
     namespace rec
     {
-        int fillDeflate(golang::flate::compressor* d, gocpp::slice<unsigned char> b);
-        struct gocpp::error writeBlock(golang::flate::compressor* d, gocpp::slice<golang::flate::token> tokens, int index);
-        void fillWindow(golang::flate::compressor* d, gocpp::slice<unsigned char> b);
-        std::tuple<int, int, bool> findMatch(golang::flate::compressor* d, int pos, int prevHead, int prevLength, int lookahead);
-        struct gocpp::error writeStoredBlock(golang::flate::compressor* d, gocpp::slice<unsigned char> buf);
-        void encSpeed(golang::flate::compressor* d);
-        void initDeflate(golang::flate::compressor* d);
-        void deflate(golang::flate::compressor* d);
-        int fillStore(golang::flate::compressor* d, gocpp::slice<unsigned char> b);
-        void store(golang::flate::compressor* d);
-        void storeHuff(golang::flate::compressor* d);
-        std::tuple<int, struct gocpp::error> write(golang::flate::compressor* d, gocpp::slice<unsigned char> b);
-        struct gocpp::error syncFlush(golang::flate::compressor* d);
-        struct gocpp::error init(golang::flate::compressor* d, io::Writer w, int level);
-        void reset(golang::flate::compressor* d, io::Writer w);
-        struct gocpp::error close(golang::flate::compressor* d);
-        std::tuple<int, struct gocpp::error> Write(golang::flate::dictWriter* w, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> Write(golang::flate::Writer* w, gocpp::slice<unsigned char> data);
-        struct gocpp::error Flush(golang::flate::Writer* w);
-        struct gocpp::error Close(golang::flate::Writer* w);
-        void Reset(golang::flate::Writer* w, io::Writer dst);
+        int fillDeflate(compressor* d, gocpp::slice<unsigned char> b);
+        struct gocpp::error writeBlock(compressor* d, gocpp::slice<golang::flate::token> tokens, int index);
+        void fillWindow(compressor* d, gocpp::slice<unsigned char> b);
+        std::tuple<int, int, bool> findMatch(compressor* d, int pos, int prevHead, int prevLength, int lookahead);
+        struct gocpp::error writeStoredBlock(compressor* d, gocpp::slice<unsigned char> buf);
+        void encSpeed(compressor* d);
+        void initDeflate(compressor* d);
+        void deflate(compressor* d);
+        int fillStore(compressor* d, gocpp::slice<unsigned char> b);
+        void store(compressor* d);
+        void storeHuff(compressor* d);
+        std::tuple<int, struct gocpp::error> write(compressor* d, gocpp::slice<unsigned char> b);
+        struct gocpp::error syncFlush(compressor* d);
+        struct gocpp::error init(compressor* d, io::Writer w, int level);
+        void reset(compressor* d, io::Writer w);
+        struct gocpp::error close(compressor* d);
+        std::tuple<int, struct gocpp::error> Write(dictWriter* w, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> Write(Writer* w, gocpp::slice<unsigned char> data);
+        struct gocpp::error Flush(Writer* w);
+        struct gocpp::error Close(Writer* w);
+        void Reset(Writer* w, io::Writer dst);
     }
 }
 

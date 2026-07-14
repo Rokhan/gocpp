@@ -32,8 +32,8 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct dlogger* getCachedDlogger();
-    bool putCachedDlogger(struct dlogger* l);
+    golang::runtime::dlogger* getCachedDlogger();
+    bool putCachedDlogger(dlogger* l);
 
     namespace rec
     {

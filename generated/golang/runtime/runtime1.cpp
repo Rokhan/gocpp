@@ -602,7 +602,7 @@ namespace golang::runtime
     // existing int var for that value, which may
     // already have an initial value.
     gocpp_id_0 debug;
-    gocpp::slice<dbgVar*> dbgvars = gocpp::slice<dbgVar*> {
+    gocpp::slice<golang::runtime::dbgVar*> dbgvars = gocpp::slice<golang::runtime::dbgVar*> {
         gocpp::Init<>([](auto& x) {
         x.name = "allocfreetrace"_s;
         x.value = & debug.allocfreetrace;
@@ -980,7 +980,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    struct m* acquirem()
+    golang::runtime::m* acquirem()
     {
         auto gp = getg();
         gp->m->locks++;
@@ -988,7 +988,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    void releasem(struct m* mp)
+    void releasem(m* mp)
     {
         auto gp = getg();
         mp->locks--;
@@ -1026,7 +1026,7 @@ namespace golang::runtime
     //go:linkname reflect_resolveTypeOff reflect.resolveTypeOff
     gocpp::unsafe_pointer reflect_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off)
     {
-        return gocpp::unsafe_pointer(rec::typeOff(gocpp::recv(toRType((runtime::_type*)(rtype))), typeOff(off)));
+        return gocpp::unsafe_pointer(rec::typeOff(gocpp::recv(toRType((golang::runtime::_type*)(rtype))), typeOff(off)));
     }
 
     // reflect_resolveTextOff resolves a function pointer offset from a base type.
@@ -1034,7 +1034,7 @@ namespace golang::runtime
     //go:linkname reflect_resolveTextOff reflect.resolveTextOff
     gocpp::unsafe_pointer reflect_resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off)
     {
-        return rec::textOff(gocpp::recv(toRType((runtime::_type*)(rtype))), textOff(off));
+        return rec::textOff(gocpp::recv(toRType((golang::runtime::_type*)(rtype))), textOff(off));
     }
 
     // reflectlite_resolveNameOff resolves a name offset from a base pointer.
@@ -1050,7 +1050,7 @@ namespace golang::runtime
     //go:linkname reflectlite_resolveTypeOff internal/reflectlite.resolveTypeOff
     gocpp::unsafe_pointer reflectlite_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off)
     {
-        return gocpp::unsafe_pointer(rec::typeOff(gocpp::recv(toRType((runtime::_type*)(rtype))), typeOff(off)));
+        return gocpp::unsafe_pointer(rec::typeOff(gocpp::recv(toRType((golang::runtime::_type*)(rtype))), typeOff(off)));
     }
 
     // reflect_addReflectOff adds a pointer to the reflection offset lookup map.

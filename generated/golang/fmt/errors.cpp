@@ -54,7 +54,7 @@ namespace golang::fmt
                     break;
                 case 1:
                 {
-                    auto w = gocpp::InitPtr<wrapError>([=](auto& x) {
+                    auto w = gocpp::InitPtr<golang::fmt::wrapError>([=](auto& x) {
                         x.msg = s;
                     });
                     std::tie(w->err, std::ignore) = gocpp::getValue<gocpp::error>(a[p->wrappedErrs[0]]);
@@ -78,7 +78,7 @@ namespace golang::fmt
                             errs = append(errs, e);
                         }
                     }
-                    err = new wrapErrors {s, errs};
+                    err = new golang::fmt::wrapErrors {s, errs};
                     break;
             }
         }
@@ -118,12 +118,12 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::fmt::wrapError* e)
+    gocpp::string rec::Error(wrapError* e)
     {
         return e->msg;
     }
 
-    struct gocpp::error rec::Unwrap(golang::fmt::wrapError* e)
+    struct gocpp::error rec::Unwrap(wrapError* e)
     {
         return e->err;
     }
@@ -160,12 +160,12 @@ namespace golang::fmt
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::fmt::wrapErrors* e)
+    gocpp::string rec::Error(wrapErrors* e)
     {
         return e->msg;
     }
 
-    gocpp::slice<gocpp::error> rec::Unwrap(golang::fmt::wrapErrors* e)
+    gocpp::slice<gocpp::error> rec::Unwrap(wrapErrors* e)
     {
         return e->errs;
     }

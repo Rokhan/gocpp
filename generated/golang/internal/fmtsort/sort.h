@@ -38,13 +38,13 @@ namespace golang::fmtsort
     std::ostream& operator<<(std::ostream& os, const struct SortedMap& value);
     int compare(reflect::Value aVal, reflect::Value bVal);
     std::tuple<int, bool> nilCompare(reflect::Value aVal, reflect::Value bVal);
-    struct SortedMap* Sort(reflect::Value mapValue);
+    golang::fmtsort::SortedMap* Sort(reflect::Value mapValue);
 
     namespace rec
     {
-        int Len(golang::fmtsort::SortedMap* o);
-        bool Less(golang::fmtsort::SortedMap* o, int i, int j);
-        void Swap(golang::fmtsort::SortedMap* o, int i, int j);
+        int Len(SortedMap* o);
+        bool Less(SortedMap* o, int i, int j);
+        void Swap(SortedMap* o, int i, int j);
     }
 }
 

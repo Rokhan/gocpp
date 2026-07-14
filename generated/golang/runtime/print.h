@@ -38,9 +38,9 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern mutex debuglock;
-    void printeface(struct eface e);
-    void printiface(struct iface i);
+    extern golang::runtime::mutex debuglock;
+    void printeface(eface e);
+    void printiface(iface i);
 
     namespace rec
     {

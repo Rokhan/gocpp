@@ -49,6 +49,6 @@ namespace golang::binary
     }
 
     // NativeEndian is the native-endian implementation of [ByteOrder] and [AppendByteOrder].
-    nativeEndian NativeEndian;
+    golang::binary::nativeEndian NativeEndian;
 }
 

@@ -13,6 +13,6 @@ namespace golang::binary
     struct coder;
     struct GoTag_decoder;
     struct GoTag_encoder;
-    using decoder = gocpp::defined<coder, GoTag_decoder>;
-    using encoder = gocpp::defined<coder, GoTag_encoder>;
+    using decoder = gocpp::defined<golang::binary::coder, GoTag_decoder>;
+    using encoder = gocpp::defined<golang::binary::coder, GoTag_encoder>;
 }

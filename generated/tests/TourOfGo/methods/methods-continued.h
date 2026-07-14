@@ -16,7 +16,7 @@ namespace golang::main
 
     namespace rec
     {
-        double Abs(golang::main::MyFloat f);
+        double Abs(MyFloat f);
     }
 }
 

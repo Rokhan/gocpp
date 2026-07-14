@@ -56,24 +56,24 @@ namespace golang::poll
     // Keep this string consistent because of issue #4373:
     // since historically programs have not been able to detect
     // this error, they look for the string.
-    gocpp::string rec::Error(golang::poll::errNetClosing e)
+    gocpp::string rec::Error(errNetClosing e)
     {
         return "use of closed network connection"_s;
     }
 
-    bool rec::Timeout(golang::poll::errNetClosing e)
+    bool rec::Timeout(errNetClosing e)
     {
         return false;
     }
 
-    bool rec::Temporary(golang::poll::errNetClosing e)
+    bool rec::Temporary(errNetClosing e)
     {
         return false;
     }
 
     // ErrNetClosing is returned when a network descriptor is used after
     // it has been closed.
-    errNetClosing ErrNetClosing = errNetClosing {};
+    golang::poll::errNetClosing ErrNetClosing = golang::poll::errNetClosing {};
     // ErrFileClosing is returned when a file descriptor is used after it
     // has been closed.
     gocpp::error ErrFileClosing = errors::New("use of closed file"_s);
@@ -92,7 +92,7 @@ namespace golang::poll
 
     // ErrDeadlineExceeded is returned for an expired deadline.
     // This is exported by the os package as os.ErrDeadlineExceeded.
-    gocpp::error ErrDeadlineExceeded = new DeadlineExceededError {};
+    gocpp::error ErrDeadlineExceeded = new golang::poll::DeadlineExceededError {};
     // DeadlineExceededError is returned for an expired deadline.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -124,17 +124,17 @@ namespace golang::poll
     // The string is "i/o timeout" because that is what was returned
     // by earlier Go versions. Changing it may break programs that
     // match on error strings.
-    gocpp::string rec::Error(golang::poll::DeadlineExceededError* e)
+    gocpp::string rec::Error(DeadlineExceededError* e)
     {
         return "i/o timeout"_s;
     }
 
-    bool rec::Timeout(golang::poll::DeadlineExceededError* e)
+    bool rec::Timeout(DeadlineExceededError* e)
     {
         return true;
     }
 
-    bool rec::Temporary(golang::poll::DeadlineExceededError* e)
+    bool rec::Temporary(DeadlineExceededError* e)
     {
         return true;
     }

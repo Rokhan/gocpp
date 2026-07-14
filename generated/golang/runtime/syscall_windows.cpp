@@ -204,7 +204,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    bool rec::tryMerge(golang::runtime::abiPart* a, struct abiPart b)
+    bool rec::tryMerge(abiPart* a, abiPart b)
     {
         if(a->kind != abiPartStack || b.kind != abiPartStack)
         {
@@ -267,7 +267,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::assignArg(golang::runtime::abiDesc* p, golang::runtime::_type* t)
+    void rec::assignArg(abiDesc* p, _type* t)
     {
         if(t->Size_ > goarch::PtrSize)
         {
@@ -330,7 +330,7 @@ namespace golang::runtime
             // could be a small by-value struct, but C and Go
             // struct layouts are compatible, so we can copy these
             // directly, too.
-            auto part = gocpp::Init<abiPart>([=](auto& x) {
+            auto part = gocpp::Init<golang::runtime::abiPart>([=](auto& x) {
                 x.kind = abiPartStack;
                 x.srcStackOffset = p->srcStackSize;
                 x.dstStackOffset = p->dstStackSize;
@@ -356,7 +356,7 @@ namespace golang::runtime
     // Assumes t.size <= goarch.PtrSize and t.size != 0.
     //
     // Returns whether the assignment succeeded.
-    bool rec::tryRegAssignArg(golang::runtime::abiDesc* p, golang::runtime::_type* t, uintptr_t offset)
+    bool rec::tryRegAssignArg(abiDesc* p, _type* t, uintptr_t offset)
     {
         //Go switch emulation
         {
@@ -406,7 +406,7 @@ namespace golang::runtime
                     break;
                 case 14:
                 {
-                    auto at = (runtime::arraytype*)(gocpp::unsafe_pointer(t));
+                    auto at = (golang::runtime::arraytype*)(gocpp::unsafe_pointer(t));
                     if(at->Len == 1)
                     {
                         // TODO fix when runtime is fully commoned up w/ abi.Type
@@ -416,7 +416,7 @@ namespace golang::runtime
                 }
                 case 15:
                 {
-                    auto st = (runtime::structtype*)(gocpp::unsafe_pointer(t));
+                    auto st = (golang::runtime::structtype*)(gocpp::unsafe_pointer(t));
                     for(auto [i, gocpp_ignored] : st->Fields)
                     {
                         auto f = & st->Fields[i];
@@ -440,13 +440,13 @@ namespace golang::runtime
     // value in the C ABI space.
     //
     // Returns whether the assignment was successful.
-    bool rec::assignReg(golang::runtime::abiDesc* p, uintptr_t size, uintptr_t offset)
+    bool rec::assignReg(abiDesc* p, uintptr_t size, uintptr_t offset)
     {
         if(p->dstRegisters >= intArgRegs)
         {
             return false;
         }
-        p->parts = append(p->parts, gocpp::Init<abiPart>([=](auto& x) {
+        p->parts = append(p->parts, gocpp::Init<golang::runtime::abiPart>([=](auto& x) {
             x.kind = abiPartReg;
             x.srcStackOffset = p->srcStackSize + offset;
             x.dstRegister = p->dstRegisters;
@@ -539,7 +539,7 @@ namespace golang::runtime
     // it always uses fastcall. On arm, it always uses the ARM convention.
     //
     //go:linkname compileCallback syscall.compileCallback
-    uintptr_t compileCallback(struct eface fn, bool cdecl)
+    uintptr_t compileCallback(eface fn, bool cdecl)
     {
         uintptr_t code;
         if(GOARCH != "386"_s)
@@ -552,10 +552,10 @@ namespace golang::runtime
         {
             gocpp::panic("compileCallback: expected function with one uintptr-sized result"_s);
         }
-        auto ft = (runtime::functype*)(gocpp::unsafe_pointer(fn._type));
+        auto ft = (golang::runtime::functype*)(gocpp::unsafe_pointer(fn._type));
 
         // Check arguments and construct ABI translation.
-        abiDesc abiMap = {};
+        golang::runtime::abiDesc abiMap = {};
         for(auto [gocpp_ignored, t] : rec::InSlice(gocpp::recv(ft)))
         {
             rec::assignArg(gocpp::recv(abiMap), t);
@@ -605,7 +605,7 @@ namespace golang::runtime
             retPop = abiMap.srcStackSize;
         }
 
-        auto key = winCallbackKey {(funcval*)(fn.data), cdecl};
+        auto key = golang::runtime::winCallbackKey {(golang::runtime::funcval*)(fn.data), cdecl};
 
         cbsLock();
 
@@ -619,7 +619,7 @@ namespace golang::runtime
         // Register the callback.
         if(cbs.index == nullptr)
         {
-            cbs.index = gocpp::make(gocpp::Tag<gocpp::map<winCallbackKey, int>>());
+            cbs.index = gocpp::make(gocpp::Tag<gocpp::map<golang::runtime::winCallbackKey, int>>());
         }
         auto n = cbs.n;
         if(n >= len(cbs.ctxt))
@@ -627,7 +627,7 @@ namespace golang::runtime
             cbsUnlock();
             go_throw("too many callback functions"_s);
         }
-        auto c = winCallback {key.fn, retPop, abiMap};
+        auto c = golang::runtime::winCallback {key.fn, retPop, abiMap};
         cbs.ctxt[n] = c;
         cbs.index[key] = n;
         cbs.n++;
@@ -675,7 +675,7 @@ namespace golang::runtime
     }
 
     // callbackWrap is called by callbackasm to invoke a registered C callback.
-    void callbackWrap(struct callbackArgs* a)
+    void callbackWrap(callbackArgs* a)
     {
         auto c = cbs.ctxt[a->index];
         a->retPop = c.retPop;

@@ -97,7 +97,7 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Pointer<T>& value);
     struct entry
     {
-        golang::main::Pointer<go_any> p{};
+        Pointer<go_any> p{};
 
         using isGoStruct = void;
 
@@ -112,16 +112,16 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
     void main();
-    struct entry* newEntry(go_any i);
+    golang::main::entry* newEntry(go_any i);
 
     namespace rec
     {
         
         template<typename T>
-        T Get(golang::main::Wrapper<T>* p);
+        T Get(Wrapper<T>* p);
         
         template<typename T>
-        void Store(golang::main::Pointer<T>* x, T* val);
+        void Store(Pointer<T>* x, T* val);
     }
 }
 

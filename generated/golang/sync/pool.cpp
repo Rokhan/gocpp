@@ -188,7 +188,7 @@ namespace golang::sync
     }
 
     // Put adds x to the pool.
-    void rec::Put(golang::sync::Pool* p, go_any x)
+    void rec::Put(Pool* p, go_any x)
     {
         if(x == nullptr)
         {
@@ -228,7 +228,7 @@ namespace golang::sync
     //
     // If Get would otherwise return nil and p.New is non-nil, Get returns
     // the result of calling p.New.
-    go_any rec::Get(golang::sync::Pool* p)
+    go_any rec::Get(Pool* p)
     {
         if(race::Enabled)
         {
@@ -264,7 +264,7 @@ namespace golang::sync
         return x;
     }
 
-    go_any rec::getSlow(golang::sync::Pool* p, int pid)
+    go_any rec::getSlow(Pool* p, int pid)
     {
         // See the comment in pin regarding ordering of the loads.
         // load-acquire
@@ -315,7 +315,7 @@ namespace golang::sync
     // pin pins the current goroutine to P, disables preemption and
     // returns poolLocal pool for the P and the P's id.
     // Caller must call runtime_procUnpin() when done with the pool.
-    std::tuple<struct poolLocal*, int> rec::pin(golang::sync::Pool* p)
+    std::tuple<golang::sync::poolLocal*, int> rec::pin(Pool* p)
     {
         // Check whether p is nil to get a panic.
         // Otherwise the nil dereference happens while the m is pinned,
@@ -341,7 +341,7 @@ namespace golang::sync
         return rec::pinSlow(gocpp::recv(p));
     }
 
-    std::tuple<struct poolLocal*, int> rec::pinSlow(golang::sync::Pool* p)
+    std::tuple<golang::sync::poolLocal*, int> rec::pinSlow(Pool* p)
     {
         gocpp::Defer defer;
         try
@@ -365,7 +365,7 @@ namespace golang::sync
             }
             // If GOMAXPROCS changes between GCs, we re-allocate the array and lose the old one.
             auto size = runtime::GOMAXPROCS(0);
-            auto local = gocpp::make(gocpp::Tag<gocpp::slice<poolLocal>>(), size);
+            auto local = gocpp::make(gocpp::Tag<gocpp::slice<golang::sync::poolLocal>>(), size);
             // store-release
             atomic::StorePointer(& p->local, gocpp::unsafe_pointer(& local[0]));
             // store-release
@@ -410,18 +410,18 @@ namespace golang::sync
     // STW.
     // oldPools is the set of pools that may have non-empty victim
     // caches. Protected by STW.
-    Mutex allPoolsMu;
-    gocpp::slice<Pool*> allPools;
-    gocpp::slice<Pool*> oldPools;
+    golang::sync::Mutex allPoolsMu;
+    gocpp::slice<golang::sync::Pool*> allPools;
+    gocpp::slice<golang::sync::Pool*> oldPools;
     void init()
     {
         runtime_registerPoolCleanup(poolCleanup);
     }
 
-    struct poolLocal* indexLocal(gocpp::unsafe_pointer l, int i)
+    golang::sync::poolLocal* indexLocal(gocpp::unsafe_pointer l, int i)
     {
-        auto lp = gocpp::unsafe_pointer(uintptr_t(l) + uintptr_t(i) * gocpp::Sizeof<poolLocal>());
-        return (poolLocal*)(lp);
+        auto lp = gocpp::unsafe_pointer(uintptr_t(l) + uintptr_t(i) * gocpp::Sizeof<golang::sync::poolLocal>());
+        return (golang::sync::poolLocal*)(lp);
     }
 
     // Implemented in runtime.

@@ -38,9 +38,9 @@ namespace golang::zlib
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
-    struct Writer* NewWriter(io::Writer w);
-    std::tuple<struct Writer*, struct gocpp::error> NewWriterLevel(io::Writer w, int level);
-    std::tuple<struct Writer*, struct gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
+    golang::zlib::Writer* NewWriter(io::Writer w);
+    std::tuple<golang::zlib::Writer*, struct gocpp::error> NewWriterLevel(io::Writer w, int level);
+    std::tuple<golang::zlib::Writer*, struct gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict);
 }
 
 #include "golang/io/io.h"
@@ -50,11 +50,11 @@ namespace golang::zlib
 
     namespace rec
     {
-        void Reset(golang::zlib::Writer* z, io::Writer w);
-        struct gocpp::error writeHeader(golang::zlib::Writer* z);
-        std::tuple<int, struct gocpp::error> Write(golang::zlib::Writer* z, gocpp::slice<unsigned char> p);
-        struct gocpp::error Flush(golang::zlib::Writer* z);
-        struct gocpp::error Close(golang::zlib::Writer* z);
+        void Reset(Writer* z, io::Writer w);
+        struct gocpp::error writeHeader(Writer* z);
+        std::tuple<int, struct gocpp::error> Write(Writer* z, gocpp::slice<unsigned char> p);
+        struct gocpp::error Flush(Writer* z);
+        struct gocpp::error Close(Writer* z);
     }
 }
 

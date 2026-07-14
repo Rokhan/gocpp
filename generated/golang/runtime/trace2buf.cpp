@@ -93,9 +93,9 @@ namespace golang::runtime
     }
 
     // write returns an a traceWriter that writes into the current M's stream.
-    struct traceWriter rec::writer(golang::runtime::traceLocker tl)
+    golang::runtime::traceWriter rec::writer(traceLocker tl)
     {
-        return gocpp::Init<traceWriter>([=](auto& x) {
+        return gocpp::Init<golang::runtime::traceWriter>([=](auto& x) {
             x.traceLocker = tl;
             x.traceBuf = tl.mp->trace.buf[tl.gen % 2];
         });
@@ -108,10 +108,10 @@ namespace golang::runtime
     // - trace.gen is prevented from advancing.
     //
     // buf may be nil.
-    struct traceWriter unsafeTraceWriter(uintptr_t gen, struct traceBuf* buf)
+    golang::runtime::traceWriter unsafeTraceWriter(uintptr_t gen, traceBuf* buf)
     {
-        return gocpp::Init<traceWriter>([=](auto& x) {
-            x.traceLocker = gocpp::Init<traceLocker>([=](auto& x) {
+        return gocpp::Init<golang::runtime::traceWriter>([=](auto& x) {
+            x.traceLocker = gocpp::Init<golang::runtime::traceLocker>([=](auto& x) {
                 x.gen = gen;
             });
             x.traceBuf = buf;
@@ -119,7 +119,7 @@ namespace golang::runtime
     }
 
     // end writes the buffer back into the m.
-    void rec::end(golang::runtime::traceWriter w)
+    void rec::end(traceWriter w)
     {
         if(w.traceLocker.mp == nullptr)
         {
@@ -133,7 +133,7 @@ namespace golang::runtime
     // ensure makes sure that at least maxSize bytes are available to write.
     //
     // Returns whether the buffer was flushed.
-    std::tuple<struct traceWriter, bool> rec::ensure(golang::runtime::traceWriter w, int maxSize)
+    std::tuple<golang::runtime::traceWriter, bool> rec::ensure(traceWriter w, int maxSize)
     {
         auto refill = w.traceBuf == nullptr || ! rec::available(gocpp::recv(w), maxSize);
         if(refill)
@@ -144,7 +144,7 @@ namespace golang::runtime
     }
 
     // flush puts w.traceBuf on the queue of full buffers.
-    struct traceWriter rec::flush(golang::runtime::traceWriter w)
+    golang::runtime::traceWriter rec::flush(traceWriter w)
     {
         systemstack([=]() mutable -> void
         {
@@ -160,7 +160,7 @@ namespace golang::runtime
     }
 
     // refill puts w.traceBuf on the queue of full buffers and refresh's w's buffer.
-    struct traceWriter rec::refill(golang::runtime::traceWriter w)
+    golang::runtime::traceWriter rec::refill(traceWriter w)
     {
         systemstack([=]() mutable -> void
         {
@@ -178,7 +178,7 @@ namespace golang::runtime
             else
             {
                 unlock(& trace.lock);
-                w.traceBuf = (traceBuf*)(sysAlloc(gocpp::Sizeof<traceBuf>(), & memstats.other_sys));
+                w.traceBuf = (golang::runtime::traceBuf*)(sysAlloc(gocpp::Sizeof<golang::runtime::traceBuf>(), & memstats.other_sys));
                 if(w.traceBuf == nullptr)
                 {
                     go_throw("trace: out of memory"_s);
@@ -245,7 +245,7 @@ namespace golang::runtime
     }
 
     // push queues buf into queue of buffers.
-    void rec::push(golang::runtime::traceBufQueue* q, struct traceBuf* buf)
+    void rec::push(traceBufQueue* q, traceBuf* buf)
     {
         buf->traceBufHeader.link = nullptr;
         if(q->head == nullptr)
@@ -260,7 +260,7 @@ namespace golang::runtime
     }
 
     // pop dequeues from the queue of buffers.
-    struct traceBuf* rec::pop(golang::runtime::traceBufQueue* q)
+    golang::runtime::traceBuf* rec::pop(traceBufQueue* q)
     {
         auto buf = q->head;
         if(buf == nullptr)
@@ -276,7 +276,7 @@ namespace golang::runtime
         return buf;
     }
 
-    bool rec::empty(golang::runtime::traceBufQueue* q)
+    bool rec::empty(traceBufQueue* q)
     {
         return q->head == nullptr;
     }
@@ -359,14 +359,14 @@ namespace golang::runtime
     }
 
     // byte appends v to buf.
-    void rec::byte(golang::runtime::traceBuf* buf, unsigned char v)
+    void rec::byte(traceBuf* buf, unsigned char v)
     {
         buf->arr[buf->traceBufHeader.pos] = v;
         buf->traceBufHeader.pos++;
     }
 
     // varint appends v to buf in little-endian-base-128 encoding.
-    void rec::varint(golang::runtime::traceBuf* buf, uint64_t v)
+    void rec::varint(traceBuf* buf, uint64_t v)
     {
         auto pos = buf->traceBufHeader.pos;
         auto arr = buf->arr.make_slice(pos, pos + traceBytesPerNumber);
@@ -387,7 +387,7 @@ namespace golang::runtime
     // varintReserve reserves enough space in buf to hold any varint.
     //
     // Space reserved this way can be filled in with the varintAt method.
-    int rec::varintReserve(golang::runtime::traceBuf* buf)
+    int rec::varintReserve(traceBuf* buf)
     {
         auto p = buf->traceBufHeader.pos;
         buf->traceBufHeader.pos += traceBytesPerNumber;
@@ -395,12 +395,12 @@ namespace golang::runtime
     }
 
     // stringData appends s's data directly to buf.
-    void rec::stringData(golang::runtime::traceBuf* buf, gocpp::string s)
+    void rec::stringData(traceBuf* buf, gocpp::string s)
     {
         buf->traceBufHeader.pos += copy(buf->arr.make_slice(buf->traceBufHeader.pos), s);
     }
 
-    bool rec::available(golang::runtime::traceBuf* buf, int size)
+    bool rec::available(traceBuf* buf, int size)
     {
         return len(buf->arr) - buf->traceBufHeader.pos >= size;
     }
@@ -409,7 +409,7 @@ namespace golang::runtime
     // consumes traceBytesPerNumber bytes. This is intended for when the caller
     // needs to reserve space for a varint but can't populate it until later.
     // Use varintReserve to reserve this space.
-    void rec::varintAt(golang::runtime::traceBuf* buf, int pos, uint64_t v)
+    void rec::varintAt(traceBuf* buf, int pos, uint64_t v)
     {
         for(auto i = 0; i < traceBytesPerNumber; i++)
         {
@@ -435,7 +435,7 @@ namespace golang::runtime
     // Must run on the system stack because trace.lock must be held.
     //
     //go:systemstack
-    void traceBufFlush(struct traceBuf* buf, uintptr_t gen)
+    void traceBufFlush(traceBuf* buf, uintptr_t gen)
     {
         assertLockHeld(& trace.lock);
 

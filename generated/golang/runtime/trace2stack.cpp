@@ -72,7 +72,7 @@ namespace golang::runtime
     // Avoid calling this function directly. gen needs to be the current generation
     // that this stack trace is being written out for, which needs to be synchronized with
     // generations moving forward. Prefer traceEventWriter.stack.
-    uint64_t traceStack(int skip, struct m* mp, uintptr_t gen)
+    uint64_t traceStack(int skip, m* mp, uintptr_t gen)
     {
         gocpp::array<uintptr_t, traceStackSize> pcBuf = {};
 
@@ -165,7 +165,7 @@ namespace golang::runtime
 
     // put returns a unique id for the stack trace pcs and caches it in the table,
     // if it sees the trace for the first time.
-    uint64_t rec::put(golang::runtime::traceStackTable* t, gocpp::slice<uintptr_t> pcs)
+    uint64_t rec::put(traceStackTable* t, gocpp::slice<uintptr_t> pcs)
     {
         if(len(pcs) == 0)
         {
@@ -183,7 +183,7 @@ namespace golang::runtime
     // may acquire trace.lock.
     //
     //go:systemstack
-    void rec::dump(golang::runtime::traceStackTable* t, uintptr_t gen)
+    void rec::dump(traceStackTable* t, uintptr_t gen)
     {
         auto w = unsafeTraceWriter(gen, nullptr);
 
@@ -246,9 +246,9 @@ namespace golang::runtime
 
     // makeTraceFrames returns the frames corresponding to pcs. It may
     // allocate and may emit trace events.
-    gocpp::slice<traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs)
+    gocpp::slice<golang::runtime::traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs)
     {
-        auto frames = gocpp::make(gocpp::Tag<gocpp::slice<traceFrame>>(), 0, len(pcs));
+        auto frames = gocpp::make(gocpp::Tag<gocpp::slice<golang::runtime::traceFrame>>(), 0, len(pcs));
         auto ci = CallersFrames(pcs);
         for(; ; )
         {
@@ -300,9 +300,9 @@ namespace golang::runtime
     }
 
     // makeTraceFrame sets up a traceFrame for a frame.
-    struct traceFrame makeTraceFrame(uintptr_t gen, struct Frame f)
+    golang::runtime::traceFrame makeTraceFrame(uintptr_t gen, Frame f)
     {
-        traceFrame frame = {};
+        golang::runtime::traceFrame frame = {};
         frame.PC = f.PC;
 
         auto fn = f.Function;

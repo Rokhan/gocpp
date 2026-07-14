@@ -33,7 +33,7 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    ticksType ticks;
+    golang::runtime::ticksType ticks;
     
     template<typename T> requires gocpp::GoStruct<T>
     ticksType::operator T()
@@ -75,7 +75,7 @@ namespace golang::runtime
     // init initializes ticks to maximize the chance that we have a good ticksPerSecond reference.
     //
     // Must not run concurrently with ticksPerSecond.
-    void rec::init(golang::runtime::ticksType* t)
+    void rec::init(ticksType* t)
     {
         runtime::lock(& ticks.lock);
         t->startTime = nanotime();
@@ -250,7 +250,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    void rec::IncNonDefault(golang::runtime::godebugInc* g)
+    void rec::IncNonDefault(godebugInc* g)
     {
         auto inc = rec::Load<std::function<void (void)>>(gocpp::recv(g->inc));
         if(inc == nullptr)

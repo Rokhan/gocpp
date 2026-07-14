@@ -69,13 +69,13 @@ namespace golang::os
 
     namespace rec
     {
-        void close(golang::os::dirInfo* d);
-        std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<os::DirEntry>, gocpp::slice<os::FileInfo>, struct gocpp::error> readdir(golang::os::File* file, int n, golang::os::readdirMode mode);
-        gocpp::string Name(golang::os::dirEntry de);
-        bool IsDir(golang::os::dirEntry de);
-        os::FileMode Type(golang::os::dirEntry de);
-        std::tuple<os::FileInfo, struct gocpp::error> Info(golang::os::dirEntry de);
-        gocpp::string String(golang::os::dirEntry de);
+        void close(dirInfo* d);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::slice<DirEntry>, gocpp::slice<FileInfo>, struct gocpp::error> readdir(File* file, int n, readdirMode mode);
+        gocpp::string Name(dirEntry de);
+        bool IsDir(dirEntry de);
+        golang::os::FileMode Type(dirEntry de);
+        std::tuple<struct FileInfo, struct gocpp::error> Info(dirEntry de);
+        gocpp::string String(dirEntry de);
     }
 }
 

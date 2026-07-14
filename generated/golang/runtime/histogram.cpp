@@ -126,7 +126,7 @@ namespace golang::runtime
     // may run in sensitive locations.
     //
     //go:nosplit
-    void rec::record(golang::runtime::timeHistogram* h, int64_t duration)
+    void rec::record(timeHistogram* h, int64_t duration)
     {
         // If the duration is negative, capture that in underflow.
         if(duration < 0)
@@ -166,7 +166,7 @@ namespace golang::runtime
     }
 
     // write dumps the histogram to the passed metricValue as a float64 histogram.
-    void rec::write(golang::runtime::timeHistogram* h, struct metricValue* out)
+    void rec::write(timeHistogram* h, metricValue* out)
     {
         auto hist = rec::float64HistOrInit(gocpp::recv(out), timeHistBuckets);
         // The bottom-most bucket, containing negative values, is tracked

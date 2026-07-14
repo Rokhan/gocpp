@@ -115,7 +115,7 @@ namespace golang::runtime
 
     void gcinit()
     {
-        if(gocpp::Sizeof<workbuf>() != _WorkbufSize)
+        if(gocpp::Sizeof<golang::runtime::workbuf>() != _WorkbufSize)
         {
             go_throw("size of Workbuf is suboptimal"_s);
         }
@@ -265,7 +265,7 @@ namespace golang::runtime
         return double(selfTime) / double(delta) > 1.2 * gcController.fractionalUtilizationGoal;
     }
 
-    workType work;
+    golang::runtime::workType work;
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_1::operator T()
@@ -552,7 +552,7 @@ namespace golang::runtime
         // We're now in sweep N or later. Trigger GC cycle N+1, which
         // will first finish sweep N if necessary and then enter sweep
         // termination N+1.
-        gcStart(gocpp::Init<gcTrigger>([=](auto& x) {
+        gcStart(gocpp::Init<golang::runtime::gcTrigger>([=](auto& x) {
             x.kind = gcTriggerCycle;
             x.n = n + 1;
         }));
@@ -673,7 +673,7 @@ namespace golang::runtime
     // test reports whether the trigger condition is satisfied, meaning
     // that the exit condition for the _GCoff phase has been met. The exit
     // condition should be tested when allocating.
-    bool rec::test(golang::runtime::gcTrigger t)
+    bool rec::test(gcTrigger t)
     {
         if(! memstats.enablegc || rec::Load(gocpp::recv(panicking)) != 0 || gcphase != _GCoff)
         {
@@ -719,7 +719,7 @@ namespace golang::runtime
     //
     // This may return without performing this transition in some cases,
     // such as when called on a system stack or with locks held.
-    void gcStart(struct gcTrigger trigger)
+    void gcStart(gcTrigger trigger)
     {
         // Since this is called from malloc and malloc is called in
         // the guts of a number of libraries that might be holding
@@ -813,7 +813,7 @@ namespace golang::runtime
 
         auto now = nanotime();
         work.tSweepTerm = now;
-        worldStop stw = {};
+        golang::runtime::worldStop stw = {};
         systemstack([=]() mutable -> void
         {
             stw = stopTheWorldWithSema(stwGCSweepTerm);
@@ -965,7 +965,7 @@ namespace golang::runtime
 
         // Flush all local buffers and collect flushedWork flags.
         gcMarkDoneFlushed = 0;
-        forEachP(waitReasonGCMarkTermination, [=](struct p* pp) mutable -> void
+        forEachP(waitReasonGCMarkTermination, [=](golang::runtime::p* pp) mutable -> void
         {
             // Flush the write barrier buffer, since this may add
             // work to the gcWork.
@@ -1002,7 +1002,7 @@ namespace golang::runtime
         auto now = nanotime();
         work.tMarkTerm = now;
         getg()->m->preemptoff = "gcing"_s;
-        worldStop stw = {};
+        golang::runtime::worldStop stw = {};
         // The gcphase is _GCmark, it will transition to _GCmarktermination
         // below. The important thing is that the wb remains active until
         // all marking is complete. This includes writes made by the GC.
@@ -1079,7 +1079,7 @@ namespace golang::runtime
 
     // World must be stopped and mark assists and background workers must be
     // disabled.
-    void gcMarkTermination(struct worldStop stw)
+    void gcMarkTermination(worldStop stw)
     {
         // Start marktermination (write barrier remains enabled for now).
         setGCPhase(_GCmarktermination);
@@ -1277,7 +1277,7 @@ namespace golang::runtime
         // of additional memory might be held onto.
         // Also, flush the pinner cache, to avoid leaking that memory
         // indefinitely.
-        forEachP(waitReasonFlushProcCaches, [=](struct p* pp) mutable -> void
+        forEachP(waitReasonFlushProcCaches, [=](golang::runtime::p* pp) mutable -> void
         {
             rec::prepareForSweep(gocpp::recv(pp->mcache));
             if(pp->status == _Pidle)
@@ -1515,9 +1515,9 @@ namespace golang::runtime
         {
             // Go to sleep until woken by
             // gcController.findRunnableGCWorker.
-            gopark([=](struct g* g, gocpp::unsafe_pointer nodep) mutable -> bool
+            gopark([=](golang::runtime::g* g, gocpp::unsafe_pointer nodep) mutable -> bool
             {
-                auto node = (gcBgMarkWorkerNode*)(nodep);
+                auto node = (golang::runtime::gcBgMarkWorkerNode*)(nodep);
 
                 if(auto mp = rec::ptr(gocpp::recv(node->m)); mp != nullptr)
                 {
@@ -1681,7 +1681,7 @@ namespace golang::runtime
     // gcMarkWorkAvailable reports whether executing a mark worker
     // on p is potentially useful. p may be nil, in which case it only
     // checks the global sources of work.
-    bool gcMarkWorkAvailable(struct p* p)
+    bool gcMarkWorkAvailable(golang::runtime::p* p)
     {
         if(p != nullptr && ! rec::empty(gocpp::recv(p->gcw)))
         {
@@ -1816,7 +1816,7 @@ namespace golang::runtime
     // The world must be stopped.
     //
     //go:systemstack
-    bool gcSweep(golang::runtime::gcMode mode)
+    bool gcSweep(gcMode mode)
     {
         assertWorldStopped();
 
@@ -1890,7 +1890,7 @@ namespace golang::runtime
     {
         // This may be called during a concurrent phase, so lock to make sure
         // allgs doesn't change.
-        forEachG([=](struct g* gp) mutable -> void
+        forEachG([=](golang::runtime::g* gp) mutable -> void
         {
             // set to true in gcphasework
             gp->gcscandone = false;
@@ -1948,8 +1948,8 @@ namespace golang::runtime
         // Disconnect cached list before dropping it on the floor,
         // so that a dangling ref to one entry does not pin all of them.
         lock(& sched.sudoglock);
-        sudog* sg = {};
-        sudog* sgnext = {};
+        golang::runtime::sudog* sg = {};
+        golang::runtime::sudog* sgnext = {};
         for(sg = sched.sudogcache; sg != nullptr; sg = sgnext)
         {
             sgnext = sg->next;
@@ -1963,8 +1963,8 @@ namespace golang::runtime
         lock(& sched.deferlock);
         // disconnect cached list before dropping it on the floor,
         // so that a dangling ref to one entry does not pin all of them.
-        _defer* d = {};
-        _defer* dlink = {};
+        golang::runtime::_defer* d = {};
+        golang::runtime::_defer* dlink = {};
         for(d = sched.deferpool; d != nullptr; d = dlink)
         {
             dlink = d->link;
@@ -2052,11 +2052,11 @@ namespace golang::runtime
         semacquire(& gcsema);
 
         // Create reachability specials for ptrs.
-        auto specials = gocpp::make(gocpp::Tag<gocpp::slice<specialReachable*>>(), len(ptrs));
+        auto specials = gocpp::make(gocpp::Tag<gocpp::slice<golang::runtime::specialReachable*>>(), len(ptrs));
         for(auto [i, p] : ptrs)
         {
             lock(& mheap_.speciallock);
-            auto s = (specialReachable*)(rec::alloc(gocpp::recv(mheap_.specialReachableAlloc)));
+            auto s = (golang::runtime::specialReachable*)(rec::alloc(gocpp::recv(mheap_.specialReachableAlloc)));
             unlock(& mheap_.speciallock);
             s->special.kind = _KindSpecialReachable;
             if(! addspecial(p, & s->special))

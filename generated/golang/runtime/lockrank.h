@@ -13,11 +13,11 @@
 namespace golang::runtime
 {
     extern gocpp::slice<gocpp::string> lockNames;
-    extern gocpp::slice<gocpp::slice<runtime::lockRank>> lockPartialOrder;
+    extern gocpp::slice<gocpp::slice<golang::runtime::lockRank>> lockPartialOrder;
 
     namespace rec
     {
-        gocpp::string String(golang::runtime::lockRank rank);
+        gocpp::string String(lockRank rank);
     }
 }
 

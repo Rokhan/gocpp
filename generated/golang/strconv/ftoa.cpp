@@ -60,8 +60,8 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    floatInfo float32info = floatInfo {23, 8, - 127};
-    floatInfo float64info = floatInfo {52, 11, - 1023};
+    golang::strconv::floatInfo float32info = golang::strconv::floatInfo {23, 8, - 127};
+    golang::strconv::floatInfo float64info = golang::strconv::floatInfo {52, 11, - 1023};
     // FormatFloat converts the floating-point number f to a string,
     // according to the format fmt and precision prec. It rounds the
     // result assuming that the original was obtained from a floating-point
@@ -99,7 +99,7 @@ namespace golang::strconv
     gocpp::slice<unsigned char> genericFtoa(gocpp::slice<unsigned char> dst, double val, unsigned char fmt, int prec, int bitSize)
     {
         uint64_t bits = {};
-        floatInfo* flt = {};
+        golang::strconv::floatInfo* flt = {};
         //Go switch emulation
         {
             auto condition = bitSize;
@@ -186,7 +186,7 @@ namespace golang::strconv
             return bigFtoa(dst, prec, fmt, neg, mant, exp, flt);
         }
 
-        decimalSlice digs = {};
+        golang::strconv::decimalSlice digs = {};
         auto ok = false;
         // Negative precision means "only as much as needed to be exact."
         auto shortest = prec < 0;
@@ -279,17 +279,17 @@ namespace golang::strconv
     }
 
     // bigFtoa uses multiprecision computations to format a float.
-    gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt)
+    gocpp::slice<unsigned char> bigFtoa(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, floatInfo* flt)
     {
         auto d = new decimal{};
         rec::Assign(gocpp::recv(d), mant);
         rec::Shift(gocpp::recv(d), exp - int(flt->mantbits));
-        decimalSlice digs = {};
+        golang::strconv::decimalSlice digs = {};
         auto shortest = prec < 0;
         if(shortest)
         {
             roundShortest(d, mant, exp, flt);
-            digs = gocpp::Init<decimalSlice>([=](auto& x) {
+            digs = gocpp::Init<golang::strconv::decimalSlice>([=](auto& x) {
                 x.d = d->d.make_slice(0);
                 x.nd = d->nd;
                 x.dp = d->dp;
@@ -351,7 +351,7 @@ namespace golang::strconv
                         break;
                 }
             }
-            digs = gocpp::Init<decimalSlice>([=](auto& x) {
+            digs = gocpp::Init<golang::strconv::decimalSlice>([=](auto& x) {
                 x.d = d->d.make_slice(0);
                 x.nd = d->nd;
                 x.dp = d->dp;
@@ -360,7 +360,7 @@ namespace golang::strconv
         return formatDigits(dst, shortest, neg, digs, prec, fmt);
     }
 
-    gocpp::slice<unsigned char> formatDigits(gocpp::slice<unsigned char> dst, bool shortest, bool neg, struct decimalSlice digs, int prec, unsigned char fmt)
+    gocpp::slice<unsigned char> formatDigits(gocpp::slice<unsigned char> dst, bool shortest, bool neg, decimalSlice digs, int prec, unsigned char fmt)
     {
         //Go switch emulation
         {
@@ -421,7 +421,7 @@ namespace golang::strconv
 
     // roundShortest rounds d (= mant * 2^exp) to the shortest number of digits
     // that will let the original floating point value be precisely reconstructed.
-    void roundShortest(struct decimal* d, uint64_t mant, int exp, struct floatInfo* flt)
+    void roundShortest(decimal* d, uint64_t mant, int exp, floatInfo* flt)
     {
         // If mantissa is zero, the number is zero; stop now.
         if(mant == 0)
@@ -625,7 +625,7 @@ namespace golang::strconv
     }
 
     // %e: -d.ddddde±dd
-    gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> dst, bool neg, struct decimalSlice d, int prec, unsigned char fmt)
+    gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> dst, bool neg, decimalSlice d, int prec, unsigned char fmt)
     {
         // sign
         if(neg)
@@ -701,7 +701,7 @@ namespace golang::strconv
     }
 
     // %f: -ddddddd.ddddd
-    gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> dst, bool neg, struct decimalSlice d, int prec)
+    gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> dst, bool neg, decimalSlice d, int prec)
     {
         // sign
         if(neg)
@@ -743,7 +743,7 @@ namespace golang::strconv
     }
 
     // %b: -ddddddddp±ddd
-    gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp, struct floatInfo* flt)
+    gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp, floatInfo* flt)
     {
         // sign
         if(neg)
@@ -769,7 +769,7 @@ namespace golang::strconv
     }
 
     // %x: -0x1.yyyyyyyyp±ddd or -0x0p+0. (y is hex digit, d is decimal digit)
-    gocpp::slice<unsigned char> fmtX(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, struct floatInfo* flt)
+    gocpp::slice<unsigned char> fmtX(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, floatInfo* flt)
     {
         if(mant == 0)
         {

@@ -17,16 +17,16 @@ namespace golang::reflect
     using SelectDir = int;
     struct SelectCase;
     struct gocpp_id_7;
-    const reflect::flag flagKindMask = (1 << flagKindWidth) - 1;
-    const reflect::flag flagStickyRO = 1 << 5;
-    const reflect::flag flagEmbedRO = 1 << 6;
-    const reflect::flag flagIndir = 1 << 7;
-    const reflect::flag flagAddr = 1 << 8;
-    const reflect::flag flagMethod = 1 << 9;
-    const reflect::SelectDir _ = 0;
-    const reflect::SelectDir SelectSend = 1;
-    const reflect::SelectDir SelectRecv = 2;
-    const reflect::SelectDir SelectDefault = 3;
+    const golang::reflect::flag flagKindMask = (1 << flagKindWidth) - 1;
+    const golang::reflect::flag flagStickyRO = 1 << 5;
+    const golang::reflect::flag flagEmbedRO = 1 << 6;
+    const golang::reflect::flag flagIndir = 1 << 7;
+    const golang::reflect::flag flagAddr = 1 << 8;
+    const golang::reflect::flag flagMethod = 1 << 9;
+    const golang::reflect::SelectDir _ = 0;
+    const golang::reflect::SelectDir SelectSend = 1;
+    const golang::reflect::SelectDir SelectRecv = 2;
+    const golang::reflect::SelectDir SelectDefault = 3;
 }
 #include "golang/internal/abi/type.fwd.h"
 #include "golang/reflect/type.fwd.h"
@@ -38,5 +38,5 @@ namespace golang::reflect
     struct emptyInterface;
     struct nonEmptyInterface;
     struct runtimeSelect;
-    const reflect::flag flagRO = flagStickyRO | flagEmbedRO;
+    const golang::reflect::flag flagRO = flagStickyRO | flagEmbedRO;
 }

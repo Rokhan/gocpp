@@ -98,7 +98,7 @@ namespace golang::runtime
     }
 
     // reset resets the gTraceState for a new goroutine.
-    void rec::reset(golang::runtime::gTraceState* s)
+    void rec::reset(gTraceState* s)
     {
         // N.B. s.statusTraced is managed and cleared separately.
         s->traceSchedResourceState.seq = gocpp::array<uint64_t, 2> {};
@@ -302,11 +302,11 @@ namespace golang::runtime
     // nosplit because it's called on the syscall path when stack movement is forbidden.
     //
     //go:nosplit
-    struct traceLocker traceAcquire()
+    golang::runtime::traceLocker traceAcquire()
     {
         if(! traceEnabled())
         {
-            return traceLocker {};
+            return golang::runtime::traceLocker {};
         }
         return traceAcquireEnabled();
     }
@@ -318,7 +318,7 @@ namespace golang::runtime
     // nosplit because it's called by traceAcquire, which is nosplit.
     //
     //go:nosplit
-    struct traceLocker traceAcquireEnabled()
+    golang::runtime::traceLocker traceAcquireEnabled()
     {
         // Any time we acquire a traceLocker, we may flush a trace buffer. But
         // buffer flushes are rare. Record the lock edge even if it doesn't happen
@@ -351,9 +351,9 @@ namespace golang::runtime
         {
             rec::Add(gocpp::recv(mp->trace.seqlock), 1);
             releasem(mp);
-            return traceLocker {};
+            return golang::runtime::traceLocker {};
         }
-        return traceLocker {mp, gen};
+        return golang::runtime::traceLocker {mp, gen};
     }
 
     // ok returns true if the traceLocker is valid (i.e. tracing is enabled).
@@ -361,7 +361,7 @@ namespace golang::runtime
     // nosplit because it's called on the syscall path when stack movement is forbidden.
     //
     //go:nosplit
-    bool rec::ok(golang::runtime::traceLocker tl)
+    bool rec::ok(traceLocker tl)
     {
         return tl.gen != 0;
     }
@@ -371,7 +371,7 @@ namespace golang::runtime
     // nosplit because it's called on the syscall path when stack movement is forbidden.
     //
     //go:nosplit
-    void traceRelease(struct traceLocker tl)
+    void traceRelease(traceLocker tl)
     {
         auto seq = rec::Add(gocpp::recv(tl.mp->trace.seqlock), 1);
         if(debugTraceReentrancy && seq % 2 != 0)
@@ -397,7 +397,7 @@ namespace golang::runtime
     }
 
     // Gomaxprocs emits a ProcsChange event.
-    void rec::Gomaxprocs(golang::runtime::traceLocker tl, int32_t procs)
+    void rec::Gomaxprocs(traceLocker tl, int32_t procs)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvProcsChange, traceArg(procs), rec::stack(gocpp::recv(tl), 1));
     }
@@ -405,7 +405,7 @@ namespace golang::runtime
     // ProcStart traces a ProcStart event.
     //
     // Must be called with a valid P.
-    void rec::ProcStart(golang::runtime::traceLocker tl)
+    void rec::ProcStart(traceLocker tl)
     {
         auto pp = rec::ptr(gocpp::recv(tl.mp->p));
         // Procs are typically started within the scheduler when there is no user goroutine. If there is a user goroutine,
@@ -415,7 +415,7 @@ namespace golang::runtime
     }
 
     // ProcStop traces a ProcStop event.
-    void rec::ProcStop(golang::runtime::traceLocker tl, struct p* pp)
+    void rec::ProcStop(traceLocker tl, golang::runtime::p* pp)
     {
         // The only time a goroutine is allowed to have its Proc moved around
         // from under it is during a syscall.
@@ -426,7 +426,7 @@ namespace golang::runtime
     //
     // Must be emitted by an actively running goroutine on an active P. This restriction can be changed
     // easily and only depends on where it's currently called.
-    void rec::GCActive(golang::runtime::traceLocker tl)
+    void rec::GCActive(traceLocker tl)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCActive, traceArg(trace.seqGC));
         // N.B. Only one GC can be running at a time, so this is naturally
@@ -438,7 +438,7 @@ namespace golang::runtime
     //
     // Must be emitted by an actively running goroutine on an active P. This restriction can be changed
     // easily and only depends on where it's currently called.
-    void rec::GCStart(golang::runtime::traceLocker tl)
+    void rec::GCStart(traceLocker tl)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCBegin, traceArg(trace.seqGC), rec::stack(gocpp::recv(tl), 3));
         // N.B. Only one GC can be running at a time, so this is naturally
@@ -450,7 +450,7 @@ namespace golang::runtime
     //
     // Must be emitted by an actively running goroutine on an active P. This restriction can be changed
     // easily and only depends on where it's currently called.
-    void rec::GCDone(golang::runtime::traceLocker tl)
+    void rec::GCDone(traceLocker tl)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCEnd, traceArg(trace.seqGC));
         // N.B. Only one GC can be running at a time, so this is naturally
@@ -459,7 +459,7 @@ namespace golang::runtime
     }
 
     // STWStart traces a STWBegin event.
-    void rec::STWStart(golang::runtime::traceLocker tl, golang::runtime::stwReason reason)
+    void rec::STWStart(traceLocker tl, stwReason reason)
     {
         // Although the current P may be in _Pgcstop here, we model the P as running during the STW. This deviates from the
         // runtime's state tracking, but it's more accurate and doesn't result in any loss of information.
@@ -467,7 +467,7 @@ namespace golang::runtime
     }
 
     // STWDone traces a STWEnd event.
-    void rec::STWDone(golang::runtime::traceLocker tl)
+    void rec::STWDone(traceLocker tl)
     {
         // Although the current P may be in _Pgcstop here, we model the P as running during the STW. This deviates from the
         // runtime's state tracking, but it's more accurate and doesn't result in any loss of information.
@@ -481,7 +481,7 @@ namespace golang::runtime
     // must be no preemption points between these two calls.
     //
     // Must be called with a valid P.
-    void rec::GCSweepStart(golang::runtime::traceLocker tl)
+    void rec::GCSweepStart(traceLocker tl)
     {
         // Delay the actual GCSweepBegin event until the first span
         // sweep. If we don't sweep anything, don't emit any events.
@@ -501,7 +501,7 @@ namespace golang::runtime
     // pair; however, it will not emit any trace events in this case.
     //
     // Must be called with a valid P.
-    void rec::GCSweepSpan(golang::runtime::traceLocker tl, uintptr_t bytesSwept)
+    void rec::GCSweepSpan(traceLocker tl, uintptr_t bytesSwept)
     {
         auto pp = rec::ptr(gocpp::recv(tl.mp->p));
         if(pp->trace.maySweep)
@@ -520,7 +520,7 @@ namespace golang::runtime
     // a GCSweepEnd event.
     //
     // Must be called with a valid P.
-    void rec::GCSweepDone(golang::runtime::traceLocker tl)
+    void rec::GCSweepDone(traceLocker tl)
     {
         auto pp = rec::ptr(gocpp::recv(tl.mp->p));
         if(! pp->trace.maySweep)
@@ -536,19 +536,19 @@ namespace golang::runtime
     }
 
     // GCMarkAssistStart emits a MarkAssistBegin event.
-    void rec::GCMarkAssistStart(golang::runtime::traceLocker tl)
+    void rec::GCMarkAssistStart(traceLocker tl)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCMarkAssistBegin, rec::stack(gocpp::recv(tl), 1));
     }
 
     // GCMarkAssistDone emits a MarkAssistEnd event.
-    void rec::GCMarkAssistDone(golang::runtime::traceLocker tl)
+    void rec::GCMarkAssistDone(traceLocker tl)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGCMarkAssistEnd);
     }
 
     // GoCreate emits a GoCreate event.
-    void rec::GoCreate(golang::runtime::traceLocker tl, struct g* newg, uintptr_t pc)
+    void rec::GoCreate(traceLocker tl, g* newg, uintptr_t pc)
     {
         rec::setStatusTraced(gocpp::recv(newg->trace), tl.gen);
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoCreate, traceArg(newg->goid), rec::startPC(gocpp::recv(tl), pc), rec::stack(gocpp::recv(tl), 2));
@@ -557,7 +557,7 @@ namespace golang::runtime
     // GoStart emits a GoStart event.
     //
     // Must be called with a valid P.
-    void rec::GoStart(golang::runtime::traceLocker tl)
+    void rec::GoStart(traceLocker tl)
     {
         auto gp = getg()->m->curg;
         auto pp = gp->m->p;
@@ -573,25 +573,25 @@ namespace golang::runtime
     // GoEnd emits a GoDestroy event.
     //
     // TODO(mknyszek): Rename this to GoDestroy.
-    void rec::GoEnd(golang::runtime::traceLocker tl)
+    void rec::GoEnd(traceLocker tl)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoDestroy);
     }
 
     // GoSched emits a GoStop event with a GoSched reason.
-    void rec::GoSched(golang::runtime::traceLocker tl)
+    void rec::GoSched(traceLocker tl)
     {
         rec::GoStop(gocpp::recv(tl), traceGoStopGoSched);
     }
 
     // GoPreempt emits a GoStop event with a GoPreempted reason.
-    void rec::GoPreempt(golang::runtime::traceLocker tl)
+    void rec::GoPreempt(traceLocker tl)
     {
         rec::GoStop(gocpp::recv(tl), traceGoStopPreempted);
     }
 
     // GoStop emits a GoStop event with the provided reason.
-    void rec::GoStop(golang::runtime::traceLocker tl, golang::runtime::traceGoStopReason reason)
+    void rec::GoStop(traceLocker tl, traceGoStopReason reason)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoStop, traceArg(trace.goStopReasons[tl.gen % 2][reason]), rec::stack(gocpp::recv(tl), 1));
     }
@@ -600,13 +600,13 @@ namespace golang::runtime
     //
     // TODO(mknyszek): Replace traceBlockReason with waitReason. It's silly
     // that we have both, and waitReason is way more descriptive.
-    void rec::GoPark(golang::runtime::traceLocker tl, golang::runtime::traceBlockReason reason, int skip)
+    void rec::GoPark(traceLocker tl, traceBlockReason reason, int skip)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvGoBlock, traceArg(trace.goBlockReasons[tl.gen % 2][reason]), rec::stack(gocpp::recv(tl), skip));
     }
 
     // GoUnpark emits a GoUnblock event.
-    void rec::GoUnpark(golang::runtime::traceLocker tl, struct g* gp, int skip)
+    void rec::GoUnpark(traceLocker tl, g* gp, int skip)
     {
         // Emit a GoWaiting status if necessary for the unblocked goroutine.
         auto w = rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning);
@@ -622,7 +622,7 @@ namespace golang::runtime
     // GoSysCall emits a GoSyscallBegin event.
     //
     // Must be called with a valid P.
-    void rec::GoSysCall(golang::runtime::traceLocker tl)
+    void rec::GoSysCall(traceLocker tl)
     {
         int skip = {};
         //Go switch emulation
@@ -664,7 +664,7 @@ namespace golang::runtime
     // - The goroutine lost its P, it ran some other code, and then got it back. It's now running with that P.
     // - The goroutine lost its P and was unable to reacquire it, and is now running without a P.
     // - The goroutine lost its P and acquired a different one, and is now running with that P.
-    void rec::GoSysExit(golang::runtime::traceLocker tl, bool lostP)
+    void rec::GoSysExit(traceLocker tl, bool lostP)
     {
         auto ev = traceEvGoSyscallEnd;
         // Procs implicitly enter traceProcSyscall on GoSyscallBegin.
@@ -687,7 +687,7 @@ namespace golang::runtime
     // inSyscall indicates that we're stealing the P from a syscall context.
     //
     // The caller must have ownership of pp.
-    void rec::ProcSteal(golang::runtime::traceLocker tl, struct p* pp, bool inSyscall)
+    void rec::ProcSteal(traceLocker tl, golang::runtime::p* pp, bool inSyscall)
     {
         // Grab the M ID we stole from.
         auto mStolenFrom = pp->trace.mSyscallID;
@@ -723,18 +723,18 @@ namespace golang::runtime
     }
 
     // GoSysBlock is a no-op in the new tracer.
-    void rec::GoSysBlock(golang::runtime::traceLocker tl, struct p* pp)
+    void rec::GoSysBlock(traceLocker tl, golang::runtime::p* pp)
     {
     }
 
     // HeapAlloc emits a HeapAlloc event.
-    void rec::HeapAlloc(golang::runtime::traceLocker tl, uint64_t live)
+    void rec::HeapAlloc(traceLocker tl, uint64_t live)
     {
         rec::commit(gocpp::recv(rec::eventWriter(gocpp::recv(tl), traceGoRunning, traceProcRunning)), traceEvHeapAlloc, traceArg(live));
     }
 
     // HeapGoal reads the current heap goal and emits a HeapGoal event.
-    void rec::HeapGoal(golang::runtime::traceLocker tl)
+    void rec::HeapGoal(traceLocker tl)
     {
         auto heapGoal = rec::heapGoal(gocpp::recv(gcController));
         if(heapGoal == ~ uint64_t(0))
@@ -747,7 +747,7 @@ namespace golang::runtime
 
     // OneNewExtraM is a no-op in the new tracer. This is worth keeping around though because
     // it's a good place to insert a thread-level event about the new extra M.
-    void rec::OneNewExtraM(golang::runtime::traceLocker tl, struct g* _1)
+    void rec::OneNewExtraM(traceLocker tl, g* _1)
     {
     }
 
@@ -757,7 +757,7 @@ namespace golang::runtime
     //
     // This occurs when C code calls into Go. On pthread platforms it occurs only when
     // a C thread calls into Go code for the first time.
-    void rec::GoCreateSyscall(golang::runtime::traceLocker tl, struct g* gp)
+    void rec::GoCreateSyscall(traceLocker tl, g* gp)
     {
         // N.B. We should never trace a status for this goroutine (which we're currently running on),
         // since we want this to appear like goroutine creation.
@@ -771,7 +771,7 @@ namespace golang::runtime
     //
     // This occurs when Go code returns back to C. On pthread platforms it occurs only when
     // the C thread is destroyed.
-    void rec::GoDestroySyscall(golang::runtime::traceLocker tl)
+    void rec::GoDestroySyscall(traceLocker tl)
     {
         // N.B. If we trace a status here, we must never have a P, and we must be on a goroutine
         // that is in the syscall state.
@@ -822,7 +822,7 @@ namespace golang::runtime
             // Need to do this check because the caller won't have it.
             return;
         }
-        runtime::traceEv ev = {};
+        golang::runtime::traceEv ev = {};
         //Go switch emulation
         {
             auto condition = mode;
@@ -866,7 +866,7 @@ namespace golang::runtime
     // This must run on the system stack to match the old tracer.
     //
     //go:systemstack
-    void traceProcFree(struct p* _1)
+    void traceProcFree(golang::runtime::p* _1)
     {
     }
 
@@ -876,7 +876,7 @@ namespace golang::runtime
     // mp must not be able to emit trace events anymore.
     //
     // sched.lock must be held to synchronize with traceAdvance.
-    void traceThreadDestroy(struct m* mp)
+    void traceThreadDestroy(m* mp)
     {
         assertLockHeld(& sched.lock);
 
@@ -918,7 +918,7 @@ namespace golang::runtime
     // nosplit because it's called from exitsyscall without a P.
     //
     //go:nosplit
-    void rec::RecordSyscallExitedTime(golang::runtime::traceLocker _1, struct g* _1, struct p* _2)
+    void rec::RecordSyscallExitedTime(traceLocker _1, g* _1, golang::runtime::p* _2)
     {
     }
 

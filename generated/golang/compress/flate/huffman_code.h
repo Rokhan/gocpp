@@ -76,9 +76,9 @@ namespace golang::flate
     struct GoTag_byLiteral { };
     struct GoTag_byFreq { };
     uint16_t reverseBits(uint16_t number, unsigned char bitLength);
-    struct literalNode maxNode();
-    using byLiteral = gocpp::defined<gocpp::slice<literalNode>, GoTag_byLiteral>;
-    using byFreq = gocpp::defined<gocpp::slice<literalNode>, GoTag_byFreq>;
+    golang::flate::literalNode maxNode();
+    using byLiteral = gocpp::defined<gocpp::slice<golang::flate::literalNode>, GoTag_byLiteral>;
+    using byFreq = gocpp::defined<gocpp::slice<golang::flate::literalNode>, GoTag_byFreq>;
     struct huffmanEncoder
     {
         gocpp::slice<hcode> codes{};
@@ -99,27 +99,27 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanEncoder& value);
-    struct huffmanEncoder* newHuffmanEncoder(int size);
-    struct huffmanEncoder* generateFixedLiteralEncoding();
-    struct huffmanEncoder* generateFixedOffsetEncoding();
-    extern huffmanEncoder* fixedLiteralEncoding;
-    extern huffmanEncoder* fixedOffsetEncoding;
+    golang::flate::huffmanEncoder* newHuffmanEncoder(int size);
+    golang::flate::huffmanEncoder* generateFixedLiteralEncoding();
+    golang::flate::huffmanEncoder* generateFixedOffsetEncoding();
+    extern golang::flate::huffmanEncoder* fixedLiteralEncoding;
+    extern golang::flate::huffmanEncoder* fixedOffsetEncoding;
 
     namespace rec
     {
-        void set(golang::flate::hcode* h, uint16_t code, uint16_t length);
-        int bitLength(golang::flate::huffmanEncoder* h, gocpp::slice<int32_t> freq);
-        gocpp::slice<int32_t> bitCounts(golang::flate::huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
-        void assignEncodingAndSize(golang::flate::huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
-        void generate(golang::flate::huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);
-        void sort(golang::flate::byLiteral* s, gocpp::slice<literalNode> a);
-        int Len(golang::flate::byLiteral s);
-        bool Less(golang::flate::byLiteral s, int i, int j);
-        void Swap(golang::flate::byLiteral s, int i, int j);
-        void sort(golang::flate::byFreq* s, gocpp::slice<literalNode> a);
-        int Len(golang::flate::byFreq s);
-        bool Less(golang::flate::byFreq s, int i, int j);
-        void Swap(golang::flate::byFreq s, int i, int j);
+        void set(hcode* h, uint16_t code, uint16_t length);
+        int bitLength(huffmanEncoder* h, gocpp::slice<int32_t> freq);
+        gocpp::slice<int32_t> bitCounts(huffmanEncoder* h, gocpp::slice<literalNode> list, int32_t maxBits);
+        void assignEncodingAndSize(huffmanEncoder* h, gocpp::slice<int32_t> bitCount, gocpp::slice<literalNode> list);
+        void generate(huffmanEncoder* h, gocpp::slice<int32_t> freq, int32_t maxBits);
+        void sort(byLiteral* s, gocpp::slice<literalNode> a);
+        int Len(byLiteral s);
+        bool Less(byLiteral s, int i, int j);
+        void Swap(byLiteral s, int i, int j);
+        void sort(byFreq* s, gocpp::slice<literalNode> a);
+        int Len(byFreq s);
+        bool Less(byFreq s, int i, int j);
+        void Swap(byFreq s, int i, int j);
     }
 }
 

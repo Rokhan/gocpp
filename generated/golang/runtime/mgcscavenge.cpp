@@ -270,7 +270,7 @@ namespace golang::runtime
     // sleep time to maintain our desired utilization is too low to
     // be reliable.
     // Sleep/wait state of the background scavenger.
-    scavengerState scavenger;
+    golang::runtime::scavengerState scavenger;
     
     template<typename T> requires gocpp::GoStruct<T>
     scavengerState::operator T()
@@ -342,7 +342,7 @@ namespace golang::runtime
     // init initializes a scavenger state and wires to the current G.
     //
     // Must be called from a regular goroutine that can allocate.
-    void rec::init(golang::runtime::scavengerState* s)
+    void rec::init(scavengerState* s)
     {
         if(s->g != nullptr)
         {
@@ -355,7 +355,7 @@ namespace golang::runtime
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {
-            rec::wake(gocpp::recv(gocpp::getValue<scavengerState*>(s)));
+            rec::wake(gocpp::recv(gocpp::getValue<golang::runtime::scavengerState*>(s)));
         };
 
         // input: fraction of CPU time actually used.
@@ -366,7 +366,7 @@ namespace golang::runtime
         // is to ensure that the controller's outputs have a direct relationship with
         // its inputs (as opposed to an inverse relationship), making it somewhat
         // easier to reason about for tuning purposes.
-        s->sleepController = gocpp::Init<piController>([=](auto& x) {
+        s->sleepController = gocpp::Init<golang::runtime::piController>([=](auto& x) {
             x.kp = 0.3375;
             x.ti = 3.2e6;
             x.tt = 1e9;
@@ -409,7 +409,7 @@ namespace golang::runtime
     }
 
     // park parks the scavenger goroutine.
-    void rec::park(golang::runtime::scavengerState* s)
+    void rec::park(scavengerState* s)
     {
         runtime::lock(& s->lock);
         if(getg() != s->g)
@@ -421,7 +421,7 @@ namespace golang::runtime
     }
 
     // ready signals to sysmon that the scavenger should be awoken.
-    void rec::ready(golang::runtime::scavengerState* s)
+    void rec::ready(scavengerState* s)
     {
         rec::Store(gocpp::recv(s->sysmonWake), 1);
     }
@@ -429,7 +429,7 @@ namespace golang::runtime
     // wake immediately unparks the scavenger if necessary.
     //
     // Safe to run without a P.
-    void rec::wake(golang::runtime::scavengerState* s)
+    void rec::wake(scavengerState* s)
     {
         runtime::lock(& s->lock);
         if(s->parked)
@@ -446,7 +446,7 @@ namespace golang::runtime
             // the current P's runnext slot, which is desirable to prevent
             // the scavenger from interfering with user goroutine scheduling
             // too much.
-            gList list = {};
+            golang::runtime::gList list = {};
             rec::push(gocpp::recv(list), s->g);
             injectglist(& list);
         }
@@ -460,7 +460,7 @@ namespace golang::runtime
     //
     // The scavenger may be woken up earlier by a pacing change, and it may not go
     // to sleep at all if there's a pending pacing change.
-    void rec::sleep(golang::runtime::scavengerState* s, double worked)
+    void rec::sleep(scavengerState* s, double worked)
     {
         runtime::lock(& s->lock);
         if(getg() != s->g)
@@ -569,7 +569,7 @@ namespace golang::runtime
 
     // controllerFailed indicates that the scavenger's scheduling
     // controller failed.
-    void rec::controllerFailed(golang::runtime::scavengerState* s)
+    void rec::controllerFailed(scavengerState* s)
     {
         runtime::lock(& s->lock);
         s->printControllerReset = true;
@@ -582,7 +582,7 @@ namespace golang::runtime
     // releasing those bytes.
     //
     // Must be run on the scavenger goroutine.
-    std::tuple<uintptr_t, double> rec::run(golang::runtime::scavengerState* s)
+    std::tuple<uintptr_t, double> rec::run(scavengerState* s)
     {
         uintptr_t released;
         double worked;
@@ -694,7 +694,7 @@ namespace golang::runtime
     //
     // scavenge always tries to scavenge nbytes worth of memory, and will
     // only fail to do so if the heap is exhausted for now.
-    uintptr_t rec::scavenge(golang::runtime::pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force)
+    uintptr_t rec::scavenge(pageAlloc* p, uintptr_t nbytes, std::function<bool ()> shouldStop, bool force)
     {
         auto released = uintptr_t(0);
         for(; released < nbytes; )
@@ -756,7 +756,7 @@ namespace golang::runtime
     // Must run on the systemstack because it acquires p.mheapLock.
     //
     //go:systemstack
-    uintptr_t rec::scavengeOne(golang::runtime::pageAlloc* p, golang::runtime::chunkIdx ci, unsigned int searchIdx, uintptr_t max)
+    uintptr_t rec::scavengeOne(pageAlloc* p, chunkIdx ci, unsigned int searchIdx, uintptr_t max)
     {
         // Calculate the maximum number of pages to scavenge.
         // This should be alignUp(max, pageSize) / pageSize but max can and will
@@ -825,7 +825,7 @@ namespace golang::runtime
                 // Relock the heap, because now we need to make these pages
                 // available allocation. Free them back to the page allocator.
                 runtime::lock(p->mheapLock);
-                if(auto b = (offAddr {addr}); rec::lessThan(gocpp::recv(b), p->searchAddr))
+                if(auto b = (golang::runtime::offAddr {addr}); rec::lessThan(gocpp::recv(b), p->searchAddr))
                 {
                     p->searchAddr = b;
                 }
@@ -949,7 +949,7 @@ namespace golang::runtime
     // will round up). That is, even if max is small, the returned size is not guaranteed
     // to be equal to max. max is allowed to be less than min, in which case it is as if
     // max == min.
-    std::tuple<unsigned int, unsigned int> rec::findScavengeCandidate(golang::runtime::pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max)
+    std::tuple<unsigned int, unsigned int> rec::findScavengeCandidate(pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max)
     {
         if(minimum & (minimum - 1) != 0 || minimum == 0)
         {
@@ -1123,7 +1123,7 @@ namespace golang::runtime
     // init initializes the scavengeIndex.
     //
     // Returns the amount added to sysStat.
-    uintptr_t rec::init(golang::runtime::scavengeIndex* s, bool test, golang::runtime::sysMemStat* sysStat)
+    uintptr_t rec::init(scavengeIndex* s, bool test, sysMemStat* sysStat)
     {
         rec::Clear(gocpp::recv(s->searchAddrBg));
         rec::Clear(gocpp::recv(s->searchAddrForce));
@@ -1135,7 +1135,7 @@ namespace golang::runtime
     // sysGrow updates the index's backing store in response to a heap growth.
     //
     // Returns the amount of memory added to sysStat.
-    uintptr_t rec::grow(golang::runtime::scavengeIndex* s, uintptr_t base, uintptr_t limit, golang::runtime::sysMemStat* sysStat)
+    uintptr_t rec::grow(scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat)
     {
         // Update minHeapIdx. Note that even if there's no mapping work to do,
         // we may still have a new, lower minimum heap address.
@@ -1149,7 +1149,7 @@ namespace golang::runtime
 
     // find returns the highest chunk index that may contain pages available to scavenge.
     // It also returns an offset to start searching in the highest chunk.
-    std::tuple<runtime::chunkIdx, unsigned int> rec::find(golang::runtime::scavengeIndex* s, bool force)
+    std::tuple<golang::runtime::chunkIdx, unsigned int> rec::find(scavengeIndex* s, bool force)
     {
         auto cursor = & s->searchAddrBg;
         if(force)
@@ -1212,7 +1212,7 @@ namespace golang::runtime
     // eagerly collapsing).
     //
     // alloc may only run concurrently with find.
-    void rec::alloc(golang::runtime::scavengeIndex* s, golang::runtime::chunkIdx ci, unsigned int npages)
+    void rec::alloc(scavengeIndex* s, chunkIdx ci, unsigned int npages)
     {
         auto sc = rec::load(gocpp::recv(s->chunks[ci]));
         rec::alloc(gocpp::recv(sc), npages, s->gen);
@@ -1228,7 +1228,7 @@ namespace golang::runtime
     // a free of npages occurred.
     //
     // free may only run concurrently with find.
-    void rec::free(golang::runtime::scavengeIndex* s, golang::runtime::chunkIdx ci, unsigned int page, unsigned int npages)
+    void rec::free(scavengeIndex* s, chunkIdx ci, unsigned int page, unsigned int npages)
     {
         auto sc = rec::load(gocpp::recv(s->chunks[ci]));
         rec::free(gocpp::recv(sc), npages, s->gen);
@@ -1236,9 +1236,9 @@ namespace golang::runtime
 
         // Update scavenge search addresses.
         auto addr = chunkBase(ci) + uintptr_t(page + npages - 1) * pageSize;
-        if(rec::lessThan(gocpp::recv(s->freeHWM), offAddr {addr}))
+        if(rec::lessThan(gocpp::recv(s->freeHWM), golang::runtime::offAddr {addr}))
         {
-            s->freeHWM = offAddr {addr};
+            s->freeHWM = golang::runtime::offAddr {addr};
         }
         // N.B. Because free is serialized, it's not necessary to do a
         // full CAS here. free only ever increases searchAddr, while
@@ -1246,7 +1246,7 @@ namespace golang::runtime
         // decreases, even if the value we loaded is stale, the actual
         // value will never be larger.
         auto [searchAddr, gocpp_id_1] = rec::Load(gocpp::recv(s->searchAddrForce));
-        if(rec::lessThan(gocpp::recv((offAddr {searchAddr})), offAddr {addr}))
+        if(rec::lessThan(gocpp::recv((golang::runtime::offAddr {searchAddr})), golang::runtime::offAddr {addr}))
         {
             rec::StoreMarked(gocpp::recv(s->searchAddrForce), addr);
         }
@@ -1257,11 +1257,11 @@ namespace golang::runtime
     // to be released.
     //
     // nextGen may only run concurrently with find.
-    void rec::nextGen(golang::runtime::scavengeIndex* s)
+    void rec::nextGen(scavengeIndex* s)
     {
         s->gen++;
         auto [searchAddr, gocpp_id_2] = rec::Load(gocpp::recv(s->searchAddrBg));
-        if(rec::lessThan(gocpp::recv((offAddr {searchAddr})), s->freeHWM))
+        if(rec::lessThan(gocpp::recv((golang::runtime::offAddr {searchAddr})), s->freeHWM))
         {
             rec::StoreMarked(gocpp::recv(s->searchAddrBg), rec::addr(gocpp::recv(s->freeHWM)));
         }
@@ -1273,7 +1273,7 @@ namespace golang::runtime
     // at the same chunk.
     //
     // setEmpty may only run concurrently with find.
-    void rec::setEmpty(golang::runtime::scavengeIndex* s, golang::runtime::chunkIdx ci)
+    void rec::setEmpty(scavengeIndex* s, chunkIdx ci)
     {
         auto val = rec::load(gocpp::recv(s->chunks[ci]));
         rec::setEmpty(gocpp::recv(val));
@@ -1312,14 +1312,14 @@ namespace golang::runtime
     }
 
     // load loads and unpacks a scavChunkData.
-    struct scavChunkData rec::load(golang::runtime::atomicScavChunkData* sc)
+    golang::runtime::scavChunkData rec::load(atomicScavChunkData* sc)
     {
         return unpackScavChunkData(rec::Load(gocpp::recv(sc->value)));
     }
 
     // store packs and writes a new scavChunkData. store must be serialized
     // with other calls to store.
-    void rec::store(golang::runtime::atomicScavChunkData* sc, struct scavChunkData ssc)
+    void rec::store(atomicScavChunkData* sc, scavChunkData ssc)
     {
         rec::Store(gocpp::recv(sc->value), rec::pack(gocpp::recv(ssc)));
     }
@@ -1367,9 +1367,9 @@ namespace golang::runtime
     }
 
     // unpackScavChunkData unpacks a scavChunkData from a uint64.
-    struct scavChunkData unpackScavChunkData(uint64_t sc)
+    golang::runtime::scavChunkData unpackScavChunkData(uint64_t sc)
     {
-        return gocpp::Init<scavChunkData>([=](auto& x) {
+        return gocpp::Init<golang::runtime::scavChunkData>([=](auto& x) {
             x.inUse = uint16_t(sc);
             x.lastInUse = uint16_t(sc >> 16) & scavChunkInUseMask;
             x.gen = uint32_t(sc >> 32);
@@ -1378,7 +1378,7 @@ namespace golang::runtime
     }
 
     // pack returns sc packed into a uint64.
-    uint64_t rec::pack(golang::runtime::scavChunkData sc)
+    uint64_t rec::pack(scavChunkData sc)
     {
         return uint64_t(sc.inUse) | (uint64_t(sc.lastInUse) << 16) | (uint64_t(sc.scavChunkFlags) << (16 + logScavChunkInUseMax)) | (uint64_t(sc.gen) << 32);
     }
@@ -1395,26 +1395,26 @@ namespace golang::runtime
     // chunk.
     // scavChunkFlags is a set of bit-flags for the scavenger for each palloc chunk.
     // isEmpty returns true if the hasFree flag is unset.
-    bool rec::isEmpty(golang::runtime::scavChunkFlags* sc)
+    bool rec::isEmpty(scavChunkFlags* sc)
     {
         return (*sc) & scavChunkHasFree == 0;
     }
 
     // setEmpty clears the hasFree flag.
-    void rec::setEmpty(golang::runtime::scavChunkFlags* sc)
+    void rec::setEmpty(scavChunkFlags* sc)
     {
         *sc &^= scavChunkHasFree;
     }
 
     // setNonEmpty sets the hasFree flag.
-    void rec::setNonEmpty(golang::runtime::scavChunkFlags* sc)
+    void rec::setNonEmpty(scavChunkFlags* sc)
     {
         *sc |= scavChunkHasFree;
     }
 
     // shouldScavenge returns true if the corresponding chunk should be interrogated
     // by the scavenger.
-    bool rec::shouldScavenge(golang::runtime::scavChunkData sc, uint32_t currGen, bool force)
+    bool rec::shouldScavenge(scavChunkData sc, uint32_t currGen, bool force)
     {
         if(rec::isEmpty(gocpp::recv(sc)))
         {
@@ -1439,7 +1439,7 @@ namespace golang::runtime
     }
 
     // alloc updates sc given that npages were allocated in the corresponding chunk.
-    void rec::alloc(golang::runtime::scavChunkData* sc, unsigned int npages, uint32_t newGen)
+    void rec::alloc(scavChunkData* sc, unsigned int npages, uint32_t newGen)
     {
         if((unsigned int)(sc->inUse) + npages > pallocChunkPages)
         {
@@ -1460,7 +1460,7 @@ namespace golang::runtime
     }
 
     // free updates sc given that npages was freed in the corresponding chunk.
-    void rec::free(golang::runtime::scavChunkData* sc, unsigned int npages, uint32_t newGen)
+    void rec::free(scavChunkData* sc, unsigned int npages, uint32_t newGen)
     {
         if((unsigned int)(sc->inUse) < npages)
         {
@@ -1539,7 +1539,7 @@ namespace golang::runtime
     //
     // In the specific case of an error overflow occurs, the errOverflow field will be
     // set and the rest of the controller's internal state will be fully reset.
-    std::tuple<double, bool> rec::next(golang::runtime::piController* c, double input, double setpoint, double period)
+    std::tuple<double, bool> rec::next(piController* c, double input, double setpoint, double period)
     {
         // Compute the raw output value.
         auto prop = c->kp * (setpoint - input);
@@ -1584,7 +1584,7 @@ namespace golang::runtime
     }
 
     // reset resets the controller state, except for controller error flags.
-    void rec::reset(golang::runtime::piController* c)
+    void rec::reset(piController* c)
     {
         c->errIntegral = 0;
     }

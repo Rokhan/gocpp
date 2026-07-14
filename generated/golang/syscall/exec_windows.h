@@ -41,8 +41,8 @@ namespace golang::syscall
 
     std::ostream& operator<<(std::ostream& os, const struct ProcAttr& value);
     struct gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv);
-    extern ProcAttr zeroProcAttr;
-    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, struct ProcAttr* attr);
+    extern golang::syscall::ProcAttr zeroProcAttr;
+    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr);
 }
 #include "golang/sync/rwmutex.h"
 #include "golang/syscall/security_windows.h"
@@ -78,7 +78,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SysProcAttr& value);
-    extern SysProcAttr zeroSysProcAttr;
+    extern golang::syscall::SysProcAttr zeroSysProcAttr;
 
     namespace rec
     {

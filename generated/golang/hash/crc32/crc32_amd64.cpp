@@ -42,8 +42,8 @@ namespace golang::crc32
     uint32_t ieeeCLMUL(uint32_t crc, gocpp::slice<unsigned char> p)
     /* convertBlockStmt, nil block */;
 
-    gocpp::array_ptr<crc32::sse42Table> castagnoliSSE42TableK1;
-    gocpp::array_ptr<crc32::sse42Table> castagnoliSSE42TableK2;
+    gocpp::array_ptr<golang::crc32::sse42Table> castagnoliSSE42TableK1;
+    gocpp::array_ptr<golang::crc32::sse42Table> castagnoliSSE42TableK2;
     bool archAvailableCastagnoli()
     {
         return cpu::X86.HasSSE42;
@@ -55,8 +55,8 @@ namespace golang::crc32
         {
             gocpp::panic("arch-specific Castagnoli not available"_s);
         }
-        castagnoliSSE42TableK1 = new sse42Table{};
-        castagnoliSSE42TableK2 = new sse42Table{};
+        castagnoliSSE42TableK1 = new crc32::sse42Table{};
+        castagnoliSSE42TableK2 = new crc32::sse42Table{};
         // See description in updateCastagnoli.
         // t[0][i] = CRC(i000, O)
         // t[1][i] = CRC(0i00, O)
@@ -78,7 +78,7 @@ namespace golang::crc32
     // castagnoliShift computes the CRC32-C of K1 or K2 zeroes (depending on the
     // table given) with the given initial crc value. This corresponds to
     // CRC(crc, O) in the description in updateCastagnoli.
-    uint32_t castagnoliShift(gocpp::array_ptr<golang::crc32::sse42Table> table, uint32_t crc)
+    uint32_t castagnoliShift(gocpp::array_ptr<sse42Table> table, uint32_t crc)
     {
         return table[3][crc >> 24] ^ table[2][(crc >> 16) & 0xFF] ^ table[1][(crc >> 8) & 0xFF] ^ table[0][crc & 0xFF];
     }
@@ -186,7 +186,7 @@ namespace golang::crc32
         return cpu::X86.HasPCLMULQDQ && cpu::X86.HasSSE41;
     }
 
-    gocpp::array_ptr<slicing8Table> archIeeeTable8;
+    gocpp::array_ptr<golang::crc32::slicing8Table> archIeeeTable8;
     void archInitIEEE()
     {
         if(! cpu::X86.HasPCLMULQDQ || ! cpu::X86.HasSSE41)

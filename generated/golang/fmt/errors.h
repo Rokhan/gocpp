@@ -62,10 +62,10 @@ namespace golang::fmt
 
     namespace rec
     {
-        gocpp::string Error(golang::fmt::wrapError* e);
-        struct gocpp::error Unwrap(golang::fmt::wrapError* e);
-        gocpp::string Error(golang::fmt::wrapErrors* e);
-        gocpp::slice<gocpp::error> Unwrap(golang::fmt::wrapErrors* e);
+        gocpp::string Error(wrapError* e);
+        struct gocpp::error Unwrap(wrapError* e);
+        gocpp::string Error(wrapErrors* e);
+        gocpp::slice<gocpp::error> Unwrap(wrapErrors* e);
     }
 }
 

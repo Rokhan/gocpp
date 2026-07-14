@@ -20,7 +20,7 @@ namespace golang::main
     {
     }
 
-    double rec::Abs(golang::main::MyFloat f)
+    double rec::Abs(MyFloat f)
     {
         if(f < 0)
         {

@@ -116,19 +116,19 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value);
-    void storePoolChainElt(struct poolChainElt** pp, struct poolChainElt* v);
-    struct poolChainElt* loadPoolChainElt(struct poolChainElt** pp);
+    void storePoolChainElt(poolChainElt** pp, poolChainElt* v);
+    golang::sync::poolChainElt* loadPoolChainElt(poolChainElt** pp);
 
     namespace rec
     {
-        std::tuple<uint32_t, uint32_t> unpack(golang::sync::poolDequeue* d, uint64_t ptrs);
-        uint64_t pack(golang::sync::poolDequeue* d, uint32_t head, uint32_t tail);
-        bool pushHead(golang::sync::poolDequeue* d, go_any val);
-        std::tuple<go_any, bool> popHead(golang::sync::poolDequeue* d);
-        std::tuple<go_any, bool> popTail(golang::sync::poolDequeue* d);
-        void pushHead(golang::sync::poolChain* c, go_any val);
-        std::tuple<go_any, bool> popHead(golang::sync::poolChain* c);
-        std::tuple<go_any, bool> popTail(golang::sync::poolChain* c);
+        std::tuple<uint32_t, uint32_t> unpack(poolDequeue* d, uint64_t ptrs);
+        uint64_t pack(poolDequeue* d, uint32_t head, uint32_t tail);
+        bool pushHead(poolDequeue* d, go_any val);
+        std::tuple<go_any, bool> popHead(poolDequeue* d);
+        std::tuple<go_any, bool> popTail(poolDequeue* d);
+        void pushHead(poolChain* c, go_any val);
+        std::tuple<go_any, bool> popHead(poolChain* c);
+        std::tuple<go_any, bool> popTail(poolChain* c);
     }
 }
 

@@ -23,14 +23,14 @@ namespace golang::runtime
     const uintptr_t gcBitsChunkBytes = uintptr_t(64 << 10);
     struct gcBitsHeader;
     struct gocpp_id_4;
-    const runtime::mSpanState mSpanDead = 0;
-    const runtime::mSpanState mSpanInUse = 1;
-    const runtime::mSpanState mSpanManual = 2;
-    const runtime::spanAllocType spanAllocHeap = 0;
-    const runtime::spanAllocType spanAllocStack = 1;
-    const runtime::spanAllocType spanAllocPtrScalarBits = 2;
-    const runtime::spanAllocType spanAllocWorkBuf = 3;
-    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<gcBitsHeader>() [known mising deps] */;
+    const golang::runtime::mSpanState mSpanDead = 0;
+    const golang::runtime::mSpanState mSpanInUse = 1;
+    const golang::runtime::mSpanState mSpanManual = 2;
+    const golang::runtime::spanAllocType spanAllocHeap = 0;
+    const golang::runtime::spanAllocType spanAllocStack = 1;
+    const golang::runtime::spanAllocType spanAllocPtrScalarBits = 2;
+    const golang::runtime::spanAllocType spanAllocWorkBuf = 3;
+    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<golang::runtime::gcBitsHeader>() [known mising deps] */;
 }
 #include "golang/internal/cpu/cpu.fwd.h"
 #include "golang/internal/cpu/cpu_x86.fwd.h"

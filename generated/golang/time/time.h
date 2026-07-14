@@ -12,13 +12,13 @@
 
 namespace golang::time
 {
-    time::Weekday absWeekday(uint64_t abs);
+    golang::time::Weekday absWeekday(uint64_t abs);
     std::tuple<int, int, int> absClock(uint64_t abs);
     std::tuple<int, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int prec);
     int fmtInt(gocpp::slice<unsigned char> buf, uint64_t v);
-    bool lessThanHalf(golang::time::Duration x, golang::time::Duration y);
-    time::Duration subMono(int64_t t, int64_t u);
-    std::tuple<int, time::Month, int, int> absDate(uint64_t abs, bool full);
+    bool lessThanHalf(Duration x, Duration y);
+    golang::time::Duration subMono(int64_t t, int64_t u);
+    std::tuple<int, golang::time::Month, int, int> absDate(uint64_t abs, bool full);
     extern gocpp::array<int32_t, 13> daysBefore;
     int daysIn(golang::time::Month m, int year);
     uint64_t daysSinceEpoch(int year);
@@ -51,7 +51,7 @@ namespace golang::time
         // that correspond to this Time.
         // The nil location means UTC.
         // All UTC times are represented with loc==nil, never loc==&utcLoc.
-        Location* loc{};
+        golang::time::Location* loc{};
 
         using isGoStruct = void;
 
@@ -65,15 +65,15 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Time& value);
-    time::Duration Since(struct Time t);
-    time::Duration Until(struct Time t);
-    struct Time Now();
-    struct Time unixTime(int64_t sec, int32_t nsec);
-    struct Time Unix(int64_t sec, int64_t nsec);
-    struct Time UnixMilli(int64_t msec);
-    struct Time UnixMicro(int64_t usec);
-    struct Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, struct Location* loc);
-    std::tuple<int, time::Duration> div(struct Time t, golang::time::Duration d);
+    golang::time::Duration Since(Time t);
+    golang::time::Duration Until(Time t);
+    golang::time::Time Now();
+    golang::time::Time unixTime(int64_t sec, int32_t nsec);
+    golang::time::Time Unix(int64_t sec, int64_t nsec);
+    golang::time::Time UnixMilli(int64_t msec);
+    golang::time::Time UnixMicro(int64_t usec);
+    golang::time::Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, golang::time::Location* loc);
+    std::tuple<int, golang::time::Duration> div(Time t, Duration d);
 }
 
 #include "golang/time/zoneinfo.h"
@@ -83,71 +83,71 @@ namespace golang::time
 
     namespace rec
     {
-        int32_t nsec(golang::time::Time* t);
-        int64_t sec(golang::time::Time* t);
-        int64_t unixSec(golang::time::Time* t);
-        void addSec(golang::time::Time* t, int64_t d);
-        void setLoc(golang::time::Time* t, struct Location* loc);
-        void stripMono(golang::time::Time* t);
-        void setMono(golang::time::Time* t, int64_t m);
-        int64_t mono(golang::time::Time* t);
-        bool After(golang::time::Time t, struct Time u);
-        bool Before(golang::time::Time t, struct Time u);
-        int Compare(golang::time::Time t, struct Time u);
-        bool Equal(golang::time::Time t, struct Time u);
+        int32_t nsec(Time* t);
+        int64_t sec(Time* t);
+        int64_t unixSec(Time* t);
+        void addSec(Time* t, int64_t d);
+        void setLoc(Time* t, golang::time::Location* loc);
+        void stripMono(Time* t);
+        void setMono(Time* t, int64_t m);
+        int64_t mono(Time* t);
+        bool After(Time t, Time u);
+        bool Before(Time t, Time u);
+        int Compare(Time t, Time u);
+        bool Equal(Time t, Time u);
         gocpp::string String(golang::time::Month m);
         gocpp::string String(golang::time::Weekday d);
-        bool IsZero(golang::time::Time t);
-        uint64_t abs(golang::time::Time t);
-        std::tuple<gocpp::string, int, uint64_t> locabs(golang::time::Time t);
-        std::tuple<int, time::Month, int> Date(golang::time::Time t);
-        int Year(golang::time::Time t);
-        time::Month Month(golang::time::Time t);
-        int Day(golang::time::Time t);
-        time::Weekday Weekday(golang::time::Time t);
-        std::tuple<int, int> ISOWeek(golang::time::Time t);
-        std::tuple<int, int, int> Clock(golang::time::Time t);
-        int Hour(golang::time::Time t);
-        int Minute(golang::time::Time t);
-        int Second(golang::time::Time t);
-        int Nanosecond(golang::time::Time t);
-        int YearDay(golang::time::Time t);
-        gocpp::string String(golang::time::Duration d);
-        int format(golang::time::Duration d, gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
-        int64_t Nanoseconds(golang::time::Duration d);
-        int64_t Microseconds(golang::time::Duration d);
-        int64_t Milliseconds(golang::time::Duration d);
-        double Seconds(golang::time::Duration d);
-        double Minutes(golang::time::Duration d);
-        double Hours(golang::time::Duration d);
-        time::Duration Truncate(golang::time::Duration d, golang::time::Duration m);
-        time::Duration Round(golang::time::Duration d, golang::time::Duration m);
-        time::Duration Abs(golang::time::Duration d);
-        struct Time Add(golang::time::Time t, golang::time::Duration d);
-        time::Duration Sub(golang::time::Time t, struct Time u);
-        struct Time AddDate(golang::time::Time t, int years, int months, int days);
-        std::tuple<int, time::Month, int, int> date(golang::time::Time t, bool full);
-        struct Time UTC(golang::time::Time t);
-        struct Time Local(golang::time::Time t);
-        struct Time In(golang::time::Time t, struct Location* loc);
-        struct Location* Location(golang::time::Time t);
-        std::tuple<gocpp::string, int> Zone(golang::time::Time t);
-        std::tuple<struct Time, struct Time> ZoneBounds(golang::time::Time t);
-        int64_t Unix(golang::time::Time t);
-        int64_t UnixMilli(golang::time::Time t);
-        int64_t UnixMicro(golang::time::Time t);
-        int64_t UnixNano(golang::time::Time t);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(golang::time::Time t);
-        struct gocpp::error UnmarshalBinary(golang::time::Time* t, gocpp::slice<unsigned char> data);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> GobEncode(golang::time::Time t);
-        struct gocpp::error GobDecode(golang::time::Time* t, gocpp::slice<unsigned char> data);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalJSON(golang::time::Time t);
-        struct gocpp::error UnmarshalJSON(golang::time::Time* t, gocpp::slice<unsigned char> data);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalText(golang::time::Time t);
-        struct gocpp::error UnmarshalText(golang::time::Time* t, gocpp::slice<unsigned char> data);
-        bool IsDST(golang::time::Time t);
-        struct Time Truncate(golang::time::Time t, golang::time::Duration d);
-        struct Time Round(golang::time::Time t, golang::time::Duration d);
+        bool IsZero(Time t);
+        uint64_t abs(Time t);
+        std::tuple<gocpp::string, int, uint64_t> locabs(Time t);
+        std::tuple<int, golang::time::Month, int> Date(Time t);
+        int Year(Time t);
+        golang::time::Month Month(Time t);
+        int Day(Time t);
+        golang::time::Weekday Weekday(Time t);
+        std::tuple<int, int> ISOWeek(Time t);
+        std::tuple<int, int, int> Clock(Time t);
+        int Hour(Time t);
+        int Minute(Time t);
+        int Second(Time t);
+        int Nanosecond(Time t);
+        int YearDay(Time t);
+        gocpp::string String(Duration d);
+        int format(Duration d, gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
+        int64_t Nanoseconds(Duration d);
+        int64_t Microseconds(Duration d);
+        int64_t Milliseconds(Duration d);
+        double Seconds(Duration d);
+        double Minutes(Duration d);
+        double Hours(Duration d);
+        golang::time::Duration Truncate(Duration d, Duration m);
+        golang::time::Duration Round(Duration d, Duration m);
+        golang::time::Duration Abs(Duration d);
+        golang::time::Time Add(Time t, Duration d);
+        golang::time::Duration Sub(Time t, Time u);
+        golang::time::Time AddDate(Time t, int years, int months, int days);
+        std::tuple<int, golang::time::Month, int, int> date(Time t, bool full);
+        golang::time::Time UTC(Time t);
+        golang::time::Time Local(Time t);
+        golang::time::Time In(Time t, golang::time::Location* loc);
+        golang::time::Location* Location(Time t);
+        std::tuple<gocpp::string, int> Zone(Time t);
+        std::tuple<golang::time::Time, golang::time::Time> ZoneBounds(Time t);
+        int64_t Unix(Time t);
+        int64_t UnixMilli(Time t);
+        int64_t UnixMicro(Time t);
+        int64_t UnixNano(Time t);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(Time t);
+        struct gocpp::error UnmarshalBinary(Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> GobEncode(Time t);
+        struct gocpp::error GobDecode(Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalJSON(Time t);
+        struct gocpp::error UnmarshalJSON(Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalText(Time t);
+        struct gocpp::error UnmarshalText(Time* t, gocpp::slice<unsigned char> data);
+        bool IsDST(Time t);
+        golang::time::Time Truncate(Time t, Duration d);
+        golang::time::Time Round(Time t, Duration d);
     }
 }
 

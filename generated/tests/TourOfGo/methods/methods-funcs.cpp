@@ -52,14 +52,14 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    double Abs(struct Vertex v)
+    double Abs(Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
     void main()
     {
-        auto v = Vertex {3, 4};
+        auto v = golang::main::Vertex {3, 4};
         mocklib::Println(Abs(v));
     }
 

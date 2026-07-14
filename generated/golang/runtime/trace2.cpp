@@ -154,9 +154,9 @@ namespace golang::runtime
         atomic::Pointer<g> reader{}; // goroutine that called ReadTrace, or nil
         // Fast mappings from enumerations to string IDs that are prepopulated
         // in the trace.
-        gocpp::array<gocpp::array<golang::runtime::traceArg, len(gcMarkWorkerModeStrings)>, 2> markWorkerLabels{};
-        gocpp::array<gocpp::array<golang::runtime::traceArg, len(traceGoStopReasonStrings)>, 2> goStopReasons{};
-        gocpp::array<gocpp::array<golang::runtime::traceArg, len(traceBlockReasonStrings)>, 2> goBlockReasons{};
+        gocpp::array<gocpp::array<traceArg, len(gcMarkWorkerModeStrings)>, 2> markWorkerLabels{};
+        gocpp::array<gocpp::array<traceArg, len(traceGoStopReasonStrings)>, 2> goStopReasons{};
+        gocpp::array<gocpp::array<traceArg, len(traceBlockReasonStrings)>, 2> goBlockReasons{};
         // Trace generation counter.
         atomic::Uintptr gen{};
         uintptr_t lastNonZeroGen{}; // last non-zero value of gen
@@ -453,7 +453,7 @@ namespace golang::runtime
             uint64_t goid{};
             int64_t mid{};
             uint32_t status{};
-            golang::runtime::waitReason waitreason{};
+            waitReason waitreason{};
             bool inMarkAssist{};
 
             using isGoStruct = void;
@@ -472,7 +472,7 @@ namespace golang::runtime
             }
         };
         gocpp::slice<untracedG> untracedGs = {};
-        forEachGRace([=](struct g* gp) mutable -> void
+        forEachGRace([=](golang::runtime::g* gp) mutable -> void
         {
             // Make absolutely sure all Gs are ready for the next
             // generation. We need to do this even for dead Gs because
@@ -740,7 +740,7 @@ namespace golang::runtime
             // preempt all Ps anyway, might as well stay consistent with StartTrace
             // which does this during the STW.
             semacquire(& worldsema);
-            forEachP(waitReasonTraceProcStatus, [=](struct p* pp) mutable -> void
+            forEachP(waitReasonTraceProcStatus, [=](golang::runtime::p* pp) mutable -> void
             {
                 auto tl = traceAcquire();
                 if(! rec::statusWasTraced(gocpp::recv(pp->trace), tl.gen))
@@ -886,7 +886,7 @@ namespace golang::runtime
         });
         if(park)
         {
-            gopark([=](struct g* gp, gocpp::unsafe_pointer _1) mutable -> bool
+            gopark([=](golang::runtime::g* gp, gocpp::unsafe_pointer _1) mutable -> bool
             {
                 if(! rec::CompareAndSwapNoWB<g>(gocpp::recv(trace.reader), nullptr, gp))
                 {
@@ -1067,7 +1067,7 @@ namespace golang::runtime
     // This must run on the system stack because it acquires trace.lock.
     //
     //go:systemstack
-    struct g* traceReader()
+    golang::runtime::g* traceReader()
     {
         auto gp = traceReaderAvailable();
         if(gp == nullptr || ! rec::CompareAndSwapNoWB<g>(gocpp::recv(trace.reader), gp, nullptr))
@@ -1080,7 +1080,7 @@ namespace golang::runtime
     // traceReaderAvailable returns the trace reader if it is not currently
     // scheduled and should be. Callers should first check that
     // (traceEnabled() || traceShuttingDown()) is true.
-    struct g* traceReaderAvailable()
+    golang::runtime::g* traceReaderAvailable()
     {
         // There are three conditions under which we definitely want to schedule
         // the reader:
@@ -1103,7 +1103,7 @@ namespace golang::runtime
     }
 
     // Trace advancer goroutine.
-    traceAdvancerState traceAdvancer;
+    golang::runtime::traceAdvancerState traceAdvancer;
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_2::operator T()
@@ -1228,7 +1228,7 @@ namespace golang::runtime
 
 
     // start starts a new traceAdvancer.
-    void rec::start(golang::runtime::traceAdvancerState* s)
+    void rec::start(traceAdvancerState* s)
     {
         // Start a goroutine to periodically advance the trace generation.
         s->done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_3>>());
@@ -1248,7 +1248,7 @@ namespace golang::runtime
     }
 
     // stop stops a traceAdvancer and blocks until it exits.
-    void rec::stop(golang::runtime::traceAdvancerState* s)
+    void rec::stop(traceAdvancerState* s)
     {
         rec::wake(gocpp::recv(s->timer));
         s->done.recv();
@@ -1358,7 +1358,7 @@ namespace golang::runtime
 
 
     // newWakeableSleep initializes a new wakeableSleep and returns it.
-    struct wakeableSleep* newWakeableSleep()
+    golang::runtime::wakeableSleep* newWakeableSleep()
     {
         auto s = new wakeableSleep{};
         lockInit(& s->lock, lockRankWakeableSleep);
@@ -1367,7 +1367,7 @@ namespace golang::runtime
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {
-            rec::wake(gocpp::recv(gocpp::getValue<wakeableSleep*>(s)));
+            rec::wake(gocpp::recv(gocpp::getValue<golang::runtime::wakeableSleep*>(s)));
         };
         return s;
     }
@@ -1377,7 +1377,7 @@ namespace golang::runtime
     //
     // Must not be called by more than one goroutine at a time and
     // must not be called concurrently with close.
-    void rec::sleep(golang::runtime::wakeableSleep* s, int64_t ns)
+    void rec::sleep(wakeableSleep* s, int64_t ns)
     {
         resetTimer(s->timer, nanotime() + ns);
         runtime::lock(& s->lock);
@@ -1430,7 +1430,7 @@ namespace golang::runtime
     // wake awakens any goroutine sleeping on the timer.
     //
     // Safe for concurrent use with all other methods.
-    void rec::wake(golang::runtime::wakeableSleep* s)
+    void rec::wake(wakeableSleep* s)
     {
         // Grab the wakeup channel, which may be nil if we're
         // racing with close.
@@ -1473,7 +1473,7 @@ namespace golang::runtime
     //
     // It must only be called once no goroutine is sleeping on the
     // timer *and* nothing else will call wake concurrently.
-    void rec::close(golang::runtime::wakeableSleep* s)
+    void rec::close(wakeableSleep* s)
     {
         // Set wakeup to nil so that a late timer ends up being a no-op.
         runtime::lock(& s->lock);

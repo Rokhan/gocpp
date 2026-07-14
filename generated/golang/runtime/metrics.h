@@ -70,7 +70,7 @@ namespace golang::runtime
     double nsToSec(int64_t ns);
     struct metricValue
     {
-        golang::runtime::metricKind kind{};
+        metricKind kind{};
         uint64_t scalar{}; // contains scalar values for scalar Kinds.
         gocpp::unsafe_pointer pointer{}; // contains non-scalar values.
 
@@ -106,7 +106,7 @@ namespace golang::runtime
     struct metricName
     {
         gocpp::string name{};
-        golang::runtime::metricKind kind{};
+        metricKind kind{};
 
         using isGoStruct = void;
 
@@ -131,7 +131,7 @@ namespace golang::runtime
         statDepSet deps{};
         // compute is a function that populates a metricValue
         // given a populated statAggregate structure.
-        std::function<void (struct statAggregate* in, struct metricValue* out)> compute{};
+        std::function<void (statAggregate* in, metricValue* out)> compute{};
 
         using isGoStruct = void;
 
@@ -145,18 +145,18 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricData& value);
-    runtime::statDepSet makeStatDepSet(gocpp::slice<golang::runtime::statDep> deps);
+    golang::runtime::statDepSet makeStatDepSet(gocpp::slice<statDep> deps);
     
     template<typename... Args>
-    runtime::statDepSet makeStatDepSet(Args... deps)
+    golang::runtime::statDepSet makeStatDepSet(Args... deps)
     {
-        return makeStatDepSet(gocpp::ToSlice<golang::runtime::statDep>(deps...));
+        return makeStatDepSet(gocpp::ToSlice<statDep>(deps...));
     }
     
     template<typename... Args>
-    runtime::statDepSet makeStatDepSet(golang::runtime::statDep value, Args... deps)
+    golang::runtime::statDepSet makeStatDepSet(statDep value, Args... deps)
     {
-        return makeStatDepSet(gocpp::ToSlice<golang::runtime::statDep>(value, deps...));
+        return makeStatDepSet(gocpp::ToSlice<statDep>(value, deps...));
     }
     struct metricSample
     {
@@ -228,10 +228,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cpuStatsAggregate& value);
-    extern gocpp::map<gocpp::string, metricData> metrics;
+    extern gocpp::map<gocpp::string, golang::runtime::metricData> metrics;
     struct statAggregate
     {
-        golang::runtime::statDepSet ensured{};
+        statDepSet ensured{};
         heapStatsAggregate heapStats{};
         sysStatsAggregate sysStats{};
         cpuStatsAggregate cpuStats{};
@@ -249,22 +249,22 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct statAggregate& value);
-    void compute0(struct statAggregate* _1, struct metricValue* out);
-    extern statAggregate agg;
+    void compute0(statAggregate* _1, metricValue* out);
+    extern golang::runtime::statAggregate agg;
 
     namespace rec
     {
-        void compute(golang::runtime::metricReader f, struct statAggregate* _1, struct metricValue* out);
-        runtime::statDepSet difference(golang::runtime::statDepSet s, golang::runtime::statDepSet b);
-        runtime::statDepSet go_union(golang::runtime::statDepSet s, golang::runtime::statDepSet b);
-        bool empty(gocpp::array_ptr<golang::runtime::statDepSet> s);
-        bool has(gocpp::array_ptr<golang::runtime::statDepSet> s, golang::runtime::statDep d);
-        void compute(golang::runtime::heapStatsAggregate* a);
-        void compute(golang::runtime::sysStatsAggregate* a);
-        void compute(golang::runtime::cpuStatsAggregate* a);
-        void compute(golang::runtime::gcStatsAggregate* a);
-        void ensure(golang::runtime::statAggregate* a, gocpp::array_ptr<golang::runtime::statDepSet> deps);
-        struct metricFloat64Histogram* float64HistOrInit(golang::runtime::metricValue* v, gocpp::slice<double> buckets);
+        void compute(metricReader f, statAggregate* _1, metricValue* out);
+        golang::runtime::statDepSet difference(statDepSet s, statDepSet b);
+        golang::runtime::statDepSet go_union(statDepSet s, statDepSet b);
+        bool empty(gocpp::array_ptr<statDepSet> s);
+        bool has(gocpp::array_ptr<statDepSet> s, statDep d);
+        void compute(heapStatsAggregate* a);
+        void compute(sysStatsAggregate* a);
+        void compute(cpuStatsAggregate* a);
+        void compute(gcStatsAggregate* a);
+        void ensure(statAggregate* a, gocpp::array_ptr<statDepSet> deps);
+        golang::runtime::metricFloat64Histogram* float64HistOrInit(metricValue* v, gocpp::slice<double> buckets);
     }
 }
 

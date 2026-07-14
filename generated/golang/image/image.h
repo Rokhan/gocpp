@@ -62,7 +62,7 @@ namespace golang::image
             virtual color::Model vColorModel() = 0;
             // Bounds returns the domain for which At can return non-zero color.
             // The bounds do not necessarily contain the point (0, 0).
-            virtual struct Rectangle vBounds() = 0;
+            virtual golang::image::Rectangle vBounds() = 0;
             // At returns the color of the pixel at (x, y).
             // At(Bounds().Min.X, Bounds().Min.Y) returns the upper-left pixel of the grid.
             // At(Bounds().Max.X-1, Bounds().Max.Y-1) returns the lower-right one.
@@ -80,7 +80,7 @@ namespace golang::image
 
             color::Model vColorModel() override;
 
-            struct Rectangle vBounds() override;
+            golang::image::Rectangle vBounds() override;
 
             color::Color vAt(int x, int y) override;
 
@@ -100,15 +100,15 @@ namespace golang::image
         color::Model ColorModel(const gocpp::PtrRecv<struct Image, false>& self);
         color::Model ColorModel(const gocpp::ObjRecv<struct Image>& self);
 
-        struct Rectangle Bounds(const gocpp::PtrRecv<struct Image, false>& self);
-        struct Rectangle Bounds(const gocpp::ObjRecv<struct Image>& self);
+        golang::image::Rectangle Bounds(const gocpp::PtrRecv<struct Image, false>& self);
+        golang::image::Rectangle Bounds(const gocpp::ObjRecv<struct Image>& self);
 
         color::Color At(const gocpp::PtrRecv<struct Image, false>& self, int x, int y);
         color::Color At(const gocpp::ObjRecv<struct Image>& self, int x, int y);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Image& value);
-    int pixelBufferLength(int bytesPerPixel, struct Rectangle r, gocpp::string imageTypeName);
+    int pixelBufferLength(int bytesPerPixel, Rectangle r, gocpp::string imageTypeName);
     struct RGBA
     {
         // Pix holds the image's pixels, in R, G, B, A order. The pixel at
@@ -470,16 +470,16 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct PalettedImage& value);
-    struct RGBA* NewRGBA(struct Rectangle r);
-    struct RGBA64* NewRGBA64(struct Rectangle r);
-    struct NRGBA* NewNRGBA(struct Rectangle r);
-    struct NRGBA64* NewNRGBA64(struct Rectangle r);
-    struct Alpha* NewAlpha(struct Rectangle r);
-    struct Alpha16* NewAlpha16(struct Rectangle r);
-    struct Gray* NewGray(struct Rectangle r);
-    struct Gray16* NewGray16(struct Rectangle r);
-    struct CMYK* NewCMYK(struct Rectangle r);
-    struct Paletted* NewPaletted(struct Rectangle r, color::Palette p);
+    golang::image::RGBA* NewRGBA(Rectangle r);
+    golang::image::RGBA64* NewRGBA64(Rectangle r);
+    golang::image::NRGBA* NewNRGBA(Rectangle r);
+    golang::image::NRGBA64* NewNRGBA64(Rectangle r);
+    golang::image::Alpha* NewAlpha(Rectangle r);
+    golang::image::Alpha16* NewAlpha16(Rectangle r);
+    golang::image::Gray* NewGray(Rectangle r);
+    golang::image::Gray16* NewGray16(Rectangle r);
+    golang::image::CMYK* NewCMYK(Rectangle r);
+    golang::image::Paletted* NewPaletted(Rectangle r, color::Palette p);
 }
 
 #include "golang/image/color/color.h"
@@ -492,7 +492,7 @@ namespace golang::image
     namespace rec
     {
         color::Model ColorModel(golang::image::RGBA* p);
-        struct Rectangle Bounds(golang::image::RGBA* p);
+        golang::image::Rectangle Bounds(golang::image::RGBA* p);
         color::Color At(golang::image::RGBA* p, int x, int y);
         color::RGBA64 RGBA64At(golang::image::RGBA* p, int x, int y);
         color::RGBA RGBAAt(golang::image::RGBA* p, int x, int y);
@@ -500,105 +500,105 @@ namespace golang::image
         void Set(golang::image::RGBA* p, int x, int y, color::Color c);
         void SetRGBA64(golang::image::RGBA* p, int x, int y, color::RGBA64 c);
         void SetRGBA(golang::image::RGBA* p, int x, int y, color::RGBA c);
-        struct Image SubImage(golang::image::RGBA* p, struct Rectangle r);
+        struct Image SubImage(golang::image::RGBA* p, Rectangle r);
         bool Opaque(golang::image::RGBA* p);
-        color::Model ColorModel(golang::image::RGBA64* p);
-        struct Rectangle Bounds(golang::image::RGBA64* p);
-        color::Color At(golang::image::RGBA64* p, int x, int y);
-        color::RGBA64 RGBA64At(golang::image::RGBA64* p, int x, int y);
-        int PixOffset(golang::image::RGBA64* p, int x, int y);
-        void Set(golang::image::RGBA64* p, int x, int y, color::Color c);
-        void SetRGBA64(golang::image::RGBA64* p, int x, int y, color::RGBA64 c);
-        struct Image SubImage(golang::image::RGBA64* p, struct Rectangle r);
-        bool Opaque(golang::image::RGBA64* p);
-        color::Model ColorModel(golang::image::NRGBA* p);
-        struct Rectangle Bounds(golang::image::NRGBA* p);
-        color::Color At(golang::image::NRGBA* p, int x, int y);
-        color::RGBA64 RGBA64At(golang::image::NRGBA* p, int x, int y);
-        color::NRGBA NRGBAAt(golang::image::NRGBA* p, int x, int y);
-        int PixOffset(golang::image::NRGBA* p, int x, int y);
-        void Set(golang::image::NRGBA* p, int x, int y, color::Color c);
-        void SetRGBA64(golang::image::NRGBA* p, int x, int y, color::RGBA64 c);
-        void SetNRGBA(golang::image::NRGBA* p, int x, int y, color::NRGBA c);
-        struct Image SubImage(golang::image::NRGBA* p, struct Rectangle r);
-        bool Opaque(golang::image::NRGBA* p);
-        color::Model ColorModel(golang::image::NRGBA64* p);
-        struct Rectangle Bounds(golang::image::NRGBA64* p);
-        color::Color At(golang::image::NRGBA64* p, int x, int y);
-        color::RGBA64 RGBA64At(golang::image::NRGBA64* p, int x, int y);
-        color::NRGBA64 NRGBA64At(golang::image::NRGBA64* p, int x, int y);
-        int PixOffset(golang::image::NRGBA64* p, int x, int y);
-        void Set(golang::image::NRGBA64* p, int x, int y, color::Color c);
-        void SetRGBA64(golang::image::NRGBA64* p, int x, int y, color::RGBA64 c);
-        void SetNRGBA64(golang::image::NRGBA64* p, int x, int y, color::NRGBA64 c);
-        struct Image SubImage(golang::image::NRGBA64* p, struct Rectangle r);
-        bool Opaque(golang::image::NRGBA64* p);
-        color::Model ColorModel(golang::image::Alpha* p);
-        struct Rectangle Bounds(golang::image::Alpha* p);
-        color::Color At(golang::image::Alpha* p, int x, int y);
-        color::RGBA64 RGBA64At(golang::image::Alpha* p, int x, int y);
-        color::Alpha AlphaAt(golang::image::Alpha* p, int x, int y);
-        int PixOffset(golang::image::Alpha* p, int x, int y);
-        void Set(golang::image::Alpha* p, int x, int y, color::Color c);
-        void SetRGBA64(golang::image::Alpha* p, int x, int y, color::RGBA64 c);
-        void SetAlpha(golang::image::Alpha* p, int x, int y, color::Alpha c);
-        struct Image SubImage(golang::image::Alpha* p, struct Rectangle r);
-        bool Opaque(golang::image::Alpha* p);
-        color::Model ColorModel(golang::image::Alpha16* p);
-        struct Rectangle Bounds(golang::image::Alpha16* p);
-        color::Color At(golang::image::Alpha16* p, int x, int y);
-        color::RGBA64 RGBA64At(golang::image::Alpha16* p, int x, int y);
-        color::Alpha16 Alpha16At(golang::image::Alpha16* p, int x, int y);
-        int PixOffset(golang::image::Alpha16* p, int x, int y);
-        void Set(golang::image::Alpha16* p, int x, int y, color::Color c);
-        void SetRGBA64(golang::image::Alpha16* p, int x, int y, color::RGBA64 c);
-        void SetAlpha16(golang::image::Alpha16* p, int x, int y, color::Alpha16 c);
-        struct Image SubImage(golang::image::Alpha16* p, struct Rectangle r);
-        bool Opaque(golang::image::Alpha16* p);
-        color::Model ColorModel(golang::image::Gray* p);
-        struct Rectangle Bounds(golang::image::Gray* p);
-        color::Color At(golang::image::Gray* p, int x, int y);
-        color::RGBA64 RGBA64At(golang::image::Gray* p, int x, int y);
-        color::Gray GrayAt(golang::image::Gray* p, int x, int y);
-        int PixOffset(golang::image::Gray* p, int x, int y);
-        void Set(golang::image::Gray* p, int x, int y, color::Color c);
-        void SetRGBA64(golang::image::Gray* p, int x, int y, color::RGBA64 c);
-        void SetGray(golang::image::Gray* p, int x, int y, color::Gray c);
-        struct Image SubImage(golang::image::Gray* p, struct Rectangle r);
-        bool Opaque(golang::image::Gray* p);
-        color::Model ColorModel(golang::image::Gray16* p);
-        struct Rectangle Bounds(golang::image::Gray16* p);
-        color::Color At(golang::image::Gray16* p, int x, int y);
-        color::RGBA64 RGBA64At(golang::image::Gray16* p, int x, int y);
-        color::Gray16 Gray16At(golang::image::Gray16* p, int x, int y);
-        int PixOffset(golang::image::Gray16* p, int x, int y);
-        void Set(golang::image::Gray16* p, int x, int y, color::Color c);
-        void SetRGBA64(golang::image::Gray16* p, int x, int y, color::RGBA64 c);
-        void SetGray16(golang::image::Gray16* p, int x, int y, color::Gray16 c);
-        struct Image SubImage(golang::image::Gray16* p, struct Rectangle r);
-        bool Opaque(golang::image::Gray16* p);
-        color::Model ColorModel(golang::image::CMYK* p);
-        struct Rectangle Bounds(golang::image::CMYK* p);
-        color::Color At(golang::image::CMYK* p, int x, int y);
-        color::RGBA64 RGBA64At(golang::image::CMYK* p, int x, int y);
-        color::CMYK CMYKAt(golang::image::CMYK* p, int x, int y);
-        int PixOffset(golang::image::CMYK* p, int x, int y);
-        void Set(golang::image::CMYK* p, int x, int y, color::Color c);
-        void SetRGBA64(golang::image::CMYK* p, int x, int y, color::RGBA64 c);
-        void SetCMYK(golang::image::CMYK* p, int x, int y, color::CMYK c);
-        struct Image SubImage(golang::image::CMYK* p, struct Rectangle r);
-        bool Opaque(golang::image::CMYK* p);
-        color::Model ColorModel(golang::image::Paletted* p);
-        struct Rectangle Bounds(golang::image::Paletted* p);
-        color::Color At(golang::image::Paletted* p, int x, int y);
-        color::RGBA64 RGBA64At(golang::image::Paletted* p, int x, int y);
-        int PixOffset(golang::image::Paletted* p, int x, int y);
-        void Set(golang::image::Paletted* p, int x, int y, color::Color c);
-        void SetRGBA64(golang::image::Paletted* p, int x, int y, color::RGBA64 c);
-        uint8_t ColorIndexAt(golang::image::Paletted* p, int x, int y);
-        void SetColorIndex(golang::image::Paletted* p, int x, int y, uint8_t index);
-        struct Image SubImage(golang::image::Paletted* p, struct Rectangle r);
-        bool Opaque(golang::image::Paletted* p);
+        color::Model ColorModel(RGBA64* p);
+        golang::image::Rectangle Bounds(RGBA64* p);
+        color::Color At(RGBA64* p, int x, int y);
+        color::RGBA64 RGBA64At(RGBA64* p, int x, int y);
+        int PixOffset(RGBA64* p, int x, int y);
+        void Set(RGBA64* p, int x, int y, color::Color c);
+        void SetRGBA64(RGBA64* p, int x, int y, color::RGBA64 c);
+        struct Image SubImage(RGBA64* p, Rectangle r);
+        bool Opaque(RGBA64* p);
+        color::Model ColorModel(NRGBA* p);
+        golang::image::Rectangle Bounds(NRGBA* p);
+        color::Color At(NRGBA* p, int x, int y);
+        color::RGBA64 RGBA64At(NRGBA* p, int x, int y);
+        color::NRGBA NRGBAAt(NRGBA* p, int x, int y);
+        int PixOffset(NRGBA* p, int x, int y);
+        void Set(NRGBA* p, int x, int y, color::Color c);
+        void SetRGBA64(NRGBA* p, int x, int y, color::RGBA64 c);
+        void SetNRGBA(NRGBA* p, int x, int y, color::NRGBA c);
+        struct Image SubImage(NRGBA* p, Rectangle r);
+        bool Opaque(NRGBA* p);
+        color::Model ColorModel(NRGBA64* p);
+        golang::image::Rectangle Bounds(NRGBA64* p);
+        color::Color At(NRGBA64* p, int x, int y);
+        color::RGBA64 RGBA64At(NRGBA64* p, int x, int y);
+        color::NRGBA64 NRGBA64At(NRGBA64* p, int x, int y);
+        int PixOffset(NRGBA64* p, int x, int y);
+        void Set(NRGBA64* p, int x, int y, color::Color c);
+        void SetRGBA64(NRGBA64* p, int x, int y, color::RGBA64 c);
+        void SetNRGBA64(NRGBA64* p, int x, int y, color::NRGBA64 c);
+        struct Image SubImage(NRGBA64* p, Rectangle r);
+        bool Opaque(NRGBA64* p);
+        color::Model ColorModel(Alpha* p);
+        golang::image::Rectangle Bounds(Alpha* p);
+        color::Color At(Alpha* p, int x, int y);
+        color::RGBA64 RGBA64At(Alpha* p, int x, int y);
+        color::Alpha AlphaAt(Alpha* p, int x, int y);
+        int PixOffset(Alpha* p, int x, int y);
+        void Set(Alpha* p, int x, int y, color::Color c);
+        void SetRGBA64(Alpha* p, int x, int y, color::RGBA64 c);
+        void SetAlpha(Alpha* p, int x, int y, color::Alpha c);
+        struct Image SubImage(Alpha* p, Rectangle r);
+        bool Opaque(Alpha* p);
+        color::Model ColorModel(Alpha16* p);
+        golang::image::Rectangle Bounds(Alpha16* p);
+        color::Color At(Alpha16* p, int x, int y);
+        color::RGBA64 RGBA64At(Alpha16* p, int x, int y);
+        color::Alpha16 Alpha16At(Alpha16* p, int x, int y);
+        int PixOffset(Alpha16* p, int x, int y);
+        void Set(Alpha16* p, int x, int y, color::Color c);
+        void SetRGBA64(Alpha16* p, int x, int y, color::RGBA64 c);
+        void SetAlpha16(Alpha16* p, int x, int y, color::Alpha16 c);
+        struct Image SubImage(Alpha16* p, Rectangle r);
+        bool Opaque(Alpha16* p);
+        color::Model ColorModel(Gray* p);
+        golang::image::Rectangle Bounds(Gray* p);
+        color::Color At(Gray* p, int x, int y);
+        color::RGBA64 RGBA64At(Gray* p, int x, int y);
+        color::Gray GrayAt(Gray* p, int x, int y);
+        int PixOffset(Gray* p, int x, int y);
+        void Set(Gray* p, int x, int y, color::Color c);
+        void SetRGBA64(Gray* p, int x, int y, color::RGBA64 c);
+        void SetGray(Gray* p, int x, int y, color::Gray c);
+        struct Image SubImage(Gray* p, Rectangle r);
+        bool Opaque(Gray* p);
+        color::Model ColorModel(Gray16* p);
+        golang::image::Rectangle Bounds(Gray16* p);
+        color::Color At(Gray16* p, int x, int y);
+        color::RGBA64 RGBA64At(Gray16* p, int x, int y);
+        color::Gray16 Gray16At(Gray16* p, int x, int y);
+        int PixOffset(Gray16* p, int x, int y);
+        void Set(Gray16* p, int x, int y, color::Color c);
+        void SetRGBA64(Gray16* p, int x, int y, color::RGBA64 c);
+        void SetGray16(Gray16* p, int x, int y, color::Gray16 c);
+        struct Image SubImage(Gray16* p, Rectangle r);
+        bool Opaque(Gray16* p);
+        color::Model ColorModel(CMYK* p);
+        golang::image::Rectangle Bounds(CMYK* p);
+        color::Color At(CMYK* p, int x, int y);
+        color::RGBA64 RGBA64At(CMYK* p, int x, int y);
+        color::CMYK CMYKAt(CMYK* p, int x, int y);
+        int PixOffset(CMYK* p, int x, int y);
+        void Set(CMYK* p, int x, int y, color::Color c);
+        void SetRGBA64(CMYK* p, int x, int y, color::RGBA64 c);
+        void SetCMYK(CMYK* p, int x, int y, color::CMYK c);
+        struct Image SubImage(CMYK* p, Rectangle r);
+        bool Opaque(CMYK* p);
+        color::Model ColorModel(Paletted* p);
+        golang::image::Rectangle Bounds(Paletted* p);
+        color::Color At(Paletted* p, int x, int y);
+        color::RGBA64 RGBA64At(Paletted* p, int x, int y);
+        int PixOffset(Paletted* p, int x, int y);
+        void Set(Paletted* p, int x, int y, color::Color c);
+        void SetRGBA64(Paletted* p, int x, int y, color::RGBA64 c);
+        uint8_t ColorIndexAt(Paletted* p, int x, int y);
+        void SetColorIndex(Paletted* p, int x, int y, uint8_t index);
+        struct Image SubImage(Paletted* p, Rectangle r);
+        bool Opaque(Paletted* p);
     }
 }
 

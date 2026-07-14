@@ -123,12 +123,12 @@ namespace golang::runtime
 
     atomic::Uint32 fingStatus;
     // finalizer goroutine status.
-    mutex finlock;
-    g* fing;
-    finblock* finq;
-    finblock* finc;
+    golang::runtime::mutex finlock;
+    golang::runtime::g* fing;
+    golang::runtime::finblock* finq;
+    golang::runtime::finblock* finc;
     gocpp::array<unsigned char, _FinBlockSize / goarch::PtrSize / 8> finptrmask;
-    finblock* allfin;
+    golang::runtime::finblock* allfin;
     // NOTE: Layout known to queuefinalizer.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -203,7 +203,7 @@ namespace golang::runtime
         lockWithRankMayAcquire(& finlock, getLockRank(& finlock));
     }
 
-    void queuefinalizer(gocpp::unsafe_pointer p, struct funcval* fn, uintptr_t nret, golang::runtime::_type* fint, golang::runtime::ptrtype* ot)
+    void queuefinalizer(gocpp::unsafe_pointer p, funcval* fn, uintptr_t nret, _type* fint, ptrtype* ot)
     {
         if(gcphase != _GCoff)
         {
@@ -221,14 +221,14 @@ namespace golang::runtime
         {
             if(finc == nullptr)
             {
-                finc = (finblock*)(persistentalloc(_FinBlockSize, 0, & memstats.gcMiscSys));
+                finc = (golang::runtime::finblock*)(persistentalloc(_FinBlockSize, 0, & memstats.gcMiscSys));
                 finc->alllink = allfin;
                 allfin = finc;
                 if(finptrmask[0] == 0)
                 {
                     // Build pointer mask for Finalizer array in block.
                     // Check assumptions made in finalizer1 array above.
-                    if((gocpp::Sizeof<finalizer>() != 5 * goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::fn) != 0 || gocpp::Offsetof<finalizer>(&finalizer::arg) != goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::nret) != 2 * goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::fint) != 3 * goarch::PtrSize || gocpp::Offsetof<finalizer>(&finalizer::ot) != 4 * goarch::PtrSize))
+                    if((gocpp::Sizeof<golang::runtime::finalizer>() != 5 * goarch::PtrSize || gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::fn) != 0 || gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::arg) != goarch::PtrSize || gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::nret) != 2 * goarch::PtrSize || gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::fint) != 3 * goarch::PtrSize || gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::ot) != 4 * goarch::PtrSize))
                     {
                         go_throw("finalizer out of sync"_s);
                     }
@@ -256,7 +256,7 @@ namespace golang::runtime
     }
 
     //go:nowritebarrier
-    void iterate_finq(std::function<void (struct funcval* _1, gocpp::unsafe_pointer _2, uintptr_t _3, golang::runtime::_type* _4, golang::runtime::ptrtype* _5)> callback)
+    void iterate_finq(std::function<void (funcval* _1, gocpp::unsafe_pointer _2, uintptr_t _3, _type* _4, ptrtype* _5)> callback)
     {
         for(auto fb = allfin; fb != nullptr; fb = fb->alllink)
         {
@@ -268,7 +268,7 @@ namespace golang::runtime
         }
     }
 
-    struct g* wakefing()
+    golang::runtime::g* wakefing()
     {
         if(auto ok = rec::CompareAndSwap(gocpp::recv(fingStatus), fingCreated | fingWait | fingWake, fingCreated); ok)
         {
@@ -286,9 +286,9 @@ namespace golang::runtime
         }
     }
 
-    bool finalizercommit(struct g* gp, gocpp::unsafe_pointer lock)
+    bool finalizercommit(g* gp, gocpp::unsafe_pointer lock)
     {
-        unlock((mutex*)(lock));
+        unlock((golang::runtime::mutex*)(lock));
         // fingStatus should be modified after fing is put into a waiting state
         // to avoid waking fing in running state, even if it is about to be parked.
         rec::Or(gocpp::recv(fingStatus), fingWait);
@@ -379,15 +379,15 @@ namespace golang::runtime
                                 break;
                             case 1:
                             {
-                                auto ityp = (runtime::interfacetype*)(gocpp::unsafe_pointer(f->fint));
+                                auto ityp = (golang::runtime::interfacetype*)(gocpp::unsafe_pointer(f->fint));
                                 // set up with empty interface
-                                (eface*)(r)->_type = & f->ot->Type;
-                                (eface*)(r)->data = f->arg;
+                                (golang::runtime::eface*)(r)->_type = & f->ot->Type;
+                                (golang::runtime::eface*)(r)->data = f->arg;
                                 if(len(ityp->Methods) != 0)
                                 {
                                     // convert to interface with methods
                                     // this conversion is guaranteed to succeed - we checked in SetFinalizer
-                                    (iface*)(r)->tab = assertE2I(ityp, (eface*)(r)->_type);
+                                    (golang::runtime::iface*)(r)->tab = assertE2I(ityp, (golang::runtime::eface*)(r)->_type);
                                 }
                                 break;
                             }
@@ -573,7 +573,7 @@ namespace golang::runtime
         {
             go_throw("runtime.SetFinalizer: first argument is "_s + rec::string(gocpp::recv(toRType(etyp))) + ", not pointer"_s);
         }
-        auto ot = (runtime::ptrtype*)(gocpp::unsafe_pointer(etyp));
+        auto ot = (golang::runtime::ptrtype*)(gocpp::unsafe_pointer(etyp));
         if(ot->Elem == nullptr)
         {
             go_throw("nil elem type!"_s);
@@ -629,7 +629,7 @@ namespace golang::runtime
         {
             go_throw("runtime.SetFinalizer: second argument is "_s + rec::string(gocpp::recv(toRType(ftyp))) + ", not a function"_s);
         }
-        auto ft = (runtime::functype*)(gocpp::unsafe_pointer(ftyp));
+        auto ft = (golang::runtime::functype*)(gocpp::unsafe_pointer(ftyp));
         if(rec::IsVariadic(gocpp::recv(ft)))
         {
             go_throw("runtime.SetFinalizer: cannot pass "_s + rec::string(gocpp::recv(toRType(etyp))) + " to finalizer "_s + rec::string(gocpp::recv(toRType(ftyp))) + " because dotdotdot"_s);
@@ -652,7 +652,7 @@ namespace golang::runtime
                     goto okarg;
                     break;
                 case 1:
-                    if((rec::Uncommon(gocpp::recv(fint)) == nullptr || rec::Uncommon(gocpp::recv(etyp)) == nullptr) && (runtime::ptrtype*)(gocpp::unsafe_pointer(fint))->Elem == ot->Elem)
+                    if((rec::Uncommon(gocpp::recv(fint)) == nullptr || rec::Uncommon(gocpp::recv(etyp)) == nullptr) && (golang::runtime::ptrtype*)(gocpp::unsafe_pointer(fint))->Elem == ot->Elem)
                     {
                         // ok - not same type, but both pointers,
                         // one or the other is unnamed, and same element type, so assignable.
@@ -661,7 +661,7 @@ namespace golang::runtime
                     break;
                 case 2:
                 {
-                    auto ityp = (runtime::interfacetype*)(gocpp::unsafe_pointer(fint));
+                    auto ityp = (golang::runtime::interfacetype*)(gocpp::unsafe_pointer(fint));
                     if(len(ityp->Methods) == 0)
                     {
                         // ok - satisfies empty interface
@@ -690,7 +690,7 @@ namespace golang::runtime
 
         systemstack([=]() mutable -> void
         {
-            if(! addfinalizer(e->data, (funcval*)(f->data), nret, fint, ot))
+            if(! addfinalizer(e->data, (golang::runtime::funcval*)(f->data), nret, fint, ot))
             {
                 go_throw("runtime.SetFinalizer: finalizer already set"_s);
             }

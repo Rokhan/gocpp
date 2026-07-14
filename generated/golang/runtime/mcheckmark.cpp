@@ -121,7 +121,7 @@ namespace golang::runtime
             if(bitmap == nullptr)
             {
                 // Allocate bitmap on first use.
-                bitmap = (checkmarksMap*)(persistentalloc(gocpp::Sizeof<checkmarksMap>(), 0, & memstats.gcMiscSys));
+                bitmap = (golang::runtime::checkmarksMap*)(persistentalloc(gocpp::Sizeof<checkmarksMap>(), 0, & memstats.gcMiscSys));
                 if(bitmap == nullptr)
                 {
                     go_throw("out of memory allocating checkmarks bitmap"_s);
@@ -154,7 +154,7 @@ namespace golang::runtime
     // setCheckmark throws if marking object is a checkmarks violation,
     // and otherwise sets obj's checkmark. It returns true if obj was
     // already checkmarked.
-    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, struct markBits mbits)
+    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, markBits mbits)
     {
         if(! rec::isMarked(gocpp::recv(mbits)))
         {

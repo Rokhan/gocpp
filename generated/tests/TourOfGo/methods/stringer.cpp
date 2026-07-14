@@ -51,15 +51,15 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::String(golang::main::Person p)
+    gocpp::string rec::String(Person p)
     {
         return mocklib::Sprintf("%v (%v years)"_s, p.Name, p.Age);
     }
 
     void main()
     {
-        auto a = Person {"Arthur Dent"_s, 42};
-        auto z = Person {"Zaphod Beeblebrox"_s, 9001};
+        auto a = golang::main::Person {"Arthur Dent"_s, 42};
+        auto z = golang::main::Person {"Zaphod Beeblebrox"_s, 9001};
         mocklib::Println(a, z);
     }
 

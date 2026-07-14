@@ -97,12 +97,12 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void rec::M(golang::main::T* t)
+    void rec::M(T* t)
     {
         mocklib::Println(t->S);
     }
 
-    void rec::M(golang::main::F f)
+    void rec::M(F f)
     {
         mocklib::Println(f);
     }
@@ -111,7 +111,7 @@ namespace golang::main
     {
         I i = {};
 
-        i = new T {"Hello"_s};
+        i = new golang::main::T {"Hello"_s};
         describe(i);
         rec::M(gocpp::recv(i));
 

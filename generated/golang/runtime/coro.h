@@ -21,7 +21,7 @@ namespace golang::runtime
     struct coro
     {
         golang::runtime::guintptr gp{};
-        std::function<void (struct coro* _1)> f{};
+        std::function<void (coro* _1)> f{};
 
         using isGoStruct = void;
 
@@ -35,10 +35,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct coro& value);
-    void coroswitch_m(struct g* gp);
-    struct coro* newcoro(std::function<void (struct coro* _1)> f);
-    void coroexit(struct coro* c);
-    void coroswitch(struct coro* c);
+    void coroswitch_m(g* gp);
+    golang::runtime::coro* newcoro(std::function<void (coro* _1)> f);
+    void coroexit(coro* c);
+    void coroswitch(coro* c);
 
     namespace rec
     {

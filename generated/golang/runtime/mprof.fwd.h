@@ -18,13 +18,13 @@ namespace golang::runtime
     struct BlockProfileRecord;
     struct gocpp_id_0;
     using goroutineProfileState = uint32_t;
-    const runtime::bucketType memProfile = 1 + 0;
-    const runtime::bucketType blockProfile = 1 + 1;
-    const runtime::bucketType mutexProfile = 1 + 2;
-    /*const uint32_t mProfCycleWrap = uint32_t(len(memRecord {}.future)) * (2 << 24) [known mising deps] */;
-    const runtime::goroutineProfileState goroutineProfileAbsent = 0;
-    const runtime::goroutineProfileState goroutineProfileInProgress = 1;
-    const runtime::goroutineProfileState goroutineProfileSatisfied = 2;
+    const golang::runtime::bucketType memProfile = 1 + 0;
+    const golang::runtime::bucketType blockProfile = 1 + 1;
+    const golang::runtime::bucketType mutexProfile = 1 + 2;
+    /*const uint32_t mProfCycleWrap = uint32_t(len(golang::runtime::memRecord {}.future)) * (2 << 24) [known mising deps] */;
+    const golang::runtime::goroutineProfileState goroutineProfileAbsent = 0;
+    const golang::runtime::goroutineProfileState goroutineProfileInProgress = 1;
+    const golang::runtime::goroutineProfileState goroutineProfileSatisfied = 2;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"

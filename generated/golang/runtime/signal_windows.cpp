@@ -115,7 +115,7 @@ namespace golang::runtime
     // by calling runtime.abort function.
     //
     //go:nosplit
-    bool isAbort(struct context* r)
+    bool isAbort(context* r)
     {
         auto pc = rec::ip(gocpp::recv(r));
         if(GOARCH == "386"_s || GOARCH == "amd64"_s || GOARCH == "arm"_s)
@@ -135,7 +135,7 @@ namespace golang::runtime
     // because of a stack overflow.
     //
     //go:nosplit
-    bool isgoexception(struct exceptionrecord* info, struct context* r)
+    bool isgoexception(exceptionrecord* info, context* r)
     {
         // Only handle exception if executing instructions in Go binary
         // (not Windows library code).
@@ -199,10 +199,10 @@ namespace golang::runtime
     // Only implemented on windows/386, which is the only
     // arch that loads TLS when calling getg(). Others
     // use a dedicated register.
-    struct g* sigFetchGSafe()
+    golang::runtime::g* sigFetchGSafe()
     /* convertBlockStmt, nil block */;
 
-    struct g* sigFetchG()
+    golang::runtime::g* sigFetchG()
     {
         if(GOARCH == "386"_s)
         {
@@ -219,7 +219,7 @@ namespace golang::runtime
     // It is nosplit for the same reason as exceptionhandler.
     //
     //go:nosplit
-    int32_t sigtrampgo(struct exceptionpointers* ep, int kind)
+    int32_t sigtrampgo(exceptionpointers* ep, int kind)
     {
         auto gp = sigFetchG();
         if(gp == nullptr)
@@ -227,7 +227,7 @@ namespace golang::runtime
             return _EXCEPTION_CONTINUE_SEARCH;
         }
 
-        std::function<int32_t (struct exceptionrecord* info, struct context* r, struct g* gp)> fn = {};
+        std::function<int32_t (golang::runtime::exceptionrecord* info, golang::runtime::context* r, golang::runtime::g* gp)> fn = {};
         //Go switch emulation
         {
             auto condition = kind;
@@ -311,7 +311,7 @@ namespace golang::runtime
     // _EXCEPTION_BREAKPOINT, which is raised by abort() if we overflow the g0 stack.
     //
     //go:nosplit
-    int32_t exceptionhandler(struct exceptionrecord* info, struct context* r, struct g* gp)
+    int32_t exceptionhandler(exceptionrecord* info, context* r, g* gp)
     {
         if(! isgoexception(info, r))
         {
@@ -375,7 +375,7 @@ namespace golang::runtime
     // It is nosplit for the same reason as exceptionhandler.
     //
     //go:nosplit
-    int32_t sehhandler(struct exceptionrecord* _1, uint64_t _2, struct context* _3, struct _DISPATCHER_CONTEXT* dctxt)
+    int32_t sehhandler(exceptionrecord* _1, uint64_t _2, context* _3, _DISPATCHER_CONTEXT* dctxt)
     {
         auto g0 = getg();
         if(g0 == nullptr || g0->m->curg == nullptr)
@@ -420,7 +420,7 @@ namespace golang::runtime
     // It is nosplit for the same reason as exceptionhandler.
     //
     //go:nosplit
-    int32_t firstcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp)
+    int32_t firstcontinuehandler(exceptionrecord* info, context* r, g* gp)
     {
         if(! isgoexception(info, r))
         {
@@ -435,7 +435,7 @@ namespace golang::runtime
     // It is nosplit for the same reason as exceptionhandler.
     //
     //go:nosplit
-    int32_t lastcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp)
+    int32_t lastcontinuehandler(exceptionrecord* info, context* r, g* gp)
     {
         if(islibrary || isarchive)
         {
@@ -464,7 +464,7 @@ namespace golang::runtime
     // Always called on g0. gp is the G where the exception occurred.
     //
     //go:nosplit
-    void winthrow(struct exceptionrecord* info, struct context* r, struct g* gp)
+    void winthrow(exceptionrecord* info, context* r, g* gp)
     {
         auto g0 = getg();
 
@@ -609,7 +609,7 @@ namespace golang::runtime
     // This provides the expected exit status for the shell.
     //
     //go:nosplit
-    void dieFromException(struct exceptionrecord* info, struct context* r)
+    void dieFromException(exceptionrecord* info, context* r)
     {
         if(info == nullptr)
         {
@@ -618,7 +618,7 @@ namespace golang::runtime
             {
                 // Try to reconstruct an exception record from
                 // the exception information stored in gp.
-                info = gocpp::InitPtr<exceptionrecord>([=](auto& x) {
+                info = gocpp::InitPtr<golang::runtime::exceptionrecord>([=](auto& x) {
                     x.exceptionaddress = gp->sigpc;
                     x.exceptioncode = gp->sig;
                     x.numberparameters = 2;
@@ -630,7 +630,7 @@ namespace golang::runtime
             {
                 // By default, a failing Go application exits with exit code 2.
                 // Use this value when gp does not contain exception info.
-                info = gocpp::InitPtr<exceptionrecord>([=](auto& x) {
+                info = gocpp::InitPtr<golang::runtime::exceptionrecord>([=](auto& x) {
                     x.exceptioncode = 2;
                 });
             }

@@ -143,7 +143,7 @@ namespace golang::runtime
         return fd == iocphandle;
     }
 
-    int32_t netpollopen(uintptr_t fd, struct pollDesc* pd)
+    int32_t netpollopen(uintptr_t fd, pollDesc* pd)
     {
         // TODO(iant): Consider using taggedPointer on 64-bit systems.
         if(stdcall4(_CreateIoCompletionPort, fd, iocphandle, uintptr_t(gocpp::unsafe_pointer(pd)), 0) == 0)
@@ -159,7 +159,7 @@ namespace golang::runtime
         return 0;
     }
 
-    void netpollarm(struct pollDesc* pd, int mode)
+    void netpollarm(pollDesc* pd, int mode)
     {
         go_throw("runtime: unused"_s);
     }
@@ -184,23 +184,23 @@ namespace golang::runtime
     // delay < 0: blocks indefinitely
     // delay == 0: does not block, just polls
     // delay > 0: block for up to that many nanoseconds
-    std::tuple<struct gList, int32_t> netpoll(int64_t delay)
+    std::tuple<golang::runtime::gList, int32_t> netpoll(int64_t delay)
     {
-        gocpp::array<overlappedEntry, 64> entries = {};
+        gocpp::array<golang::runtime::overlappedEntry, 64> entries = {};
         uint32_t wait = {};
         uint32_t qty = {};
         uint32_t flags = {};
         uint32_t n = {};
         uint32_t i = {};
         int32_t errno = {};
-        net_op* op = {};
-        gList toRun = {};
+        golang::runtime::net_op* op = {};
+        golang::runtime::gList toRun = {};
 
         auto mp = getg()->m;
 
         if(iocphandle == _INVALID_HANDLE_VALUE)
         {
-            return {gList {}, 0};
+            return {golang::runtime::gList {}, 0};
         }
         if(delay < 0)
         {
@@ -243,7 +243,7 @@ namespace golang::runtime
             errno = int32_t(getlasterror());
             if(errno == _WAIT_TIMEOUT)
             {
-                return {gList {}, 0};
+                return {golang::runtime::gList {}, 0};
             }
             println("runtime: GetQueuedCompletionStatusEx failed (errno="_s, errno, ")"_s);
             go_throw("runtime: netpoll failed"_s);
@@ -277,7 +277,7 @@ namespace golang::runtime
         return {toRun, delta};
     }
 
-    int32_t handlecompletion(struct gList* toRun, struct net_op* op, int32_t errno, uint32_t qty)
+    int32_t handlecompletion(gList* toRun, net_op* op, int32_t errno, uint32_t qty)
     {
         auto mode = op->mode;
         if(mode != 'r' && mode != 'w')

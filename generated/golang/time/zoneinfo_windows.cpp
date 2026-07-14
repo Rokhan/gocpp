@@ -207,7 +207,7 @@ namespace golang::time
         {
             nzone++;
         }
-        l->zone = gocpp::make(gocpp::Tag<gocpp::slice<zone>>(), nzone);
+        l->zone = gocpp::make(gocpp::Tag<gocpp::slice<golang::time::zone>>(), nzone);
 
         auto [stdname, dstname] = abbrev(i);
 
@@ -220,7 +220,7 @@ namespace golang::time
             l->cacheStart = alpha;
             l->cacheEnd = omega;
             l->cacheZone = std;
-            l->tx = gocpp::make(gocpp::Tag<gocpp::slice<zoneTrans>>(), 1);
+            l->tx = gocpp::make(gocpp::Tag<gocpp::slice<golang::time::zoneTrans>>(), 1);
             l->tx[0].when = l->cacheStart;
             l->tx[0].index = 0;
             return;
@@ -249,7 +249,7 @@ namespace golang::time
         }
 
         // 2 tx per year, 100 years on each side of this year
-        l->tx = gocpp::make(gocpp::Tag<gocpp::slice<zoneTrans>>(), 400);
+        l->tx = gocpp::make(gocpp::Tag<gocpp::slice<golang::time::zoneTrans>>(), 400);
 
         auto t = rec::UTC(gocpp::recv(Now()));
         auto year = rec::Year(gocpp::recv(t));

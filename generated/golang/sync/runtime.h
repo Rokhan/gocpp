@@ -27,10 +27,10 @@ namespace golang::sync
 
 namespace golang::sync
 {
-    uint32_t runtime_notifyListAdd(struct notifyList* l);
-    void runtime_notifyListWait(struct notifyList* l, uint32_t t);
-    void runtime_notifyListNotifyAll(struct notifyList* l);
-    void runtime_notifyListNotifyOne(struct notifyList* l);
+    uint32_t runtime_notifyListAdd(notifyList* l);
+    void runtime_notifyListWait(notifyList* l, uint32_t t);
+    void runtime_notifyListNotifyAll(notifyList* l);
+    void runtime_notifyListNotifyOne(notifyList* l);
 
     namespace rec
     {

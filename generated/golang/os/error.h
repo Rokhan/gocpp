@@ -111,9 +111,9 @@ namespace golang::os
 
     namespace rec
     {
-        gocpp::string Error(golang::os::SyscallError* e);
-        struct gocpp::error Unwrap(golang::os::SyscallError* e);
-        bool Timeout(golang::os::SyscallError* e);
+        gocpp::string Error(SyscallError* e);
+        struct gocpp::error Unwrap(SyscallError* e);
+        bool Timeout(SyscallError* e);
     }
 }
 

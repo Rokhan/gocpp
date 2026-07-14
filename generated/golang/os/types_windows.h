@@ -50,18 +50,18 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileStat& value);
-    mocklib::Date atime(golang::os::FileInfo fi);
-    struct fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
-    bool sameFile(struct fileStat* fs1, struct fileStat* fs2);
+    mocklib::Date atime(struct FileInfo fi);
+    golang::os::fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
+    bool sameFile(fileStat* fs1, fileStat* fs2);
 }
 #include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/syscall/syscall_windows.h"
 
 namespace golang::os
 {
-    std::tuple<struct fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h);
-    struct fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d);
-    struct fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d);
+    std::tuple<golang::os::fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h);
+    golang::os::fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d);
+    golang::os::fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d);
 }
 
 #include "golang/time/time.h"
@@ -71,14 +71,14 @@ namespace golang::os
 
     namespace rec
     {
-        bool isReparseTagNameSurrogate(golang::os::fileStat* fs);
-        bool isSymlink(golang::os::fileStat* fs);
-        int64_t Size(golang::os::fileStat* fs);
-        os::FileMode Mode(golang::os::fileStat* fs);
-        mocklib::Date ModTime(golang::os::fileStat* fs);
-        go_any Sys(golang::os::fileStat* fs);
-        struct gocpp::error loadFileId(golang::os::fileStat* fs);
-        struct gocpp::error saveInfoFromPath(golang::os::fileStat* fs, gocpp::string path);
+        bool isReparseTagNameSurrogate(fileStat* fs);
+        bool isSymlink(fileStat* fs);
+        int64_t Size(fileStat* fs);
+        golang::os::FileMode Mode(fileStat* fs);
+        mocklib::Date ModTime(fileStat* fs);
+        go_any Sys(fileStat* fs);
+        struct gocpp::error loadFileId(fileStat* fs);
+        struct gocpp::error saveInfoFromPath(fileStat* fs, gocpp::string path);
     }
 }
 

@@ -302,10 +302,10 @@ namespace golang::color
     struct Color grayModel(struct Color c);
     struct Color gray16Model(struct Color c);
     using Palette = gocpp::defined<gocpp::slice<Color>, GoTag_Palette>;
-    extern Gray16 Black;
-    extern Gray16 White;
-    extern Alpha16 Transparent;
-    extern Alpha16 Opaque;
+    extern golang::color::Gray16 Black;
+    extern golang::color::Gray16 White;
+    extern golang::color::Alpha16 Transparent;
+    extern golang::color::Alpha16 Opaque;
     extern Model RGBAModel;
     extern Model RGBA64Model;
     extern Model NRGBAModel;
@@ -318,16 +318,16 @@ namespace golang::color
     namespace rec
     {
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::RGBA c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::RGBA64 c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::NRGBA c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::NRGBA64 c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::Alpha c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::Alpha16 c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::Gray c);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(golang::color::Gray16 c);
-        struct Color Convert(golang::color::modelFunc* m, struct Color c);
-        struct Color Convert(golang::color::Palette p, struct Color c);
-        int Index(golang::color::Palette p, struct Color c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(RGBA64 c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(NRGBA c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(NRGBA64 c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Alpha c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Alpha16 c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Gray c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Gray16 c);
+        struct Color Convert(modelFunc* m, struct Color c);
+        struct Color Convert(Palette p, struct Color c);
+        int Index(Palette p, struct Color c);
     }
 }
 

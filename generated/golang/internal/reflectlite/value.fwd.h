@@ -10,12 +10,12 @@ namespace golang::reflectlite
     const long flagKindWidth = 5;
     const long flagMethodShift = 10;
     struct gocpp_id_5;
-    const reflectlite::flag flagKindMask = (1 << flagKindWidth) - 1;
-    const reflectlite::flag flagStickyRO = 1 << 5;
-    const reflectlite::flag flagEmbedRO = 1 << 6;
-    const reflectlite::flag flagIndir = 1 << 7;
-    const reflectlite::flag flagAddr = 1 << 8;
-    const reflectlite::flag flagMethod = 1 << 9;
+    const golang::reflectlite::flag flagKindMask = (1 << flagKindWidth) - 1;
+    const golang::reflectlite::flag flagStickyRO = 1 << 5;
+    const golang::reflectlite::flag flagEmbedRO = 1 << 6;
+    const golang::reflectlite::flag flagIndir = 1 << 7;
+    const golang::reflectlite::flag flagAddr = 1 << 8;
+    const golang::reflectlite::flag flagMethod = 1 << 9;
 }
 #include "golang/internal/abi/type.fwd.h"
 #include "golang/internal/reflectlite/type.fwd.h"
@@ -25,5 +25,5 @@ namespace golang::reflectlite
     struct Value;
     struct ValueError;
     struct emptyInterface;
-    const reflectlite::flag flagRO = flagStickyRO | flagEmbedRO;
+    const golang::reflectlite::flag flagRO = flagStickyRO | flagEmbedRO;
 }

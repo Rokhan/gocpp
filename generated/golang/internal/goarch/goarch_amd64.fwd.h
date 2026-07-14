@@ -14,6 +14,6 @@ namespace golang::goarch
 
 namespace golang::goarch
 {
-    const ArchFamilyType _ArchFamily = AMD64;
+    const goarch::ArchFamilyType _ArchFamily = AMD64;
     const int _StackAlign = PtrSize;
 }

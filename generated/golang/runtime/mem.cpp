@@ -35,7 +35,7 @@ namespace golang::runtime
     // which prevents us from allocating more stack.
     //
     //go:nosplit
-    gocpp::unsafe_pointer sysAlloc(uintptr_t n, golang::runtime::sysMemStat* sysStat)
+    gocpp::unsafe_pointer sysAlloc(uintptr_t n, sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), int64_t(n));
         rec::Add(gocpp::recv(gcController.mappedReady), int64_t(n));
@@ -105,7 +105,7 @@ namespace golang::runtime
     // which prevents us from allocating more stack.
     //
     //go:nosplit
-    void sysFree(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat)
+    void sysFree(gocpp::unsafe_pointer v, uintptr_t n, sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), - int64_t(n));
         rec::Add(gocpp::recv(gcController.mappedReady), - int64_t(n));
@@ -148,7 +148,7 @@ namespace golang::runtime
     // memory region can be efficiently transitioned to Ready.
     //
     // sysStat must be non-nil.
-    void sysMap(gocpp::unsafe_pointer v, uintptr_t n, golang::runtime::sysMemStat* sysStat)
+    void sysMap(gocpp::unsafe_pointer v, uintptr_t n, sysMemStat* sysStat)
     {
         rec::add(gocpp::recv(sysStat), int64_t(n));
         sysMapOS(v, n);

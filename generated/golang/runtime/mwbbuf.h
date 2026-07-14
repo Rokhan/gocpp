@@ -45,15 +45,15 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    void wbBufFlush1(struct p* pp);
+    void wbBufFlush1(golang::runtime::p* pp);
 
     namespace rec
     {
-        void reset(golang::runtime::wbBuf* b);
-        void discard(golang::runtime::wbBuf* b);
-        bool empty(golang::runtime::wbBuf* b);
-        gocpp::array_ptr<gocpp::array<uintptr_t, 1>> get1(golang::runtime::wbBuf* b);
-        gocpp::array_ptr<gocpp::array<uintptr_t, 2>> get2(golang::runtime::wbBuf* b);
+        void reset(wbBuf* b);
+        void discard(wbBuf* b);
+        bool empty(wbBuf* b);
+        gocpp::array_ptr<gocpp::array<uintptr_t, 1>> get1(wbBuf* b);
+        gocpp::array_ptr<gocpp::array<uintptr_t, 2>> get2(wbBuf* b);
     }
 }
 

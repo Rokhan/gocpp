@@ -28,10 +28,10 @@ namespace golang::runtime
 
     namespace rec
     {
-        void sysInit(golang::runtime::pageAlloc* p, bool test);
-        void sysGrow(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t limit);
-        uintptr_t sysGrow(golang::runtime::scavengeIndex* s, uintptr_t base, uintptr_t limit, golang::runtime::sysMemStat* sysStat);
-        uintptr_t sysInit(golang::runtime::scavengeIndex* s, bool test, golang::runtime::sysMemStat* sysStat);
+        void sysInit(pageAlloc* p, bool test);
+        void sysGrow(pageAlloc* p, uintptr_t base, uintptr_t limit);
+        uintptr_t sysGrow(scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat);
+        uintptr_t sysInit(scavengeIndex* s, bool test, sysMemStat* sysStat);
     }
 }
 

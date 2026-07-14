@@ -16,7 +16,7 @@ namespace golang::bytes
     {
         gocpp::slice<unsigned char> buf{}; // contents are the bytes buf[off : len(buf)]
         int off{}; // read at &buf[off], write at &buf[len(buf)]
-        golang::bytes::readOp lastRead{}; // last read operation, so that Unread* can work correctly.
+        readOp lastRead{}; // last read operation, so that Unread* can work correctly.
 
         using isGoStruct = void;
 
@@ -31,8 +31,8 @@ namespace golang::bytes
 
     std::ostream& operator<<(std::ostream& os, const struct Buffer& value);
     gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int n);
-    struct Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
-    struct Buffer* NewBufferString(gocpp::string s);
+    golang::bytes::Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
+    golang::bytes::Buffer* NewBufferString(gocpp::string s);
 }
 #include "golang/errors/errors.h"
 

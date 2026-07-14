@@ -69,9 +69,9 @@ namespace golang::strings
     std::tuple<gocpp::string, gocpp::string, bool> Cut(gocpp::string s, gocpp::string sep);
     std::tuple<gocpp::string, bool> CutPrefix(gocpp::string s, gocpp::string prefix);
     std::tuple<gocpp::string, bool> CutSuffix(gocpp::string s, gocpp::string suffix);
-    std::tuple<strings::asciiSet, bool> makeASCIISet(gocpp::string chars);
-    gocpp::string trimLeftASCII(gocpp::string s, gocpp::array_ptr<golang::strings::asciiSet> as);
-    gocpp::string trimRightASCII(gocpp::string s, gocpp::array_ptr<golang::strings::asciiSet> as);
+    std::tuple<golang::strings::asciiSet, bool> makeASCIISet(gocpp::string chars);
+    gocpp::string trimLeftASCII(gocpp::string s, gocpp::array_ptr<asciiSet> as);
+    gocpp::string trimRightASCII(gocpp::string s, gocpp::array_ptr<asciiSet> as);
 }
 #include "golang/unicode/letter.h"
 
@@ -83,7 +83,7 @@ namespace golang::strings
 
     namespace rec
     {
-        bool contains(gocpp::array_ptr<golang::strings::asciiSet> as, unsigned char c);
+        bool contains(gocpp::array_ptr<asciiSet> as, unsigned char c);
     }
 }
 

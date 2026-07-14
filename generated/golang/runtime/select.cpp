@@ -95,7 +95,7 @@ namespace golang::runtime
 
     void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder)
     {
-        hchan* c = {};
+        golang::runtime::hchan* c = {};
         for(auto [gocpp_ignored, o] : lockorder)
         {
             auto c0 = scases[o].c;
@@ -129,7 +129,7 @@ namespace golang::runtime
         }
     }
 
-    bool selparkcommit(struct g* gp, gocpp::unsafe_pointer _1)
+    bool selparkcommit(g* gp, gocpp::unsafe_pointer _1)
     {
         // There are unlocked sudogs that point into gp's stack. Stack
         // copying must lock the channels of those sudogs.
@@ -156,7 +156,7 @@ namespace golang::runtime
         // particular, it must not access the *hselect. That's okay,
         // because by the time this is called, gp.waiting has all
         // channels in lock order.
-        hchan* lastc = {};
+        golang::runtime::hchan* lastc = {};
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
         {
             if(sg->c != lastc && lastc != nullptr)
@@ -199,7 +199,7 @@ namespace golang::runtime
     // ordinal position of its respective select{recv,send,default} call.
     // Also, if the chosen scase was a receive operation, it reports whether
     // a value was received.
-    std::tuple<int, bool> selectgo(struct scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block)
+    std::tuple<int, bool> selectgo(scase* cas0, uint16_t* order0, uintptr_t* pc0, int nsends, int nrecvs, bool block)
     {
         if(debugSelect)
         {
@@ -208,7 +208,7 @@ namespace golang::runtime
 
         // NOTE: In order to maintain a lean stack size, the number of scases
         // is capped at 65536.
-        auto cas1 = (gocpp::array_ptr<gocpp::array<scase, 1 << 16>>)(gocpp::unsafe_pointer(cas0));
+        auto cas1 = (gocpp::array_ptr<gocpp::array<golang::runtime::scase, 1 << 16>>)(gocpp::unsafe_pointer(cas0));
         auto order1 = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 17>>)(gocpp::unsafe_pointer(order0));
 
         auto ncases = nsends + nrecvs;
@@ -329,18 +329,18 @@ namespace golang::runtime
         // lock all the channels involved in the select
         sellock(scases, lockorder);
 
-        g* gp = {};
-        sudog* sg = {};
-        hchan* c = {};
-        scase* k = {};
-        sudog* sglist = {};
-        sudog* sgnext = {};
+        golang::runtime::g* gp = {};
+        golang::runtime::sudog* sg = {};
+        golang::runtime::hchan* c = {};
+        golang::runtime::scase* k = {};
+        golang::runtime::sudog* sglist = {};
+        golang::runtime::sudog* sgnext = {};
         gocpp::unsafe_pointer qp = {};
-        sudog** nextp = {};
+        golang::runtime::sudog** nextp = {};
 
         // pass 1 - look for something already waiting
         int casi = {};
-        scase* cas = {};
+        golang::runtime::scase* cas = {};
         bool caseSuccess = {};
         int64_t caseReleaseTime = - 1;
         bool recvOK = {};
@@ -446,7 +446,7 @@ namespace golang::runtime
         sellock(scases, lockorder);
 
         rec::Store(gocpp::recv(gp->selectDone), 0);
-        sg = (sudog*)(gp->param);
+        sg = (golang::runtime::sudog*)(gp->param);
         gp->param = nullptr;
 
         // pass 3 - dequeue from unsuccessful chans
@@ -685,7 +685,7 @@ namespace golang::runtime
         gocpp::panic(plainError("send on closed channel"_s));
     }
 
-    uintptr_t rec::sortkey(golang::runtime::hchan* c)
+    uintptr_t rec::sortkey(hchan* c)
     {
         return uintptr_t(gocpp::unsafe_pointer(c));
     }
@@ -738,7 +738,7 @@ namespace golang::runtime
         {
             block();
         }
-        auto sel = gocpp::make(gocpp::Tag<gocpp::slice<scase>>(), len(cases));
+        auto sel = gocpp::make(gocpp::Tag<gocpp::slice<golang::runtime::scase>>(), len(cases));
         auto orig = gocpp::make(gocpp::Tag<gocpp::slice<int>>(), len(cases));
         auto [nsends, nrecvs] = std::tuple{0, 0};
         auto dflt = - 1;
@@ -769,7 +769,7 @@ namespace golang::runtime
                 }
             }
 
-            sel[j] = gocpp::Init<scase>([=](auto& x) {
+            sel[j] = gocpp::Init<golang::runtime::scase>([=](auto& x) {
                 x.c = rc.ch;
                 x.elem = rc.val;
             });
@@ -815,7 +815,7 @@ namespace golang::runtime
         return {chosen, recvOK};
     }
 
-    void rec::dequeueSudoG(golang::runtime::waitq* q, struct sudog* sgp)
+    void rec::dequeueSudoG(waitq* q, sudog* sgp)
     {
         auto x = sgp->prev;
         auto y = sgp->next;

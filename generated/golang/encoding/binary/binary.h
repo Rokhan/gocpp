@@ -216,8 +216,8 @@ namespace golang::binary
     struct GoTag_decoder { };
     struct GoTag_encoder { };
     int intDataSize(go_any data);
-    extern littleEndian LittleEndian;
-    extern bigEndian BigEndian;
+    extern golang::binary::littleEndian LittleEndian;
+    extern golang::binary::bigEndian BigEndian;
     struct coder
     {
         ByteOrder order{};
@@ -249,8 +249,8 @@ namespace golang::binary
     extern sync::Map structSize;
     int dataSize(reflect::Value v);
     int go_sizeof(reflect::Type t);
-    using decoder = gocpp::defined<coder, GoTag_decoder>;
-    using encoder = gocpp::defined<coder, GoTag_encoder>;
+    using decoder = gocpp::defined<golang::binary::coder, GoTag_decoder>;
+    using encoder = gocpp::defined<golang::binary::coder, GoTag_encoder>;
 }
 
 #include "golang/encoding/binary/native_endian_little.h"
@@ -261,52 +261,52 @@ namespace golang::binary
 
     namespace rec
     {
-        uint16_t Uint16(golang::binary::littleEndian, gocpp::slice<unsigned char> b);
-        void PutUint16(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint16_t v);
-        gocpp::slice<unsigned char> AppendUint16(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint16_t v);
-        uint32_t Uint32(golang::binary::littleEndian, gocpp::slice<unsigned char> b);
-        void PutUint32(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint32_t v);
-        gocpp::slice<unsigned char> AppendUint32(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint32_t v);
-        uint64_t Uint64(golang::binary::littleEndian, gocpp::slice<unsigned char> b);
-        void PutUint64(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint64_t v);
-        gocpp::slice<unsigned char> AppendUint64(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint64_t v);
-        gocpp::string String(golang::binary::littleEndian);
-        gocpp::string GoString(golang::binary::littleEndian);
-        uint16_t Uint16(golang::binary::bigEndian, gocpp::slice<unsigned char> b);
-        void PutUint16(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint16_t v);
-        gocpp::slice<unsigned char> AppendUint16(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint16_t v);
-        uint32_t Uint32(golang::binary::bigEndian, gocpp::slice<unsigned char> b);
-        void PutUint32(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint32_t v);
-        gocpp::slice<unsigned char> AppendUint32(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint32_t v);
-        uint64_t Uint64(golang::binary::bigEndian, gocpp::slice<unsigned char> b);
-        void PutUint64(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint64_t v);
-        gocpp::slice<unsigned char> AppendUint64(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint64_t v);
-        gocpp::string String(golang::binary::bigEndian);
-        gocpp::string GoString(golang::binary::bigEndian);
-        gocpp::string String(golang::binary::nativeEndian);
-        gocpp::string GoString(golang::binary::nativeEndian);
-        bool go_bool(golang::binary::decoder* d);
-        void go_bool(golang::binary::encoder* e, bool x);
-        uint8_t uint8(golang::binary::decoder* d);
-        void uint8(golang::binary::encoder* e, uint8_t x);
-        uint16_t uint16(golang::binary::decoder* d);
-        void uint16(golang::binary::encoder* e, uint16_t x);
-        uint32_t uint32(golang::binary::decoder* d);
-        void uint32(golang::binary::encoder* e, uint32_t x);
-        uint64_t uint64(golang::binary::decoder* d);
-        void uint64(golang::binary::encoder* e, uint64_t x);
-        int8_t int8(golang::binary::decoder* d);
-        void int8(golang::binary::encoder* e, int8_t x);
-        int16_t int16(golang::binary::decoder* d);
-        void int16(golang::binary::encoder* e, int16_t x);
-        int32_t int32(golang::binary::decoder* d);
-        void int32(golang::binary::encoder* e, int32_t x);
-        int64_t int64(golang::binary::decoder* d);
-        void int64(golang::binary::encoder* e, int64_t x);
-        void value(golang::binary::decoder* d, reflect::Value v);
-        void value(golang::binary::encoder* e, reflect::Value v);
-        void skip(golang::binary::decoder* d, reflect::Value v);
-        void skip(golang::binary::encoder* e, reflect::Value v);
+        uint16_t Uint16(littleEndian, gocpp::slice<unsigned char> b);
+        void PutUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v);
+        gocpp::slice<unsigned char> AppendUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v);
+        uint32_t Uint32(littleEndian, gocpp::slice<unsigned char> b);
+        void PutUint32(littleEndian, gocpp::slice<unsigned char> b, uint32_t v);
+        gocpp::slice<unsigned char> AppendUint32(littleEndian, gocpp::slice<unsigned char> b, uint32_t v);
+        uint64_t Uint64(littleEndian, gocpp::slice<unsigned char> b);
+        void PutUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v);
+        gocpp::slice<unsigned char> AppendUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v);
+        gocpp::string String(littleEndian);
+        gocpp::string GoString(littleEndian);
+        uint16_t Uint16(bigEndian, gocpp::slice<unsigned char> b);
+        void PutUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v);
+        gocpp::slice<unsigned char> AppendUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v);
+        uint32_t Uint32(bigEndian, gocpp::slice<unsigned char> b);
+        void PutUint32(bigEndian, gocpp::slice<unsigned char> b, uint32_t v);
+        gocpp::slice<unsigned char> AppendUint32(bigEndian, gocpp::slice<unsigned char> b, uint32_t v);
+        uint64_t Uint64(bigEndian, gocpp::slice<unsigned char> b);
+        void PutUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v);
+        gocpp::slice<unsigned char> AppendUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v);
+        gocpp::string String(bigEndian);
+        gocpp::string GoString(bigEndian);
+        gocpp::string String(nativeEndian);
+        gocpp::string GoString(nativeEndian);
+        bool go_bool(decoder* d);
+        void go_bool(encoder* e, bool x);
+        uint8_t uint8(decoder* d);
+        void uint8(encoder* e, uint8_t x);
+        uint16_t uint16(decoder* d);
+        void uint16(encoder* e, uint16_t x);
+        uint32_t uint32(decoder* d);
+        void uint32(encoder* e, uint32_t x);
+        uint64_t uint64(decoder* d);
+        void uint64(encoder* e, uint64_t x);
+        int8_t int8(decoder* d);
+        void int8(encoder* e, int8_t x);
+        int16_t int16(decoder* d);
+        void int16(encoder* e, int16_t x);
+        int32_t int32(decoder* d);
+        void int32(encoder* e, int32_t x);
+        int64_t int64(decoder* d);
+        void int64(encoder* e, int64_t x);
+        void value(decoder* d, reflect::Value v);
+        void value(encoder* e, reflect::Value v);
+        void skip(decoder* d, reflect::Value v);
+        void skip(encoder* e, reflect::Value v);
     }
 }
 

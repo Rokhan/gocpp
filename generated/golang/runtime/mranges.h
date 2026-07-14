@@ -59,8 +59,8 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern offAddr minOffAddr;
-    extern offAddr maxOffAddr;
+    extern golang::runtime::offAddr minOffAddr;
+    extern golang::runtime::offAddr maxOffAddr;
     struct atomicOffAddr
     {
         // a contains the offset address, unlike offAddr.
@@ -78,7 +78,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
-    struct addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
+    golang::runtime::addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
 }
 #include "golang/runtime/mstats.h"
 
@@ -92,7 +92,7 @@ namespace golang::runtime
         // this addrRanges.
         uintptr_t totalBytes{};
         // sysStat is the stat to track allocations by this type
-        golang::runtime::sysMemStat* sysStat{};
+        sysMemStat* sysStat{};
 
         using isGoStruct = void;
 
@@ -115,32 +115,32 @@ namespace golang::runtime
 
     namespace rec
     {
-        uintptr_t size(golang::runtime::addrRange a);
-        bool contains(golang::runtime::addrRange a, uintptr_t addr);
-        struct addrRange subtract(golang::runtime::addrRange a, struct addrRange b);
-        std::tuple<uintptr_t, bool> takeFromFront(golang::runtime::addrRange* a, uintptr_t len, uint8_t align);
-        std::tuple<uintptr_t, bool> takeFromBack(golang::runtime::addrRange* a, uintptr_t len, uint8_t align);
-        struct addrRange removeGreaterEqual(golang::runtime::addrRange a, uintptr_t addr);
-        struct offAddr add(golang::runtime::offAddr l, uintptr_t bytes);
-        struct offAddr sub(golang::runtime::offAddr l, uintptr_t bytes);
-        uintptr_t diff(golang::runtime::offAddr l1, struct offAddr l2);
-        bool lessThan(golang::runtime::offAddr l1, struct offAddr l2);
-        bool lessEqual(golang::runtime::offAddr l1, struct offAddr l2);
-        bool equal(golang::runtime::offAddr l1, struct offAddr l2);
-        uintptr_t addr(golang::runtime::offAddr l);
-        void Clear(golang::runtime::atomicOffAddr* b);
-        void StoreMin(golang::runtime::atomicOffAddr* b, uintptr_t addr);
-        void StoreUnmark(golang::runtime::atomicOffAddr* b, uintptr_t markedAddr, uintptr_t newAddr);
-        void StoreMarked(golang::runtime::atomicOffAddr* b, uintptr_t addr);
-        std::tuple<uintptr_t, bool> Load(golang::runtime::atomicOffAddr* b);
-        void init(golang::runtime::addrRanges* a, golang::runtime::sysMemStat* sysStat);
-        int findSucc(golang::runtime::addrRanges* a, uintptr_t addr);
-        std::tuple<uintptr_t, bool> findAddrGreaterEqual(golang::runtime::addrRanges* a, uintptr_t addr);
-        bool contains(golang::runtime::addrRanges* a, uintptr_t addr);
-        void add(golang::runtime::addrRanges* a, struct addrRange r);
-        struct addrRange removeLast(golang::runtime::addrRanges* a, uintptr_t nBytes);
-        void removeGreaterEqual(golang::runtime::addrRanges* a, uintptr_t addr);
-        void cloneInto(golang::runtime::addrRanges* a, struct addrRanges* b);
+        uintptr_t size(addrRange a);
+        bool contains(addrRange a, uintptr_t addr);
+        golang::runtime::addrRange subtract(addrRange a, addrRange b);
+        std::tuple<uintptr_t, bool> takeFromFront(addrRange* a, uintptr_t len, uint8_t align);
+        std::tuple<uintptr_t, bool> takeFromBack(addrRange* a, uintptr_t len, uint8_t align);
+        golang::runtime::addrRange removeGreaterEqual(addrRange a, uintptr_t addr);
+        golang::runtime::offAddr add(offAddr l, uintptr_t bytes);
+        golang::runtime::offAddr sub(offAddr l, uintptr_t bytes);
+        uintptr_t diff(offAddr l1, offAddr l2);
+        bool lessThan(offAddr l1, offAddr l2);
+        bool lessEqual(offAddr l1, offAddr l2);
+        bool equal(offAddr l1, offAddr l2);
+        uintptr_t addr(offAddr l);
+        void Clear(atomicOffAddr* b);
+        void StoreMin(atomicOffAddr* b, uintptr_t addr);
+        void StoreUnmark(atomicOffAddr* b, uintptr_t markedAddr, uintptr_t newAddr);
+        void StoreMarked(atomicOffAddr* b, uintptr_t addr);
+        std::tuple<uintptr_t, bool> Load(atomicOffAddr* b);
+        void init(addrRanges* a, sysMemStat* sysStat);
+        int findSucc(addrRanges* a, uintptr_t addr);
+        std::tuple<uintptr_t, bool> findAddrGreaterEqual(addrRanges* a, uintptr_t addr);
+        bool contains(addrRanges* a, uintptr_t addr);
+        void add(addrRanges* a, addrRange r);
+        golang::runtime::addrRange removeLast(addrRanges* a, uintptr_t nBytes);
+        void removeGreaterEqual(addrRanges* a, uintptr_t addr);
+        void cloneInto(addrRanges* a, addrRanges* b);
     }
 }
 

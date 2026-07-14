@@ -51,8 +51,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct semaRoot& value);
-    void readyWithTime(struct sudog* s, int traceskip);
-    void semacquire1(uint32_t* addr, bool lifo, golang::runtime::semaProfileFlags profile, int skipframes, golang::runtime::waitReason reason);
+    void readyWithTime(sudog* s, int traceskip);
+    void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int skipframes, waitReason reason);
     struct notifyList
     {
         // wait is the ticket number of the next waiter. It is atomically
@@ -82,17 +82,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notifyList& value);
-    uint32_t notifyListAdd(struct notifyList* l);
-    void notifyListWait(struct notifyList* l, uint32_t t);
-    void notifyListNotifyAll(struct notifyList* l);
-    void notifyListNotifyOne(struct notifyList* l);
+    uint32_t notifyListAdd(notifyList* l);
+    void notifyListWait(notifyList* l, uint32_t t);
+    void notifyListNotifyAll(notifyList* l);
+    void notifyListNotifyOne(notifyList* l);
 }
 #include "golang/internal/cpu/cpu_x86.h"
 
 namespace golang::runtime
 {
     using semTable = gocpp::defined<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;
-    extern semTable semtable;
+    extern golang::runtime::semTable semtable;
 }
 
 #include "golang/runtime/runtime2.h"
@@ -102,11 +102,11 @@ namespace golang::runtime
 
     namespace rec
     {
-        struct semaRoot* rootFor(gocpp::array_ptr<golang::runtime::semTable> t, uint32_t* addr);
-        void queue(golang::runtime::semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo);
-        std::tuple<struct sudog*, int64_t, int64_t> dequeue(golang::runtime::semaRoot* root, uint32_t* addr);
-        void rotateLeft(golang::runtime::semaRoot* root, struct sudog* x);
-        void rotateRight(golang::runtime::semaRoot* root, struct sudog* y);
+        golang::runtime::semaRoot* rootFor(gocpp::array_ptr<semTable> t, uint32_t* addr);
+        void queue(semaRoot* root, uint32_t* addr, sudog* s, bool lifo);
+        std::tuple<golang::runtime::sudog*, int64_t, int64_t> dequeue(semaRoot* root, uint32_t* addr);
+        void rotateLeft(semaRoot* root, sudog* x);
+        void rotateRight(semaRoot* root, sudog* y);
     }
 }
 

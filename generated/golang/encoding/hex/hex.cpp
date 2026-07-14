@@ -68,7 +68,7 @@ namespace golang::hex
     // The stream-based Decoder returns [io.ErrUnexpectedEOF] instead of ErrLength.
     gocpp::error ErrLength = errors::New("encoding/hex: odd length hex string"_s);
     // InvalidByteError values describe errors resulting from an invalid byte in a hex string.
-    gocpp::string rec::Error(golang::hex::InvalidByteError e)
+    gocpp::string rec::Error(InvalidByteError e)
     {
         return mocklib::Sprintf("encoding/hex: invalid byte: %#U"_s, gocpp::rune(e));
     }
@@ -216,12 +216,12 @@ namespace golang::hex
     // NewEncoder returns an [io.Writer] that writes lowercase hexadecimal characters to w.
     io::Writer NewEncoder(io::Writer w)
     {
-        return gocpp::InitPtr<encoder>([=](auto& x) {
+        return gocpp::InitPtr<golang::hex::encoder>([=](auto& x) {
             x.w = w;
         });
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(golang::hex::encoder* e, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -284,12 +284,12 @@ namespace golang::hex
     // NewDecoder expects that r contain only an even number of hexadecimal characters.
     io::Reader NewDecoder(io::Reader r)
     {
-        return gocpp::InitPtr<decoder>([=](auto& x) {
+        return gocpp::InitPtr<golang::hex::decoder>([=](auto& x) {
             x.r = r;
         });
     }
 
-    std::tuple<int, struct gocpp::error> rec::Read(golang::hex::decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
     {
         int n;
         struct gocpp::error err;
@@ -342,7 +342,7 @@ namespace golang::hex
     // line.
     io::WriteCloser Dumper(io::Writer w)
     {
-        return gocpp::InitPtr<dumper>([=](auto& x) {
+        return gocpp::InitPtr<golang::hex::dumper>([=](auto& x) {
             x.w = w;
         });
     }
@@ -400,7 +400,7 @@ namespace golang::hex
         return b;
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(golang::hex::dumper* h, gocpp::slice<unsigned char> data)
+    std::tuple<int, struct gocpp::error> rec::Write(dumper* h, gocpp::slice<unsigned char> data)
     {
         int n;
         struct gocpp::error err;
@@ -473,7 +473,7 @@ namespace golang::hex
         return {n, err};
     }
 
-    struct gocpp::error rec::Close(golang::hex::dumper* h)
+    struct gocpp::error rec::Close(dumper* h)
     {
         struct gocpp::error err;
         // See the comments in Write() for the details of this format.

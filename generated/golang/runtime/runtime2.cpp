@@ -319,9 +319,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct eface* efaceOf(go_any* ep)
+    golang::runtime::eface* efaceOf(go_any* ep)
     {
-        return (eface*)(gocpp::unsafe_pointer(ep));
+        return (golang::runtime::eface*)(gocpp::unsafe_pointer(ep));
     }
 
     // A guintptr holds a goroutine pointer, but typed as a uintptr
@@ -346,13 +346,13 @@ namespace golang::runtime
     // Note that pollDesc.rg, pollDesc.wg also store g in uintptr form,
     // so they would need to be updated too if g's start moving.
     //go:nosplit
-    struct g* rec::ptr(golang::runtime::guintptr gp)
+    golang::runtime::g* rec::ptr(golang::runtime::guintptr gp)
     {
-        return (g*)(gocpp::unsafe_pointer(gp));
+        return (golang::runtime::g*)(gocpp::unsafe_pointer(gp));
     }
 
     //go:nosplit
-    void rec::set(golang::runtime::guintptr* gp, struct g* g)
+    void rec::set(golang::runtime::guintptr* gp, g* g)
     {
         *gp = guintptr(gocpp::unsafe_pointer(g));
     }
@@ -364,7 +364,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    runtime::guintptr rec::guintptr(golang::runtime::g* gp)
+    golang::runtime::guintptr rec::guintptr(g* gp)
     {
         return guintptr(gocpp::unsafe_pointer(gp));
     }
@@ -374,19 +374,19 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void setGNoWB(struct g** gp, struct g* go_new)
+    void setGNoWB(g** gp, g* go_new)
     {
-        rec::set(gocpp::recv((runtime::guintptr*)(gocpp::unsafe_pointer(gp))), go_new);
+        rec::set(gocpp::recv((guintptr*)(gocpp::unsafe_pointer(gp))), go_new);
     }
 
     //go:nosplit
-    struct p* rec::ptr(golang::runtime::puintptr pp)
+    golang::runtime::p* rec::ptr(puintptr pp)
     {
-        return (p*)(gocpp::unsafe_pointer(pp));
+        return (golang::runtime::p*)(gocpp::unsafe_pointer(pp));
     }
 
     //go:nosplit
-    void rec::set(golang::runtime::puintptr* pp, struct p* p)
+    void rec::set(puintptr* pp, golang::runtime::p* p)
     {
         *pp = puintptr(gocpp::unsafe_pointer(p));
     }
@@ -401,13 +401,13 @@ namespace golang::runtime
     //  2. Any muintptr in the heap must be owned by the M itself so it can
     //     ensure it is not in use when the last true *m is released.
     //go:nosplit
-    struct m* rec::ptr(golang::runtime::muintptr mp)
+    golang::runtime::m* rec::ptr(muintptr mp)
     {
-        return (m*)(gocpp::unsafe_pointer(mp));
+        return (golang::runtime::m*)(gocpp::unsafe_pointer(mp));
     }
 
     //go:nosplit
-    void rec::set(golang::runtime::muintptr* mp, struct m* m)
+    void rec::set(muintptr* mp, m* m)
     {
         *mp = muintptr(gocpp::unsafe_pointer(m));
     }
@@ -417,9 +417,9 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    void setMNoWB(struct m** mp, struct m* go_new)
+    void setMNoWB(m** mp, m* go_new)
     {
-        rec::set(gocpp::recv((runtime::muintptr*)(gocpp::unsafe_pointer(mp))), go_new);
+        rec::set(gocpp::recv((muintptr*)(gocpp::unsafe_pointer(mp))), go_new);
     }
 
     
@@ -2036,7 +2036,7 @@ namespace golang::runtime
         x[waitReasonPageTraceFlush] = "page trace flush"_s;
         x[waitReasonCoroutine] = "coroutine"_s;
     });
-    gocpp::string rec::String(golang::runtime::waitReason w)
+    gocpp::string rec::String(waitReason w)
     {
         if(w < 0 || w >= waitReason(len(waitReasonStrings)))
         {
@@ -2045,7 +2045,7 @@ namespace golang::runtime
         return waitReasonStrings[w];
     }
 
-    bool rec::isMutexWait(golang::runtime::waitReason w)
+    bool rec::isMutexWait(waitReason w)
     {
         return w == waitReasonSyncMutexLock || w == waitReasonSyncRWMutexRLock || w == waitReasonSyncRWMutexLock;
     }
@@ -2074,17 +2074,17 @@ namespace golang::runtime
     // as they are not an external api.
     // Set on startup in asm_{386,amd64}.s
     // set by cmd/link on arm systems
-    m* allm;
+    golang::runtime::m* allm;
     int32_t gomaxprocs;
     int32_t ncpu;
-    forcegcstate forcegc;
-    schedt sched;
+    golang::runtime::forcegcstate forcegc;
+    golang::runtime::schedt sched;
     int32_t newprocs;
-    mutex allpLock;
-    gocpp::slice<p*> allp;
+    golang::runtime::mutex allpLock;
+    gocpp::slice<golang::runtime::p*> allp;
     pMask idlepMask;
     pMask timerpMask;
-    runtime::lfstack gcBgMarkWorkerPool;
+    golang::runtime::lfstack gcBgMarkWorkerPool;
     int32_t gcBgMarkWorkerCount;
     uint32_t processorVersionInfo;
     bool isIntel;

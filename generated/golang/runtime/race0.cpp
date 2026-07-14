@@ -40,12 +40,12 @@ namespace golang::runtime
     {
     }
 
-    void raceReadObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
+    void raceReadObjectPC(_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race"_s);
     }
 
-    void raceWriteObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
+    void raceWriteObjectPC(_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc)
     {
         go_throw("race"_s);
     }
@@ -102,7 +102,7 @@ namespace golang::runtime
         go_throw("race"_s);
     }
 
-    void raceacquireg(struct g* gp, gocpp::unsafe_pointer addr)
+    void raceacquireg(g* gp, gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
@@ -117,7 +117,7 @@ namespace golang::runtime
         go_throw("race"_s);
     }
 
-    void racereleaseg(struct g* gp, gocpp::unsafe_pointer addr)
+    void racereleaseg(g* gp, gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
@@ -127,7 +127,7 @@ namespace golang::runtime
         go_throw("race"_s);
     }
 
-    void racereleaseacquireg(struct g* gp, gocpp::unsafe_pointer addr)
+    void racereleaseacquireg(g* gp, gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }
@@ -137,7 +137,7 @@ namespace golang::runtime
         go_throw("race"_s);
     }
 
-    void racereleasemergeg(struct g* gp, gocpp::unsafe_pointer addr)
+    void racereleasemergeg(g* gp, gocpp::unsafe_pointer addr)
     {
         go_throw("race"_s);
     }

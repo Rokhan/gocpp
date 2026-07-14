@@ -7,9 +7,9 @@
 namespace golang::os
 {
     using readdirMode = int;
-    const os::readdirMode readdirName = 0;
-    const os::readdirMode readdirDirEntry = 1;
-    const os::readdirMode readdirFileInfo = 2;
+    const golang::os::readdirMode readdirName = 0;
+    const golang::os::readdirMode readdirDirEntry = 1;
+    const golang::os::readdirMode readdirFileInfo = 2;
 }
 #include "golang/io/fs/fs.fwd.h"
 

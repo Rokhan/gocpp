@@ -36,10 +36,10 @@ namespace golang::strconv
     std::tuple<int64_t, struct gocpp::error> ParseInt(gocpp::string s, int base, int bitSize);
     std::tuple<int, struct gocpp::error> Atoi(gocpp::string s);
     bool underscoreOK(gocpp::string s);
-    struct NumError* syntaxError(gocpp::string fn, gocpp::string str);
-    struct NumError* rangeError(gocpp::string fn, gocpp::string str);
-    struct NumError* baseError(gocpp::string fn, gocpp::string str, int base);
-    struct NumError* bitSizeError(gocpp::string fn, gocpp::string str, int bitSize);
+    golang::strconv::NumError* syntaxError(gocpp::string fn, gocpp::string str);
+    golang::strconv::NumError* rangeError(gocpp::string fn, gocpp::string str);
+    golang::strconv::NumError* baseError(gocpp::string fn, gocpp::string str, int base);
+    golang::strconv::NumError* bitSizeError(gocpp::string fn, gocpp::string str, int bitSize);
 }
 #include "golang/errors/errors.h"
 
@@ -50,8 +50,8 @@ namespace golang::strconv
 
     namespace rec
     {
-        gocpp::string Error(golang::strconv::NumError* e);
-        struct gocpp::error Unwrap(golang::strconv::NumError* e);
+        gocpp::string Error(NumError* e);
+        struct gocpp::error Unwrap(NumError* e);
     }
 }
 

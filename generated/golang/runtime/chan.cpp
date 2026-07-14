@@ -147,12 +147,12 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_makechan reflect.makechan
-    struct hchan* reflect_makechan(golang::runtime::chantype* t, int size)
+    golang::runtime::hchan* reflect_makechan(chantype* t, int size)
     {
         return makechan(t, size);
     }
 
-    struct hchan* makechan64(golang::runtime::chantype* t, int64_t size)
+    golang::runtime::hchan* makechan64(chantype* t, int64_t size)
     {
         if(int64_t(int(size)) != size)
         {
@@ -162,7 +162,7 @@ namespace golang::runtime
         return makechan(t, int(size));
     }
 
-    struct hchan* makechan(golang::runtime::chantype* t, int size)
+    golang::runtime::hchan* makechan(chantype* t, int size)
     {
         auto elem = t->Elem;
 
@@ -186,7 +186,7 @@ namespace golang::runtime
         // buf points into the same allocation, elemtype is persistent.
         // SudoG's are referenced from their owning thread so they can't be collected.
         // TODO(dvyukov,rlh): Rethink when collector can move allocated objects.
-        hchan* c = {};
+        golang::runtime::hchan* c = {};
         //Go switch emulation
         {
             int conditionId = -1;
@@ -196,14 +196,14 @@ namespace golang::runtime
             {
                 case 0:
                     // Queue or element size is zero.
-                    c = (hchan*)(mallocgc(hchanSize, nullptr, true));
+                    c = (golang::runtime::hchan*)(mallocgc(hchanSize, nullptr, true));
                     // Race detector uses this location for synchronization.
                     c->buf = rec::raceaddr(gocpp::recv(c));
                     break;
                 case 1:
                     // Elements do not contain pointers.
                     // Allocate hchan and buf in one call.
-                    c = (hchan*)(mallocgc(hchanSize + mem, nullptr, true));
+                    c = (golang::runtime::hchan*)(mallocgc(hchanSize + mem, nullptr, true));
                     c->buf = add(gocpp::unsafe_pointer(c), hchanSize);
                     break;
                 default:
@@ -227,7 +227,7 @@ namespace golang::runtime
     }
 
     // chanbuf(c, i) is pointer to the i'th slot in the buffer.
-    gocpp::unsafe_pointer chanbuf(struct hchan* c, unsigned int i)
+    gocpp::unsafe_pointer chanbuf(hchan* c, unsigned int i)
     {
         return add(c->buf, uintptr_t(i) * uintptr_t(c->elemsize));
     }
@@ -236,7 +236,7 @@ namespace golang::runtime
     // It uses a single word-sized read of mutable state, so although
     // the answer is instantaneously true, the correct answer may have changed
     // by the time the calling function receives the return value.
-    bool full(struct hchan* c)
+    bool full(hchan* c)
     {
         // c.dataqsiz is immutable (never written after the channel is created)
         // so it is safe to read at any time during channel operation.
@@ -252,7 +252,7 @@ namespace golang::runtime
     // entry point for c <- x from compiled code.
     //
     //go:nosplit
-    void chansend1(struct hchan* c, gocpp::unsafe_pointer elem)
+    void chansend1(hchan* c, gocpp::unsafe_pointer elem)
     {
         chansend(c, elem, true, getcallerpc());
     }
@@ -269,7 +269,7 @@ namespace golang::runtime
  * been closed.  it is easiest to loop and re-run
  * the operation; we'll see that it's now closed.
  */
-    bool chansend(struct hchan* c, gocpp::unsafe_pointer ep, bool block, uintptr_t callerpc)
+    bool chansend(hchan* c, gocpp::unsafe_pointer ep, bool block, uintptr_t callerpc)
     {
         if(c == nullptr)
         {
@@ -422,7 +422,7 @@ namespace golang::runtime
     // Channel c must be empty and locked.  send unlocks c with unlockf.
     // sg must already be dequeued from c.
     // ep must be non-nil and point to the heap or the caller's stack.
-    void send(struct hchan* c, struct sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int skip)
+    void send(hchan* c, sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int skip)
     {
         if(raceenabled)
         {
@@ -462,7 +462,7 @@ namespace golang::runtime
         goready(gp, skip + 1);
     }
 
-    void sendDirect(golang::runtime::_type* t, struct sudog* sg, gocpp::unsafe_pointer src)
+    void sendDirect(_type* t, sudog* sg, gocpp::unsafe_pointer src)
     {
         // src is on our stack, dst is a slot on another stack.
         // Once we read sg.elem out of sg, it will no longer
@@ -475,7 +475,7 @@ namespace golang::runtime
         memmove(dst, src, t->Size_);
     }
 
-    void recvDirect(golang::runtime::_type* t, struct sudog* sg, gocpp::unsafe_pointer dst)
+    void recvDirect(_type* t, sudog* sg, gocpp::unsafe_pointer dst)
     {
         // dst is on our stack or the heap, src is on another stack.
         // The channel is locked, so src will not move during this
@@ -485,7 +485,7 @@ namespace golang::runtime
         memmove(dst, src, t->Size_);
     }
 
-    void closechan(struct hchan* c)
+    void closechan(hchan* c)
     {
         if(c == nullptr)
         {
@@ -508,7 +508,7 @@ namespace golang::runtime
 
         c->closed = 1;
 
-        gList glist = {};
+        golang::runtime::gList glist = {};
 
         // release all readers
         for(; ; )
@@ -572,7 +572,7 @@ namespace golang::runtime
 
     // empty reports whether a read from c would block (that is, the channel is
     // empty).  It uses a single atomic read of mutable state.
-    bool empty(struct hchan* c)
+    bool empty(hchan* c)
     {
         // c.dataqsiz is immutable.
         if(c->dataqsiz == 0)
@@ -585,13 +585,13 @@ namespace golang::runtime
     // entry points for <- c from compiled code.
     //
     //go:nosplit
-    void chanrecv1(struct hchan* c, gocpp::unsafe_pointer elem)
+    void chanrecv1(hchan* c, gocpp::unsafe_pointer elem)
     {
         chanrecv(c, elem, true);
     }
 
     //go:nosplit
-    bool chanrecv2(struct hchan* c, gocpp::unsafe_pointer elem)
+    bool chanrecv2(hchan* c, gocpp::unsafe_pointer elem)
     {
         bool received;
         std::tie(std::ignore, received) = chanrecv(c, elem, true);
@@ -604,7 +604,7 @@ namespace golang::runtime
     // Otherwise, if c is closed, zeros *ep and returns (true, false).
     // Otherwise, fills in *ep with an element and returns (true, true).
     // A non-nil ep must point to the heap or the caller's stack.
-    std::tuple<bool, bool> chanrecv(struct hchan* c, gocpp::unsafe_pointer ep, bool block)
+    std::tuple<bool, bool> chanrecv(hchan* c, gocpp::unsafe_pointer ep, bool block)
     {
         bool selected;
         bool received;
@@ -791,7 +791,7 @@ namespace golang::runtime
     // Channel c must be full and locked. recv unlocks c with unlockf.
     // sg must already be dequeued from c.
     // A non-nil ep must point to the heap or the caller's stack.
-    void recv(struct hchan* c, struct sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int skip)
+    void recv(hchan* c, sudog* sg, gocpp::unsafe_pointer ep, std::function<void ()> unlockf, int skip)
     {
         if(c->dataqsiz == 0)
         {
@@ -844,7 +844,7 @@ namespace golang::runtime
         goready(gp, skip + 1);
     }
 
-    bool chanparkcommit(struct g* gp, gocpp::unsafe_pointer chanLock)
+    bool chanparkcommit(g* gp, gocpp::unsafe_pointer chanLock)
     {
         // There are unlocked sudogs that point into gp's stack. Stack
         // copying must lock the channels of those sudogs.
@@ -861,7 +861,7 @@ namespace golang::runtime
         // we risk gp getting readied by a channel operation and
         // so gp could continue running before everything before
         // the unlock is visible (even to gp itself).
-        unlock((mutex*)(chanLock));
+        unlock((golang::runtime::mutex*)(chanLock));
         return true;
     }
 
@@ -881,7 +881,7 @@ namespace golang::runtime
     //	} else {
     //		... bar
     //	}
-    bool selectnbsend(struct hchan* c, gocpp::unsafe_pointer elem)
+    bool selectnbsend(hchan* c, gocpp::unsafe_pointer elem)
     {
         bool selected;
         return chansend(c, elem, false, getcallerpc());
@@ -903,7 +903,7 @@ namespace golang::runtime
     //	} else {
     //		... bar
     //	}
-    std::tuple<bool, bool> selectnbrecv(gocpp::unsafe_pointer elem, struct hchan* c)
+    std::tuple<bool, bool> selectnbrecv(gocpp::unsafe_pointer elem, hchan* c)
     {
         bool selected;
         bool received;
@@ -911,14 +911,14 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_chansend reflect.chansend0
-    bool reflect_chansend(struct hchan* c, gocpp::unsafe_pointer elem, bool nb)
+    bool reflect_chansend(hchan* c, gocpp::unsafe_pointer elem, bool nb)
     {
         bool selected;
         return chansend(c, elem, ! nb, getcallerpc());
     }
 
     //go:linkname reflect_chanrecv reflect.chanrecv
-    std::tuple<bool, bool> reflect_chanrecv(struct hchan* c, bool nb, gocpp::unsafe_pointer elem)
+    std::tuple<bool, bool> reflect_chanrecv(hchan* c, bool nb, gocpp::unsafe_pointer elem)
     {
         bool selected;
         bool received;
@@ -926,7 +926,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_chanlen reflect.chanlen
-    int reflect_chanlen(struct hchan* c)
+    int reflect_chanlen(hchan* c)
     {
         if(c == nullptr)
         {
@@ -936,7 +936,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflectlite_chanlen internal/reflectlite.chanlen
-    int reflectlite_chanlen(struct hchan* c)
+    int reflectlite_chanlen(hchan* c)
     {
         if(c == nullptr)
         {
@@ -946,7 +946,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_chancap reflect.chancap
-    int reflect_chancap(struct hchan* c)
+    int reflect_chancap(hchan* c)
     {
         if(c == nullptr)
         {
@@ -956,12 +956,12 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_chanclose reflect.chanclose
-    void reflect_chanclose(struct hchan* c)
+    void reflect_chanclose(hchan* c)
     {
         closechan(c);
     }
 
-    void rec::enqueue(golang::runtime::waitq* q, struct sudog* sgp)
+    void rec::enqueue(waitq* q, sudog* sgp)
     {
         sgp->next = nullptr;
         auto x = q->last;
@@ -977,7 +977,7 @@ namespace golang::runtime
         q->last = sgp;
     }
 
-    struct sudog* rec::dequeue(golang::runtime::waitq* q)
+    golang::runtime::sudog* rec::dequeue(waitq* q)
     {
         for(; ; )
         {
@@ -1017,7 +1017,7 @@ namespace golang::runtime
         }
     }
 
-    gocpp::unsafe_pointer rec::raceaddr(golang::runtime::hchan* c)
+    gocpp::unsafe_pointer rec::raceaddr(hchan* c)
     {
         // Treat read-like and write-like operations on the channel to
         // happen at this address. Avoid using the address of qcount
@@ -1027,7 +1027,7 @@ namespace golang::runtime
         return gocpp::unsafe_pointer(& c->buf);
     }
 
-    void racesync(struct hchan* c, struct sudog* sg)
+    void racesync(hchan* c, sudog* sg)
     {
         racerelease(chanbuf(c, 0));
         raceacquireg(sg->g, chanbuf(c, 0));
@@ -1038,7 +1038,7 @@ namespace golang::runtime
     // Notify the race detector of a send or receive involving buffer entry idx
     // and a channel c or its communicating partner sg.
     // This function handles the special case of c.elemsize==0.
-    void racenotify(struct hchan* c, unsigned int idx, struct sudog* sg)
+    void racenotify(hchan* c, unsigned int idx, sudog* sg)
     {
         // We could have passed the unsafe.Pointer corresponding to entry idx
         // instead of idx itself.  However, in a future version of this function,

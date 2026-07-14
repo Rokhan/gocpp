@@ -38,12 +38,12 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    void raceReadObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
-    void raceWriteObjectPC(golang::runtime::_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
-    void raceacquireg(struct g* gp, gocpp::unsafe_pointer addr);
-    void racereleaseg(struct g* gp, gocpp::unsafe_pointer addr);
-    void racereleaseacquireg(struct g* gp, gocpp::unsafe_pointer addr);
-    void racereleasemergeg(struct g* gp, gocpp::unsafe_pointer addr);
+    void raceReadObjectPC(_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void raceWriteObjectPC(_type* t, gocpp::unsafe_pointer addr, uintptr_t callerpc, uintptr_t pc);
+    void raceacquireg(g* gp, gocpp::unsafe_pointer addr);
+    void racereleaseg(g* gp, gocpp::unsafe_pointer addr);
+    void racereleaseacquireg(g* gp, gocpp::unsafe_pointer addr);
+    void racereleasemergeg(g* gp, gocpp::unsafe_pointer addr);
 
     namespace rec
     {

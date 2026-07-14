@@ -13,8 +13,8 @@
 
 namespace golang::os
 {
-    std::tuple<os::FileInfo, struct gocpp::error> Stat(gocpp::string name);
-    std::tuple<os::FileInfo, struct gocpp::error> Lstat(gocpp::string name);
+    std::tuple<struct FileInfo, struct gocpp::error> Stat(gocpp::string name);
+    std::tuple<struct FileInfo, struct gocpp::error> Lstat(gocpp::string name);
 
     namespace rec
     {

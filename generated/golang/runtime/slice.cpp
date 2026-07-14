@@ -117,7 +117,7 @@ namespace golang::runtime
 
     // makeslicecopy allocates a slice of "tolen" elements of type "et",
     // then copies "fromlen" elements of type "et" into that new allocation from "from".
-    gocpp::unsafe_pointer makeslicecopy(golang::runtime::_type* et, int tolen, int fromlen, gocpp::unsafe_pointer from)
+    gocpp::unsafe_pointer makeslicecopy(_type* et, int tolen, int fromlen, gocpp::unsafe_pointer from)
     {
         uintptr_t tomem = {};
         uintptr_t copymem = {};
@@ -184,7 +184,7 @@ namespace golang::runtime
         return to;
     }
 
-    gocpp::unsafe_pointer makeslice(golang::runtime::_type* et, int len, int cap)
+    gocpp::unsafe_pointer makeslice(_type* et, int len, int cap)
     {
         auto [mem, overflow] = math::MulUintptr(et->Size_, uintptr_t(cap));
         if(overflow || mem > maxAlloc || len < 0 || len > cap)
@@ -205,7 +205,7 @@ namespace golang::runtime
         return mallocgc(mem, et, true);
     }
 
-    gocpp::unsafe_pointer makeslice64(golang::runtime::_type* et, int64_t len64, int64_t cap64)
+    gocpp::unsafe_pointer makeslice64(_type* et, int64_t len64, int64_t cap64)
     {
         auto len = int(len64);
         if(int64_t(len) != len64)
@@ -253,7 +253,7 @@ namespace golang::runtime
     // new length so that the old length is not live (does not need to be
     // spilled/restored) and the new length is returned (also does not need
     // to be spilled/restored).
-    struct slice growslice(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, golang::runtime::_type* et)
+    golang::runtime::slice growslice(gocpp::unsafe_pointer oldPtr, int newLen, int oldCap, int num, _type* et)
     {
         auto oldLen = newLen - num;
         if(raceenabled)
@@ -279,7 +279,7 @@ namespace golang::runtime
         {
             // append should not create a slice with nil pointer but non-zero len.
             // We assume that append doesn't need to preserve oldPtr in this case.
-            return slice {gocpp::unsafe_pointer(& zerobase), newLen, newLen};
+            return golang::runtime::slice {gocpp::unsafe_pointer(& zerobase), newLen, newLen};
         }
 
         auto newcap = nextslicecap(newLen, oldCap);
@@ -385,7 +385,7 @@ namespace golang::runtime
         }
         memmove(p, oldPtr, lenmem);
 
-        return slice {p, newLen, newcap};
+        return golang::runtime::slice {p, newLen, newcap};
     }
 
     // nextslicecap computes the next appropriate slice length.
@@ -430,7 +430,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_growslice reflect.growslice
-    struct slice reflect_growslice(golang::runtime::_type* et, struct slice old, int num)
+    golang::runtime::slice reflect_growslice(_type* et, golang::runtime::slice old, int num)
     {
         // Semantically equivalent to slices.Grow, except that the caller
         // is responsible for ensuring that old.len+num > old.cap.

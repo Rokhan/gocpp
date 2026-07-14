@@ -63,8 +63,8 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    void callbackUpdateSystemStack(struct m* mp, uintptr_t sp, bool signal);
-    void cgoCheckArg(golang::runtime::_type* t, gocpp::unsafe_pointer p, bool indir, bool top, gocpp::string msg);
+    void callbackUpdateSystemStack(m* mp, uintptr_t sp, bool signal);
+    void cgoCheckArg(_type* t, gocpp::unsafe_pointer p, bool indir, bool top, gocpp::string msg);
 
     namespace rec
     {

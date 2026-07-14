@@ -30,7 +30,7 @@ namespace golang::strings
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
-    struct Reader* NewReader(gocpp::string s);
+    golang::strings::Reader* NewReader(gocpp::string s);
 }
 
 #include "golang/io/io.h"
@@ -40,17 +40,17 @@ namespace golang::strings
 
     namespace rec
     {
-        int Len(golang::strings::Reader* r);
-        int64_t Size(golang::strings::Reader* r);
-        std::tuple<int, struct gocpp::error> Read(golang::strings::Reader* r, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> ReadAt(golang::strings::Reader* r, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<unsigned char, struct gocpp::error> ReadByte(golang::strings::Reader* r);
-        struct gocpp::error UnreadByte(golang::strings::Reader* r);
-        std::tuple<gocpp::rune, int, struct gocpp::error> ReadRune(golang::strings::Reader* r);
-        struct gocpp::error UnreadRune(golang::strings::Reader* r);
-        std::tuple<int64_t, struct gocpp::error> Seek(golang::strings::Reader* r, int64_t offset, int whence);
-        std::tuple<int64_t, struct gocpp::error> WriteTo(golang::strings::Reader* r, io::Writer w);
-        void Reset(golang::strings::Reader* r, gocpp::string s);
+        int Len(Reader* r);
+        int64_t Size(Reader* r);
+        std::tuple<int, struct gocpp::error> Read(Reader* r, gocpp::slice<unsigned char> b);
+        std::tuple<int, struct gocpp::error> ReadAt(Reader* r, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<unsigned char, struct gocpp::error> ReadByte(Reader* r);
+        struct gocpp::error UnreadByte(Reader* r);
+        std::tuple<gocpp::rune, int, struct gocpp::error> ReadRune(Reader* r);
+        struct gocpp::error UnreadRune(Reader* r);
+        std::tuple<int64_t, struct gocpp::error> Seek(Reader* r, int64_t offset, int whence);
+        std::tuple<int64_t, struct gocpp::error> WriteTo(Reader* r, io::Writer w);
+        void Reset(Reader* r, gocpp::string s);
     }
 }
 

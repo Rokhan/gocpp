@@ -23,7 +23,7 @@ namespace golang::strconv
     }
 
     // ryuFtoaFixed32 formats mant*(2^exp) with prec decimal digits.
-    void ryuFtoaFixed32(struct decimalSlice* d, uint32_t mant, int exp, int prec)
+    void ryuFtoaFixed32(decimalSlice* d, uint32_t mant, int exp, int prec)
     {
         if(prec < 0)
         {
@@ -103,7 +103,7 @@ namespace golang::strconv
     }
 
     // ryuFtoaFixed64 formats mant*(2^exp) with prec decimal digits.
-    void ryuFtoaFixed64(struct decimalSlice* d, uint64_t mant, int exp, int prec)
+    void ryuFtoaFixed64(decimalSlice* d, uint64_t mant, int exp, int prec)
     {
         if(prec > 18)
         {
@@ -187,7 +187,7 @@ namespace golang::strconv
     // formatDecimal fills d with at most prec decimal digits
     // of mantissa m. The boolean trunc indicates whether m
     // is truncated compared to the original number being formatted.
-    void formatDecimal(struct decimalSlice* d, uint64_t m, bool trunc, bool roundUp, int prec)
+    void formatDecimal(decimalSlice* d, uint64_t m, bool trunc, bool roundUp, int prec)
     {
         auto max = uint64pow10[prec];
         auto trimmed = 0;
@@ -267,7 +267,7 @@ namespace golang::strconv
     }
 
     // ryuFtoaShortest formats mant*2^exp with prec decimal digits.
-    void ryuFtoaShortest(struct decimalSlice* d, uint64_t mant, int exp, struct floatInfo* flt)
+    void ryuFtoaShortest(decimalSlice* d, uint64_t mant, int exp, floatInfo* flt)
     {
         if(mant == 0)
         {
@@ -422,7 +422,7 @@ namespace golang::strconv
     // computeBounds returns a floating-point vector (l, c, u)×2^e2
     // where the mantissas are 55-bit (or 26-bit) integers, describing the interval
     // represented by the input float64 or float32.
-    std::tuple<uint64_t, uint64_t, uint64_t, int> computeBounds(uint64_t mant, int exp, struct floatInfo* flt)
+    std::tuple<uint64_t, uint64_t, uint64_t, int> computeBounds(uint64_t mant, int exp, floatInfo* flt)
     {
         uint64_t lower;
         uint64_t central;
@@ -444,7 +444,7 @@ namespace golang::strconv
         }
     }
 
-    void ryuDigits(struct decimalSlice* d, uint64_t lower, uint64_t central, uint64_t upper, bool c0, bool cup)
+    void ryuDigits(decimalSlice* d, uint64_t lower, uint64_t central, uint64_t upper, bool c0, bool cup)
     {
         auto [lhi, llo] = divmod1e9(lower);
         auto [chi, clo] = divmod1e9(central);
@@ -499,7 +499,7 @@ namespace golang::strconv
     }
 
     // ryuDigits32 emits decimal digits for a number less than 1e9.
-    void ryuDigits32(struct decimalSlice* d, uint32_t lower, uint32_t central, uint32_t upper, bool c0, bool cup, int endindex)
+    void ryuDigits32(decimalSlice* d, uint32_t lower, uint32_t central, uint32_t upper, bool c0, bool cup, int endindex)
     {
         if(upper == 0)
         {

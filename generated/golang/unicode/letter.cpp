@@ -279,7 +279,7 @@ namespace golang::unicode
     }
 
     // Is reports whether the rune is in the specified table of ranges.
-    bool Is(struct RangeTable* rangeTab, gocpp::rune r)
+    bool Is(RangeTable* rangeTab, gocpp::rune r)
     {
         auto r16 = rangeTab->R16;
         // Compare as uint32 to correctly handle negative runes.
@@ -295,7 +295,7 @@ namespace golang::unicode
         return false;
     }
 
-    bool isExcludingLatin(struct RangeTable* rangeTab, gocpp::rune r)
+    bool isExcludingLatin(RangeTable* rangeTab, gocpp::rune r)
     {
         auto r16 = rangeTab->R16;
         // Compare as uint32 to correctly handle negative runes.
@@ -443,9 +443,9 @@ namespace golang::unicode
     }
 
     // ToUpper maps the rune to upper case giving priority to the special mapping.
-    gocpp::rune rec::ToUpper(golang::unicode::SpecialCase special, gocpp::rune r)
+    gocpp::rune rec::ToUpper(SpecialCase special, gocpp::rune r)
     {
-        auto [r1, hadMapping] = to(UpperCase, r, gocpp::slice<CaseRange>(special));
+        auto [r1, hadMapping] = to(UpperCase, r, gocpp::slice<golang::unicode::CaseRange>(special));
         if(r1 == r && ! hadMapping)
         {
             r1 = unicode::ToUpper(r);
@@ -454,9 +454,9 @@ namespace golang::unicode
     }
 
     // ToTitle maps the rune to title case giving priority to the special mapping.
-    gocpp::rune rec::ToTitle(golang::unicode::SpecialCase special, gocpp::rune r)
+    gocpp::rune rec::ToTitle(SpecialCase special, gocpp::rune r)
     {
-        auto [r1, hadMapping] = to(TitleCase, r, gocpp::slice<CaseRange>(special));
+        auto [r1, hadMapping] = to(TitleCase, r, gocpp::slice<golang::unicode::CaseRange>(special));
         if(r1 == r && ! hadMapping)
         {
             r1 = unicode::ToTitle(r);
@@ -465,9 +465,9 @@ namespace golang::unicode
     }
 
     // ToLower maps the rune to lower case giving priority to the special mapping.
-    gocpp::rune rec::ToLower(golang::unicode::SpecialCase special, gocpp::rune r)
+    gocpp::rune rec::ToLower(SpecialCase special, gocpp::rune r)
     {
-        auto [r1, hadMapping] = to(LowerCase, r, gocpp::slice<CaseRange>(special));
+        auto [r1, hadMapping] = to(LowerCase, r, gocpp::slice<golang::unicode::CaseRange>(special));
         if(r1 == r && ! hadMapping)
         {
             r1 = unicode::ToLower(r);

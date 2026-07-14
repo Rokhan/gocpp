@@ -121,7 +121,7 @@ namespace golang::runtime
     // or P and pass the appropriate status.
     //
     // In this case, the default status should be traceGoBad or traceProcBad to help identify bugs sooner.
-    struct traceEventWriter rec::eventWriter(golang::runtime::traceLocker tl, golang::runtime::traceGoStatus goStatus, golang::runtime::traceProcStatus procStatus)
+    golang::runtime::traceEventWriter rec::eventWriter(traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus)
     {
         auto w = rec::writer(gocpp::recv(tl));
         if(auto pp = rec::ptr(gocpp::recv(tl.mp->p)); pp != nullptr && ! rec::statusWasTraced(gocpp::recv(pp->trace), tl.gen) && rec::acquireStatus(gocpp::recv(pp->trace), tl.gen))
@@ -132,32 +132,32 @@ namespace golang::runtime
         {
             w = rec::writeGoStatus(gocpp::recv(w), uint64_t(gp->goid), int64_t(tl.mp->procid), goStatus, gp->inMarkAssist);
         }
-        return traceEventWriter {w};
+        return golang::runtime::traceEventWriter {w};
     }
 
     // commit writes out a trace event and calls end. It's a helper to make the
     // common case of writing out a single event less error-prone.
-    void rec::commit(golang::runtime::traceEventWriter e, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
+    void rec::commit(traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args)
     {
         e = rec::write(gocpp::recv(e), ev, args);
         rec::end(gocpp::recv(e));
     }
 
     // write writes an event into the trace.
-    struct traceEventWriter rec::write(golang::runtime::traceEventWriter e, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
+    golang::runtime::traceEventWriter rec::write(traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args)
     {
         e.w = rec::event(gocpp::recv(e.w), ev, args);
         return e;
     }
 
     // end finishes writing to the trace. The traceEventWriter must not be used after this call.
-    void rec::end(golang::runtime::traceEventWriter e)
+    void rec::end(traceEventWriter e)
     {
         rec::end(gocpp::recv(e.w));
     }
 
     // traceEventWrite is the part of traceEvent that actually writes the event.
-    struct traceWriter rec::event(golang::runtime::traceWriter w, golang::runtime::traceEv ev, gocpp::slice<golang::runtime::traceArg> args)
+    golang::runtime::traceWriter rec::event(traceWriter w, traceEv ev, gocpp::slice<traceArg> args)
     {
         // Make sure we have room.
         std::tie(w, std::ignore) = rec::ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
@@ -184,7 +184,7 @@ namespace golang::runtime
     // stack takes a stack trace skipping the provided number of frames.
     // It then returns a traceArg representing that stack which may be
     // passed to write.
-    runtime::traceArg rec::stack(golang::runtime::traceLocker tl, int skip)
+    golang::runtime::traceArg rec::stack(traceLocker tl, int skip)
     {
         return traceArg(traceStack(skip, tl.mp, tl.gen));
     }
@@ -194,7 +194,7 @@ namespace golang::runtime
     //
     // It then returns a traceArg representing that stack which may be
     // passed to write.
-    runtime::traceArg rec::startPC(golang::runtime::traceLocker tl, uintptr_t pc)
+    golang::runtime::traceArg rec::startPC(traceLocker tl, uintptr_t pc)
     {
         // +PCQuantum because makeTraceFrame expects return PCs and subtracts PCQuantum.
         return traceArg(rec::put(gocpp::recv(trace.stackTab[tl.gen % 2]), gocpp::slice<uintptr_t> {
@@ -206,7 +206,7 @@ namespace golang::runtime
     // string returns a traceArg representing s which may be passed to write.
     // The string is assumed to be relatively short and popular, so it may be
     // stored for a while in the string dictionary.
-    runtime::traceArg rec::string(golang::runtime::traceLocker tl, gocpp::string s)
+    golang::runtime::traceArg rec::string(traceLocker tl, gocpp::string s)
     {
         return traceArg(rec::put(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
     }
@@ -214,7 +214,7 @@ namespace golang::runtime
     // uniqueString returns a traceArg representing s which may be passed to write.
     // The string is assumed to be unique or long, so it will be written out to
     // the trace eagerly.
-    runtime::traceArg rec::uniqueString(golang::runtime::traceLocker tl, gocpp::string s)
+    golang::runtime::traceArg rec::uniqueString(traceLocker tl, gocpp::string s)
     {
         return traceArg(rec::emit(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
     }

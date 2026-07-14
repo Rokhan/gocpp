@@ -13,7 +13,7 @@
 namespace golang::os
 {
     int Getpagesize();
-    bool SameFile(golang::os::FileInfo fi1, golang::os::FileInfo fi2);
+    bool SameFile(FileInfo fi1, FileInfo fi2);
 }
 #include "golang/os/file_windows.h"
 
@@ -44,8 +44,8 @@ namespace golang::os
 
     namespace rec
     {
-        gocpp::string Name(golang::os::fileStat* fs);
-        bool IsDir(golang::os::fileStat* fs);
+        gocpp::string Name(fileStat* fs);
+        bool IsDir(fileStat* fs);
     }
 }
 

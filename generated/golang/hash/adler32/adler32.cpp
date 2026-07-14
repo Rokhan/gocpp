@@ -37,7 +37,7 @@ namespace golang::adler32
     // The size of an Adler-32 checksum in bytes.
     // digest represents the partial evaluation of a checksum.
     // The low 16 bits are s1, the high 16 bits are s2.
-    void rec::Reset(golang::adler32::digest* d)
+    void rec::Reset(digest* d)
     {
         *d = 1;
     }
@@ -49,22 +49,22 @@ namespace golang::adler32
     // state of the hash.
     hash::Hash32 New()
     {
-        auto d = new digest{};
+        auto d = new adler32::digest{};
         rec::Reset(gocpp::recv(d));
         return d;
     }
 
-    int rec::Size(golang::adler32::digest* d)
+    int rec::Size(digest* d)
     {
         return Size;
     }
 
-    int rec::BlockSize(golang::adler32::digest* d)
+    int rec::BlockSize(digest* d)
     {
         return 4;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(golang::adler32::digest* d)
+    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -72,7 +72,7 @@ namespace golang::adler32
         return {b, nullptr};
     }
 
-    struct gocpp::error rec::UnmarshalBinary(golang::adler32::digest* d, gocpp::slice<unsigned char> b)
+    struct gocpp::error rec::UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || gocpp::string(b.make_slice(0, len(magic))) != magic)
         {
@@ -102,7 +102,7 @@ namespace golang::adler32
     }
 
     // Add p to the running checksum d.
-    adler32::digest update(golang::adler32::digest d, gocpp::slice<unsigned char> p)
+    golang::adler32::digest update(digest d, gocpp::slice<unsigned char> p)
     {
         auto [s1, s2] = std::tuple{uint32_t(d & 0xffff), uint32_t(d >> 16)};
         for(; len(p) > 0; )
@@ -136,7 +136,7 @@ namespace golang::adler32
         return digest((s2 << 16) | s1);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(golang::adler32::digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, struct gocpp::error> rec::Write(digest* d, gocpp::slice<unsigned char> p)
     {
         int nn;
         struct gocpp::error err;
@@ -144,12 +144,12 @@ namespace golang::adler32
         return {len(p), nullptr};
     }
 
-    uint32_t rec::Sum32(golang::adler32::digest* d)
+    uint32_t rec::Sum32(digest* d)
     {
         return uint32_t(*d);
     }
 
-    gocpp::slice<unsigned char> rec::Sum(golang::adler32::digest* d, gocpp::slice<unsigned char> in)
+    gocpp::slice<unsigned char> rec::Sum(digest* d, gocpp::slice<unsigned char> in)
     {
         auto s = uint32_t(*d);
         return append(in, (unsigned char)(s >> 24), (unsigned char)(s >> 16), (unsigned char)(s >> 8), (unsigned char)(s));

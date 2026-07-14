@@ -149,7 +149,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    void rec::dump(golang::reflect::abiSeq* a)
+    void rec::dump(abiSeq* a)
     {
         for(auto [i, p] : a->steps)
         {
@@ -169,7 +169,7 @@ namespace golang::reflect
     // stepsForValue returns the ABI instructions for translating
     // the i'th Go argument or return value represented by this
     // abiSeq to the Go ABI.
-    gocpp::slice<abiStep> rec::stepsForValue(golang::reflect::abiSeq* a, int i)
+    gocpp::slice<golang::reflect::abiStep> rec::stepsForValue(abiSeq* a, int i)
     {
         auto s = a->valueStart[i];
         int e = {};
@@ -188,7 +188,7 @@ namespace golang::reflect
     //
     // If the value was stack-assigned, returns the single
     // abiStep describing that translation, and nil otherwise.
-    struct abiStep* rec::addArg(golang::reflect::abiSeq* a, abi::Type* t)
+    golang::reflect::abiStep* rec::addArg(abiSeq* a, abi::Type* t)
     {
         // We'll always be adding a new value, so do that first.
         auto pStart = len(a->steps);
@@ -231,7 +231,7 @@ namespace golang::reflect
     // If the receiver was stack-assigned, returns the single
     // abiStep describing that translation, and nil otherwise.
     // Returns true if the receiver is a pointer.
-    std::tuple<struct abiStep*, bool> rec::addRcvr(golang::reflect::abiSeq* a, abi::Type* rcvr)
+    std::tuple<golang::reflect::abiStep*, bool> rec::addRcvr(abiSeq* a, abi::Type* rcvr)
     {
         // The receiver is always one word.
         a->valueStart = append(a->valueStart, len(a->steps));
@@ -270,7 +270,7 @@ namespace golang::reflect
     //
     // This method along with the assign* methods represent the
     // complete register-assignment algorithm for the Go ABI.
-    bool rec::regAssign(golang::reflect::abiSeq* a, abi::Type* t, uintptr_t offset)
+    bool rec::regAssign(abiSeq* a, abi::Type* t, uintptr_t offset)
     {
         //Go switch emulation
         {
@@ -363,7 +363,7 @@ namespace golang::reflect
                     break;
                 case 24:
                 {
-                    auto tt = (reflect::arrayType*)(gocpp::unsafe_pointer(t));
+                    auto tt = (golang::reflect::arrayType*)(gocpp::unsafe_pointer(t));
                     //Go switch emulation
                     {
                         auto condition = tt->Len;
@@ -390,7 +390,7 @@ namespace golang::reflect
                 }
                 case 25:
                 {
-                    auto st = (structType*)(gocpp::unsafe_pointer(t));
+                    auto st = (golang::reflect::structType*)(gocpp::unsafe_pointer(t));
                     for(auto [i, gocpp_ignored] : st->StructType.Fields)
                     {
                         auto f = & st->StructType.Fields[i];
@@ -420,7 +420,7 @@ namespace golang::reflect
     // n must be <= 8.
     //
     // Returns whether assignment succeeded.
-    bool rec::assignIntN(golang::reflect::abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap)
+    bool rec::assignIntN(abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap)
     {
         if(n > 8 || n < 0)
         {
@@ -441,7 +441,7 @@ namespace golang::reflect
             {
                 kind = abiStepPointer;
             }
-            a->steps = append(a->steps, gocpp::Init<abiStep>([=](auto& x) {
+            a->steps = append(a->steps, gocpp::Init<golang::reflect::abiStep>([=](auto& x) {
                 x.kind = kind;
                 x.offset = offset + uintptr_t(i) * size;
                 x.size = size;
@@ -458,7 +458,7 @@ namespace golang::reflect
     // next n floating-point registers.
     //
     // Returns whether assignment succeeded.
-    bool rec::assignFloatN(golang::reflect::abiSeq* a, uintptr_t offset, uintptr_t size, int n)
+    bool rec::assignFloatN(abiSeq* a, uintptr_t offset, uintptr_t size, int n)
     {
         if(n < 0)
         {
@@ -470,7 +470,7 @@ namespace golang::reflect
         }
         for(auto i = 0; i < n; i++)
         {
-            a->steps = append(a->steps, gocpp::Init<abiStep>([=](auto& x) {
+            a->steps = append(a->steps, gocpp::Init<golang::reflect::abiStep>([=](auto& x) {
                 x.kind = abiStepFloatReg;
                 x.offset = offset + uintptr_t(i) * size;
                 x.size = size;
@@ -485,10 +485,10 @@ namespace golang::reflect
     // large with alignment "alignment" to the stack.
     //
     // Should not be called directly; use addArg instead.
-    void rec::stackAssign(golang::reflect::abiSeq* a, uintptr_t size, uintptr_t alignment)
+    void rec::stackAssign(abiSeq* a, uintptr_t size, uintptr_t alignment)
     {
         a->stackBytes = align(a->stackBytes, alignment);
-        a->steps = append(a->steps, gocpp::Init<abiStep>([=](auto& x) {
+        a->steps = append(a->steps, gocpp::Init<golang::reflect::abiStep>([=](auto& x) {
             x.kind = abiStepStack;
             x.offset = 0;
             x.size = size;
@@ -548,7 +548,7 @@ namespace golang::reflect
         return value.PrintTo(os);
     }
 
-    void rec::dump(golang::reflect::abiDesc* a)
+    void rec::dump(abiDesc* a)
     {
         println("ABI"_s);
         println("call"_s);
@@ -579,7 +579,7 @@ namespace golang::reflect
         }
     }
 
-    struct abiDesc newAbiDesc(golang::reflect::funcType* t, abi::Type* rcvr)
+    golang::reflect::abiDesc newAbiDesc(funcType* t, abi::Type* rcvr)
     {
         // We need to add space for this argument to
         // the frame so that it can spill args into it.
@@ -597,7 +597,7 @@ namespace golang::reflect
         auto inRegPtrs = abi::IntArgRegBitmap {};
 
         // Compute abiSeq for input parameters.
-        abiSeq in = {};
+        golang::reflect::abiSeq in = {};
         if(rcvr != nullptr)
         {
             auto [stkStep, isPtr] = rec::addRcvr(gocpp::recv(in), rcvr);
@@ -649,7 +649,7 @@ namespace golang::reflect
         auto outRegPtrs = abi::IntArgRegBitmap {};
 
         // Compute abiSeq for output parameters.
-        abiSeq out = {};
+        golang::reflect::abiSeq out = {};
         // Stack-assigned return values do not share
         // space with arguments like they do with registers,
         // so we need to inject a stack offset here.
@@ -677,7 +677,7 @@ namespace golang::reflect
         // Undo the faking from earlier so that stackBytes
         // is accurate.
         out.stackBytes -= retOffset;
-        return abiDesc {in, out, stackCallArgsSize, retOffset, spill, stackPtrs, inRegPtrs, outRegPtrs};
+        return golang::reflect::abiDesc {in, out, stackCallArgsSize, retOffset, spill, stackPtrs, inRegPtrs, outRegPtrs};
     }
 
     // intFromReg loads an argSize sized integer from reg and places it at to.

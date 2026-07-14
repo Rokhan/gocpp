@@ -17,7 +17,7 @@ namespace golang::abi
         uintptr_t Size_{};
         uintptr_t PtrBytes{}; // number of (prefix) bytes in the type that can contain pointers
         uint32_t Hash{}; // hash of type; avoids computation in hash tables
-        golang::abi::TFlag TFlag{}; // extra type information flags
+        TFlag TFlag{}; // extra type information flags
         uint8_t Align_{}; // alignment of variable with this type
         uint8_t FieldAlign_{}; // alignment of struct field with this type
         uint8_t Kind_{}; // enumeration for C
@@ -28,8 +28,8 @@ namespace golang::abi
         // If the KindGCProg bit is set in kind, GCData is a GC program.
         // Otherwise it is a ptrmask bitmap. See mbitmap.go for details.
         unsigned char* GCData{};
-        golang::abi::NameOff Str{}; // string form
-        golang::abi::TypeOff PtrToThis{}; // type for pointer to this type, may be zero
+        NameOff Str{}; // string form
+        TypeOff PtrToThis{}; // type for pointer to this type, may be zero
 
         using isGoStruct = void;
 
@@ -46,10 +46,10 @@ namespace golang::abi
     extern gocpp::slice<gocpp::string> kindNames;
     struct Method
     {
-        golang::abi::NameOff Name{}; // name of method
-        golang::abi::TypeOff Mtyp{}; // method type (without receiver)
-        golang::abi::TextOff Ifn{}; // fn used in interface call (one-word receiver)
-        golang::abi::TextOff Tfn{}; // fn used for normal method call
+        NameOff Name{}; // name of method
+        TypeOff Mtyp{}; // method type (without receiver)
+        TextOff Ifn{}; // fn used in interface call (one-word receiver)
+        TextOff Tfn{}; // fn used for normal method call
 
         using isGoStruct = void;
 
@@ -65,7 +65,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct Method& value);
     struct UncommonType
     {
-        golang::abi::NameOff PkgPath{}; // import path; empty for built-in types like int, string
+        NameOff PkgPath{}; // import path; empty for built-in types like int, string
         uint16_t Mcount{}; // number of methods
         uint16_t Xcount{}; // number of exported methods
         uint32_t Moff{}; // offset from this uncommontype to [mcount]Method
@@ -86,8 +86,8 @@ namespace golang::abi
     gocpp::unsafe_pointer addChecked(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
     struct Imethod
     {
-        golang::abi::NameOff Name{}; // name of method
-        golang::abi::TypeOff Typ{}; // .(*FuncType) underneath
+        NameOff Name{}; // name of method
+        TypeOff Typ{}; // .(*FuncType) underneath
 
         using isGoStruct = void;
 
@@ -120,7 +120,7 @@ namespace golang::abi
     int writeVarint(gocpp::slice<unsigned char> buf, int n);
     struct ArrayType
     {
-        Type Type{};
+        golang::abi::Type Type{};
         golang::abi::Type* Elem{}; // array element type
         golang::abi::Type* Slice{}; // slice type
         uintptr_t Len{};
@@ -139,7 +139,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct ArrayType& value);
     struct ChanType
     {
-        Type Type{};
+        golang::abi::Type Type{};
         golang::abi::Type* Elem{};
         golang::abi::ChanDir Dir{};
 
@@ -157,8 +157,8 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct ChanType& value);
     struct InterfaceType
     {
-        Type Type{};
-        Name PkgPath{}; // import path
+        golang::abi::Type Type{};
+        golang::abi::Name PkgPath{}; // import path
         gocpp::slice<Imethod> Methods{}; // sorted by hash
 
         using isGoStruct = void;
@@ -175,7 +175,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct InterfaceType& value);
     struct MapType
     {
-        Type Type{};
+        golang::abi::Type Type{};
         golang::abi::Type* Key{};
         golang::abi::Type* Elem{};
         golang::abi::Type* Bucket{}; // internal type representing a hash bucket
@@ -200,7 +200,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct MapType& value);
     struct SliceType
     {
-        Type Type{};
+        golang::abi::Type Type{};
         golang::abi::Type* Elem{}; // slice element type
 
         using isGoStruct = void;
@@ -217,7 +217,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct SliceType& value);
     struct FuncType
     {
-        Type Type{};
+        golang::abi::Type Type{};
         uint16_t InCount{};
         uint16_t OutCount{}; // top bit is set if last input parameter is ...
 
@@ -235,7 +235,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct FuncType& value);
     struct PtrType
     {
-        Type Type{};
+        golang::abi::Type Type{};
         golang::abi::Type* Elem{}; // pointer element (pointed at) type
 
         using isGoStruct = void;
@@ -252,8 +252,8 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct PtrType& value);
     struct StructField
     {
-        Name Name{}; // name is always non-empty
-        Type* Typ{}; // type of field
+        golang::abi::Name Name{}; // name is always non-empty
+        golang::abi::Type* Typ{}; // type of field
         uintptr_t Offset{}; // byte offset of field
 
         using isGoStruct = void;
@@ -268,11 +268,11 @@ namespace golang::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct StructField& value);
-    struct Name NewName(gocpp::string n, gocpp::string tag, bool exported, bool embedded);
+    golang::abi::Name NewName(gocpp::string n, gocpp::string tag, bool exported, bool embedded);
     struct StructType
     {
-        Type Type{};
-        Name PkgPath{};
+        golang::abi::Type Type{};
+        golang::abi::Name PkgPath{};
         gocpp::slice<StructField> Fields{};
 
         using isGoStruct = void;
@@ -289,7 +289,7 @@ namespace golang::abi
     std::ostream& operator<<(std::ostream& os, const struct StructType& value);
     struct structTypeUncommon
     {
-        StructType StructType{};
+        golang::abi::StructType StructType{};
         UncommonType u{};
 
         using isGoStruct = void;
@@ -308,28 +308,28 @@ namespace golang::abi
     namespace rec
     {
         gocpp::string String(golang::abi::Kind k);
-        abi::Kind Kind(golang::abi::Type* t);
+        golang::abi::Kind Kind(golang::abi::Type* t);
         bool HasName(golang::abi::Type* t);
         bool Pointers(golang::abi::Type* t);
         bool IfaceIndir(golang::abi::Type* t);
         bool IsDirectIface(golang::abi::Type* t);
         gocpp::slice<unsigned char> GcSlice(golang::abi::Type* t, uintptr_t begin, uintptr_t end);
-        gocpp::slice<Method> Methods(golang::abi::UncommonType* t);
-        gocpp::slice<Method> ExportedMethods(golang::abi::UncommonType* t);
+        gocpp::slice<golang::abi::Method> Methods(UncommonType* t);
+        gocpp::slice<golang::abi::Method> ExportedMethods(UncommonType* t);
         int Len(golang::abi::Type* t);
-        struct Type* Common(golang::abi::Type* t);
-        abi::ChanDir ChanDir(golang::abi::Type* t);
-        struct UncommonType* Uncommon(golang::abi::Type* t);
-        struct Type* Elem(golang::abi::Type* t);
-        struct StructType* StructType(golang::abi::Type* t);
-        struct MapType* MapType(golang::abi::Type* t);
-        struct ArrayType* ArrayType(golang::abi::Type* t);
-        struct FuncType* FuncType(golang::abi::Type* t);
-        struct InterfaceType* InterfaceType(golang::abi::Type* t);
+        golang::abi::Type* Common(golang::abi::Type* t);
+        golang::abi::ChanDir ChanDir(golang::abi::Type* t);
+        golang::abi::UncommonType* Uncommon(golang::abi::Type* t);
+        golang::abi::Type* Elem(golang::abi::Type* t);
+        golang::abi::StructType* StructType(golang::abi::Type* t);
+        golang::abi::MapType* MapType(golang::abi::Type* t);
+        golang::abi::ArrayType* ArrayType(golang::abi::Type* t);
+        golang::abi::FuncType* FuncType(golang::abi::Type* t);
+        golang::abi::InterfaceType* InterfaceType(golang::abi::Type* t);
         uintptr_t Size(golang::abi::Type* t);
         int Align(golang::abi::Type* t);
         int FieldAlign(golang::abi::Type* t);
-        gocpp::slice<Method> ExportedMethods(golang::abi::Type* t);
+        gocpp::slice<golang::abi::Method> ExportedMethods(golang::abi::Type* t);
         int NumMethod(golang::abi::Type* t);
         int NumMethod(golang::abi::InterfaceType* t);
         bool IndirectKey(golang::abi::MapType* mt);
@@ -337,15 +337,15 @@ namespace golang::abi
         bool ReflexiveKey(golang::abi::MapType* mt);
         bool NeedKeyUpdate(golang::abi::MapType* mt);
         bool HashMightPanic(golang::abi::MapType* mt);
-        struct Type* Key(golang::abi::Type* t);
-        struct Type* In(golang::abi::FuncType* t, int i);
+        golang::abi::Type* Key(golang::abi::Type* t);
+        golang::abi::Type* In(golang::abi::FuncType* t, int i);
         int NumIn(golang::abi::FuncType* t);
         int NumOut(golang::abi::FuncType* t);
-        struct Type* Out(golang::abi::FuncType* t, int i);
-        gocpp::slice<Type*> InSlice(golang::abi::FuncType* t);
-        gocpp::slice<Type*> OutSlice(golang::abi::FuncType* t);
+        golang::abi::Type* Out(golang::abi::FuncType* t, int i);
+        gocpp::slice<golang::abi::Type*> InSlice(golang::abi::FuncType* t);
+        gocpp::slice<golang::abi::Type*> OutSlice(golang::abi::FuncType* t);
         bool IsVariadic(golang::abi::FuncType* t);
-        bool Embedded(golang::abi::StructField* f);
+        bool Embedded(StructField* f);
         unsigned char* DataChecked(golang::abi::Name n, int off, gocpp::string whySafe);
         unsigned char* Data(golang::abi::Name n, int off);
         bool IsExported(golang::abi::Name n);

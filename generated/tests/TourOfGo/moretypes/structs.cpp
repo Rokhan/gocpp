@@ -580,37 +580,37 @@ namespace golang::main
 
     void main()
     {
-        mocklib::Println(Vertex {1, 2});
+        mocklib::Println(golang::main::Vertex {1, 2});
 
         gocpp_id_3 i = {};
         gocpp_id_4 j = {};
         mocklib::Println(i == j);
 
-        auto e = Empty {};
+        auto e = golang::main::Empty {};
         mocklib::Println(e == j);
 
         auto v1 = gocpp_id_5 {1, 2};
         auto v2 = gocpp_id_6 {1, 2};
         mocklib::Println(v1 == v2);
 
-        auto d = Dummy {1, 2};
+        auto d = golang::main::Dummy {1, 2};
         d = gocpp_id_7 {1, 2};
         mocklib::Println(d == v2);
         mocklib::Println(d == v1);
 
-        Dummy* p1 = & d;
+        golang::main::Dummy* p1 = & d;
         mocklib::Println(p1);
 
         p1 = nullptr;
         mocklib::Println(p1);
 
-        auto dd = Dummy2 {d, Vertex {}, 3};
+        auto dd = golang::main::Dummy2 {d, golang::main::Vertex {}, 3};
         mocklib::Println(dd);
 
         inlineStructDef(gocpp_id_8 {42});
         embededStructDef();
 
-        auto vv = Vertex {3, 4};
+        auto vv = golang::main::Vertex {3, 4};
         auto offsetX = gocpp::Offsetof<Vertex>(&Vertex::X);
         auto offsetY = gocpp::Offsetof<Vertex>(&Vertex::Y);
         mocklib::Println("Offset of X in Vertex:"_s, offsetX);
@@ -622,7 +622,7 @@ namespace golang::main
         mocklib::Println("Size of Anonymous struct:"_s, gocpp::Sizeof<gocpp_id_0>());
 
         // test field access
-        Dummy3 d3 = Dummy3 {Dummy2 {Dummy {1, 2}, Vertex {3, 4}, 5}, 6, 7};
+        golang::main::Dummy3 d3 = golang::main::Dummy3 {golang::main::Dummy2 {golang::main::Dummy {1, 2}, golang::main::Vertex {3, 4}, 5}, 6, 7};
         // should print 1
         mocklib::Println(d3.Dummy2.Dummy.i);
         // should print 2

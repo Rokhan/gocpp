@@ -309,9 +309,9 @@ namespace golang::binary
     }
 
     // LittleEndian is the little-endian implementation of [ByteOrder] and [AppendByteOrder].
-    littleEndian LittleEndian;
+    golang::binary::littleEndian LittleEndian;
     // BigEndian is the big-endian implementation of [ByteOrder] and [AppendByteOrder].
-    bigEndian BigEndian;
+    golang::binary::bigEndian BigEndian;
     
     template<typename T> requires gocpp::GoStruct<T>
     littleEndian::operator T()
@@ -338,14 +338,14 @@ namespace golang::binary
         return value.PrintTo(os);
     }
 
-    uint16_t rec::Uint16(golang::binary::littleEndian, gocpp::slice<unsigned char> b)
+    uint16_t rec::Uint16(littleEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[1];
         return uint16_t(b[0]) | (uint16_t(b[1]) << 8);
     }
 
-    void rec::PutUint16(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
+    void rec::PutUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         // early bounds check to guarantee safety of writes below
         _ = b[1];
@@ -353,19 +353,19 @@ namespace golang::binary
         b[1] = (unsigned char)(v >> 8);
     }
 
-    gocpp::slice<unsigned char> rec::AppendUint16(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
+    gocpp::slice<unsigned char> rec::AppendUint16(littleEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         return append(b, (unsigned char)(v), (unsigned char)(v >> 8));
     }
 
-    uint32_t rec::Uint32(golang::binary::littleEndian, gocpp::slice<unsigned char> b)
+    uint32_t rec::Uint32(littleEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[3];
         return uint32_t(b[0]) | (uint32_t(b[1]) << 8) | (uint32_t(b[2]) << 16) | (uint32_t(b[3]) << 24);
     }
 
-    void rec::PutUint32(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
+    void rec::PutUint32(littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         // early bounds check to guarantee safety of writes below
         _ = b[3];
@@ -375,19 +375,19 @@ namespace golang::binary
         b[3] = (unsigned char)(v >> 24);
     }
 
-    gocpp::slice<unsigned char> rec::AppendUint32(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
+    gocpp::slice<unsigned char> rec::AppendUint32(littleEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         return append(b, (unsigned char)(v), (unsigned char)(v >> 8), (unsigned char)(v >> 16), (unsigned char)(v >> 24));
     }
 
-    uint64_t rec::Uint64(golang::binary::littleEndian, gocpp::slice<unsigned char> b)
+    uint64_t rec::Uint64(littleEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[7];
         return uint64_t(b[0]) | (uint64_t(b[1]) << 8) | (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) | (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) | (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
     }
 
-    void rec::PutUint64(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
+    void rec::PutUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         // early bounds check to guarantee safety of writes below
         _ = b[7];
@@ -401,17 +401,17 @@ namespace golang::binary
         b[7] = (unsigned char)(v >> 56);
     }
 
-    gocpp::slice<unsigned char> rec::AppendUint64(golang::binary::littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
+    gocpp::slice<unsigned char> rec::AppendUint64(littleEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         return append(b, (unsigned char)(v), (unsigned char)(v >> 8), (unsigned char)(v >> 16), (unsigned char)(v >> 24), (unsigned char)(v >> 32), (unsigned char)(v >> 40), (unsigned char)(v >> 48), (unsigned char)(v >> 56));
     }
 
-    gocpp::string rec::String(golang::binary::littleEndian)
+    gocpp::string rec::String(littleEndian)
     {
         return "LittleEndian"_s;
     }
 
-    gocpp::string rec::GoString(golang::binary::littleEndian)
+    gocpp::string rec::GoString(littleEndian)
     {
         return "binary.LittleEndian"_s;
     }
@@ -442,14 +442,14 @@ namespace golang::binary
         return value.PrintTo(os);
     }
 
-    uint16_t rec::Uint16(golang::binary::bigEndian, gocpp::slice<unsigned char> b)
+    uint16_t rec::Uint16(bigEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[1];
         return uint16_t(b[1]) | (uint16_t(b[0]) << 8);
     }
 
-    void rec::PutUint16(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
+    void rec::PutUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         // early bounds check to guarantee safety of writes below
         _ = b[1];
@@ -457,19 +457,19 @@ namespace golang::binary
         b[1] = (unsigned char)(v);
     }
 
-    gocpp::slice<unsigned char> rec::AppendUint16(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
+    gocpp::slice<unsigned char> rec::AppendUint16(bigEndian, gocpp::slice<unsigned char> b, uint16_t v)
     {
         return append(b, (unsigned char)(v >> 8), (unsigned char)(v));
     }
 
-    uint32_t rec::Uint32(golang::binary::bigEndian, gocpp::slice<unsigned char> b)
+    uint32_t rec::Uint32(bigEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[3];
         return uint32_t(b[3]) | (uint32_t(b[2]) << 8) | (uint32_t(b[1]) << 16) | (uint32_t(b[0]) << 24);
     }
 
-    void rec::PutUint32(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
+    void rec::PutUint32(bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         // early bounds check to guarantee safety of writes below
         _ = b[3];
@@ -479,19 +479,19 @@ namespace golang::binary
         b[3] = (unsigned char)(v);
     }
 
-    gocpp::slice<unsigned char> rec::AppendUint32(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
+    gocpp::slice<unsigned char> rec::AppendUint32(bigEndian, gocpp::slice<unsigned char> b, uint32_t v)
     {
         return append(b, (unsigned char)(v >> 24), (unsigned char)(v >> 16), (unsigned char)(v >> 8), (unsigned char)(v));
     }
 
-    uint64_t rec::Uint64(golang::binary::bigEndian, gocpp::slice<unsigned char> b)
+    uint64_t rec::Uint64(bigEndian, gocpp::slice<unsigned char> b)
     {
         // bounds check hint to compiler; see golang.org/issue/14808
         _ = b[7];
         return uint64_t(b[7]) | (uint64_t(b[6]) << 8) | (uint64_t(b[5]) << 16) | (uint64_t(b[4]) << 24) | (uint64_t(b[3]) << 32) | (uint64_t(b[2]) << 40) | (uint64_t(b[1]) << 48) | (uint64_t(b[0]) << 56);
     }
 
-    void rec::PutUint64(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
+    void rec::PutUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         // early bounds check to guarantee safety of writes below
         _ = b[7];
@@ -505,27 +505,27 @@ namespace golang::binary
         b[7] = (unsigned char)(v);
     }
 
-    gocpp::slice<unsigned char> rec::AppendUint64(golang::binary::bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
+    gocpp::slice<unsigned char> rec::AppendUint64(bigEndian, gocpp::slice<unsigned char> b, uint64_t v)
     {
         return append(b, (unsigned char)(v >> 56), (unsigned char)(v >> 48), (unsigned char)(v >> 40), (unsigned char)(v >> 32), (unsigned char)(v >> 24), (unsigned char)(v >> 16), (unsigned char)(v >> 8), (unsigned char)(v));
     }
 
-    gocpp::string rec::String(golang::binary::bigEndian)
+    gocpp::string rec::String(bigEndian)
     {
         return "BigEndian"_s;
     }
 
-    gocpp::string rec::GoString(golang::binary::bigEndian)
+    gocpp::string rec::GoString(bigEndian)
     {
         return "binary.BigEndian"_s;
     }
 
-    gocpp::string rec::String(golang::binary::nativeEndian)
+    gocpp::string rec::String(nativeEndian)
     {
         return "NativeEndian"_s;
     }
 
-    gocpp::string rec::GoString(golang::binary::nativeEndian)
+    gocpp::string rec::GoString(nativeEndian)
     {
         return "binary.NativeEndian"_s;
     }
@@ -787,7 +787,7 @@ namespace golang::binary
         {
             return errors::New("binary.Read: invalid type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
-        auto d = gocpp::InitPtr<decoder>([=](auto& x) {
+        auto d = gocpp::InitPtr<golang::binary::decoder>([=](auto& x) {
             x.order = order;
             x.buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
         });
@@ -1115,7 +1115,7 @@ namespace golang::binary
             return errors::New("binary.Write: some values are not fixed-sized in type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
-        auto e = gocpp::InitPtr<encoder>([=](auto& x) {
+        auto e = gocpp::InitPtr<golang::binary::encoder>([=](auto& x) {
             x.order = order;
             x.buf = buf;
         });
@@ -1282,14 +1282,14 @@ namespace golang::binary
         return value.PrintTo(os);
     }
 
-    bool rec::go_bool(golang::binary::decoder* d)
+    bool rec::go_bool(decoder* d)
     {
         auto x = d->buf[d->offset];
         d->offset++;
         return x != 0;
     }
 
-    void rec::go_bool(golang::binary::encoder* e, bool x)
+    void rec::go_bool(encoder* e, bool x)
     {
         if(x)
         {
@@ -1302,99 +1302,99 @@ namespace golang::binary
         e->offset++;
     }
 
-    uint8_t rec::uint8(golang::binary::decoder* d)
+    uint8_t rec::uint8(decoder* d)
     {
         auto x = d->buf[d->offset];
         d->offset++;
         return x;
     }
 
-    void rec::uint8(golang::binary::encoder* e, uint8_t x)
+    void rec::uint8(encoder* e, uint8_t x)
     {
         e->buf[e->offset] = x;
         e->offset++;
     }
 
-    uint16_t rec::uint16(golang::binary::decoder* d)
+    uint16_t rec::uint16(decoder* d)
     {
         auto x = rec::Uint16(gocpp::recv(d->order), d->buf.make_slice(d->offset, d->offset + 2));
         d->offset += 2;
         return x;
     }
 
-    void rec::uint16(golang::binary::encoder* e, uint16_t x)
+    void rec::uint16(encoder* e, uint16_t x)
     {
         rec::PutUint16(gocpp::recv(e->order), e->buf.make_slice(e->offset, e->offset + 2), x);
         e->offset += 2;
     }
 
-    uint32_t rec::uint32(golang::binary::decoder* d)
+    uint32_t rec::uint32(decoder* d)
     {
         auto x = rec::Uint32(gocpp::recv(d->order), d->buf.make_slice(d->offset, d->offset + 4));
         d->offset += 4;
         return x;
     }
 
-    void rec::uint32(golang::binary::encoder* e, uint32_t x)
+    void rec::uint32(encoder* e, uint32_t x)
     {
         rec::PutUint32(gocpp::recv(e->order), e->buf.make_slice(e->offset, e->offset + 4), x);
         e->offset += 4;
     }
 
-    uint64_t rec::uint64(golang::binary::decoder* d)
+    uint64_t rec::uint64(decoder* d)
     {
         auto x = rec::Uint64(gocpp::recv(d->order), d->buf.make_slice(d->offset, d->offset + 8));
         d->offset += 8;
         return x;
     }
 
-    void rec::uint64(golang::binary::encoder* e, uint64_t x)
+    void rec::uint64(encoder* e, uint64_t x)
     {
         rec::PutUint64(gocpp::recv(e->order), e->buf.make_slice(e->offset, e->offset + 8), x);
         e->offset += 8;
     }
 
-    int8_t rec::int8(golang::binary::decoder* d)
+    int8_t rec::int8(decoder* d)
     {
         return int8_t(rec::uint8(gocpp::recv(d)));
     }
 
-    void rec::int8(golang::binary::encoder* e, int8_t x)
+    void rec::int8(encoder* e, int8_t x)
     {
         rec::uint8(gocpp::recv(e), uint8_t(x));
     }
 
-    int16_t rec::int16(golang::binary::decoder* d)
+    int16_t rec::int16(decoder* d)
     {
         return int16_t(rec::uint16(gocpp::recv(d)));
     }
 
-    void rec::int16(golang::binary::encoder* e, int16_t x)
+    void rec::int16(encoder* e, int16_t x)
     {
         rec::uint16(gocpp::recv(e), uint16_t(x));
     }
 
-    int32_t rec::int32(golang::binary::decoder* d)
+    int32_t rec::int32(decoder* d)
     {
         return int32_t(rec::uint32(gocpp::recv(d)));
     }
 
-    void rec::int32(golang::binary::encoder* e, int32_t x)
+    void rec::int32(encoder* e, int32_t x)
     {
         rec::uint32(gocpp::recv(e), uint32_t(x));
     }
 
-    int64_t rec::int64(golang::binary::decoder* d)
+    int64_t rec::int64(decoder* d)
     {
         return int64_t(rec::uint64(gocpp::recv(d)));
     }
 
-    void rec::int64(golang::binary::encoder* e, int64_t x)
+    void rec::int64(encoder* e, int64_t x)
     {
         rec::uint64(gocpp::recv(e), uint64_t(x));
     }
 
-    void rec::value(golang::binary::decoder* d, reflect::Value v)
+    void rec::value(decoder* d, reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1511,7 +1511,7 @@ namespace golang::binary
         }
     }
 
-    void rec::value(golang::binary::encoder* e, reflect::Value v)
+    void rec::value(encoder* e, reflect::Value v)
     {
         //Go switch emulation
         {
@@ -1698,12 +1698,12 @@ namespace golang::binary
         }
     }
 
-    void rec::skip(golang::binary::decoder* d, reflect::Value v)
+    void rec::skip(decoder* d, reflect::Value v)
     {
         d->offset += dataSize(v);
     }
 
-    void rec::skip(golang::binary::encoder* e, reflect::Value v)
+    void rec::skip(encoder* e, reflect::Value v)
     {
         auto n = dataSize(v);
         auto zero = e->buf.make_slice(e->offset, e->offset + n);

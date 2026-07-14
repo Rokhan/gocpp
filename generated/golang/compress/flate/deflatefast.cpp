@@ -118,9 +118,9 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    struct deflateFast* newDeflateFast()
+    golang::flate::deflateFast* newDeflateFast()
     {
-        return gocpp::InitPtr<deflateFast>([=](auto& x) {
+        return gocpp::InitPtr<golang::flate::deflateFast>([=](auto& x) {
             x.cur = maxStoreBlockSize;
             x.prev = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, maxStoreBlockSize);
         });
@@ -128,7 +128,7 @@ namespace golang::flate
 
     // encode encodes a block given in src and appends tokens
     // to dst and returns the result.
-    gocpp::slice<flate::token> rec::encode(golang::flate::deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src)
+    gocpp::slice<golang::flate::token> rec::encode(deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src)
     {
         // Ensure that e.cur doesn't wrap.
         if(e->cur >= bufferReset)
@@ -174,7 +174,7 @@ namespace golang::flate
             auto skip = int32_t(32);
 
             auto nextS = s;
-            tableEntry candidate = {};
+            golang::flate::tableEntry candidate = {};
             for(; ; )
             {
                 s = nextS;
@@ -187,7 +187,7 @@ namespace golang::flate
                 }
                 candidate = e->table[nextHash & tableMask];
                 auto now = load32(src, nextS);
-                e->table[nextHash & tableMask] = gocpp::Init<tableEntry>([=](auto& x) {
+                e->table[nextHash & tableMask] = gocpp::Init<golang::flate::tableEntry>([=](auto& x) {
                     x.offset = s + e->cur;
                     x.val = cv;
                 });
@@ -241,14 +241,14 @@ namespace golang::flate
                 // three load32 calls.
                 auto x = load64(src, s - 1);
                 auto prevHash = hash(uint32_t(x));
-                e->table[prevHash & tableMask] = gocpp::Init<tableEntry>([=](auto& y) {
+                e->table[prevHash & tableMask] = gocpp::Init<golang::flate::tableEntry>([=](auto& y) {
                     y.offset = e->cur + s - 1;
                     y.val = uint32_t(x);
                 });
                 x >>= 8;
                 auto currHash = hash(uint32_t(x));
                 candidate = e->table[currHash & tableMask];
-                e->table[currHash & tableMask] = gocpp::Init<tableEntry>([=](auto& y) {
+                e->table[currHash & tableMask] = gocpp::Init<golang::flate::tableEntry>([=](auto& y) {
                     y.offset = e->cur + s;
                     y.val = uint32_t(x);
                 });
@@ -275,7 +275,7 @@ namespace golang::flate
         return dst;
     }
 
-    gocpp::slice<flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit)
+    gocpp::slice<golang::flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit)
     {
         for(auto [gocpp_ignored, v] : lit)
         {
@@ -287,7 +287,7 @@ namespace golang::flate
     // matchLen returns the match length between src[s:] and src[t:].
     // t can be negative to indicate the match is starting in e.prev.
     // We assume that src[s-4:s] and src[t-4:t] already match.
-    int32_t rec::matchLen(golang::flate::deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src)
+    int32_t rec::matchLen(deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src)
     {
         auto s1 = int(s) + maxMatchLength - 4;
         if(s1 > len(src))
@@ -358,7 +358,7 @@ namespace golang::flate
 
     // Reset resets the encoding history.
     // This ensures that no matches are made to the previous block.
-    void rec::reset(golang::flate::deflateFast* e)
+    void rec::reset(deflateFast* e)
     {
         e->prev = e->prev.make_slice(0, 0);
         // Bump the offset, so all matches will fail distance check.
@@ -376,14 +376,14 @@ namespace golang::flate
     // This is only called in rare situations to prevent integer overflow.
     //
     // See https://golang.org/issue/18636 and https://github.com/golang/go/issues/34121.
-    void rec::shiftOffsets(golang::flate::deflateFast* e)
+    void rec::shiftOffsets(deflateFast* e)
     {
         if(len(e->prev) == 0)
         {
             // We have no history; just clear the table.
             for(auto [i, gocpp_ignored] : e->table.make_slice(0))
             {
-                e->table[i] = tableEntry {};
+                e->table[i] = golang::flate::tableEntry {};
             }
             e->cur = maxMatchOffset + 1;
             return;

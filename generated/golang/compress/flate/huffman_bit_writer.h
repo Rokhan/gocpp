@@ -59,8 +59,8 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanBitWriter& value);
-    extern huffmanEncoder* huffOffset;
-    struct huffmanBitWriter* newHuffmanBitWriter(io::Writer w);
+    extern golang::flate::huffmanEncoder* huffOffset;
+    golang::flate::huffmanBitWriter* newHuffmanBitWriter(io::Writer w);
 }
 
 #include "golang/compress/flate/huffman_code.h"
@@ -72,24 +72,24 @@ namespace golang::flate
 
     namespace rec
     {
-        void reset(golang::flate::huffmanBitWriter* w, io::Writer writer);
-        void flush(golang::flate::huffmanBitWriter* w);
-        void write(golang::flate::huffmanBitWriter* w, gocpp::slice<unsigned char> b);
-        void writeBits(golang::flate::huffmanBitWriter* w, int32_t b, unsigned int nb);
-        void writeBytes(golang::flate::huffmanBitWriter* w, gocpp::slice<unsigned char> bytes);
-        void generateCodegen(golang::flate::huffmanBitWriter* w, int numLiterals, int numOffsets, struct huffmanEncoder* litEnc, struct huffmanEncoder* offEnc);
-        std::tuple<int, int> dynamicSize(golang::flate::huffmanBitWriter* w, struct huffmanEncoder* litEnc, struct huffmanEncoder* offEnc, int extraBits);
-        int fixedSize(golang::flate::huffmanBitWriter* w, int extraBits);
-        std::tuple<int, bool> storedSize(golang::flate::huffmanBitWriter* w, gocpp::slice<unsigned char> in);
-        void writeCode(golang::flate::huffmanBitWriter* w, struct hcode c);
-        void writeDynamicHeader(golang::flate::huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof);
-        void writeStoredHeader(golang::flate::huffmanBitWriter* w, int length, bool isEof);
-        void writeFixedHeader(golang::flate::huffmanBitWriter* w, bool isEof);
-        void writeBlock(golang::flate::huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input);
-        void writeBlockDynamic(golang::flate::huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input);
-        std::tuple<int, int> indexTokens(golang::flate::huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens);
-        void writeTokens(golang::flate::huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes);
-        void writeBlockHuff(golang::flate::huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input);
+        void reset(huffmanBitWriter* w, io::Writer writer);
+        void flush(huffmanBitWriter* w);
+        void write(huffmanBitWriter* w, gocpp::slice<unsigned char> b);
+        void writeBits(huffmanBitWriter* w, int32_t b, unsigned int nb);
+        void writeBytes(huffmanBitWriter* w, gocpp::slice<unsigned char> bytes);
+        void generateCodegen(huffmanBitWriter* w, int numLiterals, int numOffsets, huffmanEncoder* litEnc, huffmanEncoder* offEnc);
+        std::tuple<int, int> dynamicSize(huffmanBitWriter* w, huffmanEncoder* litEnc, huffmanEncoder* offEnc, int extraBits);
+        int fixedSize(huffmanBitWriter* w, int extraBits);
+        std::tuple<int, bool> storedSize(huffmanBitWriter* w, gocpp::slice<unsigned char> in);
+        void writeCode(huffmanBitWriter* w, hcode c);
+        void writeDynamicHeader(huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof);
+        void writeStoredHeader(huffmanBitWriter* w, int length, bool isEof);
+        void writeFixedHeader(huffmanBitWriter* w, bool isEof);
+        void writeBlock(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input);
+        void writeBlockDynamic(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input);
+        std::tuple<int, int> indexTokens(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens);
+        void writeTokens(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes);
+        void writeBlockHuff(huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input);
     }
 }
 

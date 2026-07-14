@@ -200,7 +200,7 @@ namespace golang::atomic
     template<typename T> 
     struct Pointer
     {
-        UnsafePointer u{};
+        golang::atomic::UnsafePointer u{};
 
         using isGoStruct = void;
 
@@ -220,46 +220,46 @@ namespace golang::atomic
 
     namespace rec
     {
-        int32_t Load(golang::atomic::Int32* i);
-        void Store(golang::atomic::Int32* i, int32_t value);
-        bool CompareAndSwap(golang::atomic::Int32* i, int32_t old, int32_t go_new);
-        int32_t Swap(golang::atomic::Int32* i, int32_t go_new);
-        int32_t Add(golang::atomic::Int32* i, int32_t delta);
-        int64_t Load(golang::atomic::Int64* i);
-        void Store(golang::atomic::Int64* i, int64_t value);
-        bool CompareAndSwap(golang::atomic::Int64* i, int64_t old, int64_t go_new);
-        int64_t Swap(golang::atomic::Int64* i, int64_t go_new);
-        int64_t Add(golang::atomic::Int64* i, int64_t delta);
-        uint8_t Load(golang::atomic::Uint8* u);
-        void Store(golang::atomic::Uint8* u, uint8_t value);
-        void And(golang::atomic::Uint8* u, uint8_t value);
-        void Or(golang::atomic::Uint8* u, uint8_t value);
+        int32_t Load(Int32* i);
+        void Store(Int32* i, int32_t value);
+        bool CompareAndSwap(Int32* i, int32_t old, int32_t go_new);
+        int32_t Swap(Int32* i, int32_t go_new);
+        int32_t Add(Int32* i, int32_t delta);
+        int64_t Load(Int64* i);
+        void Store(Int64* i, int64_t value);
+        bool CompareAndSwap(Int64* i, int64_t old, int64_t go_new);
+        int64_t Swap(Int64* i, int64_t go_new);
+        int64_t Add(Int64* i, int64_t delta);
+        uint8_t Load(Uint8* u);
+        void Store(Uint8* u, uint8_t value);
+        void And(Uint8* u, uint8_t value);
+        void Or(Uint8* u, uint8_t value);
         bool Load(golang::atomic::Bool* b);
         void Store(golang::atomic::Bool* b, bool value);
-        uint32_t Load(golang::atomic::Uint32* u);
-        uint32_t LoadAcquire(golang::atomic::Uint32* u);
-        void Store(golang::atomic::Uint32* u, uint32_t value);
-        void StoreRelease(golang::atomic::Uint32* u, uint32_t value);
-        bool CompareAndSwap(golang::atomic::Uint32* u, uint32_t old, uint32_t go_new);
-        bool CompareAndSwapRelease(golang::atomic::Uint32* u, uint32_t old, uint32_t go_new);
-        uint32_t Swap(golang::atomic::Uint32* u, uint32_t value);
-        void And(golang::atomic::Uint32* u, uint32_t value);
-        void Or(golang::atomic::Uint32* u, uint32_t value);
-        uint32_t Add(golang::atomic::Uint32* u, int32_t delta);
-        uint64_t Load(golang::atomic::Uint64* u);
-        void Store(golang::atomic::Uint64* u, uint64_t value);
-        bool CompareAndSwap(golang::atomic::Uint64* u, uint64_t old, uint64_t go_new);
-        uint64_t Swap(golang::atomic::Uint64* u, uint64_t value);
-        uint64_t Add(golang::atomic::Uint64* u, int64_t delta);
-        uintptr_t Load(golang::atomic::Uintptr* u);
-        uintptr_t LoadAcquire(golang::atomic::Uintptr* u);
-        void Store(golang::atomic::Uintptr* u, uintptr_t value);
-        void StoreRelease(golang::atomic::Uintptr* u, uintptr_t value);
-        bool CompareAndSwap(golang::atomic::Uintptr* u, uintptr_t old, uintptr_t go_new);
-        uintptr_t Swap(golang::atomic::Uintptr* u, uintptr_t value);
-        uintptr_t Add(golang::atomic::Uintptr* u, uintptr_t delta);
-        double Load(golang::atomic::Float64* f);
-        void Store(golang::atomic::Float64* f, double value);
+        uint32_t Load(Uint32* u);
+        uint32_t LoadAcquire(Uint32* u);
+        void Store(Uint32* u, uint32_t value);
+        void StoreRelease(Uint32* u, uint32_t value);
+        bool CompareAndSwap(Uint32* u, uint32_t old, uint32_t go_new);
+        bool CompareAndSwapRelease(Uint32* u, uint32_t old, uint32_t go_new);
+        uint32_t Swap(Uint32* u, uint32_t value);
+        void And(Uint32* u, uint32_t value);
+        void Or(Uint32* u, uint32_t value);
+        uint32_t Add(Uint32* u, int32_t delta);
+        uint64_t Load(Uint64* u);
+        void Store(Uint64* u, uint64_t value);
+        bool CompareAndSwap(Uint64* u, uint64_t old, uint64_t go_new);
+        uint64_t Swap(Uint64* u, uint64_t value);
+        uint64_t Add(Uint64* u, int64_t delta);
+        uintptr_t Load(Uintptr* u);
+        uintptr_t LoadAcquire(Uintptr* u);
+        void Store(Uintptr* u, uintptr_t value);
+        void StoreRelease(Uintptr* u, uintptr_t value);
+        bool CompareAndSwap(Uintptr* u, uintptr_t old, uintptr_t go_new);
+        uintptr_t Swap(Uintptr* u, uintptr_t value);
+        uintptr_t Add(Uintptr* u, uintptr_t delta);
+        double Load(Float64* f);
+        void Store(Float64* f, double value);
         gocpp::unsafe_pointer Load(golang::atomic::UnsafePointer* u);
         void StoreNoWB(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer value);
         void Store(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer value);
@@ -280,8 +280,8 @@ namespace golang::atomic
         
         template<typename T>
         bool CompareAndSwap(golang::atomic::Pointer<T>* p, T* old, T* go_new);
-        void Lock(golang::atomic::noCopy*);
-        void Unlock(golang::atomic::noCopy*);
+        void Lock(noCopy*);
+        void Unlock(noCopy*);
     }
 }
 

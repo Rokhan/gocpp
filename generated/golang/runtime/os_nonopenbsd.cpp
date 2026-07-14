@@ -28,13 +28,13 @@ namespace golang::runtime
 
     // osStackAlloc performs OS-specific initialization before s is used
     // as stack memory.
-    void osStackAlloc(struct mspan* s)
+    void osStackAlloc(mspan* s)
     {
     }
 
     // osStackFree undoes the effect of osStackAlloc before s is returned
     // to the heap.
-    void osStackFree(struct mspan* s)
+    void osStackFree(mspan* s)
     {
     }
 

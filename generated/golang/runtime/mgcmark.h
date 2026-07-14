@@ -31,23 +31,23 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    int64_t markroot(struct gcWork* gcw, uint32_t i, bool flushBgCredit);
-    int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, struct gcWork* gcw, int shard);
-    void markrootSpans(struct gcWork* gcw, int shard);
-    void gcAssistAlloc(struct g* gp);
-    void gcAssistAlloc1(struct g* gp, int64_t scanWork);
-    int64_t scanstack(struct g* gp, struct gcWork* gcw);
-    void scanframeworker(struct stkframe* frame, struct stackScanState* state, struct gcWork* gcw);
-    void gcDrainMarkWorkerIdle(struct gcWork* gcw);
-    void gcDrainMarkWorkerDedicated(struct gcWork* gcw, bool untilPreempt);
-    void gcDrainMarkWorkerFractional(struct gcWork* gcw);
-    void gcDrain(struct gcWork* gcw, golang::runtime::gcDrainFlags flags);
-    int64_t gcDrainN(struct gcWork* gcw, int64_t scanWork);
-    void scanblock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* stk);
-    void scanobject(uintptr_t b, struct gcWork* gcw);
-    void scanConservative(uintptr_t b, uintptr_t n, uint8_t* ptrmask, struct gcWork* gcw, struct stackScanState* state);
-    void greyobject(uintptr_t obj, uintptr_t base, uintptr_t off, struct mspan* span, struct gcWork* gcw, uintptr_t objIndex);
-    void gcmarknewobject(struct mspan* span, uintptr_t obj);
+    int64_t markroot(gcWork* gcw, uint32_t i, bool flushBgCredit);
+    int64_t markrootBlock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask0, gcWork* gcw, int shard);
+    void markrootSpans(gcWork* gcw, int shard);
+    void gcAssistAlloc(g* gp);
+    void gcAssistAlloc1(g* gp, int64_t scanWork);
+    int64_t scanstack(g* gp, gcWork* gcw);
+    void scanframeworker(stkframe* frame, stackScanState* state, gcWork* gcw);
+    void gcDrainMarkWorkerIdle(gcWork* gcw);
+    void gcDrainMarkWorkerDedicated(gcWork* gcw, bool untilPreempt);
+    void gcDrainMarkWorkerFractional(gcWork* gcw);
+    void gcDrain(gcWork* gcw, gcDrainFlags flags);
+    int64_t gcDrainN(gcWork* gcw, int64_t scanWork);
+    void scanblock(uintptr_t b0, uintptr_t n0, uint8_t* ptrmask, gcWork* gcw, stackScanState* stk);
+    void scanobject(uintptr_t b, gcWork* gcw);
+    void scanConservative(uintptr_t b, uintptr_t n, uint8_t* ptrmask, gcWork* gcw, stackScanState* state);
+    void greyobject(uintptr_t obj, uintptr_t base, uintptr_t off, mspan* span, gcWork* gcw, uintptr_t objIndex);
+    void gcmarknewobject(mspan* span, uintptr_t obj);
 
     namespace rec
     {

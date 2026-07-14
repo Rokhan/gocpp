@@ -87,5 +87,5 @@ namespace golang::syscall
 
 namespace golang::syscall
 {
-    using Token = syscall::Handle;
+    using Token = golang::syscall::Handle;
 }

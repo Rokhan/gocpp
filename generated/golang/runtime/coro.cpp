@@ -91,7 +91,7 @@ namespace golang::runtime
     // newcoro creates a new coro containing a
     // goroutine blocked waiting to run f
     // and returns that coro.
-    struct coro* newcoro(std::function<void (struct coro* _1)> f)
+    golang::runtime::coro* newcoro(std::function<void (coro* _1)> f)
     {
         auto c = new coro{};
         c->f = f;
@@ -100,7 +100,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             auto start = corostart;
-            auto startfv = *(funcval**)(gocpp::unsafe_pointer(& start));
+            auto startfv = *(golang::runtime::funcval**)(gocpp::unsafe_pointer(& start));
             gp = newproc1(startfv, gp, pc);
         });
         gp->coroarg = c;
@@ -125,7 +125,7 @@ namespace golang::runtime
 
     // coroexit is like coroswitch but closes the coro
     // and exits the current goroutine
-    void coroexit(struct coro* c)
+    void coroexit(coro* c)
     {
         auto gp = getg();
         gp->coroarg = c;
@@ -135,7 +135,7 @@ namespace golang::runtime
 
     // coroswitch switches to the goroutine blocked on c
     // and then blocks the current goroutine on c.
-    void coroswitch(struct coro* c)
+    void coroswitch(coro* c)
     {
         auto gp = getg();
         gp->coroarg = c;
@@ -154,7 +154,7 @@ namespace golang::runtime
     // and the one at the bottom on gnext.atomicstatus.
     // It is important not to add more atomic operations or other
     // expensive operations to the fast path.
-    void coroswitch_m(struct g* gp)
+    void coroswitch_m(g* gp)
     {
         // TODO(rsc,mknyszek): add tracing support in a lightweight manner.
         // Probably the tracer will need a global bool (set and cleared during STW)
@@ -190,7 +190,7 @@ namespace golang::runtime
 
         // The goroutine stored in c is the one to run next.
         // Swap it with ourselves.
-        g* gnext = {};
+        golang::runtime::g* gnext = {};
         for(; ; )
         {
             // Note: this is a racy load, but it will eventually
@@ -208,7 +208,7 @@ namespace golang::runtime
             {
                 go_throw("coroswitch on exited coro"_s);
             }
-            runtime::guintptr self = {};
+            golang::runtime::guintptr self = {};
             rec::set(gocpp::recv(self), gp);
             if(rec::cas(gocpp::recv(c->gp), next, self))
             {

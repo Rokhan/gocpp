@@ -24,7 +24,7 @@ namespace golang::rand
 
     namespace rec
     {
-        double ExpFloat64(golang::rand::Rand* r);
+        double ExpFloat64(Rand* r);
     }
 }
 

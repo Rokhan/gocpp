@@ -46,18 +46,18 @@ namespace golang::time
 namespace golang::time
 {
     extern gocpp::error errBadData;
-    std::tuple<struct Location*, struct gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data);
+    std::tuple<golang::time::Location*, struct gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data);
     int findZone(gocpp::slice<zone> zones, gocpp::string name, int offset, bool isDST);
-    std::tuple<struct Location*, struct gocpp::error> loadLocation(gocpp::string name, gocpp::slice<gocpp::string> sources);
+    std::tuple<golang::time::Location*, struct gocpp::error> loadLocation(gocpp::string name, gocpp::slice<gocpp::string> sources);
 
     namespace rec
     {
-        gocpp::string Error(golang::time::fileSizeError f);
-        gocpp::slice<unsigned char> read(golang::time::dataIO* d, int n);
-        std::tuple<uint32_t, bool> big4(golang::time::dataIO* d);
-        std::tuple<uint64_t, bool> big8(golang::time::dataIO* d);
-        std::tuple<unsigned char, bool> byte(golang::time::dataIO* d);
-        gocpp::slice<unsigned char> rest(golang::time::dataIO* d);
+        gocpp::string Error(fileSizeError f);
+        gocpp::slice<unsigned char> read(dataIO* d, int n);
+        std::tuple<uint32_t, bool> big4(dataIO* d);
+        std::tuple<uint64_t, bool> big8(dataIO* d);
+        std::tuple<unsigned char, bool> byte(dataIO* d);
+        gocpp::slice<unsigned char> rest(dataIO* d);
     }
 }
 

@@ -27,7 +27,7 @@ namespace golang::sync
     // If f panics, the returned function will panic with the same value on every call.
     std::function<void ()> OnceFunc(std::function<void ()> f)
     {
-        Once once = {};
+        golang::sync::Once once = {};
         bool valid = {};
         go_any p = {};
         // Construct the inner closure just once to reduce costs on the fast path.
@@ -74,7 +74,7 @@ namespace golang::sync
     template<typename T>
     std::function<T ()> OnceValue(std::function<T ()> f)
     {
-        Once once = {};
+        golang::sync::Once once = {};
         bool valid = {};
         go_any p = {};
         T result = {};
@@ -118,7 +118,7 @@ namespace golang::sync
     template<typename T1, typename T2>
     std::function<std::tuple<T1, T2> ()> OnceValues(std::function<std::tuple<T1, T2> ()> f)
     {
-        Once once = {};
+        golang::sync::Once once = {};
         bool valid = {};
         go_any p = {};
         T1 r1 = {};

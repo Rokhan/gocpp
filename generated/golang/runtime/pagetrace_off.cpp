@@ -51,17 +51,17 @@ namespace golang::runtime
     }
 
     //go:systemstack
-    void pageTraceAlloc(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages)
+    void pageTraceAlloc(golang::runtime::p* pp, int64_t now, uintptr_t base, uintptr_t npages)
     {
     }
 
     //go:systemstack
-    void pageTraceFree(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages)
+    void pageTraceFree(golang::runtime::p* pp, int64_t now, uintptr_t base, uintptr_t npages)
     {
     }
 
     //go:systemstack
-    void pageTraceScav(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages)
+    void pageTraceScav(golang::runtime::p* pp, int64_t now, uintptr_t base, uintptr_t npages)
     {
     }
 

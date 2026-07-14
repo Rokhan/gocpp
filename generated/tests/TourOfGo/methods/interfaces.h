@@ -346,11 +346,11 @@ namespace golang::main
 
     namespace rec
     {
-        void Add(golang::main::num* n, int f);
-        void Mul(golang::main::num* n, int f);
-        void Print(golang::main::num* n);
-        double Abs(golang::main::MyFloat f);
-        double Abs(golang::main::Vertex* v);
+        void Add(num* n, int f);
+        void Mul(num* n, int f);
+        void Print(num* n);
+        double Abs(MyFloat f);
+        double Abs(Vertex* v);
     }
 }
 

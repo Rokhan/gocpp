@@ -24,7 +24,7 @@ namespace golang::runtime
         uint32_t nchunk{}; // bytes remaining in current chunk
         uint32_t nalloc{}; // size of new chunks in bytes
         uintptr_t inuse{}; // in-use bytes now
-        golang::runtime::sysMemStat* stat{};
+        sysMemStat* stat{};
         bool zero{}; // zero allocations
 
         using isGoStruct = void;
@@ -65,9 +65,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        void init(golang::runtime::fixalloc* f, uintptr_t size, std::function<void (gocpp::unsafe_pointer arg, gocpp::unsafe_pointer p)> first, gocpp::unsafe_pointer arg, golang::runtime::sysMemStat* stat);
-        gocpp::unsafe_pointer alloc(golang::runtime::fixalloc* f);
-        void free(golang::runtime::fixalloc* f, gocpp::unsafe_pointer p);
+        void init(fixalloc* f, uintptr_t size, std::function<void (gocpp::unsafe_pointer arg, gocpp::unsafe_pointer p)> first, gocpp::unsafe_pointer arg, sysMemStat* stat);
+        gocpp::unsafe_pointer alloc(fixalloc* f);
+        void free(fixalloc* f, gocpp::unsafe_pointer p);
     }
 }
 

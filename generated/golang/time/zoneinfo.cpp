@@ -162,11 +162,11 @@ namespace golang::time
     // alpha and omega are the beginning and end of time for zone
     // transitions.
     // UTC represents Universal Coordinated Time (UTC).
-    Location* UTC = & utcLoc;
+    golang::time::Location* UTC = & utcLoc;
     // utcLoc is separate so that get can refer to &utcLoc
     // and ensure that it never returns a nil *Location,
     // even if a badly behaved client has changed UTC.
-    Location utcLoc = gocpp::Init<Location>([](auto& x) {
+    golang::time::Location utcLoc = gocpp::Init<golang::time::Location>([](auto& x) {
         x.name = "UTC"_s;
     });
     // Local represents the system's local time zone.
@@ -175,12 +175,12 @@ namespace golang::time
     // use the system default /etc/localtime.
     // TZ="" means use UTC.
     // TZ="foo" means use file foo in the system timezone directory.
-    Location* Local = & localLoc;
+    golang::time::Location* Local = & localLoc;
     // localLoc is separate so that initLocal can initialize
     // it even if a client has changed Local.
-    Location localLoc;
+    golang::time::Location localLoc;
     sync::Once localOnce;
-    struct Location* rec::get(golang::time::Location* l)
+    golang::time::Location* rec::get(golang::time::Location* l)
     {
         if(l == nullptr)
         {
@@ -200,11 +200,11 @@ namespace golang::time
         return rec::get(gocpp::recv(l))->name;
     }
 
-    gocpp::slice<Location*> unnamedFixedZones;
+    gocpp::slice<golang::time::Location*> unnamedFixedZones;
     sync::Once unnamedFixedZonesOnce;
     // FixedZone returns a Location that always uses
     // the given zone name and offset (seconds east of UTC).
-    struct Location* FixedZone(gocpp::string name, int offset)
+    golang::time::Location* FixedZone(gocpp::string name, int offset)
     {
         // Most calls to FixedZone have an unnamed zone with an offset by the hour.
         // Optimize for that case by returning the same *Location for a given hour.
@@ -215,7 +215,7 @@ namespace golang::time
         {
             rec::Do(gocpp::recv(unnamedFixedZonesOnce), [=]() mutable -> void
             {
-                unnamedFixedZones = gocpp::make(gocpp::Tag<gocpp::slice<Location*>>(), hoursBeforeUTC + 1 + hoursAfterUTC);
+                unnamedFixedZones = gocpp::make(gocpp::Tag<gocpp::slice<golang::time::Location*>>(), hoursBeforeUTC + 1 + hoursAfterUTC);
                 for(auto hr = - hoursBeforeUTC; hr <= + hoursAfterUTC; hr++)
                 {
                     unnamedFixedZones[hr + hoursBeforeUTC] = fixedZone(""_s, hr * 60 * 60);
@@ -226,12 +226,12 @@ namespace golang::time
         return fixedZone(name, offset);
     }
 
-    struct Location* fixedZone(gocpp::string name, int offset)
+    golang::time::Location* fixedZone(gocpp::string name, int offset)
     {
-        auto l = gocpp::InitPtr<Location>([=](auto& x) {
+        auto l = gocpp::InitPtr<golang::time::Location>([=](auto& x) {
             x.name = name;
-            x.zone = gocpp::slice<zone> {{name, offset, false}};
-            x.tx = gocpp::slice<zoneTrans> {{alpha, 0, false, false}};
+            x.zone = gocpp::slice<golang::time::zone> {{name, offset, false}};
+            x.tx = gocpp::slice<golang::time::zoneTrans> {{alpha, 0, false, false}};
             x.cacheStart = alpha;
             x.cacheEnd = omega;
         });
@@ -466,8 +466,8 @@ namespace golang::time
         }
         s = s.make_slice(1);
 
-        rule startRule = {};
-        rule endRule = {};
+        golang::time::rule startRule = {};
+        golang::time::rule endRule = {};
         std::tie(startRule, s, ok) = tzsetRule(s);
         if(! ok || len(s) == 0 || s[0] != ',')
         {
@@ -712,12 +712,12 @@ namespace golang::time
 
     // tzsetRule parses a rule from a tzset string.
     // It returns the rule, and the remainder of the string, and reports success.
-    std::tuple<struct rule, gocpp::string, bool> tzsetRule(gocpp::string s)
+    std::tuple<golang::time::rule, gocpp::string, bool> tzsetRule(gocpp::string s)
     {
-        rule r = {};
+        golang::time::rule r = {};
         if(len(s) == 0)
         {
-            return {rule {}, ""_s, false};
+            return {golang::time::rule {}, ""_s, false};
         }
         auto ok = false;
         if(s[0] == 'J')
@@ -726,7 +726,7 @@ namespace golang::time
             std::tie(jday, s, ok) = tzsetNum(s.make_slice(1), 1, 365);
             if(! ok)
             {
-                return {rule {}, ""_s, false};
+                return {golang::time::rule {}, ""_s, false};
             }
             r.kind = ruleJulian;
             r.day = jday;
@@ -738,19 +738,19 @@ namespace golang::time
             std::tie(mon, s, ok) = tzsetNum(s.make_slice(1), 1, 12);
             if(! ok || len(s) == 0 || s[0] != '.')
             {
-                return {rule {}, ""_s, false};
+                return {golang::time::rule {}, ""_s, false};
             }
             int week = {};
             std::tie(week, s, ok) = tzsetNum(s.make_slice(1), 1, 5);
             if(! ok || len(s) == 0 || s[0] != '.')
             {
-                return {rule {}, ""_s, false};
+                return {golang::time::rule {}, ""_s, false};
             }
             int day = {};
             std::tie(day, s, ok) = tzsetNum(s.make_slice(1), 0, 6);
             if(! ok)
             {
-                return {rule {}, ""_s, false};
+                return {golang::time::rule {}, ""_s, false};
             }
             r.kind = ruleMonthWeekDay;
             r.day = day;
@@ -763,7 +763,7 @@ namespace golang::time
             std::tie(day, s, ok) = tzsetNum(s, 0, 365);
             if(! ok)
             {
-                return {rule {}, ""_s, false};
+                return {golang::time::rule {}, ""_s, false};
             }
             r.kind = ruleDOY;
             r.day = day;
@@ -781,7 +781,7 @@ namespace golang::time
         auto& s = s_tmp;
         if(! ok)
         {
-            return {rule {}, ""_s, false};
+            return {golang::time::rule {}, ""_s, false};
         }
         r.time = offset;
 
@@ -828,7 +828,7 @@ namespace golang::time
     // tzruleTime takes a year, a rule, and a timezone offset,
     // and returns the number of seconds since the start of the year
     // that the rule takes effect.
-    int tzruleTime(int year, struct rule r, int off)
+    int tzruleTime(int year, rule r, int off)
     {
         int s = {};
         //Go switch emulation
@@ -955,7 +955,7 @@ namespace golang::time
     //   - on a Unix system, the system standard installation location
     //   - $GOROOT/lib/time/zoneinfo.zip
     //   - the time/tzdata package, if it was imported
-    std::tuple<struct Location*, struct gocpp::error> LoadLocation(gocpp::string name)
+    std::tuple<golang::time::Location*, struct gocpp::error> LoadLocation(gocpp::string name)
     {
         if(name == ""_s || name == "UTC"_s)
         {

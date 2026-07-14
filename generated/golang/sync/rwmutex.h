@@ -39,8 +39,8 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RWMutex& value);
-    bool syscall_hasWaitingReaders(struct RWMutex* rw);
-    using rlocker = gocpp::defined<RWMutex, GoTag_rlocker>;
+    bool syscall_hasWaitingReaders(RWMutex* rw);
+    using rlocker = gocpp::defined<golang::sync::RWMutex, GoTag_rlocker>;
 }
 
 #include "golang/sync/mutex.h"
@@ -50,16 +50,16 @@ namespace golang::sync
 
     namespace rec
     {
-        void RLock(golang::sync::RWMutex* rw);
-        bool TryRLock(golang::sync::RWMutex* rw);
-        void RUnlock(golang::sync::RWMutex* rw);
-        void rUnlockSlow(golang::sync::RWMutex* rw, int32_t r);
-        void Lock(golang::sync::RWMutex* rw);
-        bool TryLock(golang::sync::RWMutex* rw);
-        void Unlock(golang::sync::RWMutex* rw);
-        struct Locker RLocker(golang::sync::RWMutex* rw);
-        void Lock(golang::sync::rlocker* r);
-        void Unlock(golang::sync::rlocker* r);
+        void RLock(RWMutex* rw);
+        bool TryRLock(RWMutex* rw);
+        void RUnlock(RWMutex* rw);
+        void rUnlockSlow(RWMutex* rw, int32_t r);
+        void Lock(RWMutex* rw);
+        bool TryLock(RWMutex* rw);
+        void Unlock(RWMutex* rw);
+        struct Locker RLocker(RWMutex* rw);
+        void Lock(rlocker* r);
+        void Unlock(rlocker* r);
     }
 }
 

@@ -49,17 +49,17 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    bool isAbort(struct context* r);
-    bool isgoexception(struct exceptionrecord* info, struct context* r);
-    struct g* sigFetchGSafe();
-    struct g* sigFetchG();
-    int32_t sigtrampgo(struct exceptionpointers* ep, int kind);
-    int32_t exceptionhandler(struct exceptionrecord* info, struct context* r, struct g* gp);
-    int32_t sehhandler(struct exceptionrecord* _1, uint64_t _2, struct context* _3, struct _DISPATCHER_CONTEXT* dctxt);
-    int32_t firstcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp);
-    int32_t lastcontinuehandler(struct exceptionrecord* info, struct context* r, struct g* gp);
-    void winthrow(struct exceptionrecord* info, struct context* r, struct g* gp);
-    void dieFromException(struct exceptionrecord* info, struct context* r);
+    bool isAbort(context* r);
+    bool isgoexception(exceptionrecord* info, context* r);
+    golang::runtime::g* sigFetchGSafe();
+    golang::runtime::g* sigFetchG();
+    int32_t sigtrampgo(exceptionpointers* ep, int kind);
+    int32_t exceptionhandler(exceptionrecord* info, context* r, g* gp);
+    int32_t sehhandler(exceptionrecord* _1, uint64_t _2, context* _3, _DISPATCHER_CONTEXT* dctxt);
+    int32_t firstcontinuehandler(exceptionrecord* info, context* r, g* gp);
+    int32_t lastcontinuehandler(exceptionrecord* info, context* r, g* gp);
+    void winthrow(exceptionrecord* info, context* r, g* gp);
+    void dieFromException(exceptionrecord* info, context* r);
 
     namespace rec
     {

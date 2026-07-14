@@ -212,9 +212,9 @@ namespace golang::reflect
     extern gocpp_id_7 dummy;
     void contentEscapes(gocpp::unsafe_pointer x);
     gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
-    gocpp::unsafe_pointer mapiterkey(struct hiter* it);
-    gocpp::unsafe_pointer mapiterelem(struct hiter* it);
-    void mapiternext(struct hiter* it);
+    gocpp::unsafe_pointer mapiterkey(hiter* it);
+    gocpp::unsafe_pointer mapiterelem(hiter* it);
+    void mapiternext(hiter* it);
 }
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/map.h"
@@ -244,7 +244,7 @@ namespace golang::reflect
         // If ifaceIndir(typ), code can assume that flagIndir is set.
         // The remaining 22+ bits give a method number for method values.
         // If flag.kind() != Func, code can assume that flagMethod is unset.
-        golang::reflect::flag flag{};
+        flag flag{};
 
         using isGoStruct = void;
 
@@ -331,14 +331,14 @@ namespace golang::reflect
 
     std::ostream& operator<<(std::ostream& os, const struct nonEmptyInterface& value);
     extern abi::Type* bytesType;
-    void callReflect(struct makeFuncImpl* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs);
-    void callMethod(struct methodValue* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs);
+    void callReflect(makeFuncImpl* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs);
+    void callMethod(methodValue* ctxt, gocpp::unsafe_pointer frame, bool* retValid, abi::RegArgs* regs);
     extern abi::Type* uint8Type;
     extern abi::Type* stringType;
     void typesMustMatch(gocpp::string what, struct Type t1, struct Type t2);
     struct runtimeSelect
     {
-        golang::reflect::SelectDir dir{}; // SelectSend, SelectRecv or SelectDefault
+        SelectDir dir{}; // SelectSend, SelectRecv or SelectDefault
         rtype* typ{}; // channel type
         gocpp::unsafe_pointer ch{}; // channel
         gocpp::unsafe_pointer val{}; // ptr to data (SendDir) or ptr to receive buffer (RecvDir)
@@ -368,7 +368,7 @@ namespace golang::reflect
     void mapassign_faststr(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key, gocpp::unsafe_pointer val);
     void mapdelete(abi::Type* t, gocpp::unsafe_pointer m, gocpp::unsafe_pointer key);
     void mapdelete_faststr(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key);
-    void mapiterinit(abi::Type* t, gocpp::unsafe_pointer m, struct hiter* it);
+    void mapiterinit(abi::Type* t, gocpp::unsafe_pointer m, hiter* it);
     void mapclear(abi::Type* t, gocpp::unsafe_pointer m);
     void call(abi::Type* stackArgsType, gocpp::unsafe_pointer f, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
     void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);
@@ -379,15 +379,15 @@ namespace golang::reflect
     void typedarrayclear(abi::Type* elemType, gocpp::unsafe_pointer ptr, int len);
     uintptr_t typehash(abi::Type* t, gocpp::unsafe_pointer p, uintptr_t h);
     unsafeheader::Slice growslice(abi::Type* t, unsafeheader::Slice old, int num);
-    go_any packEface(struct Value v);
-    struct Value unpackEface(go_any i);
-    std::tuple<abi::Type*, reflect::funcType*, gocpp::unsafe_pointer> methodReceiver(gocpp::string op, struct Value v, int methodIndex);
-    void storeRcvr(struct Value v, gocpp::unsafe_pointer p);
-    gocpp::string funcName(std::function<gocpp::slice<Value> (gocpp::slice<Value> _1)> f);
-    go_any valueInterface(struct Value v, bool safe);
+    go_any packEface(golang::reflect::Value v);
+    golang::reflect::Value unpackEface(go_any i);
+    std::tuple<abi::Type*, golang::reflect::funcType*, gocpp::unsafe_pointer> methodReceiver(gocpp::string op, golang::reflect::Value v, int methodIndex);
+    void storeRcvr(golang::reflect::Value v, gocpp::unsafe_pointer p);
+    gocpp::string funcName(std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> _1)> f);
+    go_any valueInterface(golang::reflect::Value v, bool safe);
     struct MapIter
     {
-        Value m{};
+        golang::reflect::Value m{};
         hiter hiter{};
 
         using isGoStruct = void;
@@ -402,28 +402,28 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MapIter& value);
-    struct Value copyVal(abi::Type* typ, golang::reflect::flag fl, gocpp::unsafe_pointer ptr);
-    struct Value Append(struct Value s, gocpp::slice<Value> x);
+    golang::reflect::Value copyVal(abi::Type* typ, flag fl, gocpp::unsafe_pointer ptr);
+    golang::reflect::Value Append(golang::reflect::Value s, gocpp::slice<golang::reflect::Value> x);
     
     template<typename... Args>
-    struct Value Append(struct Value s, Args... x)
+    golang::reflect::Value Append(golang::reflect::Value s, Args... x)
     {
-        return Append(s, gocpp::ToSlice<Value>(x...));
+        return Append(s, gocpp::ToSlice<golang::reflect::Value>(x...));
     }
     
     template<typename... Args>
-    struct Value Append(struct Value s, Value value, Args... x)
+    golang::reflect::Value Append(golang::reflect::Value s, golang::reflect::Value value, Args... x)
     {
-        return Append(s, gocpp::ToSlice<Value>(value, x...));
+        return Append(s, gocpp::ToSlice<golang::reflect::Value>(value, x...));
     }
-    struct Value AppendSlice(struct Value s, struct Value t);
-    int Copy(struct Value dst, struct Value src);
+    golang::reflect::Value AppendSlice(golang::reflect::Value s, golang::reflect::Value t);
+    int Copy(golang::reflect::Value dst, golang::reflect::Value src);
     std::tuple<int, bool> rselect(gocpp::slice<runtimeSelect>);
     struct SelectCase
     {
-        golang::reflect::SelectDir Dir{}; // direction of case
-        Value Chan{}; // channel to use (for send or receive)
-        Value Send{}; // value to send (for send)
+        SelectDir Dir{}; // direction of case
+        golang::reflect::Value Chan{}; // channel to use (for send or receive)
+        golang::reflect::Value Send{}; // value to send (for send)
 
         using isGoStruct = void;
 
@@ -437,43 +437,43 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SelectCase& value);
-    struct Value MakeSlice(struct Type typ, int len, int cap);
-    struct Value MakeChan(struct Type typ, int buffer);
-    struct Value MakeMap(struct Type typ);
-    struct Value MakeMapWithSize(struct Type typ, int n);
-    struct Value Indirect(struct Value v);
-    struct Value ValueOf(go_any i);
-    struct Value Zero(struct Type typ);
-    struct Value New(struct Type typ);
-    struct Value NewAt(struct Type typ, gocpp::unsafe_pointer p);
-    std::function<struct Value (struct Value _1, struct Type _2)> convertOp(abi::Type* dst, abi::Type* src);
-    struct Value makeInt(golang::reflect::flag f, uint64_t bits, struct Type t);
-    struct Value makeFloat(golang::reflect::flag f, double v, struct Type t);
-    struct Value makeFloat32(golang::reflect::flag f, double v, struct Type t);
-    struct Value makeComplex(golang::reflect::flag f, struct gocpp::complex128 v, struct Type t);
-    struct Value makeString(golang::reflect::flag f, gocpp::string v, struct Type t);
-    struct Value makeBytes(golang::reflect::flag f, gocpp::slice<unsigned char> v, struct Type t);
-    struct Value makeRunes(golang::reflect::flag f, gocpp::slice<gocpp::rune> v, struct Type t);
-    struct Value cvtInt(struct Value v, struct Type t);
-    struct Value cvtUint(struct Value v, struct Type t);
-    struct Value cvtFloatInt(struct Value v, struct Type t);
-    struct Value cvtFloatUint(struct Value v, struct Type t);
-    struct Value cvtIntFloat(struct Value v, struct Type t);
-    struct Value cvtUintFloat(struct Value v, struct Type t);
-    struct Value cvtFloat(struct Value v, struct Type t);
-    struct Value cvtComplex(struct Value v, struct Type t);
-    struct Value cvtIntString(struct Value v, struct Type t);
-    struct Value cvtUintString(struct Value v, struct Type t);
-    struct Value cvtBytesString(struct Value v, struct Type t);
-    struct Value cvtStringBytes(struct Value v, struct Type t);
-    struct Value cvtRunesString(struct Value v, struct Type t);
-    struct Value cvtStringRunes(struct Value v, struct Type t);
-    struct Value cvtSliceArrayPtr(struct Value v, struct Type t);
-    struct Value cvtSliceArray(struct Value v, struct Type t);
-    struct Value cvtDirect(struct Value v, struct Type typ);
-    struct Value cvtT2I(struct Value v, struct Type typ);
-    struct Value cvtI2I(struct Value v, struct Type typ);
-    std::tuple<int, struct Value, bool> Select(gocpp::slice<SelectCase> cases);
+    golang::reflect::Value MakeSlice(struct Type typ, int len, int cap);
+    golang::reflect::Value MakeChan(struct Type typ, int buffer);
+    golang::reflect::Value MakeMap(struct Type typ);
+    golang::reflect::Value MakeMapWithSize(struct Type typ, int n);
+    golang::reflect::Value Indirect(golang::reflect::Value v);
+    golang::reflect::Value ValueOf(go_any i);
+    golang::reflect::Value Zero(struct Type typ);
+    golang::reflect::Value New(struct Type typ);
+    golang::reflect::Value NewAt(struct Type typ, gocpp::unsafe_pointer p);
+    std::function<golang::reflect::Value (golang::reflect::Value _1, struct Type _2)> convertOp(abi::Type* dst, abi::Type* src);
+    golang::reflect::Value makeInt(flag f, uint64_t bits, struct Type t);
+    golang::reflect::Value makeFloat(flag f, double v, struct Type t);
+    golang::reflect::Value makeFloat32(flag f, double v, struct Type t);
+    golang::reflect::Value makeComplex(flag f, struct gocpp::complex128 v, struct Type t);
+    golang::reflect::Value makeString(flag f, gocpp::string v, struct Type t);
+    golang::reflect::Value makeBytes(flag f, gocpp::slice<unsigned char> v, struct Type t);
+    golang::reflect::Value makeRunes(flag f, gocpp::slice<gocpp::rune> v, struct Type t);
+    golang::reflect::Value cvtInt(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtUint(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtFloatInt(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtFloatUint(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtIntFloat(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtUintFloat(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtFloat(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtComplex(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtIntString(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtUintString(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtBytesString(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtStringBytes(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtRunesString(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtStringRunes(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtSliceArrayPtr(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtSliceArray(golang::reflect::Value v, struct Type t);
+    golang::reflect::Value cvtDirect(golang::reflect::Value v, struct Type typ);
+    golang::reflect::Value cvtT2I(golang::reflect::Value v, struct Type typ);
+    golang::reflect::Value cvtI2I(golang::reflect::Value v, struct Type typ);
+    std::tuple<int, golang::reflect::Value, bool> Select(gocpp::slice<SelectCase> cases);
 }
 
 #include "golang/internal/abi/type.h"
@@ -484,17 +484,17 @@ namespace golang::reflect
 
     namespace rec
     {
-        reflect::Kind kind(golang::reflect::flag f);
-        reflect::flag ro(golang::reflect::flag f);
+        golang::reflect::Kind kind(flag f);
+        golang::reflect::flag ro(flag f);
         abi::Type* typ(golang::reflect::Value v);
         gocpp::unsafe_pointer pointer(golang::reflect::Value v);
-        gocpp::string Error(golang::reflect::ValueError* e);
-        void mustBe(golang::reflect::flag f, golang::reflect::Kind expected);
-        void mustBeExported(golang::reflect::flag f);
-        void mustBeExportedSlow(golang::reflect::flag f);
-        void mustBeAssignable(golang::reflect::flag f);
-        void mustBeAssignableSlow(golang::reflect::flag f);
-        struct Value Addr(golang::reflect::Value v);
+        gocpp::string Error(ValueError* e);
+        void mustBe(flag f, golang::reflect::Kind expected);
+        void mustBeExported(flag f);
+        void mustBeExportedSlow(flag f);
+        void mustBeAssignable(flag f);
+        void mustBeAssignableSlow(flag f);
+        golang::reflect::Value Addr(golang::reflect::Value v);
         bool Bool(golang::reflect::Value v);
         void panicNotBool(golang::reflect::Value v);
         gocpp::slice<unsigned char> Bytes(golang::reflect::Value v);
@@ -502,23 +502,23 @@ namespace golang::reflect
         gocpp::slice<gocpp::rune> runes(golang::reflect::Value v);
         bool CanAddr(golang::reflect::Value v);
         bool CanSet(golang::reflect::Value v);
-        gocpp::slice<Value> Call(golang::reflect::Value v, gocpp::slice<Value> in);
-        gocpp::slice<Value> CallSlice(golang::reflect::Value v, gocpp::slice<Value> in);
-        gocpp::slice<Value> call(golang::reflect::Value v, gocpp::string op, gocpp::slice<Value> in);
+        gocpp::slice<golang::reflect::Value> Call(golang::reflect::Value v, gocpp::slice<golang::reflect::Value> in);
+        gocpp::slice<golang::reflect::Value> CallSlice(golang::reflect::Value v, gocpp::slice<golang::reflect::Value> in);
+        gocpp::slice<golang::reflect::Value> call(golang::reflect::Value v, gocpp::string op, gocpp::slice<golang::reflect::Value> in);
         int Cap(golang::reflect::Value v);
         int capNonSlice(golang::reflect::Value v);
         void Close(golang::reflect::Value v);
         bool CanComplex(golang::reflect::Value v);
         struct gocpp::complex128 Complex(golang::reflect::Value v);
-        struct Value Elem(golang::reflect::Value v);
-        struct Value Field(golang::reflect::Value v, int i);
-        struct Value FieldByIndex(golang::reflect::Value v, gocpp::slice<int> index);
-        std::tuple<struct Value, struct gocpp::error> FieldByIndexErr(golang::reflect::Value v, gocpp::slice<int> index);
-        struct Value FieldByName(golang::reflect::Value v, gocpp::string name);
-        struct Value FieldByNameFunc(golang::reflect::Value v, std::function<bool (gocpp::string _1)> match);
+        golang::reflect::Value Elem(golang::reflect::Value v);
+        golang::reflect::Value Field(golang::reflect::Value v, int i);
+        golang::reflect::Value FieldByIndex(golang::reflect::Value v, gocpp::slice<int> index);
+        std::tuple<golang::reflect::Value, struct gocpp::error> FieldByIndexErr(golang::reflect::Value v, gocpp::slice<int> index);
+        golang::reflect::Value FieldByName(golang::reflect::Value v, gocpp::string name);
+        golang::reflect::Value FieldByNameFunc(golang::reflect::Value v, std::function<bool (gocpp::string _1)> match);
         bool CanFloat(golang::reflect::Value v);
         double Float(golang::reflect::Value v);
-        struct Value Index(golang::reflect::Value v, int i);
+        golang::reflect::Value Index(golang::reflect::Value v, int i);
         bool CanInt(golang::reflect::Value v);
         int64_t Int(golang::reflect::Value v);
         bool CanInterface(golang::reflect::Value v);
@@ -528,34 +528,34 @@ namespace golang::reflect
         bool IsValid(golang::reflect::Value v);
         bool IsZero(golang::reflect::Value v);
         void SetZero(golang::reflect::Value v);
-        reflect::Kind Kind(golang::reflect::Value v);
+        golang::reflect::Kind Kind(golang::reflect::Value v);
         int Len(golang::reflect::Value v);
         int lenNonSlice(golang::reflect::Value v);
-        struct Value MapIndex(golang::reflect::Value v, struct Value key);
-        gocpp::slice<Value> MapKeys(golang::reflect::Value v);
-        bool initialized(golang::reflect::hiter* h);
-        struct Value Key(golang::reflect::MapIter* iter);
-        void SetIterKey(golang::reflect::Value v, struct MapIter* iter);
-        struct Value Value(golang::reflect::MapIter* iter);
-        void SetIterValue(golang::reflect::Value v, struct MapIter* iter);
-        bool Next(golang::reflect::MapIter* iter);
-        void Reset(golang::reflect::MapIter* iter, struct Value v);
-        struct MapIter* MapRange(golang::reflect::Value v);
-        void panicNotMap(golang::reflect::flag f);
-        struct Value Method(golang::reflect::Value v, int i);
+        golang::reflect::Value MapIndex(golang::reflect::Value v, golang::reflect::Value key);
+        gocpp::slice<golang::reflect::Value> MapKeys(golang::reflect::Value v);
+        bool initialized(hiter* h);
+        golang::reflect::Value Key(MapIter* iter);
+        void SetIterKey(golang::reflect::Value v, MapIter* iter);
+        golang::reflect::Value Value(MapIter* iter);
+        void SetIterValue(golang::reflect::Value v, MapIter* iter);
+        bool Next(MapIter* iter);
+        void Reset(MapIter* iter, golang::reflect::Value v);
+        golang::reflect::MapIter* MapRange(golang::reflect::Value v);
+        void panicNotMap(flag f);
+        golang::reflect::Value Method(golang::reflect::Value v, int i);
         int NumMethod(golang::reflect::Value v);
-        struct Value MethodByName(golang::reflect::Value v, gocpp::string name);
+        golang::reflect::Value MethodByName(golang::reflect::Value v, gocpp::string name);
         int NumField(golang::reflect::Value v);
         bool OverflowComplex(golang::reflect::Value v, struct gocpp::complex128 x);
         bool OverflowFloat(golang::reflect::Value v, double x);
         bool OverflowInt(golang::reflect::Value v, int64_t x);
         bool OverflowUint(golang::reflect::Value v, uint64_t x);
         uintptr_t Pointer(golang::reflect::Value v);
-        std::tuple<struct Value, bool> Recv(golang::reflect::Value v);
-        std::tuple<struct Value, bool> recv(golang::reflect::Value v, bool nb);
-        void Send(golang::reflect::Value v, struct Value x);
-        bool send(golang::reflect::Value v, struct Value x, bool nb);
-        void Set(golang::reflect::Value v, struct Value x);
+        std::tuple<golang::reflect::Value, bool> Recv(golang::reflect::Value v);
+        std::tuple<golang::reflect::Value, bool> recv(golang::reflect::Value v, bool nb);
+        void Send(golang::reflect::Value v, golang::reflect::Value x);
+        bool send(golang::reflect::Value v, golang::reflect::Value x, bool nb);
+        void Set(golang::reflect::Value v, golang::reflect::Value x);
         void SetBool(golang::reflect::Value v, bool x);
         void SetBytes(golang::reflect::Value v, gocpp::slice<unsigned char> x);
         void setRunes(golang::reflect::Value v, gocpp::slice<gocpp::rune> x);
@@ -564,16 +564,16 @@ namespace golang::reflect
         void SetInt(golang::reflect::Value v, int64_t x);
         void SetLen(golang::reflect::Value v, int n);
         void SetCap(golang::reflect::Value v, int n);
-        void SetMapIndex(golang::reflect::Value v, struct Value key, struct Value elem);
+        void SetMapIndex(golang::reflect::Value v, golang::reflect::Value key, golang::reflect::Value elem);
         void SetUint(golang::reflect::Value v, uint64_t x);
         void SetPointer(golang::reflect::Value v, gocpp::unsafe_pointer x);
         void SetString(golang::reflect::Value v, gocpp::string x);
-        struct Value Slice(golang::reflect::Value v, int i, int j);
-        struct Value Slice3(golang::reflect::Value v, int i, int j, int k);
+        golang::reflect::Value Slice(golang::reflect::Value v, int i, int j);
+        golang::reflect::Value Slice3(golang::reflect::Value v, int i, int j, int k);
         gocpp::string String(golang::reflect::Value v);
         gocpp::string stringNonString(golang::reflect::Value v);
-        std::tuple<struct Value, bool> TryRecv(golang::reflect::Value v);
-        bool TrySend(golang::reflect::Value v, struct Value x);
+        std::tuple<golang::reflect::Value, bool> TryRecv(golang::reflect::Value v);
+        bool TrySend(golang::reflect::Value v, golang::reflect::Value x);
         struct Type Type(golang::reflect::Value v);
         struct Type typeSlow(golang::reflect::Value v);
         bool CanUint(golang::reflect::Value v);
@@ -582,13 +582,13 @@ namespace golang::reflect
         gocpp::unsafe_pointer UnsafePointer(golang::reflect::Value v);
         void Grow(golang::reflect::Value v, int n);
         void grow(golang::reflect::Value v, int n);
-        struct Value extendSlice(golang::reflect::Value v, int n);
+        golang::reflect::Value extendSlice(golang::reflect::Value v, int n);
         void Clear(golang::reflect::Value v);
-        struct Value assignTo(golang::reflect::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target);
-        struct Value Convert(golang::reflect::Value v, struct Type t);
+        golang::reflect::Value assignTo(golang::reflect::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target);
+        golang::reflect::Value Convert(golang::reflect::Value v, struct Type t);
         bool CanConvert(golang::reflect::Value v, struct Type t);
         bool Comparable(golang::reflect::Value v);
-        bool Equal(golang::reflect::Value v, struct Value u);
+        bool Equal(golang::reflect::Value v, golang::reflect::Value u);
     }
 }
 

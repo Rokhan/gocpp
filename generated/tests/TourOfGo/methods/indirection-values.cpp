@@ -52,23 +52,23 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    double rec::Abs(golang::main::Vertex v)
+    double rec::Abs(Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
-    double AbsFunc(struct Vertex v)
+    double AbsFunc(Vertex v)
     {
         return std::sqrt(v.X * v.X + v.Y * v.Y);
     }
 
     void main()
     {
-        auto v = Vertex {3, 4};
+        auto v = golang::main::Vertex {3, 4};
         mocklib::Println(rec::Abs(gocpp::recv(v)));
         mocklib::Println(AbsFunc(v));
 
-        auto p = new Vertex {4, 3};
+        auto p = new golang::main::Vertex {4, 3};
         mocklib::Println(rec::Abs(gocpp::recv(p)));
         mocklib::Println(AbsFunc(*p));
     }

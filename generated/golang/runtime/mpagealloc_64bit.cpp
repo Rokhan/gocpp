@@ -81,7 +81,7 @@ namespace golang::runtime
     // sysInit performs architecture-dependent initialization of fields
     // in pageAlloc. pageAlloc should be uninitialized except for sysStat
     // if any runtime statistic should be updated.
-    void rec::sysInit(golang::runtime::pageAlloc* p, bool test)
+    void rec::sysInit(pageAlloc* p, bool test)
     {
         // Reserve memory for each level. This will get mapped in
         // as R/W by setArenas.
@@ -98,8 +98,8 @@ namespace golang::runtime
             }
 
             // Put this reservation into a slice.
-            auto sl = notInHeapSlice {(notInHeap*)(r), 0, entries};
-            p->summary[l] = *(gocpp::slice<runtime::pallocSum>*)(gocpp::unsafe_pointer(& sl));
+            auto sl = golang::runtime::notInHeapSlice {(golang::runtime::notInHeap*)(r), 0, entries};
+            p->summary[l] = *(gocpp::slice<golang::runtime::pallocSum>*)(gocpp::unsafe_pointer(& sl));
         }
     }
 
@@ -113,7 +113,7 @@ namespace golang::runtime
     // Both must be aligned to pallocChunkBytes.
     //
     // The caller must update p.start and p.end after calling sysGrow.
-    void rec::sysGrow(golang::runtime::pageAlloc* p, uintptr_t base, uintptr_t limit)
+    void rec::sysGrow(pageAlloc* p, uintptr_t base, uintptr_t limit)
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
@@ -124,7 +124,7 @@ namespace golang::runtime
         // addrRangeToSummaryRange converts a range of addresses into a range
         // of summary indices which must be mapped to support those addresses
         // in the summary range.
-        auto addrRangeToSummaryRange = [=](int level, struct addrRange r) mutable -> std::tuple<int, int>
+        auto addrRangeToSummaryRange = [=](int level, golang::runtime::addrRange r) mutable -> std::tuple<int, int>
         {
             auto [sumIdxBase, sumIdxLimit] = addrsToSummaryRange(level, rec::addr(gocpp::recv(r.base)), rec::addr(gocpp::recv(r.limit)));
             return blockAlignSummaryRange(level, sumIdxBase, sumIdxLimit);
@@ -133,21 +133,21 @@ namespace golang::runtime
         // summaryRangeToSumAddrRange converts a range of indices in any
         // level of p.summary into page-aligned addresses which cover that
         // range of indices.
-        auto summaryRangeToSumAddrRange = [=](int level, int sumIdxBase, int sumIdxLimit) mutable -> struct addrRange
+        auto summaryRangeToSumAddrRange = [=](int level, int sumIdxBase, int sumIdxLimit) mutable -> golang::runtime::addrRange
         {
             auto baseOffset = alignDown(uintptr_t(sumIdxBase) * pallocSumBytes, physPageSize);
             auto limitOffset = alignUp(uintptr_t(sumIdxLimit) * pallocSumBytes, physPageSize);
             auto base = gocpp::unsafe_pointer(& p->summary[level][0]);
-            return addrRange {
-                offAddr {uintptr_t(add(base, baseOffset))},
-                offAddr {uintptr_t(add(base, limitOffset))}
+            return golang::runtime::addrRange {
+                golang::runtime::offAddr {uintptr_t(add(base, baseOffset))},
+                golang::runtime::offAddr {uintptr_t(add(base, limitOffset))}
             };
         };
 
         // addrRangeToSumAddrRange is a convenience function that converts
         // an address range r to the address range of the given summary level
         // that stores the summaries for r.
-        auto addrRangeToSumAddrRange = [=](int level, struct addrRange r) mutable -> struct addrRange
+        auto addrRangeToSumAddrRange = [=](int level, golang::runtime::addrRange r) mutable -> golang::runtime::addrRange
         {
             auto [sumIdxBase, sumIdxLimit] = addrRangeToSummaryRange(level, r);
             return summaryRangeToSumAddrRange(level, sumIdxBase, sumIdxLimit);
@@ -211,14 +211,14 @@ namespace golang::runtime
     // sysGrow increases the index's backing store in response to a heap growth.
     //
     // Returns the amount of memory added to sysStat.
-    uintptr_t rec::sysGrow(golang::runtime::scavengeIndex* s, uintptr_t base, uintptr_t limit, golang::runtime::sysMemStat* sysStat)
+    uintptr_t rec::sysGrow(scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat)
     {
         if(base % pallocChunkBytes != 0 || limit % pallocChunkBytes != 0)
         {
             print("runtime: base = "_s, hex(base), ", limit = "_s, hex(limit), "\n"_s);
             go_throw("sysGrow bounds not aligned to pallocChunkBytes"_s);
         }
-        auto scSize = gocpp::Sizeof<atomicScavChunkData>();
+        auto scSize = gocpp::Sizeof<golang::runtime::atomicScavChunkData>();
         // Map and commit the pieces of chunks that we need.
         // We always map the full range of the minimum heap address to the
         // maximum heap address. We don't do this for the summary structure
@@ -273,13 +273,13 @@ namespace golang::runtime
     // sysInit initializes the scavengeIndex' chunks array.
     //
     // Returns the amount of memory added to sysStat.
-    uintptr_t rec::sysInit(golang::runtime::scavengeIndex* s, bool test, golang::runtime::sysMemStat* sysStat)
+    uintptr_t rec::sysInit(scavengeIndex* s, bool test, sysMemStat* sysStat)
     {
         auto n = uintptr_t(1 << heapAddrBits) / pallocChunkBytes;
-        auto nbytes = n * gocpp::Sizeof<atomicScavChunkData>();
+        auto nbytes = n * gocpp::Sizeof<golang::runtime::atomicScavChunkData>();
         auto r = sysReserve(nullptr, nbytes);
-        auto sl = notInHeapSlice {(notInHeap*)(r), int(n), int(n)};
-        s->chunks = *(gocpp::slice<atomicScavChunkData>*)(gocpp::unsafe_pointer(& sl));
+        auto sl = golang::runtime::notInHeapSlice {(golang::runtime::notInHeap*)(r), int(n), int(n)};
+        s->chunks = *(gocpp::slice<golang::runtime::atomicScavChunkData>*)(gocpp::unsafe_pointer(& sl));
         // All memory above is mapped Reserved.
         return 0;
     }

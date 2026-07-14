@@ -12,25 +12,25 @@ namespace golang::fs
     struct ReadDirFile;
     using FileMode = uint32_t;
     struct PathError;
-    const fs::FileMode ModeDir = 1 << (32 - 1 - 0);
-    const fs::FileMode ModeAppend = 1 << (32 - 1 - 1);
-    const fs::FileMode ModeExclusive = 1 << (32 - 1 - 2);
-    const fs::FileMode ModeTemporary = 1 << (32 - 1 - 3);
-    const fs::FileMode ModeSymlink = 1 << (32 - 1 - 4);
-    const fs::FileMode ModeDevice = 1 << (32 - 1 - 5);
-    const fs::FileMode ModeNamedPipe = 1 << (32 - 1 - 6);
-    const fs::FileMode ModeSocket = 1 << (32 - 1 - 7);
-    const fs::FileMode ModeSetuid = 1 << (32 - 1 - 8);
-    const fs::FileMode ModeSetgid = 1 << (32 - 1 - 9);
-    const fs::FileMode ModeCharDevice = 1 << (32 - 1 - 10);
-    const fs::FileMode ModeSticky = 1 << (32 - 1 - 11);
-    const fs::FileMode ModeIrregular = 1 << (32 - 1 - 12);
-    const fs::FileMode ModePerm = 0777;
+    const golang::fs::FileMode ModeDir = 1 << (32 - 1 - 0);
+    const golang::fs::FileMode ModeAppend = 1 << (32 - 1 - 1);
+    const golang::fs::FileMode ModeExclusive = 1 << (32 - 1 - 2);
+    const golang::fs::FileMode ModeTemporary = 1 << (32 - 1 - 3);
+    const golang::fs::FileMode ModeSymlink = 1 << (32 - 1 - 4);
+    const golang::fs::FileMode ModeDevice = 1 << (32 - 1 - 5);
+    const golang::fs::FileMode ModeNamedPipe = 1 << (32 - 1 - 6);
+    const golang::fs::FileMode ModeSocket = 1 << (32 - 1 - 7);
+    const golang::fs::FileMode ModeSetuid = 1 << (32 - 1 - 8);
+    const golang::fs::FileMode ModeSetgid = 1 << (32 - 1 - 9);
+    const golang::fs::FileMode ModeCharDevice = 1 << (32 - 1 - 10);
+    const golang::fs::FileMode ModeSticky = 1 << (32 - 1 - 11);
+    const golang::fs::FileMode ModeIrregular = 1 << (32 - 1 - 12);
+    const golang::fs::FileMode ModePerm = 0777;
 }
 #include "golang/time/time.fwd.h"
 
 namespace golang::fs
 {
     struct FileInfo;
-    const FileMode ModeType = ModeDir | ModeSymlink | ModeNamedPipe | ModeSocket | ModeDevice | ModeCharDevice | ModeIrregular;
+    const fs::FileMode ModeType = ModeDir | ModeSymlink | ModeNamedPipe | ModeSocket | ModeDevice | ModeCharDevice | ModeIrregular;
 }

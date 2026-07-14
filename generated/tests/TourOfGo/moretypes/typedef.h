@@ -31,17 +31,17 @@ namespace golang::main
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     struct GoTag_VertexAlias { };
     struct GoTag_vvvv2 { };
-    void UseTypedefPtr1(golang::main::vvvv1* t);
+    void UseTypedefPtr1(vvvv1* t);
     void main();
-    using VertexAlias = gocpp::defined<Vertex, GoTag_VertexAlias>;
-    using vvvv2 = gocpp::defined<main::Vertex, GoTag_vvvv2>;
-    void UseStructPtr(golang::main::Vertex* t);
-    void UseTypedefPtr2(golang::main::vvvv2* t);
+    using VertexAlias = gocpp::defined<golang::main::Vertex, GoTag_VertexAlias>;
+    using vvvv2 = gocpp::defined<golang::main::Vertex, GoTag_vvvv2>;
+    void UseStructPtr(Vertex* t);
+    void UseTypedefPtr2(vvvv2* t);
 
     namespace rec
     {
-        void Print(golang::main::Vertex* v);
-        void Print(golang::main::vvvv2* v);
+        void Print(Vertex* v);
+        void Print(vvvv2* v);
     }
 }
 

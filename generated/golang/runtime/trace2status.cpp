@@ -72,7 +72,7 @@ namespace golang::runtime
     // doesn't try to find a GoSyscallEndBlocked that
     // corresponds with the ProcSteal.
     // writeGoStatus emits a GoStatus event as well as any active ranges on the goroutine.
-    struct traceWriter rec::writeGoStatus(golang::runtime::traceWriter w, uint64_t goid, int64_t mid, golang::runtime::traceGoStatus status, bool markAssist)
+    golang::runtime::traceWriter rec::writeGoStatus(traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist)
     {
         // The status should never be bad. Some invariant must have been violated.
         if(status == traceGoBad)
@@ -96,13 +96,13 @@ namespace golang::runtime
     //
     // The caller must fully own pp and it must be prevented from transitioning (e.g. this can be
     // called by a forEachP callback or from a STW).
-    struct traceWriter rec::writeProcStatusForP(golang::runtime::traceWriter w, struct p* pp, bool inSTW)
+    golang::runtime::traceWriter rec::writeProcStatusForP(traceWriter w, golang::runtime::p* pp, bool inSTW)
     {
         if(! rec::acquireStatus(gocpp::recv(pp->trace), w.traceLocker.gen))
         {
             return w;
         }
-        runtime::traceProcStatus status = {};
+        traceProcStatus status = {};
         //Go switch emulation
         {
             auto condition = pp->status;
@@ -150,7 +150,7 @@ namespace golang::runtime
     //
     // The caller must have taken ownership of a P's status writing, and the P must be
     // prevented from transitioning.
-    struct traceWriter rec::writeProcStatus(golang::runtime::traceWriter w, uint64_t pid, golang::runtime::traceProcStatus status, bool inSweep)
+    golang::runtime::traceWriter rec::writeProcStatus(traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep)
     {
         // The status should never be bad. Some invariant must have been violated.
         if(status == traceProcBad)
@@ -173,10 +173,10 @@ namespace golang::runtime
     // goStatusToTraceGoStatus translates the internal status to tracGoStatus.
     //
     // status must not be _Gdead or any status whose name has the suffix "_unused."
-    runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, golang::runtime::waitReason wr)
+    golang::runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, waitReason wr)
     {
         // N.B. Ignore the _Gscan bit. We don't model it in the tracer.
-        runtime::traceGoStatus tgs = {};
+        traceGoStatus tgs = {};
         //Go switch emulation
         {
             auto condition = status &^ _Gscan;
@@ -260,7 +260,7 @@ namespace golang::runtime
     }
 
     // acquireStatus acquires the right to emit a Status event for the scheduling resource.
-    bool rec::acquireStatus(golang::runtime::traceSchedResourceState* r, uintptr_t gen)
+    bool rec::acquireStatus(traceSchedResourceState* r, uintptr_t gen)
     {
         if(! rec::CompareAndSwap(gocpp::recv(r->statusTraced[gen % 3]), 0, 1))
         {
@@ -271,7 +271,7 @@ namespace golang::runtime
     }
 
     // readyNextGen readies r for the generation following gen.
-    void rec::readyNextGen(golang::runtime::traceSchedResourceState* r, uintptr_t gen)
+    void rec::readyNextGen(traceSchedResourceState* r, uintptr_t gen)
     {
         auto nextGen = traceNextGen(gen);
         r->seq[nextGen % 2] = 0;
@@ -279,20 +279,20 @@ namespace golang::runtime
     }
 
     // statusWasTraced returns true if the sched resource's status was already acquired for tracing.
-    bool rec::statusWasTraced(golang::runtime::traceSchedResourceState* r, uintptr_t gen)
+    bool rec::statusWasTraced(traceSchedResourceState* r, uintptr_t gen)
     {
         return rec::Load(gocpp::recv(r->statusTraced[gen % 3])) != 0;
     }
 
     // setStatusTraced indicates that the resource's status was already traced, for example
     // when a goroutine is created.
-    void rec::setStatusTraced(golang::runtime::traceSchedResourceState* r, uintptr_t gen)
+    void rec::setStatusTraced(traceSchedResourceState* r, uintptr_t gen)
     {
         rec::Store(gocpp::recv(r->statusTraced[gen % 3]), 1);
     }
 
     // nextSeq returns the next sequence number for the resource.
-    runtime::traceArg rec::nextSeq(golang::runtime::traceSchedResourceState* r, uintptr_t gen)
+    golang::runtime::traceArg rec::nextSeq(traceSchedResourceState* r, uintptr_t gen)
     {
         r->seq[gen % 2]++;
         return traceArg(r->seq[gen % 2]);

@@ -23,6 +23,6 @@ namespace golang::unicode
     using d = gocpp::defined<gocpp::array<gocpp::rune, MaxCase>, GoTag_d>;
     const long linearMax = 18;
     struct foldPair;
-    using SpecialCase = gocpp::defined<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
+    using SpecialCase = gocpp::defined<gocpp::slice<golang::unicode::CaseRange>, GoTag_SpecialCase>;
     const gocpp::rune UpperLower = MaxRune + 1;
 }

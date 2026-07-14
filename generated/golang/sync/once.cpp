@@ -81,7 +81,7 @@ namespace golang::sync
     //
     // If f panics, Do considers it to have returned; future calls of Do return
     // without calling f.
-    void rec::Do(golang::sync::Once* o, std::function<void ()> f)
+    void rec::Do(Once* o, std::function<void ()> f)
     {
         // Note: Here is an incorrect implementation of Do:
         // if o.done.CompareAndSwap(0, 1) {
@@ -101,7 +101,7 @@ namespace golang::sync
         }
     }
 
-    void rec::doSlow(golang::sync::Once* o, std::function<void ()> f)
+    void rec::doSlow(Once* o, std::function<void ()> f)
     {
         gocpp::Defer defer;
         try

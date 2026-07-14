@@ -14,8 +14,8 @@ namespace golang::runtime
     const long drainCheckThreshold = 100000;
     const long pagesPerSpanRoot = 512;
     using gcDrainFlags = int;
-    const runtime::gcDrainFlags gcDrainUntilPreempt = 1 << 0;
-    const runtime::gcDrainFlags gcDrainFlushBgCredit = 1 << 1;
-    const runtime::gcDrainFlags gcDrainIdle = 1 << 2;
-    const runtime::gcDrainFlags gcDrainFractional = 1 << 3;
+    const golang::runtime::gcDrainFlags gcDrainUntilPreempt = 1 << 0;
+    const golang::runtime::gcDrainFlags gcDrainFlushBgCredit = 1 << 1;
+    const golang::runtime::gcDrainFlags gcDrainIdle = 1 << 2;
+    const golang::runtime::gcDrainFlags gcDrainFractional = 1 << 3;
 }

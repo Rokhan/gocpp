@@ -68,7 +68,7 @@ namespace golang::flate
     extern gocpp::array<int, 19> codeOrder;
     struct gocpp::error noEOF(struct gocpp::error e);
     void fixedHuffmanDecoderInit();
-    extern huffmanDecoder fixedHuffmanDecoder;
+    extern golang::flate::huffmanDecoder fixedHuffmanDecoder;
 }
 #include "golang/io/io.h"
 #include "golang/sync/once.h"
@@ -223,7 +223,7 @@ namespace golang::flate
         gocpp::array<unsigned char, 4> buf{};
         // Next step in the decompression,
         // and decompression state.
-        std::function<void (struct decompressor* _1)> step{};
+        std::function<void (decompressor* _1)> step{};
         int stepState{};
         bool final{};
         gocpp::error err{};
@@ -254,23 +254,23 @@ namespace golang::flate
 
     namespace rec
     {
-        gocpp::string Error(golang::flate::CorruptInputError e);
-        gocpp::string Error(golang::flate::InternalError e);
-        gocpp::string Error(golang::flate::ReadError* e);
-        gocpp::string Error(golang::flate::WriteError* e);
-        bool init(golang::flate::huffmanDecoder* h, gocpp::slice<int> lengths);
-        void nextBlock(golang::flate::decompressor* f);
-        std::tuple<int, struct gocpp::error> Read(golang::flate::decompressor* f, gocpp::slice<unsigned char> b);
-        struct gocpp::error Close(golang::flate::decompressor* f);
-        struct gocpp::error readHuffman(golang::flate::decompressor* f);
-        void huffmanBlock(golang::flate::decompressor* f);
-        void dataBlock(golang::flate::decompressor* f);
-        void copyData(golang::flate::decompressor* f);
-        void finishBlock(golang::flate::decompressor* f);
-        struct gocpp::error moreBits(golang::flate::decompressor* f);
-        std::tuple<int, struct gocpp::error> huffSym(golang::flate::decompressor* f, struct huffmanDecoder* h);
-        void makeReader(golang::flate::decompressor* f, io::Reader r);
-        struct gocpp::error Reset(golang::flate::decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict);
+        gocpp::string Error(CorruptInputError e);
+        gocpp::string Error(InternalError e);
+        gocpp::string Error(ReadError* e);
+        gocpp::string Error(WriteError* e);
+        bool init(huffmanDecoder* h, gocpp::slice<int> lengths);
+        void nextBlock(decompressor* f);
+        std::tuple<int, struct gocpp::error> Read(decompressor* f, gocpp::slice<unsigned char> b);
+        struct gocpp::error Close(decompressor* f);
+        struct gocpp::error readHuffman(decompressor* f);
+        void huffmanBlock(decompressor* f);
+        void dataBlock(decompressor* f);
+        void copyData(decompressor* f);
+        void finishBlock(decompressor* f);
+        struct gocpp::error moreBits(decompressor* f);
+        std::tuple<int, struct gocpp::error> huffSym(decompressor* f, huffmanDecoder* h);
+        void makeReader(decompressor* f, io::Reader r);
+        struct gocpp::error Reset(decompressor* f, io::Reader r, gocpp::slice<unsigned char> dict);
     }
 }
 

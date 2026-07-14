@@ -14,14 +14,14 @@ namespace golang::runtime
 {
     void reflectOffsLock();
     void reflectOffsUnlock();
-    runtime::name resolveNameOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::nameOff off);
-    runtime::_type* resolveTypeOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::typeOff off);
+    golang::runtime::name resolveNameOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::nameOff off);
+    golang::runtime::_type* resolveTypeOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::typeOff off);
     gocpp::string pkgPath(golang::runtime::name n);
     void typelinksinit();
     struct _typePair
     {
-        golang::runtime::_type* t1{};
-        golang::runtime::_type* t2{};
+        _type* t1{};
+        _type* t2{};
 
         using isGoStruct = void;
 
@@ -50,7 +50,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
-    bool typesEqual(golang::runtime::_type* t, golang::runtime::_type* v, gocpp::map<_typePair, gocpp_id_2> seen);
+    bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp_id_2> seen);
 }
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/runtime2.h"
@@ -74,17 +74,17 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct rtype& value);
     extern gocpp_id_0 reflectOffs;
-    struct rtype toRType(abi::Type* t);
+    golang::runtime::rtype toRType(abi::Type* t);
 
     namespace rec
     {
-        gocpp::string string(golang::runtime::rtype t);
-        runtime::uncommontype* uncommon(golang::runtime::rtype t);
-        gocpp::string name(golang::runtime::rtype t);
-        gocpp::string pkgpath(golang::runtime::rtype t);
-        runtime::name nameOff(golang::runtime::rtype t, golang::runtime::nameOff off);
-        runtime::_type* typeOff(golang::runtime::rtype t, golang::runtime::typeOff off);
-        gocpp::unsafe_pointer textOff(golang::runtime::rtype t, golang::runtime::textOff off);
+        gocpp::string string(rtype t);
+        golang::runtime::uncommontype* uncommon(rtype t);
+        gocpp::string name(rtype t);
+        gocpp::string pkgpath(rtype t);
+        golang::runtime::name nameOff(rtype t, golang::runtime::nameOff off);
+        golang::runtime::_type* typeOff(rtype t, golang::runtime::typeOff off);
+        gocpp::unsafe_pointer textOff(rtype t, golang::runtime::textOff off);
     }
 }
 

@@ -89,7 +89,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    cpuProfile cpuprof;
+    golang::runtime::cpuProfile cpuprof;
     // SetCPUProfileRate sets the CPU profiling rate to hz samples per second.
     // If hz <= 0, SetCPUProfileRate turns off profiling.
     // If the profiler is on, the rate cannot be changed without first turning it off.
@@ -143,7 +143,7 @@ namespace golang::runtime
     // of stack.
     //
     //go:nowritebarrierrec
-    void rec::add(golang::runtime::cpuProfile* p, gocpp::unsafe_pointer* tagPtr, gocpp::slice<uintptr_t> stk)
+    void rec::add(cpuProfile* p, gocpp::unsafe_pointer* tagPtr, gocpp::slice<uintptr_t> stk)
     {
         // Simple cas-lock to coordinate with setcpuprofilerate.
         for(; ! rec::CompareAndSwap(gocpp::recv(prof.signalLock), 0, 1); )
@@ -180,7 +180,7 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrierrec
-    void rec::addNonGo(golang::runtime::cpuProfile* p, gocpp::slice<uintptr_t> stk)
+    void rec::addNonGo(cpuProfile* p, gocpp::slice<uintptr_t> stk)
     {
         // Simple cas-lock to coordinate with SetCPUProfileRate.
         // (Other calls to add or addNonGo should be blocked out
@@ -214,7 +214,7 @@ namespace golang::runtime
     // addExtra is called either from a signal handler on a Go thread
     // or from an ordinary goroutine; either way it can use stack
     // and has a g. The world may be stopped, though.
-    void rec::addExtra(golang::runtime::cpuProfile* p)
+    void rec::addExtra(cpuProfile* p)
     {
         // Copy accumulated non-Go profile events.
         auto hdr = gocpp::array<uint64_t, 1> {1};

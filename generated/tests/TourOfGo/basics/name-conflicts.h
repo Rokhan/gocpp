@@ -34,7 +34,7 @@ namespace golang::main
     {
         double Pi(golang::main::toto t);
         double toto(golang::main::toto t);
-        main::titi titi(golang::main::toto t, golang::main::titi d);
+        golang::main::titi titi(golang::main::toto t, golang::main::titi d);
     }
 }
 

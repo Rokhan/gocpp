@@ -51,31 +51,31 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    void rec::Print(golang::main::Vertex* v)
+    void rec::Print(Vertex* v)
     {
         mocklib::Println("Receiver, Vertex:"_s, v->X, v->Y);
     }
 
-    void rec::Print(golang::main::vvvv2* v)
+    void rec::Print(vvvv2* v)
     {
         mocklib::Println("Receiver, vvvv2:"_s, v->X, v->Y);
     }
 
-    void UseTypedefPtr1(golang::main::vvvv1* t)
+    void UseTypedefPtr1(vvvv1* t)
     {
         mocklib::Println("\nUseTypedefPtr1"_s);
         mocklib::Println("vvvv1:"_s, t->X, t->Y);
         rec::Print(gocpp::recv(t));
     }
 
-    void UseTypedefPtr2(golang::main::vvvv2* t)
+    void UseTypedefPtr2(vvvv2* t)
     {
         mocklib::Println("\nUseTypedefPtr2"_s);
         mocklib::Println("vvvv2:"_s, t->X, t->Y);
         rec::Print(gocpp::recv(t));
     }
 
-    void UseStructPtr(golang::main::Vertex* t)
+    void UseStructPtr(Vertex* t)
     {
         mocklib::Println("\nUseStructPtr"_s);
         mocklib::Println("Vertex:"_s, t->X, t->Y);
@@ -88,15 +88,15 @@ namespace golang::main
         auto vstr2 = str2("hello"_s);
         mocklib::Println("str1:"_s, vstr1, ", str2:"_s, vstr2);
 
-        mocklib::Println(main::Vertex {1, 2});
-        UseTypedefPtr1(new main::Vertex {1, 2});
-        UseTypedefPtr1(new main::vvvv1 {1, 2});
+        mocklib::Println(golang::main::Vertex {1, 2});
+        UseTypedefPtr1(new golang::main::Vertex {1, 2});
+        UseTypedefPtr1(new vvvv1 {1, 2});
 
-        UseTypedefPtr2(new main::vvvv2 {1, 2});
-        UseStructPtr(new main::Vertex {1, 2});
+        UseTypedefPtr2(new vvvv2 {1, 2});
+        UseStructPtr(new golang::main::Vertex {1, 2});
 
-        main::vvvv1 v01 = main::Vertex {};
-        main::Vertex v02 = v01;
+        vvvv1 v01 = golang::main::Vertex {};
+        golang::main::Vertex v02 = v01;
         _ = v01;
         _ = v02;
     }

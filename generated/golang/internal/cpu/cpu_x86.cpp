@@ -38,7 +38,7 @@ namespace golang::cpu
     uint32_t maxExtendedFunctionInformation;
     void doinit()
     {
-        options = gocpp::slice<option> {
+        options = gocpp::slice<golang::cpu::option> {
             gocpp::Init<>([=](auto& x) {
             x.Name = "adx"_s;
             x.Feature = & X86.HasADX;
@@ -69,19 +69,19 @@ namespace golang::cpu
         {
             // These options are required at level 2. At lower levels
             // they can be turned off.
-            options = append(options, gocpp::Init<option>([=](auto& x) {
+            options = append(options, gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "popcnt"_s;
                 x.Feature = & X86.HasPOPCNT;
-            }), gocpp::Init<option>([=](auto& x) {
+            }), gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "sse3"_s;
                 x.Feature = & X86.HasSSE3;
-            }), gocpp::Init<option>([=](auto& x) {
+            }), gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "sse41"_s;
                 x.Feature = & X86.HasSSE41;
-            }), gocpp::Init<option>([=](auto& x) {
+            }), gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "sse42"_s;
                 x.Feature = & X86.HasSSE42;
-            }), gocpp::Init<option>([=](auto& x) {
+            }), gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "ssse3"_s;
                 x.Feature = & X86.HasSSSE3;
             }));
@@ -90,19 +90,19 @@ namespace golang::cpu
         {
             // These options are required at level 3. At lower levels
             // they can be turned off.
-            options = append(options, gocpp::Init<option>([=](auto& x) {
+            options = append(options, gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "avx"_s;
                 x.Feature = & X86.HasAVX;
-            }), gocpp::Init<option>([=](auto& x) {
+            }), gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "avx2"_s;
                 x.Feature = & X86.HasAVX2;
-            }), gocpp::Init<option>([=](auto& x) {
+            }), gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "bmi1"_s;
                 x.Feature = & X86.HasBMI1;
-            }), gocpp::Init<option>([=](auto& x) {
+            }), gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "bmi2"_s;
                 x.Feature = & X86.HasBMI2;
-            }), gocpp::Init<option>([=](auto& x) {
+            }), gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "fma"_s;
                 x.Feature = & X86.HasFMA;
             }));
@@ -111,13 +111,13 @@ namespace golang::cpu
         {
             // These options are required at level 4. At lower levels
             // they can be turned off.
-            options = append(options, gocpp::Init<option>([=](auto& x) {
+            options = append(options, gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "avx512f"_s;
                 x.Feature = & X86.HasAVX512F;
-            }), gocpp::Init<option>([=](auto& x) {
+            }), gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "avx512bw"_s;
                 x.Feature = & X86.HasAVX512BW;
-            }), gocpp::Init<option>([=](auto& x) {
+            }), gocpp::Init<golang::cpu::option>([=](auto& x) {
                 x.Name = "avx512vl"_s;
                 x.Feature = & X86.HasAVX512VL;
             }));

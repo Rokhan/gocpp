@@ -14,7 +14,7 @@ namespace golang::reflect
 {
     struct abiStep
     {
-        golang::reflect::abiStepKind kind{};
+        abiStepKind kind{};
         // offset and size together describe a part of a Go value
         // in memory.
         uintptr_t offset{};
@@ -135,7 +135,7 @@ namespace golang::reflect
 
 namespace golang::reflect
 {
-    struct abiDesc newAbiDesc(golang::reflect::funcType* t, abi::Type* rcvr);
+    golang::reflect::abiDesc newAbiDesc(funcType* t, abi::Type* rcvr);
 }
 
 #include "golang/internal/abi/type.h"
@@ -145,15 +145,15 @@ namespace golang::reflect
 
     namespace rec
     {
-        void dump(golang::reflect::abiSeq* a);
-        gocpp::slice<abiStep> stepsForValue(golang::reflect::abiSeq* a, int i);
-        struct abiStep* addArg(golang::reflect::abiSeq* a, abi::Type* t);
-        std::tuple<struct abiStep*, bool> addRcvr(golang::reflect::abiSeq* a, abi::Type* rcvr);
-        bool regAssign(golang::reflect::abiSeq* a, abi::Type* t, uintptr_t offset);
-        bool assignIntN(golang::reflect::abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap);
-        bool assignFloatN(golang::reflect::abiSeq* a, uintptr_t offset, uintptr_t size, int n);
-        void stackAssign(golang::reflect::abiSeq* a, uintptr_t size, uintptr_t alignment);
-        void dump(golang::reflect::abiDesc* a);
+        void dump(abiSeq* a);
+        gocpp::slice<golang::reflect::abiStep> stepsForValue(abiSeq* a, int i);
+        golang::reflect::abiStep* addArg(abiSeq* a, abi::Type* t);
+        std::tuple<golang::reflect::abiStep*, bool> addRcvr(abiSeq* a, abi::Type* rcvr);
+        bool regAssign(abiSeq* a, abi::Type* t, uintptr_t offset);
+        bool assignIntN(abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap);
+        bool assignFloatN(abiSeq* a, uintptr_t offset, uintptr_t size, int n);
+        void stackAssign(abiSeq* a, uintptr_t size, uintptr_t alignment);
+        void dump(abiDesc* a);
     }
 }
 

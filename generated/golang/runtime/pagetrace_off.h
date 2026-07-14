@@ -34,9 +34,9 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    void pageTraceAlloc(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages);
-    void pageTraceFree(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages);
-    void pageTraceScav(struct p* pp, int64_t now, uintptr_t base, uintptr_t npages);
+    void pageTraceAlloc(golang::runtime::p* pp, int64_t now, uintptr_t base, uintptr_t npages);
+    void pageTraceFree(golang::runtime::p* pp, int64_t now, uintptr_t base, uintptr_t npages);
+    void pageTraceScav(golang::runtime::p* pp, int64_t now, uintptr_t base, uintptr_t npages);
 
     namespace rec
     {

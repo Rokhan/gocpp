@@ -19,11 +19,11 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    void cgoCheckMemmove(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
-    void cgoCheckMemmove2(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
-    void cgoCheckSliceCopy(golang::runtime::_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, int n);
-    void cgoCheckTypedBlock(golang::runtime::_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
-    void cgoCheckUsingType(golang::runtime::_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
+    void cgoCheckMemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
+    void cgoCheckMemmove2(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
+    void cgoCheckSliceCopy(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, int n);
+    void cgoCheckTypedBlock(_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
+    void cgoCheckUsingType(_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
 
     namespace rec
     {

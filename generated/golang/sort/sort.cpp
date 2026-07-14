@@ -121,7 +121,7 @@ namespace golang::sort
 
     // // hint for pdqsort when choosing the pivot
     // xorshift paper: https://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
-    uint64_t rec::Next(golang::sort::xorshift* r)
+    uint64_t rec::Next(xorshift* r)
     {
         *r ^= *r << 13;
         *r ^= *r >> 17;
@@ -233,7 +233,7 @@ namespace golang::sort
     }
 
     // Less returns the opposite of the embedded implementation's Less method.
-    bool rec::Less(golang::sort::reverse r, int i, int j)
+    bool rec::Less(reverse r, int i, int j)
     {
         return rec::Less(gocpp::recv(r.Interface), j, i);
     }
@@ -241,7 +241,7 @@ namespace golang::sort
     // Reverse returns the reverse order for data.
     struct Interface Reverse(struct Interface data)
     {
-        return new reverse {data};
+        return new golang::sort::reverse {data};
     }
 
     // IsSorted reports whether data is sorted.
@@ -262,30 +262,30 @@ namespace golang::sort
     }
 
     // IntSlice attaches the methods of Interface to []int, sorting in increasing order.
-    int rec::Len(golang::sort::IntSlice x)
+    int rec::Len(IntSlice x)
     {
         return len(x);
     }
 
-    bool rec::Less(golang::sort::IntSlice x, int i, int j)
+    bool rec::Less(IntSlice x, int i, int j)
     {
         return x[i] < x[j];
     }
 
-    void rec::Swap(golang::sort::IntSlice x, int i, int j)
+    void rec::Swap(IntSlice x, int i, int j)
     {
         std::tie(x[i], x[j]) = std::tuple{x[j], x[i]};
     }
 
     // Sort is a convenience method: x.Sort() calls Sort(x).
-    void rec::Sort(golang::sort::IntSlice x)
+    void rec::Sort(IntSlice x)
     {
         sort::Sort(x);
     }
 
     // Float64Slice implements Interface for a []float64, sorting in increasing order,
     // with not-a-number (NaN) values ordered before other values.
-    int rec::Len(golang::sort::Float64Slice x)
+    int rec::Len(Float64Slice x)
     {
         return len(x);
     }
@@ -296,12 +296,12 @@ namespace golang::sort
     // This implementation of Less places NaN values before any others, by using:
     //
     //	x[i] < x[j] || (math.IsNaN(x[i]) && !math.IsNaN(x[j]))
-    bool rec::Less(golang::sort::Float64Slice x, int i, int j)
+    bool rec::Less(Float64Slice x, int i, int j)
     {
         return x[i] < x[j] || (isNaN(x[i]) && ! isNaN(x[j]));
     }
 
-    void rec::Swap(golang::sort::Float64Slice x, int i, int j)
+    void rec::Swap(Float64Slice x, int i, int j)
     {
         std::tie(x[i], x[j]) = std::tuple{x[j], x[i]};
     }
@@ -313,29 +313,29 @@ namespace golang::sort
     }
 
     // Sort is a convenience method: x.Sort() calls Sort(x).
-    void rec::Sort(golang::sort::Float64Slice x)
+    void rec::Sort(Float64Slice x)
     {
         sort::Sort(x);
     }
 
     // StringSlice attaches the methods of Interface to []string, sorting in increasing order.
-    int rec::Len(golang::sort::StringSlice x)
+    int rec::Len(StringSlice x)
     {
         return len(x);
     }
 
-    bool rec::Less(golang::sort::StringSlice x, int i, int j)
+    bool rec::Less(StringSlice x, int i, int j)
     {
         return x[i] < x[j];
     }
 
-    void rec::Swap(golang::sort::StringSlice x, int i, int j)
+    void rec::Swap(StringSlice x, int i, int j)
     {
         std::tie(x[i], x[j]) = std::tuple{x[j], x[i]};
     }
 
     // Sort is a convenience method: x.Sort() calls Sort(x).
-    void rec::Sort(golang::sort::StringSlice x)
+    void rec::Sort(StringSlice x)
     {
         sort::Sort(x);
     }

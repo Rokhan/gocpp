@@ -67,10 +67,10 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct overlappedEntry& value);
     extern atomic::Uint32 netpollWakeSig;
-    int32_t netpollopen(uintptr_t fd, struct pollDesc* pd);
-    void netpollarm(struct pollDesc* pd, int mode);
-    std::tuple<struct gList, int32_t> netpoll(int64_t delay);
-    int32_t handlecompletion(struct gList* toRun, struct net_op* op, int32_t errno, uint32_t qty);
+    int32_t netpollopen(uintptr_t fd, pollDesc* pd);
+    void netpollarm(pollDesc* pd, int mode);
+    std::tuple<golang::runtime::gList, int32_t> netpoll(int64_t delay);
+    int32_t handlecompletion(gList* toRun, net_op* op, int32_t errno, uint32_t qty);
 
     namespace rec
     {

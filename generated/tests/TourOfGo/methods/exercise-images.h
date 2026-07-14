@@ -38,9 +38,9 @@ namespace golang::main
 
     namespace rec
     {
-        color::Model ColorModel(golang::main::Image);
-        image::Rectangle Bounds(golang::main::Image);
-        color::Color At(golang::main::Image, int x, int y);
+        color::Model ColorModel(Image);
+        image::Rectangle Bounds(Image);
+        color::Color At(Image, int x, int y);
     }
 }
 

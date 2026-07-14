@@ -117,14 +117,14 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    int64_t rec::Nanoseconds(golang::syscall::Timeval* tv)
+    int64_t rec::Nanoseconds(Timeval* tv)
     {
         return (int64_t(tv->Sec) * 1e6 + int64_t(tv->Usec)) * 1e3;
     }
 
-    struct Timeval NsecToTimeval(int64_t nsec)
+    golang::syscall::Timeval NsecToTimeval(int64_t nsec)
     {
-        struct Timeval tv;
+        golang::syscall::Timeval tv;
         tv.Sec = int32_t(nsec / 1e9);
         tv.Usec = int32_t(nsec % 1e9 / 1e3);
         return tv;
@@ -278,7 +278,7 @@ namespace golang::syscall
 
     // Nanoseconds returns Filetime ft in nanoseconds
     // since Epoch (00:00:00 UTC, January 1, 1970).
-    int64_t rec::Nanoseconds(golang::syscall::Filetime* ft)
+    int64_t rec::Nanoseconds(Filetime* ft)
     {
         // 100-nanosecond intervals since January 1, 1601
         auto nsec = (int64_t(ft->HighDateTime) << 32) + int64_t(ft->LowDateTime);
@@ -289,9 +289,9 @@ namespace golang::syscall
         return nsec;
     }
 
-    struct Filetime NsecToFiletime(int64_t nsec)
+    golang::syscall::Filetime NsecToFiletime(int64_t nsec)
     {
-        struct Filetime ft;
+        golang::syscall::Filetime ft;
         // convert into 100-nanosecond
         nsec /= 100;
         // change starting time to January 1, 1601
@@ -416,7 +416,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    void copyFindData(struct Win32finddata* dst, struct win32finddata1* src)
+    void copyFindData(Win32finddata* dst, win32finddata1* src)
     {
         dst->FileAttributes = src->FileAttributes;
         dst->CreationTime = src->CreationTime;
@@ -2141,7 +2141,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    GUID WSAID_CONNECTEX = GUID {
+    golang::syscall::GUID WSAID_CONNECTEX = golang::syscall::GUID {
         0x25a207b9,
         0xddf3,
         0x4660,

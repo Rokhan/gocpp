@@ -64,9 +64,9 @@ namespace golang::runtime
         using abi::rec::Uncommon;
     }
 
-    mutex itabLock;
+    golang::runtime::mutex itabLock;
     itabTableType* itabTable = & itabTableInit;
-    itabTableType itabTableInit = gocpp::Init<itabTableType>([](auto& x) {
+    golang::runtime::itabTableType itabTableInit = gocpp::Init<golang::runtime::itabTableType>([](auto& x) {
         x.size = itabInitSize;
     });
     // Note: change the formula in the mallocgc call in itabAdd if you change these fields.
@@ -105,13 +105,13 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uintptr_t itabHashFunc(golang::runtime::interfacetype* inter, golang::runtime::_type* typ)
+    uintptr_t itabHashFunc(interfacetype* inter, _type* typ)
     {
         // compiler has provided some good hash codes for us.
         return uintptr_t(inter->Type.Hash ^ typ->Hash);
     }
 
-    struct itab* getitab(golang::runtime::interfacetype* inter, golang::runtime::_type* typ, bool canfail)
+    golang::runtime::itab* getitab(interfacetype* inter, _type* typ, bool canfail)
     {
         if(len(inter->Methods) == 0)
         {
@@ -126,16 +126,16 @@ namespace golang::runtime
                 return nullptr;
             }
             auto name = rec::nameOff(gocpp::recv(toRType(& inter->Type)), inter->Methods[0].Name);
-            gocpp::panic(new TypeAssertionError {nullptr, typ, & inter->Type, rec::Name(gocpp::recv(name))});
+            gocpp::panic(new golang::runtime::TypeAssertionError {nullptr, typ, & inter->Type, rec::Name(gocpp::recv(name))});
         }
 
-        itab* m = {};
+        golang::runtime::itab* m = {};
 
         // First, look in the existing table to see if we can find the itab we need.
         // This is by far the most common case, so do it without locks.
         // Use atomic to ensure we see any previous writes done by the thread
         // that updates the itabTable field (with atomic.Storep in itabAdd).
-        auto t = (itabTableType*)(atomic::Loadp(gocpp::unsafe_pointer(& itabTable)));
+        auto t = (golang::runtime::itabTableType*)(atomic::Loadp(gocpp::unsafe_pointer(& itabTable)));
         if(m = rec::find(gocpp::recv(t), inter, typ); m != nullptr)
         {
             goto finish;
@@ -150,7 +150,7 @@ namespace golang::runtime
         }
 
         // Entry doesn't exist yet. Make a new entry & add it.
-        m = (itab*)(persistentalloc(gocpp::Sizeof<itab>() + uintptr_t(len(inter->Methods) - 1) * goarch::PtrSize, 0, & memstats.other_sys));
+        m = (golang::runtime::itab*)(persistentalloc(gocpp::Sizeof<golang::runtime::itab>() + uintptr_t(len(inter->Methods) - 1) * goarch::PtrSize, 0, & memstats.other_sys));
         m->inter = inter;
         m->_type = typ;
         // The hash is used in type switches. However, compiler statically generates itab's
@@ -177,7 +177,7 @@ namespace golang::runtime
         // The cached result doesn't record which
         // interface function was missing, so initialize
         // the itab again to get the missing function name.
-        gocpp::panic(gocpp::InitPtr<TypeAssertionError>([=](auto& x) {
+        gocpp::panic(gocpp::InitPtr<golang::runtime::TypeAssertionError>([=](auto& x) {
             x.concrete = typ;
             x.asserted = & inter->Type;
             x.missingMethod = rec::init(gocpp::recv(m));
@@ -186,7 +186,7 @@ namespace golang::runtime
 
     // find finds the given interface/type pair in t.
     // Returns nil if the given interface/type pair isn't present.
-    struct itab* rec::find(golang::runtime::itabTableType* t, golang::runtime::interfacetype* inter, golang::runtime::_type* typ)
+    golang::runtime::itab* rec::find(itabTableType* t, interfacetype* inter, _type* typ)
     {
         // Implemented using quadratic probing.
         // Probe sequence is h(i) = h0 + i*(i+1)/2 mod 2^k.
@@ -195,11 +195,11 @@ namespace golang::runtime
         auto h = itabHashFunc(inter, typ) & mask;
         for(auto i = uintptr_t(1); ; i++)
         {
-            auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), h * goarch::PtrSize));
+            auto p = (golang::runtime::itab**)(runtime::add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), h * goarch::PtrSize));
             // Use atomic read here so if we see m != nil, we also see
             // the initializations of the fields of m.
             // m := *p
-            auto m = (itab*)(atomic::Loadp(gocpp::unsafe_pointer(p)));
+            auto m = (golang::runtime::itab*)(atomic::Loadp(gocpp::unsafe_pointer(p)));
             if(m == nullptr)
             {
                 return nullptr;
@@ -215,7 +215,7 @@ namespace golang::runtime
 
     // itabAdd adds the given itab to the itab hash table.
     // itabLock must be held.
-    void itabAdd(struct itab* m)
+    void itabAdd(itab* m)
     {
         // Bugs can lead to calling this while mallocing is set,
         // typically because this is called while panicking.
@@ -234,7 +234,7 @@ namespace golang::runtime
             // t2 = new(itabTableType) + some additional entries
             // We lie and tell malloc we want pointer-free memory because
             // all the pointed-to values are not in the heap.
-            auto t2 = (itabTableType*)(mallocgc((2 + 2 * t->size) * goarch::PtrSize, nullptr, true));
+            auto t2 = (golang::runtime::itabTableType*)(mallocgc((2 + 2 * t->size) * goarch::PtrSize, nullptr, true));
             t2->size = t->size * 2;
 
             // Copy over entries.
@@ -257,7 +257,7 @@ namespace golang::runtime
 
     // add adds the given itab to itab table t.
     // itabLock must be held.
-    void rec::add(golang::runtime::itabTableType* t, struct itab* m)
+    void rec::add(itabTableType* t, itab* m)
     {
         // See comment in find about the probe sequence.
         // Insert new itab in the first empty spot in the probe sequence.
@@ -265,7 +265,7 @@ namespace golang::runtime
         auto h = itabHashFunc(m->inter, m->_type) & mask;
         for(auto i = uintptr_t(1); ; i++)
         {
-            auto p = (itab**)(runtime::add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), h * goarch::PtrSize));
+            auto p = (golang::runtime::itab**)(runtime::add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), h * goarch::PtrSize));
             auto m2 = *p;
             if(m2 == m)
             {
@@ -294,7 +294,7 @@ namespace golang::runtime
     // the m.inter/m._type pair. If the type does not implement the interface,
     // it sets m.fun[0] to 0 and returns the name of an interface function that is missing.
     // It is ok to call this multiple times on the same m, even concurrently.
-    gocpp::string rec::init(golang::runtime::itab* m)
+    gocpp::string rec::init(itab* m)
     {
         auto inter = m->inter;
         auto typ = m->_type;
@@ -383,16 +383,16 @@ namespace golang::runtime
     // have = the dynamic type we have.
     // want = the static type we're trying to convert to.
     // iface = the static type we're converting from.
-    void panicdottypeE(golang::runtime::_type* have, golang::runtime::_type* want, golang::runtime::_type* iface)
+    void panicdottypeE(_type* have, _type* want, _type* iface)
     {
-        gocpp::panic(new TypeAssertionError {iface, have, want, ""_s});
+        gocpp::panic(new golang::runtime::TypeAssertionError {iface, have, want, ""_s});
     }
 
     // panicdottypeI is called when doing an i.(T) conversion and the conversion fails.
     // Same args as panicdottypeE, but "have" is the dynamic itab we have.
-    void panicdottypeI(struct itab* have, golang::runtime::_type* want, golang::runtime::_type* iface)
+    void panicdottypeI(itab* have, _type* want, _type* iface)
     {
-        runtime::_type* t = {};
+        golang::runtime::_type* t = {};
         if(have != nullptr)
         {
             t = have->_type;
@@ -402,12 +402,12 @@ namespace golang::runtime
 
     // panicnildottype is called when doing an i.(T) conversion and the interface i is nil.
     // want = the static type we're trying to convert to.
-    void panicnildottype(golang::runtime::_type* want)
+    void panicnildottype(_type* want)
     {
         // TODO: Add the static type we're converting from as well.
         // It might generate a better error message.
         // Just to match other nil conversion errors, we don't for now.
-        gocpp::panic(new TypeAssertionError {nullptr, nullptr, want, ""_s});
+        gocpp::panic(new golang::runtime::TypeAssertionError {nullptr, nullptr, want, ""_s});
     }
 
     // The specialized convTx routines need a type descriptor to use when calling mallocgc.
@@ -421,14 +421,14 @@ namespace golang::runtime
     go_any uint64Eface = uint64InterfacePtr(0);
     go_any stringEface = stringInterfacePtr(""_s);
     go_any sliceEface = sliceInterfacePtr(nullptr);
-    runtime::_type* uint16Type = efaceOf(& uint16Eface)->_type;
-    runtime::_type* uint32Type = efaceOf(& uint32Eface)->_type;
-    runtime::_type* uint64Type = efaceOf(& uint64Eface)->_type;
-    runtime::_type* stringType = efaceOf(& stringEface)->_type;
-    runtime::_type* sliceType = efaceOf(& sliceEface)->_type;
+    golang::runtime::_type* uint16Type = efaceOf(& uint16Eface)->_type;
+    golang::runtime::_type* uint32Type = efaceOf(& uint32Eface)->_type;
+    golang::runtime::_type* uint64Type = efaceOf(& uint64Eface)->_type;
+    golang::runtime::_type* stringType = efaceOf(& stringEface)->_type;
+    golang::runtime::_type* sliceType = efaceOf(& sliceEface)->_type;
     // convT converts a value of type t, which is pointed to by v, to a pointer that can
     // be used as the second word of an interface value.
-    gocpp::unsafe_pointer convT(golang::runtime::_type* t, gocpp::unsafe_pointer v)
+    gocpp::unsafe_pointer convT(_type* t, gocpp::unsafe_pointer v)
     {
         if(raceenabled)
         {
@@ -447,7 +447,7 @@ namespace golang::runtime
         return x;
     }
 
-    gocpp::unsafe_pointer convTnoptr(golang::runtime::_type* t, gocpp::unsafe_pointer v)
+    gocpp::unsafe_pointer convTnoptr(_type* t, gocpp::unsafe_pointer v)
     {
         // TODO: maybe take size instead of type?
         if(raceenabled)
@@ -540,7 +540,7 @@ namespace golang::runtime
     {
         gocpp::unsafe_pointer x;
         // Note: this must work for any element type, not just byte.
-        if((slice*)(gocpp::unsafe_pointer(& val))->array == nullptr)
+        if((golang::runtime::slice*)(gocpp::unsafe_pointer(& val))->array == nullptr)
         {
             x = gocpp::unsafe_pointer(& zeroVal[0]);
         }
@@ -552,17 +552,17 @@ namespace golang::runtime
         return x;
     }
 
-    struct itab* assertE2I(golang::runtime::interfacetype* inter, golang::runtime::_type* t)
+    golang::runtime::itab* assertE2I(interfacetype* inter, _type* t)
     {
         if(t == nullptr)
         {
             // explicit conversions require non-nil interface value.
-            gocpp::panic(new TypeAssertionError {nullptr, nullptr, & inter->Type, ""_s});
+            gocpp::panic(new golang::runtime::TypeAssertionError {nullptr, nullptr, & inter->Type, ""_s});
         }
         return getitab(inter, t, false);
     }
 
-    struct itab* assertE2I2(golang::runtime::interfacetype* inter, golang::runtime::_type* t)
+    golang::runtime::itab* assertE2I2(interfacetype* inter, _type* t)
     {
         if(t == nullptr)
         {
@@ -574,14 +574,14 @@ namespace golang::runtime
     // typeAssert builds an itab for the concrete type t and the
     // interface type s.Inter. If the conversion is not possible it
     // panics if s.CanFail is false and returns nil if s.CanFail is true.
-    struct itab* typeAssert(abi::TypeAssert* s, golang::runtime::_type* t)
+    golang::runtime::itab* typeAssert(abi::TypeAssert* s, _type* t)
     {
-        itab* tab = {};
+        golang::runtime::itab* tab = {};
         if(t == nullptr)
         {
             if(! s->CanFail)
             {
-                gocpp::panic(new TypeAssertionError {nullptr, nullptr, & s->Inter->Type, ""_s});
+                gocpp::panic(new golang::runtime::TypeAssertionError {nullptr, nullptr, & s->Inter->Type, ""_s});
             }
         }
         else
@@ -622,7 +622,7 @@ namespace golang::runtime
         return tab;
     }
 
-    abi::TypeAssertCache* buildTypeAssertCache(abi::TypeAssertCache* oldC, golang::runtime::_type* typ, struct itab* tab)
+    abi::TypeAssertCache* buildTypeAssertCache(abi::TypeAssertCache* oldC, _type* typ, itab* tab)
     {
         auto oldEntries = unsafe::Slice(& oldC->Entries[0], oldC->Mask + 1);
 
@@ -651,7 +651,7 @@ namespace golang::runtime
         auto newEntries = unsafe::Slice(& newC->Entries[0], newN);
 
         // Fill the new table.
-        auto addEntry = [=](runtime::_type* typ, struct itab* tab) mutable -> void
+        auto addEntry = [=](golang::runtime::_type* typ, golang::runtime::itab* tab) mutable -> void
         {
             auto h = int(typ->Hash) & (newN - 1);
             for(; ; )
@@ -669,7 +669,7 @@ namespace golang::runtime
         {
             if(e.Typ != 0)
             {
-                addEntry((runtime::_type*)(gocpp::unsafe_pointer(e.Typ)), (itab*)(gocpp::unsafe_pointer(e.Itab)));
+                addEntry((golang::runtime::_type*)(gocpp::unsafe_pointer(e.Typ)), (golang::runtime::itab*)(gocpp::unsafe_pointer(e.Itab)));
             }
         }
         addEntry(typ, tab);
@@ -687,13 +687,13 @@ namespace golang::runtime
     // an itab for the pair <t, s.Cases[i]>.
     // If there is no match, return N,nil, where N is the number
     // of cases.
-    std::tuple<int, struct itab*> interfaceSwitch(abi::InterfaceSwitch* s, golang::runtime::_type* t)
+    std::tuple<int, golang::runtime::itab*> interfaceSwitch(abi::InterfaceSwitch* s, _type* t)
     {
         auto cases = unsafe::Slice(& s->Cases[0], s->NCases);
 
         // Results if we don't find a match.
         auto case_ = len(cases);
-        itab* tab = {};
+        golang::runtime::itab* tab = {};
 
         // Look through each case in order.
         for(auto [i, c] : cases)
@@ -745,7 +745,7 @@ namespace golang::runtime
     // buildInterfaceSwitchCache constructs an interface switch cache
     // containing all the entries from oldC plus the new entry
     // (typ,case_,tab).
-    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, golang::runtime::_type* typ, int case_, struct itab* tab)
+    abi::InterfaceSwitchCache* buildInterfaceSwitchCache(abi::InterfaceSwitchCache* oldC, _type* typ, int case_, itab* tab)
     {
         auto oldEntries = unsafe::Slice(& oldC->Entries[0], oldC->Mask + 1);
 
@@ -774,7 +774,7 @@ namespace golang::runtime
         auto newEntries = unsafe::Slice(& newC->Entries[0], newN);
 
         // Fill the new table.
-        auto addEntry = [=](runtime::_type* typ, int case_, struct itab* tab) mutable -> void
+        auto addEntry = [=](golang::runtime::_type* typ, int case_, golang::runtime::itab* tab) mutable -> void
         {
             auto h = int(typ->Hash) & (newN - 1);
             for(; ; )
@@ -793,7 +793,7 @@ namespace golang::runtime
         {
             if(e.Typ != 0)
             {
-                addEntry((runtime::_type*)(gocpp::unsafe_pointer(e.Typ)), e.Case, (itab*)(gocpp::unsafe_pointer(e.Itab)));
+                addEntry((golang::runtime::_type*)(gocpp::unsafe_pointer(e.Typ)), e.Case, (golang::runtime::itab*)(gocpp::unsafe_pointer(e.Itab)));
             }
         }
         addEntry(typ, case_, tab);
@@ -807,25 +807,25 @@ namespace golang::runtime
         x.Mask = 0;
     });
     //go:linkname reflect_ifaceE2I reflect.ifaceE2I
-    void reflect_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst)
+    void reflect_ifaceE2I(interfacetype* inter, eface e, iface* dst)
     {
-        *dst = iface {assertE2I(inter, e._type), e.data};
+        *dst = golang::runtime::iface {assertE2I(inter, e._type), e.data};
     }
 
     //go:linkname reflectlite_ifaceE2I internal/reflectlite.ifaceE2I
-    void reflectlite_ifaceE2I(golang::runtime::interfacetype* inter, struct eface e, struct iface* dst)
+    void reflectlite_ifaceE2I(interfacetype* inter, eface e, iface* dst)
     {
-        *dst = iface {assertE2I(inter, e._type), e.data};
+        *dst = golang::runtime::iface {assertE2I(inter, e._type), e.data};
     }
 
-    void iterate_itabs(std::function<void (struct itab* _1)> fn)
+    void iterate_itabs(std::function<void (itab* _1)> fn)
     {
         // Note: only runs during stop the world or with itabLock held,
         // so no other locks/atomics needed.
         auto t = itabTable;
         for(auto i = uintptr_t(0); i < t->size; i++)
         {
-            auto m = *(itab**)(add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), i * goarch::PtrSize));
+            auto m = *(golang::runtime::itab**)(add(gocpp::unsafe_pointer(gocpp::make_array_ptr(t->entries)), i * goarch::PtrSize));
             if(m != nullptr)
             {
                 fn(m);

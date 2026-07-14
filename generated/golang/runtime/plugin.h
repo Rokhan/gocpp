@@ -20,8 +20,8 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    std::tuple<gocpp::string, gocpp::map<gocpp::string, go_any>, gocpp::slice<initTask*>, gocpp::string> plugin_lastmoduleinit();
-    void pluginftabverify(struct moduledata* md);
+    std::tuple<gocpp::string, gocpp::map<gocpp::string, go_any>, gocpp::slice<golang::runtime::initTask*>, gocpp::string> plugin_lastmoduleinit();
+    void pluginftabverify(moduledata* md);
     struct ptabEntry
     {
         golang::runtime::nameOff name{};

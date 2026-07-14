@@ -111,7 +111,7 @@ namespace golang::windows
     syscall::LazyProc* procDestroyEnvironmentBlock = rec::NewProc(gocpp::recv(moduserenv), "DestroyEnvironmentBlock"_s);
     syscall::LazyProc* procGetProfilesDirectoryW = rec::NewProc(gocpp::recv(moduserenv), "GetProfilesDirectoryW"_s);
     syscall::LazyProc* procWSASocketW = rec::NewProc(gocpp::recv(modws2_32), "WSASocketW"_s);
-    std::tuple<uint32_t, struct gocpp::error> adjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, struct TOKEN_PRIVILEGES* newstate, uint32_t buflen, struct TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen)
+    std::tuple<uint32_t, struct gocpp::error> adjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen)
     {
         uint32_t ret;
         struct gocpp::error err;
@@ -129,7 +129,7 @@ namespace golang::windows
         return {ret, err};
     }
 
-    struct gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, golang::windows::TokenType tokenType, syscall::Token* phNewToken)
+    struct gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, TokenType tokenType, syscall::Token* phNewToken)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_1, e1] = syscall::Syscall6(rec::Addr(gocpp::recv(procDuplicateTokenEx)), 6, uintptr_t(hExistingToken), uintptr_t(dwDesiredAccess), uintptr_t(gocpp::unsafe_pointer(lpTokenAttributes)), uintptr_t(impersonationLevel), uintptr_t(tokenType), uintptr_t(gocpp::unsafe_pointer(phNewToken)));
@@ -151,7 +151,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error LookupPrivilegeValue(uint16_t* systemname, uint16_t* name, struct LUID* luid)
+    struct gocpp::error LookupPrivilegeValue(uint16_t* systemname, uint16_t* name, LUID* luid)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_3, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procLookupPrivilegeValueW)), 3, uintptr_t(gocpp::unsafe_pointer(systemname)), uintptr_t(gocpp::unsafe_pointer(name)), uintptr_t(gocpp::unsafe_pointer(luid)));
@@ -204,7 +204,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error QueryServiceStatus(syscall::Handle hService, struct SERVICE_STATUS* lpServiceStatus)
+    struct gocpp::error QueryServiceStatus(syscall::Handle hService, SERVICE_STATUS* lpServiceStatus)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_7, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procQueryServiceStatus)), 2, uintptr_t(hService), uintptr_t(gocpp::unsafe_pointer(lpServiceStatus)), 0);
@@ -253,7 +253,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error GetAdaptersAddresses(uint32_t family, uint32_t flags, uintptr_t reserved, struct IpAdapterAddresses* adapterAddresses, uint32_t* sizePointer)
+    struct gocpp::error GetAdaptersAddresses(uint32_t family, uint32_t flags, uintptr_t reserved, IpAdapterAddresses* adapterAddresses, uint32_t* sizePointer)
     {
         struct gocpp::error errcode;
         auto [r0, gocpp_id_11, gocpp_id_12] = syscall::Syscall6(rec::Addr(gocpp::recv(procGetAdaptersAddresses)), 5, uintptr_t(family), uintptr_t(flags), uintptr_t(reserved), uintptr_t(gocpp::unsafe_pointer(adapterAddresses)), uintptr_t(gocpp::unsafe_pointer(sizePointer)), 0);
@@ -264,7 +264,7 @@ namespace golang::windows
         return errcode;
     }
 
-    std::tuple<syscall::Handle, struct gocpp::error> CreateEvent(struct SecurityAttributes* eventAttrs, uint32_t manualReset, uint32_t initialState, uint16_t* name)
+    std::tuple<syscall::Handle, struct gocpp::error> CreateEvent(SecurityAttributes* eventAttrs, uint32_t manualReset, uint32_t initialState, uint16_t* name)
     {
         syscall::Handle handle;
         struct gocpp::error err;
@@ -400,7 +400,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error Module32First(syscall::Handle snapshot, struct ModuleEntry32* moduleEntry)
+    struct gocpp::error Module32First(syscall::Handle snapshot, ModuleEntry32* moduleEntry)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_27, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procModule32FirstW)), 2, uintptr_t(snapshot), uintptr_t(gocpp::unsafe_pointer(moduleEntry)), 0);
@@ -411,7 +411,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error Module32Next(syscall::Handle snapshot, struct ModuleEntry32* moduleEntry)
+    struct gocpp::error Module32Next(syscall::Handle snapshot, ModuleEntry32* moduleEntry)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_28, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procModule32NextW)), 2, uintptr_t(snapshot), uintptr_t(gocpp::unsafe_pointer(moduleEntry)), 0);
@@ -484,7 +484,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error VirtualQuery(uintptr_t address, struct MemoryBasicInformation* buffer, uintptr_t length)
+    struct gocpp::error VirtualQuery(uintptr_t address, MemoryBasicInformation* buffer, uintptr_t length)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_37, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procVirtualQuery)), 3, uintptr_t(address), uintptr_t(gocpp::unsafe_pointer(buffer)), uintptr_t(length));
@@ -528,7 +528,7 @@ namespace golang::windows
         return neterr;
     }
 
-    struct gocpp::error GetProcessMemoryInfo(syscall::Handle handle, struct PROCESS_MEMORY_COUNTERS* memCounters, uint32_t cb)
+    struct gocpp::error GetProcessMemoryInfo(syscall::Handle handle, PROCESS_MEMORY_COUNTERS* memCounters, uint32_t cb)
     {
         struct gocpp::error err;
         auto [r1, gocpp_id_44, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procGetProcessMemoryInfo)), 3, uintptr_t(handle), uintptr_t(gocpp::unsafe_pointer(memCounters)), uintptr_t(cb));

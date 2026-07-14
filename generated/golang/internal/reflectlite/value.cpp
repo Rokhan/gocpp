@@ -86,12 +86,12 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    reflectlite::Kind rec::kind(golang::reflectlite::flag f)
+    golang::reflectlite::Kind rec::kind(flag f)
     {
         return Kind(f & flagKindMask);
     }
 
-    reflectlite::flag rec::ro(golang::reflectlite::flag f)
+    golang::reflectlite::flag rec::ro(flag f)
     {
         if(f & flagRO != 0)
         {
@@ -126,11 +126,11 @@ namespace golang::reflectlite
     }
 
     // packEface converts v to the empty interface.
-    go_any packEface(struct Value v)
+    go_any packEface(golang::reflectlite::Value v)
     {
         auto t = rec::typ(gocpp::recv(v));
         go_any i = {};
-        auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
+        auto e = (golang::reflectlite::emptyInterface*)(gocpp::unsafe_pointer(& i));
         // First, fill in the data portion of the interface.
         //Go switch emulation
         {
@@ -178,21 +178,21 @@ namespace golang::reflectlite
     }
 
     // unpackEface converts the empty interface i to a Value.
-    struct Value unpackEface(go_any i)
+    golang::reflectlite::Value unpackEface(go_any i)
     {
-        auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
+        auto e = (golang::reflectlite::emptyInterface*)(gocpp::unsafe_pointer(& i));
         // NOTE: don't read e.word until we know whether it is really a pointer or not.
         auto t = e->typ;
         if(t == nullptr)
         {
-            return Value {};
+            return golang::reflectlite::Value {};
         }
         auto f = flag(rec::Kind(gocpp::recv(t)));
         if(ifaceIndir(t))
         {
             f |= flagIndir;
         }
-        return Value {t, e->word, f};
+        return golang::reflectlite::Value {t, e->word, f};
     }
 
     // A ValueError occurs when a Value method is invoked on
@@ -230,7 +230,7 @@ namespace golang::reflectlite
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::reflectlite::ValueError* e)
+    gocpp::string rec::Error(ValueError* e)
     {
         if(e->Kind == 0)
         {
@@ -287,11 +287,11 @@ namespace golang::reflectlite
 
     // mustBeExported panics if f records that the value was obtained using
     // an unexported field.
-    void rec::mustBeExported(golang::reflectlite::flag f)
+    void rec::mustBeExported(flag f)
     {
         if(f == 0)
         {
-            gocpp::panic(new ValueError {methodName(), 0});
+            gocpp::panic(new golang::reflectlite::ValueError {methodName(), 0});
         }
         if(f & flagRO != 0)
         {
@@ -302,11 +302,11 @@ namespace golang::reflectlite
     // mustBeAssignable panics if f records that the value is not assignable,
     // which is to say that either it was obtained using an unexported field
     // or it is not addressable.
-    void rec::mustBeAssignable(golang::reflectlite::flag f)
+    void rec::mustBeAssignable(flag f)
     {
         if(f == 0)
         {
-            gocpp::panic(new ValueError {methodName(), abi::Invalid});
+            gocpp::panic(new golang::reflectlite::ValueError {methodName(), abi::Invalid});
         }
         // Assignable if addressable and not read-only.
         if(f & flagRO != 0)
@@ -382,7 +382,7 @@ namespace golang::reflectlite
     // or that the pointer v points to.
     // It panics if v's Kind is not Interface or Pointer.
     // It returns the zero Value if v is nil.
-    struct Value rec::Elem(golang::reflectlite::Value v)
+    golang::reflectlite::Value rec::Elem(golang::reflectlite::Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
@@ -422,18 +422,18 @@ namespace golang::reflectlite
                     // The returned value's address is v's value.
                     if(ptr == nullptr)
                     {
-                        return Value {};
+                        return golang::reflectlite::Value {};
                     }
-                    auto tt = (reflectlite::ptrType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (golang::reflectlite::ptrType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     auto typ = tt->Elem;
                     auto fl = v.flag & flagRO | flagIndir | flagAddr;
                     fl |= flag(rec::Kind(gocpp::recv(typ)));
-                    return Value {typ, ptr, fl};
+                    return golang::reflectlite::Value {typ, ptr, fl};
                     break;
                 }
             }
         }
-        gocpp::panic(new ValueError {"reflectlite.Value.Elem"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflectlite::ValueError {"reflectlite.Value.Elem"_s, rec::kind(gocpp::recv(v))});
     }
 
     
@@ -485,11 +485,11 @@ namespace golang::reflectlite
             }
 
 
-    go_any valueInterface(struct Value v)
+    go_any valueInterface(golang::reflectlite::Value v)
     {
         if(v.flag == 0)
         {
-            gocpp::panic(new ValueError {"reflectlite.Value.Interface"_s, 0});
+            gocpp::panic(new golang::reflectlite::ValueError {"reflectlite.Value.Interface"_s, 0});
         }
 
         if(rec::kind(gocpp::recv(v)) == abi::Interface)
@@ -556,7 +556,7 @@ namespace golang::reflectlite
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflectlite.Value.IsNil"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflectlite::ValueError {"reflectlite.Value.IsNil"_s, rec::kind(gocpp::recv(v))});
     }
 
     // IsValid reports whether v represents a value.
@@ -571,7 +571,7 @@ namespace golang::reflectlite
 
     // Kind returns v's Kind.
     // If v is the zero Value (IsValid returns false), Kind returns Invalid.
-    reflectlite::Kind rec::Kind(golang::reflectlite::Value v)
+    golang::reflectlite::Kind rec::Kind(golang::reflectlite::Value v)
     {
         return rec::kind(gocpp::recv(v));
     }
@@ -602,7 +602,7 @@ namespace golang::reflectlite
             {
                 case 0:
                 {
-                    auto tt = (reflectlite::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
+                    auto tt = (golang::reflectlite::arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     return int(tt->Len);
                     break;
                 }
@@ -622,7 +622,7 @@ namespace golang::reflectlite
                     break;
             }
         }
-        gocpp::panic(new ValueError {"reflect.Value.Len"_s, rec::kind(gocpp::recv(v))});
+        gocpp::panic(new golang::reflectlite::ValueError {"reflect.Value.Len"_s, rec::kind(gocpp::recv(v))});
     }
 
     // NumMethod returns the number of exported methods in the value's method set.
@@ -630,7 +630,7 @@ namespace golang::reflectlite
     {
         if(rec::typ(gocpp::recv(v)) == nullptr)
         {
-            gocpp::panic(new ValueError {"reflectlite.Value.NumMethod"_s, abi::Invalid});
+            gocpp::panic(new golang::reflectlite::ValueError {"reflectlite.Value.NumMethod"_s, abi::Invalid});
         }
         return rec::NumMethod(gocpp::recv(rec::typ(gocpp::recv(v))));
     }
@@ -638,7 +638,7 @@ namespace golang::reflectlite
     // Set assigns x to the value v.
     // It panics if CanSet returns false.
     // As in Go, x's value must be assignable to v's type.
-    void rec::Set(golang::reflectlite::Value v, struct Value x)
+    void rec::Set(golang::reflectlite::Value v, golang::reflectlite::Value x)
     {
         rec::mustBeAssignable(gocpp::recv(v));
         // do not let unexported x leak
@@ -665,7 +665,7 @@ namespace golang::reflectlite
         auto f = v.flag;
         if(f == 0)
         {
-            gocpp::panic(new ValueError {"reflectlite.Value.Type"_s, abi::Invalid});
+            gocpp::panic(new golang::reflectlite::ValueError {"reflectlite.Value.Type"_s, abi::Invalid});
         }
         // Method values not supported.
         return toRType(rec::typ(gocpp::recv(v)));
@@ -677,11 +677,11 @@ namespace golang::reflectlite
 
     // ValueOf returns a new Value initialized to the concrete value
     // stored in the interface i. ValueOf(nil) returns the zero Value.
-    struct Value ValueOf(go_any i)
+    golang::reflectlite::Value ValueOf(go_any i)
     {
         if(i == nullptr)
         {
-            return Value {};
+            return golang::reflectlite::Value {};
         }
         return unpackEface(i);
     }
@@ -689,7 +689,7 @@ namespace golang::reflectlite
     // assignTo returns a value v that can be assigned directly to typ.
     // It panics if v is not assignable to typ.
     // For a conversion to an interface type, target is a suggested scratch space to use.
-    struct Value rec::assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target)
+    golang::reflectlite::Value rec::assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target)
     {
         // if v.flag&flagMethod != 0 {
         // v = makeMethodValue(context, v)
@@ -707,7 +707,7 @@ namespace golang::reflectlite
                     // Same memory layout, so no harm done.
                     auto fl = v.flag & (flagAddr | flagIndir) | rec::ro(gocpp::recv(v.flag));
                     fl |= flag(rec::Kind(gocpp::recv(dst)));
-                    return Value {dst, v.ptr, fl};
+                    return golang::reflectlite::Value {dst, v.ptr, fl};
                     break;
                 }
 
@@ -722,7 +722,7 @@ namespace golang::reflectlite
                         // A nil ReadWriter passed to nil Reader is OK,
                         // but using ifaceE2I below will panic.
                         // Avoid the panic by returning a nil dst (e.g., Reader) explicitly.
-                        return Value {dst, nullptr, flag(abi::Interface)};
+                        return golang::reflectlite::Value {dst, nullptr, flag(abi::Interface)};
                     }
                     auto x = valueInterface(v);
                     if(rec::NumMethod(gocpp::recv(dst)) == 0)
@@ -733,7 +733,7 @@ namespace golang::reflectlite
                     {
                         ifaceE2I(dst, x, target);
                     }
-                    return Value {dst, target, flagIndir | flag(abi::Interface)};
+                    return golang::reflectlite::Value {dst, target, flagIndir | flag(abi::Interface)};
                     break;
                 }
             }

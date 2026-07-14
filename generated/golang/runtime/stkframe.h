@@ -23,7 +23,7 @@ namespace golang::runtime
     {
         // fn is the function being run in this frame. If there is
         // inlining, this is the outermost function.
-        funcInfo fn{};
+        golang::runtime::funcInfo fn{};
         // pc is the program counter within fn.
         // The meaning of this is subtle:
         // - Typically, this frame performed a regular function call
@@ -88,7 +88,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reflectMethodValue& value);
-    extern gocpp::array<stackObjectRecord, 1> methodValueCallFrameObjs;
+    extern gocpp::array<golang::runtime::stackObjectRecord, 1> methodValueCallFrameObjs;
 }
 
 #include "golang/runtime/stack.h"
@@ -98,9 +98,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        uintptr_t argBytes(golang::runtime::stkframe* frame);
-        std::tuple<struct bitvector, bool> argMapInternal(golang::runtime::stkframe* frame);
-        std::tuple<struct bitvector, struct bitvector, gocpp::slice<stackObjectRecord>> getStackMap(golang::runtime::stkframe* frame, bool debug);
+        uintptr_t argBytes(stkframe* frame);
+        std::tuple<golang::runtime::bitvector, bool> argMapInternal(stkframe* frame);
+        std::tuple<golang::runtime::bitvector, golang::runtime::bitvector, gocpp::slice<golang::runtime::stackObjectRecord>> getStackMap(stkframe* frame, bool debug);
     }
 }
 

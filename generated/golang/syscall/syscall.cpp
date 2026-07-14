@@ -99,7 +99,7 @@ namespace golang::syscall
     // See mksyscall.pl.
     uintptr_t _zero;
     // Unix returns the time stored in ts as seconds plus nanoseconds.
-    std::tuple<int64_t, int64_t> rec::Unix(golang::syscall::Timespec* ts)
+    std::tuple<int64_t, int64_t> rec::Unix(Timespec* ts)
     {
         int64_t sec;
         int64_t nsec;
@@ -107,7 +107,7 @@ namespace golang::syscall
     }
 
     // Unix returns the time stored in tv as seconds plus nanoseconds.
-    std::tuple<int64_t, int64_t> rec::Unix(golang::syscall::Timeval* tv)
+    std::tuple<int64_t, int64_t> rec::Unix(Timeval* tv)
     {
         int64_t sec;
         int64_t nsec;
@@ -115,13 +115,13 @@ namespace golang::syscall
     }
 
     // Nano returns the time stored in ts as nanoseconds.
-    int64_t rec::Nano(golang::syscall::Timespec* ts)
+    int64_t rec::Nano(Timespec* ts)
     {
         return int64_t(ts->Sec) * 1e9 + int64_t(ts->Nsec);
     }
 
     // Nano returns the time stored in tv as nanoseconds.
-    int64_t rec::Nano(golang::syscall::Timeval* tv)
+    int64_t rec::Nano(Timeval* tv)
     {
         return int64_t(tv->Sec) * 1e9 + int64_t(tv->Usec) * 1000;
     }

@@ -95,12 +95,12 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    semTable semtable;
+    golang::runtime::semTable semtable;
     // Prime to not correlate with any user patterns.
     struct gocpp_id_0
     {
         semaRoot root{};
-        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<semaRoot>()> pad{};
+        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<golang::runtime::semaRoot>()> pad{};
 
         using isGoStruct = void;
 
@@ -137,7 +137,7 @@ namespace golang::runtime
     }
 
 
-    struct semaRoot* rec::rootFor(gocpp::array_ptr<golang::runtime::semTable> t, uint32_t* addr)
+    golang::runtime::semaRoot* rec::rootFor(gocpp::array_ptr<semTable> t, uint32_t* addr)
     {
         return & t[(uintptr_t(gocpp::unsafe_pointer(addr)) >> 3) % semTabSize].root;
     }
@@ -184,7 +184,7 @@ namespace golang::runtime
         semrelease(addr);
     }
 
-    void readyWithTime(struct sudog* s, int traceskip)
+    void readyWithTime(sudog* s, int traceskip)
     {
         if(s->releasetime != 0)
         {
@@ -199,7 +199,7 @@ namespace golang::runtime
         semacquire1(addr, false, 0, 0, waitReasonSemacquire);
     }
 
-    void semacquire1(uint32_t* addr, bool lifo, golang::runtime::semaProfileFlags profile, int skipframes, golang::runtime::waitReason reason)
+    void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int skipframes, waitReason reason)
     {
         auto gp = getg();
         if(gp != gp->m->curg)
@@ -378,7 +378,7 @@ namespace golang::runtime
     }
 
     // queue adds s to the blocked goroutines in semaRoot.
-    void rec::queue(golang::runtime::semaRoot* root, uint32_t* addr, struct sudog* s, bool lifo)
+    void rec::queue(semaRoot* root, uint32_t* addr, sudog* s, bool lifo)
     {
         s->g = getg();
         s->elem = gocpp::unsafe_pointer(addr);
@@ -386,7 +386,7 @@ namespace golang::runtime
         s->prev = nullptr;
         s->waiters = 0;
 
-        sudog* last = {};
+        golang::runtime::sudog* last = {};
         auto pt = & root->treap;
         for(auto t = *pt; t != nullptr; t = *pt)
         {
@@ -498,9 +498,9 @@ namespace golang::runtime
     // If there are additional entries in the wait list, dequeue
     // returns tailtime set to the last entry's acquiretime.
     // Otherwise tailtime is found.acquiretime.
-    std::tuple<struct sudog*, int64_t, int64_t> rec::dequeue(golang::runtime::semaRoot* root, uint32_t* addr)
+    std::tuple<golang::runtime::sudog*, int64_t, int64_t> rec::dequeue(semaRoot* root, uint32_t* addr)
     {
-        struct sudog* found;
+        golang::runtime::sudog* found;
         int64_t now;
         int64_t tailtime;
         auto ps = & root->treap;
@@ -608,7 +608,7 @@ namespace golang::runtime
 
     // rotateLeft rotates the tree rooted at node x.
     // turning (x a (y b c)) into (y (x a b) c).
-    void rec::rotateLeft(golang::runtime::semaRoot* root, struct sudog* x)
+    void rec::rotateLeft(semaRoot* root, sudog* x)
     {
         // p -> (x a (y b c))
         auto p = x->parent;
@@ -645,7 +645,7 @@ namespace golang::runtime
 
     // rotateRight rotates the tree rooted at node y.
     // turning (y (x a b) c) into (x a (y b c)).
-    void rec::rotateRight(golang::runtime::semaRoot* root, struct sudog* y)
+    void rec::rotateRight(semaRoot* root, sudog* y)
     {
         // p -> (y (x a b) c)
         auto p = y->parent;
@@ -736,7 +736,7 @@ namespace golang::runtime
     // such a notification, passing the returned ticket number.
     //
     //go:linkname notifyListAdd sync.runtime_notifyListAdd
-    uint32_t notifyListAdd(struct notifyList* l)
+    uint32_t notifyListAdd(notifyList* l)
     {
         // This may be called concurrently, for example, when called from
         // sync.Cond.Wait while holding a RWMutex in read mode.
@@ -747,7 +747,7 @@ namespace golang::runtime
     // notifyListAdd was called, it returns immediately. Otherwise, it blocks.
     //
     //go:linkname notifyListWait sync.runtime_notifyListWait
-    void notifyListWait(struct notifyList* l, uint32_t t)
+    void notifyListWait(notifyList* l, uint32_t t)
     {
         lockWithRank(& l->lock, lockRankNotifyList);
 
@@ -789,7 +789,7 @@ namespace golang::runtime
     // notifyListNotifyAll notifies all entries in the list.
     //
     //go:linkname notifyListNotifyAll sync.runtime_notifyListNotifyAll
-    void notifyListNotifyAll(struct notifyList* l)
+    void notifyListNotifyAll(notifyList* l)
     {
         // Fast-path: if there are no new waiters since the last notification
         // we don't need to acquire the lock.
@@ -825,7 +825,7 @@ namespace golang::runtime
     // notifyListNotifyOne notifies one entry in the list.
     //
     //go:linkname notifyListNotifyOne sync.runtime_notifyListNotifyOne
-    void notifyListNotifyOne(struct notifyList* l)
+    void notifyListNotifyOne(notifyList* l)
     {
         // Fast-path: if there are no new waiters since the last notification
         // we don't need to acquire the lock at all.
@@ -859,7 +859,7 @@ namespace golang::runtime
         // be too long. This applies even when the g is missing:
         // it hasn't yet gotten to sleep and has lost the race to
         // the (few) other g's that we find on the list.
-        for(auto [p, s] = std::tuple{(sudog*)(nullptr), l->head}; s != nullptr; std::tie(p, s) = std::tuple{s, s->next})
+        for(auto [p, s] = std::tuple{(golang::runtime::sudog*)(nullptr), l->head}; s != nullptr; std::tie(p, s) = std::tuple{s, s->next})
         {
             if(s->ticket == t)
             {
@@ -888,9 +888,9 @@ namespace golang::runtime
     //go:linkname notifyListCheck sync.runtime_notifyListCheck
     void notifyListCheck(uintptr_t sz)
     {
-        if(sz != gocpp::Sizeof<notifyList>())
+        if(sz != gocpp::Sizeof<golang::runtime::notifyList>())
         {
-            print("runtime: bad notifyList size - sync="_s, sz, " runtime="_s, gocpp::Sizeof<notifyList>(), "\n"_s);
+            print("runtime: bad notifyList size - sync="_s, sz, " runtime="_s, gocpp::Sizeof<golang::runtime::notifyList>(), "\n"_s);
             go_throw("bad notifyList size"_s);
         }
     }

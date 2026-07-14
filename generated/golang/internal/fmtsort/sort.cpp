@@ -79,17 +79,17 @@ namespace golang::fmtsort
         return value.PrintTo(os);
     }
 
-    int rec::Len(golang::fmtsort::SortedMap* o)
+    int rec::Len(SortedMap* o)
     {
         return len(o->Key);
     }
 
-    bool rec::Less(golang::fmtsort::SortedMap* o, int i, int j)
+    bool rec::Less(SortedMap* o, int i, int j)
     {
         return compare(o->Key[i], o->Key[j]) < 0;
     }
 
-    void rec::Swap(golang::fmtsort::SortedMap* o, int i, int j)
+    void rec::Swap(SortedMap* o, int i, int j)
     {
         std::tie(o->Key[i], o->Key[j]) = std::tuple{o->Key[j], o->Key[i]};
         std::tie(o->Value[i], o->Value[j]) = std::tuple{o->Value[j], o->Value[i]};
@@ -113,7 +113,7 @@ namespace golang::fmtsort
     //     Otherwise identical arrays compare by length.
     //   - interface values compare first by reflect.Type describing the concrete type
     //     and then by concrete value as described in the previous rules.
-    struct SortedMap* Sort(reflect::Value mapValue)
+    golang::fmtsort::SortedMap* Sort(reflect::Value mapValue)
     {
         if(rec::Kind(gocpp::recv(rec::Type(gocpp::recv(mapValue)))) != reflect::Map)
         {
@@ -131,7 +131,7 @@ namespace golang::fmtsort
             key = append(key, rec::Key(gocpp::recv(iter)));
             value = append(value, rec::Value(gocpp::recv(iter)));
         }
-        auto sorted = gocpp::InitPtr<SortedMap>([=](auto& x) {
+        auto sorted = gocpp::InitPtr<golang::fmtsort::SortedMap>([=](auto& x) {
             x.Key = key;
             x.Value = value;
         });

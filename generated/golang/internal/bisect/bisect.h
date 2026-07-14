@@ -189,23 +189,23 @@ namespace golang::bisect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dedup& value);
-    std::tuple<struct Matcher*, struct gocpp::error> New(gocpp::string pattern);
+    std::tuple<golang::bisect::Matcher*, struct gocpp::error> New(gocpp::string pattern);
 
     namespace rec
     {
-        struct dedup* Load(golang::bisect::atomicPointerDedup* p);
-        bool CompareAndSwap(golang::bisect::atomicPointerDedup* p, struct dedup* old, struct dedup* go_new);
-        bool MarkerOnly(golang::bisect::Matcher* m);
-        bool ShouldEnable(golang::bisect::Matcher* m, uint64_t id);
-        bool ShouldPrint(golang::bisect::Matcher* m, uint64_t id);
-        bool matchResult(golang::bisect::Matcher* m, uint64_t id);
-        bool FileLine(golang::bisect::Matcher* m, struct Writer w, gocpp::string file, int line);
-        bool fileLine(golang::bisect::Matcher* m, struct Writer w, gocpp::string file, int line);
-        bool Stack(golang::bisect::Matcher* m, struct Writer w);
-        bool stack(golang::bisect::Matcher* m, struct Writer w);
-        gocpp::string Error(golang::bisect::parseError* e);
-        bool seen(golang::bisect::dedup* d, uint64_t h);
-        bool seenLossy(golang::bisect::dedup* d, uint64_t h);
+        golang::bisect::dedup* Load(atomicPointerDedup* p);
+        bool CompareAndSwap(atomicPointerDedup* p, dedup* old, dedup* go_new);
+        bool MarkerOnly(Matcher* m);
+        bool ShouldEnable(Matcher* m, uint64_t id);
+        bool ShouldPrint(Matcher* m, uint64_t id);
+        bool matchResult(Matcher* m, uint64_t id);
+        bool FileLine(Matcher* m, struct Writer w, gocpp::string file, int line);
+        bool fileLine(Matcher* m, struct Writer w, gocpp::string file, int line);
+        bool Stack(Matcher* m, struct Writer w);
+        bool stack(Matcher* m, struct Writer w);
+        gocpp::string Error(parseError* e);
+        bool seen(dedup* d, uint64_t h);
+        bool seenLossy(dedup* d, uint64_t h);
     }
 }
 

@@ -75,7 +75,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    using pinnerBits = gocpp::defined<gcBits, GoTag_pinnerBits>;
+    using pinnerBits = gocpp::defined<golang::runtime::gcBits, GoTag_pinnerBits>;
     extern std::function<void (void)> pinnerLeakPanic;
 }
 
@@ -86,22 +86,22 @@ namespace golang::runtime
 
     namespace rec
     {
-        void Pin(golang::runtime::Pinner* p, go_any pointer);
-        void Unpin(golang::runtime::Pinner* p);
-        void unpin(golang::runtime::pinner* p);
-        bool isPinned(golang::runtime::pinState* v);
-        bool isMultiPinned(golang::runtime::pinState* v);
-        void setPinned(golang::runtime::pinState* v, bool val);
-        void setMultiPinned(golang::runtime::pinState* v, bool val);
-        void set(golang::runtime::pinState* v, bool val, bool multipin);
-        struct pinState ofObject(golang::runtime::pinnerBits* p, uintptr_t n);
-        uintptr_t pinnerBitSize(golang::runtime::mspan* s);
-        runtime::pinnerBits* newPinnerBits(golang::runtime::mspan* s);
-        runtime::pinnerBits* getPinnerBits(golang::runtime::mspan* s);
-        void setPinnerBits(golang::runtime::mspan* s, golang::runtime::pinnerBits* p);
-        void refreshPinnerBits(golang::runtime::mspan* s);
-        void incPinCounter(golang::runtime::mspan* span, uintptr_t offset);
-        bool decPinCounter(golang::runtime::mspan* span, uintptr_t offset);
+        void Pin(Pinner* p, go_any pointer);
+        void Unpin(Pinner* p);
+        void unpin(pinner* p);
+        bool isPinned(pinState* v);
+        bool isMultiPinned(pinState* v);
+        void setPinned(pinState* v, bool val);
+        void setMultiPinned(pinState* v, bool val);
+        void set(pinState* v, bool val, bool multipin);
+        golang::runtime::pinState ofObject(pinnerBits* p, uintptr_t n);
+        uintptr_t pinnerBitSize(mspan* s);
+        golang::runtime::pinnerBits* newPinnerBits(mspan* s);
+        golang::runtime::pinnerBits* getPinnerBits(mspan* s);
+        void setPinnerBits(mspan* s, pinnerBits* p);
+        void refreshPinnerBits(mspan* s);
+        void incPinCounter(mspan* span, uintptr_t offset);
+        bool decPinCounter(mspan* span, uintptr_t offset);
     }
 }
 

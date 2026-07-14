@@ -91,7 +91,7 @@ namespace golang::atomic
 
     // For testing *Pointer[T]'s methods can be inlined.
     // Keep in sync with cmd/compile/internal/test/inl_test.go:TestIntendedInlining.
-    atomic::Pointer<int>* gocpp_id_0 = new atomic::Pointer<int> {};
+    golang::atomic::Pointer<int>* gocpp_id_0 = new golang::atomic::Pointer<int> {};
     // A Pointer is an atomic pointer of type *T. The zero value is a nil *T.
     
     template<typename T>
@@ -196,33 +196,33 @@ namespace golang::atomic
     }
 
     // Load atomically loads and returns the value stored in x.
-    int32_t rec::Load(golang::atomic::Int32* x)
+    int32_t rec::Load(Int32* x)
     {
         return LoadInt32(& x->v);
     }
 
     // Store atomically stores val into x.
-    void rec::Store(golang::atomic::Int32* x, int32_t val)
+    void rec::Store(Int32* x, int32_t val)
     {
         StoreInt32(& x->v, val);
     }
 
     // Swap atomically stores new into x and returns the previous value.
-    int32_t rec::Swap(golang::atomic::Int32* x, int32_t go_new)
+    int32_t rec::Swap(Int32* x, int32_t go_new)
     {
         int32_t old;
         return SwapInt32(& x->v, go_new);
     }
 
     // CompareAndSwap executes the compare-and-swap operation for x.
-    bool rec::CompareAndSwap(golang::atomic::Int32* x, int32_t old, int32_t go_new)
+    bool rec::CompareAndSwap(Int32* x, int32_t old, int32_t go_new)
     {
         bool swapped;
         return CompareAndSwapInt32(& x->v, old, go_new);
     }
 
     // Add atomically adds delta to x and returns the new value.
-    int32_t rec::Add(golang::atomic::Int32* x, int32_t delta)
+    int32_t rec::Add(Int32* x, int32_t delta)
     {
         int32_t go_new;
         return AddInt32(& x->v, delta);
@@ -265,33 +265,33 @@ namespace golang::atomic
     }
 
     // Load atomically loads and returns the value stored in x.
-    int64_t rec::Load(golang::atomic::Int64* x)
+    int64_t rec::Load(Int64* x)
     {
         return LoadInt64(& x->v);
     }
 
     // Store atomically stores val into x.
-    void rec::Store(golang::atomic::Int64* x, int64_t val)
+    void rec::Store(Int64* x, int64_t val)
     {
         StoreInt64(& x->v, val);
     }
 
     // Swap atomically stores new into x and returns the previous value.
-    int64_t rec::Swap(golang::atomic::Int64* x, int64_t go_new)
+    int64_t rec::Swap(Int64* x, int64_t go_new)
     {
         int64_t old;
         return SwapInt64(& x->v, go_new);
     }
 
     // CompareAndSwap executes the compare-and-swap operation for x.
-    bool rec::CompareAndSwap(golang::atomic::Int64* x, int64_t old, int64_t go_new)
+    bool rec::CompareAndSwap(Int64* x, int64_t old, int64_t go_new)
     {
         bool swapped;
         return CompareAndSwapInt64(& x->v, old, go_new);
     }
 
     // Add atomically adds delta to x and returns the new value.
-    int64_t rec::Add(golang::atomic::Int64* x, int64_t delta)
+    int64_t rec::Add(Int64* x, int64_t delta)
     {
         int64_t go_new;
         return AddInt64(& x->v, delta);
@@ -331,33 +331,33 @@ namespace golang::atomic
     }
 
     // Load atomically loads and returns the value stored in x.
-    uint32_t rec::Load(golang::atomic::Uint32* x)
+    uint32_t rec::Load(Uint32* x)
     {
         return LoadUint32(& x->v);
     }
 
     // Store atomically stores val into x.
-    void rec::Store(golang::atomic::Uint32* x, uint32_t val)
+    void rec::Store(Uint32* x, uint32_t val)
     {
         StoreUint32(& x->v, val);
     }
 
     // Swap atomically stores new into x and returns the previous value.
-    uint32_t rec::Swap(golang::atomic::Uint32* x, uint32_t go_new)
+    uint32_t rec::Swap(Uint32* x, uint32_t go_new)
     {
         uint32_t old;
         return SwapUint32(& x->v, go_new);
     }
 
     // CompareAndSwap executes the compare-and-swap operation for x.
-    bool rec::CompareAndSwap(golang::atomic::Uint32* x, uint32_t old, uint32_t go_new)
+    bool rec::CompareAndSwap(Uint32* x, uint32_t old, uint32_t go_new)
     {
         bool swapped;
         return CompareAndSwapUint32(& x->v, old, go_new);
     }
 
     // Add atomically adds delta to x and returns the new value.
-    uint32_t rec::Add(golang::atomic::Uint32* x, uint32_t delta)
+    uint32_t rec::Add(Uint32* x, uint32_t delta)
     {
         uint32_t go_new;
         return AddUint32(& x->v, delta);
@@ -400,33 +400,33 @@ namespace golang::atomic
     }
 
     // Load atomically loads and returns the value stored in x.
-    uint64_t rec::Load(golang::atomic::Uint64* x)
+    uint64_t rec::Load(Uint64* x)
     {
         return LoadUint64(& x->v);
     }
 
     // Store atomically stores val into x.
-    void rec::Store(golang::atomic::Uint64* x, uint64_t val)
+    void rec::Store(Uint64* x, uint64_t val)
     {
         StoreUint64(& x->v, val);
     }
 
     // Swap atomically stores new into x and returns the previous value.
-    uint64_t rec::Swap(golang::atomic::Uint64* x, uint64_t go_new)
+    uint64_t rec::Swap(Uint64* x, uint64_t go_new)
     {
         uint64_t old;
         return SwapUint64(& x->v, go_new);
     }
 
     // CompareAndSwap executes the compare-and-swap operation for x.
-    bool rec::CompareAndSwap(golang::atomic::Uint64* x, uint64_t old, uint64_t go_new)
+    bool rec::CompareAndSwap(Uint64* x, uint64_t old, uint64_t go_new)
     {
         bool swapped;
         return CompareAndSwapUint64(& x->v, old, go_new);
     }
 
     // Add atomically adds delta to x and returns the new value.
-    uint64_t rec::Add(golang::atomic::Uint64* x, uint64_t delta)
+    uint64_t rec::Add(Uint64* x, uint64_t delta)
     {
         uint64_t go_new;
         return AddUint64(& x->v, delta);
@@ -466,33 +466,33 @@ namespace golang::atomic
     }
 
     // Load atomically loads and returns the value stored in x.
-    uintptr_t rec::Load(golang::atomic::Uintptr* x)
+    uintptr_t rec::Load(Uintptr* x)
     {
         return LoadUintptr(& x->v);
     }
 
     // Store atomically stores val into x.
-    void rec::Store(golang::atomic::Uintptr* x, uintptr_t val)
+    void rec::Store(Uintptr* x, uintptr_t val)
     {
         StoreUintptr(& x->v, val);
     }
 
     // Swap atomically stores new into x and returns the previous value.
-    uintptr_t rec::Swap(golang::atomic::Uintptr* x, uintptr_t go_new)
+    uintptr_t rec::Swap(Uintptr* x, uintptr_t go_new)
     {
         uintptr_t old;
         return SwapUintptr(& x->v, go_new);
     }
 
     // CompareAndSwap executes the compare-and-swap operation for x.
-    bool rec::CompareAndSwap(golang::atomic::Uintptr* x, uintptr_t old, uintptr_t go_new)
+    bool rec::CompareAndSwap(Uintptr* x, uintptr_t old, uintptr_t go_new)
     {
         bool swapped;
         return CompareAndSwapUintptr(& x->v, old, go_new);
     }
 
     // Add atomically adds delta to x and returns the new value.
-    uintptr_t rec::Add(golang::atomic::Uintptr* x, uintptr_t delta)
+    uintptr_t rec::Add(Uintptr* x, uintptr_t delta)
     {
         uintptr_t go_new;
         return AddUintptr(& x->v, delta);
@@ -532,11 +532,11 @@ namespace golang::atomic
     }
 
     // Lock is a no-op used by -copylocks checker from `go vet`.
-    void rec::Lock(golang::atomic::noCopy*)
+    void rec::Lock(noCopy*)
     {
     }
 
-    void rec::Unlock(golang::atomic::noCopy*)
+    void rec::Unlock(noCopy*)
     {
     }
 

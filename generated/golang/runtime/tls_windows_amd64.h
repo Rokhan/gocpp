@@ -13,7 +13,7 @@
 
 namespace golang::runtime
 {
-    void osSetupTLS(struct m* mp);
+    void osSetupTLS(m* mp);
 
     namespace rec
     {

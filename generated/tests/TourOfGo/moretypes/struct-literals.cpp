@@ -51,12 +51,12 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    Vertex v1 = Vertex {1, 2};
-    Vertex v2 = gocpp::Init<Vertex>([](auto& x) {
+    golang::main::Vertex v1 = golang::main::Vertex {1, 2};
+    golang::main::Vertex v2 = gocpp::Init<golang::main::Vertex>([](auto& x) {
         x.X = 1;
     });
-    Vertex v3 = Vertex {};
-    Vertex* p = new Vertex {1, 2};
+    golang::main::Vertex v3 = golang::main::Vertex {};
+    golang::main::Vertex* p = new golang::main::Vertex {1, 2};
     void main()
     {
         mocklib::Println(v1, p, v2, v3);

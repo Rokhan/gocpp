@@ -41,17 +41,17 @@ namespace golang::poll
 
     namespace rec
     {
-        bool incref(golang::poll::fdMutex* mu);
-        bool increfAndClose(golang::poll::fdMutex* mu);
-        bool decref(golang::poll::fdMutex* mu);
-        bool rwlock(golang::poll::fdMutex* mu, bool read);
-        bool rwunlock(golang::poll::fdMutex* mu, bool read);
-        struct gocpp::error incref(golang::poll::FD* fd);
-        struct gocpp::error decref(golang::poll::FD* fd);
-        struct gocpp::error readLock(golang::poll::FD* fd);
-        void readUnlock(golang::poll::FD* fd);
-        struct gocpp::error writeLock(golang::poll::FD* fd);
-        void writeUnlock(golang::poll::FD* fd);
+        bool incref(fdMutex* mu);
+        bool increfAndClose(fdMutex* mu);
+        bool decref(fdMutex* mu);
+        bool rwlock(fdMutex* mu, bool read);
+        bool rwunlock(fdMutex* mu, bool read);
+        struct gocpp::error incref(FD* fd);
+        struct gocpp::error decref(FD* fd);
+        struct gocpp::error readLock(FD* fd);
+        void readUnlock(FD* fd);
+        struct gocpp::error writeLock(FD* fd);
+        void writeUnlock(FD* fd);
     }
 }
 

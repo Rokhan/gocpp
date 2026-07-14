@@ -56,17 +56,17 @@ namespace golang::runtime
     //
     //	func semawakeup(mp *m)
     //		Wake up mp, which is or will soon be sleeping on its semaphore.
-    bool mutexContended(struct mutex* l)
+    bool mutexContended(mutex* l)
     {
         return atomic::Loaduintptr(& l->key) > locked;
     }
 
-    void lock(struct mutex* l)
+    void lock(mutex* l)
     {
         lockWithRank(l, getLockRank(l));
     }
 
-    void lock2(struct mutex* l)
+    void lock2(mutex* l)
     {
         auto gp = getg();
         if(gp->m->locks < 0)
@@ -82,7 +82,7 @@ namespace golang::runtime
         }
         semacreate(gp->m);
 
-        auto timer = gocpp::InitPtr<lockTimer>([=](auto& x) {
+        auto timer = gocpp::InitPtr<golang::runtime::lockTimer>([=](auto& x) {
             x.lock = l;
         });
         rec::begin(gocpp::recv(timer));
@@ -151,7 +151,7 @@ namespace golang::runtime
         }
     }
 
-    void unlock(struct mutex* l)
+    void unlock(mutex* l)
     {
         unlockWithRank(l);
     }
@@ -159,10 +159,10 @@ namespace golang::runtime
     // We might not be holding a p in this code.
     //
     //go:nowritebarrier
-    void unlock2(struct mutex* l)
+    void unlock2(mutex* l)
     {
         auto gp = getg();
-        m* mp = {};
+        golang::runtime::m* mp = {};
         for(; ; )
         {
             auto v = atomic::Loaduintptr(& l->key);
@@ -200,12 +200,12 @@ namespace golang::runtime
     }
 
     // One-time notifications.
-    void noteclear(struct note* n)
+    void noteclear(note* n)
     {
         n->key = 0;
     }
 
-    void notewakeup(struct note* n)
+    void notewakeup(note* n)
     {
         uintptr_t v = {};
         for(; ; )
@@ -235,13 +235,13 @@ namespace golang::runtime
                     break;
                 default:
                     // Must be the waiting m. Wake it up.
-                    semawakeup((m*)(gocpp::unsafe_pointer(v)));
+                    semawakeup((golang::runtime::m*)(gocpp::unsafe_pointer(v)));
                     break;
             }
         }
     }
 
-    void notesleep(struct note* n)
+    void notesleep(note* n)
     {
         auto gp = getg();
         if(gp != gp->m->g0)
@@ -278,7 +278,7 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    bool notetsleep_internal(struct note* n, int64_t ns, struct g* gp, int64_t deadline)
+    bool notetsleep_internal(note* n, int64_t ns, g* gp, int64_t deadline)
     {
         // gp and deadline are logically local variables, but they are written
         // as parameters so that the stack space they require is charged
@@ -388,7 +388,7 @@ namespace golang::runtime
         }
     }
 
-    bool notetsleep(struct note* n, int64_t ns)
+    bool notetsleep(note* n, int64_t ns)
     {
         auto gp = getg();
         if(gp != gp->m->g0)
@@ -401,7 +401,7 @@ namespace golang::runtime
 
     // same as runtime·notetsleep, but called on user g (not g0)
     // calls only nosplit functions between entersyscallblock/exitsyscall.
-    bool notetsleepg(struct note* n, int64_t ns)
+    bool notetsleepg(note* n, int64_t ns)
     {
         auto gp = getg();
         if(gp == gp->m->g0)
@@ -415,7 +415,7 @@ namespace golang::runtime
         return ok;
     }
 
-    std::tuple<struct g*, bool> beforeIdle(int64_t, int64_t)
+    std::tuple<golang::runtime::g*, bool> beforeIdle(int64_t, int64_t)
     {
         return {nullptr, false};
     }

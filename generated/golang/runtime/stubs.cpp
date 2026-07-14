@@ -55,7 +55,7 @@ namespace golang::runtime
     // getg returns the pointer to the current g.
     // The compiler rewrites calls to this function into instructions
     // that fetch the g directly (from TLS or from the dedicated register).
-    struct g* getg()
+    golang::runtime::g* getg()
     /* convertBlockStmt, nil block */;
 
     // mcall switches from the g to the g0 stack and invokes fn(g),
@@ -72,7 +72,7 @@ namespace golang::runtime
     // This must NOT be go:noescape: if fn is a stack-allocated closure,
     // fn puts g on a run queue, and g executes before fn returns, the
     // closure will be invalidated while it is still executing.
-    void mcall(std::function<void (struct g* _1)> fn)
+    void mcall(std::function<void (g* _1)> fn)
     /* convertBlockStmt, nil block */;
 
     // systemstack runs fn on a system stack.
@@ -198,13 +198,13 @@ namespace golang::runtime
     void cgocallback(uintptr_t fn, uintptr_t frame, uintptr_t ctxt)
     /* convertBlockStmt, nil block */;
 
-    void gogo(struct gobuf* buf)
+    void gogo(gobuf* buf)
     /* convertBlockStmt, nil block */;
 
     void asminit()
     /* convertBlockStmt, nil block */;
 
-    void setg(struct g* gg)
+    void setg(g* gg)
     /* convertBlockStmt, nil block */;
 
     void breakpoint()
@@ -254,7 +254,7 @@ namespace golang::runtime
     // regArgs is only used in the reflectcall frame.
     //
     //go:noescape
-    void reflectcall(golang::runtime::_type* stackArgsType, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
+    void reflectcall(_type* stackArgsType, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs)
     /* convertBlockStmt, nil block */;
 
     void procyield(uint32_t cycles)

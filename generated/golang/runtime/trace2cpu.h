@@ -22,7 +22,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    void traceCPUSample(struct g* gp, struct m* mp, struct p* pp, gocpp::slice<uintptr_t> stk);
+    void traceCPUSample(g* gp, m* mp, golang::runtime::p* pp, gocpp::slice<uintptr_t> stk);
 
     namespace rec
     {

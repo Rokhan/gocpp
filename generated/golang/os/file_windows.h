@@ -50,12 +50,12 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct file& value);
-    struct File* newFile(syscall::Handle h, gocpp::string name, gocpp::string kind);
-    struct File* newConsoleFile(syscall::Handle h, gocpp::string name);
-    struct File* NewFile(uintptr_t fd, gocpp::string name);
-    void epipecheck(struct File* file, struct gocpp::error e);
-    std::tuple<struct File*, struct gocpp::error> openFileNolog(gocpp::string name, int flag, golang::os::FileMode perm);
-    std::tuple<struct File*, struct File*, struct gocpp::error> Pipe();
+    golang::os::File* newFile(syscall::Handle h, gocpp::string name, gocpp::string kind);
+    golang::os::File* newConsoleFile(syscall::Handle h, gocpp::string name);
+    golang::os::File* NewFile(uintptr_t fd, gocpp::string name);
+    void epipecheck(File* file, struct gocpp::error e);
+    std::tuple<golang::os::File*, struct gocpp::error> openFileNolog(gocpp::string name, int flag, FileMode perm);
+    std::tuple<golang::os::File*, golang::os::File*, struct gocpp::error> Pipe();
     extern sync::Once useGetTempPath2Once;
     std::tuple<syscall::Handle, struct gocpp::error> openSymlink(gocpp::string path);
 }
@@ -67,9 +67,9 @@ namespace golang::os
 
     namespace rec
     {
-        uintptr_t Fd(golang::os::File* file);
-        struct gocpp::error close(golang::os::file* file);
-        std::tuple<int64_t, struct gocpp::error> seek(golang::os::File* f, int64_t offset, int whence);
+        uintptr_t Fd(File* file);
+        struct gocpp::error close(file* file);
+        std::tuple<int64_t, struct gocpp::error> seek(File* f, int64_t offset, int whence);
     }
 }
 

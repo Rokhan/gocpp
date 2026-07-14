@@ -178,15 +178,15 @@ namespace golang::godebug
     // To disable that panic for access to an undocumented setting,
     // prefix the name with a #, as in godebug.New("#gofsystrace").
     // The # is a signal to New but not part of the key used in $GODEBUG.
-    struct Setting* New(gocpp::string name)
+    golang::godebug::Setting* New(gocpp::string name)
     {
-        return gocpp::InitPtr<Setting>([=](auto& x) {
+        return gocpp::InitPtr<golang::godebug::Setting>([=](auto& x) {
             x.name = name;
         });
     }
 
     // Name returns the name of the setting.
-    gocpp::string rec::Name(golang::godebug::Setting* s)
+    gocpp::string rec::Name(Setting* s)
     {
         if(s->name != ""_s && s->name[0] == '#')
         {
@@ -196,13 +196,13 @@ namespace golang::godebug
     }
 
     // Undocumented reports whether this is an undocumented setting.
-    bool rec::Undocumented(golang::godebug::Setting* s)
+    bool rec::Undocumented(Setting* s)
     {
         return s->name != ""_s && s->name[0] == '#';
     }
 
     // String returns a printable form for the setting: name=value.
-    gocpp::string rec::String(golang::godebug::Setting* s)
+    gocpp::string rec::String(Setting* s)
     {
         return rec::Name(gocpp::recv(s)) + "="_s + rec::Value(gocpp::recv(s));
     }
@@ -213,13 +213,13 @@ namespace golang::godebug
     // /godebug/non-default-behavior/<name>:events.
     //
     // Note that Value must be called at least once before IncNonDefault.
-    void rec::IncNonDefault(golang::godebug::Setting* s)
+    void rec::IncNonDefault(Setting* s)
     {
         rec::Do(gocpp::recv(s->setting.nonDefaultOnce), [&](){ return rec::go_register(s); });
         rec::Add(gocpp::recv(s->setting.nonDefault), 1);
     }
 
-    void rec::go_register(golang::godebug::Setting* s)
+    void rec::go_register(Setting* s)
     {
         if(s->setting.info == nullptr || s->setting.info->Opaque)
         {
@@ -242,7 +242,7 @@ namespace golang::godebug
     // a name=value pair in the $GODEBUG environment variable.
     // Once entered into the map, the name is never removed.
     sync::Map cache;
-    value empty;
+    golang::godebug::value empty;
     // Value returns the current value for the GODEBUG setting s.
     //
     // Value maintains an internal cache that is synchronized
@@ -250,7 +250,7 @@ namespace golang::godebug
     // making Value efficient to call as frequently as needed.
     // Clients should therefore typically not attempt their own
     // caching of Value's result.
-    gocpp::string rec::Value(golang::godebug::Setting* s)
+    gocpp::string rec::Value(Setting* s)
     {
         rec::Do(gocpp::recv(s->once), [=]() mutable -> void
         {
@@ -260,7 +260,7 @@ namespace golang::godebug
                 gocpp::panic("godebug: Value of name not listed in godebugs.All: "_s + s->name);
             }
         });
-        auto v = *rec::Load<value>(gocpp::recv(s->setting.value));
+        auto v = *rec::Load<godebug::value>(gocpp::recv(s->setting.value));
         if(v.bisect != nullptr && ! rec::Stack(gocpp::recv(v.bisect), & go_stderr))
         {
             return ""_s;
@@ -269,19 +269,19 @@ namespace golang::godebug
     }
 
     // lookup returns the unique *setting value for the given name.
-    struct setting* lookup(gocpp::string name)
+    golang::godebug::setting* lookup(gocpp::string name)
     {
         if(auto [v, ok] = rec::Load(gocpp::recv(cache), name); ok)
         {
-            return gocpp::getValue<setting*>(v);
+            return gocpp::getValue<golang::godebug::setting*>(v);
         }
-        auto s = new setting{};
+        auto s = new godebug::setting{};
         s->info = godebugs::Lookup(name);
-        rec::Store<value>(gocpp::recv(s->value), & empty);
+        rec::Store<godebug::value>(gocpp::recv(s->value), & empty);
         if(auto [v, loaded] = rec::LoadOrStore(gocpp::recv(cache), name, s); loaded)
         {
             // Lost race: someone else created it. Use theirs.
-            return gocpp::getValue<setting*>(v);
+            return gocpp::getValue<golang::godebug::setting*>(v);
         }
 
         return s;
@@ -358,7 +358,7 @@ namespace golang::godebug
             {
                 if(! did[gocpp::getValue<gocpp::string>(name)])
                 {
-                    rec::Store<value>(gocpp::recv(gocpp::getValue<setting*>(s)->value), & empty);
+                    rec::Store<godebug::value>(gocpp::recv(gocpp::getValue<golang::godebug::setting*>(s)->value), & empty);
                 }
                 return true;
             });
@@ -396,7 +396,7 @@ namespace golang::godebug
                     if(! did[name])
                     {
                         did[name] = true;
-                        auto v = gocpp::InitPtr<value>([=](auto& x) {
+                        auto v = gocpp::InitPtr<golang::godebug::value>([=](auto& x) {
                             x.text = arg;
                         });
                         for(auto j = 0; j < len(arg); j++)
@@ -408,7 +408,7 @@ namespace golang::godebug
                                 break;
                             }
                         }
-                        rec::Store<value>(gocpp::recv(lookup(name)->value), v);
+                        rec::Store<godebug::value>(gocpp::recv(lookup(name)->value), v);
                     }
                 }
                 eq = - 1;
@@ -448,8 +448,8 @@ namespace golang::godebug
         return value.PrintTo(os);
     }
 
-    runtimeStderr go_stderr;
-    std::tuple<int, struct gocpp::error> rec::Write(golang::godebug::runtimeStderr*, gocpp::slice<unsigned char> b)
+    golang::godebug::runtimeStderr go_stderr;
+    std::tuple<int, struct gocpp::error> rec::Write(runtimeStderr*, gocpp::slice<unsigned char> b)
     {
         if(len(b) > 0)
         {

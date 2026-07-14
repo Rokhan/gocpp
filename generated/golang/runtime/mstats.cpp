@@ -155,7 +155,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    mstats memstats;
+    golang::runtime::mstats memstats;
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_0::operator T()
@@ -324,7 +324,7 @@ namespace golang::runtime
         }
         // Ensure the size of heapStatsDelta causes adjacent fields/slots (e.g.
         // [3]heapStatsDelta) to be 8-byte aligned.
-        if(auto size = gocpp::Sizeof<heapStatsDelta>(); size % 8 != 0)
+        if(auto size = gocpp::Sizeof<golang::runtime::heapStatsDelta>(); size % 8 != 0)
         {
             println(size);
             go_throw("heapStatsDelta not a multiple of 8 bytes in size"_s);
@@ -337,7 +337,7 @@ namespace golang::runtime
     // call to ReadMemStats. This is in contrast with a heap profile,
     // which is a snapshot as of the most recently completed garbage
     // collection cycle.
-    void ReadMemStats(struct MemStats* m)
+    void ReadMemStats(MemStats* m)
     {
         // nil check test before we switch stacks, see issue 61158
         _ = m->Alloc;
@@ -402,7 +402,7 @@ namespace golang::runtime
     // readmemstats_m populates stats for internal runtime values.
     //
     // The world must be stopped.
-    void readmemstats_m(struct MemStats* stats)
+    void readmemstats_m(MemStats* stats)
     {
         assertWorldStopped();
 
@@ -419,7 +419,7 @@ namespace golang::runtime
         // Similarly, total amount of allocated memory is calculated as amount of freed memory
         // plus amount of alive heap memory.
         // Collect consistent stats, which are the source-of-truth in some cases.
-        heapStatsDelta consStats = {};
+        golang::runtime::heapStatsDelta consStats = {};
         rec::unsafeRead(gocpp::recv(memstats.heapStats), & consStats);
 
         // Collect large allocation stats.
@@ -676,7 +676,7 @@ namespace golang::runtime
     // Must be nosplit as it is called in runtime initialization, e.g. newosproc0.
     //
     //go:nosplit
-    uint64_t rec::load(golang::runtime::sysMemStat* s)
+    uint64_t rec::load(sysMemStat* s)
     {
         return atomic::Load64((uint64_t*)(s));
     }
@@ -686,7 +686,7 @@ namespace golang::runtime
     // Must be nosplit as it is called in runtime initialization, e.g. newosproc0.
     //
     //go:nosplit
-    void rec::add(golang::runtime::sysMemStat* s, int64_t n)
+    void rec::add(sysMemStat* s, int64_t n)
     {
         auto val = atomic::Xadd64((uint64_t*)(s), n);
         if((n > 0 && int64_t(val) < n) || (n < 0 && int64_t(val) + n < n))
@@ -765,7 +765,7 @@ namespace golang::runtime
     }
 
     // merge adds in the deltas from b into a.
-    void rec::merge(golang::runtime::heapStatsDelta* a, struct heapStatsDelta* b)
+    void rec::merge(heapStatsDelta* a, heapStatsDelta* b)
     {
         a->committed += b->committed;
         a->released += b->released;
@@ -848,7 +848,7 @@ namespace golang::runtime
     // function.
     //
     //go:nosplit
-    struct heapStatsDelta* rec::acquire(golang::runtime::consistentHeapStats* m)
+    golang::runtime::heapStatsDelta* rec::acquire(consistentHeapStats* m)
     {
         if(auto pp = rec::ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
         {
@@ -882,7 +882,7 @@ namespace golang::runtime
     // before this operation has completed.
     //
     //go:nosplit
-    void rec::release(golang::runtime::consistentHeapStats* m)
+    void rec::release(consistentHeapStats* m)
     {
         if(auto pp = rec::ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
         {
@@ -904,7 +904,7 @@ namespace golang::runtime
     //
     // Unsafe because it does so without any synchronization. The
     // world must be stopped.
-    void rec::unsafeRead(golang::runtime::consistentHeapStats* m, struct heapStatsDelta* out)
+    void rec::unsafeRead(consistentHeapStats* m, heapStatsDelta* out)
     {
         assertWorldStopped();
 
@@ -918,13 +918,13 @@ namespace golang::runtime
     //
     // Unsafe because the world must be stopped and values should
     // be donated elsewhere before clearing.
-    void rec::unsafeClear(golang::runtime::consistentHeapStats* m)
+    void rec::unsafeClear(consistentHeapStats* m)
     {
         assertWorldStopped();
 
         for(auto [i, gocpp_ignored] : m->stats)
         {
-            m->stats[i] = heapStatsDelta {};
+            m->stats[i] = golang::runtime::heapStatsDelta {};
         }
     }
 
@@ -935,7 +935,7 @@ namespace golang::runtime
     //
     // Not safe to call concurrently. The world must be stopped
     // or metricsSema must be held.
-    void rec::read(golang::runtime::consistentHeapStats* m, struct heapStatsDelta* out)
+    void rec::read(consistentHeapStats* m, heapStatsDelta* out)
     {
         // Getting preempted after this point is not safe because
         // we read allp. We need to make sure a STW can't happen
@@ -982,7 +982,7 @@ namespace golang::runtime
         // stats[prevGen] for the next time we want to take
         // a snapshot.
         rec::merge(gocpp::recv(m->stats[currGen]), & m->stats[prevGen]);
-        m->stats[prevGen] = heapStatsDelta {};
+        m->stats[prevGen] = golang::runtime::heapStatsDelta {};
 
         // Finally, copy out the complete delta.
         *out = m->stats[currGen];
@@ -1054,7 +1054,7 @@ namespace golang::runtime
     //
     // gcMarkPhase indicates that we're in the mark phase and that certain counter
     // values should be used.
-    void rec::accumulate(golang::runtime::cpuStats* s, int64_t now, bool gcMarkPhase)
+    void rec::accumulate(cpuStats* s, int64_t now, bool gcMarkPhase)
     {
         // N.B. Mark termination and sweep termination pauses are
         // accumulated in work.cpuStats at the end of their respective pauses.

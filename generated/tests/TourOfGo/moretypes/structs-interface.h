@@ -326,12 +326,12 @@ namespace golang::main
 
     namespace rec
     {
-        gocpp::string Close(golang::main::nopCloser);
-        gocpp::string Close(golang::main::nopCloserWriterTo);
-        int WriteTo(golang::main::nopCloserWriterTo c);
-        int Read(golang::main::myReader r);
-        int Read(golang::main::myReaderWriterTo r);
-        int WriteTo(golang::main::myReaderWriterTo r);
+        gocpp::string Close(nopCloser);
+        gocpp::string Close(nopCloserWriterTo);
+        int WriteTo(nopCloserWriterTo c);
+        int Read(myReader r);
+        int Read(myReaderWriterTo r);
+        int WriteTo(myReaderWriterTo r);
     }
 }
 

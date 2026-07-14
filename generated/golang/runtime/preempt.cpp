@@ -127,7 +127,7 @@ namespace golang::runtime
     // the signal case.
     //
     //go:systemstack
-    struct suspendGState suspendG(struct g* gp)
+    golang::runtime::suspendGState suspendG(g* gp)
     {
         if(auto mp = getg()->m; mp->curg != nullptr && readgstatus(mp->curg) == _Grunning)
         {
@@ -143,7 +143,7 @@ namespace golang::runtime
 
         // Drive the goroutine to a preemption point.
         auto stopped = false;
-        m* asyncM = {};
+        golang::runtime::m* asyncM = {};
         uint32_t asyncGen = {};
         int64_t nextPreemptM = {};
         for(auto i = 0; ; i++)
@@ -180,7 +180,7 @@ namespace golang::runtime
                         // preemptStop may need to be cleared, but
                         // doing that here could race with goroutine
                         // reuse. Instead, goexit0 clears it.
-                        return gocpp::Init<suspendGState>([=](auto& x) {
+                        return gocpp::Init<golang::runtime::suspendGState>([=](auto& x) {
                             x.dead = true;
                         });
                         break;
@@ -228,7 +228,7 @@ namespace golang::runtime
                         // {_Gsyscall,_Gwaiting} -> _Grunning. Maybe
                         // for all those transitions we need to check
                         // suspended and deschedule?
-                        return gocpp::Init<suspendGState>([=](auto& x) {
+                        return gocpp::Init<golang::runtime::suspendGState>([=](auto& x) {
                             x.g = gp;
                             x.stopped = stopped;
                         });
@@ -307,7 +307,7 @@ namespace golang::runtime
 
     // resumeG undoes the effects of suspendG, allowing the suspended
     // goroutine to continue from its current safe-point.
-    void resumeG(struct suspendGState state)
+    void resumeG(suspendGState state)
     {
         if(state.dead)
         {
@@ -351,7 +351,7 @@ namespace golang::runtime
     // It is nosplit because it has nosplit callers.
     //
     //go:nosplit
-    bool canPreemptM(struct m* mp)
+    bool canPreemptM(m* mp)
     {
         return mp->locks == 0 && mp->mallocing == 0 && mp->preemptoff == ""_s && rec::ptr(gocpp::recv(mp->p))->status == _Prunning;
     }
@@ -410,7 +410,7 @@ namespace golang::runtime
 
     // wantAsyncPreempt returns whether an asynchronous preemption is
     // queued for gp.
-    bool wantAsyncPreempt(struct g* gp)
+    bool wantAsyncPreempt(g* gp)
     {
         // Check both the G and the P.
         return (gp->preempt || gp->m->p != 0 && rec::ptr(gocpp::recv(gp->m->p))->preempt) && readgstatus(gp) &^ _Gscan == _Grunning;
@@ -432,7 +432,7 @@ namespace golang::runtime
     // In some cases the PC is safe for asynchronous preemption but it
     // also needs to adjust the resumption PC. The new PC is returned in
     // the second result.
-    std::tuple<bool, uintptr_t> isAsyncSafePoint(struct g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr)
+    std::tuple<bool, uintptr_t> isAsyncSafePoint(g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr)
     {
         auto mp = gp->m;
 

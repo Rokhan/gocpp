@@ -152,26 +152,26 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    struct entry* newEntry(go_any i)
+    golang::sync::entry* newEntry(go_any i)
     {
-        auto e = new entry {};
+        auto e = new golang::sync::entry {};
         rec::Store<gocpp::go_any>(gocpp::recv(e->p), & i);
         return e;
     }
 
-    struct readOnly rec::loadReadOnly(golang::sync::Map* m)
+    golang::sync::readOnly rec::loadReadOnly(Map* m)
     {
         if(auto p = rec::Load<readOnly>(gocpp::recv(m->read)); p != nullptr)
         {
             return *p;
         }
-        return readOnly {};
+        return golang::sync::readOnly {};
     }
 
     // Load returns the value stored in the map for a key, or nil if no
     // value is present.
     // The ok result indicates whether value was found in the map.
-    std::tuple<go_any, bool> rec::Load(golang::sync::Map* m, go_any key)
+    std::tuple<go_any, bool> rec::Load(Map* m, go_any key)
     {
         go_any value;
         bool ok;
@@ -216,7 +216,7 @@ namespace golang::sync
     }
 
     // Store sets the value for a key.
-    void rec::Store(golang::sync::Map* m, go_any key, go_any value)
+    void rec::Store(Map* m, go_any key, go_any value)
     {
         std::tie(std::ignore, std::ignore) = rec::Swap(gocpp::recv(m), key, value);
     }
@@ -274,7 +274,7 @@ namespace golang::sync
     // LoadOrStore returns the existing value for the key if present.
     // Otherwise, it stores and returns the given value.
     // The loaded result is true if the value was loaded, false if stored.
-    std::tuple<go_any, bool> rec::LoadOrStore(golang::sync::Map* m, go_any key, go_any value)
+    std::tuple<go_any, bool> rec::LoadOrStore(Map* m, go_any key, go_any value)
     {
         go_any actual;
         bool loaded;
@@ -312,7 +312,7 @@ namespace golang::sync
                 // We're adding the first new key to the dirty map.
                 // Make sure it is allocated and mark the read-only map as incomplete.
                 rec::dirtyLocked(gocpp::recv(m));
-                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
+                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<golang::sync::readOnly>([=](auto& x) {
                     x.m = read.m;
                     x.amended = true;
                 }));
@@ -369,7 +369,7 @@ namespace golang::sync
 
     // LoadAndDelete deletes the value for a key, returning the previous value if any.
     // The loaded result reports whether the key was present.
-    std::tuple<go_any, bool> rec::LoadAndDelete(golang::sync::Map* m, go_any key)
+    std::tuple<go_any, bool> rec::LoadAndDelete(Map* m, go_any key)
     {
         go_any value;
         bool loaded;
@@ -399,7 +399,7 @@ namespace golang::sync
     }
 
     // Delete deletes the value for a key.
-    void rec::Delete(golang::sync::Map* m, go_any key)
+    void rec::Delete(Map* m, go_any key)
     {
         rec::LoadAndDelete(gocpp::recv(m), key);
     }
@@ -444,7 +444,7 @@ namespace golang::sync
 
     // Swap swaps the value for a key and returns the previous value if any.
     // The loaded result reports whether the key was present.
-    std::tuple<go_any, bool> rec::Swap(golang::sync::Map* m, go_any key, go_any value)
+    std::tuple<go_any, bool> rec::Swap(Map* m, go_any key, go_any value)
     {
         go_any previous;
         bool loaded;
@@ -493,7 +493,7 @@ namespace golang::sync
                 // We're adding the first new key to the dirty map.
                 // Make sure it is allocated and mark the read-only map as incomplete.
                 rec::dirtyLocked(gocpp::recv(m));
-                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
+                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<golang::sync::readOnly>([=](auto& x) {
                     x.m = read.m;
                     x.amended = true;
                 }));
@@ -507,7 +507,7 @@ namespace golang::sync
     // CompareAndSwap swaps the old and new values for key
     // if the value stored in the map is equal to old.
     // The old value must be of a comparable type.
-    bool rec::CompareAndSwap(golang::sync::Map* m, go_any key, go_any old, go_any go_new)
+    bool rec::CompareAndSwap(Map* m, go_any key, go_any old, go_any go_new)
     {
         gocpp::Defer defer;
         try
@@ -557,7 +557,7 @@ namespace golang::sync
     //
     // If there is no current value for key in the map, CompareAndDelete
     // returns false (even if the old value is the nil interface value).
-    bool rec::CompareAndDelete(golang::sync::Map* m, go_any key, go_any old)
+    bool rec::CompareAndDelete(Map* m, go_any key, go_any old)
     {
         bool deleted;
         auto read = rec::loadReadOnly(gocpp::recv(m));
@@ -606,7 +606,7 @@ namespace golang::sync
     //
     // Range may be O(N) with the number of elements in the map even if f returns
     // false after a constant number of calls.
-    void rec::Range(golang::sync::Map* m, std::function<bool (go_any key, go_any value)> f)
+    void rec::Range(Map* m, std::function<bool (go_any key, go_any value)> f)
     {
         // We need to be able to iterate over all of the keys that were already
         // present at the start of the call to Range.
@@ -623,7 +623,7 @@ namespace golang::sync
             read = rec::loadReadOnly(gocpp::recv(m));
             if(read.amended)
             {
-                read = gocpp::Init<readOnly>([=](auto& x) {
+                read = gocpp::Init<golang::sync::readOnly>([=](auto& x) {
                     x.m = m->dirty;
                 });
                 auto copyRead = read;
@@ -648,21 +648,21 @@ namespace golang::sync
         }
     }
 
-    void rec::missLocked(golang::sync::Map* m)
+    void rec::missLocked(Map* m)
     {
         m->misses++;
         if(m->misses < len(m->dirty))
         {
             return;
         }
-        rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
+        rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<golang::sync::readOnly>([=](auto& x) {
             x.m = m->dirty;
         }));
         m->dirty = nullptr;
         m->misses = 0;
     }
 
-    void rec::dirtyLocked(golang::sync::Map* m)
+    void rec::dirtyLocked(Map* m)
     {
         if(m->dirty != nullptr)
         {
@@ -670,7 +670,7 @@ namespace golang::sync
         }
 
         auto read = rec::loadReadOnly(gocpp::recv(m));
-        m->dirty = gocpp::make(gocpp::Tag<gocpp::map<go_any, entry*>>(), len(read.m));
+        m->dirty = gocpp::make(gocpp::Tag<gocpp::map<go_any, golang::sync::entry*>>(), len(read.m));
         for(auto [k, e] : read.m)
         {
             if(! rec::tryExpungeLocked(gocpp::recv(e)))

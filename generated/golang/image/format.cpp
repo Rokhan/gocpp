@@ -80,11 +80,11 @@ namespace golang::image
     // string can contain "?" wildcards that each match any one byte.
     // [Decode] is the function that decodes the encoded image.
     // [DecodeConfig] is the function that decodes just its configuration.
-    void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<struct Config, struct gocpp::error> (io::Reader _1)> decodeConfig)
+    void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<golang::image::Config, struct gocpp::error> (io::Reader _1)> decodeConfig)
     {
         rec::Lock(gocpp::recv(formatsMu));
-        auto [formats, gocpp_id_0] = gocpp::getValue<gocpp::slice<format>>(rec::Load(gocpp::recv(atomicFormats)));
-        rec::Store(gocpp::recv(atomicFormats), append(formats, format {name, magic, decode, decodeConfig}));
+        auto [formats, gocpp_id_0] = gocpp::getValue<gocpp::slice<golang::image::format>>(rec::Load(gocpp::recv(atomicFormats)));
+        rec::Store(gocpp::recv(atomicFormats), append(formats, golang::image::format {name, magic, decode, decodeConfig}));
         rec::Unlock(gocpp::recv(formatsMu));
     }
 
@@ -175,9 +175,9 @@ namespace golang::image
     }
 
     // sniff determines the format of r's data.
-    struct format sniff(struct reader r)
+    golang::image::format sniff(struct reader r)
     {
-        auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<format>>(rec::Load(gocpp::recv(atomicFormats)));
+        auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<golang::image::format>>(rec::Load(gocpp::recv(atomicFormats)));
         for(auto [gocpp_ignored, f] : formats)
         {
             auto [b, err] = rec::Peek(gocpp::recv(r), len(f.magic));
@@ -186,7 +186,7 @@ namespace golang::image
                 return f;
             }
         }
-        return format {};
+        return golang::image::format {};
     }
 
     // Decode decodes an image that has been encoded in a registered format.
@@ -209,13 +209,13 @@ namespace golang::image
     // been encoded in a registered format. The string returned is the format name
     // used during format registration. Format registration is typically done by
     // an init function in the codec-specific package.
-    std::tuple<struct Config, gocpp::string, struct gocpp::error> DecodeConfig(io::Reader r)
+    std::tuple<golang::image::Config, gocpp::string, struct gocpp::error> DecodeConfig(io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);
         if(f.decodeConfig == nullptr)
         {
-            return {Config {}, ""_s, ErrFormat};
+            return {golang::image::Config {}, ""_s, ErrFormat};
         }
         auto [c, err] = f.decodeConfig(rr);
         return {c, f.name, err};

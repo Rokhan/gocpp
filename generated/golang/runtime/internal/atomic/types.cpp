@@ -58,7 +58,7 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-    int32_t rec::Load(golang::atomic::Int32* i)
+    int32_t rec::Load(Int32* i)
     {
         return Loadint32(& i->value);
     }
@@ -66,7 +66,7 @@ namespace golang::atomic
     // Store updates the value atomically.
     //
     //go:nosplit
-    void rec::Store(golang::atomic::Int32* i, int32_t value)
+    void rec::Store(Int32* i, int32_t value)
     {
         Storeint32(& i->value, value);
     }
@@ -76,7 +76,7 @@ namespace golang::atomic
     // It reports whether the swap ran.
     //
     //go:nosplit
-    bool rec::CompareAndSwap(golang::atomic::Int32* i, int32_t old, int32_t go_new)
+    bool rec::CompareAndSwap(Int32* i, int32_t old, int32_t go_new)
     {
         return Casint32(& i->value, old, go_new);
     }
@@ -85,7 +85,7 @@ namespace golang::atomic
     // i's value before the replacement.
     //
     //go:nosplit
-    int32_t rec::Swap(golang::atomic::Int32* i, int32_t go_new)
+    int32_t rec::Swap(Int32* i, int32_t go_new)
     {
         return Xchgint32(& i->value, go_new);
     }
@@ -97,7 +97,7 @@ namespace golang::atomic
     // two's-complement way.
     //
     //go:nosplit
-    int32_t rec::Add(golang::atomic::Int32* i, int32_t delta)
+    int32_t rec::Add(Int32* i, int32_t delta)
     {
         return Xaddint32(& i->value, delta);
     }
@@ -145,7 +145,7 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-    int64_t rec::Load(golang::atomic::Int64* i)
+    int64_t rec::Load(Int64* i)
     {
         return Loadint64(& i->value);
     }
@@ -153,7 +153,7 @@ namespace golang::atomic
     // Store updates the value atomically.
     //
     //go:nosplit
-    void rec::Store(golang::atomic::Int64* i, int64_t value)
+    void rec::Store(Int64* i, int64_t value)
     {
         Storeint64(& i->value, value);
     }
@@ -163,7 +163,7 @@ namespace golang::atomic
     // It reports whether the swap ran.
     //
     //go:nosplit
-    bool rec::CompareAndSwap(golang::atomic::Int64* i, int64_t old, int64_t go_new)
+    bool rec::CompareAndSwap(Int64* i, int64_t old, int64_t go_new)
     {
         return Casint64(& i->value, old, go_new);
     }
@@ -172,7 +172,7 @@ namespace golang::atomic
     // i's value before the replacement.
     //
     //go:nosplit
-    int64_t rec::Swap(golang::atomic::Int64* i, int64_t go_new)
+    int64_t rec::Swap(Int64* i, int64_t go_new)
     {
         return Xchgint64(& i->value, go_new);
     }
@@ -184,7 +184,7 @@ namespace golang::atomic
     // two's-complement way.
     //
     //go:nosplit
-    int64_t rec::Add(golang::atomic::Int64* i, int64_t delta)
+    int64_t rec::Add(Int64* i, int64_t delta)
     {
         return Xaddint64(& i->value, delta);
     }
@@ -227,7 +227,7 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-    uint8_t rec::Load(golang::atomic::Uint8* u)
+    uint8_t rec::Load(Uint8* u)
     {
         return Load8(& u->value);
     }
@@ -235,7 +235,7 @@ namespace golang::atomic
     // Store updates the value atomically.
     //
     //go:nosplit
-    void rec::Store(golang::atomic::Uint8* u, uint8_t value)
+    void rec::Store(Uint8* u, uint8_t value)
     {
         Store8(& u->value, value);
     }
@@ -247,7 +247,7 @@ namespace golang::atomic
     // The full process is performed atomically.
     //
     //go:nosplit
-    void rec::And(golang::atomic::Uint8* u, uint8_t value)
+    void rec::And(Uint8* u, uint8_t value)
     {
         And8(& u->value, value);
     }
@@ -259,7 +259,7 @@ namespace golang::atomic
     // The full process is performed atomically.
     //
     //go:nosplit
-    void rec::Or(golang::atomic::Uint8* u, uint8_t value)
+    void rec::Or(Uint8* u, uint8_t value)
     {
         Or8(& u->value, value);
     }
@@ -355,7 +355,7 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-    uint32_t rec::Load(golang::atomic::Uint32* u)
+    uint32_t rec::Load(Uint32* u)
     {
         return atomic::Load(& u->value);
     }
@@ -369,7 +369,7 @@ namespace golang::atomic
     // WARNING: Use sparingly and with great care.
     //
     //go:nosplit
-    uint32_t rec::LoadAcquire(golang::atomic::Uint32* u)
+    uint32_t rec::LoadAcquire(Uint32* u)
     {
         return LoadAcq(& u->value);
     }
@@ -377,7 +377,7 @@ namespace golang::atomic
     // Store updates the value atomically.
     //
     //go:nosplit
-    void rec::Store(golang::atomic::Uint32* u, uint32_t value)
+    void rec::Store(Uint32* u, uint32_t value)
     {
         atomic::Store(& u->value, value);
     }
@@ -391,7 +391,7 @@ namespace golang::atomic
     // WARNING: Use sparingly and with great care.
     //
     //go:nosplit
-    void rec::StoreRelease(golang::atomic::Uint32* u, uint32_t value)
+    void rec::StoreRelease(Uint32* u, uint32_t value)
     {
         StoreRel(& u->value, value);
     }
@@ -401,7 +401,7 @@ namespace golang::atomic
     // It reports whether the swap ran.
     //
     //go:nosplit
-    bool rec::CompareAndSwap(golang::atomic::Uint32* u, uint32_t old, uint32_t go_new)
+    bool rec::CompareAndSwap(Uint32* u, uint32_t old, uint32_t go_new)
     {
         return Cas(& u->value, old, go_new);
     }
@@ -416,7 +416,7 @@ namespace golang::atomic
     // WARNING: Use sparingly and with great care.
     //
     //go:nosplit
-    bool rec::CompareAndSwapRelease(golang::atomic::Uint32* u, uint32_t old, uint32_t go_new)
+    bool rec::CompareAndSwapRelease(Uint32* u, uint32_t old, uint32_t go_new)
     {
         return CasRel(& u->value, old, go_new);
     }
@@ -425,7 +425,7 @@ namespace golang::atomic
     // u's value before the replacement.
     //
     //go:nosplit
-    uint32_t rec::Swap(golang::atomic::Uint32* u, uint32_t value)
+    uint32_t rec::Swap(Uint32* u, uint32_t value)
     {
         return Xchg(& u->value, value);
     }
@@ -437,7 +437,7 @@ namespace golang::atomic
     // The full process is performed atomically.
     //
     //go:nosplit
-    void rec::And(golang::atomic::Uint32* u, uint32_t value)
+    void rec::And(Uint32* u, uint32_t value)
     {
         atomic::And(& u->value, value);
     }
@@ -449,7 +449,7 @@ namespace golang::atomic
     // The full process is performed atomically.
     //
     //go:nosplit
-    void rec::Or(golang::atomic::Uint32* u, uint32_t value)
+    void rec::Or(Uint32* u, uint32_t value)
     {
         atomic::Or(& u->value, value);
     }
@@ -461,7 +461,7 @@ namespace golang::atomic
     // two's-complement way.
     //
     //go:nosplit
-    uint32_t rec::Add(golang::atomic::Uint32* u, int32_t delta)
+    uint32_t rec::Add(Uint32* u, int32_t delta)
     {
         return Xadd(& u->value, delta);
     }
@@ -509,7 +509,7 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-    uint64_t rec::Load(golang::atomic::Uint64* u)
+    uint64_t rec::Load(Uint64* u)
     {
         return Load64(& u->value);
     }
@@ -517,7 +517,7 @@ namespace golang::atomic
     // Store updates the value atomically.
     //
     //go:nosplit
-    void rec::Store(golang::atomic::Uint64* u, uint64_t value)
+    void rec::Store(Uint64* u, uint64_t value)
     {
         Store64(& u->value, value);
     }
@@ -527,7 +527,7 @@ namespace golang::atomic
     // It reports whether the swap ran.
     //
     //go:nosplit
-    bool rec::CompareAndSwap(golang::atomic::Uint64* u, uint64_t old, uint64_t go_new)
+    bool rec::CompareAndSwap(Uint64* u, uint64_t old, uint64_t go_new)
     {
         return Cas64(& u->value, old, go_new);
     }
@@ -536,7 +536,7 @@ namespace golang::atomic
     // u's value before the replacement.
     //
     //go:nosplit
-    uint64_t rec::Swap(golang::atomic::Uint64* u, uint64_t value)
+    uint64_t rec::Swap(Uint64* u, uint64_t value)
     {
         return Xchg64(& u->value, value);
     }
@@ -548,7 +548,7 @@ namespace golang::atomic
     // two's-complement way.
     //
     //go:nosplit
-    uint64_t rec::Add(golang::atomic::Uint64* u, int64_t delta)
+    uint64_t rec::Add(Uint64* u, int64_t delta)
     {
         return Xadd64(& u->value, delta);
     }
@@ -591,7 +591,7 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-    uintptr_t rec::Load(golang::atomic::Uintptr* u)
+    uintptr_t rec::Load(Uintptr* u)
     {
         return Loaduintptr(& u->value);
     }
@@ -605,7 +605,7 @@ namespace golang::atomic
     // WARNING: Use sparingly and with great care.
     //
     //go:nosplit
-    uintptr_t rec::LoadAcquire(golang::atomic::Uintptr* u)
+    uintptr_t rec::LoadAcquire(Uintptr* u)
     {
         return LoadAcquintptr(& u->value);
     }
@@ -613,7 +613,7 @@ namespace golang::atomic
     // Store updates the value atomically.
     //
     //go:nosplit
-    void rec::Store(golang::atomic::Uintptr* u, uintptr_t value)
+    void rec::Store(Uintptr* u, uintptr_t value)
     {
         Storeuintptr(& u->value, value);
     }
@@ -627,7 +627,7 @@ namespace golang::atomic
     // WARNING: Use sparingly and with great care.
     //
     //go:nosplit
-    void rec::StoreRelease(golang::atomic::Uintptr* u, uintptr_t value)
+    void rec::StoreRelease(Uintptr* u, uintptr_t value)
     {
         StoreReluintptr(& u->value, value);
     }
@@ -637,7 +637,7 @@ namespace golang::atomic
     // It reports whether the swap ran.
     //
     //go:nosplit
-    bool rec::CompareAndSwap(golang::atomic::Uintptr* u, uintptr_t old, uintptr_t go_new)
+    bool rec::CompareAndSwap(Uintptr* u, uintptr_t old, uintptr_t go_new)
     {
         return Casuintptr(& u->value, old, go_new);
     }
@@ -646,7 +646,7 @@ namespace golang::atomic
     // u's value before the replacement.
     //
     //go:nosplit
-    uintptr_t rec::Swap(golang::atomic::Uintptr* u, uintptr_t value)
+    uintptr_t rec::Swap(Uintptr* u, uintptr_t value)
     {
         return Xchguintptr(& u->value, value);
     }
@@ -658,7 +658,7 @@ namespace golang::atomic
     // two's-complement way.
     //
     //go:nosplit
-    uintptr_t rec::Add(golang::atomic::Uintptr* u, uintptr_t delta)
+    uintptr_t rec::Add(Uintptr* u, uintptr_t delta)
     {
         return Xadduintptr(& u->value, delta);
     }
@@ -700,7 +700,7 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-    double rec::Load(golang::atomic::Float64* f)
+    double rec::Load(Float64* f)
     {
         auto r = rec::Load(gocpp::recv(f->u));
         return *(double*)(gocpp::unsafe_pointer(& r));
@@ -709,7 +709,7 @@ namespace golang::atomic
     // Store updates the value atomically.
     //
     //go:nosplit
-    void rec::Store(golang::atomic::Float64* f, double value)
+    void rec::Store(Float64* f, double value)
     {
         rec::Store(gocpp::recv(f->u), *(uint64_t*)(gocpp::unsafe_pointer(& value)));
     }
@@ -944,11 +944,11 @@ namespace golang::atomic
     }
 
     // Lock is a no-op used by -copylocks checker from `go vet`.
-    void rec::Lock(golang::atomic::noCopy*)
+    void rec::Lock(noCopy*)
     {
     }
 
-    void rec::Unlock(golang::atomic::noCopy*)
+    void rec::Unlock(noCopy*)
     {
     }
 

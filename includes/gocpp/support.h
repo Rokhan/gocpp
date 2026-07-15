@@ -140,6 +140,7 @@ namespace gocpp
     struct defined : T
     {
         using T::T;
+        using T::operator=;
 
         defined() = default;
         explicit defined(const T& t) : T(t) { }
@@ -1172,7 +1173,7 @@ namespace gocpp
             this->mArray->reserve(capacity);
             mStart = 0;
             mEnd = high - low;
-        }        
+        }
 
         // TODO : other constructors
 

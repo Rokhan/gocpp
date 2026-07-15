@@ -636,7 +636,7 @@ type depInfo struct {
 	depIdents map[string]bool
 
 	decPkg  string
-	depPkgs map[string]bool
+	depPkgs map[string]includeType
 
 	initialOrder int
 	rank         int
@@ -746,6 +746,134 @@ func ComputeDeps(toDo map[string]types.Type, dm depMode) map[string]types.Type {
 	}
 
 	return done
+}
+
+func (depInfo *depInfo) ComputePackages(pc parsingContext, dm depMode) {
+	if dm == FwdDepend {
+		return
+	}
+	appendMap(&depInfo.depPkgs, ComputePackages(depInfo.dependencies, pc, dm))
+	if depInfo.decPkg != "" {
+		delete(depInfo.depPkgs, depInfo.decPkg)
+	}
+}
+
+func ComputePackages(deps map[string]types.Type, pc parsingContext, dm depMode) map[string]includeType {
+
+	toDo := map[string]types.Type{}
+	for k, v := range deps {
+		toDo[k] = v
+	}
+
+	result := map[string]includeType{}
+
+	addResult := func(obj types.Object) {
+		pkg := pc.getPackageFromType(obj, UnknownTag)
+		result[pkg.basePath()] = HdrInclude
+	}
+
+	done := map[string]types.Type{}
+	for len(toDo) != 0 {
+		for key, value := range toDo {
+			if _, skip := done[key]; skip {
+				delete(toDo, key)
+				continue
+			}
+			elt := value
+			switch t := elt.(type) {
+			case *types.Array:
+				elem := t.Elem()
+				toDo[elem.String()] = elem
+
+			case *types.Chan:
+				elem := t.Elem()
+				toDo[elem.String()] = elem
+
+			case *types.Slice:
+				elem := t.Elem()
+				toDo[elem.String()] = elem
+
+			case *types.Map:
+				elem := t.Elem()
+				keyType := t.Key()
+				toDo[elem.String()] = elem
+				toDo[keyType.String()] = keyType
+
+			case *types.Pointer:
+				if dm == FwdDepend {
+					elem := t.Elem()
+					toDo[elem.String()] = elem
+				}
+
+			case *types.Signature:
+				if t.Params() != nil {
+					for i := 0; i < t.Params().Len(); i++ {
+						paramType := t.Params().At(i).Type()
+						toDo[paramType.String()] = paramType
+						addResult(t.Params().At(i))
+					}
+				}
+				if t.Results() != nil {
+					for i := 0; i < t.Results().Len(); i++ {
+						resultType := t.Results().At(i).Type()
+						toDo[resultType.String()] = resultType
+						addResult(t.Results().At(i))
+					}
+				}
+				if t.Recv() != nil {
+					recvType := t.Recv().Type()
+					toDo[recvType.String()] = recvType
+					addResult(t.Recv())
+				}
+
+			case *types.Struct:
+				if dm == DecDepend {
+					for i := 0; i < t.NumFields(); i++ {
+						fieldType := t.Field(i).Type()
+						toDo[fieldType.String()] = fieldType
+						addResult(t.Field(i))
+					}
+				}
+
+			case *types.Interface:
+				if dm == DecDepend {
+					for i := 0; i < t.NumEmbeddeds(); i++ {
+						embeddedType := t.EmbeddedType(i)
+						toDo[embeddedType.String()] = embeddedType
+					}
+
+					for i := 0; i < t.NumMethods(); i++ {
+						method := t.Method(i)
+						toDo[method.FullName()] = method.Type()
+						addResult(method)
+					}
+				}
+
+			case *types.Union:
+				if dm == DecDepend {
+					for i := 0; i < t.Len(); i++ {
+						termType := t.Term(i).Type()
+						toDo[termType.String()] = termType
+					}
+				}
+
+			case *types.Named:
+				// No need to recurse on this, bring unided dependencies
+				addResult(t.Obj())
+
+			case nil, *types.Alias, *types.Basic, *types.TypeParam:
+				// Nothing to do
+
+			default:
+				Panicf("ComputeDeps, unmanaged type %T", t)
+			}
+
+			done[key] = value
+			delete(toDo, key)
+		}
+	}
+
+	return result
 }
 
 type receiverDesc interface {

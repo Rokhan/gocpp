@@ -297,7 +297,7 @@
 | $(ImportDir)/runtime/fastlog2table.go | ✔️ ([cpp](generated/golang/runtime/fastlog2table.cpp), [h](generated/golang/runtime/fastlog2table.h))| ✔️ |
 | $(ImportDir)/runtime/fds_nonunix.go | ✔️ ([cpp](generated/golang/runtime/fds_nonunix.cpp), [h](generated/golang/runtime/fds_nonunix.h))| ✔️ |
 | $(ImportDir)/runtime/float.go | ✔️ ([cpp](generated/golang/runtime/float.cpp), [h](generated/golang/runtime/float.h))| ❌ |
-| $(ImportDir)/runtime/hash64.go | ✔️ ([cpp](generated/golang/runtime/hash64.cpp), [h](generated/golang/runtime/hash64.h))| ❌ |
+| $(ImportDir)/runtime/hash64.go | ✔️ ([cpp](generated/golang/runtime/hash64.cpp), [h](generated/golang/runtime/hash64.h))| ✔️ |
 | $(ImportDir)/runtime/histogram.go | ✔️ ([cpp](generated/golang/runtime/histogram.cpp), [h](generated/golang/runtime/histogram.h))| ❌ |
 | $(ImportDir)/runtime/iface.go | ✔️ ([cpp](generated/golang/runtime/iface.cpp), [h](generated/golang/runtime/iface.h))| ❌ |
 | $(ImportDir)/runtime/internal/atomic/atomic_amd64.go | ✔️ ([cpp](generated/golang/runtime/internal/atomic/atomic_amd64.cpp), [h](generated/golang/runtime/internal/atomic/atomic_amd64.h))| ✔️ |

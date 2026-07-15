@@ -164,7 +164,7 @@ func (cv *cppConverter) includeHeaderDependencies(pkgInfos []*pkgInfo, incType i
 		alreadyIncluded[pkgInfo.filePath] = true
 
 		*order++
-		di := depInfo{nil, map[string]types.Type{}, "", map[string]bool{}, pkgInfo.basePath(), map[string]bool{}, *order, 0}
+		di := depInfo{nil, map[string]types.Type{}, "", map[string]bool{}, pkgInfo.basePath(), map[string]includeType{}, *order, 0}
 
 		switch pkgInfo.fileType {
 		case GoFiles, CompiledGoFiles:
@@ -476,6 +476,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.computeDepInfos(headerElts)
 
 	headerElts = append(headerElts, cv.includeHeaderDependencies(usedPkgInfos, HdrInclude, &hdrInitialOrder)...)
+	headerElts = append(headerElts, cv.includeHeaderDependencies(usedPkgInfos, FwdInclude, &hdrInitialOrder)...)
 	hdrInNamespace := cv.generateSortedHeader(headerElts, getHeader, DecDepend, cv.hpp, false, DefsTag)
 
 	// Compute packages used by recievers defined at end of the header file.
@@ -636,8 +637,10 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 	if len(headerElts) != 0 {
 		for _, place := range headerElts {
 			di := &place.depInfo
+			cv.Logf("'%s' decl (before) info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
 			di.ComputeDeps(dm)
-			cv.Logf("'%s' decl info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
+			di.ComputePackages(cv.parsingContext, dm)
+			cv.Logf("'%s' decl (after)  info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
 		}
 
 		cv.Logf("'%s' decl: Sorting.\n", outFile.name)
@@ -650,11 +653,27 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 			}
 		}
 
+		hdrIncluded := map[string]bool{}
+
 		for i, place := range headerElts {
 
 			// Skip includes not needed by any definitions
 			if i > maxDecIndex && keepTag != place.pkgInfo.tag {
 				continue
+			}
+
+			// Do not include header twice, do not include fwd header if main header has been included.
+			switch place.includeType {
+			case HdrInclude:
+				if _, ok := hdrIncluded[place.depInfo.decPkg]; ok {
+					continue
+				} else {
+					hdrIncluded[place.depInfo.decPkg] = true
+				}
+			case FwdInclude:
+				if _, ok := hdrIncluded[place.depInfo.decPkg]; ok {
+					continue
+				}
 			}
 
 			// Close namespace for includes
@@ -747,6 +766,27 @@ func (cv *cppConverter) getPackageFromType(usedType types.Object, tag tagType) *
 		}
 	} else {
 		cv.Logf("pkginfo, nil pkg, file: %v, usedTypeName: %v, tag:%v ---\n", file, usedType.Name(), tag)
+	}
+	return nil
+}
+
+func (cv *parsingContext) getPackageFromType(usedType types.Object, tag tagType) *pkgInfo {
+	if usedType == nil {
+		return nil
+	}
+
+	var file = cv.getPosition(usedType.Pos()).Filename
+
+	if file == "" {
+		return nil
+	}
+
+	pkg := usedType.Pkg()
+	if pkg != nil {
+		fixedPath := pkg.Path()
+		//fixedPath := fixPkgPath(pkg.Path(), file)
+		fmt.Printf("getPackageFromType, pkgName: %v, pkgPath: %v, fixedpath: %s file: %v, usedTypeName: %v, tag: %v ---\n", pkg.Name(), pkg.Path(), fixedPath, file, usedType.Name(), tag)
+		return &pkgInfo{pkg.Name(), fixedPath, file, tag, GoFiles}
 	}
 	return nil
 }
@@ -2370,14 +2410,14 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 	panic("convertTypeSpec, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) getAllUsedPackages(expr ast.Expr) map[string]bool {
-	result := map[string]bool{}
+func (cv *cppConverter) getAllUsedPackages(expr ast.Expr) map[string]includeType {
+	result := map[string]includeType{}
 	for ident := range getAllIdentifiers(expr) {
 		defObj := cv.typeInfo.Uses[ident]
 		if defObj != nil {
 			pkg := cv.getPackageFromType(defObj, UnknownTag)
 			if pkg != nil {
-				result[pkg.basePath()] = true
+				result[pkg.basePath()] = FwdInclude
 			}
 		}
 	}
@@ -2421,7 +2461,7 @@ func (cv *cppConverter) getFunDeclDepInfo(n *ast.FuncDecl) depInfo {
 	di := depInfo{
 		dependencies: map[string]types.Type{},
 		depIdents:    make(map[string]bool),
-		depPkgs:      make(map[string]bool),
+		depPkgs:      make(map[string]includeType),
 		decIdent:     n.Name.Name,
 	}
 
@@ -2466,15 +2506,15 @@ func (cv *cppConverter) getStructDepInfo(n *ast.StructType) depInfo {
 func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
 	defType := cv.typeInfo.Defs[n.Names[i]].Type()
 	deps := map[string]types.Type{defType.String(): defType}
-	pkgs := make(set[string])
+	pkgs := map[string]includeType{}
 	names := make(set[string])
 	if n.Values != nil {
-		pkgs.append(cv.getAllUsedPackages(n.Values[i]))
+		appendMap(&pkgs, cv.getAllUsedPackages(n.Values[i]))
 		names.append(cv.getAllUsedNames(n.Values[i]))
 	}
 
 	if n.Type != nil {
-		pkgs.append(cv.getAllUsedPackages(n.Type))
+		appendMap(&pkgs, cv.getAllUsedPackages(n.Type))
 		names.append(cv.getAllUsedNames(n.Type))
 		declType := cv.typeInfo.Types[n.Type].Type
 		deps[declType.String()] = declType

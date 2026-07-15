@@ -18,6 +18,12 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+type Logger interface {
+	Logf(format string, a ...any) (n int, err error)
+	Panicf(format string, params ...interface{})
+	VerboseLog() bool
+}
+
 func GetCppName(name string) string {
 	val, ok := cppKeyWordsMapping[name]
 	if ok {

@@ -74,17 +74,17 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gcBitsHeader& value);
     void nextMarkBitArenaEpoch();
 }
-#include "golang/internal/cpu/cpu_x86.h"
-#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap_allocheaders.h"
 #include "golang/runtime/mcentral.h"
-#include "golang/runtime/mcheckmark.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
+#include "golang/internal/cpu/cpu_x86.fwd.h"
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/malloc.fwd.h"
+#include "golang/runtime/mcheckmark.fwd.h"
+#include "golang/runtime/mprof.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
@@ -392,6 +392,7 @@ namespace golang::runtime
 }
 #include "golang/runtime/mcache.h"
 #include "golang/runtime/mranges.h"
+#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -495,6 +496,7 @@ namespace golang::runtime
     golang::runtime::gcBitsArena* newArenaMayUnlock();
 }
 #include "golang/internal/cpu/cpu.h"
+#include "golang/runtime/malloc.h"
 #include "golang/runtime/mfixalloc.h"
 #include "golang/runtime/mpagealloc.h"
 

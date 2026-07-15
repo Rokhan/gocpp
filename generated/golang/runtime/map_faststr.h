@@ -9,8 +9,8 @@
 #include "golang/runtime/map_faststr.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/map.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/map.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

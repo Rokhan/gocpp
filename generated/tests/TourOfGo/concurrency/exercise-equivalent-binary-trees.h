@@ -14,7 +14,7 @@ namespace golang::main
 {
     void main();
 }
-#include "golang/golang.org/x/tour/tree/tree.h"
+#include "golang/golang.org/x/tour/tree/tree.fwd.h"
 
 namespace golang::main
 {

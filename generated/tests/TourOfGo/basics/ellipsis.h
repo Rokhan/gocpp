@@ -30,7 +30,7 @@ namespace golang::main
     }
     void main();
 }
-#include "golang/math/cmplx/sqrt.h"
+#include "golang/math/cmplx/sqrt.fwd.h"
 
 namespace golang::main
 {

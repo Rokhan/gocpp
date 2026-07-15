@@ -83,10 +83,10 @@ namespace golang::runtime
     void callCgoSymbolizer(cgoSymbolizerArg* arg);
 }
 #include "golang/internal/abi/symtab.h"
-#include "golang/runtime/cgocall.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stkframe.h"
 #include "golang/runtime/symtab.h"
+#include "golang/runtime/cgocall.fwd.h"
 
 namespace golang::runtime
 {

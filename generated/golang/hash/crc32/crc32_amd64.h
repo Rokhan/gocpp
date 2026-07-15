@@ -24,7 +24,7 @@ namespace golang::crc32
     uint32_t archUpdateIEEE(uint32_t crc, gocpp::slice<unsigned char> p);
 }
 #include "golang/hash/crc32/crc32.h"
-#include "golang/hash/crc32/crc32_generic.h"
+#include "golang/hash/crc32/crc32_generic.fwd.h"
 
 namespace golang::crc32
 {

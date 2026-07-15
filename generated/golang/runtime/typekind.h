@@ -9,7 +9,7 @@
 #include "golang/runtime/typekind.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/type.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

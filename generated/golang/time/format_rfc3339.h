@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
+#include "golang/time/zoneinfo.fwd.h"
 
 namespace golang::time
 {

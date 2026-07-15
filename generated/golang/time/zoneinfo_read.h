@@ -40,8 +40,8 @@ namespace golang::time
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfo(gocpp::string name, gocpp::string source);
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readFile(gocpp::string name);
 }
-#include "golang/errors/errors.h"
 #include "golang/time/zoneinfo.h"
+#include "golang/errors/errors.fwd.h"
 
 namespace golang::time
 {

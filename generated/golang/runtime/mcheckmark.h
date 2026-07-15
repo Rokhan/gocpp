@@ -16,10 +16,10 @@ namespace golang::runtime
     void startCheckmarks();
     void endCheckmarks();
 }
-#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap.h"
+#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/runtime/malloc.fwd.h"
 
 namespace golang::runtime
 {

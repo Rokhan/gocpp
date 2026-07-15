@@ -100,7 +100,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct memoryBasicInformation& value);
 }
-#include "golang/runtime/defs_windows_amd64.h"
+#include "golang/runtime/defs_windows_amd64.fwd.h"
 
 namespace golang::runtime
 {

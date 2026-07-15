@@ -89,7 +89,7 @@ namespace golang::abi
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertCache& value);
 }
-#include "golang/internal/abi/type.h"
+#include "golang/internal/abi/type.fwd.h"
 
 namespace golang::abi
 {

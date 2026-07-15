@@ -37,8 +37,8 @@ namespace golang::runtime
     int slicecopy(gocpp::unsafe_pointer toPtr, int toLen, gocpp::unsafe_pointer fromPtr, int fromLen, uintptr_t width);
     gocpp::slice<unsigned char> bytealg_MakeNoZero(int len);
 }
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/malloc.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

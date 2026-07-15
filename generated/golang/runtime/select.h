@@ -15,9 +15,9 @@ namespace golang::runtime
     void selectsetpc(uintptr_t* pc);
     void block();
 }
-#include "golang/internal/abi/funcpc.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/runtime2.h"
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/runtime/chan.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

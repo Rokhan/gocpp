@@ -71,9 +71,9 @@ namespace golang::time
     std::tuple<uint64_t, double, gocpp::string> leadingFraction(gocpp::string s);
     golang::time::ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message);
 }
-#include "golang/errors/errors.h"
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
+#include "golang/errors/errors.fwd.h"
+#include "golang/time/zoneinfo.fwd.h"
 
 namespace golang::time
 {

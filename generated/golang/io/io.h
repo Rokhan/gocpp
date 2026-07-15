@@ -1447,8 +1447,8 @@ namespace golang::io
     std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value);
     std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ReadAll(struct Reader r);
 }
-#include "golang/errors/errors.h"
 #include "golang/sync/pool.h"
+#include "golang/errors/errors.fwd.h"
 
 namespace golang::io
 {

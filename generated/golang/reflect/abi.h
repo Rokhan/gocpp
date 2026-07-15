@@ -69,7 +69,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct abiSeq& value);
 }
 #include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/abi_amd64.h"
+#include "golang/internal/abi/abi_amd64.fwd.h"
 
 namespace golang::reflect
 {
@@ -82,7 +82,7 @@ namespace golang::reflect
     void floatFromReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer to);
     void floatToReg(abi::RegArgs* r, int reg, uintptr_t argSize, gocpp::unsafe_pointer from);
 }
-#include "golang/reflect/type.h"
+#include "golang/reflect/type.fwd.h"
 
 namespace golang::reflect
 {
@@ -131,7 +131,7 @@ namespace golang::reflect
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
 }
-#include "golang/internal/abi/type.h"
+#include "golang/internal/abi/type.fwd.h"
 
 namespace golang::reflect
 {

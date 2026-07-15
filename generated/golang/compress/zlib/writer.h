@@ -9,9 +9,9 @@
 #include "golang/compress/zlib/writer.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/compress/flate/deflate.h"
 #include "golang/hash/hash.h"
 #include "golang/io/io.h"
+#include "golang/compress/flate/deflate.fwd.h"
 
 namespace golang::zlib
 {

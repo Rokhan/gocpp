@@ -20,7 +20,7 @@ namespace golang::strconv
     bool divisibleByPower5(uint64_t m, int k);
     std::tuple<uint32_t, uint32_t> divmod1e9(uint64_t x);
 }
-#include "golang/strconv/ftoa.h"
+#include "golang/strconv/ftoa.fwd.h"
 
 namespace golang::strconv
 {

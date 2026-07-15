@@ -28,7 +28,7 @@ namespace golang::time
     std::tuple<int, int> norm(int hi, int lo, int base);
     extern int64_t startNano;
 }
-#include "golang/time/zoneinfo.h"
+#include "golang/time/zoneinfo.fwd.h"
 
 namespace golang::time
 {

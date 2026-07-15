@@ -162,7 +162,7 @@ namespace golang::runtime
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

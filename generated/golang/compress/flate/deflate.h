@@ -38,11 +38,11 @@ namespace golang::flate
     int matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b, int max);
     extern gocpp::slice<golang::flate::compressionLevel> levels;
 }
-#include "golang/compress/flate/deflatefast.h"
-#include "golang/compress/flate/huffman_bit_writer.h"
 #include "golang/compress/flate/token.h"
-#include "golang/errors/errors.h"
 #include "golang/io/io.h"
+#include "golang/compress/flate/deflatefast.fwd.h"
+#include "golang/compress/flate/huffman_bit_writer.fwd.h"
+#include "golang/errors/errors.fwd.h"
 
 namespace golang::flate
 {

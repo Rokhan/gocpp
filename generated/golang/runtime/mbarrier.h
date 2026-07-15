@@ -14,10 +14,10 @@ namespace golang::runtime
 {
     void memclrHasPointers(gocpp::unsafe_pointer ptr, uintptr_t n);
 }
-#include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/type.h"
 #include "golang/runtime/slice.h"
-#include "golang/runtime/type.h"
+#include "golang/internal/abi/abi.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

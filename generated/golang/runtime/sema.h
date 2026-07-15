@@ -87,7 +87,7 @@ namespace golang::runtime
     void notifyListNotifyAll(notifyList* l);
     void notifyListNotifyOne(notifyList* l);
 }
-#include "golang/internal/cpu/cpu_x86.h"
+#include "golang/internal/cpu/cpu_x86.fwd.h"
 
 namespace golang::runtime
 {

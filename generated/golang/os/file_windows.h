@@ -24,10 +24,11 @@ namespace golang::os
     std::tuple<gocpp::string, struct gocpp::error> readlink(gocpp::string name);
 }
 #include "golang/internal/poll/fd_windows.h"
-#include "golang/os/dir_windows.h"
-#include "golang/os/types.h"
+#include "golang/io/fs/fs.h"
 #include "golang/sync/once.h"
 #include "golang/syscall/syscall_windows.h"
+#include "golang/os/dir_windows.fwd.h"
+#include "golang/os/types.fwd.h"
 
 namespace golang::os
 {

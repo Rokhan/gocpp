@@ -16,7 +16,7 @@ namespace golang::runtime
     struct GoTag_pallocBits { };
     unsigned int findBitRange64(uint64_t c, unsigned int n);
 }
-#include "golang/runtime/mpagealloc.h"
+#include "golang/runtime/mpagealloc.fwd.h"
 
 namespace golang::runtime
 {

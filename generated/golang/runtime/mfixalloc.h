@@ -10,7 +10,7 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/mstats.h"
+#include "golang/runtime/mstats.fwd.h"
 
 namespace golang::runtime
 {

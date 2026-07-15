@@ -17,7 +17,7 @@ namespace golang::runtime
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
+#include "golang/runtime/stack.fwd.h"
 
 namespace golang::runtime
 {
@@ -117,26 +117,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackScanState& value);
-    struct stackObjectBuf
-    {
-        sys::NotInHeap _1{};
-        stackObjectBufHdr stackObjectBufHdr{};
-        gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackObjectBufHdr>()) / gocpp::Sizeof<golang::runtime::stackObject>()> obj{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stackObjectBuf& value);
 }
-#include "golang/internal/goarch/goarch.h"
+#include "golang/internal/goarch/goarch.fwd.h"
 
 namespace golang::runtime
 {
@@ -158,6 +140,24 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackWorkBuf& value);
+    struct stackObjectBuf
+    {
+        sys::NotInHeap _1{};
+        stackObjectBufHdr stackObjectBufHdr{};
+        gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackObjectBufHdr>()) / gocpp::Sizeof<golang::runtime::stackObject>()> obj{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackObjectBuf& value);
     std::tuple<golang::runtime::stackObject*, golang::runtime::stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n);
 }
 

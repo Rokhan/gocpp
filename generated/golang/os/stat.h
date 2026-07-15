@@ -9,7 +9,8 @@
 #include "golang/os/stat.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/os/types.h"
+#include "golang/io/fs/fs.h"
+#include "golang/os/types.fwd.h"
 
 namespace golang::os
 {

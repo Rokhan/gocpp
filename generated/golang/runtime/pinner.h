@@ -70,8 +70,8 @@ namespace golang::runtime
     struct GoTag_pinnerBits { };
     uintptr_t* pinnerGetPinCounter(gocpp::unsafe_pointer addr);
 }
-#include "golang/runtime/error.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/error.fwd.h"
 
 namespace golang::runtime
 {

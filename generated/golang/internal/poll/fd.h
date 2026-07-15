@@ -48,7 +48,7 @@ namespace golang::poll
     extern golang::poll::errNetClosing ErrNetClosing;
     extern gocpp::error ErrDeadlineExceeded;
 }
-#include "golang/errors/errors.h"
+#include "golang/errors/errors.fwd.h"
 
 namespace golang::poll
 {

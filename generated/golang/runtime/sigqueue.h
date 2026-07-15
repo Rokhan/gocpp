@@ -22,8 +22,8 @@ namespace golang::runtime
     bool signal_ignored(uint32_t s);
 }
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/os_windows.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/os_windows.fwd.h"
 
 namespace golang::runtime
 {

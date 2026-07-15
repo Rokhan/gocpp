@@ -17,8 +17,8 @@ namespace golang::runtime
     int64_t runtime_pprof_runtime_cyclesPerSecond();
     std::tuple<gocpp::slice<uint64_t>, gocpp::slice<gocpp::unsafe_pointer>, bool> runtime_pprof_readProfile();
 }
-#include "golang/runtime/profbuf.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/profbuf.fwd.h"
 
 namespace golang::runtime
 {

@@ -82,8 +82,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct workbufhdr& value);
 }
-#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/sys/nih.h"
+#include "golang/internal/goarch/goarch.fwd.h"
 
 namespace golang::runtime
 {

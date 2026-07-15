@@ -40,7 +40,7 @@ namespace golang::fmt
 
     std::ostream& operator<<(std::ostream& os, const struct fmtFlags& value);
 }
-#include "golang/fmt/print.h"
+#include "golang/fmt/print.fwd.h"
 
 namespace golang::fmt
 {

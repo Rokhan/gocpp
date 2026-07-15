@@ -21,11 +21,11 @@ namespace golang::runtime
     void SetFinalizer(go_any obj, go_any finalizer);
     void KeepAlive(go_any x);
 }
-#include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/mgc.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
+#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/runtime/mgc.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

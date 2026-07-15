@@ -63,10 +63,10 @@ namespace golang::runtime
 }
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mcache.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/mstats.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/mheap.fwd.h"
+#include "golang/runtime/mstats.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

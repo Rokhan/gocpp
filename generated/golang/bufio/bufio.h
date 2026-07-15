@@ -30,8 +30,8 @@ namespace golang::bufio
 
     std::ostream& operator<<(std::ostream& os, const struct ReadWriter& value);
 }
-#include "golang/errors/errors.h"
 #include "golang/io/io.h"
+#include "golang/errors/errors.fwd.h"
 
 namespace golang::bufio
 {

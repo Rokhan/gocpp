@@ -158,8 +158,8 @@ namespace golang::runtime
     void sigsave(sigset* p);
     void msigrestore(sigset sigmask);
 }
-#include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/internal/atomic/types.fwd.h"
 
 namespace golang::runtime
 {

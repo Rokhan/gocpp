@@ -41,9 +41,9 @@ namespace golang::poll
     struct gocpp::error convertErr(int res, bool isFile);
     bool IsPollDescriptor(uintptr_t fd);
 }
-#include "golang/internal/poll/fd_windows.h"
 #include "golang/sync/once.h"
 #include "golang/time/time.h"
+#include "golang/internal/poll/fd_windows.fwd.h"
 
 namespace golang::poll
 {

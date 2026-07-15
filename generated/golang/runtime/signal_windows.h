@@ -43,9 +43,9 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gsignalStack& value);
 }
-#include "golang/runtime/defs_windows.h"
-#include "golang/runtime/defs_windows_amd64.h"
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/defs_windows.fwd.h"
+#include "golang/runtime/defs_windows_amd64.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

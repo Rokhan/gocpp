@@ -68,9 +68,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct heapBits& value);
     golang::runtime::heapBits heapBitsForAddr(uintptr_t addr, uintptr_t size);
 }
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/type.h"
+#include "golang/internal/abi/type.fwd.h"
+#include "golang/runtime/mheap.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

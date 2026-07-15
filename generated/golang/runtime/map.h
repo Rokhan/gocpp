@@ -119,9 +119,9 @@ namespace golang::runtime
     int reflect_maplen(hmap* h);
     int reflectlite_maplen(hmap* h);
 }
-#include "golang/internal/abi/map.h"
-#include "golang/runtime/slice.h"
-#include "golang/runtime/type.h"
+#include "golang/internal/abi/map.fwd.h"
+#include "golang/runtime/slice.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

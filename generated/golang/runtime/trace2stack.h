@@ -37,9 +37,9 @@ namespace golang::runtime
     uintptr_t startPCForTrace(uintptr_t pc);
     gocpp::slice<golang::runtime::traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs);
 }
-#include "golang/runtime/runtime2.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/trace2map.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

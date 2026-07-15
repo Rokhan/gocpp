@@ -20,8 +20,8 @@ namespace golang::runtime
 }
 #include "golang/runtime/defs_windows.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/netpoll.h"
 #include "golang/runtime/proc.h"
+#include "golang/runtime/netpoll.fwd.h"
 
 namespace golang::runtime
 {

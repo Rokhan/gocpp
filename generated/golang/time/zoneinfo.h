@@ -114,8 +114,8 @@ namespace golang::time
     std::tuple<golang::time::rule, gocpp::string, bool> tzsetRule(gocpp::string s);
     int tzruleTime(int year, rule r, int off);
 }
-#include "golang/errors/errors.h"
 #include "golang/sync/once.h"
+#include "golang/errors/errors.fwd.h"
 
 namespace golang::time
 {

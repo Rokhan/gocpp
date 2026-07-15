@@ -252,7 +252,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct MemStats& value);
 }
-#include "golang/runtime/sizeclasses.h"
+#include "golang/runtime/sizeclasses.fwd.h"
 
 namespace golang::runtime
 {

@@ -34,7 +34,7 @@ namespace golang::bytes
     golang::bytes::Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
     golang::bytes::Buffer* NewBufferString(gocpp::string s);
 }
-#include "golang/errors/errors.h"
+#include "golang/errors/errors.fwd.h"
 
 namespace golang::bytes
 {

@@ -74,10 +74,10 @@ namespace golang::runtime
     void systemstack(std::function<void ()> fn);
     void goexit(neverCallThisFunction);
 }
-#include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/abi_amd64.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
+#include "golang/internal/abi/abi.fwd.h"
+#include "golang/internal/abi/abi_amd64.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

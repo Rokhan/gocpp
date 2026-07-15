@@ -197,8 +197,8 @@ namespace golang::flate
     io::ReadCloser NewReader(io::Reader r);
     io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
 }
-#include "golang/bufio/bufio.h"
 #include "golang/compress/flate/dict_decoder.h"
+#include "golang/bufio/bufio.fwd.h"
 
 namespace golang::flate
 {

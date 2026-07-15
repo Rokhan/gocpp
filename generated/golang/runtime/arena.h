@@ -22,8 +22,8 @@ namespace golang::runtime
     bool inUserArenaChunk(uintptr_t p);
 }
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/mheap.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

@@ -37,7 +37,7 @@ namespace golang::cpu
     int indexByte(gocpp::string s, unsigned char c);
     extern gocpp::slice<golang::cpu::option> options;
 }
-#include "golang/internal/cpu/cpu_x86.h"
+#include "golang/internal/cpu/cpu_x86.fwd.h"
 
 namespace golang::cpu
 {

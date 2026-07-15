@@ -45,7 +45,7 @@ namespace golang::main
     void go_template();
     void go_class();
 }
-#include "golang/fmt/print.h"
+#include "golang/fmt/print.fwd.h"
 
 namespace golang::main
 {

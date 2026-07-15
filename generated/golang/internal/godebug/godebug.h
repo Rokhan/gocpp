@@ -37,12 +37,12 @@ namespace golang::godebug
     std::function<void ()> newIncNonDefault(gocpp::string name);
     extern golang::godebug::runtimeStderr go_stderr;
 }
-#include "golang/internal/bisect/bisect.h"
-#include "golang/internal/godebugs/table.h"
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/map.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
+#include "golang/internal/bisect/bisect.fwd.h"
+#include "golang/internal/godebugs/table.fwd.h"
 
 namespace golang::godebug
 {

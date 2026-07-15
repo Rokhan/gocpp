@@ -54,10 +54,10 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
 }
-#include "golang/runtime/mpagealloc_64bit.h"
-#include "golang/runtime/mpallocbits.h"
-#include "golang/runtime/mstats.h"
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/mpagealloc_64bit.fwd.h"
+#include "golang/runtime/mpallocbits.fwd.h"
+#include "golang/runtime/mstats.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

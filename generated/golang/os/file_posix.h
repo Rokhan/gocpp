@@ -16,8 +16,9 @@ namespace golang::os
     struct gocpp::error Lchown(gocpp::string name, int uid, int gid);
     struct gocpp::error ignoringEINTR(std::function<struct gocpp::error ()> fn);
 }
-#include "golang/os/types.h"
+#include "golang/io/fs/fs.h"
 #include "golang/time/time.h"
+#include "golang/os/types.fwd.h"
 
 namespace golang::os
 {

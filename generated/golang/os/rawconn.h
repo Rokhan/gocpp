@@ -9,7 +9,7 @@
 #include "golang/os/rawconn.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/os/types.h"
+#include "golang/os/types.fwd.h"
 
 namespace golang::os
 {

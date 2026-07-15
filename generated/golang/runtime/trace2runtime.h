@@ -26,9 +26,9 @@ namespace golang::runtime
     void trace_userLog(uint64_t id, gocpp::string category, gocpp::string message);
 }
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/trace2buf.h"
 #include "golang/runtime/trace2status.h"
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/trace2buf.fwd.h"
 
 namespace golang::runtime
 {

@@ -160,8 +160,8 @@ namespace golang::rand
     struct Source NewSource(int64_t seed);
     std::tuple<int, struct gocpp::error> read(gocpp::slice<unsigned char> p, struct Source src, int64_t* readVal, int8_t* readPos);
 }
-#include "golang/math/rand/rng.h"
 #include "golang/sync/mutex.h"
+#include "golang/math/rand/rng.fwd.h"
 
 namespace golang::rand
 {
@@ -234,7 +234,7 @@ namespace golang::rand
 {
     extern atomic::Pointer<golang::rand::Rand> globalRandGenerator;
 }
-#include "golang/internal/godebug/godebug.h"
+#include "golang/internal/godebug/godebug.fwd.h"
 
 namespace golang::rand
 {

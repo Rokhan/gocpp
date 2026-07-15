@@ -64,7 +64,7 @@ namespace golang::windows
 
     std::ostream& operator<<(std::ostream& os, const struct LUID_AND_ATTRIBUTES& value);
 }
-#include "golang/syscall/security_windows.h"
+#include "golang/syscall/security_windows.fwd.h"
 
 namespace golang::windows
 {
@@ -162,6 +162,11 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TOKEN_MANDATORY_LABEL& value);
+}
+#include "golang/syscall/security_windows.h"
+
+namespace golang::windows
+{
     struct gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
 
     namespace rec

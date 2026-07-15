@@ -60,7 +60,7 @@ namespace golang::strconv
     gocpp::slice<unsigned char> fmtB(gocpp::slice<unsigned char> dst, bool neg, uint64_t mant, int exp, floatInfo* flt);
     gocpp::slice<unsigned char> fmtX(gocpp::slice<unsigned char> dst, int prec, unsigned char fmt, bool neg, uint64_t mant, int exp, floatInfo* flt);
 }
-#include "golang/strconv/decimal.h"
+#include "golang/strconv/decimal.fwd.h"
 
 namespace golang::strconv
 {

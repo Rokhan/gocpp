@@ -23,11 +23,11 @@ namespace golang::runtime
     void gcDumpObject(gocpp::string label, uintptr_t obj, uintptr_t off);
     void gcMarkTinyAllocs();
 }
-#include "golang/runtime/mgcstack.h"
-#include "golang/runtime/mgcwork.h"
-#include "golang/runtime/mheap.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/stkframe.h"
+#include "golang/runtime/mgcstack.fwd.h"
+#include "golang/runtime/mgcwork.fwd.h"
+#include "golang/runtime/mheap.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/stkframe.fwd.h"
 
 namespace golang::runtime
 {

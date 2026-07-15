@@ -22,7 +22,7 @@ namespace golang::unicode
     bool IsSpace(gocpp::rune r);
     bool IsSymbol(gocpp::rune r);
 }
-#include "golang/unicode/letter.h"
+#include "golang/unicode/letter.fwd.h"
 
 namespace golang::unicode
 {

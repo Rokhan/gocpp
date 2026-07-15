@@ -53,13 +53,13 @@ namespace golang::syscall
     struct gocpp::error WSACleanup();
     uint16_t Ntohs(uint16_t netshort);
 }
-#include "golang/internal/syscall/windows/sysdll/sysdll.h"
-#include "golang/syscall/dll_windows.h"
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
-#include "golang/syscall/types_windows_amd64.h"
-#include "golang/syscall/zerrors_windows.h"
+#include "golang/internal/syscall/windows/sysdll/sysdll.fwd.h"
+#include "golang/syscall/dll_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/types_windows_amd64.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::syscall
 {

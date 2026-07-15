@@ -23,7 +23,7 @@ namespace golang::sync
     void runtime_doSpin();
     int64_t runtime_nanotime();
 }
-#include "golang/sync/runtime2.h"
+#include "golang/sync/runtime2.fwd.h"
 
 namespace golang::sync
 {

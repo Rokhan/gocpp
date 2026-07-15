@@ -113,8 +113,8 @@ namespace golang::runtime
     uint32_t readUnaligned32(gocpp::unsafe_pointer p);
     uint64_t readUnaligned64(gocpp::unsafe_pointer p);
 }
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

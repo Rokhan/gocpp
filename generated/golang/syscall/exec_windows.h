@@ -47,7 +47,7 @@ namespace golang::syscall
 #include "golang/sync/rwmutex.h"
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
+#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::syscall
 {

@@ -256,20 +256,20 @@ namespace golang::runtime
     extern bool isarchive;
 }
 #include "golang/internal/abi/symtab.h"
-#include "golang/runtime/chan.h"
-#include "golang/runtime/coro.h"
-#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/lfstack.h"
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/mheap.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/proc.h"
-#include "golang/runtime/time.h"
 #include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/chan.fwd.h"
+#include "golang/runtime/coro.fwd.h"
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/mheap.fwd.h"
+#include "golang/runtime/time.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
@@ -657,10 +657,8 @@ namespace golang::runtime
     extern golang::runtime::mutex allpLock;
 }
 #include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/cgocall.h"
 #include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/malloc.h"
-#include "golang/runtime/mcache.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgclimit.h"
 #include "golang/runtime/mgcwork.h"
@@ -669,9 +667,11 @@ namespace golang::runtime
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/pagetrace_off.h"
 #include "golang/runtime/panic.h"
-#include "golang/runtime/pinner.h"
 #include "golang/runtime/signal_windows.h"
 #include "golang/runtime/symtab.h"
+#include "golang/runtime/cgocall.fwd.h"
+#include "golang/runtime/mcache.fwd.h"
+#include "golang/runtime/pinner.fwd.h"
 
 namespace golang::runtime
 {

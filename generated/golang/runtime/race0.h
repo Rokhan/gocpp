@@ -33,8 +33,8 @@ namespace golang::runtime
     void racegoend();
     void racectxend(uintptr_t racectx);
 }
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

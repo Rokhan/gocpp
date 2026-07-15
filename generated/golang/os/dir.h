@@ -13,6 +13,11 @@
 namespace golang::os
 {
     extern bool testingForceReadDirLstat;
+}
+#include "golang/io/fs/fs.h"
+
+namespace golang::os
+{
     std::tuple<gocpp::slice<golang::os::DirEntry>, struct gocpp::error> ReadDir(gocpp::string name);
 }
 

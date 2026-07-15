@@ -20,8 +20,8 @@ namespace golang::flate
     void init();
     void histogram(gocpp::slice<unsigned char> b, gocpp::slice<int32_t> h);
 }
-#include "golang/compress/flate/huffman_code.h"
 #include "golang/io/io.h"
+#include "golang/compress/flate/huffman_code.fwd.h"
 
 namespace golang::flate
 {

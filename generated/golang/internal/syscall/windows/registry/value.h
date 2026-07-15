@@ -14,8 +14,9 @@ namespace golang::registry
 {
     std::tuple<gocpp::string, struct gocpp::error> ExpandString(gocpp::string value);
 }
-#include "golang/errors/errors.h"
-#include "golang/syscall/types_windows.h"
+#include "golang/syscall/syscall_windows.h"
+#include "golang/errors/errors.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::registry
 {

@@ -45,10 +45,10 @@ namespace golang::crc32
     uint32_t Checksum(gocpp::slice<unsigned char> data, gocpp::array_ptr<Table> tab);
     uint32_t tableSum(gocpp::array_ptr<Table> t);
 }
-#include "golang/hash/crc32/crc32_generic.h"
 #include "golang/hash/hash.h"
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/once.h"
+#include "golang/hash/crc32/crc32_generic.fwd.h"
 
 namespace golang::crc32
 {

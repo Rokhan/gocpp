@@ -32,7 +32,7 @@ namespace golang::syscall
 
     std::ostream& operator<<(std::ostream& os, const struct Servent& value);
 }
-#include "golang/syscall/types_windows.h"
+#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::syscall
 {

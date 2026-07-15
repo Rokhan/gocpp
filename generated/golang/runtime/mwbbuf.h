@@ -41,7 +41,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct wbBuf& value);
     void wbBufFlush();
 }
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

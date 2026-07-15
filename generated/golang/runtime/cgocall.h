@@ -58,8 +58,8 @@ namespace golang::runtime
     bool cgoInRange(gocpp::unsafe_pointer p, uintptr_t start, uintptr_t end);
     void cgoCheckResult(go_any val);
 }
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

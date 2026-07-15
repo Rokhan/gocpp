@@ -18,7 +18,7 @@ namespace golang::runtime
     bool traceReadCPU(uintptr_t gen);
     void traceCPUFlush(uintptr_t gen);
 }
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

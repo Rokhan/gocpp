@@ -9,7 +9,7 @@
 #include "golang/runtime/os_nonopenbsd.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/mheap.h"
+#include "golang/runtime/mheap.fwd.h"
 
 namespace golang::runtime
 {

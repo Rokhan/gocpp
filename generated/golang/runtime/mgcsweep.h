@@ -39,7 +39,7 @@ namespace golang::runtime
     void gcPaceSweeper(uint64_t trigger);
 }
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/mheap.h"
+#include "golang/runtime/mheap.fwd.h"
 
 namespace golang::runtime
 {

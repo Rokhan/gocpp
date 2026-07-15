@@ -216,12 +216,12 @@ namespace golang::reflect
     gocpp::unsafe_pointer mapiterelem(hiter* it);
     void mapiternext(hiter* it);
 }
-#include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/map.h"
-#include "golang/internal/abi/type.h"
 #include "golang/internal/unsafeheader/unsafeheader.h"
-#include "golang/reflect/makefunc.h"
 #include "golang/reflect/type.h"
+#include "golang/internal/abi/abi.fwd.h"
+#include "golang/internal/abi/map.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+#include "golang/reflect/makefunc.fwd.h"
 
 namespace golang::reflect
 {

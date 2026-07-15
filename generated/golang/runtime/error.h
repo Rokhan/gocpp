@@ -183,7 +183,7 @@ namespace golang::runtime
     void printanycustomtype(go_any i);
     void panicwrap();
 }
-#include "golang/runtime/type.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

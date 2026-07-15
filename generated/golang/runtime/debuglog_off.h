@@ -28,7 +28,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct dlogPerM& value);
 }
-#include "golang/runtime/debuglog.h"
+#include "golang/runtime/debuglog.fwd.h"
 
 namespace golang::runtime
 {

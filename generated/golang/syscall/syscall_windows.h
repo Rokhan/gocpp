@@ -355,9 +355,9 @@ namespace golang::syscall
     struct gocpp::error SetsockoptIPv6Mreq(golang::syscall::Handle fd, int level, int opt, IPv6Mreq* mreq);
 }
 #include "golang/sync/once.h"
-#include "golang/syscall/dll_windows.h"
 #include "golang/syscall/types_windows.h"
-#include "golang/syscall/zsyscall_windows.h"
+#include "golang/syscall/dll_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
 
 namespace golang::syscall
 {

@@ -10,9 +10,9 @@
 #include "gocpp/support.h"
 
 #include "golang/compress/flate/inflate.h"
-#include "golang/errors/errors.h"
 #include "golang/hash/hash.h"
 #include "golang/io/io.h"
+#include "golang/errors/errors.fwd.h"
 
 namespace golang::zlib
 {

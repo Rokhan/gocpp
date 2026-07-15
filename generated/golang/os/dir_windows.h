@@ -37,8 +37,8 @@ namespace golang::os
     std::ostream& operator<<(std::ostream& os, const struct dirInfo& value);
     extern bool allowReadDirFileID;
 }
-#include "golang/os/types_windows.h"
 #include "golang/sync/pool.h"
+#include "golang/os/types_windows.fwd.h"
 
 namespace golang::os
 {

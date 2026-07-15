@@ -85,7 +85,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct traceAdvancerState& value);
 }
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/time.h"
+#include "golang/runtime/time.fwd.h"
 
 namespace golang::runtime
 {
@@ -114,13 +114,13 @@ namespace golang::runtime
     golang::runtime::wakeableSleep* newWakeableSleep();
 }
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/mgc.h"
-#include "golang/runtime/profbuf.h"
 #include "golang/runtime/trace2buf.h"
 #include "golang/runtime/trace2event.h"
-#include "golang/runtime/trace2runtime.h"
 #include "golang/runtime/trace2stack.h"
 #include "golang/runtime/trace2string.h"
+#include "golang/runtime/mgc.fwd.h"
+#include "golang/runtime/profbuf.fwd.h"
+#include "golang/runtime/trace2runtime.fwd.h"
 
 namespace golang::runtime
 {

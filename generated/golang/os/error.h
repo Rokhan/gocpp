@@ -99,7 +99,7 @@ namespace golang::os
     extern gocpp::error ErrNoDeadline;
     extern gocpp::error ErrDeadlineExceeded;
 }
-#include "golang/io/fs/fs.h"
+#include "golang/io/fs/fs.fwd.h"
 
 namespace golang::os
 {

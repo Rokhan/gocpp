@@ -15,7 +15,7 @@ namespace golang::runtime
     void cgoCheckPtrWrite(gocpp::unsafe_pointer* dst, gocpp::unsafe_pointer src);
     void cgoCheckBits(gocpp::unsafe_pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size);
 }
-#include "golang/runtime/type.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

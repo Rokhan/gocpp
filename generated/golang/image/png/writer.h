@@ -158,11 +158,11 @@ namespace golang::png
 
     std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
 }
-#include "golang/bufio/bufio.h"
-#include "golang/compress/zlib/writer.h"
 #include "golang/image/image.h"
-#include "golang/image/png/reader.h"
 #include "golang/io/io.h"
+#include "golang/bufio/bufio.fwd.h"
+#include "golang/compress/zlib/writer.fwd.h"
+#include "golang/image/png/reader.fwd.h"
 
 namespace golang::png
 {

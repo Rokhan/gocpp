@@ -9,8 +9,8 @@
 #include "golang/unicode/tables.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/unicode/graphic.h"
 #include "golang/unicode/letter.h"
+#include "golang/unicode/graphic.fwd.h"
 
 namespace golang::unicode
 {

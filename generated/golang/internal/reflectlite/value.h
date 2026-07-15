@@ -137,7 +137,7 @@ namespace golang::reflectlite
     gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
 }
 #include "golang/internal/abi/type.h"
-#include "golang/internal/reflectlite/type.h"
+#include "golang/internal/reflectlite/type.fwd.h"
 
 namespace golang::reflectlite
 {

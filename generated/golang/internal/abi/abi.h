@@ -14,7 +14,7 @@ namespace golang::abi
 {
     struct GoTag_IntArgRegBitmap { };
 }
-#include "golang/internal/abi/abi_amd64.h"
+#include "golang/internal/abi/abi_amd64.fwd.h"
 
 namespace golang::abi
 {

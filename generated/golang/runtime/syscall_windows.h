@@ -152,7 +152,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct winCallback& value);
 }
-#include "golang/runtime/zcallback_windows.h"
+#include "golang/runtime/zcallback_windows.fwd.h"
 
 namespace golang::runtime
 {

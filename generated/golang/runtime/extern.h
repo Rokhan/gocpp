@@ -19,8 +19,8 @@ namespace golang::runtime
     extern gocpp::string buildVersion;
     gocpp::string Version();
 }
-#include "golang/internal/goarch/zgoarch_amd64.h"
-#include "golang/internal/goos/zgoos_windows.h"
+#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
+#include "golang/internal/goos/zgoos_windows.fwd.h"
 
 namespace golang::runtime
 {

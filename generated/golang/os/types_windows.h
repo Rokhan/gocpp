@@ -9,10 +9,11 @@
 #include "golang/os/types_windows.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/os/types.h"
+#include "golang/io/fs/fs.h"
 #include "golang/sync/mutex.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/time/time.h"
+#include "golang/os/types.fwd.h"
 
 namespace golang::os
 {
@@ -51,17 +52,17 @@ namespace golang::os
 
     std::ostream& operator<<(std::ostream& os, const struct fileStat& value);
     mocklib::Date atime(struct FileInfo fi);
-    golang::os::fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
     bool sameFile(fileStat* fs1, fileStat* fs2);
 }
-#include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/syscall/syscall_windows.h"
+#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
 
 namespace golang::os
 {
     std::tuple<golang::os::fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h);
     golang::os::fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d);
     golang::os::fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d);
+    golang::os::fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
 }
 
 #include "golang/time/time.h"

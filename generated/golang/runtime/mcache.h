@@ -48,8 +48,8 @@ namespace golang::runtime
 }
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/malloc.h"
 #include "golang/runtime/mheap.h"
+#include "golang/runtime/malloc.fwd.h"
 
 namespace golang::runtime
 {
@@ -94,7 +94,7 @@ namespace golang::runtime
     golang::runtime::mcache* allocmcache();
     void freemcache(mcache* c);
 }
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

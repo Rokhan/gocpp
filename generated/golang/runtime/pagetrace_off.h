@@ -30,7 +30,7 @@ namespace golang::runtime
     void initPageTrace(gocpp::string env);
     void finishPageTrace();
 }
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

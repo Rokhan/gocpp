@@ -20,7 +20,7 @@ namespace golang::runtime
     void sysFault(gocpp::unsafe_pointer v, uintptr_t n);
     gocpp::unsafe_pointer sysReserve(gocpp::unsafe_pointer v, uintptr_t n);
 }
-#include "golang/runtime/mstats.h"
+#include "golang/runtime/mstats.fwd.h"
 
 namespace golang::runtime
 {

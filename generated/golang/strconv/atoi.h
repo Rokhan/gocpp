@@ -41,7 +41,7 @@ namespace golang::strconv
     golang::strconv::NumError* baseError(gocpp::string fn, gocpp::string str, int base);
     golang::strconv::NumError* bitSizeError(gocpp::string fn, gocpp::string str, int bitSize);
 }
-#include "golang/errors/errors.h"
+#include "golang/errors/errors.fwd.h"
 
 namespace golang::strconv
 {

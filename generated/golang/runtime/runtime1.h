@@ -40,7 +40,7 @@ namespace golang::runtime
     int32_t reflect_addReflectOff(gocpp::unsafe_pointer ptr);
 }
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

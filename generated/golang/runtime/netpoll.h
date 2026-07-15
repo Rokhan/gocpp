@@ -114,13 +114,13 @@ namespace golang::runtime
     void netpolldeadlineimpl(pollDesc* pd, uintptr_t seq, bool read, bool write);
     extern go_any pdEface;
 }
-#include "golang/runtime/proc.h"
+#include "golang/runtime/proc.fwd.h"
 
 namespace golang::runtime
 {
     int32_t netpollready(gList* toRun, pollDesc* pd, int32_t mode);
 }
-#include "golang/runtime/type.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

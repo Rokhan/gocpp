@@ -17,7 +17,7 @@ namespace golang::runtime
     extern uintptr_t asyncPreemptStack;
     void init();
 }
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {

@@ -66,10 +66,10 @@ namespace golang::runtime
     extern uintptr_t maxstackceiling;
 }
 #include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/malloc.h"
 #include "golang/runtime/mcache.h"
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/runtime/malloc.fwd.h"
 
 namespace golang::runtime
 {
@@ -131,9 +131,9 @@ namespace golang::runtime
     void adjustsudogs(g* gp, adjustinfo* adjinfo);
     uintptr_t syncadjustsudogs(g* gp, uintptr_t used, adjustinfo* adjinfo);
 }
-#include "golang/internal/cpu/cpu_x86.h"
-#include "golang/runtime/stkframe.h"
 #include "golang/runtime/symtab.h"
+#include "golang/internal/cpu/cpu_x86.fwd.h"
+#include "golang/runtime/stkframe.fwd.h"
 
 namespace golang::runtime
 {

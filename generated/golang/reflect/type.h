@@ -17,7 +17,6 @@ namespace golang::reflect
     gocpp::unsafe_pointer resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
     gocpp::unsafe_pointer resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off);
     int32_t addReflectOff(gocpp::unsafe_pointer ptr);
-    golang::reflect::aTextOff resolveReflectText(gocpp::unsafe_pointer ptr);
     gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
     struct fieldScan
     {
@@ -77,7 +76,7 @@ namespace golang::reflect
 #include "golang/reflect/abi.h"
 #include "golang/sync/map.h"
 #include "golang/sync/mutex.h"
-#include "golang/sync/pool.h"
+#include "golang/sync/pool.fwd.h"
 
 namespace golang::reflect
 {
@@ -538,6 +537,7 @@ namespace golang::reflect
     gocpp::string pkgPath(abi::Name n);
     abi::Name newName(gocpp::string n, gocpp::string tag, bool exported, bool embedded);
     golang::reflect::aNameOff resolveReflectName(abi::Name n);
+    golang::reflect::aTextOff resolveReflectText(gocpp::unsafe_pointer ptr);
     extern sync::Map ptrMap;
     extern sync::Map lookupCache;
     struct cacheKey

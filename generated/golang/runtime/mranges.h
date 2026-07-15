@@ -54,8 +54,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct addrRange& value);
 }
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/malloc.h"
-#include "golang/runtime/stack.h"
+#include "golang/runtime/malloc.fwd.h"
+#include "golang/runtime/stack.fwd.h"
 
 namespace golang::runtime
 {
@@ -80,7 +80,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
     golang::runtime::addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
 }
-#include "golang/runtime/mstats.h"
+#include "golang/runtime/mstats.fwd.h"
 
 namespace golang::runtime
 {

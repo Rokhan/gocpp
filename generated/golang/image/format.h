@@ -14,11 +14,11 @@ namespace golang::image
 {
     bool match(gocpp::string magic, gocpp::slice<unsigned char> b);
 }
-#include "golang/errors/errors.h"
 #include "golang/image/image.h"
 #include "golang/io/io.h"
 #include "golang/sync/atomic/value.h"
 #include "golang/sync/mutex.h"
+#include "golang/errors/errors.fwd.h"
 
 namespace golang::image
 {

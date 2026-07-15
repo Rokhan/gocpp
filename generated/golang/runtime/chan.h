@@ -9,8 +9,8 @@
 #include "golang/runtime/chan.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/runtime2.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
@@ -34,6 +34,11 @@ namespace golang::runtime
     void sendDirect(_type* t, sudog* sg, gocpp::unsafe_pointer src);
     void recvDirect(_type* t, sudog* sg, gocpp::unsafe_pointer dst);
     bool chanparkcommit(g* gp, gocpp::unsafe_pointer chanLock);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct hchan
     {
         unsigned int qcount{}; // total data in the queue

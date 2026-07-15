@@ -10,8 +10,8 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/trace2buf.h"
 #include "golang/runtime/trace2map.h"
+#include "golang/runtime/trace2buf.fwd.h"
 
 namespace golang::runtime
 {

@@ -43,10 +43,10 @@ namespace golang::runtime
     golang::runtime::markBits markBitsForAddr(uintptr_t p);
     golang::runtime::markBits markBitsForSpan(uintptr_t base);
 }
-#include "golang/runtime/mheap.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/mheap.fwd.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

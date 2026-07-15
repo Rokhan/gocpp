@@ -30,7 +30,7 @@ namespace golang::runtime
 }
 #include "golang/internal/abi/switch.h"
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.h"
+#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {

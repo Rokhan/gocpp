@@ -25,4 +25,7 @@ func main() {
 
 	primes4 := primes0[:]
 	fmt.Println(primes4)
+
+	fmt.Println("0123456789"[3])
+	fmt.Println("0123456789"[3:7])
 }

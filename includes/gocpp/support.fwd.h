@@ -95,6 +95,11 @@ namespace gocpp
             return string(this->substr(low));
         }
 
+        constexpr inline string make_slice(size_t low, size_t high) const
+        {
+            return string(this->substr(low, high - low));
+        }
+
         // Assignment operators
         constexpr inline string& operator=(const string& src)
         {

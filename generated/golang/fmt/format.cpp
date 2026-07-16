@@ -144,7 +144,7 @@ namespace golang::fmt
         // Make enough room for padding.
         if(newLen > cap(buf))
         {
-            buf = gocpp::make(buffer, cap(buf) * 2 + n);
+            buf = gocpp::make(gocpp::Tag<buffer>(), cap(buf) * 2 + n);
             copy(buf, *f->buf);
         }
         // Decide which byte the padding should be filled with.

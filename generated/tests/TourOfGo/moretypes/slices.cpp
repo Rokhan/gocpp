@@ -40,6 +40,9 @@ namespace golang::main
 
         auto primes4 = primes0.make_slice(0);
         mocklib::Println(primes4);
+
+        mocklib::Println("0123456789"_s[3]);
+        mocklib::Println("0123456789"_s.make_slice(3, 7));
     }
 
 }

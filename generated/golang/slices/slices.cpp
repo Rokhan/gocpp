@@ -195,7 +195,7 @@ namespace golang::slices
             // the slice up to the next storage class.
             // This is what Grow does but we don't call Grow because
             // that might copy the values twice.
-            auto s2 = append(s.make_slice(0, i), gocpp::make(S, n + m - i));
+            auto s2 = append(s.make_slice(0, i), gocpp::make(gocpp::Tag<S>(), n + m - i));
             copy(s2.make_slice(i), v);
             copy(s2.make_slice(i + m), s.make_slice(i));
             return s2;
@@ -328,7 +328,7 @@ namespace golang::slices
         {
             // Too big to fit, allocate and copy over.
             // See Insert
-            auto s2 = append(s.make_slice(0, i), gocpp::make(S, tot - i));
+            auto s2 = append(s.make_slice(0, i), gocpp::make(gocpp::Tag<S>(), tot - i));
             copy(s2.make_slice(i), v);
             copy(s2.make_slice(i + len(v)), s.make_slice(j));
             return s2;

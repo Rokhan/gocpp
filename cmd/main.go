@@ -3740,7 +3740,10 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		var closeStr string = ")"
 		switch fun := n.Fun.(type) {
 		case *ast.SelectorExpr:
-			if cv.isNameSpace(fun.X) {
+			_, isType := cv.typeInfo.Uses[fun.Sel].(*types.TypeName)
+			if isType {
+				cv.BuffExprPrintf(buf, "%v(", cv.convertTypeExpr(fun, ctContext{ignoreNameSpace: true}))
+			} else if cv.isNameSpace(fun.X) {
 				funcName := ExprPrintf("%s::%s", cv.convertExpr(fun.X), cv.convertExpr(fun.Sel))
 				funcName = GetCppExprFunc(funcName)
 				// Need a special case for unsafe::Sizeof to avoid difficulties with constexpr
@@ -3858,7 +3861,12 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		if n.Name == "iota" {
 			return mkCppExpr(cv.Iota())
 		} else {
-			return mkCppExpr(GetCppName(n.Name))
+			switch cv.typeInfo.Uses[n].(type) {
+			case *types.TypeName:
+				return ExprPrintf("gocpp::Tag<%s>()", n.Name)
+			default:
+				return mkCppExpr(GetCppName(n.Name))
+			}
 		}
 
 	case *ast.IndexExpr:
@@ -3872,7 +3880,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		name := cv.convertExpr(n.X)
 
 		if cv.isNameSpace(n.X) {
-			return GetCppExprFunc(ExprPrintf("%s::%s", name, cv.convertExpr(n.Sel)))
+			return GetCppExprFunc(ExprPrintf("%s::%s", name, cv.convertTypeExpr(n.Sel, ctContext{ignoreNameSpace: true})))
 		} else if isFunc, hasReceiv, nbParams := cv.IsSelectorExprSignature(n); isFunc && !ctx.isTarget {
 			_, pkg := cv.isTypedef(n.Sel)
 			ns := ""

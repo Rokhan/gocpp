@@ -2143,12 +2143,20 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "const %s %s = %s%s", exprType, name, expr, end)...)
 							}
 						} else {
-							if cv.ignoreKnownError(name, knownMissingDeps) {
-								result = append(result, headerStrf(s, "/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
-								result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+							if tok == token.CONST {
+								if cv.ignoreKnownError(name, knownMissingDeps) {
+									result = append(result, headerStrf(s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+								} else {
+									result = append(result, headerStrf(s, "const %s %s = %s%s", exprType, name, expr, end)...)
+								}
 							} else {
-								result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
-								result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, expr, end)...)
+								if cv.ignoreKnownError(name, knownMissingDeps) {
+									result = append(result, headerStrf(s, "/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
+									result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+								} else {
+									result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
+									result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, expr, end)...)
+								}
 							}
 						}
 					}
@@ -2168,13 +2176,22 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "const %s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
 							}
 						} else {
-							if cv.ignoreKnownError(name, knownMissingDeps) {
-								result = append(result, headerStrf(s, "/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
-								result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
+							if tok == token.CONST {
+								if cv.ignoreKnownError(name, knownMissingDeps) {
+									result = append(result, headerStrf(s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
+								} else {
+									Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
+									result = append(result, headerStrf(s, "const %s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
+								}
 							} else {
-								Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
-								result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
-								result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
+								if cv.ignoreKnownError(name, knownMissingDeps) {
+									result = append(result, headerStrf(s, "/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
+									result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
+								} else {
+									Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
+									result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
+									result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
+								}
 							}
 						}
 					}
@@ -2596,10 +2613,8 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 	return false, pkgName
 }
 
-func (cv *cppConverter) checkCanFwd(cppType *cppType) {
+func checkCanFwd(cppType *cppType) {
 	switch cppType.str {
-	case cpp_string_type:
-		cppType.canFwd = false
 	case cpp_cplx64_type:
 		cppType.isStruct = true
 	case cpp_cplx128_type:
@@ -2707,7 +2722,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 			identType.dbg = cv.DbgSprintf("/*default, ctx.namespace: %s, pkg:%s, isStruct: %v, isTD:%v, isParam:%v*/", ctx.namespace, pkg, identType.isStruct, isTD, isParam)
 		}
 
-		cv.checkCanFwd(&identType)
+		checkCanFwd(&identType)
 		cv.checkIsParam(n, &identType)
 
 		if deps, ok := ctx.typeParams[identType.str]; ok && len(deps) != 0 {
@@ -3558,15 +3573,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		// Move code to 'GetCppGoType' ?
 		typeStr = convertNamespace(typeStr, cv.namespace)
 		cppType := mkCppType(typeStr, nil)
-
-		switch typeStr {
-		case cpp_string_type:
-			cppType.canFwd = false
-		case cpp_cplx64_type:
-			cppType.canFwd = false
-		case cpp_cplx128_type:
-			cppType.canFwd = false
-		}
+		checkCanFwd(&cppType)
 		return cppType
 	} else {
 		cv.Panicf("convertExprCppType, [%T, %s, %s]", node, types.ExprString(node), cv.Position(node))

@@ -218,7 +218,7 @@
 | $(ImportDir)/internal/syscall/windows/symlink_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/symlink_windows.cpp), [h](generated/golang/internal/syscall/windows/symlink_windows.h))| ✔️ |
 | $(ImportDir)/internal/syscall/windows/syscall_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/syscall_windows.cpp), [h](generated/golang/internal/syscall/windows/syscall_windows.h))| ❌ |
 | $(ImportDir)/internal/syscall/windows/sysdll/sysdll.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/sysdll/sysdll.cpp), [h](generated/golang/internal/syscall/windows/sysdll/sysdll.h))| ✔️ |
-| $(ImportDir)/internal/syscall/windows/zsyscall_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/zsyscall_windows.cpp), [h](generated/golang/internal/syscall/windows/zsyscall_windows.h))| ❌ |
+| $(ImportDir)/internal/syscall/windows/zsyscall_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/zsyscall_windows.cpp), [h](generated/golang/internal/syscall/windows/zsyscall_windows.h))| ✔️ |
 | $(ImportDir)/internal/testlog/log.go | ✔️ ([cpp](generated/golang/internal/testlog/log.cpp), [h](generated/golang/internal/testlog/log.h))| ❌ |
 | $(ImportDir)/internal/unsafeheader/unsafeheader.go | ✔️ ([cpp](generated/golang/internal/unsafeheader/unsafeheader.cpp), [h](generated/golang/internal/unsafeheader/unsafeheader.h))| ✔️ |
 | $(ImportDir)/io/fs/format.go | ✔️ ([cpp](generated/golang/io/fs/format.cpp), [h](generated/golang/io/fs/format.h))| ❌ |

@@ -59,7 +59,7 @@ var stdTypeMapping = map[string]string{
 
 var stdNsTypeMapping = map[string]nsType{
 	// predefined types. To do: need a way to map them to type defined in "golang/runtime"
-	"error": nsType{"gocpp", "error"},
+	"error": {"gocpp", "error"},
 }
 
 type fullName struct {

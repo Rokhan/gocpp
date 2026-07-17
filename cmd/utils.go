@@ -529,6 +529,18 @@ type CanForward struct {
 
 func (visitor *CanForward) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
+	case *ast.Ident:
+		idObj := visitor.cv.typeInfo.Uses[n]
+		if idObj == nil {
+			return visitor
+		}
+		idType := idObj.Type().Underlying()
+		switch idType.(type) {
+		// struct are defined in header, can't forward if we use them
+		case *types.Struct:
+			visitor.value = false
+			return nil
+		}
 	case *ast.CallExpr:
 		// special case we know they can be used in forward declaration header.
 		switch fun := n.Fun.(type) {
@@ -565,11 +577,12 @@ func (visitor *CanForward) Visit(node ast.Node) ast.Visitor {
 		switch t := exprType.(type) {
 		case *types.Basic:
 			switch t.Kind() {
-			case types.String, types.Complex64, types.Complex128:
+			case types.Complex64, types.Complex128:
 				visitor.value = false
 				return nil
 			}
 		}
+
 	case nil:
 		return nil
 	}

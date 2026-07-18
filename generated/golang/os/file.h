@@ -76,10 +76,10 @@ namespace golang::os
 #include "golang/io/fs/fs.h"
 #include "golang/io/io.h"
 #include "golang/os/stat.h"
+#include "golang/syscall/syscall_windows.h"
 #include "golang/errors/errors.fwd.h"
 #include "golang/os/file_windows.fwd.h"
 #include "golang/os/types.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
 
 namespace golang::os
 {

@@ -250,12 +250,12 @@ namespace golang::runtime
     void doInit(gocpp::slice<initTask*> ts);
     void doInit1(initTask* t);
 }
+#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/rwmutex.h"
 #include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/mcache.fwd.h"
 
 namespace golang::runtime

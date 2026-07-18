@@ -34,13 +34,13 @@ namespace golang::windows
 #include "golang/internal/syscall/windows/security_windows.h"
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/zerrors_windows.h"
 #include "golang/internal/syscall/windows/memory_windows.fwd.h"
 #include "golang/internal/syscall/windows/psapi_windows.fwd.h"
 #include "golang/internal/syscall/windows/syscall_windows.fwd.h"
 #include "golang/internal/syscall/windows/sysdll/sysdll.fwd.h"
 #include "golang/syscall/dll_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::windows
 {

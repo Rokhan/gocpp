@@ -69,7 +69,7 @@ namespace golang::reflect
     std::ostream& operator<<(std::ostream& os, const struct abiSeq& value);
 }
 #include "golang/internal/abi/abi.h"
-#include "golang/internal/abi/abi_amd64.fwd.h"
+#include "golang/internal/abi/abi_amd64.h"
 
 namespace golang::reflect
 {

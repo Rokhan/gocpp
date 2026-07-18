@@ -9,8 +9,8 @@
 #include "golang/runtime/mpagealloc_64bit.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mpagealloc.fwd.h"
+#include "golang/runtime/malloc.h"
+#include "golang/runtime/mpagealloc.h"
 
 namespace golang::runtime
 {

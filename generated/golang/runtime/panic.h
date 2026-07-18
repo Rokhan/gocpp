@@ -97,9 +97,9 @@ namespace golang::runtime
     void deferprocat(std::function<void ()> fn, go_any frame);
 }
 #include "golang/runtime/internal/atomic/types.h"
+#include "golang/runtime/runtime.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/error.fwd.h"
-#include "golang/runtime/runtime.fwd.h"
 
 namespace golang::runtime
 {

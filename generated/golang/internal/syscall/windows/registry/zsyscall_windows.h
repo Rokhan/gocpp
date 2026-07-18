@@ -16,10 +16,10 @@ namespace golang::registry
     std::tuple<uint32_t, struct gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size);
 }
 #include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/zerrors_windows.h"
 #include "golang/internal/syscall/windows/sysdll/sysdll.fwd.h"
 #include "golang/syscall/dll_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::registry
 {

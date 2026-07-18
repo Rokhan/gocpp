@@ -356,8 +356,8 @@ namespace golang::syscall
 }
 #include "golang/sync/once.h"
 #include "golang/syscall/types_windows.h"
+#include "golang/syscall/zsyscall_windows.h"
 #include "golang/syscall/dll_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
 
 namespace golang::syscall
 {

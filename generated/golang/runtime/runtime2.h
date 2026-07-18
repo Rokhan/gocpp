@@ -256,6 +256,7 @@ namespace golang::runtime
     extern bool isarchive;
 }
 #include "golang/internal/abi/symtab.h"
+#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/lfstack.h"
@@ -266,7 +267,6 @@ namespace golang::runtime
 #include "golang/runtime/trace2runtime.h"
 #include "golang/runtime/chan.fwd.h"
 #include "golang/runtime/coro.fwd.h"
-#include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/time.fwd.h"
 #include "golang/runtime/type.fwd.h"

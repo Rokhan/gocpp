@@ -54,8 +54,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct addrRange& value);
 }
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/stack.fwd.h"
+#include "golang/runtime/malloc.h"
+#include "golang/runtime/stack.h"
 
 namespace golang::runtime
 {

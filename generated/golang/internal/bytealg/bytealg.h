@@ -27,7 +27,7 @@ namespace golang::bytealg
     int LastIndexRabinKarp(T s, T sep);
     gocpp::slice<unsigned char> MakeNoZero(int n);
 }
-#include "golang/internal/cpu/cpu.fwd.h"
+#include "golang/internal/cpu/cpu.h"
 
 namespace golang::bytealg
 {

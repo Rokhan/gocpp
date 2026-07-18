@@ -20,11 +20,12 @@ type parsingInfos struct {
 }
 
 func convertGoToCppTypes(goType []types.Type, namespace string, position token.Position) []string {
-	res := []string{}
+	results := []string{}
 	for _, subType := range goType {
-		res = append(res, convertGoToCppType(subType, namespace, position))
+		result, _ := convertGoToCppType(subType, namespace, position)
+		results = append(results, result)
 	}
-	return res
+	return results
 }
 
 func convertCommentLines(comment *ast.CommentGroup) []string {

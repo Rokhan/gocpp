@@ -151,7 +151,7 @@
 | $(ImportDir)/golang.org/x/tour/wc/wc.go | ✔️ ([cpp](generated/golang/golang.org/x/tour/wc/wc.cpp), [h](generated/golang/golang.org/x/tour/wc/wc.h))| ❌ |
 | $(ImportDir)/hash/adler32/adler32.go | ✔️ ([cpp](generated/golang/hash/adler32/adler32.cpp), [h](generated/golang/hash/adler32/adler32.h))| ❌ |
 | $(ImportDir)/hash/crc32/crc32.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32.cpp), [h](generated/golang/hash/crc32/crc32.h))| ❌ |
-| $(ImportDir)/hash/crc32/crc32_amd64.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32_amd64.cpp), [h](generated/golang/hash/crc32/crc32_amd64.h))| ❌ |
+| $(ImportDir)/hash/crc32/crc32_amd64.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32_amd64.cpp), [h](generated/golang/hash/crc32/crc32_amd64.h))| ✔️ |
 | $(ImportDir)/hash/crc32/crc32_generic.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32_generic.cpp), [h](generated/golang/hash/crc32/crc32_generic.h))| ❌ |
 | $(ImportDir)/hash/hash.go | ✔️ ([cpp](generated/golang/hash/hash.cpp), [h](generated/golang/hash/hash.h))| ✔️ |
 | $(ImportDir)/image/color/color.go | ✔️ ([cpp](generated/golang/image/color/color.cpp), [h](generated/golang/image/color/color.h))| ❌ |
@@ -171,7 +171,7 @@
 | $(ImportDir)/internal/abi/symtab.go | ✔️ ([cpp](generated/golang/internal/abi/symtab.cpp), [h](generated/golang/internal/abi/symtab.h))| ✔️ |
 | $(ImportDir)/internal/abi/type.go | ✔️ ([cpp](generated/golang/internal/abi/type.cpp), [h](generated/golang/internal/abi/type.h))| ❌ |
 | $(ImportDir)/internal/bisect/bisect.go | ✔️ ([cpp](generated/golang/internal/bisect/bisect.cpp), [h](generated/golang/internal/bisect/bisect.h))| ❌ |
-| $(ImportDir)/internal/bytealg/bytealg.go | ✔️ ([cpp](generated/golang/internal/bytealg/bytealg.cpp), [h](generated/golang/internal/bytealg/bytealg.h))| ❌ |
+| $(ImportDir)/internal/bytealg/bytealg.go | ✔️ ([cpp](generated/golang/internal/bytealg/bytealg.cpp), [h](generated/golang/internal/bytealg/bytealg.h))| ✔️ |
 | $(ImportDir)/internal/bytealg/compare_native.go | ✔️ ([cpp](generated/golang/internal/bytealg/compare_native.cpp), [h](generated/golang/internal/bytealg/compare_native.h))| ✔️ |
 | $(ImportDir)/internal/bytealg/count_native.go | ✔️ ([cpp](generated/golang/internal/bytealg/count_native.cpp), [h](generated/golang/internal/bytealg/count_native.h))| ✔️ |
 | $(ImportDir)/internal/bytealg/index_amd64.go | ✔️ ([cpp](generated/golang/internal/bytealg/index_amd64.cpp), [h](generated/golang/internal/bytealg/index_amd64.h))| ❌ |

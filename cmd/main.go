@@ -1012,8 +1012,9 @@ func (cv *cppConverter) parentMethod(pt parentType) (methods []method) {
 			var resultTypes []outType
 			if sig.Results() != nil {
 				for j := 0; j < sig.Results().Len(); j++ {
+					restype, _ := cv.convertGoToCppType(sig.Results().At(j).Type(), token.Position{})
 					resultTypes = append(resultTypes, outType{
-						str:       cv.convertGoToCppType(sig.Results().At(j).Type(), token.Position{}),
+						str:       restype,
 						isStruct:  false,
 						typenames: nil,
 					})
@@ -1030,7 +1031,7 @@ func (cv *cppConverter) parentMethod(pt parentType) (methods []method) {
 					if paramName == "" {
 						paramName = fmt.Sprintf("param%d", j)
 					}
-					paramType := cv.convertGoToCppType(param.Type(), token.Position{})
+					paramType, _ := cv.convertGoToCppType(param.Type(), token.Position{})
 					params = append(params, typeName{
 						names: []string{paramName},
 						Type:  mkCppType(paramType, nil),
@@ -1085,7 +1086,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		cv.ConvertDoc(d.Doc)
 
 		typeParams := cv.GetFuncTypeParameters(d)
-		ctx := ctContext{inDeclaration: true, namespace: cv.namespace, typeParams: typeParams, isInReceiverDecl: true, keepDebug: true}
+		ctx := ctContext{usagePosition: UsageInDeclaration, namespace: cv.namespace, typeParams: typeParams, isInReceiverDecl: true, keepDebug: true}
 		params := cv.readFieldsCtx(d.Recv, ctx)
 		params.setIsRecv()
 		ctx.isInReceiverDecl = false
@@ -2153,8 +2154,8 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 					}
 				} else {
 					for i := range s.Names {
-						exprType := cv.convertTypeExpr(s.Type, ctContext{})
 						name := GetCppName(s.Names[i].Name)
+						exprType := cv.convertTypeExpr(s.Type, ctContext{usagePosition: UsageInHeader, targetVarName: name})
 
 						if len(values) == 0 {
 							result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
@@ -2611,12 +2612,16 @@ var exprToId map[ast.Expr]string = map[ast.Expr]string{}
 var typeToId map[types.Type]string = map[types.Type]string{}
 
 func (cv *cppConverter) GenerateExprId(expr ast.Expr) (string, bool) {
+	return cv.GetOrCreateExprCustomedId(expr, cv.GenerateId)
+}
+
+func (cv *cppConverter) GetOrCreateExprCustomedId(expr ast.Expr, hint func() string) (string, bool) {
 	id, ok := exprToId[expr]
 	if ok {
 		return id, false
 	}
 
-	id = cv.GenerateId()
+	id = hint()
 	exprToId[expr] = id
 
 	// TODO: doesn't work for types that are not defined in the current file.
@@ -2630,15 +2635,34 @@ func (cv *cppConverter) GenerateExprId(expr ast.Expr) (string, bool) {
 	return id, true
 }
 
+func (cv *cppConverter) GetOrCreateExprId(expr ast.Expr, ctx ctContext, suffix string) (string, bool) {
+	return cv.GetOrCreateExprCustomedId(expr, func() string {
+		if ctx.targetVarName == "" {
+			return cv.GenerateId()
+		} else {
+			return ctx.targetVarName + suffix
+		}
+	})
+}
+
+type UsagePosition int
+
+const (
+	UsageDefaut        UsagePosition = 0
+	UsageInDeclaration UsagePosition = 1
+	UsageInHeader      UsagePosition = 2
+)
+
 type ctContext struct {
-	inDeclaration      bool
+	usagePosition      UsagePosition
 	ensureHasTypeName  bool
 	ensureHasBlankName bool
 	namespace          string
 	typeParams         typeParams
 	isInReceiverDecl   bool
-	keepDebug          bool
+	keepDebug          bool // Do not merge debug string with result
 	ignoreNameSpace    bool
+	targetVarName      string
 }
 
 // Maybe merge this function with "convertExprToType" in future ?
@@ -2752,25 +2776,31 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		return cppType
 
 	case *ast.StructType:
-		name, first := cv.GenerateExprId(node)
+		name, first := cv.GetOrCreateExprId(node, ctx, "Struct")
 		if first {
 			structFwdDecl := fmt.Sprintf("struct %s;\n", name)
 
 			// if we want to use "inlineStr" we have to know if we are inside function or not to disable
 			// stream operator generation.
-			if ctx.inDeclaration {
+			switch ctx.usagePosition {
+			case UsageInDeclaration, UsageInHeader:
 				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, decl, with, false})
 				defs = append(defs, headerStr(structDef, node))
 
 				structImpl, _ := cv.convertStructTypeExpr(n, nil, genStructParam{name, implem, with, false})
 				defs = append(defs, outlineStr(structImpl, node))
+				if ctx.usagePosition == UsageInHeader {
+					defs = append(defs, fwdHeaderStr(structFwdDecl, node, depInfo{}))
+				}
 				return mkCppType(name, defs)
-			} else {
+			case UsageDefaut:
 				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, all, with, false})
 				//defs = append(defs, inlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{}))
 
 				defs = append(defs, outlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{}))
 				return mkCppType(name, defs)
+			default:
+				cv.Panicf("convertTypeExpr, unknown usage mode, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
 			}
 
 		}
@@ -2959,7 +2989,7 @@ func (cv *cppConverter) computeGenStructData(param genStructParam, templatePrmLi
 
 func (cv *cppConverter) convertStructTypeExpr(node *ast.StructType, templatePrms map[string][]string, param genStructParam) (cppStruct string, places []place) {
 	buf := new(bytes.Buffer)
-	ctx := ctContext{inDeclaration: true, ensureHasTypeName: true, namespace: cv.namespace, keepDebug: true}
+	ctx := ctContext{usagePosition: UsageInDeclaration, ensureHasTypeName: true, namespace: cv.namespace, keepDebug: true}
 	fields, parents := cv.readFieldsAndParentsCtx(node.Fields, ctx)
 
 	templatePrmList := ""
@@ -3507,7 +3537,23 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 	// NB, name are confusing (convertTypeExpr, convertExprToType, convertGoToCppType, etc ...)
 	exprType := cv.convertExprToType(node)
 	if exprType != nil {
-		typeStr := cv.convertGoToCppType(exprType, cv.Position(node))
+		typeStr, hasType := cv.convertGoToCppType(exprType, cv.Position(node))
+		if !hasType {
+			// generate ad hoc name base on ident value
+			switch n := node.(type) {
+			case *ast.Ident:
+				typeStr = fmt.Sprintf("%sStruct", n.Name)
+			case *ast.SelectorExpr:
+				ns, ok := n.X.(*ast.Ident)
+				if ok {
+					typeStr = fmt.Sprintf("%s.%sStruct", ns.Name, n.Sel.Name)
+				} else {
+					cv.Errorf("Can't create type name, node:%s, type:%s", node, exprType)
+				}
+			default:
+				cv.Errorf("Can't create type name, node:%s, type:%s", node, exprType)
+			}
+		}
 		// Probably this steps should only be done for named types
 		// Move code to 'GetCppGoType' ?
 		typeStr = convertNamespace(typeStr, cv.namespace)
@@ -3527,6 +3573,16 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 	}
 
 	panic("convertExprCppType, bug, unreacheable code reached !")
+}
+
+// log error or panic in strict mode
+func (cv *cppConverter) Errorf(format string, params ...any) {
+	if cv.shared.strictMode {
+		params = append(params, cv.printStack())
+		cv.Panicf(format, params...)
+	} else {
+		cv.Logf(format, params...)
+	}
 }
 
 func apply(slice []string, f func(string) string) []string {
@@ -3553,36 +3609,36 @@ func convertNamespace(typeStr string, namespace string) string {
 //	-> convertTypeExpr(node ast.Expr) cppType
 //	-> convertTypeSpec(node *ast.TypeSpec, end string) cppType
 
-func (cv *cppConverter) convertGoToCppType(goType types.Type, position token.Position) string {
+func (cv *cppConverter) convertGoToCppType(goType types.Type, position token.Position) (string, bool) {
 	return convertGoToCppType(goType, cv.namespace, position)
 }
 
-func convertGoToCppType(goType types.Type, namespace string, position token.Position) string {
+func convertGoToCppType(goType types.Type, namespace string, position token.Position) (string, bool) {
 	if goType == nil {
 		panic("convertGoToCppType, Cannot convert nil type.")
 	}
 
 	switch subType := goType.(type) {
 	case *types.Array:
-		return fmt.Sprintf("gocpp::array<%s, %d>", GetCppGoType(subType.Elem(), namespace), subType.Len())
+		return fmt.Sprintf("gocpp::array<%s, %d>", GetCppGoType(subType.Elem(), namespace), subType.Len()), true
 
 	case *types.Basic:
-		return GetCppGoType(subType, namespace)
+		return GetCppGoType(subType, namespace), true
 
 	case *types.Chan:
-		return fmt.Sprintf("gocpp::channel<%s>", GetCppGoType(subType.Elem(), namespace))
+		return fmt.Sprintf("gocpp::channel<%s>", GetCppGoType(subType.Elem(), namespace)), true
 
 	case *types.Map:
-		return fmt.Sprintf("gocpp::map<%s, %s>", GetCppGoType(subType.Key(), namespace), GetCppGoType(subType.Elem(), namespace))
+		return fmt.Sprintf("gocpp::map<%s, %s>", GetCppGoType(subType.Key(), namespace), GetCppGoType(subType.Elem(), namespace)), true
 
 	case *types.Named:
-		return GetCppGoType(subType, namespace)
+		return GetCppGoType(subType, namespace), true
 
 	case *types.Pointer:
-		return fmt.Sprintf("%s*", GetCppGoType(subType.Elem(), namespace))
+		return fmt.Sprintf("%s*", GetCppGoType(subType.Elem(), namespace)), true
 
 	case *types.Slice:
-		return fmt.Sprintf("gocpp::slice<%s>", GetCppGoType(subType.Elem(), namespace))
+		return fmt.Sprintf("gocpp::slice<%s>", GetCppGoType(subType.Elem(), namespace)), true
 
 	case *types.Struct:
 		fmt.Printf("convertGoToCppType, struct type [%v], position[%v]\n", subType, position)
@@ -3592,23 +3648,23 @@ func convertGoToCppType(goType types.Type, namespace string, position token.Posi
 				fmt.Printf("convertGoToCppType, id %d, type %v\n", id, t)
 			}
 			//panic(fmt.Sprintf("Unknown struct type in convertGoToCppType, type [%v], position[%v]", subType, position))
-			id = "UnknownStructType"
+			return "UnknownStructType", false
 		}
-		return fmt.Sprintf("%s", id)
+		return fmt.Sprintf("%s", id), true
 
 	case *types.TypeParam:
-		return fmt.Sprintf("%s", subType)
+		return fmt.Sprintf("%s", subType), true
 
 	case *types.Signature:
 		if subType.Results().Len() <= 1 {
-			return fmt.Sprintf("std::function<%s (%s)>", GetCppGoType(subType.Results(), namespace), GetCppGoType(subType.Params(), namespace))
+			return fmt.Sprintf("std::function<%s (%s)>", GetCppGoType(subType.Results(), namespace), GetCppGoType(subType.Params(), namespace)), true
 		} else {
-			return fmt.Sprintf("std::function<std::tuple<%s> (%s)>", GetCppGoType(subType.Results(), namespace), GetCppGoType(subType.Params(), namespace))
+			return fmt.Sprintf("std::function<std::tuple<%s> (%s)>", GetCppGoType(subType.Results(), namespace), GetCppGoType(subType.Params(), namespace)), true
 		}
 
 	case *types.Interface:
 		if subType.NumMethods() == 0 {
-			return "gocpp::go_any"
+			return "gocpp::go_any", true
 		} else {
 			panic(fmt.Sprintf("Unmanaged interface in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), position))
 		}

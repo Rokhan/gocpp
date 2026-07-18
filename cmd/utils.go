@@ -635,6 +635,8 @@ type depInfo struct {
 	decIdent  string
 	depIdents map[string]bool
 
+	depVars map[types.Object]bool
+
 	decPkg  string
 	depPkgs map[string]includeType
 
@@ -753,6 +755,12 @@ func (depInfo *depInfo) ComputePackages(pc parsingContext, dm depMode) {
 		return
 	}
 	appendMap(&depInfo.depPkgs, ComputePackages(depInfo.dependencies, pc, dm))
+
+	for varObj := range depInfo.depVars {
+		pkg := pc.getPackageFromType(varObj, UnknownTag)
+		depInfo.depPkgs[pkg.basePath()] = HdrInclude
+	}
+
 	if depInfo.decPkg != "" {
 		delete(depInfo.depPkgs, depInfo.decPkg)
 	}

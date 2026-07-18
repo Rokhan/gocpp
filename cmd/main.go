@@ -164,7 +164,7 @@ func (cv *cppConverter) includeHeaderDependencies(pkgInfos []*pkgInfo, incType i
 		alreadyIncluded[pkgInfo.filePath] = true
 
 		*order++
-		di := depInfo{nil, map[string]types.Type{}, "", map[string]bool{}, pkgInfo.basePath(), map[string]includeType{}, *order, 0}
+		di := depInfo{nil, map[string]types.Type{}, "", map[string]bool{}, nil, pkgInfo.basePath(), map[string]includeType{}, *order, 0}
 
 		switch pkgInfo.fileType {
 		case GoFiles, CompiledGoFiles:
@@ -637,10 +637,10 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 	if len(headerElts) != 0 {
 		for _, place := range headerElts {
 			di := &place.depInfo
-			cv.Logf("'%s' decl (before) info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
+			cv.Logf("'%s' decl (before) info[%v, %v]: type='%v', deps=%v, vars=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.depVars, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
 			di.ComputeDeps(dm)
 			di.ComputePackages(cv.parsingContext, dm)
-			cv.Logf("'%s' decl (after)  info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
+			cv.Logf("'%s' decl (after)  info[%v, %v]: type='%v', deps=%v, vars=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.depVars, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
 		}
 
 		cv.Logf("'%s' decl: Sorting.\n", outFile.name)
@@ -2432,6 +2432,20 @@ func (cv *cppConverter) getAllUsedNames(expr ast.Expr) map[string]bool {
 	return result
 }
 
+func (cv *cppConverter) getAllUsedVars(expr ast.Expr) map[types.Object]bool {
+	result := map[types.Object]bool{}
+	for ident := range getAllIdentifiers(expr) {
+		defObj := cv.typeInfo.Uses[ident]
+		switch def := defObj.(type) {
+		case *types.Const:
+			result[def] = true
+		case *types.Var:
+			result[def] = true
+		}
+	}
+	return result
+}
+
 func (cv *cppConverter) appendDepExpr(di *depInfo, expr ast.Expr) {
 	if expr == nil {
 		return
@@ -2486,7 +2500,7 @@ func (cv *cppConverter) getTypeDepInfo(n *ast.TypeSpec) depInfo {
 	pkgs := cv.getAllUsedPackages(n.Type)
 	definedType := cv.typeInfo.Defs[n.Name].Type()
 	usedType := cv.typeInfo.Types[n.Type].Type
-	return depInfo{definedType, map[string]types.Type{usedType.String(): usedType}, n.Name.Name, map[string]bool{}, "", pkgs, 0, 0}
+	return depInfo{definedType, map[string]types.Type{usedType.String(): usedType}, n.Name.Name, map[string]bool{}, nil, "", pkgs, 0, 0}
 }
 
 func (cv *cppConverter) getStructDepInfo(n *ast.StructType) depInfo {
@@ -2500,17 +2514,19 @@ func (cv *cppConverter) getStructDepInfo(n *ast.StructType) depInfo {
 	if structType != nil {
 		deps[structType.String()] = structType
 	}
-	return depInfo{structType, deps, "", map[string]bool{}, "", pkgs, 0, 0}
+	return depInfo{structType, deps, "", map[string]bool{}, nil, "", pkgs, 0, 0}
 }
 
 func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
 	defType := cv.typeInfo.Defs[n.Names[i]].Type()
 	deps := map[string]types.Type{defType.String(): defType}
 	pkgs := map[string]includeType{}
+	vars := map[types.Object]bool{}
 	names := make(set[string])
 	if n.Values != nil {
 		appendMap(&pkgs, cv.getAllUsedPackages(n.Values[i]))
 		names.append(cv.getAllUsedNames(n.Values[i]))
+		appendMap(&vars, cv.getAllUsedVars(n.Values[i]))
 	}
 
 	if n.Type != nil {
@@ -2520,7 +2536,7 @@ func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
 		deps[declType.String()] = declType
 	}
 
-	return depInfo{nil, deps, n.Names[i].Name, names, "", pkgs, 0, 0}
+	return depInfo{nil, deps, n.Names[i].Name, names, vars, "", pkgs, 0, 0}
 }
 
 func (cv *cppConverter) checkStructType(expr ast.Expr, cppType *cppType) {

@@ -133,8 +133,25 @@ namespace golang::reflectlite
     int maplen(gocpp::unsafe_pointer);
     gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int i, uintptr_t eltSize, gocpp::string whySafe);
     void escapes(go_any x);
-    extern gocpp_id_5 dummy;
+    struct dummyStruct
+    {
+        bool b{};
+        go_any x{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct dummyStruct& value);
     gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
+    extern dummyStruct dummy;
 }
 #include "golang/internal/abi/type.h"
 #include "golang/internal/reflectlite/type.fwd.h"

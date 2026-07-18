@@ -32,7 +32,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _typePair& value);
-    struct gocpp_id_2
+    struct gocpp_id_1
     {
 
         using isGoStruct = void;
@@ -46,8 +46,8 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
-    bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp_id_2> seen);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
+    bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp_id_1> seen);
 }
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/runtime2.h"
@@ -70,10 +70,29 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rtype& value);
-    extern gocpp_id_0 reflectOffs;
+    struct reflectOffsStruct
+    {
+        mutex lock{};
+        int32_t next{};
+        gocpp::map<int32_t, gocpp::unsafe_pointer> m{};
+        gocpp::map<gocpp::unsafe_pointer, int32_t> minv{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct reflectOffsStruct& value);
     golang::runtime::name resolveNameOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::nameOff off);
     golang::runtime::_type* resolveTypeOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::typeOff off);
     gocpp::string pkgPath(golang::runtime::name n);
+    extern reflectOffsStruct reflectOffs;
     golang::runtime::rtype toRType(abi::Type* t);
 
     namespace rec

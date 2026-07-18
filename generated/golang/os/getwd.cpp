@@ -41,47 +41,40 @@ namespace golang::os
         using mocklib::rec::Unlock;
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    getwdCacheStruct::operator T()
     {
-        mocklib::Mutex Mutex{};
-        gocpp::string dir{};
+        T result;
+        result.Mutex = this->Mutex;
+        result.dir = this->dir;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool getwdCacheStruct::operator==(const T& ref) const
+    {
+        if (Mutex != ref.Mutex) return false;
+        if (dir != ref.dir) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.Mutex = this->Mutex;
-            result.dir = this->dir;
-            return result;
-        }
+    std::ostream& getwdCacheStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << Mutex;
+        os << " " << dir;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (Mutex != ref.Mutex) return false;
-            if (dir != ref.dir) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << Mutex;
-            os << " " << dir;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct getwdCacheStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_0 getwdCache;
+    getwdCacheStruct getwdCache;
     // Getwd returns a rooted path name corresponding to the
     // current directory. If the current directory can be
     // reached via multiple paths (due to symbolic links),
@@ -184,7 +177,7 @@ namespace golang::os
                 }
                 for(auto [gocpp_ignored, name] : names)
                 {
-                    auto [d, gocpp_id_1] = lstatNolog(parent + "/"_s + name);
+                    auto [d, gocpp_id_0] = lstatNolog(parent + "/"_s + name);
                     if(SameFile(d, dot))
                     {
                         dir = "/"_s + name + dir;

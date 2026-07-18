@@ -32,65 +32,52 @@ namespace golang::runtime
         using atomic::rec::Load;
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    sigStruct::operator T()
     {
-        note note{};
-        gocpp::array<uint32_t, (go__NSIG + 31) / 32> mask{};
-        gocpp::array<uint32_t, (go__NSIG + 31) / 32> wanted{};
-        gocpp::array<uint32_t, (go__NSIG + 31) / 32> ignored{};
-        gocpp::array<uint32_t, (go__NSIG + 31) / 32> recv{};
-        atomic::Uint32 state{};
-        atomic::Uint32 delivering{};
-        bool inuse{};
+        T result;
+        result.note = this->note;
+        result.mask = this->mask;
+        result.wanted = this->wanted;
+        result.ignored = this->ignored;
+        result.recv = this->recv;
+        result.state = this->state;
+        result.delivering = this->delivering;
+        result.inuse = this->inuse;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sigStruct::operator==(const T& ref) const
+    {
+        if (note != ref.note) return false;
+        if (mask != ref.mask) return false;
+        if (wanted != ref.wanted) return false;
+        if (ignored != ref.ignored) return false;
+        if (recv != ref.recv) return false;
+        if (state != ref.state) return false;
+        if (delivering != ref.delivering) return false;
+        if (inuse != ref.inuse) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.note = this->note;
-            result.mask = this->mask;
-            result.wanted = this->wanted;
-            result.ignored = this->ignored;
-            result.recv = this->recv;
-            result.state = this->state;
-            result.delivering = this->delivering;
-            result.inuse = this->inuse;
-            return result;
-        }
+    std::ostream& sigStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << note;
+        os << " " << mask;
+        os << " " << wanted;
+        os << " " << ignored;
+        os << " " << recv;
+        os << " " << state;
+        os << " " << delivering;
+        os << " " << inuse;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (note != ref.note) return false;
-            if (mask != ref.mask) return false;
-            if (wanted != ref.wanted) return false;
-            if (ignored != ref.ignored) return false;
-            if (recv != ref.recv) return false;
-            if (state != ref.state) return false;
-            if (delivering != ref.delivering) return false;
-            if (inuse != ref.inuse) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << note;
-            os << " " << mask;
-            os << " " << wanted;
-            os << " " << ignored;
-            os << " " << recv;
-            os << " " << state;
-            os << " " << delivering;
-            os << " " << inuse;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct sigStruct& value)
     {
         return value.PrintTo(os);
     }
@@ -107,7 +94,7 @@ namespace golang::runtime
     // which may be running in a different thread. That race is unavoidable,
     // as there is no connection between handling a signal and receiving one,
     // but atomic instructions should minimize it.
-    gocpp_id_0 sig;
+    sigStruct sig;
     // sigsend delivers a signal from sighandler to the internal signal delivery queue.
     // It reports whether the signal was sent. If not, the caller typically crashes the program.
     // It runs from the signal handler, so it's limited in what it can do.

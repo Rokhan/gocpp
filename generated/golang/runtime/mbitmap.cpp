@@ -628,47 +628,40 @@ namespace golang::runtime
         return x;
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    debugPtrmaskStruct::operator T()
     {
-        mutex lock{};
-        unsigned char* data{};
+        T result;
+        result.lock = this->lock;
+        result.data = this->data;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool debugPtrmaskStruct::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (data != ref.data) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.lock = this->lock;
-            result.data = this->data;
-            return result;
-        }
+    std::ostream& debugPtrmaskStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << data;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (lock != ref.lock) return false;
-            if (data != ref.data) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << lock;
-            os << " " << data;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct debugPtrmaskStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_0 debugPtrmask;
+    debugPtrmaskStruct debugPtrmask;
     // progToPointerMask returns the 1-bit pointer mask output by the GC program prog.
     // size the size of the region described by prog, in bytes.
     // The resulting bitvector will have no more than size/goarch.PtrSize bits.

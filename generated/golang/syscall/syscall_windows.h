@@ -388,7 +388,24 @@ namespace golang::syscall
 
     std::ostream& operator<<(std::ostream& os, const struct RawSockaddrUnix& value);
     struct gocpp::error WSASendto(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, struct Sockaddr to, Overlapped* overlapped, unsigned char* croutine);
-    extern gocpp_id_4 connectExFunc;
+    struct connectExFuncStruct
+    {
+        sync::Once once{};
+        uintptr_t addr{};
+        gocpp::error err{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct connectExFuncStruct& value);
     struct gocpp::error connectEx(golang::syscall::Handle s, gocpp::unsafe_pointer name, int32_t namelen, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, Overlapped* overlapped);
     struct gocpp::error ConnectEx(golang::syscall::Handle fd, struct Sockaddr sa, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, Overlapped* overlapped);
     struct Rusage
@@ -438,6 +455,7 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct SockaddrUnix& value);
     struct gocpp::error wsaSendtoInet4(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, SockaddrInet4* to, Overlapped* overlapped, unsigned char* croutine);
     struct gocpp::error wsaSendtoInet6(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, SockaddrInet6* to, Overlapped* overlapped, unsigned char* croutine);
+    extern connectExFuncStruct connectExFunc;
 
     namespace rec
     {

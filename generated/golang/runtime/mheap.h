@@ -79,11 +79,11 @@ namespace golang::runtime
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mbitmap_allocheaders.h"
 #include "golang/runtime/mcentral.h"
+#include "golang/runtime/runtime2.h"
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
 #include "golang/runtime/mcheckmark.fwd.h"
 #include "golang/runtime/mprof.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
@@ -263,6 +263,26 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcBits& value);
+    struct gcBitsArenasStruct
+    {
+        mutex lock{};
+        gcBitsArena* free{};
+        gcBitsArena* next{}; // Read atomically. Write atomically under lock.
+        gcBitsArena* current{};
+        gcBitsArena* previous{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcBitsArenasStruct& value);
     struct gocpp_id_2
     {
         // arenaHints is a list of addresses at which to attempt to
@@ -392,7 +412,6 @@ namespace golang::runtime
 }
 #include "golang/runtime/mcache.h"
 #include "golang/runtime/mranges.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
@@ -492,7 +511,7 @@ namespace golang::runtime
     void spanHasSpecials(mspan* s);
     void spanHasNoSpecials(mspan* s);
     golang::runtime::specialsIter newSpecialsIter(mspan* span);
-    extern gocpp_id_4 gcBitsArenas;
+    extern gcBitsArenasStruct gcBitsArenas;
     golang::runtime::gcBitsArena* newArenaMayUnlock();
 }
 #include "golang/internal/cpu/cpu.h"

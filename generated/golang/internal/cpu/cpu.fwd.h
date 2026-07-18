@@ -6,12 +6,12 @@
 
 namespace golang::cpu
 {
-    struct gocpp_id_0;
-    struct gocpp_id_1;
-    struct gocpp_id_2;
-    struct gocpp_id_3;
-    struct gocpp_id_4;
-    struct gocpp_id_5;
+    struct X86Struct;
+    struct ARMStruct;
+    struct ARM64Struct;
+    struct MIPS64XStruct;
+    struct PPC64Struct;
+    struct S390XStruct;
     struct option;
 }
 #include "golang/internal/cpu/cpu_x86.fwd.h"

@@ -15,7 +15,7 @@ namespace golang::runtime
     const uintptr_t minLegalPointer = 4096;
     const int minHeapForMetadataHugePages = 1 << 30;
     struct persistentAlloc;
-    struct gocpp_id_0;
+    struct globalAllocStruct;
     const int persistentChunkSize = 256 << 10;
     struct linearAlloc;
     const int maxTinySize = _TinySize;

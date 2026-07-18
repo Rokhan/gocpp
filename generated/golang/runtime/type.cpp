@@ -153,49 +153,40 @@ namespace golang::runtime
         return ""_s;
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    reflectOffsStruct::operator T()
     {
-        mutex lock{};
-        int32_t next{};
-        gocpp::map<int32_t, gocpp::unsafe_pointer> m{};
-        gocpp::map<gocpp::unsafe_pointer, int32_t> minv{};
+        T result;
+        result.lock = this->lock;
+        result.next = this->next;
+        result.m = this->m;
+        result.minv = this->minv;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool reflectOffsStruct::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (next != ref.next) return false;
+        if (m != ref.m) return false;
+        if (minv != ref.minv) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.lock = this->lock;
-            result.next = this->next;
-            result.m = this->m;
-            result.minv = this->minv;
-            return result;
-        }
+    std::ostream& reflectOffsStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << next;
+        os << " " << m;
+        os << " " << minv;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (lock != ref.lock) return false;
-            if (next != ref.next) return false;
-            if (m != ref.m) return false;
-            if (minv != ref.minv) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << lock;
-            os << " " << next;
-            os << " " << m;
-            os << " " << minv;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct reflectOffsStruct& value)
     {
         return value.PrintTo(os);
     }
@@ -214,7 +205,7 @@ namespace golang::runtime
     // do not overlap with any compile-time module offsets.
     //
     // Entries are created by reflect.addReflectOff.
-    gocpp_id_0 reflectOffs;
+    reflectOffsStruct reflectOffs;
     void reflectOffsLock()
     {
         lock(& reflectOffs.lock);
@@ -388,7 +379,7 @@ namespace golang::runtime
         return rec::Name(gocpp::recv(pkgPathName));
     }
 
-    struct gocpp_id_1
+    struct gocpp_id_0
                         {
 
                             using isGoStruct = void;
@@ -414,7 +405,7 @@ namespace golang::runtime
                             }
                         };
 
-                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
                         {
                             return value.PrintTo(os);
                         }
@@ -478,7 +469,7 @@ namespace golang::runtime
                     auto t = (_type*)(gocpp::unsafe_pointer(md->types + uintptr_t(tl)));
                     for(auto [gocpp_ignored, candidate] : typehash[t->Hash])
                     {
-                        auto seen = gocpp::map<golang::runtime::_typePair, gocpp_id_1> {};
+                        auto seen = gocpp::map<golang::runtime::_typePair, gocpp_id_0> {};
                         if(typesEqual(t, candidate, seen))
                         {
                             t = candidate;
@@ -532,32 +523,32 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_2::operator T()
+    gocpp_id_1::operator T()
     {
         T result;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_2::operator==(const T& ref) const
+    bool gocpp_id_1::operator==(const T& ref) const
     {
         return true;
     }
 
-    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << '}';
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
     {
         return value.PrintTo(os);
     }
 
 
-    struct gocpp_id_4
+    struct gocpp_id_3
         {
 
             using isGoStruct = void;
@@ -583,7 +574,7 @@ namespace golang::runtime
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
         {
             return value.PrintTo(os);
         }
@@ -601,10 +592,10 @@ namespace golang::runtime
     // back into earlier ones.
     //
     // Only typelinksinit needs this function.
-    bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp_id_2> seen)
+    bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp_id_1> seen)
     {
         auto tp = golang::runtime::_typePair {t, v};
-        if(auto [gocpp_id_3, ok] = seen[tp]; ok)
+        if(auto [gocpp_id_2, ok] = seen[tp]; ok)
         {
             return true;
         }
@@ -612,7 +603,7 @@ namespace golang::runtime
         // mark these types as seen, and thus equivalent which prevents an infinite loop if
         // the two types are identical, but recursively defined and loaded from
         // different modules
-        seen[tp] = gocpp_id_4 {};
+        seen[tp] = gocpp_id_3 {};
 
         if(t == v)
         {

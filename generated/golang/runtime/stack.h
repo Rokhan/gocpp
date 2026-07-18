@@ -91,7 +91,23 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackpoolItem& value);
-    extern gocpp_id_1 stackLarge;
+    struct stackLargeStruct
+    {
+        mutex lock{};
+        gocpp::array<mSpanList, heapAddrBits - pageShift> free{}; // free lists by log_2(s.npages)
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackLargeStruct& value);
     golang::runtime::gclinkptr stackpoolalloc(uint8_t order);
     void stackpoolfree(gclinkptr x, uint8_t order);
     void stackcacherefill(mcache* c, uint8_t order);
@@ -124,6 +140,7 @@ namespace golang::runtime
     void gostartcallfn(gobuf* gobuf, funcval* fv);
     bool isShrinkStackSafe(g* gp);
     void shrinkstack(g* gp);
+    extern stackLargeStruct stackLarge;
     void adjustpointer(adjustinfo* adjinfo, gocpp::unsafe_pointer vpp);
     void adjustctxt(g* gp, adjustinfo* adjinfo);
     void adjustdefers(g* gp, adjustinfo* adjinfo);
@@ -137,9 +154,26 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern gocpp::array<gocpp_id_0, _NumStackOrders> stackpool;
+    struct stackpoolStruct
+    {
+        stackpoolItem item{};
+        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<golang::runtime::stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackpoolStruct& value);
     void adjustpointers(gocpp::unsafe_pointer scanp, bitvector* bv, adjustinfo* adjinfo, golang::runtime::funcInfo f);
     void adjustframe(stkframe* frame, adjustinfo* adjinfo);
+    extern gocpp::array<stackpoolStruct, _NumStackOrders> stackpool;
 
     namespace rec
     {

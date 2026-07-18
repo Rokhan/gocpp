@@ -6,7 +6,7 @@
 
 namespace golang::runtime
 {
-    struct gocpp_id_0;
+    struct sigStruct;
     const int sigIdle = 0;
     const int sigReceiving = 1;
     const int sigSending = 2;

@@ -75,200 +75,24 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_1::operator T()
+    gocpp_id_0::operator T()
     {
         T result;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_1::operator==(const T& ref) const
+    bool gocpp_id_0::operator==(const T& ref) const
     {
         return true;
     }
 
-    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << '}';
         return os;
     }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
-    struct gocpp_id_0
-    {
-        // trace.lock must only be acquired on the system stack where
-        // stack splits cannot happen while it is held.
-        mutex lock{};
-        // Trace buffer management.
-        // First we check the empty list for any free buffers. If not, buffers
-        // are allocated directly from the OS. Once they're filled up and/or
-        // flushed, they end up on the full queue for trace.gen%2.
-        // The trace reader takes buffers off the full list one-by-one and
-        // places them into reading until they're finished being read from.
-        // Then they're placed onto the empty list.
-        // Protected by trace.lock.
-        traceBuf* reading{}; // buffer currently handed off to user
-        traceBuf* empty{}; // stack of empty buffers
-        gocpp::array<traceBufQueue, 2> full{};
-        atomic::Bool workAvailable{};
-        // State for the trace reader goroutine.
-        // Protected by trace.lock.
-        atomic::Uintptr readerGen{}; // the generation the reader is currently reading for
-        atomic::Uintptr flushedGen{}; // the last completed generation
-        bool headerWritten{}; // whether ReadTrace has emitted trace header
-        // doneSema is used to synchronize the reader and traceAdvance. Specifically,
-        // it notifies traceAdvance that the reader is done with a generation.
-        // Both semaphores are 0 by default (so, acquires block). traceAdvance
-        // attempts to acquire for gen%2 after flushing the last buffers for gen.
-        // Meanwhile the reader releases the sema for gen%2 when it has finished
-        // processing gen.
-        gocpp::array<uint32_t, 2> doneSema{};
-        // Trace data tables for deduplicating data going into the trace.
-        // There are 2 of each: one for gen%2, one for 1-gen%2.
-        gocpp::array<traceStackTable, 2> stackTab{}; // maps stack traces to unique ids
-        gocpp::array<traceStringTable, 2> stringTab{}; // maps strings to unique ids
-        // cpuLogRead accepts CPU profile samples from the signal handler where
-        // they're generated. There are two profBufs here: one for gen%2, one for
-        // 1-gen%2. These profBufs use a three-word header to hold the IDs of the P, G,
-        // and M (respectively) that were active at the time of the sample. Because
-        // profBuf uses a record with all zeros in its header to indicate overflow,
-        // we make sure to make the P field always non-zero: The ID of a real P will
-        // start at bit 1, and bit 0 will be set. Samples that arrive while no P is
-        // running (such as near syscalls) will set the first header field to 0b10.
-        // This careful handling of the first header field allows us to store ID of
-        // the active G directly in the second field, even though that will be 0
-        // when sampling g0.
-        // Initialization and teardown of these fields is protected by traceAdvanceSema.
-        gocpp::array<profBuf*, 2> cpuLogRead{};
-        atomic::Uint32 signalLock{}; // protects use of the following member, only usable in signal handlers
-        gocpp::array<atomic::Pointer<profBuf>, 2> cpuLogWrite{}; // copy of cpuLogRead for use in signal handlers, set without signalLock
-        wakeableSleep* cpuSleep{};
-        gocpp::channel<gocpp_id_1> cpuLogDone{};
-        gocpp::array<traceBuf*, 2> cpuBuf{};
-        atomic::Pointer<g> reader{}; // goroutine that called ReadTrace, or nil
-        // Fast mappings from enumerations to string IDs that are prepopulated
-        // in the trace.
-        gocpp::array<gocpp::array<traceArg, len(gcMarkWorkerModeStrings)>, 2> markWorkerLabels{};
-        gocpp::array<gocpp::array<traceArg, len(traceGoStopReasonStrings)>, 2> goStopReasons{};
-        gocpp::array<gocpp::array<traceArg, len(traceBlockReasonStrings)>, 2> goBlockReasons{};
-        // Trace generation counter.
-        atomic::Uintptr gen{};
-        uintptr_t lastNonZeroGen{}; // last non-zero value of gen
-        // shutdown is set when we are waiting for trace reader to finish after setting gen to 0
-        // Writes protected by trace.lock.
-        atomic::Bool shutdown{};
-        // Number of goroutines in syscall exiting slow path.
-        atomic::Int32 exitingSyscall{};
-        // seqGC is the sequence counter for GC begin/end.
-        // Mutated only during stop-the-world.
-        uint64_t seqGC{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.lock = this->lock;
-            result.reading = this->reading;
-            result.empty = this->empty;
-            result.full = this->full;
-            result.workAvailable = this->workAvailable;
-            result.readerGen = this->readerGen;
-            result.flushedGen = this->flushedGen;
-            result.headerWritten = this->headerWritten;
-            result.doneSema = this->doneSema;
-            result.stackTab = this->stackTab;
-            result.stringTab = this->stringTab;
-            result.cpuLogRead = this->cpuLogRead;
-            result.signalLock = this->signalLock;
-            result.cpuLogWrite = this->cpuLogWrite;
-            result.cpuSleep = this->cpuSleep;
-            result.cpuLogDone = this->cpuLogDone;
-            result.cpuBuf = this->cpuBuf;
-            result.reader = this->reader;
-            result.markWorkerLabels = this->markWorkerLabels;
-            result.goStopReasons = this->goStopReasons;
-            result.goBlockReasons = this->goBlockReasons;
-            result.gen = this->gen;
-            result.lastNonZeroGen = this->lastNonZeroGen;
-            result.shutdown = this->shutdown;
-            result.exitingSyscall = this->exitingSyscall;
-            result.seqGC = this->seqGC;
-            return result;
-        }
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (lock != ref.lock) return false;
-            if (reading != ref.reading) return false;
-            if (empty != ref.empty) return false;
-            if (full != ref.full) return false;
-            if (workAvailable != ref.workAvailable) return false;
-            if (readerGen != ref.readerGen) return false;
-            if (flushedGen != ref.flushedGen) return false;
-            if (headerWritten != ref.headerWritten) return false;
-            if (doneSema != ref.doneSema) return false;
-            if (stackTab != ref.stackTab) return false;
-            if (stringTab != ref.stringTab) return false;
-            if (cpuLogRead != ref.cpuLogRead) return false;
-            if (signalLock != ref.signalLock) return false;
-            if (cpuLogWrite != ref.cpuLogWrite) return false;
-            if (cpuSleep != ref.cpuSleep) return false;
-            if (cpuLogDone != ref.cpuLogDone) return false;
-            if (cpuBuf != ref.cpuBuf) return false;
-            if (reader != ref.reader) return false;
-            if (markWorkerLabels != ref.markWorkerLabels) return false;
-            if (goStopReasons != ref.goStopReasons) return false;
-            if (goBlockReasons != ref.goBlockReasons) return false;
-            if (gen != ref.gen) return false;
-            if (lastNonZeroGen != ref.lastNonZeroGen) return false;
-            if (shutdown != ref.shutdown) return false;
-            if (exitingSyscall != ref.exitingSyscall) return false;
-            if (seqGC != ref.seqGC) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << lock;
-            os << " " << reading;
-            os << " " << empty;
-            os << " " << full;
-            os << " " << workAvailable;
-            os << " " << readerGen;
-            os << " " << flushedGen;
-            os << " " << headerWritten;
-            os << " " << doneSema;
-            os << " " << stackTab;
-            os << " " << stringTab;
-            os << " " << cpuLogRead;
-            os << " " << signalLock;
-            os << " " << cpuLogWrite;
-            os << " " << cpuSleep;
-            os << " " << cpuLogDone;
-            os << " " << cpuBuf;
-            os << " " << reader;
-            os << " " << markWorkerLabels;
-            os << " " << goStopReasons;
-            os << " " << goBlockReasons;
-            os << " " << gen;
-            os << " " << lastNonZeroGen;
-            os << " " << shutdown;
-            os << " " << exitingSyscall;
-            os << " " << seqGC;
-            os << '}';
-            return os;
-        }
-    };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
     {
@@ -276,8 +100,113 @@ namespace golang::runtime
     }
 
 
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    traceStruct::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.reading = this->reading;
+        result.empty = this->empty;
+        result.full = this->full;
+        result.workAvailable = this->workAvailable;
+        result.readerGen = this->readerGen;
+        result.flushedGen = this->flushedGen;
+        result.headerWritten = this->headerWritten;
+        result.doneSema = this->doneSema;
+        result.stackTab = this->stackTab;
+        result.stringTab = this->stringTab;
+        result.cpuLogRead = this->cpuLogRead;
+        result.signalLock = this->signalLock;
+        result.cpuLogWrite = this->cpuLogWrite;
+        result.cpuSleep = this->cpuSleep;
+        result.cpuLogDone = this->cpuLogDone;
+        result.cpuBuf = this->cpuBuf;
+        result.reader = this->reader;
+        result.markWorkerLabels = this->markWorkerLabels;
+        result.goStopReasons = this->goStopReasons;
+        result.goBlockReasons = this->goBlockReasons;
+        result.gen = this->gen;
+        result.lastNonZeroGen = this->lastNonZeroGen;
+        result.shutdown = this->shutdown;
+        result.exitingSyscall = this->exitingSyscall;
+        result.seqGC = this->seqGC;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool traceStruct::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (reading != ref.reading) return false;
+        if (empty != ref.empty) return false;
+        if (full != ref.full) return false;
+        if (workAvailable != ref.workAvailable) return false;
+        if (readerGen != ref.readerGen) return false;
+        if (flushedGen != ref.flushedGen) return false;
+        if (headerWritten != ref.headerWritten) return false;
+        if (doneSema != ref.doneSema) return false;
+        if (stackTab != ref.stackTab) return false;
+        if (stringTab != ref.stringTab) return false;
+        if (cpuLogRead != ref.cpuLogRead) return false;
+        if (signalLock != ref.signalLock) return false;
+        if (cpuLogWrite != ref.cpuLogWrite) return false;
+        if (cpuSleep != ref.cpuSleep) return false;
+        if (cpuLogDone != ref.cpuLogDone) return false;
+        if (cpuBuf != ref.cpuBuf) return false;
+        if (reader != ref.reader) return false;
+        if (markWorkerLabels != ref.markWorkerLabels) return false;
+        if (goStopReasons != ref.goStopReasons) return false;
+        if (goBlockReasons != ref.goBlockReasons) return false;
+        if (gen != ref.gen) return false;
+        if (lastNonZeroGen != ref.lastNonZeroGen) return false;
+        if (shutdown != ref.shutdown) return false;
+        if (exitingSyscall != ref.exitingSyscall) return false;
+        if (seqGC != ref.seqGC) return false;
+        return true;
+    }
+
+    std::ostream& traceStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << reading;
+        os << " " << empty;
+        os << " " << full;
+        os << " " << workAvailable;
+        os << " " << readerGen;
+        os << " " << flushedGen;
+        os << " " << headerWritten;
+        os << " " << doneSema;
+        os << " " << stackTab;
+        os << " " << stringTab;
+        os << " " << cpuLogRead;
+        os << " " << signalLock;
+        os << " " << cpuLogWrite;
+        os << " " << cpuSleep;
+        os << " " << cpuLogDone;
+        os << " " << cpuBuf;
+        os << " " << reader;
+        os << " " << markWorkerLabels;
+        os << " " << goStopReasons;
+        os << " " << goBlockReasons;
+        os << " " << gen;
+        os << " " << lastNonZeroGen;
+        os << " " << shutdown;
+        os << " " << exitingSyscall;
+        os << " " << seqGC;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct traceStruct& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
     // trace is global tracing context.
-    gocpp_id_0 trace;
+    traceStruct trace;
     uint32_t traceAdvanceSema = 1;
     uint32_t traceShutdownSema = 1;
     // StartTrace enables tracing for the current process.
@@ -1106,26 +1035,26 @@ namespace golang::runtime
     golang::runtime::traceAdvancerState traceAdvancer;
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_2::operator T()
+    gocpp_id_1::operator T()
     {
         T result;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_2::operator==(const T& ref) const
+    bool gocpp_id_1::operator==(const T& ref) const
     {
         return true;
     }
 
-    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << '}';
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
     {
         return value.PrintTo(os);
     }
@@ -1163,7 +1092,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_3
+    struct gocpp_id_2
         {
 
             using isGoStruct = void;
@@ -1189,13 +1118,13 @@ namespace golang::runtime
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
         {
             return value.PrintTo(os);
         }
 
 
-    struct gocpp_id_4
+    struct gocpp_id_3
             {
 
                 using isGoStruct = void;
@@ -1221,7 +1150,7 @@ namespace golang::runtime
                 }
             };
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
             {
                 return value.PrintTo(os);
             }
@@ -1231,7 +1160,7 @@ namespace golang::runtime
     void rec::start(traceAdvancerState* s)
     {
         // Start a goroutine to periodically advance the trace generation.
-        s->done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_3>>());
+        s->done = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_2>>());
         s->timer = newWakeableSleep();
         gocpp::go([&]{ [=]() mutable -> void
         {
@@ -1243,7 +1172,7 @@ namespace golang::runtime
                 // Try to advance the trace.
                 traceAdvance(false);
             }
-            s->done.send(gocpp_id_4 {});
+            s->done.send(gocpp_id_3 {});
         }(); });
     }
 
@@ -1260,26 +1189,26 @@ namespace golang::runtime
     // new generations.
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_5::operator T()
+    gocpp_id_4::operator T()
     {
         T result;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_5::operator==(const T& ref) const
+    bool gocpp_id_4::operator==(const T& ref) const
     {
         return true;
     }
 
-    std::ostream& gocpp_id_5::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_4::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << '}';
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
     {
         return value.PrintTo(os);
     }
@@ -1325,7 +1254,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_6
+    struct gocpp_id_5
         {
 
             using isGoStruct = void;
@@ -1351,7 +1280,7 @@ namespace golang::runtime
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
         {
             return value.PrintTo(os);
         }
@@ -1362,7 +1291,7 @@ namespace golang::runtime
     {
         auto s = new wakeableSleep{};
         lockInit(& s->lock, lockRankWakeableSleep);
-        s->wakeup = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_6>>(), 1);
+        s->wakeup = gocpp::make(gocpp::Tag<gocpp::channel<gocpp_id_5>>(), 1);
         s->timer = new timer{};
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
@@ -1395,7 +1324,7 @@ namespace golang::runtime
         stopTimer(s->timer);
     }
 
-    struct gocpp_id_7
+    struct gocpp_id_6
                 {
 
                     using isGoStruct = void;
@@ -1421,7 +1350,7 @@ namespace golang::runtime
                     }
                 };
 
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
                 {
                     return value.PrintTo(os);
                 }
@@ -1448,7 +1377,7 @@ namespace golang::runtime
             //Go select emulation
             {
                 int conditionId = -1;
-                if(s->wakeup.trySend(gocpp_id_7 {})) { conditionId = 0; }
+                if(s->wakeup.trySend(gocpp_id_6 {})) { conditionId = 0; }
                 switch(conditionId)
                 {
                     case 0:

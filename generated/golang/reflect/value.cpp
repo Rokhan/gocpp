@@ -6043,47 +6043,40 @@ namespace golang::reflect
         }
     }
 
-    struct gocpp_id_7
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    dummyStruct::operator T()
     {
-        bool b{};
-        go_any x{};
+        T result;
+        result.b = this->b;
+        result.x = this->x;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool dummyStruct::operator==(const T& ref) const
+    {
+        if (b != ref.b) return false;
+        if (x != ref.x) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.b = this->b;
-            result.x = this->x;
-            return result;
-        }
+    std::ostream& dummyStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << b;
+        os << " " << x;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (b != ref.b) return false;
-            if (x != ref.x) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << b;
-            os << " " << x;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
+    std::ostream& operator<<(std::ostream& os, const struct dummyStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_7 dummy;
+    dummyStruct dummy;
     // Dummy annotation marking that the content of value x
     // escapes (i.e. modeling roughly heap=*x),
     // for use in cases where the reflect code is so clever that

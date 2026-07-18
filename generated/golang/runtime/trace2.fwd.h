@@ -6,13 +6,13 @@
 
 namespace golang::runtime
 {
-    struct gocpp_id_0;
+    struct traceStruct;
     struct traceAdvancerState;
+    struct gocpp_id_2;
     struct gocpp_id_3;
-    struct gocpp_id_4;
     const double defaultTraceAdvancePeriod = 1e9;
+    struct gocpp_id_5;
     struct gocpp_id_6;
-    struct gocpp_id_7;
 }
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/time.fwd.h"

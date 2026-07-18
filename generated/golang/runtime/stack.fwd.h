@@ -12,8 +12,8 @@ namespace golang::runtime
     const long stackFaultOnFree = 0;
     const long stackNoCache = 0;
     const bool debugCheckBP = false;
-    struct gocpp_id_0;
-    struct gocpp_id_1;
+    struct stackpoolStruct;
+    struct stackLargeStruct;
     struct bitvector;
     struct stackObjectRecord;
 }

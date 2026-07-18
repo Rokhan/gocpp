@@ -10,7 +10,7 @@ namespace golang::runtime
     const long retainExtraPercent = 10;
     const long reduceExtraPercent = 5;
     const double scavChunkHiOccFrac = 0.96875;
-    struct gocpp_id_0;
+    struct scavengeStruct;
     const double startingScavSleepRatio = 0.001;
     const double minScavWorkTime = 1e6;
     struct scavChunkData;

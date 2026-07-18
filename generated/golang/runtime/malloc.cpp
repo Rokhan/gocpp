@@ -1663,47 +1663,40 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    globalAllocStruct::operator T()
     {
-        mutex mutex{};
-        persistentAlloc persistentAlloc{};
+        T result;
+        result.mutex = this->mutex;
+        result.persistentAlloc = this->persistentAlloc;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool globalAllocStruct::operator==(const T& ref) const
+    {
+        if (mutex != ref.mutex) return false;
+        if (persistentAlloc != ref.persistentAlloc) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.mutex = this->mutex;
-            result.persistentAlloc = this->persistentAlloc;
-            return result;
-        }
+    std::ostream& globalAllocStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << mutex;
+        os << " " << persistentAlloc;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (mutex != ref.mutex) return false;
-            if (persistentAlloc != ref.persistentAlloc) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << mutex;
-            os << " " << persistentAlloc;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct globalAllocStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_0 globalAlloc;
+    globalAllocStruct globalAlloc;
     // persistentChunkSize is the number of bytes we allocate when we grow
     // a persistentAlloc.
     // persistentChunks is a list of all the persistent chunks we have

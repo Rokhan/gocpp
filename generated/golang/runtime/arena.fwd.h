@@ -7,7 +7,7 @@
 namespace golang::runtime
 {
     const int userArenaChunkBytesMax = 8 << 20;
-    struct gocpp_id_0;
+    struct userArenaStateStruct;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/malloc.fwd.h"

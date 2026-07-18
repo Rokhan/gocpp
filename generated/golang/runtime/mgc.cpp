@@ -153,45 +153,37 @@ namespace golang::runtime
     // Garbage collector phase.
     // Indicates to write barrier and synchronization task to perform.
     uint32_t gcphase;
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    writeBarrierStruct::operator T()
     {
-        bool enabled{}; // compiler emits a check of this before calling write barrier
-        gocpp::array<unsigned char, 3> pad{}; // compiler uses 32-bit load for "enabled" field
-        uint64_t alignme{}; // guarantee alignment so that compiler can use a 32 or 64-bit load
+        T result;
+        result.enabled = this->enabled;
+        result.pad = this->pad;
+        result.alignme = this->alignme;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool writeBarrierStruct::operator==(const T& ref) const
+    {
+        if (enabled != ref.enabled) return false;
+        if (pad != ref.pad) return false;
+        if (alignme != ref.alignme) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.enabled = this->enabled;
-            result.pad = this->pad;
-            result.alignme = this->alignme;
-            return result;
-        }
+    std::ostream& writeBarrierStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << enabled;
+        os << " " << pad;
+        os << " " << alignme;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (enabled != ref.enabled) return false;
-            if (pad != ref.pad) return false;
-            if (alignme != ref.alignme) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << enabled;
-            os << " " << pad;
-            os << " " << alignme;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct writeBarrierStruct& value)
     {
         return value.PrintTo(os);
     }
@@ -201,7 +193,7 @@ namespace golang::runtime
     // If you change it, you must change builtin/runtime.go, too.
     // If you change the first four bytes, you must also change the write
     // barrier insertion code.
-    gocpp_id_0 writeBarrier;
+    writeBarrierStruct writeBarrier;
     // gcBlackenEnabled is 1 if mutator assists and background mark
     // workers are allowed to blacken objects. This must only be set when
     // gcphase == _GCmark.
@@ -268,7 +260,7 @@ namespace golang::runtime
     golang::runtime::workType work;
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_1::operator T()
+    gocpp_id_0::operator T()
     {
         T result;
         result.lock = this->lock;
@@ -278,7 +270,7 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_1::operator==(const T& ref) const
+    bool gocpp_id_0::operator==(const T& ref) const
     {
         if (lock != ref.lock) return false;
         if (free != ref.free) return false;
@@ -286,12 +278,45 @@ namespace golang::runtime
         return true;
     }
 
-    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << lock;
         os << " " << free;
         os << " " << busy;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_1::operator T()
+    {
+        T result;
+        result.lock = this->lock;
+        result.q = this->q;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_1::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (q != ref.q) return false;
+        return true;
+    }
+
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << q;
         os << '}';
         return os;
     }
@@ -308,7 +333,7 @@ namespace golang::runtime
     {
         T result;
         result.lock = this->lock;
-        result.q = this->q;
+        result.list = this->list;
         return result;
     }
 
@@ -316,44 +341,11 @@ namespace golang::runtime
     bool gocpp_id_2::operator==(const T& ref) const
     {
         if (lock != ref.lock) return false;
-        if (q != ref.q) return false;
-        return true;
-    }
-
-    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << "" << lock;
-        os << " " << q;
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_3::operator T()
-    {
-        T result;
-        result.lock = this->lock;
-        result.list = this->list;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_3::operator==(const T& ref) const
-    {
-        if (lock != ref.lock) return false;
         if (list != ref.list) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_3::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << lock;
@@ -362,7 +354,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
     {
         return value.PrintTo(os);
     }
@@ -690,7 +682,7 @@ namespace golang::runtime
             {
                 case 0:
                 {
-                    auto [trigger, gocpp_id_4] = rec::trigger(gocpp::recv(gcController));
+                    auto [trigger, gocpp_id_3] = rec::trigger(gocpp::recv(gcController));
                     return rec::Load(gocpp::recv(gcController.heapLive)) >= trigger;
                     break;
                 }
@@ -1164,7 +1156,7 @@ namespace golang::runtime
 
         // Update timing memstats
         auto now = nanotime();
-        auto [sec, nsec, gocpp_id_5] = time_now();
+        auto [sec, nsec, gocpp_id_4] = time_now();
         auto unixNow = sec * 1e9 + int64_t(nsec);
         work.pauseNS += now - stw.start;
         work.tEnd = now;
@@ -2110,7 +2102,7 @@ namespace golang::runtime
         {
             return "stack"_s;
         }
-        if(auto [base, gocpp_id_6, gocpp_id_7] = findObject(p2, 0, 0); base != 0)
+        if(auto [base, gocpp_id_5, gocpp_id_6] = findObject(p2, 0, 0); base != 0)
         {
             return "heap"_s;
         }

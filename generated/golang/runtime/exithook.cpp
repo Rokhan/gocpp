@@ -74,41 +74,34 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    exitHooksStruct::operator T()
     {
-        gocpp::slice<exitHook> hooks{};
-        bool runningExitHooks{};
+        T result;
+        result.hooks = this->hooks;
+        result.runningExitHooks = this->runningExitHooks;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool exitHooksStruct::operator==(const T& ref) const
+    {
+        if (hooks != ref.hooks) return false;
+        if (runningExitHooks != ref.runningExitHooks) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.hooks = this->hooks;
-            result.runningExitHooks = this->runningExitHooks;
-            return result;
-        }
+    std::ostream& exitHooksStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << hooks;
+        os << " " << runningExitHooks;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (hooks != ref.hooks) return false;
-            if (runningExitHooks != ref.runningExitHooks) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << hooks;
-            os << " " << runningExitHooks;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct exitHooksStruct& value)
     {
         return value.PrintTo(os);
     }
@@ -116,7 +109,7 @@ namespace golang::runtime
 
     // exitHooks stores state related to hook functions registered to
     // run when program execution terminates.
-    gocpp_id_0 exitHooks;
+    exitHooksStruct exitHooks;
     // runExitHooks runs any registered exit hook functions (funcs
     // previously registered using runtime.addExitHook). Here 'exitCode'
     // is the status code being passed to os.Exit, or zero if the program

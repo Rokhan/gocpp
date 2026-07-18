@@ -31,7 +31,24 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct exitHook& value);
     void runExitHooks(int exitCode);
-    extern gocpp_id_0 exitHooks;
+    struct exitHooksStruct
+    {
+        gocpp::slice<exitHook> hooks{};
+        bool runningExitHooks{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct exitHooksStruct& value);
+    extern exitHooksStruct exitHooks;
 
     namespace rec
     {

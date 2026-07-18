@@ -20,11 +20,11 @@ namespace golang::bytealg
     }
 
     // Offsets into internal/cpu records for use in assembly.
-    uintptr_t offsetX86HasSSE42 = gocpp::Offsetof<UnknownStructType>(&UnknownStructType::HasSSE42);
-    uintptr_t offsetX86HasAVX2 = gocpp::Offsetof<UnknownStructType>(&UnknownStructType::HasAVX2);
-    uintptr_t offsetX86HasPOPCNT = gocpp::Offsetof<UnknownStructType>(&UnknownStructType::HasPOPCNT);
-    uintptr_t offsetS390xHasVX = gocpp::Offsetof<UnknownStructType>(&UnknownStructType::HasVX);
-    uintptr_t offsetPPC64HasPOWER9 = gocpp::Offsetof<UnknownStructType>(&UnknownStructType::IsPOWER9);
+    uintptr_t offsetX86HasSSE42 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasSSE42);
+    uintptr_t offsetX86HasAVX2 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX2);
+    uintptr_t offsetX86HasPOPCNT = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasPOPCNT);
+    uintptr_t offsetS390xHasVX = gocpp::Offsetof<cpu::S390XStruct>(&cpu::S390XStruct::HasVX);
+    uintptr_t offsetPPC64HasPOWER9 = gocpp::Offsetof<cpu::PPC64Struct>(&cpu::PPC64Struct::IsPOWER9);
     // MaxLen is the maximum length of the string to be searched for (argument b) in Index.
     // If MaxLen is not 0, make sure MaxLen >= 4.
     int MaxLen;

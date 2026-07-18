@@ -14,12 +14,12 @@ namespace golang::reflect
     struct StructField;
     using StructTag = gocpp::string;
     struct fieldScan;
-    struct gocpp_id_3;
-    struct gocpp_id_10;
+    struct funcLookupCacheStruct;
+    struct structLookupCacheStruct;
     struct structTypeUncommon;
+    struct gocpp_id_9;
     struct gocpp_id_11;
-    struct gocpp_id_13;
-    struct gocpp_id_14;
+    struct gocpp_id_12;
     const long maxPtrmaskBytes = 2048;
     struct bitVector;
     const golang::reflect::Kind Invalid = 0;

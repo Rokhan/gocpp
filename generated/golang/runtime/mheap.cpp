@@ -2795,59 +2795,49 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_4
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gcBitsArenasStruct::operator T()
     {
-        mutex lock{};
-        gcBitsArena* free{};
-        gcBitsArena* next{}; // Read atomically. Write atomically under lock.
-        gcBitsArena* current{};
-        gcBitsArena* previous{};
+        T result;
+        result.lock = this->lock;
+        result.free = this->free;
+        result.next = this->next;
+        result.current = this->current;
+        result.previous = this->previous;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gcBitsArenasStruct::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (free != ref.free) return false;
+        if (next != ref.next) return false;
+        if (current != ref.current) return false;
+        if (previous != ref.previous) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.lock = this->lock;
-            result.free = this->free;
-            result.next = this->next;
-            result.current = this->current;
-            result.previous = this->previous;
-            return result;
-        }
+    std::ostream& gcBitsArenasStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << free;
+        os << " " << next;
+        os << " " << current;
+        os << " " << previous;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (lock != ref.lock) return false;
-            if (free != ref.free) return false;
-            if (next != ref.next) return false;
-            if (current != ref.current) return false;
-            if (previous != ref.previous) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << lock;
-            os << " " << free;
-            os << " " << next;
-            os << " " << current;
-            os << " " << previous;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
+    std::ostream& operator<<(std::ostream& os, const struct gcBitsArenasStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_4 gcBitsArenas;
+    gcBitsArenasStruct gcBitsArenas;
     // tryAlloc allocates from b or returns nil if b does not have enough room.
     // This is safe to call concurrently.
     golang::runtime::gcBits* rec::tryAlloc(gcBitsArena* b, uintptr_t bytes)

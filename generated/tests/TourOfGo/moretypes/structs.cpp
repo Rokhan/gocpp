@@ -51,48 +51,41 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    AnonymousStructStruct::operator T()
     {
-        int32_t first{};
-        int16_t second{};
+        T result;
+        result.first = this->first;
+        result.second = this->second;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool AnonymousStructStruct::operator==(const T& ref) const
+    {
+        if (first != ref.first) return false;
+        if (second != ref.second) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.first = this->first;
-            result.second = this->second;
-            return result;
-        }
+    std::ostream& AnonymousStructStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << first;
+        os << " " << second;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (first != ref.first) return false;
-            if (second != ref.second) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << first;
-            os << " " << second;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct AnonymousStructStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
     // Similar to ARM64 and X86 structs in cpu package (internal\cpu\cpu.go)
-    gocpp_id_0 AnonymousStruct;
+    AnonymousStructStruct AnonymousStruct;
     
     template<typename T> requires gocpp::GoStruct<T>
     Empty::operator T()
@@ -223,7 +216,7 @@ namespace golang::main
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_1::operator T()
+    gocpp_id_0::operator T()
     {
         T result;
         result.firstName = this->firstName;
@@ -232,14 +225,14 @@ namespace golang::main
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_1::operator==(const T& ref) const
+    bool gocpp_id_0::operator==(const T& ref) const
     {
         if (firstName != ref.firstName) return false;
         if (lastName != ref.lastName) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << firstName;
@@ -248,7 +241,7 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
     {
         return value.PrintTo(os);
     }
@@ -288,7 +281,7 @@ namespace golang::main
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_2::operator T()
+    gocpp_id_1::operator T()
     {
         T result;
         result.a = this->a;
@@ -296,13 +289,13 @@ namespace golang::main
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_2::operator==(const T& ref) const
+    bool gocpp_id_1::operator==(const T& ref) const
     {
         if (a != ref.a) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << a;
@@ -310,13 +303,13 @@ namespace golang::main
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
     {
         return value.PrintTo(os);
     }
 
 
-    void inlineStructDef(gocpp_id_2 dummy)
+    void inlineStructDef(gocpp_id_1 dummy)
     {
         mocklib::Println("inlineStructDef"_s, dummy.a);
     }
@@ -358,6 +351,38 @@ namespace golang::main
         }
     }
 
+    struct gocpp_id_2
+        {
+
+            using isGoStruct = void;
+
+            template<typename T> requires gocpp::GoStruct<T>
+            operator T()
+            {
+                T result;
+                return result;
+            }
+
+            template<typename T> requires gocpp::GoStruct<T>
+            bool operator==(const T& ref) const
+            {
+                return true;
+            }
+
+            std::ostream& PrintTo(std::ostream& os) const
+            {
+                os << '{';
+                os << '}';
+                return os;
+            }
+        };
+
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+        {
+            return value.PrintTo(os);
+        }
+
+
     struct gocpp_id_3
         {
 
@@ -392,6 +417,8 @@ namespace golang::main
 
     struct gocpp_id_4
         {
+            int i{};
+            int j{};
 
             using isGoStruct = void;
 
@@ -399,18 +426,24 @@ namespace golang::main
             operator T()
             {
                 T result;
+                result.i = this->i;
+                result.j = this->j;
                 return result;
             }
 
             template<typename T> requires gocpp::GoStruct<T>
             bool operator==(const T& ref) const
             {
+                if (i != ref.i) return false;
+                if (j != ref.j) return false;
                 return true;
             }
 
             std::ostream& PrintTo(std::ostream& os) const
             {
                 os << '{';
+                os << "" << i;
+                os << " " << j;
                 os << '}';
                 return os;
             }
@@ -504,46 +537,6 @@ namespace golang::main
 
     struct gocpp_id_7
         {
-            int i{};
-            int j{};
-
-            using isGoStruct = void;
-
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
-            {
-                T result;
-                result.i = this->i;
-                result.j = this->j;
-                return result;
-            }
-
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
-            {
-                if (i != ref.i) return false;
-                if (j != ref.j) return false;
-                return true;
-            }
-
-            std::ostream& PrintTo(std::ostream& os) const
-            {
-                os << '{';
-                os << "" << i;
-                os << " " << j;
-                os << '}';
-                return os;
-            }
-        };
-
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
-        {
-            return value.PrintTo(os);
-        }
-
-
-    struct gocpp_id_8
-        {
             int a{};
 
             using isGoStruct = void;
@@ -572,7 +565,7 @@ namespace golang::main
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
         {
             return value.PrintTo(os);
         }
@@ -582,19 +575,19 @@ namespace golang::main
     {
         mocklib::Println(golang::main::Vertex {1, 2});
 
-        gocpp_id_3 i = {};
-        gocpp_id_4 j = {};
+        gocpp_id_2 i = {};
+        gocpp_id_3 j = {};
         mocklib::Println(i == j);
 
         auto e = golang::main::Empty {};
         mocklib::Println(e == j);
 
-        auto v1 = gocpp_id_5 {1, 2};
-        auto v2 = gocpp_id_6 {1, 2};
+        auto v1 = gocpp_id_4 {1, 2};
+        auto v2 = gocpp_id_5 {1, 2};
         mocklib::Println(v1 == v2);
 
         auto d = golang::main::Dummy {1, 2};
-        d = gocpp_id_7 {1, 2};
+        d = gocpp_id_6 {1, 2};
         mocklib::Println(d == v2);
         mocklib::Println(d == v1);
 
@@ -607,7 +600,7 @@ namespace golang::main
         auto dd = golang::main::Dummy2 {d, golang::main::Vertex {}, 3};
         mocklib::Println(dd);
 
-        inlineStructDef(gocpp_id_8 {42});
+        inlineStructDef(gocpp_id_7 {42});
         embededStructDef();
 
         auto vv = golang::main::Vertex {3, 4};
@@ -617,9 +610,9 @@ namespace golang::main
         mocklib::Println("Offset of Y in Vertex:"_s, offsetY);
         mocklib::Println("Size of Vertex:"_s, gocpp::Sizeof<Vertex>());
 
-        mocklib::Println("Offset of a in Anonymous struct:"_s, gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::first));
-        mocklib::Println("Offset of b in Anonymous struct:"_s, gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::second));
-        mocklib::Println("Size of Anonymous struct:"_s, gocpp::Sizeof<gocpp_id_0>());
+        mocklib::Println("Offset of a in Anonymous struct:"_s, gocpp::Offsetof<AnonymousStructStruct>(&AnonymousStructStruct::first));
+        mocklib::Println("Offset of b in Anonymous struct:"_s, gocpp::Offsetof<AnonymousStructStruct>(&AnonymousStructStruct::second));
+        mocklib::Println("Size of Anonymous struct:"_s, gocpp::Sizeof<AnonymousStructStruct>());
 
         // test field access
         golang::main::Dummy3 d3 = golang::main::Dummy3 {golang::main::Dummy2 {golang::main::Dummy {1, 2}, golang::main::Vertex {3, 4}, 5}, 6, 7};

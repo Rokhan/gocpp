@@ -120,41 +120,34 @@ namespace golang::runtime
     // Force a stack movement. Used for debugging.
     // 0xfffffeed in hex.
     // stackPoisonMin is the lowest allowed stack poison value.
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    stackpoolStruct::operator T()
     {
-        stackpoolItem item{};
-        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<golang::runtime::stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1{};
+        T result;
+        result.item = this->item;
+        result._1 = this->_1;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackpoolStruct::operator==(const T& ref) const
+    {
+        if (item != ref.item) return false;
+        if (_1 != ref._1) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.item = this->item;
-            result._1 = this->_1;
-            return result;
-        }
+    std::ostream& stackpoolStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << item;
+        os << " " << _1;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (item != ref.item) return false;
-            if (_1 != ref._1) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << item;
-            os << " " << _1;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct stackpoolStruct& value)
     {
         return value.PrintTo(os);
     }
@@ -166,7 +159,7 @@ namespace golang::runtime
     //	order = log_2(size/FixedStack)
     //
     // There is a free list for each order.
-    gocpp::array<gocpp_id_0, _NumStackOrders> stackpool;
+    gocpp::array<stackpoolStruct, _NumStackOrders> stackpool;
     
     template<typename T> requires gocpp::GoStruct<T>
     stackpoolItem::operator T()
@@ -202,48 +195,41 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_1
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    stackLargeStruct::operator T()
     {
-        mutex lock{};
-        gocpp::array<mSpanList, heapAddrBits - pageShift> free{}; // free lists by log_2(s.npages)
+        T result;
+        result.lock = this->lock;
+        result.free = this->free;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool stackLargeStruct::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (free != ref.free) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.lock = this->lock;
-            result.free = this->free;
-            return result;
-        }
+    std::ostream& stackLargeStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << free;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (lock != ref.lock) return false;
-            if (free != ref.free) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << lock;
-            os << " " << free;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    std::ostream& operator<<(std::ostream& os, const struct stackLargeStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
     // Global pool of large stack spans.
-    gocpp_id_1 stackLarge;
+    stackLargeStruct stackLarge;
     void stackinit()
     {
         if(_StackCacheSize & _PageMask != 0)

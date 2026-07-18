@@ -39,7 +39,7 @@ namespace golang::windows
     const long MSG_TRUNC = 0x0100;
     const long MSG_CTRUNC = 0x0200;
     const uintptr_t socket_error = uintptr_t(~ uint32_t(0));
-    struct gocpp_id_0;
+    struct sendRecvMsgFuncStruct;
     const long ComputerNameNetBIOS = 0;
     const long ComputerNameDnsHostname = 1;
     const long ComputerNameDnsDomain = 2;

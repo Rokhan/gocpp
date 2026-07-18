@@ -16,7 +16,24 @@ namespace golang::runtime
     void gcinit();
     void gcenable();
     extern uint32_t gcphase;
-    extern gocpp_id_0 writeBarrier;
+    struct writeBarrierStruct
+    {
+        bool enabled{}; // compiler emits a check of this before calling write barrier
+        gocpp::array<unsigned char, 3> pad{}; // compiler uses 32-bit load for "enabled" field
+        uint64_t alignme{}; // guarantee alignment so that compiler can use a 32 or 64-bit load
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct writeBarrierStruct& value);
     extern uint32_t gcBlackenEnabled;
     void setGCPhase(uint32_t x);
     extern gocpp::array<gocpp::string, 4> gcMarkWorkerModeStrings;
@@ -69,6 +86,7 @@ namespace golang::runtime
         return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(value, ptrs...));
     }
     gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p);
+    extern writeBarrierStruct writeBarrier;
     void gcStart(gcTrigger trigger);
     extern std::function<void ()> poolcleanup;
     void sync_runtime_registerPoolCleanup(std::function<void ()> f);
@@ -79,7 +97,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct gocpp_id_1
+    struct gocpp_id_0
     {
         mutex lock{};
         // free is a list of spans dedicated to workbufs, but
@@ -100,8 +118,8 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
-    struct gocpp_id_2
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    struct gocpp_id_1
     {
         mutex lock{};
         gQueue q{};
@@ -117,8 +135,8 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
-    struct gocpp_id_3
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
+    struct gocpp_id_2
     {
         mutex lock{};
         gList list{};
@@ -134,7 +152,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
     void gcMarkTermination(worldStop stw);
     struct gcBgMarkWorkerNode
     {
@@ -174,7 +192,7 @@ namespace golang::runtime
         cpu::CacheLinePad _1{}; // prevents false-sharing between full and empty
         lfstack empty{}; // lock-free list of empty blocks workbuf
         cpu::CacheLinePad _2{}; // prevents false-sharing between empty and nproc/nwait
-        gocpp_id_1 wbufSpans{};
+        gocpp_id_0 wbufSpans{};
         // Restore 64-bit alignment on 32-bit.
         uint32_t _3{};
         // bytesMarked is the number of bytes marked this cycle. This
@@ -242,10 +260,10 @@ namespace golang::runtime
         // assistQueue is a queue of assists that are blocked because
         // there was neither enough credit to steal or enough work to
         // do.
-        gocpp_id_2 assistQueue{};
+        gocpp_id_1 assistQueue{};
         // sweepWaiters is a list of blocked goroutines to wake when
         // we transition from mark termination to sweep.
-        gocpp_id_3 sweepWaiters{};
+        gocpp_id_2 sweepWaiters{};
         // cycles is the number of completed GC cycles, where a GC
         // cycle is sweep termination, mark, mark termination, and
         // sweep. This differs from memstats.numgc, which is

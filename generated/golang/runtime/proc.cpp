@@ -3061,60 +3061,43 @@ namespace golang::runtime
     golang::runtime::rwmutex execLock;
     // These errors are reported (via writeErrStr) by some OS-specific
     // versions of newosproc and newosproc0.
-    struct gocpp_id_1
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    newmHandoffStruct::operator T()
     {
-        mutex lock{};
-        // newm points to a list of M structures that need new OS
-        // threads. The list is linked through m.schedlink.
-        muintptr newm{};
-        // waiting indicates that wake needs to be notified when an m
-        // is put on the list.
-        bool waiting{};
-        note wake{};
-        // haveTemplateThread indicates that the templateThread has
-        // been started. This is not protected by lock. Use cas to set
-        // to 1.
-        uint32_t haveTemplateThread{};
+        T result;
+        result.lock = this->lock;
+        result.newm = this->newm;
+        result.waiting = this->waiting;
+        result.wake = this->wake;
+        result.haveTemplateThread = this->haveTemplateThread;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool newmHandoffStruct::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (newm != ref.newm) return false;
+        if (waiting != ref.waiting) return false;
+        if (wake != ref.wake) return false;
+        if (haveTemplateThread != ref.haveTemplateThread) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.lock = this->lock;
-            result.newm = this->newm;
-            result.waiting = this->waiting;
-            result.wake = this->wake;
-            result.haveTemplateThread = this->haveTemplateThread;
-            return result;
-        }
+    std::ostream& newmHandoffStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << newm;
+        os << " " << waiting;
+        os << " " << wake;
+        os << " " << haveTemplateThread;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (lock != ref.lock) return false;
-            if (newm != ref.newm) return false;
-            if (waiting != ref.waiting) return false;
-            if (wake != ref.wake) return false;
-            if (haveTemplateThread != ref.haveTemplateThread) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << lock;
-            os << " " << newm;
-            os << " " << waiting;
-            os << " " << wake;
-            os << " " << haveTemplateThread;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    std::ostream& operator<<(std::ostream& os, const struct newmHandoffStruct& value)
     {
         return value.PrintTo(os);
     }
@@ -3123,7 +3106,7 @@ namespace golang::runtime
     // newmHandoff contains a list of m structures that need new OS threads.
     // This is used by newm in situations where newm itself can't safely
     // start an OS thread.
-    gocpp_id_1 newmHandoff;
+    newmHandoffStruct newmHandoff;
     // Create a new m. It will start off with a call to fn, or else the scheduler.
     // fn needs to be static and not a heap allocated closure.
     // May run with m.p==nil, so write barriers are not allowed.
@@ -3726,7 +3709,7 @@ namespace golang::runtime
         // which may steal timers. It's important that between now
         // and then, nothing blocks, so these numbers remain mostly
         // relevant.
-        auto [now, pollUntil, gocpp_id_2] = checkTimers(pp, 0);
+        auto [now, pollUntil, gocpp_id_1] = checkTimers(pp, 0);
 
         // Try to schedule the trace reader.
         if(traceEnabled() || traceShuttingDown())
@@ -3991,7 +3974,7 @@ namespace golang::runtime
             lock(& sched.lock);
             if(sched.runqsize != 0)
             {
-                auto [pp, gocpp_id_3] = pidlegetSpinning(0);
+                auto [pp, gocpp_id_2] = pidlegetSpinning(0);
                 if(pp != nullptr)
                 {
                     auto gp = globrunqget(pp, 0);
@@ -4087,7 +4070,7 @@ namespace golang::runtime
                 goto top;
             }
             lock(& sched.lock);
-            auto [pp, gocpp_id_4] = pidleget(now);
+            auto [pp, gocpp_id_3] = pidleget(now);
             unlock(& sched.lock);
             if(pp == nullptr)
             {
@@ -4259,7 +4242,7 @@ namespace golang::runtime
             if(! rec::read(gocpp::recv(idlepMaskSnapshot), uint32_t(id)) && ! runqempty(p2))
             {
                 lock(& sched.lock);
-                auto [pp, gocpp_id_5] = pidlegetSpinning(0);
+                auto [pp, gocpp_id_4] = pidlegetSpinning(0);
                 if(pp == nullptr)
                 {
                     // Can't get a P, don't bother checking remaining Ps.
@@ -4458,7 +4441,7 @@ namespace golang::runtime
                 auto mp = acquirem();
                 lock(& sched.lock);
 
-                auto [pp, gocpp_id_6] = pidlegetSpinning(0);
+                auto [pp, gocpp_id_5] = pidlegetSpinning(0);
                 if(pp == nullptr)
                 {
                     unlock(& sched.lock);
@@ -5494,7 +5477,7 @@ namespace golang::runtime
     bool exitsyscallfast_pidle()
     {
         lock(& sched.lock);
-        auto [pp, gocpp_id_7] = pidleget(0);
+        auto [pp, gocpp_id_6] = pidleget(0);
         if(pp != nullptr && rec::Load(gocpp::recv(sched.sysmonwait)))
         {
             rec::Store(gocpp::recv(sched.sysmonwait), false);
@@ -6186,49 +6169,40 @@ namespace golang::runtime
         return int32_t(sched.mnext - sched.nmfreed);
     }
 
-    struct gocpp_id_8
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    profStruct::operator T()
     {
-        atomic::Uint32 signalLock{};
-        // Must hold signalLock to write. Reads may be lock-free, but
-        // signalLock should be taken to synchronize with changes.
-        atomic::Int32 hz{};
+        T result;
+        result.signalLock = this->signalLock;
+        result.hz = this->hz;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool profStruct::operator==(const T& ref) const
+    {
+        if (signalLock != ref.signalLock) return false;
+        if (hz != ref.hz) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.signalLock = this->signalLock;
-            result.hz = this->hz;
-            return result;
-        }
+    std::ostream& profStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << signalLock;
+        os << " " << hz;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (signalLock != ref.signalLock) return false;
-            if (hz != ref.hz) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << signalLock;
-            os << " " << hz;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
+    std::ostream& operator<<(std::ostream& os, const struct profStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_8 prof;
+    profStruct prof;
     void _System()
     {
         _System();
@@ -6986,7 +6960,7 @@ namespace golang::runtime
                 faketime = when;
 
                 // Start an M to steal the timer.
-                auto [pp, gocpp_id_9] = pidleget(faketime);
+                auto [pp, gocpp_id_7] = pidleget(faketime);
                 if(pp == nullptr)
                 {
                     // There should always be a free P since

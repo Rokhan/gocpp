@@ -78,7 +78,39 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern gocpp_id_0 scavenge;
+    struct scavengeStruct
+    {
+        // gcPercentGoal is the amount of retained heap memory (measured by
+        // heapRetained) that the runtime will try to maintain by returning
+        // memory to the OS. This goal is derived from gcController.gcPercent
+        // by choosing to retain enough memory to allocate heap memory up to
+        // the heap goal.
+        atomic::Uint64 gcPercentGoal{};
+        // memoryLimitGoal is the amount of memory retained by the runtime (
+        // measured by gcController.mappedReady) that the runtime will try to
+        // maintain by returning memory to the OS. This goal is derived from
+        // gcController.memoryLimit by choosing to target the memory limit or
+        // some lower target to keep the scavenger working.
+        atomic::Uint64 memoryLimitGoal{};
+        // assistTime is the time spent by the allocator scavenging in the last GC cycle.
+        // This is reset once a GC cycle ends.
+        atomic::Int64 assistTime{};
+        // backgroundTime is the time spent by the background scavenger in the last GC cycle.
+        // This is reset once a GC cycle ends.
+        atomic::Int64 backgroundTime{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct scavengeStruct& value);
     struct scavengerState
     {
         // lock protects all fields below.
@@ -164,6 +196,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
+    extern scavengeStruct scavenge;
     extern golang::runtime::scavengerState scavenger;
 }
 #include "golang/runtime/mranges.h"

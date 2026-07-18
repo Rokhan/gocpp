@@ -53,49 +53,40 @@ namespace golang::runtime
     // random data to the process at startup time.
     // For example Linux passes 16 bytes in the auxv vector.
     gocpp::slice<unsigned char> startupRand;
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    globalRandStruct::operator T()
     {
-        mutex lock{};
-        gocpp::array<unsigned char, 32> seed{};
-        chacha8rand::State state{};
-        bool init{};
+        T result;
+        result.lock = this->lock;
+        result.seed = this->seed;
+        result.state = this->state;
+        result.init = this->init;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool globalRandStruct::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (seed != ref.seed) return false;
+        if (state != ref.state) return false;
+        if (init != ref.init) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.lock = this->lock;
-            result.seed = this->seed;
-            result.state = this->state;
-            result.init = this->init;
-            return result;
-        }
+    std::ostream& globalRandStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << seed;
+        os << " " << state;
+        os << " " << init;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (lock != ref.lock) return false;
-            if (seed != ref.seed) return false;
-            if (state != ref.state) return false;
-            if (init != ref.init) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << lock;
-            os << " " << seed;
-            os << " " << state;
-            os << " " << init;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct globalRandStruct& value)
     {
         return value.PrintTo(os);
     }
@@ -105,7 +96,7 @@ namespace golang::runtime
     // It is only used at startup and for creating new m's.
     // Otherwise the per-m random state should be used
     // by calling goodrand.
-    gocpp_id_0 globalRand;
+    globalRandStruct globalRand;
     bool readRandomFailed;
     // randinit initializes the global random state.
     // It must be called before any use of grand.

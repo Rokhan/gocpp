@@ -9,7 +9,7 @@ namespace golang::reflectlite
     using flag = uintptr_t;
     const long flagKindWidth = 5;
     const long flagMethodShift = 10;
-    struct gocpp_id_5;
+    struct dummyStruct;
     const golang::reflectlite::flag flagKindMask = (1 << flagKindWidth) - 1;
     const golang::reflectlite::flag flagStickyRO = 1 << 5;
     const golang::reflectlite::flag flagEmbedRO = 1 << 6;

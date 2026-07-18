@@ -527,55 +527,46 @@ namespace golang::windows
         x.Data3 = 0x436b;
         x.Data4 = gocpp::array<unsigned char, 8> {0x8a, 0x53, 0xe5, 0x4f, 0xe3, 0x51, 0xc3, 0x22};
     });
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    sendRecvMsgFuncStruct::operator T()
     {
-        sync::Once once{};
-        uintptr_t sendAddr{};
-        uintptr_t recvAddr{};
-        gocpp::error err{};
+        T result;
+        result.once = this->once;
+        result.sendAddr = this->sendAddr;
+        result.recvAddr = this->recvAddr;
+        result.err = this->err;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool sendRecvMsgFuncStruct::operator==(const T& ref) const
+    {
+        if (once != ref.once) return false;
+        if (sendAddr != ref.sendAddr) return false;
+        if (recvAddr != ref.recvAddr) return false;
+        if (err != ref.err) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.once = this->once;
-            result.sendAddr = this->sendAddr;
-            result.recvAddr = this->recvAddr;
-            result.err = this->err;
-            return result;
-        }
+    std::ostream& sendRecvMsgFuncStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << once;
+        os << " " << sendAddr;
+        os << " " << recvAddr;
+        os << " " << err;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (once != ref.once) return false;
-            if (sendAddr != ref.sendAddr) return false;
-            if (recvAddr != ref.recvAddr) return false;
-            if (err != ref.err) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << once;
-            os << " " << sendAddr;
-            os << " " << recvAddr;
-            os << " " << err;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct sendRecvMsgFuncStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_0 sendRecvMsgFunc;
+    sendRecvMsgFuncStruct sendRecvMsgFunc;
     
     template<typename T> requires gocpp::GoStruct<T>
     WSAMsg::operator T()
@@ -657,7 +648,7 @@ namespace golang::windows
         {
             return err;
         }
-        auto [r1, gocpp_id_1, e1] = syscall::Syscall6(sendRecvMsgFunc.sendAddr, 6, uintptr_t(fd), uintptr_t(gocpp::unsafe_pointer(msg)), uintptr_t(flags), uintptr_t(gocpp::unsafe_pointer(bytesSent)), uintptr_t(gocpp::unsafe_pointer(overlapped)), uintptr_t(gocpp::unsafe_pointer(croutine)));
+        auto [r1, gocpp_id_0, e1] = syscall::Syscall6(sendRecvMsgFunc.sendAddr, 6, uintptr_t(fd), uintptr_t(gocpp::unsafe_pointer(msg)), uintptr_t(flags), uintptr_t(gocpp::unsafe_pointer(bytesSent)), uintptr_t(gocpp::unsafe_pointer(overlapped)), uintptr_t(gocpp::unsafe_pointer(croutine)));
         if(r1 == socket_error)
         {
             if(e1 != 0)
@@ -679,7 +670,7 @@ namespace golang::windows
         {
             return err;
         }
-        auto [r1, gocpp_id_2, e1] = syscall::Syscall6(sendRecvMsgFunc.recvAddr, 5, uintptr_t(fd), uintptr_t(gocpp::unsafe_pointer(msg)), uintptr_t(gocpp::unsafe_pointer(bytesReceived)), uintptr_t(gocpp::unsafe_pointer(overlapped)), uintptr_t(gocpp::unsafe_pointer(croutine)), 0);
+        auto [r1, gocpp_id_1, e1] = syscall::Syscall6(sendRecvMsgFunc.recvAddr, 5, uintptr_t(fd), uintptr_t(gocpp::unsafe_pointer(msg)), uintptr_t(gocpp::unsafe_pointer(bytesReceived)), uintptr_t(gocpp::unsafe_pointer(overlapped)), uintptr_t(gocpp::unsafe_pointer(croutine)), 0);
         if(r1 == socket_error)
         {
             if(e1 != 0)

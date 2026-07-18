@@ -200,69 +200,46 @@ namespace golang::runtime
         }
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    scavengeStruct::operator T()
     {
-        // gcPercentGoal is the amount of retained heap memory (measured by
-        // heapRetained) that the runtime will try to maintain by returning
-        // memory to the OS. This goal is derived from gcController.gcPercent
-        // by choosing to retain enough memory to allocate heap memory up to
-        // the heap goal.
-        atomic::Uint64 gcPercentGoal{};
-        // memoryLimitGoal is the amount of memory retained by the runtime (
-        // measured by gcController.mappedReady) that the runtime will try to
-        // maintain by returning memory to the OS. This goal is derived from
-        // gcController.memoryLimit by choosing to target the memory limit or
-        // some lower target to keep the scavenger working.
-        atomic::Uint64 memoryLimitGoal{};
-        // assistTime is the time spent by the allocator scavenging in the last GC cycle.
-        // This is reset once a GC cycle ends.
-        atomic::Int64 assistTime{};
-        // backgroundTime is the time spent by the background scavenger in the last GC cycle.
-        // This is reset once a GC cycle ends.
-        atomic::Int64 backgroundTime{};
+        T result;
+        result.gcPercentGoal = this->gcPercentGoal;
+        result.memoryLimitGoal = this->memoryLimitGoal;
+        result.assistTime = this->assistTime;
+        result.backgroundTime = this->backgroundTime;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool scavengeStruct::operator==(const T& ref) const
+    {
+        if (gcPercentGoal != ref.gcPercentGoal) return false;
+        if (memoryLimitGoal != ref.memoryLimitGoal) return false;
+        if (assistTime != ref.assistTime) return false;
+        if (backgroundTime != ref.backgroundTime) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.gcPercentGoal = this->gcPercentGoal;
-            result.memoryLimitGoal = this->memoryLimitGoal;
-            result.assistTime = this->assistTime;
-            result.backgroundTime = this->backgroundTime;
-            return result;
-        }
+    std::ostream& scavengeStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << gcPercentGoal;
+        os << " " << memoryLimitGoal;
+        os << " " << assistTime;
+        os << " " << backgroundTime;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (gcPercentGoal != ref.gcPercentGoal) return false;
-            if (memoryLimitGoal != ref.memoryLimitGoal) return false;
-            if (assistTime != ref.assistTime) return false;
-            if (backgroundTime != ref.backgroundTime) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << gcPercentGoal;
-            os << " " << memoryLimitGoal;
-            os << " " << assistTime;
-            os << " " << backgroundTime;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct scavengeStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_0 scavenge;
+    scavengeStruct scavenge;
     // It doesn't really matter what value we start at, but we can't be zero, because
     // that'll cause divide-by-zero issues. Pick something conservative which we'll
     // also use as a fallback.
@@ -1245,7 +1222,7 @@ namespace golang::runtime
         // find only ever decreases it. Since we only ever race with
         // decreases, even if the value we loaded is stale, the actual
         // value will never be larger.
-        auto [searchAddr, gocpp_id_1] = rec::Load(gocpp::recv(s->searchAddrForce));
+        auto [searchAddr, gocpp_id_0] = rec::Load(gocpp::recv(s->searchAddrForce));
         if(rec::lessThan(gocpp::recv((golang::runtime::offAddr {searchAddr})), golang::runtime::offAddr {addr}))
         {
             rec::StoreMarked(gocpp::recv(s->searchAddrForce), addr);
@@ -1260,7 +1237,7 @@ namespace golang::runtime
     void rec::nextGen(scavengeIndex* s)
     {
         s->gen++;
-        auto [searchAddr, gocpp_id_2] = rec::Load(gocpp::recv(s->searchAddrBg));
+        auto [searchAddr, gocpp_id_1] = rec::Load(gocpp::recv(s->searchAddrBg));
         if(rec::lessThan(gocpp::recv((golang::runtime::offAddr {searchAddr})), s->freeHWM))
         {
             rec::StoreMarked(gocpp::recv(s->searchAddrBg), rec::addr(gocpp::recv(s->freeHWM)));

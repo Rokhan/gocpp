@@ -11,7 +11,7 @@ namespace golang::runtime
     const bool concurrentSweep = true;
     const bool debugScanConservative = false;
     const int sweepMinHeapDistance = 1024 * 1024;
-    struct gocpp_id_0;
+    struct writeBarrierStruct;
     const int _GCoff = 0;
     const int _GCmark = 1;
     const int _GCmarktermination = 2;

@@ -193,7 +193,25 @@ namespace golang::windows
     std::ostream& operator<<(std::ostream& os, const struct ModuleEntry32& value);
     extern syscall::GUID WSAID_WSASENDMSG;
     extern syscall::GUID WSAID_WSARECVMSG;
-    extern gocpp_id_0 sendRecvMsgFunc;
+    struct sendRecvMsgFuncStruct
+    {
+        sync::Once once{};
+        uintptr_t sendAddr{};
+        uintptr_t recvAddr{};
+        gocpp::error err{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct sendRecvMsgFuncStruct& value);
     struct WSAMsg
     {
         syscall::Pointer Name{};
@@ -375,6 +393,7 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterPrefix& value);
+    extern sendRecvMsgFuncStruct sendRecvMsgFunc;
     struct gocpp::error WSASendMsg(syscall::Handle fd, WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine);
     struct gocpp::error WSARecvMsg(syscall::Handle fd, WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine);
 

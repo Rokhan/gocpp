@@ -79,7 +79,23 @@ namespace golang::runtime
     gocpp::unsafe_pointer newarray(_type* typ, int n);
     gocpp::unsafe_pointer reflect_unsafe_NewArray(_type* typ, int n);
     void profilealloc(m* mp, gocpp::unsafe_pointer x, uintptr_t size);
-    extern gocpp_id_0 globalAlloc;
+    struct globalAllocStruct
+    {
+        mutex mutex{};
+        persistentAlloc persistentAlloc{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct globalAllocStruct& value);
     gocpp::unsafe_pointer persistentalloc(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
     struct notInHeap
     {
@@ -97,6 +113,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notInHeap& value);
+    extern globalAllocStruct globalAlloc;
     extern golang::runtime::notInHeap* persistentChunks;
     golang::runtime::notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
 }

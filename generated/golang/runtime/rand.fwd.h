@@ -6,5 +6,5 @@
 
 namespace golang::runtime
 {
-    struct gocpp_id_0;
+    struct globalRandStruct;
 }

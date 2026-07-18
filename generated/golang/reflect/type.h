@@ -559,9 +559,45 @@ namespace golang::reflect
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cacheKey& value);
-    extern gocpp_id_3 funcLookupCache;
+    struct funcLookupCacheStruct
+    {
+        mocklib::Mutex Mutex{}; // Guards stores (but not loads) on m.
+        // m is a map[uint32][]*rtype keyed by the hash calculated in FuncOf.
+        // Elements of m are append-only and thus safe for concurrent reading.
+        sync::Map m{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct funcLookupCacheStruct& value);
     extern mocklib::Mutex funcTypesMutex;
-    extern gocpp_id_10 structLookupCache;
+    struct structLookupCacheStruct
+    {
+        mocklib::Mutex Mutex{}; // Guards stores (but not loads) on m.
+        // m is a map[uint32][]Type keyed by the hash calculated in StructOf.
+        // Elements in m are append-only and thus safe for concurrent reading.
+        sync::Map m{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct structLookupCacheStruct& value);
     struct layoutKey
     {
         funcType* ftyp{}; // function signature
@@ -644,6 +680,7 @@ namespace golang::reflect
     bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
     abi::Type* rtypeOff(gocpp::unsafe_pointer section, int32_t off);
     gocpp::slice<abi::Type*> typesByString(gocpp::string s);
+    extern funcLookupCacheStruct funcLookupCache;
     struct Type ChanOf(golang::reflect::ChanDir dir, struct Type t);
     struct Type MapOf(struct Type key, struct Type elem);
     extern gocpp::slice<Type> funcTypes;
@@ -657,6 +694,7 @@ namespace golang::reflect
     void emitGCMask(gocpp::slice<unsigned char> out, uintptr_t base, abi::Type* typ, uintptr_t n);
     gocpp::slice<unsigned char> appendGCProg(gocpp::slice<unsigned char> dst, abi::Type* typ);
     struct Type SliceOf(struct Type t);
+    extern structLookupCacheStruct structLookupCache;
     struct structTypeUncommon
     {
         structType structType{};

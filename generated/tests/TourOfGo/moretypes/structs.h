@@ -29,7 +29,23 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
-    extern gocpp_id_0 AnonymousStruct;
+    struct AnonymousStructStruct
+    {
+        int32_t first{};
+        int16_t second{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct AnonymousStructStruct& value);
     struct Empty
     {
 
@@ -63,7 +79,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Dummy& value);
-    struct gocpp_id_1
+    struct gocpp_id_0
     {
         gocpp::string firstName{};
         gocpp::string lastName{};
@@ -79,10 +95,10 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     struct Person
     {
-        gocpp_id_1* identity{};
+        gocpp_id_0* identity{};
         int age{};
 
         using isGoStruct = void;
@@ -97,7 +113,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Person& value);
-    struct gocpp_id_2
+    struct gocpp_id_1
     {
         int a{};
 
@@ -112,9 +128,10 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     void embededStructDef();
     void main();
+    extern AnonymousStructStruct AnonymousStruct;
     struct Dummy2
     {
         Dummy Dummy{}; // Comment 1: Dummy
@@ -133,7 +150,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Dummy2& value);
-    void inlineStructDef(gocpp_id_2 dummy);
+    void inlineStructDef(gocpp_id_1 dummy);
     struct Dummy3
     {
         Dummy2 Dummy2{};

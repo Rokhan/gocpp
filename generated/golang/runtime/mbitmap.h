@@ -53,10 +53,27 @@ namespace golang::runtime
     void badPointer(mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     std::tuple<uintptr_t, golang::runtime::mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     void typeBitsBulkBarrier(_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
-    extern gocpp_id_0 debugPtrmask;
+    struct debugPtrmaskStruct
+    {
+        mutex lock{};
+        unsigned char* data{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct debugPtrmaskStruct& value);
     golang::runtime::bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
     golang::runtime::mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog);
     void dematerializeGCProg(mspan* s);
+    extern debugPtrmaskStruct debugPtrmask;
 }
 
 #include "golang/runtime/mheap.h"

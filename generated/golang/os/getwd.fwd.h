@@ -6,5 +6,5 @@
 
 namespace golang::os
 {
-    struct gocpp_id_0;
+    struct getwdCacheStruct;
 }

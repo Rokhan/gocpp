@@ -209,12 +209,29 @@ namespace golang::reflect
     void memmove(gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t size);
     bool verifyNotInHeapPtr(uintptr_t p);
     void escapes(go_any x);
-    extern gocpp_id_7 dummy;
+    struct dummyStruct
+    {
+        bool b{};
+        go_any x{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct dummyStruct& value);
     void contentEscapes(gocpp::unsafe_pointer x);
     gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
     gocpp::unsafe_pointer mapiterkey(hiter* it);
     gocpp::unsafe_pointer mapiterelem(hiter* it);
     void mapiternext(hiter* it);
+    extern dummyStruct dummy;
 }
 #include "golang/internal/unsafeheader/unsafeheader.h"
 #include "golang/reflect/type.h"

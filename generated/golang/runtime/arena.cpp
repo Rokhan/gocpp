@@ -512,57 +512,43 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    userArenaStateStruct::operator T()
     {
-        mutex lock{};
-        // reuse contains a list of partially-used and already-live
-        // user arena chunks that can be quickly reused for another
-        // arena.
-        // Protected by lock.
-        gocpp::slice<liveUserArenaChunk> reuse{};
-        // fault contains full user arena chunks that need to be faulted.
-        // Protected by lock.
-        gocpp::slice<liveUserArenaChunk> fault{};
+        T result;
+        result.lock = this->lock;
+        result.reuse = this->reuse;
+        result.fault = this->fault;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool userArenaStateStruct::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (reuse != ref.reuse) return false;
+        if (fault != ref.fault) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.lock = this->lock;
-            result.reuse = this->reuse;
-            result.fault = this->fault;
-            return result;
-        }
+    std::ostream& userArenaStateStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << reuse;
+        os << " " << fault;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (lock != ref.lock) return false;
-            if (reuse != ref.reuse) return false;
-            if (fault != ref.fault) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << lock;
-            os << " " << reuse;
-            os << " " << fault;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct userArenaStateStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_0 userArenaState;
+    userArenaStateStruct userArenaState;
     // userArenaNextFree reserves space in the user arena for an item of the specified
     // type. If cap is not -1, this is for an array of cap elements of type t.
     gocpp::unsafe_pointer rec::userArenaNextFree(mspan* s, _type* typ, int cap)

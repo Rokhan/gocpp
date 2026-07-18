@@ -9,7 +9,7 @@ namespace golang::runtime
     const int tracebackCrash = 1 << 0;
     const int tracebackAll = 1 << 1;
     const int tracebackShift = 2;
-    struct gocpp_id_0;
+    struct debugStruct;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 

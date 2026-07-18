@@ -53,56 +53,47 @@ namespace golang::runtime
         using abi::rec::OutSlice;
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    cbsStruct::operator T()
     {
-        mutex lock{}; // use cbsLock / cbsUnlock for race instrumentation.
-        gocpp::array<winCallback, cb_max> ctxt{};
-        gocpp::map<winCallbackKey, int> index{};
-        int n{};
+        T result;
+        result.lock = this->lock;
+        result.ctxt = this->ctxt;
+        result.index = this->index;
+        result.n = this->n;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool cbsStruct::operator==(const T& ref) const
+    {
+        if (lock != ref.lock) return false;
+        if (ctxt != ref.ctxt) return false;
+        if (index != ref.index) return false;
+        if (n != ref.n) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.lock = this->lock;
-            result.ctxt = this->ctxt;
-            result.index = this->index;
-            result.n = this->n;
-            return result;
-        }
+    std::ostream& cbsStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << lock;
+        os << " " << ctxt;
+        os << " " << index;
+        os << " " << n;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (lock != ref.lock) return false;
-            if (ctxt != ref.ctxt) return false;
-            if (index != ref.index) return false;
-            if (n != ref.n) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << lock;
-            os << " " << ctxt;
-            os << " " << index;
-            os << " " << n;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct cbsStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
     // cbs stores all registered Go callbacks.
-    gocpp_id_0 cbs;
+    cbsStruct cbs;
     void cbsLock()
     {
         lock(& cbs.lock);
@@ -737,7 +728,7 @@ namespace golang::runtime
         }
     }
 
-    struct gocpp_id_1
+    struct gocpp_id_0
         {
             uint16_t* lpFileName{};
             uintptr_t hFile{}; // always 0
@@ -775,7 +766,7 @@ namespace golang::runtime
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
         {
             return value.PrintTo(os);
         }
@@ -792,7 +783,7 @@ namespace golang::runtime
         auto c = & getg()->m->syscall;
         c->fn = getLoadLibraryEx();
         c->n = 3;
-        auto args = gocpp_id_1 {filename, 0, _LOAD_LIBRARY_SEARCH_SYSTEM32};
+        auto args = gocpp_id_0 {filename, 0, _LOAD_LIBRARY_SEARCH_SYSTEM32};
         c->args = uintptr_t(noescape(gocpp::unsafe_pointer(& args)));
 
         cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));

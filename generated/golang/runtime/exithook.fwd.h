@@ -7,5 +7,5 @@
 namespace golang::runtime
 {
     struct exitHook;
-    struct gocpp_id_0;
+    struct exitHooksStruct;
 }

@@ -1482,51 +1482,43 @@ namespace golang::syscall
         return rec::Find(gocpp::recv(procGetAddrInfoW));
     }
 
-    struct gocpp_id_4
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    connectExFuncStruct::operator T()
     {
-        sync::Once once{};
-        uintptr_t addr{};
-        gocpp::error err{};
+        T result;
+        result.once = this->once;
+        result.addr = this->addr;
+        result.err = this->err;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool connectExFuncStruct::operator==(const T& ref) const
+    {
+        if (once != ref.once) return false;
+        if (addr != ref.addr) return false;
+        if (err != ref.err) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.once = this->once;
-            result.addr = this->addr;
-            result.err = this->err;
-            return result;
-        }
+    std::ostream& connectExFuncStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << once;
+        os << " " << addr;
+        os << " " << err;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (once != ref.once) return false;
-            if (addr != ref.addr) return false;
-            if (err != ref.err) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << once;
-            os << " " << addr;
-            os << " " << err;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
+    std::ostream& operator<<(std::ostream& os, const struct connectExFuncStruct& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_4 connectExFunc;
+    connectExFuncStruct connectExFunc;
     struct gocpp::error LoadConnectEx()
     {
         rec::Do(gocpp::recv(connectExFunc.once), [=]() mutable -> void
@@ -1555,7 +1547,7 @@ namespace golang::syscall
     struct gocpp::error connectEx(golang::syscall::Handle s, gocpp::unsafe_pointer name, int32_t namelen, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, Overlapped* overlapped)
     {
         struct gocpp::error err;
-        auto [r1, gocpp_id_5, e1] = Syscall9(connectExFunc.addr, 7, uintptr_t(s), uintptr_t(name), uintptr_t(namelen), uintptr_t(gocpp::unsafe_pointer(sendBuf)), uintptr_t(sendDataLen), uintptr_t(gocpp::unsafe_pointer(bytesSent)), uintptr_t(gocpp::unsafe_pointer(overlapped)), 0, 0);
+        auto [r1, gocpp_id_4, e1] = Syscall9(connectExFunc.addr, 7, uintptr_t(s), uintptr_t(name), uintptr_t(namelen), uintptr_t(gocpp::unsafe_pointer(sendBuf)), uintptr_t(sendDataLen), uintptr_t(gocpp::unsafe_pointer(bytesSent)), uintptr_t(gocpp::unsafe_pointer(overlapped)), 0, 0);
         if(r1 == 0)
         {
             if(e1 != 0)

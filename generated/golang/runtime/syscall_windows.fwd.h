@@ -6,13 +6,13 @@
 
 namespace golang::runtime
 {
-    struct gocpp_id_0;
+    struct cbsStruct;
     using abiPartKind = int;
     struct abiPart;
     struct abiDesc;
     struct callbackArgs;
     const long _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
-    struct gocpp_id_1;
+    struct gocpp_id_0;
     const long maxArgs = 42;
     const golang::runtime::abiPartKind abiPartBad = 0;
     const golang::runtime::abiPartKind abiPartStack = 1;

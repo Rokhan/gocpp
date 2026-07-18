@@ -33,8 +33,27 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern gocpp_id_0 globalRand;
+    struct globalRandStruct
+    {
+        mutex lock{};
+        gocpp::array<unsigned char, 32> seed{};
+        chacha8rand::State state{};
+        bool init{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct globalRandStruct& value);
     void mrandinit(m* mp);
+    extern globalRandStruct globalRand;
 
     namespace rec
     {

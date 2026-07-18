@@ -327,6 +327,33 @@ namespace golang::runtime
     void addExtraM(m* mp);
     extern golang::runtime::rwmutex allocmLock;
     extern golang::runtime::rwmutex execLock;
+    struct newmHandoffStruct
+    {
+        mutex lock{};
+        // newm points to a list of M structures that need new OS
+        // threads. The list is linked through m.schedlink.
+        muintptr newm{};
+        // waiting indicates that wake needs to be notified when an m
+        // is put on the list.
+        bool waiting{};
+        note wake{};
+        // haveTemplateThread indicates that the templateThread has
+        // been started. This is not protected by lock. Use cas to set
+        // to 1.
+        uint32_t haveTemplateThread{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct newmHandoffStruct& value);
     void newm(std::function<void ()> fn, golang::runtime::p* pp, int64_t id);
     void newm1(m* mp);
     void startm(golang::runtime::p* pp, bool spinning, bool lockheld);
@@ -360,7 +387,25 @@ namespace golang::runtime
     void gfput(golang::runtime::p* pp, g* gp);
     golang::runtime::g* gfget(golang::runtime::p* pp);
     void gfpurge(golang::runtime::p* pp);
-    extern gocpp_id_8 prof;
+    struct profStruct
+    {
+        atomic::Uint32 signalLock{};
+        // Must hold signalLock to write. Reads may be lock-free, but
+        // signalLock should be taken to synchronize with changes.
+        atomic::Int32 hz{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct profStruct& value);
     void sigprof(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp, m* mp);
     golang::runtime::p* procresize(int32_t nprocs);
     void acquirep(golang::runtime::p* pp);
@@ -419,8 +464,9 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gList& value);
     void forEachG(std::function<void (g* gp)> fn);
     void forEachGRace(std::function<void (g* gp)> fn);
-    extern gocpp_id_1 newmHandoff;
+    extern newmHandoffStruct newmHandoff;
     void injectglist(gList* glist);
+    extern profStruct prof;
     void globrunqputbatch(gQueue* batch, int32_t n);
     void runqputbatch(golang::runtime::p* pp, gQueue* q, int qsize);
     std::tuple<golang::runtime::gQueue, uint32_t> runqdrain(golang::runtime::p* pp);

@@ -27,7 +27,30 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern gocpp_id_0 sig;
+    struct sigStruct
+    {
+        note note{};
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> mask{};
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> wanted{};
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> ignored{};
+        gocpp::array<uint32_t, (go__NSIG + 31) / 32> recv{};
+        atomic::Uint32 state{};
+        atomic::Uint32 delivering{};
+        bool inuse{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct sigStruct& value);
+    extern sigStruct sig;
 
     namespace rec
     {

@@ -8,7 +8,7 @@ namespace golang::runtime
 {
     struct markBits;
     const uintptr_t clobberdeadPtr = uintptr_t(0xdeaddead | (0xdeaddead << ((~ uintptr_t(0) >> 63) * 32)));
-    struct gocpp_id_0;
+    struct debugPtrmaskStruct;
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 

@@ -454,144 +454,109 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_0
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    debugStruct::operator T()
     {
-        int32_t cgocheck{};
-        int32_t clobberfree{};
-        int32_t disablethp{};
-        int32_t dontfreezetheworld{};
-        int32_t efence{};
-        int32_t gccheckmark{};
-        int32_t gcpacertrace{};
-        int32_t gcshrinkstackoff{};
-        int32_t gcstoptheworld{};
-        int32_t gctrace{};
-        int32_t invalidptr{};
-        int32_t madvdontneed{}; // for Linux; issue 28466
-        atomic::Int32 runtimeContentionStacks{};
-        int32_t scavtrace{};
-        int32_t scheddetail{};
-        int32_t schedtrace{};
-        int32_t tracebackancestors{};
-        int32_t asyncpreemptoff{};
-        int32_t harddecommit{};
-        int32_t adaptivestackstart{};
-        int32_t tracefpunwindoff{};
-        int32_t traceadvanceperiod{};
-        // debug.malloc is used as a combined debug check
-        // in the malloc function and should be set
-        // if any of the below debug options is != 0.
-        bool malloc{};
-        int32_t allocfreetrace{};
-        int32_t inittrace{};
-        int32_t sbrk{};
-        atomic::Int32 panicnil{};
+        T result;
+        result.cgocheck = this->cgocheck;
+        result.clobberfree = this->clobberfree;
+        result.disablethp = this->disablethp;
+        result.dontfreezetheworld = this->dontfreezetheworld;
+        result.efence = this->efence;
+        result.gccheckmark = this->gccheckmark;
+        result.gcpacertrace = this->gcpacertrace;
+        result.gcshrinkstackoff = this->gcshrinkstackoff;
+        result.gcstoptheworld = this->gcstoptheworld;
+        result.gctrace = this->gctrace;
+        result.invalidptr = this->invalidptr;
+        result.madvdontneed = this->madvdontneed;
+        result.runtimeContentionStacks = this->runtimeContentionStacks;
+        result.scavtrace = this->scavtrace;
+        result.scheddetail = this->scheddetail;
+        result.schedtrace = this->schedtrace;
+        result.tracebackancestors = this->tracebackancestors;
+        result.asyncpreemptoff = this->asyncpreemptoff;
+        result.harddecommit = this->harddecommit;
+        result.adaptivestackstart = this->adaptivestackstart;
+        result.tracefpunwindoff = this->tracefpunwindoff;
+        result.traceadvanceperiod = this->traceadvanceperiod;
+        result.malloc = this->malloc;
+        result.allocfreetrace = this->allocfreetrace;
+        result.inittrace = this->inittrace;
+        result.sbrk = this->sbrk;
+        result.panicnil = this->panicnil;
+        return result;
+    }
 
-        using isGoStruct = void;
+    template<typename T> requires gocpp::GoStruct<T>
+    bool debugStruct::operator==(const T& ref) const
+    {
+        if (cgocheck != ref.cgocheck) return false;
+        if (clobberfree != ref.clobberfree) return false;
+        if (disablethp != ref.disablethp) return false;
+        if (dontfreezetheworld != ref.dontfreezetheworld) return false;
+        if (efence != ref.efence) return false;
+        if (gccheckmark != ref.gccheckmark) return false;
+        if (gcpacertrace != ref.gcpacertrace) return false;
+        if (gcshrinkstackoff != ref.gcshrinkstackoff) return false;
+        if (gcstoptheworld != ref.gcstoptheworld) return false;
+        if (gctrace != ref.gctrace) return false;
+        if (invalidptr != ref.invalidptr) return false;
+        if (madvdontneed != ref.madvdontneed) return false;
+        if (runtimeContentionStacks != ref.runtimeContentionStacks) return false;
+        if (scavtrace != ref.scavtrace) return false;
+        if (scheddetail != ref.scheddetail) return false;
+        if (schedtrace != ref.schedtrace) return false;
+        if (tracebackancestors != ref.tracebackancestors) return false;
+        if (asyncpreemptoff != ref.asyncpreemptoff) return false;
+        if (harddecommit != ref.harddecommit) return false;
+        if (adaptivestackstart != ref.adaptivestackstart) return false;
+        if (tracefpunwindoff != ref.tracefpunwindoff) return false;
+        if (traceadvanceperiod != ref.traceadvanceperiod) return false;
+        if (malloc != ref.malloc) return false;
+        if (allocfreetrace != ref.allocfreetrace) return false;
+        if (inittrace != ref.inittrace) return false;
+        if (sbrk != ref.sbrk) return false;
+        if (panicnil != ref.panicnil) return false;
+        return true;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T()
-        {
-            T result;
-            result.cgocheck = this->cgocheck;
-            result.clobberfree = this->clobberfree;
-            result.disablethp = this->disablethp;
-            result.dontfreezetheworld = this->dontfreezetheworld;
-            result.efence = this->efence;
-            result.gccheckmark = this->gccheckmark;
-            result.gcpacertrace = this->gcpacertrace;
-            result.gcshrinkstackoff = this->gcshrinkstackoff;
-            result.gcstoptheworld = this->gcstoptheworld;
-            result.gctrace = this->gctrace;
-            result.invalidptr = this->invalidptr;
-            result.madvdontneed = this->madvdontneed;
-            result.runtimeContentionStacks = this->runtimeContentionStacks;
-            result.scavtrace = this->scavtrace;
-            result.scheddetail = this->scheddetail;
-            result.schedtrace = this->schedtrace;
-            result.tracebackancestors = this->tracebackancestors;
-            result.asyncpreemptoff = this->asyncpreemptoff;
-            result.harddecommit = this->harddecommit;
-            result.adaptivestackstart = this->adaptivestackstart;
-            result.tracefpunwindoff = this->tracefpunwindoff;
-            result.traceadvanceperiod = this->traceadvanceperiod;
-            result.malloc = this->malloc;
-            result.allocfreetrace = this->allocfreetrace;
-            result.inittrace = this->inittrace;
-            result.sbrk = this->sbrk;
-            result.panicnil = this->panicnil;
-            return result;
-        }
+    std::ostream& debugStruct::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << cgocheck;
+        os << " " << clobberfree;
+        os << " " << disablethp;
+        os << " " << dontfreezetheworld;
+        os << " " << efence;
+        os << " " << gccheckmark;
+        os << " " << gcpacertrace;
+        os << " " << gcshrinkstackoff;
+        os << " " << gcstoptheworld;
+        os << " " << gctrace;
+        os << " " << invalidptr;
+        os << " " << madvdontneed;
+        os << " " << runtimeContentionStacks;
+        os << " " << scavtrace;
+        os << " " << scheddetail;
+        os << " " << schedtrace;
+        os << " " << tracebackancestors;
+        os << " " << asyncpreemptoff;
+        os << " " << harddecommit;
+        os << " " << adaptivestackstart;
+        os << " " << tracefpunwindoff;
+        os << " " << traceadvanceperiod;
+        os << " " << malloc;
+        os << " " << allocfreetrace;
+        os << " " << inittrace;
+        os << " " << sbrk;
+        os << " " << panicnil;
+        os << '}';
+        return os;
+    }
 
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const
-        {
-            if (cgocheck != ref.cgocheck) return false;
-            if (clobberfree != ref.clobberfree) return false;
-            if (disablethp != ref.disablethp) return false;
-            if (dontfreezetheworld != ref.dontfreezetheworld) return false;
-            if (efence != ref.efence) return false;
-            if (gccheckmark != ref.gccheckmark) return false;
-            if (gcpacertrace != ref.gcpacertrace) return false;
-            if (gcshrinkstackoff != ref.gcshrinkstackoff) return false;
-            if (gcstoptheworld != ref.gcstoptheworld) return false;
-            if (gctrace != ref.gctrace) return false;
-            if (invalidptr != ref.invalidptr) return false;
-            if (madvdontneed != ref.madvdontneed) return false;
-            if (runtimeContentionStacks != ref.runtimeContentionStacks) return false;
-            if (scavtrace != ref.scavtrace) return false;
-            if (scheddetail != ref.scheddetail) return false;
-            if (schedtrace != ref.schedtrace) return false;
-            if (tracebackancestors != ref.tracebackancestors) return false;
-            if (asyncpreemptoff != ref.asyncpreemptoff) return false;
-            if (harddecommit != ref.harddecommit) return false;
-            if (adaptivestackstart != ref.adaptivestackstart) return false;
-            if (tracefpunwindoff != ref.tracefpunwindoff) return false;
-            if (traceadvanceperiod != ref.traceadvanceperiod) return false;
-            if (malloc != ref.malloc) return false;
-            if (allocfreetrace != ref.allocfreetrace) return false;
-            if (inittrace != ref.inittrace) return false;
-            if (sbrk != ref.sbrk) return false;
-            if (panicnil != ref.panicnil) return false;
-            return true;
-        }
-
-        std::ostream& PrintTo(std::ostream& os) const
-        {
-            os << '{';
-            os << "" << cgocheck;
-            os << " " << clobberfree;
-            os << " " << disablethp;
-            os << " " << dontfreezetheworld;
-            os << " " << efence;
-            os << " " << gccheckmark;
-            os << " " << gcpacertrace;
-            os << " " << gcshrinkstackoff;
-            os << " " << gcstoptheworld;
-            os << " " << gctrace;
-            os << " " << invalidptr;
-            os << " " << madvdontneed;
-            os << " " << runtimeContentionStacks;
-            os << " " << scavtrace;
-            os << " " << scheddetail;
-            os << " " << schedtrace;
-            os << " " << tracebackancestors;
-            os << " " << asyncpreemptoff;
-            os << " " << harddecommit;
-            os << " " << adaptivestackstart;
-            os << " " << tracefpunwindoff;
-            os << " " << traceadvanceperiod;
-            os << " " << malloc;
-            os << " " << allocfreetrace;
-            os << " " << inittrace;
-            os << " " << sbrk;
-            os << " " << panicnil;
-            os << '}';
-            return os;
-        }
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct debugStruct& value)
     {
         return value.PrintTo(os);
     }
@@ -601,7 +566,7 @@ namespace golang::runtime
     // except for "memprofilerate" since there is an
     // existing int var for that value, which may
     // already have an initial value.
-    gocpp_id_0 debug;
+    debugStruct debug;
     gocpp::slice<golang::runtime::dbgVar*> dbgvars = gocpp::slice<golang::runtime::dbgVar*> {
         gocpp::Init<>([](auto& x) {
         x.name = "allocfreetrace"_s;

@@ -31,7 +31,6 @@ namespace golang::base64
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Encoding& value);
-    extern gocpp::string decodeMapInitialize;
     std::tuple<uint32_t, bool> assemble32(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4);
     std::tuple<uint64_t, bool> assemble64(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4, unsigned char n5, unsigned char n6, unsigned char n7, unsigned char n8);
     int decodedLen(int n, gocpp::rune padChar);

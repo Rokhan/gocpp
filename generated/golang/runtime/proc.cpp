@@ -668,7 +668,6 @@ namespace golang::runtime
     // Disable crash stack on Windows for now. Apparently, throwing an exception
     // on a non-system-allocated crash stack causes EXCEPTION_STACK_OVERFLOW and
     // hangs the process (see issue 63938).
-    bool crashStackImplemented = (GOARCH == "amd64"_s || GOARCH == "arm64"_s || GOARCH == "mips64"_s || GOARCH == "mips64le"_s || GOARCH == "ppc64"_s || GOARCH == "ppc64le"_s || GOARCH == "riscv64"_s || GOARCH == "wasm"_s) && GOOS != "windows"_s;
     //go:noescape
     void switchToCrashStack0(std::function<void ()> fn)
     /* convertBlockStmt, nil block */;
@@ -1133,7 +1132,6 @@ namespace golang::runtime
     // constants conditionally.
     // osHasLowResClock indicates that timestamps produced by nanotime on the platform have a
     // low resolution, typically on the order of 1 ms or more.
-    bool osHasLowResTimer = GOOS == "windows"_s || GOOS == "openbsd"_s || GOOS == "netbsd"_s;
     // Mark gp ready to run.
     void ready(g* gp, int traceskip, bool next)
     {

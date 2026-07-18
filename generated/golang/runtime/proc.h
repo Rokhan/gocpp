@@ -250,7 +250,6 @@ namespace golang::runtime
     void doInit(gocpp::slice<initTask*> ts);
     void doInit1(initTask* t);
 }
-#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/runtime2.h"
@@ -274,7 +273,6 @@ namespace golang::runtime
     void badmcall2(std::function<void (g* _1)> fn);
     extern golang::runtime::g gcrash;
     extern atomic::Pointer<golang::runtime::g> crashingG;
-    extern bool crashStackImplemented;
     extern golang::runtime::mutex allglock;
     extern gocpp::slice<golang::runtime::g*> allgs;
     extern golang::runtime::g** allgptr;
@@ -284,7 +282,6 @@ namespace golang::runtime
     golang::runtime::g* atomicAllGIndex(g** ptr, uintptr_t i);
     void dumpgstatus(g* gp);
     void mcommoninit(m* mp, int64_t id);
-    extern bool osHasLowResTimer;
     void ready(g* gp, int traceskip, bool next);
     extern atomic::Bool freezing;
     uint32_t readgstatus(g* gp);

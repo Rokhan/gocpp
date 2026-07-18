@@ -256,7 +256,6 @@ namespace golang::runtime
     extern bool isarchive;
 }
 #include "golang/internal/abi/symtab.h"
-#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/lfstack.h"
@@ -614,7 +613,6 @@ namespace golang::runtime
     extern pMask idlepMask;
     extern pMask timerpMask;
     extern golang::runtime::lfstack gcBgMarkWorkerPool;
-    extern bool framepointer_enabled;
     golang::runtime::eface* efaceOf(go_any* ep);
     void setGNoWB(g** gp, g* go_new);
     struct gocpp_id_3

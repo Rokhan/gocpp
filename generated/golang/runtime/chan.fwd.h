@@ -16,5 +16,4 @@ namespace golang::runtime
 {
     struct hchan;
     struct waitq;
-    /*const uintptr_t hchanSize = gocpp::Sizeof<golang::runtime::hchan>() + uintptr_t(- int(gocpp::Sizeof<golang::runtime::hchan>()) & (maxAlign - 1)) [known mising deps] */;
 }

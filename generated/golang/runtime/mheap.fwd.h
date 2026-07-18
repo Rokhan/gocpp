@@ -30,10 +30,10 @@ namespace golang::runtime
     const golang::runtime::spanAllocType spanAllocStack = 1;
     const golang::runtime::spanAllocType spanAllocPtrScalarBits = 2;
     const golang::runtime::spanAllocType spanAllocWorkBuf = 3;
-    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<golang::runtime::gcBitsHeader>() [known mising deps] */;
 }
 #include "golang/internal/cpu/cpu.fwd.h"
 #include "golang/internal/cpu/cpu_x86.fwd.h"
+#include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
@@ -52,6 +52,7 @@ namespace golang::runtime
 namespace golang::runtime
 {
     const int maxPhysHugePageSize = pallocChunkBytes;
+    const bool physPageAlignedStacks = GOOS == "openbsd"_s;
     struct mheap;
     struct heapArena;
     struct arenaHint;

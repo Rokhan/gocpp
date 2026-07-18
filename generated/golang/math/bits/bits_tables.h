@@ -9,13 +9,8 @@
 #include "golang/math/bits/bits_tables.fwd.h"
 #include "gocpp/support.h"
 
-
 namespace golang::bits
 {
-    extern gocpp::string ntz8tab;
-    extern gocpp::string pop8tab;
-    extern gocpp::string rev8tab;
-    extern gocpp::string len8tab;
 
     namespace rec
     {

@@ -175,7 +175,6 @@ namespace golang::runtime
         releasem(mp);
     }
 
-    uintptr_t pinnerRefStoreSize = (pinnerSize - gocpp::Sizeof<gocpp::slice<gocpp::unsafe_pointer>>()) / gocpp::Sizeof<unsafe::Pointer>();
     
     template<typename T> requires gocpp::GoStruct<T>
     pinner::operator T()

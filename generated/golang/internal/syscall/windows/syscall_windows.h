@@ -393,6 +393,7 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterPrefix& value);
+    const uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<golang::windows::ModuleEntry32>();
     extern sendRecvMsgFuncStruct sendRecvMsgFunc;
     struct gocpp::error WSASendMsg(syscall::Handle fd, WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine);
     struct gocpp::error WSARecvMsg(syscall::Handle fd, WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine);

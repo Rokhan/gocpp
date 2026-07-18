@@ -2094,6 +2094,5 @@ namespace golang::runtime
     bool islibrary;
     bool isarchive;
     // Must agree with internal/buildcfg.FramePointerEnabled.
-    bool framepointer_enabled = GOARCH == "amd64"_s || GOARCH == "arm64"_s;
 }
 

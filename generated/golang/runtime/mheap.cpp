@@ -112,7 +112,6 @@ namespace golang::runtime
     // physPageAlignedStacks indicates whether stack allocations must be
     // physical page aligned. This is a requirement for MAP_STACK on
     // OpenBSD.
-    bool physPageAlignedStacks = GOOS == "openbsd"_s;
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_0::operator T()

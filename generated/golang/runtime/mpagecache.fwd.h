@@ -7,5 +7,4 @@
 namespace golang::runtime
 {
     struct pageCache;
-    /*const uintptr_t pageCachePages = 8 * gocpp::Sizeof<uint64_t>() [known mising deps] */;
 }

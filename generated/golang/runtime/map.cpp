@@ -101,7 +101,6 @@ namespace golang::runtime
     // during map writes and thus no one else can observe the map during that time).
     // flags
     // sentinel bucket ID for iterator checks
-    uintptr_t dataOffset = gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::v);
     // isEmpty reports whether the given tophash array entry represents an empty bucket entry.
     bool isEmpty(uint8_t x)
     {

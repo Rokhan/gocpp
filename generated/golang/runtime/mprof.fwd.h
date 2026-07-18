@@ -21,7 +21,6 @@ namespace golang::runtime
     const golang::runtime::bucketType memProfile = 1 + 0;
     const golang::runtime::bucketType blockProfile = 1 + 1;
     const golang::runtime::bucketType mutexProfile = 1 + 2;
-    /*const uint32_t mProfCycleWrap = uint32_t(len(golang::runtime::memRecord {}.future)) * (2 << 24) [known mising deps] */;
     const golang::runtime::goroutineProfileState goroutineProfileAbsent = 0;
     const golang::runtime::goroutineProfileState goroutineProfileInProgress = 1;
     const golang::runtime::goroutineProfileState goroutineProfileSatisfied = 2;

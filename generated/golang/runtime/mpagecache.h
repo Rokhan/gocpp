@@ -30,6 +30,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pageCache& value);
+    /*const uintptr_t pageCachePages = 8 * gocpp::Sizeof<uint64_t>() [known mising deps] */;
 }
 
 #include "golang/runtime/mpagealloc.h"

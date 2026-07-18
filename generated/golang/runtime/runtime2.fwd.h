@@ -101,6 +101,7 @@ namespace golang::runtime
 #include "golang/runtime/chan.fwd.h"
 #include "golang/runtime/coro.fwd.h"
 #include "golang/runtime/debuglog_off.fwd.h"
+#include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/histogram.fwd.h"
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/internal/sys/nih.fwd.h"
@@ -141,4 +142,5 @@ namespace golang::runtime
     struct itab;
     struct forcegcstate;
     struct _defer;
+    const bool framepointer_enabled = GOARCH == "amd64"_s || GOARCH == "arm64"_s;
 }

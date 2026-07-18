@@ -41,11 +41,14 @@ namespace golang::runtime
     const golang::runtime::stwReason stwForTestResetDebugLog = 16;
 }
 #include "golang/internal/goos/zgoos_windows.fwd.h"
+#include "golang/runtime/extern.fwd.h"
 #include "golang/runtime/race0.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
+    const bool crashStackImplemented = (GOARCH == "amd64"_s || GOARCH == "arm64"_s || GOARCH == "mips64"_s || GOARCH == "mips64le"_s || GOARCH == "ppc64"_s || GOARCH == "ppc64le"_s || GOARCH == "riscv64"_s || GOARCH == "wasm"_s) && GOOS != "windows"_s;
+    const bool osHasLowResTimer = GOOS == "windows"_s || GOOS == "openbsd"_s || GOOS == "netbsd"_s;
     const int osHasLowResClockInt = goos::IsWindows;
     struct cgothreadstart;
     const bool randomizeScheduler = raceenabled;

@@ -73,8 +73,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gcBitsHeader& value);
     void nextMarkBitArenaEpoch();
+    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<golang::runtime::gcBitsHeader>() [known mising deps] */;
 }
-#include "golang/runtime/extern.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mbitmap_allocheaders.h"
@@ -88,7 +88,6 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern bool physPageAlignedStacks;
     struct gocpp_id_1
     {
         mcentral mcentral{};

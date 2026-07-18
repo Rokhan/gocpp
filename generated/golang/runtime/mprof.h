@@ -261,6 +261,7 @@ namespace golang::runtime
     void tracealloc(gocpp::unsafe_pointer p, uintptr_t size, _type* typ);
     extern gocpp::array<golang::runtime::mutex, len(golang::runtime::memRecord {}.future)> profMemFutureLock;
     extern golang::runtime::mProfCycleHolder mProfCycle;
+    /*const uint32_t mProfCycleWrap = uint32_t(len(golang::runtime::memRecord {}.future)) * (2 << 24) [known mising deps] */;
     golang::runtime::bucket* newBucket(bucketType typ, int nstk);
     golang::runtime::bucket* stkbucket(bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc);
     void mProf_Free(golang::runtime::bucket* b, uintptr_t size);

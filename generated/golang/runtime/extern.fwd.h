@@ -3,3 +3,11 @@
 
 #include "gocpp/support.fwd.h"
 
+#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
+#include "golang/internal/goos/zgoos_windows.fwd.h"
+
+namespace golang::runtime
+{
+    const gocpp::string GOOS = goos::GOOS;
+    const gocpp::string GOARCH = goarch::GOARCH;
+}

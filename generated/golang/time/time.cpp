@@ -390,12 +390,6 @@ namespace golang::time
         return "%!Weekday("_s + gocpp::string(buf.make_slice(n)) + ")"_s;
     }
 
-    // The unsigned zero year for internal calculations.
-    // Must be 1 mod 400, and times before it will not compute correctly,
-    // but otherwise can be changed at will.
-    // The year of the zero Time.
-    // Assumed by the unixToInternal computation below.
-    // Offsets to convert between internal and absolute or Unix times.
     // IsZero reports whether t represents the zero time instant,
     // January 1, year 1, 00:00:00 UTC.
     bool rec::IsZero(Time t)
@@ -599,18 +593,6 @@ namespace golang::time
     // A Duration represents the elapsed time between two instants
     // as an int64 nanosecond count. The representation limits the
     // largest representable duration to approximately 290 years.
-    // Common durations. There is no definition for units of Day or larger
-    // to avoid confusion across daylight savings time zone transitions.
-    //
-    // To count the number of units in a Duration, divide:
-    //
-    //	second := time.Second
-    //	fmt.Print(int64(second/time.Millisecond)) // prints 1000
-    //
-    // To convert an integer number of units to a Duration, multiply:
-    //
-    //	seconds := 10
-    //	fmt.Print(time.Duration(seconds)*time.Second) // prints 10s
     // String returns a string representing the duration in the form "72h3m0.5s".
     // Leading zero units are omitted. As a special case, durations less than one
     // second format use a smaller unit (milli-, micro-, or nanoseconds) to ensure

@@ -87,35 +87,8 @@ namespace golang::abi
 
     // A Kind represents the specific kind of type that a Type represents.
     // The zero Kind is not a valid kind.
-    // TODO (khr, drchase) why aren't these in TFlag?  Investigate, fix if possible.
     // TFlag is used by a Type to signal what extra type information is
     // available in the memory directly following the Type value.
-    // TFlagUncommon means that there is a data with a type, UncommonType,
-    // just beyond the shared-per-type common data.  That is, the data
-    // for struct types will store their UncommonType at one offset, the
-    // data for interface types will store their UncommonType at a different
-    // offset.  UncommonType is always accessed via a pointer that is computed
-    // using trust-us-we-are-the-implementors pointer arithmetic.
-    //
-    // For example, if t.Kind() == Struct and t.tflag&TFlagUncommon != 0,
-    // then t has UncommonType data and it can be accessed as:
-    //
-    //	type structTypeUncommon struct {
-    //		structType
-    //		u UncommonType
-    //	}
-    //	u := &(*structTypeUncommon)(unsafe.Pointer(t)).u
-    // TFlagExtraStar means the name in the str field has an
-    // extraneous '*' prefix. This is because for most types T in
-    // a program, the type *T also exists and reusing the str data
-    // saves binary size.
-    // TFlagNamed means the type has a name.
-    // TFlagRegularMemory means that equal and hash functions can treat
-    // this type as a single region of t.size bytes.
-    // TFlagUnrolledBitmap marks special types that are unrolled-bitmap
-    // versions of types with GC programs.
-    // These types need to be deallocated when the underlying object
-    // is freed.
     // NameOff is the offset to a name from moduledata.types.  See resolveNameOff in runtime.
     // TypeOff is the offset to a type from moduledata.types.  See resolveTypeOff in runtime.
     // TextOff is an offset from the top of a text section.  See (rtype).textOff in runtime.

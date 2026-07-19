@@ -6,6 +6,7 @@
 
 namespace golang::registry
 {
+    // Registry value types.
     const long NONE = 0;
     const long SZ = 1;
     const long EXPAND_SZ = 2;

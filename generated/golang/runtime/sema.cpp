@@ -96,7 +96,6 @@ namespace golang::runtime
     }
 
     golang::runtime::semTable semtable;
-    // Prime to not correlate with any user patterns.
     struct gocpp_id_0
     {
         semaRoot root{};

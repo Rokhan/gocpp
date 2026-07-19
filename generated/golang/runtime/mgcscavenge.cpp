@@ -74,40 +74,6 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // The background scavenger is paced according to these parameters.
-    //
-    // scavengePercent represents the portion of mutator time we're willing
-    // to spend on scavenging in percent.
-    // retainExtraPercent represents the amount of memory over the heap goal
-    // that the scavenger should keep as a buffer space for the allocator.
-    // This constant is used when we do not have a memory limit set.
-    //
-    // The purpose of maintaining this overhead is to have a greater pool of
-    // unscavenged memory available for allocation (since using scavenged memory
-    // incurs an additional cost), to account for heap fragmentation and
-    // the ever-changing layout of the heap.
-    // reduceExtraPercent represents the amount of memory under the limit
-    // that the scavenger should target. For example, 5 means we target 95%
-    // of the limit.
-    //
-    // The purpose of shooting lower than the limit is to ensure that, once
-    // close to the limit, the scavenger is working hard to maintain it. If
-    // we have a memory limit set but are far away from it, there's no harm
-    // in leaving up to 100-retainExtraPercent live, and it's more efficient
-    // anyway, for the same reasons that retainExtraPercent exists.
-    // maxPagesPerPhysPage is the maximum number of supported runtime pages per
-    // physical page, based on maxPhysPageSize.
-    // scavengeCostRatio is the approximate ratio between the costs of using previously
-    // scavenged memory and scavenging memory.
-    //
-    // For most systems the cost of scavenging greatly outweighs the costs
-    // associated with using scavenged memory, making this constant 0. On other systems
-    // (especially ones where "sysUsed" is not just a no-op) this cost is non-trivial.
-    //
-    // This ratio is used as part of multiplicative factor to help the scavenger account
-    // for the additional costs of using scavenged memory in its pacing.
-    // scavChunkHiOcFrac indicates the fraction of pages that need to be allocated
-    // in the chunk in a single GC cycle for it to be considered high density.
     // heapRetained returns an estimate of the current heap RSS.
     uint64_t heapRetained()
     {
@@ -240,12 +206,6 @@ namespace golang::runtime
 
 
     scavengeStruct scavenge;
-    // It doesn't really matter what value we start at, but we can't be zero, because
-    // that'll cause divide-by-zero issues. Pick something conservative which we'll
-    // also use as a fallback.
-    // Spend at least 1 ms scavenging, otherwise the corresponding
-    // sleep time to maintain our desired utilization is too low to
-    // be reliable.
     // Sleep/wait state of the background scavenger.
     golang::runtime::scavengerState scavenger;
     
@@ -1360,16 +1320,6 @@ namespace golang::runtime
         return uint64_t(sc.inUse) | (uint64_t(sc.lastInUse) << 16) | (uint64_t(sc.scavChunkFlags) << (16 + logScavChunkInUseMax)) | (uint64_t(sc.gen) << 32);
     }
 
-    // scavChunkHasFree indicates whether the chunk has anything left to
-    // scavenge. This is the opposite of "empty," used elsewhere in this
-    // file. The reason we say "HasFree" here is so the zero value is
-    // correct for a newly-grown chunk. (New memory is scavenged.)
-    // scavChunkMaxFlags is the maximum number of flags we can have, given how
-    // a scavChunkData is packed into 8 bytes.
-    // logScavChunkInUseMax is the number of bits needed to represent the number
-    // of pages allocated in a single chunk. This is 1 more than log2 of the
-    // number of pages in the chunk because we need to represent a fully-allocated
-    // chunk.
     // scavChunkFlags is a set of bit-flags for the scavenger for each palloc chunk.
     // isEmpty returns true if the hasFree flag is unset.
     bool rec::isEmpty(scavChunkFlags* sc)

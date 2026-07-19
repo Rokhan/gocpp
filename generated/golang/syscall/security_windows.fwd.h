@@ -21,11 +21,13 @@ namespace golang::syscall
     const long NameCanonicalEx = 9;
     const long NameServicePrincipal = 10;
     const long NameDnsDomain = 12;
+    // do not reorder
     const int NetSetupUnknownStatus = 0;
     const int NetSetupUnjoined = 1;
     const int NetSetupWorkgroupName = 2;
     const int NetSetupDomainName = 3;
     struct UserInfo10;
+    // do not reorder
     const int SidTypeUser = 1 + 0;
     const int SidTypeGroup = 1 + 1;
     const int SidTypeDomain = 1 + 2;
@@ -37,6 +39,7 @@ namespace golang::syscall
     const int SidTypeComputer = 1 + 8;
     const int SidTypeLabel = 1 + 9;
     struct SID;
+    // do not reorder
     const int TOKEN_ASSIGN_PRIMARY = 1 << 0;
     const int TOKEN_DUPLICATE = 1 << 1;
     const int TOKEN_IMPERSONATE = 1 << 2;
@@ -46,6 +49,7 @@ namespace golang::syscall
     const int TOKEN_ADJUST_GROUPS = 1 << 6;
     const int TOKEN_ADJUST_DEFAULT = 1 << 7;
     const int TOKEN_ADJUST_SESSIONID = 1 << 8;
+    // do not reorder
     const int TokenUser = 1 + 0;
     const int TokenGroups = 1 + 1;
     const int TokenPrivileges = 1 + 2;

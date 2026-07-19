@@ -208,12 +208,6 @@ namespace golang::runtime
         return x;
     }
 
-    // userArenaChunkBytes is the size of a user arena chunk.
-    // userArenaChunkPages is the number of pages a user arena chunk uses.
-    // userArenaChunkMaxAllocBytes is the maximum size of an object that can
-    // be allocated from an arena. This number is chosen to cap worst-case
-    // fragmentation of user arenas to 25%. Larger allocations are redirected
-    // to the heap.
     void init()
     {
         if(userArenaChunkPages * pageSize != userArenaChunkBytes)

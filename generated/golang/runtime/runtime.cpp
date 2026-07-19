@@ -83,21 +83,6 @@ namespace golang::runtime
         runtime::unlock(& ticks.lock);
     }
 
-    // minTimeForTicksPerSecond is the minimum elapsed time we require to consider our ticksPerSecond
-    // measurement to be of decent enough quality for profiling.
-    //
-    // There's a linear relationship here between minimum time and error from the true value.
-    // The error from the true ticks-per-second in a linux/amd64 VM seems to be:
-    // -   1 ms -> ~0.02% error
-    // -   5 ms -> ~0.004% error
-    // -  10 ms -> ~0.002% error
-    // -  50 ms -> ~0.0003% error
-    // - 100 ms -> ~0.0001% error
-    //
-    // We're willing to take 0.004% error here, because ticksPerSecond is intended to be used for
-    // converting durations, not timestamps. Durations are usually going to be much larger, and so
-    // the tiny error doesn't matter. The error is definitely going to be a problem when trying to
-    // use this for timestamps, as it'll make those timestamps much less likely to line up.
     // ticksPerSecond returns a conversion rate between the cputicks clock and the nanotime clock.
     //
     // Note: Clocks are hard. Using this as an actual conversion rate for timestamps is ill-advised

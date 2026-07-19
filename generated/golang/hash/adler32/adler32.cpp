@@ -30,11 +30,6 @@ namespace golang::adler32
     {
     }
 
-    // mod is the largest prime that is less than 65536.
-    // nmax is the largest n such that
-    // 255 * n * (n+1) / 2 + (n+1) * (mod-1) <= 2^32-1.
-    // It is mentioned in RFC 1950 (search for "5552").
-    // The size of an Adler-32 checksum in bytes.
     // digest represents the partial evaluation of a checksum.
     // The low 16 bits are s1, the high 16 bits are s2.
     void rec::Reset(digest* d)

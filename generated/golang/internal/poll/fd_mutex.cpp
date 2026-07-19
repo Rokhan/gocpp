@@ -64,13 +64,6 @@ namespace golang::poll
         return value.PrintTo(os);
     }
 
-    // fdMutex.state is organized as follows:
-    // 1 bit - whether FD is closed, if set all subsequent lock operations will fail.
-    // 1 bit - lock for read operations.
-    // 1 bit - lock for write operations.
-    // 20 bits - total number of references (read+write+misc).
-    // 20 bits - number of outstanding read waiters.
-    // 20 bits - number of outstanding write waiters.
     // incref adds a reference to mu.
     // It reports whether mu is available for reading or writing.
     bool rec::incref(fdMutex* mu)

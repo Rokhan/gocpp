@@ -6,8 +6,13 @@
 
 namespace golang::adler32
 {
+    // mod is the largest prime that is less than 65536.
     const long mod = 65521;
+    // nmax is the largest n such that
+    // 255 * n * (n+1) / 2 + (n+1) * (mod-1) <= 2^32-1.
+    // It is mentioned in RFC 1950 (search for "5552").
     const long nmax = 5552;
+    // The size of an Adler-32 checksum in bytes.
     const long Size = 4;
     using digest = uint32_t;
     const gocpp::string magic = "adl\x01"_s;

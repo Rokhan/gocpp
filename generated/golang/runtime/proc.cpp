@@ -665,9 +665,6 @@ namespace golang::runtime
         abort();
     }
 
-    // Disable crash stack on Windows for now. Apparently, throwing an exception
-    // on a non-system-allocated crash stack causes EXCEPTION_STACK_OVERFLOW and
-    // hangs the process (see issue 63938).
     //go:noescape
     void switchToCrashStack0(std::function<void ()> fn)
     /* convertBlockStmt, nil block */;
@@ -684,6 +681,8 @@ namespace golang::runtime
     // Access via the slice is protected by allglock or stop-the-world.
     // Readers that cannot take the lock may (carefully!) use the atomic
     // variables below.
+    golang::runtime::mutex allglock;
+    gocpp::slice<golang::runtime::g*> allgs;
     // allglen and allgptr are atomic variables that contain len(allgs) and
     // &allgs[0] respectively. Proper ordering depends on totally-ordered
     // loads and stores. Writes are protected by allglock.
@@ -696,8 +695,6 @@ namespace golang::runtime
     // allgptr copies should always be stored as a concrete type or
     // unsafe.Pointer, not uintptr, to ensure that GC can still reach it
     // even if it points to a stale array.
-    golang::runtime::mutex allglock;
-    gocpp::slice<golang::runtime::g*> allgs;
     uintptr_t allglen;
     golang::runtime::g** allgptr;
     void allgadd(g* gp)
@@ -774,8 +771,6 @@ namespace golang::runtime
         return;
     }
 
-    // Number of goroutine ids to grab from sched.goidgen to local per-P cache at once.
-    // 16 seems to provide enough amortization, but other than that it's mostly arbitrary number.
     // cpuinit sets up CPU feature flags and calls internal/cpu.Initialize. env should be the complete
     // value of the GODEBUG environment variable.
     void cpuinit(gocpp::string env)
@@ -1126,12 +1121,6 @@ namespace golang::runtime
         return mp->ncgo > 0 || mp->isextra;
     }
 
-    // osHasLowResTimer indicates that the platform's internal timer system has a low resolution,
-    // typically on the order of 1 ms or more.
-    // osHasLowResClockInt is osHasLowResClock but in integer form, so it can be used to create
-    // constants conditionally.
-    // osHasLowResClock indicates that timestamps produced by nanotime on the platform have a
-    // low resolution, typically on the order of 1 ms or more.
     // Mark gp ready to run.
     void ready(g* gp, int traceskip, bool next)
     {
@@ -1159,8 +1148,6 @@ namespace golang::runtime
         releasem(mp);
     }
 
-    // freezeStopWait is a large value that freezetheworld sets
-    // sched.stopwait to in order to request that all Gs permanently stop.
     // freezing is set to non-zero if the runtime is trying to freeze the
     // world.
     atomic::Bool freezing;
@@ -1520,9 +1507,6 @@ namespace golang::runtime
     }
 
     // stwReason is an enumeration of reasons the world is stopping.
-    // Reasons to stop-the-world.
-    //
-    // Avoid reusing reasons and add new ones instead.
     gocpp::string rec::String(stwReason r)
     {
         return stwReasonStrings[r];
@@ -2956,12 +2940,12 @@ namespace golang::runtime
     // Can't be atomic.Pointer[m] because we use an invalid pointer as a
     // "locked" sentinel value. M's on this list remain visible to the GC
     // because their mp.curg is on allgs.
-    // Number of M's in the extraM list.
-    // Number of waiters in lockextra.
-    // Number of extra M's in use by threads.
     atomic::Uintptr extraM;
+    // Number of M's in the extraM list.
     atomic::Uint32 extraMLength;
+    // Number of waiters in lockextra.
     atomic::Uint32 extraMWaiters;
+    // Number of extra M's in use by threads.
     atomic::Uint32 extraMInUse;
     // lockextra locks the extra list and returns the list head.
     // The caller must unlock the list by storing a new list head
@@ -3052,13 +3036,11 @@ namespace golang::runtime
     // allocmLock is locked for read when creating new Ms in allocm and their
     // addition to allm. Thus acquiring this lock for write blocks the
     // creation of new Ms.
+    golang::runtime::rwmutex allocmLock;
     // execLock serializes exec and clone to avoid bugs or unspecified
     // behaviour around exec'ing while creating/destroying threads. See
     // issue #19546.
-    golang::runtime::rwmutex allocmLock;
     golang::runtime::rwmutex execLock;
-    // These errors are reported (via writeErrStr) by some OS-specific
-    // versions of newosproc and newosproc0.
     
     template<typename T> requires gocpp::GoStruct<T>
     newmHandoffStruct::operator T()
@@ -7225,8 +7207,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // forcePreemptNS is the time slice given to a G before it is
-    // preempted.
     uint32_t retake(int64_t now)
     {
         auto n = 0;
@@ -7833,15 +7813,6 @@ namespace golang::runtime
         }
     }
 
-    // To shake out latent assumptions about scheduling order,
-    // we introduce some randomness into scheduling decisions
-    // when running with the race detector.
-    // The need for this was made obvious by changing the
-    // (deterministic) scheduling order in Go 1.5 and breaking
-    // many poorly-written tests.
-    // With the randomness here, as long as the tests pass
-    // consistently with -race, they shouldn't have latent scheduling
-    // assumptions.
     // runqput tries to put g on the local runnable queue.
     // If next is false, runqput adds g to the tail of the runnable queue.
     // If next is true, runqput puts g in the pp.runnext slot.

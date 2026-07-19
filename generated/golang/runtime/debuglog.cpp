@@ -66,11 +66,6 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // debugLogBytes is the size of each per-M ring buffer. This is
-    // allocated off-heap to avoid blowing up the M and hence the GC'd
-    // heap size.
-    // debugLogStringLimit is the maximum number of bytes in a string.
-    // Above this, the string will be truncated with "..(n more bytes).."
     // dlog returns a debug logger. The caller can use methods on the
     // returned logger to add values, which will be space-separated in the
     // final output, much like println. The caller must call end() to
@@ -560,9 +555,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // debugLogHeaderSize is the number of bytes in the framing
-    // header of every dlog record.
-    // debugLogSyncSize is the number of bytes in a sync record.
     //go:nosplit
     void rec::ensure(debugLogWriter* l, uint64_t n)
     {

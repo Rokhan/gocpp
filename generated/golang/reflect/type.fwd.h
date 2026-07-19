@@ -20,6 +20,7 @@ namespace golang::reflect
     struct gocpp_id_9;
     struct gocpp_id_11;
     struct gocpp_id_12;
+    // See cmd/compile/internal/reflectdata/reflect.go for derivation of constant.
     const long maxPtrmaskBytes = 2048;
     struct bitVector;
     const golang::reflect::Kind Invalid = 0;
@@ -78,11 +79,16 @@ namespace golang::reflect
     struct structType;
     struct Method;
     struct cacheKey;
+    // Make sure these routines stay in sync with ../runtime/map.go!
+    // These types exist only for GC, so we only fill out GC relevant info.
+    // Currently, that's just size and the GC program. We also fill in string
+    // for possible debugging use.
     const uintptr_t bucketSize = abi::MapBucketCount;
     const uintptr_t maxKeySize = abi::MapMaxKeyBytes;
     const uintptr_t maxValSize = abi::MapMaxElemBytes;
     struct layoutKey;
     struct layoutType;
+    // Ptr is the old name for the [Pointer] kind.
     const Kind Ptr = Pointer;
     const ChanDir BothDir = RecvDir | SendDir;
 }

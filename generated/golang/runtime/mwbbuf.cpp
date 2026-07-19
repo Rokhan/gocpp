@@ -57,8 +57,6 @@ namespace golang::runtime
     {
     }
 
-    // testSmallBuf forces a small write barrier buffer to stress write
-    // barrier flushing.
     // wbBuf is a per-P buffer of pointers queued by the write barrier.
     // This buffer is flushed to the GC workbufs when it fills up and on
     // various GC transitions.
@@ -101,17 +99,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // wbBufEntries is the maximum number of pointers that can be
-    // stored in the write barrier buffer.
-    //
-    // This trades latency for throughput amortization. Higher
-    // values amortize flushing overhead more, but increase the
-    // latency of flushing. Higher values also increase the cache
-    // footprint of the buffer.
-    //
-    // TODO: What is the latency cost of this? Tune this value.
-    // Maximum number of entries that we need to ask from the
-    // buffer in a single call.
     // reset empties b by resetting its next and end pointers.
     void rec::reset(wbBuf* b)
     {

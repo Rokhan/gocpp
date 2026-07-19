@@ -6,5 +6,6 @@
 
 namespace golang::png
 {
+    // intSize is either 32 or 64.
     const int intSize = 32 << (~ (unsigned int)(0) >> 63);
 }

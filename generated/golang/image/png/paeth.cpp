@@ -17,7 +17,6 @@ namespace golang::png
     {
     }
 
-    // intSize is either 32 or 64.
     int abs(int x)
     {
         // m := -1 if x < 0. m := 0 otherwise.

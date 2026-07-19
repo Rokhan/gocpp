@@ -11,6 +11,13 @@ namespace golang::os
     struct File;
     using FileInfo = fs::FileInfo;
     using FileMode = fs::FileMode;
+    // The defined file mode bits are the most significant bits of the FileMode.
+    // The nine least-significant bits are the standard Unix rwxrwxrwx permissions.
+    // The values of these bits should be considered part of the public API and
+    // may be used in wire protocols or disk representations: they must not be
+    // changed, although new bits might be added.
+    // The single letters are the abbreviations
+    // used by the String method's formatting.
     const fs::FileMode ModeDir = fs::ModeDir;
     const fs::FileMode ModeAppend = fs::ModeAppend;
     const fs::FileMode ModeExclusive = fs::ModeExclusive;
@@ -24,6 +31,7 @@ namespace golang::os
     const fs::FileMode ModeCharDevice = fs::ModeCharDevice;
     const fs::FileMode ModeSticky = fs::ModeSticky;
     const fs::FileMode ModeIrregular = fs::ModeIrregular;
+    // Mask for the type bits. For regular files, none will be set.
     const fs::FileMode ModeType = fs::ModeType;
     const fs::FileMode ModePerm = fs::ModePerm;
 }

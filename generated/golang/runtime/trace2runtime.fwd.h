@@ -8,6 +8,11 @@ namespace golang::runtime
 {
     using traceBlockReason = uint8_t;
     using traceGoStopReason = uint8_t;
+    // debugTraceReentrancy checks if the trace is reentrant.
+    //
+    // This is optional because throwing in a function makes it instantly
+    // not inlineable, and we want traceAcquire to be inlineable for
+    // low overhead when the trace is disabled.
     const bool debugTraceReentrancy = false;
     const golang::runtime::traceBlockReason traceBlockGeneric = 0;
     const golang::runtime::traceBlockReason traceBlockForever = 1;

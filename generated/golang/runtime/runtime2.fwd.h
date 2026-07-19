@@ -6,21 +6,104 @@
 
 namespace golang::runtime
 {
+    // defined constants
+    // _Gidle means this goroutine was just allocated and has not
+    // yet been initialized.
     const int _Gidle = 0;
+    // _Grunnable means this goroutine is on a run queue. It is
+    // not currently executing user code. The stack is not owned.
     const int _Grunnable = 1;
+    // _Grunning means this goroutine may execute user code. The
+    // stack is owned by this goroutine. It is not on a run queue.
+    // It is assigned an M and a P (g.m and g.m.p are valid).
     const int _Grunning = 2;
+    // _Gsyscall means this goroutine is executing a system call.
+    // It is not executing user code. The stack is owned by this
+    // goroutine. It is not on a run queue. It is assigned an M.
     const int _Gsyscall = 3;
+    // _Gwaiting means this goroutine is blocked in the runtime.
+    // It is not executing user code. It is not on a run queue,
+    // but should be recorded somewhere (e.g., a channel wait
+    // queue) so it can be ready()d when necessary. The stack is
+    // not owned *except* that a channel operation may read or
+    // write parts of the stack under the appropriate channel
+    // lock. Otherwise, it is not safe to access the stack after a
+    // goroutine enters _Gwaiting (e.g., it may get moved).
     const int _Gwaiting = 4;
+    // _Gmoribund_unused is currently unused, but hardcoded in gdb
+    // scripts.
     const int _Gmoribund_unused = 5;
+    // _Gdead means this goroutine is currently unused. It may be
+    // just exited, on a free list, or just being initialized. It
+    // is not executing user code. It may or may not have a stack
+    // allocated. The G and its stack (if any) are owned by the M
+    // that is exiting the G or that obtained the G from the free
+    // list.
     const int _Gdead = 6;
+    // _Genqueue_unused is currently unused.
     const int _Genqueue_unused = 7;
+    // _Gcopystack means this goroutine's stack is being moved. It
+    // is not executing user code and is not on a run queue. The
+    // stack is owned by the goroutine that put it in _Gcopystack.
     const int _Gcopystack = 8;
+    // _Gpreempted means this goroutine stopped itself for a
+    // suspendG preemption. It is like _Gwaiting, but nothing is
+    // yet responsible for ready()ing it. Some suspendG must CAS
+    // the status to _Gwaiting to take responsibility for
+    // ready()ing this G.
     const int _Gpreempted = 9;
+    // _Gscan combined with one of the above states other than
+    // _Grunning indicates that GC is scanning the stack. The
+    // goroutine is not executing user code and the stack is owned
+    // by the goroutine that set the _Gscan bit.
+    //
+    // _Gscanrunning is different: it is used to briefly block
+    // state transitions while GC signals the G to scan its own
+    // stack. This is otherwise like _Grunning.
+    //
+    // atomicstatus&~Gscan gives the state the goroutine will
+    // return to when the scan completes.
     const long _Gscan = 0x1000;
+    // _Pidle means a P is not being used to run user code or the
+    // scheduler. Typically, it's on the idle P list and available
+    // to the scheduler, but it may just be transitioning between
+    // other states.
+    //
+    // The P is owned by the idle list or by whatever is
+    // transitioning its state. Its run queue is empty.
     const int _Pidle = 0;
+    // _Prunning means a P is owned by an M and is being used to
+    // run user code or the scheduler. Only the M that owns this P
+    // is allowed to change the P's status from _Prunning. The M
+    // may transition the P to _Pidle (if it has no more work to
+    // do), _Psyscall (when entering a syscall), or _Pgcstop (to
+    // halt for the GC). The M may also hand ownership of the P
+    // off directly to another M (e.g., to schedule a locked G).
     const int _Prunning = 1;
+    // _Psyscall means a P is not running user code. It has
+    // affinity to an M in a syscall but is not owned by it and
+    // may be stolen by another M. This is similar to _Pidle but
+    // uses lightweight transitions and maintains M affinity.
+    //
+    // Leaving _Psyscall must be done with a CAS, either to steal
+    // or retake the P. Note that there's an ABA hazard: even if
+    // an M successfully CASes its original P back to _Prunning
+    // after a syscall, it must understand the P may have been
+    // used by another M in the interim.
     const int _Psyscall = 2;
+    // _Pgcstop means a P is halted for STW and owned by the M
+    // that stopped the world. The M that stopped the world
+    // continues to use its P, even in _Pgcstop. Transitioning
+    // from _Prunning to _Pgcstop causes an M to release its P and
+    // park.
+    //
+    // The P retains its run queue and startTheWorld will restart
+    // the scheduler on Ps with non-empty run queues.
     const int _Pgcstop = 3;
+    // _Pdead means a P is no longer used (GOMAXPROCS shrank). We
+    // reuse Ps if GOMAXPROCS increases. A dead P is mostly
+    // stripped of its resources, though a few things remain
+    // (e.g., trace buffers).
     const int _Pdead = 4;
     struct note;
     struct funcval;
@@ -31,11 +114,17 @@ namespace golang::runtime
     struct gobuf;
     struct libcall;
     struct stack;
+    // gTrackingPeriod is the number of transitions out of _Grunning between
+    // latency tracking runs.
     const long gTrackingPeriod = 8;
+    // tlsSlots is the number of pointer-sized slots reserved for TLS on some platforms,
+    // like Windows.
     const long tlsSlots = 6;
+    // Values for m.freeWait.
     const long freeMStack = 0;
     const long freeMRef = 1;
     const long freeMWait = 2;
+    // Values for the flags field of a sigTabT.
     const int _SigNotify = 1 << 0;
     const int _SigKill = 1 << 1;
     const int _SigThrow = 1 << 2;
@@ -142,5 +231,6 @@ namespace golang::runtime
     struct itab;
     struct forcegcstate;
     struct _defer;
+    // Must agree with internal/buildcfg.FramePointerEnabled.
     const bool framepointer_enabled = GOARCH == "amd64"_s || GOARCH == "arm64"_s;
 }

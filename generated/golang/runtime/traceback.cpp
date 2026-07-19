@@ -60,38 +60,7 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // tracebackInnerFrames is the number of innermost frames to print in a
-    // stack trace. The total maximum frames is tracebackInnerFrames +
-    // tracebackOuterFrames.
-    // tracebackOuterFrames is the number of outermost frames to print in a
-    // stack trace.
     // unwindFlags control the behavior of various unwinders.
-    // unwindPrintErrors indicates that if unwinding encounters an error, it
-    // should print a message and stop without throwing. This is used for things
-    // like stack printing, where it's better to get incomplete information than
-    // to crash. This is also used in situations where everything may not be
-    // stopped nicely and the stack walk may not be able to complete, such as
-    // during profiling signals or during a crash.
-    //
-    // If neither unwindPrintErrors or unwindSilentErrors are set, unwinding
-    // performs extra consistency checks and throws on any error.
-    //
-    // Note that there are a small number of fatal situations that will throw
-    // regardless of unwindPrintErrors or unwindSilentErrors.
-    // unwindSilentErrors silently ignores errors during unwinding.
-    // unwindTrap indicates that the initial PC and SP are from a trap, not a
-    // return PC from a call.
-    //
-    // The unwindTrap flag is updated during unwinding. If set, frame.pc is the
-    // address of a faulting instruction instead of the return address of a
-    // call. It also means the liveness at pc may not be known.
-    //
-    // TODO: Distinguish frame.continpc, which is really the stack map PC, from
-    // the actual continuation PC, which is computed differently depending on
-    // this flag and a few other things.
-    // unwindJumpStack indicates that, if the traceback is on a system stack, it
-    // should resume tracing at the user stack when the system stack is
-    // exhausted.
     // An unwinder iterates the physical stack frames of a Go sack.
     //
     // Typical use of an unwinder looks like:

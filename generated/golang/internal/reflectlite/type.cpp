@@ -261,7 +261,6 @@ namespace golang::reflectlite
 
     // A Kind represents the specific kind of type that a Type represents.
     // The zero Kind is not a valid kind.
-    // Import-and-export these constants as necessary
     
     template<typename T> requires gocpp::GoStruct<T>
     rtype::operator T()

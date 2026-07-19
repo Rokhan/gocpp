@@ -6,6 +6,7 @@
 
 namespace golang::syscall
 {
+    // Invented values to support what package os expects.
     const long O_RDONLY = 0x00000;
     const long O_WRONLY = 0x00001;
     const long O_RDWR = 0x00002;
@@ -96,12 +97,14 @@ namespace golang::syscall
     const long CTRL_CLOSE_EVENT = 2;
     const long CTRL_LOGOFF_EVENT = 5;
     const long CTRL_SHUTDOWN_EVENT = 6;
+    // flags for CreateToolhelp32Snapshot
     const long TH32CS_SNAPHEAPLIST = 0x01;
     const long TH32CS_SNAPPROCESS = 0x02;
     const long TH32CS_SNAPTHREAD = 0x04;
     const long TH32CS_SNAPMODULE = 0x08;
     const long TH32CS_SNAPMODULE32 = 0x10;
     const long TH32CS_INHERIT = 0x80000000;
+    // do not reorder
     const int FILE_NOTIFY_CHANGE_FILE_NAME = 1 << 0;
     const int FILE_NOTIFY_CHANGE_DIR_NAME = 1 << 1;
     const int FILE_NOTIFY_CHANGE_ATTRIBUTES = 1 << 2;
@@ -109,11 +112,13 @@ namespace golang::syscall
     const int FILE_NOTIFY_CHANGE_LAST_WRITE = 1 << 4;
     const int FILE_NOTIFY_CHANGE_LAST_ACCESS = 1 << 5;
     const int FILE_NOTIFY_CHANGE_CREATION = 1 << 6;
+    // do not reorder
     const int FILE_ACTION_ADDED = 0 + 1;
     const int FILE_ACTION_REMOVED = 1 + 1;
     const int FILE_ACTION_MODIFIED = 2 + 1;
     const int FILE_ACTION_RENAMED_OLD_NAME = 3 + 1;
     const int FILE_ACTION_RENAMED_NEW_NAME = 4 + 1;
+    // wincrypt.h
     const long PROV_RSA_FULL = 1;
     const long PROV_RSA_SIG = 2;
     const long PROV_DSS = 3;
@@ -192,6 +197,8 @@ namespace golang::syscall
     const long GetFileExInfoStandard = 0;
     const long GetFileExMaxInfoLevel = 1;
     struct Win32FileAttributeData;
+    // ShowWindow constants
+    // winuser.h
     const long SW_HIDE = 0;
     const long SW_NORMAL = 1;
     const long SW_SHOWNORMAL = 1;
@@ -263,6 +270,7 @@ namespace golang::syscall
     const long WSADESCRIPTION_LEN = 256;
     const long WSASYS_STATUS_LEN = 128;
     struct WSABuf;
+    // Invented values to support what package os expects.
     const long S_IFMT = 0x1f000;
     const long S_IFIFO = 0x1000;
     const long S_IFCHR = 0x2000;
@@ -348,6 +356,7 @@ namespace golang::syscall
     const long DNS_TYPE_WINSR = 0xff02;
     const long DNS_TYPE_NBSTAT = 0xff01;
     const long DNS_INFO_NO_RECORDS = 0x251D;
+    // flags inside DNSRecord.Dw
     const long DnsSectionQuestion = 0x0000;
     const long DnsSectionAnswer = 0x0001;
     const long DnsSectionAuthority = 0x0002;
@@ -398,6 +407,7 @@ namespace golang::syscall
     struct CertChainPolicyPara;
     struct SSLExtraCertChainPolicyPara;
     struct CertChainPolicyStatus;
+    // do not reorder
     const int HKEY_CLASSES_ROOT = 0x80000000 + 0;
     const int HKEY_CURRENT_USER = 0x80000000 + 1;
     const int HKEY_LOCAL_MACHINE = 0x80000000 + 2;
@@ -417,6 +427,7 @@ namespace golang::syscall
     const long KEY_WOW64_64KEY = 0x0100;
     const long KEY_WOW64_32KEY = 0x0200;
     const long KEY_ALL_ACCESS = 0xf003f;
+    // do not reorder
     const int REG_NONE = 0;
     const int REG_SZ = 1;
     const int REG_EXPAND_SZ = 2;
@@ -489,6 +500,7 @@ namespace golang::syscall
 
 namespace golang::syscall
 {
+    // Windows errors.
     const golang::syscall::Errno ERROR_FILE_NOT_FOUND = 2;
     const golang::syscall::Errno ERROR_PATH_NOT_FOUND = 3;
     const golang::syscall::Errno ERROR_ACCESS_DENIED = 5;
@@ -512,6 +524,7 @@ namespace golang::syscall
     const golang::syscall::Errno WSAEACCES = 10013;
     const golang::syscall::Errno WSAECONNABORTED = 10053;
     const golang::syscall::Errno WSAECONNRESET = 10054;
+    // More invented values for signals
     const Signal go_SIGHUP = Signal(0x1);
     const Signal go_SIGINT = Signal(0x2);
     const Signal go_SIGQUIT = Signal(0x3);

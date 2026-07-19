@@ -89,12 +89,6 @@ namespace golang::os
         return value.PrintTo(os);
     }
 
-    // dirBufSize is the size of the dirInfo buffer.
-    // The buffer must be big enough to hold at least a single entry.
-    // The filename alone can be 512 bytes (MAX_PATH*2), and the fixed part of
-    // the FILE_ID_BOTH_DIR_INFO structure is 105 bytes, so dirBufSize
-    // should not be set below 1024 bytes (512+105+safety buffer).
-    // Windows 8.1 and earlier only works with buffer sizes up to 64 kB.
     sync::Pool dirBufPool = gocpp::Init<sync::Pool>([](auto& x) {
         x.New = []() mutable -> go_any
         {

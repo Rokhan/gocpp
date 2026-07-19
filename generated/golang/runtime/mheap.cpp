@@ -88,30 +88,6 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // minPhysPageSize is a lower-bound on the physical page size. The
-    // true physical page size may be larger than this. In contrast,
-    // sys.PhysPageSize is an upper-bound on the physical page size.
-    // maxPhysPageSize is the maximum page size the runtime supports.
-    // maxPhysHugePageSize sets an upper-bound on the maximum huge page size
-    // that the runtime supports.
-    // pagesPerReclaimerChunk indicates how many pages to scan from the
-    // pageInUse bitmap at a time. Used by the page reclaimer.
-    //
-    // Higher values reduce contention on scanning indexes (such as
-    // h.reclaimIndex), but increase the minimum latency of the
-    // operation.
-    //
-    // The time required to scan this many pages can vary a lot depending
-    // on how many spans are actually freed. Experimentally, it can
-    // scan for pages at ~300 GB/ms on a 2.6GHz Core i7, but can only
-    // free spans at ~32 MB/ms. Using 512 pages bounds this at
-    // roughly 100µs.
-    //
-    // Must be a multiple of the pageInUse bitmap element size and
-    // must also evenly divide pagesPerArena.
-    // physPageAlignedStacks indicates whether stack allocations must be
-    // physical page aligned. This is a requirement for MAP_STACK on
-    // OpenBSD.
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_0::operator T()
@@ -2171,10 +2147,6 @@ namespace golang::runtime
         std::tie(other->first, other->last) = std::tuple{nullptr, nullptr};
     }
 
-    // _KindSpecialReachable is a special used for tracking
-    // reachability during testing.
-    // _KindSpecialPinCounter is a special used for objects that are pinned
-    // multiple times
     
     template<typename T> requires gocpp::GoStruct<T>
     special::operator T()

@@ -170,10 +170,10 @@ namespace golang::runtime
 
     // minOffAddr is the minimum address in the offset space, and
     // it corresponds to the virtual address arenaBaseOffset.
+    golang::runtime::offAddr minOffAddr = golang::runtime::offAddr {arenaBaseOffset};
     // maxOffAddr is the maximum address in the offset address
     // space. It corresponds to the highest virtual address representable
     // by the page alloc chunk and heap arena maps.
-    golang::runtime::offAddr minOffAddr = golang::runtime::offAddr {arenaBaseOffset};
     golang::runtime::offAddr maxOffAddr = golang::runtime::offAddr {(((1 << heapAddrBits) - 1) + arenaBaseOffset) & uintptrMask};
     // offAddr represents an address in a contiguous view
     // of the address space on systems where the address space is

@@ -6,5 +6,6 @@
 
 namespace golang::bytealg
 {
+    // PrimeRK is the prime base used in Rabin-Karp algorithm.
     const long PrimeRK = 16777619;
 }

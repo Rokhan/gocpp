@@ -6,5 +6,7 @@
 
 namespace golang::syscall
 {
+    // Do the interface allocations only once for common
+    // Errno values.
     const long errnoERROR_IO_PENDING = 997;
 }

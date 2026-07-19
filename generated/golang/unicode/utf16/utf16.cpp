@@ -18,9 +18,6 @@ namespace golang::utf16
     {
     }
 
-    // 0xd800-0xdc00 encodes the high 10 bits of a pair.
-    // 0xdc00-0xe000 encodes the low 10 bits of a pair.
-    // the value is those 20 bits plus 0x10000.
     // IsSurrogate reports whether the specified Unicode code point
     // can appear in a surrogate pair.
     bool IsSurrogate(gocpp::rune r)

@@ -13,5 +13,32 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
+    // Timestamps in trace are produced through either nanotime or cputicks
+    // and divided by traceTimeDiv. nanotime is used everywhere except on
+    // platforms where osHasLowResClock is true, because the system clock
+    // isn't granular enough to get useful information out of a trace in
+    // many cases.
+    //
+    // This makes absolute values of timestamp diffs smaller, and so they are
+    // encoded in fewer bytes.
+    //
+    // The target resolution in all cases is 64 nanoseconds.
+    // This is based on the fact that fundamentally the execution tracer won't emit
+    // events more frequently than roughly every 200 ns or so, because that's roughly
+    // how long it takes to call through the scheduler.
+    // We could be more aggressive and bump this up to 128 ns while still getting
+    // useful data, but the extra bit doesn't save us that much and the headroom is
+    // nice to have.
+    //
+    // Hitting this target resolution is easy in the nanotime case: just pick a
+    // division of 64. In the cputicks case it's a bit more complex.
+    //
+    // For x86, on a 3 GHz machine, we'd want to divide by 3*64 to hit our target.
+    // To keep the division operation efficient, we round that up to 4*64, or 256.
+    // Given what cputicks represents, we use this on all other platforms except
+    // for PowerPC.
+    // The suggested increment frequency for PowerPC's time base register is
+    // 512 MHz according to Power ISA v2.07 section 6.2, so we use 32 on ppc64
+    // and ppc64le.
     const int traceTimeDiv = (1 - osHasLowResClockInt) * 64 + osHasLowResClockInt * (256 - 224 * (goarch::IsPpc64 | goarch::IsPpc64le));
 }

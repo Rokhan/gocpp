@@ -6,9 +6,12 @@
 
 namespace golang::abi
 {
+    // Map constants common to several packages
+    // runtime/runtime-gdb.py:MapTypePrinter contains its own copy
     const long MapBucketCountBits = 3;
     const long MapMaxKeyBytes = 128;
     const long MapMaxElemBytes = 128;
+    // ZeroValSize is the size in bytes of runtime.zeroVal.
     const long ZeroValSize = 1024;
     const int MapBucketCount = 1 << MapBucketCountBits;
 }

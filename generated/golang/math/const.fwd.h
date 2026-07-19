@@ -6,6 +6,7 @@
 
 namespace golang::math
 {
+    // Mathematical constants.
     const double E = 2.71828182845904523536028747135266249775724709369995957496696763;
     const double Pi = 3.14159265358979323846264338327950288419716939937510582097494459;
     const double Phi = 1.61803398874989484820458683436563811772030917980576286213544862;
@@ -15,10 +16,14 @@ namespace golang::math
     const double SqrtPhi = 1.27201964951406896425242246173749149171560804184009624861664038;
     const double Ln2 = 0.693147180559945309417232121458176568075500134360255254120680009;
     const double Ln10 = 2.30258509299404568401799145468436420760110148862877297603332790;
+    // Floating-point limit values.
+    // Max is the largest finite value representable by the type.
+    // SmallestNonzero is the smallest positive, non-zero value representable by the type.
     const double MaxFloat32 = 0x1p127 * (1 + (1 - 0x1p-23));
     const double SmallestNonzeroFloat32 = 0x1p-126 * 0x1p-23;
     const double MaxFloat64 = 0x1p1023 * (1 + (1 - 0x1p-52));
     const double SmallestNonzeroFloat64 = 0x1p-1022 * 0x1p-52;
+    // Integer limit values.
     const int intSize = 32 << (~ (unsigned int)(0) >> 63);
     const int MaxInt8 = (1 << 7) - 1;
     const int MinInt8 = - 1 << 7;

@@ -6,6 +6,8 @@
 
 namespace golang::runtime
 {
+    // The constant is known to the compiler.
+    // There is no fundamental theory behind this number.
     const long tmpStringBufSize = 32;
     struct GoTag_tmpBuf;
     using tmpBuf = gocpp::defined<gocpp::array<unsigned char, tmpStringBufSize>, GoTag_tmpBuf>;

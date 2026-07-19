@@ -46,8 +46,6 @@ namespace golang::png
         using mocklib::rec::Error;
     }
 
-    // Color type, as per the PNG spec.
-    // A cb is a combination of color type and bit depth.
     bool cbPaletted(int cb)
     {
         return cbP1 <= cb && cb <= cbP8;
@@ -58,8 +56,6 @@ namespace golang::png
         return cb == cbTC8 || cb == cbTC16;
     }
 
-    // Filter type, as per the PNG spec.
-    // Interlace type.
     // interlaceScan defines the placement and size of a pass for Adam7 interlacing.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -110,12 +106,6 @@ namespace golang::png
         {2, 2, 1, 0},
         {1, 2, 0, 1}
     };
-    // Decoding stage.
-    // The PNG specification says that the IHDR, PLTE (if present), tRNS (if
-    // present), IDAT and IEND chunks must appear in that order. There may be
-    // multiple IDAT chunks, and IDAT chunks must be sequential (i.e. they may not
-    // have any other chunks between them).
-    // https://www.w3.org/TR/PNG/#5ChunkOrdering
     
     template<typename T> requires gocpp::GoStruct<T>
     decoder::operator T()

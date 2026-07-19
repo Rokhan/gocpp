@@ -20,9 +20,6 @@ namespace golang::syscall
     {
     }
 
-    // Go names for Windows errors.
-    // Windows reserves errors >= 1<<29 for application use.
-    // Invented values to support what package os and others expects.
     // Error strings for invented errors
     gocpp::array<gocpp::string, 131> errors = gocpp::Init<gocpp::array<gocpp::string, 131>>([](auto& x) {
         x[go_E2BIG - APPLICATION_ERROR] = "argument list too long"_s;

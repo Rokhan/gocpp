@@ -775,7 +775,6 @@ namespace golang::syscall
         }
     }
 
-    // This matches the value in os/file_windows.go.
     struct gocpp::error UtimesNano(gocpp::string path, gocpp::slice<Timespec> ts)
     {
         gocpp::Defer defer;

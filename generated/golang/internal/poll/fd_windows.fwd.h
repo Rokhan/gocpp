@@ -7,6 +7,9 @@
 namespace golang::poll
 {
     using fileKind = unsigned char;
+    // Windows ReadFile and WSARecv use DWORD (uint32) parameter to pass buffer length.
+    // This prevents us reading blocks larger than 4GB.
+    // See golang.org/issue/26923.
     const int maxRW = 1 << 30;
     const golang::poll::fileKind kindNet = 0;
     const golang::poll::fileKind kindFile = 1;

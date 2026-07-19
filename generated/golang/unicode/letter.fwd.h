@@ -15,14 +15,20 @@ namespace golang::unicode
     struct Range32;
     struct CaseRange;
     struct GoTag_SpecialCase;
+    // Indices into the Delta arrays inside CaseRanges for case mapping.
     const int UpperCase = 0;
     const int LowerCase = 1;
     const int TitleCase = 2;
     const int MaxCase = 3;
     struct GoTag_d;
     using d = gocpp::defined<gocpp::array<gocpp::rune, MaxCase>, GoTag_d>;
+    // linearMax is the maximum size table for linear search for non-Latin1 rune.
+    // Derived by running 'go test -calibrate'.
     const long linearMax = 18;
     struct foldPair;
     using SpecialCase = gocpp::defined<gocpp::slice<golang::unicode::CaseRange>, GoTag_SpecialCase>;
+    // If the Delta field of a [CaseRange] is UpperLower, it means
+    // this CaseRange represents a sequence of the form (say)
+    // [Upper] [Lower] [Upper] [Lower].
     const gocpp::rune UpperLower = MaxRune + 1;
 }

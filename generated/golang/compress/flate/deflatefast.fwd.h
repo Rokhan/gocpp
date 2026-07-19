@@ -7,6 +7,10 @@
 namespace golang::flate
 {
     const long tableBits = 14;
+    // These constants are defined by the Snappy implementation so that its
+    // assembly implementation can fast-path some 16-bytes-at-a-time copies. They
+    // aren't necessary in the pure Go implementation, as we don't use those same
+    // optimizations, but using the same thresholds doesn't really hurt.
     const int inputMargin = 16 - 1;
     struct tableEntry;
     struct deflateFast;
@@ -19,6 +23,11 @@ namespace golang::flate
 
 namespace golang::flate
 {
+    // Reset the buffer offset when reaching this.
+    // Offsets are stored between blocks as int32 values.
+    // Since the offset we are checking against is at the beginning
+    // of the buffer, we need to subtract the current and input
+    // buffer to not risk overflowing the int32.
     const int bufferReset = math::MaxInt32 - maxStoreBlockSize * 2;
     const int tableMask = tableSize - 1;
 }

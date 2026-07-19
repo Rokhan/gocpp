@@ -6,9 +6,11 @@
 
 namespace golang::runtime
 {
+    // Numbers fundamental to the encoding.
     const char runeError = '\uFFFD';
     const long runeSelf = 0x80;
     const char maxRune = '\U0010FFFF';
+    // Code points in the surrogate range are not valid for UTF-8.
     const long surrogateMin = 0xD800;
     const long surrogateMax = 0xDFFF;
     const long t1 = 0x00;
@@ -24,6 +26,7 @@ namespace golang::runtime
     const int rune1Max = (1 << 7) - 1;
     const int rune2Max = (1 << 11) - 1;
     const int rune3Max = (1 << 16) - 1;
+    // The default lowest and highest continuation byte.
     const long locb = 0x80;
     const long hicb = 0xBF;
 }

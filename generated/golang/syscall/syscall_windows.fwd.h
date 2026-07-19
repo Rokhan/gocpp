@@ -10,6 +10,7 @@ namespace golang::syscall
     using Errno = uintptr_t;
     const uintptr_t ptrSize = gocpp::Sizeof<uintptr_t>();
     const bool ImplementsGetwd = true;
+    // This matches the value in os/file_windows.go.
     const long _UTIME_OMIT = - 1;
     const uintptr_t socket_error = uintptr_t(~ uint32_t(0));
     struct RawSockaddrInet4;

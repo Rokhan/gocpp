@@ -13,6 +13,11 @@ namespace golang::runtime
     struct callbackArgs;
     const long _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
     struct gocpp_id_0;
+    // maxArgs should be divisible by 2, as Windows stack
+    // must be kept 16-byte aligned on syscall entry.
+    //
+    // Although it only permits maximum 42 parameters, it
+    // is arguably large enough.
     const long maxArgs = 42;
     const golang::runtime::abiPartKind abiPartBad = 0;
     const golang::runtime::abiPartKind abiPartStack = 1;

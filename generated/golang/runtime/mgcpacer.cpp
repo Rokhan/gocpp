@@ -76,47 +76,6 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // gcGoalUtilization is the goal CPU utilization for
-    // marking as a fraction of GOMAXPROCS.
-    //
-    // Increasing the goal utilization will shorten GC cycles as the GC
-    // has more resources behind it, lessening costs from the write barrier,
-    // but comes at the cost of increasing mutator latency.
-    // gcBackgroundUtilization is the fixed CPU utilization for background
-    // marking. It must be <= gcGoalUtilization. The difference between
-    // gcGoalUtilization and gcBackgroundUtilization will be made up by
-    // mark assists. The scheduler will aim to use within 50% of this
-    // goal.
-    //
-    // As a general rule, there's little reason to set gcBackgroundUtilization
-    // < gcGoalUtilization. One reason might be in mostly idle applications,
-    // where goroutines are unlikely to assist at all, so the actual
-    // utilization will be lower than the goal. But this is moot point
-    // because the idle mark workers already soak up idle CPU resources.
-    // These two values are still kept separate however because they are
-    // distinct conceptually, and in previous iterations of the pacer the
-    // distinction was more important.
-    // gcCreditSlack is the amount of scan work credit that can
-    // accumulate locally before updating gcController.heapScanWork and,
-    // optionally, gcController.bgScanCredit. Lower values give a more
-    // accurate assist ratio and make it more likely that assists will
-    // successfully steal background credit. Higher values reduce memory
-    // contention.
-    // gcAssistTimeSlack is the nanoseconds of mutator assist time that
-    // can accumulate on a P before updating gcController.assistTime.
-    // gcOverAssistWork determines how many extra units of scan work a GC
-    // assist does when an assist happens. This amortizes the cost of an
-    // assist by pre-paying for this many bytes of future allocations.
-    // defaultHeapMinimum is the value of heapMinimum for GOGC==100.
-    // maxStackScanSlack is the bytes of stack space allocated or freed
-    // that can accumulate on a P before updating gcController.stackSize.
-    // memoryLimitMinHeapGoalHeadroom is the minimum amount of headroom the
-    // pacer gives to the heap goal when operating in the memory-limited regime.
-    // That is, it'll reduce the heap goal by this many extra bytes off of the
-    // base calculation, at minimum.
-    // memoryLimitHeapGoalHeadroomPercent is how headroom the memory-limit-based
-    // heap goal should have as a percent of the maximum possible heap goal allowed
-    // to maintain the memory limit.
     // gcController implements the GC pacing controller that determines
     // when to trigger concurrent garbage collection and how much marking
     // work to do in mutator assists and background marking.
@@ -1044,19 +1003,6 @@ namespace golang::runtime
         return goal;
     }
 
-    // These constants determine the bounds on the GC trigger as a fraction
-    // of heap bytes allocated between the start of a GC (heapLive == heapMarked)
-    // and the end of a GC (heapLive == heapGoal).
-    //
-    // The constants are obscured in this way for efficiency. The denominator
-    // of the fraction is always a power-of-two for a quick division, so that
-    // the numerator is a single constant integer multiplication.
-    // The minimum trigger constant was chosen empirically: given a sufficiently
-    // fast/scalable allocator with 48 Ps that could drive the trigger ratio
-    // to <0.05, this constant causes applications to retain the same peak
-    // RSS compared to not having this allocator.
-    // The maximum trigger constant is chosen somewhat arbitrarily, but the
-    // current constant has served us well over the years.
     // trigger returns the current point at which a GC should trigger along with
     // the heap goal.
     //

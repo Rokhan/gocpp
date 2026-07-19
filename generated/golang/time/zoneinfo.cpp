@@ -159,8 +159,6 @@ namespace golang::time
         return value.PrintTo(os);
     }
 
-    // alpha and omega are the beginning and end of time for zone
-    // transitions.
     // UTC represents Universal Coordinated Time (UTC).
     golang::time::Location* UTC = & utcLoc;
     // utcLoc is separate so that get can refer to &utcLoc

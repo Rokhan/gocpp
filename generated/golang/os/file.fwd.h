@@ -6,6 +6,9 @@
 
 namespace golang::os
 {
+    // Seek whence values.
+    //
+    // Deprecated: Use io.SeekStart, io.SeekCurrent, and io.SeekEnd.
     const int SEEK_SET = 0;
     const int SEEK_CUR = 1;
     const int SEEK_END = 2;
@@ -19,9 +22,13 @@ namespace golang::os
 
 namespace golang::os
 {
+    // Flags to OpenFile wrapping those of the underlying system. Not all
+    // flags may be implemented on a given system.
+    // Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.
     const int O_RDONLY = syscall::O_RDONLY;
     const int O_WRONLY = syscall::O_WRONLY;
     const int O_RDWR = syscall::O_RDWR;
+    // The remaining values may be or'ed in to control behavior.
     const int O_APPEND = syscall::O_APPEND;
     const int O_CREATE = syscall::O_CREAT;
     const int O_EXCL = syscall::O_EXCL;

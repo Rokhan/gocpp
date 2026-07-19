@@ -83,13 +83,6 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // concurrentSweep is a debug flag. Disabling this flag
-    // ensures all spans are swept while the world is stopped.
-    // debugScanConservative enables debug logging for stack
-    // frames that are scanned conservatively.
-    // sweepMinHeapDistance is a lower bound on the heap distance
-    // (in bytes) reserved for concurrent sweeping between GC
-    // cycles.
     // heapObjectsCanMove always returns false in the current garbage collector.
     // It exists for go4.org/unsafe/assume-no-moving-gc, which is an
     // unfortunate idea that had an even more unfortunate implementation.
@@ -212,23 +205,6 @@ namespace golang::runtime
     // is mutator assists, which happen in response to allocations and are
     // not scheduled. The other three are variations in the per-P mark
     // workers and are distinguished by gcMarkWorkerMode.
-    // gcMarkWorkerNotWorker indicates that the next scheduled G is not
-    // starting work and the mode should be ignored.
-    // gcMarkWorkerDedicatedMode indicates that the P of a mark
-    // worker is dedicated to running that mark worker. The mark
-    // worker should run without preemption.
-    // gcMarkWorkerFractionalMode indicates that a P is currently
-    // running the "fractional" mark worker. The fractional worker
-    // is necessary when GOMAXPROCS*gcBackgroundUtilization is not
-    // an integer and using only dedicated workers would result in
-    // utilization too far from the target of gcBackgroundUtilization.
-    // The fractional worker should run until it is preempted and
-    // will be scheduled to pick up the fractional part of
-    // GOMAXPROCS*gcBackgroundUtilization.
-    // gcMarkWorkerIdleMode indicates that a P is running the mark
-    // worker because it has nothing else to do. The idle worker
-    // should run until it is preempted and account its time
-    // against gcController.idleMarkTime.
     // gcMarkWorkerModeStrings are the strings labels of gcMarkWorkerModes
     // to use in execution traces.
     gocpp::array<gocpp::string, 4> gcMarkWorkerModeStrings = gocpp::array<gocpp::string, 4> {
@@ -653,15 +629,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // gcTriggerHeap indicates that a cycle should be started when
-    // the heap size reaches the trigger heap size computed by the
-    // controller.
-    // gcTriggerTime indicates that a cycle should be started when
-    // it's been more than forcegcperiod nanoseconds since the
-    // previous GC cycle.
-    // gcTriggerCycle indicates that a cycle should be started if
-    // we have not yet started cycle number gcTrigger.n (relative
-    // to work.cycles).
     // test reports whether the trigger condition is satisfied, meaning
     // that the exit condition for the _GCoff phase has been met. The exit
     // condition should be tested when allocating.

@@ -104,13 +104,6 @@ namespace golang::os
     File* Stdin = NewFile(uintptr_t(syscall::Stdin), "/dev/stdin"_s);
     File* Stdout = NewFile(uintptr_t(syscall::Stdout), "/dev/stdout"_s);
     File* Stderr = NewFile(uintptr_t(syscall::Stderr), "/dev/stderr"_s);
-    // Flags to OpenFile wrapping those of the underlying system. Not all
-    // flags may be implemented on a given system.
-    // Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.
-    // The remaining values may be or'ed in to control behavior.
-    // Seek whence values.
-    //
-    // Deprecated: Use io.SeekStart, io.SeekCurrent, and io.SeekEnd.
     // LinkError records an error during a link or symlink or rename
     // system call and the paths that caused it.
     

@@ -28,8 +28,6 @@ namespace golang::syscall
     }
 
     gocpp::unsafe_pointer _;
-    // Do the interface allocations only once for common
-    // Errno values.
     gocpp::error errERROR_IO_PENDING = Errno(errnoERROR_IO_PENDING);
     gocpp::error errERROR_EINVAL = go_EINVAL;
     // errnoErr returns common boxed Errno values, to prevent

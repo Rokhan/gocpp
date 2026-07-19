@@ -6,6 +6,11 @@
 
 namespace golang::runtime
 {
+    // Keep a cached value to make gotraceback fast,
+    // since we call it on every call to gentraceback.
+    // The cached value is a uint32 in which the low bits
+    // are the "crash" and "all" settings and the remaining
+    // bits are the traceback value (0 off, 1 on, 2 include system).
     const int tracebackCrash = 1 << 0;
     const int tracebackAll = 1 << 1;
     const int tracebackShift = 2;

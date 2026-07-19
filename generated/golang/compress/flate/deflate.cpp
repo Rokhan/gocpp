@@ -27,23 +27,6 @@ namespace golang::flate
         using io::rec::Write;
     }
 
-    // HuffmanOnly disables Lempel-Ziv match searching and only performs Huffman
-    // entropy encoding. This mode is useful in compressing data that has
-    // already been compressed with an LZ style algorithm (e.g. Snappy or LZ4)
-    // that lacks an entropy encoder. Compression gains are achieved when
-    // certain bytes in the input stream occur more frequently than others.
-    //
-    // Note that HuffmanOnly produces a compressed output that is
-    // RFC 1951 compliant. That is, any valid DEFLATE decompressor will
-    // continue to be able to decompress this output.
-    // The LZ77 step produces a sequence of literal tokens and <length, offset>
-    // pair tokens. The offset is also known as distance. The underlying wire
-    // format limits the range of lengths and offsets. For example, there are
-    // 256 legitimate lengths: those in the range [3, 258]. This package's
-    // compressor uses a higher minimum match length, enabling optimizations
-    // such as finding matches via 32-bit loads and compares.
-    // The maximum number of tokens we put into a single flate block, just to
-    // stop things from getting too large.
     
     template<typename T> requires gocpp::GoStruct<T>
     compressionLevel::operator T()

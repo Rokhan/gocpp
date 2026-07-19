@@ -94,11 +94,6 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    // dequeueLimit is the maximum size of a poolDequeue.
-    //
-    // This must be at most (1<<dequeueBits)/2 because detecting fullness
-    // depends on wrapping around the ring buffer without wrapping around
-    // the index. We divide by 4 so this fits in an int on 32-bit.
     struct gocpp_id_0
     {
 

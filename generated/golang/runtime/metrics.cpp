@@ -1063,8 +1063,6 @@ namespace golang::runtime
 
     // metricKind is a runtime copy of runtime/metrics.ValueKind and
     // must be kept structurally identical to that type.
-    // These values must be kept identical to their corresponding Kind* values
-    // in the runtime/metrics package.
     // metricSample is a runtime copy of runtime/metrics.Sample and
     // must be kept structurally identical to that type.
     

@@ -6,7 +6,14 @@
 
 namespace golang::runtime
 {
+    // Maximum number of PCs in a single stack trace.
+    // Since events contain only stack id rather than whole stack trace,
+    // we can allow quite large values here.
     const long traceStackSize = 128;
+    // logicalStackSentinel is a sentinel value at pcBuf[0] signifying that
+    // pcBuf[1:] holds a logical stack requiring no further processing. Any other
+    // value at pcBuf[0] represents a skip value to apply to the physical stack in
+    // pcBuf[1:] after inline expansion.
     const uintptr_t logicalStackSentinel = ~ uintptr_t(0);
     struct traceFrame;
 }

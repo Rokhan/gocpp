@@ -33,15 +33,6 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // profBufWordCount is the size of the CPU profile buffer's storage for the
-    // header and stack of each sample, measured in 64-bit words. Every sample
-    // has a required header of two words. With a small additional header (a
-    // word or two) and stacks at the profiler's maximum length of 64 frames,
-    // that capacity can support 1900 samples or 19 thread-seconds at a 100 Hz
-    // sample rate, at a cost of 1 MiB.
-    // profBufTagCount is the size of the CPU profile buffer's storage for the
-    // goroutine tags associated with each sample. A capacity of 1<<14 means
-    // room for 16k samples, or 160 thread-seconds at a 100 Hz sample rate.
     
     template<typename T> requires gocpp::GoStruct<T>
     cpuProfile::operator T()

@@ -17,8 +17,5 @@ namespace golang::abi
     {
     }
 
-    // Map constants common to several packages
-    // runtime/runtime-gdb.py:MapTypePrinter contains its own copy
-    // ZeroValSize is the size in bytes of runtime.zeroVal.
 }
 

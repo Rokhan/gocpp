@@ -19,11 +19,9 @@ namespace golang::bytealg
     {
     }
 
-    // Offsets into internal/cpu records for use in assembly.
     // MaxLen is the maximum length of the string to be searched for (argument b) in Index.
     // If MaxLen is not 0, make sure MaxLen >= 4.
     int MaxLen;
-    // PrimeRK is the prime base used in Rabin-Karp algorithm.
     // HashStr returns the hash and the appropriate multiplicative
     // factor for use in Rabin-Karp algorithm.
     template<typename T>

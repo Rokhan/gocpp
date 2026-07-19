@@ -28,6 +28,7 @@ namespace golang::reflectlite
     using sliceType = abi::SliceType;
     using structType = abi::StructType;
     const abi::Kind Ptr = abi::Pointer;
+    // Import-and-export these constants as necessary
     const abi::Kind Interface = abi::Interface;
     const abi::Kind Slice = abi::Slice;
     const abi::Kind String = abi::String;

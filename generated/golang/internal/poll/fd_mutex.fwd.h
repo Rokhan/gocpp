@@ -7,6 +7,13 @@
 namespace golang::poll
 {
     struct fdMutex;
+    // fdMutex.state is organized as follows:
+    // 1 bit - whether FD is closed, if set all subsequent lock operations will fail.
+    // 1 bit - lock for read operations.
+    // 1 bit - lock for write operations.
+    // 20 bits - total number of references (read+write+misc).
+    // 20 bits - number of outstanding read waiters.
+    // 20 bits - number of outstanding write waiters.
     const int mutexClosed = 1 << 0;
     const int mutexRLock = 1 << 1;
     const int mutexWLock = 1 << 2;

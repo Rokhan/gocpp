@@ -84,23 +84,6 @@ namespace golang::runtime
     }
 
 
-    // Maximum number of key/elem pairs a bucket can hold.
-    // Maximum average load of a bucket that triggers growth is bucketCnt*13/16 (about 80% full)
-    // Because of minimum alignment rules, bucketCnt is known to be at least 8.
-    // Represent as loadFactorNum/loadFactorDen, to allow integer math.
-    // Maximum key or elem size to keep inline (instead of mallocing per element).
-    // Must fit in a uint8.
-    // Fast versions cannot handle big elems - the cutoff size for
-    // fast versions in cmd/compile/internal/gc/walk.go must be at most this elem.
-    // data offset should be the size of the bmap struct, but needs to be
-    // aligned correctly. For amd64p32 this means 64-bit alignment
-    // even though pointers are 32 bit.
-    // Possible tophash values. We reserve a few possibilities for special marks.
-    // Each bucket (including its overflow buckets, if any) will have either all or none of its
-    // entries in the evacuated* states (except during the evacuate() method, which only happens
-    // during map writes and thus no one else can observe the map during that time).
-    // flags
-    // sentinel bucket ID for iterator checks
     // isEmpty reports whether the given tophash array entry represents an empty bucket entry.
     bool isEmpty(uint8_t x)
     {

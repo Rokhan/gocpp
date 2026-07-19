@@ -20,7 +20,6 @@ namespace golang::unicode
     {
     }
 
-    // Version is the Unicode edition from which the tables are derived.
     // Categories is the set of Unicode category tables.
     gocpp::map<gocpp::string, golang::unicode::RangeTable*> Categories = gocpp::map<gocpp::string, golang::unicode::RangeTable*> {
         { "C"_s, C },

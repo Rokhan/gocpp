@@ -52,10 +52,10 @@ namespace golang::zlib
     }
 
     // ErrChecksum is returned when reading ZLIB data that has an invalid checksum.
-    // ErrDictionary is returned when reading ZLIB data that has an invalid dictionary.
-    // ErrHeader is returned when reading ZLIB data that has an invalid header.
     gocpp::error ErrChecksum = errors::New("zlib: invalid checksum"_s);
+    // ErrDictionary is returned when reading ZLIB data that has an invalid dictionary.
     gocpp::error ErrDictionary = errors::New("zlib: invalid dictionary"_s);
+    // ErrHeader is returned when reading ZLIB data that has an invalid header.
     gocpp::error ErrHeader = errors::New("zlib: invalid header"_s);
     
     template<typename T> requires gocpp::GoStruct<T>

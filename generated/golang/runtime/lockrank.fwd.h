@@ -7,6 +7,10 @@
 namespace golang::runtime
 {
     using lockRank = int;
+    // Constants representing the ranks of all non-leaf runtime locks, in rank order.
+    // Locks with lower rank must be taken before locks with higher rank,
+    // in addition to satisfying the partial order in lockPartialOrder.
+    // A few ranks allow self-cycles, which are specified in lockPartialOrder.
     const golang::runtime::lockRank lockRankUnknown = 0;
     const golang::runtime::lockRank lockRankSysmon = 1;
     const golang::runtime::lockRank lockRankScavenge = 2;
@@ -22,6 +26,7 @@ namespace golang::runtime
     const golang::runtime::lockRank lockRankCpuprof = 12;
     const golang::runtime::lockRank lockRankPollDesc = 13;
     const golang::runtime::lockRank lockRankWakeableSleep = 14;
+    // SCHED
     const golang::runtime::lockRank lockRankAllocmR = 15;
     const golang::runtime::lockRank lockRankExecR = 16;
     const golang::runtime::lockRank lockRankSched = 17;
@@ -36,24 +41,30 @@ namespace golang::runtime
     const golang::runtime::lockRank lockRankItab = 26;
     const golang::runtime::lockRank lockRankReflectOffs = 27;
     const golang::runtime::lockRank lockRankUserArenaState = 28;
+    // TRACEGLOBAL
     const golang::runtime::lockRank lockRankTraceBuf = 29;
     const golang::runtime::lockRank lockRankTraceStrings = 30;
+    // MALLOC
     const golang::runtime::lockRank lockRankFin = 31;
     const golang::runtime::lockRank lockRankSpanSetSpine = 32;
     const golang::runtime::lockRank lockRankMspanSpecial = 33;
+    // MPROF
     const golang::runtime::lockRank lockRankGcBitsArenas = 34;
     const golang::runtime::lockRank lockRankProfInsert = 35;
     const golang::runtime::lockRank lockRankProfBlock = 36;
     const golang::runtime::lockRank lockRankProfMemActive = 37;
     const golang::runtime::lockRank lockRankProfMemFuture = 38;
+    // STACKGROW
     const golang::runtime::lockRank lockRankGscan = 39;
     const golang::runtime::lockRank lockRankStackpool = 40;
     const golang::runtime::lockRank lockRankStackLarge = 41;
     const golang::runtime::lockRank lockRankHchanLeaf = 42;
+    // WB
     const golang::runtime::lockRank lockRankWbufSpans = 43;
     const golang::runtime::lockRank lockRankMheap = 44;
     const golang::runtime::lockRank lockRankMheapSpecial = 45;
     const golang::runtime::lockRank lockRankGlobalAlloc = 46;
+    // TRACE
     const golang::runtime::lockRank lockRankTrace = 47;
     const golang::runtime::lockRank lockRankTraceStackTab = 48;
     const golang::runtime::lockRank lockRankPanic = 49;
@@ -62,5 +73,7 @@ namespace golang::runtime
     const golang::runtime::lockRank lockRankAllocmRInternal = 52;
     const golang::runtime::lockRank lockRankExecRInternal = 53;
     const golang::runtime::lockRank lockRankTestRInternal = 54;
+    // lockRankLeafRank is the rank of lock that does not have a declared rank,
+    // and hence is a leaf lock.
     const golang::runtime::lockRank lockRankLeafRank = 1000;
 }

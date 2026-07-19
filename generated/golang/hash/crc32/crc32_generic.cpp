@@ -63,7 +63,6 @@ namespace golang::crc32
         return ~ crc;
     }
 
-    // Use slicing-by-8 when payload >= this value.
     // slicing8Table is array of 8 Tables, used by the slicing-by-8 algorithm.
     // slicingMakeTable constructs a slicing8Table for the specified polynomial. The
     // table is suitable for use with the slicing-by-8 algorithm (slicingUpdate).

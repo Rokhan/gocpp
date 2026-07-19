@@ -6,11 +6,13 @@
 
 namespace golang::png
 {
+    // Color type, as per the PNG spec.
     const long ctGrayscale = 0;
     const long ctTrueColor = 2;
     const long ctPaletted = 3;
     const long ctGrayscaleAlpha = 4;
     const long ctTrueColorAlpha = 6;
+    // A cb is a combination of color type and bit depth.
     const int cbInvalid = 0;
     const int cbG1 = 1;
     const int cbG2 = 2;
@@ -27,15 +29,23 @@ namespace golang::png
     const int cbGA16 = 13;
     const int cbTC16 = 14;
     const int cbTCA16 = 15;
+    // Filter type, as per the PNG spec.
     const long ftNone = 0;
     const long ftSub = 1;
     const long ftUp = 2;
     const long ftAverage = 3;
     const long ftPaeth = 4;
     const long nFilter = 5;
+    // Interlace type.
     const long itNone = 0;
     const long itAdam7 = 1;
     struct interlaceScan;
+    // Decoding stage.
+    // The PNG specification says that the IHDR, PLTE (if present), tRNS (if
+    // present), IDAT and IEND chunks must appear in that order. There may be
+    // multiple IDAT chunks, and IDAT chunks must be sequential (i.e. they may not
+    // have any other chunks between them).
+    // https://www.w3.org/TR/PNG/#5ChunkOrdering
     const int dsStart = 0;
     const int dsSeenIHDR = 1;
     const int dsSeenPLTE = 2;

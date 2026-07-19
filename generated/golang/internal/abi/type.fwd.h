@@ -8,6 +8,7 @@ namespace golang::abi
 {
     struct Type;
     using Kind = unsigned int;
+    // TODO (khr, drchase) why aren't these in TFlag?  Investigate, fix if possible.
     const int KindDirectIface = 1 << 5;
     const int KindGCProg = 1 << 6;
     const int KindMask = (1 << 5) - 1;
@@ -57,10 +58,36 @@ namespace golang::abi
     const golang::abi::Kind String = 24;
     const golang::abi::Kind Struct = 25;
     const golang::abi::Kind UnsafePointer = 26;
+    // TFlagUncommon means that there is a data with a type, UncommonType,
+    // just beyond the shared-per-type common data.  That is, the data
+    // for struct types will store their UncommonType at one offset, the
+    // data for interface types will store their UncommonType at a different
+    // offset.  UncommonType is always accessed via a pointer that is computed
+    // using trust-us-we-are-the-implementors pointer arithmetic.
+    //
+    // For example, if t.Kind() == Struct and t.tflag&TFlagUncommon != 0,
+    // then t has UncommonType data and it can be accessed as:
+    //
+    //	type structTypeUncommon struct {
+    //		structType
+    //		u UncommonType
+    //	}
+    //	u := &(*structTypeUncommon)(unsafe.Pointer(t)).u
     const golang::abi::TFlag TFlagUncommon = 1 << 0;
+    // TFlagExtraStar means the name in the str field has an
+    // extraneous '*' prefix. This is because for most types T in
+    // a program, the type *T also exists and reusing the str data
+    // saves binary size.
     const golang::abi::TFlag TFlagExtraStar = 1 << 1;
+    // TFlagNamed means the type has a name.
     const golang::abi::TFlag TFlagNamed = 1 << 2;
+    // TFlagRegularMemory means that equal and hash functions can treat
+    // this type as a single region of t.size bytes.
     const golang::abi::TFlag TFlagRegularMemory = 1 << 3;
+    // TFlagUnrolledBitmap marks special types that are unrolled-bitmap
+    // versions of types with GC programs.
+    // These types need to be deallocated when the underlying object
+    // is freed.
     const golang::abi::TFlag TFlagUnrolledBitmap = 1 << 4;
     const golang::abi::ChanDir RecvDir = 1 << 0;
     const golang::abi::ChanDir SendDir = 1 << 1;

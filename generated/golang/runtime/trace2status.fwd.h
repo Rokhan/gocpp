@@ -17,6 +17,15 @@ namespace golang::runtime
     const golang::runtime::traceProcStatus traceProcRunning = 1;
     const golang::runtime::traceProcStatus traceProcIdle = 2;
     const golang::runtime::traceProcStatus traceProcSyscall = 3;
+    // traceProcSyscallAbandoned is a special case of
+    // traceProcSyscall. It's used in the very specific case
+    // where the first a P is mentioned in a generation is
+    // part of a ProcSteal event. If that's the first time
+    // it's mentioned, then there's no GoSyscallBegin to
+    // connect the P stealing back to at that point. This
+    // special state indicates this to the parser, so it
+    // doesn't try to find a GoSyscallEndBlocked that
+    // corresponds with the ProcSteal.
     const golang::runtime::traceProcStatus traceProcSyscallAbandoned = 4;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"

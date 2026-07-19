@@ -6,8 +6,21 @@
 
 namespace golang::runtime
 {
+    // testSmallBuf forces a small write barrier buffer to stress write
+    // barrier flushing.
     const bool testSmallBuf = false;
     struct wbBuf;
+    // wbBufEntries is the maximum number of pointers that can be
+    // stored in the write barrier buffer.
+    //
+    // This trades latency for throughput amortization. Higher
+    // values amortize flushing overhead more, but increase the
+    // latency of flushing. Higher values also increase the cache
+    // footprint of the buffer.
+    //
+    // TODO: What is the latency cost of this? Tune this value.
     const long wbBufEntries = 512;
+    // Maximum number of entries that we need to ask from the
+    // buffer in a single call.
     const long wbMaxEntriesPerCall = 8;
 }

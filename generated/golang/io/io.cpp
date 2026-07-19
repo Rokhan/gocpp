@@ -31,7 +31,6 @@ namespace golang::io
         using sync::rec::Put;
     }
 
-    // Seek whence values.
     // ErrShortWrite means that a write accepted fewer bytes than requested
     // but failed to return an explicit error.
     gocpp::error ErrShortWrite = errors::New("short write"_s);

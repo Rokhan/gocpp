@@ -20,13 +20,6 @@ namespace golang::utf8
     {
     }
 
-    // Numbers fundamental to the encoding.
-    // Code points in the surrogate range are not valid for UTF-8.
-    // The default lowest and highest continuation byte.
-    // These names of these constants are chosen to give nice alignment in the
-    // table below. The first nibble is an index into acceptRanges or F for
-    // special one-byte cases. The second nibble is the Rune length or the
-    // Status for the special one-byte case.
     // first is information about the first byte in a UTF-8 sequence.
     gocpp::array<uint8_t, 256> first = gocpp::array<uint8_t, 256> {
         // 1   2   3   4   5   6   7   8   9   A   B   C   D   E   F

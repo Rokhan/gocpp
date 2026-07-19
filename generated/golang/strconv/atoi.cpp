@@ -120,7 +120,6 @@ namespace golang::strconv
         return new golang::strconv::NumError {fn, cloneString(str), errors::New("invalid bit size "_s + Itoa(bitSize))};
     }
 
-    // IntSize is the size in bits of an int or uint value.
     // ParseUint is like ParseInt but for unsigned numbers.
     //
     // A sign prefix is not permitted.

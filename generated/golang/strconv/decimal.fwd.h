@@ -7,6 +7,8 @@
 namespace golang::strconv
 {
     struct decimal;
+    // Maximum shift that we can do in one pass without overflow.
+    // A uint has 32 or 64 bits, and we have to be able to accommodate 9<<k.
     const int uintSize = 32 << (~ (unsigned int)(0) >> 63);
     struct leftCheat;
     const int maxShift = uintSize - 4;

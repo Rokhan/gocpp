@@ -10,13 +10,30 @@ namespace golang::flate
     const long BestSpeed = 1;
     const long BestCompression = 9;
     const long DefaultCompression = - 1;
+    // HuffmanOnly disables Lempel-Ziv match searching and only performs Huffman
+    // entropy encoding. This mode is useful in compressing data that has
+    // already been compressed with an LZ style algorithm (e.g. Snappy or LZ4)
+    // that lacks an entropy encoder. Compression gains are achieved when
+    // certain bytes in the input stream occur more frequently than others.
+    //
+    // Note that HuffmanOnly produces a compressed output that is
+    // RFC 1951 compliant. That is, any valid DEFLATE decompressor will
+    // continue to be able to decompress this output.
     const long HuffmanOnly = - 2;
     const long logWindowSize = 15;
+    // The LZ77 step produces a sequence of literal tokens and <length, offset>
+    // pair tokens. The offset is also known as distance. The underlying wire
+    // format limits the range of lengths and offsets. For example, there are
+    // 256 legitimate lengths: those in the range [3, 258]. This package's
+    // compressor uses a higher minimum match length, enabling optimizations
+    // such as finding matches via 32-bit loads and compares.
     const long baseMatchLength = 3;
     const long minMatchLength = 4;
     const long maxMatchLength = 258;
     const long baseMatchOffset = 1;
     const int maxMatchOffset = 1 << 15;
+    // The maximum number of tokens we put into a single flate block, just to
+    // stop things from getting too large.
     const int maxFlateBlockTokens = 1 << 14;
     const long maxStoreBlockSize = 65535;
     const long hashBits = 17;

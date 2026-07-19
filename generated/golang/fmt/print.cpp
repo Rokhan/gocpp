@@ -62,8 +62,6 @@ namespace golang::fmt
         using sync::rec::Put;
     }
 
-    // Strings for use with buffer.WriteString.
-    // This is less overhead than using buffer.Write with byte arrays.
     // State represents the printer state passed to custom formatters.
     // It provides access to the io.Writer interface plus information about
     // the flags and options for the operand's format specifier.

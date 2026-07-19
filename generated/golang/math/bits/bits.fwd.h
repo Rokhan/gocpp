@@ -7,6 +7,7 @@
 namespace golang::bits
 {
     const int uintSize = 32 << (~ (unsigned int)(0) >> 63);
+    // See http://supertech.csail.mit.edu/papers/debruijn.pdf
     const long deBruijn32 = 0x077CB531;
     const long deBruijn64 = 0x03f79d71b4ca8b09;
     const long m0 = 0x5555555555555555;
@@ -14,5 +15,6 @@ namespace golang::bits
     const long m2 = 0x0f0f0f0f0f0f0f0f;
     const long m3 = 0x00ff00ff00ff00ff;
     const long m4 = 0x0000ffff0000ffff;
+    // UintSize is the size of a uint in bits.
     const int UintSize = uintSize;
 }

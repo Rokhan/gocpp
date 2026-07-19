@@ -7,6 +7,8 @@
 namespace golang::poll
 {
     struct pollDesc;
+    // Error values returned by runtime_pollReset and runtime_pollWait.
+    // These must match the values in runtime/netpoll.go.
     const long pollNoError = 0;
     const long pollErrClosing = 1;
     const long pollErrTimeout = 2;

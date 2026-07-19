@@ -56,13 +56,6 @@ namespace golang::runtime
     {
     }
 
-    // Maximum number of PCs in a single stack trace.
-    // Since events contain only stack id rather than whole stack trace,
-    // we can allow quite large values here.
-    // logicalStackSentinel is a sentinel value at pcBuf[0] signifying that
-    // pcBuf[1:] holds a logical stack requiring no further processing. Any other
-    // value at pcBuf[0] represents a skip value to apply to the physical stack in
-    // pcBuf[1:] after inline expansion.
     // traceStack captures a stack trace and registers it in the trace stack table.
     // It then returns its unique ID.
     //
@@ -360,8 +353,6 @@ namespace golang::runtime
             return pcBuf.make_slice(1);
         }
 
-        // skipOrAdd skips or appends retPC to newPCBuf and returns true if more
-        // pcs can be added.
         auto lastFuncID = abi::FuncIDNormal;
         auto newPCBuf = gocpp::make(gocpp::Tag<gocpp::slice<uintptr_t>>(), 0, traceStackSize);
         auto skip = pcBuf[0];

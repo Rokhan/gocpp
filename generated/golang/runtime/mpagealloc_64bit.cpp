@@ -35,13 +35,6 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // The number of levels in the radix tree.
-    // Constants for testing.
-    // Number of bits needed to represent all indices into the L1 of the
-    // chunks map.
-    //
-    // See (*pageAlloc).chunks for more details. Update the documentation
-    // there should this number change.
     // levelBits is the number of bits in the radix for a given level in the super summary
     // structure.
     //

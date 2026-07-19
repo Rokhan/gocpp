@@ -11,7 +11,12 @@ namespace golang::time
     const long nsecShift = 30;
     using Month = int;
     using Weekday = int;
+    // The unsigned zero year for internal calculations.
+    // Must be 1 mod 400, and times before it will not compute correctly,
+    // but otherwise can be changed at will.
     const long absoluteZeroYear = - 292277022399;
+    // The year of the zero Time.
+    // Assumed by the unixToInternal computation below.
     const long internalYear = 1;
     using Duration = int64_t;
     const long secondsPerMinute = 60;
@@ -41,6 +46,18 @@ namespace golang::time
     const golang::time::Weekday Saturday = 6;
     const golang::time::Duration minDuration = - 1 << 63;
     const golang::time::Duration maxDuration = (1 << 63) - 1;
+    // Common durations. There is no definition for units of Day or larger
+    // to avoid confusion across daylight savings time zone transitions.
+    //
+    // To count the number of units in a Duration, divide:
+    //
+    //	second := time.Second
+    //	fmt.Print(int64(second/time.Millisecond)) // prints 1000
+    //
+    // To convert an integer number of units to a Duration, multiply:
+    //
+    //	seconds := 10
+    //	fmt.Print(time.Duration(seconds)*time.Second) // prints 10s
     const golang::time::Duration Nanosecond = 1;
     const int secondsPerHour = 60 * secondsPerMinute;
 }
@@ -51,6 +68,7 @@ namespace golang::time
     struct Time;
     const Duration Microsecond = 1000 * Nanosecond;
     const int secondsPerDay = 24 * secondsPerHour;
+    // Offsets to convert between internal and absolute or Unix times.
     const int64_t absoluteToInternal = (absoluteZeroYear - internalYear) * 365.2425 * secondsPerDay;
     const int64_t unixToInternal = (1969 * 365 + 1969 / 4 - 1969 / 100 + 1969 / 400) * secondsPerDay;
     const int64_t wallToInternal = (1884 * 365 + 1884 / 4 - 1884 / 100 + 1884 / 400) * secondsPerDay;

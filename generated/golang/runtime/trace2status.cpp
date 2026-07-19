@@ -62,15 +62,6 @@ namespace golang::runtime
     // traceProcStatus is the status of a P.
     //
     // They mostly correspond to the various P statuses.
-    // traceProcSyscallAbandoned is a special case of
-    // traceProcSyscall. It's used in the very specific case
-    // where the first a P is mentioned in a generation is
-    // part of a ProcSteal event. If that's the first time
-    // it's mentioned, then there's no GoSyscallBegin to
-    // connect the P stealing back to at that point. This
-    // special state indicates this to the parser, so it
-    // doesn't try to find a GoSyscallEndBlocked that
-    // corresponds with the ProcSteal.
     // writeGoStatus emits a GoStatus event as well as any active ranges on the goroutine.
     golang::runtime::traceWriter rec::writeGoStatus(traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist)
     {

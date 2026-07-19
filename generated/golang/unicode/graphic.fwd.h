@@ -6,6 +6,7 @@
 
 namespace golang::unicode
 {
+    // Bit masks for each code point under U+0100, for fast lookup.
     const int pC = 1 << 0;
     const int pP = 1 << 1;
     const int pN = 1 << 2;

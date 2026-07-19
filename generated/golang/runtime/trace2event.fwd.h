@@ -9,6 +9,7 @@ namespace golang::runtime
     using traceEv = uint8_t;
     using traceArg = uint64_t;
     const golang::runtime::traceEv traceEvNone = 0;
+    // Structural events.
     const golang::runtime::traceEv traceEvEventBatch = 1;
     const golang::runtime::traceEv traceEvStacks = 2;
     const golang::runtime::traceEv traceEvStack = 3;
@@ -17,11 +18,13 @@ namespace golang::runtime
     const golang::runtime::traceEv traceEvCPUSamples = 6;
     const golang::runtime::traceEv traceEvCPUSample = 7;
     const golang::runtime::traceEv traceEvFrequency = 8;
+    // Procs.
     const golang::runtime::traceEv traceEvProcsChange = 9;
     const golang::runtime::traceEv traceEvProcStart = 10;
     const golang::runtime::traceEv traceEvProcStop = 11;
     const golang::runtime::traceEv traceEvProcSteal = 12;
     const golang::runtime::traceEv traceEvProcStatus = 13;
+    // Goroutines.
     const golang::runtime::traceEv traceEvGoCreate = 14;
     const golang::runtime::traceEv traceEvGoCreateSyscall = 15;
     const golang::runtime::traceEv traceEvGoStart = 16;
@@ -34,8 +37,10 @@ namespace golang::runtime
     const golang::runtime::traceEv traceEvGoSyscallEnd = 23;
     const golang::runtime::traceEv traceEvGoSyscallEndBlocked = 24;
     const golang::runtime::traceEv traceEvGoStatus = 25;
+    // STW.
     const golang::runtime::traceEv traceEvSTWBegin = 26;
     const golang::runtime::traceEv traceEvSTWEnd = 27;
+    // GC events.
     const golang::runtime::traceEv traceEvGCActive = 28;
     const golang::runtime::traceEv traceEvGCBegin = 29;
     const golang::runtime::traceEv traceEvGCEnd = 30;
@@ -47,6 +52,7 @@ namespace golang::runtime
     const golang::runtime::traceEv traceEvGCMarkAssistEnd = 36;
     const golang::runtime::traceEv traceEvHeapAlloc = 37;
     const golang::runtime::traceEv traceEvHeapGoal = 38;
+    // Annotations.
     const golang::runtime::traceEv traceEvGoLabel = 39;
     const golang::runtime::traceEv traceEvUserTaskBegin = 40;
     const golang::runtime::traceEv traceEvUserTaskEnd = 41;

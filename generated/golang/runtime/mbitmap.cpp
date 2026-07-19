@@ -374,8 +374,6 @@ namespace golang::runtime
         m->index++;
     }
 
-    // clobberdeadPtr is a special value that is used by the compiler to
-    // clobber dead stack slots, when -clobberdead flag is set.
     // badPointer throws bad pointer in heap panic.
     void badPointer(mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff)
     {

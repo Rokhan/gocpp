@@ -34,9 +34,6 @@ namespace golang::flate
         using sync::rec::Do;
     }
 
-    // The next three numbers come from the RFC section 3.2.7, with the
-    // additional proviso in section 3.2.5 which implies that distance codes
-    // 30 and 31 should never occur in compressed data.
     // Initialize the fixedHuffmanDecoder only once upon first use.
     sync::Once fixedOnce;
     golang::flate::huffmanDecoder fixedHuffmanDecoder;

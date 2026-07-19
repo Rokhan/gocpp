@@ -176,7 +176,6 @@ namespace golang::hex
         return rec::String(gocpp::recv(buf));
     }
 
-    // bufferSize is the number of hexadecimal characters to buffer in encoder and decoder.
     
     template<typename T> requires gocpp::GoStruct<T>
     encoder::operator T()

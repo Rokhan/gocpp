@@ -27,7 +27,6 @@ namespace golang::bits
     {
     }
 
-    // UintSize is the size of a uint in bits.
     // LeadingZeros returns the number of leading zero bits in x; the result is [UintSize] for x == 0.
     int LeadingZeros(unsigned int x)
     {
@@ -58,7 +57,6 @@ namespace golang::bits
         return 64 - Len64(x);
     }
 
-    // See http://supertech.csail.mit.edu/papers/debruijn.pdf
     gocpp::array<unsigned char, 32> deBruijn32tab = gocpp::array<unsigned char, 32> {
         0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
         31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9

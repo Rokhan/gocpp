@@ -12,6 +12,11 @@ namespace golang::sync
     using dequeueNil = gocpp_id_0*;
     struct poolChain;
     struct poolChainElt;
+    // dequeueLimit is the maximum size of a poolDequeue.
+    //
+    // This must be at most (1<<dequeueBits)/2 because detecting fullness
+    // depends on wrapping around the ring buffer without wrapping around
+    // the index. We divide by 4 so this fits in an int on 32-bit.
     const int dequeueLimit = (1 << dequeueBits) / 4;
 }
 #include "golang/sync/atomic/type.fwd.h"

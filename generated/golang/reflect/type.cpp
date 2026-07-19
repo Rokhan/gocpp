@@ -590,7 +590,6 @@ namespace golang::reflect
 
     // A Kind represents the specific kind of type that a [Type] represents.
     // The zero Kind is not a valid kind.
-    // Ptr is the old name for the [Pointer] kind.
     // uncommonType is present only for defined types or types with methods
     // (if T is a defined type, the uncommonTypes for T and *T have methods).
     // Using a pointer to this struct reduces the overall size required
@@ -3078,10 +3077,6 @@ namespace golang::reflect
         }
     }
 
-    // Make sure these routines stay in sync with ../runtime/map.go!
-    // These types exist only for GC, so we only fill out GC relevant info.
-    // Currently, that's just size and the GC program. We also fill in string
-    // for possible debugging use.
     abi::Type* bucketOf(abi::Type* ktyp, abi::Type* etyp)
     {
         if(ktyp->Size_ > maxKeySize)
@@ -4006,7 +4001,6 @@ namespace golang::reflect
         }
     }
 
-    // See cmd/compile/internal/reflectdata/reflect.go for derivation of constant.
     // ArrayOf returns the array type with the given length and element type.
     // For example, if t represents int, ArrayOf(5, t) represents [5]int.
     //

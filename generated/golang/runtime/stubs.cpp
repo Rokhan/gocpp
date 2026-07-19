@@ -155,7 +155,6 @@ namespace golang::runtime
         memmove(to, from, n);
     }
 
-    // exported value for testing
     // in internal/bytealg/equal_*.s
     //
     //go:noescape

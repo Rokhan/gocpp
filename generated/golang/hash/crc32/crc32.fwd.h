@@ -6,9 +6,19 @@
 
 namespace golang::crc32
 {
+    // The size of a CRC-32 checksum in bytes.
     const long Size = 4;
+    // Predefined polynomials.
+    // IEEE is by far and away the most common CRC-32 polynomial.
+    // Used by ethernet (IEEE 802.3), v.42, fddi, gzip, zip, png, ...
     const long IEEE = 0xedb88320;
+    // Castagnoli's polynomial, used in iSCSI.
+    // Has better error detection characteristics than IEEE.
+    // https://dx.doi.org/10.1109/26.231911
     const long Castagnoli = 0x82f63b78;
+    // Koopman's polynomial.
+    // Also has better error detection characteristics than IEEE.
+    // https://dx.doi.org/10.1109/DSN.2002.1028931
     const long Koopman = 0xeb31d82e;
     struct GoTag_Table;
     using Table = gocpp::defined<gocpp::array<uint32_t, 256>, GoTag_Table>;

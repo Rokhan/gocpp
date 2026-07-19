@@ -24,6 +24,8 @@ namespace golang::runtime
     const golang::runtime::statDep cpuStatsDep = 2;
     const golang::runtime::statDep gcStatsDep = 3;
     const golang::runtime::statDep numStatsDeps = 4;
+    // These values must be kept identical to their corresponding Kind* values
+    // in the runtime/metrics package.
     const golang::runtime::metricKind metricKindBad = 0;
     const golang::runtime::metricKind metricKindUint64 = 1;
     const golang::runtime::metricKind metricKindFloat64 = 2;

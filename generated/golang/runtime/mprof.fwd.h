@@ -6,7 +6,12 @@
 
 namespace golang::runtime
 {
+    // size of bucket hash table
     const long buckHashSize = 179999;
+    // maxStack is the max depth of stack to record in bucket.
+    // Note that it's only used internally as a guard against
+    // wildly out-of-bounds slicing of the PCs that come after
+    // a bucket struct, and it could increase in the future.
     const long maxStack = 32;
     using bucketType = int;
     struct memRecord;
@@ -18,6 +23,7 @@ namespace golang::runtime
     struct BlockProfileRecord;
     struct gocpp_id_0;
     using goroutineProfileState = uint32_t;
+    // profile types
     const golang::runtime::bucketType memProfile = 1 + 0;
     const golang::runtime::bucketType blockProfile = 1 + 1;
     const golang::runtime::bucketType mutexProfile = 1 + 2;

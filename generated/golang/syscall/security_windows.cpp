@@ -51,7 +51,6 @@ namespace golang::syscall
         }
     }
 
-    // do not reorder
     
     template<typename T> requires gocpp::GoStruct<T>
     UserInfo10::operator T()
@@ -90,7 +89,6 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    // do not reorder
     // The security identifier (SID) structure is a variable-length
     // structure used to uniquely identify users or groups.
     
@@ -277,8 +275,6 @@ namespace golang::syscall
         }
     }
 
-    // do not reorder
-    // do not reorder
     
     template<typename T> requires gocpp::GoStruct<T>
     SIDAndAttributes::operator T()

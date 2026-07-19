@@ -21,20 +21,5 @@ namespace golang::goarch
     {
     }
 
-    // PtrSize is the size of a pointer in bytes - unsafe.Sizeof(uintptr(0)) but as an ideal constant.
-    // It is also the size of the machine's native word size (that is, 4 on 32-bit systems, 8 on 64-bit).
-    // ArchFamily is the architecture family (AMD64, ARM, ...)
-    // BigEndian reports whether the architecture is big-endian.
-    // DefaultPhysPageSize is the default physical page size.
-    // PCQuantum is the minimal unit for a program counter (1 on x86, 4 on most other systems).
-    // The various PC tables record PC deltas pre-divided by PCQuantum.
-    // Int64Align is the required alignment for a 64-bit integer (4 on 32-bit systems, 8 on 64-bit).
-    // MinFrameSize is the size of the system-reserved words at the bottom
-    // of a frame (just above the architectural stack pointer).
-    // It is zero on x86 and PtrSize on most non-x86 (LR-based) systems.
-    // On PowerPC it is larger, to cover three more reserved words:
-    // the compiler word, the link editor word, and the TOC save word.
-    // StackAlign is the required alignment of the SP register.
-    // The stack must be at least word aligned, but some architectures require more.
 }
 

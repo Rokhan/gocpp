@@ -237,8 +237,6 @@ namespace golang::runtime
         rec::unlock(gocpp::recv(l));
     }
 
-    // gcCPULimiterUpdatePeriod dictates the maximum amount of wall-clock time
-    // we can go before updating the limiter.
     // needUpdate returns true if the limiter's maximum update period has been
     // exceeded, and so would benefit from an update.
     bool rec::needUpdate(gcCPULimiterState* l, int64_t now)
@@ -443,7 +441,6 @@ namespace golang::runtime
         }
     }
 
-    // capacityPerProc is the limiter's bucket capacity for each P in GOMAXPROCS.
     // resetCapacity updates the capacity based on GOMAXPROCS. Must not be called
     // while the GC is enabled.
     //
@@ -481,8 +478,6 @@ namespace golang::runtime
     // to execute its function.
     //
     // This type may use no more than limiterEventBits bits of information.
-    // limiterEventTypeMask is a mask for the bits in p.limiterEventStart that represent
-    // the event type. The rest of the bits of that field represent a timestamp.
     // limiterEventStamp is a nanotime timestamp packed with a limiterEventType.
     // makeLimiterEventStamp creates a new stamp from the event type and the current timestamp.
     golang::runtime::limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now)

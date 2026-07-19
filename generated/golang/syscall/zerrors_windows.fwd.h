@@ -6,6 +6,7 @@
 
 namespace golang::syscall
 {
+    // Windows reserves errors >= 1<<29 for application use.
     const int APPLICATION_ERROR = 1 << 29;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
@@ -13,8 +14,10 @@ namespace golang::syscall
 
 namespace golang::syscall
 {
+    // Go names for Windows errors.
     const golang::syscall::Errno go_ENOENT = ERROR_FILE_NOT_FOUND;
     const golang::syscall::Errno go_ENOTDIR = ERROR_PATH_NOT_FOUND;
+    // Invented values to support what package os and others expects.
     const golang::syscall::Errno go_E2BIG = APPLICATION_ERROR + 0;
     const golang::syscall::Errno go_EACCES = APPLICATION_ERROR + 1;
     const golang::syscall::Errno go_EADDRINUSE = APPLICATION_ERROR + 2;

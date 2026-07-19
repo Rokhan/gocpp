@@ -113,6 +113,9 @@ namespace golang::runtime
     go_any mapclone(go_any m);
     void keys(go_any m, gocpp::unsafe_pointer p);
     void values(go_any m, gocpp::unsafe_pointer p);
+    // data offset should be the size of the bmap struct, but needs to be
+    // aligned correctly. For amd64p32 this means 64-bit alignment
+    // even though pointers are 32 bit.
     const uintptr_t dataOffset = gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::v);
     bool evacuated(bmap* b);
     golang::runtime::hmap* makemap_small();

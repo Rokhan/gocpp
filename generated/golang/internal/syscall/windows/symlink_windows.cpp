@@ -19,8 +19,6 @@ namespace golang::windows
     {
     }
 
-    // symlink support for CreateSymbolicLink() starting with Windows 10 (1703, v10.0.14972)
-    // FileInformationClass values
     
     template<typename T> requires gocpp::GoStruct<T>
     FILE_ATTRIBUTE_TAG_INFO::operator T()

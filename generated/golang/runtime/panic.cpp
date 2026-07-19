@@ -89,16 +89,6 @@ namespace golang::runtime
 
     // throwType indicates the current type of ongoing throw, which affects the
     // amount of detail printed to stderr. Higher values include more detail.
-    // throwTypeNone means that we are not throwing.
-    // throwTypeUser is a throw due to a problem with the application.
-    //
-    // These throws do not include runtime frames, system goroutines, or
-    // frame metadata.
-    // throwTypeRuntime is a throw due to a problem with Go itself.
-    //
-    // These throws include as much information as possible to aid in
-    // debugging the runtime, including runtime frames, system goroutines,
-    // and frame metadata.
     // Check to make sure we can really generate a panic. If the panic
     // was generated from the runtime, or from inside malloc, then convert
     // to a throw of msg.

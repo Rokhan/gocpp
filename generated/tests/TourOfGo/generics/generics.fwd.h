@@ -6,6 +6,7 @@
 
 namespace golang::main
 {
+    // PrimeRK is the prime base used in Rabin-Karp algorithm.
     const long PrimeRK = 16777619;
     template<typename T> struct Wrapper;
     template<typename T> struct Pointer;

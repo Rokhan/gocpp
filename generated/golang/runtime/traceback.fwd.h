@@ -6,15 +6,46 @@
 
 namespace golang::runtime
 {
+    // tracebackInnerFrames is the number of innermost frames to print in a
+    // stack trace. The total maximum frames is tracebackInnerFrames +
+    // tracebackOuterFrames.
     const long tracebackInnerFrames = 50;
+    // tracebackOuterFrames is the number of outermost frames to print in a
+    // stack trace.
     const long tracebackOuterFrames = 50;
     using unwindFlags = uint8_t;
     struct cgoTracebackArg;
     struct cgoContextArg;
     struct cgoSymbolizerArg;
+    // unwindPrintErrors indicates that if unwinding encounters an error, it
+    // should print a message and stop without throwing. This is used for things
+    // like stack printing, where it's better to get incomplete information than
+    // to crash. This is also used in situations where everything may not be
+    // stopped nicely and the stack walk may not be able to complete, such as
+    // during profiling signals or during a crash.
+    //
+    // If neither unwindPrintErrors or unwindSilentErrors are set, unwinding
+    // performs extra consistency checks and throws on any error.
+    //
+    // Note that there are a small number of fatal situations that will throw
+    // regardless of unwindPrintErrors or unwindSilentErrors.
     const golang::runtime::unwindFlags unwindPrintErrors = 1 << 0;
+    // unwindSilentErrors silently ignores errors during unwinding.
     const golang::runtime::unwindFlags unwindSilentErrors = 1 << 1;
+    // unwindTrap indicates that the initial PC and SP are from a trap, not a
+    // return PC from a call.
+    //
+    // The unwindTrap flag is updated during unwinding. If set, frame.pc is the
+    // address of a faulting instruction instead of the return address of a
+    // call. It also means the liveness at pc may not be known.
+    //
+    // TODO: Distinguish frame.continpc, which is really the stack map PC, from
+    // the actual continuation PC, which is computed differently depending on
+    // this flag and a few other things.
     const golang::runtime::unwindFlags unwindTrap = 1 << 2;
+    // unwindJumpStack indicates that, if the traceback is on a system stack, it
+    // should resume tracing at the user stack when the system stack is
+    // exhausted.
     const golang::runtime::unwindFlags unwindJumpStack = 1 << 3;
 }
 #include "golang/internal/abi/symtab.fwd.h"

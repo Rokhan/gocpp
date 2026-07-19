@@ -24,17 +24,6 @@ namespace golang::flate
         using io::rec::Write;
     }
 
-    // The largest offset code.
-    // The special code used to mark the end of a block.
-    // The first length code.
-    // The number of codegen codes.
-    // bufferFlushSize indicates the buffer size
-    // after which bytes are flushed to the writer.
-    // Should preferably be a multiple of 6, since
-    // we accumulate 6 bytes between writes to the buffer.
-    // bufferSize is the actual output byte buffer size.
-    // It must have additional headroom for a flush
-    // which can contain up to 8 bytes.
     // The number of extra bits needed by length code X - LENGTH_CODES_START.
     gocpp::slice<int8_t> lengthExtraBits = gocpp::slice<int8_t> {
         /* 257 */ 0, 0, 0,

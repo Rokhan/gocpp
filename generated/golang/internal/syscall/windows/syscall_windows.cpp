@@ -458,7 +458,6 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
-    // flags for CreateToolhelp32Snapshot
     
     template<typename T> requires gocpp::GoStruct<T>
     ModuleEntry32::operator T()
@@ -701,7 +700,6 @@ namespace golang::windows
         return MoveFileEx(from, to, MOVEFILE_REPLACE_EXISTING);
     }
 
-    // Constants from lmshare.h
     
     template<typename T> requires gocpp::GoStruct<T>
     SHARE_INFO_2::operator T()

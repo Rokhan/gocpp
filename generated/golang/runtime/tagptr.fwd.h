@@ -7,5 +7,6 @@
 namespace golang::runtime
 {
     using taggedPointer = uint64_t;
+    // minTagBits is the minimum number of tag bits that we expect.
     const long minTagBits = 10;
 }

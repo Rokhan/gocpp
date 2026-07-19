@@ -42,17 +42,10 @@ namespace golang::registry
     {
     }
 
-    // Registry key security and access rights.
-    // See https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-key-security-and-access-rights
-    // for details.
     // Key is a handle to an open Windows registry key.
     // Keys can be obtained by calling OpenKey; there are
     // also some predefined root keys such as CURRENT_USER.
     // Keys can be used directly in the Windows API.
-    // Windows defines some predefined root keys that are always open.
-    // An application can use these keys as entry points to the registry.
-    // Normally these keys are used in OpenKey to open new keys,
-    // but they can also be used anywhere a Key is required.
     // Close closes open key k.
     struct gocpp::error rec::Close(golang::registry::Key k)
     {

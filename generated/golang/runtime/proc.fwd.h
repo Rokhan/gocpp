@@ -6,15 +6,23 @@
 
 namespace golang::runtime
 {
+    // Number of goroutine ids to grab from sched.goidgen to local per-P cache at once.
+    // 16 seems to provide enough amortization, but other than that it's mostly arbitrary number.
     const long _GoidCacheBatch = 16;
+    // freezeStopWait is a large value that freezetheworld sets
+    // sched.stopwait to in order to request that all Gs permanently stop.
     const long freezeStopWait = 0x7fffffff;
     using stwReason = uint8_t;
     struct worldStop;
+    // These errors are reported (via writeErrStr) by some OS-specific
+    // versions of newosproc and newosproc0.
     const gocpp::string failthreadcreate = "runtime: failed to create new OS thread\n"_s;
     const gocpp::string failallocatestack = "runtime: failed to allocate stack for the new OS thread\n"_s;
     struct newmHandoffStruct;
     struct profStruct;
     struct sysmontick;
+    // forcePreemptNS is the time slice given to a G before it is
+    // preempted.
     const int forcePreemptNS = 10 * 1000 * 1000;
     struct GoTag_pMask;
     using pMask = gocpp::defined<gocpp::slice<uint32_t>, GoTag_pMask>;
@@ -22,6 +30,9 @@ namespace golang::runtime
     struct randomEnum;
     struct initTask;
     struct tracestat;
+    // Reasons to stop-the-world.
+    //
+    // Avoid reusing reasons and add new ones instead.
     const golang::runtime::stwReason stwUnknown = 0;
     const golang::runtime::stwReason stwGCMarkTerm = 1;
     const golang::runtime::stwReason stwGCSweepTerm = 2;
@@ -47,12 +58,30 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
+    // Disable crash stack on Windows for now. Apparently, throwing an exception
+    // on a non-system-allocated crash stack causes EXCEPTION_STACK_OVERFLOW and
+    // hangs the process (see issue 63938).
     const bool crashStackImplemented = (GOARCH == "amd64"_s || GOARCH == "arm64"_s || GOARCH == "mips64"_s || GOARCH == "mips64le"_s || GOARCH == "ppc64"_s || GOARCH == "ppc64le"_s || GOARCH == "riscv64"_s || GOARCH == "wasm"_s) && GOOS != "windows"_s;
+    // osHasLowResTimer indicates that the platform's internal timer system has a low resolution,
+    // typically on the order of 1 ms or more.
     const bool osHasLowResTimer = GOOS == "windows"_s || GOOS == "openbsd"_s || GOOS == "netbsd"_s;
+    // osHasLowResClockInt is osHasLowResClock but in integer form, so it can be used to create
+    // constants conditionally.
     const int osHasLowResClockInt = goos::IsWindows;
     struct cgothreadstart;
+    // To shake out latent assumptions about scheduling order,
+    // we introduce some randomness into scheduling decisions
+    // when running with the race detector.
+    // The need for this was made obvious by changing the
+    // (deterministic) scheduling order in Go 1.5 and breaking
+    // many poorly-written tests.
+    // With the randomness here, as long as the tests pass
+    // consistently with -race, they shouldn't have latent scheduling
+    // assumptions.
     const bool randomizeScheduler = raceenabled;
     struct gQueue;
     struct gList;
+    // osHasLowResClock indicates that timestamps produced by nanotime on the platform have a
+    // low resolution, typically on the order of 1 ms or more.
     const bool osHasLowResClock = osHasLowResClockInt > 0;
 }

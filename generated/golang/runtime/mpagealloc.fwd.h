@@ -7,10 +7,23 @@
 namespace golang::runtime
 {
     const long logPallocChunkPages = 9;
+    // The number of radix bits for each level.
+    //
+    // The value of 3 is chosen such that the block of summaries we need to scan at
+    // each level fits in 64 bytes (2^3 summaries * 8 bytes per summary), which is
+    // close to the L1 cache line width on many systems. Also, a value of 3 fits 4 tree
+    // levels perfectly into the 21-bit pallocBits summary field at the root level.
+    //
+    // The following equation explains how each of the constants relate:
+    // summaryL0Bits + (summaryLevels-1)*summaryLevelBits + logPallocChunkBytes = heapAddrBits
+    //
+    // summaryLevels is an architecture-dependent value defined in mpagealloc_*.go.
     const long summaryLevelBits = 3;
     using chunkIdx = unsigned int;
     struct gocpp_id_1;
     using pallocSum = uint64_t;
+    // The size of a bitmap chunk, i.e. the amount of bits (that is, pages) to consider
+    // in the bitmap at once.
     const int pallocChunkPages = 1 << logPallocChunkPages;
     /*const uintptr_t pallocSumBytes = gocpp::Sizeof<pallocSum>() [known mising deps] */;
 }
@@ -30,7 +43,14 @@ namespace golang::runtime
     const int logMaxPackedValue = logPallocChunkPages + (summaryLevels - 1) * summaryLevelBits;
     const int pallocChunkBytes = pallocChunkPages * pageSize;
     const int summaryL0Bits = heapAddrBits - logPallocChunkBytes - (summaryLevels - 1) * summaryLevelBits;
+    // pallocChunksL2Bits is the number of bits of the chunk index number
+    // covered by the second level of the chunks map.
+    //
+    // See (*pageAlloc).chunks for more details. Update the documentation
+    // there should this change.
     const int pallocChunksL2Bits = heapAddrBits - logPallocChunkBytes - pallocChunksL1Bits;
+    // maxPackedValue is the maximum value that any of the three fields in
+    // the pallocSum may take on.
     const int maxPackedValue = 1 << logMaxPackedValue;
     const pallocSum freeChunkSum = pallocSum(uint64_t(pallocChunkPages) | uint64_t(pallocChunkPages << logMaxPackedValue) | uint64_t(pallocChunkPages << (2 * logMaxPackedValue)));
     const int pallocChunksL1Shift = pallocChunksL2Bits;

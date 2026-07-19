@@ -6,7 +6,10 @@
 
 namespace golang::os
 {
+    // This matches the value in syscall/syscall_windows.go.
     const long _UTIME_OMIT = - 1;
+    // DevNull is the name of the operating system's “null device.”
+    // On Unix-like systems, it is "/dev/null"; on Windows, "NUL".
     const gocpp::string DevNull = "NUL"_s;
 }
 #include "golang/internal/poll/fd_windows.fwd.h"

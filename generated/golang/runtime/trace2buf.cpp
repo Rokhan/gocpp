@@ -51,7 +51,6 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // Maximum number of bytes required to encode uint64 in base-128.
     // traceWriter is the interface for writing all trace data.
     //
     // This type is passed around as a value, and all of its methods return

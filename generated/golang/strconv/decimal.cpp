@@ -163,8 +163,6 @@ namespace golang::strconv
         trim(a);
     }
 
-    // Maximum shift that we can do in one pass without overflow.
-    // A uint has 32 or 64 bits, and we have to be able to accommodate 9<<k.
     // Binary shift right (/ 2) by k bits.  k <= maxShift to avoid overflow.
     void rightShift(decimal* a, unsigned int k)
     {

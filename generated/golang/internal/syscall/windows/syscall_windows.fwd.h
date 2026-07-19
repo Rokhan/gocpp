@@ -30,6 +30,7 @@ namespace golang::windows
     const long IfOperStatusDormant = 5;
     const long IfOperStatusNotPresent = 6;
     const long IfOperStatusLowerLayerDown = 7;
+    // flags for CreateToolhelp32Snapshot
     const long TH32CS_SNAPMODULE = 0x08;
     const long TH32CS_SNAPMODULE32 = 0x10;
     const long MAX_MODULE_NAME32 = 255;
@@ -58,6 +59,7 @@ namespace golang::windows
     const long LOCKFILE_FAIL_IMMEDIATELY = 0x00000001;
     const long LOCKFILE_EXCLUSIVE_LOCK = 0x00000002;
     const long MB_ERR_INVALID_CHARS = 8;
+    // Constants from lmshare.h
     const long STYPE_DISKTREE = 0x00;
     const long STYPE_TEMPORARY = 0x40000000;
     struct SHARE_INFO_2;

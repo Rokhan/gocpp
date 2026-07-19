@@ -6,8 +6,12 @@
 
 namespace golang::time
 {
+    // maxFileSize is the max permitted size of files read by readFile.
+    // As reference, the zoneinfo.zip distributed by Go is ~350 KB,
+    // so 10MB is overkill.
     const int maxFileSize = 10 << 20;
     using fileSizeError = gocpp::string;
+    // Copies of io.Seek* constants to avoid importing "io":
     const long seekStart = 0;
     const long seekCurrent = 1;
     const long seekEnd = 2;

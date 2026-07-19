@@ -8,6 +8,11 @@
 
 namespace golang::runtime
 {
+    // GOOS is the running program's operating system target:
+    // one of darwin, freebsd, linux, and so on.
+    // To view possible combinations of GOOS and GOARCH, run "go tool dist list".
     const gocpp::string GOOS = goos::GOOS;
+    // GOARCH is the running program's architecture target:
+    // one of 386, amd64, arm, s390x, and so on.
     const gocpp::string GOARCH = goarch::GOARCH;
 }

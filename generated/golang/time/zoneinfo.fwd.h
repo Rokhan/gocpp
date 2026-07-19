@@ -9,6 +9,8 @@ namespace golang::time
     struct Location;
     struct zone;
     struct zoneTrans;
+    // alpha and omega are the beginning and end of time for zone
+    // transitions.
     const int alpha = - 1 << 63;
     const int omega = (1 << 63) - 1;
     using ruleKind = int;

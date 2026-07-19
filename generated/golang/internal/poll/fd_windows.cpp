@@ -625,9 +625,6 @@ namespace golang::poll
         return err;
     }
 
-    // Windows ReadFile and WSARecv use DWORD (uint32) parameter to pass buffer length.
-    // This prevents us reading blocks larger than 4GB.
-    // See golang.org/issue/26923.
     // Read implements io.Reader.
     std::tuple<int, struct gocpp::error> rec::Read(FD* fd, gocpp::slice<unsigned char> buf)
     {

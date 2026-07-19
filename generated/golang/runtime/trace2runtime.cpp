@@ -292,11 +292,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // debugTraceReentrancy checks if the trace is reentrant.
-    //
-    // This is optional because throwing in a function makes it instantly
-    // not inlineable, and we want traceAcquire to be inlineable for
-    // low overhead when the trace is disabled.
     // traceAcquire prepares this M for writing one or more trace events.
     //
     // nosplit because it's called on the syscall path when stack movement is forbidden.

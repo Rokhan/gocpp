@@ -7,6 +7,8 @@
 namespace golang::goarch
 {
     using ArchFamilyType = int;
+    // PtrSize is the size of a pointer in bytes - unsafe.Sizeof(uintptr(0)) but as an ideal constant.
+    // It is also the size of the machine's native word size (that is, 4 on 32-bit systems, 8 on 64-bit).
     const int PtrSize = 4 << (~ uintptr_t(0) >> 63);
     const golang::goarch::ArchFamilyType AMD64 = 0;
     const golang::goarch::ArchFamilyType ARM = 1;
@@ -19,6 +21,7 @@ namespace golang::goarch
     const golang::goarch::ArchFamilyType RISCV64 = 8;
     const golang::goarch::ArchFamilyType S390X = 9;
     const golang::goarch::ArchFamilyType WASM = 10;
+    // Int64Align is the required alignment for a 64-bit integer (4 on 32-bit systems, 8 on 64-bit).
     const int Int64Align = PtrSize;
 }
 #include "golang/internal/goarch/goarch_amd64.fwd.h"
@@ -26,10 +29,22 @@ namespace golang::goarch
 
 namespace golang::goarch
 {
+    // ArchFamily is the architecture family (AMD64, ARM, ...)
     const golang::goarch::ArchFamilyType ArchFamily = _ArchFamily;
+    // BigEndian reports whether the architecture is big-endian.
     const bool BigEndian = IsArmbe | IsArm64be | IsMips | IsMips64 | IsPpc | IsPpc64 | IsS390 | IsS390x | IsSparc | IsSparc64 == 1;
+    // DefaultPhysPageSize is the default physical page size.
     const int DefaultPhysPageSize = _DefaultPhysPageSize;
+    // PCQuantum is the minimal unit for a program counter (1 on x86, 4 on most other systems).
+    // The various PC tables record PC deltas pre-divided by PCQuantum.
     const int PCQuantum = _PCQuantum;
+    // MinFrameSize is the size of the system-reserved words at the bottom
+    // of a frame (just above the architectural stack pointer).
+    // It is zero on x86 and PtrSize on most non-x86 (LR-based) systems.
+    // On PowerPC it is larger, to cover three more reserved words:
+    // the compiler word, the link editor word, and the TOC save word.
     const int MinFrameSize = _MinFrameSize;
+    // StackAlign is the required alignment of the SP register.
+    // The stack must be at least word aligned, but some architectures require more.
     const int StackAlign = _StackAlign;
 }

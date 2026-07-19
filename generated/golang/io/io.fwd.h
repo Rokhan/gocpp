@@ -6,6 +6,7 @@
 
 namespace golang::io
 {
+    // Seek whence values.
     const long SeekStart = 0;
     const long SeekCurrent = 1;
     const long SeekEnd = 2;

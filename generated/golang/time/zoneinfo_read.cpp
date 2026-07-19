@@ -38,15 +38,11 @@ namespace golang::time
     // This is set when the time/tzdata package is imported,
     // via registerLoadFromEmbeddedTzdata.
     std::function<std::tuple<gocpp::string, struct gocpp::error> (gocpp::string zipname)> loadFromEmbeddedTZData;
-    // maxFileSize is the max permitted size of files read by readFile.
-    // As reference, the zoneinfo.zip distributed by Go is ~350 KB,
-    // so 10MB is overkill.
     gocpp::string rec::Error(fileSizeError f)
     {
         return "time: file "_s + gocpp::string(f) + " is too large"_s;
     }
 
-    // Copies of io.Seek* constants to avoid importing "io":
     // Simple I/O interface to binary blob of data.
     
     template<typename T> requires gocpp::GoStruct<T>

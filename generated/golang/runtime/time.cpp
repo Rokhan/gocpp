@@ -114,31 +114,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // Values for the timer status field.
-    // Timer has no status set yet.
-    // Waiting for timer to fire.
-    // The timer is in some P's heap.
-    // Running the timer function.
-    // A timer will only have this status briefly.
-    // The timer is deleted and should be removed.
-    // It should not be run, but it is still in some P's heap.
-    // The timer is being removed.
-    // The timer will only have this status briefly.
-    // The timer has been stopped.
-    // It is not in any P's heap.
-    // The timer is being modified.
-    // The timer will only have this status briefly.
-    // The timer has been modified to an earlier time.
-    // The new when value is in the nextwhen field.
-    // The timer is in some P's heap, possibly in the wrong place.
-    // The timer has been modified to the same or a later time.
-    // The new when value is in the nextwhen field.
-    // The timer is in some P's heap, possibly in the wrong place.
-    // The timer has been modified and is being moved.
-    // The timer will only have this status briefly.
-    // maxWhen is the maximum value for timer's when field.
-    // verifyTimers can be set to true to add debugging checks that the
-    // timer heaps are valid.
     // timeSleep puts the current goroutine to sleep for at least ns nanoseconds.
     //
     //go:linkname timeSleep time.Sleep

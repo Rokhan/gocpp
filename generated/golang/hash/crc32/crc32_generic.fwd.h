@@ -6,6 +6,7 @@
 
 namespace golang::crc32
 {
+    // Use slicing-by-8 when payload >= this value.
     const long slicing8Cutoff = 16;
     struct GoTag_slicing8Table;
 }

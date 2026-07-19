@@ -405,13 +405,13 @@ namespace golang::sync
         std::tie(oldPools, allPools) = std::tuple{allPools, nullptr};
     }
 
+    golang::sync::Mutex allPoolsMu;
     // allPools is the set of pools that have non-empty primary
     // caches. Protected by either 1) allPoolsMu and pinning or 2)
     // STW.
+    gocpp::slice<golang::sync::Pool*> allPools;
     // oldPools is the set of pools that may have non-empty victim
     // caches. Protected by STW.
-    golang::sync::Mutex allPoolsMu;
-    gocpp::slice<golang::sync::Pool*> allPools;
     gocpp::slice<golang::sync::Pool*> oldPools;
     void init()
     {

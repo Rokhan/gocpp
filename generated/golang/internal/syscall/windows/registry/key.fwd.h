@@ -6,6 +6,9 @@
 
 namespace golang::registry
 {
+    // Registry key security and access rights.
+    // See https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-key-security-and-access-rights
+    // for details.
     const long ALL_ACCESS = 0xf003f;
     const long CREATE_LINK = 0x00020;
     const long CREATE_SUB_KEY = 0x00004;
@@ -26,6 +29,10 @@ namespace golang::registry
 {
     using Key = syscall::Handle;
     struct KeyInfo;
+    // Windows defines some predefined root keys that are always open.
+    // An application can use these keys as entry points to the registry.
+    // Normally these keys are used in OpenKey to open new keys,
+    // but they can also be used anywhere a Key is required.
     const registry::Key CLASSES_ROOT = Key(syscall::HKEY_CLASSES_ROOT);
     const registry::Key CURRENT_USER = Key(syscall::HKEY_CURRENT_USER);
     const registry::Key LOCAL_MACHINE = Key(syscall::HKEY_LOCAL_MACHINE);

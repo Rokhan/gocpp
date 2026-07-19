@@ -57,89 +57,6 @@ namespace golang::runtime
     {
     }
 
-    // defined constants
-    // _Gidle means this goroutine was just allocated and has not
-    // yet been initialized.
-    // _Grunnable means this goroutine is on a run queue. It is
-    // not currently executing user code. The stack is not owned.
-    // _Grunning means this goroutine may execute user code. The
-    // stack is owned by this goroutine. It is not on a run queue.
-    // It is assigned an M and a P (g.m and g.m.p are valid).
-    // _Gsyscall means this goroutine is executing a system call.
-    // It is not executing user code. The stack is owned by this
-    // goroutine. It is not on a run queue. It is assigned an M.
-    // _Gwaiting means this goroutine is blocked in the runtime.
-    // It is not executing user code. It is not on a run queue,
-    // but should be recorded somewhere (e.g., a channel wait
-    // queue) so it can be ready()d when necessary. The stack is
-    // not owned *except* that a channel operation may read or
-    // write parts of the stack under the appropriate channel
-    // lock. Otherwise, it is not safe to access the stack after a
-    // goroutine enters _Gwaiting (e.g., it may get moved).
-    // _Gmoribund_unused is currently unused, but hardcoded in gdb
-    // scripts.
-    // _Gdead means this goroutine is currently unused. It may be
-    // just exited, on a free list, or just being initialized. It
-    // is not executing user code. It may or may not have a stack
-    // allocated. The G and its stack (if any) are owned by the M
-    // that is exiting the G or that obtained the G from the free
-    // list.
-    // _Genqueue_unused is currently unused.
-    // _Gcopystack means this goroutine's stack is being moved. It
-    // is not executing user code and is not on a run queue. The
-    // stack is owned by the goroutine that put it in _Gcopystack.
-    // _Gpreempted means this goroutine stopped itself for a
-    // suspendG preemption. It is like _Gwaiting, but nothing is
-    // yet responsible for ready()ing it. Some suspendG must CAS
-    // the status to _Gwaiting to take responsibility for
-    // ready()ing this G.
-    // _Gscan combined with one of the above states other than
-    // _Grunning indicates that GC is scanning the stack. The
-    // goroutine is not executing user code and the stack is owned
-    // by the goroutine that set the _Gscan bit.
-    //
-    // _Gscanrunning is different: it is used to briefly block
-    // state transitions while GC signals the G to scan its own
-    // stack. This is otherwise like _Grunning.
-    //
-    // atomicstatus&~Gscan gives the state the goroutine will
-    // return to when the scan completes.
-    // _Pidle means a P is not being used to run user code or the
-    // scheduler. Typically, it's on the idle P list and available
-    // to the scheduler, but it may just be transitioning between
-    // other states.
-    //
-    // The P is owned by the idle list or by whatever is
-    // transitioning its state. Its run queue is empty.
-    // _Prunning means a P is owned by an M and is being used to
-    // run user code or the scheduler. Only the M that owns this P
-    // is allowed to change the P's status from _Prunning. The M
-    // may transition the P to _Pidle (if it has no more work to
-    // do), _Psyscall (when entering a syscall), or _Pgcstop (to
-    // halt for the GC). The M may also hand ownership of the P
-    // off directly to another M (e.g., to schedule a locked G).
-    // _Psyscall means a P is not running user code. It has
-    // affinity to an M in a syscall but is not owned by it and
-    // may be stolen by another M. This is similar to _Pidle but
-    // uses lightweight transitions and maintains M affinity.
-    //
-    // Leaving _Psyscall must be done with a CAS, either to steal
-    // or retake the P. Note that there's an ABA hazard: even if
-    // an M successfully CASes its original P back to _Prunning
-    // after a syscall, it must understand the P may have been
-    // used by another M in the interim.
-    // _Pgcstop means a P is halted for STW and owned by the M
-    // that stopped the world. The M that stopped the world
-    // continues to use its P, even in _Pgcstop. Transitioning
-    // from _Prunning to _Pgcstop causes an M to release its P and
-    // park.
-    //
-    // The P retains its run queue and startTheWorld will restart
-    // the scheduler on Ps with non-empty run queues.
-    // _Pdead means a P is no longer used (GOMAXPROCS shrank). We
-    // reuse Ps if GOMAXPROCS increases. A dead P is mostly
-    // stripped of its resources, though a few things remain
-    // (e.g., trace buffers).
     // Mutual exclusion locks.  In the uncontended case,
     // as fast as spin locks (just a few user-level instructions),
     // but on the contention path they sleep in the kernel.
@@ -847,11 +764,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // gTrackingPeriod is the number of transitions out of _Grunning between
-    // latency tracking runs.
-    // tlsSlots is the number of pointer-sized slots reserved for TLS on some platforms,
-    // like Windows.
-    // Values for m.freeWait.
     
     template<typename T> requires gocpp::GoStruct<T>
     m::operator T()
@@ -1551,7 +1463,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    // Values for the flags field of a sigTabT.
     // Layout of in-memory per-function information prepared by linker
     // See https://golang.org/s/go12symtab.
     // Keep in sync with linker (../cmd/link/internal/ld/pcln.go:/pclntab)
@@ -2050,10 +1961,18 @@ namespace golang::runtime
         return w == waitReasonSyncMutexLock || w == waitReasonSyncRWMutexRLock || w == waitReasonSyncRWMutexLock;
     }
 
+    golang::runtime::m* allm;
+    int32_t gomaxprocs;
+    int32_t ncpu;
+    golang::runtime::forcegcstate forcegc;
+    golang::runtime::schedt sched;
+    int32_t newprocs;
     // allpLock protects P-less reads and size changes of allp, idlepMask,
     // and timerpMask, and all writes to allp.
+    golang::runtime::mutex allpLock;
     // len(allp) == gomaxprocs; may change at safe points, otherwise
     // immutable.
+    gocpp::slice<golang::runtime::p*> allp;
     // Bitmask of Ps in _Pidle list, one bit per P. Reads and writes must
     // be atomic. Length may change at safe points.
     //
@@ -2064,35 +1983,26 @@ namespace golang::runtime
     // corrupting the bitmap.
     //
     // N.B., procresize takes ownership of all Ps in stopTheWorldWithSema.
+    pMask idlepMask;
     // Bitmask of Ps that may have a timer, one bit per P. Reads and writes
     // must be atomic. Length may change at safe points.
+    pMask timerpMask;
     // Pool of GC parked background workers. Entries are type
     // *gcBgMarkWorkerNode.
+    golang::runtime::lfstack gcBgMarkWorkerPool;
     // Total number of gcBgMarkWorker goroutines. Protected by worldsema.
+    int32_t gcBgMarkWorkerCount;
     // Information about what cpu features are available.
     // Packages outside the runtime should not use these
     // as they are not an external api.
     // Set on startup in asm_{386,amd64}.s
-    // set by cmd/link on arm systems
-    golang::runtime::m* allm;
-    int32_t gomaxprocs;
-    int32_t ncpu;
-    golang::runtime::forcegcstate forcegc;
-    golang::runtime::schedt sched;
-    int32_t newprocs;
-    golang::runtime::mutex allpLock;
-    gocpp::slice<golang::runtime::p*> allp;
-    pMask idlepMask;
-    pMask timerpMask;
-    golang::runtime::lfstack gcBgMarkWorkerPool;
-    int32_t gcBgMarkWorkerCount;
     uint32_t processorVersionInfo;
     bool isIntel;
+    // set by cmd/link on arm systems
     uint8_t goarm;
     uint8_t goarmsoftfp;
     // Set by the linker so the runtime can determine the buildmode.
     bool islibrary;
     bool isarchive;
-    // Must agree with internal/buildcfg.FramePointerEnabled.
 }
 

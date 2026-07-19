@@ -920,11 +920,6 @@ namespace golang::runtime
         return syscall_SyscallN(fn, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18);
     }
 
-    // maxArgs should be divisible by 2, as Windows stack
-    // must be kept 16-byte aligned on syscall entry.
-    //
-    // Although it only permits maximum 42 parameters, it
-    // is arguably large enough.
     //go:linkname syscall_SyscallN syscall.SyscallN
     //go:nosplit
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args)

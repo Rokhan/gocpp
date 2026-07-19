@@ -7,7 +7,9 @@
 namespace golang::windows
 {
     const long FILE_SUPPORTS_OPEN_BY_FILE_ID = 0x01000000;
+    // symlink support for CreateSymbolicLink() starting with Windows 10 (1703, v10.0.14972)
     const long SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE = 0x2;
+    // FileInformationClass values
     const long FileBasicInfo = 0;
     const long FileStandardInfo = 1;
     const long FileNameInfo = 2;

@@ -20,10 +20,5 @@ namespace golang::math
     {
     }
 
-    // Mathematical constants.
-    // Floating-point limit values.
-    // Max is the largest finite value representable by the type.
-    // SmallestNonzero is the smallest positive, non-zero value representable by the type.
-    // Integer limit values.
 }
 

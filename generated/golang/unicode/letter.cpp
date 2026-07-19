@@ -185,13 +185,7 @@ namespace golang::unicode
 
     // SpecialCase represents language-specific case mappings such as Turkish.
     // Methods of SpecialCase customize (by overriding) the standard mappings.
-    // Indices into the Delta arrays inside CaseRanges for case mapping.
     // // to make the CaseRanges text shorter
-    // If the Delta field of a [CaseRange] is UpperLower, it means
-    // this CaseRange represents a sequence of the form (say)
-    // [Upper] [Lower] [Upper] [Lower].
-    // linearMax is the maximum size table for linear search for non-Latin1 rune.
-    // Derived by running 'go test -calibrate'.
     // is16 reports whether r is in the sorted slice of 16-bit ranges.
     bool is16(gocpp::slice<Range16> ranges, uint16_t r)
     {

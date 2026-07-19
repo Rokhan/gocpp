@@ -17,9 +17,6 @@ namespace golang::runtime
     {
     }
 
-    // Numbers fundamental to the encoding.
-    // Code points in the surrogate range are not valid for UTF-8.
-    // The default lowest and highest continuation byte.
     // countrunes returns the number of runes in s.
     int countrunes(gocpp::string s)
     {

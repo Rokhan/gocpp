@@ -6,12 +6,17 @@
 
 namespace golang::runtime
 {
+    // TODO(brainman): should not need those
     const long go__NSIG = 65;
     using stdFunction = gocpp::unsafe_pointer;
     struct sigset;
     const long go__MAX_PATH = 260;
     const uintptr_t currentProcess = ~ uintptr_t(0);
     const uintptr_t currentThread = ~ uintptr_t(1);
+    // osRelaxMinNS indicates that sysmon shouldn't osRelax if the next
+    // timer is less than 60 ms from now. Since osRelaxing may reduce
+    // timer resolution to 15.6 ms, this keeps timer error under roughly 1
+    // part in 4.
     const double osRelaxMinNS = 60 * 1e6;
     const bool preemptMSupported = true;
 }

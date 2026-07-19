@@ -6,6 +6,18 @@
 
 namespace golang::runtime
 {
+    // This implementation depends on OS-specific implementations of
+    //
+    //	func semacreate(mp *m)
+    //		Create a semaphore for mp, if it does not already have one.
+    //
+    //	func semasleep(ns int64) int32
+    //		If ns < 0, acquire m's semaphore and return 0.
+    //		If ns >= 0, try to acquire m's semaphore for at most ns nanoseconds.
+    //		Return 0 if the semaphore was acquired, -1 if interrupted or timed out.
+    //
+    //	func semawakeup(mp *m)
+    //		Wake up mp, which is or will soon be sleeping on its semaphore.
     const uintptr_t locked = 1;
     const long active_spin = 4;
     const long active_spin_cnt = 30;

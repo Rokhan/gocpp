@@ -52,8 +52,6 @@ namespace golang::runtime
     {
     }
 
-    // The constant is known to the compiler.
-    // There is no fundamental theory behind this number.
     // concatstrings implements a Go string concatenation x+y+z+...
     // The operands are passed in the slice a.
     // If buf != nil, the compiler has determined that the result does not

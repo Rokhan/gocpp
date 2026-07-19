@@ -12,6 +12,13 @@ namespace golang::fs
     struct ReadDirFile;
     using FileMode = uint32_t;
     struct PathError;
+    // The defined file mode bits are the most significant bits of the [FileMode].
+    // The nine least-significant bits are the standard Unix rwxrwxrwx permissions.
+    // The values of these bits should be considered part of the public API and
+    // may be used in wire protocols or disk representations: they must not be
+    // changed, although new bits might be added.
+    // The single letters are the abbreviations
+    // used by the String method's formatting.
     const golang::fs::FileMode ModeDir = 1 << (32 - 1 - 0);
     const golang::fs::FileMode ModeAppend = 1 << (32 - 1 - 1);
     const golang::fs::FileMode ModeExclusive = 1 << (32 - 1 - 2);
@@ -32,5 +39,6 @@ namespace golang::fs
 namespace golang::fs
 {
     struct FileInfo;
+    // Mask for the type bits. For regular files, none will be set.
     const fs::FileMode ModeType = ModeDir | ModeSymlink | ModeNamedPipe | ModeSocket | ModeDevice | ModeCharDevice | ModeIrregular;
 }

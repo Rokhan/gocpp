@@ -31,10 +31,6 @@ namespace golang::cpu
     int32_t getGOAMD64level()
     /* convertBlockStmt, nil block */;
 
-    // edx bits
-    // ecx bits
-    // ebx bits
-    // edx bits for CPUID 0x80000001
     uint32_t maxExtendedFunctionInformation;
     void doinit()
     {

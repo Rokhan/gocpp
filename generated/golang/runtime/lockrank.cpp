@@ -17,19 +17,6 @@ namespace golang::runtime
     {
     }
 
-    // Constants representing the ranks of all non-leaf runtime locks, in rank order.
-    // Locks with lower rank must be taken before locks with higher rank,
-    // in addition to satisfying the partial order in lockPartialOrder.
-    // A few ranks allow self-cycles, which are specified in lockPartialOrder.
-    // SCHED
-    // TRACEGLOBAL
-    // MALLOC
-    // MPROF
-    // STACKGROW
-    // WB
-    // TRACE
-    // lockRankLeafRank is the rank of lock that does not have a declared rank,
-    // and hence is a leaf lock.
     // lockNames gives the names associated with each of the above ranks.
     gocpp::slice<gocpp::string> lockNames = gocpp::Init<gocpp::slice<gocpp::string>>([](auto& x) {
         x[lockRankSysmon] = "sysmon"_s;

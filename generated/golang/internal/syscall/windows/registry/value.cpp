@@ -26,12 +26,11 @@ namespace golang::registry
     {
     }
 
-    // Registry value types.
     // ErrShortBuffer is returned when the buffer was too short for the operation.
-    // ErrNotExist is returned when a registry key or value does not exist.
-    // ErrUnexpectedType is returned by Get*Value when the value's type was unexpected.
     syscall::Errno ErrShortBuffer = syscall::ERROR_MORE_DATA;
+    // ErrNotExist is returned when a registry key or value does not exist.
     syscall::Errno ErrNotExist = syscall::ERROR_FILE_NOT_FOUND;
+    // ErrUnexpectedType is returned by Get*Value when the value's type was unexpected.
     gocpp::error ErrUnexpectedType = errors::New("unexpected key value type"_s);
     // GetValue retrieves the type and data for the specified value associated
     // with an open key k. It fills up buffer buf and returns the retrieved

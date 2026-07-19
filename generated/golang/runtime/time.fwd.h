@@ -6,17 +6,42 @@
 
 namespace golang::runtime
 {
+    // Values for the timer status field.
+    // Timer has no status set yet.
     const int timerNoStatus = 0;
+    // Waiting for timer to fire.
+    // The timer is in some P's heap.
     const int timerWaiting = 1;
+    // Running the timer function.
+    // A timer will only have this status briefly.
     const int timerRunning = 2;
+    // The timer is deleted and should be removed.
+    // It should not be run, but it is still in some P's heap.
     const int timerDeleted = 3;
+    // The timer is being removed.
+    // The timer will only have this status briefly.
     const int timerRemoving = 4;
+    // The timer has been stopped.
+    // It is not in any P's heap.
     const int timerRemoved = 5;
+    // The timer is being modified.
+    // The timer will only have this status briefly.
     const int timerModifying = 6;
+    // The timer has been modified to an earlier time.
+    // The new when value is in the nextwhen field.
+    // The timer is in some P's heap, possibly in the wrong place.
     const int timerModifiedEarlier = 7;
+    // The timer has been modified to the same or a later time.
+    // The new when value is in the nextwhen field.
+    // The timer is in some P's heap, possibly in the wrong place.
     const int timerModifiedLater = 8;
+    // The timer has been modified and is being moved.
+    // The timer will only have this status briefly.
     const int timerMoving = 9;
+    // maxWhen is the maximum value for timer's when field.
     const int maxWhen = (1 << 63) - 1;
+    // verifyTimers can be set to true to add debugging checks that the
+    // timer heaps are valid.
     const bool verifyTimers = false;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"

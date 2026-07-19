@@ -1185,8 +1185,6 @@ namespace golang::runtime
         rec::close(gocpp::recv(s->timer));
     }
 
-    // traceAdvancePeriod is the approximate period between
-    // new generations.
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_4::operator T()

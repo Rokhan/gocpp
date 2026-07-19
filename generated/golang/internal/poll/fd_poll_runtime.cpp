@@ -182,8 +182,6 @@ namespace golang::poll
         return pd->runtimeCtx != 0;
     }
 
-    // Error values returned by runtime_pollReset and runtime_pollWait.
-    // These must match the values in runtime/netpoll.go.
     struct gocpp::error convertErr(int res, bool isFile)
     {
         //Go switch emulation

@@ -6,10 +6,12 @@
 
 namespace golang::utf8
 {
+    // Numbers fundamental to the encoding.
     const char RuneError = '\uFFFD';
     const long RuneSelf = 0x80;
     const char MaxRune = '\U0010FFFF';
     const long UTFMax = 4;
+    // Code points in the surrogate range are not valid for UTF-8.
     const long surrogateMin = 0xD800;
     const long surrogateMax = 0xDFFF;
     const long t1 = 0b00000000;
@@ -25,8 +27,13 @@ namespace golang::utf8
     const int rune1Max = (1 << 7) - 1;
     const int rune2Max = (1 << 11) - 1;
     const int rune3Max = (1 << 16) - 1;
+    // The default lowest and highest continuation byte.
     const long locb = 0b10000000;
     const long hicb = 0b10111111;
+    // These names of these constants are chosen to give nice alignment in the
+    // table below. The first nibble is an index into acceptRanges or F for
+    // special one-byte cases. The second nibble is the Rune length or the
+    // Status for the special one-byte case.
     const long xx = 0xF1;
     const long as = 0xF0;
     const long s1 = 0x02;

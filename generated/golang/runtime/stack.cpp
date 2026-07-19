@@ -90,36 +90,7 @@ namespace golang::runtime
         using atomic::rec::Load;
     }
 
-    // stackSystem is a number of additional bytes to add
-    // to each stack below the usual guard area for OS-specific
-    // purposes like signal handling. Used on Windows, Plan 9,
-    // and iOS because they do not use a separate stack.
-    // The minimum size of stack used by Go code
-    // The minimum stack size to allocate.
-    // The hackery here rounds fixedStack0 up to a power of 2.
-    // stackNosplit is the maximum number of bytes that a chain of NOSPLIT
-    // functions can use.
-    // This arithmetic must match that in cmd/internal/objabi/stack.go:StackNosplit.
-    // The stack guard is a pointer this many bytes above the
-    // bottom of the stack.
-    //
-    // The guard leaves enough room for a stackNosplit chain of NOSPLIT calls
-    // plus one stackSmall frame plus stackSystem bytes for the OS.
-    // This arithmetic must match that in cmd/internal/objabi/stack.go:StackLimit.
-    // stackDebug == 0: no logging
-    //            == 1: logging of per-stack operations
-    //            == 2: logging of per-frame operations
-    //            == 3: logging of per-word updates
-    //            == 4: logging of per-word reads
-    // check the BP links during traceback.
     long stackPoisonCopy = 0;
-    // Goroutine preemption request.
-    // 0xfffffade in hex.
-    // Thread is forking. Causes a split stack check failure.
-    // 0xfffffb2e in hex.
-    // Force a stack movement. Used for debugging.
-    // 0xfffffeed in hex.
-    // stackPoisonMin is the lowest allowed stack poison value.
     
     template<typename T> requires gocpp::GoStruct<T>
     stackpoolStruct::operator T()

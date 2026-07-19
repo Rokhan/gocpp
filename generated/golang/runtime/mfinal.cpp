@@ -122,7 +122,6 @@ namespace golang::runtime
     }
 
     atomic::Uint32 fingStatus;
-    // finalizer goroutine status.
     golang::runtime::mutex finlock;
     golang::runtime::g* fing;
     golang::runtime::finblock* finq;

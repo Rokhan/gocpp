@@ -75,14 +75,6 @@ namespace golang::os
     // information about files can be moved from one system
     // to another portably. Not all bits apply to all systems.
     // The only required bit is ModeDir for directories.
-    // The defined file mode bits are the most significant bits of the FileMode.
-    // The nine least-significant bits are the standard Unix rwxrwxrwx permissions.
-    // The values of these bits should be considered part of the public API and
-    // may be used in wire protocols or disk representations: they must not be
-    // changed, although new bits might be added.
-    // The single letters are the abbreviations
-    // used by the String method's formatting.
-    // Mask for the type bits. For regular files, none will be set.
     gocpp::string rec::Name(fileStat* fs)
     {
         return fs->name;

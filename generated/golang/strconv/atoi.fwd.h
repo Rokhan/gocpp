@@ -9,5 +9,6 @@ namespace golang::strconv
     struct NumError;
     const int intSize = 32 << (~ (unsigned int)(0) >> 63);
     const int maxUint64 = (1 << 64) - 1;
+    // IntSize is the size in bits of an int or uint value.
     const int IntSize = intSize;
 }

@@ -8,7 +8,17 @@ namespace golang::runtime
 {
     using throwType = uint32_t;
     struct PanicNilError;
+    // throwTypeNone means that we are not throwing.
     const golang::runtime::throwType throwTypeNone = 0;
+    // throwTypeUser is a throw due to a problem with the application.
+    //
+    // These throws do not include runtime frames, system goroutines, or
+    // frame metadata.
     const golang::runtime::throwType throwTypeUser = 1;
+    // throwTypeRuntime is a throw due to a problem with Go itself.
+    //
+    // These throws include as much information as possible to aid in
+    // debugging the runtime, including runtime frames, system goroutines,
+    // and frame metadata.
     const golang::runtime::throwType throwTypeRuntime = 2;
 }

@@ -67,12 +67,6 @@ namespace golang::runtime
     //
     // NOTE: If you add an event type, make sure you also update all
     // tables in this file!
-    // Structural events.
-    // Procs.
-    // Goroutines.
-    // STW.
-    // GC events.
-    // Annotations.
     // traceArg is a simple wrapper type to help ensure that arguments passed
     // to traces are well-formed.
     // traceEventWriter is the high-level API for writing trace events.

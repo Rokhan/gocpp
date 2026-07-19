@@ -19,9 +19,6 @@ namespace golang::syscall
     {
     }
 
-    // Windows errors.
-    // Invented values to support what package os expects.
-    // More invented values for signals
     gocpp::array<gocpp::string, 16> signals = gocpp::Init<gocpp::array<gocpp::string, 16>>([](auto& x) {
         x[1] = "hangup"_s;
         x[2] = "interrupt"_s;
@@ -39,10 +36,6 @@ namespace golang::syscall
         x[14] = "alarm clock"_s;
         x[15] = "terminated"_s;
     });
-    // flags for CreateToolhelp32Snapshot
-    // do not reorder
-    // do not reorder
-    // wincrypt.h
     gocpp::slice<unsigned char> OID_PKIX_KP_SERVER_AUTH = gocpp::slice<unsigned char>("1.3.6.1.5.5.7.3.1\x00"_s);
     gocpp::slice<unsigned char> OID_SERVER_GATED_CRYPTO = gocpp::slice<unsigned char>("1.3.6.1.4.1.311.10.3.3\x00"_s);
     gocpp::slice<unsigned char> OID_SGC_NETSCAPE = gocpp::slice<unsigned char>("2.16.840.1.113730.4.1\x00"_s);
@@ -532,8 +525,6 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    // ShowWindow constants
-    // winuser.h
     
     template<typename T> requires gocpp::GoStruct<T>
     StartupInfo::operator T()
@@ -898,7 +889,6 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    // Invented values to support what package os expects.
     
     template<typename T> requires gocpp::GoStruct<T>
     Hostent::operator T()
@@ -975,7 +965,6 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    // flags inside DNSRecord.Dw
     
     template<typename T> requires gocpp::GoStruct<T>
     DNSSRVData::operator T()
@@ -2051,8 +2040,6 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    // do not reorder
-    // do not reorder
     
     template<typename T> requires gocpp::GoStruct<T>
     AddrinfoW::operator T()

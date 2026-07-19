@@ -6,6 +6,7 @@
 
 namespace golang::runtime
 {
+    // Prime to not correlate with any user patterns.
     const long semTabSize = 251;
     struct gocpp_id_0;
     struct GoTag_semTable;

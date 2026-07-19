@@ -42,24 +42,6 @@ namespace golang::runtime
     {
     }
 
-    // The size of a bitmap chunk, i.e. the amount of bits (that is, pages) to consider
-    // in the bitmap at once.
-    // The number of radix bits for each level.
-    //
-    // The value of 3 is chosen such that the block of summaries we need to scan at
-    // each level fits in 64 bytes (2^3 summaries * 8 bytes per summary), which is
-    // close to the L1 cache line width on many systems. Also, a value of 3 fits 4 tree
-    // levels perfectly into the 21-bit pallocBits summary field at the root level.
-    //
-    // The following equation explains how each of the constants relate:
-    // summaryL0Bits + (summaryLevels-1)*summaryLevelBits + logPallocChunkBytes = heapAddrBits
-    //
-    // summaryLevels is an architecture-dependent value defined in mpagealloc_*.go.
-    // pallocChunksL2Bits is the number of bits of the chunk index number
-    // covered by the second level of the chunks map.
-    //
-    // See (*pageAlloc).chunks for more details. Update the documentation
-    // there should this change.
     // maxSearchAddr returns the maximum searchAddr value, which indicates
     // that the heap has no free space.
     //
@@ -1055,8 +1037,6 @@ namespace golang::runtime
         rec::update(gocpp::recv(p), base, npages, true, false);
     }
 
-    // maxPackedValue is the maximum value that any of the three fields in
-    // the pallocSum may take on.
     // pallocSum is a packed summary type which packs three numbers: start, max,
     // and end into a single 8-byte value. Each of these values are a summary of
     // a bitmap and are thus counts, each of which may have a maximum value of

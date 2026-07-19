@@ -24,7 +24,6 @@ namespace golang::bytes
         using io::rec::Write;
     }
 
-    // smallBufferSize is an initial allocation minimal capacity.
     // A Buffer is a variable-sized buffer of bytes with [Buffer.Read] and [Buffer.Write] methods.
     // The zero value for Buffer is an empty buffer ready to use.
     
@@ -66,8 +65,6 @@ namespace golang::bytes
     // the buffer, so that UnreadRune and UnreadByte can check for
     // invalid usage. opReadRuneX constants are chosen such that
     // converted to int they correspond to the rune size that was read.
-    // Don't use iota for these, as the values need to correspond with the
-    // names and comments, which is easier to see when being explicit.
     // ErrTooLarge is passed to panic if memory cannot be allocated to store data in a buffer.
     gocpp::error ErrTooLarge = errors::New("bytes.Buffer: too large"_s);
     gocpp::error errNegativeRead = errors::New("bytes.Buffer: reader returned negative count from Read"_s);
@@ -264,10 +261,6 @@ namespace golang::bytes
         return {copy(b->buf.make_slice(m), s), nullptr};
     }
 
-    // MinRead is the minimum slice size passed to a Read call by
-    // [Buffer.ReadFrom]. As long as the [Buffer] has at least MinRead bytes beyond
-    // what is required to hold the contents of r, ReadFrom will not grow the
-    // underlying buffer.
     // ReadFrom reads data from r until EOF and appends it to the buffer, growing
     // the buffer as needed. The return value n is the number of bytes read. Any
     // error except io.EOF encountered during the read is also returned. If the

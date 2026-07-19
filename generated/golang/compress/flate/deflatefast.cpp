@@ -21,11 +21,6 @@ namespace golang::flate
     {
     }
 
-    // Reset the buffer offset when reaching this.
-    // Offsets are stored between blocks as int32 values.
-    // Since the offset we are checking against is at the beginning
-    // of the buffer, we need to subtract the current and input
-    // buffer to not risk overflowing the int32.
     uint32_t load32(gocpp::slice<unsigned char> b, int32_t i)
     {
         // Help the compiler eliminate bounds checks on the next line.
@@ -45,10 +40,6 @@ namespace golang::flate
         return (u * 0x1e35a7bd) >> tableShift;
     }
 
-    // These constants are defined by the Snappy implementation so that its
-    // assembly implementation can fast-path some 16-bytes-at-a-time copies. They
-    // aren't necessary in the pure Go implementation, as we don't use those same
-    // optimizations, but using the same thresholds doesn't really hurt.
     
     template<typename T> requires gocpp::GoStruct<T>
     tableEntry::operator T()

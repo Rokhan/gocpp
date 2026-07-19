@@ -6,12 +6,23 @@
 
 namespace golang::flate
 {
+    // The largest offset code.
     const long offsetCodeCount = 30;
+    // The special code used to mark the end of a block.
     const long endBlockMarker = 256;
+    // The first length code.
     const long lengthCodesStart = 257;
+    // The number of codegen codes.
     const long codegenCodeCount = 19;
     const long badCode = 255;
+    // bufferFlushSize indicates the buffer size
+    // after which bytes are flushed to the writer.
+    // Should preferably be a multiple of 6, since
+    // we accumulate 6 bytes between writes to the buffer.
     const long bufferFlushSize = 240;
+    // bufferSize is the actual output byte buffer size.
+    // It must have additional headroom for a flush
+    // which can contain up to 8 bytes.
     const int bufferSize = bufferFlushSize + 8;
 }
 #include "golang/compress/flate/huffman_code.fwd.h"

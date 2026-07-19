@@ -6,6 +6,8 @@
 
 namespace golang::fmt
 {
+    // Strings for use with buffer.WriteString.
+    // This is less overhead than using buffer.Write with byte arrays.
     const gocpp::string commaSpaceString = ", "_s;
     const gocpp::string nilAngleString = "<nil>"_s;
     const gocpp::string nilParenString = "(nil)"_s;

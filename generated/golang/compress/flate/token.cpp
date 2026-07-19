@@ -17,9 +17,6 @@ namespace golang::flate
     {
     }
 
-    // 2 bits:   type   0 = literal  1=EOF  2=Match   3=Unused
-    // 8 bits:   xlength = length - MIN_MATCH_LENGTH
-    // 22 bits   xoffset = offset - MIN_OFFSET_SIZE, or literal
     // The length code for length X (MIN_MATCH_LENGTH <= X <= MAX_MATCH_LENGTH)
     // is lengthCodes[length - MIN_MATCH_LENGTH]
     gocpp::array<uint32_t, 256> lengthCodes = gocpp::array<uint32_t, 256> {

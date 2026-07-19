@@ -32,8 +32,6 @@ namespace golang::windows
     }
 
     gocpp::unsafe_pointer _;
-    // Do the interface allocations only once for common
-    // Errno values.
     gocpp::error errERROR_IO_PENDING = syscall::Errno(errnoERROR_IO_PENDING);
     gocpp::error errERROR_EINVAL = syscall::go_EINVAL;
     // errnoErr returns common boxed Errno values, to prevent

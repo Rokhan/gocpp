@@ -8,8 +8,15 @@ namespace golang::runtime
 {
     const long _DebugGC = 0;
     const int _FinBlockSize = 4 * 1024;
+    // concurrentSweep is a debug flag. Disabling this flag
+    // ensures all spans are swept while the world is stopped.
     const bool concurrentSweep = true;
+    // debugScanConservative enables debug logging for stack
+    // frames that are scanned conservatively.
     const bool debugScanConservative = false;
+    // sweepMinHeapDistance is a lower bound on the heap distance
+    // (in bytes) reserved for concurrent sweeping between GC
+    // cycles.
     const int sweepMinHeapDistance = 1024 * 1024;
     struct writeBarrierStruct;
     const int _GCoff = 0;
@@ -19,15 +26,41 @@ namespace golang::runtime
     using gcMode = int;
     struct gcTrigger;
     using gcTriggerKind = int;
+    // gcMarkWorkerNotWorker indicates that the next scheduled G is not
+    // starting work and the mode should be ignored.
     const golang::runtime::gcMarkWorkerMode gcMarkWorkerNotWorker = 0;
+    // gcMarkWorkerDedicatedMode indicates that the P of a mark
+    // worker is dedicated to running that mark worker. The mark
+    // worker should run without preemption.
     const golang::runtime::gcMarkWorkerMode gcMarkWorkerDedicatedMode = 1;
+    // gcMarkWorkerFractionalMode indicates that a P is currently
+    // running the "fractional" mark worker. The fractional worker
+    // is necessary when GOMAXPROCS*gcBackgroundUtilization is not
+    // an integer and using only dedicated workers would result in
+    // utilization too far from the target of gcBackgroundUtilization.
+    // The fractional worker should run until it is preempted and
+    // will be scheduled to pick up the fractional part of
+    // GOMAXPROCS*gcBackgroundUtilization.
     const golang::runtime::gcMarkWorkerMode gcMarkWorkerFractionalMode = 2;
+    // gcMarkWorkerIdleMode indicates that a P is running the mark
+    // worker because it has nothing else to do. The idle worker
+    // should run until it is preempted and account its time
+    // against gcController.idleMarkTime.
     const golang::runtime::gcMarkWorkerMode gcMarkWorkerIdleMode = 3;
     const golang::runtime::gcMode gcBackgroundMode = 0;
     const golang::runtime::gcMode gcForceMode = 1;
     const golang::runtime::gcMode gcForceBlockMode = 2;
+    // gcTriggerHeap indicates that a cycle should be started when
+    // the heap size reaches the trigger heap size computed by the
+    // controller.
     const golang::runtime::gcTriggerKind gcTriggerHeap = 0;
+    // gcTriggerTime indicates that a cycle should be started when
+    // it's been more than forcegcperiod nanoseconds since the
+    // previous GC cycle.
     const golang::runtime::gcTriggerKind gcTriggerTime = 1;
+    // gcTriggerCycle indicates that a cycle should be started if
+    // we have not yet started cycle number gcTrigger.n (relative
+    // to work.cycles).
     const golang::runtime::gcTriggerKind gcTriggerCycle = 2;
 }
 #include "golang/internal/cpu/cpu.fwd.h"

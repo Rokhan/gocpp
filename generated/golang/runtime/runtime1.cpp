@@ -54,11 +54,6 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    // Keep a cached value to make gotraceback fast,
-    // since we call it on every call to gentraceback.
-    // The cached value is a uint32 in which the low bits
-    // are the "crash" and "all" settings and the remaining
-    // bits are the traceback value (0 off, 1 on, 2 include system).
     uint32_t traceback_cache = 2 << tracebackShift;
     uint32_t traceback_env;
     // gotraceback returns the current traceback settings.
@@ -153,6 +148,8 @@ namespace golang::runtime
     // TODO: These should be locals in testAtomic64, but we don't 8-byte
     // align stack variables on 386.
     uint64_t test_z64;
+    // TODO: These should be locals in testAtomic64, but we don't 8-byte
+    // align stack variables on 386.
     uint64_t test_x64;
     void testAtomic64()
     {

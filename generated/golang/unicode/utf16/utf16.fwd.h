@@ -8,6 +8,9 @@ namespace golang::utf16
 {
     const char replacementChar = '\uFFFD';
     const char maxRune = '\U0010FFFF';
+    // 0xd800-0xdc00 encodes the high 10 bits of a pair.
+    // 0xdc00-0xe000 encodes the low 10 bits of a pair.
+    // the value is those 20 bits plus 0x10000.
     const long surr1 = 0xd800;
     const long surr2 = 0xdc00;
     const long surr3 = 0xe000;

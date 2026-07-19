@@ -187,8 +187,6 @@ namespace golang::strconv
         return {math::Float32frombits(uint32_t(retBits)), true};
     }
 
-    // detailedPowersOfTen{Min,Max}Exp10 is the power of 10 represented by the
-    // first and last rows of detailedPowersOfTen. Both bounds are inclusive.
     // detailedPowersOfTen contains 128-bit mantissa approximations (rounded down)
     // to the powers of 10. For example:
     //

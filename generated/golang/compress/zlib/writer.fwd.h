@@ -9,6 +9,8 @@
 
 namespace golang::zlib
 {
+    // These constants are copied from the flate package, so that code that imports
+    // "compress/zlib" does not also have to import "compress/flate".
     const int NoCompression = flate::NoCompression;
     const int BestSpeed = flate::BestSpeed;
     const int BestCompression = flate::BestCompression;

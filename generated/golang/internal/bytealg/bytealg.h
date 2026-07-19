@@ -31,6 +31,7 @@ namespace golang::bytealg
 
 namespace golang::bytealg
 {
+    // Offsets into internal/cpu records for use in assembly.
     const uintptr_t offsetX86HasSSE42 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasSSE42);
     const uintptr_t offsetX86HasAVX2 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX2);
     const uintptr_t offsetX86HasPOPCNT = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasPOPCNT);

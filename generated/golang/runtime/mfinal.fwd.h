@@ -6,6 +6,7 @@
 
 namespace golang::runtime
 {
+    // finalizer goroutine status.
     const uint32_t fingUninitialized = 0;
     const uint32_t fingCreated = 1 << (1 - 1);
     const uint32_t fingRunningFinalizer = 1 << (2 - 1);

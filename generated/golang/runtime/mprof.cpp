@@ -82,20 +82,14 @@ namespace golang::runtime
 
     // NOTE(rsc): Everything here could use cas if contention became an issue.
     // profInsertLock protects changes to the start of all *bucket linked lists
+    golang::runtime::mutex profInsertLock;
     // profBlockLock protects the contents of every blockRecord struct
+    golang::runtime::mutex profBlockLock;
     // profMemActiveLock protects the active field of every memRecord struct
+    golang::runtime::mutex profMemActiveLock;
     // profMemFutureLock is a set of locks that protect the respective elements
     // of the future array of every memRecord struct
-    golang::runtime::mutex profInsertLock;
-    golang::runtime::mutex profBlockLock;
-    golang::runtime::mutex profMemActiveLock;
     gocpp::array<golang::runtime::mutex, len(golang::runtime::memRecord {}.future)> profMemFutureLock;
-    // profile types
-    // size of bucket hash table
-    // maxStack is the max depth of stack to record in bucket.
-    // Note that it's only used internally as a guard against
-    // wildly out-of-bounds slicing of the PCs that come after
-    // a bucket struct, and it could increase in the future.
     // A bucket holds per-call-stack profiling information.
     // The representation is a bit sleazy, inherited from C.
     // This struct defines the bucket header. It is followed in

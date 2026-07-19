@@ -19,7 +19,6 @@ namespace golang::main
     {
     }
 
-    // PrimeRK is the prime base used in Rabin-Karp algorithm.
     // HashStr returns the hash and the appropriate multiplicative
     // factor for use in Rabin-Karp algorithm.
     template<typename T>

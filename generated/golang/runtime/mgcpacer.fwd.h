@@ -6,16 +6,69 @@
 
 namespace golang::runtime
 {
+    // gcBackgroundUtilization is the fixed CPU utilization for background
+    // marking. It must be <= gcGoalUtilization. The difference between
+    // gcGoalUtilization and gcBackgroundUtilization will be made up by
+    // mark assists. The scheduler will aim to use within 50% of this
+    // goal.
+    //
+    // As a general rule, there's little reason to set gcBackgroundUtilization
+    // < gcGoalUtilization. One reason might be in mostly idle applications,
+    // where goroutines are unlikely to assist at all, so the actual
+    // utilization will be lower than the goal. But this is moot point
+    // because the idle mark workers already soak up idle CPU resources.
+    // These two values are still kept separate however because they are
+    // distinct conceptually, and in previous iterations of the pacer the
+    // distinction was more important.
     const double gcBackgroundUtilization = 0.25;
+    // gcCreditSlack is the amount of scan work credit that can
+    // accumulate locally before updating gcController.heapScanWork and,
+    // optionally, gcController.bgScanCredit. Lower values give a more
+    // accurate assist ratio and make it more likely that assists will
+    // successfully steal background credit. Higher values reduce memory
+    // contention.
     const long gcCreditSlack = 2000;
+    // gcAssistTimeSlack is the nanoseconds of mutator assist time that
+    // can accumulate on a P before updating gcController.assistTime.
     const long gcAssistTimeSlack = 5000;
+    // gcOverAssistWork determines how many extra units of scan work a GC
+    // assist does when an assist happens. This amortizes the cost of an
+    // assist by pre-paying for this many bytes of future allocations.
     const int gcOverAssistWork = 64 << 10;
+    // maxStackScanSlack is the bytes of stack space allocated or freed
+    // that can accumulate on a P before updating gcController.stackSize.
     const int maxStackScanSlack = 8 << 10;
+    // memoryLimitMinHeapGoalHeadroom is the minimum amount of headroom the
+    // pacer gives to the heap goal when operating in the memory-limited regime.
+    // That is, it'll reduce the heap goal by this many extra bytes off of the
+    // base calculation, at minimum.
     const int memoryLimitMinHeapGoalHeadroom = 1 << 20;
+    // memoryLimitHeapGoalHeadroomPercent is how headroom the memory-limit-based
+    // heap goal should have as a percent of the maximum possible heap goal allowed
+    // to maintain the memory limit.
     const long memoryLimitHeapGoalHeadroomPercent = 3;
+    // These constants determine the bounds on the GC trigger as a fraction
+    // of heap bytes allocated between the start of a GC (heapLive == heapMarked)
+    // and the end of a GC (heapLive == heapGoal).
+    //
+    // The constants are obscured in this way for efficiency. The denominator
+    // of the fraction is always a power-of-two for a quick division, so that
+    // the numerator is a single constant integer multiplication.
     const long triggerRatioDen = 64;
+    // The minimum trigger constant was chosen empirically: given a sufficiently
+    // fast/scalable allocator with 48 Ps that could drive the trigger ratio
+    // to <0.05, this constant causes applications to retain the same peak
+    // RSS compared to not having this allocator.
     const long minTriggerRatioNum = 45;
+    // The maximum trigger constant is chosen somewhat arbitrarily, but the
+    // current constant has served us well over the years.
     const long maxTriggerRatioNum = 61;
+    // gcGoalUtilization is the goal CPU utilization for
+    // marking as a fraction of GOMAXPROCS.
+    //
+    // Increasing the goal utilization will shorten GC cycles as the GC
+    // has more resources behind it, lessening costs from the write barrier,
+    // but comes at the cost of increasing mutator latency.
     const double gcGoalUtilization = gcBackgroundUtilization;
 }
 #include "golang/internal/cpu/cpu.fwd.h"
@@ -25,6 +78,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
+    // defaultHeapMinimum is the value of heapMinimum for GOGC==100.
     const int defaultHeapMinimum = (goexperiment::HeapMinimum512KiBInt) * (512 << 10) + (1 - goexperiment::HeapMinimum512KiBInt) * (4 << 20);
     struct gcControllerState;
 }

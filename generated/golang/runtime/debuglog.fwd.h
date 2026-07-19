@@ -6,6 +6,9 @@
 
 namespace golang::runtime
 {
+    // debugLogBytes is the size of each per-M ring buffer. This is
+    // allocated off-heap to avoid blowing up the M and hence the GC'd
+    // heap size.
     const int debugLogBytes = 16 << 10;
     const int debugLogUnknown = 1 + 0;
     const int debugLogBoolTrue = 1 + 1;
@@ -19,10 +22,15 @@ namespace golang::runtime
     const int debugLogStringOverflow = 1 + 9;
     const int debugLogPC = 1 + 10;
     const int debugLogTraceback = 1 + 11;
+    // debugLogHeaderSize is the number of bytes in the framing
+    // header of every dlog record.
     const long debugLogHeaderSize = 2;
     struct debugLogReader;
     struct gocpp_id_0;
+    // debugLogStringLimit is the maximum number of bytes in a string.
+    // Above this, the string will be truncated with "..(n more bytes).."
     const int debugLogStringLimit = debugLogBytes / 8;
+    // debugLogSyncSize is the number of bytes in a sync record.
     const int debugLogSyncSize = debugLogHeaderSize + 2 * 8;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"

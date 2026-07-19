@@ -6,6 +6,8 @@
 
 namespace golang::strconv
 {
+    // detailedPowersOfTen{Min,Max}Exp10 is the power of 10 represented by the
+    // first and last rows of detailedPowersOfTen. Both bounds are inclusive.
     const long detailedPowersOfTenMinExp10 = - 348;
     const long detailedPowersOfTenMaxExp10 = + 347;
 }

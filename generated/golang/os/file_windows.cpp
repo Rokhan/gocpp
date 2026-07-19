@@ -50,7 +50,6 @@ namespace golang::os
         using windows::rec::Path;
     }
 
-    // This matches the value in syscall/syscall_windows.go.
     // file is the real representation of *File.
     // The extra level of indirection ensures that no clients of os
     // can overwrite this data, which could cause the finalizer
@@ -165,8 +164,6 @@ namespace golang::os
     {
     }
 
-    // DevNull is the name of the operating system's “null device.”
-    // On Unix-like systems, it is "/dev/null"; on Windows, "NUL".
     // openFileNolog is the Windows implementation of OpenFile.
     std::tuple<golang::os::File*, struct gocpp::error> openFileNolog(gocpp::string name, int flag, FileMode perm)
     {

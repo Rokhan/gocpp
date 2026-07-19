@@ -7,7 +7,9 @@
 namespace golang::cpu
 {
     const long CacheLinePadSize = 64;
+    // edx bits
     const int cpuid_SSE2 = 1 << 26;
+    // ecx bits
     const int cpuid_SSE3 = 1 << 0;
     const int cpuid_PCLMULQDQ = 1 << 1;
     const int cpuid_SSSE3 = 1 << 9;
@@ -18,6 +20,7 @@ namespace golang::cpu
     const int cpuid_AES = 1 << 25;
     const int cpuid_OSXSAVE = 1 << 27;
     const int cpuid_AVX = 1 << 28;
+    // ebx bits
     const int cpuid_BMI1 = 1 << 3;
     const int cpuid_AVX2 = 1 << 5;
     const int cpuid_BMI2 = 1 << 8;
@@ -27,5 +30,6 @@ namespace golang::cpu
     const int cpuid_SHA = 1 << 29;
     const int cpuid_AVX512BW = 1 << 30;
     const int cpuid_AVX512VL = 1 << 31;
+    // edx bits for CPUID 0x80000001
     const int cpuid_RDTSCP = 1 << 27;
 }

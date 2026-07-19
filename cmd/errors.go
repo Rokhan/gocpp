@@ -74,6 +74,14 @@ func (cv *parsingContext) EndPosition(expr ast.Node) token.Position {
 	return token.Position{}
 }
 
+func (cv *parsingContext) TokenPosition(token token.Pos) token.Position {
+	return cv.pcShared.fileSet.Position(token)
+}
+
+func (cv *parsingContext) TokenLine(token token.Pos) int {
+	return cv.pcShared.fileSet.Position(token).Line
+}
+
 func (cv *parsingContext) StartLine(expr ast.Node) int {
 	return cv.Position(expr).Line
 }

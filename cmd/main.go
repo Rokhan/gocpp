@@ -3826,10 +3826,22 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		return ExprPrintf("{ %s, %s }", cv.convertExpr(n.Key), cv.convertExpr(n.Value))
 
 	case *ast.BinaryExpr:
+		xEnd := cv.EndPosition(n.X)
+		token := cv.TokenPosition(n.OpPos)
+		yStart := cv.Position(n.Y)
+		leftSpace := " "
+		rightSpace := " "
+		if xEnd.Line < token.Line {
+			leftSpace = "\n" + cv.cpp.Indent() + strings.Repeat(baseIndent, max(token.Column-1, 1))
+		}
+		if token.Line < yStart.Line {
+			rightSpace = "\n" + cv.cpp.Indent() + strings.Repeat(baseIndent, max(yStart.Column-1, 1))
+		}
+
 		if needPriority(n.Op) && ctx.isSubExpr {
-			return ExprPrintf("(%s %s %s)", cv.convertSubExpr(n.X), convertToken(n.Op), cv.convertSubExpr(n.Y))
+			return ExprPrintf("(%s%s%s%s%s)", cv.convertSubExpr(n.X), leftSpace, convertToken(n.Op), rightSpace, cv.convertSubExpr(n.Y))
 		} else {
-			return ExprPrintf("%s %s %s", cv.convertSubExpr(n.X), convertToken(n.Op), cv.convertSubExpr(n.Y))
+			return ExprPrintf("%s%s%s%s%s", cv.convertSubExpr(n.X), leftSpace, convertToken(n.Op), rightSpace, cv.convertSubExpr(n.Y))
 		}
 		// import "go/type"
 		//xType := types.ExprString(n.X)
@@ -4174,7 +4186,7 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 			cv.BuffExprPrintf(buf, "%s%s {", newPrefix, litType)
 		}
 		var sep = ""
-		prevEndLine := cv.getPosition(n.Lbrace).Line
+		prevEndLine := cv.TokenLine(n.Lbrace)
 		for _, elt := range n.Elts {
 			startLine := cv.StartLine(elt)
 			// Don't add extra blank lines for comments

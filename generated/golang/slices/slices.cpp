@@ -544,7 +544,8 @@ namespace golang::slices
         }
         // TODO: use a runtime/unsafe facility once one becomes available. See issue 12445.
         // Also see crypto/internal/alias/alias.go:AnyOverlap
-        return uintptr_t(gocpp::unsafe_pointer(& a[0])) <= uintptr_t(gocpp::unsafe_pointer(& b[len(b) - 1])) + (elemSize - 1) && uintptr_t(gocpp::unsafe_pointer(& b[0])) <= uintptr_t(gocpp::unsafe_pointer(& a[len(a) - 1])) + (elemSize - 1);
+        return uintptr_t(gocpp::unsafe_pointer(& a[0])) <= uintptr_t(gocpp::unsafe_pointer(& b[len(b) - 1])) + (elemSize - 1) &&
+                uintptr_t(gocpp::unsafe_pointer(& b[0])) <= uintptr_t(gocpp::unsafe_pointer(& a[len(a) - 1])) + (elemSize - 1);
     }
 
     // startIdx returns the index in haystack where the needle starts.

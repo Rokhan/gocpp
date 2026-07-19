@@ -80,7 +80,10 @@ namespace golang::crc32
     // CRC(crc, O) in the description in updateCastagnoli.
     uint32_t castagnoliShift(gocpp::array_ptr<sse42Table> table, uint32_t crc)
     {
-        return table[3][crc >> 24] ^ table[2][(crc >> 16) & 0xFF] ^ table[1][(crc >> 8) & 0xFF] ^ table[0][crc & 0xFF];
+        return table[3][crc >> 24] ^
+                table[2][(crc >> 16) & 0xFF] ^
+                table[1][(crc >> 8) & 0xFF] ^
+                table[0][crc & 0xFF];
     }
 
     uint32_t archUpdateCastagnoli(uint32_t crc, gocpp::slice<unsigned char> p)

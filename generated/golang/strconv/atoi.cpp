@@ -366,7 +366,8 @@ namespace golang::strconv
         auto fnAtoi = "Atoi"_s;
 
         auto sLen = len(s);
-        if(intSize == 32 && (0 < sLen && sLen < 10) || intSize == 64 && (0 < sLen && sLen < 19))
+        if(intSize == 32 && (0 < sLen && sLen < 10) ||
+                intSize == 64 && (0 < sLen && sLen < 19))
         {
             // Fast path for small integers that fit int type.
             auto s0 = s;

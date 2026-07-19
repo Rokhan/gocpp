@@ -235,7 +235,13 @@ namespace golang::time
         if(version > 1)
         {
             // Skip the 32-bit data.
-            auto skip = n[NTime] * 4 + n[NTime] + n[NZone] * 6 + n[NChar] + n[NLeap] * 8 + n[NStdWall] + n[NUTCLocal];
+            auto skip = n[NTime] * 4 +
+                        n[NTime] +
+                        n[NZone] * 6 +
+                        n[NChar] +
+                        n[NLeap] * 8 +
+                        n[NStdWall] +
+                        n[NUTCLocal];
             // Skip the version 2 header that we just read.
             skip += 4 + 16;
             rec::read(gocpp::recv(d), skip);
@@ -596,7 +602,11 @@ namespace golang::time
                 // 30	name[namelen]
                 // 30+namelen+xlen - file data
                 buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), zheadersize + namelen);
-                if(auto err = preadn(fd, buf, off); err != nullptr || get4(buf) != zheader || get2(buf.make_slice(8)) != meth || get2(buf.make_slice(26)) != namelen || gocpp::string(buf.make_slice(30, 30 + namelen)) != name)
+                if(auto err = preadn(fd, buf, off); err != nullptr ||
+                            get4(buf) != zheader ||
+                            get2(buf.make_slice(8)) != meth ||
+                            get2(buf.make_slice(26)) != namelen ||
+                            gocpp::string(buf.make_slice(30, 30 + namelen)) != name)
                 {
                     return {nullptr, errors::New("corrupt zip file "_s + zipfile)};
                 }

@@ -52,6 +52,8 @@ namespace golang::runtime
     // maxPackedValue is the maximum value that any of the three fields in
     // the pallocSum may take on.
     const int maxPackedValue = 1 << logMaxPackedValue;
-    const pallocSum freeChunkSum = pallocSum(uint64_t(pallocChunkPages) | uint64_t(pallocChunkPages << logMaxPackedValue) | uint64_t(pallocChunkPages << (2 * logMaxPackedValue)));
+    const pallocSum freeChunkSum = pallocSum(uint64_t(pallocChunkPages) |
+            uint64_t(pallocChunkPages << logMaxPackedValue) |
+            uint64_t(pallocChunkPages << (2 * logMaxPackedValue)));
     const int pallocChunksL1Shift = pallocChunksL2Bits;
 }

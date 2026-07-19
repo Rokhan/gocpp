@@ -227,7 +227,12 @@ namespace golang::runtime
                 {
                     // Build pointer mask for Finalizer array in block.
                     // Check assumptions made in finalizer1 array above.
-                    if((gocpp::Sizeof<golang::runtime::finalizer>() != 5 * goarch::PtrSize || gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::fn) != 0 || gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::arg) != goarch::PtrSize || gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::nret) != 2 * goarch::PtrSize || gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::fint) != 3 * goarch::PtrSize || gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::ot) != 4 * goarch::PtrSize))
+                    if((gocpp::Sizeof<golang::runtime::finalizer>() != 5 * goarch::PtrSize ||
+                                        gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::fn) != 0 ||
+                                        gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::arg) != goarch::PtrSize ||
+                                        gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::nret) != 2 * goarch::PtrSize ||
+                                        gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::fint) != 3 * goarch::PtrSize ||
+                                        gocpp::Offsetof<golang::runtime::finalizer>(&golang::runtime::finalizer::ot) != 4 * goarch::PtrSize))
                     {
                         go_throw("finalizer out of sync"_s);
                     }
@@ -436,7 +441,10 @@ namespace golang::runtime
         // due to external linking.
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
         {
-            if(datap->noptrdata <= uintptr_t(p) && uintptr_t(p) < datap->enoptrdata || datap->data <= uintptr_t(p) && uintptr_t(p) < datap->edata || datap->bss <= uintptr_t(p) && uintptr_t(p) < datap->ebss || datap->noptrbss <= uintptr_t(p) && uintptr_t(p) < datap->enoptrbss)
+            if(datap->noptrdata <= uintptr_t(p) && uintptr_t(p) < datap->enoptrdata ||
+                        datap->data <= uintptr_t(p) && uintptr_t(p) < datap->edata ||
+                        datap->bss <= uintptr_t(p) && uintptr_t(p) < datap->ebss ||
+                        datap->noptrbss <= uintptr_t(p) && uintptr_t(p) < datap->enoptrbss)
             {
                 return true;
             }

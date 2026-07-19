@@ -527,7 +527,8 @@ namespace golang::runtime
         // (scanWork) / (assistDuration * procs * (utilization+idleUtilization))
         // Note that because we only care about the ratio, assistDuration and procs cancel out.
         auto scanWork = rec::Load(gocpp::recv(c->heapScanWork)) + rec::Load(gocpp::recv(c->stackScanWork)) + rec::Load(gocpp::recv(c->globalsScanWork));
-        auto currentConsMark = (double(rec::Load(gocpp::recv(c->heapLive)) - c->triggered) * (utilization + idleUtilization)) / (double(scanWork) * (1 - utilization));
+        auto currentConsMark = (double(rec::Load(gocpp::recv(c->heapLive)) - c->triggered) * (utilization + idleUtilization)) /
+                (double(scanWork) * (1 - utilization));
 
         // Update our cons/mark estimate. This is the maximum of the value we just computed and the last
         // 4 cons/mark values we measured. The reason we take the maximum here is to bias a noisy

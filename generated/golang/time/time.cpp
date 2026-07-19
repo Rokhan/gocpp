@@ -1407,7 +1407,8 @@ namespace golang::time
         }
 
         buf = buf.make_slice(1);
-        auto sec = int64_t(buf[7]) | (int64_t(buf[6]) << 8) | (int64_t(buf[5]) << 16) | (int64_t(buf[4]) << 24) | (int64_t(buf[3]) << 32) | (int64_t(buf[2]) << 40) | (int64_t(buf[1]) << 48) | (int64_t(buf[0]) << 56);
+        auto sec = int64_t(buf[7]) | (int64_t(buf[6]) << 8) | (int64_t(buf[5]) << 16) | (int64_t(buf[4]) << 24) |
+                (int64_t(buf[3]) << 32) | (int64_t(buf[2]) << 40) | (int64_t(buf[1]) << 48) | (int64_t(buf[0]) << 56);
 
         buf = buf.make_slice(8);
         auto nsec = int32_t(buf[3]) | (int32_t(buf[2]) << 8) | (int32_t(buf[1]) << 16) | (int32_t(buf[0]) << 24);

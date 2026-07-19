@@ -142,7 +142,8 @@ namespace golang::sync
     uint64_t rec::pack(poolDequeue* d, uint32_t head, uint32_t tail)
     {
         auto mask = (1 << dequeueBits) - 1;
-        return (uint64_t(head) << dequeueBits) | uint64_t(tail & mask);
+        return (uint64_t(head) << dequeueBits) |
+                uint64_t(tail & mask);
     }
 
     // pushHead adds val at the head of the queue. It returns false if the

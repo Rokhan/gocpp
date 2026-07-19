@@ -968,7 +968,8 @@ namespace golang::runtime
     {
         // Check that the pclntab's format is valid.
         auto hdr = datap->pcHeader;
-        if(hdr->magic != 0xfffffff1 || hdr->pad1 != 0 || hdr->pad2 != 0 || hdr->minLC != sys::PCQuantum || hdr->ptrSize != goarch::PtrSize || hdr->textStart != datap->text)
+        if(hdr->magic != 0xfffffff1 || hdr->pad1 != 0 || hdr->pad2 != 0 ||
+                hdr->minLC != sys::PCQuantum || hdr->ptrSize != goarch::PtrSize || hdr->textStart != datap->text)
         {
             println("runtime: pcHeader: magic="_s, hex(hdr->magic), "pad1="_s, hdr->pad1, "pad2="_s, hdr->pad2, "minLC="_s, hdr->minLC, "ptrSize="_s, hdr->ptrSize, "pcHeader.textStart="_s, hex(hdr->textStart), "text="_s, hex(datap->text), "pluginpath="_s, datap->pluginpath);
             go_throw("invalid function symbol table"_s);

@@ -273,7 +273,9 @@ namespace golang::runtime
         // Implement wyrand: https://github.com/wangyi-fudan/wyhash
         // Only the platform that math.Mul64 can be lowered
         // by the compiler should be in this list.
-        if(goarch::IsAmd64 | goarch::IsArm64 | goarch::IsPpc64 | goarch::IsPpc64le | goarch::IsMips64 | goarch::IsMips64le | goarch::IsS390x | goarch::IsRiscv64 | goarch::IsLoong64 == 1)
+        if(goarch::IsAmd64 | goarch::IsArm64 | goarch::IsPpc64 |
+                goarch::IsPpc64le | goarch::IsMips64 | goarch::IsMips64le |
+                goarch::IsS390x | goarch::IsRiscv64 | goarch::IsLoong64 == 1)
         {
             mp->cheaprand += 0xa0761d6478bd642f;
             auto [hi, lo] = math::Mul64(mp->cheaprand, mp->cheaprand ^ 0xe7037ed1a0b428db);

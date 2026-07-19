@@ -72,7 +72,10 @@ namespace golang::runtime
                 return {""_s, nullptr, nullptr, "plugin already loaded"_s};
             }
 
-            if(inRange(pmd->text, pmd->etext, md->text, md->etext) || inRange(pmd->bss, pmd->ebss, md->bss, md->ebss) || inRange(pmd->data, pmd->edata, md->data, md->edata) || inRange(pmd->types, pmd->etypes, md->types, md->etypes))
+            if(inRange(pmd->text, pmd->etext, md->text, md->etext) ||
+                        inRange(pmd->bss, pmd->ebss, md->bss, md->ebss) ||
+                        inRange(pmd->data, pmd->edata, md->data, md->edata) ||
+                        inRange(pmd->types, pmd->etypes, md->types, md->etypes))
             {
                 println("plugin: new module data overlaps with previous moduledata"_s);
                 println("\tpmd.text-etext="_s, hex(pmd->text), "-"_s, hex(pmd->etext));

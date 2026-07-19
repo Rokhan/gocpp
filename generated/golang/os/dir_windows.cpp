@@ -187,7 +187,8 @@ namespace golang::os
                     {
                         break;
                     }
-                    if(err == syscall::ERROR_FILE_NOT_FOUND && (d->go_class == windows::FileIdBothDirectoryRestartInfo || d->go_class == windows::FileFullDirectoryRestartInfo))
+                    if(err == syscall::ERROR_FILE_NOT_FOUND &&
+                                        (d->go_class == windows::FileIdBothDirectoryRestartInfo || d->go_class == windows::FileFullDirectoryRestartInfo))
                     {
                         // GetFileInformationByHandleEx doesn't document the return error codes when the info class is FileIdBothDirectoryRestartInfo,
                         // but MS-FSA 2.1.5.6.3 [1] specifies that the underlying file system driver should return STATUS_NO_SUCH_FILE when
@@ -253,7 +254,8 @@ namespace golang::os
                 {
                     d->bufp = 0;
                 }
-                if((len(nameslice) == 1 && nameslice[0] == '.') || (len(nameslice) == 2 && nameslice[0] == '.' && nameslice[1] == '.'))
+                if((len(nameslice) == 1 && nameslice[0] == '.') ||
+                                (len(nameslice) == 2 && nameslice[0] == '.' && nameslice[1] == '.'))
                 {
                     // Ignore "." and ".." and avoid allocating a string for them.
                     continue;

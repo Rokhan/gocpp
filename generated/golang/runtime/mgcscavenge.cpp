@@ -333,7 +333,8 @@ namespace golang::runtime
             s->shouldStop = [=]() mutable -> bool
             {
                 // If background scavenging is disabled or if there's no work to do just stop.
-                return heapRetained() <= rec::Load(gocpp::recv(scavenge.gcPercentGoal)) && rec::Load(gocpp::recv(gcController.mappedReady)) <= rec::Load(gocpp::recv(scavenge.memoryLimitGoal));
+                return heapRetained() <= rec::Load(gocpp::recv(scavenge.gcPercentGoal)) &&
+                                rec::Load(gocpp::recv(gcController.mappedReady)) <= rec::Load(gocpp::recv(scavenge.memoryLimitGoal));
             };
         }
         if(s->gomaxprocs == nullptr)
@@ -1317,7 +1318,10 @@ namespace golang::runtime
     // pack returns sc packed into a uint64.
     uint64_t rec::pack(scavChunkData sc)
     {
-        return uint64_t(sc.inUse) | (uint64_t(sc.lastInUse) << 16) | (uint64_t(sc.scavChunkFlags) << (16 + logScavChunkInUseMax)) | (uint64_t(sc.gen) << 32);
+        return uint64_t(sc.inUse) |
+                (uint64_t(sc.lastInUse) << 16) |
+                (uint64_t(sc.scavChunkFlags) << (16 + logScavChunkInUseMax)) |
+                (uint64_t(sc.gen) << 32);
     }
 
     // scavChunkFlags is a set of bit-flags for the scavenger for each palloc chunk.

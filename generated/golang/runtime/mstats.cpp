@@ -461,7 +461,10 @@ namespace golang::runtime
         auto gcWorkBufInUse = uint64_t(consStats.inWorkBufs);
         auto gcProgPtrScalarBitsInUse = uint64_t(consStats.inPtrScalarBits);
 
-        auto totalMapped = rec::load(gocpp::recv(gcController.heapInUse)) + rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased)) + rec::load(gocpp::recv(memstats.stacks_sys)) + rec::load(gocpp::recv(memstats.mspan_sys)) + rec::load(gocpp::recv(memstats.mcache_sys)) + rec::load(gocpp::recv(memstats.buckhash_sys)) + rec::load(gocpp::recv(memstats.gcMiscSys)) + rec::load(gocpp::recv(memstats.other_sys)) + stackInUse + gcWorkBufInUse + gcProgPtrScalarBitsInUse;
+        auto totalMapped = rec::load(gocpp::recv(gcController.heapInUse)) + rec::load(gocpp::recv(gcController.heapFree)) + rec::load(gocpp::recv(gcController.heapReleased)) +
+                rec::load(gocpp::recv(memstats.stacks_sys)) + rec::load(gocpp::recv(memstats.mspan_sys)) + rec::load(gocpp::recv(memstats.mcache_sys)) +
+                rec::load(gocpp::recv(memstats.buckhash_sys)) + rec::load(gocpp::recv(memstats.gcMiscSys)) + rec::load(gocpp::recv(memstats.other_sys)) +
+                stackInUse + gcWorkBufInUse + gcProgPtrScalarBitsInUse;
 
         auto heapGoal = rec::heapGoal(gocpp::recv(gcController));
 

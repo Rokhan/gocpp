@@ -59,7 +59,8 @@ namespace golang::syscall
                 int conditionId = -1;
                 if(r < surr1) { conditionId = 0; }
                 else if(surr3 <= r) { conditionId = 1; }
-                else if(surr1 <= r && r < surr2 && i + 1 < len(s) && surr2 <= s[i + 1] && s[i + 1] < surr3) { conditionId = 2; }
+                else if(surr1 <= r && r < surr2 && i + 1 < len(s) &&
+                            surr2 <= s[i + 1] && s[i + 1] < surr3) { conditionId = 2; }
                 switch(conditionId)
                 {
                     case 0:

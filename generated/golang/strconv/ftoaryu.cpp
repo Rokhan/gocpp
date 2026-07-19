@@ -84,7 +84,9 @@ namespace golang::strconv
         {
             // If we computed an exact product, d + 1/2
             // should round to d+1 if 'd' is odd.
-            roundUp = dfrac > (1 << (extra - 1)) || (dfrac == (1 << (extra - 1)) && ! d0) || (dfrac == (1 << (extra - 1)) && d0 && di & 1 == 1);
+            roundUp = dfrac > (1 << (extra - 1)) ||
+                        (dfrac == (1 << (extra - 1)) && ! d0) ||
+                        (dfrac == (1 << (extra - 1)) && d0 && di & 1 == 1);
         }
         else
         {
@@ -162,7 +164,9 @@ namespace golang::strconv
         {
             // If we computed an exact product, d + 1/2
             // should round to d+1 if 'd' is odd.
-            roundUp = dfrac > (1 << (extra - 1)) || (dfrac == (1 << (extra - 1)) && ! d0) || (dfrac == (1 << (extra - 1)) && d0 && di & 1 == 1);
+            roundUp = dfrac > (1 << (extra - 1)) ||
+                        (dfrac == (1 << (extra - 1)) && ! d0) ||
+                        (dfrac == (1 << (extra - 1)) && d0 && di & 1 == 1);
         }
         else
         {
@@ -374,7 +378,8 @@ namespace golang::strconv
         {
             // If we computed an exact product, the half integer
             // should round to next (even) integer if 'dc' is odd.
-            cup = fracc > (1 << (extra - 1)) || (fracc == (1 << (extra - 1)) && dc & 1 == 1);
+            cup = fracc > (1 << (extra - 1)) ||
+                        (fracc == (1 << (extra - 1)) && dc & 1 == 1);
         }
         else
         {
@@ -550,7 +555,9 @@ namespace golang::strconv
         // should we round up?
         if(trimmed > 0)
         {
-            cup = cNextDigit > 5 || (cNextDigit == 5 && ! c0) || (cNextDigit == 5 && c0 && central & 1 == 1);
+            cup = cNextDigit > 5 ||
+                        (cNextDigit == 5 && ! c0) ||
+                        (cNextDigit == 5 && c0 && central & 1 == 1);
         }
         if(central < upper && cup)
         {

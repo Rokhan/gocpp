@@ -164,7 +164,8 @@ namespace golang::runtime
             }
             return msg;
         }
-        return "interface conversion: "_s + cs + " is not "_s + as + ": missing method "_s + e->missingMethod;
+        return "interface conversion: "_s + cs + " is not "_s + as +
+                ": missing method "_s + e->missingMethod;
     }
 
     // itoa converts val to a decimal representation. The result is

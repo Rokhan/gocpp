@@ -79,6 +79,7 @@ namespace golang::runtime
 namespace golang::runtime
 {
     // defaultHeapMinimum is the value of heapMinimum for GOGC==100.
-    const int defaultHeapMinimum = (goexperiment::HeapMinimum512KiBInt) * (512 << 10) + (1 - goexperiment::HeapMinimum512KiBInt) * (4 << 20);
+    const int defaultHeapMinimum = (goexperiment::HeapMinimum512KiBInt) * (512 << 10) +
+            (1 - goexperiment::HeapMinimum512KiBInt) * (4 << 20);
     struct gcControllerState;
 }

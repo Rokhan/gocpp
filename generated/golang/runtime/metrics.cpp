@@ -455,7 +455,9 @@ namespace golang::runtime
             x.compute = [=](golang::runtime::statAggregate* in, golang::runtime::metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
-                out->scalar = uint64_t(in->heapStats.heapStatsDelta.committed - in->heapStats.heapStatsDelta.inHeap - in->heapStats.heapStatsDelta.inStacks - in->heapStats.heapStatsDelta.inWorkBufs - in->heapStats.heapStatsDelta.inPtrScalarBits);
+                out->scalar = uint64_t(in->heapStats.heapStatsDelta.committed - in->heapStats.heapStatsDelta.inHeap -
+                                    in->heapStats.heapStatsDelta.inStacks - in->heapStats.heapStatsDelta.inWorkBufs -
+                                    in->heapStats.heapStatsDelta.inPtrScalarBits);
             };
         }) },
             { "/memory/classes/heap/objects:bytes"_s, gocpp::Init<>([=](auto& x) {
@@ -559,7 +561,10 @@ namespace golang::runtime
             x.compute = [=](golang::runtime::statAggregate* in, golang::runtime::metricValue* out) mutable -> void
             {
                 out->kind = metricKindUint64;
-                out->scalar = uint64_t(in->heapStats.heapStatsDelta.committed + in->heapStats.heapStatsDelta.released) + in->sysStats.stacksSys + in->sysStats.mSpanSys + in->sysStats.mCacheSys + in->sysStats.buckHashSys + in->sysStats.gcMiscSys + in->sysStats.otherSys;
+                out->scalar = uint64_t(in->heapStats.heapStatsDelta.committed + in->heapStats.heapStatsDelta.released) +
+                                    in->sysStats.stacksSys + in->sysStats.mSpanSys +
+                                    in->sysStats.mCacheSys + in->sysStats.buckHashSys +
+                                    in->sysStats.gcMiscSys + in->sysStats.otherSys;
             };
         }) },
             { "/sched/gomaxprocs:threads"_s, gocpp::Init<>([=](auto& x) {

@@ -1266,7 +1266,8 @@ namespace golang::runtime
                     }
                 }
             }
-            if((b->tophash[offi] != evacuatedX && b->tophash[offi] != evacuatedY) || ! (rec::ReflexiveKey(gocpp::recv(t)) || t->Key->Equal(k, k)))
+            if((b->tophash[offi] != evacuatedX && b->tophash[offi] != evacuatedY) ||
+                        ! (rec::ReflexiveKey(gocpp::recv(t)) || t->Key->Equal(k, k)))
             {
                 // This is the golden data, we can return it.
                 // OR
@@ -1725,11 +1726,13 @@ namespace golang::runtime
         {
             go_throw("runtime.reflect_makemap: unsupported map key type"_s);
         }
-        if(t->Key->Size_ > maxKeySize && (! rec::IndirectKey(gocpp::recv(t)) || t->KeySize != uint8_t(goarch::PtrSize)) || t->Key->Size_ <= maxKeySize && (rec::IndirectKey(gocpp::recv(t)) || t->KeySize != uint8_t(t->Key->Size_)))
+        if(t->Key->Size_ > maxKeySize && (! rec::IndirectKey(gocpp::recv(t)) || t->KeySize != uint8_t(goarch::PtrSize)) ||
+                t->Key->Size_ <= maxKeySize && (rec::IndirectKey(gocpp::recv(t)) || t->KeySize != uint8_t(t->Key->Size_)))
         {
             go_throw("key size wrong"_s);
         }
-        if(t->Elem->Size_ > maxElemSize && (! rec::IndirectElem(gocpp::recv(t)) || t->ValueSize != uint8_t(goarch::PtrSize)) || t->Elem->Size_ <= maxElemSize && (rec::IndirectElem(gocpp::recv(t)) || t->ValueSize != uint8_t(t->Elem->Size_)))
+        if(t->Elem->Size_ > maxElemSize && (! rec::IndirectElem(gocpp::recv(t)) || t->ValueSize != uint8_t(goarch::PtrSize)) ||
+                t->Elem->Size_ <= maxElemSize && (rec::IndirectElem(gocpp::recv(t)) || t->ValueSize != uint8_t(t->Elem->Size_)))
         {
             go_throw("elem size wrong"_s);
         }

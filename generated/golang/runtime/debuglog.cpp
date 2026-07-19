@@ -731,7 +731,8 @@ namespace golang::runtime
     //go:nosplit
     uint16_t rec::readUint16LEAt(debugLogReader* r, uint64_t pos)
     {
-        return uint16_t(r->data->b[pos % uint64_t(len(r->data->b))]) | (uint16_t(r->data->b[(pos + 1) % uint64_t(len(r->data->b))]) << 8);
+        return uint16_t(r->data->b[pos % uint64_t(len(r->data->b))]) |
+                (uint16_t(r->data->b[(pos + 1) % uint64_t(len(r->data->b))]) << 8);
     }
 
     //go:nosplit
@@ -743,7 +744,10 @@ namespace golang::runtime
             b[i] = r->data->b[pos % uint64_t(len(r->data->b))];
             pos++;
         }
-        return uint64_t(b[0]) | (uint64_t(b[1]) << 8) | (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) | (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) | (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
+        return uint64_t(b[0]) | (uint64_t(b[1]) << 8) |
+                (uint64_t(b[2]) << 16) | (uint64_t(b[3]) << 24) |
+                (uint64_t(b[4]) << 32) | (uint64_t(b[5]) << 40) |
+                (uint64_t(b[6]) << 48) | (uint64_t(b[7]) << 56);
     }
 
     uint64_t rec::peek(debugLogReader* r)

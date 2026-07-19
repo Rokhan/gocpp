@@ -1049,7 +1049,9 @@ namespace golang::runtime
         {
             return pallocSum(uint64_t(1 << 63));
         }
-        return pallocSum((uint64_t(start) & (maxPackedValue - 1)) | ((uint64_t(max) & (maxPackedValue - 1)) << logMaxPackedValue) | ((uint64_t(end) & (maxPackedValue - 1)) << (2 * logMaxPackedValue)));
+        return pallocSum((uint64_t(start) & (maxPackedValue - 1)) |
+                ((uint64_t(max) & (maxPackedValue - 1)) << logMaxPackedValue) |
+                ((uint64_t(end) & (maxPackedValue - 1)) << (2 * logMaxPackedValue)));
     }
 
     // start extracts the start value from a packed sum.

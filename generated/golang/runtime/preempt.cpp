@@ -496,7 +496,9 @@ namespace golang::runtime
         // Check the inner-most name
         auto [u, uf] = newInlineUnwinder(f, pc);
         auto name = rec::name(gocpp::recv(rec::srcFunc(gocpp::recv(u), uf)));
-        if(hasPrefix(name, "runtime."_s) || hasPrefix(name, "runtime/internal/"_s) || hasPrefix(name, "reflect."_s))
+        if(hasPrefix(name, "runtime."_s) ||
+                hasPrefix(name, "runtime/internal/"_s) ||
+                hasPrefix(name, "reflect."_s))
         {
             // For now we never async preempt the runtime or
             // anything closely tied to the runtime. Known issues

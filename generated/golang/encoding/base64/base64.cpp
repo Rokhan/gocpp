@@ -800,7 +800,10 @@ namespace golang::base64
         {
             return {0, false};
         }
-        return {(uint32_t(n1) << 26) | (uint32_t(n2) << 20) | (uint32_t(n3) << 14) | (uint32_t(n4) << 8), true};
+        return {(uint32_t(n1) << 26) |
+                    (uint32_t(n2) << 20) |
+                    (uint32_t(n3) << 14) |
+                    (uint32_t(n4) << 8), true};
     }
 
     // assemble64 assembles 8 base64 digits into 6 bytes.
@@ -816,7 +819,14 @@ namespace golang::base64
         {
             return {0, false};
         }
-        return {(uint64_t(n1) << 58) | (uint64_t(n2) << 52) | (uint64_t(n3) << 46) | (uint64_t(n4) << 40) | (uint64_t(n5) << 34) | (uint64_t(n6) << 28) | (uint64_t(n7) << 22) | (uint64_t(n8) << 16), true};
+        return {(uint64_t(n1) << 58) |
+                    (uint64_t(n2) << 52) |
+                    (uint64_t(n3) << 46) |
+                    (uint64_t(n4) << 40) |
+                    (uint64_t(n5) << 34) |
+                    (uint64_t(n6) << 28) |
+                    (uint64_t(n7) << 22) |
+                    (uint64_t(n8) << 16), true};
     }
 
     

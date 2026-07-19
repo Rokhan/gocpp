@@ -244,7 +244,8 @@ namespace golang::os
         // links, not symlinks.
         // TODO(bcmills): Get more input from Microsoft on what the behavior ought to
         // be for MOUNT_POINT reparse points.
-        return fs->ReparseTag == syscall::IO_REPARSE_TAG_SYMLINK || fs->ReparseTag == windows::IO_REPARSE_TAG_MOUNT_POINT;
+        return fs->ReparseTag == syscall::IO_REPARSE_TAG_SYMLINK ||
+                fs->ReparseTag == windows::IO_REPARSE_TAG_MOUNT_POINT;
     }
 
     int64_t rec::Size(fileStat* fs)

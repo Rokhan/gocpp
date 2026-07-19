@@ -569,7 +569,9 @@ namespace golang::flate
                 minIndex = 0;
             }
 
-            if(d->chainHead - d->hashOffset >= minIndex && (d->compressionLevel.fastSkipHashing != skipNever && lookahead > minMatchLength - 1 || d->compressionLevel.fastSkipHashing == skipNever && lookahead > prevLength && prevLength < d->compressionLevel.lazy))
+            if(d->chainHead - d->hashOffset >= minIndex &&
+                        (d->compressionLevel.fastSkipHashing != skipNever && lookahead > minMatchLength - 1 ||
+                            d->compressionLevel.fastSkipHashing == skipNever && lookahead > prevLength && prevLength < d->compressionLevel.lazy))
             {
                 if(auto [newLength, newOffset, ok] = rec::findMatch(gocpp::recv(d), d->index, d->chainHead - d->hashOffset, minMatchLength - 1, lookahead); ok)
                 {
@@ -577,7 +579,8 @@ namespace golang::flate
                     d->offset = newOffset;
                 }
             }
-            if(d->compressionLevel.fastSkipHashing != skipNever && d->length >= minMatchLength || d->compressionLevel.fastSkipHashing == skipNever && prevLength >= minMatchLength && d->length <= prevLength)
+            if(d->compressionLevel.fastSkipHashing != skipNever && d->length >= minMatchLength ||
+                        d->compressionLevel.fastSkipHashing == skipNever && prevLength >= minMatchLength && d->length <= prevLength)
             {
                 // There was a match at the previous step, and the current match is
                 // not better. Output the previous match.

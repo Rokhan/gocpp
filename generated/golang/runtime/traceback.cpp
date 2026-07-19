@@ -1758,7 +1758,9 @@ namespace golang::runtime
             gocpp::panic("unsupported version"_s);
         }
 
-        if(cgoTraceback != nullptr && cgoTraceback != traceback || cgoContext != nullptr && cgoContext != context || cgoSymbolizer != nullptr && cgoSymbolizer != symbolizer)
+        if(cgoTraceback != nullptr && cgoTraceback != traceback ||
+                cgoContext != nullptr && cgoContext != context ||
+                cgoSymbolizer != nullptr && cgoSymbolizer != symbolizer)
         {
             gocpp::panic("call SetCgoTraceback only once"_s);
         }

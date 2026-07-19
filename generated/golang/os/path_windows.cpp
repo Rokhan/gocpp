@@ -81,12 +81,15 @@ namespace golang::os
         }
         // with drive letter
         auto c = path[0];
-        if(path[1] == ':' && ('0' <= c && c <= '9' || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z'))
+        if(path[1] == ':' &&
+                ('0' <= c && c <= '9' || 'a' <= c && c <= 'z' ||
+                    'A' <= c && c <= 'Z'))
         {
             return path.make_slice(0, 2);
         }
         // is it UNC
-        if(auto l = len(path); l >= 5 && IsPathSeparator(path[0]) && IsPathSeparator(path[1]) && ! IsPathSeparator(path[2]) && path[2] != '.')
+        if(auto l = len(path); l >= 5 && IsPathSeparator(path[0]) && IsPathSeparator(path[1]) &&
+                ! IsPathSeparator(path[2]) && path[2] != '.')
         {
             // first, leading `\\` and next shouldn't be `\`. its server name.
             for(auto n = 3; n < l - 1; n++)

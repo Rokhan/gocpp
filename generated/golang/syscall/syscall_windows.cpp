@@ -219,16 +219,30 @@ namespace golang::syscall
             switch(conditionId)
             {
                 case 0:
-                    return e == ERROR_ACCESS_DENIED || e == go_EACCES || e == go_EPERM;
+                    return e == ERROR_ACCESS_DENIED ||
+                                e == go_EACCES ||
+                                e == go_EPERM;
                     break;
                 case 1:
-                    return e == ERROR_ALREADY_EXISTS || e == ERROR_DIR_NOT_EMPTY || e == ERROR_FILE_EXISTS || e == go_EEXIST || e == go_ENOTEMPTY;
+                    return e == ERROR_ALREADY_EXISTS ||
+                                e == ERROR_DIR_NOT_EMPTY ||
+                                e == ERROR_FILE_EXISTS ||
+                                e == go_EEXIST ||
+                                e == go_ENOTEMPTY;
                     break;
                 case 2:
-                    return e == ERROR_FILE_NOT_FOUND || e == _ERROR_BAD_NETPATH || e == ERROR_PATH_NOT_FOUND || e == go_ENOENT;
+                    return e == ERROR_FILE_NOT_FOUND ||
+                                e == _ERROR_BAD_NETPATH ||
+                                e == ERROR_PATH_NOT_FOUND ||
+                                e == go_ENOENT;
                     break;
                 case 3:
-                    return e == _ERROR_NOT_SUPPORTED || e == _ERROR_CALL_NOT_IMPLEMENTED || e == go_ENOSYS || e == go_ENOTSUP || e == go_EOPNOTSUPP || e == go_EWINDOWS;
+                    return e == _ERROR_NOT_SUPPORTED ||
+                                e == _ERROR_CALL_NOT_IMPLEMENTED ||
+                                e == go_ENOSYS ||
+                                e == go_ENOTSUP ||
+                                e == go_EOPNOTSUPP ||
+                                e == go_EWINDOWS;
                     break;
             }
         }

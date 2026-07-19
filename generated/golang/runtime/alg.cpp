@@ -620,7 +620,10 @@ namespace golang::runtime
     void alginit()
     {
         // Install AES hash algorithms if the instructions needed are present.
-        if((GOARCH == "386"_s || GOARCH == "amd64"_s) && cpu::X86.HasAES && cpu::X86.HasSSSE3 && cpu::X86.HasSSE41)
+        if((GOARCH == "386"_s || GOARCH == "amd64"_s) &&
+                cpu::X86.HasAES &&
+                cpu::X86.HasSSSE3 &&
+                cpu::X86.HasSSE41)
         {
             // PINSR{D,Q}
             initAlgAES();
@@ -665,7 +668,8 @@ namespace golang::runtime
         auto q = (gocpp::array_ptr<gocpp::array<unsigned char, 8>>)(p);
         if(goarch::BigEndian)
         {
-            return uint64_t(q[7]) | (uint64_t(q[6]) << 8) | (uint64_t(q[5]) << 16) | (uint64_t(q[4]) << 24) | (uint64_t(q[3]) << 32) | (uint64_t(q[2]) << 40) | (uint64_t(q[1]) << 48) | (uint64_t(q[0]) << 56);
+            return uint64_t(q[7]) | (uint64_t(q[6]) << 8) | (uint64_t(q[5]) << 16) | (uint64_t(q[4]) << 24) |
+                        (uint64_t(q[3]) << 32) | (uint64_t(q[2]) << 40) | (uint64_t(q[1]) << 48) | (uint64_t(q[0]) << 56);
         }
         return uint64_t(q[0]) | (uint64_t(q[1]) << 8) | (uint64_t(q[2]) << 16) | (uint64_t(q[3]) << 24) | (uint64_t(q[4]) << 32) | (uint64_t(q[5]) << 40) | (uint64_t(q[6]) << 48) | (uint64_t(q[7]) << 56);
     }

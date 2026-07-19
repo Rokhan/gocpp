@@ -1169,11 +1169,13 @@ namespace golang::reflect
                 auto v = out[i];
                 if(rec::typ(gocpp::recv(v)) == nullptr)
                 {
-                    gocpp::panic("reflect: function created by MakeFunc using "_s + funcName(f) + " returned zero Value"_s);
+                    gocpp::panic("reflect: function created by MakeFunc using "_s + funcName(f) +
+                                        " returned zero Value"_s);
                 }
                 if(v.flag & flagRO != 0)
                 {
-                    gocpp::panic("reflect: function created by MakeFunc using "_s + funcName(f) + " returned value obtained from unexported field"_s);
+                    gocpp::panic("reflect: function created by MakeFunc using "_s + funcName(f) +
+                                        " returned value obtained from unexported field"_s);
                 }
                 if(rec::Size(gocpp::recv(typ)) == 0)
                 {
@@ -2559,7 +2561,14 @@ namespace golang::reflect
         }
         for(; len(w) >= n; )
         {
-            if(w[0] != 0 || w[1] != 0 || w[2] != 0 || w[3] != 0 || w[4] != 0 || w[5] != 0 || w[6] != 0 || w[7] != 0 || w[8] != 0 || w[9] != 0 || w[10] != 0 || w[11] != 0 || w[12] != 0 || w[13] != 0 || w[14] != 0 || w[15] != 0 || w[16] != 0 || w[17] != 0 || w[18] != 0 || w[19] != 0 || w[20] != 0 || w[21] != 0 || w[22] != 0 || w[23] != 0 || w[24] != 0 || w[25] != 0 || w[26] != 0 || w[27] != 0 || w[28] != 0 || w[29] != 0 || w[30] != 0 || w[31] != 0)
+            if(w[0] != 0 || w[1] != 0 || w[2] != 0 || w[3] != 0 ||
+                        w[4] != 0 || w[5] != 0 || w[6] != 0 || w[7] != 0 ||
+                        w[8] != 0 || w[9] != 0 || w[10] != 0 || w[11] != 0 ||
+                        w[12] != 0 || w[13] != 0 || w[14] != 0 || w[15] != 0 ||
+                        w[16] != 0 || w[17] != 0 || w[18] != 0 || w[19] != 0 ||
+                        w[20] != 0 || w[21] != 0 || w[22] != 0 || w[23] != 0 ||
+                        w[24] != 0 || w[25] != 0 || w[26] != 0 || w[27] != 0 ||
+                        w[28] != 0 || w[29] != 0 || w[30] != 0 || w[31] != 0)
             {
                 return false;
             }
@@ -5545,7 +5554,9 @@ namespace golang::reflect
         }
 
         // dst and src are non-defined pointer types with same underlying base type.
-        if(rec::Kind(gocpp::recv(dst)) == abi::Pointer && nameFor(dst) == ""_s && rec::Kind(gocpp::recv(src)) == abi::Pointer && nameFor(src) == ""_s && haveIdenticalUnderlyingType(elem(dst), elem(src), false))
+        if(rec::Kind(gocpp::recv(dst)) == abi::Pointer && nameFor(dst) == ""_s &&
+                rec::Kind(gocpp::recv(src)) == abi::Pointer && nameFor(src) == ""_s &&
+                haveIdenticalUnderlyingType(elem(dst), elem(src), false))
         {
             return cvtDirect;
         }

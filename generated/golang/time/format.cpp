@@ -1055,9 +1055,14 @@ namespace golang::time
     {
         if(e->Message == ""_s)
         {
-            return "parsing time "_s + quote(e->Value) + " as "_s + quote(e->Layout) + ": cannot parse "_s + quote(e->ValueElem) + " as "_s + quote(e->LayoutElem);
+            return "parsing time "_s +
+                        quote(e->Value) + " as "_s +
+                        quote(e->Layout) + ": cannot parse "_s +
+                        quote(e->ValueElem) + " as "_s +
+                        quote(e->LayoutElem);
         }
-        return "parsing time "_s + quote(e->Value) + e->Message;
+        return "parsing time "_s +
+                quote(e->Value) + e->Message;
     }
 
     // isDigit reports whether s[i] is in range and is a decimal digit.

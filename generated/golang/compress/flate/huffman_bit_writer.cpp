@@ -357,8 +357,15 @@ namespace golang::flate
         {
             numCodegens--;
         }
-        auto header = 3 + 5 + 5 + 4 + (3 * numCodegens) + rec::bitLength(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0)) + int(w->codegenFreq[16]) * 2 + int(w->codegenFreq[17]) * 3 + int(w->codegenFreq[18]) * 7;
-        size = header + rec::bitLength(gocpp::recv(litEnc), w->literalFreq) + rec::bitLength(gocpp::recv(offEnc), w->offsetFreq) + extraBits;
+        auto header = 3 + 5 + 5 + 4 + (3 * numCodegens) +
+                rec::bitLength(gocpp::recv(w->codegenEncoding), w->codegenFreq.make_slice(0)) +
+                int(w->codegenFreq[16]) * 2 +
+                int(w->codegenFreq[17]) * 3 +
+                int(w->codegenFreq[18]) * 7;
+        size = header +
+                rec::bitLength(gocpp::recv(litEnc), w->literalFreq) +
+                rec::bitLength(gocpp::recv(offEnc), w->offsetFreq) +
+                extraBits;
 
         return {size, numCodegens};
     }
@@ -366,7 +373,10 @@ namespace golang::flate
     // fixedSize returns the size of dynamically encoded data in bits.
     int rec::fixedSize(huffmanBitWriter* w, int extraBits)
     {
-        return 3 + rec::bitLength(gocpp::recv(fixedLiteralEncoding), w->literalFreq) + rec::bitLength(gocpp::recv(fixedOffsetEncoding), w->offsetFreq) + extraBits;
+        return 3 +
+                rec::bitLength(gocpp::recv(fixedLiteralEncoding), w->literalFreq) +
+                rec::bitLength(gocpp::recv(fixedOffsetEncoding), w->offsetFreq) +
+                extraBits;
     }
 
     // storedSize calculates the stored size, including header.

@@ -1958,7 +1958,9 @@ namespace golang::runtime
 
     bool rec::isMutexWait(waitReason w)
     {
-        return w == waitReasonSyncMutexLock || w == waitReasonSyncRWMutexRLock || w == waitReasonSyncRWMutexLock;
+        return w == waitReasonSyncMutexLock ||
+                w == waitReasonSyncRWMutexRLock ||
+                w == waitReasonSyncRWMutexLock;
     }
 
     golang::runtime::m* allm;

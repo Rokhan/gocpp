@@ -451,7 +451,8 @@ namespace golang::runtime
         // arm64 and it's an illegal instruction and this is coming from
         // non-Go code, then assume it's this runtime probing happen, and
         // pass that onward to SEH.
-        if(GOARCH == "arm64"_s && info->exceptioncode == _EXCEPTION_ILLEGAL_INSTRUCTION && (rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r))))
+        if(GOARCH == "arm64"_s && info->exceptioncode == _EXCEPTION_ILLEGAL_INSTRUCTION &&
+                (rec::ip(gocpp::recv(r)) < firstmoduledata.text || firstmoduledata.etext < rec::ip(gocpp::recv(r))))
         {
             return _EXCEPTION_CONTINUE_SEARCH;
         }

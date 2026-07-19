@@ -87,7 +87,8 @@ namespace golang::image
     // In reports whether p is in r.
     bool rec::In(Point p, Rectangle r)
     {
-        return r.Min.X <= p.X && p.X < r.Max.X && r.Min.Y <= p.Y && p.Y < r.Max.Y;
+        return r.Min.X <= p.X && p.X < r.Max.X &&
+                r.Min.Y <= p.Y && p.Y < r.Max.Y;
     }
 
     // Mod returns the point q in r such that p.X-q.X is a multiple of r's width
@@ -314,7 +315,9 @@ namespace golang::image
     // Overlaps reports whether r and s have a non-empty intersection.
     bool rec::Overlaps(Rectangle r, Rectangle s)
     {
-        return ! rec::Empty(gocpp::recv(r)) && ! rec::Empty(gocpp::recv(s)) && r.Min.X < s.Max.X && s.Min.X < r.Max.X && r.Min.Y < s.Max.Y && s.Min.Y < r.Max.Y;
+        return ! rec::Empty(gocpp::recv(r)) && ! rec::Empty(gocpp::recv(s)) &&
+                r.Min.X < s.Max.X && s.Min.X < r.Max.X &&
+                r.Min.Y < s.Max.Y && s.Min.Y < r.Max.Y;
     }
 
     // In reports whether every point in r is in s.
@@ -326,7 +329,8 @@ namespace golang::image
         }
         // Note that r.Max is an exclusive bound for r, so that r.In(s)
         // does not require that r.Max.In(s).
-        return s.Min.X <= r.Min.X && r.Max.X <= s.Max.X && s.Min.Y <= r.Min.Y && r.Max.Y <= s.Max.Y;
+        return s.Min.X <= r.Min.X && r.Max.X <= s.Max.X &&
+                s.Min.Y <= r.Min.Y && r.Max.Y <= s.Max.Y;
     }
 
     // Canon returns the canonical version of r. The returned rectangle has minimum

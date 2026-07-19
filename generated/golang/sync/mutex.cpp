@@ -203,7 +203,8 @@ namespace golang::sync
                 // Active spinning makes sense.
                 // Try to set mutexWoken flag to inform Unlock
                 // to not wake other blocked goroutines.
-                if(! awoke && old & mutexWoken == 0 && (old >> mutexWaiterShift) != 0 && atomic::CompareAndSwapInt32(& m->state, old, old | mutexWoken))
+                if(! awoke && old & mutexWoken == 0 && (old >> mutexWaiterShift) != 0 &&
+                                atomic::CompareAndSwapInt32(& m->state, old, old | mutexWoken))
                 {
                     awoke = true;
                 }

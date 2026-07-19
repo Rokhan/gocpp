@@ -116,7 +116,7 @@ func GetCppExprFunc(funcName cppExpr) cppExpr {
 	// }
 	val, ok := stdFuncMapping[funcName.str]
 	if ok {
-		return cppExpr{val, "", funcName.defs, funcName.typenames}
+		return cppExpr{str: val, defs: funcName.defs, typenames: funcName.typenames}
 	} else {
 		return funcName
 	}
@@ -903,32 +903,30 @@ type receiverDesc interface {
 type goReceiverDesc ast.SelectorExpr
 type mockReceiverDesc string
 
-func extractParamDefs(srcParams ...any) ([]place, []any, []string) {
-	defs := []place{}
-	params := []any{}
-	typeNames := []string{}
-
+func extractParamDefs(srcParams ...any) (defs []place, params []any, typeNames []string, comments []string) {
 	for _, srcParam := range srcParams {
 		switch prm := srcParam.(type) {
 		case cppType:
 			defs = append(defs, prm.defs...)
 			params = append(params, prm.str)
 			typeNames = append(typeNames, prm.typenames...)
+			comments = append(comments, prm.comments...)
 		case cppExpr:
 			defs = append(defs, prm.defs...)
 			params = append(params, prm.str)
 			typeNames = append(typeNames, prm.typenames...)
+			comments = append(comments, prm.comments...)
 		default:
 			params = append(params, srcParam)
 		}
 	}
-	return defs, params, typeNames
+	return
 }
 
 // Sprintf formats according to a format specifier and returns the resulting string.
 func ExprPrintf(format string, srcParams ...any) cppExpr {
-	defs, params, typeNames := extractParamDefs(srcParams...)
-	return cppExpr{fmt.Sprintf(format, params...), "", defs, typeNames}
+	defs, params, typeNames, comments := extractParamDefs(srcParams...)
+	return cppExpr{str: fmt.Sprintf(format, params...), defs: defs, typenames: typeNames, comments: comments}
 }
 
 type includeType int
@@ -952,7 +950,7 @@ func getIncludeSuffix(incTyp includeType) string {
 
 type place struct {
 	// when type/declaration need be generated inlined
-	inline *string
+	inline *[]string
 	// when type/declaration need to be generated outline function
 	outline *string
 	// when type/declaration need to be in header
@@ -1000,7 +998,11 @@ func getFwdHeader(place place) []string {
 }
 
 func inlineStr(str string, node ast.Node) place {
-	return place{&str, nil, nil, nil, nil, NotInclude, depInfo{}, nil, node, nil}
+	return place{ArrayPtr(str), nil, nil, nil, nil, NotInclude, depInfo{}, nil, node, nil}
+}
+
+func inlineStrs(strs []string, node ast.Node) place {
+	return place{inline: &strs, includeType: NotInclude, depInfo: depInfo{}, node: node}
 }
 
 func goReceiver(rec ast.SelectorExpr) place {
@@ -1019,12 +1021,20 @@ func headerStr(str string, node ast.Node) place {
 	return place{nil, nil, ArrayPtr(str), nil, nil, NotInclude, depInfo{}, nil, node, nil}
 }
 
+func headerStrs(strs []string, node ast.Node) place {
+	return place{header: &strs, includeType: NotInclude, depInfo: depInfo{}, node: node}
+}
+
 func headerEndStr(str string) place {
 	return place{nil, nil, nil, &str, nil, NotInclude, depInfo{}, nil, nil, nil}
 }
 
 func fwdHeaderStr(str string, node ast.Node, depInfo depInfo) place {
 	return place{nil, nil, nil, nil, ArrayPtr(str), NotInclude, depInfo, nil, node, nil}
+}
+
+func fwdHeaderStrs(strs []string, node ast.Node, depInfo depInfo) place {
+	return place{fwdHeader: &strs, includeType: NotInclude, depInfo: depInfo, node: node}
 }
 
 // Maybe create one version for headers and one for fwd headers.
@@ -1038,7 +1048,8 @@ func importPackage(name string, pkgPath string, filePath string, pkgType pkgType
 
 func inlineStrf(node ast.Node, format string, params ...any) []place {
 	expr := ExprPrintf(format, params...)
-	expr.defs = append(expr.defs, inlineStr(expr.str, node))
+	commentedExprStr := append(expr.comments, expr.str)
+	expr.defs = append(expr.defs, inlineStrs(commentedExprStr, node))
 	return expr.defs
 }
 
@@ -1050,7 +1061,8 @@ func inlineStrf(node ast.Node, format string, params ...any) []place {
 
 func headerStrf(node ast.Node, format string, params ...any) []place {
 	expr := ExprPrintf(format, params...)
-	expr.defs = append(expr.defs, headerStr(expr.str, node))
+	commentedExprStr := append(expr.comments, expr.str)
+	expr.defs = append(expr.defs, headerStrs(commentedExprStr, node))
 	return expr.defs
 }
 
@@ -1062,7 +1074,8 @@ func headerEndStrf(format string, params ...any) []place {
 
 func fwdHeaderStrf(di depInfo, node ast.Node, format string, params ...any) []place {
 	expr := ExprPrintf(format, params...)
-	expr.defs = append(expr.defs, fwdHeaderStr(expr.str, node, di))
+	commentedExprStr := append(expr.comments, expr.str)
+	expr.defs = append(expr.defs, fwdHeaderStrs(commentedExprStr, node, di))
 	return expr.defs
 }
 
@@ -1083,6 +1096,7 @@ type cppExpr struct {
 	dbg       string
 	defs      []place // inline def used by type
 	typenames []string
+	comments  []string
 
 	// probably need some depInfo here
 }

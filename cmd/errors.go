@@ -41,6 +41,12 @@ func (cv *parsingContext) Panicf(format string, params ...interface{}) {
 	Panicf(format, params...)
 }
 
+func (cv *parsingContext) Assertf(ok bool, format string, a ...interface{}) {
+	if !ok {
+		cv.Panicf(format, a...)
+	}
+}
+
 func (cv *parsingContext) getPosition(pos token.Pos) token.Position {
 	return cv.pcShared.fileSet.Position(pos)
 }

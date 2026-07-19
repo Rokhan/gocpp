@@ -577,17 +577,24 @@ func (cv *cppConverter) computeDepInfos(headerElts []*place) {
 // Still need to generate "Doc" comments for Fields
 // Still need to generate comment stored in "Comments" field
 func (cv *cppConverter) ConvertDoc(doc *ast.CommentGroup) {
+	out := cv.cpp.out
+	for _, comText := range cv.ConvertDocToStrings(doc) {
+		fmt.Fprintf(out, "%s%s", cv.cpp.Indent(), comText)
+	}
+}
+
+func (cv *cppConverter) ConvertDocToStrings(doc *ast.CommentGroup) (result []string) {
 	if doc == nil {
 		return
 	}
 
-	out := cv.cpp.out
 	for _, comment := range doc.List {
 		text := strings.TrimSpace(comment.Text)
 		if text != "" {
-			fmt.Fprintf(out, "%s%s\n", cv.cpp.Indent(), text)
+			result = append(result, text+"\n")
 		}
 	}
+	return
 }
 
 func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
@@ -1055,7 +1062,9 @@ func (cv *cppConverter) parentMethod(pt parentType) (methods []method) {
 func (cv *cppConverter) printOrKeepPlace(place place, outPlaces *[]place, pkgInfos *[]*pkgInfo) {
 	// Print immediatly inline && header in buffer
 	if place.inline != nil {
-		fmt.Fprintf(cv.cpp.out, "%s%s", cv.cpp.Indent(), *place.inline)
+		for _, inlineStr := range *place.inline {
+			fmt.Fprintf(cv.cpp.out, "%s%s", cv.cpp.Indent(), inlineStr)
+		}
 	} else if place.pkgInfo != nil {
 		*pkgInfos = append(*pkgInfos, place.pkgInfo)
 	} else {
@@ -1074,11 +1083,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 
 	switch d := decl.(type) {
 	case *ast.GenDecl:
-		// Avoid duplicating comments in functions/methods
-		if isNameSpace {
-			cv.ConvertDoc(d.Doc)
-		}
-		for _, place := range cv.convertSpecs(d.Specs, d.Tok, isNameSpace, ";\n") {
+		for _, place := range cv.convertGenDecl(d, d.Tok, isNameSpace, ";\n") {
 			cv.printOrKeepPlace(place, &outPlaces, &pkgInfos)
 		}
 
@@ -1981,9 +1986,13 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr,
 	case *ast.DeclStmt:
 		switch d := s.Decl.(type) {
 		case *ast.GenDecl:
-			for _, declItem := range cv.convertSpecs(d.Specs, d.Tok, false, "") {
+			for _, declItem := range cv.convertGenDecl(d, d.Tok, false, "") {
 				if declItem.inline != nil {
-					result = ExprPrintf("%s%s,", result, *declItem.inline)
+					if len(*declItem.inline) == 1 {
+						result = ExprPrintf("%s%s,", result, *declItem.inline)
+					} else {
+						cv.Panicf("Unexpected multiline inline, expr: %v, input %v", declItem.inline, cv.Position(s))
+					}
 				} else {
 					result.defs = append(result.defs, declItem)
 				}
@@ -2080,16 +2089,22 @@ func (cv *cppConverter) canForward(expr ast.Expr) bool {
 	return cf.value
 }
 
-func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamespace bool, end string) []place {
+func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNamespace bool, end string) []place {
 	var result []place
 
 	cv.ResetIota()
 	var values []ast.Expr
 	var typeExpr ast.Expr
+	specs := gd.Specs
 
-	for _, spec := range specs {
+	for i, spec := range specs {
 		switch s := spec.(type) {
 		case *ast.TypeSpec:
+			// Put top comment with the first declararation
+			// isNamespace: Avoid duplicating comments in functions/methods
+			if i == 0 && isNamespace {
+				cv.ConvertDoc(gd.Doc)
+			}
 			cv.ConvertDoc(s.Doc)
 			if s.Comment != nil {
 				for _, comment := range s.Comment.List {
@@ -2104,7 +2119,13 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 			}
 
 		case *ast.ValueSpec:
-			cv.ConvertDoc(s.Doc)
+			var comments []string
+			// Put top comment with the first declararation
+			// isNamespace: Avoid duplicating comments in functions/methods
+			if i == 0 && isNamespace {
+				comments = append(comments, cv.ConvertDocToStrings(gd.Doc)...)
+			}
+			comments = append(comments, cv.ConvertDocToStrings(s.Doc)...)
 			if len(s.Values) != 0 {
 				values = s.Values
 
@@ -2131,6 +2152,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 						}
 						expr := cv.convertExpr(values[i])
 						exprType := cv.convertExprCppType(values[i])
+						exprType.comments = comments
 						name := GetCppName(s.Names[i].Name)
 
 						canFwd := exprType.canFwd && cv.canForward(values[i])
@@ -2164,6 +2186,7 @@ func (cv *cppConverter) convertSpecs(specs []ast.Spec, tok token.Token, isNamesp
 					for i := range s.Names {
 						name := GetCppName(s.Names[i].Name)
 						exprType := cv.convertTypeExpr(s.Type, ctContext{usagePosition: UsageInHeader, targetVarName: name})
+						exprType.comments = comments
 
 						if len(values) == 0 {
 							result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
@@ -3683,7 +3706,9 @@ func convertGoToCppType(goType types.Type, namespace string, position token.Posi
 
 // Sprintf formats according to a format specifier and returns the resulting string.
 func (cv *cppConverter) BuffExprPrintf(buff *cppExprBuffer, format string, srcParams ...any) (n int, err error) {
-	defs, params, _ := extractParamDefs(srcParams...)
+	defs, params /*tns*/, _, coms := extractParamDefs(srcParams...)
+	//cv.Assertf(tns == nil, "typenames should be nil here")
+	cv.Assertf(coms == nil, "comments should be nil here")
 	*buff.defs = append(*buff.defs, defs...)
 	return fmt.Fprintf(buff.buff, format, params...)
 }
@@ -3691,7 +3716,9 @@ func (cv *cppConverter) BuffExprPrintf(buff *cppExprBuffer, format string, srcPa
 func (cv *cppConverter) printInline(bBuff io.Writer, bDefs *[]place, defs []place) {
 	for _, def := range defs {
 		if def.inline != nil {
-			fmt.Fprintf(bBuff, "%s%s\n", cv.cpp.Indent(), *def.inline)
+			for _, inlineStr := range *def.inline {
+				fmt.Fprintf(bBuff, "%s%s\n", cv.cpp.Indent(), inlineStr)
+			}
 		} else {
 			*bDefs = append(*bDefs, def)
 		}
@@ -3700,7 +3727,9 @@ func (cv *cppConverter) printInline(bBuff io.Writer, bDefs *[]place, defs []plac
 
 // Sprintf formats according to a format specifier.
 func (cv *cppConverter) WritterExprPrintf(buff *cppExprWritter[*bufio.Writer], format string, srcParams ...any) (n int, err error) {
-	defs, params, _ := extractParamDefs(srcParams...)
+	defs, params /*tns*/, _, coms := extractParamDefs(srcParams...)
+	//cv.Assertf(tns == nil, "typenames should be nil here")
+	cv.Assertf(coms == nil, "comments should be nil here")
 	cv.printInline(buff.buff, buff.defs, defs)
 	return fmt.Fprintf(buff.buff, format, params...)
 }
@@ -4257,7 +4286,7 @@ func (cv *cppConverter) convertExprsImpl(exprs []ast.Expr, ctx exprCtx, useIgnor
 		tns = append(tns, expr.typenames...)
 	}
 
-	return cppExpr{strings.Join(strs, ", "), "", defs, tns}
+	return cppExpr{str: strings.Join(strs, ", "), defs: defs, typenames: tns}
 }
 
 /* from example: https://github.com/golang/example/tree/master/gotypes#introduction */

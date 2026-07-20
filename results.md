@@ -142,7 +142,7 @@
 | $(ImportDir)/encoding/hex/hex.go | ✔️ ([cpp](generated/golang/encoding/hex/hex.cpp), [h](generated/golang/encoding/hex/hex.h))| ✔️ |
 | $(ImportDir)/errors/errors.go | ✔️ ([cpp](generated/golang/errors/errors.cpp), [h](generated/golang/errors/errors.h))| ✔️ |
 | $(ImportDir)/errors/wrap.go | ✔️ ([cpp](generated/golang/errors/wrap.cpp), [h](generated/golang/errors/wrap.h))| ✔️ |
-| $(ImportDir)/fmt/errors.go | ✔️ ([cpp](generated/golang/fmt/errors.cpp), [h](generated/golang/fmt/errors.h))| ❌ |
+| $(ImportDir)/fmt/errors.go | ✔️ ([cpp](generated/golang/fmt/errors.cpp), [h](generated/golang/fmt/errors.h))| ✔️ |
 | $(ImportDir)/fmt/format.go | ✔️ ([cpp](generated/golang/fmt/format.cpp), [h](generated/golang/fmt/format.h))| ✔️ |
 | $(ImportDir)/fmt/print.go | ✔️ ([cpp](generated/golang/fmt/print.cpp), [h](generated/golang/fmt/print.h))| ❌ |
 | $(ImportDir)/golang.org/x/tour/pic/pic.go | ✔️ ([cpp](generated/golang/golang.org/x/tour/pic/pic.cpp), [h](generated/golang/golang.org/x/tour/pic/pic.h))| ❌ |
@@ -178,7 +178,7 @@
 | $(ImportDir)/internal/bytealg/index_native.go | ✔️ ([cpp](generated/golang/internal/bytealg/index_native.cpp), [h](generated/golang/internal/bytealg/index_native.h))| ✔️ |
 | $(ImportDir)/internal/bytealg/indexbyte_native.go | ✔️ ([cpp](generated/golang/internal/bytealg/indexbyte_native.cpp), [h](generated/golang/internal/bytealg/indexbyte_native.h))| ✔️ |
 | $(ImportDir)/internal/bytealg/lastindexbyte_generic.go | ✔️ ([cpp](generated/golang/internal/bytealg/lastindexbyte_generic.cpp), [h](generated/golang/internal/bytealg/lastindexbyte_generic.h))| ✔️ |
-| $(ImportDir)/internal/chacha8rand/chacha8.go | ✔️ ([cpp](generated/golang/internal/chacha8rand/chacha8.cpp), [h](generated/golang/internal/chacha8rand/chacha8.h))| ❌ |
+| $(ImportDir)/internal/chacha8rand/chacha8.go | ✔️ ([cpp](generated/golang/internal/chacha8rand/chacha8.cpp), [h](generated/golang/internal/chacha8rand/chacha8.h))| ✔️ |
 | $(ImportDir)/internal/cpu/cpu.go | ✔️ ([cpp](generated/golang/internal/cpu/cpu.cpp), [h](generated/golang/internal/cpu/cpu.h))| ❌ |
 | $(ImportDir)/internal/cpu/cpu_x86.go | ✔️ ([cpp](generated/golang/internal/cpu/cpu_x86.cpp), [h](generated/golang/internal/cpu/cpu_x86.h))| ❌ |
 | $(ImportDir)/internal/fmtsort/sort.go | ✔️ ([cpp](generated/golang/internal/fmtsort/sort.cpp), [h](generated/golang/internal/fmtsort/sort.h))| ❌ |
@@ -201,7 +201,7 @@
 | $(ImportDir)/internal/poll/fd_posix.go | ✔️ ([cpp](generated/golang/internal/poll/fd_posix.cpp), [h](generated/golang/internal/poll/fd_posix.h))| ❌ |
 | $(ImportDir)/internal/poll/fd_windows.go | ✔️ ([cpp](generated/golang/internal/poll/fd_windows.cpp), [h](generated/golang/internal/poll/fd_windows.h))| ❌ |
 | $(ImportDir)/internal/race/norace.go | ✔️ ([cpp](generated/golang/internal/race/norace.cpp), [h](generated/golang/internal/race/norace.h))| ✔️ |
-| $(ImportDir)/internal/reflectlite/swapper.go | ✔️ ([cpp](generated/golang/internal/reflectlite/swapper.cpp), [h](generated/golang/internal/reflectlite/swapper.h))| ❌ |
+| $(ImportDir)/internal/reflectlite/swapper.go | ✔️ ([cpp](generated/golang/internal/reflectlite/swapper.cpp), [h](generated/golang/internal/reflectlite/swapper.h))| ✔️ |
 | $(ImportDir)/internal/reflectlite/type.go | ✔️ ([cpp](generated/golang/internal/reflectlite/type.cpp), [h](generated/golang/internal/reflectlite/type.h))| ❌ |
 | $(ImportDir)/internal/reflectlite/value.go | ✔️ ([cpp](generated/golang/internal/reflectlite/value.cpp), [h](generated/golang/internal/reflectlite/value.h))| ❌ |
 | $(ImportDir)/internal/safefilepath/path.go | ✔️ ([cpp](generated/golang/internal/safefilepath/path.cpp), [h](generated/golang/internal/safefilepath/path.h))| ✔️ |
@@ -435,7 +435,7 @@
 | $(ImportDir)/sync/map.go | ✔️ ([cpp](generated/golang/sync/map.cpp), [h](generated/golang/sync/map.h))| ❌ |
 | $(ImportDir)/sync/mutex.go | ✔️ ([cpp](generated/golang/sync/mutex.cpp), [h](generated/golang/sync/mutex.h))| ❌ |
 | $(ImportDir)/sync/once.go | ✔️ ([cpp](generated/golang/sync/once.cpp), [h](generated/golang/sync/once.h))| ✔️ |
-| $(ImportDir)/sync/oncefunc.go | ✔️ ([cpp](generated/golang/sync/oncefunc.cpp), [h](generated/golang/sync/oncefunc.h))| ❌ |
+| $(ImportDir)/sync/oncefunc.go | ✔️ ([cpp](generated/golang/sync/oncefunc.cpp), [h](generated/golang/sync/oncefunc.h))| ✔️ |
 | $(ImportDir)/sync/pool.go | ✔️ ([cpp](generated/golang/sync/pool.cpp), [h](generated/golang/sync/pool.h))| ❌ |
 | $(ImportDir)/sync/poolqueue.go | ✔️ ([cpp](generated/golang/sync/poolqueue.cpp), [h](generated/golang/sync/poolqueue.h))| ❌ |
 | $(ImportDir)/sync/runtime.go | ✔️ ([cpp](generated/golang/sync/runtime.cpp), [h](generated/golang/sync/runtime.h))| ✔️ |
@@ -456,7 +456,7 @@
 | $(ImportDir)/syscall/zerrors_windows.go | ✔️ ([cpp](generated/golang/syscall/zerrors_windows.cpp), [h](generated/golang/syscall/zerrors_windows.h))| ✔️ |
 | $(ImportDir)/syscall/zsyscall_windows.go | ✔️ ([cpp](generated/golang/syscall/zsyscall_windows.cpp), [h](generated/golang/syscall/zsyscall_windows.h))| ✔️ |
 | $(ImportDir)/time/format.go | ✔️ ([cpp](generated/golang/time/format.cpp), [h](generated/golang/time/format.h))| ❌ |
-| $(ImportDir)/time/format_rfc3339.go | ✔️ ([cpp](generated/golang/time/format_rfc3339.cpp), [h](generated/golang/time/format_rfc3339.h))| ❌ |
+| $(ImportDir)/time/format_rfc3339.go | ✔️ ([cpp](generated/golang/time/format_rfc3339.cpp), [h](generated/golang/time/format_rfc3339.h))| ✔️ |
 | $(ImportDir)/time/sleep.go | ✔️ ([cpp](generated/golang/time/sleep.cpp), [h](generated/golang/time/sleep.h))| ❌ |
 | $(ImportDir)/time/sys_windows.go | ✔️ ([cpp](generated/golang/time/sys_windows.cpp), [h](generated/golang/time/sys_windows.h))| ❌ |
 | $(ImportDir)/time/tick.go | ✔️ ([cpp](generated/golang/time/tick.cpp), [h](generated/golang/time/tick.h))| ❌ |

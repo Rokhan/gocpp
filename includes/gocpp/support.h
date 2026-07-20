@@ -50,40 +50,6 @@ namespace golang
     {
         struct Time;
     }
-
-    // temporary hack, while we don't use the native runtime::error object
-    namespace errors
-    {
-        namespace rec
-        {
-            gocpp::string Error(struct errorString* e);
-        }
-    }
-    namespace poll
-    {
-        struct DeadlineExceededError;
-
-        namespace rec
-        {
-            gocpp::string Error(struct errNetClosing e);
-            gocpp::string Error(struct DeadlineExceededError* e);
-        }
-    }
-    namespace main
-    {
-        namespace rec
-        {
-            gocpp::string Error(struct MyError* e);
-        }
-    }
-    namespace hex
-    {
-        using InvalidByteError = unsigned char;
-        namespace rec
-        {
-            gocpp::string Error(const InvalidByteError& e);
-        }
-    }
 }
 
 namespace mocklib
@@ -682,11 +648,6 @@ namespace gocpp
         }
     };
 
-    // temporary hack, while we don't use the native runtime::error object
-    using golang::main::rec::Error;
-    using golang::errors::rec::Error;
-    using golang::poll::rec::Error;
-
     template <typename T>
     concept IsRefError = requires(const T& t) {
         { Error(t) } -> std::same_as<gocpp::string>;
@@ -710,31 +671,50 @@ namespace gocpp
         error(std::nullptr_t) : optional(std::nullopt) {}
         error(const gocpp::string& msg) : optional(msg) {}
         
-        // Temporary mock, we lose the original type
-        template<typename T> requires IsRefError<T>
-        explicit error(const T& t) : optional(Error(t)) {}
-        
-        // Temporary mock, we lose the original type
-        template<typename T> requires IsPtrError<T>
-        explicit error(const T* t) : optional(Error(t)) {}
+        template<typename T>
+        error(T& ref)
+        {
+            mValue.reset(new errorImpl<T, std::unique_ptr<T>>(new T(ref)));
+        }
 
-        // Temporary mock, we lose the original type
-        // Why the "requires IsRefError<T>" constraint does not work here ? 
-        error(golang::hex::InvalidByteError t) : optional(golang::hex::rec::Error(t)) {}
+        template<typename T>
+        error(const T& ref)
+        {
+            mValue.reset(new errorImpl<T, std::unique_ptr<T>>(new T(ref)));
+        }
 
-        // Temporary mock, need to find a more generic solution
-        error(golang::poll::DeadlineExceededError* t) : optional(golang::poll::rec::Error(t)) {}
-
+        template<typename T>
+        error(T* ptr)
+        {
+            mValue.reset(new errorImpl<T, gocpp::ptr<T>>(ptr));
+        }
 
         // Mock generated interface inheritance
-        struct Ierror { };
-
-        template<typename T, typename TStore, typename TInterface = Ierror>
-        struct errorImpl : virtual Ierror
+        struct Ierror
         {
-            explicit errorImpl(T* ptr) { }
+            virtual string vError() = 0;
+            virtual void* getPtr() = 0;
         };
 
+        template<typename T, typename TStore, typename TInterface = Ierror>
+        struct errorImpl : virtual TInterface
+        {
+            explicit errorImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            gocpp::string vError() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        std::shared_ptr<Ierror> mValue;
 
         error& operator=(const std::string& msg)
         {
@@ -745,6 +725,13 @@ namespace gocpp
         error& operator=(std::nullptr_t)
         {
             this->optional::operator=(std::nullopt);
+            return *this;
+        }
+
+        template<typename T>
+        error& operator=(T* ptr)
+        {
+            mValue.reset(new errorImpl<T, gocpp::ptr<T>>(ptr));
             return *this;
         }
 
@@ -936,6 +923,34 @@ namespace gocpp
 
     template <typename T>
     PtrRecv<T> recv(T& t) { return PtrRecv<T>(&t); }
+
+    namespace rec
+    {
+        gocpp::string Error(const gocpp::PtrRecv<error, false>& self);
+        gocpp::string Error(const gocpp::ObjRecv<error>& self);
+    }
+
+    // Maybe "gocpp::error" should be defined in a specific header included later, when 
+    // target "rec::Error" are availables.
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::string error::errorImpl<T, TStore, TInterface>::vError()
+    {
+        //return rec::Error(gocpp::PtrRecv<T, false>(value.get()));
+        return "<ERROR>";
+    }
+
+    namespace rec
+    {
+        gocpp::string Error(const gocpp::PtrRecv<error, false>& self)
+        {
+            return self.ptr->mValue->vError();
+        }
+
+        gocpp::string Error(const gocpp::ObjRecv<error>& self)
+        {
+            return self.obj.mValue->vError();
+        }
+    }
 
     namespace details
     {

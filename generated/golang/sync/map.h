@@ -29,7 +29,7 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct readOnly& value);
-    extern go_any* expunged;
+    extern gocpp::go_any* expunged;
 }
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"

@@ -568,18 +568,18 @@ namespace golang::runtime
                 // is paged in is too expensive. Trying to account for the whole region means
                 // that it will appear like an enormous memory overhead in statistics, even though
                 // it is not.
-                l2 = (gocpp::array_ptr<gocpp::array<golang::runtime::heapArena*, 1 << arenaL2Bits>>)(sysAllocOS(gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>()));
+                l2 = (gocpp::array_ptr<gocpp::array<golang::runtime::heapArena*, 1 << arenaL2Bits>>)(sysAllocOS(gocpp::Sizeof<gocpp::array<heapArena*, 1048576>>()));
                 if(l2 == nullptr)
                 {
                     go_throw("out of memory allocating heap arena map"_s);
                 }
                 if(h->arenasHugePages)
                 {
-                    sysHugePage(gocpp::unsafe_pointer(l2), gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>());
+                    sysHugePage(gocpp::unsafe_pointer(l2), gocpp::Sizeof<gocpp::array<heapArena*, 1048576>>());
                 }
                 else
                 {
-                    sysNoHugePage(gocpp::unsafe_pointer(l2), gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>());
+                    sysNoHugePage(gocpp::unsafe_pointer(l2), gocpp::Sizeof<gocpp::array<heapArena*, 1048576>>());
                 }
                 atomic::StorepNoWB(gocpp::unsafe_pointer(& h->arenas[rec::l1(gocpp::recv(ri))]), gocpp::unsafe_pointer(l2));
             }
@@ -747,7 +747,7 @@ namespace golang::runtime
             {
                 continue;
             }
-            sysHugePage(gocpp::unsafe_pointer(l2), gocpp::Sizeof<gocpp::array<*runtime::heapArena, 1048576>>());
+            sysHugePage(gocpp::unsafe_pointer(l2), gocpp::Sizeof<gocpp::array<heapArena*, 1048576>>());
         }
     }
 

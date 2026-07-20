@@ -58,7 +58,7 @@ namespace golang::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct operation& value);
-    extern std::function<gocpp::error (syscall::Handle, *uint16, uint32_t, *uint32, *byte)> ReadConsole;
+    extern std::function<gocpp::error (syscall::Handle, uint16_t*, uint32_t, uint32_t*, unsigned char*)> ReadConsole;
     int32_t sockaddrInet4ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
     int32_t sockaddrInet6ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
     void rawToSockaddrInet4(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);

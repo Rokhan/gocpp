@@ -195,9 +195,9 @@ namespace golang::runtime
     //go:linkname godebug_setNewIncNonDefault internal/godebug.setNewIncNonDefault
     void godebug_setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault)
     {
-        auto p = new std::function<func() (gocpp::string)>{};
+        auto p = new std::function<std::function<void (void)> (gocpp::string)>{};
         *p = newIncNonDefault;
-        rec::Store<std::function<func() (gocpp::string)>>(gocpp::recv(godebugNewIncNonDefault), p);
+        rec::Store<std::function<std::function<void (void)> (gocpp::string)>>(gocpp::recv(godebugNewIncNonDefault), p);
     }
 
     // A godebugInc provides access to internal/godebug's IncNonDefault function
@@ -240,7 +240,7 @@ namespace golang::runtime
         auto inc = rec::Load<std::function<void (void)>>(gocpp::recv(g->inc));
         if(inc == nullptr)
         {
-            auto newInc = rec::Load<std::function<func() (gocpp::string)>>(gocpp::recv(godebugNewIncNonDefault));
+            auto newInc = rec::Load<std::function<std::function<void (void)> (gocpp::string)>>(gocpp::recv(godebugNewIncNonDefault));
             if(newInc == nullptr)
             {
                 return;

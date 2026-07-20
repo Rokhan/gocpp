@@ -402,7 +402,7 @@ namespace golang::runtime
         }
         if(h->extra->overflow == nullptr)
         {
-            h->extra->overflow = new gocpp::slice<*runtime::bmap>{};
+            h->extra->overflow = new gocpp::slice<bmap*>{};
         }
     }
 

@@ -700,7 +700,7 @@ namespace golang::poll
         }
     }
 
-    std::function<gocpp::error (syscall::Handle, *uint16, uint32_t, *uint32, *byte)> ReadConsole = syscall::ReadConsole;
+    std::function<gocpp::error (syscall::Handle, uint16_t*, uint32_t, uint32_t*, unsigned char*)> ReadConsole = syscall::ReadConsole;
     // readConsole reads utf16 characters from console File,
     // encodes them into utf8 and stores them in buffer b.
     // It returns the number of utf8 bytes read and an error, if any.

@@ -3633,6 +3633,11 @@ func convertNamespace(typeStr string, namespace string) string {
 	return typeStr
 }
 
+type typeConvCtx struct {
+	namespace string
+	position  token.Position
+}
+
 // TODO, check if we really need all this methods/function
 //
 //	-> convertGoToCppType(goType types.Type, position token.Position) string
@@ -3640,38 +3645,38 @@ func convertNamespace(typeStr string, namespace string) string {
 //	-> convertTypeSpec(node *ast.TypeSpec, end string) cppType
 
 func (cv *cppConverter) convertGoToCppType(goType types.Type, position token.Position) (string, bool) {
-	return convertGoToCppType(goType, cv.namespace, position)
+	return convertGoToCppType(goType, typeConvCtx{cv.namespace, position})
 }
 
-func convertGoToCppType(goType types.Type, namespace string, position token.Position) (string, bool) {
+func convertGoToCppType(goType types.Type, tcCtx typeConvCtx) (string, bool) {
 	if goType == nil {
 		panic("convertGoToCppType, Cannot convert nil type.")
 	}
 
 	switch subType := goType.(type) {
 	case *types.Array:
-		return fmt.Sprintf("gocpp::array<%s, %d>", GetCppGoType(subType.Elem(), namespace), subType.Len()), true
+		return fmt.Sprintf("gocpp::array<%s, %d>", convertGoToCppTypeRec(subType.Elem(), tcCtx), subType.Len()), true
 
 	case *types.Basic:
-		return GetCppGoType(subType, namespace), true
+		return GetCppGoType(subType, tcCtx.namespace), true
 
 	case *types.Chan:
-		return fmt.Sprintf("gocpp::channel<%s>", GetCppGoType(subType.Elem(), namespace)), true
+		return fmt.Sprintf("gocpp::channel<%s>", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
 
 	case *types.Map:
-		return fmt.Sprintf("gocpp::map<%s, %s>", GetCppGoType(subType.Key(), namespace), GetCppGoType(subType.Elem(), namespace)), true
+		return fmt.Sprintf("gocpp::map<%s, %s>", convertGoToCppTypeRec(subType.Key(), tcCtx), convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
 
 	case *types.Named:
-		return GetCppGoType(subType, namespace), true
+		return GetCppGoType(subType, tcCtx.namespace), true
 
 	case *types.Pointer:
-		return fmt.Sprintf("%s*", GetCppGoType(subType.Elem(), namespace)), true
+		return fmt.Sprintf("%s*", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
 
 	case *types.Slice:
-		return fmt.Sprintf("gocpp::slice<%s>", GetCppGoType(subType.Elem(), namespace)), true
+		return fmt.Sprintf("gocpp::slice<%s>", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
 
 	case *types.Struct:
-		fmt.Printf("convertGoToCppType, struct type [%v], position[%v]\n", subType, position)
+		//fmt.Printf("convertGoToCppType, struct type [%v], position[%v]\n", subType, position)
 		id, ok := typeToId[subType]
 		if !ok {
 			for id, t := range typeToId {
@@ -3686,22 +3691,45 @@ func convertGoToCppType(goType types.Type, namespace string, position token.Posi
 		return fmt.Sprintf("%s", subType), true
 
 	case *types.Signature:
-		if subType.Results().Len() <= 1 {
-			return fmt.Sprintf("std::function<%s (%s)>", GetCppGoType(subType.Results(), namespace), GetCppGoType(subType.Params(), namespace)), true
-		} else {
-			return fmt.Sprintf("std::function<std::tuple<%s> (%s)>", GetCppGoType(subType.Results(), namespace), GetCppGoType(subType.Params(), namespace)), true
+		switch subType.Results().Len() {
+		case 0:
+			return fmt.Sprintf("std::function<void (%s)>", convertTupleToCppTypeList(subType.Params(), tcCtx)), true
+		case 1:
+			return fmt.Sprintf("std::function<%s (%s)>", convertGoToCppTypeRec(subType.Results().At(0).Type(), tcCtx), convertTupleToCppTypeList(subType.Params(), tcCtx)), true
+		default:
+			return fmt.Sprintf("std::function<std::tuple<%s> (%s)>", convertTupleToCppTypeList(subType.Results(), tcCtx), convertTupleToCppTypeList(subType.Params(), tcCtx)), true
 		}
+
+	case *types.Tuple:
+		return fmt.Sprintf("std::tuple<%s>", convertTupleToCppTypeList(subType, tcCtx)), true
 
 	case *types.Interface:
 		if subType.NumMethods() == 0 {
 			return "gocpp::go_any", true
 		} else {
-			panic(fmt.Sprintf("Unmanaged interface in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), position))
+			panic(fmt.Sprintf("Unmanaged interface in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), tcCtx.position))
 		}
 
 	default:
-		panic(fmt.Sprintf("Unmanaged subType in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), position))
+		panic(fmt.Sprintf("Unmanaged subType in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), tcCtx.position))
 	}
+}
+
+func convertGoToCppTypeRec(goType types.Type, tcCtx typeConvCtx) string {
+	return first(convertGoToCppType(goType, tcCtx))
+}
+
+func convertTupleToCppTypeList(t *types.Tuple, tcCtx typeConvCtx) string {
+	if t.Len() == 0 {
+		return "void"
+	}
+
+	var strs []string
+	for i := 0; i < t.Len(); i++ {
+		strType, _ := convertGoToCppType(t.At(i).Type(), tcCtx)
+		strs = append(strs, strType)
+	}
+	return strings.Join(strs, ", ")
 }
 
 // Sprintf formats according to a format specifier and returns the resulting string.

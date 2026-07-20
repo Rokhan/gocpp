@@ -18,6 +18,14 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+func first[T1 any, T2 any](t1 T1, t2 T2) T1 {
+	return t1
+}
+
+func second[T1 any, T2 any](t1 T1, t2 T2) T2 {
+	return t2
+}
+
 type Logger interface {
 	Logf(format string, a ...any) (n int, err error)
 	Panicf(format string, params ...interface{})
@@ -75,25 +83,8 @@ func GetCppOutType(goType outType) string {
 }
 
 func GetCppGoType(goType types.Type, namespace string) string {
-	switch t := goType.(type) {
-	case *types.Tuple:
-		if t.Len() == 0 {
-			return "void"
-		}
-
-		var strs []string
-		for i := 0; i < t.Len(); i++ {
-			strs = append(strs, GetCppGoType(t.At(i).Type(), namespace))
-		}
-		return strings.Join(strs, ", ")
-
-	case *types.Named:
-		typeStr := GetCppType(goType.String())
-		return convertNamespace(typeStr, namespace)
-
-	default:
-		return GetCppType(goType.String())
-	}
+	ccpStr := GetCppType(goType.String())
+	return convertNamespace(ccpStr, namespace)
 }
 
 // func GetCppFunc[T string | cppExpr](funcName T) T

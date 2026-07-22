@@ -123,8 +123,18 @@ var cppKeyWordsMapping = map[string]string{
 	"stdout": "go_stdout", // Macro of <cstdio>
 	"stderr": "go_stderr", // Macro of <cstdio>
 
+	"SEEK_SET": "go_SEEK_SET", // Macro of <stdio.h>
+	"SEEK_CUR": "go_SEEK_CUR", // Macro of <stdio.h>
+	"SEEK_END": "go_SEEK_END", // Macro of <stdio.h>
+
 	"_NSIG":     "go__NSIG",     // Misc Macro
 	"_MAX_PATH": "go__MAX_PATH", // Misc Macro
+
+	"_C": "go_C", // Misc
+	"_L": "go_L", // Misc
+	"_N": "go_N", // Misc
+	"_P": "go_P", // Misc
+	"_S": "go_S", // Misc
 
 	"SIGHUP":  "go_SIGHUP",  // Unix Macro
 	"SIGINT":  "go_SIGINT",  // Unix Macro

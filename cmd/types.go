@@ -288,7 +288,7 @@ func (cv *parsingInfos) getReferencedTypesFor(file string) (usedTypes map[types.
 	return
 }
 
-// func (cv *cppConverter) filterSelections(srcSelections map[*ast.SelectorExpr]*types.Selection, file string, usedTypes map[types.Object]tagType, tag tagType) {
+// func (cv *parsingInfos) filterSelections(srcSelections map[*ast.SelectorExpr]*types.Selection, file string, usedTypes map[types.Object]tagType, tag tagType) {
 // 	for sel, selection := range srcSelections {
 // 		var filePos = cv.Position(sel)
 // 		if file != filePos.Filename {
@@ -344,8 +344,7 @@ func (cv *parsingInfos) filterUsedObjects(objs map[*ast.Ident]types.Object, file
 					}
 				}
 			default:
-				// We will probably need need at some point.
-				// usedTypes[t] |= tag
+				usedTypes[t] |= tag
 			}
 		}
 	}

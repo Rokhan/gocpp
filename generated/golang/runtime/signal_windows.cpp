@@ -15,6 +15,7 @@
 #include "golang/internal/abi/type.h"
 #include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/runtime/arena.h"
+#include "golang/runtime/cgo.h"
 #include "golang/runtime/cgocall.h"
 #include "golang/runtime/chan.h"
 #include "golang/runtime/coro.h"

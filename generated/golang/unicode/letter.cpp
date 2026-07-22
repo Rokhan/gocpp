@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/unicode/graphic.h"
+#include "golang/unicode/tables.h"
 
 // Package unicode provides data and functions to test some properties of
 // Unicode code points.

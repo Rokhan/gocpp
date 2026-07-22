@@ -59,7 +59,7 @@ namespace golang::unicode
         { "Zp"_s, Zp },
         { "Zs"_s, Zs }
     };
-    RangeTable* _C = gocpp::InitPtr<RangeTable>([](auto& x) {
+    RangeTable* go_C = gocpp::InitPtr<RangeTable>([](auto& x) {
         x.R16 = gocpp::slice<Range16> {
             {0x0000, 0x001f, 1},
             {0x007f, 0x009f, 1},
@@ -134,7 +134,7 @@ namespace golang::unicode
             {0xd800, 0xdfff, 1}
         };
     });
-    RangeTable* _L = gocpp::InitPtr<RangeTable>([](auto& x) {
+    RangeTable* go_L = gocpp::InitPtr<RangeTable>([](auto& x) {
         x.R16 = gocpp::slice<Range16> {
             {0x0041, 0x005a, 1},
             {0x0061, 0x007a, 1},
@@ -2444,7 +2444,7 @@ namespace golang::unicode
             {0xe0100, 0xe01ef, 1}
         };
     });
-    RangeTable* _N = gocpp::InitPtr<RangeTable>([](auto& x) {
+    RangeTable* go_N = gocpp::InitPtr<RangeTable>([](auto& x) {
         x.R16 = gocpp::slice<Range16> {
             {0x0030, 0x0039, 1},
             {0x00b2, 0x00b3, 1},
@@ -2752,7 +2752,7 @@ namespace golang::unicode
         };
         x.LatinOffset = 3;
     });
-    RangeTable* _P = gocpp::InitPtr<RangeTable>([](auto& x) {
+    RangeTable* go_P = gocpp::InitPtr<RangeTable>([](auto& x) {
         x.R16 = gocpp::slice<Range16> {
             {0x0021, 0x0023, 1},
             {0x0025, 0x002a, 1},
@@ -3202,7 +3202,7 @@ namespace golang::unicode
         };
         x.LatinOffset = 1;
     });
-    RangeTable* _S = gocpp::InitPtr<RangeTable>([](auto& x) {
+    RangeTable* go_S = gocpp::InitPtr<RangeTable>([](auto& x) {
         x.R16 = gocpp::slice<Range16> {
             {0x0024, 0x002b, 7},
             {0x003c, 0x003e, 1},
@@ -3732,8 +3732,8 @@ namespace golang::unicode
     RangeTable* Cs = _Cs;
     RangeTable* Digit = _Nd;
     RangeTable* Nd = _Nd;
-    RangeTable* Letter = _L;
-    RangeTable* L = _L;
+    RangeTable* Letter = go_L;
+    RangeTable* L = go_L;
     RangeTable* Lm = _Lm;
     RangeTable* Lo = _Lo;
     RangeTable* Lower = _Ll;
@@ -3745,10 +3745,10 @@ namespace golang::unicode
     RangeTable* Mn = _Mn;
     RangeTable* Nl = _Nl;
     RangeTable* No = _No;
-    RangeTable* Number = _N;
-    RangeTable* N = _N;
-    RangeTable* Other = _C;
-    RangeTable* C = _C;
+    RangeTable* Number = go_N;
+    RangeTable* N = go_N;
+    RangeTable* Other = go_C;
+    RangeTable* C = go_C;
     RangeTable* Pc = _Pc;
     RangeTable* Pd = _Pd;
     RangeTable* Pe = _Pe;
@@ -3756,16 +3756,16 @@ namespace golang::unicode
     RangeTable* Pi = _Pi;
     RangeTable* Po = _Po;
     RangeTable* Ps = _Ps;
-    RangeTable* Punct = _P;
-    RangeTable* P = _P;
+    RangeTable* Punct = go_P;
+    RangeTable* P = go_P;
     RangeTable* Sc = _Sc;
     RangeTable* Sk = _Sk;
     RangeTable* Sm = _Sm;
     RangeTable* So = _So;
     RangeTable* Space = _Z;
     RangeTable* Z = _Z;
-    RangeTable* Symbol = _S;
-    RangeTable* S = _S;
+    RangeTable* Symbol = go_S;
+    RangeTable* S = go_S;
     RangeTable* Title = _Lt;
     RangeTable* Lt = _Lt;
     RangeTable* Upper = _Lu;

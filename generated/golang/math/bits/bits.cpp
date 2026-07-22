@@ -11,6 +11,7 @@
 #include "golang/math/bits/bits.h"
 #include "gocpp/support.h"
 
+#include "golang/math/bits/bits_errors.h"
 #include "golang/math/bits/bits_tables.h"
 
 // Package bits implements bit counting and manipulation

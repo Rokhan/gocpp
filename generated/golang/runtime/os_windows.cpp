@@ -47,6 +47,7 @@
 #include "golang/runtime/print.h"
 #include "golang/runtime/proc.h"
 #include "golang/runtime/rand.h"
+#include "golang/runtime/runtime.h"
 #include "golang/runtime/runtime1.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/select.h"

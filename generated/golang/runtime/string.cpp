@@ -23,6 +23,7 @@
 #include "golang/runtime/debuglog_off.h"
 #include "golang/runtime/error.h"
 #include "golang/runtime/extern.h"
+#include "golang/runtime/iface.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/lockrank.h"

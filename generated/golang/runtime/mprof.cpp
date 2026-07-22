@@ -48,6 +48,7 @@
 #include "golang/runtime/plugin.h"
 #include "golang/runtime/print.h"
 #include "golang/runtime/proc.h"
+#include "golang/runtime/proflabel.h"
 #include "golang/runtime/race0.h"
 #include "golang/runtime/rand.h"
 #include "golang/runtime/runtime.h"

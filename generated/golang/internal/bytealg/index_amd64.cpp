@@ -11,6 +11,7 @@
 #include "golang/internal/bytealg/index_amd64.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/bytealg/bytealg.h"
 #include "golang/internal/cpu/cpu.h"
 
 namespace golang::bytealg

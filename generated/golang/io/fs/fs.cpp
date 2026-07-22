@@ -11,6 +11,7 @@
 #include "golang/io/fs/fs.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/oserror/errors.h"
 #include "golang/time/time.h"
 #include "golang/time/zoneinfo.h"
 #include "golang/unicode/utf8/utf8.h"

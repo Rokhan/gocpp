@@ -19,6 +19,7 @@
 #include "golang/internal/syscall/windows/zsyscall_windows.h"
 #include "golang/io/fs/format.h"
 #include "golang/io/fs/fs.h"
+#include "golang/io/io.h"
 #include "golang/os/dir.h"
 #include "golang/os/error.h"
 #include "golang/os/file_windows.h"

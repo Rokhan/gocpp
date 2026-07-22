@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/math/unsafe.h"
+#include "golang/strconv/atof.h"
 #include "golang/strconv/atoi.h"
 #include "golang/strconv/decimal.h"
 #include "golang/strconv/ftoaryu.h"

@@ -11,6 +11,7 @@
 #include "golang/internal/safefilepath/path_windows.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/safefilepath/path.h"
 #include "golang/syscall/exec_windows.h"
 #include "golang/unicode/utf8/utf8.h"
 

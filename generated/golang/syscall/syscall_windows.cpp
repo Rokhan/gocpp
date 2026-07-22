@@ -14,6 +14,7 @@
 #include "golang/errors/errors.h"
 #include "golang/internal/bytealg/indexbyte_native.h"
 #include "golang/internal/itoa/itoa.h"
+#include "golang/internal/oserror/errors.h"
 #include "golang/internal/race/norace.h"
 #include "golang/runtime/extern.h"
 #include "golang/sync/atomic/type.h"

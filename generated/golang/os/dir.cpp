@@ -17,6 +17,7 @@
 #include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/io/fs/fs.h"
 #include "golang/os/dir_windows.h"
+#include "golang/os/error.h"
 #include "golang/os/file.h"
 #include "golang/os/file_posix.h"
 #include "golang/os/file_windows.h"

@@ -13,6 +13,7 @@
 
 #include "golang/errors/errors.h"
 #include "golang/errors/wrap.h"
+#include "golang/internal/poll/fd.h"
 #include "golang/internal/poll/fd_mutex.h"
 #include "golang/internal/poll/fd_poll_runtime.h"
 #include "golang/internal/poll/fd_windows.h"

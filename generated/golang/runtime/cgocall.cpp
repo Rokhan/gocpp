@@ -17,6 +17,7 @@
 #include "golang/internal/goexperiment/exp_allocheaders_on.h"
 #include "golang/internal/goexperiment/exp_cgocheck2_off.h"
 #include "golang/runtime/atomic_pointer.h"
+#include "golang/runtime/cgo.h"
 #include "golang/runtime/chan.h"
 #include "golang/runtime/coro.h"
 #include "golang/runtime/debuglog_off.h"

@@ -11,6 +11,7 @@
 #include "golang/os/error.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/poll/fd.h"
 #include "golang/io/fs/fs.h"
 #include "golang/os/error_errno.h"
 #include "golang/os/file.h"

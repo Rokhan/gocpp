@@ -9,9 +9,9 @@ namespace golang::os
     // Seek whence values.
     //
     // Deprecated: Use io.SeekStart, io.SeekCurrent, and io.SeekEnd.
-    const int SEEK_SET = 0;
-    const int SEEK_CUR = 1;
-    const int SEEK_END = 2;
+    const int go_SEEK_SET = 0;
+    const int go_SEEK_CUR = 1;
+    const int go_SEEK_END = 2;
     struct LinkError;
     struct noReadFrom;
     struct noWriteTo;

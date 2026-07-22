@@ -11,6 +11,7 @@
 #include "golang/syscall/dll_windows.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/syscall/windows/sysdll/sysdll.h"
 #include "golang/sync/atomic/doc.h"
 #include "golang/sync/mutex.h"
 #include "golang/syscall/syscall.h"

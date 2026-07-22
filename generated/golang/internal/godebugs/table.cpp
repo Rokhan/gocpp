@@ -70,7 +70,7 @@ namespace golang::godebugs
     //
     // Note: After adding entries to this table, update the list in doc/godebug.md as well.
     // (Otherwise the test in this package will fail.)
-    gocpp::slice<golang::godebugs::Info> All = gocpp::slice<golang::godebugs::Info> {
+    gocpp::slice<Info> All = gocpp::slice<Info> {
         gocpp::Init<>([](auto& x) {
         x.Name = "execerrdot"_s;
         x.Package = "os/exec"_s;
@@ -196,7 +196,7 @@ namespace golang::godebugs
     })
     };
     // Lookup returns the Info with the given name.
-    golang::godebugs::Info* Lookup(gocpp::string name)
+    Info* Lookup(gocpp::string name)
     {
         // binary search, avoiding import of sort.
         auto lo = 0;

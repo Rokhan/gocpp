@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/unicode/letter.h"
+#include "golang/unicode/tables.h"
 
 namespace golang::unicode
 {

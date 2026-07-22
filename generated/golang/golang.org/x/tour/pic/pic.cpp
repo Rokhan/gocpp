@@ -30,6 +30,7 @@
 #include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/io/io.h"
 #include "golang/os/dir_windows.h"
+#include "golang/os/file.h"
 #include "golang/os/file_windows.h"
 #include "golang/os/types.h"
 #include "golang/sync/mutex.h"

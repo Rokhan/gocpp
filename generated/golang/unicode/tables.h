@@ -14,12 +14,12 @@
 
 namespace golang::unicode
 {
-    extern RangeTable* _C;
+    extern RangeTable* go_C;
     extern RangeTable* _Cc;
     extern RangeTable* _Cf;
     extern RangeTable* _Co;
     extern RangeTable* _Cs;
-    extern RangeTable* _L;
+    extern RangeTable* go_L;
     extern RangeTable* _Ll;
     extern RangeTable* _Lm;
     extern RangeTable* _Lo;
@@ -29,11 +29,11 @@ namespace golang::unicode
     extern RangeTable* _Mc;
     extern RangeTable* _Me;
     extern RangeTable* _Mn;
-    extern RangeTable* _N;
+    extern RangeTable* go_N;
     extern RangeTable* _Nd;
     extern RangeTable* _Nl;
     extern RangeTable* _No;
-    extern RangeTable* _P;
+    extern RangeTable* go_P;
     extern RangeTable* _Pc;
     extern RangeTable* _Pd;
     extern RangeTable* _Pe;
@@ -41,7 +41,7 @@ namespace golang::unicode
     extern RangeTable* _Pi;
     extern RangeTable* _Po;
     extern RangeTable* _Ps;
-    extern RangeTable* _S;
+    extern RangeTable* go_S;
     extern RangeTable* _Sc;
     extern RangeTable* _Sk;
     extern RangeTable* _Sm;

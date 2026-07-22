@@ -11,7 +11,9 @@
 #include "golang/strconv/quote.h"
 #include "gocpp/support.h"
 
+#include "golang/strconv/atoi.h"
 #include "golang/strconv/bytealg.h"
+#include "golang/strconv/isprint.h"
 #include "golang/unicode/utf8/utf8.h"
 
 namespace golang::strconv

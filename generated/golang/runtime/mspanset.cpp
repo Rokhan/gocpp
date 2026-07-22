@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/type.h"
+#include "golang/internal/cpu/cpu.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"

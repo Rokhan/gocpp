@@ -16,6 +16,7 @@
 #include "golang/internal/poll/fd_mutex.h"
 #include "golang/internal/poll/fd_poll_runtime.h"
 #include "golang/internal/poll/fd_posix.h"
+#include "golang/internal/poll/hook_windows.h"
 #include "golang/internal/race/norace.h"
 #include "golang/internal/syscall/windows/net_windows.h"
 #include "golang/internal/syscall/windows/symlink_windows.h"

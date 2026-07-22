@@ -59,6 +59,7 @@
 #include "golang/runtime/signal_windows.h"
 #include "golang/runtime/sizeclasses.h"
 #include "golang/runtime/slice.h"
+#include "golang/runtime/stack.h"
 #include "golang/runtime/stubs.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/time.h"

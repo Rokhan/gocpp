@@ -33,6 +33,7 @@
 #include "golang/runtime/panic.h"
 #include "golang/runtime/plugin.h"
 #include "golang/runtime/proc.h"
+#include "golang/runtime/runtime.h"
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/signal_windows.h"
 #include "golang/runtime/stack.h"

@@ -32,6 +32,7 @@
 #include "golang/runtime/lockrank.h"
 #include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
+#include "golang/runtime/map.h"
 #include "golang/runtime/mbarrier.h"
 #include "golang/runtime/mprof.h"
 #include "golang/runtime/msan0.h"

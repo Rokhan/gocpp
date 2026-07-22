@@ -17,6 +17,7 @@
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/goexperiment/exp_allocheaders_on.h"
 #include "golang/runtime/arena.h"
+#include "golang/runtime/cgo.h"
 #include "golang/runtime/cgocall.h"
 #include "golang/runtime/chan.h"
 #include "golang/runtime/coro.h"

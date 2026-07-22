@@ -15,6 +15,7 @@
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/lock_sema.h"
 #include "golang/runtime/panic.h"
+#include "golang/runtime/proflabel.h"
 #include "golang/runtime/race0.h"
 #include "golang/runtime/runtime2.h"
 

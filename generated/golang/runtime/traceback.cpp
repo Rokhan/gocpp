@@ -18,6 +18,7 @@
 #include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/alg.h"
 #include "golang/runtime/asan0.h"
+#include "golang/runtime/cgo.h"
 #include "golang/runtime/cgocall.h"
 #include "golang/runtime/chan.h"
 #include "golang/runtime/coro.h"

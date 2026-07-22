@@ -506,6 +506,11 @@ namespace gocpp
 
             return this->first;
         }
+
+        auto operator->() noexcept -> decltype(std::get<0>(*this))
+        {
+            return std::get<0>(*this);
+        }
     };
 
     struct ErrNoValueInChannel
@@ -1191,6 +1196,14 @@ namespace gocpp
         }
 
         // TODO : other constructors
+
+        slice& operator=(std::nullptr_t)
+        {
+            this->mArray->clear();
+            mStart = 0;
+            mEnd = 0;
+            return *this;
+        }
 
         range_iterator begin()
         {

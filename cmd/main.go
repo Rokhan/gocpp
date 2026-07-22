@@ -4144,6 +4144,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		return ExprPrintf("*%s", cv.convertExpr(n.X))
 
 	case *ast.TypeAssertExpr:
+		// maybe we should try to get from context the number of required output
 		return ExprPrintf("gocpp::getValue<%s>(%s)", cv.convertTypeExpr(n.Type, ctContext{}), cv.convertExpr(n.X))
 
 	default:

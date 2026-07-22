@@ -1108,7 +1108,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 			}
 			usedTypeParams = append(usedTypeParams, param.Type.typenames...)
 			if cv.shared.debugMode && param.Type.dbg != "" {
-				debugComments = append(usedTypeParams, fmt.Sprintf("/* %s: */%s", param.names, param.Type.dbg))
+				debugComments = append(debugComments, fmt.Sprintf("/* %s: */%s", param.names, param.Type.dbg))
 			}
 		}
 
@@ -1512,7 +1512,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		}
 	}
 
-	cppOut := &cppExprWritter[*bufio.Writer]{cv.cpp.out, &[]place{}}
+	cppOut := &cppExprWritter[*bufio.Writer]{cv.cpp.out, &[]place{}, nil}
 
 	if cgs := cv.commentMap[stmt]; len(cgs) > 0 {
 		for _, cg := range cgs {
@@ -2751,10 +2751,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		if deps, ok := ctx.typeParams[identType.str]; ok && len(deps) != 0 {
 			identType.str = fmt.Sprintf("%s<%s>", identType.str, strings.Join(deps, ", "))
 		}
-		if !ctx.keepDebug {
-			identType.str = fmt.Sprintf("%s%s", identType.dbg, identType.str)
-			identType.dbg = ""
-		}
+		identType.manageDbg(ctx.keepDebug)
 		return identType
 
 	case *ast.ArrayType:
@@ -2788,12 +2785,14 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 
 	case *ast.SelectorExpr:
 		namespace := cv.convertExpr(n.X)
+		keepDbg := ctx.keepDebug
 		ctx.keepDebug = true
 		ctx.ignoreNameSpace = true
 		field := cv.convertTypeExpr(n.Sel, ctx)
 		typeName := GetCppExprFunc(ExprPrintf("%s::%s", namespace, field))
-		cppType := cppType{cppExpr: cppExpr{str: field.dbg + typeName.str}, canFwd: true}
+		cppType := cppType{cppExpr: typeName, canFwd: true}
 		cppType.isStruct = field.isStruct
+		cppType.manageDbg(keepDbg)
 		return cppType
 
 	case *ast.StarExpr:
@@ -2803,6 +2802,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 			cppType.eltType = &typeExpr
 			cppType.typenames = append(cppType.typenames, typeExpr.typenames...)
 			cppType.isStruct = false
+			cppType.manageDbg(ctx.keepDebug)
 			return cppType
 		}
 
@@ -2811,6 +2811,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		cppType.eltType = &typeExpr
 		cppType.typenames = append(cppType.typenames, typeExpr.typenames...)
 		cppType.isStruct = typeExpr.isStruct
+		cppType.manageDbg(ctx.keepDebug)
 		return cppType
 
 	case *ast.StructType:
@@ -3734,10 +3735,11 @@ func convertTupleToCppTypeList(t *types.Tuple, tcCtx typeConvCtx) string {
 
 // Sprintf formats according to a format specifier and returns the resulting string.
 func (cv *cppConverter) BuffExprPrintf(buff *cppExprBuffer, format string, srcParams ...any) (n int, err error) {
-	defs, params /*tns*/, _, coms := extractParamDefs(srcParams...)
+	defs, params /*tns*/, _, coms, dbgs := extractParamDefs(srcParams...)
 	//cv.Assertf(tns == nil, "typenames should be nil here")
 	cv.Assertf(coms == nil, "comments should be nil here")
 	*buff.defs = append(*buff.defs, defs...)
+	buff.dbgs = append(buff.dbgs, dbgs...)
 	return fmt.Fprintf(buff.buff, format, params...)
 }
 
@@ -3755,10 +3757,11 @@ func (cv *cppConverter) printInline(bBuff io.Writer, bDefs *[]place, defs []plac
 
 // Sprintf formats according to a format specifier.
 func (cv *cppConverter) WritterExprPrintf(buff *cppExprWritter[*bufio.Writer], format string, srcParams ...any) (n int, err error) {
-	defs, params /*tns*/, _, coms := extractParamDefs(srcParams...)
+	defs, params /*tns*/, _, coms, dbgs := extractParamDefs(srcParams...)
 	//cv.Assertf(tns == nil, "typenames should be nil here")
 	cv.Assertf(coms == nil, "comments should be nil here")
 	cv.printInline(buff.buff, buff.defs, defs)
+	buff.dbgs = append(buff.dbgs, dbgs...)
 	return fmt.Fprintf(buff.buff, format, params...)
 }
 

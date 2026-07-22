@@ -894,7 +894,7 @@ type receiverDesc interface {
 type goReceiverDesc ast.SelectorExpr
 type mockReceiverDesc string
 
-func extractParamDefs(srcParams ...any) (defs []place, params []any, typeNames []string, comments []string) {
+func extractParamDefs(srcParams ...any) (defs []place, params []any, typeNames []string, comments []string, dbgs []string) {
 	for _, srcParam := range srcParams {
 		switch prm := srcParam.(type) {
 		case cppType:
@@ -902,11 +902,13 @@ func extractParamDefs(srcParams ...any) (defs []place, params []any, typeNames [
 			params = append(params, prm.str)
 			typeNames = append(typeNames, prm.typenames...)
 			comments = append(comments, prm.comments...)
+			dbgs = append(dbgs, prm.dbg)
 		case cppExpr:
 			defs = append(defs, prm.defs...)
 			params = append(params, prm.str)
 			typeNames = append(typeNames, prm.typenames...)
 			comments = append(comments, prm.comments...)
+			dbgs = append(dbgs, prm.dbg)
 		default:
 			params = append(params, srcParam)
 		}
@@ -916,8 +918,13 @@ func extractParamDefs(srcParams ...any) (defs []place, params []any, typeNames [
 
 // Sprintf formats according to a format specifier and returns the resulting string.
 func ExprPrintf(format string, srcParams ...any) cppExpr {
-	defs, params, typeNames, comments := extractParamDefs(srcParams...)
-	return cppExpr{str: fmt.Sprintf(format, params...), defs: defs, typenames: typeNames, comments: comments}
+	defs, params, typeNames, comments, dbgs := extractParamDefs(srcParams...)
+	return cppExpr{
+		str:       fmt.Sprintf(format, params...),
+		dbg:       strings.Join(dbgs, ""),
+		defs:      defs,
+		typenames: typeNames,
+		comments:  comments}
 }
 
 type includeType int
@@ -1088,8 +1095,16 @@ type cppExpr struct {
 	defs      []place // inline def used by type
 	typenames []string
 	comments  []string
-
 	// probably need some depInfo here
+}
+
+// (keepDbg == true) => do nothing
+func (expr *cppExpr) manageDbg(keepDbg bool) {
+	if !keepDbg {
+		expr.str = expr.dbg + expr.str
+		expr.dbg = ""
+		return
+	}
 }
 
 func (expr cppExpr) toCppType() cppType {
@@ -1134,16 +1149,17 @@ func mkCppEllipsis(expr cppExpr, eltType cppType) cppType {
 type cppExprWritter[TWritter io.Writer] struct {
 	buff TWritter // cpp type as a string
 	defs *[]place // inline def used by type
+	dbgs []string
 }
 
 type cppExprBuffer cppExprWritter[*bytes.Buffer]
 
 func mkCppWritter[TWritter io.Writer](w TWritter) *cppExprWritter[TWritter] {
-	return &cppExprWritter[TWritter]{w, &[]place{}}
+	return &cppExprWritter[TWritter]{w, &[]place{}, nil}
 }
 
 func mkCppBuffer() *cppExprBuffer {
-	return &cppExprBuffer{new(bytes.Buffer), &[]place{}}
+	return &cppExprBuffer{new(bytes.Buffer), &[]place{}, nil}
 }
 
 // func (buff *cppExprBuffer) UpCast() *cppExprWritter[io.Writer] {
@@ -1153,7 +1169,7 @@ func mkCppBuffer() *cppExprBuffer {
 // }
 
 func (buff *cppExprBuffer) Expr() cppExpr {
-	return cppExpr{str: buff.buff.String(), defs: *buff.defs}
+	return cppExpr{str: buff.buff.String(), defs: *buff.defs, dbg: strings.Join(buff.dbgs, "")}
 }
 
 func mkTemplateParameter(name string, deps []string) string {

@@ -612,8 +612,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct _defer& value);
     extern pMask idlepMask;
     extern pMask timerpMask;
-    extern golang::runtime::lfstack gcBgMarkWorkerPool;
-    golang::runtime::eface* efaceOf(go_any* ep);
+    extern lfstack gcBgMarkWorkerPool;
+    eface* efaceOf(go_any* ep);
     void setGNoWB(g** gp, g* go_new);
     struct gocpp_id_3
     {
@@ -652,7 +652,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct forcegcstate& value);
-    extern golang::runtime::mutex allpLock;
+    extern mutex allpLock;
 }
 #include "golang/internal/chacha8rand/chacha8.h"
 #include "golang/runtime/debuglog_off.h"
@@ -890,8 +890,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct p& value);
     void setMNoWB(m** mp, m* go_new);
-    extern golang::runtime::m* allm;
-    extern golang::runtime::forcegcstate forcegc;
+    extern m* allm;
+    extern forcegcstate forcegc;
     extern gocpp::slice<golang::runtime::p*> allp;
 }
 #include "golang/runtime/histogram.h"
@@ -992,17 +992,17 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct schedt& value);
-    extern golang::runtime::schedt sched;
+    extern schedt sched;
 
     namespace rec
     {
-        golang::runtime::g* ptr(golang::runtime::guintptr gp);
+        g* ptr(golang::runtime::guintptr gp);
         void set(golang::runtime::guintptr* gp, g* g);
         bool cas(golang::runtime::guintptr* gp, golang::runtime::guintptr old, golang::runtime::guintptr go_new);
         golang::runtime::guintptr guintptr(g* gp);
         golang::runtime::p* ptr(puintptr pp);
         void set(puintptr* pp, golang::runtime::p* p);
-        golang::runtime::m* ptr(muintptr mp);
+        m* ptr(muintptr mp);
         void set(muintptr* mp, m* m);
         gocpp::string String(waitReason w);
         bool isMutexWait(waitReason w);

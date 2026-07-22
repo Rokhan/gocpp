@@ -232,10 +232,10 @@ namespace golang::bytes
     // Write appends the contents of p to the buffer, growing the buffer as
     // needed. The return value n is the length of p; err is always nil. If the
     // buffer becomes too large, Write will panic with [ErrTooLarge].
-    std::tuple<int, struct gocpp::error> rec::Write(golang::bytes::Buffer* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Write(golang::bytes::Buffer* b, gocpp::slice<unsigned char> p)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         b->lastRead = opInvalid;
         auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), len(p));
         if(! ok)
@@ -248,10 +248,10 @@ namespace golang::bytes
     // WriteString appends the contents of s to the buffer, growing the buffer as
     // needed. The return value n is the length of s; err is always nil. If the
     // buffer becomes too large, WriteString will panic with [ErrTooLarge].
-    std::tuple<int, struct gocpp::error> rec::WriteString(golang::bytes::Buffer* b, gocpp::string s)
+    std::tuple<int, gocpp::error> rec::WriteString(golang::bytes::Buffer* b, gocpp::string s)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         b->lastRead = opInvalid;
         auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), len(s));
         if(! ok)
@@ -265,10 +265,10 @@ namespace golang::bytes
     // the buffer as needed. The return value n is the number of bytes read. Any
     // error except io.EOF encountered during the read is also returned. If the
     // buffer becomes too large, ReadFrom will panic with [ErrTooLarge].
-    std::tuple<int64_t, struct gocpp::error> rec::ReadFrom(golang::bytes::Buffer* b, io::Reader r)
+    std::tuple<int64_t, gocpp::error> rec::ReadFrom(golang::bytes::Buffer* b, io::Reader r)
     {
         int64_t n;
-        struct gocpp::error err;
+        gocpp::error err;
         b->lastRead = opInvalid;
         for(; ; )
         {
@@ -337,10 +337,10 @@ namespace golang::bytes
     // The return value n is the number of bytes written; it always fits into an
     // int, but it is int64 to match the io.WriterTo interface. Any error
     // encountered during the write is also returned.
-    std::tuple<int64_t, struct gocpp::error> rec::WriteTo(golang::bytes::Buffer* b, io::Writer w)
+    std::tuple<int64_t, gocpp::error> rec::WriteTo(golang::bytes::Buffer* b, io::Writer w)
     {
         int64_t n;
-        struct gocpp::error err;
+        gocpp::error err;
         b->lastRead = opInvalid;
         if(auto nBytes = rec::Len(gocpp::recv(b)); nBytes > 0)
         {
@@ -371,7 +371,7 @@ namespace golang::bytes
     // The returned error is always nil, but is included to match [bufio.Writer]'s
     // WriteByte. If the buffer becomes too large, WriteByte will panic with
     // [ErrTooLarge].
-    struct gocpp::error rec::WriteByte(golang::bytes::Buffer* b, unsigned char c)
+    gocpp::error rec::WriteByte(golang::bytes::Buffer* b, unsigned char c)
     {
         b->lastRead = opInvalid;
         auto [m, ok] = rec::tryGrowByReslice(gocpp::recv(b), 1);
@@ -387,10 +387,10 @@ namespace golang::bytes
     // buffer, returning its length and an error, which is always nil but is
     // included to match [bufio.Writer]'s WriteRune. The buffer is grown as needed;
     // if it becomes too large, WriteRune will panic with [ErrTooLarge].
-    std::tuple<int, struct gocpp::error> rec::WriteRune(golang::bytes::Buffer* b, gocpp::rune r)
+    std::tuple<int, gocpp::error> rec::WriteRune(golang::bytes::Buffer* b, gocpp::rune r)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         // Compare as uint32 to correctly handle negative runes.
         if(uint32_t(r) < utf8::RuneSelf)
         {
@@ -411,10 +411,10 @@ namespace golang::bytes
     // is drained. The return value n is the number of bytes read. If the
     // buffer has no data to return, err is io.EOF (unless len(p) is zero);
     // otherwise it is nil.
-    std::tuple<int, struct gocpp::error> rec::Read(golang::bytes::Buffer* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Read(golang::bytes::Buffer* b, gocpp::slice<unsigned char> p)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         b->lastRead = opInvalid;
         if(rec::empty(gocpp::recv(b)))
         {
@@ -458,7 +458,7 @@ namespace golang::bytes
 
     // ReadByte reads and returns the next byte from the buffer.
     // If no byte is available, it returns error io.EOF.
-    std::tuple<unsigned char, struct gocpp::error> rec::ReadByte(golang::bytes::Buffer* b)
+    std::tuple<unsigned char, gocpp::error> rec::ReadByte(golang::bytes::Buffer* b)
     {
         if(rec::empty(gocpp::recv(b)))
         {
@@ -477,11 +477,11 @@ namespace golang::bytes
     // If no bytes are available, the error returned is io.EOF.
     // If the bytes are an erroneous UTF-8 encoding, it
     // consumes one byte and returns U+FFFD, 1.
-    std::tuple<gocpp::rune, int, struct gocpp::error> rec::ReadRune(golang::bytes::Buffer* b)
+    std::tuple<gocpp::rune, int, gocpp::error> rec::ReadRune(golang::bytes::Buffer* b)
     {
         gocpp::rune r;
         int size;
-        struct gocpp::error err;
+        gocpp::error err;
         if(rec::empty(gocpp::recv(b)))
         {
             // Buffer is empty, reset to recover space.
@@ -507,7 +507,7 @@ namespace golang::bytes
     // not a successful [Buffer.ReadRune], UnreadRune returns an error.  (In this regard
     // it is stricter than [Buffer.UnreadByte], which will unread the last byte
     // from any read operation.)
-    struct gocpp::error rec::UnreadRune(golang::bytes::Buffer* b)
+    gocpp::error rec::UnreadRune(golang::bytes::Buffer* b)
     {
         if(b->lastRead <= opInvalid)
         {
@@ -526,7 +526,7 @@ namespace golang::bytes
     // read operation that read at least one byte. If a write has happened since
     // the last read, if the last read returned an error, or if the read read zero
     // bytes, UnreadByte returns an error.
-    struct gocpp::error rec::UnreadByte(golang::bytes::Buffer* b)
+    gocpp::error rec::UnreadByte(golang::bytes::Buffer* b)
     {
         if(b->lastRead == opInvalid)
         {
@@ -546,10 +546,10 @@ namespace golang::bytes
     // it returns the data read before the error and the error itself (often io.EOF).
     // ReadBytes returns err != nil if and only if the returned data does not end in
     // delim.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::ReadBytes(golang::bytes::Buffer* b, unsigned char delim)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::ReadBytes(golang::bytes::Buffer* b, unsigned char delim)
     {
         gocpp::slice<unsigned char> line;
-        struct gocpp::error err;
+        gocpp::error err;
         gocpp::slice<unsigned char> slice;
         std::tie(slice, err) = rec::readSlice(gocpp::recv(b), delim);
         // return a copy of slice. The buffer's backing array may
@@ -559,10 +559,10 @@ namespace golang::bytes
     }
 
     // readSlice is like ReadBytes but returns a reference to internal buffer data.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::readSlice(golang::bytes::Buffer* b, unsigned char delim)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::readSlice(golang::bytes::Buffer* b, unsigned char delim)
     {
         gocpp::slice<unsigned char> line;
-        struct gocpp::error err;
+        gocpp::error err;
         auto i = IndexByte(b->buf.make_slice(b->off), delim);
         auto end = b->off + i + 1;
         if(i < 0)
@@ -582,10 +582,10 @@ namespace golang::bytes
     // it returns the data read before the error and the error itself (often io.EOF).
     // ReadString returns err != nil if and only if the returned data does not end
     // in delim.
-    std::tuple<gocpp::string, struct gocpp::error> rec::ReadString(golang::bytes::Buffer* b, unsigned char delim)
+    std::tuple<gocpp::string, gocpp::error> rec::ReadString(golang::bytes::Buffer* b, unsigned char delim)
     {
         gocpp::string line;
-        struct gocpp::error err;
+        gocpp::error err;
         gocpp::slice<unsigned char> slice;
         std::tie(slice, err) = rec::readSlice(gocpp::recv(b), delim);
         return {gocpp::string(slice), err};

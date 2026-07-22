@@ -80,7 +80,7 @@ namespace golang::flate
     // the contents of dict.
     void rec::init(dictDecoder* dd, int size, gocpp::slice<unsigned char> dict)
     {
-        *dd = gocpp::Init<golang::flate::dictDecoder>([=](auto& x) {
+        *dd = gocpp::Init<dictDecoder>([=](auto& x) {
             x.hist = dd->hist;
         });
 

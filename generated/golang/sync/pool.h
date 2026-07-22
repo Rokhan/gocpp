@@ -70,7 +70,7 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolLocalInternal& value);
-    extern golang::sync::Mutex allPoolsMu;
+    extern Mutex allPoolsMu;
     struct poolLocal
     {
         poolLocalInternal poolLocalInternal{};
@@ -90,17 +90,17 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct poolLocal& value);
-    extern gocpp::slice<golang::sync::Pool*> allPools;
-    extern gocpp::slice<golang::sync::Pool*> oldPools;
-    golang::sync::poolLocal* indexLocal(gocpp::unsafe_pointer l, int i);
+    extern gocpp::slice<Pool*> allPools;
+    extern gocpp::slice<Pool*> oldPools;
+    poolLocal* indexLocal(gocpp::unsafe_pointer l, int i);
 
     namespace rec
     {
         void Put(Pool* p, go_any x);
         go_any Get(Pool* p);
         go_any getSlow(Pool* p, int pid);
-        std::tuple<golang::sync::poolLocal*, int> pin(Pool* p);
-        std::tuple<golang::sync::poolLocal*, int> pinSlow(Pool* p);
+        std::tuple<poolLocal*, int> pin(Pool* p);
+        std::tuple<poolLocal*, int> pinSlow(Pool* p);
     }
 }
 

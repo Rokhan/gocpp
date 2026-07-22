@@ -180,7 +180,7 @@ namespace golang::runtime
             }
         }
 
-        golang::runtime::stkframe frame = {};
+        stkframe frame = {};
         frame.pc = pc0;
         frame.sp = sp0;
         if(usesLR)
@@ -229,13 +229,13 @@ namespace golang::runtime
             {
                 go_throw("unknown pc"_s);
             }
-            *u = golang::runtime::unwinder {};
+            *u = unwinder {};
             return;
         }
         frame.fn = f;
 
         // Populate the unwinder.
-        *u = gocpp::Init<golang::runtime::unwinder>([=](auto& x) {
+        *u = gocpp::Init<unwinder>([=](auto& x) {
             x.frame = frame;
             x.g = rec::guintptr(gocpp::recv(gp));
             x.cgoCtxt = len(gp->cgoCtxt) - 1;
@@ -1058,7 +1058,7 @@ namespace golang::runtime
         // always stopping and resuming on physical frame boundaries, or at least
         // cgo expansion boundaries. It's not clear that's much simpler.
         flags |= unwindPrintErrors;
-        golang::runtime::unwinder u = {};
+        unwinder u = {};
         auto tracebackWithRuntime = [=](bool showRuntime) mutable -> int
         {
             int maxInt = 0x7fffffff;
@@ -1202,7 +1202,7 @@ namespace golang::runtime
             // Print cgo frames.
             if(auto cgoN = rec::cgoCallers(gocpp::recv(u), cgoBuf.make_slice(0)); cgoN > 0)
             {
-                golang::runtime::cgoSymbolizerArg arg = {};
+                cgoSymbolizerArg arg = {};
                 auto anySymbolized = false;
                 auto stop = false;
                 for(auto [gocpp_ignored, pc] : cgoBuf.make_slice(0, cgoN))
@@ -1298,7 +1298,7 @@ namespace golang::runtime
         int n = {};
         systemstack([=]() mutable -> void
         {
-            golang::runtime::unwinder u = {};
+            unwinder u = {};
             rec::initAt(gocpp::recv(u), pc, sp, 0, gp, unwindSilentErrors);
             n = tracebackPCs(& u, skip, pcbuf);
         });
@@ -1307,7 +1307,7 @@ namespace golang::runtime
 
     int gcallers(g* gp, int skip, gocpp::slice<uintptr_t> pcbuf)
     {
-        golang::runtime::unwinder u = {};
+        unwinder u = {};
         rec::init(gocpp::recv(u), gp, unwindSilentErrors);
         return tracebackPCs(& u, skip, pcbuf);
     }
@@ -1464,7 +1464,7 @@ namespace golang::runtime
         // Instead, use forEachGRace, which requires no locking. We don't lock
         // against concurrent creation of new Gs, but even with allglock we may
         // miss Gs created after this loop.
-        forEachGRace([=](golang::runtime::g* gp) mutable -> void
+        forEachGRace([=](g* gp) mutable -> void
         {
             if(gp == me || gp == curgp || readgstatus(gp) == _Gdead || isSystemGoroutine(gp, false) && level < 2)
             {
@@ -1919,7 +1919,7 @@ namespace golang::runtime
             bool stop;
             return {true, false};
         };
-        golang::runtime::cgoSymbolizerArg arg = {};
+        cgoSymbolizerArg arg = {};
         for(auto [gocpp_ignored, c] : callers)
         {
             if(c == 0)
@@ -1987,11 +1987,11 @@ namespace golang::runtime
         }
         if(msanenabled)
         {
-            msanwrite(gocpp::unsafe_pointer(arg), gocpp::Sizeof<golang::runtime::cgoSymbolizerArg>());
+            msanwrite(gocpp::unsafe_pointer(arg), gocpp::Sizeof<cgoSymbolizerArg>());
         }
         if(asanenabled)
         {
-            asanwrite(gocpp::unsafe_pointer(arg), gocpp::Sizeof<golang::runtime::cgoSymbolizerArg>());
+            asanwrite(gocpp::unsafe_pointer(arg), gocpp::Sizeof<cgoSymbolizerArg>());
         }
         call(cgoSymbolizer, noescape(gocpp::unsafe_pointer(arg)));
     }
@@ -2010,7 +2010,7 @@ namespace golang::runtime
             // or when on the system stack.
             call = asmcgocall;
         }
-        auto arg = gocpp::Init<golang::runtime::cgoTracebackArg>([=](auto& x) {
+        auto arg = gocpp::Init<cgoTracebackArg>([=](auto& x) {
             x.context = ctxt;
             x.buf = (uintptr_t*)(noescape(gocpp::unsafe_pointer(& buf[0])));
             x.max = uintptr_t(len(buf));

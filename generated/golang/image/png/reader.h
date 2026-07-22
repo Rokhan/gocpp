@@ -35,7 +35,7 @@ namespace golang::png
     std::ostream& operator<<(std::ostream& os, const struct interlaceScan& value);
     extern png::FormatError chunkOrderError;
     void init();
-    extern gocpp::slice<golang::png::interlaceScan> interlacing;
+    extern gocpp::slice<interlaceScan> interlacing;
 }
 #include "golang/hash/hash.h"
 #include "golang/image/color/color.h"
@@ -75,8 +75,8 @@ namespace golang::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decoder& value);
-    std::tuple<image::Image, struct gocpp::error> Decode(io::Reader r);
-    std::tuple<image::Config, struct gocpp::error> DecodeConfig(io::Reader r);
+    std::tuple<image::Image, gocpp::error> Decode(io::Reader r);
+    std::tuple<image::Config, gocpp::error> DecodeConfig(io::Reader r);
 }
 
 #include "golang/image/image.h"
@@ -89,18 +89,18 @@ namespace golang::png
     {
         gocpp::string Error(FormatError e);
         gocpp::string Error(UnsupportedError e);
-        struct gocpp::error parseIHDR(decoder* d, uint32_t length);
-        struct gocpp::error parsePLTE(decoder* d, uint32_t length);
-        struct gocpp::error parsetRNS(decoder* d, uint32_t length);
-        std::tuple<int, struct gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
-        std::tuple<image::Image, struct gocpp::error> decode(decoder* d);
-        std::tuple<image::Image, struct gocpp::error> readImagePass(decoder* d, io::Reader r, int pass, bool allocateOnly);
+        gocpp::error parseIHDR(decoder* d, uint32_t length);
+        gocpp::error parsePLTE(decoder* d, uint32_t length);
+        gocpp::error parsetRNS(decoder* d, uint32_t length);
+        std::tuple<int, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
+        std::tuple<image::Image, gocpp::error> decode(decoder* d);
+        std::tuple<image::Image, gocpp::error> readImagePass(decoder* d, io::Reader r, int pass, bool allocateOnly);
         void mergePassInto(decoder* d, image::Image dst, image::Image src, int pass);
-        struct gocpp::error parseIDAT(decoder* d, uint32_t length);
-        struct gocpp::error parseIEND(decoder* d, uint32_t length);
-        struct gocpp::error parseChunk(decoder* d, bool configOnly);
-        struct gocpp::error verifyChecksum(decoder* d);
-        struct gocpp::error checkHeader(decoder* d);
+        gocpp::error parseIDAT(decoder* d, uint32_t length);
+        gocpp::error parseIEND(decoder* d, uint32_t length);
+        gocpp::error parseChunk(decoder* d, bool configOnly);
+        gocpp::error verifyChecksum(decoder* d);
+        gocpp::error checkHeader(decoder* d);
     }
 }
 

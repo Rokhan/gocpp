@@ -13,15 +13,15 @@ namespace golang::runtime
     struct boundsError;
     using boundsErrorCode = uint8_t;
     struct stringer;
-    const golang::runtime::boundsErrorCode boundsIndex = 0;
-    const golang::runtime::boundsErrorCode boundsSliceAlen = 1;
-    const golang::runtime::boundsErrorCode boundsSliceAcap = 2;
-    const golang::runtime::boundsErrorCode boundsSliceB = 3;
-    const golang::runtime::boundsErrorCode boundsSlice3Alen = 4;
-    const golang::runtime::boundsErrorCode boundsSlice3Acap = 5;
-    const golang::runtime::boundsErrorCode boundsSlice3B = 6;
-    const golang::runtime::boundsErrorCode boundsSlice3C = 7;
-    const golang::runtime::boundsErrorCode boundsConvert = 8;
+    const boundsErrorCode boundsIndex = 0;
+    const boundsErrorCode boundsSliceAlen = 1;
+    const boundsErrorCode boundsSliceAcap = 2;
+    const boundsErrorCode boundsSliceB = 3;
+    const boundsErrorCode boundsSlice3Alen = 4;
+    const boundsErrorCode boundsSlice3Acap = 5;
+    const boundsErrorCode boundsSlice3B = 6;
+    const boundsErrorCode boundsSlice3C = 7;
+    const boundsErrorCode boundsConvert = 8;
 }
 #include "golang/runtime/type.fwd.h"
 

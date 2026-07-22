@@ -28,7 +28,7 @@ namespace golang::time
 
     // registerLoadFromEmbeddedTZData is called by the time/tzdata package,
     // if it is imported.
-    void registerLoadFromEmbeddedTZData(std::function<std::tuple<gocpp::string, struct gocpp::error> (gocpp::string _1)> f)
+    void registerLoadFromEmbeddedTZData(std::function<std::tuple<gocpp::string, gocpp::error> (gocpp::string _1)> f)
     {
         loadFromEmbeddedTZData = f;
     }
@@ -37,7 +37,7 @@ namespace golang::time
     // from tzdata information embedded in the binary itself.
     // This is set when the time/tzdata package is imported,
     // via registerLoadFromEmbeddedTzdata.
-    std::function<std::tuple<gocpp::string, struct gocpp::error> (gocpp::string zipname)> loadFromEmbeddedTZData;
+    std::function<std::tuple<gocpp::string, gocpp::error> (gocpp::string zipname)> loadFromEmbeddedTZData;
     gocpp::string rec::Error(fileSizeError f)
     {
         return "time: file "_s + gocpp::string(f) + " is too large"_s;
@@ -155,9 +155,9 @@ namespace golang::time
     // initialized from the IANA Time Zone database-formatted data.
     // The data should be in the format of a standard IANA time zone file
     // (for example, the content of /etc/localtime on Unix systems).
-    std::tuple<golang::time::Location*, struct gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data)
+    std::tuple<golang::time::Location*, gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data)
     {
-        auto d = golang::time::dataIO {data, false};
+        auto d = dataIO {data, false};
 
         // 4-byte magic "TZif"
         if(auto magic = rec::read(gocpp::recv(d), 4); gocpp::string(magic) != "TZif"_s)
@@ -271,13 +271,13 @@ namespace golang::time
         }
 
         // Transition times.
-        auto txtimes = golang::time::dataIO {rec::read(gocpp::recv(d), n[NTime] * size), false};
+        auto txtimes = dataIO {rec::read(gocpp::recv(d), n[NTime] * size), false};
 
         // Time zone indices for transition times.
         auto txzones = rec::read(gocpp::recv(d), n[NTime]);
 
         // Zone info structures
-        auto zonedata = golang::time::dataIO {rec::read(gocpp::recv(d), n[NZone] * 6), false};
+        auto zonedata = dataIO {rec::read(gocpp::recv(d), n[NZone] * 6), false};
 
         // Time zone abbreviations.
         auto abbrev = rec::read(gocpp::recv(d), n[NChar]);
@@ -316,7 +316,7 @@ namespace golang::time
             // This also avoids a panic later when we add and then use a fake transition (golang.org/issue/29437).
             return {nullptr, errBadData};
         }
-        auto zones = gocpp::make(gocpp::Tag<gocpp::slice<golang::time::zone>>(), nzone);
+        auto zones = gocpp::make(gocpp::Tag<gocpp::slice<zone>>(), nzone);
         for(auto [i, gocpp_ignored] : zones)
         {
             bool ok = {};
@@ -354,7 +354,7 @@ namespace golang::time
         }
 
         // Now the transition time info.
-        auto tx = gocpp::make(gocpp::Tag<gocpp::slice<golang::time::zoneTrans>>(), n[NTime]);
+        auto tx = gocpp::make(gocpp::Tag<gocpp::slice<zoneTrans>>(), n[NTime]);
         for(auto [i, gocpp_ignored] : tx)
         {
             int64_t n = {};
@@ -400,7 +400,7 @@ namespace golang::time
         {
             // Build fake transition to cover all time.
             // This happens in fixed locations like "Etc/GMT0".
-            tx = append(tx, gocpp::Init<golang::time::zoneTrans>([=](auto& x) {
+            tx = append(tx, gocpp::Init<zoneTrans>([=](auto& x) {
                 x.when = alpha;
                 x.index = 0;
             }));
@@ -444,7 +444,7 @@ namespace golang::time
                         }
                         else
                         {
-                            l->cacheZone = gocpp::InitPtr<golang::time::zone>([=](auto& x) {
+                            l->cacheZone = gocpp::InitPtr<zone>([=](auto& x) {
                                 x.name = name;
                                 x.offset = offset;
                                 x.isDST = isDST;
@@ -473,7 +473,7 @@ namespace golang::time
 
     // loadTzinfoFromDirOrZip returns the contents of the file with the given name
     // in dir. dir can either be an uncompressed zip file, or a directory.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromDirOrZip(gocpp::string dir, gocpp::string name)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfoFromDirOrZip(gocpp::string dir, gocpp::string name)
     {
         if(len(dir) > 4 && dir.make_slice(len(dir) - 4) == ".zip"_s)
         {
@@ -508,7 +508,7 @@ namespace golang::time
 
     // loadTzinfoFromZip returns the contents of the file with the given name
     // in the given uncompressed zip file.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfoFromZip(gocpp::string zipfile, gocpp::string name)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfoFromZip(gocpp::string zipfile, gocpp::string name)
     {
         gocpp::Defer defer;
         try
@@ -632,12 +632,12 @@ namespace golang::time
     // loadTzinfoFromTzdata returns the time zone information of the time zone
     // with the given name, from a tzdata database file as they are typically
     // found on android.
-    std::function<std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> (gocpp::string file, gocpp::string name)> loadTzinfoFromTzdata;
+    std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::string file, gocpp::string name)> loadTzinfoFromTzdata;
     // loadTzinfo returns the time zone information of the time zone
     // with the given name, from a given source. A source may be a
     // timezone database directory, tzdata database file or an uncompressed
     // zip file, containing the contents of such a directory.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> loadTzinfo(gocpp::string name, gocpp::string source)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfo(gocpp::string name, gocpp::string source)
     {
         if(len(source) >= 6 && source.make_slice(len(source) - 6) == "tzdata"_s)
         {
@@ -650,10 +650,10 @@ namespace golang::time
     // the specified sources. See loadTzinfo for a list of supported sources.
     // The first timezone data matching the given name that is successfully loaded
     // and parsed is returned as a Location.
-    std::tuple<golang::time::Location*, struct gocpp::error> loadLocation(gocpp::string name, gocpp::slice<gocpp::string> sources)
+    std::tuple<golang::time::Location*, gocpp::error> loadLocation(gocpp::string name, gocpp::slice<gocpp::string> sources)
     {
         golang::time::Location* z;
-        struct gocpp::error firstErr;
+        gocpp::error firstErr;
         for(auto [gocpp_ignored, source] : sources)
         {
             auto [zoneData, err] = loadTzinfo(name, source);
@@ -710,7 +710,7 @@ namespace golang::time
     // It is a trivial implementation of os.ReadFile, reimplemented
     // here to avoid depending on io/ioutil or os.
     // It returns an error if name exceeds maxFileSize bytes.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> readFile(gocpp::string name)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> readFile(gocpp::string name)
     {
         gocpp::Defer defer;
         try

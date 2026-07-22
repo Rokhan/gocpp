@@ -44,7 +44,7 @@ namespace golang::runtime
         std::tuple<uintptr_t, uintptr_t> alloc(pageCache* c, uintptr_t npages);
         std::tuple<uintptr_t, uintptr_t> allocN(pageCache* c, uintptr_t npages);
         void flush(pageCache* c, pageAlloc* p);
-        golang::runtime::pageCache allocToCache(pageAlloc* p);
+        pageCache allocToCache(pageAlloc* p);
     }
 }
 

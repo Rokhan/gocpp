@@ -15,7 +15,7 @@ namespace golang::runtime
 {
     void lfnodeValidate(lfnode* node);
     uint64_t lfstackPack(lfnode* node, uintptr_t cnt);
-    golang::runtime::lfnode* lfstackUnpack(uint64_t val);
+    lfnode* lfstackUnpack(uint64_t val);
 }
 
 #include "golang/runtime/runtime2.h"

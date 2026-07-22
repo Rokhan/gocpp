@@ -12,7 +12,7 @@
 
 namespace golang::main
 {
-    struct gocpp::error run();
+    gocpp::error run();
     void main();
 }
 #include "golang/time/time.h"

@@ -322,7 +322,7 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value);
-    struct ReadCloser NopCloser(struct Reader r);
+    ReadCloser NopCloser(Reader r);
 
     namespace rec
     {

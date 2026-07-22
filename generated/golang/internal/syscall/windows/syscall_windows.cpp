@@ -610,7 +610,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
-    struct gocpp::error loadWSASendRecvMsg()
+    gocpp::error loadWSASendRecvMsg()
     {
         rec::Do(gocpp::recv(sendRecvMsgFunc.once), [=]() mutable -> void
         {
@@ -640,7 +640,7 @@ namespace golang::windows
         return sendRecvMsgFunc.err;
     }
 
-    struct gocpp::error WSASendMsg(syscall::Handle fd, WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine)
+    gocpp::error WSASendMsg(syscall::Handle fd, WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine)
     {
         auto err = loadWSASendRecvMsg();
         if(err != nullptr)
@@ -662,7 +662,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error WSARecvMsg(syscall::Handle fd, WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine)
+    gocpp::error WSARecvMsg(syscall::Handle fd, WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine)
     {
         auto err = loadWSASendRecvMsg();
         if(err != nullptr)
@@ -684,7 +684,7 @@ namespace golang::windows
         return err;
     }
 
-    struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath)
+    gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath)
     {
         auto [from, err] = syscall::UTF16PtrFromString(oldpath);
         if(err != nullptr)
@@ -750,7 +750,7 @@ namespace golang::windows
         return value.PrintTo(os);
     }
 
-    struct gocpp::error ErrorLoadingGetTempPath2()
+    gocpp::error ErrorLoadingGetTempPath2()
     {
         return rec::Find(gocpp::recv(procGetTempPath2W));
     }

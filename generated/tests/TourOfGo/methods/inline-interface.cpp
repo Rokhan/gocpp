@@ -127,7 +127,7 @@ namespace golang::main
         i = MyFloat(42.0);
         describe(i);
 
-        i = golang::main::Vertex {4, 2};
+        i = Vertex {4, 2};
         describe(i);
     }
 

@@ -51,7 +51,7 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileStat& value);
-    mocklib::Date atime(struct FileInfo fi);
+    mocklib::Date atime(FileInfo fi);
     bool sameFile(fileStat* fs1, fileStat* fs2);
 }
 #include "golang/syscall/syscall_windows.h"
@@ -59,10 +59,10 @@ namespace golang::os
 
 namespace golang::os
 {
-    std::tuple<golang::os::fileStat*, struct gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h);
-    golang::os::fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d);
-    golang::os::fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d);
-    golang::os::fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
+    std::tuple<fileStat*, gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h);
+    fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d);
+    fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d);
+    fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
 }
 
 #include "golang/time/time.h"
@@ -75,11 +75,11 @@ namespace golang::os
         bool isReparseTagNameSurrogate(fileStat* fs);
         bool isSymlink(fileStat* fs);
         int64_t Size(fileStat* fs);
-        golang::os::FileMode Mode(fileStat* fs);
+        FileMode Mode(fileStat* fs);
         mocklib::Date ModTime(fileStat* fs);
         go_any Sys(fileStat* fs);
-        struct gocpp::error loadFileId(fileStat* fs);
-        struct gocpp::error saveInfoFromPath(fileStat* fs, gocpp::string path);
+        gocpp::error loadFileId(fileStat* fs);
+        gocpp::error saveInfoFromPath(fileStat* fs, gocpp::string path);
     }
 }
 

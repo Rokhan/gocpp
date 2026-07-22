@@ -37,8 +37,8 @@ namespace golang::runtime
     // must also evenly divide pagesPerArena.
     const long pagesPerSpanRoot = 512;
     using gcDrainFlags = int;
-    const golang::runtime::gcDrainFlags gcDrainUntilPreempt = 1 << 0;
-    const golang::runtime::gcDrainFlags gcDrainFlushBgCredit = 1 << 1;
-    const golang::runtime::gcDrainFlags gcDrainIdle = 1 << 2;
-    const golang::runtime::gcDrainFlags gcDrainFractional = 1 << 3;
+    const gcDrainFlags gcDrainUntilPreempt = 1 << 0;
+    const gcDrainFlags gcDrainFlushBgCredit = 1 << 1;
+    const gcDrainFlags gcDrainIdle = 1 << 2;
+    const gcDrainFlags gcDrainFractional = 1 << 3;
 }

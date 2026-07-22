@@ -70,7 +70,7 @@ namespace golang::runtime
         }
         semacreate(gp->m);
 
-        auto timer = gocpp::InitPtr<golang::runtime::lockTimer>([=](auto& x) {
+        auto timer = gocpp::InitPtr<lockTimer>([=](auto& x) {
             x.lock = l;
         });
         rec::begin(gocpp::recv(timer));
@@ -150,7 +150,7 @@ namespace golang::runtime
     void unlock2(mutex* l)
     {
         auto gp = getg();
-        golang::runtime::m* mp = {};
+        m* mp = {};
         for(; ; )
         {
             auto v = atomic::Loaduintptr(& l->key);
@@ -223,7 +223,7 @@ namespace golang::runtime
                     break;
                 default:
                     // Must be the waiting m. Wake it up.
-                    semawakeup((golang::runtime::m*)(gocpp::unsafe_pointer(v)));
+                    semawakeup((m*)(gocpp::unsafe_pointer(v)));
                     break;
             }
         }
@@ -403,7 +403,7 @@ namespace golang::runtime
         return ok;
     }
 
-    std::tuple<golang::runtime::g*, bool> beforeIdle(int64_t, int64_t)
+    std::tuple<g*, bool> beforeIdle(int64_t, int64_t)
     {
         return {nullptr, false};
     }

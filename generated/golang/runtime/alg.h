@@ -119,8 +119,8 @@ namespace golang::runtime
 namespace golang::runtime
 {
     uintptr_t typehash(_type* t, gocpp::unsafe_pointer p, uintptr_t h);
-    struct gocpp::error mapKeyError(maptype* t, gocpp::unsafe_pointer p);
-    struct gocpp::error mapKeyError2(_type* t, gocpp::unsafe_pointer p);
+    gocpp::error mapKeyError(maptype* t, gocpp::unsafe_pointer p);
+    gocpp::error mapKeyError2(_type* t, gocpp::unsafe_pointer p);
     uintptr_t reflect_typehash(_type* t, gocpp::unsafe_pointer p, uintptr_t h);
     bool efaceeq(_type* t, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
     bool ifaceeq(itab* tab, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);

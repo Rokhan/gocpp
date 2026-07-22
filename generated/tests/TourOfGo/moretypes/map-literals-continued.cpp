@@ -51,7 +51,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    gocpp::map<gocpp::string, golang::main::Vertex> m = gocpp::map<gocpp::string, golang::main::Vertex> {
+    gocpp::map<gocpp::string, Vertex> m = gocpp::map<gocpp::string, Vertex> {
         { "Bell Labs"_s, {40.68433, - 74.39967} },
         { "Google"_s, {37.42202, - 122.08408} }
     };

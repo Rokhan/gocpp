@@ -87,7 +87,7 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct T& value);
     void main();
-    void describe(struct I i);
+    void describe(I i);
 
     namespace rec
     {

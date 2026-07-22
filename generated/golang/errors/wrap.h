@@ -12,7 +12,7 @@
 
 namespace golang::errors
 {
-    struct gocpp::error Unwrap(struct gocpp::error err);
+    gocpp::error Unwrap(gocpp::error err);
     struct gocpp_id_0 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -39,7 +39,7 @@ namespace golang::errors
 
         struct Igocpp_id_0
         {
-            virtual struct gocpp::error vUnwrap() = 0;
+            virtual gocpp::error vUnwrap() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -51,7 +51,7 @@ namespace golang::errors
                 value.reset(ptr);
             }
 
-            struct gocpp::error vUnwrap() override;
+            gocpp::error vUnwrap() override;
 
             void* getPtr() override
             {
@@ -66,13 +66,13 @@ namespace golang::errors
 
     namespace rec
     {
-        struct gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_0, false>& self);
-        struct gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_0>& self);
+        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_0, false>& self);
+        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_0>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    bool Is(struct gocpp::error err, struct gocpp::error target);
-    bool is(struct gocpp::error err, struct gocpp::error target, bool targetComparable);
+    bool Is(gocpp::error err, gocpp::error target);
+    bool is(gocpp::error err, gocpp::error target, bool targetComparable);
     struct gocpp_id_1 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -99,7 +99,7 @@ namespace golang::errors
 
         struct Igocpp_id_1
         {
-            virtual bool vIs(struct gocpp::error _1) = 0;
+            virtual bool vIs(gocpp::error _1) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -111,7 +111,7 @@ namespace golang::errors
                 value.reset(ptr);
             }
 
-            bool vIs(struct gocpp::error _1) override;
+            bool vIs(gocpp::error _1) override;
 
             void* getPtr() override
             {
@@ -126,8 +126,8 @@ namespace golang::errors
 
     namespace rec
     {
-        bool Is(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, struct gocpp::error _1);
-        bool Is(const gocpp::ObjRecv<struct gocpp_id_1>& self, struct gocpp::error _1);
+        bool Is(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, gocpp::error _1);
+        bool Is(const gocpp::ObjRecv<struct gocpp_id_1>& self, gocpp::error _1);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
@@ -157,7 +157,7 @@ namespace golang::errors
 
         struct Igocpp_id_3
         {
-            virtual struct gocpp::error vUnwrap() = 0;
+            virtual gocpp::error vUnwrap() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -169,7 +169,7 @@ namespace golang::errors
                 value.reset(ptr);
             }
 
-            struct gocpp::error vUnwrap() override;
+            gocpp::error vUnwrap() override;
 
             void* getPtr() override
             {
@@ -184,8 +184,8 @@ namespace golang::errors
 
     namespace rec
     {
-        struct gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_3, false>& self);
-        struct gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_3>& self);
+        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_3, false>& self);
+        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_3>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
@@ -247,7 +247,7 @@ namespace golang::errors
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
-    bool As(struct gocpp::error err, go_any target);
+    bool As(gocpp::error err, go_any target);
     struct gocpp_id_5 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -332,7 +332,7 @@ namespace golang::errors
 
         struct Igocpp_id_7
         {
-            virtual struct gocpp::error vUnwrap() = 0;
+            virtual gocpp::error vUnwrap() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -344,7 +344,7 @@ namespace golang::errors
                 value.reset(ptr);
             }
 
-            struct gocpp::error vUnwrap() override;
+            gocpp::error vUnwrap() override;
 
             void* getPtr() override
             {
@@ -359,8 +359,8 @@ namespace golang::errors
 
     namespace rec
     {
-        struct gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_7, false>& self);
-        struct gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_7>& self);
+        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_7, false>& self);
+        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_7>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value);
@@ -428,7 +428,7 @@ namespace golang::errors
 
 namespace golang::errors
 {
-    bool as(struct gocpp::error err, go_any target, reflectlite::Value targetVal, reflectlite::Type targetType);
+    bool as(gocpp::error err, go_any target, reflectlite::Value targetVal, reflectlite::Type targetType);
     extern reflectlite::Type errorType;
 
     namespace rec

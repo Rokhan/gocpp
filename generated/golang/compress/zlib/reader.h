@@ -67,7 +67,7 @@ namespace golang::zlib
         {
             // Reset discards any buffered data and resets the Resetter as if it was
             // newly initialized with the given reader.
-            virtual struct gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) = 0;
+            virtual gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -79,7 +79,7 @@ namespace golang::zlib
                 value.reset(ptr);
             }
 
-            struct gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) override;
+            gocpp::error vReset(io::Reader r, gocpp::slice<unsigned char> dict) override;
 
             void* getPtr() override
             {
@@ -94,13 +94,13 @@ namespace golang::zlib
 
     namespace rec
     {
-        struct gocpp::error Reset(const gocpp::PtrRecv<struct Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict);
-        struct gocpp::error Reset(const gocpp::ObjRecv<struct Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict);
+        gocpp::error Reset(const gocpp::PtrRecv<struct Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict);
+        gocpp::error Reset(const gocpp::ObjRecv<struct Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value);
-    std::tuple<io::ReadCloser, struct gocpp::error> NewReader(io::Reader r);
-    std::tuple<io::ReadCloser, struct gocpp::error> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
+    std::tuple<io::ReadCloser, gocpp::error> NewReader(io::Reader r);
+    std::tuple<io::ReadCloser, gocpp::error> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
 }
 
 #include "golang/io/io.h"
@@ -110,9 +110,9 @@ namespace golang::zlib
 
     namespace rec
     {
-        std::tuple<int, struct gocpp::error> Read(reader* z, gocpp::slice<unsigned char> p);
-        struct gocpp::error Close(reader* z);
-        struct gocpp::error Reset(reader* z, io::Reader r, gocpp::slice<unsigned char> dict);
+        std::tuple<int, gocpp::error> Read(reader* z, gocpp::slice<unsigned char> p);
+        gocpp::error Close(reader* z);
+        gocpp::error Reset(reader* z, io::Reader r, gocpp::slice<unsigned char> dict);
     }
 }
 

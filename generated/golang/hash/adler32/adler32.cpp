@@ -59,7 +59,7 @@ namespace golang::adler32
         return 4;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(digest* d)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::MarshalBinary(digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -67,7 +67,7 @@ namespace golang::adler32
         return {b, nullptr};
     }
 
-    struct gocpp::error rec::UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
+    gocpp::error rec::UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || gocpp::string(b.make_slice(0, len(magic))) != magic)
         {
@@ -97,7 +97,7 @@ namespace golang::adler32
     }
 
     // Add p to the running checksum d.
-    golang::adler32::digest update(digest d, gocpp::slice<unsigned char> p)
+    digest update(digest d, gocpp::slice<unsigned char> p)
     {
         auto [s1, s2] = std::tuple{uint32_t(d & 0xffff), uint32_t(d >> 16)};
         for(; len(p) > 0; )
@@ -131,10 +131,10 @@ namespace golang::adler32
         return digest((s2 << 16) | s1);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Write(digest* d, gocpp::slice<unsigned char> p)
     {
         int nn;
-        struct gocpp::error err;
+        gocpp::error err;
         *d = update(*d, p);
         return {len(p), nullptr};
     }

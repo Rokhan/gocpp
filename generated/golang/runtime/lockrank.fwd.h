@@ -11,69 +11,69 @@ namespace golang::runtime
     // Locks with lower rank must be taken before locks with higher rank,
     // in addition to satisfying the partial order in lockPartialOrder.
     // A few ranks allow self-cycles, which are specified in lockPartialOrder.
-    const golang::runtime::lockRank lockRankUnknown = 0;
-    const golang::runtime::lockRank lockRankSysmon = 1;
-    const golang::runtime::lockRank lockRankScavenge = 2;
-    const golang::runtime::lockRank lockRankForcegc = 3;
-    const golang::runtime::lockRank lockRankDefer = 4;
-    const golang::runtime::lockRank lockRankSweepWaiters = 5;
-    const golang::runtime::lockRank lockRankAssistQueue = 6;
-    const golang::runtime::lockRank lockRankSweep = 7;
-    const golang::runtime::lockRank lockRankTestR = 8;
-    const golang::runtime::lockRank lockRankTestW = 9;
-    const golang::runtime::lockRank lockRankAllocmW = 10;
-    const golang::runtime::lockRank lockRankExecW = 11;
-    const golang::runtime::lockRank lockRankCpuprof = 12;
-    const golang::runtime::lockRank lockRankPollDesc = 13;
-    const golang::runtime::lockRank lockRankWakeableSleep = 14;
+    const lockRank lockRankUnknown = 0;
+    const lockRank lockRankSysmon = 1;
+    const lockRank lockRankScavenge = 2;
+    const lockRank lockRankForcegc = 3;
+    const lockRank lockRankDefer = 4;
+    const lockRank lockRankSweepWaiters = 5;
+    const lockRank lockRankAssistQueue = 6;
+    const lockRank lockRankSweep = 7;
+    const lockRank lockRankTestR = 8;
+    const lockRank lockRankTestW = 9;
+    const lockRank lockRankAllocmW = 10;
+    const lockRank lockRankExecW = 11;
+    const lockRank lockRankCpuprof = 12;
+    const lockRank lockRankPollDesc = 13;
+    const lockRank lockRankWakeableSleep = 14;
     // SCHED
-    const golang::runtime::lockRank lockRankAllocmR = 15;
-    const golang::runtime::lockRank lockRankExecR = 16;
-    const golang::runtime::lockRank lockRankSched = 17;
-    const golang::runtime::lockRank lockRankAllg = 18;
-    const golang::runtime::lockRank lockRankAllp = 19;
-    const golang::runtime::lockRank lockRankTimers = 20;
-    const golang::runtime::lockRank lockRankNetpollInit = 21;
-    const golang::runtime::lockRank lockRankHchan = 22;
-    const golang::runtime::lockRank lockRankNotifyList = 23;
-    const golang::runtime::lockRank lockRankSudog = 24;
-    const golang::runtime::lockRank lockRankRoot = 25;
-    const golang::runtime::lockRank lockRankItab = 26;
-    const golang::runtime::lockRank lockRankReflectOffs = 27;
-    const golang::runtime::lockRank lockRankUserArenaState = 28;
+    const lockRank lockRankAllocmR = 15;
+    const lockRank lockRankExecR = 16;
+    const lockRank lockRankSched = 17;
+    const lockRank lockRankAllg = 18;
+    const lockRank lockRankAllp = 19;
+    const lockRank lockRankTimers = 20;
+    const lockRank lockRankNetpollInit = 21;
+    const lockRank lockRankHchan = 22;
+    const lockRank lockRankNotifyList = 23;
+    const lockRank lockRankSudog = 24;
+    const lockRank lockRankRoot = 25;
+    const lockRank lockRankItab = 26;
+    const lockRank lockRankReflectOffs = 27;
+    const lockRank lockRankUserArenaState = 28;
     // TRACEGLOBAL
-    const golang::runtime::lockRank lockRankTraceBuf = 29;
-    const golang::runtime::lockRank lockRankTraceStrings = 30;
+    const lockRank lockRankTraceBuf = 29;
+    const lockRank lockRankTraceStrings = 30;
     // MALLOC
-    const golang::runtime::lockRank lockRankFin = 31;
-    const golang::runtime::lockRank lockRankSpanSetSpine = 32;
-    const golang::runtime::lockRank lockRankMspanSpecial = 33;
+    const lockRank lockRankFin = 31;
+    const lockRank lockRankSpanSetSpine = 32;
+    const lockRank lockRankMspanSpecial = 33;
     // MPROF
-    const golang::runtime::lockRank lockRankGcBitsArenas = 34;
-    const golang::runtime::lockRank lockRankProfInsert = 35;
-    const golang::runtime::lockRank lockRankProfBlock = 36;
-    const golang::runtime::lockRank lockRankProfMemActive = 37;
-    const golang::runtime::lockRank lockRankProfMemFuture = 38;
+    const lockRank lockRankGcBitsArenas = 34;
+    const lockRank lockRankProfInsert = 35;
+    const lockRank lockRankProfBlock = 36;
+    const lockRank lockRankProfMemActive = 37;
+    const lockRank lockRankProfMemFuture = 38;
     // STACKGROW
-    const golang::runtime::lockRank lockRankGscan = 39;
-    const golang::runtime::lockRank lockRankStackpool = 40;
-    const golang::runtime::lockRank lockRankStackLarge = 41;
-    const golang::runtime::lockRank lockRankHchanLeaf = 42;
+    const lockRank lockRankGscan = 39;
+    const lockRank lockRankStackpool = 40;
+    const lockRank lockRankStackLarge = 41;
+    const lockRank lockRankHchanLeaf = 42;
     // WB
-    const golang::runtime::lockRank lockRankWbufSpans = 43;
-    const golang::runtime::lockRank lockRankMheap = 44;
-    const golang::runtime::lockRank lockRankMheapSpecial = 45;
-    const golang::runtime::lockRank lockRankGlobalAlloc = 46;
+    const lockRank lockRankWbufSpans = 43;
+    const lockRank lockRankMheap = 44;
+    const lockRank lockRankMheapSpecial = 45;
+    const lockRank lockRankGlobalAlloc = 46;
     // TRACE
-    const golang::runtime::lockRank lockRankTrace = 47;
-    const golang::runtime::lockRank lockRankTraceStackTab = 48;
-    const golang::runtime::lockRank lockRankPanic = 49;
-    const golang::runtime::lockRank lockRankDeadlock = 50;
-    const golang::runtime::lockRank lockRankRaceFini = 51;
-    const golang::runtime::lockRank lockRankAllocmRInternal = 52;
-    const golang::runtime::lockRank lockRankExecRInternal = 53;
-    const golang::runtime::lockRank lockRankTestRInternal = 54;
+    const lockRank lockRankTrace = 47;
+    const lockRank lockRankTraceStackTab = 48;
+    const lockRank lockRankPanic = 49;
+    const lockRank lockRankDeadlock = 50;
+    const lockRank lockRankRaceFini = 51;
+    const lockRank lockRankAllocmRInternal = 52;
+    const lockRank lockRankExecRInternal = 53;
+    const lockRank lockRankTestRInternal = 54;
     // lockRankLeafRank is the rank of lock that does not have a declared rank,
     // and hence is a leaf lock.
-    const golang::runtime::lockRank lockRankLeafRank = 1000;
+    const lockRank lockRankLeafRank = 1000;
 }

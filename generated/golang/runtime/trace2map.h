@@ -58,12 +58,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::traceMapNode* next(traceMapNode* n);
+        traceMapNode* next(traceMapNode* n);
         uint64_t stealID(traceMap* tab);
         std::tuple<uint64_t, bool> put(traceMap* tab, gocpp::unsafe_pointer data, uintptr_t size);
         uint64_t find(traceMap* tab, gocpp::unsafe_pointer data, uintptr_t size, uintptr_t hash);
-        golang::runtime::traceMapNode* bucket(traceMap* tab, int part);
-        golang::runtime::traceMapNode* newTraceMapNode(traceMap* tab, gocpp::unsafe_pointer data, uintptr_t size, uintptr_t hash, uint64_t id);
+        traceMapNode* bucket(traceMap* tab, int part);
+        traceMapNode* newTraceMapNode(traceMap* tab, gocpp::unsafe_pointer data, uintptr_t size, uintptr_t hash, uint64_t id);
         void reset(traceMap* tab);
     }
 }

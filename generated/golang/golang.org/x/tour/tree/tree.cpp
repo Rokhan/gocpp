@@ -57,9 +57,9 @@ namespace golang::tree
     }
 
     // New returns a new, random binary tree holding the values k, 2k, ..., 10k.
-    golang::tree::Tree* New(int k)
+    Tree* New(int k)
     {
-        golang::tree::Tree* t = {};
+        Tree* t = {};
         for(auto [gocpp_ignored, v] : rand::Perm(10))
         {
             t = insert(t, (1 + v) * k);
@@ -67,11 +67,11 @@ namespace golang::tree
         return t;
     }
 
-    golang::tree::Tree* insert(Tree* t, int v)
+    Tree* insert(Tree* t, int v)
     {
         if(t == nullptr)
         {
-            return new golang::tree::Tree {nullptr, v, nullptr};
+            return new Tree {nullptr, v, nullptr};
         }
         if(v < t->Value)
         {

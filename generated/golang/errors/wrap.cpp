@@ -54,19 +54,19 @@ namespace golang::errors
         }
 
         template<typename T, typename TStore, typename TInterface>
-        struct gocpp::error gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vUnwrap()
+        gocpp::error gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vUnwrap()
         {
             return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
         }
 
         namespace rec
         {
-            struct gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
+            gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
             {
                 return self.ptr->value->vUnwrap();
             }
 
-            struct gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_0>& self)
+            gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_0>& self)
             {
                 return self.obj.value->vUnwrap();
             }
@@ -84,7 +84,7 @@ namespace golang::errors
     //
     // Unwrap only calls a method of the form "Unwrap() error".
     // In particular Unwrap does not unwrap errors returned by [Join].
-    struct gocpp::error Unwrap(struct gocpp::error err)
+    gocpp::error Unwrap(gocpp::error err)
     {
         auto [u, ok] = gocpp::getValue<gocpp_id_0>(err);
         if(! ok)
@@ -111,7 +111,7 @@ namespace golang::errors
     // then Is(MyError{}, fs.ErrExist) returns true. See [syscall.Errno.Is] for
     // an example in the standard library. An Is method should only shallowly
     // compare err and the target and not call [Unwrap] on either.
-    bool Is(struct gocpp::error err, struct gocpp::error target)
+    bool Is(gocpp::error err, gocpp::error target)
     {
         if(target == nullptr)
         {
@@ -147,19 +147,19 @@ namespace golang::errors
             }
 
             template<typename T, typename TStore, typename TInterface>
-            bool gocpp_id_1::gocpp_id_1Impl<T, TStore, TInterface>::vIs(struct gocpp::error _1)
+            bool gocpp_id_1::gocpp_id_1Impl<T, TStore, TInterface>::vIs(gocpp::error _1)
             {
                 return rec::Is(gocpp::PtrRecv<T, false>(value.get()), _1);
             }
 
             namespace rec
             {
-                bool Is(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, struct gocpp::error _1)
+                bool Is(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, gocpp::error _1)
                 {
                     return self.ptr->value->vIs(_1);
                 }
 
-                bool Is(const gocpp::ObjRecv<struct gocpp_id_1>& self, struct gocpp::error _1)
+                bool Is(const gocpp::ObjRecv<struct gocpp_id_1>& self, gocpp::error _1)
                 {
                     return self.obj.value->vIs(_1);
                 }
@@ -196,19 +196,19 @@ namespace golang::errors
                 }
 
                 template<typename T, typename TStore, typename TInterface>
-                struct gocpp::error gocpp_id_3::gocpp_id_3Impl<T, TStore, TInterface>::vUnwrap()
+                gocpp::error gocpp_id_3::gocpp_id_3Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
                 namespace rec
                 {
-                    struct gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_3, false>& self)
+                    gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_3, false>& self)
                     {
                         return self.ptr->value->vUnwrap();
                     }
 
-                    struct gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_3>& self)
+                    gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_3>& self)
                     {
                         return self.obj.value->vUnwrap();
                     }
@@ -269,7 +269,7 @@ namespace golang::errors
                 }
 
 
-    bool is(struct gocpp::error err, struct gocpp::error target, bool targetComparable)
+    bool is(gocpp::error err, gocpp::error target, bool targetComparable)
     {
         for(; ; )
         {
@@ -340,7 +340,7 @@ namespace golang::errors
     //
     // As panics if target is not a non-nil pointer to either a type that implements
     // error, or to any interface type.
-    bool As(struct gocpp::error err, go_any target)
+    bool As(gocpp::error err, go_any target)
     {
         if(err == nullptr)
         {
@@ -438,19 +438,19 @@ namespace golang::errors
                 }
 
                 template<typename T, typename TStore, typename TInterface>
-                struct gocpp::error gocpp_id_7::gocpp_id_7Impl<T, TStore, TInterface>::vUnwrap()
+                gocpp::error gocpp_id_7::gocpp_id_7Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
                 namespace rec
                 {
-                    struct gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_7, false>& self)
+                    gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_7, false>& self)
                     {
                         return self.ptr->value->vUnwrap();
                     }
 
-                    struct gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_7>& self)
+                    gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_7>& self)
                     {
                         return self.obj.value->vUnwrap();
                     }
@@ -511,7 +511,7 @@ namespace golang::errors
                 }
 
 
-    bool as(struct gocpp::error err, go_any target, reflectlite::Value targetVal, reflectlite::Type targetType)
+    bool as(gocpp::error err, go_any target, reflectlite::Value targetVal, reflectlite::Type targetType)
     {
         for(; ; )
         {

@@ -32,10 +32,10 @@ namespace golang::strconv
     gocpp::slice<unsigned char> AppendQuoteRuneToGraphic(gocpp::slice<unsigned char> dst, gocpp::rune r);
     bool CanBackquote(gocpp::string s);
     std::tuple<gocpp::rune, bool> unhex(unsigned char b);
-    std::tuple<gocpp::rune, bool, gocpp::string, struct gocpp::error> UnquoteChar(gocpp::string s, unsigned char quote);
-    std::tuple<gocpp::string, struct gocpp::error> QuotedPrefix(gocpp::string s);
-    std::tuple<gocpp::string, struct gocpp::error> Unquote(gocpp::string s);
-    std::tuple<gocpp::string, gocpp::string, struct gocpp::error> unquote(gocpp::string in, bool unescape);
+    std::tuple<gocpp::rune, bool, gocpp::string, gocpp::error> UnquoteChar(gocpp::string s, unsigned char quote);
+    std::tuple<gocpp::string, gocpp::error> QuotedPrefix(gocpp::string s);
+    std::tuple<gocpp::string, gocpp::error> Unquote(gocpp::string s);
+    std::tuple<gocpp::string, gocpp::string, gocpp::error> unquote(gocpp::string in, bool unescape);
     int bsearch16(gocpp::slice<uint16_t> a, uint16_t x);
     int bsearch32(gocpp::slice<uint32_t> a, uint32_t x);
     bool IsPrint(gocpp::rune r);

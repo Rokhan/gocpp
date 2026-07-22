@@ -19,8 +19,8 @@ namespace golang::os
     std::tuple<gocpp::string, int> getShellName(gocpp::string s);
     gocpp::string Getenv(gocpp::string key);
     std::tuple<gocpp::string, bool> LookupEnv(gocpp::string key);
-    struct gocpp::error Setenv(gocpp::string key, gocpp::string value);
-    struct gocpp::error Unsetenv(gocpp::string key);
+    gocpp::error Setenv(gocpp::string key, gocpp::string value);
+    gocpp::error Unsetenv(gocpp::string key);
     void Clearenv();
     gocpp::slice<gocpp::string> Environ();
 

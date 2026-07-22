@@ -15,5 +15,5 @@ namespace golang::sync
 namespace golang::sync
 {
     struct RWMutex;
-    using rlocker = gocpp::defined<golang::sync::RWMutex, GoTag_rlocker>;
+    using rlocker = gocpp::defined<RWMutex, GoTag_rlocker>;
 }

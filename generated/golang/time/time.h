@@ -17,7 +17,7 @@ namespace golang::time
     std::tuple<int, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int prec);
     int fmtInt(gocpp::slice<unsigned char> buf, uint64_t v);
     bool lessThanHalf(Duration x, Duration y);
-    golang::time::Duration subMono(int64_t t, int64_t u);
+    Duration subMono(int64_t t, int64_t u);
     std::tuple<int, golang::time::Month, int, int> absDate(uint64_t abs, bool full);
     extern gocpp::array<int32_t, 13> daysBefore;
     int daysIn(golang::time::Month m, int year);
@@ -65,15 +65,15 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Time& value);
-    golang::time::Duration Since(Time t);
-    golang::time::Duration Until(Time t);
-    golang::time::Time Now();
-    golang::time::Time unixTime(int64_t sec, int32_t nsec);
-    golang::time::Time Unix(int64_t sec, int64_t nsec);
-    golang::time::Time UnixMilli(int64_t msec);
-    golang::time::Time UnixMicro(int64_t usec);
-    golang::time::Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, golang::time::Location* loc);
-    std::tuple<int, golang::time::Duration> div(Time t, Duration d);
+    Duration Since(Time t);
+    Duration Until(Time t);
+    Time Now();
+    Time unixTime(int64_t sec, int32_t nsec);
+    Time Unix(int64_t sec, int64_t nsec);
+    Time UnixMilli(int64_t msec);
+    Time UnixMicro(int64_t usec);
+    Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, golang::time::Location* loc);
+    std::tuple<int, Duration> div(Time t, Duration d);
 }
 
 #include "golang/time/zoneinfo.h"
@@ -120,34 +120,34 @@ namespace golang::time
         double Seconds(Duration d);
         double Minutes(Duration d);
         double Hours(Duration d);
-        golang::time::Duration Truncate(Duration d, Duration m);
-        golang::time::Duration Round(Duration d, Duration m);
-        golang::time::Duration Abs(Duration d);
-        golang::time::Time Add(Time t, Duration d);
-        golang::time::Duration Sub(Time t, Time u);
-        golang::time::Time AddDate(Time t, int years, int months, int days);
+        Duration Truncate(Duration d, Duration m);
+        Duration Round(Duration d, Duration m);
+        Duration Abs(Duration d);
+        Time Add(Time t, Duration d);
+        Duration Sub(Time t, Time u);
+        Time AddDate(Time t, int years, int months, int days);
         std::tuple<int, golang::time::Month, int, int> date(Time t, bool full);
-        golang::time::Time UTC(Time t);
-        golang::time::Time Local(Time t);
-        golang::time::Time In(Time t, golang::time::Location* loc);
+        Time UTC(Time t);
+        Time Local(Time t);
+        Time In(Time t, golang::time::Location* loc);
         golang::time::Location* Location(Time t);
         std::tuple<gocpp::string, int> Zone(Time t);
-        std::tuple<golang::time::Time, golang::time::Time> ZoneBounds(Time t);
+        std::tuple<Time, Time> ZoneBounds(Time t);
         int64_t Unix(Time t);
         int64_t UnixMilli(Time t);
         int64_t UnixMicro(Time t);
         int64_t UnixNano(Time t);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(Time t);
-        struct gocpp::error UnmarshalBinary(Time* t, gocpp::slice<unsigned char> data);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> GobEncode(Time t);
-        struct gocpp::error GobDecode(Time* t, gocpp::slice<unsigned char> data);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalJSON(Time t);
-        struct gocpp::error UnmarshalJSON(Time* t, gocpp::slice<unsigned char> data);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalText(Time t);
-        struct gocpp::error UnmarshalText(Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(Time t);
+        gocpp::error UnmarshalBinary(Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> GobEncode(Time t);
+        gocpp::error GobDecode(Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(Time t);
+        gocpp::error UnmarshalJSON(Time* t, gocpp::slice<unsigned char> data);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(Time t);
+        gocpp::error UnmarshalText(Time* t, gocpp::slice<unsigned char> data);
         bool IsDST(Time t);
-        golang::time::Time Truncate(Time t, Duration d);
-        golang::time::Time Round(Time t, Duration d);
+        Time Truncate(Time t, Duration d);
+        Time Round(Time t, Duration d);
     }
 }
 

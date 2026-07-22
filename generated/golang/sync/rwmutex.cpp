@@ -298,19 +298,19 @@ namespace golang::sync
 
     // RLocker returns a Locker interface that implements
     // the Lock and Unlock methods by calling rw.RLock and rw.RUnlock.
-    struct Locker rec::RLocker(RWMutex* rw)
+    Locker rec::RLocker(RWMutex* rw)
     {
-        return (golang::sync::rlocker*)(rw);
+        return (rlocker*)(rw);
     }
 
     void rec::Lock(rlocker* r)
     {
-        rec::RLock(gocpp::recv((golang::sync::RWMutex*)(r)));
+        rec::RLock(gocpp::recv((RWMutex*)(r)));
     }
 
     void rec::Unlock(rlocker* r)
     {
-        rec::RUnlock(gocpp::recv((golang::sync::RWMutex*)(r)));
+        rec::RUnlock(gocpp::recv((RWMutex*)(r)));
     }
 
 }

@@ -186,7 +186,7 @@ namespace golang::sync
     // single producer.
     std::tuple<go_any, bool> rec::popHead(poolDequeue* d)
     {
-        golang::sync::eface* slot = {};
+        eface* slot = {};
         for(; ; )
         {
             auto ptrs = rec::Load(gocpp::recv(d->headTail));
@@ -217,7 +217,7 @@ namespace golang::sync
         }
         // Zero the slot. Unlike popTail, this isn't racing with
         // pushHead, so we don't need to be careful here.
-        *slot = golang::sync::eface {};
+        *slot = eface {};
         return {val, true};
     }
 
@@ -226,7 +226,7 @@ namespace golang::sync
     // number of consumers.
     std::tuple<go_any, bool> rec::popTail(poolDequeue* d)
     {
-        golang::sync::eface* slot = {};
+        eface* slot = {};
         for(; ; )
         {
             auto ptrs = rec::Load(gocpp::recv(d->headTail));
@@ -348,9 +348,9 @@ namespace golang::sync
         atomic::StorePointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp)), gocpp::unsafe_pointer(v));
     }
 
-    golang::sync::poolChainElt* loadPoolChainElt(poolChainElt** pp)
+    poolChainElt* loadPoolChainElt(poolChainElt** pp)
     {
-        return (golang::sync::poolChainElt*)(atomic::LoadPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp))));
+        return (poolChainElt*)(atomic::LoadPointer((gocpp::unsafe_pointer*)(gocpp::unsafe_pointer(pp))));
     }
 
     void rec::pushHead(poolChain* c, go_any val)
@@ -362,7 +362,7 @@ namespace golang::sync
             // Must be a power of 2
             auto initSize = 8;
             d = new poolChainElt{};
-            d->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<golang::sync::eface>>(), initSize);
+            d->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), initSize);
             c->head = d;
             storePoolChainElt(& c->tail, d);
         }
@@ -381,10 +381,10 @@ namespace golang::sync
             newSize = dequeueLimit;
         }
 
-        auto d2 = gocpp::InitPtr<golang::sync::poolChainElt>([=](auto& x) {
+        auto d2 = gocpp::InitPtr<poolChainElt>([=](auto& x) {
             x.prev = d;
         });
-        d2->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<golang::sync::eface>>(), newSize);
+        d2->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), newSize);
         c->head = d2;
         storePoolChainElt(& d->next, d2);
         rec::pushHead(gocpp::recv(d2), val);

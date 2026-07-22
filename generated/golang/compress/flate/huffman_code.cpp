@@ -177,20 +177,20 @@ namespace golang::flate
         h->code = code;
     }
 
-    golang::flate::literalNode maxNode()
+    literalNode maxNode()
     {
-        return golang::flate::literalNode {math::MaxUint16, math::MaxInt32};
+        return literalNode {math::MaxUint16, math::MaxInt32};
     }
 
-    golang::flate::huffmanEncoder* newHuffmanEncoder(int size)
+    huffmanEncoder* newHuffmanEncoder(int size)
     {
-        return gocpp::InitPtr<golang::flate::huffmanEncoder>([=](auto& x) {
-            x.codes = gocpp::make(gocpp::Tag<gocpp::slice<golang::flate::hcode>>(), size);
+        return gocpp::InitPtr<huffmanEncoder>([=](auto& x) {
+            x.codes = gocpp::make(gocpp::Tag<gocpp::slice<hcode>>(), size);
         });
     }
 
     // Generates a HuffmanCode corresponding to the fixed literal table.
-    golang::flate::huffmanEncoder* generateFixedLiteralEncoding()
+    huffmanEncoder* generateFixedLiteralEncoding()
     {
         auto h = newHuffmanEncoder(maxNumLit);
         auto codes = h->codes;
@@ -229,7 +229,7 @@ namespace golang::flate
                         break;
                 }
             }
-            codes[ch] = gocpp::Init<golang::flate::hcode>([=](auto& x) {
+            codes[ch] = gocpp::Init<hcode>([=](auto& x) {
                 x.code = reverseBits(bits, (unsigned char)(size));
                 x.len = size;
             });
@@ -237,13 +237,13 @@ namespace golang::flate
         return h;
     }
 
-    golang::flate::huffmanEncoder* generateFixedOffsetEncoding()
+    huffmanEncoder* generateFixedOffsetEncoding()
     {
         auto h = newHuffmanEncoder(30);
         auto codes = h->codes;
         for(auto [ch, gocpp_ignored] : codes)
         {
-            codes[ch] = gocpp::Init<golang::flate::hcode>([=](auto& x) {
+            codes[ch] = gocpp::Init<hcode>([=](auto& x) {
                 x.code = reverseBits(uint16_t(ch), 5);
                 x.len = 5;
             });
@@ -251,8 +251,8 @@ namespace golang::flate
         return h;
     }
 
-    golang::flate::huffmanEncoder* fixedLiteralEncoding = generateFixedLiteralEncoding();
-    golang::flate::huffmanEncoder* fixedOffsetEncoding = generateFixedOffsetEncoding();
+    huffmanEncoder* fixedLiteralEncoding = generateFixedLiteralEncoding();
+    huffmanEncoder* fixedOffsetEncoding = generateFixedOffsetEncoding();
     int rec::bitLength(huffmanEncoder* h, gocpp::slice<int32_t> freq)
     {
         int total = {};
@@ -301,7 +301,7 @@ namespace golang::flate
         // A bogus "Level 0" whose sole purpose is so that
         // level1.prev.needed==0.  This makes level1.nextPairFreq
         // be a legitimate value that never gets chosen.
-        gocpp::array<golang::flate::levelInfo, maxBitsLimit> levels = {};
+        gocpp::array<levelInfo, maxBitsLimit> levels = {};
         // leafCounts[i] counts the number of literals at the left
         // of ancestors of the rightmost node at level i.
         // leafCounts[i][j] is the number of literals at the left
@@ -312,7 +312,7 @@ namespace golang::flate
         {
             // For every level, the first two items are the first two characters.
             // We initialize the levels as if we had already figured this out.
-            levels[level] = gocpp::Init<golang::flate::levelInfo>([=](auto& x) {
+            levels[level] = gocpp::Init<levelInfo>([=](auto& x) {
                 x.level = level;
                 x.lastFreq = list[1].freq;
                 x.nextCharFreq = list[2].freq;
@@ -430,7 +430,7 @@ namespace golang::flate
             rec::sort(gocpp::recv(h->lns), chunk);
             for(auto [gocpp_ignored, node] : chunk)
             {
-                h->codes[node.literal] = gocpp::Init<golang::flate::hcode>([=](auto& x) {
+                h->codes[node.literal] = gocpp::Init<hcode>([=](auto& x) {
                     x.code = reverseBits(code, uint8_t(n));
                     x.len = uint16_t(n);
                 });
@@ -451,7 +451,7 @@ namespace golang::flate
             // Allocate a reusable buffer with the longest possible frequency table.
             // Possible lengths are codegenCodeCount, offsetCodeCount and maxNumLit.
             // The largest of these is maxNumLit, so we allocate for that case.
-            h->freqcache = gocpp::make(gocpp::Tag<gocpp::slice<golang::flate::literalNode>>(), maxNumLit + 1);
+            h->freqcache = gocpp::make(gocpp::Tag<gocpp::slice<literalNode>>(), maxNumLit + 1);
         }
         auto list = h->freqcache.make_slice(0, len(freq) + 1);
         // Number of non-zero literals
@@ -461,7 +461,7 @@ namespace golang::flate
         {
             if(f != 0)
             {
-                list[count] = golang::flate::literalNode {uint16_t(i), f};
+                list[count] = literalNode {uint16_t(i), f};
                 count++;
             }
             else

@@ -44,8 +44,8 @@ namespace golang::time
     const golang::time::Weekday Thursday = 4;
     const golang::time::Weekday Friday = 5;
     const golang::time::Weekday Saturday = 6;
-    const golang::time::Duration minDuration = - 1 << 63;
-    const golang::time::Duration maxDuration = (1 << 63) - 1;
+    const Duration minDuration = - 1 << 63;
+    const Duration maxDuration = (1 << 63) - 1;
     // Common durations. There is no definition for units of Day or larger
     // to avoid confusion across daylight savings time zone transitions.
     //
@@ -58,7 +58,7 @@ namespace golang::time
     //
     //	seconds := 10
     //	fmt.Print(time.Duration(seconds)*time.Second) // prints 10s
-    const golang::time::Duration Nanosecond = 1;
+    const Duration Nanosecond = 1;
     const int secondsPerHour = 60 * secondsPerMinute;
 }
 #include "golang/time/zoneinfo.fwd.h"

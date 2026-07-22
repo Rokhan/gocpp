@@ -61,7 +61,7 @@ namespace golang::syscall
     // ByteSliceFromString returns a NUL-terminated slice of bytes
     // containing the text of s. If s contains a NUL byte at any
     // location, it returns (nil, EINVAL).
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> ByteSliceFromString(gocpp::string s)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> ByteSliceFromString(gocpp::string s)
     {
         if(bytealg::IndexByteString(s, 0) != - 1)
         {
@@ -85,7 +85,7 @@ namespace golang::syscall
     // BytePtrFromString returns a pointer to a NUL-terminated array of
     // bytes containing the text of s. If s contains a NUL byte at any
     // location, it returns (nil, EINVAL).
-    std::tuple<unsigned char*, struct gocpp::error> BytePtrFromString(gocpp::string s)
+    std::tuple<unsigned char*, gocpp::error> BytePtrFromString(gocpp::string s)
     {
         auto [a, err] = ByteSliceFromString(s);
         if(err != nullptr)

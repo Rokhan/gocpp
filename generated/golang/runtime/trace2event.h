@@ -40,7 +40,7 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::traceEventWriter eventWriter(traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus);
+        traceEventWriter eventWriter(traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus);
         void commit(traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args);
         
         template<typename... Args>
@@ -54,37 +54,37 @@ namespace golang::runtime
         {
             return commit(e, ev, gocpp::ToSlice<traceArg>(value, args...));
         }
-        golang::runtime::traceEventWriter write(traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args);
+        traceEventWriter write(traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args);
         
         template<typename... Args>
-        golang::runtime::traceEventWriter write(traceEventWriter e, traceEv ev, Args... args)
+        traceEventWriter write(traceEventWriter e, traceEv ev, Args... args)
         {
             return write(e, ev, gocpp::ToSlice<traceArg>(args...));
         }
         
         template<typename... Args>
-        golang::runtime::traceEventWriter write(traceEventWriter e, traceEv ev, traceArg value, Args... args)
+        traceEventWriter write(traceEventWriter e, traceEv ev, traceArg value, Args... args)
         {
             return write(e, ev, gocpp::ToSlice<traceArg>(value, args...));
         }
         void end(traceEventWriter e);
-        golang::runtime::traceWriter event(traceWriter w, traceEv ev, gocpp::slice<traceArg> args);
+        traceWriter event(traceWriter w, traceEv ev, gocpp::slice<traceArg> args);
         
         template<typename... Args>
-        golang::runtime::traceWriter event(traceWriter w, traceEv ev, Args... args)
+        traceWriter event(traceWriter w, traceEv ev, Args... args)
         {
             return event(w, ev, gocpp::ToSlice<traceArg>(args...));
         }
         
         template<typename... Args>
-        golang::runtime::traceWriter event(traceWriter w, traceEv ev, traceArg value, Args... args)
+        traceWriter event(traceWriter w, traceEv ev, traceArg value, Args... args)
         {
             return event(w, ev, gocpp::ToSlice<traceArg>(value, args...));
         }
-        golang::runtime::traceArg stack(traceLocker tl, int skip);
-        golang::runtime::traceArg startPC(traceLocker tl, uintptr_t pc);
-        golang::runtime::traceArg string(traceLocker tl, gocpp::string s);
-        golang::runtime::traceArg uniqueString(traceLocker tl, gocpp::string s);
+        traceArg stack(traceLocker tl, int skip);
+        traceArg startPC(traceLocker tl, uintptr_t pc);
+        traceArg string(traceLocker tl, gocpp::string s);
+        traceArg uniqueString(traceLocker tl, gocpp::string s);
     }
 }
 

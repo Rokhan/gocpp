@@ -282,15 +282,15 @@ namespace golang::color
 
     // YCbCrModel is the [Model] for Y'CbCr colors.
     Model YCbCrModel = ModelFunc(yCbCrModel);
-    struct Color yCbCrModel(struct Color c)
+    Color yCbCrModel(Color c)
     {
-        if(auto [gocpp_id_0, ok] = gocpp::getValue<golang::color::YCbCr>(c); ok)
+        if(auto [gocpp_id_0, ok] = gocpp::getValue<YCbCr>(c); ok)
         {
             return c;
         }
         auto [r, g, b, gocpp_id_1] = rec::RGBA(gocpp::recv(c));
         auto [y, u, v] = RGBToYCbCr(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
-        return golang::color::YCbCr {y, u, v};
+        return YCbCr {y, u, v};
     }
 
     // NYCbCrA represents a non-alpha-premultiplied Y'CbCr-with-alpha color, having
@@ -381,7 +381,7 @@ namespace golang::color
     // NYCbCrAModel is the [Model] for non-alpha-premultiplied Y'CbCr-with-alpha
     // colors.
     Model NYCbCrAModel = ModelFunc(nYCbCrAModel);
-    struct Color nYCbCrAModel(struct Color c)
+    Color nYCbCrAModel(Color c)
     {
         //Go type switch emulation
         {
@@ -401,7 +401,7 @@ namespace golang::color
                 case 1:
                 {
                     color::YCbCr c = gocpp::any_cast<color::YCbCr>(c_ref);
-                    return golang::color::NYCbCrA {c, 0xff};
+                    return NYCbCrA {c, 0xff};
                     break;
                 }
             }
@@ -417,7 +417,7 @@ namespace golang::color
         }
 
         auto [y, u, v] = RGBToYCbCr(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
-        return golang::color::NYCbCrA {gocpp::Init<golang::color::YCbCr>([=](auto& x) {
+        return NYCbCrA {gocpp::Init<YCbCr>([=](auto& x) {
             x.Y = y;
             x.Cb = u;
             x.Cr = v;
@@ -514,15 +514,15 @@ namespace golang::color
 
     // CMYKModel is the [Model] for CMYK colors.
     Model CMYKModel = ModelFunc(cmykModel);
-    struct Color cmykModel(struct Color c)
+    Color cmykModel(Color c)
     {
-        if(auto [gocpp_id_3, ok] = gocpp::getValue<golang::color::CMYK>(c); ok)
+        if(auto [gocpp_id_3, ok] = gocpp::getValue<CMYK>(c); ok)
         {
             return c;
         }
         auto [r, g, b, gocpp_id_4] = rec::RGBA(gocpp::recv(c));
         auto [cc, mm, yy, kk] = RGBToCMYK(uint8_t(r >> 8), uint8_t(g >> 8), uint8_t(b >> 8));
-        return golang::color::CMYK {cc, mm, yy, kk};
+        return CMYK {cc, mm, yy, kk};
     }
 
 }

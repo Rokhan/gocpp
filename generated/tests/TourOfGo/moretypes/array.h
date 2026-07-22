@@ -22,7 +22,7 @@ namespace golang::main
     void testPtrArray();
     void main();
     int arrayLen(gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
-    golang::main::asciiSet makeASCIISet(gocpp::string chars);
+    asciiSet makeASCIISet(gocpp::string chars);
 
     namespace rec
     {

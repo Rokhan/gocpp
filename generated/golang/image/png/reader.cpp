@@ -97,7 +97,7 @@ namespace golang::png
 
     // interlacing defines Adam7 interlacing, with 7 passes of reduced images.
     // See https://www.w3.org/TR/PNG/#8Interlace
-    gocpp::slice<golang::png::interlaceScan> interlacing = gocpp::slice<golang::png::interlaceScan> {
+    gocpp::slice<interlaceScan> interlacing = gocpp::slice<interlaceScan> {
         {8, 8, 0, 0},
         {8, 8, 4, 0},
         {4, 8, 0, 4},
@@ -187,7 +187,7 @@ namespace golang::png
         return "png: unsupported feature: "_s + gocpp::string(e);
     }
 
-    struct gocpp::error rec::parseIHDR(decoder* d, uint32_t length)
+    gocpp::error rec::parseIHDR(decoder* d, uint32_t length)
     {
         if(length != 13)
         {
@@ -363,7 +363,7 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error rec::parsePLTE(decoder* d, uint32_t length)
+    gocpp::error rec::parsePLTE(decoder* d, uint32_t length)
     {
         // The number of palette entries.
         auto np = int(length / 3);
@@ -426,7 +426,7 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error rec::parsetRNS(decoder* d, uint32_t length)
+    gocpp::error rec::parsetRNS(decoder* d, uint32_t length)
     {
         //Go switch emulation
         {
@@ -548,7 +548,7 @@ namespace golang::png
     // immediately before the first Read call is that d.r is positioned between the
     // first IDAT and xxx, and the decoder state immediately after the last Read
     // call is that d.r is positioned between yy and crc1.
-    std::tuple<int, struct gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
     {
         if(len(p) == 0)
         {
@@ -586,7 +586,7 @@ namespace golang::png
     }
 
     // decode decodes the IDAT data into an image.
-    std::tuple<image::Image, struct gocpp::error> rec::decode(decoder* d)
+    std::tuple<image::Image, gocpp::error> rec::decode(decoder* d)
     {
         gocpp::Defer defer;
         try
@@ -657,7 +657,7 @@ namespace golang::png
     }
 
     // readImagePass reads a single image pass, sized according to the pass number.
-    std::tuple<image::Image, struct gocpp::error> rec::readImagePass(decoder* d, io::Reader r, int pass, bool allocateOnly)
+    std::tuple<image::Image, gocpp::error> rec::readImagePass(decoder* d, io::Reader r, int pass, bool allocateOnly)
     {
         auto bitsPerPixel = 0;
         auto pixOffset = 0;
@@ -1326,9 +1326,9 @@ namespace golang::png
         }
     }
 
-    struct gocpp::error rec::parseIDAT(decoder* d, uint32_t length)
+    gocpp::error rec::parseIDAT(decoder* d, uint32_t length)
     {
-        struct gocpp::error err;
+        gocpp::error err;
         d->idatLength = length;
         std::tie(d->img, err) = rec::decode(gocpp::recv(d));
         if(err != nullptr)
@@ -1338,7 +1338,7 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error rec::parseIEND(decoder* d, uint32_t length)
+    gocpp::error rec::parseIEND(decoder* d, uint32_t length)
     {
         if(length != 0)
         {
@@ -1347,7 +1347,7 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error rec::parseChunk(decoder* d, bool configOnly)
+    gocpp::error rec::parseChunk(decoder* d, bool configOnly)
     {
         // Read the length and chunk type.
         if(auto [gocpp_id_4, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 8)); err != nullptr)
@@ -1460,7 +1460,7 @@ namespace golang::png
         return rec::verifyChecksum(gocpp::recv(d));
     }
 
-    struct gocpp::error rec::verifyChecksum(decoder* d)
+    gocpp::error rec::verifyChecksum(decoder* d)
     {
         if(auto [gocpp_id_5, err] = io::ReadFull(d->r, d->tmp.make_slice(0, 4)); err != nullptr)
         {
@@ -1473,7 +1473,7 @@ namespace golang::png
         return nullptr;
     }
 
-    struct gocpp::error rec::checkHeader(decoder* d)
+    gocpp::error rec::checkHeader(decoder* d)
     {
         auto [gocpp_id_6, err] = io::ReadFull(d->r, d->tmp.make_slice(0, len(pngHeader)));
         if(err != nullptr)
@@ -1489,9 +1489,9 @@ namespace golang::png
 
     // Decode reads a PNG image from r and returns it as an [image.Image].
     // The type of Image returned depends on the PNG contents.
-    std::tuple<image::Image, struct gocpp::error> Decode(io::Reader r)
+    std::tuple<image::Image, gocpp::error> Decode(io::Reader r)
     {
-        auto d = gocpp::InitPtr<golang::png::decoder>([=](auto& x) {
+        auto d = gocpp::InitPtr<decoder>([=](auto& x) {
             x.r = r;
             x.crc = crc32::NewIEEE();
         });
@@ -1519,9 +1519,9 @@ namespace golang::png
 
     // DecodeConfig returns the color model and dimensions of a PNG image without
     // decoding the entire image.
-    std::tuple<image::Config, struct gocpp::error> DecodeConfig(io::Reader r)
+    std::tuple<image::Config, gocpp::error> DecodeConfig(io::Reader r)
     {
-        auto d = gocpp::InitPtr<golang::png::decoder>([=](auto& x) {
+        auto d = gocpp::InitPtr<decoder>([=](auto& x) {
             x.r = r;
             x.crc = crc32::NewIEEE();
         });

@@ -164,7 +164,7 @@ namespace golang::runtime
     // The precise representation is an implementation detail, but for the
     // sake of documentation, 0s are free pages and 1s are allocated pages.
     // summarize returns a packed summary of the bitmap in pallocBits.
-    golang::runtime::pallocSum rec::summarize(gocpp::array_ptr<pallocBits> b)
+    pallocSum rec::summarize(gocpp::array_ptr<pallocBits> b)
     {
         unsigned int start = {};
         unsigned int most = {};

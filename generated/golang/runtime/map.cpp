@@ -314,14 +314,14 @@ namespace golang::runtime
         return h > emptyOne && h < minTopHash;
     }
 
-    golang::runtime::bmap* rec::overflow(bmap* b, maptype* t)
+    bmap* rec::overflow(bmap* b, maptype* t)
     {
-        return *(golang::runtime::bmap**)(runtime::add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize));
+        return *(bmap**)(runtime::add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize));
     }
 
     void rec::setoverflow(bmap* b, maptype* t, bmap* ovf)
     {
-        *(golang::runtime::bmap**)(runtime::add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize)) = ovf;
+        *(bmap**)(runtime::add(gocpp::unsafe_pointer(b), uintptr_t(t->BucketSize) - goarch::PtrSize)) = ovf;
     }
 
     gocpp::unsafe_pointer rec::keys(bmap* b)
@@ -358,9 +358,9 @@ namespace golang::runtime
         }
     }
 
-    golang::runtime::bmap* rec::newoverflow(hmap* h, maptype* t, bmap* b)
+    bmap* rec::newoverflow(hmap* h, maptype* t, bmap* b)
     {
-        golang::runtime::bmap* ovf = {};
+        bmap* ovf = {};
         if(h->extra != nullptr && h->extra->nextOverflow != nullptr)
         {
             // We have preallocated overflow buckets available.
@@ -369,7 +369,7 @@ namespace golang::runtime
             if(rec::overflow(gocpp::recv(ovf), t) == nullptr)
             {
                 // We're not at the end of the preallocated overflow buckets. Bump the pointer.
-                h->extra->nextOverflow = (golang::runtime::bmap*)(runtime::add(gocpp::unsafe_pointer(ovf), uintptr_t(t->BucketSize)));
+                h->extra->nextOverflow = (bmap*)(runtime::add(gocpp::unsafe_pointer(ovf), uintptr_t(t->BucketSize)));
             }
             else
             {
@@ -382,7 +382,7 @@ namespace golang::runtime
         }
         else
         {
-            ovf = (golang::runtime::bmap*)(newobject(t->Bucket));
+            ovf = (bmap*)(newobject(t->Bucket));
         }
         rec::incrnoverflow(gocpp::recv(h));
         if(t->Bucket->PtrBytes == 0)
@@ -406,7 +406,7 @@ namespace golang::runtime
         }
     }
 
-    golang::runtime::hmap* makemap64(maptype* t, int64_t hint, hmap* h)
+    hmap* makemap64(maptype* t, int64_t hint, hmap* h)
     {
         if(int64_t(int(hint)) != hint)
         {
@@ -418,7 +418,7 @@ namespace golang::runtime
     // makemap_small implements Go map creation for make(map[k]v) and
     // make(map[k]v, hint) when hint is known to be at most bucketCnt
     // at compile time and the map needs to be allocated on the heap.
-    golang::runtime::hmap* makemap_small()
+    hmap* makemap_small()
     {
         auto h = new hmap{};
         h->hash0 = uint32_t(rand());
@@ -430,7 +430,7 @@ namespace golang::runtime
     // can be created on the stack, h and/or bucket may be non-nil.
     // If h != nil, the map can be created directly in h.
     // If h.buckets != nil, bucket pointed to can be used as the first bucket.
-    golang::runtime::hmap* makemap(maptype* t, int hint, hmap* h)
+    hmap* makemap(maptype* t, int hint, hmap* h)
     {
         auto [mem, overflow] = math::MulUintptr(uintptr_t(hint), t->Bucket->Size_);
         if(overflow || mem > maxAlloc)
@@ -459,7 +459,7 @@ namespace golang::runtime
         // If hint is large zeroing this memory could take a while.
         if(h->B != 0)
         {
-            golang::runtime::bmap* nextOverflow = {};
+            bmap* nextOverflow = {};
             std::tie(h->buckets, nextOverflow) = makeBucketArray(t, h->B, nullptr);
             if(nextOverflow != nullptr)
             {
@@ -477,10 +477,10 @@ namespace golang::runtime
     // allocated by makeBucketArray with the same t and b parameters.
     // If dirtyalloc is nil a new backing array will be alloced and
     // otherwise dirtyalloc will be cleared and reused as backing array.
-    std::tuple<gocpp::unsafe_pointer, golang::runtime::bmap*> makeBucketArray(maptype* t, uint8_t b, gocpp::unsafe_pointer dirtyalloc)
+    std::tuple<gocpp::unsafe_pointer, bmap*> makeBucketArray(maptype* t, uint8_t b, gocpp::unsafe_pointer dirtyalloc)
     {
         gocpp::unsafe_pointer buckets;
-        golang::runtime::bmap* nextOverflow;
+        bmap* nextOverflow;
         auto base = bucketShift(b);
         auto nbuckets = base;
         // For small b, overflow buckets are unlikely.
@@ -527,9 +527,9 @@ namespace golang::runtime
             // we use the convention that if a preallocated overflow bucket's overflow
             // pointer is nil, then there are more available by bumping the pointer.
             // We need a safe non-nil pointer for the last overflow bucket; just use buckets.
-            nextOverflow = (golang::runtime::bmap*)(add(buckets, base * uintptr_t(t->BucketSize)));
-            auto last = (golang::runtime::bmap*)(add(buckets, (nbuckets - 1) * uintptr_t(t->BucketSize)));
-            rec::setoverflow(gocpp::recv(last), t, (golang::runtime::bmap*)(buckets));
+            nextOverflow = (bmap*)(add(buckets, base * uintptr_t(t->BucketSize)));
+            auto last = (bmap*)(add(buckets, (nbuckets - 1) * uintptr_t(t->BucketSize)));
+            rec::setoverflow(gocpp::recv(last), t, (bmap*)(buckets));
         }
         return {buckets, nextOverflow};
     }
@@ -571,7 +571,7 @@ namespace golang::runtime
         }
         auto hash = t->Hasher(key, uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
-        auto b = (golang::runtime::bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
+        auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
         if(auto c = h->oldbuckets; c != nullptr)
         {
             if(! rec::sameSizeGrow(gocpp::recv(h)))
@@ -579,7 +579,7 @@ namespace golang::runtime
                 // There used to be half as many buckets; mask down one more power of two.
                 m >>= 1;
             }
-            auto oldb = (golang::runtime::bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
+            auto oldb = (bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
             if(! evacuated(oldb))
             {
                 b = oldb;
@@ -656,7 +656,7 @@ namespace golang::runtime
         }
         auto hash = t->Hasher(key, uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
-        auto b = (golang::runtime::bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
+        auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
         if(auto c = h->oldbuckets; c != nullptr)
         {
             if(! rec::sameSizeGrow(gocpp::recv(h)))
@@ -664,7 +664,7 @@ namespace golang::runtime
                 // There used to be half as many buckets; mask down one more power of two.
                 m >>= 1;
             }
-            auto oldb = (golang::runtime::bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
+            auto oldb = (bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
             if(! evacuated(oldb))
             {
                 b = oldb;
@@ -718,7 +718,7 @@ namespace golang::runtime
         }
         auto hash = t->Hasher(key, uintptr_t(h->hash0));
         auto m = bucketMask(h->B);
-        auto b = (golang::runtime::bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
+        auto b = (bmap*)(add(h->buckets, (hash & m) * uintptr_t(t->BucketSize)));
         if(auto c = h->oldbuckets; c != nullptr)
         {
             if(! rec::sameSizeGrow(gocpp::recv(h)))
@@ -726,7 +726,7 @@ namespace golang::runtime
                 // There used to be half as many buckets; mask down one more power of two.
                 m >>= 1;
             }
-            auto oldb = (golang::runtime::bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
+            auto oldb = (bmap*)(add(c, (hash & m) * uintptr_t(t->BucketSize)));
             if(! evacuated(oldb))
             {
                 b = oldb;
@@ -835,7 +835,7 @@ namespace golang::runtime
         {
             growWork(t, h, bucket);
         }
-        auto b = (golang::runtime::bmap*)(add(h->buckets, bucket * uintptr_t(t->BucketSize)));
+        auto b = (bmap*)(add(h->buckets, bucket * uintptr_t(t->BucketSize)));
         auto top = tophash(hash);
 
         uint8_t* inserti = {};
@@ -981,7 +981,7 @@ namespace golang::runtime
         {
             growWork(t, h, bucket);
         }
-        auto b = (golang::runtime::bmap*)(add(h->buckets, bucket * uintptr_t(t->BucketSize)));
+        auto b = (bmap*)(add(h->buckets, bucket * uintptr_t(t->BucketSize)));
         auto bOrig = b;
         auto top = tophash(hash);
         search:
@@ -1119,7 +1119,7 @@ namespace golang::runtime
             return;
         }
 
-        if(gocpp::Sizeof<golang::runtime::hiter>() / goarch::PtrSize != 12)
+        if(gocpp::Sizeof<hiter>() / goarch::PtrSize != 12)
         {
             // see cmd/compile/internal/reflectdata/reflect.go
             go_throw("hash_iter size incorrect"_s);
@@ -1193,20 +1193,20 @@ namespace golang::runtime
                 // bucket hasn't been evacuated) then we need to iterate through the old
                 // bucket and only return the ones that will be migrated to this bucket.
                 auto oldbucket = bucket & rec::oldbucketmask(gocpp::recv(it->h));
-                b = (golang::runtime::bmap*)(add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize)));
+                b = (bmap*)(add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize)));
                 if(! evacuated(b))
                 {
                     checkBucket = bucket;
                 }
                 else
                 {
-                    b = (golang::runtime::bmap*)(add(it->buckets, bucket * uintptr_t(t->BucketSize)));
+                    b = (bmap*)(add(it->buckets, bucket * uintptr_t(t->BucketSize)));
                     checkBucket = noCheck;
                 }
             }
             else
             {
-                b = (golang::runtime::bmap*)(add(it->buckets, bucket * uintptr_t(t->BucketSize)));
+                b = (bmap*)(add(it->buckets, bucket * uintptr_t(t->BucketSize)));
                 checkBucket = noCheck;
             }
             bucket++;
@@ -1340,7 +1340,7 @@ namespace golang::runtime
         {
             for(auto i = uintptr_t(0); i <= mask; i++)
             {
-                auto b = (golang::runtime::bmap*)(add(bucket, i * uintptr_t(t->BucketSize)));
+                auto b = (bmap*)(add(bucket, i * uintptr_t(t->BucketSize)));
                 for(; b != nullptr; b = rec::overflow(gocpp::recv(b), t))
                 {
                     for(auto i = uintptr_t(0); i < bucketCnt; i++)
@@ -1369,7 +1369,7 @@ namespace golang::runtime
         // Keep the mapextra allocation but clear any extra information.
         if(h->extra != nullptr)
         {
-            *h->extra = golang::runtime::mapextra {};
+            *h->extra = mapextra {};
         }
 
         // makeBucketArray clears the memory pointed to by h.buckets
@@ -1504,7 +1504,7 @@ namespace golang::runtime
 
     bool bucketEvacuated(maptype* t, hmap* h, uintptr_t bucket)
     {
-        auto b = (golang::runtime::bmap*)(add(h->oldbuckets, bucket * uintptr_t(t->BucketSize)));
+        auto b = (bmap*)(add(h->oldbuckets, bucket * uintptr_t(t->BucketSize)));
         return evacuated(b);
     }
 
@@ -1549,16 +1549,16 @@ namespace golang::runtime
 
     void evacuate(maptype* t, hmap* h, uintptr_t oldbucket)
     {
-        auto b = (golang::runtime::bmap*)(add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize)));
+        auto b = (bmap*)(add(h->oldbuckets, oldbucket * uintptr_t(t->BucketSize)));
         auto newbit = rec::noldbuckets(gocpp::recv(h));
         if(! evacuated(b))
         {
             // TODO: reuse overflow buckets instead of using new ones, if there
             // is no iterator using the old buckets.  (If !oldIterator.)
             // xy contains the x and y (low and high) evacuation destinations.
-            gocpp::array<golang::runtime::evacDst, 2> xy = {};
+            gocpp::array<evacDst, 2> xy = {};
             auto x = & xy[0];
-            x->b = (golang::runtime::bmap*)(add(h->buckets, oldbucket * uintptr_t(t->BucketSize)));
+            x->b = (bmap*)(add(h->buckets, oldbucket * uintptr_t(t->BucketSize)));
             x->k = add(gocpp::unsafe_pointer(x->b), dataOffset);
             x->e = add(x->k, bucketCnt * uintptr_t(t->KeySize));
 
@@ -1567,7 +1567,7 @@ namespace golang::runtime
                 // Only calculate y pointers if we're growing bigger.
                 // Otherwise GC can see bad pointers.
                 auto y = & xy[1];
-                y->b = (golang::runtime::bmap*)(add(h->buckets, (oldbucket + newbit) * uintptr_t(t->BucketSize)));
+                y->b = (bmap*)(add(h->buckets, (oldbucket + newbit) * uintptr_t(t->BucketSize)));
                 y->k = add(gocpp::unsafe_pointer(y->b), dataOffset);
                 y->e = add(y->k, bucketCnt * uintptr_t(t->KeySize));
             }
@@ -1719,7 +1719,7 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_makemap reflect.makemap
-    golang::runtime::hmap* reflect_makemap(maptype* t, int cap)
+    hmap* reflect_makemap(maptype* t, int cap)
     {
         // Check invariants and reflects math.
         if(t->Key->Equal == nullptr)
@@ -1893,13 +1893,13 @@ namespace golang::runtime
     go_any mapclone(go_any m)
     {
         auto e = efaceOf(& m);
-        e->data = gocpp::unsafe_pointer(mapclone2((golang::runtime::maptype*)(gocpp::unsafe_pointer(e->_type)), (golang::runtime::hmap*)(e->data)));
+        e->data = gocpp::unsafe_pointer(mapclone2((maptype*)(gocpp::unsafe_pointer(e->_type)), (hmap*)(e->data)));
         return m;
     }
 
     // moveToBmap moves a bucket from src to dst. It returns the destination bucket or new destination bucket if it overflows
     // and the pos that the next key/value will be written, if pos == bucketCnt means needs to written in overflow bucket.
-    std::tuple<golang::runtime::bmap*, int> moveToBmap(maptype* t, hmap* h, bmap* dst, int pos, bmap* src)
+    std::tuple<bmap*, int> moveToBmap(maptype* t, hmap* h, bmap* dst, int pos, bmap* src)
     {
         for(auto i = 0; i < bucketCnt; i++)
         {
@@ -1963,7 +1963,7 @@ namespace golang::runtime
         return {dst, pos};
     }
 
-    golang::runtime::hmap* mapclone2(maptype* t, hmap* src)
+    hmap* mapclone2(maptype* t, hmap* src)
     {
         auto dst = makemap(t, src->count, nullptr);
         dst->hash0 = src->hash0;
@@ -1998,11 +1998,11 @@ namespace golang::runtime
         auto srcArraySize = int(bucketShift(src->B));
         for(auto i = 0; i < dstArraySize; i++)
         {
-            auto dstBmap = (golang::runtime::bmap*)(add(dst->buckets, uintptr_t(i * int(t->BucketSize))));
+            auto dstBmap = (bmap*)(add(dst->buckets, uintptr_t(i * int(t->BucketSize))));
             auto pos = 0;
             for(auto j = 0; j < srcArraySize; j += dstArraySize)
             {
-                auto srcBmap = (golang::runtime::bmap*)(add(src->buckets, uintptr_t((i + j) * int(t->BucketSize))));
+                auto srcBmap = (bmap*)(add(src->buckets, uintptr_t((i + j) * int(t->BucketSize))));
                 for(; srcBmap != nullptr; )
                 {
                     std::tie(dstBmap, pos) = moveToBmap(t, dst, dstBmap, pos, srcBmap);
@@ -2026,7 +2026,7 @@ namespace golang::runtime
 
         for(auto i = 0; i < oldSrcArraySize; i++)
         {
-            auto srcBmap = (golang::runtime::bmap*)(add(srcOldbuckets, uintptr_t(i * int(t->BucketSize))));
+            auto srcBmap = (bmap*)(add(srcOldbuckets, uintptr_t(i * int(t->BucketSize))));
             if(evacuated(srcBmap))
             {
                 continue;
@@ -2035,7 +2035,7 @@ namespace golang::runtime
             if(oldB >= dst->B)
             {
                 // main bucket bits in dst is less than oldB bits in src
-                auto dstBmap = (golang::runtime::bmap*)(add(dst->buckets, (uintptr_t(i) & bucketMask(dst->B)) * uintptr_t(t->BucketSize)));
+                auto dstBmap = (bmap*)(add(dst->buckets, (uintptr_t(i) & bucketMask(dst->B)) * uintptr_t(t->BucketSize)));
                 for(; rec::overflow(gocpp::recv(dstBmap), t) != nullptr; )
                 {
                     dstBmap = rec::overflow(gocpp::recv(dstBmap), t);
@@ -2092,8 +2092,8 @@ namespace golang::runtime
     void keys(go_any m, gocpp::unsafe_pointer p)
     {
         auto e = efaceOf(& m);
-        auto t = (golang::runtime::maptype*)(gocpp::unsafe_pointer(e->_type));
-        auto h = (golang::runtime::hmap*)(e->data);
+        auto t = (maptype*)(gocpp::unsafe_pointer(e->_type));
+        auto h = (hmap*)(e->data);
 
         if(h == nullptr || h->count == 0)
         {
@@ -2104,7 +2104,7 @@ namespace golang::runtime
         auto offset = uint8_t((r >> h->B) & (bucketCnt - 1));
         if(h->B == 0)
         {
-            copyKeys(t, h, (golang::runtime::bmap*)(h->buckets), s, offset);
+            copyKeys(t, h, (bmap*)(h->buckets), s, offset);
             return;
         }
         auto arraySize = int(bucketShift(h->B));
@@ -2112,7 +2112,7 @@ namespace golang::runtime
         for(auto i = 0; i < arraySize; i++)
         {
             auto bucket = (i + r) & (arraySize - 1);
-            auto b = (golang::runtime::bmap*)(add(buckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
+            auto b = (bmap*)(add(buckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
             copyKeys(t, h, b, s, offset);
         }
 
@@ -2122,7 +2122,7 @@ namespace golang::runtime
             for(auto i = 0; i < oldArraySize; i++)
             {
                 auto bucket = (i + r) & (oldArraySize - 1);
-                auto b = (golang::runtime::bmap*)(add(h->oldbuckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
+                auto b = (bmap*)(add(h->oldbuckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
                 if(evacuated(b))
                 {
                     continue;
@@ -2170,8 +2170,8 @@ namespace golang::runtime
     void values(go_any m, gocpp::unsafe_pointer p)
     {
         auto e = efaceOf(& m);
-        auto t = (golang::runtime::maptype*)(gocpp::unsafe_pointer(e->_type));
-        auto h = (golang::runtime::hmap*)(e->data);
+        auto t = (maptype*)(gocpp::unsafe_pointer(e->_type));
+        auto h = (hmap*)(e->data);
         if(h == nullptr || h->count == 0)
         {
             return;
@@ -2181,7 +2181,7 @@ namespace golang::runtime
         auto offset = uint8_t((r >> h->B) & (bucketCnt - 1));
         if(h->B == 0)
         {
-            copyValues(t, h, (golang::runtime::bmap*)(h->buckets), s, offset);
+            copyValues(t, h, (bmap*)(h->buckets), s, offset);
             return;
         }
         auto arraySize = int(bucketShift(h->B));
@@ -2189,7 +2189,7 @@ namespace golang::runtime
         for(auto i = 0; i < arraySize; i++)
         {
             auto bucket = (i + r) & (arraySize - 1);
-            auto b = (golang::runtime::bmap*)(add(buckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
+            auto b = (bmap*)(add(buckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
             copyValues(t, h, b, s, offset);
         }
 
@@ -2199,7 +2199,7 @@ namespace golang::runtime
             for(auto i = 0; i < oldArraySize; i++)
             {
                 auto bucket = (i + r) & (oldArraySize - 1);
-                auto b = (golang::runtime::bmap*)(add(h->oldbuckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
+                auto b = (bmap*)(add(h->oldbuckets, uintptr_t(bucket) * uintptr_t(t->BucketSize)));
                 if(evacuated(b))
                 {
                     continue;

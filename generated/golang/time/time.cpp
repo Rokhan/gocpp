@@ -798,7 +798,7 @@ namespace golang::time
 
     // Truncate returns the result of rounding d toward zero to a multiple of m.
     // If m <= 0, Truncate returns d unchanged.
-    golang::time::Duration rec::Truncate(Duration d, Duration m)
+    Duration rec::Truncate(Duration d, Duration m)
     {
         if(m <= 0)
         {
@@ -820,7 +820,7 @@ namespace golang::time
     // value that can be stored in a Duration,
     // Round returns the maximum (or minimum) duration.
     // If m <= 0, Round returns d unchanged.
-    golang::time::Duration rec::Round(Duration d, Duration m)
+    Duration rec::Round(Duration d, Duration m)
     {
         if(m <= 0)
         {
@@ -855,7 +855,7 @@ namespace golang::time
 
     // Abs returns the absolute value of d.
     // As a special case, math.MinInt64 is converted to math.MaxInt64.
-    golang::time::Duration rec::Abs(Duration d)
+    Duration rec::Abs(Duration d)
     {
         //Go switch emulation
         {
@@ -878,7 +878,7 @@ namespace golang::time
     }
 
     // Add returns the time t+d.
-    golang::time::Time rec::Add(Time t, Duration d)
+    Time rec::Add(Time t, Duration d)
     {
         auto dsec = int64_t(d / 1e9);
         auto nsec = rec::nsec(gocpp::recv(t)) + int32_t(d % 1e9);
@@ -916,7 +916,7 @@ namespace golang::time
     // value that can be stored in a Duration, the maximum (or minimum) duration
     // will be returned.
     // To compute t-d for a duration d, use t.Add(-d).
-    golang::time::Duration rec::Sub(Time t, Time u)
+    Duration rec::Sub(Time t, Time u)
     {
         if(t.wall & u.wall & hasMonotonic != 0)
         {
@@ -947,7 +947,7 @@ namespace golang::time
         }
     }
 
-    golang::time::Duration subMono(int64_t t, int64_t u)
+    Duration subMono(int64_t t, int64_t u)
     {
         auto d = Duration(t - u);
         if(d < 0 && t > u)
@@ -965,7 +965,7 @@ namespace golang::time
 
     // Since returns the time elapsed since t.
     // It is shorthand for time.Now().Sub(t).
-    golang::time::Duration Since(Time t)
+    Duration Since(Time t)
     {
         if(t.wall & hasMonotonic != 0)
         {
@@ -977,7 +977,7 @@ namespace golang::time
 
     // Until returns the duration until t.
     // It is shorthand for t.Sub(time.Now()).
-    golang::time::Duration Until(Time t)
+    Duration Until(Time t)
     {
         if(t.wall & hasMonotonic != 0)
         {
@@ -1004,7 +1004,7 @@ namespace golang::time
     // AddDate normalizes its result in the same way that Date does,
     // so, for example, adding one month to October 31 yields
     // December 1, the normalized form for November 31.
-    golang::time::Time rec::AddDate(Time t, int years, int months, int days)
+    Time rec::AddDate(Time t, int years, int months, int days)
     {
         auto [year, month, day] = rec::Date(gocpp::recv(t));
         auto [hour, min, sec] = rec::Clock(gocpp::recv(t));
@@ -1190,7 +1190,7 @@ namespace golang::time
     // (Callers may want to use 0 as "time not set".)
     int64_t startNano = runtimeNano() - 1;
     // Now returns the current local time.
-    golang::time::Time Now()
+    Time Now()
     {
         auto [sec, nsec, mono] = now();
         mono -= startNano;
@@ -1200,25 +1200,25 @@ namespace golang::time
             // Seconds field overflowed the 33 bits available when
             // storing a monotonic time. This will be true after
             // March 16, 2157.
-            return golang::time::Time {uint64_t(nsec), sec + minWall, Local};
+            return Time {uint64_t(nsec), sec + minWall, Local};
         }
-        return golang::time::Time {hasMonotonic | (uint64_t(sec) << nsecShift) | uint64_t(nsec), mono, Local};
+        return Time {hasMonotonic | (uint64_t(sec) << nsecShift) | uint64_t(nsec), mono, Local};
     }
 
-    golang::time::Time unixTime(int64_t sec, int32_t nsec)
+    Time unixTime(int64_t sec, int32_t nsec)
     {
-        return golang::time::Time {uint64_t(nsec), sec + unixToInternal, Local};
+        return Time {uint64_t(nsec), sec + unixToInternal, Local};
     }
 
     // UTC returns t with the location set to UTC.
-    golang::time::Time rec::UTC(Time t)
+    Time rec::UTC(Time t)
     {
         rec::setLoc(gocpp::recv(t), & utcLoc);
         return t;
     }
 
     // Local returns t with the location set to local time.
-    golang::time::Time rec::Local(Time t)
+    Time rec::Local(Time t)
     {
         rec::setLoc(gocpp::recv(t), Local);
         return t;
@@ -1229,7 +1229,7 @@ namespace golang::time
     // purposes.
     //
     // In panics if loc is nil.
-    golang::time::Time rec::In(Time t, golang::time::Location* loc)
+    Time rec::In(Time t, golang::time::Location* loc)
     {
         if(loc == nullptr)
         {
@@ -1265,10 +1265,10 @@ namespace golang::time
     // If the zone begins at the beginning of time, start will be returned as a zero Time.
     // If the zone goes on forever, end will be returned as a zero Time.
     // The Location of the returned times will be the same as t.
-    std::tuple<golang::time::Time, golang::time::Time> rec::ZoneBounds(Time t)
+    std::tuple<Time, Time> rec::ZoneBounds(Time t)
     {
-        golang::time::Time start;
-        golang::time::Time end;
+        Time start;
+        Time end;
         auto [gocpp_id_18, gocpp_id_19, startSec, endSec, gocpp_id_20] = rec::lookup(gocpp::recv(t.loc), rec::unixSec(gocpp::recv(t)));
         if(startSec != alpha)
         {
@@ -1326,7 +1326,7 @@ namespace golang::time
     }
 
     // MarshalBinary implements the encoding.BinaryMarshaler interface.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(Time t)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::MarshalBinary(Time t)
     {
         // minutes east of UTC. -1 is UTC.
         int16_t offsetMin = {};
@@ -1382,7 +1382,7 @@ namespace golang::time
     }
 
     // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
-    struct gocpp::error rec::UnmarshalBinary(Time* t, gocpp::slice<unsigned char> data)
+    gocpp::error rec::UnmarshalBinary(Time* t, gocpp::slice<unsigned char> data)
     {
         auto buf = data;
         if(len(buf) == 0)
@@ -1420,7 +1420,7 @@ namespace golang::time
             offset += int(buf[2]);
         }
 
-        *t = golang::time::Time {};
+        *t = Time {};
         t->wall = uint64_t(nsec);
         t->ext = sec;
 
@@ -1442,13 +1442,13 @@ namespace golang::time
     }
 
     // GobEncode implements the gob.GobEncoder interface.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::GobEncode(Time t)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::GobEncode(Time t)
     {
         return rec::MarshalBinary(gocpp::recv(t));
     }
 
     // GobDecode implements the gob.GobDecoder interface.
-    struct gocpp::error rec::GobDecode(Time* t, gocpp::slice<unsigned char> data)
+    gocpp::error rec::GobDecode(Time* t, gocpp::slice<unsigned char> data)
     {
         return rec::UnmarshalBinary(gocpp::recv(t), data);
     }
@@ -1457,7 +1457,7 @@ namespace golang::time
     // The time is a quoted string in the RFC 3339 format with sub-second precision.
     // If the timestamp cannot be represented as valid RFC 3339
     // (e.g., the year is out of range), then an error is reported.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalJSON(Time t)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::MarshalJSON(Time t)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano) + len(""""_s));
         b = append(b, '"');
@@ -1473,7 +1473,7 @@ namespace golang::time
 
     // UnmarshalJSON implements the json.Unmarshaler interface.
     // The time must be a quoted string in the RFC 3339 format.
-    struct gocpp::error rec::UnmarshalJSON(Time* t, gocpp::slice<unsigned char> data)
+    gocpp::error rec::UnmarshalJSON(Time* t, gocpp::slice<unsigned char> data)
     {
         if(gocpp::string(data) == "null"_s)
         {
@@ -1494,7 +1494,7 @@ namespace golang::time
     // The time is formatted in RFC 3339 format with sub-second precision.
     // If the timestamp cannot be represented as valid RFC 3339
     // (e.g., the year is out of range), then an error is reported.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalText(Time t)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::MarshalText(Time t)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano));
         gocpp::error err;
@@ -1508,7 +1508,7 @@ namespace golang::time
 
     // UnmarshalText implements the encoding.TextUnmarshaler interface.
     // The time must be in the RFC 3339 format.
-    struct gocpp::error rec::UnmarshalText(Time* t, gocpp::slice<unsigned char> data)
+    gocpp::error rec::UnmarshalText(Time* t, gocpp::slice<unsigned char> data)
     {
         gocpp::error err = {};
         std::tie(*t, err) = parseStrictRFC3339(data);
@@ -1520,7 +1520,7 @@ namespace golang::time
     // It is valid to pass nsec outside the range [0, 999999999].
     // Not all sec values have a corresponding time value. One such
     // value is 1<<63-1 (the largest int64 value).
-    golang::time::Time Unix(int64_t sec, int64_t nsec)
+    Time Unix(int64_t sec, int64_t nsec)
     {
         if(nsec < 0 || nsec >= 1e9)
         {
@@ -1538,14 +1538,14 @@ namespace golang::time
 
     // UnixMilli returns the local Time corresponding to the given Unix time,
     // msec milliseconds since January 1, 1970 UTC.
-    golang::time::Time UnixMilli(int64_t msec)
+    Time UnixMilli(int64_t msec)
     {
         return Unix(msec / 1e3, (msec % 1e3) * 1e6);
     }
 
     // UnixMicro returns the local Time corresponding to the given Unix time,
     // usec microseconds since January 1, 1970 UTC.
-    golang::time::Time UnixMicro(int64_t usec)
+    Time UnixMicro(int64_t usec)
     {
         return Unix(usec / 1e6, (usec % 1e6) * 1e3);
     }
@@ -1603,7 +1603,7 @@ namespace golang::time
     // in the transition, but it does not guarantee which.
     //
     // Date panics if loc is nil.
-    golang::time::Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, golang::time::Location* loc)
+    Time Date(int year, golang::time::Month month, int day, int hour, int min, int sec, int nsec, golang::time::Location* loc)
     {
         if(loc == nullptr)
         {
@@ -1670,7 +1670,7 @@ namespace golang::time
     // zero time; it does not operate on the presentation form of the
     // time. Thus, Truncate(Hour) may return a time with a non-zero
     // minute, depending on the time's Location.
-    golang::time::Time rec::Truncate(Time t, Duration d)
+    Time rec::Truncate(Time t, Duration d)
     {
         rec::stripMono(gocpp::recv(t));
         if(d <= 0)
@@ -1689,7 +1689,7 @@ namespace golang::time
     // zero time; it does not operate on the presentation form of the
     // time. Thus, Round(Hour) may return a time with a non-zero
     // minute, depending on the time's Location.
-    golang::time::Time rec::Round(Time t, Duration d)
+    Time rec::Round(Time t, Duration d)
     {
         rec::stripMono(gocpp::recv(t));
         if(d <= 0)
@@ -1707,10 +1707,10 @@ namespace golang::time
     // div divides t by d and returns the quotient parity and remainder.
     // We don't use the quotient parity anymore (round half up instead of round to even)
     // but it's still here in case we change our minds.
-    std::tuple<int, golang::time::Duration> div(Time t, Duration d)
+    std::tuple<int, Duration> div(Time t, Duration d)
     {
         int qmod2;
-        golang::time::Duration r;
+        Duration r;
         auto neg = false;
         auto nsec = rec::nsec(gocpp::recv(t));
         auto sec = rec::sec(gocpp::recv(t));

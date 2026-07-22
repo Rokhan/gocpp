@@ -40,7 +40,7 @@ namespace golang::sync
 
     std::ostream& operator<<(std::ostream& os, const struct RWMutex& value);
     bool syscall_hasWaitingReaders(RWMutex* rw);
-    using rlocker = gocpp::defined<golang::sync::RWMutex, GoTag_rlocker>;
+    using rlocker = gocpp::defined<RWMutex, GoTag_rlocker>;
 }
 
 #include "golang/sync/mutex.h"
@@ -57,7 +57,7 @@ namespace golang::sync
         void Lock(RWMutex* rw);
         bool TryLock(RWMutex* rw);
         void Unlock(RWMutex* rw);
-        struct Locker RLocker(RWMutex* rw);
+        Locker RLocker(RWMutex* rw);
         void Lock(rlocker* r);
         void Unlock(rlocker* r);
     }

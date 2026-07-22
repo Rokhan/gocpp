@@ -13,7 +13,7 @@
 namespace golang::registry
 {
     extern gocpp::unsafe_pointer _;
-    std::tuple<uint32_t, struct gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size);
+    std::tuple<uint32_t, gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size);
 }
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/zerrors_windows.h"
@@ -25,15 +25,15 @@ namespace golang::registry
 {
     extern gocpp::error errERROR_IO_PENDING;
     extern gocpp::error errERROR_EINVAL;
-    struct gocpp::error errnoErr(syscall::Errno e);
+    gocpp::error errnoErr(syscall::Errno e);
     extern syscall::LazyDLL* modadvapi32;
     extern syscall::LazyDLL* modkernel32;
-    struct gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition);
-    struct gocpp::error regDeleteKey(syscall::Handle key, uint16_t* subkey);
-    struct gocpp::error regDeleteValue(syscall::Handle key, uint16_t* name);
-    struct gocpp::error regEnumValue(syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen);
-    struct gocpp::error regLoadMUIString(syscall::Handle key, uint16_t* name, uint16_t* buf, uint32_t buflen, uint32_t* buflenCopied, uint32_t flags, uint16_t* dir);
-    struct gocpp::error regSetValueEx(syscall::Handle key, uint16_t* valueName, uint32_t reserved, uint32_t vtype, unsigned char* buf, uint32_t bufsize);
+    gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition);
+    gocpp::error regDeleteKey(syscall::Handle key, uint16_t* subkey);
+    gocpp::error regDeleteValue(syscall::Handle key, uint16_t* name);
+    gocpp::error regEnumValue(syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen);
+    gocpp::error regLoadMUIString(syscall::Handle key, uint16_t* name, uint16_t* buf, uint32_t buflen, uint32_t* buflenCopied, uint32_t flags, uint16_t* dir);
+    gocpp::error regSetValueEx(syscall::Handle key, uint16_t* valueName, uint32_t reserved, uint32_t vtype, unsigned char* buf, uint32_t bufsize);
     extern syscall::LazyProc* procRegCreateKeyExW;
     extern syscall::LazyProc* procRegDeleteKeyW;
     extern syscall::LazyProc* procRegDeleteValueW;

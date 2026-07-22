@@ -85,7 +85,7 @@ namespace golang::main
 
     void main()
     {
-        auto c = gocpp::InitPtr<golang::main::SafeCounter>([=](auto& x) {
+        auto c = gocpp::InitPtr<SafeCounter>([=](auto& x) {
             x.v = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, int>>());
         });
         for(auto i = 0; i < 1000; i++)

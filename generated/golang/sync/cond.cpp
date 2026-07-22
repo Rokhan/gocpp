@@ -85,9 +85,9 @@ namespace golang::sync
     }
 
     // NewCond returns a new Cond with Locker l.
-    golang::sync::Cond* NewCond(struct Locker l)
+    Cond* NewCond(Locker l)
     {
-        return gocpp::InitPtr<golang::sync::Cond>([=](auto& x) {
+        return gocpp::InitPtr<Cond>([=](auto& x) {
             x.L = l;
         });
     }

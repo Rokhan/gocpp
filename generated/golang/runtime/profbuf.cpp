@@ -163,7 +163,7 @@ namespace golang::runtime
 
     // A profAtomic is the atomically-accessed word holding a profIndex.
     // A profIndex is the packet tag and data counts and flags bits, described above.
-    golang::runtime::profIndex rec::load(profAtomic* x)
+    profIndex rec::load(profAtomic* x)
     {
         return profIndex(atomic::Load64((uint64_t*)(x)));
     }
@@ -200,7 +200,7 @@ namespace golang::runtime
     }
 
     // addCountsAndClearFlags returns the packed form of "x + (data, tag) - all flags".
-    golang::runtime::profIndex rec::addCountsAndClearFlags(profIndex x, int data, int tag)
+    profIndex rec::addCountsAndClearFlags(profIndex x, int data, int tag)
     {
         return profIndex((((uint64_t(x) >> 34) + uint64_t((uint32_t(tag) << 2) >> 2)) << 34) | uint64_t(uint32_t(x) + uint32_t(data)));
     }
@@ -273,7 +273,7 @@ namespace golang::runtime
 
     // newProfBuf returns a new profiling buffer with room for
     // a header of hdrsize words and a buffer of at least bufwords words.
-    golang::runtime::profBuf* newProfBuf(int hdrsize, int bufwords, int tags)
+    profBuf* newProfBuf(int hdrsize, int bufwords, int tags)
     {
         if(auto min = 2 + hdrsize + 1; bufwords < min)
         {

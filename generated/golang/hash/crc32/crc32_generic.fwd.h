@@ -14,5 +14,5 @@ namespace golang::crc32
 
 namespace golang::crc32
 {
-    using slicing8Table = gocpp::defined<gocpp::array<golang::crc32::Table, 8>, GoTag_slicing8Table>;
+    using slicing8Table = gocpp::defined<gocpp::array<Table, 8>, GoTag_slicing8Table>;
 }

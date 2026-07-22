@@ -160,9 +160,9 @@ namespace golang::main
         go_any ifunc2 = (totoInt)();
         mocklib::Println(ifunc2);
 
-        auto m1 = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, golang::main::Vertex>>());
-        auto m2 = gocpp::make((gocpp::Tag<gocpp::map<gocpp::string, golang::main::Vertex>>()));
-        auto m3 = gocpp::make((gocpp::Tag<gocpp::map<gocpp::string, golang::main::Vertex>>()));
+        auto m1 = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Vertex>>());
+        auto m2 = gocpp::make((gocpp::Tag<gocpp::map<gocpp::string, Vertex>>()));
+        auto m3 = gocpp::make((gocpp::Tag<gocpp::map<gocpp::string, Vertex>>()));
 
         int i = {};
         mocklib::Println(m1, m2, m3, i);

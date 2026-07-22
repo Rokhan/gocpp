@@ -16,5 +16,5 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    using pinnerBits = gocpp::defined<golang::runtime::gcBits, GoTag_pinnerBits>;
+    using pinnerBits = gocpp::defined<gcBits, GoTag_pinnerBits>;
 }

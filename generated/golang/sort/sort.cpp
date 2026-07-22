@@ -108,7 +108,7 @@ namespace golang::sort
     //
     // Note: in many situations, the newer [slices.SortFunc] function is more
     // ergonomic and runs faster.
-    void Sort(struct Interface data)
+    void Sort(golang::sort::Interface data)
     {
         auto n = rec::Len(gocpp::recv(data));
         if(n <= 1)
@@ -239,16 +239,16 @@ namespace golang::sort
     }
 
     // Reverse returns the reverse order for data.
-    struct Interface Reverse(struct Interface data)
+    golang::sort::Interface Reverse(golang::sort::Interface data)
     {
-        return new golang::sort::reverse {data};
+        return new reverse {data};
     }
 
     // IsSorted reports whether data is sorted.
     //
     // Note: in many situations, the newer [slices.IsSortedFunc] function is more
     // ergonomic and runs faster.
-    bool IsSorted(struct Interface data)
+    bool IsSorted(golang::sort::Interface data)
     {
         auto n = rec::Len(gocpp::recv(data));
         for(auto i = n - 1; i > 0; i--)
@@ -398,7 +398,7 @@ namespace golang::sort
     //
     // Note: in many situations, the newer slices.SortStableFunc function is more
     // ergonomic and runs faster.
-    void Stable(struct Interface data)
+    void Stable(golang::sort::Interface data)
     {
         stable(data, rec::Len(gocpp::recv(data)));
     }

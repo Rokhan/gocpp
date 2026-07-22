@@ -166,9 +166,9 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern golang::runtime::mutex profInsertLock;
-    extern golang::runtime::mutex profBlockLock;
-    extern golang::runtime::mutex profMemActiveLock;
+    extern mutex profInsertLock;
+    extern mutex profBlockLock;
+    extern mutex profMemActiveLock;
     struct bucket
     {
         sys::NotInHeap _1{};
@@ -257,11 +257,11 @@ namespace golang::runtime
     void tryRecordGoroutineProfile(g* gp1, std::function<void ()> yield);
     void doRecordGoroutineProfile(g* gp1);
     void saveg(uintptr_t pc, uintptr_t sp, g* gp, StackRecord* r);
-    extern golang::runtime::mutex tracelock;
+    extern mutex tracelock;
     void tracealloc(gocpp::unsafe_pointer p, uintptr_t size, _type* typ);
-    extern gocpp::array<golang::runtime::mutex, len(golang::runtime::memRecord {}.future)> profMemFutureLock;
-    extern golang::runtime::mProfCycleHolder mProfCycle;
-    /*const uint32_t mProfCycleWrap = uint32_t(len(golang::runtime::memRecord {}.future)) * (2 << 24) [known mising deps] */;
+    extern gocpp::array<mutex, len(memRecord {}.future)> profMemFutureLock;
+    extern mProfCycleHolder mProfCycle;
+    /*const uint32_t mProfCycleWrap = uint32_t(len(memRecord {}.future)) * (2 << 24) [known mising deps] */;
     golang::runtime::bucket* newBucket(bucketType typ, int nstk);
     golang::runtime::bucket* stkbucket(bucketType typ, uintptr_t size, gocpp::slice<uintptr_t> stk, bool alloc);
     void mProf_Free(golang::runtime::bucket* b, uintptr_t size);
@@ -283,8 +283,8 @@ namespace golang::runtime
         std::tuple<uint32_t, bool> setFlushed(mProfCycleHolder* c);
         void increment(mProfCycleHolder* c);
         gocpp::slice<uintptr_t> stk(golang::runtime::bucket* b);
-        golang::runtime::memRecord* mp(golang::runtime::bucket* b);
-        golang::runtime::blockRecord* bp(golang::runtime::bucket* b);
+        memRecord* mp(golang::runtime::bucket* b);
+        blockRecord* bp(golang::runtime::bucket* b);
         void begin(lockTimer* lt);
         void end(lockTimer* lt);
         void recordLock(mLockProfile* prof, int64_t cycles, mutex* l);
@@ -295,7 +295,7 @@ namespace golang::runtime
         int64_t InUseBytes(MemProfileRecord* r);
         int64_t InUseObjects(MemProfileRecord* r);
         gocpp::slice<uintptr_t> Stack(MemProfileRecord* r);
-        golang::runtime::goroutineProfileState Load(goroutineProfileStateHolder* p);
+        goroutineProfileState Load(goroutineProfileStateHolder* p);
         void Store(goroutineProfileStateHolder* p, goroutineProfileState value);
         bool CompareAndSwap(goroutineProfileStateHolder* p, goroutineProfileState old, goroutineProfileState go_new);
     }

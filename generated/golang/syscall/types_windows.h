@@ -673,8 +673,8 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reparseDataBuffer& value);
-    golang::syscall::Timeval NsecToTimeval(int64_t nsec);
-    golang::syscall::Filetime NsecToFiletime(int64_t nsec);
+    Timeval NsecToTimeval(int64_t nsec);
+    Filetime NsecToFiletime(int64_t nsec);
     struct Win32finddata
     {
         uint32_t FileAttributes{};
@@ -812,7 +812,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceInfo& value);
-    using IpMaskString = gocpp::defined<golang::syscall::IpAddressString, GoTag_IpMaskString>;
+    using IpMaskString = gocpp::defined<IpAddressString, GoTag_IpMaskString>;
     struct CertChainContext
     {
         uint32_t Size{};
@@ -897,7 +897,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CertUsageMatch& value);
-    extern golang::syscall::GUID WSAID_CONNECTEX;
+    extern GUID WSAID_CONNECTEX;
     struct WSAProtocolInfo
     {
         uint32_t ServiceFlags1{};

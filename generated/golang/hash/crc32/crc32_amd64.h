@@ -28,10 +28,10 @@ namespace golang::crc32
 
 namespace golang::crc32
 {
-    using sse42Table = gocpp::defined<gocpp::array<golang::crc32::Table, 4>, GoTag_sse42Table>;
-    extern gocpp::array_ptr<golang::crc32::slicing8Table> archIeeeTable8;
-    extern gocpp::array_ptr<golang::crc32::sse42Table> castagnoliSSE42TableK1;
-    extern gocpp::array_ptr<golang::crc32::sse42Table> castagnoliSSE42TableK2;
+    using sse42Table = gocpp::defined<gocpp::array<Table, 4>, GoTag_sse42Table>;
+    extern gocpp::array_ptr<slicing8Table> archIeeeTable8;
+    extern gocpp::array_ptr<sse42Table> castagnoliSSE42TableK1;
+    extern gocpp::array_ptr<sse42Table> castagnoliSSE42TableK2;
     uint32_t castagnoliShift(gocpp::array_ptr<sse42Table> table, uint32_t crc);
 
     namespace rec

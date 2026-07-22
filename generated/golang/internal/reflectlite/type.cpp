@@ -106,12 +106,12 @@ namespace golang::reflectlite
         return rec::Kind(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    bool Type::TypeImpl<T, TStore, TInterface>::vImplements(struct Type u)
+    bool Type::TypeImpl<T, TStore, TInterface>::vImplements(golang::reflectlite::Type u)
     {
         return rec::Implements(gocpp::PtrRecv<T, false>(value.get()), u);
     }
     template<typename T, typename TStore, typename TInterface>
-    bool Type::TypeImpl<T, TStore, TInterface>::vAssignableTo(struct Type u)
+    bool Type::TypeImpl<T, TStore, TInterface>::vAssignableTo(golang::reflectlite::Type u)
     {
         return rec::AssignableTo(gocpp::PtrRecv<T, false>(value.get()), u);
     }
@@ -126,7 +126,7 @@ namespace golang::reflectlite
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    struct Type Type::TypeImpl<T, TStore, TInterface>::vElem()
+    golang::reflectlite::Type Type::TypeImpl<T, TStore, TInterface>::vElem()
     {
         return rec::Elem(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -136,7 +136,7 @@ namespace golang::reflectlite
         return rec::common(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    golang::reflectlite::uncommonType* Type::TypeImpl<T, TStore, TInterface>::vuncommon()
+    uncommonType* Type::TypeImpl<T, TStore, TInterface>::vuncommon()
     {
         return rec::uncommon(gocpp::PtrRecv<T, false>(value.get()));
     }
@@ -183,22 +183,22 @@ namespace golang::reflectlite
             return self.obj.value->vKind();
         }
 
-        bool Implements(const gocpp::PtrRecv<struct Type, false>& self, struct Type u)
+        bool Implements(const gocpp::PtrRecv<struct Type, false>& self, golang::reflectlite::Type u)
         {
             return self.ptr->value->vImplements(u);
         }
 
-        bool Implements(const gocpp::ObjRecv<struct Type>& self, struct Type u)
+        bool Implements(const gocpp::ObjRecv<struct Type>& self, golang::reflectlite::Type u)
         {
             return self.obj.value->vImplements(u);
         }
 
-        bool AssignableTo(const gocpp::PtrRecv<struct Type, false>& self, struct Type u)
+        bool AssignableTo(const gocpp::PtrRecv<struct Type, false>& self, golang::reflectlite::Type u)
         {
             return self.ptr->value->vAssignableTo(u);
         }
 
-        bool AssignableTo(const gocpp::ObjRecv<struct Type>& self, struct Type u)
+        bool AssignableTo(const gocpp::ObjRecv<struct Type>& self, golang::reflectlite::Type u)
         {
             return self.obj.value->vAssignableTo(u);
         }
@@ -223,12 +223,12 @@ namespace golang::reflectlite
             return self.obj.value->vString();
         }
 
-        struct Type Elem(const gocpp::PtrRecv<struct Type, false>& self)
+        golang::reflectlite::Type Elem(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value->vElem();
         }
 
-        struct Type Elem(const gocpp::ObjRecv<struct Type>& self)
+        golang::reflectlite::Type Elem(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value->vElem();
         }
@@ -243,12 +243,12 @@ namespace golang::reflectlite
             return self.obj.value->vcommon();
         }
 
-        golang::reflectlite::uncommonType* uncommon(const gocpp::PtrRecv<struct Type, false>& self)
+        uncommonType* uncommon(const gocpp::PtrRecv<struct Type, false>& self)
         {
             return self.ptr->value->vuncommon();
         }
 
-        golang::reflectlite::uncommonType* uncommon(const gocpp::ObjRecv<struct Type>& self)
+        uncommonType* uncommon(const gocpp::ObjRecv<struct Type>& self)
         {
             return self.obj.value->vuncommon();
         }
@@ -511,7 +511,7 @@ namespace golang::reflectlite
         return (abi::Type*)(resolveTypeOff(gocpp::unsafe_pointer(t.Type), int32_t(off)));
     }
 
-    golang::reflectlite::uncommonType* rec::uncommon(rtype t)
+    uncommonType* rec::uncommon(rtype t)
     {
         return rec::Uncommon(gocpp::recv(t));
     }
@@ -597,9 +597,9 @@ namespace golang::reflectlite
         return s.make_slice(i + 1);
     }
 
-    golang::reflectlite::rtype toRType(abi::Type* t)
+    rtype toRType(abi::Type* t)
     {
-        return golang::reflectlite::rtype {t};
+        return rtype {t};
     }
 
     abi::Type* elem(abi::Type* t)
@@ -612,12 +612,12 @@ namespace golang::reflectlite
         gocpp::panic("reflect: Elem of invalid type "_s + rec::String(gocpp::recv(toRType(t))));
     }
 
-    struct Type rec::Elem(rtype t)
+    golang::reflectlite::Type rec::Elem(rtype t)
     {
         return toType(elem(rec::common(gocpp::recv(t))));
     }
 
-    struct Type rec::In(rtype t, int i)
+    golang::reflectlite::Type rec::In(rtype t, int i)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -627,7 +627,7 @@ namespace golang::reflectlite
         return toType(rec::InSlice(gocpp::recv(tt))[i]);
     }
 
-    struct Type rec::Key(rtype t)
+    golang::reflectlite::Type rec::Key(rtype t)
     {
         auto tt = rec::MapType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -677,7 +677,7 @@ namespace golang::reflectlite
         return rec::NumOut(gocpp::recv(tt));
     }
 
-    struct Type rec::Out(rtype t, int i)
+    golang::reflectlite::Type rec::Out(rtype t, int i)
     {
         auto tt = rec::FuncType(gocpp::recv(t.Type));
         if(tt == nullptr)
@@ -701,15 +701,15 @@ namespace golang::reflectlite
 
     // TypeOf returns the reflection Type that represents the dynamic type of i.
     // If i is a nil interface value, TypeOf returns nil.
-    struct Type TypeOf(go_any i)
+    golang::reflectlite::Type TypeOf(go_any i)
     {
-        auto eface = *(golang::reflectlite::emptyInterface*)(gocpp::unsafe_pointer(& i));
+        auto eface = *(emptyInterface*)(gocpp::unsafe_pointer(& i));
         // Noescape so this doesn't make i to escape. See the comment
         // at Value.typ for why this is safe.
         return toType((abi::Type*)(noescape(gocpp::unsafe_pointer(eface.typ))));
     }
 
-    bool rec::Implements(rtype t, struct Type u)
+    bool rec::Implements(rtype t, golang::reflectlite::Type u)
     {
         if(u == nullptr)
         {
@@ -722,7 +722,7 @@ namespace golang::reflectlite
         return implements(rec::common(gocpp::recv(u)), rec::common(gocpp::recv(t)));
     }
 
-    bool rec::AssignableTo(rtype t, struct Type u)
+    bool rec::AssignableTo(rtype t, golang::reflectlite::Type u)
     {
         if(u == nullptr)
         {
@@ -1034,7 +1034,7 @@ namespace golang::reflectlite
     // a nil *rtype must be replaced by a nil Type, but in gccgo this
     // function takes care of ensuring that multiple *rtype for the same
     // type are coalesced into a single Type.
-    struct Type toType(abi::Type* t)
+    golang::reflectlite::Type toType(abi::Type* t)
     {
         if(t == nullptr)
         {

@@ -160,7 +160,7 @@ namespace golang::runtime
     }
 
     // info returns the pollInfo corresponding to pd.
-    golang::runtime::pollInfo rec::info(pollDesc* pd)
+    pollInfo rec::info(pollDesc* pd)
     {
         return pollInfo(rec::Load(gocpp::recv(pd->atomicInfo)));
     }
@@ -252,9 +252,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    golang::runtime::mutex netpollInitLock;
+    mutex netpollInitLock;
     atomic::Uint32 netpollInited;
-    golang::runtime::pollCache pollcache;
+    pollCache pollcache;
     atomic::Uint32 netpollWaiters;
     //go:linkname poll_runtime_pollServerInit internal/poll.runtime_pollServerInit
     void poll_runtime_pollServerInit()
@@ -290,7 +290,7 @@ namespace golang::runtime
     }
 
     //go:linkname poll_runtime_pollOpen internal/poll.runtime_pollOpen
-    std::tuple<golang::runtime::pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd)
+    std::tuple<pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd)
     {
         auto pd = rec::alloc(gocpp::recv(pollcache));
         lock(& pd->lock);
@@ -532,8 +532,8 @@ namespace golang::runtime
         // If we set the new deadline in the past, unblock currently pending IO if any.
         // Note that pd.publishInfo has already been called, above, immediately after modifying rd and wd.
         auto delta = int32_t(0);
-        golang::runtime::g* rg = {};
-        golang::runtime::g* wg = {};
+        g* rg = {};
+        g* wg = {};
         if(pd->rd < 0)
         {
             rg = netpollunblock(pd, 'r', false, & delta);
@@ -565,8 +565,8 @@ namespace golang::runtime
         pd->closing = true;
         pd->rseq++;
         pd->wseq++;
-        golang::runtime::g* rg = {};
-        golang::runtime::g* wg = {};
+        g* rg = {};
+        g* wg = {};
         rec::publishInfo(gocpp::recv(pd));
         auto delta = int32_t(0);
         rg = netpollunblock(pd, 'r', false, & delta);
@@ -607,8 +607,8 @@ namespace golang::runtime
     int32_t netpollready(gList* toRun, pollDesc* pd, int32_t mode)
     {
         auto delta = int32_t(0);
-        golang::runtime::g* rg = {};
-        golang::runtime::g* wg = {};
+        g* rg = {};
+        g* wg = {};
         if(mode == 'r' || mode == 'r' + 'w')
         {
             rg = netpollunblock(pd, 'r', true, & delta);
@@ -722,7 +722,7 @@ namespace golang::runtime
     // It adds any adjustment to netpollWaiters to *delta;
     // this adjustment should be applied after the goroutine has
     // been marked ready.
-    golang::runtime::g* netpollunblock(pollDesc* pd, int32_t mode, bool ioready, int32_t* delta)
+    g* netpollunblock(pollDesc* pd, int32_t mode, bool ioready, int32_t* delta)
     {
         auto gpp = & pd->rg;
         if(mode == 'w')
@@ -759,7 +759,7 @@ namespace golang::runtime
                 {
                     *delta -= 1;
                 }
-                return (golang::runtime::g*)(gocpp::unsafe_pointer(old));
+                return (g*)(gocpp::unsafe_pointer(old));
             }
         }
     }
@@ -781,7 +781,7 @@ namespace golang::runtime
             return;
         }
         auto delta = int32_t(0);
-        golang::runtime::g* rg = {};
+        g* rg = {};
         if(read)
         {
             if(pd->rd <= 0 || pd->rt.f == nullptr)
@@ -792,7 +792,7 @@ namespace golang::runtime
             rec::publishInfo(gocpp::recv(pd));
             rg = netpollunblock(pd, 'r', false, & delta);
         }
-        golang::runtime::g* wg = {};
+        g* wg = {};
         if(write)
         {
             if(pd->wd <= 0 || pd->wt.f == nullptr && ! read)
@@ -817,17 +817,17 @@ namespace golang::runtime
 
     void netpollDeadline(go_any arg, uintptr_t seq)
     {
-        netpolldeadlineimpl(gocpp::getValue<golang::runtime::pollDesc*>(arg), seq, true, true);
+        netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, true, true);
     }
 
     void netpollReadDeadline(go_any arg, uintptr_t seq)
     {
-        netpolldeadlineimpl(gocpp::getValue<golang::runtime::pollDesc*>(arg), seq, true, false);
+        netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, true, false);
     }
 
     void netpollWriteDeadline(go_any arg, uintptr_t seq)
     {
-        netpolldeadlineimpl(gocpp::getValue<golang::runtime::pollDesc*>(arg), seq, false, true);
+        netpolldeadlineimpl(gocpp::getValue<pollDesc*>(arg), seq, false, true);
     }
 
     // netpollAnyWaiters reports whether any goroutines are waiting for I/O.
@@ -845,12 +845,12 @@ namespace golang::runtime
         }
     }
 
-    golang::runtime::pollDesc* rec::alloc(pollCache* c)
+    pollDesc* rec::alloc(pollCache* c)
     {
         runtime::lock(& c->lock);
         if(c->first == nullptr)
         {
-            auto pdSize = gocpp::Sizeof<golang::runtime::pollDesc>();
+            auto pdSize = gocpp::Sizeof<pollDesc>();
             auto n = pollBlockSize / pdSize;
             if(n == 0)
             {
@@ -861,7 +861,7 @@ namespace golang::runtime
             auto mem = persistentalloc(n * pdSize, 0, & memstats.other_sys);
             for(auto i = uintptr_t(0); i < n; i++)
             {
-                auto pd = (golang::runtime::pollDesc*)(runtime::add(mem, i * pdSize));
+                auto pd = (pollDesc*)(runtime::add(mem, i * pdSize));
                 pd->link = c->first;
                 c->first = pd;
             }
@@ -881,13 +881,13 @@ namespace golang::runtime
     go_any rec::makeArg(pollDesc* pd)
     {
         go_any i;
-        auto x = (golang::runtime::eface*)(gocpp::unsafe_pointer(& i));
+        auto x = (eface*)(gocpp::unsafe_pointer(& i));
         x->_type = pdType;
         x->data = gocpp::unsafe_pointer(& pd->self);
         return i;
     }
 
-    go_any pdEface = (golang::runtime::pollDesc*)(nullptr);
-    golang::runtime::_type* pdType = efaceOf(& pdEface)->_type;
+    go_any pdEface = (pollDesc*)(nullptr);
+    _type* pdType = efaceOf(& pdEface)->_type;
 }
 

@@ -40,8 +40,8 @@ namespace golang::runtime
     uintptr_t runGCProg(unsigned char* prog, unsigned char* dst);
     void dumpGCProg(unsigned char* p);
     gocpp::slice<unsigned char> reflect_gcbits(go_any x);
-    golang::runtime::markBits markBitsForAddr(uintptr_t p);
-    golang::runtime::markBits markBitsForSpan(uintptr_t base);
+    markBits markBitsForAddr(uintptr_t p);
+    markBits markBitsForSpan(uintptr_t base);
 }
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/stack.h"
@@ -51,7 +51,7 @@ namespace golang::runtime
 namespace golang::runtime
 {
     void badPointer(mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff);
-    std::tuple<uintptr_t, golang::runtime::mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff);
+    std::tuple<uintptr_t, mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     void typeBitsBulkBarrier(_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
     struct debugPtrmaskStruct
     {
@@ -70,8 +70,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct debugPtrmaskStruct& value);
-    golang::runtime::bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
-    golang::runtime::mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog);
+    bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
+    mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog);
     void dematerializeGCProg(mspan* s);
     extern debugPtrmaskStruct debugPtrmask;
 }
@@ -83,14 +83,14 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::markBits allocBitsForIndex(mspan* s, uintptr_t allocBitIndex);
+        markBits allocBitsForIndex(mspan* s, uintptr_t allocBitIndex);
         void refillAllocCache(mspan* s, uint16_t whichByte);
         uint16_t nextFreeIndex(mspan* s);
         bool isFree(mspan* s, uintptr_t index);
         uintptr_t divideByElemSize(mspan* s, uintptr_t n);
         uintptr_t objIndex(mspan* s, uintptr_t p);
-        golang::runtime::markBits markBitsForIndex(mspan* s, uintptr_t objIndex);
-        golang::runtime::markBits markBitsForBase(mspan* s);
+        markBits markBitsForIndex(mspan* s, uintptr_t objIndex);
+        markBits markBitsForBase(mspan* s);
         bool isMarked(markBits m);
         void setMarked(markBits m);
         void setMarkedNonAtomic(markBits m);

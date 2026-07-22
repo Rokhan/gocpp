@@ -34,7 +34,7 @@ namespace golang::reflectlite
         auto v = ValueOf(slice);
         if(rec::Kind(gocpp::recv(v)) != Slice)
         {
-            gocpp::panic(gocpp::InitPtr<golang::reflectlite::ValueError>([=](auto& x) {
+            gocpp::panic(gocpp::InitPtr<ValueError>([=](auto& x) {
                 x.Method = "Swapper"_s;
                 x.Kind = rec::Kind(gocpp::recv(v));
             }));

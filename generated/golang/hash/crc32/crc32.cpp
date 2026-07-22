@@ -42,8 +42,8 @@ namespace golang::crc32
     // polynomial. MakeTable will always return this value when asked to make a
     // Castagnoli table so we can compare against it to find when the caller is
     // using this polynomial.
-    gocpp::array_ptr<golang::crc32::Table> castagnoliTable;
-    gocpp::array_ptr<golang::crc32::slicing8Table> castagnoliTable8;
+    gocpp::array_ptr<Table> castagnoliTable;
+    gocpp::array_ptr<slicing8Table> castagnoliTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
     sync::Once castagnoliOnce;
     atomic::Bool haveCastagnoli;
@@ -72,7 +72,7 @@ namespace golang::crc32
     // IEEETable is the table for the [IEEE] polynomial.
     crc32::Table* IEEETable = simpleMakeTable(IEEE);
     // ieeeTable8 is the slicing8Table for IEEE
-    gocpp::array_ptr<golang::crc32::slicing8Table> ieeeTable8;
+    gocpp::array_ptr<slicing8Table> ieeeTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateIEEE;
     sync::Once ieeeOnce;
     void ieeeInit()
@@ -95,7 +95,7 @@ namespace golang::crc32
 
     // MakeTable returns a [Table] constructed from the specified polynomial.
     // The contents of this [Table] must not be modified.
-    gocpp::array_ptr<golang::crc32::Table> MakeTable(uint32_t poly)
+    gocpp::array_ptr<Table> MakeTable(uint32_t poly)
     {
         //Go switch emulation
         {
@@ -164,7 +164,7 @@ namespace golang::crc32
         {
             rec::Do(gocpp::recv(ieeeOnce), ieeeInit);
         }
-        return new golang::crc32::digest {0, tab};
+        return new digest {0, tab};
     }
 
     // NewIEEE creates a new [hash.Hash32] computing the CRC-32 checksum using
@@ -192,7 +192,7 @@ namespace golang::crc32
         d->crc = 0;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::MarshalBinary(digest* d)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::MarshalBinary(digest* d)
     {
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, marshaledSize);
         b = append(b, magic);
@@ -201,7 +201,7 @@ namespace golang::crc32
         return {b, nullptr};
     }
 
-    struct gocpp::error rec::UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
+    gocpp::error rec::UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b)
     {
         if(len(b) < len(magic) || gocpp::string(b.make_slice(0, len(magic))) != magic)
         {
@@ -268,10 +268,10 @@ namespace golang::crc32
         return update(crc, tab, p, true);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(digest* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Write(digest* d, gocpp::slice<unsigned char> p)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         // We only create digest objects through New() which takes care of
         // initialization in this case.
         d->crc = update(d->crc, d->tab, p, false);

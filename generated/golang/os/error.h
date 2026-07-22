@@ -12,8 +12,8 @@
 
 namespace golang::os
 {
-    struct gocpp::error errNoDeadline();
-    struct gocpp::error errDeadlineExceeded();
+    gocpp::error errNoDeadline();
+    gocpp::error errDeadlineExceeded();
     struct timeout : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -89,13 +89,13 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SyscallError& value);
-    struct gocpp::error NewSyscallError(gocpp::string syscall, struct gocpp::error err);
-    bool IsExist(struct gocpp::error err);
-    bool IsNotExist(struct gocpp::error err);
-    bool IsPermission(struct gocpp::error err);
-    bool IsTimeout(struct gocpp::error err);
-    bool underlyingErrorIs(struct gocpp::error err, struct gocpp::error target);
-    struct gocpp::error underlyingError(struct gocpp::error err);
+    gocpp::error NewSyscallError(gocpp::string syscall, gocpp::error err);
+    bool IsExist(gocpp::error err);
+    bool IsNotExist(gocpp::error err);
+    bool IsPermission(gocpp::error err);
+    bool IsTimeout(gocpp::error err);
+    bool underlyingErrorIs(gocpp::error err, gocpp::error target);
+    gocpp::error underlyingError(gocpp::error err);
     extern gocpp::error ErrNoDeadline;
     extern gocpp::error ErrDeadlineExceeded;
 }
@@ -112,7 +112,7 @@ namespace golang::os
     namespace rec
     {
         gocpp::string Error(SyscallError* e);
-        struct gocpp::error Unwrap(SyscallError* e);
+        gocpp::error Unwrap(SyscallError* e);
         bool Timeout(SyscallError* e);
     }
 }

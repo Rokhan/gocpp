@@ -239,9 +239,9 @@ namespace golang::runtime
 
     // makeTraceFrames returns the frames corresponding to pcs. It may
     // allocate and may emit trace events.
-    gocpp::slice<golang::runtime::traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs)
+    gocpp::slice<traceFrame> makeTraceFrames(uintptr_t gen, gocpp::slice<uintptr_t> pcs)
     {
-        auto frames = gocpp::make(gocpp::Tag<gocpp::slice<golang::runtime::traceFrame>>(), 0, len(pcs));
+        auto frames = gocpp::make(gocpp::Tag<gocpp::slice<traceFrame>>(), 0, len(pcs));
         auto ci = CallersFrames(pcs);
         for(; ; )
         {
@@ -293,9 +293,9 @@ namespace golang::runtime
     }
 
     // makeTraceFrame sets up a traceFrame for a frame.
-    golang::runtime::traceFrame makeTraceFrame(uintptr_t gen, Frame f)
+    traceFrame makeTraceFrame(uintptr_t gen, Frame f)
     {
-        golang::runtime::traceFrame frame = {};
+        traceFrame frame = {};
         frame.PC = f.PC;
 
         auto fn = f.Function;

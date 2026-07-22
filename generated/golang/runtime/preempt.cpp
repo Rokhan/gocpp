@@ -127,7 +127,7 @@ namespace golang::runtime
     // the signal case.
     //
     //go:systemstack
-    golang::runtime::suspendGState suspendG(g* gp)
+    suspendGState suspendG(g* gp)
     {
         if(auto mp = getg()->m; mp->curg != nullptr && readgstatus(mp->curg) == _Grunning)
         {
@@ -143,7 +143,7 @@ namespace golang::runtime
 
         // Drive the goroutine to a preemption point.
         auto stopped = false;
-        golang::runtime::m* asyncM = {};
+        m* asyncM = {};
         uint32_t asyncGen = {};
         int64_t nextPreemptM = {};
         for(auto i = 0; ; i++)
@@ -180,7 +180,7 @@ namespace golang::runtime
                         // preemptStop may need to be cleared, but
                         // doing that here could race with goroutine
                         // reuse. Instead, goexit0 clears it.
-                        return gocpp::Init<golang::runtime::suspendGState>([=](auto& x) {
+                        return gocpp::Init<suspendGState>([=](auto& x) {
                             x.dead = true;
                         });
                         break;
@@ -228,7 +228,7 @@ namespace golang::runtime
                         // {_Gsyscall,_Gwaiting} -> _Grunning. Maybe
                         // for all those transitions we need to check
                         // suspended and deschedule?
-                        return gocpp::Init<golang::runtime::suspendGState>([=](auto& x) {
+                        return gocpp::Init<suspendGState>([=](auto& x) {
                             x.g = gp;
                             x.stopped = stopped;
                         });

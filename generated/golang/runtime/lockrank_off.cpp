@@ -53,7 +53,7 @@ namespace golang::runtime
     {
     }
 
-    golang::runtime::lockRank getLockRank(mutex* l)
+    lockRank getLockRank(mutex* l)
     {
         return 0;
     }

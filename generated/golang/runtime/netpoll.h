@@ -95,13 +95,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pollCache& value);
-    extern golang::runtime::mutex netpollInitLock;
+    extern mutex netpollInitLock;
     extern atomic::Uint32 netpollInited;
     extern atomic::Uint32 netpollWaiters;
     bool netpollblockcommit(g* gp, gocpp::unsafe_pointer gpp);
     void netpollgoready(g* gp, int traceskip);
-    extern golang::runtime::pollCache pollcache;
-    std::tuple<golang::runtime::pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd);
+    extern pollCache pollcache;
+    std::tuple<pollDesc*, int> poll_runtime_pollOpen(uintptr_t fd);
     void poll_runtime_pollClose(pollDesc* pd);
     int poll_runtime_pollReset(pollDesc* pd, int mode);
     int poll_runtime_pollWait(pollDesc* pd, int mode);
@@ -110,7 +110,7 @@ namespace golang::runtime
     void poll_runtime_pollUnblock(pollDesc* pd);
     int netpollcheckerr(pollDesc* pd, int32_t mode);
     bool netpollblock(pollDesc* pd, int32_t mode, bool waitio);
-    golang::runtime::g* netpollunblock(pollDesc* pd, int32_t mode, bool ioready, int32_t* delta);
+    g* netpollunblock(pollDesc* pd, int32_t mode, bool ioready, int32_t* delta);
     void netpolldeadlineimpl(pollDesc* pd, uintptr_t seq, bool read, bool write);
     extern go_any pdEface;
 }
@@ -124,7 +124,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern golang::runtime::_type* pdType;
+    extern _type* pdType;
 
     namespace rec
     {
@@ -132,11 +132,11 @@ namespace golang::runtime
         bool eventErr(pollInfo i);
         bool expiredReadDeadline(pollInfo i);
         bool expiredWriteDeadline(pollInfo i);
-        golang::runtime::pollInfo info(pollDesc* pd);
+        pollInfo info(pollDesc* pd);
         void publishInfo(pollDesc* pd);
         void setEventErr(pollDesc* pd, bool b, uintptr_t seq);
         void free(pollCache* c, pollDesc* pd);
-        golang::runtime::pollDesc* alloc(pollCache* c);
+        pollDesc* alloc(pollCache* c);
         go_any makeArg(pollDesc* pd);
     }
 }

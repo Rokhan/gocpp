@@ -148,9 +148,9 @@ namespace golang::runtime
     //
     // hasReflectStackObj indicates that this frame also has a reflect
     // function stack object, which the caller must synthesize.
-    std::tuple<golang::runtime::bitvector, bool> rec::argMapInternal(stkframe* frame)
+    std::tuple<bitvector, bool> rec::argMapInternal(stkframe* frame)
     {
-        golang::runtime::bitvector argMap;
+        bitvector argMap;
         bool hasReflectStackObj;
         auto f = frame->fn;
         if(f._func.args != abi::ArgsSizeUnknown)
@@ -200,10 +200,10 @@ namespace golang::runtime
                             go_throw("reflect mismatch"_s);
                         }
                         // No locals, so also no stack objects
-                        return {golang::runtime::bitvector {}, false};
+                        return {bitvector {}, false};
                     }
                     hasReflectStackObj = true;
-                    auto mv = *(golang::runtime::reflectMethodValue**)(gocpp::unsafe_pointer(arg0));
+                    auto mv = *(reflectMethodValue**)(gocpp::unsafe_pointer(arg0));
                     // Figure out whether the return values are valid.
                     // Reflect will update this value after it copies
                     // in the return values.
@@ -233,11 +233,11 @@ namespace golang::runtime
 
     // getStackMap returns the locals and arguments live pointer maps, and
     // stack object list for frame.
-    std::tuple<golang::runtime::bitvector, golang::runtime::bitvector, gocpp::slice<golang::runtime::stackObjectRecord>> rec::getStackMap(stkframe* frame, bool debug)
+    std::tuple<bitvector, bitvector, gocpp::slice<stackObjectRecord>> rec::getStackMap(stkframe* frame, bool debug)
     {
-        golang::runtime::bitvector locals;
-        golang::runtime::bitvector args;
-        gocpp::slice<golang::runtime::stackObjectRecord> objs;
+        bitvector locals;
+        bitvector args;
+        gocpp::slice<stackObjectRecord> objs;
         auto targetpc = frame->continpc;
         if(targetpc == 0)
         {
@@ -285,7 +285,7 @@ namespace golang::runtime
         if(size > minsize)
         {
             auto stackid = pcdata;
-            auto stkmap = (golang::runtime::stackmap*)(funcdata(f, abi::FUNCDATA_LocalsPointerMaps));
+            auto stkmap = (stackmap*)(funcdata(f, abi::FUNCDATA_LocalsPointerMaps));
             if(stkmap == nullptr || stkmap->n <= 0)
             {
                 print("runtime: frame "_s, funcname(f), " untyped locals "_s, hex(frame->varp - size), "+"_s, hex(size), "\n"_s);
@@ -320,7 +320,7 @@ namespace golang::runtime
         {
             // Non-empty argument frame, but not a special map.
             // Fetch the argument map at pcdata.
-            auto stackmap_tmp = (golang::runtime::stackmap*)(funcdata(f, abi::FUNCDATA_ArgsPointerMaps));
+            auto stackmap_tmp = (stackmap*)(funcdata(f, abi::FUNCDATA_ArgsPointerMaps));
             auto& stackmap = stackmap_tmp;
             if(stackmap == nullptr || stackmap->n <= 0)
             {
@@ -360,7 +360,7 @@ namespace golang::runtime
             {
                 auto n = *(uintptr_t*)(p);
                 p = runtime::add(p, goarch::PtrSize);
-                auto r0 = (golang::runtime::stackObjectRecord*)(noescape(p));
+                auto r0 = (stackObjectRecord*)(noescape(p));
                 // Note: the noescape above is needed to keep
                 // getStackMap from "leaking param content:
                 // frame".  That leak propagates up to getgcmask, then
@@ -373,7 +373,7 @@ namespace golang::runtime
         return {locals, args, objs};
     }
 
-    gocpp::array<golang::runtime::stackObjectRecord, 1> methodValueCallFrameObjs;
+    gocpp::array<stackObjectRecord, 1> methodValueCallFrameObjs;
     void stkobjinit()
     {
         go_any abiRegArgsEface = abi::RegArgs {};
@@ -385,7 +385,7 @@ namespace golang::runtime
         // Set methodValueCallFrameObjs[0].gcdataoff so that
         // stackObjectRecord.gcdata() will work correctly with it.
         auto ptr = uintptr_t(gocpp::unsafe_pointer(& methodValueCallFrameObjs[0]));
-        golang::runtime::moduledata* mod = {};
+        moduledata* mod = {};
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
         {
             if(datap->gofunc <= ptr && ptr < datap->end)
@@ -398,7 +398,7 @@ namespace golang::runtime
         {
             go_throw("methodValueCallFrameObjs is not in a module"_s);
         }
-        methodValueCallFrameObjs[0] = gocpp::Init<golang::runtime::stackObjectRecord>([=](auto& x) {
+        methodValueCallFrameObjs[0] = gocpp::Init<stackObjectRecord>([=](auto& x) {
             x.off = - int32_t(alignUp(abiRegArgsType->Size_, 8));
             x.size = int32_t(abiRegArgsType->Size_);
             x._ptrdata = int32_t(abiRegArgsType->PtrBytes);

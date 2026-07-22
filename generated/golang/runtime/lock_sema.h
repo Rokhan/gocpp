@@ -29,7 +29,7 @@ namespace golang::runtime
     bool notetsleep_internal(note* n, int64_t ns, g* gp, int64_t deadline);
     bool notetsleep(note* n, int64_t ns);
     bool notetsleepg(note* n, int64_t ns);
-    std::tuple<golang::runtime::g*, bool> beforeIdle(int64_t, int64_t);
+    std::tuple<g*, bool> beforeIdle(int64_t, int64_t);
 
     namespace rec
     {

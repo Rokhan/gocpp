@@ -92,9 +92,9 @@ namespace golang::runtime
     }
 
     // write returns an a traceWriter that writes into the current M's stream.
-    golang::runtime::traceWriter rec::writer(traceLocker tl)
+    traceWriter rec::writer(traceLocker tl)
     {
-        return gocpp::Init<golang::runtime::traceWriter>([=](auto& x) {
+        return gocpp::Init<traceWriter>([=](auto& x) {
             x.traceLocker = tl;
             x.traceBuf = tl.mp->trace.buf[tl.gen % 2];
         });
@@ -107,10 +107,10 @@ namespace golang::runtime
     // - trace.gen is prevented from advancing.
     //
     // buf may be nil.
-    golang::runtime::traceWriter unsafeTraceWriter(uintptr_t gen, traceBuf* buf)
+    traceWriter unsafeTraceWriter(uintptr_t gen, traceBuf* buf)
     {
-        return gocpp::Init<golang::runtime::traceWriter>([=](auto& x) {
-            x.traceLocker = gocpp::Init<golang::runtime::traceLocker>([=](auto& x) {
+        return gocpp::Init<traceWriter>([=](auto& x) {
+            x.traceLocker = gocpp::Init<traceLocker>([=](auto& x) {
                 x.gen = gen;
             });
             x.traceBuf = buf;
@@ -132,7 +132,7 @@ namespace golang::runtime
     // ensure makes sure that at least maxSize bytes are available to write.
     //
     // Returns whether the buffer was flushed.
-    std::tuple<golang::runtime::traceWriter, bool> rec::ensure(traceWriter w, int maxSize)
+    std::tuple<traceWriter, bool> rec::ensure(traceWriter w, int maxSize)
     {
         auto refill = w.traceBuf == nullptr || ! rec::available(gocpp::recv(w), maxSize);
         if(refill)
@@ -143,7 +143,7 @@ namespace golang::runtime
     }
 
     // flush puts w.traceBuf on the queue of full buffers.
-    golang::runtime::traceWriter rec::flush(traceWriter w)
+    traceWriter rec::flush(traceWriter w)
     {
         systemstack([=]() mutable -> void
         {
@@ -159,7 +159,7 @@ namespace golang::runtime
     }
 
     // refill puts w.traceBuf on the queue of full buffers and refresh's w's buffer.
-    golang::runtime::traceWriter rec::refill(traceWriter w)
+    traceWriter rec::refill(traceWriter w)
     {
         systemstack([=]() mutable -> void
         {
@@ -177,7 +177,7 @@ namespace golang::runtime
             else
             {
                 unlock(& trace.lock);
-                w.traceBuf = (golang::runtime::traceBuf*)(sysAlloc(gocpp::Sizeof<golang::runtime::traceBuf>(), & memstats.other_sys));
+                w.traceBuf = (traceBuf*)(sysAlloc(gocpp::Sizeof<traceBuf>(), & memstats.other_sys));
                 if(w.traceBuf == nullptr)
                 {
                     go_throw("trace: out of memory"_s);
@@ -259,7 +259,7 @@ namespace golang::runtime
     }
 
     // pop dequeues from the queue of buffers.
-    golang::runtime::traceBuf* rec::pop(traceBufQueue* q)
+    traceBuf* rec::pop(traceBufQueue* q)
     {
         auto buf = q->head;
         if(buf == nullptr)

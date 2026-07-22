@@ -15,5 +15,5 @@ namespace golang::runtime
 namespace golang::runtime
 {
     using pageBits = gocpp::defined<gocpp::array<uint64_t, pallocChunkPages / 64>, GoTag_pageBits>;
-    using pallocBits = gocpp::defined<golang::runtime::pageBits, GoTag_pallocBits>;
+    using pallocBits = gocpp::defined<pageBits, GoTag_pallocBits>;
 }

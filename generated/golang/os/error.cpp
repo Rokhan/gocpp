@@ -37,7 +37,7 @@ namespace golang::os
     gocpp::error ErrClosed = fs::ErrClosed;
     gocpp::error ErrNoDeadline = errNoDeadline();
     gocpp::error ErrDeadlineExceeded = errDeadlineExceeded();
-    struct gocpp::error errNoDeadline()
+    gocpp::error errNoDeadline()
     {
         return poll::ErrNoDeadline;
     }
@@ -49,7 +49,7 @@ namespace golang::os
     // as documented by net.Conn.SetDeadline, without requiring any extra
     // work in the net package and without requiring the internal/poll
     // package to import os (which it can't, because that would be circular).
-    struct gocpp::error errDeadlineExceeded()
+    gocpp::error errDeadlineExceeded()
     {
         return poll::ErrDeadlineExceeded;
     }
@@ -141,7 +141,7 @@ namespace golang::os
         return e->Syscall + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
-    struct gocpp::error rec::Unwrap(SyscallError* e)
+    gocpp::error rec::Unwrap(SyscallError* e)
     {
         return e->Err;
     }
@@ -156,13 +156,13 @@ namespace golang::os
     // NewSyscallError returns, as an error, a new SyscallError
     // with the given system call name and error details.
     // As a convenience, if err is nil, NewSyscallError returns nil.
-    struct gocpp::error NewSyscallError(gocpp::string syscall, struct gocpp::error err)
+    gocpp::error NewSyscallError(gocpp::string syscall, gocpp::error err)
     {
         if(err == nullptr)
         {
             return nullptr;
         }
-        return gocpp::error(new golang::os::SyscallError {syscall, err});
+        return gocpp::error(new SyscallError {syscall, err});
     }
 
     // IsExist returns a boolean indicating whether the error is known to report
@@ -171,7 +171,7 @@ namespace golang::os
     //
     // This function predates errors.Is. It only supports errors returned by
     // the os package. New code should use errors.Is(err, fs.ErrExist).
-    bool IsExist(struct gocpp::error err)
+    bool IsExist(gocpp::error err)
     {
         return underlyingErrorIs(err, ErrExist);
     }
@@ -182,7 +182,7 @@ namespace golang::os
     //
     // This function predates errors.Is. It only supports errors returned by
     // the os package. New code should use errors.Is(err, fs.ErrNotExist).
-    bool IsNotExist(struct gocpp::error err)
+    bool IsNotExist(gocpp::error err)
     {
         return underlyingErrorIs(err, ErrNotExist);
     }
@@ -193,7 +193,7 @@ namespace golang::os
     //
     // This function predates errors.Is. It only supports errors returned by
     // the os package. New code should use errors.Is(err, fs.ErrPermission).
-    bool IsPermission(struct gocpp::error err)
+    bool IsPermission(gocpp::error err)
     {
         return underlyingErrorIs(err, ErrPermission);
     }
@@ -206,13 +206,13 @@ namespace golang::os
     // error EWOULDBLOCK sometimes indicates a timeout and sometimes does not.
     // New code should use errors.Is with a value appropriate to the call
     // returning the error, such as os.ErrDeadlineExceeded.
-    bool IsTimeout(struct gocpp::error err)
+    bool IsTimeout(gocpp::error err)
     {
         auto [terr, ok] = gocpp::getValue<timeout>(underlyingError(err));
         return ok && rec::Timeout(gocpp::recv(terr));
     }
 
-    bool underlyingErrorIs(struct gocpp::error err, struct gocpp::error target)
+    bool underlyingErrorIs(gocpp::error err, gocpp::error target)
     {
         // Note that this function is not errors.Is:
         // underlyingError only unwraps the specific error-wrapping types
@@ -223,12 +223,12 @@ namespace golang::os
             return true;
         }
         // To preserve prior behavior, only examine syscall errors.
-        auto [e, ok] = gocpp::getValue<golang::os::syscallErrorType>(err);
+        auto [e, ok] = gocpp::getValue<syscallErrorType>(err);
         return ok && rec::Is(gocpp::recv(e), target);
     }
 
     // underlyingError returns the underlying error for known os error types.
-    struct gocpp::error underlyingError(struct gocpp::error err)
+    gocpp::error underlyingError(gocpp::error err)
     {
         //Go type switch emulation
         {

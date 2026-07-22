@@ -107,34 +107,34 @@ namespace golang::runtime
 
     // partialUnswept returns the spanSet which holds partially-filled
     // unswept spans for this sweepgen.
-    golang::runtime::spanSet* rec::partialUnswept(mcentral* c, uint32_t sweepgen)
+    spanSet* rec::partialUnswept(mcentral* c, uint32_t sweepgen)
     {
         return & c->partial[1 - sweepgen / 2 % 2];
     }
 
     // partialSwept returns the spanSet which holds partially-filled
     // swept spans for this sweepgen.
-    golang::runtime::spanSet* rec::partialSwept(mcentral* c, uint32_t sweepgen)
+    spanSet* rec::partialSwept(mcentral* c, uint32_t sweepgen)
     {
         return & c->partial[sweepgen / 2 % 2];
     }
 
     // fullUnswept returns the spanSet which holds unswept spans without any
     // free slots for this sweepgen.
-    golang::runtime::spanSet* rec::fullUnswept(mcentral* c, uint32_t sweepgen)
+    spanSet* rec::fullUnswept(mcentral* c, uint32_t sweepgen)
     {
         return & c->full[1 - sweepgen / 2 % 2];
     }
 
     // fullSwept returns the spanSet which holds swept spans without any
     // free slots for this sweepgen.
-    golang::runtime::spanSet* rec::fullSwept(mcentral* c, uint32_t sweepgen)
+    spanSet* rec::fullSwept(mcentral* c, uint32_t sweepgen)
     {
         return & c->full[sweepgen / 2 % 2];
     }
 
     // Allocate a span to use in an mcache.
-    golang::runtime::mspan* rec::cacheSpan(mcentral* c)
+    mspan* rec::cacheSpan(mcentral* c)
     {
         // Deduct credit for this span allocation and sweep if necessary.
         auto spanBytes = uintptr_t(class_to_allocnpages[rec::sizeclass(gocpp::recv(c->spanclass))]) * _PageSize;
@@ -162,8 +162,8 @@ namespace golang::runtime
         // allocation if the budget runs low.
         auto spanBudget = 100;
 
-        golang::runtime::mspan* s = {};
-        golang::runtime::sweepLocker sl = {};
+        mspan* s = {};
+        sweepLocker sl = {};
 
         // Try partial swept spans first.
         auto sg = mheap_.sweepgen;
@@ -313,7 +313,7 @@ namespace golang::runtime
             // aren't in the global sweep lists, so mark termination
             // itself holds up sweep completion until all mcaches
             // have been swept.
-            auto ss = golang::runtime::sweepLocked {s};
+            auto ss = sweepLocked {s};
             rec::sweep(gocpp::recv(ss), false);
         }
         else
@@ -333,7 +333,7 @@ namespace golang::runtime
     }
 
     // grow allocates a new empty span from the heap and initializes it for c's size class.
-    golang::runtime::mspan* rec::grow(mcentral* c)
+    mspan* rec::grow(mcentral* c)
     {
         auto npages = uintptr_t(class_to_allocnpages[rec::sizeclass(gocpp::recv(c->spanclass))]);
         auto size = uintptr_t(class_to_size[rec::sizeclass(gocpp::recv(c->spanclass))]);

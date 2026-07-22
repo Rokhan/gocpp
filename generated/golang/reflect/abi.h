@@ -135,7 +135,7 @@ namespace golang::reflect
 
 namespace golang::reflect
 {
-    golang::reflect::abiDesc newAbiDesc(funcType* t, abi::Type* rcvr);
+    abiDesc newAbiDesc(funcType* t, abi::Type* rcvr);
 }
 
 #include "golang/internal/abi/type.h"
@@ -146,9 +146,9 @@ namespace golang::reflect
     namespace rec
     {
         void dump(abiSeq* a);
-        gocpp::slice<golang::reflect::abiStep> stepsForValue(abiSeq* a, int i);
-        golang::reflect::abiStep* addArg(abiSeq* a, abi::Type* t);
-        std::tuple<golang::reflect::abiStep*, bool> addRcvr(abiSeq* a, abi::Type* rcvr);
+        gocpp::slice<abiStep> stepsForValue(abiSeq* a, int i);
+        abiStep* addArg(abiSeq* a, abi::Type* t);
+        std::tuple<abiStep*, bool> addRcvr(abiSeq* a, abi::Type* rcvr);
         bool regAssign(abiSeq* a, abi::Type* t, uintptr_t offset);
         bool assignIntN(abiSeq* a, uintptr_t offset, uintptr_t size, int n, uint8_t ptrMap);
         bool assignFloatN(abiSeq* a, uintptr_t offset, uintptr_t size, int n);

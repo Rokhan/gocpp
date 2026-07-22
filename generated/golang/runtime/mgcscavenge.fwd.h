@@ -52,7 +52,7 @@ namespace golang::runtime
     // scavenge. This is the opposite of "empty," used elsewhere in this
     // file. The reason we say "HasFree" here is so the zero value is
     // correct for a newly-grown chunk. (New memory is scavenged.)
-    const golang::runtime::scavChunkFlags scavChunkHasFree = 1 << 0;
+    const scavChunkFlags scavChunkHasFree = 1 << 0;
     const int scavChunkFlagsMask = (1 << scavChunkMaxFlags) - 1;
 }
 #include "golang/internal/goos/zgoos_windows.fwd.h"

@@ -117,7 +117,7 @@ namespace golang::sync
 
     std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value);
     void storePoolChainElt(poolChainElt** pp, poolChainElt* v);
-    golang::sync::poolChainElt* loadPoolChainElt(poolChainElt** pp);
+    poolChainElt* loadPoolChainElt(poolChainElt** pp);
 
     namespace rec
     {

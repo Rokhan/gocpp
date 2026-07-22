@@ -80,7 +80,7 @@ namespace golang::runtime
     // if the capacity of the bucket is 1 cpu-second, then the limiter will not
     // kick in until at least 1 full cpu-second in the last 2 cpu-second window
     // is spent on GC CPU time.
-    golang::runtime::gcCPULimiterState gcCPULimiter;
+    gcCPULimiterState gcCPULimiter;
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_0::operator T()
@@ -480,7 +480,7 @@ namespace golang::runtime
     // This type may use no more than limiterEventBits bits of information.
     // limiterEventStamp is a nanotime timestamp packed with a limiterEventType.
     // makeLimiterEventStamp creates a new stamp from the event type and the current timestamp.
-    golang::runtime::limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now)
+    limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now)
     {
         return limiterEventStamp((uint64_t(typ) << (64 - limiterEventBits)) | (uint64_t(now) &^ limiterEventTypeMask));
     }
@@ -502,7 +502,7 @@ namespace golang::runtime
     }
 
     // type extracts the event type from the stamp.
-    golang::runtime::limiterEventType rec::typ(limiterEventStamp s)
+    limiterEventType rec::typ(limiterEventStamp s)
     {
         return limiterEventType(s >> (64 - limiterEventBits));
     }
@@ -562,9 +562,9 @@ namespace golang::runtime
     //
     // Returns the type of the in-flight event, as well as how long it's currently been
     // executing for. Returns limiterEventNone if no event is active.
-    std::tuple<golang::runtime::limiterEventType, int64_t> rec::consume(limiterEvent* e, int64_t now)
+    std::tuple<limiterEventType, int64_t> rec::consume(limiterEvent* e, int64_t now)
     {
-        golang::runtime::limiterEventType typ;
+        limiterEventType typ;
         int64_t duration;
         // Read the limiter event timestamp and update it to now.
         for(; ; )

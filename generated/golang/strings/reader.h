@@ -30,7 +30,7 @@ namespace golang::strings
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
-    golang::strings::Reader* NewReader(gocpp::string s);
+    Reader* NewReader(gocpp::string s);
 }
 
 #include "golang/io/io.h"
@@ -42,14 +42,14 @@ namespace golang::strings
     {
         int Len(Reader* r);
         int64_t Size(Reader* r);
-        std::tuple<int, struct gocpp::error> Read(Reader* r, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> ReadAt(Reader* r, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<unsigned char, struct gocpp::error> ReadByte(Reader* r);
-        struct gocpp::error UnreadByte(Reader* r);
-        std::tuple<gocpp::rune, int, struct gocpp::error> ReadRune(Reader* r);
-        struct gocpp::error UnreadRune(Reader* r);
-        std::tuple<int64_t, struct gocpp::error> Seek(Reader* r, int64_t offset, int whence);
-        std::tuple<int64_t, struct gocpp::error> WriteTo(Reader* r, io::Writer w);
+        std::tuple<int, gocpp::error> Read(Reader* r, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> ReadAt(Reader* r, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<unsigned char, gocpp::error> ReadByte(Reader* r);
+        gocpp::error UnreadByte(Reader* r);
+        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(Reader* r);
+        gocpp::error UnreadRune(Reader* r);
+        std::tuple<int64_t, gocpp::error> Seek(Reader* r, int64_t offset, int whence);
+        std::tuple<int64_t, gocpp::error> WriteTo(Reader* r, io::Writer w);
         void Reset(Reader* r, gocpp::string s);
     }
 }

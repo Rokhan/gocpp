@@ -321,7 +321,7 @@ namespace golang::runtime
             // could be a small by-value struct, but C and Go
             // struct layouts are compatible, so we can copy these
             // directly, too.
-            auto part = gocpp::Init<golang::runtime::abiPart>([=](auto& x) {
+            auto part = gocpp::Init<abiPart>([=](auto& x) {
                 x.kind = abiPartStack;
                 x.srcStackOffset = p->srcStackSize;
                 x.dstStackOffset = p->dstStackSize;
@@ -397,7 +397,7 @@ namespace golang::runtime
                     break;
                 case 14:
                 {
-                    auto at = (golang::runtime::arraytype*)(gocpp::unsafe_pointer(t));
+                    auto at = (arraytype*)(gocpp::unsafe_pointer(t));
                     if(at->Len == 1)
                     {
                         // TODO fix when runtime is fully commoned up w/ abi.Type
@@ -407,7 +407,7 @@ namespace golang::runtime
                 }
                 case 15:
                 {
-                    auto st = (golang::runtime::structtype*)(gocpp::unsafe_pointer(t));
+                    auto st = (structtype*)(gocpp::unsafe_pointer(t));
                     for(auto [i, gocpp_ignored] : st->Fields)
                     {
                         auto f = & st->Fields[i];
@@ -437,7 +437,7 @@ namespace golang::runtime
         {
             return false;
         }
-        p->parts = append(p->parts, gocpp::Init<golang::runtime::abiPart>([=](auto& x) {
+        p->parts = append(p->parts, gocpp::Init<abiPart>([=](auto& x) {
             x.kind = abiPartReg;
             x.srcStackOffset = p->srcStackSize + offset;
             x.dstRegister = p->dstRegisters;
@@ -543,10 +543,10 @@ namespace golang::runtime
         {
             gocpp::panic("compileCallback: expected function with one uintptr-sized result"_s);
         }
-        auto ft = (golang::runtime::functype*)(gocpp::unsafe_pointer(fn._type));
+        auto ft = (functype*)(gocpp::unsafe_pointer(fn._type));
 
         // Check arguments and construct ABI translation.
-        golang::runtime::abiDesc abiMap = {};
+        abiDesc abiMap = {};
         for(auto [gocpp_ignored, t] : rec::InSlice(gocpp::recv(ft)))
         {
             rec::assignArg(gocpp::recv(abiMap), t);
@@ -596,7 +596,7 @@ namespace golang::runtime
             retPop = abiMap.srcStackSize;
         }
 
-        auto key = golang::runtime::winCallbackKey {(golang::runtime::funcval*)(fn.data), cdecl};
+        auto key = winCallbackKey {(funcval*)(fn.data), cdecl};
 
         cbsLock();
 
@@ -610,7 +610,7 @@ namespace golang::runtime
         // Register the callback.
         if(cbs.index == nullptr)
         {
-            cbs.index = gocpp::make(gocpp::Tag<gocpp::map<golang::runtime::winCallbackKey, int>>());
+            cbs.index = gocpp::make(gocpp::Tag<gocpp::map<winCallbackKey, int>>());
         }
         auto n = cbs.n;
         if(n >= len(cbs.ctxt))
@@ -618,7 +618,7 @@ namespace golang::runtime
             cbsUnlock();
             go_throw("too many callback functions"_s);
         }
-        auto c = golang::runtime::winCallback {key.fn, retPop, abiMap};
+        auto c = winCallback {key.fn, retPop, abiMap};
         cbs.ctxt[n] = c;
         cbs.index[key] = n;
         cbs.n++;

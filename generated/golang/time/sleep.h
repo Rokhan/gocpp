@@ -65,9 +65,9 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Timer& value);
-    gocpp::channel<golang::time::Time> After(Duration d);
-    golang::time::Timer* NewTimer(Duration d);
-    golang::time::Timer* AfterFunc(Duration d, std::function<void ()> f);
+    gocpp::channel<Time> After(Duration d);
+    Timer* NewTimer(Duration d);
+    Timer* AfterFunc(Duration d, std::function<void ()> f);
 }
 
 #include "golang/time/time.h"

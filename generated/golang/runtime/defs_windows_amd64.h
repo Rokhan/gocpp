@@ -125,7 +125,7 @@ namespace golang::runtime
         void set_ip(context* c, uintptr_t x);
         void set_sp(context* c, uintptr_t x);
         void set_fp(context* c, uintptr_t x);
-        golang::runtime::context* ctx(_DISPATCHER_CONTEXT* c);
+        context* ctx(_DISPATCHER_CONTEXT* c);
     }
 }
 

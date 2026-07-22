@@ -18,10 +18,10 @@ namespace golang::bytes
     const long MinRead = 512;
     // Don't use iota for these, as the values need to correspond with the
     // names and comments, which is easier to see when being explicit.
-    const golang::bytes::readOp opRead = - 1;
-    const golang::bytes::readOp opInvalid = 0;
-    const golang::bytes::readOp opReadRune1 = 1;
-    const golang::bytes::readOp opReadRune2 = 2;
-    const golang::bytes::readOp opReadRune3 = 3;
-    const golang::bytes::readOp opReadRune4 = 4;
+    const readOp opRead = - 1;
+    const readOp opInvalid = 0;
+    const readOp opReadRune1 = 1;
+    const readOp opReadRune2 = 2;
+    const readOp opReadRune3 = 3;
+    const readOp opReadRune4 = 4;
 }

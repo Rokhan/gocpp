@@ -115,9 +115,9 @@ namespace golang::syscall
         return (int64_t(tv->Sec) * 1e6 + int64_t(tv->Usec)) * 1e3;
     }
 
-    golang::syscall::Timeval NsecToTimeval(int64_t nsec)
+    Timeval NsecToTimeval(int64_t nsec)
     {
-        golang::syscall::Timeval tv;
+        Timeval tv;
         tv.Sec = int32_t(nsec / 1e9);
         tv.Usec = int32_t(nsec % 1e9 / 1e3);
         return tv;
@@ -282,9 +282,9 @@ namespace golang::syscall
         return nsec;
     }
 
-    golang::syscall::Filetime NsecToFiletime(int64_t nsec)
+    Filetime NsecToFiletime(int64_t nsec)
     {
-        golang::syscall::Filetime ft;
+        Filetime ft;
         // convert into 100-nanosecond
         nsec /= 100;
         // change starting time to January 1, 1601
@@ -2128,7 +2128,7 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    golang::syscall::GUID WSAID_CONNECTEX = golang::syscall::GUID {
+    GUID WSAID_CONNECTEX = GUID {
         0x25a207b9,
         0xddf3,
         0x4660,

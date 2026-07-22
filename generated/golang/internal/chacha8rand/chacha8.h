@@ -53,7 +53,7 @@ namespace golang::chacha8rand
     uint64_t leUint64(gocpp::slice<unsigned char> b);
     void lePutUint64(gocpp::slice<unsigned char> b, uint64_t v);
     gocpp::slice<unsigned char> Marshal(State* s);
-    struct gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data);
+    gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data);
 
     namespace rec
     {

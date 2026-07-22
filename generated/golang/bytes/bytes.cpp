@@ -1154,9 +1154,9 @@ namespace golang::bytes
     // is unused to avoid bounds checks in asciiSet.contains.
     // makeASCIISet creates a set of ASCII characters and reports whether all
     // characters in chars are ASCII.
-    std::tuple<golang::bytes::asciiSet, bool> makeASCIISet(gocpp::string chars)
+    std::tuple<asciiSet, bool> makeASCIISet(gocpp::string chars)
     {
-        golang::bytes::asciiSet as;
+        asciiSet as;
         bool ok;
         for(auto i = 0; i < len(chars); i++)
         {

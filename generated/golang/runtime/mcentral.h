@@ -61,13 +61,13 @@ namespace golang::runtime
     namespace rec
     {
         void init(mcentral* c, spanClass spc);
-        golang::runtime::spanSet* partialUnswept(mcentral* c, uint32_t sweepgen);
-        golang::runtime::spanSet* partialSwept(mcentral* c, uint32_t sweepgen);
-        golang::runtime::spanSet* fullUnswept(mcentral* c, uint32_t sweepgen);
-        golang::runtime::spanSet* fullSwept(mcentral* c, uint32_t sweepgen);
-        golang::runtime::mspan* cacheSpan(mcentral* c);
+        spanSet* partialUnswept(mcentral* c, uint32_t sweepgen);
+        spanSet* partialSwept(mcentral* c, uint32_t sweepgen);
+        spanSet* fullUnswept(mcentral* c, uint32_t sweepgen);
+        spanSet* fullSwept(mcentral* c, uint32_t sweepgen);
+        mspan* cacheSpan(mcentral* c);
         void uncacheSpan(mcentral* c, mspan* s);
-        golang::runtime::mspan* grow(mcentral* c);
+        mspan* grow(mcentral* c);
     }
 }
 

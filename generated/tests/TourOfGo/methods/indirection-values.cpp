@@ -64,11 +64,11 @@ namespace golang::main
 
     void main()
     {
-        auto v = golang::main::Vertex {3, 4};
+        auto v = Vertex {3, 4};
         mocklib::Println(rec::Abs(gocpp::recv(v)));
         mocklib::Println(AbsFunc(v));
 
-        auto p = new golang::main::Vertex {4, 3};
+        auto p = new Vertex {4, 3};
         mocklib::Println(rec::Abs(gocpp::recv(p)));
         mocklib::Println(AbsFunc(*p));
     }

@@ -10,17 +10,17 @@ namespace golang::goarch
     // PtrSize is the size of a pointer in bytes - unsafe.Sizeof(uintptr(0)) but as an ideal constant.
     // It is also the size of the machine's native word size (that is, 4 on 32-bit systems, 8 on 64-bit).
     const int PtrSize = 4 << (~ uintptr_t(0) >> 63);
-    const golang::goarch::ArchFamilyType AMD64 = 0;
-    const golang::goarch::ArchFamilyType ARM = 1;
-    const golang::goarch::ArchFamilyType ARM64 = 2;
-    const golang::goarch::ArchFamilyType I386 = 3;
-    const golang::goarch::ArchFamilyType LOONG64 = 4;
-    const golang::goarch::ArchFamilyType MIPS = 5;
-    const golang::goarch::ArchFamilyType MIPS64 = 6;
-    const golang::goarch::ArchFamilyType PPC64 = 7;
-    const golang::goarch::ArchFamilyType RISCV64 = 8;
-    const golang::goarch::ArchFamilyType S390X = 9;
-    const golang::goarch::ArchFamilyType WASM = 10;
+    const ArchFamilyType AMD64 = 0;
+    const ArchFamilyType ARM = 1;
+    const ArchFamilyType ARM64 = 2;
+    const ArchFamilyType I386 = 3;
+    const ArchFamilyType LOONG64 = 4;
+    const ArchFamilyType MIPS = 5;
+    const ArchFamilyType MIPS64 = 6;
+    const ArchFamilyType PPC64 = 7;
+    const ArchFamilyType RISCV64 = 8;
+    const ArchFamilyType S390X = 9;
+    const ArchFamilyType WASM = 10;
     // Int64Align is the required alignment for a 64-bit integer (4 on 32-bit systems, 8 on 64-bit).
     const int Int64Align = PtrSize;
 }
@@ -30,7 +30,7 @@ namespace golang::goarch
 namespace golang::goarch
 {
     // ArchFamily is the architecture family (AMD64, ARM, ...)
-    const golang::goarch::ArchFamilyType ArchFamily = _ArchFamily;
+    const ArchFamilyType ArchFamily = _ArchFamily;
     // BigEndian reports whether the architecture is big-endian.
     const bool BigEndian = IsArmbe | IsArm64be | IsMips | IsMips64 | IsPpc | IsPpc64 | IsS390 | IsS390x | IsSparc | IsSparc64 == 1;
     // DefaultPhysPageSize is the default physical page size.

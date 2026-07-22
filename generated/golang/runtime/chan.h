@@ -70,10 +70,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct hchan& value);
-    /*const uintptr_t hchanSize = gocpp::Sizeof<golang::runtime::hchan>() + uintptr_t(- int(gocpp::Sizeof<golang::runtime::hchan>()) & (maxAlign - 1)) [known mising deps] */;
-    golang::runtime::hchan* reflect_makechan(chantype* t, int size);
-    golang::runtime::hchan* makechan64(chantype* t, int64_t size);
-    golang::runtime::hchan* makechan(chantype* t, int size);
+    /*const uintptr_t hchanSize = gocpp::Sizeof<hchan>() + uintptr_t(- int(gocpp::Sizeof<hchan>()) & (maxAlign - 1)) [known mising deps] */;
+    hchan* reflect_makechan(chantype* t, int size);
+    hchan* makechan64(chantype* t, int64_t size);
+    hchan* makechan(chantype* t, int size);
     gocpp::unsafe_pointer chanbuf(hchan* c, unsigned int i);
     bool full(hchan* c);
     void chansend1(hchan* c, gocpp::unsafe_pointer elem);
@@ -105,7 +105,7 @@ namespace golang::runtime
     namespace rec
     {
         void enqueue(waitq* q, sudog* sgp);
-        golang::runtime::sudog* dequeue(waitq* q);
+        sudog* dequeue(waitq* q);
         gocpp::unsafe_pointer raceaddr(hchan* c);
     }
 }

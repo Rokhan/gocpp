@@ -12,7 +12,7 @@
 
 namespace golang::safefilepath
 {
-    std::tuple<gocpp::string, struct gocpp::error> fromFS(gocpp::string path);
+    std::tuple<gocpp::string, gocpp::error> fromFS(gocpp::string path);
     bool IsReservedName(gocpp::string name);
     bool isReservedBaseName(gocpp::string name);
     bool equalFold(gocpp::string a, gocpp::string b);

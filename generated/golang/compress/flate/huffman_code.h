@@ -76,9 +76,9 @@ namespace golang::flate
     struct GoTag_byLiteral { };
     struct GoTag_byFreq { };
     uint16_t reverseBits(uint16_t number, unsigned char bitLength);
-    golang::flate::literalNode maxNode();
-    using byLiteral = gocpp::defined<gocpp::slice<golang::flate::literalNode>, GoTag_byLiteral>;
-    using byFreq = gocpp::defined<gocpp::slice<golang::flate::literalNode>, GoTag_byFreq>;
+    literalNode maxNode();
+    using byLiteral = gocpp::defined<gocpp::slice<literalNode>, GoTag_byLiteral>;
+    using byFreq = gocpp::defined<gocpp::slice<literalNode>, GoTag_byFreq>;
     struct huffmanEncoder
     {
         gocpp::slice<hcode> codes{};
@@ -99,11 +99,11 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanEncoder& value);
-    golang::flate::huffmanEncoder* newHuffmanEncoder(int size);
-    golang::flate::huffmanEncoder* generateFixedLiteralEncoding();
-    golang::flate::huffmanEncoder* generateFixedOffsetEncoding();
-    extern golang::flate::huffmanEncoder* fixedLiteralEncoding;
-    extern golang::flate::huffmanEncoder* fixedOffsetEncoding;
+    huffmanEncoder* newHuffmanEncoder(int size);
+    huffmanEncoder* generateFixedLiteralEncoding();
+    huffmanEncoder* generateFixedOffsetEncoding();
+    extern huffmanEncoder* fixedLiteralEncoding;
+    extern huffmanEncoder* fixedOffsetEncoding;
 
     namespace rec
     {

@@ -55,7 +55,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cpuProfile& value);
-    extern golang::runtime::cpuProfile cpuprof;
+    extern cpuProfile cpuprof;
 
     namespace rec
     {

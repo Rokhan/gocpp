@@ -104,9 +104,9 @@ namespace golang::runtime
         return uint64_t(taggedPointerPack(gocpp::unsafe_pointer(node), cnt));
     }
 
-    golang::runtime::lfnode* lfstackUnpack(uint64_t val)
+    lfnode* lfstackUnpack(uint64_t val)
     {
-        return (golang::runtime::lfnode*)(rec::pointer(gocpp::recv(taggedPointer(val))));
+        return (lfnode*)(rec::pointer(gocpp::recv(taggedPointer(val))));
     }
 
 }

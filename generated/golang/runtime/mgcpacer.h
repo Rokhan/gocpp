@@ -253,7 +253,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcControllerState& value);
-    extern golang::runtime::gcControllerState gcController;
+    extern gcControllerState gcController;
 }
 
 #include "golang/runtime/mgc.h"
@@ -269,7 +269,7 @@ namespace golang::runtime
         void revise(gcControllerState* c);
         void endCycle(gcControllerState* c, int64_t now, int procs, bool userForced);
         void enlistWorker(gcControllerState* c);
-        std::tuple<golang::runtime::g*, int64_t> findRunnableGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now);
+        std::tuple<g*, int64_t> findRunnableGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now);
         void resetLive(gcControllerState* c, uint64_t bytesMarked);
         void markWorkerStop(gcControllerState* c, gcMarkWorkerMode mode, int64_t duration);
         void update(gcControllerState* c, int64_t dHeapLive, int64_t dHeapScan);

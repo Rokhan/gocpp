@@ -109,18 +109,18 @@ namespace golang::main
     {
     }
 
-    struct gocpp::error rec::init(compressor* d)
+    gocpp::error rec::init(compressor* d)
     {
-        struct gocpp::error err;
+        gocpp::error err;
         d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
         d->step = [&](auto x){ return rec::store(x); };
         return nullptr;
     }
 
-    std::tuple<int, struct gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         auto i = d->fill(d, b);
         return {i, nullptr};
     }
@@ -133,7 +133,7 @@ namespace golang::main
             mocklib::Println(pos(i), neg(- 2 * i));
         }
 
-        auto writer = new golang::main::compressor {};
+        auto writer = new compressor {};
         rec::init(gocpp::recv(writer));
         rec::write(gocpp::recv(writer), gocpp::slice<unsigned char>("Hello, World!"_s));
     }

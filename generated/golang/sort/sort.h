@@ -127,12 +127,12 @@ namespace golang::sort
     bool IntsAreSorted(gocpp::slice<int> x);
     bool Float64sAreSorted(gocpp::slice<double> x);
     bool StringsAreSorted(gocpp::slice<gocpp::string> x);
-    void Sort(struct Interface data);
+    void Sort(golang::sort::Interface data);
     struct reverse
     {
         // This embedded Interface permits Reverse to use the methods of
         // another Interface implementation.
-        Interface Interface{};
+        golang::sort::Interface Interface{};
 
         using isGoStruct = void;
 
@@ -158,9 +158,9 @@ namespace golang::sort
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reverse& value);
-    struct Interface Reverse(struct Interface data);
-    bool IsSorted(struct Interface data);
-    void Stable(struct Interface data);
+    golang::sort::Interface Reverse(golang::sort::Interface data);
+    bool IsSorted(golang::sort::Interface data);
+    void Stable(golang::sort::Interface data);
 
     namespace rec
     {

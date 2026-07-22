@@ -69,9 +69,9 @@ namespace golang::runtime
     // makeAddrRange creates a new address range from two virtual addresses.
     //
     // Throws if the base and limit are not in the same memory segment.
-    golang::runtime::addrRange makeAddrRange(uintptr_t base, uintptr_t limit)
+    addrRange makeAddrRange(uintptr_t base, uintptr_t limit)
     {
-        auto r = golang::runtime::addrRange {golang::runtime::offAddr {base}, golang::runtime::offAddr {limit}};
+        auto r = addrRange {offAddr {base}, offAddr {limit}};
         if((base - arenaBaseOffset >= base) != (limit - arenaBaseOffset >= limit))
         {
             go_throw("addr range base and limit are not in the same memory segment"_s);
@@ -94,18 +94,18 @@ namespace golang::runtime
     // contains returns whether or not the range contains a given address.
     bool rec::contains(addrRange a, uintptr_t addr)
     {
-        return rec::lessEqual(gocpp::recv(a.base), golang::runtime::offAddr {addr}) && rec::lessThan(gocpp::recv((golang::runtime::offAddr {addr})), a.limit);
+        return rec::lessEqual(gocpp::recv(a.base), offAddr {addr}) && rec::lessThan(gocpp::recv((offAddr {addr})), a.limit);
     }
 
     // subtract takes the addrRange toPrune and cuts out any overlap with
     // from, then returns the new range. subtract assumes that a and b
     // either don't overlap at all, only overlap on one side, or are equal.
     // If b is strictly contained in a, thus forcing a split, it will throw.
-    golang::runtime::addrRange rec::subtract(addrRange a, addrRange b)
+    addrRange rec::subtract(addrRange a, addrRange b)
     {
         if(rec::lessEqual(gocpp::recv(b.base), a.base) && rec::lessEqual(gocpp::recv(a.limit), b.limit))
         {
-            return golang::runtime::addrRange {};
+            return addrRange {};
         }
         else
         if(rec::lessThan(gocpp::recv(a.base), b.base) && rec::lessThan(gocpp::recv(b.limit), a.limit))
@@ -135,7 +135,7 @@ namespace golang::runtime
         {
             return {0, false};
         }
-        a->base = golang::runtime::offAddr {base};
+        a->base = offAddr {base};
         return {base - len, true};
     }
 
@@ -149,19 +149,19 @@ namespace golang::runtime
         {
             return {0, false};
         }
-        a->limit = golang::runtime::offAddr {limit};
+        a->limit = offAddr {limit};
         return {limit, true};
     }
 
     // removeGreaterEqual removes all addresses in a greater than or equal
     // to addr and returns the new range.
-    golang::runtime::addrRange rec::removeGreaterEqual(addrRange a, uintptr_t addr)
+    addrRange rec::removeGreaterEqual(addrRange a, uintptr_t addr)
     {
-        if(rec::lessEqual(gocpp::recv((golang::runtime::offAddr {addr})), a.base))
+        if(rec::lessEqual(gocpp::recv((offAddr {addr})), a.base))
         {
-            return golang::runtime::addrRange {};
+            return addrRange {};
         }
-        if(rec::lessEqual(gocpp::recv(a.limit), golang::runtime::offAddr {addr}))
+        if(rec::lessEqual(gocpp::recv(a.limit), offAddr {addr}))
         {
             return a;
         }
@@ -170,11 +170,11 @@ namespace golang::runtime
 
     // minOffAddr is the minimum address in the offset space, and
     // it corresponds to the virtual address arenaBaseOffset.
-    golang::runtime::offAddr minOffAddr = golang::runtime::offAddr {arenaBaseOffset};
+    offAddr minOffAddr = offAddr {arenaBaseOffset};
     // maxOffAddr is the maximum address in the offset address
     // space. It corresponds to the highest virtual address representable
     // by the page alloc chunk and heap arena maps.
-    golang::runtime::offAddr maxOffAddr = golang::runtime::offAddr {(((1 << heapAddrBits) - 1) + arenaBaseOffset) & uintptrMask};
+    offAddr maxOffAddr = offAddr {(((1 << heapAddrBits) - 1) + arenaBaseOffset) & uintptrMask};
     // offAddr represents an address in a contiguous view
     // of the address space on systems where the address space is
     // segmented. On other systems, it's just a normal address.
@@ -208,17 +208,17 @@ namespace golang::runtime
     }
 
     // add adds a uintptr offset to the offAddr.
-    golang::runtime::offAddr rec::add(offAddr l, uintptr_t bytes)
+    offAddr rec::add(offAddr l, uintptr_t bytes)
     {
-        return gocpp::Init<golang::runtime::offAddr>([=](auto& x) {
+        return gocpp::Init<offAddr>([=](auto& x) {
             x.a = l.a + bytes;
         });
     }
 
     // sub subtracts a uintptr offset from the offAddr.
-    golang::runtime::offAddr rec::sub(offAddr l, uintptr_t bytes)
+    offAddr rec::sub(offAddr l, uintptr_t bytes)
     {
-        return gocpp::Init<golang::runtime::offAddr>([=](auto& x) {
+        return gocpp::Init<offAddr>([=](auto& x) {
             x.a = l.a - bytes;
         });
     }
@@ -404,10 +404,10 @@ namespace golang::runtime
 
     void rec::init(addrRanges* a, sysMemStat* sysStat)
     {
-        auto ranges = (golang::runtime::notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
+        auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
         ranges->len = 0;
         ranges->cap = 16;
-        ranges->array = (golang::runtime::notInHeap*)(persistentalloc(gocpp::Sizeof<golang::runtime::addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, sysStat));
+        ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, sysStat));
         a->sysStat = sysStat;
         a->totalBytes = 0;
     }
@@ -416,7 +416,7 @@ namespace golang::runtime
     // less than the base of the addrRange at that index.
     int rec::findSucc(addrRanges* a, uintptr_t addr)
     {
-        auto base = golang::runtime::offAddr {addr};
+        auto base = offAddr {addr};
 
         // Narrow down the search space via a binary search
         // for large addrRanges until we have at most iterMax
@@ -556,10 +556,10 @@ namespace golang::runtime
                 // 4 MiB arenas which are all discontiguous (both very conservative
                 // assumptions), this would waste at most 4 MiB of memory.
                 auto oldRanges = a->ranges;
-                auto ranges = (golang::runtime::notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
+                auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& a->ranges));
                 ranges->len = len(oldRanges) + 1;
                 ranges->cap = cap(oldRanges) * 2;
-                ranges->array = (golang::runtime::notInHeap*)(persistentalloc(gocpp::Sizeof<golang::runtime::addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, a->sysStat));
+                ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, a->sysStat));
 
                 // Copy in the old array, but make space for the new range.
                 copy(a->ranges.make_slice(0, i), oldRanges.make_slice(0, i));
@@ -578,11 +578,11 @@ namespace golang::runtime
     // removeLast removes and returns the highest-addressed contiguous range
     // of a, or the last nBytes of that range, whichever is smaller. If a is
     // empty, it returns an empty range.
-    golang::runtime::addrRange rec::removeLast(addrRanges* a, uintptr_t nBytes)
+    addrRange rec::removeLast(addrRanges* a, uintptr_t nBytes)
     {
         if(len(a->ranges) == 0)
         {
-            return golang::runtime::addrRange {};
+            return addrRange {};
         }
         auto r = a->ranges[len(a->ranges) - 1];
         auto size = rec::size(gocpp::recv(r));
@@ -591,7 +591,7 @@ namespace golang::runtime
             auto newEnd = rec::sub(gocpp::recv(r.limit), nBytes);
             a->ranges[len(a->ranges) - 1].limit = newEnd;
             a->totalBytes -= nBytes;
-            return golang::runtime::addrRange {newEnd, r.limit};
+            return addrRange {newEnd, r.limit};
         }
         a->ranges = a->ranges.make_slice(0, len(a->ranges) - 1);
         a->totalBytes -= size;
@@ -640,10 +640,10 @@ namespace golang::runtime
         if(len(a->ranges) > cap(b->ranges))
         {
             // Grow the array.
-            auto ranges = (golang::runtime::notInHeapSlice*)(gocpp::unsafe_pointer(& b->ranges));
+            auto ranges = (notInHeapSlice*)(gocpp::unsafe_pointer(& b->ranges));
             ranges->len = 0;
             ranges->cap = cap(a->ranges);
-            ranges->array = (golang::runtime::notInHeap*)(persistentalloc(gocpp::Sizeof<golang::runtime::addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, b->sysStat));
+            ranges->array = (notInHeap*)(persistentalloc(gocpp::Sizeof<addrRange>() * uintptr_t(ranges->cap), goarch::PtrSize, b->sysStat));
         }
         b->ranges = b->ranges.make_slice(0, len(a->ranges));
         b->totalBytes = a->totalBytes;

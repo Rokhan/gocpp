@@ -12,9 +12,9 @@
 
 namespace golang::os
 {
-    struct gocpp::error Chown(gocpp::string name, int uid, int gid);
-    struct gocpp::error Lchown(gocpp::string name, int uid, int gid);
-    struct gocpp::error ignoringEINTR(std::function<struct gocpp::error ()> fn);
+    gocpp::error Chown(gocpp::string name, int uid, int gid);
+    gocpp::error Lchown(gocpp::string name, int uid, int gid);
+    gocpp::error ignoringEINTR(std::function<gocpp::error ()> fn);
 }
 #include "golang/io/fs/fs.h"
 #include "golang/time/time.h"
@@ -23,8 +23,8 @@ namespace golang::os
 namespace golang::os
 {
     uint32_t syscallMode(FileMode i);
-    struct gocpp::error chmod(gocpp::string name, FileMode mode);
-    struct gocpp::error Chtimes(gocpp::string name, mocklib::Date atime, mocklib::Date mtime);
+    gocpp::error chmod(gocpp::string name, FileMode mode);
+    gocpp::error Chtimes(gocpp::string name, mocklib::Date atime, mocklib::Date mtime);
 }
 
 #include "golang/os/types.h"
@@ -35,20 +35,20 @@ namespace golang::os
 
     namespace rec
     {
-        struct gocpp::error Close(File* f);
-        std::tuple<int, struct gocpp::error> read(File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> pread(File* f, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int, struct gocpp::error> write(File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> pwrite(File* f, gocpp::slice<unsigned char> b, int64_t off);
-        struct gocpp::error chmod(File* f, FileMode mode);
-        struct gocpp::error Chown(File* f, int uid, int gid);
-        struct gocpp::error Truncate(File* f, int64_t size);
-        struct gocpp::error Sync(File* f);
-        struct gocpp::error Chdir(File* f);
-        struct gocpp::error setDeadline(File* f, mocklib::Date t);
-        struct gocpp::error setReadDeadline(File* f, mocklib::Date t);
-        struct gocpp::error setWriteDeadline(File* f, mocklib::Date t);
-        struct gocpp::error checkValid(File* f, gocpp::string op);
+        gocpp::error Close(File* f);
+        std::tuple<int, gocpp::error> read(File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> pread(File* f, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int, gocpp::error> write(File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> pwrite(File* f, gocpp::slice<unsigned char> b, int64_t off);
+        gocpp::error chmod(File* f, FileMode mode);
+        gocpp::error Chown(File* f, int uid, int gid);
+        gocpp::error Truncate(File* f, int64_t size);
+        gocpp::error Sync(File* f);
+        gocpp::error Chdir(File* f);
+        gocpp::error setDeadline(File* f, mocklib::Date t);
+        gocpp::error setReadDeadline(File* f, mocklib::Date t);
+        gocpp::error setWriteDeadline(File* f, mocklib::Date t);
+        gocpp::error checkValid(File* f, gocpp::string op);
     }
 }
 

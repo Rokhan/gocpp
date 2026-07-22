@@ -27,7 +27,7 @@ namespace golang::safefilepath
     // FromFS returns an error if the path cannot be represented by the operating
     // system. For example, paths containing '\' and ':' characters are rejected
     // on Windows.
-    std::tuple<gocpp::string, struct gocpp::error> FromFS(gocpp::string path)
+    std::tuple<gocpp::string, gocpp::error> FromFS(gocpp::string path)
     {
         return fromFS(path);
     }

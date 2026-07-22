@@ -31,8 +31,8 @@ namespace golang::image
     std::ostream& operator<<(std::ostream& os, const struct Point& value);
     int mul3NonNeg(int x, int y, int z);
     int add2NonNeg(int x, int y);
-    extern golang::image::Point ZP;
-    golang::image::Point Pt(int X, int Y);
+    extern Point ZP;
+    Point Pt(int X, int Y);
     struct Rectangle
     {
         Point Min{};
@@ -50,8 +50,8 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Rectangle& value);
-    extern golang::image::Rectangle ZR;
-    golang::image::Rectangle Rect(int x0, int y0, int x1, int y1);
+    extern Rectangle ZR;
+    Rectangle Rect(int x0, int y0, int x1, int y1);
 }
 
 #include "golang/image/color/color.h"
@@ -62,30 +62,30 @@ namespace golang::image
     namespace rec
     {
         gocpp::string String(Point p);
-        golang::image::Point Add(Point p, Point q);
-        golang::image::Point Sub(Point p, Point q);
-        golang::image::Point Mul(Point p, int k);
-        golang::image::Point Div(Point p, int k);
+        Point Add(Point p, Point q);
+        Point Sub(Point p, Point q);
+        Point Mul(Point p, int k);
+        Point Div(Point p, int k);
         bool In(Point p, Rectangle r);
-        golang::image::Point Mod(Point p, Rectangle r);
+        Point Mod(Point p, Rectangle r);
         bool Eq(Point p, Point q);
         gocpp::string String(Rectangle r);
         int Dx(Rectangle r);
         int Dy(Rectangle r);
-        golang::image::Point Size(Rectangle r);
-        golang::image::Rectangle Add(Rectangle r, Point p);
-        golang::image::Rectangle Sub(Rectangle r, Point p);
-        golang::image::Rectangle Inset(Rectangle r, int n);
-        golang::image::Rectangle Intersect(Rectangle r, Rectangle s);
-        golang::image::Rectangle Union(Rectangle r, Rectangle s);
+        Point Size(Rectangle r);
+        Rectangle Add(Rectangle r, Point p);
+        Rectangle Sub(Rectangle r, Point p);
+        Rectangle Inset(Rectangle r, int n);
+        Rectangle Intersect(Rectangle r, Rectangle s);
+        Rectangle Union(Rectangle r, Rectangle s);
         bool Empty(Rectangle r);
         bool Eq(Rectangle r, Rectangle s);
         bool Overlaps(Rectangle r, Rectangle s);
         bool In(Rectangle r, Rectangle s);
-        golang::image::Rectangle Canon(Rectangle r);
+        Rectangle Canon(Rectangle r);
         color::Color At(Rectangle r, int x, int y);
         color::RGBA64 RGBA64At(Rectangle r, int x, int y);
-        golang::image::Rectangle Bounds(Rectangle r);
+        Rectangle Bounds(Rectangle r);
         color::Model ColorModel(Rectangle r);
     }
 }

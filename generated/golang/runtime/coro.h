@@ -36,7 +36,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct coro& value);
     void coroswitch_m(g* gp);
-    golang::runtime::coro* newcoro(std::function<void (coro* _1)> f);
+    coro* newcoro(std::function<void (coro* _1)> f);
     void coroexit(coro* c);
     void coroswitch(coro* c);
 

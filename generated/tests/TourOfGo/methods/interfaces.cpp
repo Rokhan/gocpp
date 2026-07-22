@@ -279,13 +279,13 @@ namespace golang::main
 
     void testAddMul()
     {
-        auto n = golang::main::num {10};
+        auto n = num {10};
         rec::Add(gocpp::recv(n), 5);
         rec::Mul(gocpp::recv(n), 2);
         rec::Print(gocpp::recv(n));
 
         MultAdder iNum = {};
-        iNum = new golang::main::num {11};
+        iNum = new num {11};
         rec::Add(gocpp::recv(iNum), 6);
         rec::Mul(gocpp::recv(iNum), 3);
         rec::Print(gocpp::recv(iNum));
@@ -344,7 +344,7 @@ namespace golang::main
     {
         Abser a = {};
         auto f = MyFloat(- mocklib::Sqrt2);
-        auto v = golang::main::Vertex {3, 4};
+        auto v = Vertex {3, 4};
 
         // a MyFloat implements Abser
         a = f;

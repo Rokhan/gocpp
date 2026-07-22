@@ -59,7 +59,7 @@ namespace golang::main
 
     void main()
     {
-        auto v = golang::main::Vertex {3, 4};
+        auto v = Vertex {3, 4};
         mocklib::Println(Abs(v));
     }
 

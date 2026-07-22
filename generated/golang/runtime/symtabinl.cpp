@@ -152,29 +152,29 @@ namespace golang::runtime
     // This unwinder uses non-strict handling of PC because it's assumed this is
     // only ever used for symbolic debugging. If things go really wrong, it'll just
     // fall back to the outermost frame.
-    std::tuple<golang::runtime::inlineUnwinder, golang::runtime::inlineFrame> newInlineUnwinder(golang::runtime::funcInfo f, uintptr_t pc)
+    std::tuple<inlineUnwinder, inlineFrame> newInlineUnwinder(golang::runtime::funcInfo f, uintptr_t pc)
     {
         auto inldata = funcdata(f, abi::FUNCDATA_InlTree);
         if(inldata == nullptr)
         {
-            return {gocpp::Init<golang::runtime::inlineUnwinder>([=](auto& x) {
+            return {gocpp::Init<inlineUnwinder>([=](auto& x) {
                 x.f = f;
-            }), gocpp::Init<golang::runtime::inlineFrame>([=](auto& x) {
+            }), gocpp::Init<inlineFrame>([=](auto& x) {
                 x.pc = pc;
                 x.index = - 1;
             })};
         }
-        auto inlTree = (gocpp::array_ptr<gocpp::array<golang::runtime::inlinedCall, 1 << 20>>)(inldata);
-        auto u = gocpp::Init<golang::runtime::inlineUnwinder>([=](auto& x) {
+        auto inlTree = (gocpp::array_ptr<gocpp::array<inlinedCall, 1 << 20>>)(inldata);
+        auto u = gocpp::Init<inlineUnwinder>([=](auto& x) {
             x.f = f;
             x.inlTree = inlTree;
         });
         return {u, rec::resolveInternal(gocpp::recv(u), pc)};
     }
 
-    golang::runtime::inlineFrame rec::resolveInternal(inlineUnwinder* u, uintptr_t pc)
+    inlineFrame rec::resolveInternal(inlineUnwinder* u, uintptr_t pc)
     {
-        return gocpp::Init<golang::runtime::inlineFrame>([=](auto& x) {
+        return gocpp::Init<inlineFrame>([=](auto& x) {
             x.pc = pc;
             x.index = pcdatavalue1(u->f, abi::PCDATA_InlTreeIndex, pc, false);
         });
@@ -186,7 +186,7 @@ namespace golang::runtime
     }
 
     // next returns the frame representing uf's logical caller.
-    golang::runtime::inlineFrame rec::next(inlineUnwinder* u, inlineFrame uf)
+    inlineFrame rec::next(inlineUnwinder* u, inlineFrame uf)
     {
         if(uf.index < 0)
         {

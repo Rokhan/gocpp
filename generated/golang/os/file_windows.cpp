@@ -109,7 +109,7 @@ namespace golang::os
 
     // newFile returns a new File with the given file handle and name.
     // Unlike NewFile, it does not check that h is syscall.InvalidHandle.
-    golang::os::File* newFile(syscall::Handle h, gocpp::string name, gocpp::string kind)
+    File* newFile(syscall::Handle h, gocpp::string name, gocpp::string kind)
     {
         if(kind == "file"_s)
         {
@@ -124,7 +124,7 @@ namespace golang::os
             }
         }
 
-        auto f = new golang::os::File {gocpp::InitPtr<golang::os::file>([=](auto& x) {
+        auto f = new File {gocpp::InitPtr<file>([=](auto& x) {
             x.pfd = gocpp::Init<poll::FD>([=](auto& x) {
                 x.Sysfd = h;
                 x.IsStream = true;
@@ -142,7 +142,7 @@ namespace golang::os
     }
 
     // newConsoleFile creates new File that will be used as console.
-    golang::os::File* newConsoleFile(syscall::Handle h, gocpp::string name)
+    File* newConsoleFile(syscall::Handle h, gocpp::string name)
     {
         return newFile(h, name, "console"_s);
     }
@@ -150,7 +150,7 @@ namespace golang::os
     // NewFile returns a new File with the given file descriptor and
     // name. The returned value will be nil if fd is not a valid file
     // descriptor.
-    golang::os::File* NewFile(uintptr_t fd, gocpp::string name)
+    File* NewFile(uintptr_t fd, gocpp::string name)
     {
         auto h = syscall::Handle(fd);
         if(h == syscall::InvalidHandle)
@@ -160,16 +160,16 @@ namespace golang::os
         return newFile(h, name, "file"_s);
     }
 
-    void epipecheck(File* file, struct gocpp::error e)
+    void epipecheck(File* file, gocpp::error e)
     {
     }
 
     // openFileNolog is the Windows implementation of OpenFile.
-    std::tuple<golang::os::File*, struct gocpp::error> openFileNolog(gocpp::string name, int flag, FileMode perm)
+    std::tuple<File*, gocpp::error> openFileNolog(gocpp::string name, int flag, FileMode perm)
     {
         if(name == ""_s)
         {
-            return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "open"_s;
                 x.Path = name;
                 x.Err = syscall::go_ENOENT;
@@ -193,7 +193,7 @@ namespace golang::os
                     }
                 }
             }
-            return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "open"_s;
                 x.Path = name;
                 x.Err = e;
@@ -203,7 +203,7 @@ namespace golang::os
         std::tie(f, e) = std::tuple{newFile(r, name, "file"_s), nullptr};
         if(e != nullptr)
         {
-            return {nullptr, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+            return {nullptr, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "open"_s;
                 x.Path = name;
                 x.Err = e;
@@ -212,7 +212,7 @@ namespace golang::os
         return {f, nullptr};
     }
 
-    struct gocpp::error rec::close(file* file)
+    gocpp::error rec::close(file* file)
     {
         if(file == nullptr)
         {
@@ -230,7 +230,7 @@ namespace golang::os
             {
                 e = ErrClosed;
             }
-            err = gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+            err = gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "close"_s;
                 x.Path = file->name;
                 x.Err = e;
@@ -246,10 +246,10 @@ namespace golang::os
     // according to whence: 0 means relative to the origin of the file, 1 means
     // relative to the current offset, and 2 means relative to the end.
     // It returns the new offset and an error, if any.
-    std::tuple<int64_t, struct gocpp::error> rec::seek(File* f, int64_t offset, int whence)
+    std::tuple<int64_t, gocpp::error> rec::seek(File* f, int64_t offset, int whence)
     {
         int64_t ret;
-        struct gocpp::error err;
+        gocpp::error err;
         if(f->file.dirinfo != nullptr)
         {
             // Free cached dirinfo, so we allocate a new one if we
@@ -264,7 +264,7 @@ namespace golang::os
 
     // Truncate changes the size of the named file.
     // If the file is a symbolic link, it changes the size of the link's target.
-    struct gocpp::error Truncate(gocpp::string name, int64_t size)
+    gocpp::error Truncate(gocpp::string name, int64_t size)
     {
         gocpp::Defer defer;
         try
@@ -290,12 +290,12 @@ namespace golang::os
 
     // Remove removes the named file or directory.
     // If there is an error, it will be of type *PathError.
-    struct gocpp::error Remove(gocpp::string name)
+    gocpp::error Remove(gocpp::string name)
     {
         auto [p, e] = syscall::UTF16PtrFromString(fixLongPath(name));
         if(e != nullptr)
         {
-            return gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "remove"_s;
                 x.Path = name;
                 x.Err = e;
@@ -342,19 +342,19 @@ namespace golang::os
                 }
             }
         }
-        return gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+        return gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
             x.Op = "remove"_s;
             x.Path = name;
             x.Err = e;
         }));
     }
 
-    struct gocpp::error rename(gocpp::string oldname, gocpp::string newname)
+    gocpp::error rename(gocpp::string oldname, gocpp::string newname)
     {
         auto e = windows::Rename(fixLongPath(oldname), fixLongPath(newname));
         if(e != nullptr)
         {
-            return gocpp::error(new golang::os::LinkError {"rename"_s, oldname, newname, e});
+            return gocpp::error(new LinkError {"rename"_s, oldname, newname, e});
         }
         return nullptr;
     }
@@ -362,11 +362,11 @@ namespace golang::os
     // Pipe returns a connected pair of Files; reads from r return bytes written to w.
     // It returns the files and an error, if any. The Windows handles underlying
     // the returned files are marked as inheritable by child processes.
-    std::tuple<golang::os::File*, golang::os::File*, struct gocpp::error> Pipe()
+    std::tuple<File*, File*, gocpp::error> Pipe()
     {
-        golang::os::File* r;
-        golang::os::File* w;
-        struct gocpp::error err;
+        File* r;
+        File* w;
+        gocpp::error err;
         gocpp::array<syscall::Handle, 2> p = {};
         auto e = syscall::Pipe(p.make_slice(0));
         if(e != nullptr)
@@ -414,23 +414,23 @@ namespace golang::os
 
     // Link creates newname as a hard link to the oldname file.
     // If there is an error, it will be of type *LinkError.
-    struct gocpp::error Link(gocpp::string oldname, gocpp::string newname)
+    gocpp::error Link(gocpp::string oldname, gocpp::string newname)
     {
         auto [n, err] = syscall::UTF16PtrFromString(fixLongPath(newname));
         if(err != nullptr)
         {
-            return gocpp::error(new golang::os::LinkError {"link"_s, oldname, newname, err});
+            return gocpp::error(new LinkError {"link"_s, oldname, newname, err});
         }
         uint16_t* o;
         std::tie(o, err) = syscall::UTF16PtrFromString(fixLongPath(oldname));
         if(err != nullptr)
         {
-            return gocpp::error(new golang::os::LinkError {"link"_s, oldname, newname, err});
+            return gocpp::error(new LinkError {"link"_s, oldname, newname, err});
         }
         err = syscall::CreateHardLink(n, o, 0);
         if(err != nullptr)
         {
-            return gocpp::error(new golang::os::LinkError {"link"_s, oldname, newname, err});
+            return gocpp::error(new LinkError {"link"_s, oldname, newname, err});
         }
         return nullptr;
     }
@@ -439,7 +439,7 @@ namespace golang::os
     // On Windows, a symlink to a non-existent oldname creates a file symlink;
     // if oldname is later created as a directory the symlink will not work.
     // If there is an error, it will be of type *LinkError.
-    struct gocpp::error Symlink(gocpp::string oldname, gocpp::string newname)
+    gocpp::error Symlink(gocpp::string oldname, gocpp::string newname)
     {
         // '/' does not work in link's content
         oldname = fromSlash(oldname);
@@ -472,13 +472,13 @@ namespace golang::os
         std::tie(n, err) = syscall::UTF16PtrFromString(fixLongPath(newname));
         if(err != nullptr)
         {
-            return gocpp::error(new golang::os::LinkError {"symlink"_s, oldname, newname, err});
+            return gocpp::error(new LinkError {"symlink"_s, oldname, newname, err});
         }
         uint16_t* o;
         std::tie(o, err) = syscall::UTF16PtrFromString(fixLongPath(oldname));
         if(err != nullptr)
         {
-            return gocpp::error(new golang::os::LinkError {"symlink"_s, oldname, newname, err});
+            return gocpp::error(new LinkError {"symlink"_s, oldname, newname, err});
         }
 
         uint32_t flags = windows::SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
@@ -495,7 +495,7 @@ namespace golang::os
             err = syscall::CreateSymbolicLink(n, o, flags);
             if(err != nullptr)
             {
-                return gocpp::error(new golang::os::LinkError {"symlink"_s, oldname, newname, err});
+                return gocpp::error(new LinkError {"symlink"_s, oldname, newname, err});
             }
         }
         return nullptr;
@@ -504,7 +504,7 @@ namespace golang::os
     // openSymlink calls CreateFile Windows API with FILE_FLAG_OPEN_REPARSE_POINT
     // parameter, so that Windows does not follow symlink, if path is a symlink.
     // openSymlink returns opened file handle.
-    std::tuple<syscall::Handle, struct gocpp::error> openSymlink(gocpp::string path)
+    std::tuple<syscall::Handle, gocpp::error> openSymlink(gocpp::string path)
     {
         auto [p, err] = syscall::UTF16PtrFromString(path);
         if(err != nullptr)
@@ -532,7 +532,7 @@ namespace golang::os
     //	\??\C:\foo\bar into C:\foo\bar
     //	\??\UNC\foo\bar into \\foo\bar
     //	\??\Volume{abc}\ into C:\
-    std::tuple<gocpp::string, struct gocpp::error> normaliseLinkPath(gocpp::string path)
+    std::tuple<gocpp::string, gocpp::error> normaliseLinkPath(gocpp::string path)
     {
         gocpp::Defer defer;
         try
@@ -601,7 +601,7 @@ namespace golang::os
         }
     }
 
-    std::tuple<gocpp::string, struct gocpp::error> readReparseLink(gocpp::string path)
+    std::tuple<gocpp::string, gocpp::error> readReparseLink(gocpp::string path)
     {
         gocpp::Defer defer;
         try
@@ -658,12 +658,12 @@ namespace golang::os
         }
     }
 
-    std::tuple<gocpp::string, struct gocpp::error> readlink(gocpp::string name)
+    std::tuple<gocpp::string, gocpp::error> readlink(gocpp::string name)
     {
         auto [s, err] = readReparseLink(fixLongPath(name));
         if(err != nullptr)
         {
-            return {""_s, gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+            return {""_s, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "readlink"_s;
                 x.Path = name;
                 x.Err = err;

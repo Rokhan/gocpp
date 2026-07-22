@@ -70,9 +70,9 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    golang::runtime::gclinkptr nextFreeFast(mspan* s);
+    gclinkptr nextFreeFast(mspan* s);
     gocpp::unsafe_pointer mallocgc(uintptr_t size, _type* typ, bool needzero);
-    golang::runtime::g* deductAssistCredit(uintptr_t size);
+    g* deductAssistCredit(uintptr_t size);
     gocpp::unsafe_pointer newobject(_type* typ);
     gocpp::unsafe_pointer reflect_unsafe_New(_type* typ);
     gocpp::unsafe_pointer reflectlite_unsafe_New(_type* typ);
@@ -114,8 +114,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct notInHeap& value);
     extern globalAllocStruct globalAlloc;
-    extern golang::runtime::notInHeap* persistentChunks;
-    golang::runtime::notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
+    extern notInHeap* persistentChunks;
+    notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
 }
 
 #include "golang/runtime/mcache.h"
@@ -129,10 +129,10 @@ namespace golang::runtime
     {
         std::tuple<gocpp::unsafe_pointer, uintptr_t> sysAlloc(mheap* h, uintptr_t n, arenaHint** hintList, bool go_register);
         void enableMetadataHugePages(mheap* h);
-        std::tuple<golang::runtime::gclinkptr, golang::runtime::mspan*, bool> nextFree(mcache* c, spanClass spc);
+        std::tuple<gclinkptr, mspan*, bool> nextFree(mcache* c, spanClass spc);
         void init(linearAlloc* l, uintptr_t base, uintptr_t size, bool mapMemory);
         gocpp::unsafe_pointer alloc(linearAlloc* l, uintptr_t size, uintptr_t align, sysMemStat* sysStat);
-        golang::runtime::notInHeap* add(notInHeap* p, uintptr_t bytes);
+        notInHeap* add(notInHeap* p, uintptr_t bytes);
     }
 }
 

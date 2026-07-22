@@ -17,7 +17,7 @@ namespace golang::sort
     using Float64Slice = gocpp::defined<gocpp::slice<double>, GoTag_Float64Slice>;
     struct GoTag_StringSlice;
     using StringSlice = gocpp::defined<gocpp::slice<gocpp::string>, GoTag_StringSlice>;
-    const golang::sort::sortedHint unknownHint = 0;
-    const golang::sort::sortedHint increasingHint = 1;
-    const golang::sort::sortedHint decreasingHint = 2;
+    const sortedHint unknownHint = 0;
+    const sortedHint increasingHint = 1;
+    const sortedHint decreasingHint = 2;
 }

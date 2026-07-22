@@ -118,7 +118,7 @@ namespace golang::runtime
     // even though pointers are 32 bit.
     const uintptr_t dataOffset = gocpp::Offsetof<gocpp_id_0>(&gocpp_id_0::v);
     bool evacuated(bmap* b);
-    golang::runtime::hmap* makemap_small();
+    hmap* makemap_small();
     int reflect_maplen(hmap* h);
     int reflectlite_maplen(hmap* h);
 }
@@ -158,9 +158,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct hiter& value);
-    golang::runtime::hmap* makemap64(maptype* t, int64_t hint, hmap* h);
-    golang::runtime::hmap* makemap(maptype* t, int hint, hmap* h);
-    std::tuple<gocpp::unsafe_pointer, golang::runtime::bmap*> makeBucketArray(maptype* t, uint8_t b, gocpp::unsafe_pointer dirtyalloc);
+    hmap* makemap64(maptype* t, int64_t hint, hmap* h);
+    hmap* makemap(maptype* t, int hint, hmap* h);
+    std::tuple<gocpp::unsafe_pointer, bmap*> makeBucketArray(maptype* t, uint8_t b, gocpp::unsafe_pointer dirtyalloc);
     gocpp::unsafe_pointer mapaccess1(maptype* t, hmap* h, gocpp::unsafe_pointer key);
     std::tuple<gocpp::unsafe_pointer, bool> mapaccess2(maptype* t, hmap* h, gocpp::unsafe_pointer key);
     std::tuple<gocpp::unsafe_pointer, gocpp::unsafe_pointer> mapaccessK(maptype* t, hmap* h, gocpp::unsafe_pointer key);
@@ -174,7 +174,7 @@ namespace golang::runtime
     bool bucketEvacuated(maptype* t, hmap* h, uintptr_t bucket);
     void evacuate(maptype* t, hmap* h, uintptr_t oldbucket);
     void advanceEvacuationMark(hmap* h, maptype* t, uintptr_t newbit);
-    golang::runtime::hmap* reflect_makemap(maptype* t, int cap);
+    hmap* reflect_makemap(maptype* t, int cap);
     gocpp::unsafe_pointer reflect_mapaccess(maptype* t, hmap* h, gocpp::unsafe_pointer key);
     gocpp::unsafe_pointer reflect_mapaccess_faststr(maptype* t, hmap* h, gocpp::string key);
     void reflect_mapassign(maptype* t, hmap* h, gocpp::unsafe_pointer key, gocpp::unsafe_pointer elem);
@@ -183,8 +183,8 @@ namespace golang::runtime
     void reflect_mapdelete_faststr(maptype* t, hmap* h, gocpp::string key);
     void reflect_mapclear(maptype* t, hmap* h);
     extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
-    std::tuple<golang::runtime::bmap*, int> moveToBmap(maptype* t, hmap* h, bmap* dst, int pos, bmap* src);
-    golang::runtime::hmap* mapclone2(maptype* t, hmap* src);
+    std::tuple<bmap*, int> moveToBmap(maptype* t, hmap* h, bmap* dst, int pos, bmap* src);
+    hmap* mapclone2(maptype* t, hmap* src);
     void copyKeys(maptype* t, hmap* h, bmap* b, golang::runtime::slice* s, uint8_t offset);
     void copyValues(maptype* t, hmap* h, bmap* b, golang::runtime::slice* s, uint8_t offset);
     void mapiterinit(maptype* t, hmap* h, hiter* it);
@@ -196,11 +196,11 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::bmap* overflow(bmap* b, maptype* t);
+        bmap* overflow(bmap* b, maptype* t);
         void setoverflow(bmap* b, maptype* t, bmap* ovf);
         gocpp::unsafe_pointer keys(bmap* b);
         void incrnoverflow(hmap* h);
-        golang::runtime::bmap* newoverflow(hmap* h, maptype* t, bmap* b);
+        bmap* newoverflow(hmap* h, maptype* t, bmap* b);
         void createOverflow(hmap* h);
         bool growing(hmap* h);
         bool sameSizeGrow(hmap* h);

@@ -45,19 +45,19 @@ namespace golang::main
     }
 
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetcher::FetcherImpl<T, TStore, TInterface>::vFetch(gocpp::string url)
+    std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> Fetcher::FetcherImpl<T, TStore, TInterface>::vFetch(gocpp::string url)
     {
         return rec::Fetch(gocpp::PtrRecv<T, false>(value.get()), url);
     }
 
     namespace rec
     {
-        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, gocpp::string url)
+        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, gocpp::string url)
         {
             return self.ptr->value->vFetch(url);
         }
 
-        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, gocpp::string url)
+        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, gocpp::string url)
         {
             return self.obj.value->vFetch(url);
         }
@@ -70,7 +70,7 @@ namespace golang::main
 
     // Crawl uses fetcher to recursively crawl
     // pages starting with url, to a maximum of depth.
-    void Crawl(gocpp::string url, int depth, struct Fetcher fetcher)
+    void Crawl(gocpp::string url, int depth, Fetcher fetcher)
     {
         // TODO: Fetch URLs in parallel.
         // TODO: Don't fetch the same URL twice.
@@ -131,7 +131,7 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> rec::Fetch(fakeFetcher f, gocpp::string url)
+    std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> rec::Fetch(fakeFetcher f, gocpp::string url)
     {
         if(auto [res, ok] = f[url]; ok)
         {
@@ -141,15 +141,15 @@ namespace golang::main
     }
 
     // fetcher is a populated fakeFetcher.
-    golang::main::fakeFetcher fetcher = golang::main::fakeFetcher {
-        { "https://golang.org/"_s, new golang::main::fakeResult {
+    fakeFetcher fetcher = fakeFetcher {
+        { "https://golang.org/"_s, new fakeResult {
         "The Go Programming Language"_s,
         gocpp::slice<gocpp::string> {
         "https://golang.org/pkg/"_s,
         "https://golang.org/cmd/"_s
     }
     } },
-        { "https://golang.org/pkg/"_s, new golang::main::fakeResult {
+        { "https://golang.org/pkg/"_s, new fakeResult {
         "Packages"_s,
         gocpp::slice<gocpp::string> {
         "https://golang.org/"_s,
@@ -158,14 +158,14 @@ namespace golang::main
         "https://golang.org/pkg/os/"_s
     }
     } },
-        { "https://golang.org/pkg/fmt/"_s, new golang::main::fakeResult {
+        { "https://golang.org/pkg/fmt/"_s, new fakeResult {
         "Package fmt"_s,
         gocpp::slice<gocpp::string> {
         "https://golang.org/"_s,
         "https://golang.org/pkg/"_s
     }
     } },
-        { "https://golang.org/pkg/os/"_s, new golang::main::fakeResult {
+        { "https://golang.org/pkg/os/"_s, new fakeResult {
         "Package os"_s,
         gocpp::slice<gocpp::string> {
         "https://golang.org/"_s,

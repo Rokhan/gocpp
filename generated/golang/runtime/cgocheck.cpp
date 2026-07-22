@@ -368,7 +368,7 @@ namespace golang::runtime
                     break;
                 case 0:
                 {
-                    auto at = (golang::runtime::arraytype*)(gocpp::unsafe_pointer(typ));
+                    auto at = (arraytype*)(gocpp::unsafe_pointer(typ));
                     for(auto i = uintptr_t(0); i < at->Len; i++)
                     {
                         if(off < at->Elem->Size_)
@@ -393,7 +393,7 @@ namespace golang::runtime
                 }
                 case 1:
                 {
-                    auto st = (golang::runtime::structtype*)(gocpp::unsafe_pointer(typ));
+                    auto st = (structtype*)(gocpp::unsafe_pointer(typ));
                     for(auto [gocpp_ignored, f] : st->Fields)
                     {
                         if(off < f.Typ->Size_)

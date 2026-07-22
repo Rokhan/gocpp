@@ -151,9 +151,9 @@ namespace golang::runtime
     // CallersFrames takes a slice of PC values returned by [Callers] and
     // prepares to return function/file/line information.
     // Do not change the slice until you are done with the [Frames].
-    golang::runtime::Frames* CallersFrames(gocpp::slice<uintptr_t> callers)
+    Frames* CallersFrames(gocpp::slice<uintptr_t> callers)
     {
-        auto f = gocpp::InitPtr<golang::runtime::Frames>([=](auto& x) {
+        auto f = gocpp::InitPtr<Frames>([=](auto& x) {
             x.callers = callers;
         });
         f->frames = f->frameStore.make_slice(0, 0);
@@ -169,9 +169,9 @@ namespace golang::runtime
     // returned one.
     //
     // See the [Frames] example for idiomatic usage.
-    std::tuple<golang::runtime::Frame, bool> rec::Next(Frames* ci)
+    std::tuple<Frame, bool> rec::Next(Frames* ci)
     {
-        golang::runtime::Frame frame;
+        Frame frame;
         bool more;
         for(; len(ci->frames) < 2; )
         {
@@ -216,7 +216,7 @@ namespace golang::runtime
                 // File/line from funcline1 below are already correct.
                 f = nullptr;
             }
-            ci->frames = append(ci->frames, gocpp::Init<golang::runtime::Frame>([=](auto& x) {
+            ci->frames = append(ci->frames, gocpp::Init<Frame>([=](auto& x) {
                 x.PC = pc;
                 x.Func = f;
                 x.Function = funcNameForPrint(rec::name(gocpp::recv(sf)));
@@ -349,9 +349,9 @@ namespace golang::runtime
     // expandCgoFrames expands frame information for pc, known to be
     // a non-Go function, using the cgoSymbolizer hook. expandCgoFrames
     // returns nil if pc could not be expanded.
-    gocpp::slice<golang::runtime::Frame> expandCgoFrames(uintptr_t pc)
+    gocpp::slice<Frame> expandCgoFrames(uintptr_t pc)
     {
-        auto arg = gocpp::Init<golang::runtime::cgoSymbolizerArg>([=](auto& x) {
+        auto arg = gocpp::Init<cgoSymbolizerArg>([=](auto& x) {
             x.pc = pc;
         });
         callCgoSymbolizer(& arg);
@@ -362,10 +362,10 @@ namespace golang::runtime
             return nullptr;
         }
 
-        gocpp::slice<golang::runtime::Frame> frames = {};
+        gocpp::slice<Frame> frames = {};
         for(; ; )
         {
-            frames = append(frames, gocpp::Init<golang::runtime::Frame>([=](auto& x) {
+            frames = append(frames, gocpp::Init<Frame>([=](auto& x) {
                 x.PC = pc;
                 x.Func = nullptr;
                 x.Function = gostring(arg.funcName);
@@ -447,9 +447,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    golang::runtime::_func* rec::raw(Func* f)
+    _func* rec::raw(Func* f)
     {
-        return (golang::runtime::_func*)(gocpp::unsafe_pointer(f));
+        return (_func*)(gocpp::unsafe_pointer(f));
     }
 
     golang::runtime::funcInfo rec::funcInfo(Func* f)
@@ -463,7 +463,7 @@ namespace golang::runtime
         // The unsafe.Pointer to uintptr conversions and arithmetic
         // are safe because we are working with module addresses.
         auto ptr = uintptr_t(gocpp::unsafe_pointer(f));
-        golang::runtime::moduledata* mod = {};
+        moduledata* mod = {};
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
         {
             if(len(datap->pclntable) == 0)
@@ -766,10 +766,10 @@ namespace golang::runtime
     // linker and marked SNOPTRDATA so it is ignored by the GC.
     //
     // To make sure the map isn't collected, we keep a second reference here.
-    gocpp::slice<gocpp::map<golang::runtime::typeOff, golang::runtime::_type*>> pinnedTypemaps;
-    golang::runtime::moduledata firstmoduledata;
-    golang::runtime::moduledata* lastmoduledatap;
-    gocpp::slice<golang::runtime::moduledata*>* modulesSlice;
+    gocpp::slice<gocpp::map<golang::runtime::typeOff, _type*>> pinnedTypemaps;
+    moduledata firstmoduledata;
+    moduledata* lastmoduledatap;
+    gocpp::slice<moduledata*>* modulesSlice;
     // activeModules returns a slice of active modules.
     //
     // A module is active once its gcdatamask and gcbssmask have been
@@ -780,9 +780,9 @@ namespace golang::runtime
     //
     //go:nosplit
     //go:nowritebarrier
-    gocpp::slice<golang::runtime::moduledata*> activeModules()
+    gocpp::slice<moduledata*> activeModules()
     {
-        auto p = (gocpp::slice<golang::runtime::moduledata*>*)(atomic::Loadp(gocpp::unsafe_pointer(& modulesSlice)));
+        auto p = (gocpp::slice<moduledata*>*)(atomic::Loadp(gocpp::unsafe_pointer(& modulesSlice)));
         if(p == nullptr)
         {
             return nullptr;
@@ -818,7 +818,7 @@ namespace golang::runtime
                 continue;
             }
             *modules = append(*modules, md);
-            if(md->gcdatamask == (golang::runtime::bitvector {}))
+            if(md->gcdatamask == (bitvector {}))
             {
                 auto scanDataSize = md->edata - md->data;
                 md->gcdatamask = progToPointerMask((unsigned char*)(gocpp::unsafe_pointer(md->gcdata)), scanDataSize);
@@ -982,8 +982,8 @@ namespace golang::runtime
             // NOTE: ftab[nftab].entry is legal; it is the address beyond the final function.
             if(datap->ftab[i].entryoff > datap->ftab[i + 1].entryoff)
             {
-                auto f1 = golang::runtime::funcInfo {(golang::runtime::_func*)(gocpp::unsafe_pointer(& datap->pclntable[datap->ftab[i].funcoff])), datap};
-                auto f2 = golang::runtime::funcInfo {(golang::runtime::_func*)(gocpp::unsafe_pointer(& datap->pclntable[datap->ftab[i + 1].funcoff])), datap};
+                auto f1 = golang::runtime::funcInfo {(_func*)(gocpp::unsafe_pointer(& datap->pclntable[datap->ftab[i].funcoff])), datap};
+                auto f2 = golang::runtime::funcInfo {(_func*)(gocpp::unsafe_pointer(& datap->pclntable[datap->ftab[i + 1].funcoff])), datap};
                 auto f2name = "end"_s;
                 if(i + 1 < nftab)
                 {
@@ -992,7 +992,7 @@ namespace golang::runtime
                 println("function symbol table not sorted by PC offset:"_s, hex(datap->ftab[i].entryoff), funcname(f1), ">"_s, hex(datap->ftab[i + 1].entryoff), f2name, ", plugin:"_s, datap->pluginpath);
                 for(auto j = 0; j <= i; j++)
                 {
-                    println("\t"_s, hex(datap->ftab[j].entryoff), funcname(golang::runtime::funcInfo {(golang::runtime::_func*)(gocpp::unsafe_pointer(& datap->pclntable[datap->ftab[j].funcoff])), datap}));
+                    println("\t"_s, hex(datap->ftab[j].entryoff), funcname(golang::runtime::funcInfo {(_func*)(gocpp::unsafe_pointer(& datap->pclntable[datap->ftab[j].funcoff])), datap}));
                 }
                 if(GOOS == "aix"_s && isarchive)
                 {
@@ -1113,7 +1113,7 @@ namespace golang::runtime
     // If pc represents multiple functions because of inlining, it returns
     // the *Func describing the innermost function, but with an entry of
     // the outermost function.
-    golang::runtime::Func* FuncForPC(uintptr_t pc)
+    Func* FuncForPC(uintptr_t pc)
     {
         auto f = findfunc(pc);
         if(! rec::valid(gocpp::recv(f)))
@@ -1131,7 +1131,7 @@ namespace golang::runtime
         }
         auto sf = rec::srcFunc(gocpp::recv(u), uf);
         auto [file, line] = rec::fileLine(gocpp::recv(u), uf);
-        auto fi = gocpp::InitPtr<golang::runtime::funcinl>([=](auto& x) {
+        auto fi = gocpp::InitPtr<funcinl>([=](auto& x) {
             x.ones = ~ uint32_t(0);
             x.entry = rec::entry(gocpp::recv(f));
             x.name = rec::name(gocpp::recv(sf));
@@ -1139,7 +1139,7 @@ namespace golang::runtime
             x.line = int32_t(line);
             x.startLine = sf.startLine;
         });
-        return (golang::runtime::Func*)(gocpp::unsafe_pointer(fi));
+        return (Func*)(gocpp::unsafe_pointer(fi));
     }
 
     // Name returns the name of the function.
@@ -1153,7 +1153,7 @@ namespace golang::runtime
         if(rec::isInlined(gocpp::recv(fn)))
         {
             // inlined version
-            auto fi = (golang::runtime::funcinl*)(gocpp::unsafe_pointer(fn));
+            auto fi = (funcinl*)(gocpp::unsafe_pointer(fn));
             return funcNameForPrint(fi->name);
         }
         return funcNameForPrint(funcname(rec::funcInfo(gocpp::recv(f))));
@@ -1166,7 +1166,7 @@ namespace golang::runtime
         if(rec::isInlined(gocpp::recv(fn)))
         {
             // inlined version
-            auto fi = (golang::runtime::funcinl*)(gocpp::unsafe_pointer(fn));
+            auto fi = (funcinl*)(gocpp::unsafe_pointer(fn));
             return fi->entry;
         }
         return rec::entry(gocpp::recv(rec::funcInfo(gocpp::recv(fn))));
@@ -1184,7 +1184,7 @@ namespace golang::runtime
         if(rec::isInlined(gocpp::recv(fn)))
         {
             // inlined version
-            auto fi = (golang::runtime::funcinl*)(gocpp::unsafe_pointer(fn));
+            auto fi = (funcinl*)(gocpp::unsafe_pointer(fn));
             return {fi->file, int(fi->line)};
         }
         // Pass strict=false here, because anyone can call this function,
@@ -1202,7 +1202,7 @@ namespace golang::runtime
         if(rec::isInlined(gocpp::recv(fn)))
         {
             // inlined version
-            auto fi = (golang::runtime::funcinl*)(gocpp::unsafe_pointer(fn));
+            auto fi = (funcinl*)(gocpp::unsafe_pointer(fn));
             return fi->startLine;
         }
         return rec::funcInfo(gocpp::recv(fn))._func.startLine;
@@ -1214,7 +1214,7 @@ namespace golang::runtime
     // implementation.
     //
     //go:nosplit
-    golang::runtime::moduledata* findmoduledatap(uintptr_t pc)
+    moduledata* findmoduledatap(uintptr_t pc)
     {
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
         {
@@ -1263,9 +1263,9 @@ namespace golang::runtime
         return f._func != nullptr;
     }
 
-    golang::runtime::Func* rec::_Func(golang::runtime::funcInfo f)
+    Func* rec::_Func(golang::runtime::funcInfo f)
     {
-        return (golang::runtime::Func*)(gocpp::unsafe_pointer(f._func));
+        return (Func*)(gocpp::unsafe_pointer(f._func));
     }
 
     // isInlined reports whether f should be re-interpreted as a *funcinl.
@@ -1294,7 +1294,7 @@ namespace golang::runtime
         {
             return golang::runtime::funcInfo {};
         }
-        auto nsub = uintptr_t(len(golang::runtime::findfuncbucket {}.subbuckets));
+        auto nsub = uintptr_t(len(findfuncbucket {}.subbuckets));
 
         auto [pcOff, ok] = rec::textOff(gocpp::recv(datap), pc);
         if(! ok)
@@ -1307,7 +1307,7 @@ namespace golang::runtime
         auto b = x / pcbucketsize;
         auto i = x % pcbucketsize / (pcbucketsize / nsub);
 
-        auto ffb = (golang::runtime::findfuncbucket*)(add(gocpp::unsafe_pointer(datap->findfunctab), b * gocpp::Sizeof<golang::runtime::findfuncbucket>()));
+        auto ffb = (findfuncbucket*)(add(gocpp::unsafe_pointer(datap->findfunctab), b * gocpp::Sizeof<findfuncbucket>()));
         auto idx = ffb->idx + uint32_t(ffb->subbuckets[i]);
 
         // Find the ftab entry.
@@ -1317,7 +1317,7 @@ namespace golang::runtime
         }
 
         auto funcoff = datap->ftab[idx].funcoff;
-        return golang::runtime::funcInfo {(golang::runtime::_func*)(gocpp::unsafe_pointer(& datap->pclntable[funcoff])), datap};
+        return golang::runtime::funcInfo {(_func*)(gocpp::unsafe_pointer(& datap->pclntable[funcoff])), datap};
     }
 
     // A srcFunc represents a logical function in the source code. This may
@@ -1455,7 +1455,7 @@ namespace golang::runtime
     // In practice, this appears to be fairly randomly and evenly distributed.
     uintptr_t pcvalueCacheKey(uintptr_t targetpc)
     {
-        return (targetpc / goarch::PtrSize) % uintptr_t(len(golang::runtime::pcvalueCache {}.entries));
+        return (targetpc / goarch::PtrSize) % uintptr_t(len(pcvalueCache {}.entries));
     }
 
     // Returns the PCData value, and the PC where this value starts.
@@ -1570,7 +1570,7 @@ namespace golang::runtime
                         auto e = gocpp::make_array_ptr(cache->entries[ck]);
                         auto ci = cheaprandn(uint32_t(len(cache->entries[ck])));
                         e[ci] = e[0];
-                        e[0] = gocpp::Init<golang::runtime::pcvalueCacheEnt>([=](auto& x) {
+                        e[0] = gocpp::Init<pcvalueCacheEnt>([=](auto& x) {
                             x.targetpc = targetpc;
                             x.off = off;
                             x.val = val;
@@ -1865,7 +1865,7 @@ namespace golang::runtime
     }
 
     //go:nowritebarrier
-    golang::runtime::bitvector stackmapdata(stackmap* stkmap, int32_t n)
+    bitvector stackmapdata(stackmap* stkmap, int32_t n)
     {
         // Check this invariant only when stackDebug is on at all.
         // The invariant is already checked by many of stackmapdata's callers,
@@ -1874,7 +1874,7 @@ namespace golang::runtime
         {
             go_throw("stackmapdata: index out of range"_s);
         }
-        return golang::runtime::bitvector {stkmap->nbit, addb(& stkmap->bytedata[0], uintptr_t(n * ((stkmap->nbit + 7) >> 3)))};
+        return bitvector {stkmap->nbit, addb(& stkmap->bytedata[0], uintptr_t(n * ((stkmap->nbit + 7) >> 3)))};
     }
 
 }

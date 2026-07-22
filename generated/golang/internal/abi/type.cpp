@@ -437,14 +437,14 @@ namespace golang::abi
     {
         if(rec::Kind(gocpp::recv(t)) == Chan)
         {
-            auto ch = (golang::abi::ChanType*)(gocpp::unsafe_pointer(t));
+            auto ch = (ChanType*)(gocpp::unsafe_pointer(t));
             return ch->Dir;
         }
         return InvalidDir;
     }
 
     // Uncommon returns a pointer to T's "uncommon" data if there is any, otherwise nil
-    golang::abi::UncommonType* rec::Uncommon(golang::abi::Type* t)
+    UncommonType* rec::Uncommon(golang::abi::Type* t)
     {
         if(t->TFlag & TFlagUncommon == 0)
         {
@@ -465,7 +465,7 @@ namespace golang::abi
             switch(conditionId)
             {
                 case 0:
-                    return & (golang::abi::structTypeUncommon*)(gocpp::unsafe_pointer(t))->u;
+                    return & (structTypeUncommon*)(gocpp::unsafe_pointer(t))->u;
                     break;
                 case 1:
                     struct u
@@ -645,7 +645,7 @@ namespace golang::abi
                 }
                 case 1:
                 {
-                    auto tt = (golang::abi::ChanType*)(gocpp::unsafe_pointer(t));
+                    auto tt = (ChanType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 }
@@ -657,13 +657,13 @@ namespace golang::abi
                 }
                 case 3:
                 {
-                    auto tt = (golang::abi::PtrType*)(gocpp::unsafe_pointer(t));
+                    auto tt = (PtrType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 }
                 case 4:
                 {
-                    auto tt = (golang::abi::SliceType*)(gocpp::unsafe_pointer(t));
+                    auto tt = (SliceType*)(gocpp::unsafe_pointer(t));
                     return tt->Elem;
                     break;
                 }
@@ -997,7 +997,7 @@ namespace golang::abi
         auto uadd = gocpp::Sizeof<abi::FuncType>();
         if(t->Type.TFlag & TFlagUncommon != 0)
         {
-            uadd += gocpp::Sizeof<golang::abi::UncommonType>();
+            uadd += gocpp::Sizeof<UncommonType>();
         }
         if(t->InCount == 0)
         {
@@ -1016,7 +1016,7 @@ namespace golang::abi
         auto uadd = gocpp::Sizeof<abi::FuncType>();
         if(t->Type.TFlag & TFlagUncommon != 0)
         {
-            uadd += gocpp::Sizeof<golang::abi::UncommonType>();
+            uadd += gocpp::Sizeof<UncommonType>();
         }
         return (gocpp::array_ptr<gocpp::array<golang::abi::Type*, 1 << 17>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "outCount > 0"_s)).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }

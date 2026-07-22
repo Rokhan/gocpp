@@ -106,7 +106,7 @@ namespace golang::main
     {
         Abser a = {};
         auto f = MyFloat(- mocklib::Sqrt2);
-        auto v = golang::main::Vertex {3, 4};
+        auto v = Vertex {3, 4};
 
         // a MyFloat implements Abser
         a = f;

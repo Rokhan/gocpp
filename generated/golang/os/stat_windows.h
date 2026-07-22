@@ -15,10 +15,10 @@
 
 namespace golang::os
 {
-    std::tuple<struct FileInfo, struct gocpp::error> stat(gocpp::string funcname, gocpp::string name, bool followSurrogates);
-    std::tuple<struct FileInfo, struct gocpp::error> statHandle(gocpp::string name, syscall::Handle h);
-    std::tuple<struct FileInfo, struct gocpp::error> statNolog(gocpp::string name);
-    std::tuple<struct FileInfo, struct gocpp::error> lstatNolog(gocpp::string name);
+    std::tuple<FileInfo, gocpp::error> stat(gocpp::string funcname, gocpp::string name, bool followSurrogates);
+    std::tuple<FileInfo, gocpp::error> statHandle(gocpp::string name, syscall::Handle h);
+    std::tuple<FileInfo, gocpp::error> statNolog(gocpp::string name);
+    std::tuple<FileInfo, gocpp::error> lstatNolog(gocpp::string name);
 }
 
 #include "golang/os/types.h"
@@ -28,7 +28,7 @@ namespace golang::os
 
     namespace rec
     {
-        std::tuple<struct FileInfo, struct gocpp::error> Stat(File* file);
+        std::tuple<FileInfo, gocpp::error> Stat(File* file);
     }
 }
 

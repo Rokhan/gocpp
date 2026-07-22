@@ -35,7 +35,7 @@ namespace golang::main
         mocklib::Println();
     }
 
-    golang::main::ints smallPrimes = golang::main::ints {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
+    ints smallPrimes = ints {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
     // fakeFetcher is Fetcher that returns canned results.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -69,15 +69,15 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-    golang::main::fakeFetcher fetcher = golang::main::fakeFetcher {
-        { "https://golang.org/"_s, new golang::main::fakeResult {
+    fakeFetcher fetcher = fakeFetcher {
+        { "https://golang.org/"_s, new fakeResult {
         "The Go Programming Language"_s,
         gocpp::slice<gocpp::string> {
         "https://golang.org/pkg/"_s,
         "https://golang.org/cmd/"_s
     }
     } },
-        { "https://golang.org/pkg/"_s, new golang::main::fakeResult {
+        { "https://golang.org/pkg/"_s, new fakeResult {
         "Packages"_s,
         gocpp::slice<gocpp::string> {
         "https://golang.org/"_s,
@@ -86,14 +86,14 @@ namespace golang::main
         "https://golang.org/pkg/os/"_s
     }
     } },
-        { "https://golang.org/pkg/fmt/"_s, new golang::main::fakeResult {
+        { "https://golang.org/pkg/fmt/"_s, new fakeResult {
         "Package fmt"_s,
         gocpp::slice<gocpp::string> {
         "https://golang.org/"_s,
         "https://golang.org/pkg/"_s
     }
     } },
-        { "https://golang.org/pkg/os/"_s, new golang::main::fakeResult {
+        { "https://golang.org/pkg/os/"_s, new fakeResult {
         "Package os"_s,
         gocpp::slice<gocpp::string> {
         "https://golang.org/"_s,

@@ -33,7 +33,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    golang::runtime::limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now);
+    limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now);
 }
 #include "golang/runtime/internal/atomic/types.h"
 
@@ -101,7 +101,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value);
-    extern golang::runtime::gcCPULimiterState gcCPULimiter;
+    extern gcCPULimiterState gcCPULimiter;
 
     namespace rec
     {
@@ -118,9 +118,9 @@ namespace golang::runtime
         void unlock(gcCPULimiterState* l);
         void resetCapacity(gcCPULimiterState* l, int64_t now, int32_t nprocs);
         int64_t duration(limiterEventStamp s, int64_t now);
-        golang::runtime::limiterEventType typ(limiterEventStamp s);
+        limiterEventType typ(limiterEventStamp s);
         bool start(limiterEvent* e, limiterEventType typ, int64_t now);
-        std::tuple<golang::runtime::limiterEventType, int64_t> consume(limiterEvent* e, int64_t now);
+        std::tuple<limiterEventType, int64_t> consume(limiterEvent* e, int64_t now);
         void stop(limiterEvent* e, limiterEventType typ, int64_t now);
     }
 }

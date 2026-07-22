@@ -42,7 +42,7 @@ namespace golang::syscall
             // descriptor or handle.
             // The file descriptor fd is guaranteed to remain valid while
             // f executes but not after f returns.
-            virtual struct gocpp::error vControl(std::function<void (uintptr_t fd)> f) = 0;
+            virtual gocpp::error vControl(std::function<void (uintptr_t fd)> f) = 0;
             // Read invokes f on the underlying connection's file
             // descriptor or handle; f is expected to try to read from the
             // file descriptor.
@@ -51,9 +51,9 @@ namespace golang::syscall
             // tries again repeatedly.
             // The file descriptor is guaranteed to remain valid while f
             // executes but not after f returns.
-            virtual struct gocpp::error vRead(std::function<bool (uintptr_t fd)> f) = 0;
+            virtual gocpp::error vRead(std::function<bool (uintptr_t fd)> f) = 0;
             // Write is like Read but for writing.
-            virtual struct gocpp::error vWrite(std::function<bool (uintptr_t fd)> f) = 0;
+            virtual gocpp::error vWrite(std::function<bool (uintptr_t fd)> f) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -65,11 +65,11 @@ namespace golang::syscall
                 value.reset(ptr);
             }
 
-            struct gocpp::error vControl(std::function<void (uintptr_t fd)> f) override;
+            gocpp::error vControl(std::function<void (uintptr_t fd)> f) override;
 
-            struct gocpp::error vRead(std::function<bool (uintptr_t fd)> f) override;
+            gocpp::error vRead(std::function<bool (uintptr_t fd)> f) override;
 
-            struct gocpp::error vWrite(std::function<bool (uintptr_t fd)> f) override;
+            gocpp::error vWrite(std::function<bool (uintptr_t fd)> f) override;
 
             void* getPtr() override
             {
@@ -84,14 +84,14 @@ namespace golang::syscall
 
     namespace rec
     {
-        struct gocpp::error Control(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<void (uintptr_t fd)> f);
-        struct gocpp::error Control(const gocpp::ObjRecv<struct RawConn>& self, std::function<void (uintptr_t fd)> f);
+        gocpp::error Control(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<void (uintptr_t fd)> f);
+        gocpp::error Control(const gocpp::ObjRecv<struct RawConn>& self, std::function<void (uintptr_t fd)> f);
 
-        struct gocpp::error Read(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<bool (uintptr_t fd)> f);
-        struct gocpp::error Read(const gocpp::ObjRecv<struct RawConn>& self, std::function<bool (uintptr_t fd)> f);
+        gocpp::error Read(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<bool (uintptr_t fd)> f);
+        gocpp::error Read(const gocpp::ObjRecv<struct RawConn>& self, std::function<bool (uintptr_t fd)> f);
 
-        struct gocpp::error Write(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<bool (uintptr_t fd)> f);
-        struct gocpp::error Write(const gocpp::ObjRecv<struct RawConn>& self, std::function<bool (uintptr_t fd)> f);
+        gocpp::error Write(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<bool (uintptr_t fd)> f);
+        gocpp::error Write(const gocpp::ObjRecv<struct RawConn>& self, std::function<bool (uintptr_t fd)> f);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct RawConn& value);
@@ -122,7 +122,7 @@ namespace golang::syscall
         struct IConn
         {
             // SyscallConn returns a raw network connection.
-            virtual std::tuple<struct RawConn, struct gocpp::error> vSyscallConn() = 0;
+            virtual std::tuple<RawConn, gocpp::error> vSyscallConn() = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -134,7 +134,7 @@ namespace golang::syscall
                 value.reset(ptr);
             }
 
-            std::tuple<struct RawConn, struct gocpp::error> vSyscallConn() override;
+            std::tuple<RawConn, gocpp::error> vSyscallConn() override;
 
             void* getPtr() override
             {
@@ -149,8 +149,8 @@ namespace golang::syscall
 
     namespace rec
     {
-        std::tuple<struct RawConn, struct gocpp::error> SyscallConn(const gocpp::PtrRecv<struct Conn, false>& self);
-        std::tuple<struct RawConn, struct gocpp::error> SyscallConn(const gocpp::ObjRecv<struct Conn>& self);
+        std::tuple<RawConn, gocpp::error> SyscallConn(const gocpp::PtrRecv<struct Conn, false>& self);
+        std::tuple<RawConn, gocpp::error> SyscallConn(const gocpp::ObjRecv<struct Conn>& self);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Conn& value);

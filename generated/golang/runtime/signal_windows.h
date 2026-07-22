@@ -51,8 +51,8 @@ namespace golang::runtime
 {
     bool isAbort(context* r);
     bool isgoexception(exceptionrecord* info, context* r);
-    golang::runtime::g* sigFetchGSafe();
-    golang::runtime::g* sigFetchG();
+    g* sigFetchGSafe();
+    g* sigFetchG();
     int32_t sigtrampgo(exceptionpointers* ep, int kind);
     int32_t exceptionhandler(exceptionrecord* info, context* r, g* gp);
     int32_t sehhandler(exceptionrecord* _1, uint64_t _2, context* _3, _DISPATCHER_CONTEXT* dctxt);

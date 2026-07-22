@@ -309,9 +309,9 @@ namespace golang::binary
     }
 
     // LittleEndian is the little-endian implementation of [ByteOrder] and [AppendByteOrder].
-    golang::binary::littleEndian LittleEndian;
+    littleEndian LittleEndian;
     // BigEndian is the big-endian implementation of [ByteOrder] and [AppendByteOrder].
-    golang::binary::bigEndian BigEndian;
+    bigEndian BigEndian;
     
     template<typename T> requires gocpp::GoStruct<T>
     littleEndian::operator T()
@@ -548,7 +548,7 @@ namespace golang::binary
     // The error is [io.EOF] only if no bytes were read.
     // If an [io.EOF] happens after reading some but not all the bytes,
     // Read returns [io.ErrUnexpectedEOF].
-    struct gocpp::error Read(io::Reader r, struct ByteOrder order, go_any data)
+    gocpp::error Read(io::Reader r, ByteOrder order, go_any data)
     {
         // Fast path for basic types and slices.
         if(auto n = intDataSize(data); n != 0)
@@ -789,7 +789,7 @@ namespace golang::binary
         {
             return errors::New("binary.Read: invalid type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
-        auto d = gocpp::InitPtr<golang::binary::decoder>([=](auto& x) {
+        auto d = gocpp::InitPtr<decoder>([=](auto& x) {
             x.order = order;
             x.buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
         });
@@ -809,7 +809,7 @@ namespace golang::binary
     // and read from successive fields of the data.
     // When writing structs, zero values are written for fields
     // with blank (_) field names.
-    struct gocpp::error Write(io::Writer w, struct ByteOrder order, go_any data)
+    gocpp::error Write(io::Writer w, ByteOrder order, go_any data)
     {
         // Fast path for basic types and slices.
         if(auto n = intDataSize(data); n != 0)
@@ -1117,7 +1117,7 @@ namespace golang::binary
             return errors::New("binary.Write: some values are not fixed-sized in type "_s + rec::String(gocpp::recv(reflect::TypeOf(data))));
         }
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), size);
-        auto e = gocpp::InitPtr<golang::binary::encoder>([=](auto& x) {
+        auto e = gocpp::InitPtr<encoder>([=](auto& x) {
             x.order = order;
             x.buf = buf;
         });

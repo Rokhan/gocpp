@@ -75,7 +75,7 @@ namespace golang::bytes
     int LastIndexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f);
     int indexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f, bool truth);
     int lastIndexFunc(gocpp::slice<unsigned char> s, std::function<bool (gocpp::rune r)> f, bool truth);
-    std::tuple<golang::bytes::asciiSet, bool> makeASCIISet(gocpp::string chars);
+    std::tuple<asciiSet, bool> makeASCIISet(gocpp::string chars);
     gocpp::slice<unsigned char> trimLeftASCII(gocpp::slice<unsigned char> s, gocpp::array_ptr<asciiSet> as);
     gocpp::slice<unsigned char> trimRightASCII(gocpp::slice<unsigned char> s, gocpp::array_ptr<asciiSet> as);
 }

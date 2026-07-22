@@ -29,7 +29,7 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     extern uint32_t traceAdvanceSema;
     extern uint32_t traceShutdownSema;
-    struct gocpp::error StartTrace();
+    gocpp::error StartTrace();
     void StopTrace();
     void traceAdvance(bool stopTrace);
     uintptr_t traceNextGen(uintptr_t gen);
@@ -178,8 +178,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceStruct& value);
-    golang::runtime::g* traceReader();
-    golang::runtime::g* traceReaderAvailable();
+    g* traceReader();
+    g* traceReaderAvailable();
     struct wakeableSleep
     {
         timer* timer{};
@@ -200,8 +200,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct wakeableSleep& value);
     extern traceStruct trace;
-    extern golang::runtime::traceAdvancerState traceAdvancer;
-    golang::runtime::wakeableSleep* newWakeableSleep();
+    extern traceAdvancerState traceAdvancer;
+    wakeableSleep* newWakeableSleep();
 
     namespace rec
     {

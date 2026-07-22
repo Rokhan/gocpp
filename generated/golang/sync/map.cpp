@@ -159,13 +159,13 @@ namespace golang::sync
         return e;
     }
 
-    golang::sync::readOnly rec::loadReadOnly(Map* m)
+    readOnly rec::loadReadOnly(Map* m)
     {
         if(auto p = rec::Load<readOnly>(gocpp::recv(m->read)); p != nullptr)
         {
             return *p;
         }
-        return golang::sync::readOnly {};
+        return readOnly {};
     }
 
     // Load returns the value stored in the map for a key, or nil if no
@@ -312,7 +312,7 @@ namespace golang::sync
                 // We're adding the first new key to the dirty map.
                 // Make sure it is allocated and mark the read-only map as incomplete.
                 rec::dirtyLocked(gocpp::recv(m));
-                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<golang::sync::readOnly>([=](auto& x) {
+                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
                     x.m = read.m;
                     x.amended = true;
                 }));
@@ -493,7 +493,7 @@ namespace golang::sync
                 // We're adding the first new key to the dirty map.
                 // Make sure it is allocated and mark the read-only map as incomplete.
                 rec::dirtyLocked(gocpp::recv(m));
-                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<golang::sync::readOnly>([=](auto& x) {
+                rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
                     x.m = read.m;
                     x.amended = true;
                 }));
@@ -623,7 +623,7 @@ namespace golang::sync
             read = rec::loadReadOnly(gocpp::recv(m));
             if(read.amended)
             {
-                read = gocpp::Init<golang::sync::readOnly>([=](auto& x) {
+                read = gocpp::Init<readOnly>([=](auto& x) {
                     x.m = m->dirty;
                 });
                 auto copyRead = read;
@@ -655,7 +655,7 @@ namespace golang::sync
         {
             return;
         }
-        rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<golang::sync::readOnly>([=](auto& x) {
+        rec::Store<readOnly>(gocpp::recv(m->read), gocpp::InitPtr<readOnly>([=](auto& x) {
             x.m = m->dirty;
         }));
         m->dirty = nullptr;

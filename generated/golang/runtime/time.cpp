@@ -148,7 +148,7 @@ namespace golang::runtime
     // timer function, goroutineReady, before the goroutine has been parked.
     bool resetForSleep(g* gp, gocpp::unsafe_pointer ut)
     {
-        auto t = (golang::runtime::timer*)(ut);
+        auto t = (timer*)(ut);
         resettimer(t, t->nextwhen);
         return true;
     }
@@ -199,7 +199,7 @@ namespace golang::runtime
     // Ready the goroutine arg.
     void goroutineReady(go_any arg, uintptr_t seq)
     {
-        goready(gocpp::getValue<golang::runtime::g*>(arg), 0);
+        goready(gocpp::getValue<g*>(arg), 0);
     }
 
     // Note: this changes some unsynchronized operations to synchronized operations
@@ -468,7 +468,7 @@ namespace golang::runtime
         auto status = uint32_t(timerNoStatus);
         auto wasRemoved = false;
         bool pending = {};
-        golang::runtime::m* mp = {};
+        m* mp = {};
         loop:
         for(; ; )
         {
@@ -821,7 +821,7 @@ namespace golang::runtime
         // We are going to clear all timerModifiedEarlier timers.
         rec::Store(gocpp::recv(pp->timerModifiedEarliest), 0);
 
-        gocpp::slice<golang::runtime::timer*> moved = {};
+        gocpp::slice<timer*> moved = {};
         for(auto i = 0; i < len(pp->timers); i++)
         {
             auto t = pp->timers[i];

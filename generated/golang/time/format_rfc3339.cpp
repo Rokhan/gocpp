@@ -73,7 +73,7 @@ namespace golang::time
         return b;
     }
 
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::appendStrictRFC3339(Time t, gocpp::slice<unsigned char> b)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::appendStrictRFC3339(Time t, gocpp::slice<unsigned char> b)
     {
         auto n0 = len(b);
         b = rec::appendFormatRFC3339(gocpp::recv(t), b, true);
@@ -110,7 +110,7 @@ namespace golang::time
     }
 
     template<typename bytes>
-    std::tuple<golang::time::Time, bool> parseRFC3339(bytes s, golang::time::Location* local)
+    std::tuple<Time, bool> parseRFC3339(bytes s, golang::time::Location* local)
     {
         // parseUint parses s as an unsigned decimal integer and
         // verifies that it is within some range.
@@ -140,7 +140,7 @@ namespace golang::time
         // Parse the date and time.
         if(len(s) < len("2006-01-02T15:04:05"_s))
         {
-            return {golang::time::Time {}, false};
+            return {Time {}, false};
         }
         // e.g., 2006
         auto year = parseUint(s.make_slice(0, 4), 0, 9999);
@@ -156,7 +156,7 @@ namespace golang::time
         auto sec = parseUint(s.make_slice(17, 19), 0, 59);
         if(! ok || ! (s[4] == '-' && s[7] == '-' && s[10] == 'T' && s[13] == ':' && s[16] == ':'))
         {
-            return {golang::time::Time {}, false};
+            return {Time {}, false};
         }
         s = s.make_slice(19);
 
@@ -178,7 +178,7 @@ namespace golang::time
         {
             if(len(s) != len("-07:00"_s))
             {
-                return {golang::time::Time {}, false};
+                return {Time {}, false};
             }
             // e.g., 07
             auto hr = parseUint(s.make_slice(1, 3), 0, 23);
@@ -186,7 +186,7 @@ namespace golang::time
             auto mm = parseUint(s.make_slice(4, 6), 0, 59);
             if(! ok || ! ((s[0] == '-' || s[0] == '+') && s[3] == ':'))
             {
-                return {golang::time::Time {}, false};
+                return {Time {}, false};
             }
             auto zoneOffset = (hr * 60 + mm) * 60;
             if(s[0] == '-')
@@ -208,7 +208,7 @@ namespace golang::time
         return {t, true};
     }
 
-    std::tuple<golang::time::Time, struct gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b)
+    std::tuple<Time, gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b)
     {
         auto [t, ok] = parseRFC3339(b, Local);
         if(! ok)
@@ -216,7 +216,7 @@ namespace golang::time
             auto [t, err] = Parse(RFC3339, gocpp::string(b));
             if(err != nullptr)
             {
-                return {golang::time::Time {}, err};
+                return {Time {}, err};
             }
 
             // The parse template syntax cannot correctly validate RFC 3339.
@@ -241,10 +241,10 @@ namespace golang::time
                         return {t, nullptr};
                         break;
                     case 1:
-                        return {golang::time::Time {}, gocpp::error(new golang::time::ParseError {RFC3339, gocpp::string(b), "15"_s, gocpp::string(b.make_slice(len("2006-01-02T"_s)).make_slice(0, 1)), ""_s})};
+                        return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), "15"_s, gocpp::string(b.make_slice(len("2006-01-02T"_s)).make_slice(0, 1)), ""_s})};
                         break;
                     case 2:
-                        return {golang::time::Time {}, gocpp::error(new golang::time::ParseError {RFC3339, gocpp::string(b), "."_s, ","_s, ""_s})};
+                        return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), "."_s, ","_s, ""_s})};
                         break;
                     case 3:
                         //Go switch emulation
@@ -255,17 +255,17 @@ namespace golang::time
                             switch(conditionId)
                             {
                                 case 0:
-                                    return {golang::time::Time {}, gocpp::error(new golang::time::ParseError {RFC3339, gocpp::string(b), "Z07:00"_s, gocpp::string(b.make_slice(len(b) - len("Z07:00"_s))), ": timezone hour out of range"_s})};
+                                    return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), "Z07:00"_s, gocpp::string(b.make_slice(len(b) - len("Z07:00"_s))), ": timezone hour out of range"_s})};
                                     break;
                                 case 1:
-                                    return {golang::time::Time {}, gocpp::error(new golang::time::ParseError {RFC3339, gocpp::string(b), "Z07:00"_s, gocpp::string(b.make_slice(len(b) - len("Z07:00"_s))), ": timezone minute out of range"_s})};
+                                    return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), "Z07:00"_s, gocpp::string(b.make_slice(len(b) - len("Z07:00"_s))), ": timezone minute out of range"_s})};
                                     break;
                             }
                         }
                         break;
                     default:
                         // unknown error; should not occur
-                        return {golang::time::Time {}, gocpp::error(new golang::time::ParseError {RFC3339, gocpp::string(b), RFC3339, gocpp::string(b), ""_s})};
+                        return {Time {}, gocpp::error(new ParseError {RFC3339, gocpp::string(b), RFC3339, gocpp::string(b), ""_s})};
                         break;
                 }
             }

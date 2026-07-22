@@ -91,7 +91,7 @@ namespace golang::runtime
     // newcoro creates a new coro containing a
     // goroutine blocked waiting to run f
     // and returns that coro.
-    golang::runtime::coro* newcoro(std::function<void (coro* _1)> f)
+    coro* newcoro(std::function<void (coro* _1)> f)
     {
         auto c = new coro{};
         c->f = f;
@@ -100,7 +100,7 @@ namespace golang::runtime
         systemstack([=]() mutable -> void
         {
             auto start = corostart;
-            auto startfv = *(golang::runtime::funcval**)(gocpp::unsafe_pointer(& start));
+            auto startfv = *(funcval**)(gocpp::unsafe_pointer(& start));
             gp = newproc1(startfv, gp, pc);
         });
         gp->coroarg = c;
@@ -190,7 +190,7 @@ namespace golang::runtime
 
         // The goroutine stored in c is the one to run next.
         // Swap it with ourselves.
-        golang::runtime::g* gnext = {};
+        g* gnext = {};
         for(; ; )
         {
             // Note: this is a racy load, but it will eventually

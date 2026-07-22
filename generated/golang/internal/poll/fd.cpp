@@ -73,7 +73,7 @@ namespace golang::poll
 
     // ErrNetClosing is returned when a network descriptor is used after
     // it has been closed.
-    golang::poll::errNetClosing ErrNetClosing = golang::poll::errNetClosing {};
+    errNetClosing ErrNetClosing = errNetClosing {};
     // ErrFileClosing is returned when a file descriptor is used after it
     // has been closed.
     gocpp::error ErrFileClosing = errors::New("use of closed file"_s);
@@ -81,7 +81,7 @@ namespace golang::poll
     // on a file type that does not use the poller.
     gocpp::error ErrNoDeadline = errors::New("file type does not support deadline"_s);
     // Return the appropriate closing error based on isFile.
-    struct gocpp::error errClosing(bool isFile)
+    gocpp::error errClosing(bool isFile)
     {
         if(isFile)
         {
@@ -92,7 +92,7 @@ namespace golang::poll
 
     // ErrDeadlineExceeded is returned for an expired deadline.
     // This is exported by the os package as os.ErrDeadlineExceeded.
-    gocpp::error ErrDeadlineExceeded = new golang::poll::DeadlineExceededError {};
+    gocpp::error ErrDeadlineExceeded = new DeadlineExceededError {};
     // DeadlineExceededError is returned for an expired deadline.
     
     template<typename T> requires gocpp::GoStruct<T>

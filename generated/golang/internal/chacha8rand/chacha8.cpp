@@ -214,7 +214,7 @@ namespace golang::chacha8rand
     }
 
     // Unmarshal unmarshals the state from a byte slice.
-    struct gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data)
+    gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data)
     {
         if(len(data) != 6 * 8 || gocpp::string(data.make_slice(0, 8)) != "chacha8:"_s)
         {

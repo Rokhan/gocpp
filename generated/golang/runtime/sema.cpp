@@ -95,11 +95,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    golang::runtime::semTable semtable;
+    semTable semtable;
     struct gocpp_id_0
     {
         semaRoot root{};
-        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<golang::runtime::semaRoot>()> pad{};
+        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<semaRoot>()> pad{};
 
         using isGoStruct = void;
 
@@ -136,7 +136,7 @@ namespace golang::runtime
     }
 
 
-    golang::runtime::semaRoot* rec::rootFor(gocpp::array_ptr<semTable> t, uint32_t* addr)
+    semaRoot* rec::rootFor(gocpp::array_ptr<semTable> t, uint32_t* addr)
     {
         return & t[(uintptr_t(gocpp::unsafe_pointer(addr)) >> 3) % semTabSize].root;
     }
@@ -385,7 +385,7 @@ namespace golang::runtime
         s->prev = nullptr;
         s->waiters = 0;
 
-        golang::runtime::sudog* last = {};
+        sudog* last = {};
         auto pt = & root->treap;
         for(auto t = *pt; t != nullptr; t = *pt)
         {
@@ -497,9 +497,9 @@ namespace golang::runtime
     // If there are additional entries in the wait list, dequeue
     // returns tailtime set to the last entry's acquiretime.
     // Otherwise tailtime is found.acquiretime.
-    std::tuple<golang::runtime::sudog*, int64_t, int64_t> rec::dequeue(semaRoot* root, uint32_t* addr)
+    std::tuple<sudog*, int64_t, int64_t> rec::dequeue(semaRoot* root, uint32_t* addr)
     {
-        golang::runtime::sudog* found;
+        sudog* found;
         int64_t now;
         int64_t tailtime;
         auto ps = & root->treap;
@@ -858,7 +858,7 @@ namespace golang::runtime
         // be too long. This applies even when the g is missing:
         // it hasn't yet gotten to sleep and has lost the race to
         // the (few) other g's that we find on the list.
-        for(auto [p, s] = std::tuple{(golang::runtime::sudog*)(nullptr), l->head}; s != nullptr; std::tie(p, s) = std::tuple{s, s->next})
+        for(auto [p, s] = std::tuple{(sudog*)(nullptr), l->head}; s != nullptr; std::tie(p, s) = std::tuple{s, s->next})
         {
             if(s->ticket == t)
             {
@@ -887,9 +887,9 @@ namespace golang::runtime
     //go:linkname notifyListCheck sync.runtime_notifyListCheck
     void notifyListCheck(uintptr_t sz)
     {
-        if(sz != gocpp::Sizeof<golang::runtime::notifyList>())
+        if(sz != gocpp::Sizeof<notifyList>())
         {
-            print("runtime: bad notifyList size - sync="_s, sz, " runtime="_s, gocpp::Sizeof<golang::runtime::notifyList>(), "\n"_s);
+            print("runtime: bad notifyList size - sync="_s, sz, " runtime="_s, gocpp::Sizeof<notifyList>(), "\n"_s);
             go_throw("bad notifyList size"_s);
         }
     }

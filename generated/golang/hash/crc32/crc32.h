@@ -38,8 +38,8 @@ namespace golang::crc32
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
     uint32_t ChecksumIEEE(gocpp::slice<unsigned char> data);
-    extern gocpp::array_ptr<golang::crc32::Table> castagnoliTable;
-    gocpp::array_ptr<golang::crc32::Table> MakeTable(uint32_t poly);
+    extern gocpp::array_ptr<Table> castagnoliTable;
+    gocpp::array_ptr<Table> MakeTable(uint32_t poly);
     uint32_t update(uint32_t crc, gocpp::array_ptr<Table> tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);
     uint32_t Update(uint32_t crc, gocpp::array_ptr<Table> tab, gocpp::slice<unsigned char> p);
     uint32_t Checksum(gocpp::slice<unsigned char> data, gocpp::array_ptr<Table> tab);
@@ -52,11 +52,11 @@ namespace golang::crc32
 
 namespace golang::crc32
 {
-    extern gocpp::array_ptr<golang::crc32::slicing8Table> castagnoliTable8;
+    extern gocpp::array_ptr<slicing8Table> castagnoliTable8;
     extern sync::Once castagnoliOnce;
     extern atomic::Bool haveCastagnoli;
     extern crc32::Table* IEEETable;
-    extern gocpp::array_ptr<golang::crc32::slicing8Table> ieeeTable8;
+    extern gocpp::array_ptr<slicing8Table> ieeeTable8;
     extern sync::Once ieeeOnce;
     hash::Hash32 New(gocpp::array_ptr<Table> tab);
     hash::Hash32 NewIEEE();
@@ -66,9 +66,9 @@ namespace golang::crc32
         int Size(digest* d);
         int BlockSize(digest* d);
         void Reset(digest* d);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(digest* d);
-        struct gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(digest* d);
+        gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
         uint32_t Sum32(digest* d);
         gocpp::slice<unsigned char> Sum(digest* d, gocpp::slice<unsigned char> in);
     }

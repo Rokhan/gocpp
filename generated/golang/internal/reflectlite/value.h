@@ -244,7 +244,7 @@ namespace golang::reflectlite
     namespace rec
     {
         golang::reflectlite::Kind kind(flag f);
-        golang::reflectlite::flag ro(flag f);
+        flag ro(flag f);
         abi::Type* typ(golang::reflectlite::Value v);
         gocpp::unsafe_pointer pointer(golang::reflectlite::Value v);
         gocpp::string Error(ValueError* e);
@@ -258,7 +258,7 @@ namespace golang::reflectlite
         int Len(golang::reflectlite::Value v);
         int numMethod(golang::reflectlite::Value v);
         void Set(golang::reflectlite::Value v, golang::reflectlite::Value x);
-        struct Type Type(golang::reflectlite::Value v);
+        golang::reflectlite::Type Type(golang::reflectlite::Value v);
         golang::reflectlite::Value assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target);
     }
 }

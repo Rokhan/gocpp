@@ -31,8 +31,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     extern gocpp::slice<gocpp::string> mSpanStateNames;
     void recordspan(gocpp::unsafe_pointer vh, gocpp::unsafe_pointer p);
-    golang::runtime::spanClass makeSpanClass(uint8_t sizeclass, bool noscan);
-    golang::runtime::arenaIdx arenaIndex(uintptr_t p);
+    spanClass makeSpanClass(uint8_t sizeclass, bool noscan);
+    arenaIdx arenaIndex(uintptr_t p);
     uintptr_t arenaBase(arenaIdx i);
     bool inheap(uintptr_t b);
     bool inHeapOrStack(uintptr_t b);
@@ -73,7 +73,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct gcBitsHeader& value);
     void nextMarkBitArenaEpoch();
-    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<golang::runtime::gcBitsHeader>() [known mising deps] */;
+    /*const uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<gcBitsHeader>() [known mising deps] */;
 }
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/internal/sys/nih.h"
@@ -308,9 +308,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
-    std::tuple<golang::runtime::heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p);
+    std::tuple<heapArena*, uintptr_t, uint8_t> pageIndexOf(uintptr_t p);
     bool addspecial(gocpp::unsafe_pointer p, special* s);
-    golang::runtime::special* removespecial(gocpp::unsafe_pointer p, uint8_t kind);
+    special* removespecial(gocpp::unsafe_pointer p, uint8_t kind);
     struct specialfinalizer
     {
         sys::NotInHeap _1{};
@@ -406,8 +406,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcBitsArena& value);
-    golang::runtime::gcBits* newMarkBits(uintptr_t nelems);
-    golang::runtime::gcBits* newAllocBits(uintptr_t nelems);
+    gcBits* newMarkBits(uintptr_t nelems);
+    gcBits* newAllocBits(uintptr_t nelems);
 }
 #include "golang/runtime/mcache.h"
 #include "golang/runtime/mranges.h"
@@ -504,14 +504,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mspan& value);
-    golang::runtime::mspan* spanOf(uintptr_t p);
-    golang::runtime::mspan* spanOfUnchecked(uintptr_t p);
-    golang::runtime::mspan* spanOfHeap(uintptr_t p);
+    mspan* spanOf(uintptr_t p);
+    mspan* spanOfUnchecked(uintptr_t p);
+    mspan* spanOfHeap(uintptr_t p);
     void spanHasSpecials(mspan* s);
     void spanHasNoSpecials(mspan* s);
-    golang::runtime::specialsIter newSpecialsIter(mspan* span);
+    specialsIter newSpecialsIter(mspan* span);
     extern gcBitsArenasStruct gcBitsArenas;
-    golang::runtime::gcBitsArena* newArenaMayUnlock();
+    gcBitsArena* newArenaMayUnlock();
 }
 #include "golang/internal/cpu/cpu.h"
 #include "golang/runtime/malloc.h"
@@ -652,12 +652,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mheap& value);
-    extern golang::runtime::mheap mheap_;
+    extern mheap mheap_;
 
     namespace rec
     {
         void set(mSpanStateBox* b, mSpanState s);
-        golang::runtime::mSpanState get(mSpanStateBox* b);
+        mSpanState get(mSpanStateBox* b);
         uintptr_t base(mspan* s);
         std::tuple<uintptr_t, uintptr_t, uintptr_t> layout(mspan* s);
         int8_t sizeclass(spanClass sc);
@@ -668,14 +668,14 @@ namespace golang::runtime
         void reclaim(mheap* h, uintptr_t npage);
         uintptr_t reclaimChunk(mheap* h, gocpp::slice<arenaIdx> arenas, uintptr_t pageIdx, uintptr_t n);
         bool manual(spanAllocType s);
-        golang::runtime::mspan* alloc(mheap* h, uintptr_t npages, spanClass spanclass);
-        golang::runtime::mspan* allocManual(mheap* h, uintptr_t npages, spanAllocType typ);
+        mspan* alloc(mheap* h, uintptr_t npages, spanClass spanclass);
+        mspan* allocManual(mheap* h, uintptr_t npages, spanAllocType typ);
         void setSpans(mheap* h, uintptr_t base, uintptr_t npage, mspan* s);
         bool allocNeedsZero(mheap* h, uintptr_t base, uintptr_t npage);
-        golang::runtime::mspan* tryAllocMSpan(mheap* h);
-        golang::runtime::mspan* allocMSpanLocked(mheap* h);
+        mspan* tryAllocMSpan(mheap* h);
+        mspan* allocMSpanLocked(mheap* h);
         void freeMSpanLocked(mheap* h, mspan* s);
-        golang::runtime::mspan* allocSpan(mheap* h, uintptr_t npages, spanAllocType typ, spanClass spanclass);
+        mspan* allocSpan(mheap* h, uintptr_t npages, spanAllocType typ, spanClass spanclass);
         void initSpan(mheap* h, mspan* s, spanAllocType typ, spanClass spanclass, uintptr_t base, uintptr_t npages);
         std::tuple<uintptr_t, bool> grow(mheap* h, uintptr_t npage);
         void freeSpan(mheap* h, mspan* s);
@@ -690,13 +690,13 @@ namespace golang::runtime
         void insert(mSpanList* list, mspan* span);
         void insertBack(mSpanList* list, mspan* span);
         void takeAll(mSpanList* list, mSpanList* other);
-        std::tuple<golang::runtime::special**, bool> specialFindSplicePoint(mspan* span, uintptr_t offset, unsigned char kind);
+        std::tuple<special**, bool> specialFindSplicePoint(mspan* span, uintptr_t offset, unsigned char kind);
         bool valid(specialsIter* i);
         void next(specialsIter* i);
-        golang::runtime::special* unlinkAndNext(specialsIter* i);
+        special* unlinkAndNext(specialsIter* i);
         uint8_t* bytep(gcBits* b, uintptr_t n);
         std::tuple<uint8_t*, uint8_t> bitp(gcBits* b, uintptr_t n);
-        golang::runtime::gcBits* tryAlloc(gcBitsArena* b, uintptr_t bytes);
+        gcBits* tryAlloc(gcBitsArena* b, uintptr_t bytes);
     }
 }
 

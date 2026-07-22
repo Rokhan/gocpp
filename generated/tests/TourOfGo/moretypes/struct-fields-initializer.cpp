@@ -87,32 +87,32 @@ namespace golang::main
     }
 
     long one = 1;
-    golang::main::Vertex v1 = golang::main::Vertex {one, 2, 3};
-    golang::main::Vertex v2 = gocpp::Init<golang::main::Vertex>([](auto& x) {
+    Vertex v1 = Vertex {one, 2, 3};
+    Vertex v2 = gocpp::Init<Vertex>([](auto& x) {
         x.X = one;
     });
-    golang::main::Vertex v3 = golang::main::Vertex {};
-    golang::main::Vertex v4 = gocpp::Init<golang::main::Vertex>([](auto& x) {
+    Vertex v3 = Vertex {};
+    Vertex v4 = gocpp::Init<Vertex>([](auto& x) {
         x.X = one;
         x.Z = 3;
     });
-    golang::main::Segment s1 = gocpp::Init<golang::main::Segment>([](auto& x) {
-        x.Start = gocpp::Init<golang::main::Vertex>([](auto& x) {
+    Segment s1 = gocpp::Init<Segment>([](auto& x) {
+        x.Start = gocpp::Init<Vertex>([](auto& x) {
             x.X = 1;
             x.Z = 3;
             x.Y = 2;
         });
-        x.End = golang::main::Vertex {1, 1, 1};
+        x.End = Vertex {1, 1, 1};
     });
     void main()
     {
-        auto s2 = gocpp::Init<golang::main::Segment>([=](auto& x) {
-            x.Start = gocpp::Init<golang::main::Vertex>([=](auto& x) {
+        auto s2 = gocpp::Init<Segment>([=](auto& x) {
+            x.Start = gocpp::Init<Vertex>([=](auto& x) {
                 x.X = one;
                 x.Z = 3;
                 x.Y = 2;
             });
-            x.End = golang::main::Vertex {1, one, 1};
+            x.End = Vertex {1, one, 1};
         });
 
         mocklib::Println(v1, v2, v3, v4, s1, s2);

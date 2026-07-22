@@ -46,7 +46,7 @@ namespace golang::utf8
     bool Valid(gocpp::slice<unsigned char> p);
     bool ValidString(gocpp::string s);
     bool ValidRune(gocpp::rune r);
-    extern gocpp::array<golang::utf8::acceptRange, 16> acceptRanges;
+    extern gocpp::array<acceptRange, 16> acceptRanges;
 
     namespace rec
     {

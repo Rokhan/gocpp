@@ -35,7 +35,7 @@ namespace golang::godebug
     int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
     void setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
     std::function<void ()> newIncNonDefault(gocpp::string name);
-    extern golang::godebug::runtimeStderr go_stderr;
+    extern runtimeStderr go_stderr;
 }
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/map.h"
@@ -102,9 +102,9 @@ namespace golang::godebug
     std::ostream& operator<<(std::ostream& os, const struct value& value);
     extern sync::Map cache;
     extern mocklib::Mutex updateMu;
-    golang::godebug::Setting* New(gocpp::string name);
-    extern golang::godebug::value empty;
-    golang::godebug::setting* lookup(gocpp::string name);
+    Setting* New(gocpp::string name);
+    extern value empty;
+    setting* lookup(gocpp::string name);
 
     namespace rec
     {
@@ -114,7 +114,7 @@ namespace golang::godebug
         void IncNonDefault(Setting* s);
         void go_register(Setting* s);
         gocpp::string Value(Setting* s);
-        std::tuple<int, struct gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> Write(runtimeStderr*, gocpp::slice<unsigned char> b);
     }
 }
 

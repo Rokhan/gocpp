@@ -76,7 +76,7 @@ namespace golang::utf8
     }
 
     // acceptRanges has size 16 to avoid bounds checks in the code that uses it.
-    gocpp::array<golang::utf8::acceptRange, 16> acceptRanges = gocpp::Init<gocpp::array<golang::utf8::acceptRange, 16>>([](auto& x) {
+    gocpp::array<acceptRange, 16> acceptRanges = gocpp::Init<gocpp::array<acceptRange, 16>>([](auto& x) {
         x[0] = {locb, hicb};
         x[1] = {0xA0, hicb};
         x[2] = {locb, 0x9F};

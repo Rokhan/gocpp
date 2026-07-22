@@ -74,7 +74,7 @@ namespace golang::main
         rec::M(gocpp::recv(i));
     }
 
-    void describe(struct I i)
+    void describe(I i)
     {
         mocklib::Printf("(%v, %T)\n"_s, i, i);
     }

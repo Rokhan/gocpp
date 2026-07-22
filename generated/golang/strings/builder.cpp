@@ -78,7 +78,7 @@ namespace golang::strings
             // See issue 23382.
             // TODO: once issue 7921 is fixed, this should be reverted to
             // just "b.addr = b".
-            b->addr = (golang::strings::Builder*)(noescape(gocpp::unsafe_pointer(b)));
+            b->addr = (Builder*)(noescape(gocpp::unsafe_pointer(b)));
         }
         else
         if(b->addr != b)
@@ -141,7 +141,7 @@ namespace golang::strings
 
     // Write appends the contents of p to b's buffer.
     // Write always returns len(p), nil.
-    std::tuple<int, struct gocpp::error> rec::Write(Builder* b, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Write(Builder* b, gocpp::slice<unsigned char> p)
     {
         rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, p);
@@ -150,7 +150,7 @@ namespace golang::strings
 
     // WriteByte appends the byte c to b's buffer.
     // The returned error is always nil.
-    struct gocpp::error rec::WriteByte(Builder* b, unsigned char c)
+    gocpp::error rec::WriteByte(Builder* b, unsigned char c)
     {
         rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, c);
@@ -159,7 +159,7 @@ namespace golang::strings
 
     // WriteRune appends the UTF-8 encoding of Unicode code point r to b's buffer.
     // It returns the length of r and a nil error.
-    std::tuple<int, struct gocpp::error> rec::WriteRune(Builder* b, gocpp::rune r)
+    std::tuple<int, gocpp::error> rec::WriteRune(Builder* b, gocpp::rune r)
     {
         rec::copyCheck(gocpp::recv(b));
         auto n = len(b->buf);
@@ -169,7 +169,7 @@ namespace golang::strings
 
     // WriteString appends the contents of s to b's buffer.
     // It returns the length of s and a nil error.
-    std::tuple<int, struct gocpp::error> rec::WriteString(Builder* b, gocpp::string s)
+    std::tuple<int, gocpp::error> rec::WriteString(Builder* b, gocpp::string s)
     {
         rec::copyCheck(gocpp::recv(b));
         b->buf = append(b->buf, s);

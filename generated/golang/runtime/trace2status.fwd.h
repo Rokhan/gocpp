@@ -8,15 +8,15 @@ namespace golang::runtime
 {
     using traceGoStatus = uint8_t;
     using traceProcStatus = uint8_t;
-    const golang::runtime::traceGoStatus traceGoBad = 0;
-    const golang::runtime::traceGoStatus traceGoRunnable = 1;
-    const golang::runtime::traceGoStatus traceGoRunning = 2;
-    const golang::runtime::traceGoStatus traceGoSyscall = 3;
-    const golang::runtime::traceGoStatus traceGoWaiting = 4;
-    const golang::runtime::traceProcStatus traceProcBad = 0;
-    const golang::runtime::traceProcStatus traceProcRunning = 1;
-    const golang::runtime::traceProcStatus traceProcIdle = 2;
-    const golang::runtime::traceProcStatus traceProcSyscall = 3;
+    const traceGoStatus traceGoBad = 0;
+    const traceGoStatus traceGoRunnable = 1;
+    const traceGoStatus traceGoRunning = 2;
+    const traceGoStatus traceGoSyscall = 3;
+    const traceGoStatus traceGoWaiting = 4;
+    const traceProcStatus traceProcBad = 0;
+    const traceProcStatus traceProcRunning = 1;
+    const traceProcStatus traceProcIdle = 2;
+    const traceProcStatus traceProcSyscall = 3;
     // traceProcSyscallAbandoned is a special case of
     // traceProcSyscall. It's used in the very specific case
     // where the first a P is mentioned in a generation is
@@ -26,7 +26,7 @@ namespace golang::runtime
     // special state indicates this to the parser, so it
     // doesn't try to find a GoSyscallEndBlocked that
     // corresponds with the ProcSteal.
-    const golang::runtime::traceProcStatus traceProcSyscallAbandoned = 4;
+    const traceProcStatus traceProcSyscallAbandoned = 4;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 

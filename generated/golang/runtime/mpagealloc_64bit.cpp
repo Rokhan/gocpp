@@ -91,8 +91,8 @@ namespace golang::runtime
             }
 
             // Put this reservation into a slice.
-            auto sl = golang::runtime::notInHeapSlice {(golang::runtime::notInHeap*)(r), 0, entries};
-            p->summary[l] = *(gocpp::slice<golang::runtime::pallocSum>*)(gocpp::unsafe_pointer(& sl));
+            auto sl = notInHeapSlice {(notInHeap*)(r), 0, entries};
+            p->summary[l] = *(gocpp::slice<pallocSum>*)(gocpp::unsafe_pointer(& sl));
         }
     }
 
@@ -117,7 +117,7 @@ namespace golang::runtime
         // addrRangeToSummaryRange converts a range of addresses into a range
         // of summary indices which must be mapped to support those addresses
         // in the summary range.
-        auto addrRangeToSummaryRange = [=](int level, golang::runtime::addrRange r) mutable -> std::tuple<int, int>
+        auto addrRangeToSummaryRange = [=](int level, addrRange r) mutable -> std::tuple<int, int>
         {
             auto [sumIdxBase, sumIdxLimit] = addrsToSummaryRange(level, rec::addr(gocpp::recv(r.base)), rec::addr(gocpp::recv(r.limit)));
             return blockAlignSummaryRange(level, sumIdxBase, sumIdxLimit);
@@ -126,21 +126,21 @@ namespace golang::runtime
         // summaryRangeToSumAddrRange converts a range of indices in any
         // level of p.summary into page-aligned addresses which cover that
         // range of indices.
-        auto summaryRangeToSumAddrRange = [=](int level, int sumIdxBase, int sumIdxLimit) mutable -> golang::runtime::addrRange
+        auto summaryRangeToSumAddrRange = [=](int level, int sumIdxBase, int sumIdxLimit) mutable -> addrRange
         {
             auto baseOffset = alignDown(uintptr_t(sumIdxBase) * pallocSumBytes, physPageSize);
             auto limitOffset = alignUp(uintptr_t(sumIdxLimit) * pallocSumBytes, physPageSize);
             auto base = gocpp::unsafe_pointer(& p->summary[level][0]);
-            return golang::runtime::addrRange {
-                golang::runtime::offAddr {uintptr_t(add(base, baseOffset))},
-                golang::runtime::offAddr {uintptr_t(add(base, limitOffset))}
+            return addrRange {
+                offAddr {uintptr_t(add(base, baseOffset))},
+                offAddr {uintptr_t(add(base, limitOffset))}
             };
         };
 
         // addrRangeToSumAddrRange is a convenience function that converts
         // an address range r to the address range of the given summary level
         // that stores the summaries for r.
-        auto addrRangeToSumAddrRange = [=](int level, golang::runtime::addrRange r) mutable -> golang::runtime::addrRange
+        auto addrRangeToSumAddrRange = [=](int level, addrRange r) mutable -> addrRange
         {
             auto [sumIdxBase, sumIdxLimit] = addrRangeToSummaryRange(level, r);
             return summaryRangeToSumAddrRange(level, sumIdxBase, sumIdxLimit);
@@ -211,7 +211,7 @@ namespace golang::runtime
             print("runtime: base = "_s, hex(base), ", limit = "_s, hex(limit), "\n"_s);
             go_throw("sysGrow bounds not aligned to pallocChunkBytes"_s);
         }
-        auto scSize = gocpp::Sizeof<golang::runtime::atomicScavChunkData>();
+        auto scSize = gocpp::Sizeof<atomicScavChunkData>();
         // Map and commit the pieces of chunks that we need.
         // We always map the full range of the minimum heap address to the
         // maximum heap address. We don't do this for the summary structure
@@ -269,10 +269,10 @@ namespace golang::runtime
     uintptr_t rec::sysInit(scavengeIndex* s, bool test, sysMemStat* sysStat)
     {
         auto n = uintptr_t(1 << heapAddrBits) / pallocChunkBytes;
-        auto nbytes = n * gocpp::Sizeof<golang::runtime::atomicScavChunkData>();
+        auto nbytes = n * gocpp::Sizeof<atomicScavChunkData>();
         auto r = sysReserve(nullptr, nbytes);
-        auto sl = golang::runtime::notInHeapSlice {(golang::runtime::notInHeap*)(r), int(n), int(n)};
-        s->chunks = *(gocpp::slice<golang::runtime::atomicScavChunkData>*)(gocpp::unsafe_pointer(& sl));
+        auto sl = notInHeapSlice {(notInHeap*)(r), int(n), int(n)};
+        s->chunks = *(gocpp::slice<atomicScavChunkData>*)(gocpp::unsafe_pointer(& sl));
         // All memory above is mapped Reserved.
         return 0;
     }

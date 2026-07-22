@@ -46,11 +46,11 @@ namespace golang::poll
         bool decref(fdMutex* mu);
         bool rwlock(fdMutex* mu, bool read);
         bool rwunlock(fdMutex* mu, bool read);
-        struct gocpp::error incref(FD* fd);
-        struct gocpp::error decref(FD* fd);
-        struct gocpp::error readLock(FD* fd);
+        gocpp::error incref(FD* fd);
+        gocpp::error decref(FD* fd);
+        gocpp::error readLock(FD* fd);
         void readUnlock(FD* fd);
-        struct gocpp::error writeLock(FD* fd);
+        gocpp::error writeLock(FD* fd);
         void writeUnlock(FD* fd);
     }
 }

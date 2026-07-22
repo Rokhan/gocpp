@@ -259,7 +259,7 @@ namespace golang::poll
 
     // incref adds a reference to fd.
     // It returns an error when fd cannot be used.
-    struct gocpp::error rec::incref(FD* fd)
+    gocpp::error rec::incref(FD* fd)
     {
         if(! rec::incref(gocpp::recv(fd->fdmu)))
         {
@@ -271,7 +271,7 @@ namespace golang::poll
     // decref removes a reference from fd.
     // It also closes fd when the state of fd is set to closed and there
     // is no remaining reference.
-    struct gocpp::error rec::decref(FD* fd)
+    gocpp::error rec::decref(FD* fd)
     {
         if(rec::decref(gocpp::recv(fd->fdmu)))
         {
@@ -282,7 +282,7 @@ namespace golang::poll
 
     // readLock adds a reference to fd and locks fd for reading.
     // It returns an error when fd cannot be used for reading.
-    struct gocpp::error rec::readLock(FD* fd)
+    gocpp::error rec::readLock(FD* fd)
     {
         if(! rec::rwlock(gocpp::recv(fd->fdmu), true))
         {
@@ -304,7 +304,7 @@ namespace golang::poll
 
     // writeLock adds a reference to fd and locks fd for writing.
     // It returns an error when fd cannot be used for writing.
-    struct gocpp::error rec::writeLock(FD* fd)
+    gocpp::error rec::writeLock(FD* fd)
     {
         if(! rec::rwlock(gocpp::recv(fd->fdmu), false))
         {

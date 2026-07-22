@@ -70,7 +70,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct piController& value);
-    golang::runtime::scavChunkData unpackScavChunkData(uint64_t sc);
+    scavChunkData unpackScavChunkData(uint64_t sc);
 }
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/runtime2.h"
@@ -197,7 +197,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
     extern scavengeStruct scavenge;
-    extern golang::runtime::scavengerState scavenger;
+    extern scavengerState scavenger;
 }
 #include "golang/runtime/mranges.h"
 
@@ -286,12 +286,12 @@ namespace golang::runtime
         std::tuple<unsigned int, unsigned int> findScavengeCandidate(pallocData* m, unsigned int searchIdx, uintptr_t minimum, uintptr_t max);
         uintptr_t init(scavengeIndex* s, bool test, sysMemStat* sysStat);
         uintptr_t grow(scavengeIndex* s, uintptr_t base, uintptr_t limit, sysMemStat* sysStat);
-        std::tuple<golang::runtime::chunkIdx, unsigned int> find(scavengeIndex* s, bool force);
+        std::tuple<chunkIdx, unsigned int> find(scavengeIndex* s, bool force);
         void alloc(scavengeIndex* s, chunkIdx ci, unsigned int npages);
         void free(scavengeIndex* s, chunkIdx ci, unsigned int page, unsigned int npages);
         void nextGen(scavengeIndex* s);
         void setEmpty(scavengeIndex* s, chunkIdx ci);
-        golang::runtime::scavChunkData load(atomicScavChunkData* sc);
+        scavChunkData load(atomicScavChunkData* sc);
         void store(atomicScavChunkData* sc, scavChunkData ssc);
         uint64_t pack(scavChunkData sc);
         bool isEmpty(scavChunkFlags* sc);

@@ -13,8 +13,8 @@
 
 namespace golang::fs
 {
-    gocpp::string FormatFileInfo(struct FileInfo info);
-    gocpp::string FormatDirEntry(struct DirEntry dir);
+    gocpp::string FormatFileInfo(FileInfo info);
+    gocpp::string FormatDirEntry(DirEntry dir);
 
     namespace rec
     {

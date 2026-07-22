@@ -16,10 +16,10 @@ namespace golang::hex
     int Encode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     gocpp::slice<unsigned char> AppendEncode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     int DecodedLen(int x);
-    std::tuple<int, struct gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> AppendDecode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+    std::tuple<int, gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendDecode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     gocpp::string EncodeToString(gocpp::slice<unsigned char> src);
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> DecodeString(gocpp::string s);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> DecodeString(gocpp::string s);
     gocpp::string Dump(gocpp::slice<unsigned char> data);
     unsigned char toChar(unsigned char b);
 }
@@ -94,10 +94,10 @@ namespace golang::hex
     namespace rec
     {
         gocpp::string Error(InvalidByteError e);
-        std::tuple<int, struct gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> Write(dumper* h, gocpp::slice<unsigned char> data);
-        struct gocpp::error Close(dumper* h);
+        std::tuple<int, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Write(dumper* h, gocpp::slice<unsigned char> data);
+        gocpp::error Close(dumper* h);
     }
 }
 

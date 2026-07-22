@@ -376,14 +376,14 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mstats& value);
-    extern golang::runtime::mstats memstats;
+    extern mstats memstats;
 
     namespace rec
     {
         uint64_t load(sysMemStat* s);
         void add(sysMemStat* s, int64_t n);
         void merge(heapStatsDelta* a, heapStatsDelta* b);
-        golang::runtime::heapStatsDelta* acquire(consistentHeapStats* m);
+        heapStatsDelta* acquire(consistentHeapStats* m);
         void release(consistentHeapStats* m);
         void unsafeRead(consistentHeapStats* m, heapStatsDelta* out);
         void unsafeClear(consistentHeapStats* m);

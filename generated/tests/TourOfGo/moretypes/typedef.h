@@ -33,8 +33,8 @@ namespace golang::main
     struct GoTag_vvvv2 { };
     void UseTypedefPtr1(vvvv1* t);
     void main();
-    using VertexAlias = gocpp::defined<golang::main::Vertex, GoTag_VertexAlias>;
-    using vvvv2 = gocpp::defined<golang::main::Vertex, GoTag_vvvv2>;
+    using VertexAlias = gocpp::defined<Vertex, GoTag_VertexAlias>;
+    using vvvv2 = gocpp::defined<Vertex, GoTag_vvvv2>;
     void UseStructPtr(Vertex* t);
     void UseTypedefPtr2(vvvv2* t);
 

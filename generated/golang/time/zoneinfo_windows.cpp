@@ -35,13 +35,13 @@ namespace golang::time
     // matchZoneKey checks if stdname and dstname match the corresponding key
     // values "MUI_Std" and MUI_Dlt" or "Std" and "Dlt" in the kname key stored
     // under the open registry key zones.
-    std::tuple<bool, struct gocpp::error> matchZoneKey(registry::Key zones, gocpp::string kname, gocpp::string stdname, gocpp::string dstname)
+    std::tuple<bool, gocpp::error> matchZoneKey(registry::Key zones, gocpp::string kname, gocpp::string stdname, gocpp::string dstname)
     {
         gocpp::Defer defer;
         try
         {
             bool matched;
-            struct gocpp::error err2;
+            gocpp::error err2;
             auto [k, err] = registry::OpenKey(zones, kname, registry::READ);
             if(err != nullptr)
             {
@@ -88,7 +88,7 @@ namespace golang::time
 
     // toEnglishName searches the registry for an English name of a time zone
     // whose zone names are stdname and dstname and returns the English name.
-    std::tuple<gocpp::string, struct gocpp::error> toEnglishName(gocpp::string stdname, gocpp::string dstname)
+    std::tuple<gocpp::string, gocpp::error> toEnglishName(gocpp::string stdname, gocpp::string dstname)
     {
         gocpp::Defer defer;
         try
@@ -207,7 +207,7 @@ namespace golang::time
         {
             nzone++;
         }
-        l->zone = gocpp::make(gocpp::Tag<gocpp::slice<golang::time::zone>>(), nzone);
+        l->zone = gocpp::make(gocpp::Tag<gocpp::slice<zone>>(), nzone);
 
         auto [stdname, dstname] = abbrev(i);
 
@@ -220,7 +220,7 @@ namespace golang::time
             l->cacheStart = alpha;
             l->cacheEnd = omega;
             l->cacheZone = std;
-            l->tx = gocpp::make(gocpp::Tag<gocpp::slice<golang::time::zoneTrans>>(), 1);
+            l->tx = gocpp::make(gocpp::Tag<gocpp::slice<zoneTrans>>(), 1);
             l->tx[0].when = l->cacheStart;
             l->tx[0].index = 0;
             return;
@@ -249,7 +249,7 @@ namespace golang::time
         }
 
         // 2 tx per year, 100 years on each side of this year
-        l->tx = gocpp::make(gocpp::Tag<gocpp::slice<golang::time::zoneTrans>>(), 400);
+        l->tx = gocpp::make(gocpp::Tag<gocpp::slice<zoneTrans>>(), 400);
 
         auto t = rec::UTC(gocpp::recv(Now()));
         auto year = rec::Year(gocpp::recv(t));

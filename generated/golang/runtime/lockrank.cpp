@@ -96,7 +96,7 @@ namespace golang::runtime
     // when rank X is acquired.
     //
     // Lock ranks that allow self-cycles list themselves.
-    gocpp::slice<gocpp::slice<golang::runtime::lockRank>> lockPartialOrder = gocpp::Init<gocpp::slice<gocpp::slice<golang::runtime::lockRank>>>([](auto& x) {
+    gocpp::slice<gocpp::slice<lockRank>> lockPartialOrder = gocpp::Init<gocpp::slice<gocpp::slice<lockRank>>>([](auto& x) {
         x[lockRankSysmon] = {};
         x[lockRankScavenge] = {lockRankSysmon};
         x[lockRankForcegc] = {lockRankSysmon};

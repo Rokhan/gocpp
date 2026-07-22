@@ -179,12 +179,12 @@ namespace golang::time
 
     // NewTimer creates a new Timer that will send
     // the current time on its channel after at least duration d.
-    golang::time::Timer* NewTimer(Duration d)
+    Timer* NewTimer(Duration d)
     {
-        auto c = gocpp::make(gocpp::Tag<gocpp::channel<golang::time::Time>>(), 1);
-        auto t = gocpp::InitPtr<golang::time::Timer>([=](auto& x) {
+        auto c = gocpp::make(gocpp::Tag<gocpp::channel<Time>>(), 1);
+        auto t = gocpp::InitPtr<Timer>([=](auto& x) {
             x.C = c;
-            x.r = gocpp::Init<golang::time::runtimeTimer>([=](auto& x) {
+            x.r = gocpp::Init<runtimeTimer>([=](auto& x) {
                 x.when = when(d);
                 x.f = sendTime;
                 x.arg = c;
@@ -244,7 +244,7 @@ namespace golang::time
         //Go select emulation
         {
             int conditionId = -1;
-            if(gocpp::getValue<gocpp::channel<golang::time::Time>>(c).trySend(Now())) { conditionId = 0; }
+            if(gocpp::getValue<gocpp::channel<Time>>(c).trySend(Now())) { conditionId = 0; }
             switch(conditionId)
             {
                 case 0:
@@ -262,7 +262,7 @@ namespace golang::time
     // The underlying Timer is not recovered by the garbage collector
     // until the timer fires. If efficiency is a concern, use NewTimer
     // instead and call Timer.Stop if the timer is no longer needed.
-    gocpp::channel<golang::time::Time> After(Duration d)
+    gocpp::channel<Time> After(Duration d)
     {
         return NewTimer(d)->C;
     }
@@ -271,10 +271,10 @@ namespace golang::time
     // in its own goroutine. It returns a Timer that can
     // be used to cancel the call using its Stop method.
     // The returned Timer's C field is not used and will be nil.
-    golang::time::Timer* AfterFunc(Duration d, std::function<void ()> f)
+    Timer* AfterFunc(Duration d, std::function<void ()> f)
     {
-        auto t = gocpp::InitPtr<golang::time::Timer>([=](auto& x) {
-            x.r = gocpp::Init<golang::time::runtimeTimer>([=](auto& x) {
+        auto t = gocpp::InitPtr<Timer>([=](auto& x) {
+            x.r = gocpp::Init<runtimeTimer>([=](auto& x) {
                 x.when = when(d);
                 x.f = goFunc;
                 x.arg = f;

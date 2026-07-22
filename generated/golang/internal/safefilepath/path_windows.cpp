@@ -20,7 +20,7 @@ namespace golang::safefilepath
     {
     }
 
-    std::tuple<gocpp::string, struct gocpp::error> fromFS(gocpp::string path)
+    std::tuple<gocpp::string, gocpp::error> fromFS(gocpp::string path)
     {
         if(! utf8::ValidString(path))
         {

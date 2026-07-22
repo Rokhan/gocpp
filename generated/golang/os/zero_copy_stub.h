@@ -19,8 +19,8 @@ namespace golang::os
 
     namespace rec
     {
-        std::tuple<int64_t, bool, struct gocpp::error> writeTo(File* f, io::Writer w);
-        std::tuple<int64_t, bool, struct gocpp::error> readFrom(File* f, io::Reader r);
+        std::tuple<int64_t, bool, gocpp::error> writeTo(File* f, io::Writer w);
+        std::tuple<int64_t, bool, gocpp::error> readFrom(File* f, io::Reader r);
     }
 }
 

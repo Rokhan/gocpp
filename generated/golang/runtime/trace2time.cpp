@@ -60,7 +60,7 @@ namespace golang::runtime
     // nosplit because it's called from exitsyscall, which is nosplit.
     //
     //go:nosplit
-    golang::runtime::traceTime traceClockNow()
+    traceTime traceClockNow()
     {
         if(osHasLowResClock)
         {

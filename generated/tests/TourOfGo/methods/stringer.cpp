@@ -58,8 +58,8 @@ namespace golang::main
 
     void main()
     {
-        auto a = golang::main::Person {"Arthur Dent"_s, 42};
-        auto z = golang::main::Person {"Zaphod Beeblebrox"_s, 9001};
+        auto a = Person {"Arthur Dent"_s, 42};
+        auto z = Person {"Zaphod Beeblebrox"_s, 9001};
         mocklib::Println(a, z);
     }
 

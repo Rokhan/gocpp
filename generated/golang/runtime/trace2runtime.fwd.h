@@ -14,24 +14,24 @@ namespace golang::runtime
     // not inlineable, and we want traceAcquire to be inlineable for
     // low overhead when the trace is disabled.
     const bool debugTraceReentrancy = false;
-    const golang::runtime::traceBlockReason traceBlockGeneric = 0;
-    const golang::runtime::traceBlockReason traceBlockForever = 1;
-    const golang::runtime::traceBlockReason traceBlockNet = 2;
-    const golang::runtime::traceBlockReason traceBlockSelect = 3;
-    const golang::runtime::traceBlockReason traceBlockCondWait = 4;
-    const golang::runtime::traceBlockReason traceBlockSync = 5;
-    const golang::runtime::traceBlockReason traceBlockChanSend = 6;
-    const golang::runtime::traceBlockReason traceBlockChanRecv = 7;
-    const golang::runtime::traceBlockReason traceBlockGCMarkAssist = 8;
-    const golang::runtime::traceBlockReason traceBlockGCSweep = 9;
-    const golang::runtime::traceBlockReason traceBlockSystemGoroutine = 10;
-    const golang::runtime::traceBlockReason traceBlockPreempted = 11;
-    const golang::runtime::traceBlockReason traceBlockDebugCall = 12;
-    const golang::runtime::traceBlockReason traceBlockUntilGCEnds = 13;
-    const golang::runtime::traceBlockReason traceBlockSleep = 14;
-    const golang::runtime::traceGoStopReason traceGoStopGeneric = 0;
-    const golang::runtime::traceGoStopReason traceGoStopGoSched = 1;
-    const golang::runtime::traceGoStopReason traceGoStopPreempted = 2;
+    const traceBlockReason traceBlockGeneric = 0;
+    const traceBlockReason traceBlockForever = 1;
+    const traceBlockReason traceBlockNet = 2;
+    const traceBlockReason traceBlockSelect = 3;
+    const traceBlockReason traceBlockCondWait = 4;
+    const traceBlockReason traceBlockSync = 5;
+    const traceBlockReason traceBlockChanSend = 6;
+    const traceBlockReason traceBlockChanRecv = 7;
+    const traceBlockReason traceBlockGCMarkAssist = 8;
+    const traceBlockReason traceBlockGCSweep = 9;
+    const traceBlockReason traceBlockSystemGoroutine = 10;
+    const traceBlockReason traceBlockPreempted = 11;
+    const traceBlockReason traceBlockDebugCall = 12;
+    const traceBlockReason traceBlockUntilGCEnds = 13;
+    const traceBlockReason traceBlockSleep = 14;
+    const traceGoStopReason traceGoStopGeneric = 0;
+    const traceGoStopReason traceGoStopGoSched = 1;
+    const traceGoStopReason traceGoStopPreempted = 2;
 }
 #include "golang/runtime/internal/atomic/types.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"

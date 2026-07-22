@@ -315,7 +315,7 @@ namespace golang::sync
     // pin pins the current goroutine to P, disables preemption and
     // returns poolLocal pool for the P and the P's id.
     // Caller must call runtime_procUnpin() when done with the pool.
-    std::tuple<golang::sync::poolLocal*, int> rec::pin(Pool* p)
+    std::tuple<poolLocal*, int> rec::pin(Pool* p)
     {
         // Check whether p is nil to get a panic.
         // Otherwise the nil dereference happens while the m is pinned,
@@ -341,7 +341,7 @@ namespace golang::sync
         return rec::pinSlow(gocpp::recv(p));
     }
 
-    std::tuple<golang::sync::poolLocal*, int> rec::pinSlow(Pool* p)
+    std::tuple<poolLocal*, int> rec::pinSlow(Pool* p)
     {
         gocpp::Defer defer;
         try
@@ -365,7 +365,7 @@ namespace golang::sync
             }
             // If GOMAXPROCS changes between GCs, we re-allocate the array and lose the old one.
             auto size = runtime::GOMAXPROCS(0);
-            auto local = gocpp::make(gocpp::Tag<gocpp::slice<golang::sync::poolLocal>>(), size);
+            auto local = gocpp::make(gocpp::Tag<gocpp::slice<poolLocal>>(), size);
             // store-release
             atomic::StorePointer(& p->local, gocpp::unsafe_pointer(& local[0]));
             // store-release
@@ -405,23 +405,23 @@ namespace golang::sync
         std::tie(oldPools, allPools) = std::tuple{allPools, nullptr};
     }
 
-    golang::sync::Mutex allPoolsMu;
+    Mutex allPoolsMu;
     // allPools is the set of pools that have non-empty primary
     // caches. Protected by either 1) allPoolsMu and pinning or 2)
     // STW.
-    gocpp::slice<golang::sync::Pool*> allPools;
+    gocpp::slice<Pool*> allPools;
     // oldPools is the set of pools that may have non-empty victim
     // caches. Protected by STW.
-    gocpp::slice<golang::sync::Pool*> oldPools;
+    gocpp::slice<Pool*> oldPools;
     void init()
     {
         runtime_registerPoolCleanup(poolCleanup);
     }
 
-    golang::sync::poolLocal* indexLocal(gocpp::unsafe_pointer l, int i)
+    poolLocal* indexLocal(gocpp::unsafe_pointer l, int i)
     {
-        auto lp = gocpp::unsafe_pointer(uintptr_t(l) + uintptr_t(i) * gocpp::Sizeof<golang::sync::poolLocal>());
-        return (golang::sync::poolLocal*)(lp);
+        auto lp = gocpp::unsafe_pointer(uintptr_t(l) + uintptr_t(i) * gocpp::Sizeof<poolLocal>());
+        return (poolLocal*)(lp);
     }
 
     // Implemented in runtime.

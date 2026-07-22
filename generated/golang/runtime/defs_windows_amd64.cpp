@@ -331,7 +331,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    golang::runtime::context* rec::ctx(_DISPATCHER_CONTEXT* c)
+    context* rec::ctx(_DISPATCHER_CONTEXT* c)
     {
         return c->context;
     }

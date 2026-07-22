@@ -28,7 +28,7 @@ namespace golang::poll
 
     // eofError returns io.EOF when fd is available for reading end of
     // file.
-    struct gocpp::error rec::eofError(FD* fd, int n, struct gocpp::error err)
+    gocpp::error rec::eofError(FD* fd, int n, gocpp::error err)
     {
         if(n == 0 && err == nullptr && fd->ZeroReadIsEOF)
         {
@@ -38,7 +38,7 @@ namespace golang::poll
     }
 
     // Shutdown wraps syscall.Shutdown.
-    struct gocpp::error rec::Shutdown(FD* fd, int how)
+    gocpp::error rec::Shutdown(FD* fd, int how)
     {
         gocpp::Defer defer;
         try
@@ -57,7 +57,7 @@ namespace golang::poll
     }
 
     // Fchown wraps syscall.Fchown.
-    struct gocpp::error rec::Fchown(FD* fd, int uid, int gid)
+    gocpp::error rec::Fchown(FD* fd, int uid, int gid)
     {
         gocpp::Defer defer;
         try
@@ -67,7 +67,7 @@ namespace golang::poll
                 return err;
             }
             defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
-            return ignoringEINTR([=]() mutable -> struct gocpp::error
+            return ignoringEINTR([=]() mutable -> gocpp::error
             {
                 return syscall::Fchown(fd->Sysfd, uid, gid);
             });
@@ -79,7 +79,7 @@ namespace golang::poll
     }
 
     // Ftruncate wraps syscall.Ftruncate.
-    struct gocpp::error rec::Ftruncate(FD* fd, int64_t size)
+    gocpp::error rec::Ftruncate(FD* fd, int64_t size)
     {
         gocpp::Defer defer;
         try
@@ -89,7 +89,7 @@ namespace golang::poll
                 return err;
             }
             defer.push_back([=]{ rec::decref(gocpp::recv(fd)); });
-            return ignoringEINTR([=]() mutable -> struct gocpp::error
+            return ignoringEINTR([=]() mutable -> gocpp::error
             {
                 return syscall::Ftruncate(fd->Sysfd, size);
             });
@@ -102,7 +102,7 @@ namespace golang::poll
 
     // RawControl invokes the user-defined function f for a non-IO
     // operation.
-    struct gocpp::error rec::RawControl(FD* fd, std::function<void (uintptr_t _1)> f)
+    gocpp::error rec::RawControl(FD* fd, std::function<void (uintptr_t _1)> f)
     {
         gocpp::Defer defer;
         try
@@ -128,7 +128,7 @@ namespace golang::poll
     // installed without setting SA_RESTART. None of these are the common case,
     // but there are enough of them that it seems that we can't avoid
     // an EINTR loop.
-    struct gocpp::error ignoringEINTR(std::function<struct gocpp::error ()> fn)
+    gocpp::error ignoringEINTR(std::function<gocpp::error ()> fn)
     {
         for(; ; )
         {

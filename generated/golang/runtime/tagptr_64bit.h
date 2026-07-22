@@ -13,7 +13,7 @@
 
 namespace golang::runtime
 {
-    golang::runtime::taggedPointer taggedPointerPack(gocpp::unsafe_pointer ptr, uintptr_t tag);
+    taggedPointer taggedPointerPack(gocpp::unsafe_pointer ptr, uintptr_t tag);
 }
 
 #include "golang/runtime/tagptr.h"

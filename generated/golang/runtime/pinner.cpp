@@ -139,7 +139,7 @@ namespace golang::runtime
                 // when reusing from the cache. The finalizer however has to be
                 // resilient to an empty pinner being finalized, which is done
                 // by checking p.refs' length.
-                SetFinalizer(p->pinner, [=](golang::runtime::pinner* i) mutable -> void
+                SetFinalizer(p->pinner, [=](pinner* i) mutable -> void
                 {
                     if(len(i->refs) != 0)
                     {
@@ -448,11 +448,11 @@ namespace golang::runtime
     // nosplit, because it's called by isPinned, which is nosplit
     //
     //go:nosplit
-    golang::runtime::pinState rec::ofObject(pinnerBits* p, uintptr_t n)
+    pinState rec::ofObject(pinnerBits* p, uintptr_t n)
     {
-        auto [bytep, mask] = rec::bitp(gocpp::recv((golang::runtime::gcBits*)(p)), n * 2);
+        auto [bytep, mask] = rec::bitp(gocpp::recv((gcBits*)(p)), n * 2);
         auto byteVal = atomic::Load8(bytep);
-        return golang::runtime::pinState {bytep, byteVal, mask};
+        return pinState {bytep, byteVal, mask};
     }
 
     uintptr_t rec::pinnerBitSize(mspan* s)
@@ -463,7 +463,7 @@ namespace golang::runtime
     // newPinnerBits returns a pointer to 8 byte aligned bytes to be used for this
     // span's pinner bits. newPinneBits is used to mark objects that are pinned.
     // They are copied when the span is swept.
-    golang::runtime::pinnerBits* rec::newPinnerBits(mspan* s)
+    pinnerBits* rec::newPinnerBits(mspan* s)
     {
         return (pinnerBits*)(newMarkBits(uintptr_t(s->nelems) * 2));
     }
@@ -471,7 +471,7 @@ namespace golang::runtime
     // nosplit, because it's called by isPinned, which is nosplit
     //
     //go:nosplit
-    golang::runtime::pinnerBits* rec::getPinnerBits(mspan* s)
+    pinnerBits* rec::getPinnerBits(mspan* s)
     {
         return (pinnerBits*)(atomic::Loadp(gocpp::unsafe_pointer(& s->pinnerBits)));
     }
@@ -524,23 +524,23 @@ namespace golang::runtime
     // the _additional_ pins.
     void rec::incPinCounter(mspan* span, uintptr_t offset)
     {
-        golang::runtime::specialPinCounter* rec = {};
+        specialPinCounter* rec = {};
         auto [ref, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialPinCounter);
         if(! exists)
         {
             runtime::lock(& mheap_.speciallock);
-            rec = (golang::runtime::specialPinCounter*)(rec::alloc(gocpp::recv(mheap_.specialPinCounterAlloc)));
+            rec = (specialPinCounter*)(rec::alloc(gocpp::recv(mheap_.specialPinCounterAlloc)));
             runtime::unlock(& mheap_.speciallock);
             // splice in record, fill in offset.
             rec->special.offset = uint16_t(offset);
             rec->special.kind = _KindSpecialPinCounter;
             rec->special.next = *ref;
-            *ref = (golang::runtime::special*)(gocpp::unsafe_pointer(rec));
+            *ref = (special*)(gocpp::unsafe_pointer(rec));
             spanHasSpecials(span);
         }
         else
         {
-            rec = (golang::runtime::specialPinCounter*)(gocpp::unsafe_pointer(*ref));
+            rec = (specialPinCounter*)(gocpp::unsafe_pointer(*ref));
         }
         rec->counter++;
     }
@@ -554,7 +554,7 @@ namespace golang::runtime
         {
             go_throw("runtime.Pinner: decreased non-existing pin counter"_s);
         }
-        auto counter = (golang::runtime::specialPinCounter*)(gocpp::unsafe_pointer(*ref));
+        auto counter = (specialPinCounter*)(gocpp::unsafe_pointer(*ref));
         counter->counter--;
         if(counter->counter == 0)
         {
@@ -581,7 +581,7 @@ namespace golang::runtime
         {
             return nullptr;
         }
-        auto counter = (golang::runtime::specialPinCounter*)(gocpp::unsafe_pointer(*t));
+        auto counter = (specialPinCounter*)(gocpp::unsafe_pointer(*t));
         return & counter->counter;
     }
 

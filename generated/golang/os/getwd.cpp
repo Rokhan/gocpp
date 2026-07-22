@@ -79,10 +79,10 @@ namespace golang::os
     // current directory. If the current directory can be
     // reached via multiple paths (due to symbolic links),
     // Getwd may return any one of them.
-    std::tuple<gocpp::string, struct gocpp::error> Getwd()
+    std::tuple<gocpp::string, gocpp::error> Getwd()
     {
         gocpp::string dir;
-        struct gocpp::error err;
+        gocpp::error err;
         if(mocklib::GOOS == "windows"_s || mocklib::GOOS == "plan9"_s)
         {
             return syscall::Getwd();

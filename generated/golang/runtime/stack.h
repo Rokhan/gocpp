@@ -108,7 +108,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackLargeStruct& value);
-    golang::runtime::gclinkptr stackpoolalloc(uint8_t order);
+    gclinkptr stackpoolalloc(uint8_t order);
     void stackpoolfree(gclinkptr x, uint8_t order);
     void stackcacherefill(mcache* c, uint8_t order);
     void stackcacherelease(mcache* c, uint8_t order);
@@ -157,7 +157,7 @@ namespace golang::runtime
     struct stackpoolStruct
     {
         stackpoolItem item{};
-        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<golang::runtime::stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1{};
+        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1{};
 
         using isGoStruct = void;
 

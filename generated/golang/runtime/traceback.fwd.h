@@ -29,9 +29,9 @@ namespace golang::runtime
     //
     // Note that there are a small number of fatal situations that will throw
     // regardless of unwindPrintErrors or unwindSilentErrors.
-    const golang::runtime::unwindFlags unwindPrintErrors = 1 << 0;
+    const unwindFlags unwindPrintErrors = 1 << 0;
     // unwindSilentErrors silently ignores errors during unwinding.
-    const golang::runtime::unwindFlags unwindSilentErrors = 1 << 1;
+    const unwindFlags unwindSilentErrors = 1 << 1;
     // unwindTrap indicates that the initial PC and SP are from a trap, not a
     // return PC from a call.
     //
@@ -42,11 +42,11 @@ namespace golang::runtime
     // TODO: Distinguish frame.continpc, which is really the stack map PC, from
     // the actual continuation PC, which is computed differently depending on
     // this flag and a few other things.
-    const golang::runtime::unwindFlags unwindTrap = 1 << 2;
+    const unwindFlags unwindTrap = 1 << 2;
     // unwindJumpStack indicates that, if the traceback is on a system stack, it
     // should resume tracing at the user stack when the system stack is
     // exhausted.
-    const golang::runtime::unwindFlags unwindJumpStack = 1 << 3;
+    const unwindFlags unwindJumpStack = 1 << 3;
 }
 #include "golang/internal/abi/symtab.fwd.h"
 #include "golang/runtime/internal/sys/consts.fwd.h"

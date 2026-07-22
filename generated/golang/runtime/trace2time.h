@@ -12,7 +12,7 @@
 
 namespace golang::runtime
 {
-    golang::runtime::traceTime traceClockNow();
+    traceTime traceClockNow();
     uint64_t traceClockUnitsPerSecond();
     void traceFrequency(uintptr_t gen);
 

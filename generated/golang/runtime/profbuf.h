@@ -49,16 +49,16 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct profBuf& value);
-    golang::runtime::profBuf* newProfBuf(int hdrsize, int bufwords, int tags);
+    profBuf* newProfBuf(int hdrsize, int bufwords, int tags);
 
     namespace rec
     {
-        golang::runtime::profIndex load(profAtomic* x);
+        profIndex load(profAtomic* x);
         void store(profAtomic* x, profIndex go_new);
         bool cas(profAtomic* x, profIndex old, profIndex go_new);
         uint32_t dataCount(profIndex x);
         uint32_t tagCount(profIndex x);
-        golang::runtime::profIndex addCountsAndClearFlags(profIndex x, int data, int tag);
+        profIndex addCountsAndClearFlags(profIndex x, int data, int tag);
         bool hasOverflow(profBuf* b);
         std::tuple<uint32_t, uint64_t> takeOverflow(profBuf* b);
         void incrementOverflow(profBuf* b, int64_t now);

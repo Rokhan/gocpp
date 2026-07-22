@@ -31,7 +31,7 @@ namespace golang::registry
     gocpp::error errERROR_EINVAL = syscall::go_EINVAL;
     // errnoErr returns common boxed Errno values, to prevent
     // allocations at runtime.
-    struct gocpp::error errnoErr(syscall::Errno e)
+    gocpp::error errnoErr(syscall::Errno e)
     {
         //Go switch emulation
         {
@@ -64,9 +64,9 @@ namespace golang::registry
     syscall::LazyProc* procRegLoadMUIStringW = rec::NewProc(gocpp::recv(modadvapi32), "RegLoadMUIStringW"_s);
     syscall::LazyProc* procRegSetValueExW = rec::NewProc(gocpp::recv(modadvapi32), "RegSetValueExW"_s);
     syscall::LazyProc* procExpandEnvironmentStringsW = rec::NewProc(gocpp::recv(modkernel32), "ExpandEnvironmentStringsW"_s);
-    struct gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition)
+    gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition)
     {
-        struct gocpp::error regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_0, gocpp_id_1] = syscall::Syscall9(rec::Addr(gocpp::recv(procRegCreateKeyExW)), 9, uintptr_t(key), uintptr_t(gocpp::unsafe_pointer(subkey)), uintptr_t(reserved), uintptr_t(gocpp::unsafe_pointer(go_class)), uintptr_t(options), uintptr_t(desired), uintptr_t(gocpp::unsafe_pointer(sa)), uintptr_t(gocpp::unsafe_pointer(result)), uintptr_t(gocpp::unsafe_pointer(disposition)));
         if(r0 != 0)
         {
@@ -75,9 +75,9 @@ namespace golang::registry
         return regerrno;
     }
 
-    struct gocpp::error regDeleteKey(syscall::Handle key, uint16_t* subkey)
+    gocpp::error regDeleteKey(syscall::Handle key, uint16_t* subkey)
     {
-        struct gocpp::error regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_2, gocpp_id_3] = syscall::Syscall(rec::Addr(gocpp::recv(procRegDeleteKeyW)), 2, uintptr_t(key), uintptr_t(gocpp::unsafe_pointer(subkey)), 0);
         if(r0 != 0)
         {
@@ -86,9 +86,9 @@ namespace golang::registry
         return regerrno;
     }
 
-    struct gocpp::error regDeleteValue(syscall::Handle key, uint16_t* name)
+    gocpp::error regDeleteValue(syscall::Handle key, uint16_t* name)
     {
-        struct gocpp::error regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_4, gocpp_id_5] = syscall::Syscall(rec::Addr(gocpp::recv(procRegDeleteValueW)), 2, uintptr_t(key), uintptr_t(gocpp::unsafe_pointer(name)), 0);
         if(r0 != 0)
         {
@@ -97,9 +97,9 @@ namespace golang::registry
         return regerrno;
     }
 
-    struct gocpp::error regEnumValue(syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen)
+    gocpp::error regEnumValue(syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen)
     {
-        struct gocpp::error regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_6, gocpp_id_7] = syscall::Syscall9(rec::Addr(gocpp::recv(procRegEnumValueW)), 8, uintptr_t(key), uintptr_t(index), uintptr_t(gocpp::unsafe_pointer(name)), uintptr_t(gocpp::unsafe_pointer(nameLen)), uintptr_t(gocpp::unsafe_pointer(reserved)), uintptr_t(gocpp::unsafe_pointer(valtype)), uintptr_t(gocpp::unsafe_pointer(buf)), uintptr_t(gocpp::unsafe_pointer(buflen)), 0);
         if(r0 != 0)
         {
@@ -108,9 +108,9 @@ namespace golang::registry
         return regerrno;
     }
 
-    struct gocpp::error regLoadMUIString(syscall::Handle key, uint16_t* name, uint16_t* buf, uint32_t buflen, uint32_t* buflenCopied, uint32_t flags, uint16_t* dir)
+    gocpp::error regLoadMUIString(syscall::Handle key, uint16_t* name, uint16_t* buf, uint32_t buflen, uint32_t* buflenCopied, uint32_t flags, uint16_t* dir)
     {
-        struct gocpp::error regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_8, gocpp_id_9] = syscall::Syscall9(rec::Addr(gocpp::recv(procRegLoadMUIStringW)), 7, uintptr_t(key), uintptr_t(gocpp::unsafe_pointer(name)), uintptr_t(gocpp::unsafe_pointer(buf)), uintptr_t(buflen), uintptr_t(gocpp::unsafe_pointer(buflenCopied)), uintptr_t(flags), uintptr_t(gocpp::unsafe_pointer(dir)), 0, 0);
         if(r0 != 0)
         {
@@ -119,9 +119,9 @@ namespace golang::registry
         return regerrno;
     }
 
-    struct gocpp::error regSetValueEx(syscall::Handle key, uint16_t* valueName, uint32_t reserved, uint32_t vtype, unsigned char* buf, uint32_t bufsize)
+    gocpp::error regSetValueEx(syscall::Handle key, uint16_t* valueName, uint32_t reserved, uint32_t vtype, unsigned char* buf, uint32_t bufsize)
     {
-        struct gocpp::error regerrno;
+        gocpp::error regerrno;
         auto [r0, gocpp_id_10, gocpp_id_11] = syscall::Syscall6(rec::Addr(gocpp::recv(procRegSetValueExW)), 6, uintptr_t(key), uintptr_t(gocpp::unsafe_pointer(valueName)), uintptr_t(reserved), uintptr_t(vtype), uintptr_t(gocpp::unsafe_pointer(buf)), uintptr_t(bufsize));
         if(r0 != 0)
         {
@@ -130,10 +130,10 @@ namespace golang::registry
         return regerrno;
     }
 
-    std::tuple<uint32_t, struct gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size)
+    std::tuple<uint32_t, gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size)
     {
         uint32_t n;
-        struct gocpp::error err;
+        gocpp::error err;
         auto [r0, gocpp_id_12, e1] = syscall::Syscall(rec::Addr(gocpp::recv(procExpandEnvironmentStringsW)), 3, uintptr_t(gocpp::unsafe_pointer(src)), uintptr_t(gocpp::unsafe_pointer(dst)), uintptr_t(size));
         n = uint32_t(r0);
         if(n == 0)

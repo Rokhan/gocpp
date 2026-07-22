@@ -106,11 +106,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct workbuf& value);
-    golang::runtime::workbuf* getempty();
+    workbuf* getempty();
     void putempty(workbuf* b);
     void putfull(workbuf* b);
-    golang::runtime::workbuf* trygetfull();
-    golang::runtime::workbuf* handoff(workbuf* b);
+    workbuf* trygetfull();
+    workbuf* handoff(workbuf* b);
 
     namespace rec
     {

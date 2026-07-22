@@ -121,7 +121,7 @@ namespace golang::runtime
             if(bitmap == nullptr)
             {
                 // Allocate bitmap on first use.
-                bitmap = (golang::runtime::checkmarksMap*)(persistentalloc(gocpp::Sizeof<checkmarksMap>(), 0, & memstats.gcMiscSys));
+                bitmap = (checkmarksMap*)(persistentalloc(gocpp::Sizeof<checkmarksMap>(), 0, & memstats.gcMiscSys));
                 if(bitmap == nullptr)
                 {
                     go_throw("out of memory allocating checkmarks bitmap"_s);

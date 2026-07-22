@@ -40,10 +40,10 @@ namespace golang::strings
         void Reset(Builder* b);
         void grow(Builder* b, int n);
         void Grow(Builder* b, int n);
-        std::tuple<int, struct gocpp::error> Write(Builder* b, gocpp::slice<unsigned char> p);
-        struct gocpp::error WriteByte(Builder* b, unsigned char c);
-        std::tuple<int, struct gocpp::error> WriteRune(Builder* b, gocpp::rune r);
-        std::tuple<int, struct gocpp::error> WriteString(Builder* b, gocpp::string s);
+        std::tuple<int, gocpp::error> Write(Builder* b, gocpp::slice<unsigned char> p);
+        gocpp::error WriteByte(Builder* b, unsigned char c);
+        std::tuple<int, gocpp::error> WriteRune(Builder* b, gocpp::rune r);
+        std::tuple<int, gocpp::error> WriteString(Builder* b, gocpp::string s);
     }
 }
 

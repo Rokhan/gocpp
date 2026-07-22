@@ -78,7 +78,7 @@ namespace golang::base64
     // without any special treatment for multi-byte UTF-8.
     // The resulting Encoding uses the default padding character ('='),
     // which may be changed or disabled via [Encoding.WithPadding].
-    golang::base64::Encoding* NewEncoding(gocpp::string encoder)
+    Encoding* NewEncoding(gocpp::string encoder)
     {
         if(len(encoder) != 64)
         {
@@ -122,7 +122,7 @@ namespace golang::base64
     // must not be negative, and must be a rune equal or below '\xff'.
     // Padding characters above '\x7f' are encoded as their exact byte value
     // rather than using the UTF-8 representation of the codepoint.
-    golang::base64::Encoding* rec::WithPadding(Encoding enc, gocpp::rune padding)
+    Encoding* rec::WithPadding(Encoding enc, gocpp::rune padding)
     {
         //Go switch emulation
         {
@@ -149,7 +149,7 @@ namespace golang::base64
     //
     // Note that the input is still malleable, as new line characters
     // (CR and LF) are still ignored.
-    golang::base64::Encoding* rec::Strict(Encoding enc)
+    Encoding* rec::Strict(Encoding enc)
     {
         enc.strict = true;
         return & enc;
@@ -304,10 +304,10 @@ namespace golang::base64
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         if(e->err != nullptr)
         {
             return {0, e->err};
@@ -363,7 +363,7 @@ namespace golang::base64
 
     // Close flushes any pending output from the encoder.
     // It is an error to call Write after calling Close.
-    struct gocpp::error rec::Close(encoder* e)
+    gocpp::error rec::Close(encoder* e)
     {
         // If there's anything left in the buffer, flush it out
         if(e->err == nullptr && e->nbuf > 0)
@@ -382,7 +382,7 @@ namespace golang::base64
     // partially written blocks.
     io::WriteCloser NewEncoder(Encoding* enc, io::Writer w)
     {
-        return gocpp::InitPtr<golang::base64::encoder>([=](auto& x) {
+        return gocpp::InitPtr<encoder>([=](auto& x) {
             x.enc = enc;
             x.w = w;
         });
@@ -411,11 +411,11 @@ namespace golang::base64
     // source buffer si.
     // It returns the number of bytes read from src, the number of bytes written
     // to dst, and an error, if any.
-    std::tuple<int, int, struct gocpp::error> rec::decodeQuantum(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si)
+    std::tuple<int, int, gocpp::error> rec::decodeQuantum(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si)
     {
         int nsi;
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         // Decode quantum using the base64 alphabet
         gocpp::array<unsigned char, 4> dbuf = {};
         auto dlen = 4;
@@ -557,7 +557,7 @@ namespace golang::base64
     // AppendDecode appends the base64 decoded src to dst
     // and returns the extended buffer.
     // If the input is malformed, it returns the partially decoded src and an error.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::AppendDecode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::AppendDecode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         // Compute the output size without padding to avoid over allocating.
         auto n = len(src);
@@ -574,7 +574,7 @@ namespace golang::base64
     }
 
     // DecodeString returns the bytes represented by the base64 string s.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> rec::DecodeString(Encoding* enc, gocpp::string s)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::DecodeString(Encoding* enc, gocpp::string s)
     {
         auto dbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), rec::DecodedLen(gocpp::recv(enc), len(s)));
         auto [n, err] = rec::Decode(gocpp::recv(enc), dbuf, gocpp::slice<unsigned char>(s));
@@ -631,10 +631,10 @@ namespace golang::base64
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         // Use leftover decoded output from last read.
         if(len(d->out) > 0)
         {
@@ -717,10 +717,10 @@ namespace golang::base64
     // written. If src contains invalid base64 data, it will return the
     // number of bytes successfully written and [CorruptInputError].
     // New line characters (\r and \n) are ignored.
-    std::tuple<int, struct gocpp::error> rec::Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<int, gocpp::error> rec::Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         if(len(src) == 0)
         {
             return {0, nullptr};
@@ -858,7 +858,7 @@ namespace golang::base64
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p)
     {
         auto [n, err] = rec::Read(gocpp::recv(r->wrapped), p);
         for(; n > 0; )
@@ -888,9 +888,9 @@ namespace golang::base64
     // NewDecoder constructs a new base64 stream decoder.
     io::Reader NewDecoder(Encoding* enc, io::Reader r)
     {
-        return gocpp::InitPtr<golang::base64::decoder>([=](auto& x) {
+        return gocpp::InitPtr<decoder>([=](auto& x) {
             x.enc = enc;
-            x.r = new golang::base64::newlineFilteringReader {r};
+            x.r = new newlineFilteringReader {r};
         });
     }
 

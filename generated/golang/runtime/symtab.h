@@ -276,7 +276,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct moduledata& value);
-    extern gocpp::slice<gocpp::map<golang::runtime::typeOff, golang::runtime::_type*>> pinnedTypemaps;
+    extern gocpp::slice<gocpp::map<golang::runtime::typeOff, _type*>> pinnedTypemaps;
     struct funcInfo
     {
         _func* _func{};
@@ -313,7 +313,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct srcFunc& value);
-    golang::runtime::bitvector stackmapdata(stackmap* stkmap, int32_t n);
+    bitvector stackmapdata(stackmap* stkmap, int32_t n);
     struct Frame
     {
         // PC is the program counter for the location in this frame.
@@ -365,13 +365,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Frame& value);
-    extern golang::runtime::moduledata firstmoduledata;
-    extern golang::runtime::moduledata* lastmoduledatap;
-    extern gocpp::slice<golang::runtime::moduledata*>* modulesSlice;
-    gocpp::slice<golang::runtime::moduledata*> activeModules();
+    extern moduledata firstmoduledata;
+    extern moduledata* lastmoduledatap;
+    extern gocpp::slice<moduledata*>* modulesSlice;
+    gocpp::slice<moduledata*> activeModules();
     void moduledataverify1(moduledata* datap);
-    golang::runtime::Func* FuncForPC(uintptr_t pc);
-    golang::runtime::moduledata* findmoduledatap(uintptr_t pc);
+    Func* FuncForPC(uintptr_t pc);
+    moduledata* findmoduledatap(uintptr_t pc);
     golang::runtime::funcInfo findfunc(uintptr_t pc);
     std::tuple<int32_t, uintptr_t> pcvalue(golang::runtime::funcInfo f, uint32_t off, uintptr_t targetpc, bool strict);
     gocpp::string funcname(golang::runtime::funcInfo f);
@@ -408,8 +408,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct Frames& value);
     int runtime_FrameStartLine(Frame* f);
     gocpp::string runtime_FrameSymbolName(Frame* f);
-    gocpp::slice<golang::runtime::Frame> expandCgoFrames(uintptr_t pc);
-    golang::runtime::Frames* CallersFrames(gocpp::slice<uintptr_t> callers);
+    gocpp::slice<Frame> expandCgoFrames(uintptr_t pc);
+    Frames* CallersFrames(gocpp::slice<uintptr_t> callers);
 }
 
 #include "golang/runtime/runtime2.h"
@@ -419,8 +419,8 @@ namespace golang::runtime
 
     namespace rec
     {
-        std::tuple<golang::runtime::Frame, bool> Next(Frames* ci);
-        golang::runtime::_func* raw(Func* f);
+        std::tuple<Frame, bool> Next(Frames* ci);
+        _func* raw(Func* f);
         golang::runtime::funcInfo funcInfo(Func* f);
         golang::runtime::funcInfo funcInfo(_func* f);
         uintptr_t textAddr(moduledata* md, uint32_t off32);
@@ -431,7 +431,7 @@ namespace golang::runtime
         std::tuple<gocpp::string, int> FileLine(Func* f, uintptr_t pc);
         int32_t startLine(Func* f);
         bool valid(golang::runtime::funcInfo f);
-        golang::runtime::Func* _Func(golang::runtime::funcInfo f);
+        Func* _Func(golang::runtime::funcInfo f);
         bool isInlined(_func* f);
         uintptr_t entry(golang::runtime::funcInfo f);
         golang::runtime::srcFunc srcFunc(golang::runtime::funcInfo f);

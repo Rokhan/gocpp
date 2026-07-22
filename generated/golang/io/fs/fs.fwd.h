@@ -19,20 +19,20 @@ namespace golang::fs
     // changed, although new bits might be added.
     // The single letters are the abbreviations
     // used by the String method's formatting.
-    const golang::fs::FileMode ModeDir = 1 << (32 - 1 - 0);
-    const golang::fs::FileMode ModeAppend = 1 << (32 - 1 - 1);
-    const golang::fs::FileMode ModeExclusive = 1 << (32 - 1 - 2);
-    const golang::fs::FileMode ModeTemporary = 1 << (32 - 1 - 3);
-    const golang::fs::FileMode ModeSymlink = 1 << (32 - 1 - 4);
-    const golang::fs::FileMode ModeDevice = 1 << (32 - 1 - 5);
-    const golang::fs::FileMode ModeNamedPipe = 1 << (32 - 1 - 6);
-    const golang::fs::FileMode ModeSocket = 1 << (32 - 1 - 7);
-    const golang::fs::FileMode ModeSetuid = 1 << (32 - 1 - 8);
-    const golang::fs::FileMode ModeSetgid = 1 << (32 - 1 - 9);
-    const golang::fs::FileMode ModeCharDevice = 1 << (32 - 1 - 10);
-    const golang::fs::FileMode ModeSticky = 1 << (32 - 1 - 11);
-    const golang::fs::FileMode ModeIrregular = 1 << (32 - 1 - 12);
-    const golang::fs::FileMode ModePerm = 0777;
+    const FileMode ModeDir = 1 << (32 - 1 - 0);
+    const FileMode ModeAppend = 1 << (32 - 1 - 1);
+    const FileMode ModeExclusive = 1 << (32 - 1 - 2);
+    const FileMode ModeTemporary = 1 << (32 - 1 - 3);
+    const FileMode ModeSymlink = 1 << (32 - 1 - 4);
+    const FileMode ModeDevice = 1 << (32 - 1 - 5);
+    const FileMode ModeNamedPipe = 1 << (32 - 1 - 6);
+    const FileMode ModeSocket = 1 << (32 - 1 - 7);
+    const FileMode ModeSetuid = 1 << (32 - 1 - 8);
+    const FileMode ModeSetgid = 1 << (32 - 1 - 9);
+    const FileMode ModeCharDevice = 1 << (32 - 1 - 10);
+    const FileMode ModeSticky = 1 << (32 - 1 - 11);
+    const FileMode ModeIrregular = 1 << (32 - 1 - 12);
+    const FileMode ModePerm = 0777;
 }
 #include "golang/time/time.fwd.h"
 

@@ -93,8 +93,8 @@ namespace golang::os
     // It returns false in other cases.
     bool SameFile(FileInfo fi1, FileInfo fi2)
     {
-        auto [fs1, ok1] = gocpp::getValue<golang::os::fileStat*>(fi1);
-        auto [fs2, ok2] = gocpp::getValue<golang::os::fileStat*>(fi2);
+        auto [fs1, ok1] = gocpp::getValue<fileStat*>(fi1);
+        auto [fs2, ok2] = gocpp::getValue<fileStat*>(fi2);
         if(! ok1 || ! ok2)
         {
             return false;

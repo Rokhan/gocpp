@@ -115,29 +115,29 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dlogger& value);
-    golang::runtime::dlogger* dlog();
-    extern golang::runtime::dlogger* allDloggers;
+    dlogger* dlog();
+    extern dlogger* allDloggers;
 
     namespace rec
     {
         void end(dlogger* l);
-        golang::runtime::dlogger* b(dlogger* l, bool x);
-        golang::runtime::dlogger* i(dlogger* l, int x);
-        golang::runtime::dlogger* i8(dlogger* l, int8_t x);
-        golang::runtime::dlogger* i16(dlogger* l, int16_t x);
-        golang::runtime::dlogger* i32(dlogger* l, int32_t x);
-        golang::runtime::dlogger* i64(dlogger* l, int64_t x);
-        golang::runtime::dlogger* u(dlogger* l, unsigned int x);
-        golang::runtime::dlogger* uptr(dlogger* l, uintptr_t x);
-        golang::runtime::dlogger* u8(dlogger* l, uint8_t x);
-        golang::runtime::dlogger* u16(dlogger* l, uint16_t x);
-        golang::runtime::dlogger* u32(dlogger* l, uint32_t x);
-        golang::runtime::dlogger* u64(dlogger* l, uint64_t x);
-        golang::runtime::dlogger* hex(dlogger* l, uint64_t x);
-        golang::runtime::dlogger* p(dlogger* l, go_any x);
-        golang::runtime::dlogger* s(dlogger* l, gocpp::string x);
-        golang::runtime::dlogger* pc(dlogger* l, uintptr_t x);
-        golang::runtime::dlogger* traceback(dlogger* l, gocpp::slice<uintptr_t> x);
+        dlogger* b(dlogger* l, bool x);
+        dlogger* i(dlogger* l, int x);
+        dlogger* i8(dlogger* l, int8_t x);
+        dlogger* i16(dlogger* l, int16_t x);
+        dlogger* i32(dlogger* l, int32_t x);
+        dlogger* i64(dlogger* l, int64_t x);
+        dlogger* u(dlogger* l, unsigned int x);
+        dlogger* uptr(dlogger* l, uintptr_t x);
+        dlogger* u8(dlogger* l, uint8_t x);
+        dlogger* u16(dlogger* l, uint16_t x);
+        dlogger* u32(dlogger* l, uint32_t x);
+        dlogger* u64(dlogger* l, uint64_t x);
+        dlogger* hex(dlogger* l, uint64_t x);
+        dlogger* p(dlogger* l, go_any x);
+        dlogger* s(dlogger* l, gocpp::string x);
+        dlogger* pc(dlogger* l, uintptr_t x);
+        dlogger* traceback(dlogger* l, gocpp::slice<uintptr_t> x);
         void ensure(debugLogWriter* l, uint64_t n);
         bool writeFrameAt(debugLogWriter* l, uint64_t pos, uint64_t size);
         void writeSync(debugLogWriter* l, uint64_t tick, uint64_t nano);

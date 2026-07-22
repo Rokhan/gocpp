@@ -14,7 +14,7 @@ namespace golang::adler32
 {
     gocpp::slice<unsigned char> appendUint32(gocpp::slice<unsigned char> b, uint32_t x);
     uint32_t readUint32(gocpp::slice<unsigned char> b);
-    golang::adler32::digest update(digest d, gocpp::slice<unsigned char> p);
+    digest update(digest d, gocpp::slice<unsigned char> p);
     uint32_t Checksum(gocpp::slice<unsigned char> data);
 }
 #include "golang/hash/hash.h"
@@ -28,9 +28,9 @@ namespace golang::adler32
         void Reset(digest* d);
         int Size(digest* d);
         int BlockSize(digest* d);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> MarshalBinary(digest* d);
-        struct gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
-        std::tuple<int, struct gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalBinary(digest* d);
+        gocpp::error UnmarshalBinary(digest* d, gocpp::slice<unsigned char> b);
+        std::tuple<int, gocpp::error> Write(digest* d, gocpp::slice<unsigned char> p);
         uint32_t Sum32(digest* d);
         gocpp::slice<unsigned char> Sum(digest* d, gocpp::slice<unsigned char> in);
     }

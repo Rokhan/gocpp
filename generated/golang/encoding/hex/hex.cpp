@@ -86,7 +86,7 @@ namespace golang::hex
     // characters and that src has even length.
     // If the input is malformed, Decode returns the number
     // of bytes decoded before the error.
-    std::tuple<int, struct gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<int, gocpp::error> Decode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         auto [i, j] = std::tuple{0, 1};
         for(; j < len(src); j += 2)
@@ -123,7 +123,7 @@ namespace golang::hex
     // AppendDecode appends the hexadecimally decoded src to dst
     // and returns the extended buffer.
     // If the input is malformed, it returns the partially decoded src and an error.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> AppendDecode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendDecode(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
         auto n = DecodedLen(len(src));
         dst = slices::Grow(dst, n);
@@ -146,7 +146,7 @@ namespace golang::hex
     // characters and that src has even length.
     // If the input is malformed, DecodeString returns
     // the bytes decoded before the error.
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> DecodeString(gocpp::string s)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> DecodeString(gocpp::string s)
     {
         auto src = gocpp::slice<unsigned char>(s);
         // We can use the source slice itself as the destination
@@ -214,15 +214,15 @@ namespace golang::hex
     // NewEncoder returns an [io.Writer] that writes lowercase hexadecimal characters to w.
     io::Writer NewEncoder(io::Writer w)
     {
-        return gocpp::InitPtr<golang::hex::encoder>([=](auto& x) {
+        return gocpp::InitPtr<encoder>([=](auto& x) {
             x.w = w;
         });
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> p)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         for(; len(p) > 0 && e->err == nullptr; )
         {
             auto chunkSize = bufferSize / 2;
@@ -282,15 +282,15 @@ namespace golang::hex
     // NewDecoder expects that r contain only an even number of hexadecimal characters.
     io::Reader NewDecoder(io::Reader r)
     {
-        return gocpp::InitPtr<golang::hex::decoder>([=](auto& x) {
+        return gocpp::InitPtr<decoder>([=](auto& x) {
             x.r = r;
         });
     }
 
-    std::tuple<int, struct gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Read(decoder* d, gocpp::slice<unsigned char> p)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         // Fill internal buffer with sufficient bytes to decode
         if(len(d->in) < 2 && d->err == nullptr)
         {
@@ -340,7 +340,7 @@ namespace golang::hex
     // line.
     io::WriteCloser Dumper(io::Writer w)
     {
-        return gocpp::InitPtr<golang::hex::dumper>([=](auto& x) {
+        return gocpp::InitPtr<dumper>([=](auto& x) {
             x.w = w;
         });
     }
@@ -398,10 +398,10 @@ namespace golang::hex
         return b;
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(dumper* h, gocpp::slice<unsigned char> data)
+    std::tuple<int, gocpp::error> rec::Write(dumper* h, gocpp::slice<unsigned char> data)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         if(h->closed)
         {
             return {0, errors::New("encoding/hex: dumper closed"_s)};
@@ -471,9 +471,9 @@ namespace golang::hex
         return {n, err};
     }
 
-    struct gocpp::error rec::Close(dumper* h)
+    gocpp::error rec::Close(dumper* h)
     {
-        struct gocpp::error err;
+        gocpp::error err;
         // See the comments in Write() for the details of this format.
         if(h->closed)
         {

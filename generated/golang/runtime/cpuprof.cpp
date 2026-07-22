@@ -80,7 +80,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    golang::runtime::cpuProfile cpuprof;
+    cpuProfile cpuprof;
     // SetCPUProfileRate sets the CPU profiling rate to hz samples per second.
     // If hz <= 0, SetCPUProfileRate turns off profiling.
     // If the profiler is on, the rate cannot be changed without first turning it off.

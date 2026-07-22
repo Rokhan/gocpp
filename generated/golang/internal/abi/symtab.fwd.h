@@ -46,7 +46,7 @@ namespace golang::abi
     // Examples of TopFrame functions include goexit, which appears
     // at the top of a user goroutine stack, and mstart, which appears
     // at the top of a system goroutine stack.
-    const golang::abi::FuncFlag FuncFlagTopFrame = 1 << 0;
+    const FuncFlag FuncFlagTopFrame = 1 << 0;
     // FuncFlagSPWrite indicates a function that writes an arbitrary value to SP
     // (any write other than adding or subtracting a constant amount).
     // The traceback routines cannot encode such changes into the
@@ -54,30 +54,30 @@ namespace golang::abi
     // SPWrite functions. Stopping at an SPWrite function is considered
     // to be an incomplete unwinding of the stack. In certain contexts
     // (in particular garbage collector stack scans) that is a fatal error.
-    const golang::abi::FuncFlag FuncFlagSPWrite = 1 << 1;
+    const FuncFlag FuncFlagSPWrite = 1 << 1;
     // FuncFlagAsm indicates that a function was implemented in assembly.
-    const golang::abi::FuncFlag FuncFlagAsm = 1 << 2;
-    const golang::abi::FuncID FuncIDNormal = 0;
-    const golang::abi::FuncID FuncID_abort = 1;
-    const golang::abi::FuncID FuncID_asmcgocall = 2;
-    const golang::abi::FuncID FuncID_asyncPreempt = 3;
-    const golang::abi::FuncID FuncID_cgocallback = 4;
-    const golang::abi::FuncID FuncID_corostart = 5;
-    const golang::abi::FuncID FuncID_debugCallV2 = 6;
-    const golang::abi::FuncID FuncID_gcBgMarkWorker = 7;
-    const golang::abi::FuncID FuncID_goexit = 8;
-    const golang::abi::FuncID FuncID_gogo = 9;
-    const golang::abi::FuncID FuncID_gopanic = 10;
-    const golang::abi::FuncID FuncID_handleAsyncEvent = 11;
-    const golang::abi::FuncID FuncID_mcall = 12;
-    const golang::abi::FuncID FuncID_morestack = 13;
-    const golang::abi::FuncID FuncID_mstart = 14;
-    const golang::abi::FuncID FuncID_panicwrap = 15;
-    const golang::abi::FuncID FuncID_rt0_go = 16;
-    const golang::abi::FuncID FuncID_runfinq = 17;
-    const golang::abi::FuncID FuncID_runtime_main = 18;
-    const golang::abi::FuncID FuncID_sigpanic = 19;
-    const golang::abi::FuncID FuncID_systemstack = 20;
-    const golang::abi::FuncID FuncID_systemstack_switch = 21;
-    const golang::abi::FuncID FuncIDWrapper = 22;
+    const FuncFlag FuncFlagAsm = 1 << 2;
+    const FuncID FuncIDNormal = 0;
+    const FuncID FuncID_abort = 1;
+    const FuncID FuncID_asmcgocall = 2;
+    const FuncID FuncID_asyncPreempt = 3;
+    const FuncID FuncID_cgocallback = 4;
+    const FuncID FuncID_corostart = 5;
+    const FuncID FuncID_debugCallV2 = 6;
+    const FuncID FuncID_gcBgMarkWorker = 7;
+    const FuncID FuncID_goexit = 8;
+    const FuncID FuncID_gogo = 9;
+    const FuncID FuncID_gopanic = 10;
+    const FuncID FuncID_handleAsyncEvent = 11;
+    const FuncID FuncID_mcall = 12;
+    const FuncID FuncID_morestack = 13;
+    const FuncID FuncID_mstart = 14;
+    const FuncID FuncID_panicwrap = 15;
+    const FuncID FuncID_rt0_go = 16;
+    const FuncID FuncID_runfinq = 17;
+    const FuncID FuncID_runtime_main = 18;
+    const FuncID FuncID_sigpanic = 19;
+    const FuncID FuncID_systemstack = 20;
+    const FuncID FuncID_systemstack_switch = 21;
+    const FuncID FuncIDWrapper = 22;
 }

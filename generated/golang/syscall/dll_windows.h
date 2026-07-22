@@ -54,28 +54,28 @@ namespace golang::syscall
 
 namespace golang::syscall
 {
-    std::tuple<uintptr_t, uintptr_t, golang::syscall::Errno> Syscall(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3);
-    std::tuple<uintptr_t, uintptr_t, golang::syscall::Errno> Syscall6(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
-    std::tuple<uintptr_t, uintptr_t, golang::syscall::Errno> Syscall9(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9);
-    std::tuple<uintptr_t, uintptr_t, golang::syscall::Errno> Syscall12(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12);
-    std::tuple<uintptr_t, uintptr_t, golang::syscall::Errno> Syscall15(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15);
-    std::tuple<uintptr_t, uintptr_t, golang::syscall::Errno> Syscall18(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18);
-    std::tuple<uintptr_t, uintptr_t, golang::syscall::Errno> SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args);
+    std::tuple<uintptr_t, uintptr_t, Errno> Syscall(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3);
+    std::tuple<uintptr_t, uintptr_t, Errno> Syscall6(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
+    std::tuple<uintptr_t, uintptr_t, Errno> Syscall9(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9);
+    std::tuple<uintptr_t, uintptr_t, Errno> Syscall12(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12);
+    std::tuple<uintptr_t, uintptr_t, Errno> Syscall15(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15);
+    std::tuple<uintptr_t, uintptr_t, Errno> Syscall18(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9, uintptr_t a10, uintptr_t a11, uintptr_t a12, uintptr_t a13, uintptr_t a14, uintptr_t a15, uintptr_t a16, uintptr_t a17, uintptr_t a18);
+    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args);
     
     template<typename... Args>
-    std::tuple<uintptr_t, uintptr_t, golang::syscall::Errno> SyscallN(uintptr_t trap, Args... args)
+    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t trap, Args... args)
     {
         return SyscallN(trap, gocpp::ToSlice<uintptr_t>(args...));
     }
     
     template<typename... Args>
-    std::tuple<uintptr_t, uintptr_t, golang::syscall::Errno> SyscallN(uintptr_t trap, uintptr_t value, Args... args)
+    std::tuple<uintptr_t, uintptr_t, Errno> SyscallN(uintptr_t trap, uintptr_t value, Args... args)
     {
         return SyscallN(trap, gocpp::ToSlice<uintptr_t>(value, args...));
     }
-    std::tuple<uintptr_t, golang::syscall::Errno> loadlibrary(uint16_t* filename);
-    std::tuple<uintptr_t, golang::syscall::Errno> loadsystemlibrary(uint16_t* filename);
-    std::tuple<uintptr_t, golang::syscall::Errno> getprocaddress(uintptr_t handle, uint8_t* procname);
+    std::tuple<uintptr_t, Errno> loadlibrary(uint16_t* filename);
+    std::tuple<uintptr_t, Errno> loadsystemlibrary(uint16_t* filename);
+    std::tuple<uintptr_t, Errno> getprocaddress(uintptr_t handle, uint8_t* procname);
     struct DLL
     {
         gocpp::string Name{};
@@ -130,48 +130,48 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LazyProc& value);
-    std::tuple<golang::syscall::DLL*, struct gocpp::error> LoadDLL(gocpp::string name);
-    golang::syscall::DLL* MustLoadDLL(gocpp::string name);
-    golang::syscall::LazyDLL* NewLazyDLL(gocpp::string name);
+    std::tuple<DLL*, gocpp::error> LoadDLL(gocpp::string name);
+    DLL* MustLoadDLL(gocpp::string name);
+    LazyDLL* NewLazyDLL(gocpp::string name);
 
     namespace rec
     {
         gocpp::string Error(DLLError* e);
-        struct gocpp::error Unwrap(DLLError* e);
-        std::tuple<golang::syscall::Proc*, struct gocpp::error> FindProc(DLL* d, gocpp::string name);
-        golang::syscall::Proc* MustFindProc(DLL* d, gocpp::string name);
-        struct gocpp::error Release(DLL* d);
+        gocpp::error Unwrap(DLLError* e);
+        std::tuple<Proc*, gocpp::error> FindProc(DLL* d, gocpp::string name);
+        Proc* MustFindProc(DLL* d, gocpp::string name);
+        gocpp::error Release(DLL* d);
         uintptr_t Addr(Proc* p);
-        std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(Proc* p, gocpp::slice<uintptr_t> a);
+        std::tuple<uintptr_t, uintptr_t, gocpp::error> Call(Proc* p, gocpp::slice<uintptr_t> a);
         
         template<typename... Args>
-        std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(Proc* p, Args... a)
+        std::tuple<uintptr_t, uintptr_t, gocpp::error> Call(Proc* p, Args... a)
         {
             return Call(p, gocpp::ToSlice<uintptr_t>(a...));
         }
         
         template<typename... Args>
-        std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(Proc* p, uintptr_t value, Args... a)
+        std::tuple<uintptr_t, uintptr_t, gocpp::error> Call(Proc* p, uintptr_t value, Args... a)
         {
             return Call(p, gocpp::ToSlice<uintptr_t>(value, a...));
         }
-        struct gocpp::error Load(LazyDLL* d);
+        gocpp::error Load(LazyDLL* d);
         void mustLoad(LazyDLL* d);
         uintptr_t Handle(LazyDLL* d);
-        golang::syscall::LazyProc* NewProc(LazyDLL* d, gocpp::string name);
-        struct gocpp::error Find(LazyProc* p);
+        LazyProc* NewProc(LazyDLL* d, gocpp::string name);
+        gocpp::error Find(LazyProc* p);
         void mustFind(LazyProc* p);
         uintptr_t Addr(LazyProc* p);
-        std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(LazyProc* p, gocpp::slice<uintptr_t> a);
+        std::tuple<uintptr_t, uintptr_t, gocpp::error> Call(LazyProc* p, gocpp::slice<uintptr_t> a);
         
         template<typename... Args>
-        std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(LazyProc* p, Args... a)
+        std::tuple<uintptr_t, uintptr_t, gocpp::error> Call(LazyProc* p, Args... a)
         {
             return Call(p, gocpp::ToSlice<uintptr_t>(a...));
         }
         
         template<typename... Args>
-        std::tuple<uintptr_t, uintptr_t, struct gocpp::error> Call(LazyProc* p, uintptr_t value, Args... a)
+        std::tuple<uintptr_t, uintptr_t, gocpp::error> Call(LazyProc* p, uintptr_t value, Args... a)
         {
             return Call(p, gocpp::ToSlice<uintptr_t>(value, a...));
         }

@@ -112,7 +112,7 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
     void main();
-    golang::main::entry* newEntry(go_any i);
+    entry* newEntry(go_any i);
 
     namespace rec
     {

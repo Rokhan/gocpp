@@ -94,7 +94,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceBuf& value);
-    golang::runtime::traceWriter unsafeTraceWriter(uintptr_t gen, traceBuf* buf);
+    traceWriter unsafeTraceWriter(uintptr_t gen, traceBuf* buf);
     void traceBufFlush(traceBuf* buf, uintptr_t gen);
 }
 
@@ -105,13 +105,13 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::traceWriter writer(traceLocker tl);
+        traceWriter writer(traceLocker tl);
         void end(traceWriter w);
-        std::tuple<golang::runtime::traceWriter, bool> ensure(traceWriter w, int maxSize);
-        golang::runtime::traceWriter flush(traceWriter w);
-        golang::runtime::traceWriter refill(traceWriter w);
+        std::tuple<traceWriter, bool> ensure(traceWriter w, int maxSize);
+        traceWriter flush(traceWriter w);
+        traceWriter refill(traceWriter w);
         void push(traceBufQueue* q, traceBuf* buf);
-        golang::runtime::traceBuf* pop(traceBufQueue* q);
+        traceBuf* pop(traceBufQueue* q);
         bool empty(traceBufQueue* q);
         void byte(traceBuf* buf, unsigned char v);
         void varint(traceBuf* buf, uint64_t v);

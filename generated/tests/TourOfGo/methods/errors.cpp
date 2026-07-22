@@ -58,9 +58,9 @@ namespace golang::main
         return mocklib::Sprintf("at %v, %s"_s, e->When, e->What);
     }
 
-    struct gocpp::error run()
+    gocpp::error run()
     {
-        return gocpp::error(new golang::main::MyError {
+        return gocpp::error(new MyError {
             mocklib::Date::Now(),
             "it didn't work"_s
         });

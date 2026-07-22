@@ -26,7 +26,7 @@ namespace golang::poll
     }
 
     // Fsync wraps syscall.Fsync.
-    struct gocpp::error rec::Fsync(FD* fd)
+    gocpp::error rec::Fsync(FD* fd)
     {
         gocpp::Defer defer;
         try

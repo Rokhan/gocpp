@@ -12,13 +12,13 @@
 
 namespace golang::runtime
 {
-    golang::runtime::chunkIdx chunkIndex(uintptr_t p);
+    chunkIdx chunkIndex(uintptr_t p);
     uintptr_t chunkBase(chunkIdx ci);
     unsigned int chunkPageIndex(uintptr_t p);
     std::tuple<int, int> addrsToSummaryRange(int level, uintptr_t base, uintptr_t limit);
     std::tuple<int, int> blockAlignSummaryRange(int level, int lo, int hi);
-    golang::runtime::pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
-    golang::runtime::pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, unsigned int logMaxPagesPerSum);
+    pallocSum packPallocSum(unsigned int start, unsigned int max, unsigned int end);
+    pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, unsigned int logMaxPagesPerSum);
 }
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/mgcscavenge.h"
@@ -26,9 +26,9 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    golang::runtime::offAddr maxSearchAddr();
+    offAddr maxSearchAddr();
     int offAddrToLevelIndex(int level, offAddr addr);
-    golang::runtime::offAddr levelIndexToOffAddr(int level, int idx);
+    offAddr levelIndexToOffAddr(int level, int idx);
     struct gocpp_id_0
     {
         // index is an efficient index of chunks that have pages available to
@@ -175,14 +175,14 @@ namespace golang::runtime
         unsigned int l1(chunkIdx i);
         unsigned int l2(chunkIdx i);
         void init(pageAlloc* p, mutex* mheapLock, sysMemStat* sysStat, bool test);
-        golang::runtime::pallocData* tryChunkOf(pageAlloc* p, chunkIdx ci);
-        golang::runtime::pallocData* chunkOf(pageAlloc* p, chunkIdx ci);
+        pallocData* tryChunkOf(pageAlloc* p, chunkIdx ci);
+        pallocData* chunkOf(pageAlloc* p, chunkIdx ci);
         void grow(pageAlloc* p, uintptr_t base, uintptr_t size);
         void enableChunkHugePages(pageAlloc* p);
         void update(pageAlloc* p, uintptr_t base, uintptr_t npages, bool contig, bool alloc);
         uintptr_t allocRange(pageAlloc* p, uintptr_t base, uintptr_t npages);
-        golang::runtime::offAddr findMappedAddr(pageAlloc* p, offAddr addr);
-        std::tuple<uintptr_t, golang::runtime::offAddr> find(pageAlloc* p, uintptr_t npages);
+        offAddr findMappedAddr(pageAlloc* p, offAddr addr);
+        std::tuple<uintptr_t, offAddr> find(pageAlloc* p, uintptr_t npages);
         std::tuple<uintptr_t, uintptr_t> alloc(pageAlloc* p, uintptr_t npages);
         void free(pageAlloc* p, uintptr_t base, uintptr_t npages);
         unsigned int start(pallocSum p);

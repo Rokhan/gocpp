@@ -11,10 +11,10 @@ namespace golang::poll
     // This prevents us reading blocks larger than 4GB.
     // See golang.org/issue/26923.
     const int maxRW = 1 << 30;
-    const golang::poll::fileKind kindNet = 0;
-    const golang::poll::fileKind kindFile = 1;
-    const golang::poll::fileKind kindConsole = 2;
-    const golang::poll::fileKind kindPipe = 3;
+    const fileKind kindNet = 0;
+    const fileKind kindFile = 1;
+    const fileKind kindConsole = 2;
+    const fileKind kindPipe = 3;
 }
 #include "golang/internal/poll/fd_mutex.fwd.h"
 #include "golang/internal/poll/fd_poll_runtime.fwd.h"

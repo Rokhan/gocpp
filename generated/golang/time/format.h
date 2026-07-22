@@ -20,11 +20,11 @@ namespace golang::time
     extern gocpp::slice<gocpp::string> shortMonthNames;
     extern gocpp::slice<gocpp::string> longMonthNames;
     bool match(gocpp::string s1, gocpp::string s2);
-    std::tuple<int, gocpp::string, struct gocpp::error> lookup(gocpp::slice<gocpp::string> tab, gocpp::string val);
+    std::tuple<int, gocpp::string, gocpp::error> lookup(gocpp::slice<gocpp::string> tab, gocpp::string val);
     gocpp::slice<unsigned char> appendInt(gocpp::slice<unsigned char> b, int x, int width);
     
     template<typename bytes>
-    std::tuple<int, struct gocpp::error> atoi(bytes s);
+    std::tuple<int, gocpp::error> atoi(bytes s);
     int stdFracSecond(int code, int n, int c);
     int digitsLen(int std);
     unsigned char separator(int std);
@@ -54,22 +54,22 @@ namespace golang::time
     
     template<typename bytes>
     bool isDigit(bytes s, int i);
-    std::tuple<int, gocpp::string, struct gocpp::error> getnum(gocpp::string s, bool fixed);
-    std::tuple<int, gocpp::string, struct gocpp::error> getnum3(gocpp::string s, bool fixed);
+    std::tuple<int, gocpp::string, gocpp::error> getnum(gocpp::string s, bool fixed);
+    std::tuple<int, gocpp::string, gocpp::error> getnum3(gocpp::string s, bool fixed);
     gocpp::string cutspace(gocpp::string s);
-    std::tuple<gocpp::string, struct gocpp::error> skip(gocpp::string value, gocpp::string prefix);
+    std::tuple<gocpp::string, gocpp::error> skip(gocpp::string value, gocpp::string prefix);
     std::tuple<int, bool> parseTimeZone(gocpp::string value);
     int parseGMT(gocpp::string value);
     int parseSignedOffset(gocpp::string value);
     bool commaOrPeriod(unsigned char b);
     
     template<typename bytes>
-    std::tuple<int, gocpp::string, struct gocpp::error> parseNanoseconds(bytes value, int nbytes);
+    std::tuple<int, gocpp::string, gocpp::error> parseNanoseconds(bytes value, int nbytes);
     
     template<typename bytes>
-    std::tuple<uint64_t, bytes, struct gocpp::error> leadingInt(bytes s);
+    std::tuple<uint64_t, bytes, gocpp::error> leadingInt(bytes s);
     std::tuple<uint64_t, double, gocpp::string> leadingFraction(gocpp::string s);
-    golang::time::ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message);
+    ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message);
 }
 #include "golang/time/time.h"
 #include "golang/errors/errors.fwd.h"
@@ -79,12 +79,12 @@ namespace golang::time
 {
     extern gocpp::error errAtoi;
     extern gocpp::error errBad;
-    std::tuple<golang::time::Time, struct gocpp::error> Parse(gocpp::string layout, gocpp::string value);
-    std::tuple<golang::time::Time, struct gocpp::error> ParseInLocation(gocpp::string layout, gocpp::string value, golang::time::Location* loc);
-    std::tuple<golang::time::Time, struct gocpp::error> parse(gocpp::string layout, gocpp::string value, golang::time::Location* defaultLocation, golang::time::Location* local);
+    std::tuple<Time, gocpp::error> Parse(gocpp::string layout, gocpp::string value);
+    std::tuple<Time, gocpp::error> ParseInLocation(gocpp::string layout, gocpp::string value, golang::time::Location* loc);
+    std::tuple<Time, gocpp::error> parse(gocpp::string layout, gocpp::string value, golang::time::Location* defaultLocation, golang::time::Location* local);
     extern gocpp::error errLeadingInt;
     extern gocpp::map<gocpp::string, uint64_t> unitMap;
-    std::tuple<golang::time::Duration, struct gocpp::error> ParseDuration(gocpp::string s);
+    std::tuple<Duration, gocpp::error> ParseDuration(gocpp::string s);
 }
 
 #include "golang/time/time.h"

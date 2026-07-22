@@ -113,7 +113,7 @@ namespace golang::fmtsort
     //     Otherwise identical arrays compare by length.
     //   - interface values compare first by reflect.Type describing the concrete type
     //     and then by concrete value as described in the previous rules.
-    golang::fmtsort::SortedMap* Sort(reflect::Value mapValue)
+    SortedMap* Sort(reflect::Value mapValue)
     {
         if(rec::Kind(gocpp::recv(rec::Type(gocpp::recv(mapValue)))) != reflect::Map)
         {
@@ -131,7 +131,7 @@ namespace golang::fmtsort
             key = append(key, rec::Key(gocpp::recv(iter)));
             value = append(value, rec::Value(gocpp::recv(iter)));
         }
-        auto sorted = gocpp::InitPtr<golang::fmtsort::SortedMap>([=](auto& x) {
+        auto sorted = gocpp::InitPtr<SortedMap>([=](auto& x) {
             x.Key = key;
             x.Value = value;
         });

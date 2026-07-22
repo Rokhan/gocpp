@@ -90,19 +90,19 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct reflectOffsStruct& value);
     golang::runtime::name resolveNameOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::nameOff off);
-    golang::runtime::_type* resolveTypeOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::typeOff off);
+    _type* resolveTypeOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::typeOff off);
     gocpp::string pkgPath(golang::runtime::name n);
     extern reflectOffsStruct reflectOffs;
-    golang::runtime::rtype toRType(abi::Type* t);
+    rtype toRType(abi::Type* t);
 
     namespace rec
     {
         gocpp::string string(rtype t);
-        golang::runtime::uncommontype* uncommon(rtype t);
+        uncommontype* uncommon(rtype t);
         gocpp::string name(rtype t);
         gocpp::string pkgpath(rtype t);
         golang::runtime::name nameOff(rtype t, golang::runtime::nameOff off);
-        golang::runtime::_type* typeOff(rtype t, golang::runtime::typeOff off);
+        _type* typeOff(rtype t, golang::runtime::typeOff off);
         gocpp::unsafe_pointer textOff(rtype t, golang::runtime::textOff off);
     }
 }

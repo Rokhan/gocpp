@@ -75,9 +75,9 @@ namespace golang::color
 
 namespace golang::color
 {
-    struct Color yCbCrModel(struct Color c);
-    struct Color nYCbCrAModel(struct Color c);
-    struct Color cmykModel(struct Color c);
+    Color yCbCrModel(Color c);
+    Color nYCbCrAModel(Color c);
+    Color cmykModel(Color c);
     extern Model YCbCrModel;
     extern Model NYCbCrAModel;
     extern Model CMYKModel;

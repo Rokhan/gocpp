@@ -21,7 +21,7 @@ namespace golang::runtime
 namespace golang::runtime
 {
     using pageBits = gocpp::defined<gocpp::array<uint64_t, pallocChunkPages / 64>, GoTag_pageBits>;
-    using pallocBits = gocpp::defined<golang::runtime::pageBits, GoTag_pallocBits>;
+    using pallocBits = gocpp::defined<pageBits, GoTag_pallocBits>;
     struct pallocData
     {
         pallocBits pallocBits{};
@@ -59,7 +59,7 @@ namespace golang::runtime
         void clearAll(gocpp::array_ptr<pageBits> b);
         void clearBlock64(gocpp::array_ptr<pageBits> b, unsigned int i, uint64_t v);
         unsigned int popcntRange(gocpp::array_ptr<pageBits> b, unsigned int i, unsigned int n);
-        golang::runtime::pallocSum summarize(gocpp::array_ptr<pallocBits> b);
+        pallocSum summarize(gocpp::array_ptr<pallocBits> b);
         std::tuple<unsigned int, unsigned int> find(gocpp::array_ptr<pallocBits> b, uintptr_t npages, unsigned int searchIdx);
         unsigned int find1(gocpp::array_ptr<pallocBits> b, unsigned int searchIdx);
         std::tuple<unsigned int, unsigned int> findSmallN(gocpp::array_ptr<pallocBits> b, uintptr_t npages, unsigned int searchIdx);

@@ -67,7 +67,7 @@ namespace golang::slices
 {
     
     template<typename E>
-    std::tuple<int, golang::slices::sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b);
+    std::tuple<int, sortedHint> choosePivotOrdered(gocpp::slice<E> data, int a, int b);
 
     namespace rec
     {

@@ -42,8 +42,8 @@ namespace golang::crc32
     uint32_t ieeeCLMUL(uint32_t crc, gocpp::slice<unsigned char> p)
     /* convertBlockStmt, nil block */;
 
-    gocpp::array_ptr<golang::crc32::sse42Table> castagnoliSSE42TableK1;
-    gocpp::array_ptr<golang::crc32::sse42Table> castagnoliSSE42TableK2;
+    gocpp::array_ptr<sse42Table> castagnoliSSE42TableK1;
+    gocpp::array_ptr<sse42Table> castagnoliSSE42TableK2;
     bool archAvailableCastagnoli()
     {
         return cpu::X86.HasSSE42;
@@ -189,7 +189,7 @@ namespace golang::crc32
         return cpu::X86.HasPCLMULQDQ && cpu::X86.HasSSE41;
     }
 
-    gocpp::array_ptr<golang::crc32::slicing8Table> archIeeeTable8;
+    gocpp::array_ptr<slicing8Table> archIeeeTable8;
     void archInitIEEE()
     {
         if(! cpu::X86.HasPCLMULQDQ || ! cpu::X86.HasSSE41)

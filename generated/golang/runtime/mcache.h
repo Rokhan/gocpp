@@ -90,15 +90,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mcache& value);
-    extern golang::runtime::mspan emptymspan;
-    golang::runtime::mcache* allocmcache();
+    extern mspan emptymspan;
+    mcache* allocmcache();
     void freemcache(mcache* c);
 }
 #include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
-    golang::runtime::mcache* getMCache(m* mp);
+    mcache* getMCache(m* mp);
 }
 
 #include "golang/runtime/mheap.h"
@@ -108,9 +108,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::gclink* ptr(gclinkptr p);
+        gclink* ptr(gclinkptr p);
         void refill(mcache* c, spanClass spc);
-        golang::runtime::mspan* allocLarge(mcache* c, uintptr_t size, bool noscan);
+        mspan* allocLarge(mcache* c, uintptr_t size, bool noscan);
         void releaseAll(mcache* c);
         void prepareForSweep(mcache* c);
     }

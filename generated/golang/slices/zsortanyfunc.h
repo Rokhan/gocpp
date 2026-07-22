@@ -67,7 +67,7 @@ namespace golang::slices
 {
     
     template<typename E>
-    std::tuple<int, golang::slices::sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
+    std::tuple<int, sortedHint> choosePivotCmpFunc(gocpp::slice<E> data, int a, int b, std::function<int (E a, E b)> cmp);
 
     namespace rec
     {

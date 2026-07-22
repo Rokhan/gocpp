@@ -57,7 +57,7 @@ namespace golang::os
     // On files that support SetDeadline, any pending I/O operations will
     // be canceled and return immediately with an ErrClosed error.
     // Close will return an error if it has already been called.
-    struct gocpp::error rec::Close(File* f)
+    gocpp::error rec::Close(File* f)
     {
         if(f == nullptr)
         {
@@ -68,10 +68,10 @@ namespace golang::os
 
     // read reads up to len(b) bytes from the File.
     // It returns the number of bytes read and an error, if any.
-    std::tuple<int, struct gocpp::error> rec::read(File* f, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> rec::read(File* f, gocpp::slice<unsigned char> b)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         std::tie(n, err) = rec::Read(gocpp::recv(f->file.pfd), b);
         runtime::KeepAlive(f);
         return {n, err};
@@ -80,10 +80,10 @@ namespace golang::os
     // pread reads len(b) bytes from the File starting at byte offset off.
     // It returns the number of bytes read and the error, if any.
     // EOF is signaled by a zero count with err set to nil.
-    std::tuple<int, struct gocpp::error> rec::pread(File* f, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, gocpp::error> rec::pread(File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         std::tie(n, err) = rec::Pread(gocpp::recv(f->file.pfd), b, off);
         runtime::KeepAlive(f);
         return {n, err};
@@ -91,10 +91,10 @@ namespace golang::os
 
     // write writes len(b) bytes to the File.
     // It returns the number of bytes written and an error, if any.
-    std::tuple<int, struct gocpp::error> rec::write(File* f, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> rec::write(File* f, gocpp::slice<unsigned char> b)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         std::tie(n, err) = rec::Write(gocpp::recv(f->file.pfd), b);
         runtime::KeepAlive(f);
         return {n, err};
@@ -102,10 +102,10 @@ namespace golang::os
 
     // pwrite writes len(b) bytes to the File starting at byte offset off.
     // It returns the number of bytes written and an error, if any.
-    std::tuple<int, struct gocpp::error> rec::pwrite(File* f, gocpp::slice<unsigned char> b, int64_t off)
+    std::tuple<int, gocpp::error> rec::pwrite(File* f, gocpp::slice<unsigned char> b, int64_t off)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         std::tie(n, err) = rec::Pwrite(gocpp::recv(f->file.pfd), b, off);
         runtime::KeepAlive(f);
         return {n, err};
@@ -133,16 +133,16 @@ namespace golang::os
     }
 
     // See docs in file.go:Chmod.
-    struct gocpp::error chmod(gocpp::string name, FileMode mode)
+    gocpp::error chmod(gocpp::string name, FileMode mode)
     {
         auto longName = fixLongPath(name);
-        auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
+        auto e = ignoringEINTR([=]() mutable -> gocpp::error
         {
             return syscall::Chmod(longName, syscallMode(mode));
         });
         if(e != nullptr)
         {
-            return gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "chmod"_s;
                 x.Path = name;
                 x.Err = e;
@@ -152,7 +152,7 @@ namespace golang::os
     }
 
     // See docs in file.go:(*File).Chmod.
-    struct gocpp::error rec::chmod(File* f, FileMode mode)
+    gocpp::error rec::chmod(File* f, FileMode mode)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chmod"_s); err != nullptr)
         {
@@ -172,15 +172,15 @@ namespace golang::os
     //
     // On Windows or Plan 9, Chown always returns the syscall.EWINDOWS or
     // EPLAN9 error, wrapped in *PathError.
-    struct gocpp::error Chown(gocpp::string name, int uid, int gid)
+    gocpp::error Chown(gocpp::string name, int uid, int gid)
     {
-        auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
+        auto e = ignoringEINTR([=]() mutable -> gocpp::error
         {
             return syscall::Chown(name, uid, gid);
         });
         if(e != nullptr)
         {
-            return gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "chown"_s;
                 x.Path = name;
                 x.Err = e;
@@ -195,15 +195,15 @@ namespace golang::os
     //
     // On Windows, it always returns the syscall.EWINDOWS error, wrapped
     // in *PathError.
-    struct gocpp::error Lchown(gocpp::string name, int uid, int gid)
+    gocpp::error Lchown(gocpp::string name, int uid, int gid)
     {
-        auto e = ignoringEINTR([=]() mutable -> struct gocpp::error
+        auto e = ignoringEINTR([=]() mutable -> gocpp::error
         {
             return syscall::Lchown(name, uid, gid);
         });
         if(e != nullptr)
         {
-            return gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "lchown"_s;
                 x.Path = name;
                 x.Err = e;
@@ -217,7 +217,7 @@ namespace golang::os
     //
     // On Windows, it always returns the syscall.EWINDOWS error, wrapped
     // in *PathError.
-    struct gocpp::error rec::Chown(File* f, int uid, int gid)
+    gocpp::error rec::Chown(File* f, int uid, int gid)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chown"_s); err != nullptr)
         {
@@ -233,7 +233,7 @@ namespace golang::os
     // Truncate changes the size of the file.
     // It does not change the I/O offset.
     // If there is an error, it will be of type *PathError.
-    struct gocpp::error rec::Truncate(File* f, int64_t size)
+    gocpp::error rec::Truncate(File* f, int64_t size)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "truncate"_s); err != nullptr)
         {
@@ -249,7 +249,7 @@ namespace golang::os
     // Sync commits the current contents of the file to stable storage.
     // Typically, this means flushing the file system's in-memory copy
     // of recently written data to disk.
-    struct gocpp::error rec::Sync(File* f)
+    gocpp::error rec::Sync(File* f)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "sync"_s); err != nullptr)
         {
@@ -269,7 +269,7 @@ namespace golang::os
     // The underlying filesystem may truncate or round the values to a
     // less precise time unit.
     // If there is an error, it will be of type *PathError.
-    struct gocpp::error Chtimes(gocpp::string name, mocklib::Date atime, mocklib::Date mtime)
+    gocpp::error Chtimes(gocpp::string name, mocklib::Date atime, mocklib::Date mtime)
     {
         gocpp::array<syscall::Timespec, 2> utimes = {};
         auto set = [=](int i, mocklib::Date t) mutable -> void
@@ -290,7 +290,7 @@ namespace golang::os
         set(1, mtime);
         if(auto e = syscall::UtimesNano(fixLongPath(name), utimes.make_slice(0)); e != nullptr)
         {
-            return gocpp::error(gocpp::InitPtr<golang::os::PathError>([=](auto& x) {
+            return gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {
                 x.Op = "chtimes"_s;
                 x.Path = name;
                 x.Err = e;
@@ -302,7 +302,7 @@ namespace golang::os
     // Chdir changes the current working directory to the file,
     // which must be a directory.
     // If there is an error, it will be of type *PathError.
-    struct gocpp::error rec::Chdir(File* f)
+    gocpp::error rec::Chdir(File* f)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "chdir"_s); err != nullptr)
         {
@@ -316,7 +316,7 @@ namespace golang::os
     }
 
     // setDeadline sets the read and write deadline.
-    struct gocpp::error rec::setDeadline(File* f, mocklib::Date t)
+    gocpp::error rec::setDeadline(File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetDeadline"_s); err != nullptr)
         {
@@ -326,7 +326,7 @@ namespace golang::os
     }
 
     // setReadDeadline sets the read deadline.
-    struct gocpp::error rec::setReadDeadline(File* f, mocklib::Date t)
+    gocpp::error rec::setReadDeadline(File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetReadDeadline"_s); err != nullptr)
         {
@@ -336,7 +336,7 @@ namespace golang::os
     }
 
     // setWriteDeadline sets the write deadline.
-    struct gocpp::error rec::setWriteDeadline(File* f, mocklib::Date t)
+    gocpp::error rec::setWriteDeadline(File* f, mocklib::Date t)
     {
         if(auto err = rec::checkValid(gocpp::recv(f), "SetWriteDeadline"_s); err != nullptr)
         {
@@ -347,7 +347,7 @@ namespace golang::os
 
     // checkValid checks whether f is valid for use.
     // If not, it returns an appropriate error, perhaps incorporating the operation name op.
-    struct gocpp::error rec::checkValid(File* f, gocpp::string op)
+    gocpp::error rec::checkValid(File* f, gocpp::string op)
     {
         if(f == nullptr)
         {
@@ -363,7 +363,7 @@ namespace golang::os
     // installed without setting SA_RESTART. None of these are the common case,
     // but there are enough of them that it seems that we can't avoid
     // an EINTR loop.
-    struct gocpp::error ignoringEINTR(std::function<struct gocpp::error ()> fn)
+    gocpp::error ignoringEINTR(std::function<gocpp::error ()> fn)
     {
         for(; ; )
         {

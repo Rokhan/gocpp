@@ -37,7 +37,7 @@ namespace golang::runtime
 namespace golang::runtime
 {
     void lockInit(mutex* l, lockRank rank);
-    golang::runtime::lockRank getLockRank(mutex* l);
+    lockRank getLockRank(mutex* l);
     void lockWithRank(mutex* l, lockRank rank);
     void acquireLockRank(lockRank rank);
     void unlockWithRank(mutex* l);

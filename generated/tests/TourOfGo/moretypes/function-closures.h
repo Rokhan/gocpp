@@ -50,8 +50,8 @@ namespace golang::main
         gocpp::rune ToUpper(SpecialCase special, gocpp::rune r);
         int fillStore(compressor* d, gocpp::slice<unsigned char> b);
         void store(compressor* d);
-        struct gocpp::error init(compressor* d);
-        std::tuple<int, struct gocpp::error> write(compressor* d, gocpp::slice<unsigned char> b);
+        gocpp::error init(compressor* d);
+        std::tuple<int, gocpp::error> write(compressor* d, gocpp::slice<unsigned char> b);
     }
 }
 

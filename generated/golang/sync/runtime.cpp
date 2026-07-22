@@ -74,7 +74,7 @@ namespace golang::sync
 
     void init()
     {
-        golang::sync::notifyList n = {};
+        notifyList n = {};
         runtime_notifyListCheck(gocpp::Sizeof<notifyList>());
     }
 

@@ -109,20 +109,20 @@ namespace golang::runtime
     extern gocpp::error floatError;
     extern gocpp::error memoryError;
     extern gocpp::error rangeExitError;
-    golang::runtime::_defer* badDefer();
-    golang::runtime::_defer* deferconvert(_defer* d);
+    _defer* badDefer();
+    _defer* deferconvert(_defer* d);
     void deferprocStack(_defer* d);
-    golang::runtime::_defer* newdefer();
+    _defer* newdefer();
     void freedefer(_defer* d);
     void preprintpanics(_panic* p);
     void printpanics(_panic* p);
-    extern golang::runtime::godebugInc* panicnil;
+    extern godebugInc* panicnil;
     extern atomic::Uint32 runningPanicDefers;
     extern atomic::Uint32 panicking;
-    extern golang::runtime::mutex paniclk;
+    extern mutex paniclk;
     void recovery(g* gp);
     void fatalpanic(_panic* msgs);
-    extern golang::runtime::mutex deadlock;
+    extern mutex deadlock;
     bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp);
     bool shouldPushSigpanic(g* gp, uintptr_t pc, uintptr_t lr);
 }

@@ -10,12 +10,12 @@ namespace golang::main
     using IntegerType = int;
     struct Vertex;
     struct GoTag_VertexAlias;
-    using vvvv1 = golang::main::Vertex;
+    using vvvv1 = Vertex;
     struct GoTag_vvvv2;
     using str1 = gocpp::string;
     using str2 = gocpp::string;
-    using Pointer = golang::main::ArbitraryType*;
-    using VertexAlias = gocpp::defined<golang::main::Vertex, GoTag_VertexAlias>;
-    using VertexPtr = golang::main::Vertex*;
-    using vvvv2 = gocpp::defined<golang::main::Vertex, GoTag_vvvv2>;
+    using Pointer = ArbitraryType*;
+    using VertexAlias = gocpp::defined<Vertex, GoTag_VertexAlias>;
+    using VertexPtr = Vertex*;
+    using vvvv2 = gocpp::defined<Vertex, GoTag_vvvv2>;
 }

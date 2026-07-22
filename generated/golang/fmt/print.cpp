@@ -90,7 +90,7 @@ namespace golang::fmt
     }
 
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<int, struct gocpp::error> State::StateImpl<T, TStore, TInterface>::vWrite(gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> State::StateImpl<T, TStore, TInterface>::vWrite(gocpp::slice<unsigned char> b)
     {
         return rec::Write(gocpp::PtrRecv<T, false>(value.get()), b);
     }
@@ -112,12 +112,12 @@ namespace golang::fmt
 
     namespace rec
     {
-        std::tuple<int, struct gocpp::error> Write(const gocpp::PtrRecv<struct State, false>& self, gocpp::slice<unsigned char> b)
+        std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct State, false>& self, gocpp::slice<unsigned char> b)
         {
             return self.ptr->value->vWrite(b);
         }
 
-        std::tuple<int, struct gocpp::error> Write(const gocpp::ObjRecv<struct State>& self, gocpp::slice<unsigned char> b)
+        std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct State>& self, gocpp::slice<unsigned char> b)
         {
             return self.obj.value->vWrite(b);
         }
@@ -186,19 +186,19 @@ namespace golang::fmt
     }
 
     template<typename T, typename TStore, typename TInterface>
-    void Formatter::FormatterImpl<T, TStore, TInterface>::vFormat(struct State f, gocpp::rune verb)
+    void Formatter::FormatterImpl<T, TStore, TInterface>::vFormat(State f, gocpp::rune verb)
     {
         return rec::Format(gocpp::PtrRecv<T, false>(value.get()), f, verb);
     }
 
     namespace rec
     {
-        void Format(const gocpp::PtrRecv<struct Formatter, false>& self, struct State f, gocpp::rune verb)
+        void Format(const gocpp::PtrRecv<struct Formatter, false>& self, State f, gocpp::rune verb)
         {
             return self.ptr->value->vFormat(f, verb);
         }
 
-        void Format(const gocpp::ObjRecv<struct Formatter>& self, struct State f, gocpp::rune verb)
+        void Format(const gocpp::ObjRecv<struct Formatter>& self, State f, gocpp::rune verb)
         {
             return self.obj.value->vFormat(f, verb);
         }
@@ -320,7 +320,7 @@ namespace golang::fmt
     // flags, the width, and the precision. Missing flags, width, and precision are
     // omitted. This function allows a Formatter to reconstruct the original
     // directive triggering the call to Format.
-    gocpp::string FormatString(struct State state, gocpp::rune verb)
+    gocpp::string FormatString(State state, gocpp::rune verb)
     {
         // Use a local buffer.
         gocpp::array<unsigned char, 16> tmp = {};
@@ -432,9 +432,9 @@ namespace golang::fmt
         };
     });
     // newPrinter allocates a new pp struct or grabs a cached one.
-    golang::fmt::pp* newPrinter()
+    pp* newPrinter()
     {
-        auto p = gocpp::getValue<golang::fmt::pp*>(rec::Get(gocpp::recv(ppFree)));
+        auto p = gocpp::getValue<pp*>(rec::Get(gocpp::recv(ppFree)));
         p->panicking = false;
         p->erroring = false;
         p->wrapErrs = false;
@@ -519,30 +519,30 @@ namespace golang::fmt
 
     // Implement Write so we can call Fprintf on a pp (through State), for
     // recursive use in custom verbs.
-    std::tuple<int, struct gocpp::error> rec::Write(pp* p, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> rec::Write(pp* p, gocpp::slice<unsigned char> b)
     {
         int ret;
-        struct gocpp::error err;
+        gocpp::error err;
         rec::write(gocpp::recv(p->buf), b);
         return {len(b), nullptr};
     }
 
     // Implement WriteString so that we can call io.WriteString
     // on a pp (through state), for efficiency.
-    std::tuple<int, struct gocpp::error> rec::WriteString(pp* p, gocpp::string s)
+    std::tuple<int, gocpp::error> rec::WriteString(pp* p, gocpp::string s)
     {
         int ret;
-        struct gocpp::error err;
+        gocpp::error err;
         rec::writeString(gocpp::recv(p->buf), s);
         return {len(s), nullptr};
     }
 
     // Fprintf formats according to a format specifier and writes to w.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, struct gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         auto p = newPrinter();
         rec::doPrintf(gocpp::recv(p), format, a);
         std::tie(n, err) = rec::Write(gocpp::recv(w), p->buf);
@@ -552,10 +552,10 @@ namespace golang::fmt
 
     // Printf formats according to a format specifier and writes to standard output.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, struct gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         return Fprintf(os::Stdout, format, a);
     }
 
@@ -583,10 +583,10 @@ namespace golang::fmt
     // Fprint formats using the default formats for its operands and writes to w.
     // Spaces are added between operands when neither is a string.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, struct gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Fprint(io::Writer w, gocpp::slice<go_any> a)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         auto p = newPrinter();
         rec::doPrint(gocpp::recv(p), a);
         std::tie(n, err) = rec::Write(gocpp::recv(w), p->buf);
@@ -597,10 +597,10 @@ namespace golang::fmt
     // Print formats using the default formats for its operands and writes to standard output.
     // Spaces are added between operands when neither is a string.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, struct gocpp::error> Print(gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Print(gocpp::slice<go_any> a)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         return Fprint(os::Stdout, a);
     }
 
@@ -629,10 +629,10 @@ namespace golang::fmt
     // Fprintln formats using the default formats for its operands and writes to w.
     // Spaces are always added between operands and a newline is appended.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, struct gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Fprintln(io::Writer w, gocpp::slice<go_any> a)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         auto p = newPrinter();
         rec::doPrintln(gocpp::recv(p), a);
         std::tie(n, err) = rec::Write(gocpp::recv(w), p->buf);
@@ -643,10 +643,10 @@ namespace golang::fmt
     // Println formats using the default formats for its operands and writes to standard output.
     // Spaces are always added between operands and a newline is appended.
     // It returns the number of bytes written and any write error encountered.
-    std::tuple<int, struct gocpp::error> Println(gocpp::slice<go_any> a)
+    std::tuple<int, gocpp::error> Println(gocpp::slice<go_any> a)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         return Fprintln(os::Stdout, a);
     }
 

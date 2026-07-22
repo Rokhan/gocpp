@@ -235,18 +235,18 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tracestat& value);
-    extern gocpp::slice<golang::runtime::initTask*> runtime_inittasks;
+    extern gocpp::slice<initTask*> runtime_inittasks;
     void switchToCrashStack(std::function<void ()> fn);
     void switchToCrashStack0(std::function<void ()> fn);
-    extern golang::runtime::worldStop stopTheWorldContext;
-    golang::runtime::worldStop stopTheWorld(stwReason reason);
+    extern worldStop stopTheWorldContext;
+    worldStop stopTheWorld(stwReason reason);
     void startTheWorld(worldStop w);
-    golang::runtime::worldStop stopTheWorldGC(stwReason reason);
+    worldStop stopTheWorldGC(stwReason reason);
     void startTheWorldGC(worldStop w);
-    golang::runtime::worldStop stopTheWorldWithSema(stwReason reason);
+    worldStop stopTheWorldWithSema(stwReason reason);
     int64_t startTheWorldWithSema(int64_t now, worldStop w);
-    extern golang::runtime::randomOrder stealOrder;
-    extern golang::runtime::tracestat inittrace;
+    extern randomOrder stealOrder;
+    extern tracestat inittrace;
     void doInit(gocpp::slice<initTask*> ts);
     void doInit1(initTask* t);
 }
@@ -259,27 +259,27 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern golang::runtime::m m0;
-    extern golang::runtime::g g0;
-    extern golang::runtime::mcache* mcache0;
-    extern golang::runtime::mutex raceFiniLock;
-    extern golang::runtime::sigset initSigmask;
+    extern m m0;
+    extern g g0;
+    extern mcache* mcache0;
+    extern mutex raceFiniLock;
+    extern sigset initSigmask;
     void gopark(std::function<bool (g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, waitReason reason, traceBlockReason traceReason, int traceskip);
     void goparkunlock(mutex* lock, waitReason reason, traceBlockReason traceReason, int traceskip);
     void goready(g* gp, int traceskip);
-    golang::runtime::sudog* acquireSudog();
+    sudog* acquireSudog();
     void releaseSudog(sudog* s);
     void badmcall(std::function<void (g* _1)> fn);
     void badmcall2(std::function<void (g* _1)> fn);
-    extern golang::runtime::g gcrash;
-    extern atomic::Pointer<golang::runtime::g> crashingG;
-    extern golang::runtime::mutex allglock;
-    extern gocpp::slice<golang::runtime::g*> allgs;
-    extern golang::runtime::g** allgptr;
+    extern g gcrash;
+    extern atomic::Pointer<g> crashingG;
+    extern mutex allglock;
+    extern gocpp::slice<g*> allgs;
+    extern g** allgptr;
     void allgadd(g* gp);
-    gocpp::slice<golang::runtime::g*> allGsSnapshot();
-    std::tuple<golang::runtime::g**, uintptr_t> atomicAllG();
-    golang::runtime::g* atomicAllGIndex(g** ptr, uintptr_t i);
+    gocpp::slice<g*> allGsSnapshot();
+    std::tuple<g**, uintptr_t> atomicAllG();
+    g* atomicAllGIndex(g** ptr, uintptr_t i);
     void dumpgstatus(g* gp);
     void mcommoninit(m* mp, int64_t id);
     void ready(g* gp, int traceskip, bool next);
@@ -312,18 +312,18 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cgothreadstart& value);
-    golang::runtime::m* allocm(golang::runtime::p* pp, std::function<void ()> fn, int64_t id);
+    m* allocm(golang::runtime::p* pp, std::function<void ()> fn, int64_t id);
     extern atomic::Uintptr extraM;
     extern atomic::Uint32 extraMLength;
     extern atomic::Uint32 extraMWaiters;
     extern atomic::Uint32 extraMInUse;
-    golang::runtime::m* lockextra(bool nilokay);
+    m* lockextra(bool nilokay);
     void unlockextra(m* mp, int32_t delta);
-    std::tuple<golang::runtime::m*, bool> getExtraM();
+    std::tuple<m*, bool> getExtraM();
     void putExtraM(m* mp);
     void addExtraM(m* mp);
-    extern golang::runtime::rwmutex allocmLock;
-    extern golang::runtime::rwmutex execLock;
+    extern rwmutex allocmLock;
+    extern rwmutex execLock;
     struct newmHandoffStruct
     {
         mutex lock{};
@@ -357,11 +357,11 @@ namespace golang::runtime
     void handoffp(golang::runtime::p* pp);
     void startlockedm(g* gp);
     void execute(g* gp, bool inheritTime);
-    std::tuple<golang::runtime::g*, bool, bool> findRunnable();
-    std::tuple<golang::runtime::g*, bool, int64_t, int64_t, bool> stealWork(int64_t now);
+    std::tuple<g*, bool, bool> findRunnable();
+    std::tuple<g*, bool, int64_t, int64_t, bool> stealWork(int64_t now);
     golang::runtime::p* checkRunqsNoP(gocpp::slice<golang::runtime::p*> allpSnapshot, pMask idlepMaskSnapshot);
     int64_t checkTimersNoP(gocpp::slice<golang::runtime::p*> allpSnapshot, pMask timerpMaskSnapshot, int64_t pollUntil);
-    std::tuple<golang::runtime::p*, golang::runtime::g*> checkIdleGCNoP();
+    std::tuple<golang::runtime::p*, g*> checkIdleGCNoP();
     std::tuple<int64_t, int64_t, bool> checkTimers(golang::runtime::p* pp, int64_t now);
     bool parkunlock_c(g* gp, gocpp::unsafe_pointer lock);
     void park_m(g* gp);
@@ -377,12 +377,12 @@ namespace golang::runtime
     void exitsyscallfast_reacquired(traceLocker trace);
     void exitsyscall0(g* gp);
     extern atomic::Int32 pendingPreemptSignals;
-    golang::runtime::g* malg(int32_t stacksize);
+    g* malg(int32_t stacksize);
     void newproc(funcval* fn);
-    golang::runtime::g* newproc1(funcval* fn, g* callergp, uintptr_t callerpc);
-    gocpp::slice<golang::runtime::ancestorInfo>* saveAncestors(g* callergp);
+    g* newproc1(funcval* fn, g* callergp, uintptr_t callerpc);
+    gocpp::slice<ancestorInfo>* saveAncestors(g* callergp);
     void gfput(golang::runtime::p* pp, g* gp);
-    golang::runtime::g* gfget(golang::runtime::p* pp);
+    g* gfget(golang::runtime::p* pp);
     void gfpurge(golang::runtime::p* pp);
     struct profStruct
     {
@@ -412,10 +412,10 @@ namespace golang::runtime
     bool preemptone(golang::runtime::p* pp);
     bool schedEnabled(g* gp);
     void mput(m* mp);
-    golang::runtime::m* mget();
+    m* mget();
     void globrunqput(g* gp);
     void globrunqputhead(g* gp);
-    golang::runtime::g* globrunqget(golang::runtime::p* pp, int32_t max);
+    g* globrunqget(golang::runtime::p* pp, int32_t max);
     void updateTimerPMask(golang::runtime::p* pp);
     int64_t pidleput(golang::runtime::p* pp, int64_t now);
     std::tuple<golang::runtime::p*, int64_t> pidleget(int64_t now);
@@ -423,9 +423,9 @@ namespace golang::runtime
     bool runqempty(golang::runtime::p* pp);
     void runqput(golang::runtime::p* pp, g* gp, bool next);
     bool runqputslow(golang::runtime::p* pp, g* gp, uint32_t h, uint32_t t);
-    std::tuple<golang::runtime::g*, bool> runqget(golang::runtime::p* pp);
+    std::tuple<g*, bool> runqget(golang::runtime::p* pp);
     uint32_t runqgrab(golang::runtime::p* pp, gocpp::array_ptr<gocpp::array<golang::runtime::guintptr, 256>> batch, uint32_t batchHead, bool stealRunNextG);
-    golang::runtime::g* runqsteal(golang::runtime::p* pp, golang::runtime::p* p2, bool stealRunNextG);
+    g* runqsteal(golang::runtime::p* pp, golang::runtime::p* p2, bool stealRunNextG);
     struct gQueue
     {
         golang::runtime::guintptr head{};
@@ -466,7 +466,7 @@ namespace golang::runtime
     extern profStruct prof;
     void globrunqputbatch(gQueue* batch, int32_t n);
     void runqputbatch(golang::runtime::p* pp, gQueue* q, int qsize);
-    std::tuple<golang::runtime::gQueue, uint32_t> runqdrain(golang::runtime::p* pp);
+    std::tuple<gQueue, uint32_t> runqdrain(golang::runtime::p* pp);
 }
 
 #include "golang/runtime/runtime2.h"
@@ -489,14 +489,14 @@ namespace golang::runtime
         void push(gQueue* q, g* gp);
         void pushBack(gQueue* q, g* gp);
         void pushBackAll(gQueue* q, gQueue q2);
-        golang::runtime::g* pop(gQueue* q);
-        golang::runtime::gList popList(gQueue* q);
+        g* pop(gQueue* q);
+        gList popList(gQueue* q);
         bool empty(gList* l);
         void push(gList* l, g* gp);
         void pushAll(gList* l, gQueue q);
-        golang::runtime::g* pop(gList* l);
+        g* pop(gList* l);
         void reset(randomOrder* ord, uint32_t count);
-        golang::runtime::randomEnum start(randomOrder* ord, uint32_t i);
+        randomEnum start(randomOrder* ord, uint32_t i);
         bool done(randomEnum* go_enum);
         void next(randomEnum* go_enum);
         uint32_t position(randomEnum* go_enum);

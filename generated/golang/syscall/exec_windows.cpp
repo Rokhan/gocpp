@@ -189,7 +189,7 @@ namespace golang::syscall
     // terminated strings followed by a nil.
     // Last bytes are two UCS-2 NULs, or four NUL bytes.
     // If any string contains a NUL, it returns (nil, EINVAL).
-    std::tuple<gocpp::slice<uint16_t>, struct gocpp::error> createEnvBlock(gocpp::slice<gocpp::string> envv)
+    std::tuple<gocpp::slice<uint16_t>, gocpp::error> createEnvBlock(gocpp::slice<gocpp::string> envv)
     {
         if(len(envv) == 0)
         {
@@ -224,17 +224,17 @@ namespace golang::syscall
         SetHandleInformation(Handle(fd), HANDLE_FLAG_INHERIT, 0);
     }
 
-    struct gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking)
+    gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking)
     {
-        struct gocpp::error err;
+        gocpp::error err;
         return nullptr;
     }
 
     // FullPath retrieves the full path of the specified file.
-    std::tuple<gocpp::string, struct gocpp::error> FullPath(gocpp::string name)
+    std::tuple<gocpp::string, gocpp::error> FullPath(gocpp::string name)
     {
         gocpp::string path;
-        struct gocpp::error err;
+        gocpp::error err;
         uint16_t* p;
         std::tie(p, err) = UTF16PtrFromString(name);
         if(err != nullptr)
@@ -262,10 +262,10 @@ namespace golang::syscall
         return c == '\\' || c == '/';
     }
 
-    std::tuple<gocpp::string, struct gocpp::error> normalizeDir(gocpp::string dir)
+    std::tuple<gocpp::string, gocpp::error> normalizeDir(gocpp::string dir)
     {
         gocpp::string name;
-        struct gocpp::error err;
+        gocpp::error err;
         gocpp::string ndir;
         std::tie(ndir, err) = FullPath(dir);
         if(err != nullptr)
@@ -289,10 +289,10 @@ namespace golang::syscall
         return ch;
     }
 
-    std::tuple<gocpp::string, struct gocpp::error> joinExeDirAndFName(gocpp::string dir, gocpp::string p)
+    std::tuple<gocpp::string, gocpp::error> joinExeDirAndFName(gocpp::string dir, gocpp::string p)
     {
         gocpp::string name;
-        struct gocpp::error err;
+        gocpp::error err;
         if(len(p) == 0)
         {
             return {""_s, gocpp::error(go_EINVAL)};
@@ -440,16 +440,16 @@ namespace golang::syscall
         return value.PrintTo(os);
     }
 
-    golang::syscall::ProcAttr zeroProcAttr;
-    golang::syscall::SysProcAttr zeroSysProcAttr;
-    std::tuple<int, uintptr_t, struct gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr)
+    ProcAttr zeroProcAttr;
+    SysProcAttr zeroSysProcAttr;
+    std::tuple<int, uintptr_t, gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr)
     {
         gocpp::Defer defer;
         try
         {
             int pid;
             uintptr_t handle;
-            struct gocpp::error err;
+            gocpp::error err;
             if(len(argv0) == 0)
             {
                 return {0, 0, gocpp::error(go_EWINDOWS)};
@@ -633,9 +633,9 @@ namespace golang::syscall
         }
     }
 
-    struct gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv)
+    gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv)
     {
-        struct gocpp::error err;
+        gocpp::error err;
         return gocpp::error(go_EWINDOWS);
     }
 

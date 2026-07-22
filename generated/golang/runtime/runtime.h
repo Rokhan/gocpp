@@ -74,7 +74,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct godebugInc& value);
-    extern golang::runtime::ticksType ticks;
+    extern ticksType ticks;
 
     namespace rec
     {

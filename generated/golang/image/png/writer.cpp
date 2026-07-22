@@ -114,34 +114,34 @@ namespace golang::png
     }
 
     template<typename T, typename TStore, typename TInterface>
-    golang::png::EncoderBuffer* EncoderBufferPool::EncoderBufferPoolImpl<T, TStore, TInterface>::vGet()
+    EncoderBuffer* EncoderBufferPool::EncoderBufferPoolImpl<T, TStore, TInterface>::vGet()
     {
         return rec::Get(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    void EncoderBufferPool::EncoderBufferPoolImpl<T, TStore, TInterface>::vPut(golang::png::EncoderBuffer* _1)
+    void EncoderBufferPool::EncoderBufferPoolImpl<T, TStore, TInterface>::vPut(EncoderBuffer* _1)
     {
         return rec::Put(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
 
     namespace rec
     {
-        golang::png::EncoderBuffer* Get(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self)
+        EncoderBuffer* Get(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self)
         {
             return self.ptr->value->vGet();
         }
 
-        golang::png::EncoderBuffer* Get(const gocpp::ObjRecv<struct EncoderBufferPool>& self)
+        EncoderBuffer* Get(const gocpp::ObjRecv<struct EncoderBufferPool>& self)
         {
             return self.obj.value->vGet();
         }
 
-        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, golang::png::EncoderBuffer* _1)
+        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, EncoderBuffer* _1)
         {
             return self.ptr->value->vPut(_1);
         }
 
-        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, golang::png::EncoderBuffer* _1)
+        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, EncoderBuffer* _1)
         {
             return self.obj.value->vPut(_1);
         }
@@ -440,7 +440,7 @@ namespace golang::png
     //
     // This method should only be called from writeIDATs (via writeImage).
     // No other code should treat an encoder as an io.Writer.
-    std::tuple<int, struct gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> rec::Write(encoder* e, gocpp::slice<unsigned char> b)
     {
         rec::writeChunk(gocpp::recv(e), b, "IDAT"_s);
         if(e->err != nullptr)
@@ -568,7 +568,7 @@ namespace golang::png
         }
     }
 
-    struct gocpp::error rec::writeImage(encoder* e, io::Writer w, image::Image m, int cb, int level)
+    gocpp::error rec::writeImage(encoder* e, io::Writer w, image::Image m, int cb, int level)
     {
         gocpp::Defer defer;
         try
@@ -994,14 +994,14 @@ namespace golang::png
 
     // Encode writes the Image m to w in PNG format. Any Image may be
     // encoded, but images that are not [image.NRGBA] might be encoded lossily.
-    struct gocpp::error Encode(io::Writer w, image::Image m)
+    gocpp::error Encode(io::Writer w, image::Image m)
     {
-        golang::png::Encoder e = {};
+        Encoder e = {};
         return rec::Encode(gocpp::recv(e), w, m);
     }
 
     // Encode writes the Image m to w in PNG format.
-    struct gocpp::error rec::Encode(Encoder* enc, io::Writer w, image::Image m)
+    gocpp::error rec::Encode(Encoder* enc, io::Writer w, image::Image m)
     {
         gocpp::Defer defer;
         try
@@ -1015,15 +1015,15 @@ namespace golang::png
                 return gocpp::error(FormatError("invalid image size: "_s + strconv::FormatInt(mw, 10) + "x"_s + strconv::FormatInt(mh, 10)));
             }
 
-            golang::png::encoder* e = {};
+            encoder* e = {};
             if(enc->BufferPool != nullptr)
             {
                 auto buffer = rec::Get(gocpp::recv(enc->BufferPool));
-                e = (golang::png::encoder*)(buffer);
+                e = (encoder*)(buffer);
             }
             if(e == nullptr)
             {
-                e = new golang::png::encoder {};
+                e = new encoder {};
             }
             if(enc->BufferPool != nullptr)
             {

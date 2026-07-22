@@ -59,8 +59,8 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FILE_BASIC_INFO& value);
-    struct gocpp::error loadWSASendRecvMsg();
-    struct gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath);
+    gocpp::error loadWSASendRecvMsg();
+    gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath);
     struct SHARE_INFO_2
     {
         uint16_t* Netname{};
@@ -84,7 +84,7 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SHARE_INFO_2& value);
-    struct gocpp::error ErrorLoadingGetTempPath2();
+    gocpp::error ErrorLoadingGetTempPath2();
     struct SERVICE_STATUS
     {
         uint32_t ServiceType{};
@@ -393,10 +393,10 @@ namespace golang::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IpAdapterPrefix& value);
-    const uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<golang::windows::ModuleEntry32>();
+    const uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<ModuleEntry32>();
     extern sendRecvMsgFuncStruct sendRecvMsgFunc;
-    struct gocpp::error WSASendMsg(syscall::Handle fd, WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine);
-    struct gocpp::error WSARecvMsg(syscall::Handle fd, WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine);
+    gocpp::error WSASendMsg(syscall::Handle fd, WSAMsg* msg, uint32_t flags, uint32_t* bytesSent, syscall::Overlapped* overlapped, unsigned char* croutine);
+    gocpp::error WSARecvMsg(syscall::Handle fd, WSAMsg* msg, uint32_t* bytesReceived, syscall::Overlapped* overlapped, unsigned char* croutine);
 
     namespace rec
     {

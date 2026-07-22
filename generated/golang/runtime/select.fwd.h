@@ -8,10 +8,10 @@ namespace golang::runtime
 {
     const bool debugSelect = false;
     using selectDir = int;
-    const golang::runtime::selectDir _ = 0;
-    const golang::runtime::selectDir selectSend = 1;
-    const golang::runtime::selectDir selectRecv = 2;
-    const golang::runtime::selectDir selectDefault = 3;
+    const selectDir _ = 0;
+    const selectDir selectSend = 1;
+    const selectDir selectRecv = 2;
+    const selectDir selectDefault = 3;
 }
 #include "golang/runtime/chan.fwd.h"
 

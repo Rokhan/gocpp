@@ -118,9 +118,9 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    golang::flate::huffmanBitWriter* newHuffmanBitWriter(io::Writer w)
+    huffmanBitWriter* newHuffmanBitWriter(io::Writer w)
     {
-        return gocpp::InitPtr<golang::flate::huffmanBitWriter>([=](auto& x) {
+        return gocpp::InitPtr<huffmanBitWriter>([=](auto& x) {
             x.writer = w;
             x.literalFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), maxNumLit);
             x.offsetFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), offsetCodeCount);
@@ -734,7 +734,7 @@ namespace golang::flate
 
     // huffOffset is a static offset encoder used for huffman only encoding.
     // It can be reused since we will not be encoding offset values.
-    golang::flate::huffmanEncoder* huffOffset;
+    huffmanEncoder* huffOffset;
     void init()
     {
         auto offsetFreq = gocpp::make(gocpp::Tag<gocpp::slice<int32_t>>(), offsetCodeCount);

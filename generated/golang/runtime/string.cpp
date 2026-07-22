@@ -369,9 +369,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    golang::runtime::stringStruct* stringStructOf(gocpp::string* sp)
+    stringStruct* stringStructOf(gocpp::string* sp)
     {
-        return (golang::runtime::stringStruct*)(gocpp::unsafe_pointer(sp));
+        return (stringStruct*)(gocpp::unsafe_pointer(sp));
     }
 
     gocpp::string intstring(gocpp::array_ptr<gocpp::array<unsigned char, 4>> buf, int64_t v)
@@ -737,7 +737,7 @@ namespace golang::runtime
 
         for(; ; )
         {
-            auto t = *(gocpp::string*)(gocpp::unsafe_pointer(new golang::runtime::stringStruct {ptr, safeLen}));
+            auto t = *(gocpp::string*)(gocpp::unsafe_pointer(new stringStruct {ptr, safeLen}));
             // Check one page at a time.
             if(auto i = bytealg::IndexByteString(t, 0); i != - 1)
             {
@@ -768,7 +768,7 @@ namespace golang::runtime
     //go:nosplit
     gocpp::string gostringnocopy(unsigned char* str)
     {
-        auto ss = gocpp::Init<golang::runtime::stringStruct>([=](auto& x) {
+        auto ss = gocpp::Init<stringStruct>([=](auto& x) {
             x.str = gocpp::unsafe_pointer(str);
             x.len = findnull(str);
         });

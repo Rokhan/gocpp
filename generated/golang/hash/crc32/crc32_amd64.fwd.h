@@ -14,5 +14,5 @@ namespace golang::crc32
 
 namespace golang::crc32
 {
-    using sse42Table = gocpp::defined<gocpp::array<golang::crc32::Table, 4>, GoTag_sse42Table>;
+    using sse42Table = gocpp::defined<gocpp::array<Table, 4>, GoTag_sse42Table>;
 }

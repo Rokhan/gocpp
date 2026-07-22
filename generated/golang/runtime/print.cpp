@@ -93,7 +93,7 @@ namespace golang::runtime
         printunlock();
     }
 
-    golang::runtime::mutex debuglock;
+    mutex debuglock;
     void printlock()
     {
         auto mp = getg()->m;

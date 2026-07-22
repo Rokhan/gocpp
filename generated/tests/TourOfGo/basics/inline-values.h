@@ -16,7 +16,7 @@ namespace golang::main
     struct GoTag_ints { };
     using ints = gocpp::defined<gocpp::slice<int>, GoTag_ints>;
     struct GoTag_fakeFetcher { };
-    using fakeFetcher = gocpp::defined<gocpp::map<gocpp::string, golang::main::fakeResult*>, GoTag_fakeFetcher>;
+    using fakeFetcher = gocpp::defined<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
     struct fakeResult
     {
         gocpp::string body{};
@@ -34,8 +34,8 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
-    extern golang::main::ints smallPrimes;
-    extern golang::main::fakeFetcher fetcher;
+    extern ints smallPrimes;
+    extern fakeFetcher fetcher;
 
     namespace rec
     {

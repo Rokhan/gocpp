@@ -28,7 +28,7 @@ namespace golang::time
     {
     }
 
-    std::tuple<uintptr_t, struct gocpp::error> open(gocpp::string name)
+    std::tuple<uintptr_t, gocpp::error> open(gocpp::string name)
     {
         auto [fd, err] = syscall::Open(name, syscall::O_RDONLY, 0);
         if(err != nullptr)
@@ -43,7 +43,7 @@ namespace golang::time
         return {uintptr_t(fd), nullptr};
     }
 
-    std::tuple<int, struct gocpp::error> read(uintptr_t fd, gocpp::slice<unsigned char> buf)
+    std::tuple<int, gocpp::error> read(uintptr_t fd, gocpp::slice<unsigned char> buf)
     {
         return syscall::Read(syscall::Handle(fd), buf);
     }
@@ -53,7 +53,7 @@ namespace golang::time
         syscall::Close(syscall::Handle(fd));
     }
 
-    struct gocpp::error preadn(uintptr_t fd, gocpp::slice<unsigned char> buf, int off)
+    gocpp::error preadn(uintptr_t fd, gocpp::slice<unsigned char> buf, int off)
     {
         auto whence = seekStart;
         if(off < 0)

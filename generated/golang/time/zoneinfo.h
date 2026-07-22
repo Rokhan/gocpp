@@ -111,7 +111,7 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Location& value);
-    std::tuple<golang::time::rule, gocpp::string, bool> tzsetRule(gocpp::string s);
+    std::tuple<rule, gocpp::string, bool> tzsetRule(gocpp::string s);
     int tzruleTime(int year, rule r, int off);
 }
 #include "golang/sync/once.h"
@@ -128,7 +128,7 @@ namespace golang::time
     extern gocpp::slice<golang::time::Location*> unnamedFixedZones;
     golang::time::Location* FixedZone(gocpp::string name, int offset);
     golang::time::Location* fixedZone(gocpp::string name, int offset);
-    std::tuple<golang::time::Location*, struct gocpp::error> LoadLocation(gocpp::string name);
+    std::tuple<golang::time::Location*, gocpp::error> LoadLocation(gocpp::string name);
     extern golang::time::Location* UTC;
     extern golang::time::Location* Local;
 

@@ -73,22 +73,22 @@ namespace golang::abi
     //		u UncommonType
     //	}
     //	u := &(*structTypeUncommon)(unsafe.Pointer(t)).u
-    const golang::abi::TFlag TFlagUncommon = 1 << 0;
+    const TFlag TFlagUncommon = 1 << 0;
     // TFlagExtraStar means the name in the str field has an
     // extraneous '*' prefix. This is because for most types T in
     // a program, the type *T also exists and reusing the str data
     // saves binary size.
-    const golang::abi::TFlag TFlagExtraStar = 1 << 1;
+    const TFlag TFlagExtraStar = 1 << 1;
     // TFlagNamed means the type has a name.
-    const golang::abi::TFlag TFlagNamed = 1 << 2;
+    const TFlag TFlagNamed = 1 << 2;
     // TFlagRegularMemory means that equal and hash functions can treat
     // this type as a single region of t.size bytes.
-    const golang::abi::TFlag TFlagRegularMemory = 1 << 3;
+    const TFlag TFlagRegularMemory = 1 << 3;
     // TFlagUnrolledBitmap marks special types that are unrolled-bitmap
     // versions of types with GC programs.
     // These types need to be deallocated when the underlying object
     // is freed.
-    const golang::abi::TFlag TFlagUnrolledBitmap = 1 << 4;
+    const TFlag TFlagUnrolledBitmap = 1 << 4;
     const golang::abi::ChanDir RecvDir = 1 << 0;
     const golang::abi::ChanDir SendDir = 1 << 1;
     const golang::abi::ChanDir InvalidDir = 0;

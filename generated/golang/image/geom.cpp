@@ -61,27 +61,27 @@ namespace golang::image
     }
 
     // Add returns the vector p+q.
-    golang::image::Point rec::Add(Point p, Point q)
+    Point rec::Add(Point p, Point q)
     {
-        return golang::image::Point {p.X + q.X, p.Y + q.Y};
+        return Point {p.X + q.X, p.Y + q.Y};
     }
 
     // Sub returns the vector p-q.
-    golang::image::Point rec::Sub(Point p, Point q)
+    Point rec::Sub(Point p, Point q)
     {
-        return golang::image::Point {p.X - q.X, p.Y - q.Y};
+        return Point {p.X - q.X, p.Y - q.Y};
     }
 
     // Mul returns the vector p*k.
-    golang::image::Point rec::Mul(Point p, int k)
+    Point rec::Mul(Point p, int k)
     {
-        return golang::image::Point {p.X * k, p.Y * k};
+        return Point {p.X * k, p.Y * k};
     }
 
     // Div returns the vector p/k.
-    golang::image::Point rec::Div(Point p, int k)
+    Point rec::Div(Point p, int k)
     {
-        return golang::image::Point {p.X / k, p.Y / k};
+        return Point {p.X / k, p.Y / k};
     }
 
     // In reports whether p is in r.
@@ -93,7 +93,7 @@ namespace golang::image
 
     // Mod returns the point q in r such that p.X-q.X is a multiple of r's width
     // and p.Y-q.Y is a multiple of r's height.
-    golang::image::Point rec::Mod(Point p, Rectangle r)
+    Point rec::Mod(Point p, Rectangle r)
     {
         auto [w, h] = std::tuple{rec::Dx(gocpp::recv(r)), rec::Dy(gocpp::recv(r))};
         p = rec::Sub(gocpp::recv(p), r.Min);
@@ -119,11 +119,11 @@ namespace golang::image
     // ZP is the zero [Point].
     //
     // Deprecated: Use a literal [image.Point] instead.
-    golang::image::Point ZP;
+    Point ZP;
     // Pt is shorthand for [Point]{X, Y}.
-    golang::image::Point Pt(int X, int Y)
+    Point Pt(int X, int Y)
     {
-        return golang::image::Point {X, Y};
+        return Point {X, Y};
     }
 
     // A Rectangle contains the points with Min.X <= X < Max.X, Min.Y <= Y < Max.Y.
@@ -185,36 +185,36 @@ namespace golang::image
     }
 
     // Size returns r's width and height.
-    golang::image::Point rec::Size(Rectangle r)
+    Point rec::Size(Rectangle r)
     {
-        return golang::image::Point {
+        return Point {
             r.Max.X - r.Min.X,
             r.Max.Y - r.Min.Y
         };
     }
 
     // Add returns the rectangle r translated by p.
-    golang::image::Rectangle rec::Add(Rectangle r, Point p)
+    Rectangle rec::Add(Rectangle r, Point p)
     {
-        return golang::image::Rectangle {
-            golang::image::Point {r.Min.X + p.X, r.Min.Y + p.Y},
-            golang::image::Point {r.Max.X + p.X, r.Max.Y + p.Y}
+        return Rectangle {
+            Point {r.Min.X + p.X, r.Min.Y + p.Y},
+            Point {r.Max.X + p.X, r.Max.Y + p.Y}
         };
     }
 
     // Sub returns the rectangle r translated by -p.
-    golang::image::Rectangle rec::Sub(Rectangle r, Point p)
+    Rectangle rec::Sub(Rectangle r, Point p)
     {
-        return golang::image::Rectangle {
-            golang::image::Point {r.Min.X - p.X, r.Min.Y - p.Y},
-            golang::image::Point {r.Max.X - p.X, r.Max.Y - p.Y}
+        return Rectangle {
+            Point {r.Min.X - p.X, r.Min.Y - p.Y},
+            Point {r.Max.X - p.X, r.Max.Y - p.Y}
         };
     }
 
     // Inset returns the rectangle r inset by n, which may be negative. If either
     // of r's dimensions is less than 2*n then an empty rectangle near the center
     // of r will be returned.
-    golang::image::Rectangle rec::Inset(Rectangle r, int n)
+    Rectangle rec::Inset(Rectangle r, int n)
     {
         if(rec::Dx(gocpp::recv(r)) < 2 * n)
         {
@@ -241,7 +241,7 @@ namespace golang::image
 
     // Intersect returns the largest rectangle contained by both r and s. If the
     // two rectangles do not overlap then the zero rectangle will be returned.
-    golang::image::Rectangle rec::Intersect(Rectangle r, Rectangle s)
+    Rectangle rec::Intersect(Rectangle r, Rectangle s)
     {
         if(r.Min.X < s.Min.X)
         {
@@ -270,7 +270,7 @@ namespace golang::image
     }
 
     // Union returns the smallest rectangle that contains both r and s.
-    golang::image::Rectangle rec::Union(Rectangle r, Rectangle s)
+    Rectangle rec::Union(Rectangle r, Rectangle s)
     {
         if(rec::Empty(gocpp::recv(r)))
         {
@@ -335,7 +335,7 @@ namespace golang::image
 
     // Canon returns the canonical version of r. The returned rectangle has minimum
     // and maximum coordinates swapped if necessary so that it is well-formed.
-    golang::image::Rectangle rec::Canon(Rectangle r)
+    Rectangle rec::Canon(Rectangle r)
     {
         if(r.Max.X < r.Min.X)
         {
@@ -351,7 +351,7 @@ namespace golang::image
     // At implements the [Image] interface.
     color::Color rec::At(Rectangle r, int x, int y)
     {
-        if(rec::In(gocpp::recv((golang::image::Point {x, y})), r))
+        if(rec::In(gocpp::recv((Point {x, y})), r))
         {
             return color::Opaque;
         }
@@ -361,7 +361,7 @@ namespace golang::image
     // RGBA64At implements the [RGBA64Image] interface.
     color::RGBA64 rec::RGBA64At(Rectangle r, int x, int y)
     {
-        if(rec::In(gocpp::recv((golang::image::Point {x, y})), r))
+        if(rec::In(gocpp::recv((Point {x, y})), r))
         {
             return color::RGBA64 {0xffff, 0xffff, 0xffff, 0xffff};
         }
@@ -369,7 +369,7 @@ namespace golang::image
     }
 
     // Bounds implements the [Image] interface.
-    golang::image::Rectangle rec::Bounds(Rectangle r)
+    Rectangle rec::Bounds(Rectangle r)
     {
         return r;
     }
@@ -383,11 +383,11 @@ namespace golang::image
     // ZR is the zero [Rectangle].
     //
     // Deprecated: Use a literal [image.Rectangle] instead.
-    golang::image::Rectangle ZR;
+    Rectangle ZR;
     // Rect is shorthand for [Rectangle]{Pt(x0, y0), [Pt](x1, y1)}. The returned
     // rectangle has minimum and maximum coordinates swapped if necessary so that
     // it is well-formed.
-    golang::image::Rectangle Rect(int x0, int y0, int x1, int y1)
+    Rectangle Rect(int x0, int y0, int x1, int y1)
     {
         if(x0 > x1)
         {
@@ -397,7 +397,7 @@ namespace golang::image
         {
             std::tie(y0, y1) = std::tuple{y1, y0};
         }
-        return golang::image::Rectangle {golang::image::Point {x0, y0}, golang::image::Point {x1, y1}};
+        return Rectangle {Point {x0, y0}, Point {x1, y1}};
     }
 
     // mul3NonNeg returns (x * y * z), unless at least one argument is negative or

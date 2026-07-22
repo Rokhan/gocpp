@@ -43,49 +43,49 @@ namespace golang::syscall
     }
 
     template<typename T, typename TStore, typename TInterface>
-    struct gocpp::error RawConn::RawConnImpl<T, TStore, TInterface>::vControl(std::function<void (uintptr_t fd)> f)
+    gocpp::error RawConn::RawConnImpl<T, TStore, TInterface>::vControl(std::function<void (uintptr_t fd)> f)
     {
         return rec::Control(gocpp::PtrRecv<T, false>(value.get()), f);
     }
     template<typename T, typename TStore, typename TInterface>
-    struct gocpp::error RawConn::RawConnImpl<T, TStore, TInterface>::vRead(std::function<bool (uintptr_t fd)> f)
+    gocpp::error RawConn::RawConnImpl<T, TStore, TInterface>::vRead(std::function<bool (uintptr_t fd)> f)
     {
         return rec::Read(gocpp::PtrRecv<T, false>(value.get()), f);
     }
     template<typename T, typename TStore, typename TInterface>
-    struct gocpp::error RawConn::RawConnImpl<T, TStore, TInterface>::vWrite(std::function<bool (uintptr_t fd)> f)
+    gocpp::error RawConn::RawConnImpl<T, TStore, TInterface>::vWrite(std::function<bool (uintptr_t fd)> f)
     {
         return rec::Write(gocpp::PtrRecv<T, false>(value.get()), f);
     }
 
     namespace rec
     {
-        struct gocpp::error Control(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<void (uintptr_t fd)> f)
+        gocpp::error Control(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<void (uintptr_t fd)> f)
         {
             return self.ptr->value->vControl(f);
         }
 
-        struct gocpp::error Control(const gocpp::ObjRecv<struct RawConn>& self, std::function<void (uintptr_t fd)> f)
+        gocpp::error Control(const gocpp::ObjRecv<struct RawConn>& self, std::function<void (uintptr_t fd)> f)
         {
             return self.obj.value->vControl(f);
         }
 
-        struct gocpp::error Read(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<bool (uintptr_t fd)> f)
+        gocpp::error Read(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<bool (uintptr_t fd)> f)
         {
             return self.ptr->value->vRead(f);
         }
 
-        struct gocpp::error Read(const gocpp::ObjRecv<struct RawConn>& self, std::function<bool (uintptr_t fd)> f)
+        gocpp::error Read(const gocpp::ObjRecv<struct RawConn>& self, std::function<bool (uintptr_t fd)> f)
         {
             return self.obj.value->vRead(f);
         }
 
-        struct gocpp::error Write(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<bool (uintptr_t fd)> f)
+        gocpp::error Write(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<bool (uintptr_t fd)> f)
         {
             return self.ptr->value->vWrite(f);
         }
 
-        struct gocpp::error Write(const gocpp::ObjRecv<struct RawConn>& self, std::function<bool (uintptr_t fd)> f)
+        gocpp::error Write(const gocpp::ObjRecv<struct RawConn>& self, std::function<bool (uintptr_t fd)> f)
         {
             return self.obj.value->vWrite(f);
         }
@@ -123,19 +123,19 @@ namespace golang::syscall
     }
 
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<struct RawConn, struct gocpp::error> Conn::ConnImpl<T, TStore, TInterface>::vSyscallConn()
+    std::tuple<RawConn, gocpp::error> Conn::ConnImpl<T, TStore, TInterface>::vSyscallConn()
     {
         return rec::SyscallConn(gocpp::PtrRecv<T, false>(value.get()));
     }
 
     namespace rec
     {
-        std::tuple<struct RawConn, struct gocpp::error> SyscallConn(const gocpp::PtrRecv<struct Conn, false>& self)
+        std::tuple<RawConn, gocpp::error> SyscallConn(const gocpp::PtrRecv<struct Conn, false>& self)
         {
             return self.ptr->value->vSyscallConn();
         }
 
-        std::tuple<struct RawConn, struct gocpp::error> SyscallConn(const gocpp::ObjRecv<struct Conn>& self)
+        std::tuple<RawConn, gocpp::error> SyscallConn(const gocpp::ObjRecv<struct Conn>& self)
         {
             return self.obj.value->vSyscallConn();
         }

@@ -169,9 +169,9 @@ namespace golang::runtime
     // ptr returns the *gclink form of p.
     // The result should be used for accessing fields, not stored
     // in other data structures.
-    golang::runtime::gclink* rec::ptr(gclinkptr p)
+    gclink* rec::ptr(gclinkptr p)
     {
-        return (golang::runtime::gclink*)(gocpp::unsafe_pointer(p));
+        return (gclink*)(gocpp::unsafe_pointer(p));
     }
 
     
@@ -207,14 +207,14 @@ namespace golang::runtime
     }
 
     // dummy mspan that contains no free objects.
-    golang::runtime::mspan emptymspan;
-    golang::runtime::mcache* allocmcache()
+    mspan emptymspan;
+    mcache* allocmcache()
     {
-        golang::runtime::mcache* c = {};
+        mcache* c = {};
         systemstack([=]() mutable -> void
         {
             lock(& mheap_.lock);
-            c = (golang::runtime::mcache*)(rec::alloc(gocpp::recv(mheap_.cachealloc)));
+            c = (mcache*)(rec::alloc(gocpp::recv(mheap_.cachealloc)));
             rec::Store(gocpp::recv(c->flushGen), mheap_.sweepgen);
             unlock(& mheap_.lock);
         });
@@ -253,11 +253,11 @@ namespace golang::runtime
     //
     // Returns nil if we're not bootstrapping or we don't have a P. The caller's
     // P must not change, so we must be in a non-preemptible state.
-    golang::runtime::mcache* getMCache(m* mp)
+    mcache* getMCache(m* mp)
     {
         // Grab the mcache, since that's where stats live.
         auto pp = rec::ptr(gocpp::recv(mp->p));
-        golang::runtime::mcache* c = {};
+        mcache* c = {};
         if(pp == nullptr)
         {
             // We will be called without a P while bootstrapping,
@@ -354,7 +354,7 @@ namespace golang::runtime
     }
 
     // allocLarge allocates a span for a large object.
-    golang::runtime::mspan* rec::allocLarge(mcache* c, uintptr_t size, bool noscan)
+    mspan* rec::allocLarge(mcache* c, uintptr_t size, bool noscan)
     {
         if(size + _PageSize < size)
         {

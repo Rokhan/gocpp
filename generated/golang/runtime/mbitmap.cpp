@@ -167,10 +167,10 @@ namespace golang::runtime
     }
 
     //go:nosplit
-    golang::runtime::markBits rec::allocBitsForIndex(mspan* s, uintptr_t allocBitIndex)
+    markBits rec::allocBitsForIndex(mspan* s, uintptr_t allocBitIndex)
     {
         auto [bytep, mask] = rec::bitp(gocpp::recv(s->allocBits), allocBitIndex);
-        return golang::runtime::markBits {bytep, mask, allocBitIndex};
+        return markBits {bytep, mask, allocBitIndex};
     }
 
     // refillAllocCache takes 8 bytes s.allocBits starting at whichByte
@@ -299,22 +299,22 @@ namespace golang::runtime
         return rec::divideByElemSize(gocpp::recv(s), p - rec::base(gocpp::recv(s)));
     }
 
-    golang::runtime::markBits markBitsForAddr(uintptr_t p)
+    markBits markBitsForAddr(uintptr_t p)
     {
         auto s = spanOf(p);
         auto objIndex = rec::objIndex(gocpp::recv(s), p);
         return rec::markBitsForIndex(gocpp::recv(s), objIndex);
     }
 
-    golang::runtime::markBits rec::markBitsForIndex(mspan* s, uintptr_t objIndex)
+    markBits rec::markBitsForIndex(mspan* s, uintptr_t objIndex)
     {
         auto [bytep, mask] = rec::bitp(gocpp::recv(s->gcmarkBits), objIndex);
-        return golang::runtime::markBits {bytep, mask, objIndex};
+        return markBits {bytep, mask, objIndex};
     }
 
-    golang::runtime::markBits rec::markBitsForBase(mspan* s)
+    markBits rec::markBitsForBase(mspan* s)
     {
-        return golang::runtime::markBits {& s->gcmarkBits->x, uint8_t(1), 0};
+        return markBits {& s->gcmarkBits->x, uint8_t(1), 0};
     }
 
     // isMarked reports whether mark bit m is set.
@@ -348,9 +348,9 @@ namespace golang::runtime
     }
 
     // markBitsForSpan returns the markBits for the span base address base.
-    golang::runtime::markBits markBitsForSpan(uintptr_t base)
+    markBits markBitsForSpan(uintptr_t base)
     {
-        golang::runtime::markBits mbits;
+        markBits mbits;
         mbits = markBitsForAddr(base);
         if(mbits.mask != 1)
         {
@@ -424,10 +424,10 @@ namespace golang::runtime
     // Since p is a uintptr, it would not be adjusted if the stack were to move.
     //
     //go:nosplit
-    std::tuple<uintptr_t, golang::runtime::mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff)
+    std::tuple<uintptr_t, mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff)
     {
         uintptr_t base;
-        golang::runtime::mspan* s;
+        mspan* s;
         uintptr_t objIndex;
         s = spanOf(p);
         // If s is nil, the virtual address has never been part of the heap.
@@ -663,7 +663,7 @@ namespace golang::runtime
     // progToPointerMask returns the 1-bit pointer mask output by the GC program prog.
     // size the size of the region described by prog, in bytes.
     // The resulting bitvector will have no more than size/goarch.PtrSize bits.
-    golang::runtime::bitvector progToPointerMask(unsigned char* prog, uintptr_t size)
+    bitvector progToPointerMask(unsigned char* prog, uintptr_t size)
     {
         auto n = (size / goarch::PtrSize + 7) / 8;
         auto x = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(persistentalloc(n + 1, 1, & memstats.buckhash_sys)).make_slice(0, n + 1);
@@ -674,7 +674,7 @@ namespace golang::runtime
         {
             go_throw("progToPointerMask: overflow"_s);
         }
-        return golang::runtime::bitvector {int32_t(n), & x[0]};
+        return bitvector {int32_t(n), & x[0]};
     }
 
     // runGCProg returns the number of 1-bit entries written to memory.
@@ -915,7 +915,7 @@ namespace golang::runtime
     // pointer bitmask specified by the program prog.
     // The bitmask starts at s.startAddr.
     // The result must be deallocated with dematerializeGCProg.
-    golang::runtime::mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog)
+    mspan* materializeGCProg(uintptr_t ptrdata, unsigned char* prog)
     {
         // Each word of ptrdata needs one bit in the bitmap.
         auto bitmapBytes = divRoundUp(ptrdata, 8 * goarch::PtrSize);

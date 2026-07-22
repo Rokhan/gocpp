@@ -242,7 +242,7 @@ namespace golang::color
 
         struct IModel
         {
-            virtual struct Color vConvert(struct Color c) = 0;
+            virtual Color vConvert(Color c) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -254,7 +254,7 @@ namespace golang::color
                 value.reset(ptr);
             }
 
-            struct Color vConvert(struct Color c) override;
+            Color vConvert(Color c) override;
 
             void* getPtr() override
             {
@@ -269,17 +269,17 @@ namespace golang::color
 
     namespace rec
     {
-        struct Color Convert(const gocpp::PtrRecv<struct Model, false>& self, struct Color c);
-        struct Color Convert(const gocpp::ObjRecv<struct Model>& self, struct Color c);
+        Color Convert(const gocpp::PtrRecv<struct Model, false>& self, Color c);
+        Color Convert(const gocpp::ObjRecv<struct Model>& self, Color c);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Model& value);
     struct GoTag_Palette { };
     uint32_t sqDiff(uint32_t x, uint32_t y);
-    struct Model ModelFunc(std::function<struct Color (struct Color _1)> f);
+    Model ModelFunc(std::function<Color (Color _1)> f);
     struct modelFunc
     {
-        std::function<struct Color (struct Color _1)> f{};
+        std::function<Color (Color _1)> f{};
 
         using isGoStruct = void;
 
@@ -293,19 +293,19 @@ namespace golang::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct modelFunc& value);
-    struct Color rgbaModel(struct Color c);
-    struct Color rgba64Model(struct Color c);
-    struct Color nrgbaModel(struct Color c);
-    struct Color nrgba64Model(struct Color c);
-    struct Color alphaModel(struct Color c);
-    struct Color alpha16Model(struct Color c);
-    struct Color grayModel(struct Color c);
-    struct Color gray16Model(struct Color c);
+    Color rgbaModel(Color c);
+    Color rgba64Model(Color c);
+    Color nrgbaModel(Color c);
+    Color nrgba64Model(Color c);
+    Color alphaModel(Color c);
+    Color alpha16Model(Color c);
+    Color grayModel(Color c);
+    Color gray16Model(Color c);
     using Palette = gocpp::defined<gocpp::slice<Color>, GoTag_Palette>;
-    extern golang::color::Gray16 Black;
-    extern golang::color::Gray16 White;
-    extern golang::color::Alpha16 Transparent;
-    extern golang::color::Alpha16 Opaque;
+    extern Gray16 Black;
+    extern Gray16 White;
+    extern Alpha16 Transparent;
+    extern Alpha16 Opaque;
     extern Model RGBAModel;
     extern Model RGBA64Model;
     extern Model NRGBAModel;
@@ -325,9 +325,9 @@ namespace golang::color
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Alpha16 c);
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Gray c);
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(Gray16 c);
-        struct Color Convert(modelFunc* m, struct Color c);
-        struct Color Convert(Palette p, struct Color c);
-        int Index(Palette p, struct Color c);
+        Color Convert(modelFunc* m, Color c);
+        Color Convert(Palette p, Color c);
+        int Index(Palette p, Color c);
     }
 }
 

@@ -171,11 +171,11 @@ namespace golang::runtime
 
     void init()
     {
-        if(gocpp::Sizeof<golang::runtime::stackWorkBuf>() > gocpp::Sizeof<golang::runtime::workbuf>())
+        if(gocpp::Sizeof<stackWorkBuf>() > gocpp::Sizeof<workbuf>())
         {
             gocpp::panic("stackWorkBuf too big"_s);
         }
-        if(gocpp::Sizeof<golang::runtime::stackObjectBuf>() > gocpp::Sizeof<golang::runtime::workbuf>())
+        if(gocpp::Sizeof<stackObjectBuf>() > gocpp::Sizeof<workbuf>())
         {
             gocpp::panic("stackObjectBuf too big"_s);
         }
@@ -309,7 +309,7 @@ namespace golang::runtime
         if(buf == nullptr)
         {
             // Initial setup.
-            buf = (golang::runtime::stackWorkBuf*)(gocpp::unsafe_pointer(getempty()));
+            buf = (stackWorkBuf*)(gocpp::unsafe_pointer(getempty()));
             buf->stackWorkBufHdr.workbufhdr.nobj = 0;
             buf->stackWorkBufHdr.next = nullptr;
             *head = buf;
@@ -324,7 +324,7 @@ namespace golang::runtime
             }
             else
             {
-                buf = (golang::runtime::stackWorkBuf*)(gocpp::unsafe_pointer(getempty()));
+                buf = (stackWorkBuf*)(gocpp::unsafe_pointer(getempty()));
             }
             buf->stackWorkBufHdr.workbufhdr.nobj = 0;
             buf->stackWorkBufHdr.next = *head;
@@ -343,7 +343,7 @@ namespace golang::runtime
     {
         uintptr_t p;
         bool conservative;
-        for(auto [gocpp_ignored, head] : gocpp::slice<golang::runtime::stackWorkBuf**> {& s->buf, & s->cbuf})
+        for(auto [gocpp_ignored, head] : gocpp::slice<stackWorkBuf**> {& s->buf, & s->cbuf})
         {
             auto buf = *head;
             if(buf == nullptr)
@@ -356,7 +356,7 @@ namespace golang::runtime
                 if(s->freeBuf != nullptr)
                 {
                     // Free old freeBuf.
-                    putempty((golang::runtime::workbuf*)(gocpp::unsafe_pointer(s->freeBuf)));
+                    putempty((workbuf*)(gocpp::unsafe_pointer(s->freeBuf)));
                 }
                 // Move buf to the freeBuf.
                 s->freeBuf = buf;
@@ -374,7 +374,7 @@ namespace golang::runtime
         // No more data in either list.
         if(s->freeBuf != nullptr)
         {
-            putempty((golang::runtime::workbuf*)(gocpp::unsafe_pointer(s->freeBuf)));
+            putempty((workbuf*)(gocpp::unsafe_pointer(s->freeBuf)));
             s->freeBuf = nullptr;
         }
         return {0, false};
@@ -387,7 +387,7 @@ namespace golang::runtime
         if(x == nullptr)
         {
             // initial setup
-            x = (golang::runtime::stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
+            x = (stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
             x->stackObjectBufHdr.next = nullptr;
             s->head = x;
             s->tail = x;
@@ -399,7 +399,7 @@ namespace golang::runtime
         if(x->stackObjectBufHdr.workbufhdr.nobj == len(x->obj))
         {
             // full buffer - allocate a new buffer, add to end of linked list
-            auto y = (golang::runtime::stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
+            auto y = (stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
             y->stackObjectBufHdr.next = nullptr;
             x->stackObjectBufHdr.next = y;
             s->tail = y;
@@ -427,17 +427,17 @@ namespace golang::runtime
     // Returns the root of that tree, and the buf+idx of the nth object after x.obj[idx].
     // (The first object that was not included in the binary search tree.)
     // If n == 0, returns nil, x.
-    std::tuple<golang::runtime::stackObject*, golang::runtime::stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n)
+    std::tuple<stackObject*, stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n)
     {
-        golang::runtime::stackObject* root;
-        golang::runtime::stackObjectBuf* restBuf;
+        stackObject* root;
+        stackObjectBuf* restBuf;
         int restIdx;
         if(n == 0)
         {
             return {nullptr, x, idx};
         }
-        golang::runtime::stackObject* left = {};
-        golang::runtime::stackObject* right = {};
+        stackObject* left = {};
+        stackObject* right = {};
         std::tie(left, x, idx) = binarySearchTree(x, idx, n / 2);
         root = & x->obj[idx];
         idx++;
@@ -454,7 +454,7 @@ namespace golang::runtime
 
     // findObject returns the stack object containing address a, if any.
     // Must have called buildIndex previously.
-    golang::runtime::stackObject* rec::findObject(stackScanState* s, uintptr_t a)
+    stackObject* rec::findObject(stackScanState* s, uintptr_t a)
     {
         auto off = uint32_t(a - s->stack.lo);
         auto obj = s->root;

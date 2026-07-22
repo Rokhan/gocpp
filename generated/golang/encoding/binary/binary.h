@@ -216,8 +216,8 @@ namespace golang::binary
     struct GoTag_decoder { };
     struct GoTag_encoder { };
     int intDataSize(go_any data);
-    extern golang::binary::littleEndian LittleEndian;
-    extern golang::binary::bigEndian BigEndian;
+    extern littleEndian LittleEndian;
+    extern bigEndian BigEndian;
     struct coder
     {
         ByteOrder order{};
@@ -244,13 +244,13 @@ namespace golang::binary
 
 namespace golang::binary
 {
-    struct gocpp::error Read(io::Reader r, struct ByteOrder order, go_any data);
-    struct gocpp::error Write(io::Writer w, struct ByteOrder order, go_any data);
+    gocpp::error Read(io::Reader r, ByteOrder order, go_any data);
+    gocpp::error Write(io::Writer w, ByteOrder order, go_any data);
     extern sync::Map structSize;
     int dataSize(reflect::Value v);
     int go_sizeof(reflect::Type t);
-    using decoder = gocpp::defined<golang::binary::coder, GoTag_decoder>;
-    using encoder = gocpp::defined<golang::binary::coder, GoTag_encoder>;
+    using decoder = gocpp::defined<coder, GoTag_decoder>;
+    using encoder = gocpp::defined<coder, GoTag_encoder>;
 }
 
 #include "golang/encoding/binary/native_endian_little.h"

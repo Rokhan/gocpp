@@ -38,8 +38,8 @@ namespace golang::png
 
         struct IEncoderBufferPool
         {
-            virtual golang::png::EncoderBuffer* vGet() = 0;
-            virtual void vPut(golang::png::EncoderBuffer* _1) = 0;
+            virtual EncoderBuffer* vGet() = 0;
+            virtual void vPut(EncoderBuffer* _1) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -51,9 +51,9 @@ namespace golang::png
                 value.reset(ptr);
             }
 
-            golang::png::EncoderBuffer* vGet() override;
+            EncoderBuffer* vGet() override;
 
-            void vPut(golang::png::EncoderBuffer* _1) override;
+            void vPut(EncoderBuffer* _1) override;
 
             void* getPtr() override
             {
@@ -68,11 +68,11 @@ namespace golang::png
 
     namespace rec
     {
-        golang::png::EncoderBuffer* Get(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self);
-        golang::png::EncoderBuffer* Get(const gocpp::ObjRecv<struct EncoderBufferPool>& self);
+        EncoderBuffer* Get(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self);
+        EncoderBuffer* Get(const gocpp::ObjRecv<struct EncoderBufferPool>& self);
 
-        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, golang::png::EncoderBuffer* _1);
-        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, golang::png::EncoderBuffer* _1);
+        void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, EncoderBuffer* _1);
+        void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, EncoderBuffer* _1);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct EncoderBufferPool& value);
@@ -196,8 +196,8 @@ namespace golang::png
     std::ostream& operator<<(std::ostream& os, const struct encoder& value);
     bool opaque(image::Image m);
     int filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int bpp);
-    struct gocpp::error Encode(io::Writer w, image::Image m);
-    using EncoderBuffer = gocpp::defined<golang::png::encoder, GoTag_EncoderBuffer>;
+    gocpp::error Encode(io::Writer w, image::Image m);
+    using EncoderBuffer = gocpp::defined<encoder, GoTag_EncoderBuffer>;
 }
 
 #include "golang/image/color/color.h"
@@ -212,11 +212,11 @@ namespace golang::png
         void writeChunk(encoder* e, gocpp::slice<unsigned char> b, gocpp::string name);
         void writeIHDR(encoder* e);
         void writePLTEAndTRNS(encoder* e, color::Palette p);
-        std::tuple<int, struct gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> b);
-        struct gocpp::error writeImage(encoder* e, io::Writer w, image::Image m, int cb, int level);
+        std::tuple<int, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> b);
+        gocpp::error writeImage(encoder* e, io::Writer w, image::Image m, int cb, int level);
         void writeIDATs(encoder* e);
         void writeIEND(encoder* e);
-        struct gocpp::error Encode(Encoder* enc, io::Writer w, image::Image m);
+        gocpp::error Encode(Encoder* enc, io::Writer w, image::Image m);
     }
 }
 

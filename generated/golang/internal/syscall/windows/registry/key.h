@@ -12,9 +12,9 @@
 
 namespace golang::registry
 {
-    std::tuple<golang::registry::Key, struct gocpp::error> OpenKey(golang::registry::Key k, gocpp::string path, uint32_t access);
-    std::tuple<golang::registry::Key, bool, struct gocpp::error> CreateKey(golang::registry::Key k, gocpp::string path, uint32_t access);
-    struct gocpp::error DeleteKey(golang::registry::Key k, gocpp::string path);
+    std::tuple<golang::registry::Key, gocpp::error> OpenKey(golang::registry::Key k, gocpp::string path, uint32_t access);
+    std::tuple<golang::registry::Key, bool, gocpp::error> CreateKey(golang::registry::Key k, gocpp::string path, uint32_t access);
+    gocpp::error DeleteKey(golang::registry::Key k, gocpp::string path);
 }
 #include "golang/syscall/types_windows.h"
 
@@ -44,9 +44,9 @@ namespace golang::registry
 
     namespace rec
     {
-        struct gocpp::error Close(golang::registry::Key k);
-        std::tuple<gocpp::slice<gocpp::string>, struct gocpp::error> ReadSubKeyNames(golang::registry::Key k);
-        std::tuple<golang::registry::KeyInfo*, struct gocpp::error> Stat(golang::registry::Key k);
+        gocpp::error Close(golang::registry::Key k);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::error> ReadSubKeyNames(golang::registry::Key k);
+        std::tuple<KeyInfo*, gocpp::error> Stat(golang::registry::Key k);
     }
 }
 

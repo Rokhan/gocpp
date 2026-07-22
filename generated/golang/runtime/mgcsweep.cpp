@@ -78,7 +78,7 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    golang::runtime::sweepdata sweep;
+    sweepdata sweep;
     // State of background sweep.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -123,7 +123,7 @@ namespace golang::runtime
 
     // sweepClass is a spanClass and one bit to represent whether we're currently
     // sweeping partial or full spans.
-    golang::runtime::sweepClass rec::load(sweepClass* s)
+    sweepClass rec::load(sweepClass* s)
     {
         return sweepClass(atomic::Load((uint32_t*)(s)));
     }
@@ -153,9 +153,9 @@ namespace golang::runtime
     // whether we're interested in the full or partial
     // unswept lists for that class, indicated as a boolean
     // (true means "full").
-    std::tuple<golang::runtime::spanClass, bool> rec::split(sweepClass s)
+    std::tuple<spanClass, bool> rec::split(sweepClass s)
     {
-        golang::runtime::spanClass spc;
+        spanClass spc;
         bool full;
         return {spanClass(s >> 1), s & 1 == 0};
     }
@@ -163,14 +163,14 @@ namespace golang::runtime
     // nextSpanForSweep finds and pops the next span for sweeping from the
     // central sweep buffers. It returns ownership of the span to the caller.
     // Returns nil if no such span exists.
-    golang::runtime::mspan* rec::nextSpanForSweep(mheap* h)
+    mspan* rec::nextSpanForSweep(mheap* h)
     {
         auto sg = h->sweepgen;
         for(auto sc = rec::load(gocpp::recv(sweep.centralIndex)); sc < numSweepClasses; sc++)
         {
             auto [spc, full] = rec::split(gocpp::recv(sc));
             auto c = & h->central[spc].mcentral;
-            golang::runtime::mspan* s = {};
+            mspan* s = {};
             if(full)
             {
                 s = rec::pop(gocpp::recv(rec::fullUnswept(gocpp::recv(c), sg)));
@@ -236,18 +236,18 @@ namespace golang::runtime
     // this does not indicate that all sweeping has completed.
     //
     // Even if the sweepLocker is invalid, its sweepGen is always valid.
-    golang::runtime::sweepLocker rec::begin(activeSweep* a)
+    sweepLocker rec::begin(activeSweep* a)
     {
         for(; ; )
         {
             auto state = rec::Load(gocpp::recv(a->state));
             if(state & sweepDrainedMask != 0)
             {
-                return golang::runtime::sweepLocker {mheap_.sweepgen, false};
+                return sweepLocker {mheap_.sweepgen, false};
             }
             if(rec::CompareAndSwap(gocpp::recv(a->state), state, state + 1))
             {
-                return golang::runtime::sweepLocker {mheap_.sweepgen, true};
+                return sweepLocker {mheap_.sweepgen, true};
             }
         }
     }
@@ -498,7 +498,7 @@ namespace golang::runtime
 
     // tryAcquire attempts to acquire sweep ownership of span s. If it
     // successfully acquires ownership, it blocks sweep completion.
-    std::tuple<golang::runtime::sweepLocked, bool> rec::tryAcquire(sweepLocker* l, mspan* s)
+    std::tuple<sweepLocked, bool> rec::tryAcquire(sweepLocker* l, mspan* s)
     {
         if(! l->valid)
         {
@@ -507,14 +507,14 @@ namespace golang::runtime
         // Check before attempting to CAS.
         if(atomic::Load(& s->sweepgen) != l->sweepGen - 2)
         {
-            return {golang::runtime::sweepLocked {}, false};
+            return {sweepLocked {}, false};
         }
         // Attempt to acquire sweep ownership of s.
         if(! atomic::Cas(& s->sweepgen, l->sweepGen - 2, l->sweepGen - 1))
         {
-            return {golang::runtime::sweepLocked {}, false};
+            return {sweepLocked {}, false};
         }
-        return {golang::runtime::sweepLocked {s}, true};
+        return {sweepLocked {s}, true};
     }
 
     // sweepone sweeps some unswept heap span and returns the number of pages returned
@@ -792,7 +792,7 @@ namespace golang::runtime
                 if(siter.s->kind == _KindSpecialReachable)
                 {
                     auto special = rec::unlinkAndNext(gocpp::recv(siter));
-                    (golang::runtime::specialReachable*)(gocpp::unsafe_pointer(special))->reachable = true;
+                    (specialReachable*)(gocpp::unsafe_pointer(special))->reachable = true;
                     freeSpecial(special, gocpp::unsafe_pointer(p), size);
                 }
                 else

@@ -12,7 +12,7 @@
 
 namespace golang::poll
 {
-    struct gocpp::error ignoringEINTR(std::function<struct gocpp::error ()> fn);
+    gocpp::error ignoringEINTR(std::function<gocpp::error ()> fn);
 }
 
 #include "golang/internal/poll/fd_windows.h"
@@ -22,11 +22,11 @@ namespace golang::poll
 
     namespace rec
     {
-        struct gocpp::error eofError(FD* fd, int n, struct gocpp::error err);
-        struct gocpp::error Shutdown(FD* fd, int how);
-        struct gocpp::error Fchown(FD* fd, int uid, int gid);
-        struct gocpp::error Ftruncate(FD* fd, int64_t size);
-        struct gocpp::error RawControl(FD* fd, std::function<void (uintptr_t _1)> f);
+        gocpp::error eofError(FD* fd, int n, gocpp::error err);
+        gocpp::error Shutdown(FD* fd, int how);
+        gocpp::error Fchown(FD* fd, int uid, int gid);
+        gocpp::error Ftruncate(FD* fd, int64_t size);
+        gocpp::error RawControl(FD* fd, std::function<void (uintptr_t _1)> f);
     }
 }
 

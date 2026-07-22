@@ -49,11 +49,11 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Segment& value);
-    extern golang::main::Vertex v1;
-    extern golang::main::Vertex v2;
-    extern golang::main::Vertex v3;
-    extern golang::main::Vertex v4;
-    extern golang::main::Segment s1;
+    extern Vertex v1;
+    extern Vertex v2;
+    extern Vertex v3;
+    extern Vertex v4;
+    extern Segment s1;
 
     namespace rec
     {

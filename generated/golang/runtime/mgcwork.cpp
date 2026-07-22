@@ -471,12 +471,12 @@ namespace golang::runtime
     // allocating new buffers if none are available.
     //
     //go:nowritebarrier
-    golang::runtime::workbuf* getempty()
+    workbuf* getempty()
     {
-        golang::runtime::workbuf* b = {};
+        workbuf* b = {};
         if(work.empty != 0)
         {
-            b = (golang::runtime::workbuf*)(rec::pop(gocpp::recv(work.empty)));
+            b = (workbuf*)(rec::pop(gocpp::recv(work.empty)));
             if(b != nullptr)
             {
                 rec::checkempty(gocpp::recv(b));
@@ -489,7 +489,7 @@ namespace golang::runtime
         if(b == nullptr)
         {
             // Allocate more workbufs.
-            golang::runtime::mspan* s = {};
+            mspan* s = {};
             if(work.wbufSpans.free.first != nullptr)
             {
                 lock(& work.wbufSpans.lock);
@@ -520,7 +520,7 @@ namespace golang::runtime
             // put the rest on the empty list.
             for(auto i = uintptr_t(0); i + _WorkbufSize <= workbufAlloc; i += _WorkbufSize)
             {
-                auto newb = (golang::runtime::workbuf*)(gocpp::unsafe_pointer(rec::base(gocpp::recv(s)) + i));
+                auto newb = (workbuf*)(gocpp::unsafe_pointer(rec::base(gocpp::recv(s)) + i));
                 newb->workbufhdr.nobj = 0;
                 lfnodeValidate(& newb->workbufhdr.node);
                 if(i == 0)
@@ -561,9 +561,9 @@ namespace golang::runtime
     // If one is not immediately available return nil.
     //
     //go:nowritebarrier
-    golang::runtime::workbuf* trygetfull()
+    workbuf* trygetfull()
     {
-        auto b = (golang::runtime::workbuf*)(rec::pop(gocpp::recv(work.full)));
+        auto b = (workbuf*)(rec::pop(gocpp::recv(work.full)));
         if(b != nullptr)
         {
             rec::checknonempty(gocpp::recv(b));
@@ -573,7 +573,7 @@ namespace golang::runtime
     }
 
     //go:nowritebarrier
-    golang::runtime::workbuf* handoff(workbuf* b)
+    workbuf* handoff(workbuf* b)
     {
         // Make new buffer with half of b's pointers.
         auto b1 = getempty();

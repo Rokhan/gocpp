@@ -90,7 +90,7 @@ namespace golang::rand
     double Float32();
     gocpp::slice<int> Perm(int n);
     void Shuffle(int n, std::function<void (int i, int j)> swap);
-    std::tuple<int, struct gocpp::error> Read(gocpp::slice<unsigned char> p);
+    std::tuple<int, gocpp::error> Read(gocpp::slice<unsigned char> p);
     double NormFloat64();
     double ExpFloat64();
     struct Source64 : virtual gocpp::Interface, Source
@@ -157,15 +157,15 @@ namespace golang::rand
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Source64& value);
-    struct Source NewSource(int64_t seed);
-    std::tuple<int, struct gocpp::error> read(gocpp::slice<unsigned char> p, struct Source src, int64_t* readVal, int8_t* readPos);
+    Source NewSource(int64_t seed);
+    std::tuple<int, gocpp::error> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos);
 }
 #include "golang/sync/mutex.h"
 #include "golang/math/rand/rng.fwd.h"
 
 namespace golang::rand
 {
-    golang::rand::rngSource* newSource(int64_t seed);
+    rngSource* newSource(int64_t seed);
     struct runtimeSource
     {
         // The mutex is used to avoid race conditions in Read.
@@ -225,14 +225,14 @@ namespace golang::rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Rand& value);
-    golang::rand::Rand* New(struct Source src);
-    golang::rand::Rand* globalRand();
+    Rand* New(Source src);
+    Rand* globalRand();
 }
 #include "golang/sync/atomic/type.h"
 
 namespace golang::rand
 {
-    extern atomic::Pointer<golang::rand::Rand> globalRandGenerator;
+    extern atomic::Pointer<Rand> globalRandGenerator;
 }
 #include "golang/internal/godebug/godebug.fwd.h"
 
@@ -256,17 +256,17 @@ namespace golang::rand
         double Float32(Rand* r);
         gocpp::slice<int> Perm(Rand* r, int n);
         void Shuffle(Rand* r, int n, std::function<void (int i, int j)> swap);
-        std::tuple<int, struct gocpp::error> Read(Rand* r, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Read(Rand* r, gocpp::slice<unsigned char> p);
         int64_t Int63(runtimeSource*);
         void Seed(runtimeSource*, int64_t);
         uint64_t Uint64(runtimeSource*);
-        std::tuple<int, struct gocpp::error> read(runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
+        std::tuple<int, gocpp::error> read(runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
         int64_t Int63(lockedSource* r);
         uint64_t Uint64(lockedSource* r);
         void Seed(lockedSource* r, int64_t seed);
         void seedPos(lockedSource* r, int64_t seed, int8_t* readPos);
         void seed(lockedSource* r, int64_t seed);
-        std::tuple<int, struct gocpp::error> read(lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
+        std::tuple<int, gocpp::error> read(lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos);
     }
 }
 

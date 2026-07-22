@@ -226,9 +226,9 @@ namespace golang::main
     }
 
     // from sync/map.go, simplified
-    golang::main::entry* newEntry(go_any i)
+    entry* newEntry(go_any i)
     {
-        auto e = new golang::main::entry {};
+        auto e = new entry {};
         rec::Store<gocpp::go_any>(gocpp::recv(e->p), & i);
         return e;
     }
@@ -250,10 +250,10 @@ namespace golang::main
         mocklib::Printf("Unused: %v\n"_s, UnusedGenericParameter<double>());
         mocklib::Printf("OneOrDefault: %v\n"_s, OneOrDefault(gocpp::map<int, gocpp::string> {{ 1, "toto"_s }}));
 
-        auto w1 = gocpp::Init<golang::main::Wrapper<int>>([=](auto& x) {
+        auto w1 = gocpp::Init<Wrapper<int>>([=](auto& x) {
             x.value = 42;
         });
-        auto w2 = gocpp::Init<golang::main::Wrapper<gocpp::string>>([=](auto& x) {
+        auto w2 = gocpp::Init<Wrapper<gocpp::string>>([=](auto& x) {
             x.value = "hello"_s;
         });
         mocklib::Printf("Wrapper: %v, %v\n"_s, rec::Get<int>(gocpp::recv(w1)), rec::Get<gocpp::string>(gocpp::recv(w2)));

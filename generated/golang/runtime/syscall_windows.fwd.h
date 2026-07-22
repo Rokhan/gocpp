@@ -19,9 +19,9 @@ namespace golang::runtime
     // Although it only permits maximum 42 parameters, it
     // is arguably large enough.
     const long maxArgs = 42;
-    const golang::runtime::abiPartKind abiPartBad = 0;
-    const golang::runtime::abiPartKind abiPartStack = 1;
-    const golang::runtime::abiPartKind abiPartReg = 2;
+    const abiPartKind abiPartBad = 0;
+    const abiPartKind abiPartStack = 1;
+    const abiPartKind abiPartReg = 2;
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/runtime/runtime2.fwd.h"

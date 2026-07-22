@@ -145,16 +145,16 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricData& value);
-    golang::runtime::statDepSet makeStatDepSet(gocpp::slice<statDep> deps);
+    statDepSet makeStatDepSet(gocpp::slice<statDep> deps);
     
     template<typename... Args>
-    golang::runtime::statDepSet makeStatDepSet(Args... deps)
+    statDepSet makeStatDepSet(Args... deps)
     {
         return makeStatDepSet(gocpp::ToSlice<statDep>(deps...));
     }
     
     template<typename... Args>
-    golang::runtime::statDepSet makeStatDepSet(statDep value, Args... deps)
+    statDepSet makeStatDepSet(statDep value, Args... deps)
     {
         return makeStatDepSet(gocpp::ToSlice<statDep>(value, deps...));
     }
@@ -228,7 +228,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cpuStatsAggregate& value);
-    extern gocpp::map<gocpp::string, golang::runtime::metricData> metrics;
+    extern gocpp::map<gocpp::string, metricData> metrics;
     struct statAggregate
     {
         statDepSet ensured{};
@@ -250,13 +250,13 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct statAggregate& value);
     void compute0(statAggregate* _1, metricValue* out);
-    extern golang::runtime::statAggregate agg;
+    extern statAggregate agg;
 
     namespace rec
     {
         void compute(metricReader f, statAggregate* _1, metricValue* out);
-        golang::runtime::statDepSet difference(statDepSet s, statDepSet b);
-        golang::runtime::statDepSet go_union(statDepSet s, statDepSet b);
+        statDepSet difference(statDepSet s, statDepSet b);
+        statDepSet go_union(statDepSet s, statDepSet b);
         bool empty(gocpp::array_ptr<statDepSet> s);
         bool has(gocpp::array_ptr<statDepSet> s, statDep d);
         void compute(heapStatsAggregate* a);
@@ -264,7 +264,7 @@ namespace golang::runtime
         void compute(cpuStatsAggregate* a);
         void compute(gcStatsAggregate* a);
         void ensure(statAggregate* a, gocpp::array_ptr<statDepSet> deps);
-        golang::runtime::metricFloat64Histogram* float64HistOrInit(metricValue* v, gocpp::slice<double> buckets);
+        metricFloat64Histogram* float64HistOrInit(metricValue* v, gocpp::slice<double> buckets);
     }
 }
 

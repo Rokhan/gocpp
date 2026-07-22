@@ -144,7 +144,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1{};
         stackObjectBufHdr stackObjectBufHdr{};
-        gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackObjectBufHdr>()) / gocpp::Sizeof<golang::runtime::stackObject>()> obj{};
+        gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj{};
 
         using isGoStruct = void;
 
@@ -158,7 +158,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectBuf& value);
-    std::tuple<golang::runtime::stackObject*, golang::runtime::stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n);
+    std::tuple<stackObject*, stackObjectBuf*, int> binarySearchTree(stackObjectBuf* x, int idx, int n);
 }
 
 #include "golang/runtime/stack.h"
@@ -173,7 +173,7 @@ namespace golang::runtime
         std::tuple<uintptr_t, bool> getPtr(stackScanState* s);
         void addObject(stackScanState* s, uintptr_t addr, stackObjectRecord* r);
         void buildIndex(stackScanState* s);
-        golang::runtime::stackObject* findObject(stackScanState* s, uintptr_t a);
+        stackObject* findObject(stackScanState* s, uintptr_t a);
     }
 }
 

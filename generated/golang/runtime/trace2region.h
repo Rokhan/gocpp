@@ -62,7 +62,7 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::notInHeap* alloc(traceRegionAlloc* a, uintptr_t n);
+        notInHeap* alloc(traceRegionAlloc* a, uintptr_t n);
         void drop(traceRegionAlloc* a);
     }
 }

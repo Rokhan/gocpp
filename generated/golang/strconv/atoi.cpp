@@ -76,7 +76,7 @@ namespace golang::strconv
         return "strconv."_s + e->Func + ": "_s + "parsing "_s + Quote(e->Num) + ": "_s + rec::Error(gocpp::recv(e->Err));
     }
 
-    struct gocpp::error rec::Unwrap(NumError* e)
+    gocpp::error rec::Unwrap(NumError* e)
     {
         return e->Err;
     }
@@ -100,30 +100,30 @@ namespace golang::strconv
         return gocpp::string(gocpp::slice<unsigned char>(x));
     }
 
-    golang::strconv::NumError* syntaxError(gocpp::string fn, gocpp::string str)
+    NumError* syntaxError(gocpp::string fn, gocpp::string str)
     {
-        return new golang::strconv::NumError {fn, cloneString(str), ErrSyntax};
+        return new NumError {fn, cloneString(str), ErrSyntax};
     }
 
-    golang::strconv::NumError* rangeError(gocpp::string fn, gocpp::string str)
+    NumError* rangeError(gocpp::string fn, gocpp::string str)
     {
-        return new golang::strconv::NumError {fn, cloneString(str), ErrRange};
+        return new NumError {fn, cloneString(str), ErrRange};
     }
 
-    golang::strconv::NumError* baseError(gocpp::string fn, gocpp::string str, int base)
+    NumError* baseError(gocpp::string fn, gocpp::string str, int base)
     {
-        return new golang::strconv::NumError {fn, cloneString(str), errors::New("invalid base "_s + Itoa(base))};
+        return new NumError {fn, cloneString(str), errors::New("invalid base "_s + Itoa(base))};
     }
 
-    golang::strconv::NumError* bitSizeError(gocpp::string fn, gocpp::string str, int bitSize)
+    NumError* bitSizeError(gocpp::string fn, gocpp::string str, int bitSize)
     {
-        return new golang::strconv::NumError {fn, cloneString(str), errors::New("invalid bit size "_s + Itoa(bitSize))};
+        return new NumError {fn, cloneString(str), errors::New("invalid bit size "_s + Itoa(bitSize))};
     }
 
     // ParseUint is like ParseInt but for unsigned numbers.
     //
     // A sign prefix is not permitted.
-    std::tuple<uint64_t, struct gocpp::error> ParseUint(gocpp::string s, int base, int bitSize)
+    std::tuple<uint64_t, gocpp::error> ParseUint(gocpp::string s, int base, int bitSize)
     {
         auto fnParseUint = "ParseUint"_s;
 
@@ -303,10 +303,10 @@ namespace golang::strconv
     // appropriate bitSize and sign.
     //
     // [integer literals]: https://go.dev/ref/spec#Integer_literals
-    std::tuple<int64_t, struct gocpp::error> ParseInt(gocpp::string s, int base, int bitSize)
+    std::tuple<int64_t, gocpp::error> ParseInt(gocpp::string s, int base, int bitSize)
     {
         int64_t i;
-        struct gocpp::error err;
+        gocpp::error err;
         auto fnParseInt = "ParseInt"_s;
 
         if(s == ""_s)
@@ -331,10 +331,10 @@ namespace golang::strconv
         // Convert unsigned and check range.
         uint64_t un = {};
         std::tie(un, err) = ParseUint(s, base, bitSize);
-        if(err != nullptr && gocpp::getValue<golang::strconv::NumError*>(err)->Err != ErrRange)
+        if(err != nullptr && gocpp::getValue<NumError*>(err)->Err != ErrRange)
         {
-            gocpp::getValue<golang::strconv::NumError*>(err)->Func = fnParseInt;
-            gocpp::getValue<golang::strconv::NumError*>(err)->Num = cloneString(s0);
+            gocpp::getValue<NumError*>(err)->Func = fnParseInt;
+            gocpp::getValue<NumError*>(err)->Num = cloneString(s0);
             return {0, err};
         }
 
@@ -361,7 +361,7 @@ namespace golang::strconv
     }
 
     // Atoi is equivalent to ParseInt(s, 10, 0), converted to type int.
-    std::tuple<int, struct gocpp::error> Atoi(gocpp::string s)
+    std::tuple<int, gocpp::error> Atoi(gocpp::string s)
     {
         auto fnAtoi = "Atoi"_s;
 
@@ -399,7 +399,7 @@ namespace golang::strconv
 
         // Slow path for invalid, big, or underscored integers.
         auto [i64, err] = ParseInt(s, 10, 0);
-        if(auto [nerr, ok] = gocpp::getValue<golang::strconv::NumError*>(err); ok)
+        if(auto [nerr, ok] = gocpp::getValue<NumError*>(err); ok)
         {
             nerr->Func = fnAtoi;
         }

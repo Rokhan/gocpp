@@ -166,7 +166,7 @@ namespace golang::runtime
         // Since we don't care about newer Gs (see comment in
         // gcMarkRootPrepare), no locking is required.
         auto i = 0;
-        forEachGRace([=](golang::runtime::g* gp) mutable -> void
+        forEachGRace([=](g* gp) mutable -> void
         {
             if(i >= work.nStackRoots)
             {
@@ -365,7 +365,7 @@ namespace golang::runtime
         // Take list of dead Gs with stacks.
         lock(& sched.gFree.lock);
         auto list = sched.gFree.stack;
-        sched.gFree.stack = golang::runtime::gList {};
+        sched.gFree.stack = gList {};
         unlock(& sched.gFree.lock);
         if(rec::empty(gocpp::recv(list)))
         {
@@ -373,7 +373,7 @@ namespace golang::runtime
         }
 
         // Free stacks.
-        auto q = golang::runtime::gQueue {list.head, list.head};
+        auto q = gQueue {list.head, list.head};
         for(auto gp = rec::ptr(gocpp::recv(list.head)); gp != nullptr; gp = rec::ptr(gocpp::recv(gp->schedlink)))
         {
             stackfree(gp->stack);
@@ -459,7 +459,7 @@ namespace golang::runtime
                     }
                     // don't mark finalized object, but scan it so we
                     // retain everything it points to.
-                    auto spf = (golang::runtime::specialfinalizer*)(gocpp::unsafe_pointer(sp));
+                    auto spf = (specialfinalizer*)(gocpp::unsafe_pointer(sp));
                     // A finalizer can be set for an inner byte of an object, find object beginning.
                     auto p = rec::base(gocpp::recv(s)) + uintptr_t(spf->special.offset) / s->elemsize * s->elemsize;
 
@@ -1020,7 +1020,7 @@ namespace golang::runtime
             gp->preemptShrink = true;
         }
 
-        golang::runtime::stackScanState state = {};
+        stackScanState state = {};
         state.stack = gp->stack;
 
         if(stackTraceDebug)
@@ -1042,7 +1042,7 @@ namespace golang::runtime
         }
 
         // Scan the stack. Accumulate a list of stack objects.
-        golang::runtime::unwinder u = {};
+        unwinder u = {};
         for(rec::init(gocpp::recv(u), gp, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
             scanframeworker(& u.frame, & state, gcw);
@@ -1116,7 +1116,7 @@ namespace golang::runtime
                 printunlock();
             }
             auto gcdata = rec::gcdata(gocpp::recv(r));
-            golang::runtime::mspan* s = {};
+            mspan* s = {};
             if(rec::useGCProg(gocpp::recv(r)))
             {
                 // This path is pretty unlikely, an object large enough
@@ -1169,7 +1169,7 @@ namespace golang::runtime
                 }
             }
             x->stackObjectBufHdr.workbufhdr.nobj = 0;
-            putempty((golang::runtime::workbuf*)(gocpp::unsafe_pointer(x)));
+            putempty((workbuf*)(gocpp::unsafe_pointer(x)));
         }
         if(state.buf != nullptr || state.cbuf != nullptr || state.freeBuf != nullptr)
         {
@@ -1637,7 +1637,7 @@ namespace golang::runtime
             go_throw("scanobject of a noscan object"_s);
         }
 
-        golang::runtime::typePointers tp = {};
+        typePointers tp = {};
         if(n > maxObletBytes)
         {
             // Large object. Break into oblets for better

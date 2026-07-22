@@ -155,7 +155,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    golang::runtime::mstats memstats;
+    mstats memstats;
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_0::operator T()
@@ -324,7 +324,7 @@ namespace golang::runtime
         }
         // Ensure the size of heapStatsDelta causes adjacent fields/slots (e.g.
         // [3]heapStatsDelta) to be 8-byte aligned.
-        if(auto size = gocpp::Sizeof<golang::runtime::heapStatsDelta>(); size % 8 != 0)
+        if(auto size = gocpp::Sizeof<heapStatsDelta>(); size % 8 != 0)
         {
             println(size);
             go_throw("heapStatsDelta not a multiple of 8 bytes in size"_s);
@@ -419,7 +419,7 @@ namespace golang::runtime
         // Similarly, total amount of allocated memory is calculated as amount of freed memory
         // plus amount of alive heap memory.
         // Collect consistent stats, which are the source-of-truth in some cases.
-        golang::runtime::heapStatsDelta consStats = {};
+        heapStatsDelta consStats = {};
         rec::unsafeRead(gocpp::recv(memstats.heapStats), & consStats);
 
         // Collect large allocation stats.
@@ -851,7 +851,7 @@ namespace golang::runtime
     // function.
     //
     //go:nosplit
-    golang::runtime::heapStatsDelta* rec::acquire(consistentHeapStats* m)
+    heapStatsDelta* rec::acquire(consistentHeapStats* m)
     {
         if(auto pp = rec::ptr(gocpp::recv(getg()->m->p)); pp != nullptr)
         {
@@ -927,7 +927,7 @@ namespace golang::runtime
 
         for(auto [i, gocpp_ignored] : m->stats)
         {
-            m->stats[i] = golang::runtime::heapStatsDelta {};
+            m->stats[i] = heapStatsDelta {};
         }
     }
 
@@ -985,7 +985,7 @@ namespace golang::runtime
         // stats[prevGen] for the next time we want to take
         // a snapshot.
         rec::merge(gocpp::recv(m->stats[currGen]), & m->stats[prevGen]);
-        m->stats[prevGen] = golang::runtime::heapStatsDelta {};
+        m->stats[prevGen] = heapStatsDelta {};
 
         // Finally, copy out the complete delta.
         *out = m->stats[currGen];

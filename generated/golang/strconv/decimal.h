@@ -53,7 +53,7 @@ namespace golang::strconv
     bool prefixIsLessThan(gocpp::slice<unsigned char> b, gocpp::string s);
     void trim(decimal* a);
     void rightShift(decimal* a, unsigned int k);
-    extern gocpp::slice<golang::strconv::leftCheat> leftcheats;
+    extern gocpp::slice<leftCheat> leftcheats;
     void leftShift(decimal* a, unsigned int k);
     bool shouldRoundUp(decimal* a, int nd);
 

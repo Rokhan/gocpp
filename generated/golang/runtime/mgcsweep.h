@@ -114,7 +114,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sweepdata& value);
-    extern golang::runtime::sweepdata sweep;
+    extern sweepdata sweep;
 }
 
 #include "golang/runtime/mheap.h"
@@ -124,18 +124,18 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::sweepClass load(sweepClass* s);
+        sweepClass load(sweepClass* s);
         void update(sweepClass* s, sweepClass sNew);
         void clear(sweepClass* s);
-        std::tuple<golang::runtime::spanClass, bool> split(sweepClass s);
-        golang::runtime::mspan* nextSpanForSweep(mheap* h);
-        golang::runtime::sweepLocker begin(activeSweep* a);
+        std::tuple<spanClass, bool> split(sweepClass s);
+        mspan* nextSpanForSweep(mheap* h);
+        sweepLocker begin(activeSweep* a);
         void end(activeSweep* a, sweepLocker sl);
         bool markDrained(activeSweep* a);
         uint32_t sweepers(activeSweep* a);
         bool isDone(activeSweep* a);
         void reset(activeSweep* a);
-        std::tuple<golang::runtime::sweepLocked, bool> tryAcquire(sweepLocker* l, mspan* s);
+        std::tuple<sweepLocked, bool> tryAcquire(sweepLocker* l, mspan* s);
         void ensureSwept(mspan* s);
         bool sweep(sweepLocked* sl, bool preserve);
         void reportZombies(mspan* s);

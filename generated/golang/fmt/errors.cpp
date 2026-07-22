@@ -34,7 +34,7 @@ namespace golang::fmt
     // order they appear in the arguments.
     // It is invalid to supply the %w verb with an operand that does not implement
     // the error interface. The %w verb is otherwise a synonym for %v.
-    struct gocpp::error Errorf(gocpp::string format, gocpp::slice<go_any> a)
+    gocpp::error Errorf(gocpp::string format, gocpp::slice<go_any> a)
     {
         auto p = newPrinter();
         p->wrapErrs = true;
@@ -54,7 +54,7 @@ namespace golang::fmt
                     break;
                 case 1:
                 {
-                    auto w = gocpp::InitPtr<golang::fmt::wrapError>([=](auto& x) {
+                    auto w = gocpp::InitPtr<wrapError>([=](auto& x) {
                         x.msg = s;
                     });
                     std::tie(w->err, std::ignore) = gocpp::getValue<gocpp::error>(a[p->wrappedErrs[0]]);
@@ -78,7 +78,7 @@ namespace golang::fmt
                             errs = append(errs, e);
                         }
                     }
-                    err = new golang::fmt::wrapErrors {s, errs};
+                    err = new wrapErrors {s, errs};
                     break;
             }
         }
@@ -123,7 +123,7 @@ namespace golang::fmt
         return e->msg;
     }
 
-    struct gocpp::error rec::Unwrap(wrapError* e)
+    gocpp::error rec::Unwrap(wrapError* e)
     {
         return e->err;
     }

@@ -49,7 +49,7 @@ namespace golang::runtime
     bool canPreemptM(m* mp);
     bool wantAsyncPreempt(g* gp);
     std::tuple<bool, uintptr_t> isAsyncSafePoint(g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr);
-    golang::runtime::suspendGState suspendG(g* gp);
+    suspendGState suspendG(g* gp);
     void resumeG(suspendGState state);
 
     namespace rec

@@ -12,16 +12,16 @@
 
 namespace golang::fmt
 {
-    struct gocpp::error Errorf(gocpp::string format, gocpp::slice<go_any> a);
+    gocpp::error Errorf(gocpp::string format, gocpp::slice<go_any> a);
     
     template<typename... Args>
-    struct gocpp::error Errorf(gocpp::string format, Args... a)
+    gocpp::error Errorf(gocpp::string format, Args... a)
     {
         return Errorf(format, gocpp::ToSlice<go_any>(a...));
     }
     
     template<typename... Args>
-    struct gocpp::error Errorf(gocpp::string format, go_any value, Args... a)
+    gocpp::error Errorf(gocpp::string format, go_any value, Args... a)
     {
         return Errorf(format, gocpp::ToSlice<go_any>(value, a...));
     }
@@ -63,7 +63,7 @@ namespace golang::fmt
     namespace rec
     {
         gocpp::string Error(wrapError* e);
-        struct gocpp::error Unwrap(wrapError* e);
+        gocpp::error Unwrap(wrapError* e);
         gocpp::string Error(wrapErrors* e);
         gocpp::slice<gocpp::error> Unwrap(wrapErrors* e);
     }

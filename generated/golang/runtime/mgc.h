@@ -296,7 +296,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct workType& value);
-    extern golang::runtime::workType work;
+    extern workType work;
 
     namespace rec
     {

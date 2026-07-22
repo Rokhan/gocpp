@@ -75,7 +75,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    using pinnerBits = gocpp::defined<golang::runtime::gcBits, GoTag_pinnerBits>;
+    using pinnerBits = gocpp::defined<gcBits, GoTag_pinnerBits>;
     extern std::function<void (void)> pinnerLeakPanic;
 }
 
@@ -94,10 +94,10 @@ namespace golang::runtime
         void setPinned(pinState* v, bool val);
         void setMultiPinned(pinState* v, bool val);
         void set(pinState* v, bool val, bool multipin);
-        golang::runtime::pinState ofObject(pinnerBits* p, uintptr_t n);
+        pinState ofObject(pinnerBits* p, uintptr_t n);
         uintptr_t pinnerBitSize(mspan* s);
-        golang::runtime::pinnerBits* newPinnerBits(mspan* s);
-        golang::runtime::pinnerBits* getPinnerBits(mspan* s);
+        pinnerBits* newPinnerBits(mspan* s);
+        pinnerBits* getPinnerBits(mspan* s);
         void setPinnerBits(mspan* s, pinnerBits* p);
         void refreshPinnerBits(mspan* s);
         void incPinCounter(mspan* span, uintptr_t offset);

@@ -29,7 +29,7 @@ namespace golang::fs
     // January 1, 1970 at noon is
     //
     //	-rw-r--r-- 100 1970-01-01 12:00:00 hello.go
-    gocpp::string FormatFileInfo(struct FileInfo info)
+    gocpp::string FormatFileInfo(FileInfo info)
     {
         auto name = rec::Name(gocpp::recv(info));
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 40 + len(name));
@@ -78,7 +78,7 @@ namespace golang::fs
     //
     //	d subdir/
     //	- hello.go
-    gocpp::string FormatDirEntry(struct DirEntry dir)
+    gocpp::string FormatDirEntry(DirEntry dir)
     {
         auto name = rec::Name(gocpp::recv(dir));
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 5 + len(name));

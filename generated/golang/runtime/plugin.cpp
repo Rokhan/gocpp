@@ -34,13 +34,13 @@ namespace golang::runtime
     }
 
     //go:linkname plugin_lastmoduleinit plugin.lastmoduleinit
-    std::tuple<gocpp::string, gocpp::map<gocpp::string, go_any>, gocpp::slice<golang::runtime::initTask*>, gocpp::string> plugin_lastmoduleinit()
+    std::tuple<gocpp::string, gocpp::map<gocpp::string, go_any>, gocpp::slice<initTask*>, gocpp::string> plugin_lastmoduleinit()
     {
         gocpp::string path;
         gocpp::map<gocpp::string, go_any> syms;
-        gocpp::slice<golang::runtime::initTask*> initTasks;
+        gocpp::slice<initTask*> initTasks;
         gocpp::string errstr;
-        golang::runtime::moduledata* md = {};
+        moduledata* md = {};
         for(auto pmd = firstmoduledata.next; pmd != nullptr; pmd = pmd->next)
         {
             if(pmd->bad)
@@ -124,7 +124,7 @@ namespace golang::runtime
         {
             auto symName = resolveNameOff(gocpp::unsafe_pointer(md->types), ptab.name);
             // TODO can this stack of conversions be simpler?
-            auto t = rec::typeOff(gocpp::recv(toRType((golang::runtime::_type*)(gocpp::unsafe_pointer(md->types)))), ptab.typ);
+            auto t = rec::typeOff(gocpp::recv(toRType((_type*)(gocpp::unsafe_pointer(md->types)))), ptab.typ);
             go_any val = {};
             auto valp = (gocpp::array_ptr<gocpp::array<gocpp::unsafe_pointer, 2>>)(gocpp::unsafe_pointer(& val));
             (*valp)[0] = gocpp::unsafe_pointer(t);
@@ -150,7 +150,7 @@ namespace golang::runtime
                 continue;
             }
 
-            auto f = golang::runtime::funcInfo {(golang::runtime::_func*)(gocpp::unsafe_pointer(& md->pclntable[md->ftab[i].funcoff])), md};
+            auto f = golang::runtime::funcInfo {(_func*)(gocpp::unsafe_pointer(& md->pclntable[md->ftab[i].funcoff])), md};
             auto name = funcname(f);
 
             // A common bug is f.entry has a relocation to a duplicate

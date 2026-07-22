@@ -199,10 +199,10 @@ namespace golang::runtime
     // Only implemented on windows/386, which is the only
     // arch that loads TLS when calling getg(). Others
     // use a dedicated register.
-    golang::runtime::g* sigFetchGSafe()
+    g* sigFetchGSafe()
     /* convertBlockStmt, nil block */;
 
-    golang::runtime::g* sigFetchG()
+    g* sigFetchG()
     {
         if(GOARCH == "386"_s)
         {
@@ -227,7 +227,7 @@ namespace golang::runtime
             return _EXCEPTION_CONTINUE_SEARCH;
         }
 
-        std::function<int32_t (golang::runtime::exceptionrecord* info, golang::runtime::context* r, golang::runtime::g* gp)> fn = {};
+        std::function<int32_t (exceptionrecord* info, context* r, g* gp)> fn = {};
         //Go switch emulation
         {
             auto condition = kind;
@@ -619,7 +619,7 @@ namespace golang::runtime
             {
                 // Try to reconstruct an exception record from
                 // the exception information stored in gp.
-                info = gocpp::InitPtr<golang::runtime::exceptionrecord>([=](auto& x) {
+                info = gocpp::InitPtr<exceptionrecord>([=](auto& x) {
                     x.exceptionaddress = gp->sigpc;
                     x.exceptioncode = gp->sig;
                     x.numberparameters = 2;
@@ -631,7 +631,7 @@ namespace golang::runtime
             {
                 // By default, a failing Go application exits with exit code 2.
                 // Use this value when gp does not contain exception info.
-                info = gocpp::InitPtr<golang::runtime::exceptionrecord>([=](auto& x) {
+                info = gocpp::InitPtr<exceptionrecord>([=](auto& x) {
                     x.exceptioncode = 2;
                 });
             }

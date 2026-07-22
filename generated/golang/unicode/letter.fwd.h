@@ -26,7 +26,7 @@ namespace golang::unicode
     // Derived by running 'go test -calibrate'.
     const long linearMax = 18;
     struct foldPair;
-    using SpecialCase = gocpp::defined<gocpp::slice<golang::unicode::CaseRange>, GoTag_SpecialCase>;
+    using SpecialCase = gocpp::defined<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
     // If the Delta field of a [CaseRange] is UpperLower, it means
     // this CaseRange represents a sequence of the form (say)
     // [Upper] [Lower] [Upper] [Lower].

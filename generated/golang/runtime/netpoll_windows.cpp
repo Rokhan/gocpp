@@ -184,23 +184,23 @@ namespace golang::runtime
     // delay < 0: blocks indefinitely
     // delay == 0: does not block, just polls
     // delay > 0: block for up to that many nanoseconds
-    std::tuple<golang::runtime::gList, int32_t> netpoll(int64_t delay)
+    std::tuple<gList, int32_t> netpoll(int64_t delay)
     {
-        gocpp::array<golang::runtime::overlappedEntry, 64> entries = {};
+        gocpp::array<overlappedEntry, 64> entries = {};
         uint32_t wait = {};
         uint32_t qty = {};
         uint32_t flags = {};
         uint32_t n = {};
         uint32_t i = {};
         int32_t errno = {};
-        golang::runtime::net_op* op = {};
-        golang::runtime::gList toRun = {};
+        net_op* op = {};
+        gList toRun = {};
 
         auto mp = getg()->m;
 
         if(iocphandle == _INVALID_HANDLE_VALUE)
         {
-            return {golang::runtime::gList {}, 0};
+            return {gList {}, 0};
         }
         if(delay < 0)
         {
@@ -243,7 +243,7 @@ namespace golang::runtime
             errno = int32_t(getlasterror());
             if(errno == _WAIT_TIMEOUT)
             {
-                return {golang::runtime::gList {}, 0};
+                return {gList {}, 0};
             }
             println("runtime: GetQueuedCompletionStatusEx failed (errno="_s, errno, ")"_s);
             go_throw("runtime: netpoll failed"_s);

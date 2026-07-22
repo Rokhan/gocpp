@@ -88,7 +88,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reflectMethodValue& value);
-    extern gocpp::array<golang::runtime::stackObjectRecord, 1> methodValueCallFrameObjs;
+    extern gocpp::array<stackObjectRecord, 1> methodValueCallFrameObjs;
 }
 
 #include "golang/runtime/stack.h"
@@ -99,8 +99,8 @@ namespace golang::runtime
     namespace rec
     {
         uintptr_t argBytes(stkframe* frame);
-        std::tuple<golang::runtime::bitvector, bool> argMapInternal(stkframe* frame);
-        std::tuple<golang::runtime::bitvector, golang::runtime::bitvector, gocpp::slice<golang::runtime::stackObjectRecord>> getStackMap(stkframe* frame, bool debug);
+        std::tuple<bitvector, bool> argMapInternal(stkframe* frame);
+        std::tuple<bitvector, bitvector, gocpp::slice<stackObjectRecord>> getStackMap(stkframe* frame, bool debug);
     }
 }
 

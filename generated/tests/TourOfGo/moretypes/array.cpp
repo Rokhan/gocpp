@@ -93,9 +93,9 @@ namespace golang::main
 
 
     // From bytes/bytes.go, simplified for tests
-    golang::main::asciiSet makeASCIISet(gocpp::string chars)
+    asciiSet makeASCIISet(gocpp::string chars)
     {
-        golang::main::asciiSet as;
+        asciiSet as;
         for(auto i = 0; i < len(chars); i++)
         {
             auto c = chars[i];

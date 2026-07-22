@@ -319,7 +319,7 @@ namespace golang::abi
         int Len(golang::abi::Type* t);
         golang::abi::Type* Common(golang::abi::Type* t);
         golang::abi::ChanDir ChanDir(golang::abi::Type* t);
-        golang::abi::UncommonType* Uncommon(golang::abi::Type* t);
+        UncommonType* Uncommon(golang::abi::Type* t);
         golang::abi::Type* Elem(golang::abi::Type* t);
         golang::abi::StructType* StructType(golang::abi::Type* t);
         golang::abi::MapType* MapType(golang::abi::Type* t);

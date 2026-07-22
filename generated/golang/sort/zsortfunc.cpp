@@ -323,10 +323,10 @@ namespace golang::sort
     // [0,8): chooses a static pivot.
     // [8,shortestNinther): uses the simple median-of-three method.
     // [shortestNinther,∞): uses the Tukey ninther method.
-    std::tuple<int, golang::sort::sortedHint> choosePivot_func(lessSwap data, int a, int b)
+    std::tuple<int, sortedHint> choosePivot_func(lessSwap data, int a, int b)
     {
         int pivot;
-        golang::sort::sortedHint hint;
+        sortedHint hint;
         auto shortestNinther = 50;
         auto maxSwaps = 4 * 3;
 

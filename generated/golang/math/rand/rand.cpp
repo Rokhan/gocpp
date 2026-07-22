@@ -191,14 +191,14 @@ namespace golang::rand
     // Unlike the default [Source] used by top-level functions, this source is not
     // safe for concurrent use by multiple goroutines.
     // The returned [Source] implements [Source64].
-    struct Source NewSource(int64_t seed)
+    Source NewSource(int64_t seed)
     {
         return newSource(seed);
     }
 
-    golang::rand::rngSource* newSource(int64_t seed)
+    rngSource* newSource(int64_t seed)
     {
-        golang::rand::rngSource rng = {};
+        rngSource rng = {};
         rec::Seed(gocpp::recv(rng), seed);
         return & rng;
     }
@@ -244,10 +244,10 @@ namespace golang::rand
 
     // New returns a new [Rand] that uses random values from src
     // to generate other random values.
-    golang::rand::Rand* New(struct Source src)
+    Rand* New(Source src)
     {
         auto [s64, gocpp_id_0] = gocpp::getValue<Source64>(src);
-        return gocpp::InitPtr<golang::rand::Rand>([=](auto& x) {
+        return gocpp::InitPtr<Rand>([=](auto& x) {
             x.src = src;
             x.s64 = s64;
         });
@@ -257,7 +257,7 @@ namespace golang::rand
     // Seed should not be called concurrently with any other [Rand] method.
     void rec::Seed(Rand* r, int64_t seed)
     {
-        if(auto [lk, ok] = gocpp::getValue<golang::rand::lockedSource*>(r->src); ok)
+        if(auto [lk, ok] = gocpp::getValue<lockedSource*>(r->src); ok)
         {
             rec::seedPos(gocpp::recv(lk), seed, & r->readPos);
             return;
@@ -483,10 +483,10 @@ namespace golang::rand
     // Read generates len(p) random bytes and writes them into p. It
     // always returns len(p) and a nil error.
     // Read should not be called concurrently with any other Rand method.
-    std::tuple<int, struct gocpp::error> rec::Read(Rand* r, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Read(Rand* r, gocpp::slice<unsigned char> p)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         //Go type switch emulation
         {
             const auto& gocpp_id_1 = gocpp::type_info(r->src);
@@ -512,13 +512,13 @@ namespace golang::rand
         return rand::read(p, r->src, & r->readVal, & r->readPos);
     }
 
-    std::tuple<int, struct gocpp::error> read(gocpp::slice<unsigned char> p, struct Source src, int64_t* readVal, int8_t* readPos)
+    std::tuple<int, gocpp::error> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         auto pos = *readPos;
         auto val = *readVal;
-        auto [rng, gocpp_id_2] = gocpp::getValue<golang::rand::rngSource*>(src);
+        auto [rng, gocpp_id_2] = gocpp::getValue<rngSource*>(src);
         for(n = 0; n < len(p); n++)
         {
             if(pos == 0)
@@ -546,11 +546,11 @@ namespace golang::rand
     // convenience functions. When possible it uses the runtime fastrand64
     // function to avoid locking. This is not possible if the user called Seed,
     // either explicitly or implicitly via GODEBUG=randautoseed=0.
-    atomic::Pointer<golang::rand::Rand> globalRandGenerator;
+    atomic::Pointer<Rand> globalRandGenerator;
     godebug::Setting* randautoseed = godebug::New("randautoseed"_s);
     // globalRand returns the generator to use for the top-level convenience
     // functions.
-    golang::rand::Rand* globalRand()
+    Rand* globalRand()
     {
         if(auto r = rec::Load<rand::Rand>(gocpp::recv(globalRandGenerator)); r != nullptr)
         {
@@ -558,7 +558,7 @@ namespace golang::rand
         }
 
         // This is the first call. Initialize based on GODEBUG.
-        golang::rand::Rand* r = {};
+        Rand* r = {};
         if(rec::Value(gocpp::recv(randautoseed)) == "0"_s)
         {
             rec::IncNonDefault(gocpp::recv(randautoseed));
@@ -567,9 +567,9 @@ namespace golang::rand
         }
         else
         {
-            r = gocpp::InitPtr<golang::rand::Rand>([=](auto& x) {
-                x.src = new golang::rand::runtimeSource {};
-                x.s64 = new golang::rand::runtimeSource {};
+            r = gocpp::InitPtr<Rand>([=](auto& x) {
+                x.src = new runtimeSource {};
+                x.s64 = new runtimeSource {};
             });
         }
 
@@ -637,10 +637,10 @@ namespace golang::rand
         return runtime_rand();
     }
 
-    std::tuple<int, struct gocpp::error> rec::read(runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
+    std::tuple<int, gocpp::error> rec::read(runtimeSource* fs, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         rec::Lock(gocpp::recv(fs->mu));
         std::tie(n, err) = rand::read(p, fs, readVal, readPos);
         rec::Unlock(gocpp::recv(fs->mu));
@@ -670,7 +670,7 @@ namespace golang::rand
         // If we are already using a lockedSource, we can just re-seed it.
         if(orig != nullptr)
         {
-            if(auto [gocpp_id_3, ok] = gocpp::getValue<golang::rand::lockedSource*>(orig->src); ok)
+            if(auto [gocpp_id_3, ok] = gocpp::getValue<lockedSource*>(orig->src); ok)
             {
                 rec::Seed(gocpp::recv(orig), seed);
                 return;
@@ -785,10 +785,10 @@ namespace golang::rand
     // Read, unlike the [Rand.Read] method, is safe for concurrent use.
     //
     // Deprecated: For almost all use cases, [crypto/rand.Read] is more appropriate.
-    std::tuple<int, struct gocpp::error> Read(gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> Read(gocpp::slice<unsigned char> p)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         return rec::Read(gocpp::recv(globalRand()), p);
     }
 
@@ -898,10 +898,10 @@ namespace golang::rand
     }
 
     // read implements Read for a lockedSource without a race condition.
-    std::tuple<int, struct gocpp::error> rec::read(lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
+    std::tuple<int, gocpp::error> rec::read(lockedSource* r, gocpp::slice<unsigned char> p, int64_t* readVal, int8_t* readPos)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         rec::Lock(gocpp::recv(r->lk));
         std::tie(n, err) = rand::read(p, r->s, readVal, readPos);
         rec::Unlock(gocpp::recv(r->lk));

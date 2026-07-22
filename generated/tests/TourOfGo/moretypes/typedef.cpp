@@ -88,15 +88,15 @@ namespace golang::main
         auto vstr2 = str2("hello"_s);
         mocklib::Println("str1:"_s, vstr1, ", str2:"_s, vstr2);
 
-        mocklib::Println(golang::main::Vertex {1, 2});
-        UseTypedefPtr1(new golang::main::Vertex {1, 2});
+        mocklib::Println(Vertex {1, 2});
+        UseTypedefPtr1(new Vertex {1, 2});
         UseTypedefPtr1(new vvvv1 {1, 2});
 
         UseTypedefPtr2(new vvvv2 {1, 2});
-        UseStructPtr(new golang::main::Vertex {1, 2});
+        UseStructPtr(new Vertex {1, 2});
 
-        vvvv1 v01 = golang::main::Vertex {};
-        golang::main::Vertex v02 = v01;
+        vvvv1 v01 = Vertex {};
+        Vertex v02 = v01;
         _ = v01;
         _ = v02;
     }

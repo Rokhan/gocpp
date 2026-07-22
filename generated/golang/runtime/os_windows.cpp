@@ -76,226 +76,226 @@ namespace golang::runtime
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _AddVectoredContinueHandler;
+    stdFunction _AddVectoredContinueHandler;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _AddVectoredExceptionHandler;
+    stdFunction _AddVectoredExceptionHandler;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _CloseHandle;
+    stdFunction _CloseHandle;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _CreateEventA;
+    stdFunction _CreateEventA;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _CreateFileA;
+    stdFunction _CreateFileA;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _CreateIoCompletionPort;
+    stdFunction _CreateIoCompletionPort;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _CreateThread;
+    stdFunction _CreateThread;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _CreateWaitableTimerA;
+    stdFunction _CreateWaitableTimerA;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _CreateWaitableTimerExW;
+    stdFunction _CreateWaitableTimerExW;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _DuplicateHandle;
+    stdFunction _DuplicateHandle;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _ExitProcess;
+    stdFunction _ExitProcess;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _FreeEnvironmentStringsW;
+    stdFunction _FreeEnvironmentStringsW;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetConsoleMode;
+    stdFunction _GetConsoleMode;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetCurrentThreadId;
+    stdFunction _GetCurrentThreadId;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetEnvironmentStringsW;
+    stdFunction _GetEnvironmentStringsW;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetErrorMode;
+    stdFunction _GetErrorMode;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetProcAddress;
+    stdFunction _GetProcAddress;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetProcessAffinityMask;
+    stdFunction _GetProcessAffinityMask;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetQueuedCompletionStatusEx;
+    stdFunction _GetQueuedCompletionStatusEx;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetStdHandle;
+    stdFunction _GetStdHandle;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetSystemDirectoryA;
+    stdFunction _GetSystemDirectoryA;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetSystemInfo;
+    stdFunction _GetSystemInfo;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _GetThreadContext;
+    stdFunction _GetThreadContext;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _SetThreadContext;
+    stdFunction _SetThreadContext;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _LoadLibraryExW;
+    stdFunction _LoadLibraryExW;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _LoadLibraryW;
+    stdFunction _LoadLibraryW;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _PostQueuedCompletionStatus;
+    stdFunction _PostQueuedCompletionStatus;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _QueryPerformanceCounter;
+    stdFunction _QueryPerformanceCounter;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _RaiseFailFastException;
+    stdFunction _RaiseFailFastException;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _ResumeThread;
+    stdFunction _ResumeThread;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _RtlLookupFunctionEntry;
+    stdFunction _RtlLookupFunctionEntry;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _RtlVirtualUnwind;
+    stdFunction _RtlVirtualUnwind;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _SetConsoleCtrlHandler;
+    stdFunction _SetConsoleCtrlHandler;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _SetErrorMode;
+    stdFunction _SetErrorMode;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _SetEvent;
+    stdFunction _SetEvent;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _SetProcessPriorityBoost;
+    stdFunction _SetProcessPriorityBoost;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _SetThreadPriority;
+    stdFunction _SetThreadPriority;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _SetUnhandledExceptionFilter;
+    stdFunction _SetUnhandledExceptionFilter;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _SetWaitableTimer;
+    stdFunction _SetWaitableTimer;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _SuspendThread;
+    stdFunction _SuspendThread;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _SwitchToThread;
+    stdFunction _SwitchToThread;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _TlsAlloc;
+    stdFunction _TlsAlloc;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _VirtualAlloc;
+    stdFunction _VirtualAlloc;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _VirtualFree;
+    stdFunction _VirtualFree;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _VirtualQuery;
+    stdFunction _VirtualQuery;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _WaitForSingleObject;
+    stdFunction _WaitForSingleObject;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _WaitForMultipleObjects;
+    stdFunction _WaitForMultipleObjects;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _WerGetFlags;
+    stdFunction _WerGetFlags;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _WerSetFlags;
+    stdFunction _WerSetFlags;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _WriteConsoleW;
+    stdFunction _WriteConsoleW;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _WriteFile;
+    stdFunction _WriteFile;
     // Following syscalls are available on every Windows PC.
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
-    golang::runtime::stdFunction _;
+    stdFunction _;
     // Use ProcessPrng to generate cryptographically random data.
-    golang::runtime::stdFunction _ProcessPrng;
+    stdFunction _ProcessPrng;
     // Load ntdll.dll manually during startup, otherwise Mingw
     // links wrong printf function to cgo executable (see issue
     // 12030 for details).
-    golang::runtime::stdFunction _RtlGetCurrentPeb;
-    golang::runtime::stdFunction _RtlGetNtVersionNumbers;
+    stdFunction _RtlGetCurrentPeb;
+    stdFunction _RtlGetNtVersionNumbers;
     // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
-    golang::runtime::stdFunction _timeBeginPeriod;
+    stdFunction _timeBeginPeriod;
     // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
-    golang::runtime::stdFunction _timeEndPeriod;
+    stdFunction _timeEndPeriod;
     // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
-    golang::runtime::stdFunction _WSAGetOverlappedResult;
+    stdFunction _WSAGetOverlappedResult;
     // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
-    golang::runtime::stdFunction _;
+    stdFunction _;
     gocpp::array<uint16_t, 21> bcryptprimitivesdll = gocpp::array<uint16_t, 21> {'b', 'c', 'r', 'y', 'p', 't', 'p', 'r', 'i', 'm', 'i', 't', 'i', 'v', 'e', 's', '.', 'd', 'l', 'l', 0};
     gocpp::array<uint16_t, 10> ntdlldll = gocpp::array<uint16_t, 10> {'n', 't', 'd', 'l', 'l', '.', 'd', 'l', 'l', 0};
     gocpp::array<uint16_t, 13> powrprofdll = gocpp::array<uint16_t, 13> {'p', 'o', 'w', 'r', 'p', 'r', 'o', 'f', '.', 'd', 'l', 'l', 0};
@@ -405,7 +405,7 @@ namespace golang::runtime
     /* convertBlockStmt, nil block */;
 
     gocpp::unsafe_pointer asmstdcallAddr;
-    golang::runtime::stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name)
+    stdFunction windowsFindfunc(uintptr_t lib, gocpp::slice<unsigned char> name)
     {
         if(name[len(name) - 1] != 0)
         {
@@ -514,7 +514,7 @@ namespace golang::runtime
         }
         go_any fn = [=](uintptr_t context, uint32_t changeType, uintptr_t setting) mutable -> uintptr_t
         {
-            for(auto mp = (golang::runtime::m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm))); mp != nullptr; mp = mp->alllink)
+            for(auto mp = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm))); mp != nullptr; mp = mp->alllink)
             {
                 if(mp->mOS.resumesema != 0)
                 {
@@ -570,14 +570,14 @@ namespace golang::runtime
             }
         }
         // use GetSystemInfo if GetProcessAffinityMask fails
-        golang::runtime::systeminfo info = {};
+        systeminfo info = {};
         stdcall1(_GetSystemInfo, uintptr_t(gocpp::unsafe_pointer(& info)));
         return int32_t(info.dwnumberofprocessors);
     }
 
     uintptr_t getPageSize()
     {
-        golang::runtime::systeminfo info = {};
+        systeminfo info = {};
         stdcall1(_GetSystemInfo, uintptr_t(gocpp::unsafe_pointer(& info)));
         return uintptr_t(info.dwpagesize);
     }
@@ -874,7 +874,7 @@ namespace golang::runtime
     }
 
     gocpp::array<uint16_t, 1000> utf16ConsoleBack;
-    golang::runtime::mutex utf16ConsoleBackLock;
+    mutex utf16ConsoleBackLock;
     // writeConsole writes bufLen bytes from buf to the console File.
     // It returns the number of bytes written.
     int writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen)
@@ -1165,7 +1165,7 @@ namespace golang::runtime
 
         // Query the true stack base from the OS. Currently we're
         // running on a small assumed stack.
-        golang::runtime::memoryBasicInformation mbi = {};
+        memoryBasicInformation mbi = {};
         auto res = stdcall3(_VirtualQuery, uintptr_t(gocpp::unsafe_pointer(& mbi)), uintptr_t(gocpp::unsafe_pointer(& mbi)), gocpp::Sizeof<memoryBasicInformation>());
         if(res == 0)
         {
@@ -1242,7 +1242,7 @@ namespace golang::runtime
     //go:nosplit
     uintptr_t stdcall_no_g(stdFunction fn, int n, uintptr_t args)
     {
-        auto libcall_tmp = gocpp::Init<golang::runtime::libcall>([=](auto& x) {
+        auto libcall_tmp = gocpp::Init<libcall>([=](auto& x) {
             x.fn = uintptr_t(gocpp::unsafe_pointer(fn));
             x.n = uintptr_t(n);
             x.args = args;
@@ -1475,9 +1475,9 @@ namespace golang::runtime
     void profilem(m* mp, uintptr_t thread)
     {
         // Align Context to 16 bytes.
-        golang::runtime::context* c = {};
+        context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
-        c = (golang::runtime::context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
+        c = (context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
 
         c->contextflags = _CONTEXT_CONTROL;
         stdcall2(_GetThreadContext, thread, uintptr_t(gocpp::unsafe_pointer(c)));
@@ -1487,7 +1487,7 @@ namespace golang::runtime
         sigprof(rec::ip(gocpp::recv(c)), rec::sp(gocpp::recv(c)), rec::lr(gocpp::recv(c)), gp, mp);
     }
 
-    golang::runtime::g* gFromSP(m* mp, uintptr_t sp)
+    g* gFromSP(m* mp, uintptr_t sp)
     {
         if(auto gp = mp->g0; gp != nullptr && gp->stack.lo < sp && sp < gp->stack.hi)
         {
@@ -1511,7 +1511,7 @@ namespace golang::runtime
         for(; ; )
         {
             stdcall2(_WaitForSingleObject, profiletimer, _INFINITE);
-            auto first = (golang::runtime::m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm)));
+            auto first = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm)));
             for(auto mp = first; mp != nullptr; mp = mp->alllink)
             {
                 if(mp == getg()->m)
@@ -1597,7 +1597,7 @@ namespace golang::runtime
 
     // suspendLock protects simultaneous SuspendThread operations from
     // suspending each other.
-    golang::runtime::mutex suspendLock;
+    mutex suspendLock;
     void preemptM(m* mp)
     {
         if(mp == getg()->m)
@@ -1633,9 +1633,9 @@ namespace golang::runtime
         unlock(& mp->mOS.threadLock);
 
         // Prepare thread context buffer. This must be aligned to 16 bytes.
-        golang::runtime::context* c = {};
+        context* c = {};
         gocpp::array<unsigned char, gocpp::Sizeof<context>() + 15> cbuf = {};
-        c = (golang::runtime::context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
+        c = (context*)(gocpp::unsafe_pointer((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) &^ 15));
         c->contextflags = _CONTEXT_CONTROL;
 
         // Serialize thread suspension. SuspendThread is asynchronous,

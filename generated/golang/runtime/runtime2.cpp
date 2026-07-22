@@ -236,9 +236,9 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    golang::runtime::eface* efaceOf(go_any* ep)
+    eface* efaceOf(go_any* ep)
     {
-        return (golang::runtime::eface*)(gocpp::unsafe_pointer(ep));
+        return (eface*)(gocpp::unsafe_pointer(ep));
     }
 
     // A guintptr holds a goroutine pointer, but typed as a uintptr
@@ -263,9 +263,9 @@ namespace golang::runtime
     // Note that pollDesc.rg, pollDesc.wg also store g in uintptr form,
     // so they would need to be updated too if g's start moving.
     //go:nosplit
-    golang::runtime::g* rec::ptr(golang::runtime::guintptr gp)
+    g* rec::ptr(golang::runtime::guintptr gp)
     {
-        return (golang::runtime::g*)(gocpp::unsafe_pointer(gp));
+        return (g*)(gocpp::unsafe_pointer(gp));
     }
 
     //go:nosplit
@@ -318,9 +318,9 @@ namespace golang::runtime
     //  2. Any muintptr in the heap must be owned by the M itself so it can
     //     ensure it is not in use when the last true *m is released.
     //go:nosplit
-    golang::runtime::m* rec::ptr(muintptr mp)
+    m* rec::ptr(muintptr mp)
     {
-        return (golang::runtime::m*)(gocpp::unsafe_pointer(mp));
+        return (m*)(gocpp::unsafe_pointer(mp));
     }
 
     //go:nosplit
@@ -1963,15 +1963,15 @@ namespace golang::runtime
                 w == waitReasonSyncRWMutexLock;
     }
 
-    golang::runtime::m* allm;
+    m* allm;
     int32_t gomaxprocs;
     int32_t ncpu;
-    golang::runtime::forcegcstate forcegc;
-    golang::runtime::schedt sched;
+    forcegcstate forcegc;
+    schedt sched;
     int32_t newprocs;
     // allpLock protects P-less reads and size changes of allp, idlepMask,
     // and timerpMask, and all writes to allp.
-    golang::runtime::mutex allpLock;
+    mutex allpLock;
     // len(allp) == gomaxprocs; may change at safe points, otherwise
     // immutable.
     gocpp::slice<golang::runtime::p*> allp;
@@ -1991,7 +1991,7 @@ namespace golang::runtime
     pMask timerpMask;
     // Pool of GC parked background workers. Entries are type
     // *gcBgMarkWorkerNode.
-    golang::runtime::lfstack gcBgMarkWorkerPool;
+    lfstack gcBgMarkWorkerPool;
     // Total number of gcBgMarkWorker goroutines. Protected by worldsema.
     int32_t gcBgMarkWorkerCount;
     // Information about what cpu features are available.

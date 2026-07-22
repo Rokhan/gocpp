@@ -207,7 +207,7 @@ namespace golang::runtime
 
     scavengeStruct scavenge;
     // Sleep/wait state of the background scavenger.
-    golang::runtime::scavengerState scavenger;
+    scavengerState scavenger;
     
     template<typename T> requires gocpp::GoStruct<T>
     scavengerState::operator T()
@@ -292,7 +292,7 @@ namespace golang::runtime
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {
-            rec::wake(gocpp::recv(gocpp::getValue<golang::runtime::scavengerState*>(s)));
+            rec::wake(gocpp::recv(gocpp::getValue<scavengerState*>(s)));
         };
 
         // input: fraction of CPU time actually used.
@@ -303,7 +303,7 @@ namespace golang::runtime
         // is to ensure that the controller's outputs have a direct relationship with
         // its inputs (as opposed to an inverse relationship), making it somewhat
         // easier to reason about for tuning purposes.
-        s->sleepController = gocpp::Init<golang::runtime::piController>([=](auto& x) {
+        s->sleepController = gocpp::Init<piController>([=](auto& x) {
             x.kp = 0.3375;
             x.ti = 3.2e6;
             x.tt = 1e9;
@@ -384,7 +384,7 @@ namespace golang::runtime
             // the current P's runnext slot, which is desirable to prevent
             // the scavenger from interfering with user goroutine scheduling
             // too much.
-            golang::runtime::gList list = {};
+            gList list = {};
             rec::push(gocpp::recv(list), s->g);
             injectglist(& list);
         }
@@ -763,7 +763,7 @@ namespace golang::runtime
                 // Relock the heap, because now we need to make these pages
                 // available allocation. Free them back to the page allocator.
                 runtime::lock(p->mheapLock);
-                if(auto b = (golang::runtime::offAddr {addr}); rec::lessThan(gocpp::recv(b), p->searchAddr))
+                if(auto b = (offAddr {addr}); rec::lessThan(gocpp::recv(b), p->searchAddr))
                 {
                     p->searchAddr = b;
                 }
@@ -1087,7 +1087,7 @@ namespace golang::runtime
 
     // find returns the highest chunk index that may contain pages available to scavenge.
     // It also returns an offset to start searching in the highest chunk.
-    std::tuple<golang::runtime::chunkIdx, unsigned int> rec::find(scavengeIndex* s, bool force)
+    std::tuple<chunkIdx, unsigned int> rec::find(scavengeIndex* s, bool force)
     {
         auto cursor = & s->searchAddrBg;
         if(force)
@@ -1174,9 +1174,9 @@ namespace golang::runtime
 
         // Update scavenge search addresses.
         auto addr = chunkBase(ci) + uintptr_t(page + npages - 1) * pageSize;
-        if(rec::lessThan(gocpp::recv(s->freeHWM), golang::runtime::offAddr {addr}))
+        if(rec::lessThan(gocpp::recv(s->freeHWM), offAddr {addr}))
         {
-            s->freeHWM = golang::runtime::offAddr {addr};
+            s->freeHWM = offAddr {addr};
         }
         // N.B. Because free is serialized, it's not necessary to do a
         // full CAS here. free only ever increases searchAddr, while
@@ -1184,7 +1184,7 @@ namespace golang::runtime
         // decreases, even if the value we loaded is stale, the actual
         // value will never be larger.
         auto [searchAddr, gocpp_id_0] = rec::Load(gocpp::recv(s->searchAddrForce));
-        if(rec::lessThan(gocpp::recv((golang::runtime::offAddr {searchAddr})), golang::runtime::offAddr {addr}))
+        if(rec::lessThan(gocpp::recv((offAddr {searchAddr})), offAddr {addr}))
         {
             rec::StoreMarked(gocpp::recv(s->searchAddrForce), addr);
         }
@@ -1199,7 +1199,7 @@ namespace golang::runtime
     {
         s->gen++;
         auto [searchAddr, gocpp_id_1] = rec::Load(gocpp::recv(s->searchAddrBg));
-        if(rec::lessThan(gocpp::recv((golang::runtime::offAddr {searchAddr})), s->freeHWM))
+        if(rec::lessThan(gocpp::recv((offAddr {searchAddr})), s->freeHWM))
         {
             rec::StoreMarked(gocpp::recv(s->searchAddrBg), rec::addr(gocpp::recv(s->freeHWM)));
         }
@@ -1250,7 +1250,7 @@ namespace golang::runtime
     }
 
     // load loads and unpacks a scavChunkData.
-    golang::runtime::scavChunkData rec::load(atomicScavChunkData* sc)
+    scavChunkData rec::load(atomicScavChunkData* sc)
     {
         return unpackScavChunkData(rec::Load(gocpp::recv(sc->value)));
     }
@@ -1305,9 +1305,9 @@ namespace golang::runtime
     }
 
     // unpackScavChunkData unpacks a scavChunkData from a uint64.
-    golang::runtime::scavChunkData unpackScavChunkData(uint64_t sc)
+    scavChunkData unpackScavChunkData(uint64_t sc)
     {
-        return gocpp::Init<golang::runtime::scavChunkData>([=](auto& x) {
+        return gocpp::Init<scavChunkData>([=](auto& x) {
             x.inUse = uint16_t(sc);
             x.lastInUse = uint16_t(sc >> 16) & scavChunkInUseMask;
             x.gen = uint32_t(sc >> 32);

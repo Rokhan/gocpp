@@ -31,8 +31,8 @@ namespace golang::main
     const int mask1 = (1 << 1) - 1;
     const int bit3 = 1 << 3;
     const int mask3 = (1 << 3) - 1;
-    const golang::main::Kind Invalid = 0;
-    const golang::main::Kind Bool = 1;
-    const golang::main::Kind Int = 2;
-    const golang::main::Kind Int8 = 3;
+    const Kind Invalid = 0;
+    const Kind Bool = 1;
+    const Kind Int = 2;
+    const Kind Int8 = 3;
 }

@@ -12,7 +12,7 @@
 
 namespace golang::safefilepath
 {
-    std::tuple<gocpp::string, struct gocpp::error> FromFS(gocpp::string path);
+    std::tuple<gocpp::string, gocpp::error> FromFS(gocpp::string path);
 }
 #include "golang/errors/errors.fwd.h"
 

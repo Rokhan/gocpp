@@ -78,9 +78,9 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct liveUserArenaChunk& value);
     void userArenaHeapBitsSetSliceType(_type* typ, int n, gocpp::unsafe_pointer ptr, mspan* s);
-    std::tuple<gocpp::unsafe_pointer, golang::runtime::mspan*> newUserArenaChunk();
+    std::tuple<gocpp::unsafe_pointer, mspan*> newUserArenaChunk();
     void freeUserArenaChunk(mspan* s, gocpp::unsafe_pointer x);
-    golang::runtime::userArena* newUserArena();
+    userArena* newUserArena();
 }
 #include "golang/runtime/runtime2.h"
 
@@ -124,11 +124,11 @@ namespace golang::runtime
         void slice(userArena* a, go_any sl, int cap);
         void free(userArena* a);
         gocpp::unsafe_pointer alloc(userArena* a, _type* typ, int cap);
-        golang::runtime::mspan* refill(userArena* a);
+        mspan* refill(userArena* a);
         gocpp::unsafe_pointer userArenaNextFree(mspan* s, _type* typ, int cap);
         bool isUnusedUserArenaChunk(mspan* s);
         void setUserArenaChunkToFault(mspan* s);
-        golang::runtime::mspan* allocUserArenaChunk(mheap* h);
+        mspan* allocUserArenaChunk(mheap* h);
     }
 }
 

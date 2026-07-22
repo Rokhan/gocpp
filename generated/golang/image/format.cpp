@@ -80,11 +80,11 @@ namespace golang::image
     // string can contain "?" wildcards that each match any one byte.
     // [Decode] is the function that decodes the encoded image.
     // [DecodeConfig] is the function that decodes just its configuration.
-    void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<struct Image, struct gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<golang::image::Config, struct gocpp::error> (io::Reader _1)> decodeConfig)
+    void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<Image, gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<Config, gocpp::error> (io::Reader _1)> decodeConfig)
     {
         rec::Lock(gocpp::recv(formatsMu));
-        auto [formats, gocpp_id_0] = gocpp::getValue<gocpp::slice<golang::image::format>>(rec::Load(gocpp::recv(atomicFormats)));
-        rec::Store(gocpp::recv(atomicFormats), append(formats, golang::image::format {name, magic, decode, decodeConfig}));
+        auto [formats, gocpp_id_0] = gocpp::getValue<gocpp::slice<format>>(rec::Load(gocpp::recv(atomicFormats)));
+        rec::Store(gocpp::recv(atomicFormats), append(formats, format {name, magic, decode, decodeConfig}));
         rec::Unlock(gocpp::recv(formatsMu));
     }
 
@@ -114,19 +114,19 @@ namespace golang::image
     }
 
     template<typename T, typename TStore, typename TInterface>
-    std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> reader::readerImpl<T, TStore, TInterface>::vPeek(int _1)
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> reader::readerImpl<T, TStore, TInterface>::vPeek(int _1)
     {
         return rec::Peek(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
 
     namespace rec
     {
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int _1)
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int _1)
         {
             return self.ptr->value->vPeek(_1);
         }
 
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int _1)
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int _1)
         {
             return self.obj.value->vPeek(_1);
         }
@@ -148,7 +148,7 @@ namespace golang::image
     }
 
     // asReader converts an io.Reader to a reader.
-    struct reader asReader(io::Reader r)
+    reader asReader(io::Reader r)
     {
         if(auto [rr, ok] = gocpp::getValue<reader>(r); ok)
         {
@@ -175,9 +175,9 @@ namespace golang::image
     }
 
     // sniff determines the format of r's data.
-    golang::image::format sniff(struct reader r)
+    format sniff(reader r)
     {
-        auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<golang::image::format>>(rec::Load(gocpp::recv(atomicFormats)));
+        auto [formats, gocpp_id_1] = gocpp::getValue<gocpp::slice<format>>(rec::Load(gocpp::recv(atomicFormats)));
         for(auto [gocpp_ignored, f] : formats)
         {
             auto [b, err] = rec::Peek(gocpp::recv(r), len(f.magic));
@@ -186,14 +186,14 @@ namespace golang::image
                 return f;
             }
         }
-        return golang::image::format {};
+        return format {};
     }
 
     // Decode decodes an image that has been encoded in a registered format.
     // The string returned is the format name used during format registration.
     // Format registration is typically done by an init function in the codec-
     // specific package.
-    std::tuple<struct Image, gocpp::string, struct gocpp::error> Decode(io::Reader r)
+    std::tuple<Image, gocpp::string, gocpp::error> Decode(io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);
@@ -209,13 +209,13 @@ namespace golang::image
     // been encoded in a registered format. The string returned is the format name
     // used during format registration. Format registration is typically done by
     // an init function in the codec-specific package.
-    std::tuple<golang::image::Config, gocpp::string, struct gocpp::error> DecodeConfig(io::Reader r)
+    std::tuple<Config, gocpp::string, gocpp::error> DecodeConfig(io::Reader r)
     {
         auto rr = asReader(r);
         auto f = sniff(rr);
         if(f.decodeConfig == nullptr)
         {
-            return {golang::image::Config {}, ""_s, ErrFormat};
+            return {Config {}, ""_s, ErrFormat};
         }
         auto [c, err] = f.decodeConfig(rr);
         return {c, f.name, err};

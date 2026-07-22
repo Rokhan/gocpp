@@ -90,7 +90,7 @@ namespace golang::reflect
     //
     // The Examples section of the documentation includes an illustration
     // of how to use MakeFunc to build a swap function for different types.
-    golang::reflect::Value MakeFunc(struct Type typ, std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> args)> fn)
+    golang::reflect::Value MakeFunc(golang::reflect::Type typ, std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> args)> fn)
     {
         if(rec::Kind(gocpp::recv(typ)) != Func)
         {
@@ -98,15 +98,15 @@ namespace golang::reflect
         }
 
         auto t = rec::common(gocpp::recv(typ));
-        auto ftyp = (golang::reflect::funcType*)(gocpp::unsafe_pointer(t));
+        auto ftyp = (funcType*)(gocpp::unsafe_pointer(t));
 
         auto code = abi::FuncPCABI0(makeFuncStub);
 
         // makeFuncImpl contains a stack map for use by the runtime
         auto [gocpp_id_0, gocpp_id_1, abid] = funcLayout(ftyp, nullptr);
 
-        auto impl = gocpp::InitPtr<golang::reflect::makeFuncImpl>([=](auto& x) {
-            x.makeFuncCtxt = gocpp::Init<golang::reflect::makeFuncCtxt>([=](auto& x) {
+        auto impl = gocpp::InitPtr<makeFuncImpl>([=](auto& x) {
+            x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([=](auto& x) {
                 x.fn = code;
                 x.stack = abid.stackPtrs;
                 x.argLen = abid.stackCallArgsSize;
@@ -185,14 +185,14 @@ namespace golang::reflect
         auto rcvr = golang::reflect::Value {rec::typ(gocpp::recv(v)), v.ptr, fl};
 
         // v.Type returns the actual type of the method value.
-        auto ftyp = (golang::reflect::funcType*)(gocpp::unsafe_pointer(gocpp::getValue<golang::reflect::rtype*>(rec::Type(gocpp::recv(v)))));
+        auto ftyp = (funcType*)(gocpp::unsafe_pointer(gocpp::getValue<rtype*>(rec::Type(gocpp::recv(v)))));
 
         auto code = methodValueCallCodePtr();
 
         // methodValue contains a stack map for use by the runtime
         auto [gocpp_id_2, gocpp_id_3, abid] = funcLayout(ftyp, nullptr);
-        auto fv = gocpp::InitPtr<golang::reflect::methodValue>([=](auto& x) {
-            x.makeFuncCtxt = gocpp::Init<golang::reflect::makeFuncCtxt>([=](auto& x) {
+        auto fv = gocpp::InitPtr<methodValue>([=](auto& x) {
+            x.makeFuncCtxt = gocpp::Init<makeFuncCtxt>([=](auto& x) {
                 x.fn = code;
                 x.stack = abid.stackPtrs;
                 x.argLen = abid.stackCallArgsSize;

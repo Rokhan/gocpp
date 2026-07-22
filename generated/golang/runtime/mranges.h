@@ -59,8 +59,8 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern golang::runtime::offAddr minOffAddr;
-    extern golang::runtime::offAddr maxOffAddr;
+    extern offAddr minOffAddr;
+    extern offAddr maxOffAddr;
     struct atomicOffAddr
     {
         // a contains the offset address, unlike offAddr.
@@ -78,7 +78,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
-    golang::runtime::addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
+    addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
 }
 #include "golang/runtime/mstats.fwd.h"
 
@@ -117,12 +117,12 @@ namespace golang::runtime
     {
         uintptr_t size(addrRange a);
         bool contains(addrRange a, uintptr_t addr);
-        golang::runtime::addrRange subtract(addrRange a, addrRange b);
+        addrRange subtract(addrRange a, addrRange b);
         std::tuple<uintptr_t, bool> takeFromFront(addrRange* a, uintptr_t len, uint8_t align);
         std::tuple<uintptr_t, bool> takeFromBack(addrRange* a, uintptr_t len, uint8_t align);
-        golang::runtime::addrRange removeGreaterEqual(addrRange a, uintptr_t addr);
-        golang::runtime::offAddr add(offAddr l, uintptr_t bytes);
-        golang::runtime::offAddr sub(offAddr l, uintptr_t bytes);
+        addrRange removeGreaterEqual(addrRange a, uintptr_t addr);
+        offAddr add(offAddr l, uintptr_t bytes);
+        offAddr sub(offAddr l, uintptr_t bytes);
         uintptr_t diff(offAddr l1, offAddr l2);
         bool lessThan(offAddr l1, offAddr l2);
         bool lessEqual(offAddr l1, offAddr l2);
@@ -138,7 +138,7 @@ namespace golang::runtime
         std::tuple<uintptr_t, bool> findAddrGreaterEqual(addrRanges* a, uintptr_t addr);
         bool contains(addrRanges* a, uintptr_t addr);
         void add(addrRanges* a, addrRange r);
-        golang::runtime::addrRange removeLast(addrRanges* a, uintptr_t nBytes);
+        addrRange removeLast(addrRanges* a, uintptr_t nBytes);
         void removeGreaterEqual(addrRanges* a, uintptr_t addr);
         void cloneInto(addrRanges* a, addrRanges* b);
     }

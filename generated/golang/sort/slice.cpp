@@ -43,7 +43,7 @@ namespace golang::sort
         auto swap = reflectlite::Swapper(x);
         auto length = rec::Len(gocpp::recv(rv));
         auto limit = bits::Len((unsigned int)(length));
-        pdqsort_func(golang::sort::lessSwap {less, swap}, 0, length, limit);
+        pdqsort_func(lessSwap {less, swap}, 0, length, limit);
     }
 
     // SliceStable sorts the slice x using the provided less
@@ -59,7 +59,7 @@ namespace golang::sort
     {
         auto rv = reflectlite::ValueOf(x);
         auto swap = reflectlite::Swapper(x);
-        stable_func(golang::sort::lessSwap {less, swap}, rec::Len(gocpp::recv(rv)));
+        stable_func(lessSwap {less, swap}, rec::Len(gocpp::recv(rv)));
     }
 
     // SliceIsSorted reports whether the slice x is sorted according to the provided less function.

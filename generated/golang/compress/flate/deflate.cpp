@@ -71,7 +71,7 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    gocpp::slice<golang::flate::compressionLevel> levels = gocpp::slice<golang::flate::compressionLevel> {
+    gocpp::slice<compressionLevel> levels = gocpp::slice<compressionLevel> {
         {0, 0, 0, 0, 0, /* NoCompression. */ 0},
         {1, 0, 0, 0, 0, /* BestSpeed uses a custom algorithm; see deflatefast.go. */ 0},
         // For levels 2-3 we don't bother trying with lazy matches.
@@ -232,7 +232,7 @@ namespace golang::flate
         return n;
     }
 
-    struct gocpp::error rec::writeBlock(compressor* d, gocpp::slice<golang::flate::token> tokens, int index)
+    gocpp::error rec::writeBlock(compressor* d, gocpp::slice<golang::flate::token> tokens, int index)
     {
         if(index > 0)
         {
@@ -375,7 +375,7 @@ namespace golang::flate
         return {length, offset, ok};
     }
 
-    struct gocpp::error rec::writeStoredBlock(compressor* d, gocpp::slice<unsigned char> buf)
+    gocpp::error rec::writeStoredBlock(compressor* d, gocpp::slice<unsigned char> buf)
     {
         if(rec::writeStoredHeader(gocpp::recv(d->w), len(buf), false); d->w->err != nullptr)
         {
@@ -703,10 +703,10 @@ namespace golang::flate
         d->windowEnd = 0;
     }
 
-    std::tuple<int, struct gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> rec::write(compressor* d, gocpp::slice<unsigned char> b)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         if(d->err != nullptr)
         {
             return {0, d->err};
@@ -724,7 +724,7 @@ namespace golang::flate
         return {n, nullptr};
     }
 
-    struct gocpp::error rec::syncFlush(compressor* d)
+    gocpp::error rec::syncFlush(compressor* d)
     {
         if(d->err != nullptr)
         {
@@ -742,9 +742,9 @@ namespace golang::flate
         return d->err;
     }
 
-    struct gocpp::error rec::init(compressor* d, io::Writer w, int level)
+    gocpp::error rec::init(compressor* d, io::Writer w, int level)
     {
-        struct gocpp::error err;
+        gocpp::error err;
         d->w = newHuffmanBitWriter(w);
 
         //Go switch emulation
@@ -834,7 +834,7 @@ namespace golang::flate
         }
     }
 
-    struct gocpp::error rec::close(compressor* d)
+    gocpp::error rec::close(compressor* d)
     {
         if(d->err == errWriterClosed)
         {
@@ -875,9 +875,9 @@ namespace golang::flate
     //
     // If level is in the range [-2, 9] then the error returned will be nil.
     // Otherwise the error returned will be non-nil.
-    std::tuple<golang::flate::Writer*, struct gocpp::error> NewWriter(io::Writer w, int level)
+    std::tuple<Writer*, gocpp::error> NewWriter(io::Writer w, int level)
     {
-        golang::flate::Writer dw = {};
+        Writer dw = {};
         if(auto err = rec::init(gocpp::recv(dw.d), w, level); err != nullptr)
         {
             return {nullptr, err};
@@ -891,9 +891,9 @@ namespace golang::flate
     // any compressed output. The compressed data written to w
     // can only be decompressed by a [Reader] initialized with the
     // same dictionary.
-    std::tuple<golang::flate::Writer*, struct gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
+    std::tuple<Writer*, gocpp::error> NewWriterDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
     {
-        auto dw = new golang::flate::dictWriter {w};
+        auto dw = new dictWriter {w};
         auto [zw, err] = NewWriter(dw, level);
         if(err != nullptr)
         {
@@ -934,10 +934,10 @@ namespace golang::flate
         return value.PrintTo(os);
     }
 
-    std::tuple<int, struct gocpp::error> rec::Write(dictWriter* w, gocpp::slice<unsigned char> b)
+    std::tuple<int, gocpp::error> rec::Write(dictWriter* w, gocpp::slice<unsigned char> b)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         return rec::Write(gocpp::recv(w->w), b);
     }
 
@@ -978,10 +978,10 @@ namespace golang::flate
 
     // Write writes data to w, which will eventually write the
     // compressed form of data to its underlying writer.
-    std::tuple<int, struct gocpp::error> rec::Write(Writer* w, gocpp::slice<unsigned char> data)
+    std::tuple<int, gocpp::error> rec::Write(Writer* w, gocpp::slice<unsigned char> data)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         return rec::write(gocpp::recv(w->d), data);
     }
 
@@ -994,7 +994,7 @@ namespace golang::flate
     // If the underlying writer returns an error, Flush returns that error.
     //
     // In the terminology of the zlib library, Flush is equivalent to Z_SYNC_FLUSH.
-    struct gocpp::error rec::Flush(Writer* w)
+    gocpp::error rec::Flush(Writer* w)
     {
         // For more about flushing:
         // https://www.bolet.org/~pornin/deflate-flush.html
@@ -1002,7 +1002,7 @@ namespace golang::flate
     }
 
     // Close flushes and closes the writer.
-    struct gocpp::error rec::Close(Writer* w)
+    gocpp::error rec::Close(Writer* w)
     {
         return rec::close(gocpp::recv(w->d));
     }
@@ -1012,7 +1012,7 @@ namespace golang::flate
     // and w's level and dictionary.
     void rec::Reset(Writer* w, io::Writer dst)
     {
-        if(auto [dw, ok] = gocpp::getValue<golang::flate::dictWriter*>(w->d.w->writer); ok)
+        if(auto [dw, ok] = gocpp::getValue<dictWriter*>(w->d.w->writer); ok)
         {
             // w was created with NewWriterDict
             dw->w = dst;

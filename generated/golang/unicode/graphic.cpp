@@ -20,12 +20,12 @@ namespace golang::unicode
     }
 
     // GraphicRanges defines the set of graphic characters according to Unicode.
-    gocpp::slice<golang::unicode::RangeTable*> GraphicRanges = gocpp::slice<golang::unicode::RangeTable*> {
+    gocpp::slice<RangeTable*> GraphicRanges = gocpp::slice<RangeTable*> {
         L, M, N, P, S, Zs
     };
     // PrintRanges defines the set of printable characters according to Go.
     // ASCII space, U+0020, is handled separately.
-    gocpp::slice<golang::unicode::RangeTable*> PrintRanges = gocpp::slice<golang::unicode::RangeTable*> {
+    gocpp::slice<RangeTable*> PrintRanges = gocpp::slice<RangeTable*> {
         L, M, N, P, S
     };
     // IsGraphic reports whether the rune is defined as a Graphic by Unicode.

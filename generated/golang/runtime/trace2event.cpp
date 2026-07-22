@@ -115,7 +115,7 @@ namespace golang::runtime
     // or P and pass the appropriate status.
     //
     // In this case, the default status should be traceGoBad or traceProcBad to help identify bugs sooner.
-    golang::runtime::traceEventWriter rec::eventWriter(traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus)
+    traceEventWriter rec::eventWriter(traceLocker tl, traceGoStatus goStatus, traceProcStatus procStatus)
     {
         auto w = rec::writer(gocpp::recv(tl));
         if(auto pp = rec::ptr(gocpp::recv(tl.mp->p)); pp != nullptr && ! rec::statusWasTraced(gocpp::recv(pp->trace), tl.gen) && rec::acquireStatus(gocpp::recv(pp->trace), tl.gen))
@@ -126,7 +126,7 @@ namespace golang::runtime
         {
             w = rec::writeGoStatus(gocpp::recv(w), uint64_t(gp->goid), int64_t(tl.mp->procid), goStatus, gp->inMarkAssist);
         }
-        return golang::runtime::traceEventWriter {w};
+        return traceEventWriter {w};
     }
 
     // commit writes out a trace event and calls end. It's a helper to make the
@@ -138,7 +138,7 @@ namespace golang::runtime
     }
 
     // write writes an event into the trace.
-    golang::runtime::traceEventWriter rec::write(traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args)
+    traceEventWriter rec::write(traceEventWriter e, traceEv ev, gocpp::slice<traceArg> args)
     {
         e.w = rec::event(gocpp::recv(e.w), ev, args);
         return e;
@@ -151,7 +151,7 @@ namespace golang::runtime
     }
 
     // traceEventWrite is the part of traceEvent that actually writes the event.
-    golang::runtime::traceWriter rec::event(traceWriter w, traceEv ev, gocpp::slice<traceArg> args)
+    traceWriter rec::event(traceWriter w, traceEv ev, gocpp::slice<traceArg> args)
     {
         // Make sure we have room.
         std::tie(w, std::ignore) = rec::ensure(gocpp::recv(w), 1 + (len(args) + 1) * traceBytesPerNumber);
@@ -178,7 +178,7 @@ namespace golang::runtime
     // stack takes a stack trace skipping the provided number of frames.
     // It then returns a traceArg representing that stack which may be
     // passed to write.
-    golang::runtime::traceArg rec::stack(traceLocker tl, int skip)
+    traceArg rec::stack(traceLocker tl, int skip)
     {
         return traceArg(traceStack(skip, tl.mp, tl.gen));
     }
@@ -188,7 +188,7 @@ namespace golang::runtime
     //
     // It then returns a traceArg representing that stack which may be
     // passed to write.
-    golang::runtime::traceArg rec::startPC(traceLocker tl, uintptr_t pc)
+    traceArg rec::startPC(traceLocker tl, uintptr_t pc)
     {
         // +PCQuantum because makeTraceFrame expects return PCs and subtracts PCQuantum.
         return traceArg(rec::put(gocpp::recv(trace.stackTab[tl.gen % 2]), gocpp::slice<uintptr_t> {
@@ -200,7 +200,7 @@ namespace golang::runtime
     // string returns a traceArg representing s which may be passed to write.
     // The string is assumed to be relatively short and popular, so it may be
     // stored for a while in the string dictionary.
-    golang::runtime::traceArg rec::string(traceLocker tl, gocpp::string s)
+    traceArg rec::string(traceLocker tl, gocpp::string s)
     {
         return traceArg(rec::put(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
     }
@@ -208,7 +208,7 @@ namespace golang::runtime
     // uniqueString returns a traceArg representing s which may be passed to write.
     // The string is assumed to be unique or long, so it will be written out to
     // the trace eagerly.
-    golang::runtime::traceArg rec::uniqueString(traceLocker tl, gocpp::string s)
+    traceArg rec::uniqueString(traceLocker tl, gocpp::string s)
     {
         return traceArg(rec::emit(gocpp::recv(trace.stringTab[tl.gen % 2]), tl.gen, s));
     }

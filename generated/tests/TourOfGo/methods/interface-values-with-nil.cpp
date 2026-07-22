@@ -110,17 +110,17 @@ namespace golang::main
     {
         I i = {};
 
-        golang::main::T* t = nullptr;
+        T* t = nullptr;
         i = t;
         describe(i);
         rec::M(gocpp::recv(i));
 
-        i = new golang::main::T {"hello"_s};
+        i = new T {"hello"_s};
         describe(i);
         rec::M(gocpp::recv(i));
     }
 
-    void describe(struct I i)
+    void describe(I i)
     {
         mocklib::Printf("(%v, %T)\n"_s, i, i);
     }

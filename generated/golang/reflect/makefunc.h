@@ -22,7 +22,7 @@ namespace golang::reflect
 
 namespace golang::reflect
 {
-    golang::reflect::Value MakeFunc(struct Type typ, std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> args)> fn);
+    golang::reflect::Value MakeFunc(golang::reflect::Type typ, std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> args)> fn);
     golang::reflect::Value makeMethodValue(gocpp::string op, golang::reflect::Value v);
     struct makeFuncCtxt
     {

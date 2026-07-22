@@ -34,7 +34,7 @@ namespace golang::base64
     std::tuple<uint32_t, bool> assemble32(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4);
     std::tuple<uint64_t, bool> assemble64(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4, unsigned char n5, unsigned char n6, unsigned char n7, unsigned char n8);
     int decodedLen(int n, gocpp::rune padChar);
-    golang::base64::Encoding* NewEncoding(gocpp::string encoder);
+    Encoding* NewEncoding(gocpp::string encoder);
 }
 #include "golang/io/io.h"
 
@@ -109,21 +109,21 @@ namespace golang::base64
 
     namespace rec
     {
-        golang::base64::Encoding* WithPadding(Encoding enc, gocpp::rune padding);
-        golang::base64::Encoding* Strict(Encoding enc);
+        Encoding* WithPadding(Encoding enc, gocpp::rune padding);
+        Encoding* Strict(Encoding enc);
         void Encode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
         gocpp::slice<unsigned char> AppendEncode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
         gocpp::string EncodeToString(Encoding* enc, gocpp::slice<unsigned char> src);
-        std::tuple<int, struct gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> p);
-        struct gocpp::error Close(encoder* e);
+        std::tuple<int, gocpp::error> Write(encoder* e, gocpp::slice<unsigned char> p);
+        gocpp::error Close(encoder* e);
         int EncodedLen(Encoding* enc, int n);
         gocpp::string Error(CorruptInputError e);
-        std::tuple<int, int, struct gocpp::error> decodeQuantum(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> AppendDecode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> DecodeString(Encoding* enc, gocpp::string s);
-        std::tuple<int, struct gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
-        std::tuple<int, struct gocpp::error> Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
-        std::tuple<int, struct gocpp::error> Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p);
+        std::tuple<int, int, gocpp::error> decodeQuantum(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, int si);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendDecode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> DecodeString(Encoding* enc, gocpp::string s);
+        std::tuple<int, gocpp::error> Read(decoder* d, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> Decode(Encoding* enc, gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
+        std::tuple<int, gocpp::error> Read(newlineFilteringReader* r, gocpp::slice<unsigned char> p);
         int DecodedLen(Encoding* enc, int n);
     }
 }

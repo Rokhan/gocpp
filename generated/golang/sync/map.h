@@ -109,7 +109,7 @@ namespace golang::sync
 
     namespace rec
     {
-        golang::sync::readOnly loadReadOnly(Map* m);
+        readOnly loadReadOnly(Map* m);
         std::tuple<go_any, bool> Load(Map* m, go_any key);
         std::tuple<go_any, bool> load(golang::sync::entry* e);
         void Store(Map* m, go_any key, go_any value);

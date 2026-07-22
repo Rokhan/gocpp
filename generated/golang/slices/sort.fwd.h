@@ -8,7 +8,7 @@ namespace golang::slices
 {
     using sortedHint = int;
     using xorshift = uint64_t;
-    const golang::slices::sortedHint unknownHint = 0;
-    const golang::slices::sortedHint increasingHint = 1;
-    const golang::slices::sortedHint decreasingHint = 2;
+    const sortedHint unknownHint = 0;
+    const sortedHint increasingHint = 1;
+    const sortedHint decreasingHint = 2;
 }

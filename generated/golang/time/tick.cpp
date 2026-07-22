@@ -61,7 +61,7 @@ namespace golang::time
     // the time interval or drop ticks to make up for slow receivers.
     // The duration d must be greater than zero; if not, NewTicker will
     // panic. Stop the ticker to release associated resources.
-    golang::time::Ticker* NewTicker(Duration d)
+    Ticker* NewTicker(Duration d)
     {
         if(d <= 0)
         {
@@ -70,10 +70,10 @@ namespace golang::time
         // Give the channel a 1-element time buffer.
         // If the client falls behind while reading, we drop ticks
         // on the floor until the client catches up.
-        auto c = gocpp::make(gocpp::Tag<gocpp::channel<golang::time::Time>>(), 1);
-        auto t = gocpp::InitPtr<golang::time::Ticker>([=](auto& x) {
+        auto c = gocpp::make(gocpp::Tag<gocpp::channel<Time>>(), 1);
+        auto t = gocpp::InitPtr<Ticker>([=](auto& x) {
             x.C = c;
-            x.r = gocpp::Init<golang::time::runtimeTimer>([=](auto& x) {
+            x.r = gocpp::Init<runtimeTimer>([=](auto& x) {
                 x.when = when(d);
                 x.period = int64_t(d);
                 x.f = sendTime;
@@ -113,7 +113,7 @@ namespace golang::time
     // the Ticker, be aware that without a way to shut it down the underlying
     // Ticker cannot be recovered by the garbage collector; it "leaks".
     // Unlike NewTicker, Tick will return nil if d <= 0.
-    gocpp::channel<golang::time::Time> Tick(Duration d)
+    gocpp::channel<Time> Tick(Duration d)
     {
         if(d <= 0)
         {

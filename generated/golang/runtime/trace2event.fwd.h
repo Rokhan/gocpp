@@ -8,57 +8,57 @@ namespace golang::runtime
 {
     using traceEv = uint8_t;
     using traceArg = uint64_t;
-    const golang::runtime::traceEv traceEvNone = 0;
+    const traceEv traceEvNone = 0;
     // Structural events.
-    const golang::runtime::traceEv traceEvEventBatch = 1;
-    const golang::runtime::traceEv traceEvStacks = 2;
-    const golang::runtime::traceEv traceEvStack = 3;
-    const golang::runtime::traceEv traceEvStrings = 4;
-    const golang::runtime::traceEv traceEvString = 5;
-    const golang::runtime::traceEv traceEvCPUSamples = 6;
-    const golang::runtime::traceEv traceEvCPUSample = 7;
-    const golang::runtime::traceEv traceEvFrequency = 8;
+    const traceEv traceEvEventBatch = 1;
+    const traceEv traceEvStacks = 2;
+    const traceEv traceEvStack = 3;
+    const traceEv traceEvStrings = 4;
+    const traceEv traceEvString = 5;
+    const traceEv traceEvCPUSamples = 6;
+    const traceEv traceEvCPUSample = 7;
+    const traceEv traceEvFrequency = 8;
     // Procs.
-    const golang::runtime::traceEv traceEvProcsChange = 9;
-    const golang::runtime::traceEv traceEvProcStart = 10;
-    const golang::runtime::traceEv traceEvProcStop = 11;
-    const golang::runtime::traceEv traceEvProcSteal = 12;
-    const golang::runtime::traceEv traceEvProcStatus = 13;
+    const traceEv traceEvProcsChange = 9;
+    const traceEv traceEvProcStart = 10;
+    const traceEv traceEvProcStop = 11;
+    const traceEv traceEvProcSteal = 12;
+    const traceEv traceEvProcStatus = 13;
     // Goroutines.
-    const golang::runtime::traceEv traceEvGoCreate = 14;
-    const golang::runtime::traceEv traceEvGoCreateSyscall = 15;
-    const golang::runtime::traceEv traceEvGoStart = 16;
-    const golang::runtime::traceEv traceEvGoDestroy = 17;
-    const golang::runtime::traceEv traceEvGoDestroySyscall = 18;
-    const golang::runtime::traceEv traceEvGoStop = 19;
-    const golang::runtime::traceEv traceEvGoBlock = 20;
-    const golang::runtime::traceEv traceEvGoUnblock = 21;
-    const golang::runtime::traceEv traceEvGoSyscallBegin = 22;
-    const golang::runtime::traceEv traceEvGoSyscallEnd = 23;
-    const golang::runtime::traceEv traceEvGoSyscallEndBlocked = 24;
-    const golang::runtime::traceEv traceEvGoStatus = 25;
+    const traceEv traceEvGoCreate = 14;
+    const traceEv traceEvGoCreateSyscall = 15;
+    const traceEv traceEvGoStart = 16;
+    const traceEv traceEvGoDestroy = 17;
+    const traceEv traceEvGoDestroySyscall = 18;
+    const traceEv traceEvGoStop = 19;
+    const traceEv traceEvGoBlock = 20;
+    const traceEv traceEvGoUnblock = 21;
+    const traceEv traceEvGoSyscallBegin = 22;
+    const traceEv traceEvGoSyscallEnd = 23;
+    const traceEv traceEvGoSyscallEndBlocked = 24;
+    const traceEv traceEvGoStatus = 25;
     // STW.
-    const golang::runtime::traceEv traceEvSTWBegin = 26;
-    const golang::runtime::traceEv traceEvSTWEnd = 27;
+    const traceEv traceEvSTWBegin = 26;
+    const traceEv traceEvSTWEnd = 27;
     // GC events.
-    const golang::runtime::traceEv traceEvGCActive = 28;
-    const golang::runtime::traceEv traceEvGCBegin = 29;
-    const golang::runtime::traceEv traceEvGCEnd = 30;
-    const golang::runtime::traceEv traceEvGCSweepActive = 31;
-    const golang::runtime::traceEv traceEvGCSweepBegin = 32;
-    const golang::runtime::traceEv traceEvGCSweepEnd = 33;
-    const golang::runtime::traceEv traceEvGCMarkAssistActive = 34;
-    const golang::runtime::traceEv traceEvGCMarkAssistBegin = 35;
-    const golang::runtime::traceEv traceEvGCMarkAssistEnd = 36;
-    const golang::runtime::traceEv traceEvHeapAlloc = 37;
-    const golang::runtime::traceEv traceEvHeapGoal = 38;
+    const traceEv traceEvGCActive = 28;
+    const traceEv traceEvGCBegin = 29;
+    const traceEv traceEvGCEnd = 30;
+    const traceEv traceEvGCSweepActive = 31;
+    const traceEv traceEvGCSweepBegin = 32;
+    const traceEv traceEvGCSweepEnd = 33;
+    const traceEv traceEvGCMarkAssistActive = 34;
+    const traceEv traceEvGCMarkAssistBegin = 35;
+    const traceEv traceEvGCMarkAssistEnd = 36;
+    const traceEv traceEvHeapAlloc = 37;
+    const traceEv traceEvHeapGoal = 38;
     // Annotations.
-    const golang::runtime::traceEv traceEvGoLabel = 39;
-    const golang::runtime::traceEv traceEvUserTaskBegin = 40;
-    const golang::runtime::traceEv traceEvUserTaskEnd = 41;
-    const golang::runtime::traceEv traceEvUserRegionBegin = 42;
-    const golang::runtime::traceEv traceEvUserRegionEnd = 43;
-    const golang::runtime::traceEv traceEvUserLog = 44;
+    const traceEv traceEvGoLabel = 39;
+    const traceEv traceEvUserTaskBegin = 40;
+    const traceEv traceEvUserTaskEnd = 41;
+    const traceEv traceEvUserRegionBegin = 42;
+    const traceEv traceEvUserRegionEnd = 43;
+    const traceEv traceEvUserLog = 44;
 }
 #include "golang/runtime/trace2buf.fwd.h"
 

@@ -92,7 +92,7 @@ namespace golang::runtime
 namespace golang::runtime
 {
     using semTable = gocpp::defined<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;
-    extern golang::runtime::semTable semtable;
+    extern semTable semtable;
 }
 
 #include "golang/runtime/runtime2.h"
@@ -102,9 +102,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::semaRoot* rootFor(gocpp::array_ptr<semTable> t, uint32_t* addr);
+        semaRoot* rootFor(gocpp::array_ptr<semTable> t, uint32_t* addr);
         void queue(semaRoot* root, uint32_t* addr, sudog* s, bool lifo);
-        std::tuple<golang::runtime::sudog*, int64_t, int64_t> dequeue(semaRoot* root, uint32_t* addr);
+        std::tuple<sudog*, int64_t, int64_t> dequeue(semaRoot* root, uint32_t* addr);
         void rotateLeft(semaRoot* root, sudog* x);
         void rotateRight(semaRoot* root, sudog* y);
     }

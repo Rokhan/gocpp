@@ -199,7 +199,7 @@ namespace golang::os
 
     // Setenv sets the value of the environment variable named by the key.
     // It returns an error, if any.
-    struct gocpp::error Setenv(gocpp::string key, gocpp::string value)
+    gocpp::error Setenv(gocpp::string key, gocpp::string value)
     {
         auto err = syscall::Setenv(key, value);
         if(err != nullptr)
@@ -210,7 +210,7 @@ namespace golang::os
     }
 
     // Unsetenv unsets a single environment variable.
-    struct gocpp::error Unsetenv(gocpp::string key)
+    gocpp::error Unsetenv(gocpp::string key)
     {
         return syscall::Unsetenv(key);
     }

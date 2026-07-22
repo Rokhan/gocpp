@@ -262,7 +262,7 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    gocpp::slice<golang::strconv::leftCheat> leftcheats = gocpp::slice<golang::strconv::leftCheat> {
+    gocpp::slice<leftCheat> leftcheats = gocpp::slice<leftCheat> {
         // Leading digits of 1/2^i = 5^i.
         // 5^23 is not an exact 64-bit floating point number,
         // so have to use bc for the math.

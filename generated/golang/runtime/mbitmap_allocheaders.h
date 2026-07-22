@@ -123,12 +123,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::typePointers typePointersOf(mspan* span, uintptr_t addr, uintptr_t size);
-        golang::runtime::typePointers typePointersOfUnchecked(mspan* span, uintptr_t addr);
-        golang::runtime::typePointers typePointersOfType(mspan* span, abi::Type* typ, uintptr_t addr);
-        std::tuple<golang::runtime::typePointers, uintptr_t> nextFast(typePointers tp);
-        std::tuple<golang::runtime::typePointers, uintptr_t> next(typePointers tp, uintptr_t limit);
-        golang::runtime::typePointers fastForward(typePointers tp, uintptr_t n, uintptr_t limit);
+        typePointers typePointersOf(mspan* span, uintptr_t addr, uintptr_t size);
+        typePointers typePointersOfUnchecked(mspan* span, uintptr_t addr);
+        typePointers typePointersOfType(mspan* span, abi::Type* typ, uintptr_t addr);
+        std::tuple<typePointers, uintptr_t> nextFast(typePointers tp);
+        std::tuple<typePointers, uintptr_t> next(typePointers tp, uintptr_t limit);
+        typePointers fastForward(typePointers tp, uintptr_t n, uintptr_t limit);
         uintptr_t objBase(mspan* span, uintptr_t addr);
         void initHeapBits(mspan* s, bool forceClear);
         golang::runtime::writeUserArenaHeapBits writeUserArenaHeapBits(mspan* s, uintptr_t addr);

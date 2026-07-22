@@ -88,7 +88,7 @@ namespace golang::runtime
     // GOMAXPROCS. The high-level design of this algorithm is documented
     // at https://github.com/golang/proposal/blob/master/design/44167-gc-pacer-redesign.md.
     // See https://golang.org/s/go15gcpacing for additional historical context.
-    golang::runtime::gcControllerState gcController;
+    gcControllerState gcController;
     
     template<typename T> requires gocpp::GoStruct<T>
     gcControllerState::operator T()
@@ -610,7 +610,7 @@ namespace golang::runtime
 
     // findRunnableGCWorker returns a background mark worker for pp if it
     // should be run. This must only be called when gcBlackenEnabled != 0.
-    std::tuple<golang::runtime::g*, int64_t> rec::findRunnableGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now)
+    std::tuple<g*, int64_t> rec::findRunnableGCWorker(gcControllerState* c, golang::runtime::p* pp, int64_t now)
     {
         if(gcBlackenEnabled == 0)
         {
@@ -640,7 +640,7 @@ namespace golang::runtime
         }
 
         // Grab a worker before we commit to running below.
-        auto node = (golang::runtime::gcBgMarkWorkerNode*)(rec::pop(gocpp::recv(gcBgMarkWorkerPool)));
+        auto node = (gcBgMarkWorkerNode*)(rec::pop(gocpp::recv(gcBgMarkWorkerPool)));
         if(node == nullptr)
         {
             // There is at least one worker per P, so normally there are

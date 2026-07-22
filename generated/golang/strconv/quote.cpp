@@ -346,12 +346,12 @@ namespace golang::strconv
     // If set to a single quote, it permits the sequence \' and disallows unescaped '.
     // If set to a double quote, it permits \" and disallows unescaped ".
     // If set to zero, it does not permit either escape and allows both quote characters to appear unescaped.
-    std::tuple<gocpp::rune, bool, gocpp::string, struct gocpp::error> UnquoteChar(gocpp::string s, unsigned char quote)
+    std::tuple<gocpp::rune, bool, gocpp::string, gocpp::error> UnquoteChar(gocpp::string s, unsigned char quote)
     {
         gocpp::rune value;
         bool multibyte;
         gocpp::string tail;
-        struct gocpp::error err;
+        gocpp::error err;
         // easy cases
         if(len(s) == 0)
         {
@@ -556,7 +556,7 @@ namespace golang::strconv
 
     // QuotedPrefix returns the quoted string (as understood by Unquote) at the prefix of s.
     // If s does not start with a valid quoted string, QuotedPrefix returns an error.
-    std::tuple<gocpp::string, struct gocpp::error> QuotedPrefix(gocpp::string s)
+    std::tuple<gocpp::string, gocpp::error> QuotedPrefix(gocpp::string s)
     {
         auto [out, gocpp_id_0, err] = unquote(s, false);
         return {out, err};
@@ -567,7 +567,7 @@ namespace golang::strconv
     // that s quotes.  (If s is single-quoted, it would be a Go
     // character literal; Unquote returns the corresponding
     // one-character string.)
-    std::tuple<gocpp::string, struct gocpp::error> Unquote(gocpp::string s)
+    std::tuple<gocpp::string, gocpp::error> Unquote(gocpp::string s)
     {
         auto [out, rem, err] = unquote(s, true);
         if(len(rem) > 0)
@@ -581,11 +581,11 @@ namespace golang::strconv
     // returning the parsed prefix, the remaining suffix, and any parse errors.
     // If unescape is true, the parsed prefix is unescaped,
     // otherwise the input prefix is provided verbatim.
-    std::tuple<gocpp::string, gocpp::string, struct gocpp::error> unquote(gocpp::string in, bool unescape)
+    std::tuple<gocpp::string, gocpp::string, gocpp::error> unquote(gocpp::string in, bool unescape)
     {
         gocpp::string out;
         gocpp::string rem;
-        struct gocpp::error err;
+        gocpp::error err;
         // Determine the quote form and optimistically find the terminating quote.
         if(len(in) < 2)
         {

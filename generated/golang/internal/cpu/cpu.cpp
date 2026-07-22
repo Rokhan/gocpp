@@ -467,7 +467,7 @@ namespace golang::cpu
     // Options are arch dependent and are added by the arch specific doinit functions.
     // Features that are mandatory for the specific GOARCH should not be added to options
     // (e.g. SSE2 on amd64).
-    gocpp::slice<golang::cpu::option> options;
+    gocpp::slice<option> options;
     // Option names should be lower case. e.g. avx instead of AVX.
     
     template<typename T> requires gocpp::GoStruct<T>

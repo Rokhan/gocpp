@@ -233,7 +233,7 @@ namespace golang::runtime
 
     // Allocates a stack from the free pool. Must be called with
     // stackpool[order].item.mu held.
-    golang::runtime::gclinkptr stackpoolalloc(uint8_t order)
+    gclinkptr stackpoolalloc(uint8_t order)
     {
         auto list = & stackpool[order].item.span;
         auto s = list->first;
@@ -329,7 +329,7 @@ namespace golang::runtime
 
         // Grab some stacks from the global cache.
         // Grab half of the allowed capacity (to prevent thrashing).
-        golang::runtime::gclinkptr list = {};
+        gclinkptr list = {};
         uintptr_t size = {};
         lock(& stackpool[order].item.mu);
         for(; size < _StackCacheSize / 2; )
@@ -438,7 +438,7 @@ namespace golang::runtime
                 order++;
                 n2 >>= 1;
             }
-            golang::runtime::gclinkptr x = {};
+            gclinkptr x = {};
             if(stackNoCache != 0 || thisg->m->p == 0 || thisg->m->preemptoff != ""_s)
             {
                 // thisg.m.p == 0 can happen in the guts of exitsyscall
@@ -465,7 +465,7 @@ namespace golang::runtime
         }
         else
         {
-            golang::runtime::mspan* s = {};
+            mspan* s = {};
             auto npage = uintptr_t(n) >> _PageShift;
             auto log2npage = stacklog2(npage);
 
@@ -867,7 +867,7 @@ namespace golang::runtime
                 }
                 auto ptrdata = rec::ptrdata(gocpp::recv(obj));
                 auto gcdata = rec::gcdata(gocpp::recv(obj));
-                golang::runtime::mspan* s = {};
+                mspan* s = {};
                 if(rec::useGCProg(gocpp::recv(obj)))
                 {
                     // See comments in mgcmark.go:scanstack
@@ -985,7 +985,7 @@ namespace golang::runtime
         }
 
         // Lock channels to prevent concurrent send/receive.
-        golang::runtime::hchan* lastc = {};
+        hchan* lastc = {};
         for(auto sg = gp->waiting; sg != nullptr; sg = sg->waitlink)
         {
             if(sg->c != lastc)
@@ -1065,7 +1065,7 @@ namespace golang::runtime
         }
 
         // Compute adjustment.
-        golang::runtime::adjustinfo adjinfo = {};
+        adjustinfo adjinfo = {};
         adjinfo.old = old;
         adjinfo.delta = go_new.hi - old.hi;
 
@@ -1121,7 +1121,7 @@ namespace golang::runtime
         gp->stktopsp += adjinfo.delta;
 
         // Adjust pointers in the new stack.
-        golang::runtime::unwinder u = {};
+        unwinder u = {};
         for(rec::init(gocpp::recv(u), gp, 0); rec::valid(gocpp::recv(u)); rec::next(gocpp::recv(u)))
         {
             adjustframe(& u.frame, & adjinfo);
@@ -1549,7 +1549,7 @@ namespace golang::runtime
     unsigned char* rec::gcdata(stackObjectRecord* r)
     {
         auto ptr = uintptr_t(gocpp::unsafe_pointer(r));
-        golang::runtime::moduledata* mod = {};
+        moduledata* mod = {};
         for(auto datap = & firstmoduledata; datap != nullptr; datap = datap->next)
         {
             if(datap->gofunc <= ptr && ptr < datap->end)

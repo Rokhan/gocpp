@@ -33,7 +33,7 @@ namespace golang::runtime
         using atomic::rec::Store;
     }
 
-    golang::runtime::ticksType ticks;
+    ticksType ticks;
     
     template<typename T> requires gocpp::GoStruct<T>
     ticksType::operator T()

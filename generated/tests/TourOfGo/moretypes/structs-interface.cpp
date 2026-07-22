@@ -221,13 +221,13 @@ namespace golang::main
     // the provided [Reader] r.
     // If r implements [WriterTo], the returned [ReadCloser] will implement [WriterTo]
     // by forwarding calls to r.
-    struct ReadCloser NopCloser(struct Reader r)
+    ReadCloser NopCloser(Reader r)
     {
         if(auto [gocpp_id_0, ok] = gocpp::getValue<WriterTo>(r); ok)
         {
-            return new golang::main::nopCloserWriterTo {r};
+            return new nopCloserWriterTo {r};
         }
-        return new golang::main::nopCloser {r};
+        return new nopCloser {r};
     }
 
     
@@ -407,7 +407,7 @@ namespace golang::main
     void testCloser()
     {
         // Case 1: r implements only Reader -> should return nopCloser{r}
-        auto r1 = gocpp::Init<golang::main::myReader>([=](auto& x) {
+        auto r1 = gocpp::Init<myReader>([=](auto& x) {
             x.val = 1;
         });
         auto c1 = NopCloser(r1);
@@ -417,7 +417,7 @@ namespace golang::main
         mocklib::Println("case1 Close():"_s, rec::Close(gocpp::recv(c1)));
 
         // Case 2: r implements Reader and WriterTo -> should return nopCloserWriterTo{r}
-        auto r2 = gocpp::Init<golang::main::myReaderWriterTo>([=](auto& x) {
+        auto r2 = gocpp::Init<myReaderWriterTo>([=](auto& x) {
             x.val = 5;
         });
         auto c2 = NopCloser(r2);
@@ -431,7 +431,7 @@ namespace golang::main
         }
 
         // Case 3: r passed as a static Reader interface (only Reader, no WriterTo)
-        Reader r3 = gocpp::Init<golang::main::myReader>([=](auto& x) {
+        Reader r3 = gocpp::Init<myReader>([=](auto& x) {
             x.val = 0;
         });
         auto c3 = NopCloser(r3);
@@ -443,7 +443,7 @@ namespace golang::main
         // The outer nopCloser wraps a ReadCloser; since the inner concrete type
         // (nopCloserWriterTo) implements WriterTo, the outer wrapper should
         // also be detected as implementing WriterTo via forwarding.
-        auto inner = NopCloser(gocpp::Init<golang::main::myReaderWriterTo>([=](auto& x) {
+        auto inner = NopCloser(gocpp::Init<myReaderWriterTo>([=](auto& x) {
             x.val = 7;
         }));
         auto outer = NopCloser(inner);
@@ -457,7 +457,7 @@ namespace golang::main
         mocklib::Println("case4 Close():"_s, rec::Close(gocpp::recv(outer)));
 
         // Case 5: double-wrapping where inner does NOT implement WriterTo
-        auto inner2 = NopCloser(gocpp::Init<golang::main::myReader>([=](auto& x) {
+        auto inner2 = NopCloser(gocpp::Init<myReader>([=](auto& x) {
             x.val = 9;
         }));
         auto outer2 = NopCloser(inner2);

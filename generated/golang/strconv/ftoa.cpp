@@ -60,8 +60,8 @@ namespace golang::strconv
         return value.PrintTo(os);
     }
 
-    golang::strconv::floatInfo float32info = golang::strconv::floatInfo {23, 8, - 127};
-    golang::strconv::floatInfo float64info = golang::strconv::floatInfo {52, 11, - 1023};
+    floatInfo float32info = floatInfo {23, 8, - 127};
+    floatInfo float64info = floatInfo {52, 11, - 1023};
     // FormatFloat converts the floating-point number f to a string,
     // according to the format fmt and precision prec. It rounds the
     // result assuming that the original was obtained from a floating-point
@@ -99,7 +99,7 @@ namespace golang::strconv
     gocpp::slice<unsigned char> genericFtoa(gocpp::slice<unsigned char> dst, double val, unsigned char fmt, int prec, int bitSize)
     {
         uint64_t bits = {};
-        golang::strconv::floatInfo* flt = {};
+        floatInfo* flt = {};
         //Go switch emulation
         {
             auto condition = bitSize;
@@ -186,7 +186,7 @@ namespace golang::strconv
             return bigFtoa(dst, prec, fmt, neg, mant, exp, flt);
         }
 
-        golang::strconv::decimalSlice digs = {};
+        decimalSlice digs = {};
         auto ok = false;
         // Negative precision means "only as much as needed to be exact."
         auto shortest = prec < 0;
@@ -284,12 +284,12 @@ namespace golang::strconv
         auto d = new decimal{};
         rec::Assign(gocpp::recv(d), mant);
         rec::Shift(gocpp::recv(d), exp - int(flt->mantbits));
-        golang::strconv::decimalSlice digs = {};
+        decimalSlice digs = {};
         auto shortest = prec < 0;
         if(shortest)
         {
             roundShortest(d, mant, exp, flt);
-            digs = gocpp::Init<golang::strconv::decimalSlice>([=](auto& x) {
+            digs = gocpp::Init<decimalSlice>([=](auto& x) {
                 x.d = d->d.make_slice(0);
                 x.nd = d->nd;
                 x.dp = d->dp;
@@ -351,7 +351,7 @@ namespace golang::strconv
                         break;
                 }
             }
-            digs = gocpp::Init<golang::strconv::decimalSlice>([=](auto& x) {
+            digs = gocpp::Init<decimalSlice>([=](auto& x) {
                 x.d = d->d.make_slice(0);
                 x.nd = d->nd;
                 x.dp = d->dp;

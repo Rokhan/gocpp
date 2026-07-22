@@ -47,7 +47,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    golang::runtime::dlogger* getCachedDlogger()
+    dlogger* getCachedDlogger()
     {
         return nullptr;
     }

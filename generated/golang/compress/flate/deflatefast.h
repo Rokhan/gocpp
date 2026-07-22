@@ -56,7 +56,7 @@ namespace golang::flate
 namespace golang::flate
 {
     gocpp::slice<golang::flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit);
-    golang::flate::deflateFast* newDeflateFast();
+    deflateFast* newDeflateFast();
 }
 
 #include "golang/compress/flate/token.h"

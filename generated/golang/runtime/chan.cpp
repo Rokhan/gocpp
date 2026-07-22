@@ -147,12 +147,12 @@ namespace golang::runtime
     }
 
     //go:linkname reflect_makechan reflect.makechan
-    golang::runtime::hchan* reflect_makechan(chantype* t, int size)
+    hchan* reflect_makechan(chantype* t, int size)
     {
         return makechan(t, size);
     }
 
-    golang::runtime::hchan* makechan64(chantype* t, int64_t size)
+    hchan* makechan64(chantype* t, int64_t size)
     {
         if(int64_t(int(size)) != size)
         {
@@ -162,7 +162,7 @@ namespace golang::runtime
         return makechan(t, int(size));
     }
 
-    golang::runtime::hchan* makechan(chantype* t, int size)
+    hchan* makechan(chantype* t, int size)
     {
         auto elem = t->Elem;
 
@@ -186,7 +186,7 @@ namespace golang::runtime
         // buf points into the same allocation, elemtype is persistent.
         // SudoG's are referenced from their owning thread so they can't be collected.
         // TODO(dvyukov,rlh): Rethink when collector can move allocated objects.
-        golang::runtime::hchan* c = {};
+        hchan* c = {};
         //Go switch emulation
         {
             int conditionId = -1;
@@ -196,14 +196,14 @@ namespace golang::runtime
             {
                 case 0:
                     // Queue or element size is zero.
-                    c = (golang::runtime::hchan*)(mallocgc(hchanSize, nullptr, true));
+                    c = (hchan*)(mallocgc(hchanSize, nullptr, true));
                     // Race detector uses this location for synchronization.
                     c->buf = rec::raceaddr(gocpp::recv(c));
                     break;
                 case 1:
                     // Elements do not contain pointers.
                     // Allocate hchan and buf in one call.
-                    c = (golang::runtime::hchan*)(mallocgc(hchanSize + mem, nullptr, true));
+                    c = (hchan*)(mallocgc(hchanSize + mem, nullptr, true));
                     c->buf = add(gocpp::unsafe_pointer(c), hchanSize);
                     break;
                 default:
@@ -508,7 +508,7 @@ namespace golang::runtime
 
         c->closed = 1;
 
-        golang::runtime::gList glist = {};
+        gList glist = {};
 
         // release all readers
         for(; ; )
@@ -861,7 +861,7 @@ namespace golang::runtime
         // we risk gp getting readied by a channel operation and
         // so gp could continue running before everything before
         // the unlock is visible (even to gp itself).
-        unlock((golang::runtime::mutex*)(chanLock));
+        unlock((mutex*)(chanLock));
         return true;
     }
 
@@ -977,7 +977,7 @@ namespace golang::runtime
         q->last = sgp;
     }
 
-    golang::runtime::sudog* rec::dequeue(waitq* q)
+    sudog* rec::dequeue(waitq* q)
     {
         for(; ; )
         {

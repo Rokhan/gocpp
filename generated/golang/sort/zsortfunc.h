@@ -21,7 +21,7 @@ namespace golang::sort
     int partitionEqual_func(lessSwap data, int a, int b, int pivot);
     bool partialInsertionSort_func(lessSwap data, int a, int b);
     void breakPatterns_func(lessSwap data, int a, int b);
-    std::tuple<int, golang::sort::sortedHint> choosePivot_func(lessSwap data, int a, int b);
+    std::tuple<int, sortedHint> choosePivot_func(lessSwap data, int a, int b);
     std::tuple<int, int> order2_func(lessSwap data, int a, int b, int* swaps);
     int median_func(lessSwap data, int a, int b, int c, int* swaps);
     int medianAdjacent_func(lessSwap data, int a, int* swaps);

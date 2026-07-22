@@ -40,7 +40,7 @@ namespace golang::main
         {
             // Fetch returns the body of URL and
             // a slice of URLs found on that page.
-            virtual std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> vFetch(gocpp::string url) = 0;
+            virtual std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> vFetch(gocpp::string url) = 0;
             virtual void* getPtr() = 0;
         };
 
@@ -52,7 +52,7 @@ namespace golang::main
                 value.reset(ptr);
             }
 
-            std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> vFetch(gocpp::string url) override;
+            std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> vFetch(gocpp::string url) override;
 
             void* getPtr() override
             {
@@ -67,14 +67,14 @@ namespace golang::main
 
     namespace rec
     {
-        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, gocpp::string url);
-        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, gocpp::string url);
+        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, gocpp::string url);
+        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, gocpp::string url);
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Fetcher& value);
     void main();
     struct GoTag_fakeFetcher { };
-    using fakeFetcher = gocpp::defined<gocpp::map<gocpp::string, golang::main::fakeResult*>, GoTag_fakeFetcher>;
+    using fakeFetcher = gocpp::defined<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
     struct fakeResult
     {
         gocpp::string body{};
@@ -92,12 +92,12 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
-    void Crawl(gocpp::string url, int depth, struct Fetcher fetcher);
-    extern golang::main::fakeFetcher fetcher;
+    void Crawl(gocpp::string url, int depth, Fetcher fetcher);
+    extern fakeFetcher fetcher;
 
     namespace rec
     {
-        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, struct gocpp::error> Fetch(fakeFetcher f, gocpp::string url);
+        std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> Fetch(fakeFetcher f, gocpp::string url);
     }
 }
 

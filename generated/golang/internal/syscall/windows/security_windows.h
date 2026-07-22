@@ -167,7 +167,7 @@ namespace golang::windows
 
 namespace golang::windows
 {
-    struct gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
+    gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
 
     namespace rec
     {

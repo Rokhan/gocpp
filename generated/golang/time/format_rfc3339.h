@@ -16,8 +16,8 @@ namespace golang::time
 {
     
     template<typename bytes>
-    std::tuple<golang::time::Time, bool> parseRFC3339(bytes s, golang::time::Location* local);
-    std::tuple<golang::time::Time, struct gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b);
+    std::tuple<Time, bool> parseRFC3339(bytes s, golang::time::Location* local);
+    std::tuple<Time, gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b);
 }
 
 #include "golang/time/time.h"
@@ -28,7 +28,7 @@ namespace golang::time
     namespace rec
     {
         gocpp::slice<unsigned char> appendFormatRFC3339(Time t, gocpp::slice<unsigned char> b, bool nanos);
-        std::tuple<gocpp::slice<unsigned char>, struct gocpp::error> appendStrictRFC3339(Time t, gocpp::slice<unsigned char> b);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> appendStrictRFC3339(Time t, gocpp::slice<unsigned char> b);
     }
 }
 

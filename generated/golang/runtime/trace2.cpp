@@ -214,7 +214,7 @@ namespace golang::runtime
     // StartTrace returns an error if tracing is already enabled.
     // Most clients should use the [runtime/trace] package or the [testing] package's
     // -test.trace flag instead of calling StartTrace directly.
-    struct gocpp::error StartTrace()
+    gocpp::error StartTrace()
     {
         if(traceEnabled() || traceShuttingDown())
         {
@@ -401,7 +401,7 @@ namespace golang::runtime
             }
         };
         gocpp::slice<untracedG> untracedGs = {};
-        forEachGRace([=](golang::runtime::g* gp) mutable -> void
+        forEachGRace([=](g* gp) mutable -> void
         {
             // Make absolutely sure all Gs are ready for the next
             // generation. We need to do this even for dead Gs because
@@ -815,7 +815,7 @@ namespace golang::runtime
         });
         if(park)
         {
-            gopark([=](golang::runtime::g* gp, gocpp::unsafe_pointer _1) mutable -> bool
+            gopark([=](g* gp, gocpp::unsafe_pointer _1) mutable -> bool
             {
                 if(! rec::CompareAndSwapNoWB<g>(gocpp::recv(trace.reader), nullptr, gp))
                 {
@@ -996,7 +996,7 @@ namespace golang::runtime
     // This must run on the system stack because it acquires trace.lock.
     //
     //go:systemstack
-    golang::runtime::g* traceReader()
+    g* traceReader()
     {
         auto gp = traceReaderAvailable();
         if(gp == nullptr || ! rec::CompareAndSwapNoWB<g>(gocpp::recv(trace.reader), gp, nullptr))
@@ -1009,7 +1009,7 @@ namespace golang::runtime
     // traceReaderAvailable returns the trace reader if it is not currently
     // scheduled and should be. Callers should first check that
     // (traceEnabled() || traceShuttingDown()) is true.
-    golang::runtime::g* traceReaderAvailable()
+    g* traceReaderAvailable()
     {
         // There are three conditions under which we definitely want to schedule
         // the reader:
@@ -1032,7 +1032,7 @@ namespace golang::runtime
     }
 
     // Trace advancer goroutine.
-    golang::runtime::traceAdvancerState traceAdvancer;
+    traceAdvancerState traceAdvancer;
     
     template<typename T> requires gocpp::GoStruct<T>
     gocpp_id_1::operator T()
@@ -1285,7 +1285,7 @@ namespace golang::runtime
 
 
     // newWakeableSleep initializes a new wakeableSleep and returns it.
-    golang::runtime::wakeableSleep* newWakeableSleep()
+    wakeableSleep* newWakeableSleep()
     {
         auto s = new wakeableSleep{};
         lockInit(& s->lock, lockRankWakeableSleep);
@@ -1294,7 +1294,7 @@ namespace golang::runtime
         s->timer->arg = s;
         s->timer->f = [=](go_any s, uintptr_t _1) mutable -> void
         {
-            rec::wake(gocpp::recv(gocpp::getValue<golang::runtime::wakeableSleep*>(s)));
+            rec::wake(gocpp::recv(gocpp::getValue<wakeableSleep*>(s)));
         };
         return s;
     }

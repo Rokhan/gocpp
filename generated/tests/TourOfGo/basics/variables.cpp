@@ -116,7 +116,7 @@ namespace golang::main
         gocpp::string s;
         i = 3;
         s = "hello"_s;
-        auto p = gocpp::Init<golang::main::pos>([=](auto& x) {
+        auto p = gocpp::Init<pos>([=](auto& x) {
             x.x = 1;
             x.y = 2;
         });

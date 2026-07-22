@@ -59,8 +59,8 @@ namespace golang::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanBitWriter& value);
-    extern golang::flate::huffmanEncoder* huffOffset;
-    golang::flate::huffmanBitWriter* newHuffmanBitWriter(io::Writer w);
+    extern huffmanEncoder* huffOffset;
+    huffmanBitWriter* newHuffmanBitWriter(io::Writer w);
 }
 
 #include "golang/compress/flate/huffman_code.h"

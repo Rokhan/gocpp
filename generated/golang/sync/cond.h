@@ -53,7 +53,7 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Cond& value);
-    golang::sync::Cond* NewCond(struct Locker l);
+    Cond* NewCond(Locker l);
 
     namespace rec
     {

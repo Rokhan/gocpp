@@ -65,7 +65,7 @@ namespace golang::main
 
     void main()
     {
-        auto m = golang::main::Image {};
+        auto m = Image {};
         mocklib::picShowImage(m);
     }
 

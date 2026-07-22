@@ -13,7 +13,7 @@
 namespace golang::runtime
 {
     extern gocpp::slice<gocpp::string> lockNames;
-    extern gocpp::slice<gocpp::slice<golang::runtime::lockRank>> lockPartialOrder;
+    extern gocpp::slice<gocpp::slice<lockRank>> lockPartialOrder;
 
     namespace rec
     {

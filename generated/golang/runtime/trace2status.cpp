@@ -63,7 +63,7 @@ namespace golang::runtime
     //
     // They mostly correspond to the various P statuses.
     // writeGoStatus emits a GoStatus event as well as any active ranges on the goroutine.
-    golang::runtime::traceWriter rec::writeGoStatus(traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist)
+    traceWriter rec::writeGoStatus(traceWriter w, uint64_t goid, int64_t mid, traceGoStatus status, bool markAssist)
     {
         // The status should never be bad. Some invariant must have been violated.
         if(status == traceGoBad)
@@ -87,7 +87,7 @@ namespace golang::runtime
     //
     // The caller must fully own pp and it must be prevented from transitioning (e.g. this can be
     // called by a forEachP callback or from a STW).
-    golang::runtime::traceWriter rec::writeProcStatusForP(traceWriter w, golang::runtime::p* pp, bool inSTW)
+    traceWriter rec::writeProcStatusForP(traceWriter w, golang::runtime::p* pp, bool inSTW)
     {
         if(! rec::acquireStatus(gocpp::recv(pp->trace), w.traceLocker.gen))
         {
@@ -141,7 +141,7 @@ namespace golang::runtime
     //
     // The caller must have taken ownership of a P's status writing, and the P must be
     // prevented from transitioning.
-    golang::runtime::traceWriter rec::writeProcStatus(traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep)
+    traceWriter rec::writeProcStatus(traceWriter w, uint64_t pid, traceProcStatus status, bool inSweep)
     {
         // The status should never be bad. Some invariant must have been violated.
         if(status == traceProcBad)
@@ -164,7 +164,7 @@ namespace golang::runtime
     // goStatusToTraceGoStatus translates the internal status to tracGoStatus.
     //
     // status must not be _Gdead or any status whose name has the suffix "_unused."
-    golang::runtime::traceGoStatus goStatusToTraceGoStatus(uint32_t status, waitReason wr)
+    traceGoStatus goStatusToTraceGoStatus(uint32_t status, waitReason wr)
     {
         // N.B. Ignore the _Gscan bit. We don't model it in the tracer.
         traceGoStatus tgs = {};
@@ -289,7 +289,7 @@ namespace golang::runtime
     }
 
     // nextSeq returns the next sequence number for the resource.
-    golang::runtime::traceArg rec::nextSeq(traceSchedResourceState* r, uintptr_t gen)
+    traceArg rec::nextSeq(traceSchedResourceState* r, uintptr_t gen)
     {
         r->seq[gen % 2]++;
         return traceArg(r->seq[gen % 2]);

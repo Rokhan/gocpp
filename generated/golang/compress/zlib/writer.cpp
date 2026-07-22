@@ -95,7 +95,7 @@ namespace golang::zlib
     //
     // It is the caller's responsibility to call Close on the Writer when done.
     // Writes may be buffered and not flushed until Close.
-    golang::zlib::Writer* NewWriter(io::Writer w)
+    Writer* NewWriter(io::Writer w)
     {
         auto [z, gocpp_id_0] = NewWriterLevelDict(w, DefaultCompression, nullptr);
         return z;
@@ -107,7 +107,7 @@ namespace golang::zlib
     // The compression level can be DefaultCompression, NoCompression, HuffmanOnly
     // or any integer value between BestSpeed and BestCompression inclusive.
     // The error returned will be nil if the level is valid.
-    std::tuple<golang::zlib::Writer*, struct gocpp::error> NewWriterLevel(io::Writer w, int level)
+    std::tuple<Writer*, gocpp::error> NewWriterLevel(io::Writer w, int level)
     {
         return NewWriterLevelDict(w, level, nullptr);
     }
@@ -117,13 +117,13 @@ namespace golang::zlib
     //
     // The dictionary may be nil. If not, its contents should not be modified until
     // the Writer is closed.
-    std::tuple<golang::zlib::Writer*, struct gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
+    std::tuple<Writer*, gocpp::error> NewWriterLevelDict(io::Writer w, int level, gocpp::slice<unsigned char> dict)
     {
         if(level < HuffmanOnly || level > BestCompression)
         {
             return {nullptr, mocklib::Errorf("zlib: invalid compression level: %d"_s, level)};
         }
-        return {gocpp::InitPtr<golang::zlib::Writer>([=](auto& x) {
+        return {gocpp::InitPtr<Writer>([=](auto& x) {
             x.w = w;
             x.level = level;
             x.dict = dict;
@@ -151,9 +151,9 @@ namespace golang::zlib
     }
 
     // writeHeader writes the ZLIB header.
-    struct gocpp::error rec::writeHeader(Writer* z)
+    gocpp::error rec::writeHeader(Writer* z)
     {
-        struct gocpp::error err;
+        gocpp::error err;
         z->wroteHeader = true;
         // ZLIB has a two-byte header (as documented in RFC 1950).
         // The first four bits is the CINFO (compression info), which is 7 for the default deflate window size.
@@ -241,10 +241,10 @@ namespace golang::zlib
     // Write writes a compressed form of p to the underlying io.Writer. The
     // compressed bytes are not necessarily flushed until the Writer is closed or
     // explicitly flushed.
-    std::tuple<int, struct gocpp::error> rec::Write(Writer* z, gocpp::slice<unsigned char> p)
+    std::tuple<int, gocpp::error> rec::Write(Writer* z, gocpp::slice<unsigned char> p)
     {
         int n;
-        struct gocpp::error err;
+        gocpp::error err;
         if(! z->wroteHeader)
         {
             z->err = rec::writeHeader(gocpp::recv(z));
@@ -268,7 +268,7 @@ namespace golang::zlib
     }
 
     // Flush flushes the Writer to its underlying io.Writer.
-    struct gocpp::error rec::Flush(Writer* z)
+    gocpp::error rec::Flush(Writer* z)
     {
         if(! z->wroteHeader)
         {
@@ -284,7 +284,7 @@ namespace golang::zlib
 
     // Close closes the Writer, flushing any unwritten data to the underlying
     // io.Writer, but does not close the underlying io.Writer.
-    struct gocpp::error rec::Close(Writer* z)
+    gocpp::error rec::Close(Writer* z)
     {
         if(! z->wroteHeader)
         {

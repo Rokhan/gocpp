@@ -163,12 +163,12 @@ namespace golang::runtime
 
         // Since this is a lot like a free, we need to make sure
         // we update the searchAddr just like free does.
-        if(auto b = (golang::runtime::offAddr {c->base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
+        if(auto b = (offAddr {c->base}); rec::lessThan(gocpp::recv(b), p->searchAddr))
         {
             p->searchAddr = b;
         }
         rec::update(gocpp::recv(p), c->base, pageCachePages, false, false);
-        *c = golang::runtime::pageCache {};
+        *c = pageCache {};
     }
 
     // allocToCache acquires a pageCachePages-aligned chunk of free pages which
@@ -180,7 +180,7 @@ namespace golang::runtime
     // Must run on the system stack because p.mheapLock must be held.
     //
     //go:systemstack
-    golang::runtime::pageCache rec::allocToCache(pageAlloc* p)
+    pageCache rec::allocToCache(pageAlloc* p)
     {
         assertLockHeld(p->mheapLock);
 
@@ -188,12 +188,12 @@ namespace golang::runtime
         // any known chunk, then we know we're out of memory.
         if(chunkIndex(rec::addr(gocpp::recv(p->searchAddr))) >= p->end)
         {
-            return golang::runtime::pageCache {};
+            return pageCache {};
         }
-        auto c = golang::runtime::pageCache {};
+        auto c = pageCache {};
         // chunk index
         auto ci = chunkIndex(rec::addr(gocpp::recv(p->searchAddr)));
-        golang::runtime::pallocData* chunk = {};
+        pallocData* chunk = {};
         if(p->summary[len(p->summary) - 1][ci] != 0)
         {
             // Fast path: there's free pages at or near the searchAddr address.
@@ -203,7 +203,7 @@ namespace golang::runtime
             {
                 go_throw("bad summary data"_s);
             }
-            c = gocpp::Init<golang::runtime::pageCache>([=](auto& x) {
+            c = gocpp::Init<pageCache>([=](auto& x) {
                 x.base = chunkBase(ci) + alignDown(uintptr_t(j), 64) * pageSize;
                 x.cache = ~ rec::pages64(gocpp::recv(chunk), j);
                 x.scav = rec::block64(gocpp::recv(chunk->scavenged), j);
@@ -219,11 +219,11 @@ namespace golang::runtime
                 // We failed to find adequate free space, so mark the searchAddr as OoM
                 // and return an empty pageCache.
                 p->searchAddr = maxSearchAddr();
-                return golang::runtime::pageCache {};
+                return pageCache {};
             }
             ci = chunkIndex(addr);
             chunk = rec::chunkOf(gocpp::recv(p), ci);
-            c = gocpp::Init<golang::runtime::pageCache>([=](auto& x) {
+            c = gocpp::Init<pageCache>([=](auto& x) {
                 x.base = alignDown(addr, 64 * pageSize);
                 x.cache = ~ rec::pages64(gocpp::recv(chunk), chunkPageIndex(addr));
                 x.scav = rec::block64(gocpp::recv(chunk->scavenged), chunkPageIndex(addr));
@@ -249,7 +249,7 @@ namespace golang::runtime
         // However, p.searchAddr is not allowed to point into unmapped heap memory
         // unless it is maxSearchAddr, so make it the last page as opposed to
         // the page after.
-        p->searchAddr = golang::runtime::offAddr {c.base + pageSize * (pageCachePages - 1)};
+        p->searchAddr = offAddr {c.base + pageSize * (pageCachePages - 1)};
         return c;
     }
 

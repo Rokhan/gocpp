@@ -77,7 +77,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct inlineUnwinder& value);
-    std::tuple<golang::runtime::inlineUnwinder, golang::runtime::inlineFrame> newInlineUnwinder(golang::runtime::funcInfo f, uintptr_t pc);
+    std::tuple<inlineUnwinder, inlineFrame> newInlineUnwinder(golang::runtime::funcInfo f, uintptr_t pc);
 }
 
 #include "golang/runtime/symtab.h"
@@ -87,9 +87,9 @@ namespace golang::runtime
 
     namespace rec
     {
-        golang::runtime::inlineFrame resolveInternal(inlineUnwinder* u, uintptr_t pc);
+        inlineFrame resolveInternal(inlineUnwinder* u, uintptr_t pc);
         bool valid(inlineFrame uf);
-        golang::runtime::inlineFrame next(inlineUnwinder* u, inlineFrame uf);
+        inlineFrame next(inlineUnwinder* u, inlineFrame uf);
         bool isInlined(inlineUnwinder* u, inlineFrame uf);
         golang::runtime::srcFunc srcFunc(inlineUnwinder* u, inlineFrame uf);
         std::tuple<gocpp::string, int> fileLine(inlineUnwinder* u, inlineFrame uf);

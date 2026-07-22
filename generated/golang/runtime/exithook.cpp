@@ -34,7 +34,7 @@ namespace golang::runtime
     // restricted dialects used for the trickier parts of the runtime.
     void addExitHook(std::function<void ()> f, bool runOnNonZeroExit)
     {
-        exitHooks.hooks = append(exitHooks.hooks, gocpp::Init<golang::runtime::exitHook>([=](auto& x) {
+        exitHooks.hooks = append(exitHooks.hooks, gocpp::Init<exitHook>([=](auto& x) {
             x.f = f;
             x.runOnNonZeroExit = runOnNonZeroExit;
         }));

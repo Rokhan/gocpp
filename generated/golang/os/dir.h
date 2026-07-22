@@ -18,7 +18,7 @@ namespace golang::os
 
 namespace golang::os
 {
-    std::tuple<gocpp::slice<golang::os::DirEntry>, struct gocpp::error> ReadDir(gocpp::string name);
+    std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(gocpp::string name);
 }
 
 #include "golang/os/types.h"
@@ -28,9 +28,9 @@ namespace golang::os
 
     namespace rec
     {
-        std::tuple<gocpp::slice<FileInfo>, struct gocpp::error> Readdir(File* f, int n);
-        std::tuple<gocpp::slice<gocpp::string>, struct gocpp::error> Readdirnames(File* f, int n);
-        std::tuple<gocpp::slice<golang::os::DirEntry>, struct gocpp::error> ReadDir(File* f, int n);
+        std::tuple<gocpp::slice<FileInfo>, gocpp::error> Readdir(File* f, int n);
+        std::tuple<gocpp::slice<gocpp::string>, gocpp::error> Readdirnames(File* f, int n);
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(File* f, int n);
     }
 }
 

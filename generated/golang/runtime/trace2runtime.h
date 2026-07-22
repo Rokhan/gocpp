@@ -113,8 +113,8 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct traceLocker& value);
     void traceProcFree(golang::runtime::p* _1);
     void traceThreadDestroy(m* mp);
-    golang::runtime::traceLocker traceAcquire();
-    golang::runtime::traceLocker traceAcquireEnabled();
+    traceLocker traceAcquire();
+    traceLocker traceAcquireEnabled();
     void traceRelease(traceLocker tl);
 }
 

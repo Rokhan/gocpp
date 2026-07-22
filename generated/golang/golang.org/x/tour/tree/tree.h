@@ -30,8 +30,8 @@ namespace golang::tree
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tree& value);
-    golang::tree::Tree* New(int k);
-    golang::tree::Tree* insert(Tree* t, int v);
+    Tree* New(int k);
+    Tree* insert(Tree* t, int v);
 
     namespace rec
     {

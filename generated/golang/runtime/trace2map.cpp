@@ -112,9 +112,9 @@ namespace golang::runtime
     }
 
     // next is a type-safe wrapper around link.
-    golang::runtime::traceMapNode* rec::next(traceMapNode* n)
+    traceMapNode* rec::next(traceMapNode* n)
     {
-        return (golang::runtime::traceMapNode*)(rec::Load(gocpp::recv(n->link)));
+        return (traceMapNode*)(rec::Load(gocpp::recv(n->link)));
     }
 
     // stealID steals an ID from the table, ensuring that it will not
@@ -194,15 +194,15 @@ namespace golang::runtime
     }
 
     // bucket is a type-safe wrapper for looking up a value in tab.tab.
-    golang::runtime::traceMapNode* rec::bucket(traceMap* tab, int part)
+    traceMapNode* rec::bucket(traceMap* tab, int part)
     {
-        return (golang::runtime::traceMapNode*)(rec::Load(gocpp::recv(tab->tab[part])));
+        return (traceMapNode*)(rec::Load(gocpp::recv(tab->tab[part])));
     }
 
-    golang::runtime::traceMapNode* rec::newTraceMapNode(traceMap* tab, gocpp::unsafe_pointer data, uintptr_t size, uintptr_t hash, uint64_t id)
+    traceMapNode* rec::newTraceMapNode(traceMap* tab, gocpp::unsafe_pointer data, uintptr_t size, uintptr_t hash, uint64_t id)
     {
         // Create data array.
-        auto sl = gocpp::Init<golang::runtime::notInHeapSlice>([=](auto& x) {
+        auto sl = gocpp::Init<notInHeapSlice>([=](auto& x) {
             x.array = rec::alloc(gocpp::recv(tab->mem), size);
             x.len = int(size);
             x.cap = int(size);
@@ -210,8 +210,8 @@ namespace golang::runtime
         memmove(gocpp::unsafe_pointer(sl.array), data, size);
 
         // Create metadata structure.
-        auto meta = (golang::runtime::traceMapNode*)(gocpp::unsafe_pointer(rec::alloc(gocpp::recv(tab->mem), gocpp::Sizeof<golang::runtime::traceMapNode>())));
-        *(golang::runtime::notInHeapSlice*)(gocpp::unsafe_pointer(& meta->data)) = sl;
+        auto meta = (traceMapNode*)(gocpp::unsafe_pointer(rec::alloc(gocpp::recv(tab->mem), gocpp::Sizeof<traceMapNode>())));
+        *(notInHeapSlice*)(gocpp::unsafe_pointer(& meta->data)) = sl;
         meta->id = id;
         meta->hash = hash;
         return meta;

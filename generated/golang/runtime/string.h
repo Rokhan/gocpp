@@ -78,7 +78,7 @@ namespace golang::runtime
     std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<tmpBuf> buf, int l);
     gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<tmpBuf> buf, gocpp::string s);
     gocpp::string slicerunetostring(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::rune> a);
-    golang::runtime::stringStruct* stringStructOf(gocpp::string* sp);
+    stringStruct* stringStructOf(gocpp::string* sp);
 
     namespace rec
     {

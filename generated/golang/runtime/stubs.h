@@ -81,7 +81,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    golang::runtime::g* getg();
+    g* getg();
     void mcall(std::function<void (g* _1)> fn);
     void gogo(gobuf* buf);
     void setg(g* gg);

@@ -139,7 +139,7 @@ namespace golang::runtime
         {
             go_throw("runtime: fixalloc size too large"_s);
         }
-        size = gocpp::max(size, gocpp::Sizeof<golang::runtime::mlink>());
+        size = gocpp::max(size, gocpp::Sizeof<mlink>());
 
         f->size = size;
         f->first = first;
@@ -193,7 +193,7 @@ namespace golang::runtime
     void rec::free(fixalloc* f, gocpp::unsafe_pointer p)
     {
         f->inuse -= f->size;
-        auto v = (golang::runtime::mlink*)(p);
+        auto v = (mlink*)(p);
         v->next = f->list;
         f->list = v;
     }

@@ -25,7 +25,7 @@ namespace golang::runtime
 
     // taggedPointerPack created a taggedPointer from a pointer and a tag.
     // Tag bits that don't fit in the result are discarded.
-    golang::runtime::taggedPointer taggedPointerPack(gocpp::unsafe_pointer ptr, uintptr_t tag)
+    taggedPointer taggedPointerPack(gocpp::unsafe_pointer ptr, uintptr_t tag)
     {
         if(GOOS == "aix"_s)
         {

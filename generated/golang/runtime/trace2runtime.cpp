@@ -297,11 +297,11 @@ namespace golang::runtime
     // nosplit because it's called on the syscall path when stack movement is forbidden.
     //
     //go:nosplit
-    golang::runtime::traceLocker traceAcquire()
+    traceLocker traceAcquire()
     {
         if(! traceEnabled())
         {
-            return golang::runtime::traceLocker {};
+            return traceLocker {};
         }
         return traceAcquireEnabled();
     }
@@ -313,7 +313,7 @@ namespace golang::runtime
     // nosplit because it's called by traceAcquire, which is nosplit.
     //
     //go:nosplit
-    golang::runtime::traceLocker traceAcquireEnabled()
+    traceLocker traceAcquireEnabled()
     {
         // Any time we acquire a traceLocker, we may flush a trace buffer. But
         // buffer flushes are rare. Record the lock edge even if it doesn't happen
@@ -346,9 +346,9 @@ namespace golang::runtime
         {
             rec::Add(gocpp::recv(mp->trace.seqlock), 1);
             releasem(mp);
-            return golang::runtime::traceLocker {};
+            return traceLocker {};
         }
-        return golang::runtime::traceLocker {mp, gen};
+        return traceLocker {mp, gen};
     }
 
     // ok returns true if the traceLocker is valid (i.e. tracing is enabled).
@@ -817,7 +817,7 @@ namespace golang::runtime
             // Need to do this check because the caller won't have it.
             return;
         }
-        golang::runtime::traceEv ev = {};
+        traceEv ev = {};
         //Go switch emulation
         {
             auto condition = mode;

@@ -262,10 +262,10 @@
 | $(ImportDir)/os/getwd.go | ✔️ ([cpp](generated/golang/os/getwd.cpp), [h](generated/golang/os/getwd.h))| ❌ |
 | $(ImportDir)/os/path_windows.go | ✔️ ([cpp](generated/golang/os/path_windows.cpp), [h](generated/golang/os/path_windows.h))| ✔️ |
 | $(ImportDir)/os/rawconn.go | ✔️ ([cpp](generated/golang/os/rawconn.cpp), [h](generated/golang/os/rawconn.h))| ❌ |
-| $(ImportDir)/os/stat.go | ✔️ ([cpp](generated/golang/os/stat.cpp), [h](generated/golang/os/stat.h))| ❌ |
+| $(ImportDir)/os/stat.go | ✔️ ([cpp](generated/golang/os/stat.cpp), [h](generated/golang/os/stat.h))| ✔️ |
 | $(ImportDir)/os/stat_windows.go | ✔️ ([cpp](generated/golang/os/stat_windows.cpp), [h](generated/golang/os/stat_windows.h))| ❌ |
 | $(ImportDir)/os/sticky_notbsd.go | ✔️ ([cpp](generated/golang/os/sticky_notbsd.cpp), [h](generated/golang/os/sticky_notbsd.h))| ✔️ |
-| $(ImportDir)/os/types.go | ✔️ ([cpp](generated/golang/os/types.cpp), [h](generated/golang/os/types.h))| ❌ |
+| $(ImportDir)/os/types.go | ✔️ ([cpp](generated/golang/os/types.cpp), [h](generated/golang/os/types.h))| ✔️ |
 | $(ImportDir)/os/types_windows.go | ✔️ ([cpp](generated/golang/os/types_windows.cpp), [h](generated/golang/os/types_windows.h))| ❌ |
 | $(ImportDir)/os/zero_copy_stub.go | ✔️ ([cpp](generated/golang/os/zero_copy_stub.cpp), [h](generated/golang/os/zero_copy_stub.h))| ❌ |
 | $(ImportDir)/reflect/abi.go | ✔️ ([cpp](generated/golang/reflect/abi.cpp), [h](generated/golang/reflect/abi.h))| ❌ |

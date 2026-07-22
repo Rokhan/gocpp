@@ -455,8 +455,30 @@ func (cv *parsingInfos) IsMethod(funcNode ast.Node) bool {
 	return sig != nil && sig.Recv() != nil
 }
 
+type FuncKind int
+
+const (
+	FuncKindAny    FuncKind = 0
+	FuncKindPlain  FuncKind = 1
+	FuncKindMethod FuncKind = 2
+)
+
+func (kind FuncKind) AppliesTo(sig *types.Signature) bool {
+	switch kind {
+	case FuncKindAny:
+		return true
+	case FuncKindPlain:
+		return sig.Recv() == nil
+	case FuncKindMethod:
+		return sig.Recv() != nil
+	default:
+		Panicf("Unexpected FuncKind value: %v", kind)
+		return false // unreachable
+	}
+}
+
 // Get the list of methods declared in the current package
-func (cv *parsingInfos) GetPackageMethods() []*types.Func {
+func (cv *parsingInfos) GetPackageFuncs(fk FuncKind) []*types.Func {
 	if cv.typeInfo == nil {
 		return nil
 	}
@@ -467,7 +489,7 @@ func (cv *parsingInfos) GetPackageMethods() []*types.Func {
 		}
 		if fn, ok := obj.(*types.Func); ok {
 			if sig, ok := fn.Type().(*types.Signature); ok {
-				if sig.Recv() != nil {
+				if fk.AppliesTo(sig) {
 					result = append(result, fn)
 				}
 			}
@@ -476,8 +498,17 @@ func (cv *parsingInfos) GetPackageMethods() []*types.Func {
 	return result
 }
 
+func (cv *parsingInfos) GetPackageMethods() []*types.Func {
+	return cv.GetPackageFuncs(FuncKindMethod)
+}
+
 func (cv *parsingInfos) GetPackageMethodsNames() []string {
 	methods := cv.GetPackageMethods()
+	return getFuncNames(methods)
+}
+
+func (cv *parsingInfos) GetPackageFunctionsNames() []string {
+	methods := cv.GetPackageFuncs(FuncKindPlain)
 	return getFuncNames(methods)
 }
 

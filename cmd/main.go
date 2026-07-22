@@ -318,6 +318,15 @@ func (cv *cppConverter) isNameUsebyMethods(name string) bool {
 	return false
 }
 
+func (cv *cppConverter) isNameUsebyFunction(name string) bool {
+	// TODO, maybe slow, can be optimized by caching.
+	methods := cv.GetPackageMethodsNames()
+	if slices.Contains(methods, name) {
+		return true
+	}
+	return false
+}
+
 // Get the cpp type parameters from an expression
 func (cv *cppConverter) GetCppTypeParameters(expr ast.Expr) []string {
 	goTypes := cv.GetExprTypeParameters(expr)
@@ -2585,7 +2594,7 @@ func (cv *cppConverter) checkStructType(expr ast.Expr, cppType *cppType) {
 
 	switch tv.(type) {
 	case *types.Named:
-		switch tv.Underlying().(type) {
+		switch tv.(type) {
 		case *types.Interface:
 			cppType.isStruct = true
 		case *types.Struct:
@@ -2640,8 +2649,10 @@ func checkCanFwd(cppType *cppType) {
 	switch cppType.str {
 	case cpp_cplx64_type:
 		cppType.isStruct = true
+		cppType.canFwd = false
 	case cpp_cplx128_type:
 		cppType.isStruct = true
+		cppType.canFwd = false
 	}
 }
 
@@ -2710,11 +2721,16 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		panic("node is nil")
 	}
 
+	if ctx.namespace == "" {
+		ctx.namespace = cv.namespace
+	}
+
 	switch n := node.(type) {
 	case *ast.Ident:
 		var identType cppType
 		isTD, pkg := cv.isTypedef(n)
 		isParam, _ := cv.isParam(n)
+
 		identType = mkCppType(GetCppType(n.Name), nil)
 
 		addNamespace := func() {
@@ -2725,7 +2741,10 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 			}
 		}
 
-		if isTD && !isParam {
+		if pkg == "" {
+			identType.dbg = cv.DbgSprintf("/* pkg is empty, don't add namespace, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v */", ctx.namespace, pkg, isTD, isParam, identType.str)
+			cv.checkStructType(n, &identType)
+		} else if isTD && !isParam {
 			// Check we are in a function and that the type is defined in current scope
 			isFuctionLocal := cv.isLocalType(identType.str) && cv.getScopeType() != ScopeNamespace
 			identType.dbg = cv.DbgSprintf("/* is local, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v, isLocal:%v */", ctx.namespace, pkg, isTD, isParam, identType.str, isFuctionLocal)
@@ -2734,7 +2753,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 					addNamespace()
 				}
 			}
-		} else if cv.isAmbiguousName(identType.str) && !isParam && !ctx.ignoreNameSpace {
+		} else if (cv.isAmbiguousName(identType.str) || cv.isNameUsebyMethods(identType.str)) && !isParam && !ctx.ignoreNameSpace {
 			identType.dbg = cv.DbgSprintf("/* is ambiguous, ctx.namespace: %s, pkg:%s, isTD:%v, isParam:%v, identType:%v */", ctx.namespace, pkg, isTD, isParam, identType.str)
 			addNamespace()
 		} else if ctx.isInReceiverDecl && !isParam && !ctx.ignoreNameSpace {
@@ -2746,6 +2765,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		}
 
 		checkCanFwd(&identType)
+		cv.checkStructType(n, &identType)
 		cv.checkIsParam(n, &identType)
 
 		if deps, ok := ctx.typeParams[identType.str]; ok && len(deps) != 0 {
@@ -3597,6 +3617,7 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		// Move code to 'GetCppGoType' ?
 		typeStr = convertNamespace(typeStr, cv.namespace)
 		cppType := mkCppType(typeStr, nil)
+		cv.checkStructType(node, &cppType)
 		checkCanFwd(&cppType)
 		return cppType
 	} else {

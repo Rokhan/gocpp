@@ -16,6 +16,7 @@ type parsingInfos struct {
 
 	typeInfo   *types.Info
 	astFile    *ast.File
+	pkg        *types.Package
 	commentMap ast.CommentMap
 }
 
@@ -476,7 +477,7 @@ func (kind FuncKind) AppliesTo(sig *types.Signature) bool {
 	}
 }
 
-// Get the list of methods declared in the current package
+// Get the list of functions/methods declared in the current package
 func (cv *parsingInfos) GetPackageFuncs(fk FuncKind) []*types.Func {
 	if cv.typeInfo == nil {
 		return nil
@@ -486,6 +487,11 @@ func (cv *parsingInfos) GetPackageFuncs(fk FuncKind) []*types.Func {
 		if obj == nil {
 			continue
 		}
+
+		if obj.Pkg() != cv.pkg {
+			continue // belongs to a different package
+		}
+
 		if fn, ok := obj.(*types.Func); ok {
 			if sig, ok := fn.Type().(*types.Signature); ok {
 				if fk.AppliesTo(sig) {

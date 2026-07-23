@@ -340,6 +340,7 @@ func (cv *cppConverter) GetCppTypeParameters(expr ast.Expr) []string {
 // }
 
 func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
+	cv.Assertf(cv.pkg != nil, "package should be set before calling 'ConvertFile'")
 	shared := cv.shared
 	generated := false
 	if cv.tryRecover {
@@ -4355,7 +4356,7 @@ func (cv *cppConverter) convertExprsImpl(exprs []ast.Expr, ctx exprCtx, useIgnor
 }
 
 /* from example: https://github.com/golang/example/tree/master/gotypes#introduction */
-func (cv *cppConverter) LoadAndCheckDefs(pkgPath string, fset *token.FileSet, files ...*ast.File) error {
+func (cv *cppConverter) LoadAndCheckDefs(pkgPath string, fset *token.FileSet, files ...*ast.File) (*types.Package, error) {
 	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
 	if cv.typeInfo == nil {
 		cv.typeInfo = &types.Info{
@@ -4367,11 +4368,11 @@ func (cv *cppConverter) LoadAndCheckDefs(pkgPath string, fset *token.FileSet, fi
 		}
 	}
 
-	_, err := conf.Check(pkgPath, fset, files, cv.typeInfo)
+	pkg, err := conf.Check(pkgPath, fset, files, cv.typeInfo)
 	if err != nil {
-		return err // type error
+		return nil, err // type error
 	}
-	return nil
+	return pkg, nil
 }
 
 func (cv *cppConverter) addPkgDependencies(pkgPath string, files ...*ast.File) []*ast.File {
@@ -4464,8 +4465,10 @@ func getScopeCounts(obj types.Object) []int {
 }
 
 func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInfos []*pkgInfo, toBeConverted []*cppConverter) {
-	var astFiles map[string][]*ast.File = make(map[string][]*ast.File)
-	var files map[string]bool = map[string]bool{}
+	astFiles := map[string][]*ast.File{}
+	convFiles := map[string]*cppConverter{}
+	pkgFiles := map[string][]string{}
+
 	shared := parentCv.shared
 	piShared := parentCv.pcShared
 	for _, pkgInfo := range pkgInfos {
@@ -4477,32 +4480,29 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		// getUsedDependency need this to get the correct package path
 		shared.packagePaths[pkgInfo.filePath] = pkgInfo.pkgPath
 
-		// if astFile, done := parentCv.parsedFiles[pkgInfo.filePath]; done {
-		// 	astFiles[pkgInfo.name] = append(astFiles[pkgInfo.name], astFile)
-		// 	files[pkgInfo.filePath] = true
-		// 	continue
-		// }
-
 		parentCv.Logf(" => Loading dependency: %v, %v [%v]\n", pkgInfo.pkgPath, pkgInfo.filePath, pkgInfo.fileType)
-
-		var cv *cppConverter = new(cppConverter)
-		cv.parentCv = &parentCv.parsingContext
-		cv.logPrefix = parentCv.logPrefix + "##> "
-		cv.tryRecover = shared.tryRecover
-		cv.shared = parentCv.shared
-		cv.pcShared = parentCv.pcShared
-		cv.genMakeFile = parentCv.genMakeFile
-		cv.binOutDir = parentCv.binOutDir
-		cv.inputName = pkgInfo.filePath
-		cv.srcBaseName = "$(ImportDir)/" + pkgInfo.basePath()
-		cv.baseName = cv.shared.globalSubDir + pkgInfo.basePath()
-
-		// We need to parse ignored file to allow type check in PrintDefsUses
-		cv.InitAndParse()
 
 		// Don't need to type check a second time already analysed files
 		if _, done := shared.parsedFiles[pkgInfo.filePath]; !done {
+			var cv *cppConverter = new(cppConverter)
+			cv.parentCv = &parentCv.parsingContext
+			cv.logPrefix = parentCv.logPrefix + "##> "
+			cv.tryRecover = shared.tryRecover
+			cv.shared = parentCv.shared
+			cv.pcShared = parentCv.pcShared
+			cv.genMakeFile = parentCv.genMakeFile
+			cv.binOutDir = parentCv.binOutDir
+			cv.inputName = pkgInfo.filePath
+			cv.srcBaseName = "$(ImportDir)/" + pkgInfo.basePath()
+			cv.baseName = cv.shared.globalSubDir + pkgInfo.basePath()
+
+			// We need to parse ignored file to allow type check in PrintDefsUses
+			cv.InitAndParse()
+
 			astFiles[pkgInfo.pkgPath] = append(astFiles[pkgInfo.pkgPath], cv.astFile)
+
+			convFiles[pkgInfo.filePath] = cv
+			pkgFiles[pkgInfo.pkgPath] = append(pkgFiles[pkgInfo.pkgPath], pkgInfo.filePath)
 
 			// Ignored file will not be converted
 			if pkgInfo.fileType != Ignored {
@@ -4510,19 +4510,31 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 			}
 
 			shared.parsedFiles[pkgInfo.filePath] = cv.astFile
-			files[pkgInfo.filePath] = true
 		}
 	}
 
-	for pkgPath, files := range astFiles {
-		if err := parentCv.LoadAndCheckDefs(pkgPath, piShared.fileSet, files...); err != nil {
+	for pkgPath, pathAstFiles := range astFiles {
+		pkg, err := parentCv.LoadAndCheckDefs(pkgPath, piShared.fileSet, pathAstFiles...)
+		if err != nil {
 			parentCv.Panicf("%v", err) // type error
 		}
-
-		parentCv.Logf("LoadAndCheckDefs, %v\n", pkgPath)
-		for _, file := range files {
-			parentCv.Logf("    - %v\n", parentCv.Position(file.Name))
+		if pkg == nil {
+			parentCv.Panicf("pkg is null for pkgPath:%v", pkgPath)
 		}
+		parentCv.Logf("Set packages:\n")
+		for _, pkgFile := range pkgFiles[pkgPath] {
+			parentCv.Logf("    - %v, %v\n", pkgFile, pkg)
+			convFiles[pkgFile].pkg = pkg
+		}
+		parentCv.Logf("LoadAndCheckDefs, %v\n", pkgPath)
+		for _, file := range pathAstFiles {
+			parentCv.Logf("    - %v\n", parentCv.Position(file.Name).Filename)
+		}
+	}
+
+	parentCv.Logf("ToBeConverted:\n")
+	for _, cv := range toBeConverted {
+		parentCv.Logf("  - cv, filename:%s, pkg:%v\n", parentCv.Position(cv.astFile.Name).Filename, cv.pkg)
 	}
 
 	usedPkgInfos = parentCv.getUsedDependency()
@@ -4639,11 +4651,13 @@ func main() {
 	cv.Logf("packageDir: %s\n", cv.packageDir)
 	cv.Logf("gorootSrc: %s\n", gorootSrc)
 
-	if err := cv.LoadAndCheckDefs(pkgPath, fset, astFiles...); err != nil {
+	pkg, err := cv.LoadAndCheckDefs(pkgPath, fset, astFiles...)
+	if err != nil {
 		panic(err) // type error
 	}
 
 	defer cv.PrintDefsUsage()
 
+	cv.pkg = pkg
 	cv.ConvertFile()
 }

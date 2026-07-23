@@ -318,9 +318,9 @@ func (cv *cppConverter) isNameUsebyMethods(name string) bool {
 	return false
 }
 
-func (cv *cppConverter) isNameUsebyFunction(name string) bool {
+func (cv *cppConverter) isNameUsebyFunction(name string, fk FuncKind) bool {
 	// TODO, maybe slow, can be optimized by caching.
-	methods := cv.GetPackageMethodsNames()
+	methods := cv.GetPackageFuncNames(fk)
 	if slices.Contains(methods, name) {
 		return true
 	}
@@ -4034,11 +4034,20 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		if n.Name == "iota" {
 			return mkCppExpr(cv.Iota())
 		} else {
-			switch cv.typeInfo.Uses[n].(type) {
+			usedObj := cv.typeInfo.Uses[n]
+			dbg := cv.DbgSprintf("/* %s, %T, %v */", usedObj, usedObj, isTopLevel(usedObj))
+
+			switch obj := usedObj.(type) {
 			case *types.TypeName:
 				return ExprPrintf("gocpp::Tag<%s>()", n.Name)
+			case *types.Const, *types.Var:
+				if cv.isNameUsebyFunction(n.Name, FuncKindAny) && isTopLevel(obj) {
+					return mkCppExpr(GetCppName(cv.namespace + "::" + n.Name)).addDbg(dbg)
+				} else {
+					return mkCppExpr(GetCppName(n.Name)).addDbg(dbg)
+				}
 			default:
-				return mkCppExpr(GetCppName(n.Name))
+				return mkCppExpr(GetCppName(n.Name)).addDbg(dbg)
 			}
 		}
 

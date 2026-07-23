@@ -503,6 +503,36 @@ func (cv *parsingInfos) GetPackageFuncs(fk FuncKind) []*types.Func {
 	return result
 }
 
+// // GetPackageVars returns the list of global (package-level) variables
+// // declared in the current package.
+// func (cv *parsingInfos) GetPackageVars() []*types.Var {
+// 	if cv.typeInfo == nil {
+// 		return nil
+// 	}
+// 	var result []*types.Var
+// 	for _, obj := range cv.typeInfo.Defs {
+// 		if obj == nil {
+// 			continue
+// 		}
+// 		v, ok := obj.(*types.Var)
+// 		if !ok {
+// 			continue
+// 		}
+// 		if v.IsField() {
+// 			continue // struct field, not a package-level var
+// 		}
+// 		// TODO
+// 		// if v.Pkg() != cv.pkg {
+// 		// 	continue // belongs to a different package
+// 		// }
+// 		if v.Parent() != v.Pkg().Scope() {
+// 			continue // local var / param, not package-level
+// 		}
+// 		result = append(result, v)
+// 	}
+// 	return result
+// }
+
 func (cv *parsingInfos) GetPackageMethods() []*types.Func {
 	return cv.GetPackageFuncs(FuncKindMethod)
 }
@@ -512,9 +542,13 @@ func (cv *parsingInfos) GetPackageMethodsNames() []string {
 	return getFuncNames(methods)
 }
 
-func (cv *parsingInfos) GetPackageFunctionsNames() []string {
-	methods := cv.GetPackageFuncs(FuncKindPlain)
+func (cv *parsingInfos) GetPackageFuncNames(fk FuncKind) []string {
+	methods := cv.GetPackageFuncs(fk)
 	return getFuncNames(methods)
+}
+
+func isTopLevel(obj types.Object) bool {
+	return obj != nil && obj.Parent() == obj.Pkg().Scope()
 }
 
 func getFuncNames(methods []*types.Func) []string {

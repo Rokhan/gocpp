@@ -1107,6 +1107,11 @@ func (expr *cppExpr) manageDbg(keepDbg bool) {
 	}
 }
 
+func (expr cppExpr) addDbg(dbg string) cppExpr {
+	expr.dbg = dbg
+	return expr
+}
+
 func (expr cppExpr) toCppType() cppType {
 	return cppType{expr, false, false, false, nil, true}
 }

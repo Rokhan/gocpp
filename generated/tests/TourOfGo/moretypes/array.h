@@ -19,10 +19,19 @@ namespace golang::main
     struct GoTag_asciiSet { };
     using asciiSet = gocpp::defined<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
     bool contains(gocpp::array_ptr<gocpp::array<uint32_t, 8>> as, unsigned char c);
-    void testPtrArray();
+    void testPtrArray1();
+    void testPtrArray2();
     void main();
     int arrayLen(gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
     asciiSet makeASCIISet(gocpp::string chars);
+    gocpp::array_ptr<asciiSet> makeASCIISetPtr(gocpp::string chars);
+    extern asciiSet global_as1a;
+    extern asciiSet global_as1b;
+    extern asciiSet global_as2;
+    extern gocpp::array_ptr<asciiSet> global_asPtr0;
+    extern gocpp::array_ptr<asciiSet> global_asPtr1a;
+    extern gocpp::array_ptr<asciiSet> global_asPtr1b;
+    extern gocpp::array_ptr<asciiSet> global_asPtr2;
 
     namespace rec
     {

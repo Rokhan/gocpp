@@ -70,7 +70,7 @@ namespace golang::crc32
     }
 
     // IEEETable is the table for the [IEEE] polynomial.
-    crc32::Table* IEEETable = simpleMakeTable(IEEE);
+    gocpp::array_ptr<crc32::Table> IEEETable = simpleMakeTable(IEEE);
     // ieeeTable8 is the slicing8Table for IEEE
     gocpp::array_ptr<slicing8Table> ieeeTable8;
     std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateIEEE;

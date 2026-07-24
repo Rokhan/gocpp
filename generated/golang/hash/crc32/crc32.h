@@ -55,7 +55,7 @@ namespace golang::crc32
     extern gocpp::array_ptr<slicing8Table> castagnoliTable8;
     extern sync::Once castagnoliOnce;
     extern atomic::Bool haveCastagnoli;
-    extern crc32::Table* IEEETable;
+    extern gocpp::array_ptr<crc32::Table> IEEETable;
     extern gocpp::array_ptr<slicing8Table> ieeeTable8;
     extern sync::Once ieeeOnce;
     hash::Hash32 New(gocpp::array_ptr<Table> tab);

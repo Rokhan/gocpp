@@ -104,6 +104,13 @@ namespace golang::main
         return as;
     }
 
+    gocpp::array_ptr<asciiSet> makeASCIISetPtr(gocpp::string chars)
+    {
+        gocpp::array_ptr<asciiSet> asPtr;
+        auto as = makeASCIISet(chars);
+        return gocpp::make_array_ptr(as);
+    }
+
     bool rec::contains(gocpp::array_ptr<asciiSet> as, unsigned char c)
     {
         return (as[c / 32] & (1 << (c % 32))) != 0;
@@ -114,7 +121,7 @@ namespace golang::main
         return (as[c / 32] & (1 << (c % 32))) != 0;
     }
 
-    void testPtrArray()
+    void testPtrArray1()
     {
         asciiSet as1 = {};
         as1 = makeASCIISet("abc"_s);
@@ -123,6 +130,39 @@ namespace golang::main
         mocklib::Println(contains(gocpp::make_array_ptr(as2), 'a'));
         mocklib::Println(rec::contains(gocpp::recv(as1), 'z'));
         mocklib::Println(contains(gocpp::make_array_ptr(as2), 'z'));
+
+        for(auto [i, v] : as2)
+        {
+            mocklib::Println(i, " -> "_s, v);
+        }
+    }
+
+    asciiSet global_as1a = makeASCIISet("abcde"_s);
+    asciiSet global_as1b = makeASCIISet("abcde"_s);
+    asciiSet global_as2 = makeASCIISet("12345"_s);
+    gocpp::array_ptr<asciiSet> global_asPtr0 = makeASCIISetPtr("xyz"_s);
+    gocpp::array_ptr<asciiSet> global_asPtr1a = gocpp::make_array_ptr(global_as1a);
+    gocpp::array_ptr<asciiSet> global_asPtr1b = gocpp::make_array_ptr(global_as1b);
+    gocpp::array_ptr<asciiSet> global_asPtr2 = gocpp::make_array_ptr(global_as2);
+    void testPtrArray2()
+    {
+        mocklib::Println("simple compare, array:"_s, global_as2 == global_as2);
+        mocklib::Println("simple compare, array:"_s, global_as2 == global_as1a);
+        // Check we really compare content, not just pointer
+        mocklib::Println("simple compare, array:"_s, global_as1a == global_as1b);
+        mocklib::Println("simple compare, array ptr:"_s, global_asPtr2 == global_asPtr2);
+        // Check we compare pointer, not the content
+        mocklib::Println("simple compare, array ptr:"_s, global_asPtr1a == global_asPtr1b);
+        mocklib::Println("compare with ptr:"_s, gocpp::make_array_ptr(global_as2) == global_asPtr2);
+
+        for(auto [i, v] : global_as2)
+        {
+            mocklib::Println(i, " -> "_s, v);
+        }
+        for(auto [i, v] : global_asPtr2)
+        {
+            mocklib::Println(i, " -> "_s, v);
+        }
     }
 
     void main()
@@ -163,7 +203,8 @@ namespace golang::main
         auto w = arrayLen(gocpp::make_array_ptr(buf));
         mocklib::Println("Length of buf from arrayLen:"_s, w);
 
-        testPtrArray();
+        testPtrArray1();
+        testPtrArray2();
     }
 
     int arrayLen(gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf)

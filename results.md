@@ -150,7 +150,7 @@
 | $(ImportDir)/golang.org/x/tour/tree/tree.go | ✔️ ([cpp](generated/golang/golang.org/x/tour/tree/tree.cpp), [h](generated/golang/golang.org/x/tour/tree/tree.h))| ❌ |
 | $(ImportDir)/golang.org/x/tour/wc/wc.go | ✔️ ([cpp](generated/golang/golang.org/x/tour/wc/wc.cpp), [h](generated/golang/golang.org/x/tour/wc/wc.h))| ❌ |
 | $(ImportDir)/hash/adler32/adler32.go | ✔️ ([cpp](generated/golang/hash/adler32/adler32.cpp), [h](generated/golang/hash/adler32/adler32.h))| ✔️ |
-| $(ImportDir)/hash/crc32/crc32.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32.cpp), [h](generated/golang/hash/crc32/crc32.h))| ❌ |
+| $(ImportDir)/hash/crc32/crc32.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32.cpp), [h](generated/golang/hash/crc32/crc32.h))| ✔️ |
 | $(ImportDir)/hash/crc32/crc32_amd64.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32_amd64.cpp), [h](generated/golang/hash/crc32/crc32_amd64.h))| ✔️ |
 | $(ImportDir)/hash/crc32/crc32_generic.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32_generic.cpp), [h](generated/golang/hash/crc32/crc32_generic.h))| ❌ |
 | $(ImportDir)/hash/hash.go | ✔️ ([cpp](generated/golang/hash/hash.cpp), [h](generated/golang/hash/hash.h))| ✔️ |

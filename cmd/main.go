@@ -2162,7 +2162,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 						}
 						expr := cv.convertExpr(values[i])
 						exprType := cv.convertExprCppType(values[i])
-						exprType.comments = comments
+						exprType.comments = append(exprType.comments, comments...)
 						name := GetCppName(s.Names[i].Name)
 
 						canFwd := exprType.canFwd && cv.canForward(values[i])
@@ -2196,7 +2196,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 					for i := range s.Names {
 						name := GetCppName(s.Names[i].Name)
 						exprType := cv.convertTypeExpr(s.Type, ctContext{usagePosition: UsageInHeader, targetVarName: name})
-						exprType.comments = comments
+						exprType.comments = append(exprType.comments, comments...)
 
 						if len(values) == 0 {
 							result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
@@ -3567,29 +3567,32 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		return cppType
 
 	case *ast.UnaryExpr:
+		// TODO: potential simplification
+		// It seems redundant to do this here, the defaut case based on type should be enough
 		switch n.Op {
 		case token.AND:
-			return ExprPrintf("%s*", cv.convertExprCppType(n.X)).toCppType()
+			cppType := cv.convertExprCppType(n.X)
+			if cv.IsExprArray(n.X) {
+				return ExprPrintf("gocpp::array_ptr<%s>", cppType).toCppType()
+			} else {
+				return ExprPrintf("%s*", cppType).toCppType()
+			}
 		default:
 			return cv.convertExprCppType(n.X)
 		}
 
 	case *ast.CallExpr:
+		// TODO: potential simplification
+		// It seems redundant to do this here, the defaut case based on type should be enough
 		switch fun := n.Fun.(type) {
 		// Type conversion expression
 		case *ast.ParenExpr:
 			return cv.convertTypeExpr(fun.X, ctContext{})
 		}
 
-		// case *ast.BinaryExpr, *ast.Ident:
-		// 	return convertGoToCppType(cv.convertExprToType(n))
-
-		// case *ast.IndexExpr:
-		// 	objType := convertExprToType(n.X)
-		// 	indexType := convertExprToType(n.Index)
-		// 	return fmt.Sprintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
-
 	case *ast.CompositeLit, *ast.InterfaceType, *ast.StructType:
+		// TODO: potential simplification
+		// It seems redundant to do this here, the defaut case based on type should be enough
 		return cv.convertTypeExpr(n, ctContext{})
 	}
 
@@ -3620,6 +3623,9 @@ func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 		cppType := mkCppType(typeStr, nil)
 		cv.checkStructType(node, &cppType)
 		checkCanFwd(&cppType)
+		if cv.shared.debugMode {
+			cppType.comments = append(cppType.comments, fmt.Sprintf("/* Debug comment, type: %T, expr: %s */\n", exprType, types.ExprString(node)))
+		}
 		return cppType
 	} else {
 		cv.Panicf("convertExprCppType, [%T, %s, %s]", node, types.ExprString(node), cv.Position(node))
@@ -3693,7 +3699,11 @@ func convertGoToCppType(goType types.Type, tcCtx typeConvCtx) (string, bool) {
 		return GetCppGoType(subType, tcCtx.namespace), true
 
 	case *types.Pointer:
-		return fmt.Sprintf("%s*", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
+		if isArray(subType.Elem()) {
+			return fmt.Sprintf("gocpp::array_ptr<%s>", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
+		} else {
+			return fmt.Sprintf("%s*", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
+		}
 
 	case *types.Slice:
 		return fmt.Sprintf("gocpp::slice<%s>", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true

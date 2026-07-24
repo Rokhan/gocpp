@@ -108,6 +108,11 @@ namespace gocpp
         using T::T;
         using T::operator=;
 
+        bool operator==(const defined<T, DefTag>& rhs) const
+        {
+            return T::operator==(rhs);
+        }
+
         defined() = default;
         explicit defined(const T& t) : T(t) { }
     };
@@ -204,6 +209,9 @@ namespace gocpp
 
         array_ptr& operator=(TArray* target) { ptr = target; return *this; }
 
+        bool operator==(const array_ptr<TArray>&) const = default;
+        bool operator!=(const array_ptr<TArray>&) const = default;
+
         bool operator==(std::nullptr_t) const { return ptr == nullptr; }
         bool operator!=(std::nullptr_t) const { return ptr != nullptr; }
 
@@ -228,6 +236,16 @@ namespace gocpp
             {
                 panic("runtime error: slice of nil array pointer");
             }
+        }
+
+        TArray::range_iterator begin()
+        {
+            return ptr->begin();
+        }
+
+        TArray::range_iterator end()
+        {
+            return ptr->end();
         }
 
         TArray* ptr = nullptr;
@@ -1096,6 +1114,10 @@ namespace gocpp
         }
 
         // TODO : other constructors
+
+        bool operator==(const array<T, N>& rhs) const {
+            return *this->mArray.get() == *rhs.mArray.get();
+        }
 
         friend constexpr long len(const array<T, N>& input)
         {

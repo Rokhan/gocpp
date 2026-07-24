@@ -170,21 +170,15 @@ func (cv *parsingInfos) IsExprPtr(expr ast.Expr) bool {
 
 func (cv *parsingInfos) IsExprArray(expr ast.Expr) bool {
 	goType := cv.convertExprToType(expr)
+	return isArray(goType)
+}
 
-	for {
-		switch t := goType.(type) {
-		case *types.Array:
-			return true
-
-		case *types.Named:
-			goType = t.Underlying()
-
-		// TODO: types.Named, types.Alias ??
-
-		default:
-			return false
-		}
+func isArray(goType types.Type) bool {
+	switch goType.Underlying().(type) {
+	case *types.Array:
+		return true
 	}
+	return false
 }
 
 func (cv *parsingInfos) IsExprInterface(expr ast.Expr) bool {

@@ -449,7 +449,7 @@ namespace golang::godebug
     {
         if(len(b) > 0)
         {
-            godebug::write(2, gocpp::unsafe_pointer(& b[0]), int32_t(len(b)));
+            write(2, gocpp::unsafe_pointer(& b[0]), int32_t(len(b)));
         }
         return {len(b), nullptr};
     }

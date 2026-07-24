@@ -211,8 +211,8 @@ namespace golang::runtime
     {
         void RuntimeError(TypeAssertionError*);
         gocpp::string Error(TypeAssertionError* e);
-        void RuntimeError(golang::runtime::errorString e);
-        gocpp::string Error(golang::runtime::errorString e);
+        void RuntimeError(errorString e);
+        gocpp::string Error(errorString e);
         void RuntimeError(errorAddressString e);
         gocpp::string Error(errorAddressString e);
         uintptr_t Addr(errorAddressString e);

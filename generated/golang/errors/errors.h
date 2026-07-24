@@ -33,7 +33,7 @@ namespace golang::errors
 
     namespace rec
     {
-        gocpp::string Error(golang::errors::errorString* e);
+        gocpp::string Error(errorString* e);
     }
 }
 

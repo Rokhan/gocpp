@@ -232,7 +232,7 @@ namespace golang::flate
         return n;
     }
 
-    gocpp::error rec::writeBlock(compressor* d, gocpp::slice<golang::flate::token> tokens, int index)
+    gocpp::error rec::writeBlock(compressor* d, gocpp::slice<token> tokens, int index)
     {
         if(index > 0)
         {
@@ -488,7 +488,7 @@ namespace golang::flate
     {
         d->window = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 2 * windowSize);
         d->hashOffset = 1;
-        d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<golang::flate::token>>(), 0, maxFlateBlockTokens + 1);
+        d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<token>>(), 0, maxFlateBlockTokens + 1);
         d->length = minMatchLength - 1;
         d->offset = 0;
         d->byteAvailable = false;
@@ -773,7 +773,7 @@ namespace golang::flate
                     d->fill = [&](auto x, auto y){ return rec::fillStore(x, y); };
                     d->step = [&](auto x){ return rec::encSpeed(x); };
                     d->bestSpeed = newDeflateFast();
-                    d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<golang::flate::token>>(), maxStoreBlockSize);
+                    d->tokens = gocpp::make(gocpp::Tag<gocpp::slice<token>>(), maxStoreBlockSize);
                     break;
                 case 3:
                     level = 6;

@@ -81,15 +81,15 @@ namespace golang::syscall
     gocpp::error ConvertSidToStringSid(SID* sid, uint16_t** stringSid);
     gocpp::error ConvertStringSidToSid(uint16_t* stringSid, SID** sid);
     gocpp::error CopySid(uint32_t destSidLen, SID* destSid, SID* srcSid);
-    gocpp::error CreateProcessAsUser(golang::syscall::Token token, uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo);
+    gocpp::error CreateProcessAsUser(Token token, uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo);
     gocpp::error CryptAcquireContext(golang::syscall::Handle* provhandle, uint16_t* container, uint16_t* provider, uint32_t provtype, uint32_t flags);
     gocpp::error CryptGenRandom(golang::syscall::Handle provhandle, uint32_t buflen, unsigned char* buf);
     gocpp::error CryptReleaseContext(golang::syscall::Handle provhandle, uint32_t flags);
     uint32_t GetLengthSid(SID* sid);
-    gocpp::error GetTokenInformation(golang::syscall::Token t, uint32_t infoClass, unsigned char* info, uint32_t infoLen, uint32_t* returnedLen);
+    gocpp::error GetTokenInformation(Token t, uint32_t infoClass, unsigned char* info, uint32_t infoLen, uint32_t* returnedLen);
     gocpp::error LookupAccountName(uint16_t* systemName, uint16_t* accountName, SID* sid, uint32_t* sidLen, uint16_t* refdDomainName, uint32_t* refdDomainNameLen, uint32_t* use);
     gocpp::error LookupAccountSid(uint16_t* systemName, SID* sid, uint16_t* name, uint32_t* nameLen, uint16_t* refdDomainName, uint32_t* refdDomainNameLen, uint32_t* use);
-    gocpp::error OpenProcessToken(golang::syscall::Handle h, uint32_t access, golang::syscall::Token* token);
+    gocpp::error OpenProcessToken(golang::syscall::Handle h, uint32_t access, Token* token);
     gocpp::error RegCloseKey(golang::syscall::Handle key);
     gocpp::error regEnumKeyEx(golang::syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint16_t* go_class, uint32_t* classLen, Filetime* lastWriteTime);
     gocpp::error RegOpenKeyEx(golang::syscall::Handle key, uint16_t* subkey, uint32_t options, uint32_t desiredAccess, golang::syscall::Handle* result);
@@ -167,7 +167,7 @@ namespace golang::syscall
     gocpp::error AcceptEx(golang::syscall::Handle ls, golang::syscall::Handle as, unsigned char* buf, uint32_t rxdatalen, uint32_t laddrlen, uint32_t raddrlen, uint32_t* recvd, Overlapped* overlapped);
     void GetAcceptExSockaddrs(unsigned char* buf, uint32_t rxdatalen, uint32_t laddrlen, uint32_t raddrlen, RawSockaddrAny** lrsa, int32_t* lrsalen, RawSockaddrAny** rrsa, int32_t* rrsalen);
     gocpp::error TransmitFile(golang::syscall::Handle s, golang::syscall::Handle handle, uint32_t bytesToWrite, uint32_t bytsPerSend, Overlapped* overlapped, TransmitFileBuffers* transmitFileBuf, uint32_t flags);
-    gocpp::error GetUserProfileDirectory(golang::syscall::Token t, uint16_t* dir, uint32_t* dirLen);
+    gocpp::error GetUserProfileDirectory(Token t, uint16_t* dir, uint32_t* dirLen);
     void FreeAddrInfoW(AddrinfoW* addrinfo);
     gocpp::error GetAddrInfoW(uint16_t* nodename, uint16_t* servicename, AddrinfoW* hints, AddrinfoW** result);
     std::tuple<int32_t, gocpp::error> WSAEnumProtocols(int32_t* protocols, WSAProtocolInfo* protocolBuffer, uint32_t* bufferLength);

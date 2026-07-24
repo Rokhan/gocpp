@@ -200,7 +200,7 @@ namespace golang::atomic
     template<typename T> 
     struct Pointer
     {
-        golang::atomic::UnsafePointer u{};
+        UnsafePointer u{};
 
         using isGoStruct = void;
 
@@ -234,8 +234,8 @@ namespace golang::atomic
         void Store(Uint8* u, uint8_t value);
         void And(Uint8* u, uint8_t value);
         void Or(Uint8* u, uint8_t value);
-        bool Load(golang::atomic::Bool* b);
-        void Store(golang::atomic::Bool* b, bool value);
+        bool Load(Bool* b);
+        void Store(Bool* b, bool value);
         uint32_t Load(Uint32* u);
         uint32_t LoadAcquire(Uint32* u);
         void Store(Uint32* u, uint32_t value);
@@ -260,26 +260,26 @@ namespace golang::atomic
         uintptr_t Add(Uintptr* u, uintptr_t delta);
         double Load(Float64* f);
         void Store(Float64* f, double value);
-        gocpp::unsafe_pointer Load(golang::atomic::UnsafePointer* u);
-        void StoreNoWB(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer value);
-        void Store(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer value);
-        bool CompareAndSwapNoWB(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
-        bool CompareAndSwap(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
+        gocpp::unsafe_pointer Load(UnsafePointer* u);
+        void StoreNoWB(UnsafePointer* u, gocpp::unsafe_pointer value);
+        void Store(UnsafePointer* u, gocpp::unsafe_pointer value);
+        bool CompareAndSwapNoWB(UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
+        bool CompareAndSwap(UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new);
         
         template<typename T>
-        T* Load(golang::atomic::Pointer<T>* p);
+        T* Load(Pointer<T>* p);
         
         template<typename T>
-        void StoreNoWB(golang::atomic::Pointer<T>* p, T* value);
+        void StoreNoWB(Pointer<T>* p, T* value);
         
         template<typename T>
-        void Store(golang::atomic::Pointer<T>* p, T* value);
+        void Store(Pointer<T>* p, T* value);
         
         template<typename T>
-        bool CompareAndSwapNoWB(golang::atomic::Pointer<T>* p, T* old, T* go_new);
+        bool CompareAndSwapNoWB(Pointer<T>* p, T* old, T* go_new);
         
         template<typename T>
-        bool CompareAndSwap(golang::atomic::Pointer<T>* p, T* old, T* go_new);
+        bool CompareAndSwap(Pointer<T>* p, T* old, T* go_new);
         void Lock(noCopy*);
         void Unlock(noCopy*);
     }

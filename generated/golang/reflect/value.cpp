@@ -822,7 +822,7 @@ namespace golang::reflect
                         case 0:
                         {
                             // Copy values to the "stack."
-                            auto addr = reflect::add(stackArgs, st.stkOff, "precomputed stack arg offset"_s);
+                            auto addr = add(stackArgs, st.stkOff, "precomputed stack arg offset"_s);
                             if(v.flag & flagIndir != 0)
                             {
                                 typedmemmove(& targ->t, addr, v.ptr);
@@ -840,7 +840,7 @@ namespace golang::reflect
                             // Copy values to "integer registers."
                             if(v.flag & flagIndir != 0)
                             {
-                                auto offset = reflect::add(v.ptr, st.offset, "precomputed value offset"_s);
+                                auto offset = add(v.ptr, st.offset, "precomputed value offset"_s);
                                 if(st.kind == abiStepPointer)
                                 {
                                     // Duplicate this pointer in the pointer area of the
@@ -867,7 +867,7 @@ namespace golang::reflect
                             {
                                 gocpp::panic("attempted to copy pointer to FP register"_s);
                             }
-                            auto offset = reflect::add(v.ptr, st.offset, "precomputed value offset"_s);
+                            auto offset = add(v.ptr, st.offset, "precomputed value offset"_s);
                             floatToReg(& regArgs, st.freg, st.size, offset);
                             break;
                         }
@@ -944,7 +944,7 @@ namespace golang::reflect
                     // allocated, the entire value is according to the ABI. So
                     // just make an indirection into the allocated frame.
                     auto fl = flagIndir | flag(rec::Kind(gocpp::recv(tv)));
-                    ret[i] = golang::reflect::Value {tv, reflect::add(stackArgs, st.stkOff, "tv.Size() != 0"_s), fl};
+                    ret[i] = golang::reflect::Value {tv, add(stackArgs, st.stkOff, "tv.Size() != 0"_s), fl};
                     // Note: this does introduce false sharing between results -
                     // if any result is live, they are all live.
                     // (And the space for the args is live as well, but as we've
@@ -989,20 +989,20 @@ namespace golang::reflect
                         {
                             case 0:
                             {
-                                auto offset = reflect::add(s, st.offset, "precomputed value offset"_s);
+                                auto offset = add(s, st.offset, "precomputed value offset"_s);
                                 intFromReg(& regArgs, st.ireg, st.size, offset);
                                 break;
                             }
                             case 1:
                             {
-                                auto s_tmp = reflect::add(s, st.offset, "precomputed value offset"_s);
+                                auto s_tmp = add(s, st.offset, "precomputed value offset"_s);
                                 auto& s = s_tmp;
                                 *((gocpp::unsafe_pointer*)(s)) = regArgs.Ptrs[st.ireg];
                                 break;
                             }
                             case 2:
                             {
-                                auto offset = reflect::add(s, st.offset, "precomputed value offset"_s);
+                                auto offset = add(s, st.offset, "precomputed value offset"_s);
                                 floatFromReg(& regArgs, st.freg, st.size, offset);
                                 break;
                             }
@@ -1914,7 +1914,7 @@ namespace golang::reflect
         // In the former case, we want v.ptr + offset.
         // In the latter case, we must have field.offset = 0,
         // so v.ptr + field.offset is still the correct address.
-        auto ptr = reflect::add(v.ptr, field->Offset, "same as non-reflect &v.field"_s);
+        auto ptr = add(v.ptr, field->Offset, "same as non-reflect &v.field"_s);
         return golang::reflect::Value {typ, ptr, fl};
     }
 
@@ -2075,7 +2075,7 @@ namespace golang::reflect
                     // In the former case, we want v.ptr + offset.
                     // In the latter case, we must be doing Index(0), so offset = 0,
                     // so v.ptr + offset is still the correct address.
-                    auto val = reflect::add(v.ptr, offset, "same as &v[i], i < tt.len"_s);
+                    auto val = add(v.ptr, offset, "same as &v[i], i < tt.len"_s);
                     // bits same as overall array
                     auto fl = v.flag & (flagIndir | flagAddr) | rec::ro(gocpp::recv(v.flag)) | flag(rec::Kind(gocpp::recv(typ)));
                     return golang::reflect::Value {typ, val, fl};

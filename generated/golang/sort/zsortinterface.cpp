@@ -20,7 +20,7 @@ namespace golang::sort
     }
 
     // insertionSort sorts data[a:b] using insertion sort.
-    void insertionSort(golang::sort::Interface data, int a, int b)
+    void insertionSort(Interface data, int a, int b)
     {
         for(auto i = a + 1; i < b; i++)
         {
@@ -33,7 +33,7 @@ namespace golang::sort
 
     // siftDown implements the heap property on data[lo:hi].
     // first is an offset into the array where the root of the heap lies.
-    void siftDown(golang::sort::Interface data, int lo, int hi, int first)
+    void siftDown(Interface data, int lo, int hi, int first)
     {
         auto root = lo;
         for(; ; )
@@ -56,7 +56,7 @@ namespace golang::sort
         }
     }
 
-    void heapSort(golang::sort::Interface data, int a, int b)
+    void heapSort(Interface data, int a, int b)
     {
         auto first = a;
         auto lo = 0;
@@ -82,7 +82,7 @@ namespace golang::sort
     // C++ implementation: https://github.com/orlp/pdqsort
     // Rust implementation: https://docs.rs/pdqsort/latest/pdqsort/
     // limit is the number of allowed bad (very unbalanced) pivots before falling back to heapsort.
-    void pdqsort(golang::sort::Interface data, int a, int b, int limit)
+    void pdqsort(Interface data, int a, int b, int limit)
     {
         auto maxInsertion = 12;
 
@@ -166,7 +166,7 @@ namespace golang::sort
     // Let p = data[pivot]
     // Moves elements in data[a:b] around, so that data[i]<p and data[j]>=p for i<newpivot and j>newpivot.
     // On return, data[newpivot] = p
-    std::tuple<int, bool> partition(golang::sort::Interface data, int a, int b, int pivot)
+    std::tuple<int, bool> partition(Interface data, int a, int b, int pivot)
     {
         int newpivot;
         bool alreadyPartitioned;
@@ -215,7 +215,7 @@ namespace golang::sort
 
     // partitionEqual partitions data[a:b] into elements equal to data[pivot] followed by elements greater than data[pivot].
     // It assumed that data[a:b] does not contain elements smaller than the data[pivot].
-    int partitionEqual(golang::sort::Interface data, int a, int b, int pivot)
+    int partitionEqual(Interface data, int a, int b, int pivot)
     {
         int newpivot;
         rec::Swap(gocpp::recv(data), a, pivot);
@@ -244,7 +244,7 @@ namespace golang::sort
     }
 
     // partialInsertionSort partially sorts a slice, returns true if the slice is sorted at the end.
-    bool partialInsertionSort(golang::sort::Interface data, int a, int b)
+    bool partialInsertionSort(Interface data, int a, int b)
     {
         auto maxSteps = 5;
         auto shortestShifting = 50;
@@ -298,7 +298,7 @@ namespace golang::sort
 
     // breakPatterns scatters some elements around in an attempt to break some patterns
     // that might cause imbalanced partitions in quicksort.
-    void breakPatterns(golang::sort::Interface data, int a, int b)
+    void breakPatterns(Interface data, int a, int b)
     {
         auto length = b - a;
         if(length >= 8)
@@ -323,7 +323,7 @@ namespace golang::sort
     // [0,8): chooses a static pivot.
     // [8,shortestNinther): uses the simple median-of-three method.
     // [shortestNinther,∞): uses the Tukey ninther method.
-    std::tuple<int, sortedHint> choosePivot(golang::sort::Interface data, int a, int b)
+    std::tuple<int, sortedHint> choosePivot(Interface data, int a, int b)
     {
         int pivot;
         sortedHint hint;
@@ -372,7 +372,7 @@ namespace golang::sort
     }
 
     // order2 returns x,y where data[x] <= data[y], where x,y=a,b or x,y=b,a.
-    std::tuple<int, int> order2(golang::sort::Interface data, int a, int b, int* swaps)
+    std::tuple<int, int> order2(Interface data, int a, int b, int* swaps)
     {
         if(rec::Less(gocpp::recv(data), b, a))
         {
@@ -383,7 +383,7 @@ namespace golang::sort
     }
 
     // median returns x where data[x] is the median of data[a],data[b],data[c], where x is a, b, or c.
-    int median(golang::sort::Interface data, int a, int b, int c, int* swaps)
+    int median(Interface data, int a, int b, int c, int* swaps)
     {
         std::tie(a, b) = order2(data, a, b, swaps);
         std::tie(b, c) = order2(data, b, c, swaps);
@@ -392,12 +392,12 @@ namespace golang::sort
     }
 
     // medianAdjacent finds the median of data[a - 1], data[a], data[a + 1] and stores the index into a.
-    int medianAdjacent(golang::sort::Interface data, int a, int* swaps)
+    int medianAdjacent(Interface data, int a, int* swaps)
     {
         return median(data, a - 1, a, a + 1, swaps);
     }
 
-    void reverseRange(golang::sort::Interface data, int a, int b)
+    void reverseRange(Interface data, int a, int b)
     {
         auto i = a;
         auto j = b - 1;
@@ -409,7 +409,7 @@ namespace golang::sort
         }
     }
 
-    void swapRange(golang::sort::Interface data, int a, int b, int n)
+    void swapRange(Interface data, int a, int b, int n)
     {
         for(auto i = 0; i < n; i++)
         {
@@ -417,7 +417,7 @@ namespace golang::sort
         }
     }
 
-    void stable(golang::sort::Interface data, int n)
+    void stable(Interface data, int n)
     {
         // must be > 0
         auto blockSize = 20;
@@ -466,7 +466,7 @@ namespace golang::sort
     // symMerge assumes non-degenerate arguments: a < m && m < b.
     // Having the caller check this condition eliminates many leaf recursion calls,
     // which improves performance.
-    void symMerge(golang::sort::Interface data, int a, int m, int b)
+    void symMerge(Interface data, int a, int m, int b)
     {
         // Avoid unnecessary recursions of symMerge
         // by direct insertion of data[a] into data[m:b]
@@ -576,7 +576,7 @@ namespace golang::sort
     // Data of the form 'x u v y' is changed to 'x v u y'.
     // rotate performs at most b-a many calls to data.Swap,
     // and it assumes non-degenerate arguments: a < m && m < b.
-    void rotate(golang::sort::Interface data, int a, int m, int b)
+    void rotate(Interface data, int a, int m, int b)
     {
         auto i = m - a;
         auto j = b - m;

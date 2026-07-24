@@ -54,26 +54,26 @@ namespace golang::atomic
     }
 
     // Load atomically loads and returns the value stored in x.
-    bool rec::Load(golang::atomic::Bool* x)
+    bool rec::Load(Bool* x)
     {
         return LoadUint32(& x->v) != 0;
     }
 
     // Store atomically stores val into x.
-    void rec::Store(golang::atomic::Bool* x, bool val)
+    void rec::Store(Bool* x, bool val)
     {
         StoreUint32(& x->v, b32(val));
     }
 
     // Swap atomically stores new into x and returns the previous value.
-    bool rec::Swap(golang::atomic::Bool* x, bool go_new)
+    bool rec::Swap(Bool* x, bool go_new)
     {
         bool old;
         return SwapUint32(& x->v, b32(go_new)) != 0;
     }
 
     // CompareAndSwap executes the compare-and-swap operation for the boolean value x.
-    bool rec::CompareAndSwap(golang::atomic::Bool* x, bool old, bool go_new)
+    bool rec::CompareAndSwap(Bool* x, bool old, bool go_new)
     {
         bool swapped;
         return CompareAndSwapUint32(& x->v, b32(old), b32(go_new));
@@ -91,7 +91,7 @@ namespace golang::atomic
 
     // For testing *Pointer[T]'s methods can be inlined.
     // Keep in sync with cmd/compile/internal/test/inl_test.go:TestIntendedInlining.
-    golang::atomic::Pointer<int>* gocpp_id_0 = new golang::atomic::Pointer<int> {};
+    Pointer<int>* gocpp_id_0 = new Pointer<int> {};
     // A Pointer is an atomic pointer of type *T. The zero value is a nil *T.
     
     template<typename T>
@@ -134,21 +134,21 @@ namespace golang::atomic
 
     // Load atomically loads and returns the value stored in x.
     template<typename T>
-    T* rec::Load(golang::atomic::Pointer<T>* x)
+    T* rec::Load(Pointer<T>* x)
     {
         return (T*)(LoadPointer(& x->v));
     }
 
     // Store atomically stores val into x.
     template<typename T>
-    void rec::Store(golang::atomic::Pointer<T>* x, T* val)
+    void rec::Store(Pointer<T>* x, T* val)
     {
         StorePointer(& x->v, gocpp::unsafe_pointer(val));
     }
 
     // Swap atomically stores new into x and returns the previous value.
     template<typename T>
-    T* rec::Swap(golang::atomic::Pointer<T>* x, T* go_new)
+    T* rec::Swap(Pointer<T>* x, T* go_new)
     {
         T* old;
         return (T*)(SwapPointer(& x->v, gocpp::unsafe_pointer(go_new)));
@@ -156,7 +156,7 @@ namespace golang::atomic
 
     // CompareAndSwap executes the compare-and-swap operation for x.
     template<typename T>
-    bool rec::CompareAndSwap(golang::atomic::Pointer<T>* x, T* old, T* go_new)
+    bool rec::CompareAndSwap(Pointer<T>* x, T* old, T* go_new)
     {
         bool swapped;
         return CompareAndSwapPointer(& x->v, gocpp::unsafe_pointer(old), gocpp::unsafe_pointer(go_new));

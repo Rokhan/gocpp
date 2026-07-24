@@ -130,7 +130,7 @@ namespace golang::testlog
     atomic::Value logger;
     // SetLogger sets the test logger implementation for the current process.
     // It must be called only once, at process startup.
-    void SetLogger(golang::testlog::Interface impl)
+    void SetLogger(Interface impl)
     {
         if(rec::Load(gocpp::recv(logger)) != nullptr)
         {
@@ -141,14 +141,14 @@ namespace golang::testlog
 
     // Logger returns the current test logger implementation.
     // It returns nil if there is no logger.
-    golang::testlog::Interface Logger()
+    Interface Logger()
     {
         auto impl = rec::Load(gocpp::recv(logger));
         if(impl == nullptr)
         {
             return nullptr;
         }
-        return *gocpp::getValue<golang::testlog::Interface*>(impl);
+        return *gocpp::getValue<Interface*>(impl);
     }
 
     // Getenv calls Logger().Getenv, if a logger has been set.

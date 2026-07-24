@@ -85,10 +85,10 @@ namespace golang::flate
         void writeDynamicHeader(huffmanBitWriter* w, int numLiterals, int numOffsets, int numCodegens, bool isEof);
         void writeStoredHeader(huffmanBitWriter* w, int length, bool isEof);
         void writeFixedHeader(huffmanBitWriter* w, bool isEof);
-        void writeBlock(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input);
-        void writeBlockDynamic(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input);
-        std::tuple<int, int> indexTokens(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens);
-        void writeTokens(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes);
+        void writeBlock(huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input);
+        void writeBlockDynamic(huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input);
+        std::tuple<int, int> indexTokens(huffmanBitWriter* w, gocpp::slice<token> tokens);
+        void writeTokens(huffmanBitWriter* w, gocpp::slice<token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes);
         void writeBlockHuff(huffmanBitWriter* w, bool eof, gocpp::slice<unsigned char> input);
     }
 }

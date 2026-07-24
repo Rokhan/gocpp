@@ -72,7 +72,7 @@ namespace golang::flate
         int blockStart{}; // window index where current tokens start
         bool byteAvailable{}; // if true, still need to process window[index-1].
         // queued output tokens
-        gocpp::slice<golang::flate::token> tokens{};
+        gocpp::slice<token> tokens{};
         // deflate state
         int length{};
         int offset{};
@@ -140,7 +140,7 @@ namespace golang::flate
     namespace rec
     {
         int fillDeflate(compressor* d, gocpp::slice<unsigned char> b);
-        gocpp::error writeBlock(compressor* d, gocpp::slice<golang::flate::token> tokens, int index);
+        gocpp::error writeBlock(compressor* d, gocpp::slice<token> tokens, int index);
         void fillWindow(compressor* d, gocpp::slice<unsigned char> b);
         std::tuple<int, int, bool> findMatch(compressor* d, int pos, int prevHead, int prevLength, int lookahead);
         gocpp::error writeStoredBlock(compressor* d, gocpp::slice<unsigned char> buf);

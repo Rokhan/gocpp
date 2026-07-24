@@ -152,9 +152,9 @@ namespace golang::sync
         return value.PrintTo(os);
     }
 
-    golang::sync::entry* newEntry(go_any i)
+    entry* newEntry(go_any i)
     {
-        auto e = new golang::sync::entry {};
+        auto e = new entry {};
         rec::Store<gocpp::go_any>(gocpp::recv(e->p), & i);
         return e;
     }
@@ -203,7 +203,7 @@ namespace golang::sync
         return rec::load(gocpp::recv(e));
     }
 
-    std::tuple<go_any, bool> rec::load(golang::sync::entry* e)
+    std::tuple<go_any, bool> rec::load(entry* e)
     {
         go_any value;
         bool ok;
@@ -227,7 +227,7 @@ namespace golang::sync
     //
     // If the entry is expunged, tryCompareAndSwap returns false and leaves
     // the entry unchanged.
-    bool rec::tryCompareAndSwap(golang::sync::entry* e, go_any old, go_any go_new)
+    bool rec::tryCompareAndSwap(entry* e, go_any old, go_any go_new)
     {
         auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));
         if(p == nullptr || p == expunged || *p != old)
@@ -257,7 +257,7 @@ namespace golang::sync
     //
     // If the entry was previously expunged, it must be added to the dirty map
     // before m.mu is unlocked.
-    bool rec::unexpungeLocked(golang::sync::entry* e)
+    bool rec::unexpungeLocked(entry* e)
     {
         bool wasExpunged;
         return rec::CompareAndSwap<gocpp::go_any>(gocpp::recv(e->p), expunged, nullptr);
@@ -266,7 +266,7 @@ namespace golang::sync
     // swapLocked unconditionally swaps a value into the entry.
     //
     // The entry must be known not to be expunged.
-    go_any* rec::swapLocked(golang::sync::entry* e, go_any* i)
+    go_any* rec::swapLocked(entry* e, go_any* i)
     {
         return rec::Swap<gocpp::go_any>(gocpp::recv(e->p), i);
     }
@@ -330,7 +330,7 @@ namespace golang::sync
     //
     // If the entry is expunged, tryLoadOrStore leaves the entry unchanged and
     // returns with ok==false.
-    std::tuple<go_any, bool, bool> rec::tryLoadOrStore(golang::sync::entry* e, go_any i)
+    std::tuple<go_any, bool, bool> rec::tryLoadOrStore(entry* e, go_any i)
     {
         go_any actual;
         bool loaded;
@@ -404,7 +404,7 @@ namespace golang::sync
         rec::LoadAndDelete(gocpp::recv(m), key);
     }
 
-    std::tuple<go_any, bool> rec::go_delete(golang::sync::entry* e)
+    std::tuple<go_any, bool> rec::go_delete(entry* e)
     {
         go_any value;
         bool ok;
@@ -426,7 +426,7 @@ namespace golang::sync
     //
     // If the entry is expunged, trySwap returns false and leaves the entry
     // unchanged.
-    std::tuple<go_any*, bool> rec::trySwap(golang::sync::entry* e, go_any* i)
+    std::tuple<go_any*, bool> rec::trySwap(entry* e, go_any* i)
     {
         for(; ; )
         {
@@ -670,7 +670,7 @@ namespace golang::sync
         }
 
         auto read = rec::loadReadOnly(gocpp::recv(m));
-        m->dirty = gocpp::make(gocpp::Tag<gocpp::map<go_any, golang::sync::entry*>>(), len(read.m));
+        m->dirty = gocpp::make(gocpp::Tag<gocpp::map<go_any, entry*>>(), len(read.m));
         for(auto [k, e] : read.m)
         {
             if(! rec::tryExpungeLocked(gocpp::recv(e)))
@@ -680,7 +680,7 @@ namespace golang::sync
         }
     }
 
-    bool rec::tryExpungeLocked(golang::sync::entry* e)
+    bool rec::tryExpungeLocked(entry* e)
     {
         bool isExpunged;
         auto p = rec::Load<gocpp::go_any>(gocpp::recv(e->p));

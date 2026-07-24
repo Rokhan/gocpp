@@ -131,34 +131,34 @@ namespace golang::abi
         x[Struct] = "struct"_s;
         x[UnsafePointer] = "unsafe.Pointer"_s;
     });
-    golang::abi::Kind rec::Kind(golang::abi::Type* t)
+    golang::abi::Kind rec::Kind(Type* t)
     {
         return Kind(t->Kind_ & KindMask);
     }
 
-    bool rec::HasName(golang::abi::Type* t)
+    bool rec::HasName(Type* t)
     {
         return t->TFlag & TFlagNamed != 0;
     }
 
-    bool rec::Pointers(golang::abi::Type* t)
+    bool rec::Pointers(Type* t)
     {
         return t->PtrBytes != 0;
     }
 
     // IfaceIndir reports whether t is stored indirectly in an interface value.
-    bool rec::IfaceIndir(golang::abi::Type* t)
+    bool rec::IfaceIndir(Type* t)
     {
         return t->Kind_ & KindDirectIface == 0;
     }
 
     // isDirectIface reports whether t is stored directly in an interface value.
-    bool rec::IsDirectIface(golang::abi::Type* t)
+    bool rec::IsDirectIface(Type* t)
     {
         return t->Kind_ & KindDirectIface != 0;
     }
 
-    gocpp::slice<unsigned char> rec::GcSlice(golang::abi::Type* t, uintptr_t begin, uintptr_t end)
+    gocpp::slice<unsigned char> rec::GcSlice(Type* t, uintptr_t begin, uintptr_t end)
     {
         return unsafe::Slice(t->GCData, int(end)).make_slice(begin);
     }
@@ -247,22 +247,22 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    gocpp::slice<golang::abi::Method> rec::Methods(UncommonType* t)
+    gocpp::slice<Method> rec::Methods(UncommonType* t)
     {
         if(t->Mcount == 0)
         {
             return nullptr;
         }
-        return (gocpp::array_ptr<gocpp::array<golang::abi::Method, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uintptr_t(t->Moff), "t.mcount > 0"_s)).make_slice(0, t->Mcount, t->Mcount);
+        return (gocpp::array_ptr<gocpp::array<Method, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uintptr_t(t->Moff), "t.mcount > 0"_s)).make_slice(0, t->Mcount, t->Mcount);
     }
 
-    gocpp::slice<golang::abi::Method> rec::ExportedMethods(UncommonType* t)
+    gocpp::slice<Method> rec::ExportedMethods(UncommonType* t)
     {
         if(t->Xcount == 0)
         {
             return nullptr;
         }
-        return (gocpp::array_ptr<gocpp::array<golang::abi::Method, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uintptr_t(t->Moff), "t.xcount > 0"_s)).make_slice(0, t->Xcount, t->Xcount);
+        return (gocpp::array_ptr<gocpp::array<Method, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uintptr_t(t->Moff), "t.xcount > 0"_s)).make_slice(0, t->Xcount, t->Xcount);
     }
 
     // addChecked returns p+x.
@@ -350,7 +350,7 @@ namespace golang::abi
     }
 
     // Len returns the length of t if t is an array type, otherwise 0
-    int rec::Len(golang::abi::Type* t)
+    int rec::Len(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Array)
         {
@@ -359,7 +359,7 @@ namespace golang::abi
         return 0;
     }
 
-    golang::abi::Type* rec::Common(golang::abi::Type* t)
+    Type* rec::Common(Type* t)
     {
         return t;
     }
@@ -433,7 +433,7 @@ namespace golang::abi
     }
 
     // ChanDir returns the direction of t if t is a channel type, otherwise InvalidDir (0).
-    golang::abi::ChanDir rec::ChanDir(golang::abi::Type* t)
+    golang::abi::ChanDir rec::ChanDir(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Chan)
         {
@@ -444,7 +444,7 @@ namespace golang::abi
     }
 
     // Uncommon returns a pointer to T's "uncommon" data if there is any, otherwise nil
-    UncommonType* rec::Uncommon(golang::abi::Type* t)
+    UncommonType* rec::Uncommon(Type* t)
     {
         if(t->TFlag & TFlagUncommon == 0)
         {
@@ -603,7 +603,7 @@ namespace golang::abi
                 default:
                     struct u
                     {
-                        golang::abi::Type Type{};
+                        Type Type{};
                         UncommonType u{};
 
                         using isGoStruct = void;
@@ -624,7 +624,7 @@ namespace golang::abi
     }
 
     // Elem returns the element type for t if t is an array, channel, map, pointer, or slice, otherwise nil.
-    golang::abi::Type* rec::Elem(golang::abi::Type* t)
+    Type* rec::Elem(Type* t)
     {
         //Go switch emulation
         {
@@ -673,7 +673,7 @@ namespace golang::abi
     }
 
     // StructType returns t cast to a *StructType, or nil if its tag does not match.
-    golang::abi::StructType* rec::StructType(golang::abi::Type* t)
+    golang::abi::StructType* rec::StructType(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Struct)
         {
@@ -683,7 +683,7 @@ namespace golang::abi
     }
 
     // MapType returns t cast to a *MapType, or nil if its tag does not match.
-    golang::abi::MapType* rec::MapType(golang::abi::Type* t)
+    golang::abi::MapType* rec::MapType(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Map)
         {
@@ -693,7 +693,7 @@ namespace golang::abi
     }
 
     // ArrayType returns t cast to a *ArrayType, or nil if its tag does not match.
-    golang::abi::ArrayType* rec::ArrayType(golang::abi::Type* t)
+    golang::abi::ArrayType* rec::ArrayType(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Array)
         {
@@ -703,7 +703,7 @@ namespace golang::abi
     }
 
     // FuncType returns t cast to a *FuncType, or nil if its tag does not match.
-    golang::abi::FuncType* rec::FuncType(golang::abi::Type* t)
+    golang::abi::FuncType* rec::FuncType(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Func)
         {
@@ -713,7 +713,7 @@ namespace golang::abi
     }
 
     // InterfaceType returns t cast to a *InterfaceType, or nil if its tag does not match.
-    golang::abi::InterfaceType* rec::InterfaceType(golang::abi::Type* t)
+    golang::abi::InterfaceType* rec::InterfaceType(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) != Interface)
         {
@@ -723,18 +723,18 @@ namespace golang::abi
     }
 
     // Size returns the size of data with type t.
-    uintptr_t rec::Size(golang::abi::Type* t)
+    uintptr_t rec::Size(Type* t)
     {
         return t->Size_;
     }
 
     // Align returns the alignment of data with type t.
-    int rec::Align(golang::abi::Type* t)
+    int rec::Align(Type* t)
     {
         return int(t->Align_);
     }
 
-    int rec::FieldAlign(golang::abi::Type* t)
+    int rec::FieldAlign(Type* t)
     {
         return int(t->FieldAlign_);
     }
@@ -774,7 +774,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    gocpp::slice<golang::abi::Method> rec::ExportedMethods(golang::abi::Type* t)
+    gocpp::slice<Method> rec::ExportedMethods(Type* t)
     {
         auto ut = rec::Uncommon(gocpp::recv(t));
         if(ut == nullptr)
@@ -784,7 +784,7 @@ namespace golang::abi
         return rec::ExportedMethods(gocpp::recv(ut));
     }
 
-    int rec::NumMethod(golang::abi::Type* t)
+    int rec::NumMethod(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Interface)
         {
@@ -885,7 +885,7 @@ namespace golang::abi
         return mt->Flags & 16 != 0;
     }
 
-    golang::abi::Type* rec::Key(golang::abi::Type* t)
+    Type* rec::Key(Type* t)
     {
         if(rec::Kind(gocpp::recv(t)) == Map)
         {
@@ -972,7 +972,7 @@ namespace golang::abi
         return value.PrintTo(os);
     }
 
-    golang::abi::Type* rec::In(golang::abi::FuncType* t, int i)
+    Type* rec::In(golang::abi::FuncType* t, int i)
     {
         return rec::InSlice(gocpp::recv(t))[i];
     }
@@ -987,12 +987,12 @@ namespace golang::abi
         return int(t->OutCount & ((1 << 15) - 1));
     }
 
-    golang::abi::Type* rec::Out(golang::abi::FuncType* t, int i)
+    Type* rec::Out(golang::abi::FuncType* t, int i)
     {
         return (rec::OutSlice(gocpp::recv(t))[i]);
     }
 
-    gocpp::slice<golang::abi::Type*> rec::InSlice(golang::abi::FuncType* t)
+    gocpp::slice<Type*> rec::InSlice(golang::abi::FuncType* t)
     {
         auto uadd = gocpp::Sizeof<abi::FuncType>();
         if(t->Type.TFlag & TFlagUncommon != 0)
@@ -1003,10 +1003,10 @@ namespace golang::abi
         {
             return nullptr;
         }
-        return (gocpp::array_ptr<gocpp::array<golang::abi::Type*, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "t.inCount > 0"_s)).make_slice(0, t->InCount, t->InCount);
+        return (gocpp::array_ptr<gocpp::array<Type*, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "t.inCount > 0"_s)).make_slice(0, t->InCount, t->InCount);
     }
 
-    gocpp::slice<golang::abi::Type*> rec::OutSlice(golang::abi::FuncType* t)
+    gocpp::slice<Type*> rec::OutSlice(golang::abi::FuncType* t)
     {
         auto outCount = uint16_t(rec::NumOut(gocpp::recv(t)));
         if(outCount == 0)
@@ -1018,7 +1018,7 @@ namespace golang::abi
         {
             uadd += gocpp::Sizeof<UncommonType>();
         }
-        return (gocpp::array_ptr<gocpp::array<golang::abi::Type*, 1 << 17>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "outCount > 0"_s)).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
+        return (gocpp::array_ptr<gocpp::array<Type*, 1 << 17>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "outCount > 0"_s)).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }
 
     bool rec::IsVariadic(golang::abi::FuncType* t)

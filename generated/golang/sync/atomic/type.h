@@ -173,22 +173,22 @@ namespace golang::atomic
 
     namespace rec
     {
-        bool Load(golang::atomic::Bool* x);
-        void Store(golang::atomic::Bool* x, bool val);
-        bool Swap(golang::atomic::Bool* x, bool go_new);
-        bool CompareAndSwap(golang::atomic::Bool* x, bool old, bool go_new);
+        bool Load(Bool* x);
+        void Store(Bool* x, bool val);
+        bool Swap(Bool* x, bool go_new);
+        bool CompareAndSwap(Bool* x, bool old, bool go_new);
         
         template<typename T>
-        T* Load(golang::atomic::Pointer<T>* x);
+        T* Load(Pointer<T>* x);
         
         template<typename T>
-        void Store(golang::atomic::Pointer<T>* x, T* val);
+        void Store(Pointer<T>* x, T* val);
         
         template<typename T>
-        T* Swap(golang::atomic::Pointer<T>* x, T* go_new);
+        T* Swap(Pointer<T>* x, T* go_new);
         
         template<typename T>
-        bool CompareAndSwap(golang::atomic::Pointer<T>* x, T* old, T* go_new);
+        bool CompareAndSwap(Pointer<T>* x, T* old, T* go_new);
         int32_t Load(Int32* x);
         void Store(Int32* x, int32_t val);
         int32_t Swap(Int32* x, int32_t go_new);

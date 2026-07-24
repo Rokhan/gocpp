@@ -299,7 +299,7 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-    bool rec::Load(golang::atomic::Bool* b)
+    bool rec::Load(Bool* b)
     {
         return rec::Load(gocpp::recv(b->u)) != 0;
     }
@@ -307,7 +307,7 @@ namespace golang::atomic
     // Store updates the value atomically.
     //
     //go:nosplit
-    void rec::Store(golang::atomic::Bool* b, bool value)
+    void rec::Store(Bool* b, bool value)
     {
         auto s = uint8_t(0);
         if(value)
@@ -758,7 +758,7 @@ namespace golang::atomic
     // Load accesses and returns the value atomically.
     //
     //go:nosplit
-    gocpp::unsafe_pointer rec::Load(golang::atomic::UnsafePointer* u)
+    gocpp::unsafe_pointer rec::Load(UnsafePointer* u)
     {
         return Loadp(gocpp::unsafe_pointer(& u->value));
     }
@@ -772,13 +772,13 @@ namespace golang::atomic
     // Prefer Store instead.
     //
     //go:nosplit
-    void rec::StoreNoWB(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer value)
+    void rec::StoreNoWB(UnsafePointer* u, gocpp::unsafe_pointer value)
     {
         StorepNoWB(gocpp::unsafe_pointer(& u->value), value);
     }
 
     // Store updates the value atomically.
-    void rec::Store(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer value)
+    void rec::Store(UnsafePointer* u, gocpp::unsafe_pointer value)
     {
         storePointer(& u->value, value);
     }
@@ -801,7 +801,7 @@ namespace golang::atomic
     // Prefer CompareAndSwap instead.
     //
     //go:nosplit
-    bool rec::CompareAndSwapNoWB(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
+    bool rec::CompareAndSwapNoWB(UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
     {
         return Casp1(& u->value, old, go_new);
     }
@@ -809,7 +809,7 @@ namespace golang::atomic
     // CompareAndSwap atomically compares u's value with old,
     // and if they're equal, swaps u's value with new.
     // It reports whether the swap ran.
-    bool rec::CompareAndSwap(golang::atomic::UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
+    bool rec::CompareAndSwap(UnsafePointer* u, gocpp::unsafe_pointer old, gocpp::unsafe_pointer go_new)
     {
         return casPointer(& u->value, old, go_new);
     }
@@ -855,7 +855,7 @@ namespace golang::atomic
     //
     //go:nosplit
     template<typename T>
-    T* rec::Load(golang::atomic::Pointer<T>* p)
+    T* rec::Load(Pointer<T>* p)
     {
         return (T*)(rec::Load(gocpp::recv(p->u)));
     }
@@ -870,7 +870,7 @@ namespace golang::atomic
     //
     //go:nosplit
     template<typename T>
-    void rec::StoreNoWB(golang::atomic::Pointer<T>* p, T* value)
+    void rec::StoreNoWB(Pointer<T>* p, T* value)
     {
         rec::StoreNoWB(gocpp::recv(p->u), gocpp::unsafe_pointer(value));
     }
@@ -879,7 +879,7 @@ namespace golang::atomic
     //
     //go:nosplit
     template<typename T>
-    void rec::Store(golang::atomic::Pointer<T>* p, T* value)
+    void rec::Store(Pointer<T>* p, T* value)
     {
         rec::Store(gocpp::recv(p->u), gocpp::unsafe_pointer(value));
     }
@@ -897,7 +897,7 @@ namespace golang::atomic
     //
     //go:nosplit
     template<typename T>
-    bool rec::CompareAndSwapNoWB(golang::atomic::Pointer<T>* p, T* old, T* go_new)
+    bool rec::CompareAndSwapNoWB(Pointer<T>* p, T* old, T* go_new)
     {
         return rec::CompareAndSwapNoWB(gocpp::recv(p->u), gocpp::unsafe_pointer(old), gocpp::unsafe_pointer(go_new));
     }
@@ -907,7 +907,7 @@ namespace golang::atomic
     // swaps u's value with new.
     // It reports whether the swap ran.
     template<typename T>
-    bool rec::CompareAndSwap(golang::atomic::Pointer<T>* p, T* old, T* go_new)
+    bool rec::CompareAndSwap(Pointer<T>* p, T* old, T* go_new)
     {
         return rec::CompareAndSwap(gocpp::recv(p->u), gocpp::unsafe_pointer(old), gocpp::unsafe_pointer(go_new));
     }

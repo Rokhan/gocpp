@@ -14,7 +14,7 @@ namespace golang::sync
 {
     struct readOnly
     {
-        gocpp::map<go_any, golang::sync::entry*> m{};
+        gocpp::map<go_any, entry*> m{};
         bool amended{}; // true if the dirty map contains some key not in m.
 
         using isGoStruct = void;
@@ -55,7 +55,7 @@ namespace golang::sync
         // can be stored to it.
         // If the dirty map is nil, the next write to the map will initialize it by
         // making a shallow copy of the clean map, omitting stale entries.
-        gocpp::map<go_any, golang::sync::entry*> dirty{};
+        gocpp::map<go_any, entry*> dirty{};
         // misses counts the number of loads since the read map was last updated that
         // needed to lock mu to determine whether the key was present.
         // Once enough misses have occurred to cover the cost of copying the dirty
@@ -105,30 +105,30 @@ namespace golang::sync
     };
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
-    golang::sync::entry* newEntry(go_any i);
+    entry* newEntry(go_any i);
 
     namespace rec
     {
         readOnly loadReadOnly(Map* m);
         std::tuple<go_any, bool> Load(Map* m, go_any key);
-        std::tuple<go_any, bool> load(golang::sync::entry* e);
+        std::tuple<go_any, bool> load(entry* e);
         void Store(Map* m, go_any key, go_any value);
-        bool tryCompareAndSwap(golang::sync::entry* e, go_any old, go_any go_new);
-        bool unexpungeLocked(golang::sync::entry* e);
-        go_any* swapLocked(golang::sync::entry* e, go_any* i);
+        bool tryCompareAndSwap(entry* e, go_any old, go_any go_new);
+        bool unexpungeLocked(entry* e);
+        go_any* swapLocked(entry* e, go_any* i);
         std::tuple<go_any, bool> LoadOrStore(Map* m, go_any key, go_any value);
-        std::tuple<go_any, bool, bool> tryLoadOrStore(golang::sync::entry* e, go_any i);
+        std::tuple<go_any, bool, bool> tryLoadOrStore(entry* e, go_any i);
         std::tuple<go_any, bool> LoadAndDelete(Map* m, go_any key);
         void Delete(Map* m, go_any key);
-        std::tuple<go_any, bool> go_delete(golang::sync::entry* e);
-        std::tuple<go_any*, bool> trySwap(golang::sync::entry* e, go_any* i);
+        std::tuple<go_any, bool> go_delete(entry* e);
+        std::tuple<go_any*, bool> trySwap(entry* e, go_any* i);
         std::tuple<go_any, bool> Swap(Map* m, go_any key, go_any value);
         bool CompareAndSwap(Map* m, go_any key, go_any old, go_any go_new);
         bool CompareAndDelete(Map* m, go_any key, go_any old);
         void Range(Map* m, std::function<bool (go_any key, go_any value)> f);
         void missLocked(Map* m);
         void dirtyLocked(Map* m);
-        bool tryExpungeLocked(golang::sync::entry* e);
+        bool tryExpungeLocked(entry* e);
     }
 }
 

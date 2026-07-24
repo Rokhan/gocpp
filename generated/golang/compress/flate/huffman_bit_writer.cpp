@@ -527,7 +527,7 @@ namespace golang::flate
     // is larger than the original bytes, the data will be written as a
     // stored block.
     // If the input is nil, the tokens will always be Huffman encoded.
-    void rec::writeBlock(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input)
+    void rec::writeBlock(huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
         {
@@ -607,7 +607,7 @@ namespace golang::flate
     // histogram distribution.
     // If input is supplied and the compression savings are below 1/16th of the
     // input size the block is stored.
-    void rec::writeBlockDynamic(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, bool eof, gocpp::slice<unsigned char> input)
+    void rec::writeBlockDynamic(huffmanBitWriter* w, gocpp::slice<token> tokens, bool eof, gocpp::slice<unsigned char> input)
     {
         if(w->err != nullptr)
         {
@@ -642,7 +642,7 @@ namespace golang::flate
     // literalFreq and offsetFreq, and generates literalEncoding
     // and offsetEncoding.
     // The number of literal and offset tokens is returned.
-    std::tuple<int, int> rec::indexTokens(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens)
+    std::tuple<int, int> rec::indexTokens(huffmanBitWriter* w, gocpp::slice<token> tokens)
     {
         int numLiterals;
         int numOffsets;
@@ -694,7 +694,7 @@ namespace golang::flate
 
     // writeTokens writes a slice of tokens to the output.
     // codes for literal and offset encoding must be supplied.
-    void rec::writeTokens(huffmanBitWriter* w, gocpp::slice<golang::flate::token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes)
+    void rec::writeTokens(huffmanBitWriter* w, gocpp::slice<token> tokens, gocpp::slice<hcode> leCodes, gocpp::slice<hcode> oeCodes)
     {
         if(w->err != nullptr)
         {

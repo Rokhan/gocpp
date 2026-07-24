@@ -91,8 +91,8 @@ namespace golang::testlog
     void Getenv(gocpp::string name);
     void Open(gocpp::string name);
     void Stat(gocpp::string name);
-    void SetLogger(golang::testlog::Interface impl);
-    golang::testlog::Interface Logger();
+    void SetLogger(Interface impl);
+    Interface Logger();
 }
 #include "golang/sync/atomic/value.h"
 

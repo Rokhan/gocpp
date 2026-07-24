@@ -47,7 +47,7 @@ namespace golang::registry
     // also some predefined root keys such as CURRENT_USER.
     // Keys can be used directly in the Windows API.
     // Close closes open key k.
-    gocpp::error rec::Close(golang::registry::Key k)
+    gocpp::error rec::Close(Key k)
     {
         return syscall::RegCloseKey(syscall::Handle(k));
     }
@@ -57,7 +57,7 @@ namespace golang::registry
     // and returns the new key and an error.
     // The access parameter specifies desired access rights to the
     // key to be opened.
-    std::tuple<golang::registry::Key, gocpp::error> OpenKey(golang::registry::Key k, gocpp::string path, uint32_t access)
+    std::tuple<Key, gocpp::error> OpenKey(Key k, gocpp::string path, uint32_t access)
     {
         auto [p, err] = syscall::UTF16PtrFromString(path);
         if(err != nullptr)
@@ -74,7 +74,7 @@ namespace golang::registry
     }
 
     // ReadSubKeyNames returns the names of subkeys of key k.
-    std::tuple<gocpp::slice<gocpp::string>, gocpp::error> rec::ReadSubKeyNames(golang::registry::Key k)
+    std::tuple<gocpp::slice<gocpp::string>, gocpp::error> rec::ReadSubKeyNames(Key k)
     {
         gocpp::Defer defer;
         try
@@ -135,9 +135,9 @@ namespace golang::registry
     // whether the key already existed.
     // The access parameter specifies the access rights for the key
     // to be created.
-    std::tuple<golang::registry::Key, bool, gocpp::error> CreateKey(golang::registry::Key k, gocpp::string path, uint32_t access)
+    std::tuple<Key, bool, gocpp::error> CreateKey(Key k, gocpp::string path, uint32_t access)
     {
-        golang::registry::Key newk;
+        Key newk;
         bool openedExisting;
         gocpp::error err;
         syscall::Handle h = {};
@@ -151,7 +151,7 @@ namespace golang::registry
     }
 
     // DeleteKey deletes the subkey path of key k and its values.
-    gocpp::error DeleteKey(golang::registry::Key k, gocpp::string path)
+    gocpp::error DeleteKey(Key k, gocpp::string path)
     {
         return regDeleteKey(syscall::Handle(k), syscall::StringToUTF16Ptr(path));
     }
@@ -202,7 +202,7 @@ namespace golang::registry
     }
 
     // Stat retrieves information about the open key k.
-    std::tuple<KeyInfo*, gocpp::error> rec::Stat(golang::registry::Key k)
+    std::tuple<KeyInfo*, gocpp::error> rec::Stat(Key k)
     {
         KeyInfo ki = {};
         auto err = syscall::RegQueryInfoKey(syscall::Handle(k), nullptr, nullptr, nullptr, & ki.SubKeyCount, & ki.MaxSubKeyLen, nullptr, & ki.ValueCount, & ki.MaxValueNameLen, & ki.MaxValueLen, nullptr, & ki.lastWriteTime);

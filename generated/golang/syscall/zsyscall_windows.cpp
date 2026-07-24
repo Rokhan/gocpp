@@ -249,7 +249,7 @@ namespace golang::syscall
         return err;
     }
 
-    gocpp::error CreateProcessAsUser(golang::syscall::Token token, uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo)
+    gocpp::error CreateProcessAsUser(Token token, uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo)
     {
         gocpp::error err;
         uint32_t _p0 = {};
@@ -306,7 +306,7 @@ namespace golang::syscall
         return len;
     }
 
-    gocpp::error GetTokenInformation(golang::syscall::Token t, uint32_t infoClass, unsigned char* info, uint32_t infoLen, uint32_t* returnedLen)
+    gocpp::error GetTokenInformation(Token t, uint32_t infoClass, unsigned char* info, uint32_t infoLen, uint32_t* returnedLen)
     {
         gocpp::error err;
         auto [r1, gocpp_id_9, e1] = Syscall6(rec::Addr(gocpp::recv(procGetTokenInformation)), 5, uintptr_t(t), uintptr_t(infoClass), uintptr_t(gocpp::unsafe_pointer(info)), uintptr_t(infoLen), uintptr_t(gocpp::unsafe_pointer(returnedLen)), 0);
@@ -339,7 +339,7 @@ namespace golang::syscall
         return err;
     }
 
-    gocpp::error OpenProcessToken(golang::syscall::Handle h, uint32_t access, golang::syscall::Token* token)
+    gocpp::error OpenProcessToken(golang::syscall::Handle h, uint32_t access, Token* token)
     {
         gocpp::error err;
         auto [r1, gocpp_id_12, e1] = Syscall(rec::Addr(gocpp::recv(procOpenProcessToken)), 3, uintptr_t(h), uintptr_t(access), uintptr_t(gocpp::unsafe_pointer(token)));
@@ -1659,7 +1659,7 @@ namespace golang::syscall
         return {argv, err};
     }
 
-    gocpp::error GetUserProfileDirectory(golang::syscall::Token t, uint16_t* dir, uint32_t* dirLen)
+    gocpp::error GetUserProfileDirectory(Token t, uint16_t* dir, uint32_t* dirLen)
     {
         gocpp::error err;
         auto [r1, gocpp_id_131, e1] = Syscall(rec::Addr(gocpp::recv(procGetUserProfileDirectoryW)), 3, uintptr_t(t), uintptr_t(gocpp::unsafe_pointer(dir)), uintptr_t(gocpp::unsafe_pointer(dirLen)));

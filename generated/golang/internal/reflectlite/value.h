@@ -229,10 +229,10 @@ namespace golang::reflectlite
     gocpp::unsafe_pointer unsafe_New(abi::Type*);
     void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);
     void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
-    go_any packEface(golang::reflectlite::Value v);
-    golang::reflectlite::Value unpackEface(go_any i);
-    go_any valueInterface(golang::reflectlite::Value v);
-    golang::reflectlite::Value ValueOf(go_any i);
+    go_any packEface(Value v);
+    Value unpackEface(go_any i);
+    go_any valueInterface(Value v);
+    Value ValueOf(go_any i);
 }
 
 #include "golang/internal/abi/type.h"
@@ -245,21 +245,21 @@ namespace golang::reflectlite
     {
         golang::reflectlite::Kind kind(flag f);
         flag ro(flag f);
-        abi::Type* typ(golang::reflectlite::Value v);
-        gocpp::unsafe_pointer pointer(golang::reflectlite::Value v);
+        abi::Type* typ(Value v);
+        gocpp::unsafe_pointer pointer(Value v);
         gocpp::string Error(ValueError* e);
         void mustBeExported(flag f);
         void mustBeAssignable(flag f);
-        bool CanSet(golang::reflectlite::Value v);
-        golang::reflectlite::Value Elem(golang::reflectlite::Value v);
-        bool IsNil(golang::reflectlite::Value v);
-        bool IsValid(golang::reflectlite::Value v);
-        golang::reflectlite::Kind Kind(golang::reflectlite::Value v);
-        int Len(golang::reflectlite::Value v);
-        int numMethod(golang::reflectlite::Value v);
-        void Set(golang::reflectlite::Value v, golang::reflectlite::Value x);
-        golang::reflectlite::Type Type(golang::reflectlite::Value v);
-        golang::reflectlite::Value assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target);
+        bool CanSet(Value v);
+        Value Elem(Value v);
+        bool IsNil(Value v);
+        bool IsValid(Value v);
+        golang::reflectlite::Kind Kind(Value v);
+        int Len(Value v);
+        int numMethod(Value v);
+        void Set(Value v, Value x);
+        golang::reflectlite::Type Type(Value v);
+        Value assignTo(Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target);
     }
 }
 

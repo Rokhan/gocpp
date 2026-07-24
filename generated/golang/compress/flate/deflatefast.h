@@ -55,7 +55,7 @@ namespace golang::flate
 
 namespace golang::flate
 {
-    gocpp::slice<golang::flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit);
+    gocpp::slice<token> emitLiteral(gocpp::slice<token> dst, gocpp::slice<unsigned char> lit);
     deflateFast* newDeflateFast();
 }
 
@@ -66,7 +66,7 @@ namespace golang::flate
 
     namespace rec
     {
-        gocpp::slice<golang::flate::token> encode(deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src);
+        gocpp::slice<token> encode(deflateFast* e, gocpp::slice<token> dst, gocpp::slice<unsigned char> src);
         int32_t matchLen(deflateFast* e, int32_t s, int32_t t, gocpp::slice<unsigned char> src);
         void reset(deflateFast* e);
         void shiftOffsets(deflateFast* e);

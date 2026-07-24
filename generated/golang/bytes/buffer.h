@@ -31,8 +31,8 @@ namespace golang::bytes
 
     std::ostream& operator<<(std::ostream& os, const struct Buffer& value);
     gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int n);
-    golang::bytes::Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
-    golang::bytes::Buffer* NewBufferString(gocpp::string s);
+    Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
+    Buffer* NewBufferString(gocpp::string s);
 }
 #include "golang/errors/errors.fwd.h"
 
@@ -50,33 +50,33 @@ namespace golang::bytes
 
     namespace rec
     {
-        gocpp::slice<unsigned char> Bytes(golang::bytes::Buffer* b);
-        gocpp::slice<unsigned char> AvailableBuffer(golang::bytes::Buffer* b);
-        gocpp::string String(golang::bytes::Buffer* b);
-        bool empty(golang::bytes::Buffer* b);
-        int Len(golang::bytes::Buffer* b);
-        int Cap(golang::bytes::Buffer* b);
-        int Available(golang::bytes::Buffer* b);
-        void Truncate(golang::bytes::Buffer* b, int n);
-        void Reset(golang::bytes::Buffer* b);
-        std::tuple<int, bool> tryGrowByReslice(golang::bytes::Buffer* b, int n);
-        int grow(golang::bytes::Buffer* b, int n);
-        void Grow(golang::bytes::Buffer* b, int n);
-        std::tuple<int, gocpp::error> Write(golang::bytes::Buffer* b, gocpp::slice<unsigned char> p);
-        std::tuple<int, gocpp::error> WriteString(golang::bytes::Buffer* b, gocpp::string s);
-        std::tuple<int64_t, gocpp::error> ReadFrom(golang::bytes::Buffer* b, io::Reader r);
-        std::tuple<int64_t, gocpp::error> WriteTo(golang::bytes::Buffer* b, io::Writer w);
-        gocpp::error WriteByte(golang::bytes::Buffer* b, unsigned char c);
-        std::tuple<int, gocpp::error> WriteRune(golang::bytes::Buffer* b, gocpp::rune r);
-        std::tuple<int, gocpp::error> Read(golang::bytes::Buffer* b, gocpp::slice<unsigned char> p);
-        gocpp::slice<unsigned char> Next(golang::bytes::Buffer* b, int n);
-        std::tuple<unsigned char, gocpp::error> ReadByte(golang::bytes::Buffer* b);
-        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(golang::bytes::Buffer* b);
-        gocpp::error UnreadRune(golang::bytes::Buffer* b);
-        gocpp::error UnreadByte(golang::bytes::Buffer* b);
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadBytes(golang::bytes::Buffer* b, unsigned char delim);
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> readSlice(golang::bytes::Buffer* b, unsigned char delim);
-        std::tuple<gocpp::string, gocpp::error> ReadString(golang::bytes::Buffer* b, unsigned char delim);
+        gocpp::slice<unsigned char> Bytes(Buffer* b);
+        gocpp::slice<unsigned char> AvailableBuffer(Buffer* b);
+        gocpp::string String(Buffer* b);
+        bool empty(Buffer* b);
+        int Len(Buffer* b);
+        int Cap(Buffer* b);
+        int Available(Buffer* b);
+        void Truncate(Buffer* b, int n);
+        void Reset(Buffer* b);
+        std::tuple<int, bool> tryGrowByReslice(Buffer* b, int n);
+        int grow(Buffer* b, int n);
+        void Grow(Buffer* b, int n);
+        std::tuple<int, gocpp::error> Write(Buffer* b, gocpp::slice<unsigned char> p);
+        std::tuple<int, gocpp::error> WriteString(Buffer* b, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> ReadFrom(Buffer* b, io::Reader r);
+        std::tuple<int64_t, gocpp::error> WriteTo(Buffer* b, io::Writer w);
+        gocpp::error WriteByte(Buffer* b, unsigned char c);
+        std::tuple<int, gocpp::error> WriteRune(Buffer* b, gocpp::rune r);
+        std::tuple<int, gocpp::error> Read(Buffer* b, gocpp::slice<unsigned char> p);
+        gocpp::slice<unsigned char> Next(Buffer* b, int n);
+        std::tuple<unsigned char, gocpp::error> ReadByte(Buffer* b);
+        std::tuple<gocpp::rune, int, gocpp::error> ReadRune(Buffer* b);
+        gocpp::error UnreadRune(Buffer* b);
+        gocpp::error UnreadByte(Buffer* b);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadBytes(Buffer* b, unsigned char delim);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> readSlice(Buffer* b, unsigned char delim);
+        std::tuple<gocpp::string, gocpp::error> ReadString(Buffer* b, unsigned char delim);
     }
 }
 

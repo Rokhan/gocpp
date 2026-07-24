@@ -427,7 +427,7 @@ namespace golang::syscall
         uint32_t Size{};
         uint32_t RevocationResult{};
         unsigned char* RevocationOid{};
-        golang::syscall::Pointer OidSpecificInfo{};
+        Pointer OidSpecificInfo{};
         uint32_t HasFreshnessTime{};
         uint32_t FreshnessTime{};
         CertRevocationCrlInfo* CrlInfo{};
@@ -482,7 +482,7 @@ namespace golang::syscall
     {
         uint32_t Size{};
         uint32_t Flags{};
-        golang::syscall::Pointer ExtraPolicyPara{};
+        Pointer ExtraPolicyPara{};
 
         using isGoStruct = void;
 
@@ -521,7 +521,7 @@ namespace golang::syscall
         uint32_t Error{};
         uint32_t ChainIndex{};
         uint32_t ElementIndex{};
-        golang::syscall::Pointer ExtraPolicyStatus{};
+        Pointer ExtraPolicyStatus{};
 
         using isGoStruct = void;
 
@@ -543,7 +543,7 @@ namespace golang::syscall
         int32_t Protocol{};
         uintptr_t Addrlen{};
         uint16_t* Canonname{};
-        golang::syscall::Pointer Addr{};
+        Pointer Addr{};
         AddrinfoW* Next{};
 
         using isGoStruct = void;

@@ -73,7 +73,7 @@ namespace golang::errors
     // Each call to New returns a distinct error value even if the text is identical.
     gocpp::error New(gocpp::string text)
     {
-        return gocpp::error(new golang::errors::errorString {text});
+        return gocpp::error(new errorString {text});
     }
 
     // errorString is a trivial implementation of error.
@@ -106,7 +106,7 @@ namespace golang::errors
         return value.PrintTo(os);
     }
 
-    gocpp::string rec::Error(golang::errors::errorString* e)
+    gocpp::string rec::Error(errorString* e)
     {
         return e->s;
     }

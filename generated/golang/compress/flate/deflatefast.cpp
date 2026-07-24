@@ -120,7 +120,7 @@ namespace golang::flate
 
     // encode encodes a block given in src and appends tokens
     // to dst and returns the result.
-    gocpp::slice<golang::flate::token> rec::encode(deflateFast* e, gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> src)
+    gocpp::slice<token> rec::encode(deflateFast* e, gocpp::slice<token> dst, gocpp::slice<unsigned char> src)
     {
         // Ensure that e.cur doesn't wrap.
         if(e->cur >= bufferReset)
@@ -267,7 +267,7 @@ namespace golang::flate
         return dst;
     }
 
-    gocpp::slice<golang::flate::token> emitLiteral(gocpp::slice<golang::flate::token> dst, gocpp::slice<unsigned char> lit)
+    gocpp::slice<token> emitLiteral(gocpp::slice<token> dst, gocpp::slice<unsigned char> lit)
     {
         for(auto [gocpp_ignored, v] : lit)
         {

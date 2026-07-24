@@ -100,7 +100,7 @@ namespace golang::reflectlite
         return 0;
     }
 
-    abi::Type* rec::typ(golang::reflectlite::Value v)
+    abi::Type* rec::typ(Value v)
     {
         // Types are either static (for compiler-created types) or
         // heap-allocated but always reachable (for reflection-created
@@ -112,7 +112,7 @@ namespace golang::reflectlite
 
     // pointer returns the underlying pointer represented by v.
     // v.Kind() must be Pointer, Map, Chan, Func, or UnsafePointer
-    gocpp::unsafe_pointer rec::pointer(golang::reflectlite::Value v)
+    gocpp::unsafe_pointer rec::pointer(Value v)
     {
         if(rec::Size(gocpp::recv(rec::typ(gocpp::recv(v)))) != goarch::PtrSize || ! rec::Pointers(gocpp::recv(rec::typ(gocpp::recv(v)))))
         {
@@ -126,7 +126,7 @@ namespace golang::reflectlite
     }
 
     // packEface converts v to the empty interface.
-    go_any packEface(golang::reflectlite::Value v)
+    go_any packEface(Value v)
     {
         auto t = rec::typ(gocpp::recv(v));
         go_any i = {};
@@ -178,21 +178,21 @@ namespace golang::reflectlite
     }
 
     // unpackEface converts the empty interface i to a Value.
-    golang::reflectlite::Value unpackEface(go_any i)
+    Value unpackEface(go_any i)
     {
         auto e = (emptyInterface*)(gocpp::unsafe_pointer(& i));
         // NOTE: don't read e.word until we know whether it is really a pointer or not.
         auto t = e->typ;
         if(t == nullptr)
         {
-            return golang::reflectlite::Value {};
+            return Value {};
         }
         auto f = flag(rec::Kind(gocpp::recv(t)));
         if(ifaceIndir(t))
         {
             f |= flagIndir;
         }
-        return golang::reflectlite::Value {t, e->word, f};
+        return Value {t, e->word, f};
     }
 
     // A ValueError occurs when a Value method is invoked on
@@ -324,7 +324,7 @@ namespace golang::reflectlite
     // obtained by the use of unexported struct fields.
     // If CanSet returns false, calling Set or any type-specific
     // setter (e.g., SetBool, SetInt) will panic.
-    bool rec::CanSet(golang::reflectlite::Value v)
+    bool rec::CanSet(Value v)
     {
         return v.flag & (flagAddr | flagRO) == flagAddr;
     }
@@ -382,7 +382,7 @@ namespace golang::reflectlite
     // or that the pointer v points to.
     // It panics if v's Kind is not Interface or Pointer.
     // It returns the zero Value if v is nil.
-    golang::reflectlite::Value rec::Elem(golang::reflectlite::Value v)
+    Value rec::Elem(Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
@@ -422,13 +422,13 @@ namespace golang::reflectlite
                     // The returned value's address is v's value.
                     if(ptr == nullptr)
                     {
-                        return golang::reflectlite::Value {};
+                        return Value {};
                     }
                     auto tt = (ptrType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))));
                     auto typ = tt->Elem;
                     auto fl = v.flag & flagRO | flagIndir | flagAddr;
                     fl |= flag(rec::Kind(gocpp::recv(typ)));
-                    return golang::reflectlite::Value {typ, ptr, fl};
+                    return Value {typ, ptr, fl};
                     break;
                 }
             }
@@ -485,7 +485,7 @@ namespace golang::reflectlite
             }
 
 
-    go_any valueInterface(golang::reflectlite::Value v)
+    go_any valueInterface(Value v)
     {
         if(v.flag == 0)
         {
@@ -515,7 +515,7 @@ namespace golang::reflectlite
     // by calling ValueOf with an uninitialized interface variable i,
     // i==nil will be true but v.IsNil will panic as v will be the zero
     // Value.
-    bool rec::IsNil(golang::reflectlite::Value v)
+    bool rec::IsNil(Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
@@ -564,14 +564,14 @@ namespace golang::reflectlite
     // If IsValid returns false, all other methods except String panic.
     // Most functions and methods never return an invalid Value.
     // If one does, its documentation states the conditions explicitly.
-    bool rec::IsValid(golang::reflectlite::Value v)
+    bool rec::IsValid(Value v)
     {
         return v.flag != 0;
     }
 
     // Kind returns v's Kind.
     // If v is the zero Value (IsValid returns false), Kind returns Invalid.
-    golang::reflectlite::Kind rec::Kind(golang::reflectlite::Value v)
+    golang::reflectlite::Kind rec::Kind(Value v)
     {
         return rec::kind(gocpp::recv(v));
     }
@@ -586,7 +586,7 @@ namespace golang::reflectlite
 
     // Len returns v's length.
     // It panics if v's Kind is not Array, Chan, Map, Slice, or String.
-    int rec::Len(golang::reflectlite::Value v)
+    int rec::Len(Value v)
     {
         auto k = rec::kind(gocpp::recv(v));
         //Go switch emulation
@@ -626,7 +626,7 @@ namespace golang::reflectlite
     }
 
     // NumMethod returns the number of exported methods in the value's method set.
-    int rec::numMethod(golang::reflectlite::Value v)
+    int rec::numMethod(Value v)
     {
         if(rec::typ(gocpp::recv(v)) == nullptr)
         {
@@ -638,7 +638,7 @@ namespace golang::reflectlite
     // Set assigns x to the value v.
     // It panics if CanSet returns false.
     // As in Go, x's value must be assignable to v's type.
-    void rec::Set(golang::reflectlite::Value v, golang::reflectlite::Value x)
+    void rec::Set(Value v, Value x)
     {
         rec::mustBeAssignable(gocpp::recv(v));
         // do not let unexported x leak
@@ -660,7 +660,7 @@ namespace golang::reflectlite
     }
 
     // Type returns v's type.
-    golang::reflectlite::Type rec::Type(golang::reflectlite::Value v)
+    golang::reflectlite::Type rec::Type(Value v)
     {
         auto f = v.flag;
         if(f == 0)
@@ -677,11 +677,11 @@ namespace golang::reflectlite
 
     // ValueOf returns a new Value initialized to the concrete value
     // stored in the interface i. ValueOf(nil) returns the zero Value.
-    golang::reflectlite::Value ValueOf(go_any i)
+    Value ValueOf(go_any i)
     {
         if(i == nullptr)
         {
-            return golang::reflectlite::Value {};
+            return Value {};
         }
         return unpackEface(i);
     }
@@ -689,7 +689,7 @@ namespace golang::reflectlite
     // assignTo returns a value v that can be assigned directly to typ.
     // It panics if v is not assignable to typ.
     // For a conversion to an interface type, target is a suggested scratch space to use.
-    golang::reflectlite::Value rec::assignTo(golang::reflectlite::Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target)
+    Value rec::assignTo(Value v, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target)
     {
         // if v.flag&flagMethod != 0 {
         // v = makeMethodValue(context, v)
@@ -707,7 +707,7 @@ namespace golang::reflectlite
                     // Same memory layout, so no harm done.
                     auto fl = v.flag & (flagAddr | flagIndir) | rec::ro(gocpp::recv(v.flag));
                     fl |= flag(rec::Kind(gocpp::recv(dst)));
-                    return golang::reflectlite::Value {dst, v.ptr, fl};
+                    return Value {dst, v.ptr, fl};
                     break;
                 }
 
@@ -722,7 +722,7 @@ namespace golang::reflectlite
                         // A nil ReadWriter passed to nil Reader is OK,
                         // but using ifaceE2I below will panic.
                         // Avoid the panic by returning a nil dst (e.g., Reader) explicitly.
-                        return golang::reflectlite::Value {dst, nullptr, flag(abi::Interface)};
+                        return Value {dst, nullptr, flag(abi::Interface)};
                     }
                     auto x = valueInterface(v);
                     if(rec::NumMethod(gocpp::recv(dst)) == 0)
@@ -733,7 +733,7 @@ namespace golang::reflectlite
                     {
                         ifaceE2I(dst, x, target);
                     }
-                    return golang::reflectlite::Value {dst, target, flagIndir | flag(abi::Interface)};
+                    return Value {dst, target, flagIndir | flag(abi::Interface)};
                     break;
                 }
             }

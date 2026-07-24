@@ -66,30 +66,30 @@ namespace golang::flate
         15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15
     };
     // Convert a literal into a literal token.
-    golang::flate::token literalToken(uint32_t literal)
+    token literalToken(uint32_t literal)
     {
         return token(literalType + literal);
     }
 
     // Convert a < xlength, xoffset > pair into a match token.
-    golang::flate::token matchToken(uint32_t xlength, uint32_t xoffset)
+    token matchToken(uint32_t xlength, uint32_t xoffset)
     {
         return token(matchType + (xlength << lengthShift) + xoffset);
     }
 
     // Returns the literal of a literal token.
-    uint32_t rec::literal(golang::flate::token t)
+    uint32_t rec::literal(token t)
     {
         return uint32_t(t - literalType);
     }
 
     // Returns the extra offset of a match token.
-    uint32_t rec::offset(golang::flate::token t)
+    uint32_t rec::offset(token t)
     {
         return uint32_t(t) & offsetMask;
     }
 
-    uint32_t rec::length(golang::flate::token t)
+    uint32_t rec::length(token t)
     {
         return uint32_t((t - matchType) >> lengthShift);
     }

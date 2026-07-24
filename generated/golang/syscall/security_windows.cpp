@@ -374,7 +374,7 @@ namespace golang::syscall
     // system-related operations on the local computer.
     // OpenCurrentProcessToken opens the access token
     // associated with current process.
-    std::tuple<golang::syscall::Token, gocpp::error> OpenCurrentProcessToken()
+    std::tuple<Token, gocpp::error> OpenCurrentProcessToken()
     {
         auto [p, e] = GetCurrentProcess();
         if(e != nullptr)
@@ -391,13 +391,13 @@ namespace golang::syscall
     }
 
     // Close releases access to access token.
-    gocpp::error rec::Close(golang::syscall::Token t)
+    gocpp::error rec::Close(Token t)
     {
         return CloseHandle(Handle(t));
     }
 
     // getInfo retrieves a specified type of information about an access token.
-    std::tuple<gocpp::unsafe_pointer, gocpp::error> rec::getInfo(golang::syscall::Token t, uint32_t go_class, int initSize)
+    std::tuple<gocpp::unsafe_pointer, gocpp::error> rec::getInfo(Token t, uint32_t go_class, int initSize)
     {
         auto n = uint32_t(initSize);
         for(; ; )
@@ -420,7 +420,7 @@ namespace golang::syscall
     }
 
     // GetTokenUser retrieves access token t user account information.
-    std::tuple<Tokenuser*, gocpp::error> rec::GetTokenUser(golang::syscall::Token t)
+    std::tuple<Tokenuser*, gocpp::error> rec::GetTokenUser(Token t)
     {
         auto [i, e] = rec::getInfo(gocpp::recv(t), TokenUser, 50);
         if(e != nullptr)
@@ -433,7 +433,7 @@ namespace golang::syscall
     // GetTokenPrimaryGroup retrieves access token t primary group information.
     // A pointer to a SID structure representing a group that will become
     // the primary group of any objects created by a process using this access token.
-    std::tuple<Tokenprimarygroup*, gocpp::error> rec::GetTokenPrimaryGroup(golang::syscall::Token t)
+    std::tuple<Tokenprimarygroup*, gocpp::error> rec::GetTokenPrimaryGroup(Token t)
     {
         auto [i, e] = rec::getInfo(gocpp::recv(t), TokenPrimaryGroup, 50);
         if(e != nullptr)
@@ -445,7 +445,7 @@ namespace golang::syscall
 
     // GetUserProfileDirectory retrieves path to the
     // root directory of the access token t user's profile.
-    std::tuple<gocpp::string, gocpp::error> rec::GetUserProfileDirectory(golang::syscall::Token t)
+    std::tuple<gocpp::string, gocpp::error> rec::GetUserProfileDirectory(Token t)
     {
         auto n = uint32_t(100);
         for(; ; )

@@ -407,7 +407,7 @@ namespace golang::reflectlite
 
     unsigned char* rec::data(golang::reflectlite::name n, int off, gocpp::string whySafe)
     {
-        return (unsigned char*)(reflectlite::add(gocpp::unsafe_pointer(n.bytes), uintptr_t(off), whySafe));
+        return (unsigned char*)(add(gocpp::unsafe_pointer(n.bytes), uintptr_t(off), whySafe));
     }
 
     bool rec::isExported(golang::reflectlite::name n)

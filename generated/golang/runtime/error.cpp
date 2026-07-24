@@ -187,11 +187,11 @@ namespace golang::runtime
     }
 
     // An errorString represents a runtime error described by a single string.
-    void rec::RuntimeError(golang::runtime::errorString e)
+    void rec::RuntimeError(errorString e)
     {
     }
 
-    gocpp::string rec::Error(golang::runtime::errorString e)
+    gocpp::string rec::Error(errorString e)
     {
         return "runtime error: "_s + gocpp::string(e);
     }

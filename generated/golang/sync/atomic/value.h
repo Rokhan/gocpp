@@ -51,10 +51,10 @@ namespace golang::atomic
 
     namespace rec
     {
-        go_any Load(golang::atomic::Value* v);
-        void Store(golang::atomic::Value* v, go_any val);
-        go_any Swap(golang::atomic::Value* v, go_any go_new);
-        bool CompareAndSwap(golang::atomic::Value* v, go_any old, go_any go_new);
+        go_any Load(Value* v);
+        void Store(Value* v, go_any val);
+        go_any Swap(Value* v, go_any go_new);
+        bool CompareAndSwap(Value* v, go_any old, go_any go_new);
     }
 }
 

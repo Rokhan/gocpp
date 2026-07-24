@@ -81,7 +81,7 @@ namespace golang::reflectlite
                     std::tie(ps[i], ps[j]) = std::tuple{ps[j], ps[i]};
                 };
             }
-            if(rec::Kind(gocpp::recv(typ)) == String)
+            if(rec::Kind(gocpp::recv(typ)) == reflectlite::String)
             {
                 auto ss = *(gocpp::slice<gocpp::string>*)(v.ptr);
                 return [=](int i, int j) mutable -> void

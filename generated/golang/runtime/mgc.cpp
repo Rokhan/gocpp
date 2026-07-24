@@ -113,7 +113,7 @@ namespace golang::runtime
             go_throw("size of Workbuf is suboptimal"_s);
         }
         // No sweep on the first cycle.
-        rec::Store(gocpp::recv(sweep.active.state), sweepDrainedMask);
+        rec::Store(gocpp::recv(runtime::sweep.active.state), sweepDrainedMask);
 
         // Initialize GC pacer state.
         // Use the environment variable GOGC for the initial gcPercent value.
@@ -1150,8 +1150,8 @@ namespace golang::runtime
         // Reset assist time and background time stats.
         // Do this now, instead of at the start of the next GC cycle, because
         // these two may keep accumulating even if the GC is not active.
-        rec::Store(gocpp::recv(scavenge.assistTime), 0);
-        rec::Store(gocpp::recv(scavenge.backgroundTime), 0);
+        rec::Store(gocpp::recv(runtime::scavenge.assistTime), 0);
+        rec::Store(gocpp::recv(runtime::scavenge.backgroundTime), 0);
 
         // Reset idle time stat.
         rec::Store(gocpp::recv(sched.idleTime), 0);
@@ -1190,7 +1190,7 @@ namespace golang::runtime
         // N.B. Below we might duplicate some work from gcSweep; this is
         // fine as all that work is idempotent within a GC cycle, and
         // we're still holding worldsema so a new cycle can't start.
-        auto sl = rec::begin(gocpp::recv(sweep.active));
+        auto sl = rec::begin(gocpp::recv(runtime::sweep.active));
         if(! stwSwept && ! sl.valid)
         {
             go_throw("failed to set sweep barrier"_s);
@@ -1257,7 +1257,7 @@ namespace golang::runtime
             // Note: this sweepLocker may not be valid if sweeping had
             // already completed during the STW. See the corresponding
             // begin() call that produced sl.
-            rec::end(gocpp::recv(sweep.active), sl);
+            rec::end(gocpp::recv(runtime::sweep.active), sl);
         }
 
         // Print gctrace before dropping worldsema. As soon as we drop
@@ -1786,14 +1786,14 @@ namespace golang::runtime
 
         lock(& mheap_.lock);
         mheap_.sweepgen += 2;
-        rec::reset(gocpp::recv(sweep.active));
+        rec::reset(gocpp::recv(runtime::sweep.active));
         rec::Store(gocpp::recv(mheap_.pagesSwept), 0);
         mheap_.sweepArenas = mheap_.allArenas;
         rec::Store(gocpp::recv(mheap_.reclaimIndex), 0);
         rec::Store(gocpp::recv(mheap_.reclaimCredit), 0);
         unlock(& mheap_.lock);
 
-        rec::clear(gocpp::recv(sweep.centralIndex));
+        rec::clear(gocpp::recv(runtime::sweep.centralIndex));
 
         if(! concurrentSweep || mode == gcForceBlockMode)
         {
@@ -1825,13 +1825,13 @@ namespace golang::runtime
         }
 
         // Background sweep.
-        lock(& sweep.lock);
-        if(sweep.parked)
+        lock(& runtime::sweep.lock);
+        if(runtime::sweep.parked)
         {
-            sweep.parked = false;
-            ready(sweep.g, 0, true);
+            runtime::sweep.parked = false;
+            ready(runtime::sweep.g, 0, true);
         }
-        unlock(& sweep.lock);
+        unlock(& runtime::sweep.lock);
         return false;
     }
 

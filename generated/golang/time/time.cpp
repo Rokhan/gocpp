@@ -620,7 +620,7 @@ namespace golang::time
             u = - u;
         }
 
-        if(u < uint64_t(Second))
+        if(u < uint64_t(time::Second))
         {
             // Special case: if duration is smaller than a second,
             // use smaller units, like 1.2ms
@@ -775,24 +775,24 @@ namespace golang::time
     // Seconds returns the duration as a floating point number of seconds.
     double rec::Seconds(Duration d)
     {
-        auto sec = d / Second;
-        auto nsec = d % Second;
+        auto sec = d / time::Second;
+        auto nsec = d % time::Second;
         return double(sec) + double(nsec) / 1e9;
     }
 
     // Minutes returns the duration as a floating point number of minutes.
     double rec::Minutes(Duration d)
     {
-        auto min = d / Minute;
-        auto nsec = d % Minute;
+        auto min = d / time::Minute;
+        auto nsec = d % time::Minute;
         return double(min) + double(nsec) / (60 * 1e9);
     }
 
     // Hours returns the duration as a floating point number of hours.
     double rec::Hours(Duration d)
     {
-        auto hour = d / Hour;
-        auto nsec = d % Hour;
+        auto hour = d / time::Hour;
+        auto nsec = d % time::Hour;
         return double(hour) + double(nsec) / (60 * 60 * 1e9);
     }
 
@@ -922,7 +922,7 @@ namespace golang::time
         {
             return subMono(t.ext, u.ext);
         }
-        auto d = Duration(rec::sec(gocpp::recv(t)) - rec::sec(gocpp::recv(u))) * Second + Duration(rec::nsec(gocpp::recv(t)) - rec::nsec(gocpp::recv(u)));
+        auto d = Duration(rec::sec(gocpp::recv(t)) - rec::sec(gocpp::recv(u))) * time::Second + Duration(rec::nsec(gocpp::recv(t)) - rec::nsec(gocpp::recv(u)));
         // Check for overflow or underflow.
         //Go switch emulation
         {
@@ -1200,14 +1200,14 @@ namespace golang::time
             // Seconds field overflowed the 33 bits available when
             // storing a monotonic time. This will be true after
             // March 16, 2157.
-            return Time {uint64_t(nsec), sec + minWall, Local};
+            return Time {uint64_t(nsec), sec + minWall, time::Local};
         }
-        return Time {hasMonotonic | (uint64_t(sec) << nsecShift) | uint64_t(nsec), mono, Local};
+        return Time {hasMonotonic | (uint64_t(sec) << nsecShift) | uint64_t(nsec), mono, time::Local};
     }
 
     Time unixTime(int64_t sec, int32_t nsec)
     {
-        return Time {uint64_t(nsec), sec + unixToInternal, Local};
+        return Time {uint64_t(nsec), sec + unixToInternal, time::Local};
     }
 
     // UTC returns t with the location set to UTC.
@@ -1220,7 +1220,7 @@ namespace golang::time
     // Local returns t with the location set to local time.
     Time rec::Local(Time t)
     {
-        rec::setLoc(gocpp::recv(t), Local);
+        rec::setLoc(gocpp::recv(t), time::Local);
         return t;
     }
 
@@ -1245,7 +1245,7 @@ namespace golang::time
         auto l = t.loc;
         if(l == nullptr)
         {
-            l = UTC;
+            l = time::UTC;
         }
         return l;
     }
@@ -1333,7 +1333,7 @@ namespace golang::time
         int8_t offsetSec = {};
         auto version = timeBinaryVersionV1;
 
-        if(rec::Location(gocpp::recv(t)) == UTC)
+        if(rec::Location(gocpp::recv(t)) == time::UTC)
         {
             offsetMin = - 1;
         }
@@ -1429,9 +1429,9 @@ namespace golang::time
             rec::setLoc(gocpp::recv(t), & utcLoc);
         }
         else
-        if(auto [gocpp_id_22, localoff, gocpp_id_23, gocpp_id_24, gocpp_id_25] = rec::lookup(gocpp::recv(Local), rec::unixSec(gocpp::recv(t))); offset == localoff)
+        if(auto [gocpp_id_22, localoff, gocpp_id_23, gocpp_id_24, gocpp_id_25] = rec::lookup(gocpp::recv(time::Local), rec::unixSec(gocpp::recv(t))); offset == localoff)
         {
-            rec::setLoc(gocpp::recv(t), Local);
+            rec::setLoc(gocpp::recv(t), time::Local);
         }
         else
         {
@@ -1731,8 +1731,8 @@ namespace golang::time
         //Go switch emulation
         {
             int conditionId = -1;
-            if(d < Second && Second % (d + d) == 0) { conditionId = 0; }
-            else if(d % Second == 0) { conditionId = 1; }
+            if(d < time::Second && time::Second % (d + d) == 0) { conditionId = 0; }
+            else if(d % time::Second == 0) { conditionId = 1; }
             switch(conditionId)
             {
                 // Special case: 2d divides 1 second.
@@ -1744,9 +1744,9 @@ namespace golang::time
                 // Special case: d is a multiple of 1 second.
                 case 1:
                 {
-                    auto d1 = int64_t(d / Second);
+                    auto d1 = int64_t(d / time::Second);
                     qmod2 = int(sec / d1) & 1;
-                    r = Duration(sec % d1) * Second + Duration(nsec);
+                    r = Duration(sec % d1) * time::Second + Duration(nsec);
                     break;
                 }
 

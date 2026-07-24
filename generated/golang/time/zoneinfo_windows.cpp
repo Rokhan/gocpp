@@ -173,7 +173,7 @@ namespace golang::time
         // d.Day is week within the month (1 to 5, where 5 is last week of the month)
         // d.Hour, d.Minute and d.Second are absolute time
         auto day = 1;
-        auto t = Date(year, Month(d->Month), day, int(d->Hour), int(d->Minute), int(d->Second), 0, UTC);
+        auto t = Date(year, Month(d->Month), day, int(d->Hour), int(d->Minute), int(d->Second), 0, time::UTC);
         auto i = int(d->DayOfWeek) - int(rec::Weekday(gocpp::recv(t)));
         if(i < 0)
         {

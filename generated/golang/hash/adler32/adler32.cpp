@@ -51,7 +51,7 @@ namespace golang::adler32
 
     int rec::Size(digest* d)
     {
-        return Size;
+        return adler32::Size;
     }
 
     int rec::BlockSize(digest* d)

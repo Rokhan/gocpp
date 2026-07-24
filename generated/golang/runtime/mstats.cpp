@@ -1077,8 +1077,8 @@ namespace golang::runtime
 
         // The rest of the stats below are either derived from the above or
         // are reset on each mark termination.
-        auto scavAssistCpu = rec::Load(gocpp::recv(scavenge.assistTime));
-        auto scavBgCpu = rec::Load(gocpp::recv(scavenge.backgroundTime));
+        auto scavAssistCpu = rec::Load(gocpp::recv(runtime::scavenge.assistTime));
+        auto scavBgCpu = rec::Load(gocpp::recv(runtime::scavenge.backgroundTime));
 
         // Update cumulative GC CPU stats.
         s->gcAssistTime += markAssistCpu;

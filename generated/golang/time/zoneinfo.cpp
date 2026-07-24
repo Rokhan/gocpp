@@ -957,11 +957,11 @@ namespace golang::time
     {
         if(name == ""_s || name == "UTC"_s)
         {
-            return {UTC, nullptr};
+            return {time::UTC, nullptr};
         }
         if(name == "Local"_s)
         {
-            return {Local, nullptr};
+            return {time::Local, nullptr};
         }
         if(containsDotDot(name) || name[0] == '/' || name[0] == '\\')
         {

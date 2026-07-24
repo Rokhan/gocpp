@@ -173,7 +173,7 @@ namespace golang::time
         }
 
         // Parse the time zone.
-        auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
+        auto t = Date(year, Month(month), day, hour, min, sec, nsec, time::UTC);
         if(len(s) != 1 || s[0] != 'Z')
         {
             if(len(s) != len("-07:00"_s))
@@ -210,7 +210,7 @@ namespace golang::time
 
     std::tuple<Time, gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b)
     {
-        auto [t, ok] = parseRFC3339(b, Local);
+        auto [t, ok] = parseRFC3339(b, time::Local);
         if(! ok)
         {
             auto [t, err] = Parse(RFC3339, gocpp::string(b));

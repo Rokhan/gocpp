@@ -1067,7 +1067,7 @@ namespace golang::runtime
 
         auto n0 = n;
         uintptr_t nFreed = {};
-        auto sl = rec::begin(gocpp::recv(sweep.active));
+        auto sl = rec::begin(gocpp::recv(runtime::sweep.active));
         if(! sl.valid)
         {
             return 0;
@@ -1128,7 +1128,7 @@ namespace golang::runtime
             pageIdx += uintptr_t(len(inUse) * 8);
             n -= uintptr_t(len(inUse) * 8);
         }
-        rec::end(gocpp::recv(sweep.active), sl);
+        rec::end(gocpp::recv(runtime::sweep.active), sl);
         auto trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))
         {
@@ -1534,7 +1534,7 @@ namespace golang::runtime
                 forceScavenge = true;
             }
         }
-        if(auto goal = rec::Load(gocpp::recv(scavenge.gcPercentGoal)); goal != ~ uint64_t(0) && growth > 0)
+        if(auto goal = rec::Load(gocpp::recv(runtime::scavenge.gcPercentGoal)); goal != ~ uint64_t(0) && growth > 0)
         {
             // We just caused a heap growth, so scavenge down what will soon be used.
             // By scavenging inline we deal with the failure to allocate out of
@@ -1587,7 +1587,7 @@ namespace golang::runtime
             {
                 rec::stop(gocpp::recv(pp->limiterEvent), limiterEventScavengeAssist, now);
             }
-            rec::Add(gocpp::recv(scavenge.assistTime), now - start);
+            rec::Add(gocpp::recv(runtime::scavenge.assistTime), now - start);
         }
 
         // Initialize the span.

@@ -276,14 +276,14 @@ namespace golang::reflect
         {
             auto condition = Kind(rec::Kind(gocpp::recv(t)));
             int conditionId = -1;
-            if(condition == UnsafePointer) { conditionId = 0; }
-            else if(condition == Pointer) { conditionId = 1; }
+            if(condition == reflect::UnsafePointer) { conditionId = 0; }
+            else if(condition == reflect::Pointer) { conditionId = 1; }
             else if(condition == Chan) { conditionId = 2; }
             else if(condition == Map) { conditionId = 3; }
             else if(condition == Func) { conditionId = 4; }
-            else if(condition == Bool) { conditionId = 5; }
-            else if(condition == Int) { conditionId = 6; }
-            else if(condition == Uint) { conditionId = 7; }
+            else if(condition == reflect::Bool) { conditionId = 5; }
+            else if(condition == reflect::Int) { conditionId = 6; }
+            else if(condition == reflect::Uint) { conditionId = 7; }
             else if(condition == Int8) { conditionId = 8; }
             else if(condition == Uint8) { conditionId = 9; }
             else if(condition == Int16) { conditionId = 10; }
@@ -297,9 +297,9 @@ namespace golang::reflect
             else if(condition == Float64) { conditionId = 18; }
             else if(condition == Complex64) { conditionId = 19; }
             else if(condition == Complex128) { conditionId = 20; }
-            else if(condition == String) { conditionId = 21; }
-            else if(condition == Interface) { conditionId = 22; }
-            else if(condition == Slice) { conditionId = 23; }
+            else if(condition == reflect::String) { conditionId = 21; }
+            else if(condition == reflect::Interface) { conditionId = 22; }
+            else if(condition == reflect::Slice) { conditionId = 23; }
             else if(condition == Array) { conditionId = 24; }
             else if(condition == Struct) { conditionId = 25; }
             switch(conditionId)

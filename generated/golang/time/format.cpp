@@ -571,9 +571,9 @@ namespace golang::time
             auto loc = rec::Location(gocpp::recv(t));
             auto condition = loc;
             int conditionId = -1;
-            if(condition == UTC) { conditionId = 0; }
+            if(condition == time::UTC) { conditionId = 0; }
             else if(condition == nullptr) { conditionId = 1; }
-            else if(condition == Local) { conditionId = 2; }
+            else if(condition == time::Local) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -1197,12 +1197,12 @@ namespace golang::time
         // Optimize for RFC3339 as it accounts for over half of all representations.
         if(layout == RFC3339 || layout == RFC3339Nano)
         {
-            if(auto [t, ok] = parseRFC3339(value, Local); ok)
+            if(auto [t, ok] = parseRFC3339(value, time::Local); ok)
             {
                 return {t, nullptr};
             }
         }
-        return parse(layout, value, UTC, Local);
+        return parse(layout, value, time::UTC, time::Local);
     }
 
     // ParseInLocation is like Parse but differs in two important ways.
@@ -1509,7 +1509,7 @@ namespace golang::time
                         if((std == stdISO8601TZ || std == stdISO8601ShortTZ || std == stdISO8601ColonTZ) && len(value) >= 1 && value[0] == 'Z')
                         {
                             value = value.make_slice(1);
-                            z = UTC;
+                            z = time::UTC;
                             break;
                         }
                         gocpp::string sign = {};
@@ -1612,7 +1612,7 @@ namespace golang::time
                         // Does it look like a time zone?
                         if(len(value) >= 3 && value.make_slice(0, 3) == "UTC"_s)
                         {
-                            z = UTC;
+                            z = time::UTC;
                             value = value.make_slice(3);
                             break;
                         }
@@ -1749,7 +1749,7 @@ namespace golang::time
 
         if(zoneOffset != - 1)
         {
-            auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
+            auto t = Date(year, Month(month), day, hour, min, sec, nsec, time::UTC);
             rec::addSec(gocpp::recv(t), - int64_t(zoneOffset));
 
             // Look for local zone with the given offset.
@@ -1770,7 +1770,7 @@ namespace golang::time
 
         if(zoneName != ""_s)
         {
-            auto t = Date(year, Month(month), day, hour, min, sec, nsec, UTC);
+            auto t = Date(year, Month(month), day, hour, min, sec, nsec, time::UTC);
             // Look for local zone with the given offset.
             // If that zone was in effect at the given time, use it.
             auto [offset, ok] = rec::lookupName(gocpp::recv(local), zoneName, rec::unixSec(gocpp::recv(t)));
@@ -2038,14 +2038,14 @@ namespace golang::time
     }
 
     gocpp::map<gocpp::string, uint64_t> unitMap = gocpp::map<gocpp::string, uint64_t> {
-        { "ns"_s, uint64_t(Nanosecond) },
+        { "ns"_s, uint64_t(time::Nanosecond) },
         { "us"_s, uint64_t(Microsecond) },
         { "µs"_s, uint64_t(Microsecond) },
         { "μs"_s, uint64_t(Microsecond) },
         { "ms"_s, uint64_t(Millisecond) },
-        { "s"_s, uint64_t(Second) },
-        { "m"_s, uint64_t(Minute) },
-        { "h"_s, uint64_t(Hour) }
+        { "s"_s, uint64_t(time::Second) },
+        { "m"_s, uint64_t(time::Minute) },
+        { "h"_s, uint64_t(time::Hour) }
     };
     // ParseDuration parses a duration string.
     // A duration string is a possibly signed sequence of

@@ -1356,7 +1356,7 @@ namespace golang::runtime
             markBucketsEmpty(oldBuckets, rec::oldbucketmask(gocpp::recv(h)));
         }
 
-        h->flags &^= sameSizeGrow;
+        h->flags &^= runtime::sameSizeGrow;
         h->oldbuckets = nullptr;
         h->nevacuate = 0;
         h->noverflow = 0;
@@ -1399,7 +1399,7 @@ namespace golang::runtime
         if(! overLoadFactor(h->count + 1, h->B))
         {
             bigger = 0;
-            h->flags |= sameSizeGrow;
+            h->flags |= runtime::sameSizeGrow;
         }
         auto oldbuckets = h->buckets;
         auto [newbuckets, nextOverflow] = makeBucketArray(t, h->B + bigger, nullptr);
@@ -1469,7 +1469,7 @@ namespace golang::runtime
     // sameSizeGrow reports whether the current growth is to a map of the same size.
     bool rec::sameSizeGrow(hmap* h)
     {
-        return h->flags & sameSizeGrow != 0;
+        return h->flags & runtime::sameSizeGrow != 0;
     }
 
     // noldbuckets calculates the number of buckets prior to the current map growth.
@@ -1714,7 +1714,7 @@ namespace golang::runtime
             {
                 h->extra->oldoverflow = nullptr;
             }
-            h->flags &^= sameSizeGrow;
+            h->flags &^= runtime::sameSizeGrow;
         }
     }
 

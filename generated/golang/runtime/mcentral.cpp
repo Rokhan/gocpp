@@ -172,7 +172,7 @@ namespace golang::runtime
             goto havespan;
         }
 
-        sl = rec::begin(gocpp::recv(sweep.active));
+        sl = rec::begin(gocpp::recv(runtime::sweep.active));
         if(sl.valid)
         {
             // Now try partial unswept spans.
@@ -195,7 +195,7 @@ namespace golang::runtime
                     {
                         // We got ownership of the span, so let's sweep it and use it.
                         rec::sweep(gocpp::recv(s), true);
-                        rec::end(gocpp::recv(sweep.active), sl);
+                        rec::end(gocpp::recv(runtime::sweep.active), sl);
                         goto havespan;
                     }
                 }
@@ -221,7 +221,7 @@ namespace golang::runtime
                         if(freeIndex != s->mspan.nelems)
                         {
                             s->mspan.freeindex = freeIndex;
-                            rec::end(gocpp::recv(sweep.active), sl);
+                            rec::end(gocpp::recv(runtime::sweep.active), sl);
                             goto havespan;
                         }
                         // Add it to the swept list, because sweeping didn't give us any free space.
@@ -229,7 +229,7 @@ namespace golang::runtime
                     }
                 }
             }
-            rec::end(gocpp::recv(sweep.active), sl);
+            rec::end(gocpp::recv(runtime::sweep.active), sl);
         }
         trace = traceAcquire();
         if(rec::ok(gocpp::recv(trace)))

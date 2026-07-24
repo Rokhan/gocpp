@@ -166,7 +166,7 @@ namespace golang::runtime
     mspan* rec::nextSpanForSweep(mheap* h)
     {
         auto sg = h->sweepgen;
-        for(auto sc = rec::load(gocpp::recv(sweep.centralIndex)); sc < numSweepClasses; sc++)
+        for(auto sc = rec::load(gocpp::recv(runtime::sweep.centralIndex)); sc < numSweepClasses; sc++)
         {
             auto [spc, full] = rec::split(gocpp::recv(sc));
             auto c = & h->central[spc].mcentral;
@@ -183,12 +183,12 @@ namespace golang::runtime
             {
                 // Write down that we found something so future sweepers
                 // can start from here.
-                rec::update(gocpp::recv(sweep.centralIndex), sc);
+                rec::update(gocpp::recv(runtime::sweep.centralIndex), sc);
                 return s;
             }
         }
         // Write down that we found nothing.
-        rec::update(gocpp::recv(sweep.centralIndex), sweepClassDone);
+        rec::update(gocpp::recv(runtime::sweep.centralIndex), sweepClassDone);
         return nullptr;
     }
 
@@ -352,7 +352,7 @@ namespace golang::runtime
         // things. Either we were able to preempt a sweeper, or that
         // a sweeper didn't call sweep.active.end when it should have.
         // Both cases indicate a bug, so throw.
-        if(rec::sweepers(gocpp::recv(sweep.active)) != 0)
+        if(rec::sweepers(gocpp::recv(runtime::sweep.active)) != 0)
         {
             go_throw("active sweepers found at start of mark phase"_s);
         }
@@ -380,13 +380,13 @@ namespace golang::runtime
 
     void bgsweep(gocpp::channel<int> c)
     {
-        sweep.g = getg();
+        runtime::sweep.g = getg();
 
-        lockInit(& sweep.lock, lockRankSweep);
-        lock(& sweep.lock);
-        sweep.parked = true;
+        lockInit(& runtime::sweep.lock, lockRankSweep);
+        lock(& runtime::sweep.lock);
+        runtime::sweep.parked = true;
         c.send(1);
-        goparkunlock(& sweep.lock, waitReasonGCSweepWait, traceBlockGCSweep, 1);
+        goparkunlock(& runtime::sweep.lock, waitReasonGCSweepWait, traceBlockGCSweep, 1);
 
         for(; ; )
         {
@@ -419,17 +419,17 @@ namespace golang::runtime
                 // N.B. freeSomeWbufs is already batched internally.
                 goschedIfBusy();
             }
-            lock(& sweep.lock);
+            lock(& runtime::sweep.lock);
             if(! isSweepDone())
             {
                 // This can happen if a GC runs between
                 // gosweepone returning ^0 above
                 // and the lock being acquired.
-                unlock(& sweep.lock);
+                unlock(& runtime::sweep.lock);
                 continue;
             }
-            sweep.parked = true;
-            goparkunlock(& sweep.lock, waitReasonGCSweepWait, traceBlockGCSweep, 1);
+            runtime::sweep.parked = true;
+            goparkunlock(& runtime::sweep.lock, waitReasonGCSweepWait, traceBlockGCSweep, 1);
         }
     }
 
@@ -529,7 +529,7 @@ namespace golang::runtime
 
         // TODO(austin): sweepone is almost always called in a loop;
         // lift the sweepLocker into its callers.
-        auto sl = rec::begin(gocpp::recv(sweep.active));
+        auto sl = rec::begin(gocpp::recv(runtime::sweep.active));
         if(! sl.valid)
         {
             gp->m->locks--;
@@ -544,7 +544,7 @@ namespace golang::runtime
             auto s = rec::nextSpanForSweep(gocpp::recv(mheap_));
             if(s == nullptr)
             {
-                noMoreWork = rec::markDrained(gocpp::recv(sweep.active));
+                noMoreWork = rec::markDrained(gocpp::recv(runtime::sweep.active));
                 break;
             }
             if(auto state = rec::get(gocpp::recv(s->state)); state != mSpanInUse)
@@ -583,7 +583,7 @@ namespace golang::runtime
                 }
             }
         }
-        rec::end(gocpp::recv(sweep.active), sl);
+        rec::end(gocpp::recv(runtime::sweep.active), sl);
 
         if(noMoreWork)
         {
@@ -634,7 +634,7 @@ namespace golang::runtime
     // somehow block GC progress.
     bool isSweepDone()
     {
-        return rec::isDone(gocpp::recv(sweep.active));
+        return rec::isDone(gocpp::recv(runtime::sweep.active));
     }
 
     // Returns only when span s has been swept.
@@ -654,7 +654,7 @@ namespace golang::runtime
         // If this operation fails, then that means that there are
         // no more spans to be swept. In this case, either s has already
         // been swept, or is about to be acquired for sweeping and swept.
-        auto sl = rec::begin(gocpp::recv(sweep.active));
+        auto sl = rec::begin(gocpp::recv(runtime::sweep.active));
         if(sl.valid)
         {
             // The caller must be sure that the span is a mSpanInUse span.
@@ -663,11 +663,11 @@ namespace golang::runtime
                 if(auto& s = s_tmp; ok)
                 {
                     rec::sweep(gocpp::recv(s), false);
-                    rec::end(gocpp::recv(sweep.active), sl);
+                    rec::end(gocpp::recv(runtime::sweep.active), sl);
                     return;
                 }
             }
-            rec::end(gocpp::recv(sweep.active), sl);
+            rec::end(gocpp::recv(runtime::sweep.active), sl);
         }
 
         // Unfortunately we can't sweep the span ourselves. Somebody else

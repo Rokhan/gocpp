@@ -89,6 +89,6 @@ namespace golang::reflect
     struct layoutKey;
     struct layoutType;
     // Ptr is the old name for the [Pointer] kind.
-    const Kind Ptr = Pointer;
+    const Kind Ptr = reflect::Pointer;
     const ChanDir BothDir = RecvDir | SendDir;
 }

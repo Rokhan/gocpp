@@ -179,7 +179,7 @@ namespace golang::crc32
 
     int rec::Size(digest* d)
     {
-        return Size;
+        return crc32::Size;
     }
 
     int rec::BlockSize(digest* d)

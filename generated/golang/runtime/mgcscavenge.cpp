@@ -113,11 +113,11 @@ namespace golang::runtime
         // limit, so we'll be safe even if we stop the scavenger when we shouldn't have.
         if(mappedReady <= memoryLimitGoal)
         {
-            rec::Store(gocpp::recv(scavenge.memoryLimitGoal), ~ uint64_t(0));
+            rec::Store(gocpp::recv(runtime::scavenge.memoryLimitGoal), ~ uint64_t(0));
         }
         else
         {
-            rec::Store(gocpp::recv(scavenge.memoryLimitGoal), memoryLimitGoal);
+            rec::Store(gocpp::recv(runtime::scavenge.memoryLimitGoal), memoryLimitGoal);
         }
 
         // Now handle the gcPercent goal.
@@ -127,7 +127,7 @@ namespace golang::runtime
         // or garbage data later.
         if(lastHeapGoal == 0)
         {
-            rec::Store(gocpp::recv(scavenge.gcPercentGoal), ~ uint64_t(0));
+            rec::Store(gocpp::recv(runtime::scavenge.gcPercentGoal), ~ uint64_t(0));
             return;
         }
         // Compute our scavenging goal.
@@ -158,11 +158,11 @@ namespace golang::runtime
         // proportional to the heap goal.
         if(heapRetainedNow <= gcPercentGoal || heapRetainedNow - gcPercentGoal < uint64_t(physPageSize))
         {
-            rec::Store(gocpp::recv(scavenge.gcPercentGoal), ~ uint64_t(0));
+            rec::Store(gocpp::recv(runtime::scavenge.gcPercentGoal), ~ uint64_t(0));
         }
         else
         {
-            rec::Store(gocpp::recv(scavenge.gcPercentGoal), gcPercentGoal);
+            rec::Store(gocpp::recv(runtime::scavenge.gcPercentGoal), gcPercentGoal);
         }
     }
 
@@ -324,7 +324,7 @@ namespace golang::runtime
                 {
                     return {r, 0};
                 }
-                rec::Add(gocpp::recv(scavenge.backgroundTime), end - start);
+                rec::Add(gocpp::recv(runtime::scavenge.backgroundTime), end - start);
                 return {r, end - start};
             };
         }
@@ -333,8 +333,8 @@ namespace golang::runtime
             s->shouldStop = [=]() mutable -> bool
             {
                 // If background scavenging is disabled or if there's no work to do just stop.
-                return heapRetained() <= rec::Load(gocpp::recv(scavenge.gcPercentGoal)) &&
-                                rec::Load(gocpp::recv(gcController.mappedReady)) <= rec::Load(gocpp::recv(scavenge.memoryLimitGoal));
+                return heapRetained() <= rec::Load(gocpp::recv(runtime::scavenge.gcPercentGoal)) &&
+                                rec::Load(gocpp::recv(gcController.mappedReady)) <= rec::Load(gocpp::recv(runtime::scavenge.memoryLimitGoal));
             };
         }
         if(s->gomaxprocs == nullptr)

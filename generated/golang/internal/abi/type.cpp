@@ -127,7 +127,7 @@ namespace golang::abi
         x[Map] = "map"_s;
         x[Pointer] = "ptr"_s;
         x[Slice] = "slice"_s;
-        x[String] = "string"_s;
+        x[abi::String] = "string"_s;
         x[Struct] = "struct"_s;
         x[UnsafePointer] = "unsafe.Pointer"_s;
     });

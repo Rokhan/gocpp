@@ -66,7 +66,7 @@ namespace golang::time
 namespace golang::time
 {
     struct Time;
-    const Duration Microsecond = 1000 * Nanosecond;
+    const Duration Microsecond = 1000 * time::Nanosecond;
     const int secondsPerDay = 24 * secondsPerHour;
     // Offsets to convert between internal and absolute or Unix times.
     const int64_t absoluteToInternal = (absoluteZeroYear - internalYear) * 365.2425 * secondsPerDay;
@@ -79,6 +79,6 @@ namespace golang::time
     const int64_t internalToAbsolute = - absoluteToInternal;
     const int64_t internalToUnix = - unixToInternal;
     const Duration Second = 1000 * Millisecond;
-    const Duration Minute = 60 * Second;
-    const Duration Hour = 60 * Minute;
+    const Duration Minute = 60 * time::Second;
+    const Duration Hour = 60 * time::Minute;
 }

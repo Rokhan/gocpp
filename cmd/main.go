@@ -3978,8 +3978,18 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 
 			case "new":
 				convertAsType = true
-				cv.BuffExprPrintf(buf, "new ")
-				closeStr = "{}"
+				if len(n.Args) == 1 && cv.IsExprArray(n.Args[0]) {
+					// TODO, we should have a way to tell array_ptr own the pointer here
+					cv.BuffExprPrintf(buf, "gocpp::array_ptr(new ")
+					closeStr = "{})"
+				} else {
+					cv.BuffExprPrintf(buf, "new ")
+					closeStr = "{}"
+				}
+
+				if cv.shared.debugMode {
+					buf.dbgs = append(buf.dbgs, fmt.Sprintf("/*DEBUG: new, %T, %s, %T*/", n.Fun, types.ExprString(n.Args[0]), cv.typeInfo.Types[n.Args[0]]))
+				}
 
 			default:
 				needNamespace := false

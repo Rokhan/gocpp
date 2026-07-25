@@ -201,6 +201,7 @@ namespace gocpp
         return std::any_cast<std::string>(value);
     }
 
+    // TODO: we should add a parameter to indicate if we own or rent the target pointer
     template <typename TArray>
     struct array_ptr
     {

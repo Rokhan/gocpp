@@ -23,6 +23,9 @@ namespace golang::fmt
         State& operator=(State& i) = default;
         State& operator=(const State& i) = default;
 
+        inline State(nullptr_t) {};
+        State& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         State(T& ref);
 
@@ -73,7 +76,9 @@ namespace golang::fmt
             TStore value;
         };
 
-        std::shared_ptr<IState> value;
+        inline IState* value() const;
+
+        std::shared_ptr<IState> mValue;
     };
 
     namespace rec
@@ -102,6 +107,9 @@ namespace golang::fmt
         Formatter(const Formatter& i) = default;
         Formatter& operator=(Formatter& i) = default;
         Formatter& operator=(const Formatter& i) = default;
+
+        inline Formatter(nullptr_t) {};
+        Formatter& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Formatter(T& ref);
@@ -140,7 +148,9 @@ namespace golang::fmt
             TStore value;
         };
 
-        std::shared_ptr<IFormatter> value;
+        inline IFormatter* value() const;
+
+        std::shared_ptr<IFormatter> mValue;
     };
 
     namespace rec
@@ -160,6 +170,9 @@ namespace golang::fmt
         Stringer(const Stringer& i) = default;
         Stringer& operator=(Stringer& i) = default;
         Stringer& operator=(const Stringer& i) = default;
+
+        inline Stringer(nullptr_t) {};
+        Stringer& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Stringer(T& ref);
@@ -198,7 +211,9 @@ namespace golang::fmt
             TStore value;
         };
 
-        std::shared_ptr<IStringer> value;
+        inline IStringer* value() const;
+
+        std::shared_ptr<IStringer> mValue;
     };
 
     namespace rec
@@ -218,6 +233,9 @@ namespace golang::fmt
         GoStringer(const GoStringer& i) = default;
         GoStringer& operator=(GoStringer& i) = default;
         GoStringer& operator=(const GoStringer& i) = default;
+
+        inline GoStringer(nullptr_t) {};
+        GoStringer& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         GoStringer(T& ref);
@@ -256,7 +274,9 @@ namespace golang::fmt
             TStore value;
         };
 
-        std::shared_ptr<IGoStringer> value;
+        inline IGoStringer* value() const;
+
+        std::shared_ptr<IGoStringer> mValue;
     };
 
     namespace rec

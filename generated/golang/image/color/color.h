@@ -23,6 +23,9 @@ namespace golang::color
         Color& operator=(Color& i) = default;
         Color& operator=(const Color& i) = default;
 
+        inline Color(nullptr_t) {};
+        Color& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Color(T& ref);
 
@@ -66,7 +69,9 @@ namespace golang::color
             TStore value;
         };
 
-        std::shared_ptr<IColor> value;
+        inline IColor* value() const;
+
+        std::shared_ptr<IColor> mValue;
     };
 
     namespace rec
@@ -227,6 +232,9 @@ namespace golang::color
         Model& operator=(Model& i) = default;
         Model& operator=(const Model& i) = default;
 
+        inline Model(nullptr_t) {};
+        Model& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Model(T& ref);
 
@@ -264,7 +272,9 @@ namespace golang::color
             TStore value;
         };
 
-        std::shared_ptr<IModel> value;
+        inline IModel* value() const;
+
+        std::shared_ptr<IModel> mValue;
     };
 
     namespace rec

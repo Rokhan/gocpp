@@ -23,6 +23,9 @@ namespace golang::sort
         Interface& operator=(Interface& i) = default;
         Interface& operator=(const Interface& i) = default;
 
+        inline Interface(nullptr_t) {};
+        Interface& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Interface(T& ref);
 
@@ -80,7 +83,9 @@ namespace golang::sort
             TStore value;
         };
 
-        std::shared_ptr<IInterface> value;
+        inline IInterface* value() const;
+
+        std::shared_ptr<IInterface> mValue;
     };
 
     namespace rec

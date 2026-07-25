@@ -26,19 +26,19 @@ namespace golang::main
     template<typename T>
     Abser::Abser(T& ref)
     {
-        value.reset(new AbserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new AbserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Abser::Abser(const T& ref)
     {
-        value.reset(new AbserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new AbserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Abser::Abser(T* ptr)
     {
-        value.reset(new AbserImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new AbserImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Abser::PrintTo(std::ostream& os) const
@@ -52,16 +52,22 @@ namespace golang::main
         return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Abser::IAbser* Abser::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Abser'");
+    }
+
     namespace rec
     {
         double Abs(const gocpp::PtrRecv<struct Abser, false>& self)
         {
-            return self.ptr->value->vAbs();
+            return self.ptr->value()->vAbs();
         }
 
         double Abs(const gocpp::ObjRecv<struct Abser>& self)
         {
-            return self.obj.value->vAbs();
+            return self.obj.value()->vAbs();
         }
     }
 

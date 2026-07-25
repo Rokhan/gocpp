@@ -24,6 +24,9 @@ namespace golang::hash
         Hash& operator=(Hash& i) = default;
         Hash& operator=(const Hash& i) = default;
 
+        inline Hash(nullptr_t) {};
+        Hash& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Hash(T& ref);
 
@@ -78,7 +81,9 @@ namespace golang::hash
             TStore value;
         };
 
-        std::shared_ptr<IHash> value;
+        inline IHash* value() const;
+
+        std::shared_ptr<IHash> mValue;
     };
 
     namespace rec
@@ -110,6 +115,9 @@ namespace golang::hash
         Hash32(const Hash32& i) = default;
         Hash32& operator=(Hash32& i) = default;
         Hash32& operator=(const Hash32& i) = default;
+
+        inline Hash32(nullptr_t) {};
+        Hash32& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Hash32(T& ref);
@@ -148,7 +156,9 @@ namespace golang::hash
             TStore value;
         };
 
-        std::shared_ptr<IHash32> value;
+        inline IHash32* value() const;
+
+        std::shared_ptr<IHash32> mValue;
     };
 
     namespace rec
@@ -183,6 +193,9 @@ namespace golang::hash
         Hash64(const Hash64& i) = default;
         Hash64& operator=(Hash64& i) = default;
         Hash64& operator=(const Hash64& i) = default;
+
+        inline Hash64(nullptr_t) {};
+        Hash64& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Hash64(T& ref);
@@ -221,7 +234,9 @@ namespace golang::hash
             TStore value;
         };
 
-        std::shared_ptr<IHash64> value;
+        inline IHash64* value() const;
+
+        std::shared_ptr<IHash64> mValue;
     };
 
     namespace rec

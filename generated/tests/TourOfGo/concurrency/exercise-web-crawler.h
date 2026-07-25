@@ -23,6 +23,9 @@ namespace golang::main
         Fetcher& operator=(Fetcher& i) = default;
         Fetcher& operator=(const Fetcher& i) = default;
 
+        inline Fetcher(nullptr_t) {};
+        Fetcher& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Fetcher(T& ref);
 
@@ -62,7 +65,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<IFetcher> value;
+        inline IFetcher* value() const;
+
+        std::shared_ptr<IFetcher> mValue;
     };
 
     namespace rec

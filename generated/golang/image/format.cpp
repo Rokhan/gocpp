@@ -93,19 +93,19 @@ namespace golang::image
     template<typename T>
     reader::reader(T& ref)
     {
-        value.reset(new readerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new readerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     reader::reader(const T& ref)
     {
-        value.reset(new readerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new readerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     reader::reader(T* ptr)
     {
-        value.reset(new readerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new readerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& reader::PrintTo(std::ostream& os) const
@@ -119,26 +119,32 @@ namespace golang::image
         return rec::Peek(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
 
+    inline reader::Ireader* reader::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'reader'");
+    }
+
     namespace rec
     {
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct reader, false>& self, int _1)
         {
-            return self.ptr->value->vPeek(_1);
+            return self.ptr->value()->vPeek(_1);
         }
 
         std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::ObjRecv<struct reader>& self, int _1)
         {
-            return self.obj.value->vPeek(_1);
+            return self.obj.value()->vPeek(_1);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct reader, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vRead(p);
+            return self.ptr->value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct reader>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vRead(p);
+            return self.obj.value()->vRead(p);
         }
     }
 

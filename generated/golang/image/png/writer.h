@@ -23,6 +23,9 @@ namespace golang::png
         EncoderBufferPool& operator=(EncoderBufferPool& i) = default;
         EncoderBufferPool& operator=(const EncoderBufferPool& i) = default;
 
+        inline EncoderBufferPool(nullptr_t) {};
+        EncoderBufferPool& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         EncoderBufferPool(T& ref);
 
@@ -63,7 +66,9 @@ namespace golang::png
             TStore value;
         };
 
-        std::shared_ptr<IEncoderBufferPool> value;
+        inline IEncoderBufferPool* value() const;
+
+        std::shared_ptr<IEncoderBufferPool> mValue;
     };
 
     namespace rec
@@ -87,6 +92,9 @@ namespace golang::png
         opaquer(const opaquer& i) = default;
         opaquer& operator=(opaquer& i) = default;
         opaquer& operator=(const opaquer& i) = default;
+
+        inline opaquer(nullptr_t) {};
+        opaquer& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         opaquer(T& ref);
@@ -125,7 +133,9 @@ namespace golang::png
             TStore value;
         };
 
-        std::shared_ptr<Iopaquer> value;
+        inline Iopaquer* value() const;
+
+        std::shared_ptr<Iopaquer> mValue;
     };
 
     namespace rec

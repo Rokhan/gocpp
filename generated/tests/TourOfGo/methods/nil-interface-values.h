@@ -23,6 +23,9 @@ namespace golang::main
         I& operator=(I& i) = default;
         I& operator=(const I& i) = default;
 
+        inline I(nullptr_t) {};
+        I& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         I(T& ref);
 
@@ -60,7 +63,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<II> value;
+        inline II* value() const;
+
+        std::shared_ptr<II> mValue;
     };
 
     namespace rec

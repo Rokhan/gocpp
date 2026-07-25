@@ -24,6 +24,9 @@ namespace golang::reflectlite
         gocpp_id_3& operator=(gocpp_id_3& i) = default;
         gocpp_id_3& operator=(const gocpp_id_3& i) = default;
 
+        inline gocpp_id_3(nullptr_t) {};
+        gocpp_id_3& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         gocpp_id_3(T& ref);
 
@@ -61,7 +64,9 @@ namespace golang::reflectlite
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_3> value;
+        inline Igocpp_id_3* value() const;
+
+        std::shared_ptr<Igocpp_id_3> mValue;
     };
 
     namespace rec
@@ -81,6 +86,9 @@ namespace golang::reflectlite
         gocpp_id_4(const gocpp_id_4& i) = default;
         gocpp_id_4& operator=(gocpp_id_4& i) = default;
         gocpp_id_4& operator=(const gocpp_id_4& i) = default;
+
+        inline gocpp_id_4(nullptr_t) {};
+        gocpp_id_4& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         gocpp_id_4(T& ref);
@@ -119,7 +127,9 @@ namespace golang::reflectlite
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_4> value;
+        inline Igocpp_id_4* value() const;
+
+        std::shared_ptr<Igocpp_id_4> mValue;
     };
 
     namespace rec

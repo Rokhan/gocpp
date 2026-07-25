@@ -33,19 +33,19 @@ namespace golang::main
     template<typename T>
     III::III(T& ref)
     {
-        value.reset(new IIIImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new IIIImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     III::III(const T& ref)
     {
-        value.reset(new IIIImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new IIIImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     III::III(T* ptr)
     {
-        value.reset(new IIIImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new IIIImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& III::PrintTo(std::ostream& os) const
@@ -59,16 +59,22 @@ namespace golang::main
         return rec::M(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline III::IIII* III::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'III'");
+    }
+
     namespace rec
     {
         void M(const gocpp::PtrRecv<struct III, false>& self)
         {
-            return self.ptr->value->vM();
+            return self.ptr->value()->vM();
         }
 
         void M(const gocpp::ObjRecv<struct III>& self)
         {
-            return self.obj.value->vM();
+            return self.obj.value()->vM();
         }
     }
 

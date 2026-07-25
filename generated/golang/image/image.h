@@ -43,6 +43,9 @@ namespace golang::image
         Image& operator=(Image& i) = default;
         Image& operator=(const Image& i) = default;
 
+        inline Image(nullptr_t) {};
+        Image& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Image(T& ref);
 
@@ -92,7 +95,9 @@ namespace golang::image
             TStore value;
         };
 
-        std::shared_ptr<IImage> value;
+        inline IImage* value() const;
+
+        std::shared_ptr<IImage> mValue;
     };
 
     namespace rec
@@ -342,6 +347,9 @@ namespace golang::image
         RGBA64Image& operator=(RGBA64Image& i) = default;
         RGBA64Image& operator=(const RGBA64Image& i) = default;
 
+        inline RGBA64Image(nullptr_t) {};
+        RGBA64Image& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         RGBA64Image(T& ref);
 
@@ -383,7 +391,9 @@ namespace golang::image
             TStore value;
         };
 
-        std::shared_ptr<IRGBA64Image> value;
+        inline IRGBA64Image* value() const;
+
+        std::shared_ptr<IRGBA64Image> mValue;
     };
 
     namespace rec
@@ -412,6 +422,9 @@ namespace golang::image
         PalettedImage(const PalettedImage& i) = default;
         PalettedImage& operator=(PalettedImage& i) = default;
         PalettedImage& operator=(const PalettedImage& i) = default;
+
+        inline PalettedImage(nullptr_t) {};
+        PalettedImage& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         PalettedImage(T& ref);
@@ -451,7 +464,9 @@ namespace golang::image
             TStore value;
         };
 
-        std::shared_ptr<IPalettedImage> value;
+        inline IPalettedImage* value() const;
+
+        std::shared_ptr<IPalettedImage> mValue;
     };
 
     namespace rec

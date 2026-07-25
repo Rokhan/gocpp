@@ -105,19 +105,19 @@ namespace golang::zlib
     template<typename T>
     Resetter::Resetter(T& ref)
     {
-        value.reset(new ResetterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ResetterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Resetter::Resetter(const T& ref)
     {
-        value.reset(new ResetterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ResetterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Resetter::Resetter(T* ptr)
     {
-        value.reset(new ResetterImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ResetterImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Resetter::PrintTo(std::ostream& os) const
@@ -131,16 +131,22 @@ namespace golang::zlib
         return rec::Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
     }
 
+    inline Resetter::IResetter* Resetter::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Resetter'");
+    }
+
     namespace rec
     {
         gocpp::error Reset(const gocpp::PtrRecv<struct Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict)
         {
-            return self.ptr->value->vReset(r, dict);
+            return self.ptr->value()->vReset(r, dict);
         }
 
         gocpp::error Reset(const gocpp::ObjRecv<struct Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict)
         {
-            return self.obj.value->vReset(r, dict);
+            return self.obj.value()->vReset(r, dict);
         }
     }
 

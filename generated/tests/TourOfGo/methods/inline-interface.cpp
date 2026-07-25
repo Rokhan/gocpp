@@ -71,19 +71,19 @@ namespace golang::main
         template<typename T>
         gocpp_id_0::gocpp_id_0(T& ref)
         {
-            value.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
         gocpp_id_0::gocpp_id_0(const T& ref)
         {
-            value.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
         gocpp_id_0::gocpp_id_0(T* ptr)
         {
-            value.reset(new gocpp_id_0Impl<T, gocpp::ptr<T>>(ptr));
+            mValue.reset(new gocpp_id_0Impl<T, gocpp::ptr<T>>(ptr));
         }
 
         std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
@@ -97,16 +97,22 @@ namespace golang::main
             return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
         }
 
+        inline gocpp_id_0::Igocpp_id_0* gocpp_id_0::value() const
+        {
+            if(auto res = mValue.get()) { return res; }
+            throw gocpp::GoPanic("using nil value for interface 'gocpp_id_0'");
+        }
+
         namespace rec
         {
             double Abs(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
             {
-                return self.ptr->value->vAbs();
+                return self.ptr->value()->vAbs();
             }
 
             double Abs(const gocpp::ObjRecv<struct gocpp_id_0>& self)
             {
-                return self.obj.value->vAbs();
+                return self.obj.value()->vAbs();
             }
         }
 
@@ -135,19 +141,19 @@ namespace golang::main
     template<typename T>
     gocpp_id_1::gocpp_id_1(T& ref)
     {
-        value.reset(new gocpp_id_1Impl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new gocpp_id_1Impl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     gocpp_id_1::gocpp_id_1(const T& ref)
     {
-        value.reset(new gocpp_id_1Impl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new gocpp_id_1Impl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     gocpp_id_1::gocpp_id_1(T* ptr)
     {
-        value.reset(new gocpp_id_1Impl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new gocpp_id_1Impl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
@@ -161,16 +167,22 @@ namespace golang::main
         return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline gocpp_id_1::Igocpp_id_1* gocpp_id_1::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'gocpp_id_1'");
+    }
+
     namespace rec
     {
         double Abs(const gocpp::PtrRecv<struct gocpp_id_1, false>& self)
         {
-            return self.ptr->value->vAbs();
+            return self.ptr->value()->vAbs();
         }
 
         double Abs(const gocpp::ObjRecv<struct gocpp_id_1>& self)
         {
-            return self.obj.value->vAbs();
+            return self.obj.value()->vAbs();
         }
     }
 

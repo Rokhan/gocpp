@@ -23,6 +23,9 @@ namespace golang::main
         Abser& operator=(Abser& i) = default;
         Abser& operator=(const Abser& i) = default;
 
+        inline Abser(nullptr_t) {};
+        Abser& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Abser(T& ref);
 
@@ -60,7 +63,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<IAbser> value;
+        inline IAbser* value() const;
+
+        std::shared_ptr<IAbser> mValue;
     };
 
     namespace rec

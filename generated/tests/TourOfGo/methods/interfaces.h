@@ -23,6 +23,9 @@ namespace golang::main
         Abser& operator=(Abser& i) = default;
         Abser& operator=(const Abser& i) = default;
 
+        inline Abser(nullptr_t) {};
+        Abser& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Abser(T& ref);
 
@@ -60,7 +63,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<IAbser> value;
+        inline IAbser* value() const;
+
+        std::shared_ptr<IAbser> mValue;
     };
 
     namespace rec
@@ -80,6 +85,9 @@ namespace golang::main
         Adder(const Adder& i) = default;
         Adder& operator=(Adder& i) = default;
         Adder& operator=(const Adder& i) = default;
+
+        inline Adder(nullptr_t) {};
+        Adder& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Adder(T& ref);
@@ -118,7 +126,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<IAdder> value;
+        inline IAdder* value() const;
+
+        std::shared_ptr<IAdder> mValue;
     };
 
     namespace rec
@@ -138,6 +148,9 @@ namespace golang::main
         Multiplier(const Multiplier& i) = default;
         Multiplier& operator=(Multiplier& i) = default;
         Multiplier& operator=(const Multiplier& i) = default;
+
+        inline Multiplier(nullptr_t) {};
+        Multiplier& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Multiplier(T& ref);
@@ -176,7 +189,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<IMultiplier> value;
+        inline IMultiplier* value() const;
+
+        std::shared_ptr<IMultiplier> mValue;
     };
 
     namespace rec
@@ -213,6 +228,9 @@ namespace golang::main
         dummy(const dummy& i) = default;
         dummy& operator=(dummy& i) = default;
         dummy& operator=(const dummy& i) = default;
+
+        inline dummy(nullptr_t) {};
+        dummy& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         dummy(T& ref);
@@ -251,7 +269,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<Idummy> value;
+        inline Idummy* value() const;
+
+        std::shared_ptr<Idummy> mValue;
     };
 
     namespace rec
@@ -262,6 +282,8 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct dummy& value);
     void main();
+    void testNilDeref();
+    void f();
     struct Vertex
     {
         double X{};
@@ -289,6 +311,9 @@ namespace golang::main
         MultAdder(const MultAdder& i) = default;
         MultAdder& operator=(MultAdder& i) = default;
         MultAdder& operator=(const MultAdder& i) = default;
+
+        inline MultAdder(nullptr_t) {};
+        MultAdder& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         MultAdder(T& ref);
@@ -327,7 +352,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<IMultAdder> value;
+        inline IMultAdder* value() const;
+
+        std::shared_ptr<IMultAdder> mValue;
     };
 
     namespace rec

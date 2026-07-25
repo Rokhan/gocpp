@@ -24,19 +24,19 @@ namespace golang::main
     template<typename T>
     I::I(T& ref)
     {
-        value.reset(new IImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new IImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     I::I(const T& ref)
     {
-        value.reset(new IImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new IImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     I::I(T* ptr)
     {
-        value.reset(new IImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new IImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& I::PrintTo(std::ostream& os) const
@@ -50,16 +50,22 @@ namespace golang::main
         return rec::M(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline I::II* I::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'I'");
+    }
+
     namespace rec
     {
         void M(const gocpp::PtrRecv<struct I, false>& self)
         {
-            return self.ptr->value->vM();
+            return self.ptr->value()->vM();
         }
 
         void M(const gocpp::ObjRecv<struct I>& self)
         {
-            return self.obj.value->vM();
+            return self.obj.value()->vM();
         }
     }
 

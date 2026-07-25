@@ -112,6 +112,9 @@ namespace golang::syscall
         Sockaddr& operator=(Sockaddr& i) = default;
         Sockaddr& operator=(const Sockaddr& i) = default;
 
+        inline Sockaddr(nullptr_t) {};
+        Sockaddr& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Sockaddr(T& ref);
 
@@ -149,7 +152,9 @@ namespace golang::syscall
             TStore value;
         };
 
-        std::shared_ptr<ISockaddr> value;
+        inline ISockaddr* value() const;
+
+        std::shared_ptr<ISockaddr> mValue;
     };
 
     namespace rec

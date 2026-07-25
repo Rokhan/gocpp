@@ -23,6 +23,9 @@ namespace golang::io
         Reader& operator=(Reader& i) = default;
         Reader& operator=(const Reader& i) = default;
 
+        inline Reader(nullptr_t) {};
+        Reader& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Reader(T& ref);
 
@@ -60,7 +63,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IReader> value;
+        inline IReader* value() const;
+
+        std::shared_ptr<IReader> mValue;
     };
 
     namespace rec
@@ -80,6 +85,9 @@ namespace golang::io
         Writer(const Writer& i) = default;
         Writer& operator=(Writer& i) = default;
         Writer& operator=(const Writer& i) = default;
+
+        inline Writer(nullptr_t) {};
+        Writer& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Writer(T& ref);
@@ -118,7 +126,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IWriter> value;
+        inline IWriter* value() const;
+
+        std::shared_ptr<IWriter> mValue;
     };
 
     namespace rec
@@ -138,6 +148,9 @@ namespace golang::io
         Closer(const Closer& i) = default;
         Closer& operator=(Closer& i) = default;
         Closer& operator=(const Closer& i) = default;
+
+        inline Closer(nullptr_t) {};
+        Closer& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Closer(T& ref);
@@ -176,7 +189,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<ICloser> value;
+        inline ICloser* value() const;
+
+        std::shared_ptr<ICloser> mValue;
     };
 
     namespace rec
@@ -196,6 +211,9 @@ namespace golang::io
         Seeker(const Seeker& i) = default;
         Seeker& operator=(Seeker& i) = default;
         Seeker& operator=(const Seeker& i) = default;
+
+        inline Seeker(nullptr_t) {};
+        Seeker& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Seeker(T& ref);
@@ -234,7 +252,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<ISeeker> value;
+        inline ISeeker* value() const;
+
+        std::shared_ptr<ISeeker> mValue;
     };
 
     namespace rec
@@ -254,6 +274,9 @@ namespace golang::io
         ReaderFrom(const ReaderFrom& i) = default;
         ReaderFrom& operator=(ReaderFrom& i) = default;
         ReaderFrom& operator=(const ReaderFrom& i) = default;
+
+        inline ReaderFrom(nullptr_t) {};
+        ReaderFrom& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ReaderFrom(T& ref);
@@ -292,7 +315,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IReaderFrom> value;
+        inline IReaderFrom* value() const;
+
+        std::shared_ptr<IReaderFrom> mValue;
     };
 
     namespace rec
@@ -312,6 +337,9 @@ namespace golang::io
         WriterTo(const WriterTo& i) = default;
         WriterTo& operator=(WriterTo& i) = default;
         WriterTo& operator=(const WriterTo& i) = default;
+
+        inline WriterTo(nullptr_t) {};
+        WriterTo& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         WriterTo(T& ref);
@@ -350,7 +378,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IWriterTo> value;
+        inline IWriterTo* value() const;
+
+        std::shared_ptr<IWriterTo> mValue;
     };
 
     namespace rec
@@ -370,6 +400,9 @@ namespace golang::io
         ReaderAt(const ReaderAt& i) = default;
         ReaderAt& operator=(ReaderAt& i) = default;
         ReaderAt& operator=(const ReaderAt& i) = default;
+
+        inline ReaderAt(nullptr_t) {};
+        ReaderAt& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ReaderAt(T& ref);
@@ -408,7 +441,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IReaderAt> value;
+        inline IReaderAt* value() const;
+
+        std::shared_ptr<IReaderAt> mValue;
     };
 
     namespace rec
@@ -428,6 +463,9 @@ namespace golang::io
         WriterAt(const WriterAt& i) = default;
         WriterAt& operator=(WriterAt& i) = default;
         WriterAt& operator=(const WriterAt& i) = default;
+
+        inline WriterAt(nullptr_t) {};
+        WriterAt& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         WriterAt(T& ref);
@@ -466,7 +504,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IWriterAt> value;
+        inline IWriterAt* value() const;
+
+        std::shared_ptr<IWriterAt> mValue;
     };
 
     namespace rec
@@ -486,6 +526,9 @@ namespace golang::io
         ByteReader(const ByteReader& i) = default;
         ByteReader& operator=(ByteReader& i) = default;
         ByteReader& operator=(const ByteReader& i) = default;
+
+        inline ByteReader(nullptr_t) {};
+        ByteReader& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ByteReader(T& ref);
@@ -524,7 +567,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IByteReader> value;
+        inline IByteReader* value() const;
+
+        std::shared_ptr<IByteReader> mValue;
     };
 
     namespace rec
@@ -544,6 +589,9 @@ namespace golang::io
         ByteWriter(const ByteWriter& i) = default;
         ByteWriter& operator=(ByteWriter& i) = default;
         ByteWriter& operator=(const ByteWriter& i) = default;
+
+        inline ByteWriter(nullptr_t) {};
+        ByteWriter& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ByteWriter(T& ref);
@@ -582,7 +630,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IByteWriter> value;
+        inline IByteWriter* value() const;
+
+        std::shared_ptr<IByteWriter> mValue;
     };
 
     namespace rec
@@ -602,6 +652,9 @@ namespace golang::io
         RuneReader(const RuneReader& i) = default;
         RuneReader& operator=(RuneReader& i) = default;
         RuneReader& operator=(const RuneReader& i) = default;
+
+        inline RuneReader(nullptr_t) {};
+        RuneReader& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         RuneReader(T& ref);
@@ -640,7 +693,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IRuneReader> value;
+        inline IRuneReader* value() const;
+
+        std::shared_ptr<IRuneReader> mValue;
     };
 
     namespace rec
@@ -660,6 +715,9 @@ namespace golang::io
         StringWriter(const StringWriter& i) = default;
         StringWriter& operator=(StringWriter& i) = default;
         StringWriter& operator=(const StringWriter& i) = default;
+
+        inline StringWriter(nullptr_t) {};
+        StringWriter& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         StringWriter(T& ref);
@@ -698,7 +756,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IStringWriter> value;
+        inline IStringWriter* value() const;
+
+        std::shared_ptr<IStringWriter> mValue;
     };
 
     namespace rec
@@ -734,6 +794,9 @@ namespace golang::io
         ReadWriter& operator=(ReadWriter& i) = default;
         ReadWriter& operator=(const ReadWriter& i) = default;
 
+        inline ReadWriter(nullptr_t) {};
+        ReadWriter& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         ReadWriter(T& ref);
 
@@ -768,7 +831,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IReadWriter> value;
+        inline IReadWriter* value() const;
+
+        std::shared_ptr<IReadWriter> mValue;
     };
 
     namespace rec
@@ -791,6 +856,9 @@ namespace golang::io
         ReadCloser(const ReadCloser& i) = default;
         ReadCloser& operator=(ReadCloser& i) = default;
         ReadCloser& operator=(const ReadCloser& i) = default;
+
+        inline ReadCloser(nullptr_t) {};
+        ReadCloser& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ReadCloser(T& ref);
@@ -826,7 +894,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IReadCloser> value;
+        inline IReadCloser* value() const;
+
+        std::shared_ptr<IReadCloser> mValue;
     };
 
     namespace rec
@@ -849,6 +919,9 @@ namespace golang::io
         WriteCloser(const WriteCloser& i) = default;
         WriteCloser& operator=(WriteCloser& i) = default;
         WriteCloser& operator=(const WriteCloser& i) = default;
+
+        inline WriteCloser(nullptr_t) {};
+        WriteCloser& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         WriteCloser(T& ref);
@@ -884,7 +957,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IWriteCloser> value;
+        inline IWriteCloser* value() const;
+
+        std::shared_ptr<IWriteCloser> mValue;
     };
 
     namespace rec
@@ -907,6 +982,9 @@ namespace golang::io
         ReadWriteCloser(const ReadWriteCloser& i) = default;
         ReadWriteCloser& operator=(ReadWriteCloser& i) = default;
         ReadWriteCloser& operator=(const ReadWriteCloser& i) = default;
+
+        inline ReadWriteCloser(nullptr_t) {};
+        ReadWriteCloser& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ReadWriteCloser(T& ref);
@@ -942,7 +1020,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IReadWriteCloser> value;
+        inline IReadWriteCloser* value() const;
+
+        std::shared_ptr<IReadWriteCloser> mValue;
     };
 
     namespace rec
@@ -968,6 +1048,9 @@ namespace golang::io
         ReadSeeker(const ReadSeeker& i) = default;
         ReadSeeker& operator=(ReadSeeker& i) = default;
         ReadSeeker& operator=(const ReadSeeker& i) = default;
+
+        inline ReadSeeker(nullptr_t) {};
+        ReadSeeker& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ReadSeeker(T& ref);
@@ -1003,7 +1086,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IReadSeeker> value;
+        inline IReadSeeker* value() const;
+
+        std::shared_ptr<IReadSeeker> mValue;
     };
 
     namespace rec
@@ -1026,6 +1111,9 @@ namespace golang::io
         ReadSeekCloser(const ReadSeekCloser& i) = default;
         ReadSeekCloser& operator=(ReadSeekCloser& i) = default;
         ReadSeekCloser& operator=(const ReadSeekCloser& i) = default;
+
+        inline ReadSeekCloser(nullptr_t) {};
+        ReadSeekCloser& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ReadSeekCloser(T& ref);
@@ -1061,7 +1149,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IReadSeekCloser> value;
+        inline IReadSeekCloser* value() const;
+
+        std::shared_ptr<IReadSeekCloser> mValue;
     };
 
     namespace rec
@@ -1087,6 +1177,9 @@ namespace golang::io
         WriteSeeker(const WriteSeeker& i) = default;
         WriteSeeker& operator=(WriteSeeker& i) = default;
         WriteSeeker& operator=(const WriteSeeker& i) = default;
+
+        inline WriteSeeker(nullptr_t) {};
+        WriteSeeker& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         WriteSeeker(T& ref);
@@ -1122,7 +1215,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IWriteSeeker> value;
+        inline IWriteSeeker* value() const;
+
+        std::shared_ptr<IWriteSeeker> mValue;
     };
 
     namespace rec
@@ -1145,6 +1240,9 @@ namespace golang::io
         ReadWriteSeeker(const ReadWriteSeeker& i) = default;
         ReadWriteSeeker& operator=(ReadWriteSeeker& i) = default;
         ReadWriteSeeker& operator=(const ReadWriteSeeker& i) = default;
+
+        inline ReadWriteSeeker(nullptr_t) {};
+        ReadWriteSeeker& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ReadWriteSeeker(T& ref);
@@ -1180,7 +1278,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IReadWriteSeeker> value;
+        inline IReadWriteSeeker* value() const;
+
+        std::shared_ptr<IReadWriteSeeker> mValue;
     };
 
     namespace rec
@@ -1206,6 +1306,9 @@ namespace golang::io
         ByteScanner(const ByteScanner& i) = default;
         ByteScanner& operator=(ByteScanner& i) = default;
         ByteScanner& operator=(const ByteScanner& i) = default;
+
+        inline ByteScanner(nullptr_t) {};
+        ByteScanner& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ByteScanner(T& ref);
@@ -1244,7 +1347,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IByteScanner> value;
+        inline IByteScanner* value() const;
+
+        std::shared_ptr<IByteScanner> mValue;
     };
 
     namespace rec
@@ -1267,6 +1372,9 @@ namespace golang::io
         RuneScanner(const RuneScanner& i) = default;
         RuneScanner& operator=(RuneScanner& i) = default;
         RuneScanner& operator=(const RuneScanner& i) = default;
+
+        inline RuneScanner(nullptr_t) {};
+        RuneScanner& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         RuneScanner(T& ref);
@@ -1305,7 +1413,9 @@ namespace golang::io
             TStore value;
         };
 
-        std::shared_ptr<IRuneScanner> value;
+        inline IRuneScanner* value() const;
+
+        std::shared_ptr<IRuneScanner> mValue;
     };
 
     namespace rec

@@ -70,19 +70,19 @@ namespace golang::fmt
     template<typename T>
     State::State(T& ref)
     {
-        value.reset(new StateImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new StateImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     State::State(const T& ref)
     {
-        value.reset(new StateImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new StateImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     State::State(T* ptr)
     {
-        value.reset(new StateImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new StateImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& State::PrintTo(std::ostream& os) const
@@ -111,46 +111,52 @@ namespace golang::fmt
         return rec::Flag(gocpp::PtrRecv<T, false>(value.get()), c);
     }
 
+    inline State::IState* State::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'State'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct State, false>& self, gocpp::slice<unsigned char> b)
         {
-            return self.ptr->value->vWrite(b);
+            return self.ptr->value()->vWrite(b);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct State>& self, gocpp::slice<unsigned char> b)
         {
-            return self.obj.value->vWrite(b);
+            return self.obj.value()->vWrite(b);
         }
 
         std::tuple<int, bool> Width(const gocpp::PtrRecv<struct State, false>& self)
         {
-            return self.ptr->value->vWidth();
+            return self.ptr->value()->vWidth();
         }
 
         std::tuple<int, bool> Width(const gocpp::ObjRecv<struct State>& self)
         {
-            return self.obj.value->vWidth();
+            return self.obj.value()->vWidth();
         }
 
         std::tuple<int, bool> Precision(const gocpp::PtrRecv<struct State, false>& self)
         {
-            return self.ptr->value->vPrecision();
+            return self.ptr->value()->vPrecision();
         }
 
         std::tuple<int, bool> Precision(const gocpp::ObjRecv<struct State>& self)
         {
-            return self.obj.value->vPrecision();
+            return self.obj.value()->vPrecision();
         }
 
         bool Flag(const gocpp::PtrRecv<struct State, false>& self, int c)
         {
-            return self.ptr->value->vFlag(c);
+            return self.ptr->value()->vFlag(c);
         }
 
         bool Flag(const gocpp::ObjRecv<struct State>& self, int c)
         {
-            return self.obj.value->vFlag(c);
+            return self.obj.value()->vFlag(c);
         }
     }
 
@@ -166,19 +172,19 @@ namespace golang::fmt
     template<typename T>
     Formatter::Formatter(T& ref)
     {
-        value.reset(new FormatterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new FormatterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Formatter::Formatter(const T& ref)
     {
-        value.reset(new FormatterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new FormatterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Formatter::Formatter(T* ptr)
     {
-        value.reset(new FormatterImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new FormatterImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Formatter::PrintTo(std::ostream& os) const
@@ -192,16 +198,22 @@ namespace golang::fmt
         return rec::Format(gocpp::PtrRecv<T, false>(value.get()), f, verb);
     }
 
+    inline Formatter::IFormatter* Formatter::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Formatter'");
+    }
+
     namespace rec
     {
         void Format(const gocpp::PtrRecv<struct Formatter, false>& self, State f, gocpp::rune verb)
         {
-            return self.ptr->value->vFormat(f, verb);
+            return self.ptr->value()->vFormat(f, verb);
         }
 
         void Format(const gocpp::ObjRecv<struct Formatter>& self, State f, gocpp::rune verb)
         {
-            return self.obj.value->vFormat(f, verb);
+            return self.obj.value()->vFormat(f, verb);
         }
     }
 
@@ -219,19 +231,19 @@ namespace golang::fmt
     template<typename T>
     Stringer::Stringer(T& ref)
     {
-        value.reset(new StringerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new StringerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Stringer::Stringer(const T& ref)
     {
-        value.reset(new StringerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new StringerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Stringer::Stringer(T* ptr)
     {
-        value.reset(new StringerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new StringerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Stringer::PrintTo(std::ostream& os) const
@@ -245,16 +257,22 @@ namespace golang::fmt
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Stringer::IStringer* Stringer::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Stringer'");
+    }
+
     namespace rec
     {
         gocpp::string String(const gocpp::PtrRecv<struct Stringer, false>& self)
         {
-            return self.ptr->value->vString();
+            return self.ptr->value()->vString();
         }
 
         gocpp::string String(const gocpp::ObjRecv<struct Stringer>& self)
         {
-            return self.obj.value->vString();
+            return self.obj.value()->vString();
         }
     }
 
@@ -271,19 +289,19 @@ namespace golang::fmt
     template<typename T>
     GoStringer::GoStringer(T& ref)
     {
-        value.reset(new GoStringerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new GoStringerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     GoStringer::GoStringer(const T& ref)
     {
-        value.reset(new GoStringerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new GoStringerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     GoStringer::GoStringer(T* ptr)
     {
-        value.reset(new GoStringerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new GoStringerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& GoStringer::PrintTo(std::ostream& os) const
@@ -297,16 +315,22 @@ namespace golang::fmt
         return rec::GoString(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline GoStringer::IGoStringer* GoStringer::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'GoStringer'");
+    }
+
     namespace rec
     {
         gocpp::string GoString(const gocpp::PtrRecv<struct GoStringer, false>& self)
         {
-            return self.ptr->value->vGoString();
+            return self.ptr->value()->vGoString();
         }
 
         gocpp::string GoString(const gocpp::ObjRecv<struct GoStringer>& self)
         {
-            return self.obj.value->vGoString();
+            return self.obj.value()->vGoString();
         }
     }
 

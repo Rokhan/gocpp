@@ -1021,19 +1021,19 @@ namespace golang::syscall
     template<typename T>
     Sockaddr::Sockaddr(T& ref)
     {
-        value.reset(new SockaddrImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new SockaddrImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Sockaddr::Sockaddr(const T& ref)
     {
-        value.reset(new SockaddrImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new SockaddrImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Sockaddr::Sockaddr(T* ptr)
     {
-        value.reset(new SockaddrImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new SockaddrImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Sockaddr::PrintTo(std::ostream& os) const
@@ -1047,16 +1047,22 @@ namespace golang::syscall
         return rec::sockaddr(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Sockaddr::ISockaddr* Sockaddr::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Sockaddr'");
+    }
+
     namespace rec
     {
         std::tuple<gocpp::unsafe_pointer, int32_t, gocpp::error> sockaddr(const gocpp::PtrRecv<struct Sockaddr, false>& self)
         {
-            return self.ptr->value->vsockaddr();
+            return self.ptr->value()->vsockaddr();
         }
 
         std::tuple<gocpp::unsafe_pointer, int32_t, gocpp::error> sockaddr(const gocpp::ObjRecv<struct Sockaddr>& self)
         {
-            return self.obj.value->vsockaddr();
+            return self.obj.value()->vsockaddr();
         }
     }
 

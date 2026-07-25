@@ -25,19 +25,19 @@ namespace golang::main
     template<typename T>
     Abser::Abser(T& ref)
     {
-        value.reset(new AbserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new AbserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Abser::Abser(const T& ref)
     {
-        value.reset(new AbserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new AbserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Abser::Abser(T* ptr)
     {
-        value.reset(new AbserImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new AbserImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Abser::PrintTo(std::ostream& os) const
@@ -51,16 +51,22 @@ namespace golang::main
         return rec::Abs(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Abser::IAbser* Abser::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Abser'");
+    }
+
     namespace rec
     {
         double Abs(const gocpp::PtrRecv<struct Abser, false>& self)
         {
-            return self.ptr->value->vAbs();
+            return self.ptr->value()->vAbs();
         }
 
         double Abs(const gocpp::ObjRecv<struct Abser>& self)
         {
-            return self.obj.value->vAbs();
+            return self.obj.value()->vAbs();
         }
     }
 
@@ -73,19 +79,19 @@ namespace golang::main
     template<typename T>
     Adder::Adder(T& ref)
     {
-        value.reset(new AdderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new AdderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Adder::Adder(const T& ref)
     {
-        value.reset(new AdderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new AdderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Adder::Adder(T* ptr)
     {
-        value.reset(new AdderImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new AdderImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Adder::PrintTo(std::ostream& os) const
@@ -99,16 +105,22 @@ namespace golang::main
         return rec::Add(gocpp::PtrRecv<T, false>(value.get()), f);
     }
 
+    inline Adder::IAdder* Adder::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Adder'");
+    }
+
     namespace rec
     {
         void Add(const gocpp::PtrRecv<struct Adder, false>& self, int f)
         {
-            return self.ptr->value->vAdd(f);
+            return self.ptr->value()->vAdd(f);
         }
 
         void Add(const gocpp::ObjRecv<struct Adder>& self, int f)
         {
-            return self.obj.value->vAdd(f);
+            return self.obj.value()->vAdd(f);
         }
     }
 
@@ -121,19 +133,19 @@ namespace golang::main
     template<typename T>
     Multiplier::Multiplier(T& ref)
     {
-        value.reset(new MultiplierImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new MultiplierImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Multiplier::Multiplier(const T& ref)
     {
-        value.reset(new MultiplierImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new MultiplierImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Multiplier::Multiplier(T* ptr)
     {
-        value.reset(new MultiplierImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new MultiplierImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Multiplier::PrintTo(std::ostream& os) const
@@ -147,16 +159,22 @@ namespace golang::main
         return rec::Mul(gocpp::PtrRecv<T, false>(value.get()), f);
     }
 
+    inline Multiplier::IMultiplier* Multiplier::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Multiplier'");
+    }
+
     namespace rec
     {
         void Mul(const gocpp::PtrRecv<struct Multiplier, false>& self, int f)
         {
-            return self.ptr->value->vMul(f);
+            return self.ptr->value()->vMul(f);
         }
 
         void Mul(const gocpp::ObjRecv<struct Multiplier>& self, int f)
         {
-            return self.obj.value->vMul(f);
+            return self.obj.value()->vMul(f);
         }
     }
 
@@ -169,19 +187,19 @@ namespace golang::main
     template<typename T>
     MultAdder::MultAdder(T& ref)
     {
-        value.reset(new MultAdderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new MultAdderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     MultAdder::MultAdder(const T& ref)
     {
-        value.reset(new MultAdderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new MultAdderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     MultAdder::MultAdder(T* ptr)
     {
-        value.reset(new MultAdderImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new MultAdderImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& MultAdder::PrintTo(std::ostream& os) const
@@ -195,36 +213,42 @@ namespace golang::main
         return rec::Print(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline MultAdder::IMultAdder* MultAdder::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'MultAdder'");
+    }
+
     namespace rec
     {
         void Print(const gocpp::PtrRecv<struct MultAdder, false>& self)
         {
-            return self.ptr->value->vPrint();
+            return self.ptr->value()->vPrint();
         }
 
         void Print(const gocpp::ObjRecv<struct MultAdder>& self)
         {
-            return self.obj.value->vPrint();
+            return self.obj.value()->vPrint();
         }
 
         void Add(const gocpp::PtrRecv<struct MultAdder, false>& self, int f)
         {
-            return self.ptr->value->vAdd(f);
+            return self.ptr->value()->vAdd(f);
         }
 
         void Add(const gocpp::ObjRecv<struct MultAdder>& self, int f)
         {
-            return self.obj.value->vAdd(f);
+            return self.obj.value()->vAdd(f);
         }
 
         void Mul(const gocpp::PtrRecv<struct MultAdder, false>& self, int f)
         {
-            return self.ptr->value->vMul(f);
+            return self.ptr->value()->vMul(f);
         }
 
         void Mul(const gocpp::ObjRecv<struct MultAdder>& self, int f)
         {
-            return self.obj.value->vMul(f);
+            return self.obj.value()->vMul(f);
         }
     }
 
@@ -296,19 +320,19 @@ namespace golang::main
     template<typename T>
     dummy::dummy(T& ref)
     {
-        value.reset(new dummyImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new dummyImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     dummy::dummy(const T& ref)
     {
-        value.reset(new dummyImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new dummyImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     dummy::dummy(T* ptr)
     {
-        value.reset(new dummyImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new dummyImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& dummy::PrintTo(std::ostream& os) const
@@ -322,16 +346,22 @@ namespace golang::main
         return rec::As(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
 
+    inline dummy::Idummy* dummy::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'dummy'");
+    }
+
     namespace rec
     {
         bool As(const gocpp::PtrRecv<struct dummy, false>& self, go_any _1)
         {
-            return self.ptr->value->vAs(_1);
+            return self.ptr->value()->vAs(_1);
         }
 
         bool As(const gocpp::ObjRecv<struct dummy>& self, go_any _1)
         {
-            return self.obj.value->vAs(_1);
+            return self.obj.value()->vAs(_1);
         }
     }
 
@@ -342,7 +372,7 @@ namespace golang::main
 
     void main()
     {
-        Abser a = {};
+        Abser a = nullptr;
         auto f = MyFloat(- mocklib::Sqrt2);
         auto v = Vertex {3, 4};
 
@@ -361,6 +391,49 @@ namespace golang::main
         }
 
         testAddMul();
+        testNilDeref();
+    }
+
+    void testNilDeref()
+    {
+        gocpp::Defer defer;
+        try
+        {
+            Abser a = nullptr;
+            defer.push_back([=]{ [=]() mutable -> void
+            {
+                if(auto r = gocpp::recover(); r != nullptr)
+                {
+                    // TODO: full message equivalence ?
+                    // fmt.Println("Recovered from nil deref", r)
+                    mocklib::Println("Recovered from nil deref"_s);
+                }
+            }(); });
+
+            mocklib::Println("Before nil deref."_s);
+            rec::Abs(gocpp::recv(a));
+            mocklib::Println("After nil deref."_s);
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
+    }
+
+    void f()
+    {
+        gocpp::Defer defer;
+        try
+        {
+            defer.push_back([=]{ [=]() mutable -> void
+            {
+                mocklib::Println("Simple defer in f"_s);
+            }(); });
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+        }
     }
 
     double rec::Abs(MyFloat f)

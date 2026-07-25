@@ -24,19 +24,19 @@ namespace golang::main
     template<typename T>
     Fetcher::Fetcher(T& ref)
     {
-        value.reset(new FetcherImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new FetcherImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Fetcher::Fetcher(const T& ref)
     {
-        value.reset(new FetcherImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new FetcherImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Fetcher::Fetcher(T* ptr)
     {
-        value.reset(new FetcherImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new FetcherImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Fetcher::PrintTo(std::ostream& os) const
@@ -50,16 +50,22 @@ namespace golang::main
         return rec::Fetch(gocpp::PtrRecv<T, false>(value.get()), url);
     }
 
+    inline Fetcher::IFetcher* Fetcher::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Fetcher'");
+    }
+
     namespace rec
     {
         std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> Fetch(const gocpp::PtrRecv<struct Fetcher, false>& self, gocpp::string url)
         {
-            return self.ptr->value->vFetch(url);
+            return self.ptr->value()->vFetch(url);
         }
 
         std::tuple<gocpp::string, gocpp::slice<gocpp::string>, gocpp::error> Fetch(const gocpp::ObjRecv<struct Fetcher>& self, gocpp::string url)
         {
-            return self.obj.value->vFetch(url);
+            return self.obj.value()->vFetch(url);
         }
     }
 

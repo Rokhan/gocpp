@@ -42,6 +42,9 @@ namespace golang::sync
         Locker& operator=(Locker& i) = default;
         Locker& operator=(const Locker& i) = default;
 
+        inline Locker(nullptr_t) {};
+        Locker& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Locker(T& ref);
 
@@ -82,7 +85,9 @@ namespace golang::sync
             TStore value;
         };
 
-        std::shared_ptr<ILocker> value;
+        inline ILocker* value() const;
+
+        std::shared_ptr<ILocker> mValue;
     };
 
     namespace rec

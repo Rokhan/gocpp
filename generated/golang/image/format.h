@@ -56,6 +56,9 @@ namespace golang::image
         reader& operator=(reader& i) = default;
         reader& operator=(const reader& i) = default;
 
+        inline reader(nullptr_t) {};
+        reader& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         reader(T& ref);
 
@@ -93,7 +96,9 @@ namespace golang::image
             TStore value;
         };
 
-        std::shared_ptr<Ireader> value;
+        inline Ireader* value() const;
+
+        std::shared_ptr<Ireader> mValue;
     };
 
     namespace rec

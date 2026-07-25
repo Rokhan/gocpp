@@ -91,6 +91,9 @@ namespace golang::reflect
         Type& operator=(Type& i) = default;
         Type& operator=(const Type& i) = default;
 
+        inline Type(nullptr_t) {};
+        Type& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Type(T& ref);
 
@@ -322,7 +325,9 @@ namespace golang::reflect
             TStore value;
         };
 
-        std::shared_ptr<IType> value;
+        inline IType* value() const;
+
+        std::shared_ptr<IType> mValue;
     };
 
     namespace rec

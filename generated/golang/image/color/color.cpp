@@ -24,19 +24,19 @@ namespace golang::color
     template<typename T>
     Color::Color(T& ref)
     {
-        value.reset(new ColorImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ColorImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Color::Color(const T& ref)
     {
-        value.reset(new ColorImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ColorImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Color::Color(T* ptr)
     {
-        value.reset(new ColorImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ColorImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Color::PrintTo(std::ostream& os) const
@@ -50,16 +50,22 @@ namespace golang::color
         return rec::RGBA(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Color::IColor* Color::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Color'");
+    }
+
     namespace rec
     {
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<struct Color, false>& self)
         {
-            return self.ptr->value->vRGBA();
+            return self.ptr->value()->vRGBA();
         }
 
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<struct Color>& self)
         {
-            return self.obj.value->vRGBA();
+            return self.obj.value()->vRGBA();
         }
     }
 
@@ -469,19 +475,19 @@ namespace golang::color
     template<typename T>
     Model::Model(T& ref)
     {
-        value.reset(new ModelImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ModelImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Model::Model(const T& ref)
     {
-        value.reset(new ModelImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ModelImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Model::Model(T* ptr)
     {
-        value.reset(new ModelImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ModelImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Model::PrintTo(std::ostream& os) const
@@ -495,16 +501,22 @@ namespace golang::color
         return rec::Convert(gocpp::PtrRecv<T, false>(value.get()), c);
     }
 
+    inline Model::IModel* Model::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Model'");
+    }
+
     namespace rec
     {
         Color Convert(const gocpp::PtrRecv<struct Model, false>& self, Color c)
         {
-            return self.ptr->value->vConvert(c);
+            return self.ptr->value()->vConvert(c);
         }
 
         Color Convert(const gocpp::ObjRecv<struct Model>& self, Color c)
         {
-            return self.obj.value->vConvert(c);
+            return self.obj.value()->vConvert(c);
         }
     }
 

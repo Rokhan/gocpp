@@ -716,19 +716,19 @@ namespace golang::bisect
     template<typename T>
     Writer::Writer(T& ref)
     {
-        value.reset(new WriterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Writer::Writer(const T& ref)
     {
-        value.reset(new WriterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Writer::Writer(T* ptr)
     {
-        value.reset(new WriterImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new WriterImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Writer::PrintTo(std::ostream& os) const
@@ -742,16 +742,22 @@ namespace golang::bisect
         return rec::Write(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
 
+    inline Writer::IWriter* Writer::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Writer'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Writer, false>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.ptr->value->vWrite(_1);
+            return self.ptr->value()->vWrite(_1);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Writer>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.obj.value->vWrite(_1);
+            return self.obj.value()->vWrite(_1);
         }
     }
 

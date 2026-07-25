@@ -24,6 +24,9 @@ namespace golang::cmp
         Ordered& operator=(Ordered& i) = default;
         Ordered& operator=(const Ordered& i) = default;
 
+        inline Ordered(nullptr_t) {};
+        Ordered& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Ordered(T& ref);
 
@@ -58,7 +61,9 @@ namespace golang::cmp
             TStore value;
         };
 
-        std::shared_ptr<IOrdered> value;
+        inline IOrdered* value() const;
+
+        std::shared_ptr<IOrdered> mValue;
     };
 
     namespace rec

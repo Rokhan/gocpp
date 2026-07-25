@@ -93,19 +93,19 @@ namespace golang::png
     template<typename T>
     EncoderBufferPool::EncoderBufferPool(T& ref)
     {
-        value.reset(new EncoderBufferPoolImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new EncoderBufferPoolImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     EncoderBufferPool::EncoderBufferPool(const T& ref)
     {
-        value.reset(new EncoderBufferPoolImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new EncoderBufferPoolImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     EncoderBufferPool::EncoderBufferPool(T* ptr)
     {
-        value.reset(new EncoderBufferPoolImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new EncoderBufferPoolImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& EncoderBufferPool::PrintTo(std::ostream& os) const
@@ -124,26 +124,32 @@ namespace golang::png
         return rec::Put(gocpp::PtrRecv<T, false>(value.get()), _1);
     }
 
+    inline EncoderBufferPool::IEncoderBufferPool* EncoderBufferPool::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'EncoderBufferPool'");
+    }
+
     namespace rec
     {
         EncoderBuffer* Get(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self)
         {
-            return self.ptr->value->vGet();
+            return self.ptr->value()->vGet();
         }
 
         EncoderBuffer* Get(const gocpp::ObjRecv<struct EncoderBufferPool>& self)
         {
-            return self.obj.value->vGet();
+            return self.obj.value()->vGet();
         }
 
         void Put(const gocpp::PtrRecv<struct EncoderBufferPool, false>& self, EncoderBuffer* _1)
         {
-            return self.ptr->value->vPut(_1);
+            return self.ptr->value()->vPut(_1);
         }
 
         void Put(const gocpp::ObjRecv<struct EncoderBufferPool>& self, EncoderBuffer* _1)
         {
-            return self.obj.value->vPut(_1);
+            return self.obj.value()->vPut(_1);
         }
     }
 
@@ -223,19 +229,19 @@ namespace golang::png
     template<typename T>
     opaquer::opaquer(T& ref)
     {
-        value.reset(new opaquerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new opaquerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     opaquer::opaquer(const T& ref)
     {
-        value.reset(new opaquerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new opaquerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     opaquer::opaquer(T* ptr)
     {
-        value.reset(new opaquerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new opaquerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& opaquer::PrintTo(std::ostream& os) const
@@ -249,16 +255,22 @@ namespace golang::png
         return rec::Opaque(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline opaquer::Iopaquer* opaquer::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'opaquer'");
+    }
+
     namespace rec
     {
         bool Opaque(const gocpp::PtrRecv<struct opaquer, false>& self)
         {
-            return self.ptr->value->vOpaque();
+            return self.ptr->value()->vOpaque();
         }
 
         bool Opaque(const gocpp::ObjRecv<struct opaquer>& self)
         {
-            return self.obj.value->vOpaque();
+            return self.obj.value()->vOpaque();
         }
     }
 

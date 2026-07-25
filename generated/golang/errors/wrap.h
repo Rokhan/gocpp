@@ -24,6 +24,9 @@ namespace golang::errors
         gocpp_id_0& operator=(gocpp_id_0& i) = default;
         gocpp_id_0& operator=(const gocpp_id_0& i) = default;
 
+        inline gocpp_id_0(nullptr_t) {};
+        gocpp_id_0& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         gocpp_id_0(T& ref);
 
@@ -61,7 +64,9 @@ namespace golang::errors
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_0> value;
+        inline Igocpp_id_0* value() const;
+
+        std::shared_ptr<Igocpp_id_0> mValue;
     };
 
     namespace rec
@@ -83,6 +88,9 @@ namespace golang::errors
         gocpp_id_1(const gocpp_id_1& i) = default;
         gocpp_id_1& operator=(gocpp_id_1& i) = default;
         gocpp_id_1& operator=(const gocpp_id_1& i) = default;
+
+        inline gocpp_id_1(nullptr_t) {};
+        gocpp_id_1& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         gocpp_id_1(T& ref);
@@ -121,7 +129,9 @@ namespace golang::errors
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_1> value;
+        inline Igocpp_id_1* value() const;
+
+        std::shared_ptr<Igocpp_id_1> mValue;
     };
 
     namespace rec
@@ -141,6 +151,9 @@ namespace golang::errors
         gocpp_id_3(const gocpp_id_3& i) = default;
         gocpp_id_3& operator=(gocpp_id_3& i) = default;
         gocpp_id_3& operator=(const gocpp_id_3& i) = default;
+
+        inline gocpp_id_3(nullptr_t) {};
+        gocpp_id_3& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         gocpp_id_3(T& ref);
@@ -179,7 +192,9 @@ namespace golang::errors
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_3> value;
+        inline Igocpp_id_3* value() const;
+
+        std::shared_ptr<Igocpp_id_3> mValue;
     };
 
     namespace rec
@@ -199,6 +214,9 @@ namespace golang::errors
         gocpp_id_4(const gocpp_id_4& i) = default;
         gocpp_id_4& operator=(gocpp_id_4& i) = default;
         gocpp_id_4& operator=(const gocpp_id_4& i) = default;
+
+        inline gocpp_id_4(nullptr_t) {};
+        gocpp_id_4& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         gocpp_id_4(T& ref);
@@ -237,7 +255,9 @@ namespace golang::errors
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_4> value;
+        inline Igocpp_id_4* value() const;
+
+        std::shared_ptr<Igocpp_id_4> mValue;
     };
 
     namespace rec
@@ -258,6 +278,9 @@ namespace golang::errors
         gocpp_id_5(const gocpp_id_5& i) = default;
         gocpp_id_5& operator=(gocpp_id_5& i) = default;
         gocpp_id_5& operator=(const gocpp_id_5& i) = default;
+
+        inline gocpp_id_5(nullptr_t) {};
+        gocpp_id_5& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         gocpp_id_5(T& ref);
@@ -296,7 +319,9 @@ namespace golang::errors
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_5> value;
+        inline Igocpp_id_5* value() const;
+
+        std::shared_ptr<Igocpp_id_5> mValue;
     };
 
     namespace rec
@@ -316,6 +341,9 @@ namespace golang::errors
         gocpp_id_7(const gocpp_id_7& i) = default;
         gocpp_id_7& operator=(gocpp_id_7& i) = default;
         gocpp_id_7& operator=(const gocpp_id_7& i) = default;
+
+        inline gocpp_id_7(nullptr_t) {};
+        gocpp_id_7& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         gocpp_id_7(T& ref);
@@ -354,7 +382,9 @@ namespace golang::errors
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_7> value;
+        inline Igocpp_id_7* value() const;
+
+        std::shared_ptr<Igocpp_id_7> mValue;
     };
 
     namespace rec
@@ -374,6 +404,9 @@ namespace golang::errors
         gocpp_id_8(const gocpp_id_8& i) = default;
         gocpp_id_8& operator=(gocpp_id_8& i) = default;
         gocpp_id_8& operator=(const gocpp_id_8& i) = default;
+
+        inline gocpp_id_8(nullptr_t) {};
+        gocpp_id_8& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         gocpp_id_8(T& ref);
@@ -412,7 +445,9 @@ namespace golang::errors
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_8> value;
+        inline Igocpp_id_8* value() const;
+
+        std::shared_ptr<Igocpp_id_8> mValue;
     };
 
     namespace rec

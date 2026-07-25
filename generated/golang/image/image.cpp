@@ -99,19 +99,19 @@ namespace golang::image
     template<typename T>
     Image::Image(T& ref)
     {
-        value.reset(new ImageImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ImageImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Image::Image(const T& ref)
     {
-        value.reset(new ImageImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ImageImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Image::Image(T* ptr)
     {
-        value.reset(new ImageImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ImageImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Image::PrintTo(std::ostream& os) const
@@ -135,36 +135,42 @@ namespace golang::image
         return rec::At(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
 
+    inline Image::IImage* Image::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Image'");
+    }
+
     namespace rec
     {
         color::Model ColorModel(const gocpp::PtrRecv<struct Image, false>& self)
         {
-            return self.ptr->value->vColorModel();
+            return self.ptr->value()->vColorModel();
         }
 
         color::Model ColorModel(const gocpp::ObjRecv<struct Image>& self)
         {
-            return self.obj.value->vColorModel();
+            return self.obj.value()->vColorModel();
         }
 
         Rectangle Bounds(const gocpp::PtrRecv<struct Image, false>& self)
         {
-            return self.ptr->value->vBounds();
+            return self.ptr->value()->vBounds();
         }
 
         Rectangle Bounds(const gocpp::ObjRecv<struct Image>& self)
         {
-            return self.obj.value->vBounds();
+            return self.obj.value()->vBounds();
         }
 
         color::Color At(const gocpp::PtrRecv<struct Image, false>& self, int x, int y)
         {
-            return self.ptr->value->vAt(x, y);
+            return self.ptr->value()->vAt(x, y);
         }
 
         color::Color At(const gocpp::ObjRecv<struct Image>& self, int x, int y)
         {
-            return self.obj.value->vAt(x, y);
+            return self.obj.value()->vAt(x, y);
         }
     }
 
@@ -179,19 +185,19 @@ namespace golang::image
     template<typename T>
     RGBA64Image::RGBA64Image(T& ref)
     {
-        value.reset(new RGBA64ImageImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new RGBA64ImageImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     RGBA64Image::RGBA64Image(const T& ref)
     {
-        value.reset(new RGBA64ImageImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new RGBA64ImageImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     RGBA64Image::RGBA64Image(T* ptr)
     {
-        value.reset(new RGBA64ImageImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new RGBA64ImageImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& RGBA64Image::PrintTo(std::ostream& os) const
@@ -205,46 +211,52 @@ namespace golang::image
         return rec::RGBA64At(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
 
+    inline RGBA64Image::IRGBA64Image* RGBA64Image::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'RGBA64Image'");
+    }
+
     namespace rec
     {
         color::RGBA64 RGBA64At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int x, int y)
         {
-            return self.ptr->value->vRGBA64At(x, y);
+            return self.ptr->value()->vRGBA64At(x, y);
         }
 
         color::RGBA64 RGBA64At(const gocpp::ObjRecv<struct RGBA64Image>& self, int x, int y)
         {
-            return self.obj.value->vRGBA64At(x, y);
+            return self.obj.value()->vRGBA64At(x, y);
         }
 
         color::Color At(const gocpp::PtrRecv<struct RGBA64Image, false>& self, int x, int y)
         {
-            return self.ptr->value->vAt(x, y);
+            return self.ptr->value()->vAt(x, y);
         }
 
         color::Color At(const gocpp::ObjRecv<struct RGBA64Image>& self, int x, int y)
         {
-            return self.obj.value->vAt(x, y);
+            return self.obj.value()->vAt(x, y);
         }
 
         Rectangle Bounds(const gocpp::PtrRecv<struct RGBA64Image, false>& self)
         {
-            return self.ptr->value->vBounds();
+            return self.ptr->value()->vBounds();
         }
 
         Rectangle Bounds(const gocpp::ObjRecv<struct RGBA64Image>& self)
         {
-            return self.obj.value->vBounds();
+            return self.obj.value()->vBounds();
         }
 
         color::Model ColorModel(const gocpp::PtrRecv<struct RGBA64Image, false>& self)
         {
-            return self.ptr->value->vColorModel();
+            return self.ptr->value()->vColorModel();
         }
 
         color::Model ColorModel(const gocpp::ObjRecv<struct RGBA64Image>& self)
         {
-            return self.obj.value->vColorModel();
+            return self.obj.value()->vColorModel();
         }
     }
 
@@ -262,19 +274,19 @@ namespace golang::image
     template<typename T>
     PalettedImage::PalettedImage(T& ref)
     {
-        value.reset(new PalettedImageImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new PalettedImageImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     PalettedImage::PalettedImage(const T& ref)
     {
-        value.reset(new PalettedImageImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new PalettedImageImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     PalettedImage::PalettedImage(T* ptr)
     {
-        value.reset(new PalettedImageImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new PalettedImageImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& PalettedImage::PrintTo(std::ostream& os) const
@@ -288,46 +300,52 @@ namespace golang::image
         return rec::ColorIndexAt(gocpp::PtrRecv<T, false>(value.get()), x, y);
     }
 
+    inline PalettedImage::IPalettedImage* PalettedImage::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'PalettedImage'");
+    }
+
     namespace rec
     {
         uint8_t ColorIndexAt(const gocpp::PtrRecv<struct PalettedImage, false>& self, int x, int y)
         {
-            return self.ptr->value->vColorIndexAt(x, y);
+            return self.ptr->value()->vColorIndexAt(x, y);
         }
 
         uint8_t ColorIndexAt(const gocpp::ObjRecv<struct PalettedImage>& self, int x, int y)
         {
-            return self.obj.value->vColorIndexAt(x, y);
+            return self.obj.value()->vColorIndexAt(x, y);
         }
 
         color::Color At(const gocpp::PtrRecv<struct PalettedImage, false>& self, int x, int y)
         {
-            return self.ptr->value->vAt(x, y);
+            return self.ptr->value()->vAt(x, y);
         }
 
         color::Color At(const gocpp::ObjRecv<struct PalettedImage>& self, int x, int y)
         {
-            return self.obj.value->vAt(x, y);
+            return self.obj.value()->vAt(x, y);
         }
 
         Rectangle Bounds(const gocpp::PtrRecv<struct PalettedImage, false>& self)
         {
-            return self.ptr->value->vBounds();
+            return self.ptr->value()->vBounds();
         }
 
         Rectangle Bounds(const gocpp::ObjRecv<struct PalettedImage>& self)
         {
-            return self.obj.value->vBounds();
+            return self.obj.value()->vBounds();
         }
 
         color::Model ColorModel(const gocpp::PtrRecv<struct PalettedImage, false>& self)
         {
-            return self.ptr->value->vColorModel();
+            return self.ptr->value()->vColorModel();
         }
 
         color::Model ColorModel(const gocpp::ObjRecv<struct PalettedImage>& self)
         {
-            return self.obj.value->vColorModel();
+            return self.obj.value()->vColorModel();
         }
     }
 

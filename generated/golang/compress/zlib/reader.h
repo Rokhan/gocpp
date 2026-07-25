@@ -50,6 +50,9 @@ namespace golang::zlib
         Resetter& operator=(Resetter& i) = default;
         Resetter& operator=(const Resetter& i) = default;
 
+        inline Resetter(nullptr_t) {};
+        Resetter& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Resetter(T& ref);
 
@@ -89,7 +92,9 @@ namespace golang::zlib
             TStore value;
         };
 
-        std::shared_ptr<IResetter> value;
+        inline IResetter* value() const;
+
+        std::shared_ptr<IResetter> mValue;
     };
 
     namespace rec

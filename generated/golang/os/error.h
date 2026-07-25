@@ -25,6 +25,9 @@ namespace golang::os
         timeout& operator=(timeout& i) = default;
         timeout& operator=(const timeout& i) = default;
 
+        inline timeout(nullptr_t) {};
+        timeout& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         timeout(T& ref);
 
@@ -62,7 +65,9 @@ namespace golang::os
             TStore value;
         };
 
-        std::shared_ptr<Itimeout> value;
+        inline Itimeout* value() const;
+
+        std::shared_ptr<Itimeout> mValue;
     };
 
     namespace rec

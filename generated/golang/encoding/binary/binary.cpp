@@ -77,19 +77,19 @@ namespace golang::binary
     template<typename T>
     ByteOrder::ByteOrder(T& ref)
     {
-        value.reset(new ByteOrderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ByteOrderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ByteOrder::ByteOrder(const T& ref)
     {
-        value.reset(new ByteOrderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ByteOrderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ByteOrder::ByteOrder(T* ptr)
     {
-        value.reset(new ByteOrderImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ByteOrderImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ByteOrder::PrintTo(std::ostream& os) const
@@ -133,76 +133,82 @@ namespace golang::binary
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline ByteOrder::IByteOrder* ByteOrder::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ByteOrder'");
+    }
+
     namespace rec
     {
         uint16_t Uint16(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.ptr->value->vUint16(_1);
+            return self.ptr->value()->vUint16(_1);
         }
 
         uint16_t Uint16(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.obj.value->vUint16(_1);
+            return self.obj.value()->vUint16(_1);
         }
 
         uint32_t Uint32(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.ptr->value->vUint32(_1);
+            return self.ptr->value()->vUint32(_1);
         }
 
         uint32_t Uint32(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.obj.value->vUint32(_1);
+            return self.obj.value()->vUint32(_1);
         }
 
         uint64_t Uint64(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.ptr->value->vUint64(_1);
+            return self.ptr->value()->vUint64(_1);
         }
 
         uint64_t Uint64(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.obj.value->vUint64(_1);
+            return self.obj.value()->vUint64(_1);
         }
 
         void PutUint16(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint16_t _2)
         {
-            return self.ptr->value->vPutUint16(_1, _2);
+            return self.ptr->value()->vPutUint16(_1, _2);
         }
 
         void PutUint16(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1, uint16_t _2)
         {
-            return self.obj.value->vPutUint16(_1, _2);
+            return self.obj.value()->vPutUint16(_1, _2);
         }
 
         void PutUint32(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint32_t _2)
         {
-            return self.ptr->value->vPutUint32(_1, _2);
+            return self.ptr->value()->vPutUint32(_1, _2);
         }
 
         void PutUint32(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1, uint32_t _2)
         {
-            return self.obj.value->vPutUint32(_1, _2);
+            return self.obj.value()->vPutUint32(_1, _2);
         }
 
         void PutUint64(const gocpp::PtrRecv<struct ByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint64_t _2)
         {
-            return self.ptr->value->vPutUint64(_1, _2);
+            return self.ptr->value()->vPutUint64(_1, _2);
         }
 
         void PutUint64(const gocpp::ObjRecv<struct ByteOrder>& self, gocpp::slice<unsigned char> _1, uint64_t _2)
         {
-            return self.obj.value->vPutUint64(_1, _2);
+            return self.obj.value()->vPutUint64(_1, _2);
         }
 
         gocpp::string String(const gocpp::PtrRecv<struct ByteOrder, false>& self)
         {
-            return self.ptr->value->vString();
+            return self.ptr->value()->vString();
         }
 
         gocpp::string String(const gocpp::ObjRecv<struct ByteOrder>& self)
         {
-            return self.obj.value->vString();
+            return self.obj.value()->vString();
         }
     }
 
@@ -219,19 +225,19 @@ namespace golang::binary
     template<typename T>
     AppendByteOrder::AppendByteOrder(T& ref)
     {
-        value.reset(new AppendByteOrderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new AppendByteOrderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     AppendByteOrder::AppendByteOrder(const T& ref)
     {
-        value.reset(new AppendByteOrderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new AppendByteOrderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     AppendByteOrder::AppendByteOrder(T* ptr)
     {
-        value.reset(new AppendByteOrderImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new AppendByteOrderImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& AppendByteOrder::PrintTo(std::ostream& os) const
@@ -260,46 +266,52 @@ namespace golang::binary
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline AppendByteOrder::IAppendByteOrder* AppendByteOrder::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'AppendByteOrder'");
+    }
+
     namespace rec
     {
         gocpp::slice<unsigned char> AppendUint16(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint16_t _2)
         {
-            return self.ptr->value->vAppendUint16(_1, _2);
+            return self.ptr->value()->vAppendUint16(_1, _2);
         }
 
         gocpp::slice<unsigned char> AppendUint16(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char> _1, uint16_t _2)
         {
-            return self.obj.value->vAppendUint16(_1, _2);
+            return self.obj.value()->vAppendUint16(_1, _2);
         }
 
         gocpp::slice<unsigned char> AppendUint32(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint32_t _2)
         {
-            return self.ptr->value->vAppendUint32(_1, _2);
+            return self.ptr->value()->vAppendUint32(_1, _2);
         }
 
         gocpp::slice<unsigned char> AppendUint32(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char> _1, uint32_t _2)
         {
-            return self.obj.value->vAppendUint32(_1, _2);
+            return self.obj.value()->vAppendUint32(_1, _2);
         }
 
         gocpp::slice<unsigned char> AppendUint64(const gocpp::PtrRecv<struct AppendByteOrder, false>& self, gocpp::slice<unsigned char> _1, uint64_t _2)
         {
-            return self.ptr->value->vAppendUint64(_1, _2);
+            return self.ptr->value()->vAppendUint64(_1, _2);
         }
 
         gocpp::slice<unsigned char> AppendUint64(const gocpp::ObjRecv<struct AppendByteOrder>& self, gocpp::slice<unsigned char> _1, uint64_t _2)
         {
-            return self.obj.value->vAppendUint64(_1, _2);
+            return self.obj.value()->vAppendUint64(_1, _2);
         }
 
         gocpp::string String(const gocpp::PtrRecv<struct AppendByteOrder, false>& self)
         {
-            return self.ptr->value->vString();
+            return self.ptr->value()->vString();
         }
 
         gocpp::string String(const gocpp::ObjRecv<struct AppendByteOrder>& self)
         {
-            return self.obj.value->vString();
+            return self.obj.value()->vString();
         }
     }
 

@@ -23,6 +23,9 @@ namespace golang::syscall
         RawConn& operator=(RawConn& i) = default;
         RawConn& operator=(const RawConn& i) = default;
 
+        inline RawConn(nullptr_t) {};
+        RawConn& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         RawConn(T& ref);
 
@@ -79,7 +82,9 @@ namespace golang::syscall
             TStore value;
         };
 
-        std::shared_ptr<IRawConn> value;
+        inline IRawConn* value() const;
+
+        std::shared_ptr<IRawConn> mValue;
     };
 
     namespace rec
@@ -105,6 +110,9 @@ namespace golang::syscall
         Conn(const Conn& i) = default;
         Conn& operator=(Conn& i) = default;
         Conn& operator=(const Conn& i) = default;
+
+        inline Conn(nullptr_t) {};
+        Conn& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Conn(T& ref);
@@ -144,7 +152,9 @@ namespace golang::syscall
             TStore value;
         };
 
-        std::shared_ptr<IConn> value;
+        inline IConn* value() const;
+
+        std::shared_ptr<IConn> mValue;
     };
 
     namespace rec

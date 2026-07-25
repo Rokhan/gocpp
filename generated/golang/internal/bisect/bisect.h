@@ -58,6 +58,9 @@ namespace golang::bisect
         Writer& operator=(Writer& i) = default;
         Writer& operator=(const Writer& i) = default;
 
+        inline Writer(nullptr_t) {};
+        Writer& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Writer(T& ref);
 
@@ -95,7 +98,9 @@ namespace golang::bisect
             TStore value;
         };
 
-        std::shared_ptr<IWriter> value;
+        inline IWriter* value() const;
+
+        std::shared_ptr<IWriter> mValue;
     };
 
     namespace rec

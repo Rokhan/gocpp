@@ -88,19 +88,19 @@ namespace golang::io
     template<typename T>
     Reader::Reader(T& ref)
     {
-        value.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Reader::Reader(const T& ref)
     {
-        value.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Reader::Reader(T* ptr)
     {
-        value.reset(new ReaderImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReaderImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Reader::PrintTo(std::ostream& os) const
@@ -114,16 +114,22 @@ namespace golang::io
         return rec::Read(gocpp::PtrRecv<T, false>(value.get()), p);
     }
 
+    inline Reader::IReader* Reader::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Reader'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct Reader, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vRead(p);
+            return self.ptr->value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct Reader>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vRead(p);
+            return self.obj.value()->vRead(p);
         }
     }
 
@@ -145,19 +151,19 @@ namespace golang::io
     template<typename T>
     Writer::Writer(T& ref)
     {
-        value.reset(new WriterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Writer::Writer(const T& ref)
     {
-        value.reset(new WriterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Writer::Writer(T* ptr)
     {
-        value.reset(new WriterImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new WriterImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Writer::PrintTo(std::ostream& os) const
@@ -171,16 +177,22 @@ namespace golang::io
         return rec::Write(gocpp::PtrRecv<T, false>(value.get()), p);
     }
 
+    inline Writer::IWriter* Writer::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Writer'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct Writer, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vWrite(p);
+            return self.ptr->value()->vWrite(p);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct Writer>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vWrite(p);
+            return self.obj.value()->vWrite(p);
         }
     }
 
@@ -197,19 +209,19 @@ namespace golang::io
     template<typename T>
     Closer::Closer(T& ref)
     {
-        value.reset(new CloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new CloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Closer::Closer(const T& ref)
     {
-        value.reset(new CloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new CloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Closer::Closer(T* ptr)
     {
-        value.reset(new CloserImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new CloserImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Closer::PrintTo(std::ostream& os) const
@@ -223,16 +235,22 @@ namespace golang::io
         return rec::Close(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Closer::ICloser* Closer::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Closer'");
+    }
+
     namespace rec
     {
         gocpp::error Close(const gocpp::PtrRecv<struct Closer, false>& self)
         {
-            return self.ptr->value->vClose();
+            return self.ptr->value()->vClose();
         }
 
         gocpp::error Close(const gocpp::ObjRecv<struct Closer>& self)
         {
-            return self.obj.value->vClose();
+            return self.obj.value()->vClose();
         }
     }
 
@@ -260,19 +278,19 @@ namespace golang::io
     template<typename T>
     Seeker::Seeker(T& ref)
     {
-        value.reset(new SeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new SeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Seeker::Seeker(const T& ref)
     {
-        value.reset(new SeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new SeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Seeker::Seeker(T* ptr)
     {
-        value.reset(new SeekerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new SeekerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Seeker::PrintTo(std::ostream& os) const
@@ -286,16 +304,22 @@ namespace golang::io
         return rec::Seek(gocpp::PtrRecv<T, false>(value.get()), offset, whence);
     }
 
+    inline Seeker::ISeeker* Seeker::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Seeker'");
+    }
+
     namespace rec
     {
         std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct Seeker, false>& self, int64_t offset, int whence)
         {
-            return self.ptr->value->vSeek(offset, whence);
+            return self.ptr->value()->vSeek(offset, whence);
         }
 
         std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct Seeker>& self, int64_t offset, int whence)
         {
-            return self.obj.value->vSeek(offset, whence);
+            return self.obj.value()->vSeek(offset, whence);
         }
     }
 
@@ -309,19 +333,19 @@ namespace golang::io
     template<typename T>
     ReadWriter::ReadWriter(T& ref)
     {
-        value.reset(new ReadWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadWriter::ReadWriter(const T& ref)
     {
-        value.reset(new ReadWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadWriter::ReadWriter(T* ptr)
     {
-        value.reset(new ReadWriterImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReadWriterImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ReadWriter::PrintTo(std::ostream& os) const
@@ -330,26 +354,32 @@ namespace golang::io
     }
 
 
+    inline ReadWriter::IReadWriter* ReadWriter::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ReadWriter'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadWriter, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vRead(p);
+            return self.ptr->value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadWriter>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vRead(p);
+            return self.obj.value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct ReadWriter, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vWrite(p);
+            return self.ptr->value()->vWrite(p);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct ReadWriter>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vWrite(p);
+            return self.obj.value()->vWrite(p);
         }
     }
 
@@ -363,19 +393,19 @@ namespace golang::io
     template<typename T>
     ReadCloser::ReadCloser(T& ref)
     {
-        value.reset(new ReadCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadCloser::ReadCloser(const T& ref)
     {
-        value.reset(new ReadCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadCloser::ReadCloser(T* ptr)
     {
-        value.reset(new ReadCloserImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReadCloserImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ReadCloser::PrintTo(std::ostream& os) const
@@ -384,26 +414,32 @@ namespace golang::io
     }
 
 
+    inline ReadCloser::IReadCloser* ReadCloser::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ReadCloser'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadCloser, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vRead(p);
+            return self.ptr->value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadCloser>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vRead(p);
+            return self.obj.value()->vRead(p);
         }
 
         gocpp::error Close(const gocpp::PtrRecv<struct ReadCloser, false>& self)
         {
-            return self.ptr->value->vClose();
+            return self.ptr->value()->vClose();
         }
 
         gocpp::error Close(const gocpp::ObjRecv<struct ReadCloser>& self)
         {
-            return self.obj.value->vClose();
+            return self.obj.value()->vClose();
         }
     }
 
@@ -417,19 +453,19 @@ namespace golang::io
     template<typename T>
     WriteCloser::WriteCloser(T& ref)
     {
-        value.reset(new WriteCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriteCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     WriteCloser::WriteCloser(const T& ref)
     {
-        value.reset(new WriteCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriteCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     WriteCloser::WriteCloser(T* ptr)
     {
-        value.reset(new WriteCloserImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new WriteCloserImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& WriteCloser::PrintTo(std::ostream& os) const
@@ -438,26 +474,32 @@ namespace golang::io
     }
 
 
+    inline WriteCloser::IWriteCloser* WriteCloser::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'WriteCloser'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct WriteCloser, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vWrite(p);
+            return self.ptr->value()->vWrite(p);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct WriteCloser>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vWrite(p);
+            return self.obj.value()->vWrite(p);
         }
 
         gocpp::error Close(const gocpp::PtrRecv<struct WriteCloser, false>& self)
         {
-            return self.ptr->value->vClose();
+            return self.ptr->value()->vClose();
         }
 
         gocpp::error Close(const gocpp::ObjRecv<struct WriteCloser>& self)
         {
-            return self.obj.value->vClose();
+            return self.obj.value()->vClose();
         }
     }
 
@@ -471,19 +513,19 @@ namespace golang::io
     template<typename T>
     ReadWriteCloser::ReadWriteCloser(T& ref)
     {
-        value.reset(new ReadWriteCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadWriteCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadWriteCloser::ReadWriteCloser(const T& ref)
     {
-        value.reset(new ReadWriteCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadWriteCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadWriteCloser::ReadWriteCloser(T* ptr)
     {
-        value.reset(new ReadWriteCloserImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReadWriteCloserImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ReadWriteCloser::PrintTo(std::ostream& os) const
@@ -492,36 +534,42 @@ namespace golang::io
     }
 
 
+    inline ReadWriteCloser::IReadWriteCloser* ReadWriteCloser::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ReadWriteCloser'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadWriteCloser, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vRead(p);
+            return self.ptr->value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadWriteCloser>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vRead(p);
+            return self.obj.value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct ReadWriteCloser, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vWrite(p);
+            return self.ptr->value()->vWrite(p);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct ReadWriteCloser>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vWrite(p);
+            return self.obj.value()->vWrite(p);
         }
 
         gocpp::error Close(const gocpp::PtrRecv<struct ReadWriteCloser, false>& self)
         {
-            return self.ptr->value->vClose();
+            return self.ptr->value()->vClose();
         }
 
         gocpp::error Close(const gocpp::ObjRecv<struct ReadWriteCloser>& self)
         {
-            return self.obj.value->vClose();
+            return self.obj.value()->vClose();
         }
     }
 
@@ -535,19 +583,19 @@ namespace golang::io
     template<typename T>
     ReadSeeker::ReadSeeker(T& ref)
     {
-        value.reset(new ReadSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadSeeker::ReadSeeker(const T& ref)
     {
-        value.reset(new ReadSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadSeeker::ReadSeeker(T* ptr)
     {
-        value.reset(new ReadSeekerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReadSeekerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ReadSeeker::PrintTo(std::ostream& os) const
@@ -556,26 +604,32 @@ namespace golang::io
     }
 
 
+    inline ReadSeeker::IReadSeeker* ReadSeeker::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ReadSeeker'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadSeeker, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vRead(p);
+            return self.ptr->value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadSeeker>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vRead(p);
+            return self.obj.value()->vRead(p);
         }
 
         std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct ReadSeeker, false>& self, int64_t offset, int whence)
         {
-            return self.ptr->value->vSeek(offset, whence);
+            return self.ptr->value()->vSeek(offset, whence);
         }
 
         std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct ReadSeeker>& self, int64_t offset, int whence)
         {
-            return self.obj.value->vSeek(offset, whence);
+            return self.obj.value()->vSeek(offset, whence);
         }
     }
 
@@ -590,19 +644,19 @@ namespace golang::io
     template<typename T>
     ReadSeekCloser::ReadSeekCloser(T& ref)
     {
-        value.reset(new ReadSeekCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadSeekCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadSeekCloser::ReadSeekCloser(const T& ref)
     {
-        value.reset(new ReadSeekCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadSeekCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadSeekCloser::ReadSeekCloser(T* ptr)
     {
-        value.reset(new ReadSeekCloserImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReadSeekCloserImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ReadSeekCloser::PrintTo(std::ostream& os) const
@@ -611,36 +665,42 @@ namespace golang::io
     }
 
 
+    inline ReadSeekCloser::IReadSeekCloser* ReadSeekCloser::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ReadSeekCloser'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadSeekCloser, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vRead(p);
+            return self.ptr->value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadSeekCloser>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vRead(p);
+            return self.obj.value()->vRead(p);
         }
 
         std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct ReadSeekCloser, false>& self, int64_t offset, int whence)
         {
-            return self.ptr->value->vSeek(offset, whence);
+            return self.ptr->value()->vSeek(offset, whence);
         }
 
         std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct ReadSeekCloser>& self, int64_t offset, int whence)
         {
-            return self.obj.value->vSeek(offset, whence);
+            return self.obj.value()->vSeek(offset, whence);
         }
 
         gocpp::error Close(const gocpp::PtrRecv<struct ReadSeekCloser, false>& self)
         {
-            return self.ptr->value->vClose();
+            return self.ptr->value()->vClose();
         }
 
         gocpp::error Close(const gocpp::ObjRecv<struct ReadSeekCloser>& self)
         {
-            return self.obj.value->vClose();
+            return self.obj.value()->vClose();
         }
     }
 
@@ -654,19 +714,19 @@ namespace golang::io
     template<typename T>
     WriteSeeker::WriteSeeker(T& ref)
     {
-        value.reset(new WriteSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriteSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     WriteSeeker::WriteSeeker(const T& ref)
     {
-        value.reset(new WriteSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriteSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     WriteSeeker::WriteSeeker(T* ptr)
     {
-        value.reset(new WriteSeekerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new WriteSeekerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& WriteSeeker::PrintTo(std::ostream& os) const
@@ -675,26 +735,32 @@ namespace golang::io
     }
 
 
+    inline WriteSeeker::IWriteSeeker* WriteSeeker::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'WriteSeeker'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct WriteSeeker, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vWrite(p);
+            return self.ptr->value()->vWrite(p);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct WriteSeeker>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vWrite(p);
+            return self.obj.value()->vWrite(p);
         }
 
         std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct WriteSeeker, false>& self, int64_t offset, int whence)
         {
-            return self.ptr->value->vSeek(offset, whence);
+            return self.ptr->value()->vSeek(offset, whence);
         }
 
         std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct WriteSeeker>& self, int64_t offset, int whence)
         {
-            return self.obj.value->vSeek(offset, whence);
+            return self.obj.value()->vSeek(offset, whence);
         }
     }
 
@@ -708,19 +774,19 @@ namespace golang::io
     template<typename T>
     ReadWriteSeeker::ReadWriteSeeker(T& ref)
     {
-        value.reset(new ReadWriteSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadWriteSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadWriteSeeker::ReadWriteSeeker(const T& ref)
     {
-        value.reset(new ReadWriteSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadWriteSeekerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadWriteSeeker::ReadWriteSeeker(T* ptr)
     {
-        value.reset(new ReadWriteSeekerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReadWriteSeekerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ReadWriteSeeker::PrintTo(std::ostream& os) const
@@ -729,36 +795,42 @@ namespace golang::io
     }
 
 
+    inline ReadWriteSeeker::IReadWriteSeeker* ReadWriteSeeker::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ReadWriteSeeker'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadWriteSeeker, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vRead(p);
+            return self.ptr->value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadWriteSeeker>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vRead(p);
+            return self.obj.value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::PtrRecv<struct ReadWriteSeeker, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vWrite(p);
+            return self.ptr->value()->vWrite(p);
         }
 
         std::tuple<int, gocpp::error> Write(const gocpp::ObjRecv<struct ReadWriteSeeker>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vWrite(p);
+            return self.obj.value()->vWrite(p);
         }
 
         std::tuple<int64_t, gocpp::error> Seek(const gocpp::PtrRecv<struct ReadWriteSeeker, false>& self, int64_t offset, int whence)
         {
-            return self.ptr->value->vSeek(offset, whence);
+            return self.ptr->value()->vSeek(offset, whence);
         }
 
         std::tuple<int64_t, gocpp::error> Seek(const gocpp::ObjRecv<struct ReadWriteSeeker>& self, int64_t offset, int whence)
         {
-            return self.obj.value->vSeek(offset, whence);
+            return self.obj.value()->vSeek(offset, whence);
         }
     }
 
@@ -778,19 +850,19 @@ namespace golang::io
     template<typename T>
     ReaderFrom::ReaderFrom(T& ref)
     {
-        value.reset(new ReaderFromImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReaderFromImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReaderFrom::ReaderFrom(const T& ref)
     {
-        value.reset(new ReaderFromImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReaderFromImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReaderFrom::ReaderFrom(T* ptr)
     {
-        value.reset(new ReaderFromImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReaderFromImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ReaderFrom::PrintTo(std::ostream& os) const
@@ -804,16 +876,22 @@ namespace golang::io
         return rec::ReadFrom(gocpp::PtrRecv<T, false>(value.get()), r);
     }
 
+    inline ReaderFrom::IReaderFrom* ReaderFrom::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ReaderFrom'");
+    }
+
     namespace rec
     {
         std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::PtrRecv<struct ReaderFrom, false>& self, Reader r)
         {
-            return self.ptr->value->vReadFrom(r);
+            return self.ptr->value()->vReadFrom(r);
         }
 
         std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::ObjRecv<struct ReaderFrom>& self, Reader r)
         {
-            return self.obj.value->vReadFrom(r);
+            return self.obj.value()->vReadFrom(r);
         }
     }
 
@@ -833,19 +911,19 @@ namespace golang::io
     template<typename T>
     WriterTo::WriterTo(T& ref)
     {
-        value.reset(new WriterToImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriterToImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     WriterTo::WriterTo(const T& ref)
     {
-        value.reset(new WriterToImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriterToImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     WriterTo::WriterTo(T* ptr)
     {
-        value.reset(new WriterToImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new WriterToImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& WriterTo::PrintTo(std::ostream& os) const
@@ -859,16 +937,22 @@ namespace golang::io
         return rec::WriteTo(gocpp::PtrRecv<T, false>(value.get()), w);
     }
 
+    inline WriterTo::IWriterTo* WriterTo::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'WriterTo'");
+    }
+
     namespace rec
     {
         std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::PtrRecv<struct WriterTo, false>& self, Writer w)
         {
-            return self.ptr->value->vWriteTo(w);
+            return self.ptr->value()->vWriteTo(w);
         }
 
         std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::ObjRecv<struct WriterTo>& self, Writer w)
         {
-            return self.obj.value->vWriteTo(w);
+            return self.obj.value()->vWriteTo(w);
         }
     }
 
@@ -907,19 +991,19 @@ namespace golang::io
     template<typename T>
     ReaderAt::ReaderAt(T& ref)
     {
-        value.reset(new ReaderAtImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReaderAtImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReaderAt::ReaderAt(const T& ref)
     {
-        value.reset(new ReaderAtImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReaderAtImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReaderAt::ReaderAt(T* ptr)
     {
-        value.reset(new ReaderAtImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReaderAtImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ReaderAt::PrintTo(std::ostream& os) const
@@ -933,16 +1017,22 @@ namespace golang::io
         return rec::ReadAt(gocpp::PtrRecv<T, false>(value.get()), p, off);
     }
 
+    inline ReaderAt::IReaderAt* ReaderAt::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ReaderAt'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> ReadAt(const gocpp::PtrRecv<struct ReaderAt, false>& self, gocpp::slice<unsigned char> p, int64_t off)
         {
-            return self.ptr->value->vReadAt(p, off);
+            return self.ptr->value()->vReadAt(p, off);
         }
 
         std::tuple<int, gocpp::error> ReadAt(const gocpp::ObjRecv<struct ReaderAt>& self, gocpp::slice<unsigned char> p, int64_t off)
         {
-            return self.obj.value->vReadAt(p, off);
+            return self.obj.value()->vReadAt(p, off);
         }
     }
 
@@ -970,19 +1060,19 @@ namespace golang::io
     template<typename T>
     WriterAt::WriterAt(T& ref)
     {
-        value.reset(new WriterAtImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriterAtImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     WriterAt::WriterAt(const T& ref)
     {
-        value.reset(new WriterAtImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriterAtImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     WriterAt::WriterAt(T* ptr)
     {
-        value.reset(new WriterAtImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new WriterAtImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& WriterAt::PrintTo(std::ostream& os) const
@@ -996,16 +1086,22 @@ namespace golang::io
         return rec::WriteAt(gocpp::PtrRecv<T, false>(value.get()), p, off);
     }
 
+    inline WriterAt::IWriterAt* WriterAt::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'WriterAt'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> WriteAt(const gocpp::PtrRecv<struct WriterAt, false>& self, gocpp::slice<unsigned char> p, int64_t off)
         {
-            return self.ptr->value->vWriteAt(p, off);
+            return self.ptr->value()->vWriteAt(p, off);
         }
 
         std::tuple<int, gocpp::error> WriteAt(const gocpp::ObjRecv<struct WriterAt>& self, gocpp::slice<unsigned char> p, int64_t off)
         {
-            return self.obj.value->vWriteAt(p, off);
+            return self.obj.value()->vWriteAt(p, off);
         }
     }
 
@@ -1027,19 +1123,19 @@ namespace golang::io
     template<typename T>
     ByteReader::ByteReader(T& ref)
     {
-        value.reset(new ByteReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ByteReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ByteReader::ByteReader(const T& ref)
     {
-        value.reset(new ByteReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ByteReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ByteReader::ByteReader(T* ptr)
     {
-        value.reset(new ByteReaderImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ByteReaderImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ByteReader::PrintTo(std::ostream& os) const
@@ -1053,16 +1149,22 @@ namespace golang::io
         return rec::ReadByte(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline ByteReader::IByteReader* ByteReader::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ByteReader'");
+    }
+
     namespace rec
     {
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct ByteReader, false>& self)
         {
-            return self.ptr->value->vReadByte();
+            return self.ptr->value()->vReadByte();
         }
 
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct ByteReader>& self)
         {
-            return self.obj.value->vReadByte();
+            return self.obj.value()->vReadByte();
         }
     }
 
@@ -1083,19 +1185,19 @@ namespace golang::io
     template<typename T>
     ByteScanner::ByteScanner(T& ref)
     {
-        value.reset(new ByteScannerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ByteScannerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ByteScanner::ByteScanner(const T& ref)
     {
-        value.reset(new ByteScannerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ByteScannerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ByteScanner::ByteScanner(T* ptr)
     {
-        value.reset(new ByteScannerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ByteScannerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ByteScanner::PrintTo(std::ostream& os) const
@@ -1109,26 +1211,32 @@ namespace golang::io
         return rec::UnreadByte(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline ByteScanner::IByteScanner* ByteScanner::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ByteScanner'");
+    }
+
     namespace rec
     {
         gocpp::error UnreadByte(const gocpp::PtrRecv<struct ByteScanner, false>& self)
         {
-            return self.ptr->value->vUnreadByte();
+            return self.ptr->value()->vUnreadByte();
         }
 
         gocpp::error UnreadByte(const gocpp::ObjRecv<struct ByteScanner>& self)
         {
-            return self.obj.value->vUnreadByte();
+            return self.obj.value()->vUnreadByte();
         }
 
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct ByteScanner, false>& self)
         {
-            return self.ptr->value->vReadByte();
+            return self.ptr->value()->vReadByte();
         }
 
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct ByteScanner>& self)
         {
-            return self.obj.value->vReadByte();
+            return self.obj.value()->vReadByte();
         }
     }
 
@@ -1142,19 +1250,19 @@ namespace golang::io
     template<typename T>
     ByteWriter::ByteWriter(T& ref)
     {
-        value.reset(new ByteWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ByteWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ByteWriter::ByteWriter(const T& ref)
     {
-        value.reset(new ByteWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ByteWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ByteWriter::ByteWriter(T* ptr)
     {
-        value.reset(new ByteWriterImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ByteWriterImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ByteWriter::PrintTo(std::ostream& os) const
@@ -1168,16 +1276,22 @@ namespace golang::io
         return rec::WriteByte(gocpp::PtrRecv<T, false>(value.get()), c);
     }
 
+    inline ByteWriter::IByteWriter* ByteWriter::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ByteWriter'");
+    }
+
     namespace rec
     {
         gocpp::error WriteByte(const gocpp::PtrRecv<struct ByteWriter, false>& self, unsigned char c)
         {
-            return self.ptr->value->vWriteByte(c);
+            return self.ptr->value()->vWriteByte(c);
         }
 
         gocpp::error WriteByte(const gocpp::ObjRecv<struct ByteWriter>& self, unsigned char c)
         {
-            return self.obj.value->vWriteByte(c);
+            return self.obj.value()->vWriteByte(c);
         }
     }
 
@@ -1195,19 +1309,19 @@ namespace golang::io
     template<typename T>
     RuneReader::RuneReader(T& ref)
     {
-        value.reset(new RuneReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new RuneReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     RuneReader::RuneReader(const T& ref)
     {
-        value.reset(new RuneReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new RuneReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     RuneReader::RuneReader(T* ptr)
     {
-        value.reset(new RuneReaderImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new RuneReaderImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& RuneReader::PrintTo(std::ostream& os) const
@@ -1221,16 +1335,22 @@ namespace golang::io
         return rec::ReadRune(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline RuneReader::IRuneReader* RuneReader::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'RuneReader'");
+    }
+
     namespace rec
     {
         std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct RuneReader, false>& self)
         {
-            return self.ptr->value->vReadRune();
+            return self.ptr->value()->vReadRune();
         }
 
         std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct RuneReader>& self)
         {
-            return self.obj.value->vReadRune();
+            return self.obj.value()->vReadRune();
         }
     }
 
@@ -1251,19 +1371,19 @@ namespace golang::io
     template<typename T>
     RuneScanner::RuneScanner(T& ref)
     {
-        value.reset(new RuneScannerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new RuneScannerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     RuneScanner::RuneScanner(const T& ref)
     {
-        value.reset(new RuneScannerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new RuneScannerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     RuneScanner::RuneScanner(T* ptr)
     {
-        value.reset(new RuneScannerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new RuneScannerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& RuneScanner::PrintTo(std::ostream& os) const
@@ -1277,26 +1397,32 @@ namespace golang::io
         return rec::UnreadRune(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline RuneScanner::IRuneScanner* RuneScanner::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'RuneScanner'");
+    }
+
     namespace rec
     {
         gocpp::error UnreadRune(const gocpp::PtrRecv<struct RuneScanner, false>& self)
         {
-            return self.ptr->value->vUnreadRune();
+            return self.ptr->value()->vUnreadRune();
         }
 
         gocpp::error UnreadRune(const gocpp::ObjRecv<struct RuneScanner>& self)
         {
-            return self.obj.value->vUnreadRune();
+            return self.obj.value()->vUnreadRune();
         }
 
         std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::PtrRecv<struct RuneScanner, false>& self)
         {
-            return self.ptr->value->vReadRune();
+            return self.ptr->value()->vReadRune();
         }
 
         std::tuple<gocpp::rune, int, gocpp::error> ReadRune(const gocpp::ObjRecv<struct RuneScanner>& self)
         {
-            return self.obj.value->vReadRune();
+            return self.obj.value()->vReadRune();
         }
     }
 
@@ -1310,19 +1436,19 @@ namespace golang::io
     template<typename T>
     StringWriter::StringWriter(T& ref)
     {
-        value.reset(new StringWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new StringWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     StringWriter::StringWriter(const T& ref)
     {
-        value.reset(new StringWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new StringWriterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     StringWriter::StringWriter(T* ptr)
     {
-        value.reset(new StringWriterImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new StringWriterImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& StringWriter::PrintTo(std::ostream& os) const
@@ -1336,16 +1462,22 @@ namespace golang::io
         return rec::WriteString(gocpp::PtrRecv<T, false>(value.get()), s);
     }
 
+    inline StringWriter::IStringWriter* StringWriter::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'StringWriter'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> WriteString(const gocpp::PtrRecv<struct StringWriter, false>& self, gocpp::string s)
         {
-            return self.ptr->value->vWriteString(s);
+            return self.ptr->value()->vWriteString(s);
         }
 
         std::tuple<int, gocpp::error> WriteString(const gocpp::ObjRecv<struct StringWriter>& self, gocpp::string s)
         {
-            return self.obj.value->vWriteString(s);
+            return self.obj.value()->vWriteString(s);
         }
     }
 

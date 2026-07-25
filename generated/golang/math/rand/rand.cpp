@@ -54,19 +54,19 @@ namespace golang::rand
     template<typename T>
     Source::Source(T& ref)
     {
-        value.reset(new SourceImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new SourceImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Source::Source(const T& ref)
     {
-        value.reset(new SourceImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new SourceImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Source::Source(T* ptr)
     {
-        value.reset(new SourceImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new SourceImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Source::PrintTo(std::ostream& os) const
@@ -85,26 +85,32 @@ namespace golang::rand
         return rec::Seed(gocpp::PtrRecv<T, false>(value.get()), seed);
     }
 
+    inline Source::ISource* Source::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Source'");
+    }
+
     namespace rec
     {
         int64_t Int63(const gocpp::PtrRecv<struct Source, false>& self)
         {
-            return self.ptr->value->vInt63();
+            return self.ptr->value()->vInt63();
         }
 
         int64_t Int63(const gocpp::ObjRecv<struct Source>& self)
         {
-            return self.obj.value->vInt63();
+            return self.obj.value()->vInt63();
         }
 
         void Seed(const gocpp::PtrRecv<struct Source, false>& self, int64_t seed)
         {
-            return self.ptr->value->vSeed(seed);
+            return self.ptr->value()->vSeed(seed);
         }
 
         void Seed(const gocpp::ObjRecv<struct Source>& self, int64_t seed)
         {
-            return self.obj.value->vSeed(seed);
+            return self.obj.value()->vSeed(seed);
         }
     }
 
@@ -123,19 +129,19 @@ namespace golang::rand
     template<typename T>
     Source64::Source64(T& ref)
     {
-        value.reset(new Source64Impl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new Source64Impl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Source64::Source64(const T& ref)
     {
-        value.reset(new Source64Impl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new Source64Impl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Source64::Source64(T* ptr)
     {
-        value.reset(new Source64Impl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new Source64Impl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Source64::PrintTo(std::ostream& os) const
@@ -149,36 +155,42 @@ namespace golang::rand
         return rec::Uint64(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Source64::ISource64* Source64::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Source64'");
+    }
+
     namespace rec
     {
         uint64_t Uint64(const gocpp::PtrRecv<struct Source64, false>& self)
         {
-            return self.ptr->value->vUint64();
+            return self.ptr->value()->vUint64();
         }
 
         uint64_t Uint64(const gocpp::ObjRecv<struct Source64>& self)
         {
-            return self.obj.value->vUint64();
+            return self.obj.value()->vUint64();
         }
 
         int64_t Int63(const gocpp::PtrRecv<struct Source64, false>& self)
         {
-            return self.ptr->value->vInt63();
+            return self.ptr->value()->vInt63();
         }
 
         int64_t Int63(const gocpp::ObjRecv<struct Source64>& self)
         {
-            return self.obj.value->vInt63();
+            return self.obj.value()->vInt63();
         }
 
         void Seed(const gocpp::PtrRecv<struct Source64, false>& self, int64_t seed)
         {
-            return self.ptr->value->vSeed(seed);
+            return self.ptr->value()->vSeed(seed);
         }
 
         void Seed(const gocpp::ObjRecv<struct Source64>& self, int64_t seed)
         {
-            return self.obj.value->vSeed(seed);
+            return self.obj.value()->vSeed(seed);
         }
     }
 

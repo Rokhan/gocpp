@@ -23,6 +23,9 @@ namespace golang::fs
         FS& operator=(FS& i) = default;
         FS& operator=(const FS& i) = default;
 
+        inline FS(nullptr_t) {};
+        FS& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         FS(T& ref);
 
@@ -67,7 +70,9 @@ namespace golang::fs
             TStore value;
         };
 
-        std::shared_ptr<IFS> value;
+        inline IFS* value() const;
+
+        std::shared_ptr<IFS> mValue;
     };
 
     namespace rec
@@ -88,6 +93,9 @@ namespace golang::fs
         File(const File& i) = default;
         File& operator=(File& i) = default;
         File& operator=(const File& i) = default;
+
+        inline File(nullptr_t) {};
+        File& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         File(T& ref);
@@ -132,7 +140,9 @@ namespace golang::fs
             TStore value;
         };
 
-        std::shared_ptr<IFile> value;
+        inline IFile* value() const;
+
+        std::shared_ptr<IFile> mValue;
     };
 
     namespace rec
@@ -158,6 +168,9 @@ namespace golang::fs
         DirEntry(const DirEntry& i) = default;
         DirEntry& operator=(DirEntry& i) = default;
         DirEntry& operator=(const DirEntry& i) = default;
+
+        inline DirEntry(nullptr_t) {};
+        DirEntry& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         DirEntry(T& ref);
@@ -217,7 +230,9 @@ namespace golang::fs
             TStore value;
         };
 
-        std::shared_ptr<IDirEntry> value;
+        inline IDirEntry* value() const;
+
+        std::shared_ptr<IDirEntry> mValue;
     };
 
     namespace rec
@@ -270,6 +285,9 @@ namespace golang::fs
         gocpp_id_0& operator=(gocpp_id_0& i) = default;
         gocpp_id_0& operator=(const gocpp_id_0& i) = default;
 
+        inline gocpp_id_0(nullptr_t) {};
+        gocpp_id_0& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         gocpp_id_0(T& ref);
 
@@ -307,7 +325,9 @@ namespace golang::fs
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_0> value;
+        inline Igocpp_id_0* value() const;
+
+        std::shared_ptr<Igocpp_id_0> mValue;
     };
 
     namespace rec
@@ -327,6 +347,9 @@ namespace golang::fs
         ReadDirFile(const ReadDirFile& i) = default;
         ReadDirFile& operator=(ReadDirFile& i) = default;
         ReadDirFile& operator=(const ReadDirFile& i) = default;
+
+        inline ReadDirFile(nullptr_t) {};
+        ReadDirFile& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         ReadDirFile(T& ref);
@@ -378,7 +401,9 @@ namespace golang::fs
             TStore value;
         };
 
-        std::shared_ptr<IReadDirFile> value;
+        inline IReadDirFile* value() const;
+
+        std::shared_ptr<IReadDirFile> mValue;
     };
 
     namespace rec
@@ -417,6 +442,9 @@ namespace golang::fs
         FileInfo(const FileInfo& i) = default;
         FileInfo& operator=(FileInfo& i) = default;
         FileInfo& operator=(const FileInfo& i) = default;
+
+        inline FileInfo(nullptr_t) {};
+        FileInfo& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         FileInfo(T& ref);
@@ -470,7 +498,9 @@ namespace golang::fs
             TStore value;
         };
 
-        std::shared_ptr<IFileInfo> value;
+        inline IFileInfo* value() const;
+
+        std::shared_ptr<IFileInfo> mValue;
     };
 
     namespace rec

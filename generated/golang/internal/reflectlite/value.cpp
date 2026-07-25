@@ -333,19 +333,19 @@ namespace golang::reflectlite
                         template<typename T>
                         gocpp_id_3::gocpp_id_3(T& ref)
                         {
-                            value.reset(new gocpp_id_3Impl<T, std::unique_ptr<T>>(new T(ref)));
+                            mValue.reset(new gocpp_id_3Impl<T, std::unique_ptr<T>>(new T(ref)));
                         }
 
                         template<typename T>
                         gocpp_id_3::gocpp_id_3(const T& ref)
                         {
-                            value.reset(new gocpp_id_3Impl<T, std::unique_ptr<T>>(new T(ref)));
+                            mValue.reset(new gocpp_id_3Impl<T, std::unique_ptr<T>>(new T(ref)));
                         }
 
                         template<typename T>
                         gocpp_id_3::gocpp_id_3(T* ptr)
                         {
-                            value.reset(new gocpp_id_3Impl<T, gocpp::ptr<T>>(ptr));
+                            mValue.reset(new gocpp_id_3Impl<T, gocpp::ptr<T>>(ptr));
                         }
 
                         std::ostream& gocpp_id_3::PrintTo(std::ostream& os) const
@@ -359,16 +359,22 @@ namespace golang::reflectlite
                             return rec::M(gocpp::PtrRecv<T, false>(value.get()));
                         }
 
+                        inline gocpp_id_3::Igocpp_id_3* gocpp_id_3::value() const
+                        {
+                            if(auto res = mValue.get()) { return res; }
+                            throw gocpp::GoPanic("using nil value for interface 'gocpp_id_3'");
+                        }
+
                         namespace rec
                         {
                             void M(const gocpp::PtrRecv<struct gocpp_id_3, false>& self)
                             {
-                                return self.ptr->value->vM();
+                                return self.ptr->value()->vM();
                             }
 
                             void M(const gocpp::ObjRecv<struct gocpp_id_3>& self)
                             {
-                                return self.obj.value->vM();
+                                return self.obj.value()->vM();
                             }
                         }
 
@@ -440,19 +446,19 @@ namespace golang::reflectlite
             template<typename T>
             gocpp_id_4::gocpp_id_4(T& ref)
             {
-                value.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
             gocpp_id_4::gocpp_id_4(const T& ref)
             {
-                value.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
             gocpp_id_4::gocpp_id_4(T* ptr)
             {
-                value.reset(new gocpp_id_4Impl<T, gocpp::ptr<T>>(ptr));
+                mValue.reset(new gocpp_id_4Impl<T, gocpp::ptr<T>>(ptr));
             }
 
             std::ostream& gocpp_id_4::PrintTo(std::ostream& os) const
@@ -466,16 +472,22 @@ namespace golang::reflectlite
                 return rec::M(gocpp::PtrRecv<T, false>(value.get()));
             }
 
+            inline gocpp_id_4::Igocpp_id_4* gocpp_id_4::value() const
+            {
+                if(auto res = mValue.get()) { return res; }
+                throw gocpp::GoPanic("using nil value for interface 'gocpp_id_4'");
+            }
+
             namespace rec
             {
                 void M(const gocpp::PtrRecv<struct gocpp_id_4, false>& self)
                 {
-                    return self.ptr->value->vM();
+                    return self.ptr->value()->vM();
                 }
 
                 void M(const gocpp::ObjRecv<struct gocpp_id_4>& self)
                 {
-                    return self.obj.value->vM();
+                    return self.obj.value()->vM();
                 }
             }
 

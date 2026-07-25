@@ -59,19 +59,19 @@ namespace golang::os
     template<typename T>
     timeout::timeout(T& ref)
     {
-        value.reset(new timeoutImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new timeoutImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     timeout::timeout(const T& ref)
     {
-        value.reset(new timeoutImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new timeoutImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     timeout::timeout(T* ptr)
     {
-        value.reset(new timeoutImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new timeoutImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& timeout::PrintTo(std::ostream& os) const
@@ -85,16 +85,22 @@ namespace golang::os
         return rec::Timeout(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline timeout::Itimeout* timeout::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'timeout'");
+    }
+
     namespace rec
     {
         bool Timeout(const gocpp::PtrRecv<struct timeout, false>& self)
         {
-            return self.ptr->value->vTimeout();
+            return self.ptr->value()->vTimeout();
         }
 
         bool Timeout(const gocpp::ObjRecv<struct timeout>& self)
         {
-            return self.obj.value->vTimeout();
+            return self.obj.value()->vTimeout();
         }
     }
 

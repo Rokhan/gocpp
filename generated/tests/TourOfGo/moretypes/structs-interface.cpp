@@ -24,19 +24,19 @@ namespace golang::main
     template<typename T>
     Reader::Reader(T& ref)
     {
-        value.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Reader::Reader(const T& ref)
     {
-        value.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Reader::Reader(T* ptr)
     {
-        value.reset(new ReaderImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReaderImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Reader::PrintTo(std::ostream& os) const
@@ -50,16 +50,22 @@ namespace golang::main
         return rec::Read(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Reader::IReader* Reader::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Reader'");
+    }
+
     namespace rec
     {
         int Read(const gocpp::PtrRecv<struct Reader, false>& self)
         {
-            return self.ptr->value->vRead();
+            return self.ptr->value()->vRead();
         }
 
         int Read(const gocpp::ObjRecv<struct Reader>& self)
         {
-            return self.obj.value->vRead();
+            return self.obj.value()->vRead();
         }
     }
 
@@ -72,19 +78,19 @@ namespace golang::main
     template<typename T>
     WriterTo::WriterTo(T& ref)
     {
-        value.reset(new WriterToImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriterToImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     WriterTo::WriterTo(const T& ref)
     {
-        value.reset(new WriterToImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new WriterToImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     WriterTo::WriterTo(T* ptr)
     {
-        value.reset(new WriterToImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new WriterToImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& WriterTo::PrintTo(std::ostream& os) const
@@ -98,16 +104,22 @@ namespace golang::main
         return rec::WriteTo(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline WriterTo::IWriterTo* WriterTo::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'WriterTo'");
+    }
+
     namespace rec
     {
         int WriteTo(const gocpp::PtrRecv<struct WriterTo, false>& self)
         {
-            return self.ptr->value->vWriteTo();
+            return self.ptr->value()->vWriteTo();
         }
 
         int WriteTo(const gocpp::ObjRecv<struct WriterTo>& self)
         {
-            return self.obj.value->vWriteTo();
+            return self.obj.value()->vWriteTo();
         }
     }
 
@@ -120,19 +132,19 @@ namespace golang::main
     template<typename T>
     Closer::Closer(T& ref)
     {
-        value.reset(new CloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new CloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Closer::Closer(const T& ref)
     {
-        value.reset(new CloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new CloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Closer::Closer(T* ptr)
     {
-        value.reset(new CloserImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new CloserImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Closer::PrintTo(std::ostream& os) const
@@ -146,16 +158,22 @@ namespace golang::main
         return rec::Close(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Closer::ICloser* Closer::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Closer'");
+    }
+
     namespace rec
     {
         gocpp::string Close(const gocpp::PtrRecv<struct Closer, false>& self)
         {
-            return self.ptr->value->vClose();
+            return self.ptr->value()->vClose();
         }
 
         gocpp::string Close(const gocpp::ObjRecv<struct Closer>& self)
         {
-            return self.obj.value->vClose();
+            return self.obj.value()->vClose();
         }
     }
 
@@ -168,19 +186,19 @@ namespace golang::main
     template<typename T>
     ReadCloser::ReadCloser(T& ref)
     {
-        value.reset(new ReadCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadCloser::ReadCloser(const T& ref)
     {
-        value.reset(new ReadCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadCloserImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadCloser::ReadCloser(T* ptr)
     {
-        value.reset(new ReadCloserImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReadCloserImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ReadCloser::PrintTo(std::ostream& os) const
@@ -189,26 +207,32 @@ namespace golang::main
     }
 
 
+    inline ReadCloser::IReadCloser* ReadCloser::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ReadCloser'");
+    }
+
     namespace rec
     {
         int Read(const gocpp::PtrRecv<struct ReadCloser, false>& self)
         {
-            return self.ptr->value->vRead();
+            return self.ptr->value()->vRead();
         }
 
         int Read(const gocpp::ObjRecv<struct ReadCloser>& self)
         {
-            return self.obj.value->vRead();
+            return self.obj.value()->vRead();
         }
 
         gocpp::string Close(const gocpp::PtrRecv<struct ReadCloser, false>& self)
         {
-            return self.ptr->value->vClose();
+            return self.ptr->value()->vClose();
         }
 
         gocpp::string Close(const gocpp::ObjRecv<struct ReadCloser>& self)
         {
-            return self.obj.value->vClose();
+            return self.obj.value()->vClose();
         }
     }
 

@@ -82,19 +82,19 @@ namespace golang::sync
     template<typename T>
     Locker::Locker(T& ref)
     {
-        value.reset(new LockerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new LockerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Locker::Locker(const T& ref)
     {
-        value.reset(new LockerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new LockerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Locker::Locker(T* ptr)
     {
-        value.reset(new LockerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new LockerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Locker::PrintTo(std::ostream& os) const
@@ -113,26 +113,32 @@ namespace golang::sync
         return rec::Unlock(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Locker::ILocker* Locker::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Locker'");
+    }
+
     namespace rec
     {
         void Lock(const gocpp::PtrRecv<struct Locker, false>& self)
         {
-            return self.ptr->value->vLock();
+            return self.ptr->value()->vLock();
         }
 
         void Lock(const gocpp::ObjRecv<struct Locker>& self)
         {
-            return self.obj.value->vLock();
+            return self.obj.value()->vLock();
         }
 
         void Unlock(const gocpp::PtrRecv<struct Locker, false>& self)
         {
-            return self.ptr->value->vUnlock();
+            return self.ptr->value()->vUnlock();
         }
 
         void Unlock(const gocpp::ObjRecv<struct Locker>& self)
         {
-            return self.obj.value->vUnlock();
+            return self.obj.value()->vUnlock();
         }
     }
 

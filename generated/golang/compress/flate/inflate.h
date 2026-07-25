@@ -87,6 +87,9 @@ namespace golang::flate
         Resetter& operator=(Resetter& i) = default;
         Resetter& operator=(const Resetter& i) = default;
 
+        inline Resetter(nullptr_t) {};
+        Resetter& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Resetter(T& ref);
 
@@ -126,7 +129,9 @@ namespace golang::flate
             TStore value;
         };
 
-        std::shared_ptr<IResetter> value;
+        inline IResetter* value() const;
+
+        std::shared_ptr<IResetter> mValue;
     };
 
     namespace rec
@@ -146,6 +151,9 @@ namespace golang::flate
         Reader(const Reader& i) = default;
         Reader& operator=(Reader& i) = default;
         Reader& operator=(const Reader& i) = default;
+
+        inline Reader(nullptr_t) {};
+        Reader& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Reader(T& ref);
@@ -181,7 +189,9 @@ namespace golang::flate
             TStore value;
         };
 
-        std::shared_ptr<IReader> value;
+        inline IReader* value() const;
+
+        std::shared_ptr<IReader> mValue;
     };
 
     namespace rec

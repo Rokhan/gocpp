@@ -28,19 +28,19 @@ namespace golang::sort
     template<typename T>
     Interface::Interface(T& ref)
     {
-        value.reset(new InterfaceImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new InterfaceImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Interface::Interface(const T& ref)
     {
-        value.reset(new InterfaceImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new InterfaceImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Interface::Interface(T* ptr)
     {
-        value.reset(new InterfaceImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new InterfaceImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Interface::PrintTo(std::ostream& os) const
@@ -64,36 +64,42 @@ namespace golang::sort
         return rec::Swap(gocpp::PtrRecv<T, false>(value.get()), i, j);
     }
 
+    inline Interface::IInterface* Interface::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Interface'");
+    }
+
     namespace rec
     {
         int Len(const gocpp::PtrRecv<struct Interface, false>& self)
         {
-            return self.ptr->value->vLen();
+            return self.ptr->value()->vLen();
         }
 
         int Len(const gocpp::ObjRecv<struct Interface>& self)
         {
-            return self.obj.value->vLen();
+            return self.obj.value()->vLen();
         }
 
         bool Less(const gocpp::PtrRecv<struct Interface, false>& self, int i, int j)
         {
-            return self.ptr->value->vLess(i, j);
+            return self.ptr->value()->vLess(i, j);
         }
 
         bool Less(const gocpp::ObjRecv<struct Interface>& self, int i, int j)
         {
-            return self.obj.value->vLess(i, j);
+            return self.obj.value()->vLess(i, j);
         }
 
         void Swap(const gocpp::PtrRecv<struct Interface, false>& self, int i, int j)
         {
-            return self.ptr->value->vSwap(i, j);
+            return self.ptr->value()->vSwap(i, j);
         }
 
         void Swap(const gocpp::ObjRecv<struct Interface>& self, int i, int j)
         {
-            return self.obj.value->vSwap(i, j);
+            return self.obj.value()->vSwap(i, j);
         }
     }
 

@@ -22,19 +22,19 @@ namespace golang::syscall
     template<typename T>
     RawConn::RawConn(T& ref)
     {
-        value.reset(new RawConnImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new RawConnImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     RawConn::RawConn(const T& ref)
     {
-        value.reset(new RawConnImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new RawConnImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     RawConn::RawConn(T* ptr)
     {
-        value.reset(new RawConnImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new RawConnImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& RawConn::PrintTo(std::ostream& os) const
@@ -58,36 +58,42 @@ namespace golang::syscall
         return rec::Write(gocpp::PtrRecv<T, false>(value.get()), f);
     }
 
+    inline RawConn::IRawConn* RawConn::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'RawConn'");
+    }
+
     namespace rec
     {
         gocpp::error Control(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<void (uintptr_t fd)> f)
         {
-            return self.ptr->value->vControl(f);
+            return self.ptr->value()->vControl(f);
         }
 
         gocpp::error Control(const gocpp::ObjRecv<struct RawConn>& self, std::function<void (uintptr_t fd)> f)
         {
-            return self.obj.value->vControl(f);
+            return self.obj.value()->vControl(f);
         }
 
         gocpp::error Read(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<bool (uintptr_t fd)> f)
         {
-            return self.ptr->value->vRead(f);
+            return self.ptr->value()->vRead(f);
         }
 
         gocpp::error Read(const gocpp::ObjRecv<struct RawConn>& self, std::function<bool (uintptr_t fd)> f)
         {
-            return self.obj.value->vRead(f);
+            return self.obj.value()->vRead(f);
         }
 
         gocpp::error Write(const gocpp::PtrRecv<struct RawConn, false>& self, std::function<bool (uintptr_t fd)> f)
         {
-            return self.ptr->value->vWrite(f);
+            return self.ptr->value()->vWrite(f);
         }
 
         gocpp::error Write(const gocpp::ObjRecv<struct RawConn>& self, std::function<bool (uintptr_t fd)> f)
         {
-            return self.obj.value->vWrite(f);
+            return self.obj.value()->vWrite(f);
         }
     }
 
@@ -102,19 +108,19 @@ namespace golang::syscall
     template<typename T>
     Conn::Conn(T& ref)
     {
-        value.reset(new ConnImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ConnImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Conn::Conn(const T& ref)
     {
-        value.reset(new ConnImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ConnImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Conn::Conn(T* ptr)
     {
-        value.reset(new ConnImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ConnImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Conn::PrintTo(std::ostream& os) const
@@ -128,16 +134,22 @@ namespace golang::syscall
         return rec::SyscallConn(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Conn::IConn* Conn::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Conn'");
+    }
+
     namespace rec
     {
         std::tuple<RawConn, gocpp::error> SyscallConn(const gocpp::PtrRecv<struct Conn, false>& self)
         {
-            return self.ptr->value->vSyscallConn();
+            return self.ptr->value()->vSyscallConn();
         }
 
         std::tuple<RawConn, gocpp::error> SyscallConn(const gocpp::ObjRecv<struct Conn>& self)
         {
-            return self.obj.value->vSyscallConn();
+            return self.obj.value()->vSyscallConn();
         }
     }
 

@@ -23,6 +23,9 @@ namespace golang::rand
         Source& operator=(Source& i) = default;
         Source& operator=(const Source& i) = default;
 
+        inline Source(nullptr_t) {};
+        Source& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Source(T& ref);
 
@@ -63,7 +66,9 @@ namespace golang::rand
             TStore value;
         };
 
-        std::shared_ptr<ISource> value;
+        inline ISource* value() const;
+
+        std::shared_ptr<ISource> mValue;
     };
 
     namespace rec
@@ -104,6 +109,9 @@ namespace golang::rand
         Source64& operator=(Source64& i) = default;
         Source64& operator=(const Source64& i) = default;
 
+        inline Source64(nullptr_t) {};
+        Source64& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Source64(T& ref);
 
@@ -141,7 +149,9 @@ namespace golang::rand
             TStore value;
         };
 
-        std::shared_ptr<ISource64> value;
+        inline ISource64* value() const;
+
+        std::shared_ptr<ISource64> mValue;
     };
 
     namespace rec

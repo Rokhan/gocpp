@@ -65,19 +65,19 @@ namespace golang::reflectlite
     template<typename T>
     Type::Type(T& ref)
     {
-        value.reset(new TypeImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new TypeImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Type::Type(const T& ref)
     {
-        value.reset(new TypeImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new TypeImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Type::Type(T* ptr)
     {
-        value.reset(new TypeImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new TypeImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Type::PrintTo(std::ostream& os) const
@@ -141,116 +141,122 @@ namespace golang::reflectlite
         return rec::uncommon(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Type::IType* Type::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Type'");
+    }
+
     namespace rec
     {
         gocpp::string Name(const gocpp::PtrRecv<struct Type, false>& self)
         {
-            return self.ptr->value->vName();
+            return self.ptr->value()->vName();
         }
 
         gocpp::string Name(const gocpp::ObjRecv<struct Type>& self)
         {
-            return self.obj.value->vName();
+            return self.obj.value()->vName();
         }
 
         gocpp::string PkgPath(const gocpp::PtrRecv<struct Type, false>& self)
         {
-            return self.ptr->value->vPkgPath();
+            return self.ptr->value()->vPkgPath();
         }
 
         gocpp::string PkgPath(const gocpp::ObjRecv<struct Type>& self)
         {
-            return self.obj.value->vPkgPath();
+            return self.obj.value()->vPkgPath();
         }
 
         uintptr_t Size(const gocpp::PtrRecv<struct Type, false>& self)
         {
-            return self.ptr->value->vSize();
+            return self.ptr->value()->vSize();
         }
 
         uintptr_t Size(const gocpp::ObjRecv<struct Type>& self)
         {
-            return self.obj.value->vSize();
+            return self.obj.value()->vSize();
         }
 
         golang::reflectlite::Kind Kind(const gocpp::PtrRecv<struct Type, false>& self)
         {
-            return self.ptr->value->vKind();
+            return self.ptr->value()->vKind();
         }
 
         golang::reflectlite::Kind Kind(const gocpp::ObjRecv<struct Type>& self)
         {
-            return self.obj.value->vKind();
+            return self.obj.value()->vKind();
         }
 
         bool Implements(const gocpp::PtrRecv<struct Type, false>& self, golang::reflectlite::Type u)
         {
-            return self.ptr->value->vImplements(u);
+            return self.ptr->value()->vImplements(u);
         }
 
         bool Implements(const gocpp::ObjRecv<struct Type>& self, golang::reflectlite::Type u)
         {
-            return self.obj.value->vImplements(u);
+            return self.obj.value()->vImplements(u);
         }
 
         bool AssignableTo(const gocpp::PtrRecv<struct Type, false>& self, golang::reflectlite::Type u)
         {
-            return self.ptr->value->vAssignableTo(u);
+            return self.ptr->value()->vAssignableTo(u);
         }
 
         bool AssignableTo(const gocpp::ObjRecv<struct Type>& self, golang::reflectlite::Type u)
         {
-            return self.obj.value->vAssignableTo(u);
+            return self.obj.value()->vAssignableTo(u);
         }
 
         bool Comparable(const gocpp::PtrRecv<struct Type, false>& self)
         {
-            return self.ptr->value->vComparable();
+            return self.ptr->value()->vComparable();
         }
 
         bool Comparable(const gocpp::ObjRecv<struct Type>& self)
         {
-            return self.obj.value->vComparable();
+            return self.obj.value()->vComparable();
         }
 
         gocpp::string String(const gocpp::PtrRecv<struct Type, false>& self)
         {
-            return self.ptr->value->vString();
+            return self.ptr->value()->vString();
         }
 
         gocpp::string String(const gocpp::ObjRecv<struct Type>& self)
         {
-            return self.obj.value->vString();
+            return self.obj.value()->vString();
         }
 
         golang::reflectlite::Type Elem(const gocpp::PtrRecv<struct Type, false>& self)
         {
-            return self.ptr->value->vElem();
+            return self.ptr->value()->vElem();
         }
 
         golang::reflectlite::Type Elem(const gocpp::ObjRecv<struct Type>& self)
         {
-            return self.obj.value->vElem();
+            return self.obj.value()->vElem();
         }
 
         abi::Type* common(const gocpp::PtrRecv<struct Type, false>& self)
         {
-            return self.ptr->value->vcommon();
+            return self.ptr->value()->vcommon();
         }
 
         abi::Type* common(const gocpp::ObjRecv<struct Type>& self)
         {
-            return self.obj.value->vcommon();
+            return self.obj.value()->vcommon();
         }
 
         uncommonType* uncommon(const gocpp::PtrRecv<struct Type, false>& self)
         {
-            return self.ptr->value->vuncommon();
+            return self.ptr->value()->vuncommon();
         }
 
         uncommonType* uncommon(const gocpp::ObjRecv<struct Type>& self)
         {
-            return self.obj.value->vuncommon();
+            return self.obj.value()->vuncommon();
         }
     }
 

@@ -41,19 +41,19 @@ namespace golang::fs
     template<typename T>
     FS::FS(T& ref)
     {
-        value.reset(new FSImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new FSImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     FS::FS(const T& ref)
     {
-        value.reset(new FSImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new FSImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     FS::FS(T* ptr)
     {
-        value.reset(new FSImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new FSImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& FS::PrintTo(std::ostream& os) const
@@ -67,16 +67,22 @@ namespace golang::fs
         return rec::Open(gocpp::PtrRecv<T, false>(value.get()), name);
     }
 
+    inline FS::IFS* FS::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'FS'");
+    }
+
     namespace rec
     {
         std::tuple<File, gocpp::error> Open(const gocpp::PtrRecv<struct FS, false>& self, gocpp::string name)
         {
-            return self.ptr->value->vOpen(name);
+            return self.ptr->value()->vOpen(name);
         }
 
         std::tuple<File, gocpp::error> Open(const gocpp::ObjRecv<struct FS>& self, gocpp::string name)
         {
-            return self.obj.value->vOpen(name);
+            return self.obj.value()->vOpen(name);
         }
     }
 
@@ -141,19 +147,19 @@ namespace golang::fs
     template<typename T>
     File::File(T& ref)
     {
-        value.reset(new FileImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new FileImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     File::File(const T& ref)
     {
-        value.reset(new FileImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new FileImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     File::File(T* ptr)
     {
-        value.reset(new FileImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new FileImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& File::PrintTo(std::ostream& os) const
@@ -177,36 +183,42 @@ namespace golang::fs
         return rec::Close(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline File::IFile* File::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'File'");
+    }
+
     namespace rec
     {
         std::tuple<FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct File, false>& self)
         {
-            return self.ptr->value->vStat();
+            return self.ptr->value()->vStat();
         }
 
         std::tuple<FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct File>& self)
         {
-            return self.obj.value->vStat();
+            return self.obj.value()->vStat();
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct File, false>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.ptr->value->vRead(_1);
+            return self.ptr->value()->vRead(_1);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct File>& self, gocpp::slice<unsigned char> _1)
         {
-            return self.obj.value->vRead(_1);
+            return self.obj.value()->vRead(_1);
         }
 
         gocpp::error Close(const gocpp::PtrRecv<struct File, false>& self)
         {
-            return self.ptr->value->vClose();
+            return self.ptr->value()->vClose();
         }
 
         gocpp::error Close(const gocpp::ObjRecv<struct File>& self)
         {
-            return self.obj.value->vClose();
+            return self.obj.value()->vClose();
         }
     }
 
@@ -221,19 +233,19 @@ namespace golang::fs
     template<typename T>
     DirEntry::DirEntry(T& ref)
     {
-        value.reset(new DirEntryImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new DirEntryImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     DirEntry::DirEntry(const T& ref)
     {
-        value.reset(new DirEntryImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new DirEntryImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     DirEntry::DirEntry(T* ptr)
     {
-        value.reset(new DirEntryImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new DirEntryImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& DirEntry::PrintTo(std::ostream& os) const
@@ -262,46 +274,52 @@ namespace golang::fs
         return rec::Info(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline DirEntry::IDirEntry* DirEntry::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'DirEntry'");
+    }
+
     namespace rec
     {
         gocpp::string Name(const gocpp::PtrRecv<struct DirEntry, false>& self)
         {
-            return self.ptr->value->vName();
+            return self.ptr->value()->vName();
         }
 
         gocpp::string Name(const gocpp::ObjRecv<struct DirEntry>& self)
         {
-            return self.obj.value->vName();
+            return self.obj.value()->vName();
         }
 
         bool IsDir(const gocpp::PtrRecv<struct DirEntry, false>& self)
         {
-            return self.ptr->value->vIsDir();
+            return self.ptr->value()->vIsDir();
         }
 
         bool IsDir(const gocpp::ObjRecv<struct DirEntry>& self)
         {
-            return self.obj.value->vIsDir();
+            return self.obj.value()->vIsDir();
         }
 
         FileMode Type(const gocpp::PtrRecv<struct DirEntry, false>& self)
         {
-            return self.ptr->value->vType();
+            return self.ptr->value()->vType();
         }
 
         FileMode Type(const gocpp::ObjRecv<struct DirEntry>& self)
         {
-            return self.obj.value->vType();
+            return self.obj.value()->vType();
         }
 
         std::tuple<FileInfo, gocpp::error> Info(const gocpp::PtrRecv<struct DirEntry, false>& self)
         {
-            return self.ptr->value->vInfo();
+            return self.ptr->value()->vInfo();
         }
 
         std::tuple<FileInfo, gocpp::error> Info(const gocpp::ObjRecv<struct DirEntry>& self)
         {
-            return self.obj.value->vInfo();
+            return self.obj.value()->vInfo();
         }
     }
 
@@ -318,19 +336,19 @@ namespace golang::fs
     template<typename T>
     ReadDirFile::ReadDirFile(T& ref)
     {
-        value.reset(new ReadDirFileImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadDirFileImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadDirFile::ReadDirFile(const T& ref)
     {
-        value.reset(new ReadDirFileImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReadDirFileImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     ReadDirFile::ReadDirFile(T* ptr)
     {
-        value.reset(new ReadDirFileImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReadDirFileImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& ReadDirFile::PrintTo(std::ostream& os) const
@@ -344,46 +362,52 @@ namespace golang::fs
         return rec::ReadDir(gocpp::PtrRecv<T, false>(value.get()), n);
     }
 
+    inline ReadDirFile::IReadDirFile* ReadDirFile::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'ReadDirFile'");
+    }
+
     namespace rec
     {
         std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::PtrRecv<struct ReadDirFile, false>& self, int n)
         {
-            return self.ptr->value->vReadDir(n);
+            return self.ptr->value()->vReadDir(n);
         }
 
         std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::ObjRecv<struct ReadDirFile>& self, int n)
         {
-            return self.obj.value->vReadDir(n);
+            return self.obj.value()->vReadDir(n);
         }
 
         gocpp::error Close(const gocpp::PtrRecv<struct ReadDirFile, false>& self)
         {
-            return self.ptr->value->vClose();
+            return self.ptr->value()->vClose();
         }
 
         gocpp::error Close(const gocpp::ObjRecv<struct ReadDirFile>& self)
         {
-            return self.obj.value->vClose();
+            return self.obj.value()->vClose();
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct ReadDirFile, false>& self, gocpp::slice<unsigned char> param0)
         {
-            return self.ptr->value->vRead(param0);
+            return self.ptr->value()->vRead(param0);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct ReadDirFile>& self, gocpp::slice<unsigned char> param0)
         {
-            return self.obj.value->vRead(param0);
+            return self.obj.value()->vRead(param0);
         }
 
         std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct ReadDirFile, false>& self)
         {
-            return self.ptr->value->vStat();
+            return self.ptr->value()->vStat();
         }
 
         std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct ReadDirFile>& self)
         {
-            return self.obj.value->vStat();
+            return self.obj.value()->vStat();
         }
     }
 
@@ -430,19 +454,19 @@ namespace golang::fs
     template<typename T>
     FileInfo::FileInfo(T& ref)
     {
-        value.reset(new FileInfoImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new FileInfoImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     FileInfo::FileInfo(const T& ref)
     {
-        value.reset(new FileInfoImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new FileInfoImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     FileInfo::FileInfo(T* ptr)
     {
-        value.reset(new FileInfoImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new FileInfoImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& FileInfo::PrintTo(std::ostream& os) const
@@ -481,66 +505,72 @@ namespace golang::fs
         return rec::Sys(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline FileInfo::IFileInfo* FileInfo::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'FileInfo'");
+    }
+
     namespace rec
     {
         gocpp::string Name(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
-            return self.ptr->value->vName();
+            return self.ptr->value()->vName();
         }
 
         gocpp::string Name(const gocpp::ObjRecv<struct FileInfo>& self)
         {
-            return self.obj.value->vName();
+            return self.obj.value()->vName();
         }
 
         int64_t Size(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
-            return self.ptr->value->vSize();
+            return self.ptr->value()->vSize();
         }
 
         int64_t Size(const gocpp::ObjRecv<struct FileInfo>& self)
         {
-            return self.obj.value->vSize();
+            return self.obj.value()->vSize();
         }
 
         FileMode Mode(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
-            return self.ptr->value->vMode();
+            return self.ptr->value()->vMode();
         }
 
         FileMode Mode(const gocpp::ObjRecv<struct FileInfo>& self)
         {
-            return self.obj.value->vMode();
+            return self.obj.value()->vMode();
         }
 
         mocklib::Date ModTime(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
-            return self.ptr->value->vModTime();
+            return self.ptr->value()->vModTime();
         }
 
         mocklib::Date ModTime(const gocpp::ObjRecv<struct FileInfo>& self)
         {
-            return self.obj.value->vModTime();
+            return self.obj.value()->vModTime();
         }
 
         bool IsDir(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
-            return self.ptr->value->vIsDir();
+            return self.ptr->value()->vIsDir();
         }
 
         bool IsDir(const gocpp::ObjRecv<struct FileInfo>& self)
         {
-            return self.obj.value->vIsDir();
+            return self.obj.value()->vIsDir();
         }
 
         go_any Sys(const gocpp::PtrRecv<struct FileInfo, false>& self)
         {
-            return self.ptr->value->vSys();
+            return self.ptr->value()->vSys();
         }
 
         go_any Sys(const gocpp::ObjRecv<struct FileInfo>& self)
         {
-            return self.obj.value->vSys();
+            return self.obj.value()->vSys();
         }
     }
 
@@ -665,19 +695,19 @@ namespace golang::fs
         template<typename T>
         gocpp_id_0::gocpp_id_0(T& ref)
         {
-            value.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
         gocpp_id_0::gocpp_id_0(const T& ref)
         {
-            value.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
         gocpp_id_0::gocpp_id_0(T* ptr)
         {
-            value.reset(new gocpp_id_0Impl<T, gocpp::ptr<T>>(ptr));
+            mValue.reset(new gocpp_id_0Impl<T, gocpp::ptr<T>>(ptr));
         }
 
         std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
@@ -691,16 +721,22 @@ namespace golang::fs
             return rec::Timeout(gocpp::PtrRecv<T, false>(value.get()));
         }
 
+        inline gocpp_id_0::Igocpp_id_0* gocpp_id_0::value() const
+        {
+            if(auto res = mValue.get()) { return res; }
+            throw gocpp::GoPanic("using nil value for interface 'gocpp_id_0'");
+        }
+
         namespace rec
         {
             bool Timeout(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
             {
-                return self.ptr->value->vTimeout();
+                return self.ptr->value()->vTimeout();
             }
 
             bool Timeout(const gocpp::ObjRecv<struct gocpp_id_0>& self)
             {
-                return self.obj.value->vTimeout();
+                return self.obj.value()->vTimeout();
             }
         }
 

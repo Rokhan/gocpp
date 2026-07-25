@@ -136,19 +136,19 @@ namespace golang::flate
     template<typename T>
     Resetter::Resetter(T& ref)
     {
-        value.reset(new ResetterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ResetterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Resetter::Resetter(const T& ref)
     {
-        value.reset(new ResetterImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ResetterImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Resetter::Resetter(T* ptr)
     {
-        value.reset(new ResetterImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ResetterImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Resetter::PrintTo(std::ostream& os) const
@@ -162,16 +162,22 @@ namespace golang::flate
         return rec::Reset(gocpp::PtrRecv<T, false>(value.get()), r, dict);
     }
 
+    inline Resetter::IResetter* Resetter::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Resetter'");
+    }
+
     namespace rec
     {
         gocpp::error Reset(const gocpp::PtrRecv<struct Resetter, false>& self, io::Reader r, gocpp::slice<unsigned char> dict)
         {
-            return self.ptr->value->vReset(r, dict);
+            return self.ptr->value()->vReset(r, dict);
         }
 
         gocpp::error Reset(const gocpp::ObjRecv<struct Resetter>& self, io::Reader r, gocpp::slice<unsigned char> dict)
         {
-            return self.obj.value->vReset(r, dict);
+            return self.obj.value()->vReset(r, dict);
         }
     }
 
@@ -402,19 +408,19 @@ namespace golang::flate
     template<typename T>
     Reader::Reader(T& ref)
     {
-        value.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Reader::Reader(const T& ref)
     {
-        value.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ReaderImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Reader::Reader(T* ptr)
     {
-        value.reset(new ReaderImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ReaderImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Reader::PrintTo(std::ostream& os) const
@@ -423,26 +429,32 @@ namespace golang::flate
     }
 
 
+    inline Reader::IReader* Reader::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Reader'");
+    }
+
     namespace rec
     {
         std::tuple<int, gocpp::error> Read(const gocpp::PtrRecv<struct Reader, false>& self, gocpp::slice<unsigned char> p)
         {
-            return self.ptr->value->vRead(p);
+            return self.ptr->value()->vRead(p);
         }
 
         std::tuple<int, gocpp::error> Read(const gocpp::ObjRecv<struct Reader>& self, gocpp::slice<unsigned char> p)
         {
-            return self.obj.value->vRead(p);
+            return self.obj.value()->vRead(p);
         }
 
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct Reader, false>& self)
         {
-            return self.ptr->value->vReadByte();
+            return self.ptr->value()->vReadByte();
         }
 
         std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct Reader>& self)
         {
-            return self.obj.value->vReadByte();
+            return self.obj.value()->vReadByte();
         }
     }
 

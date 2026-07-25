@@ -23,6 +23,9 @@ namespace golang::binary
         ByteOrder& operator=(ByteOrder& i) = default;
         ByteOrder& operator=(const ByteOrder& i) = default;
 
+        inline ByteOrder(nullptr_t) {};
+        ByteOrder& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         ByteOrder(T& ref);
 
@@ -78,7 +81,9 @@ namespace golang::binary
             TStore value;
         };
 
-        std::shared_ptr<IByteOrder> value;
+        inline IByteOrder* value() const;
+
+        std::shared_ptr<IByteOrder> mValue;
     };
 
     namespace rec
@@ -116,6 +121,9 @@ namespace golang::binary
         AppendByteOrder(const AppendByteOrder& i) = default;
         AppendByteOrder& operator=(AppendByteOrder& i) = default;
         AppendByteOrder& operator=(const AppendByteOrder& i) = default;
+
+        inline AppendByteOrder(nullptr_t) {};
+        AppendByteOrder& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         AppendByteOrder(T& ref);
@@ -163,7 +171,9 @@ namespace golang::binary
             TStore value;
         };
 
-        std::shared_ptr<IAppendByteOrder> value;
+        inline IAppendByteOrder* value() const;
+
+        std::shared_ptr<IAppendByteOrder> mValue;
     };
 
     namespace rec

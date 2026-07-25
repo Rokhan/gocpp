@@ -32,19 +32,19 @@ namespace golang::cmp
     template<typename T>
     Ordered::Ordered(T& ref)
     {
-        value.reset(new OrderedImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new OrderedImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Ordered::Ordered(const T& ref)
     {
-        value.reset(new OrderedImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new OrderedImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Ordered::Ordered(T* ptr)
     {
-        value.reset(new OrderedImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new OrderedImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Ordered::PrintTo(std::ostream& os) const
@@ -52,6 +52,12 @@ namespace golang::cmp
         return os;
     }
 
+
+    inline Ordered::IOrdered* Ordered::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Ordered'");
+    }
 
     namespace rec
     {    }

@@ -23,6 +23,9 @@ namespace golang::runtime
         Error& operator=(Error& i) = default;
         Error& operator=(const Error& i) = default;
 
+        inline Error(nullptr_t) {};
+        Error& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Error(T& ref);
 
@@ -64,7 +67,9 @@ namespace golang::runtime
             TStore value;
         };
 
-        std::shared_ptr<IError> value;
+        inline IError* value() const;
+
+        std::shared_ptr<IError> mValue;
     };
 
     namespace rec
@@ -132,6 +137,9 @@ namespace golang::runtime
         stringer& operator=(stringer& i) = default;
         stringer& operator=(const stringer& i) = default;
 
+        inline stringer(nullptr_t) {};
+        stringer& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         stringer(T& ref);
 
@@ -169,7 +177,9 @@ namespace golang::runtime
             TStore value;
         };
 
-        std::shared_ptr<Istringer> value;
+        inline Istringer* value() const;
+
+        std::shared_ptr<Istringer> mValue;
     };
 
     namespace rec

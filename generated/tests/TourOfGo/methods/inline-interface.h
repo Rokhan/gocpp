@@ -41,6 +41,9 @@ namespace golang::main
         gocpp_id_0& operator=(gocpp_id_0& i) = default;
         gocpp_id_0& operator=(const gocpp_id_0& i) = default;
 
+        inline gocpp_id_0(nullptr_t) {};
+        gocpp_id_0& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         gocpp_id_0(T& ref);
 
@@ -78,7 +81,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_0> value;
+        inline Igocpp_id_0* value() const;
+
+        std::shared_ptr<Igocpp_id_0> mValue;
     };
 
     namespace rec
@@ -98,6 +103,9 @@ namespace golang::main
         gocpp_id_1(const gocpp_id_1& i) = default;
         gocpp_id_1& operator=(gocpp_id_1& i) = default;
         gocpp_id_1& operator=(const gocpp_id_1& i) = default;
+
+        inline gocpp_id_1(nullptr_t) {};
+        gocpp_id_1& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         gocpp_id_1(T& ref);
@@ -136,7 +144,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<Igocpp_id_1> value;
+        inline Igocpp_id_1* value() const;
+
+        std::shared_ptr<Igocpp_id_1> mValue;
     };
 
     namespace rec

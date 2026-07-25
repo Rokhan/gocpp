@@ -32,19 +32,19 @@ namespace golang::testlog
     template<typename T>
     Interface::Interface(T& ref)
     {
-        value.reset(new InterfaceImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new InterfaceImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Interface::Interface(const T& ref)
     {
-        value.reset(new InterfaceImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new InterfaceImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Interface::Interface(T* ptr)
     {
-        value.reset(new InterfaceImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new InterfaceImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Interface::PrintTo(std::ostream& os) const
@@ -73,46 +73,52 @@ namespace golang::testlog
         return rec::Chdir(gocpp::PtrRecv<T, false>(value.get()), dir);
     }
 
+    inline Interface::IInterface* Interface::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Interface'");
+    }
+
     namespace rec
     {
         void Getenv(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string key)
         {
-            return self.ptr->value->vGetenv(key);
+            return self.ptr->value()->vGetenv(key);
         }
 
         void Getenv(const gocpp::ObjRecv<struct Interface>& self, gocpp::string key)
         {
-            return self.obj.value->vGetenv(key);
+            return self.obj.value()->vGetenv(key);
         }
 
         void Stat(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string file)
         {
-            return self.ptr->value->vStat(file);
+            return self.ptr->value()->vStat(file);
         }
 
         void Stat(const gocpp::ObjRecv<struct Interface>& self, gocpp::string file)
         {
-            return self.obj.value->vStat(file);
+            return self.obj.value()->vStat(file);
         }
 
         void Open(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string file)
         {
-            return self.ptr->value->vOpen(file);
+            return self.ptr->value()->vOpen(file);
         }
 
         void Open(const gocpp::ObjRecv<struct Interface>& self, gocpp::string file)
         {
-            return self.obj.value->vOpen(file);
+            return self.obj.value()->vOpen(file);
         }
 
         void Chdir(const gocpp::PtrRecv<struct Interface, false>& self, gocpp::string dir)
         {
-            return self.ptr->value->vChdir(dir);
+            return self.ptr->value()->vChdir(dir);
         }
 
         void Chdir(const gocpp::ObjRecv<struct Interface>& self, gocpp::string dir)
         {
-            return self.obj.value->vChdir(dir);
+            return self.obj.value()->vChdir(dir);
         }
     }
 

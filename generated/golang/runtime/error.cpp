@@ -37,19 +37,19 @@ namespace golang::runtime
     template<typename T>
     Error::Error(T& ref)
     {
-        value.reset(new ErrorImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ErrorImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Error::Error(const T& ref)
     {
-        value.reset(new ErrorImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new ErrorImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     Error::Error(T* ptr)
     {
-        value.reset(new ErrorImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new ErrorImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& Error::PrintTo(std::ostream& os) const
@@ -63,26 +63,32 @@ namespace golang::runtime
         return rec::RuntimeError(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline Error::IError* Error::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Error'");
+    }
+
     namespace rec
     {
         void RuntimeError(const gocpp::PtrRecv<struct Error, false>& self)
         {
-            return self.ptr->value->vRuntimeError();
+            return self.ptr->value()->vRuntimeError();
         }
 
         void RuntimeError(const gocpp::ObjRecv<struct Error>& self)
         {
-            return self.obj.value->vRuntimeError();
+            return self.obj.value()->vRuntimeError();
         }
 
         gocpp::string Error(const gocpp::PtrRecv<struct Error, false>& self)
         {
-            return self.ptr->value->vError();
+            return self.ptr->value()->vError();
         }
 
         gocpp::string Error(const gocpp::ObjRecv<struct Error>& self)
         {
-            return self.obj.value->vError();
+            return self.obj.value()->vError();
         }
     }
 
@@ -383,19 +389,19 @@ namespace golang::runtime
     template<typename T>
     stringer::stringer(T& ref)
     {
-        value.reset(new stringerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new stringerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     stringer::stringer(const T& ref)
     {
-        value.reset(new stringerImpl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new stringerImpl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
     stringer::stringer(T* ptr)
     {
-        value.reset(new stringerImpl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new stringerImpl<T, gocpp::ptr<T>>(ptr));
     }
 
     std::ostream& stringer::PrintTo(std::ostream& os) const
@@ -409,16 +415,22 @@ namespace golang::runtime
         return rec::String(gocpp::PtrRecv<T, false>(value.get()));
     }
 
+    inline stringer::Istringer* stringer::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'stringer'");
+    }
+
     namespace rec
     {
         gocpp::string String(const gocpp::PtrRecv<struct stringer, false>& self)
         {
-            return self.ptr->value->vString();
+            return self.ptr->value()->vString();
         }
 
         gocpp::string String(const gocpp::ObjRecv<struct stringer>& self)
         {
-            return self.obj.value->vString();
+            return self.obj.value()->vString();
         }
     }
 

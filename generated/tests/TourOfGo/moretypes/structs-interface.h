@@ -23,6 +23,9 @@ namespace golang::main
         Reader& operator=(Reader& i) = default;
         Reader& operator=(const Reader& i) = default;
 
+        inline Reader(nullptr_t) {};
+        Reader& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         Reader(T& ref);
 
@@ -60,7 +63,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<IReader> value;
+        inline IReader* value() const;
+
+        std::shared_ptr<IReader> mValue;
     };
 
     namespace rec
@@ -80,6 +85,9 @@ namespace golang::main
         WriterTo(const WriterTo& i) = default;
         WriterTo& operator=(WriterTo& i) = default;
         WriterTo& operator=(const WriterTo& i) = default;
+
+        inline WriterTo(nullptr_t) {};
+        WriterTo& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         WriterTo(T& ref);
@@ -118,7 +126,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<IWriterTo> value;
+        inline IWriterTo* value() const;
+
+        std::shared_ptr<IWriterTo> mValue;
     };
 
     namespace rec
@@ -138,6 +148,9 @@ namespace golang::main
         Closer(const Closer& i) = default;
         Closer& operator=(Closer& i) = default;
         Closer& operator=(const Closer& i) = default;
+
+        inline Closer(nullptr_t) {};
+        Closer& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
         Closer(T& ref);
@@ -176,7 +189,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<ICloser> value;
+        inline ICloser* value() const;
+
+        std::shared_ptr<ICloser> mValue;
     };
 
     namespace rec
@@ -231,6 +246,9 @@ namespace golang::main
         ReadCloser& operator=(ReadCloser& i) = default;
         ReadCloser& operator=(const ReadCloser& i) = default;
 
+        inline ReadCloser(nullptr_t) {};
+        ReadCloser& operator=(nullptr_t) { mValue.reset(); }
+
         template<typename T>
         ReadCloser(T& ref);
 
@@ -265,7 +283,9 @@ namespace golang::main
             TStore value;
         };
 
-        std::shared_ptr<IReadCloser> value;
+        inline IReadCloser* value() const;
+
+        std::shared_ptr<IReadCloser> mValue;
     };
 
     namespace rec

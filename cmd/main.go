@@ -3323,6 +3323,9 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		fmt.Fprintf(buf, "%s    %[2]s(const %[2]s& i) = default;\n", data.out.Indent(), structName)
 		fmt.Fprintf(buf, "%s    %[2]s& operator=(%[2]s& i) = default;\n", data.out.Indent(), structName)
 		fmt.Fprintf(buf, "%s    %[2]s& operator=(const %[2]s& i) = default;\n", data.out.Indent(), structName)
+		fmt.Fprintf(buf, "\n")
+		fmt.Fprintf(buf, "%s    inline %s(nullptr_t) {}%s\n", data.out.Indent(), structName, data.declEnd)
+		fmt.Fprintf(buf, "%s    %[2]s& operator=(nullptr_t) { mValue.reset(); }\n", data.out.Indent(), structName)
 	case implem:
 		data.out.indent--
 	default:
@@ -3334,7 +3337,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 	fmt.Fprintf(buf, "%s    %s%s(T& ref)%s\n", data.out.Indent(), data.namePrefix, structName, data.declEnd)
 	if data.needBody {
 		fmt.Fprintf(buf, "%s    {\n", data.out.Indent())
-		fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, std::unique_ptr<T>>(new T(ref)));\n", data.out.Indent(), structName)
+		fmt.Fprintf(buf, "%s        mValue.reset(new %sImpl<T, std::unique_ptr<T>>(new T(ref)));\n", data.out.Indent(), structName)
 		fmt.Fprintf(buf, "%s    }\n", data.out.Indent())
 	}
 	fmt.Fprintf(buf, "\n")
@@ -3342,7 +3345,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 	fmt.Fprintf(buf, "%s    %s%s(const T& ref)%s\n", data.out.Indent(), data.namePrefix, structName, data.declEnd)
 	if data.needBody {
 		fmt.Fprintf(buf, "%s    {\n", data.out.Indent())
-		fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, std::unique_ptr<T>>(new T(ref)));\n", data.out.Indent(), structName)
+		fmt.Fprintf(buf, "%s        mValue.reset(new %sImpl<T, std::unique_ptr<T>>(new T(ref)));\n", data.out.Indent(), structName)
 		fmt.Fprintf(buf, "%s    }\n", data.out.Indent())
 	}
 	fmt.Fprintf(buf, "\n")
@@ -3350,7 +3353,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 	fmt.Fprintf(buf, "%s    %s%s(T* ptr)%s\n", data.out.Indent(), data.namePrefix, structName, data.declEnd)
 	if data.needBody {
 		fmt.Fprintf(buf, "%s    {\n", data.out.Indent())
-		fmt.Fprintf(buf, "%s        value.reset(new %sImpl<T, gocpp::ptr<T>>(ptr));\n", data.out.Indent(), structName)
+		fmt.Fprintf(buf, "%s        mValue.reset(new %sImpl<T, gocpp::ptr<T>>(ptr));\n", data.out.Indent(), structName)
 		fmt.Fprintf(buf, "%s    }\n", data.out.Indent())
 	}
 
@@ -3445,10 +3448,19 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		}
 	}
 
+	fmt.Fprintf(buf, "\n")
+	fmt.Fprintf(buf, "%s    inline %sI%s* %svalue() const%s\n", data.out.Indent(), data.namePrefix, structName, data.namePrefix, data.declEnd)
+	if data.needBody {
+		fmt.Fprintf(buf, "%s    {\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s        if(auto res = mValue.get()) { return res; }\n", data.out.Indent())
+		fmt.Fprintf(buf, "%s        throw gocpp::GoPanic(\"using nil value for interface '%s'\");\n", data.out.Indent(), structName)
+		fmt.Fprintf(buf, "%s    }\n", data.out.Indent())
+	}
+
 	switch param.output {
 	case all, decl:
 		fmt.Fprintf(buf, "\n")
-		fmt.Fprintf(buf, "%s    std::shared_ptr<I%s> value;\n", data.out.Indent(), structName)
+		fmt.Fprintf(buf, "%s    std::shared_ptr<I%s> mValue;\n", data.out.Indent(), structName)
 		fmt.Fprintf(buf, "%s};\n", data.out.Indent())
 	case implem:
 		data.out.indent++
@@ -3472,7 +3484,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		fmt.Fprintf(buf, "%s%s %s(const gocpp::PtrRecv<struct %s, false>& self%s)%s\n", data.out.Indent(), method.result, method.name, structName, endParams, data.declEnd)
 		if data.needBody {
 			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-			fmt.Fprintf(buf, "%s    return self.ptr->value->v%s(%s);\n", data.out.Indent(), method.name, method.params.NamesStr())
+			fmt.Fprintf(buf, "%s    return self.ptr->value()->v%s(%s);\n", data.out.Indent(), method.name, method.params.NamesStr())
 			fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 			fmt.Fprintf(buf, "\n")
 		}
@@ -3480,7 +3492,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 		fmt.Fprintf(buf, "%s%s %s(const gocpp::ObjRecv<struct %s>& self%s)%s\n", data.out.Indent(), method.result, method.name, structName, endParams, data.declEnd)
 		if data.needBody {
 			fmt.Fprintf(buf, "%s{\n", data.out.Indent())
-			fmt.Fprintf(buf, "%s    return self.obj.value->v%s(%s);\n", data.out.Indent(), method.name, method.params.NamesStr())
+			fmt.Fprintf(buf, "%s    return self.obj.value()->v%s(%s);\n", data.out.Indent(), method.name, method.params.NamesStr())
 			fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 		}
 	}

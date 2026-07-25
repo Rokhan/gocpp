@@ -1644,23 +1644,23 @@ namespace golang
             return false;
         }
 
-        if(iRef.value == nullptr)
+        if(iRef.mValue == nullptr)
         {
             return false;
         }
 
-        return static_cast<U*>(iRef.value->getPtr()) == uPtr;
+        return static_cast<U*>(iRef.mValue->getPtr()) == uPtr;
     }
 
     template<gocpp::GoInterface T, gocpp::GoStruct U>
     bool operator==(const T& iRef, const U& uPtr)
     {
-        if(iRef.value == nullptr)
+        if(iRef.mValue == nullptr)
         {
             return false;
         }
 
-        return static_cast<U*>(iRef.value->getPtr()) == &uPtr;
+        return static_cast<U*>(iRef.mValue->getPtr()) == &uPtr;
     }
 
     using gocpp::len;

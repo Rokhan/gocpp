@@ -154,7 +154,7 @@
 | $(ImportDir)/hash/crc32/crc32_amd64.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32_amd64.cpp), [h](generated/golang/hash/crc32/crc32_amd64.h))| ✔️ |
 | $(ImportDir)/hash/crc32/crc32_generic.go | ✔️ ([cpp](generated/golang/hash/crc32/crc32_generic.cpp), [h](generated/golang/hash/crc32/crc32_generic.h))| ✔️ |
 | $(ImportDir)/hash/hash.go | ✔️ ([cpp](generated/golang/hash/hash.cpp), [h](generated/golang/hash/hash.h))| ✔️ |
-| $(ImportDir)/image/color/color.go | ✔️ ([cpp](generated/golang/image/color/color.cpp), [h](generated/golang/image/color/color.h))| ❌ |
+| $(ImportDir)/image/color/color.go | ✔️ ([cpp](generated/golang/image/color/color.cpp), [h](generated/golang/image/color/color.h))| ✔️ |
 | $(ImportDir)/image/color/ycbcr.go | ✔️ ([cpp](generated/golang/image/color/ycbcr.cpp), [h](generated/golang/image/color/ycbcr.h))| ✔️ |
 | $(ImportDir)/image/format.go | ✔️ ([cpp](generated/golang/image/format.cpp), [h](generated/golang/image/format.h))| ❌ |
 | $(ImportDir)/image/geom.go | ✔️ ([cpp](generated/golang/image/geom.cpp), [h](generated/golang/image/geom.h))| ✔️ |
@@ -221,7 +221,7 @@
 | $(ImportDir)/internal/syscall/windows/syscall_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/syscall_windows.cpp), [h](generated/golang/internal/syscall/windows/syscall_windows.h))| ❌ |
 | $(ImportDir)/internal/syscall/windows/sysdll/sysdll.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/sysdll/sysdll.cpp), [h](generated/golang/internal/syscall/windows/sysdll/sysdll.h))| ✔️ |
 | $(ImportDir)/internal/syscall/windows/zsyscall_windows.go | ✔️ ([cpp](generated/golang/internal/syscall/windows/zsyscall_windows.cpp), [h](generated/golang/internal/syscall/windows/zsyscall_windows.h))| ✔️ |
-| $(ImportDir)/internal/testlog/log.go | ✔️ ([cpp](generated/golang/internal/testlog/log.cpp), [h](generated/golang/internal/testlog/log.h))| ❌ |
+| $(ImportDir)/internal/testlog/log.go | ✔️ ([cpp](generated/golang/internal/testlog/log.cpp), [h](generated/golang/internal/testlog/log.h))| ✔️ |
 | $(ImportDir)/internal/unsafeheader/unsafeheader.go | ✔️ ([cpp](generated/golang/internal/unsafeheader/unsafeheader.cpp), [h](generated/golang/internal/unsafeheader/unsafeheader.h))| ✔️ |
 | $(ImportDir)/io/fs/format.go | ✔️ ([cpp](generated/golang/io/fs/format.cpp), [h](generated/golang/io/fs/format.h))| ❌ |
 | $(ImportDir)/io/fs/fs.go | ✔️ ([cpp](generated/golang/io/fs/fs.cpp), [h](generated/golang/io/fs/fs.h))| ✔️ |

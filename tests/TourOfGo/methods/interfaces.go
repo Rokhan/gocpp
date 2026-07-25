@@ -59,7 +59,7 @@ func testAddMul() {
 type dummy interface{ As(any) bool }
 
 func main() {
-	var a Abser
+	var a Abser = nil
 	f := MyFloat(-math.Sqrt2)
 	v := Vertex{3, 4}
 
@@ -76,6 +76,29 @@ func main() {
 	}
 
 	testAddMul()
+	testNilDeref()
+}
+
+func testNilDeref() {
+	var a Abser = nil
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered from nil deref")
+			// TODO: full message equivalence ?
+			//fmt.Println("Recovered from nil deref", r)
+		}
+	}()
+
+	fmt.Println("Before nil deref.")
+	a.Abs()
+	fmt.Println("After nil deref.")
+}
+
+func f() {
+	defer func() {
+		fmt.Println("Simple defer in f")
+	}()
+
 }
 
 type MyFloat float64

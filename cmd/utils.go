@@ -1388,7 +1388,8 @@ func typeCanBeDefined(defType types.Type) bool {
 	}
 }
 
-func isMapType(node ast.Expr) bool {
+// use cv.IsExprMap for testing the infered type
+func isAstMapType(node ast.Expr) bool {
 	switch node.(type) {
 	case *ast.MapType:
 		return true
@@ -1398,7 +1399,8 @@ func isMapType(node ast.Expr) bool {
 	}
 }
 
-func isArrayType(node ast.Expr) bool {
+// use cv.IsExprArray for testing the infered type
+func isAstArrayType(node ast.Expr) bool {
 	switch node.(type) {
 	case *ast.ArrayType:
 		return true

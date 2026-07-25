@@ -4214,7 +4214,7 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 		_, isKvInit = n.Elts[0].(*ast.KeyValueExpr)
 	}
 
-	if isKvInit && !isMapType(n.Type) && !cv.IsExprMap(n) {
+	if isKvInit && !isAstMapType(n.Type) && !cv.IsExprMap(n) {
 		ptrSuffix := ""
 		if addPtr {
 			ptrSuffix = "Ptr"
@@ -4227,7 +4227,7 @@ func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cp
 		// Maybe we should use a special 'indent' token  that will be replaced later
 		// instead of using cv.cpp.Indent(), we have no guarantee here that
 		// the code will be generated in cpp file.
-		if isArrayType(n.Type) {
+		if isAstArrayType(n.Type) {
 			for _, elt := range n.Elts {
 				kv := elt.(*ast.KeyValueExpr)
 				cv.cpp.indent++

@@ -1108,7 +1108,7 @@ namespace golang::runtime
         // Allocate memory to hold a cgo traceback if the cgo call crashes.
         if(iscgo || GOOS == "solaris"_s || GOOS == "illumos"_s || GOOS == "windows"_s)
         {
-            mp->cgoCallers = new cgoCallers{};
+            mp->cgoCallers = gocpp::array_ptr(new cgoCallers{});
         }
     }
 

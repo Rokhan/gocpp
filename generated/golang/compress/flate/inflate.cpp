@@ -1203,8 +1203,8 @@ namespace golang::flate
 
         decompressor f = {};
         rec::makeReader(gocpp::recv(f), r);
-        f.bits = new gocpp::array<int, 316>{};
-        f.codebits = new gocpp::array<int, 19>{};
+        f.bits = gocpp::array_ptr(new gocpp::array<int, 316>{});
+        f.codebits = gocpp::array_ptr(new gocpp::array<int, 19>{});
         f.step = [&](auto x){ return rec::nextBlock(x); };
         rec::init(gocpp::recv(f.dict), maxMatchOffset, nullptr);
         return & f;
@@ -1223,8 +1223,8 @@ namespace golang::flate
 
         decompressor f = {};
         rec::makeReader(gocpp::recv(f), r);
-        f.bits = new gocpp::array<int, 316>{};
-        f.codebits = new gocpp::array<int, 19>{};
+        f.bits = gocpp::array_ptr(new gocpp::array<int, 316>{});
+        f.codebits = gocpp::array_ptr(new gocpp::array<int, 19>{});
         f.step = [&](auto x){ return rec::nextBlock(x); };
         rec::init(gocpp::recv(f.dict), maxMatchOffset, dict);
         return & f;

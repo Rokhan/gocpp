@@ -24,7 +24,7 @@ namespace golang::crc32
     // (simpleUpdate).
     gocpp::array_ptr<Table> simpleMakeTable(uint32_t poly)
     {
-        auto t = new crc32::Table{};
+        auto t = gocpp::array_ptr(new crc32::Table{});
         simplePopulateTable(poly, t);
         return t;
     }
@@ -68,7 +68,7 @@ namespace golang::crc32
     // table is suitable for use with the slicing-by-8 algorithm (slicingUpdate).
     gocpp::array_ptr<slicing8Table> slicingMakeTable(uint32_t poly)
     {
-        auto t = new crc32::slicing8Table{};
+        auto t = gocpp::array_ptr(new crc32::slicing8Table{});
         simplePopulateTable(poly, gocpp::make_array_ptr(t[0]));
         for(auto i = 0; i < 256; i++)
         {

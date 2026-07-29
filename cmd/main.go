@@ -14,6 +14,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"runtime/debug"
@@ -60,7 +61,6 @@ type cppConverter struct {
 	baseName    string
 	inputName   string
 	basePkgName string
-	packageDir  string
 
 	// golang tokens, parsing and types infos
 	parsingInfos
@@ -188,7 +188,22 @@ func buildSharedData() (shared *cppConverterSharedData) {
 }
 
 func (cv *cppConverter) InitAndParse() {
+	cv.Init()
 
+	if astFile, done := cv.shared.parsedFiles[cv.inputName]; done {
+		cv.astFile = astFile
+	} else {
+		var parsedFile *ast.File
+		parsedFile, err := parser.ParseFile(cv.pcShared.fileSet, cv.inputName, nil, parser.ParseComments)
+		cv.astFile = parsedFile
+		cv.shared.parsedFiles[cv.inputName] = cv.astFile
+		if err != nil {
+			cv.Panicf("%v", err)
+		}
+	}
+}
+
+func (cv *cppConverter) Init() {
 	cv.currentSwitchId = new(list.List)
 	cv.scopes = new(list.List)
 	cv.typedefs = make(set[types.Type])
@@ -197,17 +212,6 @@ func (cv *cppConverter) InitAndParse() {
 		cv.makeFile = createOutput(cv.shared.cppOutDir, "Makefile")
 
 		fmt.Fprintf(cv.makeFile.out, "all:\n")
-	}
-
-	if astFile, done := cv.shared.parsedFiles[cv.inputName]; done {
-		cv.astFile = astFile
-	} else {
-		var parsedFile *ast.File
-		parsedFile, err := parser.ParseFile(cv.pcShared.fileSet, cv.inputName, nil, parser.ParseComments)
-		cv.astFile = parsedFile
-		if err != nil {
-			cv.Panicf("%v", err)
-		}
 	}
 }
 
@@ -4416,30 +4420,53 @@ func (cv *cppConverter) LoadAndCheckDefs(pkgPath string, fset *token.FileSet, fi
 	return pkg, nil
 }
 
-func (cv *cppConverter) addPkgDependencies(pkgPath string, files ...*ast.File) []*ast.File {
-
-	if pkgPath == "main" {
-		return files
+func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
+	absPath, err := filepath.Abs(inputPath)
+	if err != nil {
+		Panicf("addPkgDependencies, %s", err)
 	}
 
 	cfg := &packages.Config{
-		Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedCompiledGoFiles | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedTypesSizes,
+		Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedImports |
+			packages.NeedDeps | packages.NeedCompiledGoFiles | packages.NeedTypes |
+			packages.NeedTypesInfo | packages.NeedTypesSizes | packages.NeedModule,
 		Fset: cv.pcShared.fileSet,
+		Dir:  filepath.Dir(absPath),
 	}
 
+	cv.Logf("addPkgDependencies, inputPath: %s\n", inputPath)
+	cv.Logf("addPkgDependencies, absPath: %s\n", absPath)
+	cv.Logf("addPkgDependencies, cfg.Dir = %q\n", cfg.Dir)
+
 	pkgFiles := [](*ast.File){}
-	pkgs, err := packages.Load(cfg, pkgPath)
+	query := "file=" + absPath
+	cv.Logf("addPkgDependencies, query = %q\n", query)
+	pkgs, err := packages.Load(cfg, query)
 	if err != nil {
 		cv.Panicf("load: %v\n", err)
 	}
 	if packages.PrintErrors(pkgs) > 0 {
-		cv.Panicf("addPkgDependencies, packages.PrintErrors(pkgs) > 0, pkgPath: %s\n", pkgPath)
+		cv.Panicf("addPkgDependencies, packages.PrintErrors(pkgs) > 0, pkgPath: %s\n", inputPath)
 	}
 
-	for parsedFile, astFile := range cv.shared.parsedFiles {
-		cv.Logf("addPkgDependencies, parsed file %s, %v\n", parsedFile, cv.Position(astFile))
-	}
+	cv.basePkgName = pkgs[0].PkgPath
 
+	for parsedFile := range cv.shared.parsedFiles {
+		cv.Logf("addPkgDependencies, parsed file %s\n", parsedFile)
+	}
+	for _, p := range pkgs {
+		fmt.Println(p.ID, "|", p.PkgPath, "|", p.GoFiles)
+		for i, err := range p.Errors {
+			cv.Logf("addPkgDependencies, error #%d: %s", i, err)
+		}
+		if p.Module == nil {
+			fmt.Println("addPkgDependencies, p.Module is nil")
+		} else {
+			fmt.Println("addPkgDependencies, GoMod:", p.Module.GoMod)
+			fmt.Println("addPkgDependencies, Module.Path:", p.Module.Path)
+			fmt.Println("addPkgDependencies, Module.Dir:", p.Module.Dir)
+		}
+	}
 	for _, pkg := range pkgs {
 		for _, file := range pkg.GoFiles {
 			file = CleanPath(file)
@@ -4448,6 +4475,7 @@ func (cv *cppConverter) addPkgDependencies(pkgPath string, files ...*ast.File) [
 				continue
 			}
 			parsedFile, err := parser.ParseFile(cv.pcShared.fileSet, file, nil, parser.ParseComments)
+			cv.shared.parsedFiles[file] = parsedFile
 			pkgFiles = append(pkgFiles, parsedFile)
 			if err != nil {
 				cv.Panicf("addPkgDependencies, parser.ParseFile failed: %v", err)
@@ -4455,11 +4483,10 @@ func (cv *cppConverter) addPkgDependencies(pkgPath string, files ...*ast.File) [
 		}
 	}
 
-	files = append(pkgFiles, files...)
-	for _, file := range files {
-		cv.Logf("addPkgDependencies, file %s, %v\n", file.Name.Name, cv.Position(file.Name))
+	for _, file := range pkgFiles {
+		cv.Logf("addPkgDependencies, file %v\n", file.Name.Name)
 	}
-	return files
+	return pkgFiles
 }
 
 func (cv *cppConverter) PrintDefsUsage() {
@@ -4549,8 +4576,6 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 			if pkgInfo.fileType != Ignored {
 				toBeConverted = append(toBeConverted, cv)
 			}
-
-			shared.parsedFiles[pkgInfo.filePath] = cv.astFile
 		}
 	}
 
@@ -4622,7 +4647,7 @@ var gorootSrc string
 
 func main() {
 
-	inputName := flag.String("input", "tests/HelloWorld.go", "The file to parse, when converting only one file")
+	inputPath := flag.String("input", "tests/HelloWorld.go", "The file to parse, when converting only one file")
 	cppOutDir := flag.String("cppOutDir", "out", "generated code directory")
 	binOutDir := flag.String("binOutDir", "log", "gcc output dir in Makefile")
 	genMakeFile := flag.Bool("genMakeFile", false, "generate Makefile")
@@ -4630,6 +4655,7 @@ func main() {
 	debugMode := flag.Bool("debugMode", false, "add debug info in generated code")
 	tryRecover := flag.Bool("tryRecover", false, "try to recover on error (only if strictMode is false)")
 	ignoreDeps := flag.Bool("ignoreDependencies", false, "only generate target file")
+	testFile := flag.Bool("testFile", false, "Treat the file as an individual file, ignore local directory package")
 	verbose := flag.Bool("verbose", false, "verbose logs")
 	alwaysRegenerate := flag.Bool("alwaysRegenerate", false, "force to always generate, even if more recent")
 
@@ -4666,35 +4692,38 @@ func main() {
 	cv.pcShared = pcShared
 	cv.genMakeFile = *genMakeFile
 	cv.binOutDir = *binOutDir
-	cv.inputName = CleanPath(*inputName)
-	cv.InitAndParse()
+	cv.inputName, _ = filepath.Abs(*inputPath)
+	cv.inputName = CleanPath(cv.inputName)
 
-	// No global subdir for main target at the moment
-	if strings.HasPrefix(cv.inputName, gorootSrc) {
-		cv.baseName = JoinPath(shared.globalSubDir, strings.TrimPrefix(strings.TrimSuffix(cv.inputName, ".go"), gorootSrc))
-		cv.basePkgName = strings.TrimPrefix(path.Dir(cv.inputName), gorootSrc+"/")
-	} else {
-		cv.baseName = strings.TrimSuffix(cv.inputName, ".go")
-		cv.basePkgName = cv.astFile.Name.Name
-	}
-	cv.srcBaseName = strings.TrimSuffix(cv.inputName, ".go")
+	fileBaseName := strings.TrimSuffix(path.Base(cv.inputName), ".go")
+
+	cv.srcBaseName = strings.TrimSuffix(*inputPath, ".go")
 	// Never try to recover in main file
 	cv.tryRecover = false
 
-	cv.shared.parsedFiles[cv.inputName] = cv.astFile
+	var astFiles []*ast.File
+	if *testFile {
+		cv.InitAndParse()
+		astFiles = append(astFiles, cv.astFile)
+		cv.baseName = strings.TrimSuffix(*inputPath, ".go")
+		cv.basePkgName = cv.astFile.Name.Name
+	} else {
+		cv.Init()
+		astFiles = cv.addPkgDependencies(*inputPath)
+		//cv.basePkgName updated by 'addPkgDependencies'
+		cv.baseName = JoinPath(cv.basePkgName, fileBaseName)
+		cv.astFile = cv.shared.parsedFiles[cv.inputName]
+	}
 
-	pkgPath := cv.basePkgName
-	astFiles := cv.addPkgDependencies(pkgPath, cv.astFile)
-	cv.packageDir = strings.TrimSuffix(pkgPath, cv.astFile.Name.Name)
-
-	cv.Logf("pkgPath: %s\n", pkgPath)
+	cv.Logf("inputPath: %s\n", cv.inputName)
+	cv.Logf("baseName: %s\n", cv.baseName)
+	cv.Logf("pkgPath: %s\n", cv.basePkgName)
 	cv.Logf("astPackageName: %s\n", cv.astFile.Name.Name)
-	cv.Logf("packageDir: %s\n", cv.packageDir)
 	cv.Logf("gorootSrc: %s\n", gorootSrc)
 
-	pkg, err := cv.LoadAndCheckDefs(pkgPath, fset, astFiles...)
+	pkg, err := cv.LoadAndCheckDefs(cv.basePkgName, fset, astFiles...)
 	if err != nil {
-		panic(err) // type error
+		Panicf("Main, LoadAndCheckDefs, %s", err) // type error
 	}
 
 	defer cv.PrintDefsUsage()

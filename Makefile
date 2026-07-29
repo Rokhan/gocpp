@@ -125,7 +125,7 @@ $(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES) gocpp.exe
 	$(call DEBUG_LOG, " => $@")
 	$(call DEBUG_LOG, " => $*")
 
-	./gocpp.exe $(GOCPP_PARAMETERS) -input $< > $@".log"
+	./gocpp.exe $(GOCPP_PARAMETERS) -testFile=true -input $< > $@".log"
 	(cd $(OUTDIR) && make) 
 	$(LOGDIR)/$*.go.exe
 
@@ -137,7 +137,7 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
 
 	echo -n "| [$(<:tests/%=%)]($<) " > $(LOGDIR)/$*.md
 
-	./gocpp.exe $(GOCPP_PARAMETERS) -input $< > $(LOGDIR)/$*".log" \
+	./gocpp.exe $(GOCPP_PARAMETERS) -testFile=true -input $< > $(LOGDIR)/$*".log" \
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 

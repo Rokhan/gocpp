@@ -45,6 +45,9 @@ type cppConverterSharedData struct {
 	usedFiles      map[string]bool
 	packagePaths   map[string]string
 
+	// logging
+	logPerf outFile
+
 	// Cpp files parameters
 	cppOutDir string
 }
@@ -53,6 +56,7 @@ type cppConverter struct {
 	shared *cppConverterSharedData
 
 	// Logs and error management
+	genDepth   int
 	logPrefix  string
 	tryRecover bool
 	statusMd   outFile
@@ -193,14 +197,23 @@ func (cv *cppConverter) InitAndParse() {
 	if astFile, done := cv.shared.parsedFiles[cv.inputName]; done {
 		cv.astFile = astFile
 	} else {
-		var parsedFile *ast.File
-		parsedFile, err := parser.ParseFile(cv.pcShared.fileSet, cv.inputName, nil, parser.ParseComments)
-		cv.astFile = parsedFile
-		cv.shared.parsedFiles[cv.inputName] = cv.astFile
-		if err != nil {
-			cv.Panicf("%v", err)
-		}
+		cv.astFile = cv.ParseFile(cv.inputName)
 	}
+}
+
+func (cv *cppConverter) ParseFile(inputName string) *ast.File {
+	start := time.Now()
+	defer func() {
+		elapsed := time.Since(start)
+		cv.PerfLogf("ParseFile", elapsed, "input:%s", inputName)
+	}()
+
+	parsedFile, err := parser.ParseFile(cv.pcShared.fileSet, inputName, nil, parser.ParseComments)
+	cv.shared.parsedFiles[inputName] = parsedFile
+	if err != nil {
+		cv.Panicf("%v", err)
+	}
+	return parsedFile
 }
 
 func (cv *cppConverter) Init() {
@@ -387,6 +400,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.Logf(" !!!>> Start converting file: %v <<!!!\n", cv.inputName)
 	defer cv.Logf(" !!!>> End converting file: %v <<!!!\n", cv.inputName)
 
+	walkAstStart := time.Now()
 	cv.startScope(ScopeNamespace)
 
 	cv.cpp = createOutputExt(shared.cppOutDir, cv.baseName, "cpp")
@@ -429,7 +443,14 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.hpp.indent--
 	cv.cpp.indent--
 
+	cv.PerfLogf("ConvertFile::WalkAst", time.Since(walkAstStart), "pkgPath:%s", cv.baseName)
+
 	usedPkgInfos, toBeConverted := cv.convertDependency(pkgInfos)
+
+	generateStart := time.Now()
+	defer func() {
+		cv.PerfLogf("ConvertFile::Generate", time.Since(generateStart), "pkgPath:%s", cv.baseName)
+	}()
 
 	cv.ignoreKnownErrors(usedPkgInfos)
 
@@ -734,11 +755,44 @@ func (cv *cppConverter) Logf(format string, a ...any) (n int, err error) {
 	return fmt.Printf(format, a...)
 }
 
+var aggregatedByTag = map[string]time.Duration{}
+
+func (cv *cppConverter) PerfLogf(tag string, elapsed time.Duration, msgFormat string, a ...any) (n int, err error) {
+	formatedMessage := fmt.Sprintf(msgFormat, a...)
+	timePrefix := time.Now().Format("2006-01-02 15:04:05.000000")
+	shiftStr := strings.Repeat("=", cv.genDepth)
+
+	aggregatedByTag[tag] = aggregatedByTag[tag] + elapsed
+	return fmt.Fprintf(cv.shared.logPerf.file, "%s, %s=> %s, %s, elapsed: %v\n", timePrefix, shiftStr, tag, formatedMessage, elapsed)
+}
+
+func (cv *cppConverter) PerfLog(message string, action func()) {
+	start := time.Now()
+	action()
+	elapsed := time.Since(start)
+	cv.PerfLogf("(none)", elapsed, message)
+}
+
+func (cv *cppConverter) LogAggregatedPerfs() {
+	perfFile := cv.shared.logPerf.file
+	fmt.Fprintf(perfFile, "Aggregated elapsed time ny tag:\n")
+	for tag, elapsed := range aggregatedByTag {
+		if tag == "(none)" {
+			continue
+		}
+		fmt.Fprintf(perfFile, "%s => %v\n", tag, elapsed)
+	}
+}
+
 func (cv *cppConverter) VerboseLog() bool {
 	return cv.shared.verbose
 }
 
 func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
+	start := time.Now()
+	defer func() {
+		cv.PerfLogf("getUsedDependency", time.Since(start), "input:%s", cv.baseName)
+	}()
 
 	usedTypes := cv.getReferencedTypesFor(cv.inputName)
 	cv.logReferencedTypesFrom(usedTypes, "Used")
@@ -813,6 +867,11 @@ func (cv *parsingContext) getPackageFromType(usedType types.Object, tag tagType)
 }
 
 func (cv *cppConverter) logReferencedTypesFrom(usedTypes map[types.Object]tagType, name string) {
+	start := time.Now()
+	defer func() {
+		cv.PerfLogf("logReferencedTypesFrom", time.Since(start), "input:%s", cv.baseName)
+	}()
+
 	cv.Logf("\n")
 	cv.Logf(" --- %s types by %s ---\n", name, cv.inputName)
 
@@ -2317,7 +2376,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 
 			cfg := &packages.Config{Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedCompiledGoFiles}
 
-			pkgs, err := packages.Load(cfg, pkg.Path())
+			pkgs, err := cv.PkgLoad(cfg, pkg.Path())
 			if err != nil {
 				cv.Panicf("load: %v\n", err)
 			}
@@ -4402,6 +4461,12 @@ func (cv *cppConverter) convertExprsImpl(exprs []ast.Expr, ctx exprCtx, useIgnor
 
 /* from example: https://github.com/golang/example/tree/master/gotypes#introduction */
 func (cv *cppConverter) LoadAndCheckDefs(pkgPath string, fset *token.FileSet, files ...*ast.File) (*types.Package, error) {
+	start := time.Now()
+	defer func() {
+		elapsed := time.Since(start)
+		cv.PerfLogf("LoadAndCheckDefs", elapsed, "pkgPath:%s", pkgPath)
+	}()
+
 	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
 	if cv.typeInfo == nil {
 		cv.typeInfo = &types.Info{
@@ -4441,7 +4506,7 @@ func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
 	pkgFiles := [](*ast.File){}
 	query := "file=" + absPath
 	cv.Logf("addPkgDependencies, query = %q\n", query)
-	pkgs, err := packages.Load(cfg, query)
+	pkgs, err := cv.PkgLoad(cfg, query)
 	if err != nil {
 		cv.Panicf("load: %v\n", err)
 	}
@@ -4474,12 +4539,8 @@ func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
 				cv.Logf("addPkgDependencies, file %s already parsed, skipping\n", file)
 				continue
 			}
-			parsedFile, err := parser.ParseFile(cv.pcShared.fileSet, file, nil, parser.ParseComments)
-			cv.shared.parsedFiles[file] = parsedFile
+			parsedFile := cv.ParseFile(file)
 			pkgFiles = append(pkgFiles, parsedFile)
-			if err != nil {
-				cv.Panicf("addPkgDependencies, parser.ParseFile failed: %v", err)
-			}
 		}
 	}
 
@@ -4487,6 +4548,17 @@ func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
 		cv.Logf("addPkgDependencies, file %v\n", file.Name.Name)
 	}
 	return pkgFiles
+}
+
+func (cv *cppConverter) PkgLoad(cfg *packages.Config, query string) ([]*packages.Package, error) {
+	start := time.Now()
+	defer func() {
+		elapsed := time.Since(start)
+		cv.PerfLogf("packages.Load", elapsed, "input:%s", query)
+	}()
+
+	pkgs, err := packages.Load(cfg, query)
+	return pkgs, err
 }
 
 func (cv *cppConverter) PrintDefsUsage() {
@@ -4554,6 +4626,7 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		if _, done := shared.parsedFiles[pkgInfo.filePath]; !done {
 			var cv *cppConverter = new(cppConverter)
 			cv.parentCv = &parentCv.parsingContext
+			cv.genDepth = parentCv.genDepth + 1
 			cv.logPrefix = parentCv.logPrefix + "##> "
 			cv.tryRecover = shared.tryRecover
 			cv.shared = parentCv.shared
@@ -4715,6 +4788,8 @@ func main() {
 		cv.astFile = cv.shared.parsedFiles[cv.inputName]
 	}
 
+	shared.logPerf = createOutputExt(cv.binOutDir, cv.baseName, "perf.log")
+
 	cv.Logf("inputPath: %s\n", cv.inputName)
 	cv.Logf("baseName: %s\n", cv.baseName)
 	cv.Logf("pkgPath: %s\n", cv.basePkgName)
@@ -4729,5 +4804,9 @@ func main() {
 	defer cv.PrintDefsUsage()
 
 	cv.pkg = pkg
-	cv.ConvertFile()
+	cv.PerfLog("Total execution time", func() {
+		cv.ConvertFile()
+	})
+
+	cv.LogAggregatedPerfs()
 }

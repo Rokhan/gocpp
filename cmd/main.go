@@ -755,32 +755,45 @@ func (cv *cppConverter) Logf(format string, a ...any) (n int, err error) {
 	return fmt.Printf(format, a...)
 }
 
+func perfLogPrefix() string {
+	return time.Now().Format("2006-01-02 15:04:05.000000")
+}
+
 var aggregatedByTag = map[string]time.Duration{}
+var countByTag = map[string]int{}
 
 func (cv *cppConverter) PerfLogf(tag string, elapsed time.Duration, msgFormat string, a ...any) (n int, err error) {
 	formatedMessage := fmt.Sprintf(msgFormat, a...)
-	timePrefix := time.Now().Format("2006-01-02 15:04:05.000000")
 	shiftStr := strings.Repeat("=", cv.genDepth)
 
+	countByTag[tag]++
 	aggregatedByTag[tag] = aggregatedByTag[tag] + elapsed
-	return fmt.Fprintf(cv.shared.logPerf.file, "%s, %s=> %s, %s, elapsed: %v\n", timePrefix, shiftStr, tag, formatedMessage, elapsed)
+	return fmt.Fprintf(cv.shared.logPerf.file, "%s, elapsed: %8.3f ms, %s=> %s, %s\n", perfLogPrefix(), milliSecs(elapsed), shiftStr, tag, formatedMessage)
 }
 
 func (cv *cppConverter) PerfLog(message string, action func()) {
 	start := time.Now()
 	action()
 	elapsed := time.Since(start)
-	cv.PerfLogf("(none)", elapsed, message)
+
+	fmt.Fprintf(cv.shared.logPerf.file, "%s, elapsed: %v, %s\n", perfLogPrefix(), elapsed, message)
 }
 
 func (cv *cppConverter) LogAggregatedPerfs() {
 	perfFile := cv.shared.logPerf.file
-	fmt.Fprintf(perfFile, "Aggregated elapsed time ny tag:\n")
-	for tag, elapsed := range aggregatedByTag {
+	fmt.Fprintf(perfFile, "Aggregated elapsed time by tag:\n")
+	sortedTags := make([]string, 0, len(aggregatedByTag))
+	for tag := range aggregatedByTag {
+		sortedTags = append(sortedTags, tag)
+	}
+	slices.Sort(sortedTags)
+
+	maxLen := MaxLen(sortedTags)
+	for _, tag := range sortedTags {
 		if tag == "(none)" {
 			continue
 		}
-		fmt.Fprintf(perfFile, "%s => %v\n", tag, elapsed)
+		fmt.Fprintf(perfFile, "%-*s [x%4d]=> %v\n", maxLen, tag, countByTag[tag], aggregatedByTag[tag])
 	}
 }
 

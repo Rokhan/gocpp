@@ -260,6 +260,20 @@ func ArrayPtr[T any](value ...T) *[]T {
 	return &value
 }
 
+func milliSecs(elapsed time.Duration) float64 {
+	return float64(elapsed.Nanoseconds()) / 1000000.0
+}
+
+func MaxLen(sortedTags []string) int {
+	maxLen := 0
+	for _, tag := range sortedTags {
+		if len(tag) > maxLen {
+			maxLen = len(tag)
+		}
+	}
+	return maxLen
+}
+
 func createOutputExt(outdir, name, ext string) outFile {
 	var outName = name + "." + ext
 	return createOutput(outdir, outName)

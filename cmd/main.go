@@ -4505,9 +4505,7 @@ func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
 	}
 
 	cfg := &packages.Config{
-		Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedImports |
-			packages.NeedDeps | packages.NeedCompiledGoFiles | packages.NeedTypes |
-			packages.NeedTypesInfo | packages.NeedTypesSizes | packages.NeedModule,
+		Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedCompiledGoFiles,
 		Fset: cv.pcShared.fileSet,
 		Dir:  filepath.Dir(absPath),
 	}
@@ -4516,7 +4514,6 @@ func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
 	cv.Logf("addPkgDependencies, absPath: %s\n", absPath)
 	cv.Logf("addPkgDependencies, cfg.Dir = %q\n", cfg.Dir)
 
-	pkgFiles := [](*ast.File){}
 	query := "file=" + absPath
 	cv.Logf("addPkgDependencies, query = %q\n", query)
 	pkgs, err := cv.PkgLoad(cfg, query)
@@ -4545,6 +4542,7 @@ func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
 			fmt.Println("addPkgDependencies, Module.Dir:", p.Module.Dir)
 		}
 	}
+	pkgFiles := [](*ast.File){}
 	for _, pkg := range pkgs {
 		for _, file := range pkg.GoFiles {
 			file = CleanPath(file)
@@ -4563,14 +4561,24 @@ func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
 	return pkgFiles
 }
 
+var pkgCache = map[string][]*packages.Package{}
+
 func (cv *cppConverter) PkgLoad(cfg *packages.Config, query string) ([]*packages.Package, error) {
 	start := time.Now()
+	cached := ""
 	defer func() {
 		elapsed := time.Since(start)
-		cv.PerfLogf("packages.Load", elapsed, "input:%s", query)
+		cv.PerfLogf("packages.Load"+cached, elapsed, "input:%s", query)
 	}()
 
+	if pkgs, ok := pkgCache[query]; ok {
+		cached = " (cached)"
+		return pkgs, nil
+	}
 	pkgs, err := packages.Load(cfg, query)
+	if err == nil {
+		pkgCache[query] = pkgs
+	}
 	return pkgs, err
 }
 

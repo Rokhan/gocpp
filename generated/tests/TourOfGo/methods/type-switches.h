@@ -12,8 +12,8 @@
 
 namespace golang::main
 {
-    void go_do(std::any i);
-    void do_WithNameReused(std::any v);
+    void go_do(gocpp::go_any i);
+    void do_WithNameReused(gocpp::go_any v);
     void main();
 
     namespace rec

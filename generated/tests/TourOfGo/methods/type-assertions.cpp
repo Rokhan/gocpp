@@ -21,7 +21,7 @@ namespace golang::main
 
     void main()
     {
-        std::any i = "hello"_s;
+        gocpp::go_any i = "hello"_s;
 
         auto s = gocpp::getValue<gocpp::string>(i);
         mocklib::Println(s);

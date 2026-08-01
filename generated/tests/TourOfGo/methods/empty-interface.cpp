@@ -21,7 +21,7 @@ namespace golang::main
 
     void main()
     {
-        std::any i = {};
+        gocpp::go_any i = {};
         describe(i);
 
         i = 42;
@@ -31,7 +31,7 @@ namespace golang::main
         describe(i);
     }
 
-    void describe(std::any i)
+    void describe(gocpp::go_any i)
     {
         mocklib::Printf("(%v, %T)\n"_s, i, i);
     }

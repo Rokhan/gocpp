@@ -24,6 +24,16 @@ namespace golang::main
         return x + y;
     }
 
+    gocpp::map<int, int> returnMap(int x, int y)
+    {
+        return gocpp::map<int, int> {{ x, y }};
+    }
+
+    gocpp::go_any returnAny(int x, int y)
+    {
+        return x + y;
+    }
+
     void main()
     {
         mocklib::Println(add(42, 13));
@@ -32,6 +42,9 @@ namespace golang::main
         mocklib::Println(gocpp::max(42, 13, 17));
         mocklib::Println(gocpp::max(42, 51.12345, 17));
         mocklib::Println(gocpp::min(42, 13, 17));
+
+        mocklib::Println(returnMap(1, 2));
+        mocklib::Println(returnAny(1, 2));
     }
 
 }

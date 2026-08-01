@@ -13,7 +13,7 @@
 namespace golang::main
 {
     void main();
-    void describe(std::any i);
+    void describe(gocpp::go_any i);
 
     namespace rec
     {

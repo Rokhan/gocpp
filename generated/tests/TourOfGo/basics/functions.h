@@ -13,6 +13,8 @@
 namespace golang::main
 {
     int add(int x, int y);
+    gocpp::map<int, int> returnMap(int x, int y);
+    gocpp::go_any returnAny(int x, int y);
     void main();
 
     namespace rec

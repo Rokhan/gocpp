@@ -12,8 +12,8 @@
 
 namespace golang::abi
 {
-    uintptr_t FuncPCABI0(std::any f);
-    uintptr_t FuncPCABIInternal(std::any f);
+    uintptr_t FuncPCABI0(gocpp::go_any f);
+    uintptr_t FuncPCABIInternal(gocpp::go_any f);
 
     namespace rec
     {

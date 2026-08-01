@@ -19,7 +19,7 @@ namespace golang::main
     {
     }
 
-    void go_do(std::any i)
+    void go_do(gocpp::go_any i)
     {
         //Go type switch emulation
         {
@@ -51,7 +51,7 @@ namespace golang::main
         }
     }
 
-    void do_WithNameReused(std::any v)
+    void do_WithNameReused(gocpp::go_any v)
     {
         //Go type switch emulation
         {

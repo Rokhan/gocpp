@@ -23,7 +23,7 @@ namespace golang::main
     bool ToBe = false;
     uint64_t MaxInt = (1 << 64) - 1;
     gocpp::complex128 z = std::sqrt(- 5 + gocpp::complex128(0, 12));
-    void DummyPrintList(gocpp::string format, gocpp::slice<std::any> elts)
+    void DummyPrintList(gocpp::string format, gocpp::slice<gocpp::go_any> elts)
     {
         for(auto [gocpp_ignored, elt] : elts)
         {
@@ -32,7 +32,7 @@ namespace golang::main
         mocklib::Println();
     }
 
-    void DummyPrintf(gocpp::string format, gocpp::slice<std::any> a)
+    void DummyPrintf(gocpp::string format, gocpp::slice<gocpp::go_any> a)
     {
         DummyPrintList(format, a);
         return;

@@ -2944,7 +2944,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 
 	case *ast.InterfaceType:
 		if n.Methods == nil || len(n.Methods.List) == 0 {
-			return mkCppType("std::any", nil)
+			return mkCppType("gocpp::go_any", nil)
 		} else {
 			name, first := cv.GenerateExprId(node)
 
@@ -3019,7 +3019,7 @@ func (cv *cppConverter) convertInterfaceField(node ast.Expr) (pt parentType, err
 			cv.Panicf("convertInterfaceField, unmanaged token%s, type %T, position %v", n.Op, n, cv.Position(n))
 		}
 	default:
-		cv.Panicf("convertInterfaceField, unmanaged type %T, position %v", n, cv.Position(n))
+		return parentType{nsType{cv.convertExprCppType(n).str, ""}, nodeType}, nil
 	}
 
 	panic("convertExprCppType, bug, unreacheable code reached !")

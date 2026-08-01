@@ -1578,7 +1578,7 @@ namespace gocpp
     }
 
     template <typename T>
-    result_or_error<T, ErrInvalidValueCast<T>> getValue(std::any value)
+    result_or_error<T, ErrInvalidValueCast<T>> getValue(gocpp::go_any value)
     {
         if(value.type() == typeid(T))
         {
@@ -1589,7 +1589,7 @@ namespace gocpp
     }
     
     template<>
-    result_or_error<std::string, ErrInvalidValueCast<std::string>> getValue(std::any value)
+    result_or_error<std::string, ErrInvalidValueCast<std::string>> getValue(gocpp::go_any value)
     {
         if(value.type() == typeid(std::string))
         {

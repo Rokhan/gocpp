@@ -202,11 +202,8 @@ func (cv *cppConverter) InitAndParse() {
 }
 
 func (cv *cppConverter) ParseFile(inputName string) *ast.File {
-	start := time.Now()
-	defer func() {
-		elapsed := time.Since(start)
-		cv.PerfLogf("ParseFile", elapsed, "input:%s", inputName)
-	}()
+	perf := cv.startPerfScope("ParseFile")
+	defer perf.Logf("input:%s", inputName)
 
 	parsedFile, err := parser.ParseFile(cv.pcShared.fileSet, inputName, nil, parser.ParseComments)
 	cv.shared.parsedFiles[inputName] = parsedFile
@@ -400,7 +397,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.Logf(" !!!>> Start converting file: %v <<!!!\n", cv.inputName)
 	defer cv.Logf(" !!!>> End converting file: %v <<!!!\n", cv.inputName)
 
-	walkAstStart := time.Now()
+	walkAstPerf := cv.startPerfScope("ConvertFile::WalkAst")
 	cv.startScope(ScopeNamespace)
 
 	cv.cpp = createOutputExt(shared.cppOutDir, cv.baseName, "cpp")
@@ -443,14 +440,12 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.hpp.indent--
 	cv.cpp.indent--
 
-	cv.PerfLogf("ConvertFile::WalkAst", time.Since(walkAstStart), "pkgPath:%s", cv.baseName)
+	walkAstPerf.Logf("pkgPath:%s", cv.baseName)
 
 	usedPkgInfos, toBeConverted := cv.convertDependency(pkgInfos)
 
-	generateStart := time.Now()
-	defer func() {
-		cv.PerfLogf("ConvertFile::Generate", time.Since(generateStart), "pkgPath:%s", cv.baseName)
-	}()
+	generateStart := cv.startPerfScope("ConvertFile::Generate")
+	defer generateStart.Logf("pkgPath:%s", cv.baseName)
 
 	cv.ignoreKnownErrors(usedPkgInfos)
 
@@ -759,16 +754,16 @@ func perfLogPrefix() string {
 	return time.Now().Format("2006-01-02 15:04:05.000000")
 }
 
-var aggregatedByTag = map[string]time.Duration{}
-var countByTag = map[string]int{}
+func (cv *cppConverter) getLogPerfFile() io.Writer {
+	return cv.shared.logPerf.file
+}
 
-func (cv *cppConverter) PerfLogf(tag string, elapsed time.Duration, msgFormat string, a ...any) (n int, err error) {
-	formatedMessage := fmt.Sprintf(msgFormat, a...)
-	shiftStr := strings.Repeat("=", cv.genDepth)
+func (cv *cppConverter) startPerfScope(tag string) perfScope {
+	return perfScope{file: cv.getLogPerfFile(), tag: tag, start: time.Now(), depth: cv.genDepth}
+}
 
-	countByTag[tag]++
-	aggregatedByTag[tag] = aggregatedByTag[tag] + elapsed
-	return fmt.Fprintf(cv.shared.logPerf.file, "%s, elapsed: %8.3f ms, %s=> %s, %s\n", perfLogPrefix(), milliSecs(elapsed), shiftStr, tag, formatedMessage)
+func (cv *cppConverter) LogAggregatedPerfs() {
+	LogAggregatedPerfs(cv.getLogPerfFile())
 }
 
 func (cv *cppConverter) PerfLog(message string, action func()) {
@@ -779,33 +774,13 @@ func (cv *cppConverter) PerfLog(message string, action func()) {
 	fmt.Fprintf(cv.shared.logPerf.file, "%s, elapsed: %v, %s\n", perfLogPrefix(), elapsed, message)
 }
 
-func (cv *cppConverter) LogAggregatedPerfs() {
-	perfFile := cv.shared.logPerf.file
-	fmt.Fprintf(perfFile, "Aggregated elapsed time by tag:\n")
-	sortedTags := make([]string, 0, len(aggregatedByTag))
-	for tag := range aggregatedByTag {
-		sortedTags = append(sortedTags, tag)
-	}
-	slices.Sort(sortedTags)
-
-	maxLen := MaxLen(sortedTags)
-	for _, tag := range sortedTags {
-		if tag == "(none)" {
-			continue
-		}
-		fmt.Fprintf(perfFile, "%-*s [x%4d]=> %v\n", maxLen, tag, countByTag[tag], aggregatedByTag[tag])
-	}
-}
-
 func (cv *cppConverter) VerboseLog() bool {
 	return cv.shared.verbose
 }
 
 func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
-	start := time.Now()
-	defer func() {
-		cv.PerfLogf("getUsedDependency", time.Since(start), "input:%s", cv.baseName)
-	}()
+	perf := cv.startPerfScope("getUsedDependency")
+	defer perf.Logf("input:%s", cv.baseName)
 
 	usedTypes := cv.getReferencedTypesFor(cv.inputName)
 	cv.logReferencedTypesFrom(usedTypes, "Used")
@@ -880,10 +855,8 @@ func (cv *parsingContext) getPackageFromType(usedType types.Object, tag tagType)
 }
 
 func (cv *cppConverter) logReferencedTypesFrom(usedTypes map[types.Object]tagType, name string) {
-	start := time.Now()
-	defer func() {
-		cv.PerfLogf("logReferencedTypesFrom", time.Since(start), "input:%s", cv.baseName)
-	}()
+	perf := cv.startPerfScope("logReferencedTypesFrom")
+	defer perf.Logf("input:%s", cv.baseName)
 
 	cv.Logf("\n")
 	cv.Logf(" --- %s types by %s ---\n", name, cv.inputName)
@@ -1169,11 +1142,14 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 
 	switch d := decl.(type) {
 	case *ast.GenDecl:
+		perf := cv.startPerfScope("convertDecls::GenDecl")
 		for _, place := range cv.convertGenDecl(d, d.Tok, isNameSpace, ";\n") {
 			cv.printOrKeepPlace(place, &outPlaces, &pkgInfos)
 		}
+		perf.Logf("position:%s", cv.Position(d))
 
 	case *ast.FuncDecl:
+		perf := cv.startPerfScope("convertDecls::FuncDecl")
 		cv.ConvertDoc(d.Doc)
 
 		typeParams := cv.GetFuncTypeParameters(d)
@@ -1306,6 +1282,7 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		cv.printOrKeepPlaces(blockPlaces, &outPlaces, nil)
 		fmt.Fprintf(cv.cpp.out, "\n")
 		cv.endScope()
+		perf.Logf("position:%s", cv.Position(d))
 
 	case *ast.BadDecl:
 		cv.Panicf("convertDecls[BadDecl] Not implemented")
@@ -1344,11 +1321,13 @@ func (cv *cppConverter) convertBlockStmtWithLabel(block *ast.BlockStmt, env bloc
 }
 
 func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv, end string, label *ast.Ident) (outPlaces []place) {
-
 	if block == nil {
 		fmt.Fprintf(cv.cpp.out, "%v/* convertBlockStmt, nil block */;\n", cv.cpp.Indent())
 		return
 	}
+
+	perf := cv.startPerfScope("convertBlockStmt")
+	defer perf.Logf("position:%s", cv.Position(block))
 
 	if cgs := cv.commentMap[block]; len(cgs) > 0 {
 		for _, cg := range cgs {
@@ -2186,6 +2165,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 	for i, spec := range specs {
 		switch s := spec.(type) {
 		case *ast.TypeSpec:
+			perf := cv.startPerfScope("convertGenDecl::TypeSpec")
 			// Put top comment with the first declararation
 			// isNamespace: Avoid duplicating comments in functions/methods
 			if i == 0 && isNamespace {
@@ -2203,8 +2183,10 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 			if t.str != "" {
 				result = append(result, inlineStr(t.str, s))
 			}
+			perf.Logf("position:%s", cv.Position(s))
 
 		case *ast.ValueSpec:
+			perf := cv.startPerfScope("convertGenDecl::ValueSpec")
 			var comments []string
 			// Put top comment with the first declararation
 			// isNamespace: Avoid duplicating comments in functions/methods
@@ -2376,6 +2358,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 					}
 				}
 			}
+			perf.Logf("position:%s", cv.Position(s))
 
 		case *ast.ImportSpec:
 			cv.ConvertDoc(s.Doc)
@@ -4474,11 +4457,8 @@ func (cv *cppConverter) convertExprsImpl(exprs []ast.Expr, ctx exprCtx, useIgnor
 
 /* from example: https://github.com/golang/example/tree/master/gotypes#introduction */
 func (cv *cppConverter) LoadAndCheckDefs(pkgPath string, fset *token.FileSet, files ...*ast.File) (*types.Package, error) {
-	start := time.Now()
-	defer func() {
-		elapsed := time.Since(start)
-		cv.PerfLogf("LoadAndCheckDefs", elapsed, "pkgPath:%s", pkgPath)
-	}()
+	perf := cv.startPerfScope("LoadAndCheckDefs")
+	defer perf.Logf("pkgPath:%s", pkgPath)
 
 	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
 	if cv.typeInfo == nil {
@@ -4564,15 +4544,11 @@ func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
 var pkgCache = map[string][]*packages.Package{}
 
 func (cv *cppConverter) PkgLoad(cfg *packages.Config, query string) ([]*packages.Package, error) {
-	start := time.Now()
-	cached := ""
-	defer func() {
-		elapsed := time.Since(start)
-		cv.PerfLogf("packages.Load"+cached, elapsed, "input:%s", query)
-	}()
+	perf := cv.startPerfScope("packages.Load")
+	defer perf.Logf("query:%s", query)
 
 	if pkgs, ok := pkgCache[query]; ok {
-		cached = " (cached)"
+		perf.tag += " (cached)"
 		return pkgs, nil
 	}
 	pkgs, err := packages.Load(cfg, query)

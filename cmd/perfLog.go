@@ -38,11 +38,19 @@ func LogAggregatedPerfs(perfFile io.Writer) {
 	}
 	slices.Sort(sortedTags)
 
-	maxLen := MaxLen(sortedTags)
+	maxTagLen := MaxLen(sortedTags)
+	maxCountLen := 0
+	for _, count := range countByTag {
+		countLen := len(fmt.Sprintf("%d", count))
+		if countLen > maxCountLen {
+			maxCountLen = countLen
+		}
+	}
+
 	for _, tag := range sortedTags {
 		if tag == "(none)" {
 			continue
 		}
-		fmt.Fprintf(perfFile, "%-*s [x%4d]=> %v\n", maxLen, tag, countByTag[tag], aggregatedByTag[tag])
+		fmt.Fprintf(perfFile, "%-*s [x%*d] => %8.3fs\n", maxTagLen, tag, maxCountLen, countByTag[tag], aggregatedByTag[tag].Seconds())
 	}
 }

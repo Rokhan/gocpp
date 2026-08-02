@@ -6,12 +6,14 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/Rokhan/gocpp/utils/hclock"
 )
 
 type perfScope struct {
 	file  io.Writer
 	tag   string
-	start time.Time
+	start hclock.Time
 	depth int
 }
 
@@ -21,7 +23,7 @@ var countByTag = map[string]int{}
 func (cv *perfScope) Logf(msgFormat string, a ...any) {
 	formatedMessage := fmt.Sprintf(msgFormat, a...)
 	shiftStr := strings.Repeat("=", cv.depth)
-	elapsed := time.Since(cv.start)
+	elapsed := hclock.Since(cv.start)
 
 	countByTag[cv.tag]++
 	aggregatedByTag[cv.tag] = aggregatedByTag[cv.tag] + elapsed

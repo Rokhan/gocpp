@@ -10,28 +10,53 @@ import (
 	"github.com/Rokhan/gocpp/utils/hclock"
 )
 
+type overlaps struct{ in, out int }
+
 type perfScope struct {
-	file  io.Writer
-	tag   string
-	start hclock.Time
-	depth int
+	file     io.Writer
+	tag      string
+	start    hclock.Time
+	adjust   time.Duration
+	depth    int
+	overlaps overlaps
 }
 
+var activePerfScopes = map[*perfScope]bool{}
 var aggregatedByTag = map[string]time.Duration{}
+var adjustedByTag = map[string]time.Duration{}
 var countByTag = map[string]int{}
+var overlapsByTag = map[string]map[string]int{}
 
-func (cv *perfScope) Logf(msgFormat string, a ...any) {
+func createPerfScope(file io.Writer, tag string, depth int) *perfScope {
+	newScope := perfScope{file: file, tag: tag, start: hclock.Now(), depth: depth}
+	activePerfScopes[&newScope] = true
+	return &newScope
+}
+
+func (scope *perfScope) Logf(msgFormat string, a ...any) {
 	formatedMessage := fmt.Sprintf(msgFormat, a...)
-	shiftStr := strings.Repeat("=", cv.depth)
-	elapsed := hclock.Since(cv.start)
+	shiftStr := strings.Repeat("=", scope.depth)
+	elapsed := hclock.Since(scope.start)
+	delete(activePerfScopes, scope)
 
-	countByTag[cv.tag]++
-	aggregatedByTag[cv.tag] = aggregatedByTag[cv.tag] + elapsed
-	fmt.Fprintf(cv.file, "%s, elapsed: %8.3f ms, %s=> %s, %s\n", perfLogPrefix(), milliSecs(elapsed), shiftStr, cv.tag, formatedMessage)
+	adjusted := elapsed + scope.adjust
+	for activeScope := range activePerfScopes {
+		activeScope.adjust -= adjusted
+		scope.overlaps.out++
+		activeScope.overlaps.in++
+		if overlapsByTag[activeScope.tag] == nil {
+			overlapsByTag[activeScope.tag] = map[string]int{}
+		}
+		overlapsByTag[activeScope.tag][scope.tag]++
+	}
+
+	countByTag[scope.tag]++
+	aggregatedByTag[scope.tag] = aggregatedByTag[scope.tag] + elapsed
+	adjustedByTag[scope.tag] = adjustedByTag[scope.tag] + adjusted
+	fmt.Fprintf(scope.file, "%s, elapsed: %8.3f ms, adjusted: %8.3f, overlaps: %2v, %s=> %s, %s\n", perfLogPrefix(), milliSecs(elapsed), milliSecs(adjusted), scope.overlaps, shiftStr, scope.tag, formatedMessage)
 }
 
 func LogAggregatedPerfs(perfFile io.Writer) {
-	fmt.Fprintf(perfFile, "Aggregated elapsed time by tag:\n")
 	sortedTags := make([]string, 0, len(aggregatedByTag))
 	for tag := range aggregatedByTag {
 		sortedTags = append(sortedTags, tag)
@@ -47,10 +72,18 @@ func LogAggregatedPerfs(perfFile io.Writer) {
 		}
 	}
 
+	fmt.Fprintf(perfFile, "### Total aggregated elapsed time by tag: ###\n")
 	for _, tag := range sortedTags {
-		if tag == "(none)" {
-			continue
-		}
 		fmt.Fprintf(perfFile, "%-*s [x%*d] => %8.3fs\n", maxTagLen, tag, maxCountLen, countByTag[tag], aggregatedByTag[tag].Seconds())
+	}
+	fmt.Fprintf(perfFile, "### Scope overlaps ###\n")
+	for tag, overlaps := range overlapsByTag {
+		for otherTag, count := range overlaps {
+			fmt.Fprintf(perfFile, "%-*s => %-*s %*d\n", maxTagLen, tag, maxTagLen, otherTag, maxCountLen, count)
+		}
+	}
+	fmt.Fprintf(perfFile, "### Total adjusted elapsed time by tag: ###\n")
+	for _, tag := range sortedTags {
+		fmt.Fprintf(perfFile, "%-*s [x%*d] => %8.3fs\n", maxTagLen, tag, maxCountLen, countByTag[tag], adjustedByTag[tag].Seconds())
 	}
 }

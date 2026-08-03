@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Rokhan/gocpp/utils/hclock"
 	"golang.org/x/exp/maps"
 	"golang.org/x/tools/go/packages"
 )
@@ -759,8 +758,8 @@ func (cv *cppConverter) getLogPerfFile() io.Writer {
 	return cv.shared.logPerf.file
 }
 
-func (cv *cppConverter) startPerfScope(tag string) perfScope {
-	return perfScope{file: cv.getLogPerfFile(), tag: tag, start: hclock.Now(), depth: cv.genDepth}
+func (cv *cppConverter) startPerfScope(tag string) *perfScope {
+	return createPerfScope(cv.getLogPerfFile(), tag, cv.genDepth)
 }
 
 func (cv *cppConverter) LogAggregatedPerfs() {

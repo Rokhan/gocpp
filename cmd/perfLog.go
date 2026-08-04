@@ -71,19 +71,15 @@ func LogAggregatedPerfs(perfFile io.Writer) {
 			maxCountLen = countLen
 		}
 	}
-
-	fmt.Fprintf(perfFile, "### Total aggregated elapsed time by tag: ###\n")
-	for _, tag := range sortedTags {
-		fmt.Fprintf(perfFile, "%-*s [x%*d] => %8.3fs\n", maxTagLen, tag, maxCountLen, countByTag[tag], aggregatedByTag[tag].Seconds())
-	}
 	fmt.Fprintf(perfFile, "### Scope overlaps ###\n")
 	for tag, overlaps := range overlapsByTag {
 		for otherTag, count := range overlaps {
 			fmt.Fprintf(perfFile, "%-*s => %-*s %*d\n", maxTagLen, tag, maxTagLen, otherTag, maxCountLen, count)
 		}
 	}
-	fmt.Fprintf(perfFile, "### Total adjusted elapsed time by tag: ###\n")
+	fmt.Fprintf(perfFile, "### Total elapsed time by tag (adjusted and total): ###\n")
+	fmt.Fprintf(perfFile, "%-*s %*s  =>  Adjusted //  Total\n", maxTagLen, "Tag", maxCountLen+2, "Count")
 	for _, tag := range sortedTags {
-		fmt.Fprintf(perfFile, "%-*s [x%*d] => %8.3fs\n", maxTagLen, tag, maxCountLen, countByTag[tag], adjustedByTag[tag].Seconds())
+		fmt.Fprintf(perfFile, "%-*s [x%*d] => %8.3fs // %8.3fs \n", maxTagLen, tag, maxCountLen, countByTag[tag], adjustedByTag[tag].Seconds(), aggregatedByTag[tag].Seconds())
 	}
 }

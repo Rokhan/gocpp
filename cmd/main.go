@@ -782,7 +782,7 @@ func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
 	perf := cv.startPerfScope("getUsedDependency")
 	defer perf.Logf("input:%s", cv.baseName)
 
-	usedTypes := cv.getReferencedTypesFor(cv.inputName)
+	usedTypes := cv.getReferencedTypes()
 	cv.logReferencedTypesFrom(usedTypes, "Used")
 
 	cv.shared.usedFiles[cv.inputName] = true

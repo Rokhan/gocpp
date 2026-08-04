@@ -264,83 +264,84 @@ func (cv *parsingInfos) IsTypeMap(goType types.Type) bool {
 	}
 }
 
-func (cv *parsingInfos) getReferencedTypesFor(file string) (usedTypes map[types.Object]tagType) {
+func (cv *parsingInfos) getReferencedTypes() (usedTypes map[types.Object]tagType) {
 	usedTypes = make(map[types.Object]tagType)
 
 	/*
 	 * We need to manage dependencies in header and cpp like we do in forward header.
 	 * Once it will be done, all "tags" used to know if we need include in header or source file will be useless.
 	 */
+	ast.Inspect(cv.astFile, func(n ast.Node) bool {
+		if n == nil {
+			return false
+		}
 
-	types := cv.typeInfo.Types
-	cv.filterTypes(types, file, usedTypes, UsesTag)
-	uses := cv.typeInfo.Uses
-	cv.filterUsedObjects(uses, file, usedTypes, UsesTag)
-	defs := cv.typeInfo.Defs
-	cv.filterUsedObjects(defs, file, usedTypes, DefsTag)
-	// selections := cv.typeInfo.Selections
-	// cv.filterSelections(selections, file, usedTypes, UsesTag)
+		if expr, ok := n.(ast.Expr); ok {
+			if tv, ok := cv.typeInfo.Types[expr]; ok {
+				cv.filterType(tv, usedTypes, UsesTag)
+			}
+		}
+
+		if id, ok := n.(*ast.Ident); ok {
+			if use := cv.typeInfo.Uses[id]; use != nil {
+				cv.filterUsedObject(use, usedTypes, UsesTag)
+			}
+			if def := cv.typeInfo.Defs[id]; def != nil {
+				cv.filterUsedObject(def, usedTypes, DefsTag)
+			}
+		}
+
+		// Maybe needed at some point.
+		// if sel, ok := n.(*ast.SelectorExpr); ok {
+		// 	if def := cv.typeInfo.Selections[sel]; def != nil {
+		// 		cv.filterSelections(def, file, usedTypes, UsesTag)
+		// 	}
+		// }
+
+		return true
+	})
 	return
 }
 
-// func (cv *parsingInfos) filterSelections(srcSelections map[*ast.SelectorExpr]*types.Selection, file string, usedTypes map[types.Object]tagType, tag tagType) {
-// 	for sel, selection := range srcSelections {
-// 		var filePos = cv.Position(sel)
-// 		if file != filePos.Filename {
-// 			continue
-// 		}
-// 		usedTypes[selection.Obj()] |= tag
-// 	}
+// func (cv *parsingInfos) filterSelections(selection *types.Selection, usedTypes map[types.Object]tagType, tag tagType) {
+// 	usedTypes[selection.Obj()] |= tag
 // }
 
-func (cv *parsingInfos) filterTypes(srcTypes map[ast.Expr]types.TypeAndValue, file string, usedTypes map[types.Object]tagType, tag tagType) {
-	for expr, typeAndValue := range srcTypes {
-		var filePos = cv.Position(expr)
-		if file != filePos.Filename {
-			continue
-		}
-
-		for _, o := range GetObjectsOfType(typeAndValue.Type) {
-			usedTypes[o] |= tag
-		}
+func (cv *parsingInfos) filterType(srcType types.TypeAndValue, usedTypes map[types.Object]tagType, tag tagType) {
+	for _, o := range GetObjectsOfType(srcType.Type) {
+		usedTypes[o] |= tag
 	}
 }
 
-func (cv *parsingInfos) filterUsedObjects(objs map[*ast.Ident]types.Object, file string, usedTypes map[types.Object]tagType, tag tagType) {
-	for id, obj := range objs {
-		var filePos = cv.Position(id)
-		if file != filePos.Filename {
-			continue
+func (cv *parsingInfos) filterUsedObject(obj types.Object, usedTypes map[types.Object]tagType, tag tagType) {
+
+	switch t := obj.(type) {
+	case *types.TypeName, *types.Const:
+		usedTypes[t] |= tag
+		for _, o := range GetObjectsOfType(t.Type()) {
+			usedTypes[o] |= tag
 		}
 
-		switch t := obj.(type) {
-		case *types.TypeName, *types.Const:
-			usedTypes[t] |= tag
-			for _, o := range GetObjectsOfType(t.Type()) {
-				usedTypes[o] |= tag
-			}
+	case *types.Func:
+		usedTypes[t] |= tag
+		for _, o := range GetObjectsOfType(t.Type()) {
+			usedTypes[o] |= tag
+		}
 
-		case *types.Func:
-			usedTypes[t] |= tag
-			for _, o := range GetObjectsOfType(t.Type()) {
-				usedTypes[o] |= tag
-			}
-
-		case *types.Var:
-			switch tag {
-			case DefsTag:
-				scopeCount := getScopeCounts(obj)
-				// len(scopeCount) == 0  --> member of structs
-				// len(scopeCount) == 1  --> ? ? ?
-				// len(scopeCount) == 2  --> global variable
-				if len(scopeCount) <= 2 {
-					for _, o := range GetObjectsOfType(t.Type()) {
-						usedTypes[o] |= tag
-					}
+	case *types.Var:
+		switch tag {
+		case DefsTag:
+			scopeCount := getScopeCounts(obj)
+			// len(scopeCount) == 0  --> member of structs
+			// len(scopeCount) == 1  --> ? ? ?
+			// len(scopeCount) == 2  --> global variable
+			if len(scopeCount) <= 2 {
+				for _, o := range GetObjectsOfType(t.Type()) {
+					usedTypes[o] |= tag
 				}
-			default:
-				usedTypes[t] |= tag
 			}
+		default:
+			usedTypes[t] |= tag
 		}
 	}
 }

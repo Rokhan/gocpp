@@ -4810,6 +4810,11 @@ func main() {
 		Panicf("Main, LoadAndCheckDefs, %s", err) // type error
 	}
 
+	if !*testFile {
+		cv.srcBaseName = JoinPath("$(ImportDir)", pkg.Path(), pkg.Name())
+		cv.baseName = JoinPath(cv.shared.globalSubDir, pkg.Path(), pkg.Name())
+	}
+
 	defer cv.PrintDefsUsage()
 
 	cv.pkg = pkg

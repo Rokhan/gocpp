@@ -51,15 +51,44 @@ namespace golang::main
         }
     }
 
+    void do_withoutname(gocpp::go_any i)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_1 = gocpp::type_info(i);
+            int conditionId = -1;
+            if(gocpp_id_1 == typeid(int)) { conditionId = 0; }
+            else if(gocpp_id_1 == typeid(gocpp::string)) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    mocklib::Println("int"_s);
+                    break;
+                }
+                case 1:
+                {
+                    mocklib::Println("string"_s);
+                    break;
+                }
+                default:
+                {
+                    mocklib::Println("unknown"_s);
+                    break;
+                }
+            }
+        }
+    }
+
     void do_WithNameReused(gocpp::go_any v)
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_1 = gocpp::type_info(v);
+            const auto& gocpp_id_2 = gocpp::type_info(v);
             const auto& v_ref = v;
             int conditionId = -1;
-            if(gocpp_id_1 == typeid(int)) { conditionId = 0; }
-            else if(gocpp_id_1 == typeid(gocpp::string)) { conditionId = 1; }
+            if(gocpp_id_2 == typeid(int)) { conditionId = 0; }
+            else if(gocpp_id_2 == typeid(gocpp::string)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -90,6 +119,12 @@ namespace golang::main
         go_do("hello"_s);
         go_do(true);
 
+        mocklib::Println("\n----"_s);
+        do_withoutname(21);
+        do_withoutname("hello"_s);
+        do_withoutname(true);
+
+        mocklib::Println("\n----"_s);
         do_WithNameReused(21);
         do_WithNameReused("hello"_s);
         do_WithNameReused(true);

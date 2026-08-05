@@ -13,6 +13,7 @@
 namespace golang::main
 {
     void go_do(gocpp::go_any i);
+    void do_withoutname(gocpp::go_any i);
     void do_WithNameReused(gocpp::go_any v);
     void main();
 

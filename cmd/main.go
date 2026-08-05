@@ -1825,7 +1825,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 		cv.cpp.indent++
 
-		if env.isTypeSwitch {
+		if env.isTypeSwitch && env.switchVarName != "" {
 			if caseType.str != "" {
 				cv.WritterExprPrintf(cppOut, "%s%s %s = gocpp::any_cast<%s>(%s);\n", cv.cpp.Indent(), caseType, env.switchVarName, caseType, env.typeSwitchVarName)
 			} else {
@@ -1932,8 +1932,20 @@ func (cv *cppConverter) convertTypeSwitchAssign(stmt ast.Stmt) (varName cppExpr,
 			cv.Panicf("convertTypeSwitchAssign, unmanaged multiple assign [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
 		}
 
+	case *ast.ExprStmt:
+		switch expr := s.X.(type) {
+		case *ast.TypeAssertExpr:
+			if expr.Type != nil {
+				// We managed only .(type) syntax
+				cv.Panicf("convertTypeSwitchAssign, unmanaged type switch with type [%v], input: %v", reflect.TypeOf(expr.Type), cv.Position(expr.Type))
+			}
+			exprString = cv.convertExpr(expr.X)
+		default:
+			cv.Panicf("convertTypeSwitchAssign, unmanaged expression [%v] in type switch, input: %v", reflect.TypeOf(expr), cv.Position(expr))
+		}
+
 	default:
-		cv.Panicf("convertTypeSwitchAssign, unmanaged statemet type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
+		cv.Panicf("convertTypeSwitchAssign, unmanaged statement type [%v], input: %v", reflect.TypeOf(s), cv.Position(s))
 	}
 
 	return

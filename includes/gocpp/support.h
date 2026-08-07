@@ -3,6 +3,8 @@
 #include "gocpp/support.fwd.h"
 
 #include <any>
+#include <array>
+#include <charconv>
 #include <complex>
 #include <exception>
 #include <functional>
@@ -2003,6 +2005,22 @@ namespace mocklib
         return os << int(value);
     }
 
+    inline std::string to_go_string(double value)
+    {
+        std::array<char, 64> buf;
+        auto result = std::to_chars(buf.data(), buf.data() + buf.size(), value);
+        if(result.ec != std::errc {})
+        {
+            return "<to_chars error>"; // must return here — never reach the line below
+        }
+        return std::string(buf.data(), result.ptr - buf.data());
+    }
+
+    std::ostream& PrintTo(std::ostream& os, double value)
+    {
+        return os << to_go_string(value);
+    }
+
     template<typename K, typename V>
     std::ostream& PrintTo(std::ostream& os, const gocpp::map<K, V>& value)
     {
@@ -2060,6 +2078,11 @@ namespace mocklib
     void Printf(const T& value)
     {
         std::cout << value;
+    }
+
+    void Printf(const double& value)
+    {
+        std::cout << to_go_string(value);
     }
 
     // No real formatting at the moment, just replace %v

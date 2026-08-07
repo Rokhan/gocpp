@@ -987,6 +987,7 @@ type method struct {
 	commentInfo
 	params typeNames
 	parent *parentType
+	defs   []place
 }
 
 type nsType struct {
@@ -1033,8 +1034,8 @@ func (cv *cppConverter) readMethods(fields *ast.FieldList, ctx ctContext) (metho
 
 	for _, field := range fields.List {
 		for _, name := range field.Names {
-			outPrm, inPrm := cv.convertMethodExpr(field.Type, ctx)
-			methods = append(methods, method{GetCppName(name.Name), outPrm, commentInfo{field.Doc, field.Comment}, inPrm, nil})
+			outPrm, inPrm, defs := cv.convertMethodExpr(field.Type, ctx)
+			methods = append(methods, method{GetCppName(name.Name), outPrm, commentInfo{field.Doc, field.Comment}, inPrm, nil, defs})
 		}
 		if field.Names == nil {
 			newPt, err := cv.convertInterfaceField(field.Type)
@@ -1158,7 +1159,8 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		params.setIsRecv()
 		ctx.isInReceiverDecl = false
 		params = append(params, cv.readFieldsCtx(d.Type.Params, ctx)...)
-		outNames, outTypes := cv.getResultInfos(d.Type)
+		outNames, outTypes, defs := cv.getResultInfos(d.Type)
+		outPlaces = append(outPlaces, defs...)
 
 		cv.startScope(ScopeFunction)
 		cv.declareVars(params)
@@ -1166,7 +1168,11 @@ func (cv *cppConverter) convertDecls(decl ast.Decl, isNameSpace bool) (outPlaces
 		debugComments := []string{}
 		for _, param := range params {
 			for _, place := range param.Type.defs {
-				cv.printOrKeepPlace(place, &outPlaces, nil)
+				if place.outline != nil {
+					fmt.Fprintf(cv.cpp.out, "%s%s", cv.cpp.Indent(), *place.outline)
+				} else {
+					cv.printOrKeepPlace(place, &outPlaces, nil)
+				}
 			}
 			usedTypeParams = append(usedTypeParams, param.Type.typenames...)
 			if cv.shared.debugMode && param.Type.dbg != "" {
@@ -2132,9 +2138,8 @@ func (cv *cppConverter) inlineStmt(stmt ast.Stmt, env blockEnv) (result cppExpr,
 	panic("inlineStmt, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) getResultInfos(funcType *ast.FuncType) (outNames []string, outTypes []outType) {
+func (cv *cppConverter) getResultInfos(funcType *ast.FuncType) (outNames []string, outTypes []outType, defs []place) {
 	goResults := cv.readFields(funcType.Results)
-	defs := []place{}
 
 	var useNamedResults = true
 	for _, result := range goResults {
@@ -2151,10 +2156,6 @@ func (cv *cppConverter) getResultInfos(funcType *ast.FuncType) (outNames []strin
 
 	if !useNamedResults {
 		outNames = nil
-	}
-
-	if len(defs) != 0 {
-		cv.Panicf("getResultInfos, not Implemented, manage defs")
 	}
 
 	return
@@ -2492,6 +2493,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 			defs = append(defs, fwdHeaderStr(structFwdDecl, node, cv.getTypeDepInfo(node)))
 
 			structDecl, places := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, decl, with, false})
+
 			defs = append(defs, places...)
 			if templateDec != "" {
 				structDecl = fmt.Sprintf("%s\n%s%s", templateDec, cv.hpp.Indent(), structDecl)
@@ -2516,14 +2518,24 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 			structFwdDecl := fmt.Sprintf("%sstruct %s;\n", templateDec, name)
 			defs = append(defs, fwdHeaderStr(structFwdDecl, node, cv.getTypeDepInfo(node)))
 
-			structDecl := cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, decl, with, false})
+			structDecl, ifaceDefs := cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, decl, with, false})
+			// promote outlines to header as the struct is declared in the header
+			promoteOutlineToHeader(&ifaceDefs)
+
+			defs = append(defs, ifaceDefs...)
 			if templateDec != "" {
 				structDecl = fmt.Sprintf("%s\n%s%s", templateDec, cv.hpp.Indent(), structDecl)
 			}
 			defs = append(defs, headerStr(structDecl, node))
+
+			// _ => we need definitions only once
+			interfaceDecl, _ := cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, implem, with, false})
+			return mkCppType(interfaceDecl, defs)
 		}
 
-		return mkCppType(cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, implem, with, false}), defs)
+		interfaceDecl, ifaceDefs := cv.convertInterfaceTypeExpr(n, templatePrms, genStructParam{name, all, without, false})
+		defs = append(defs, ifaceDefs...)
+		return mkCppType(interfaceDecl, defs)
 
 	default:
 		cv.Panicf("convertTypeSpec, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
@@ -2946,10 +2958,12 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 			defs := []place{}
 
 			if first {
-				structDecl := cv.convertInterfaceTypeExpr(n, nil, genStructParam{name, decl, with, false})
+				structDecl, ifaceDefs := cv.convertInterfaceTypeExpr(n, nil, genStructParam{name, decl, with, false})
+				defs = append(defs, ifaceDefs...)
 				defs = append(defs, headerStr(structDecl, node))
 
-				structDef := cv.convertInterfaceTypeExpr(n, nil, genStructParam{name, implem, with, false})
+				// _ => we need definitions only once
+				structDef, _ := cv.convertInterfaceTypeExpr(n, nil, genStructParam{name, implem, with, false})
 				defs = append(defs, outlineStr(structDef, node))
 			}
 
@@ -2978,7 +2992,7 @@ func (cv *cppConverter) checkIsParam(n *ast.Ident, identType *cppType) {
 	}
 }
 
-func (cv *cppConverter) convertMethodExpr(node ast.Expr, ctx ctContext) (string, typeNames) {
+func (cv *cppConverter) convertMethodExpr(node ast.Expr, ctx ctContext) (string, typeNames, []place) {
 	if node == nil {
 		panic("node is nil")
 	}
@@ -2986,9 +3000,9 @@ func (cv *cppConverter) convertMethodExpr(node ast.Expr, ctx ctContext) (string,
 	switch n := node.(type) {
 	case *ast.FuncType:
 		params := cv.readFieldsCtx(n.Params, ctx)
-		_, outTypes := cv.getResultInfos(n)
+		_, outTypes, defs := cv.getResultInfos(n)
 		resultType := buildOutType(outTypes, nil)
-		return resultType, params
+		return resultType, params, defs
 
 	default:
 		panic(fmt.Sprintf("Not a function type %v", n))
@@ -3049,9 +3063,11 @@ func (cv *cppConverter) convertFuncTypeExpr(node *ast.FuncType, ctx ctContext) c
 	ctx.ensureHasBlankName = true
 	ctx.ensureHasTypeName = false
 	params := cv.readFieldsCtx(node.Params, ctx)
-	_, outTypes := cv.getResultInfos(node)
+	defs := params.getDefs()
+	_, outTypes, ifaceDefs := cv.getResultInfos(node)
+	defs = append(defs, ifaceDefs...)
 	resultType := buildOutType(outTypes, nil)
-	return mkCppType(fmt.Sprintf("std::function<%s (%s)>", resultType, params), params.getDefs())
+	return mkCppType(fmt.Sprintf("std::function<%s (%s)>", resultType, params), defs)
 }
 
 func (cv *cppConverter) convertMapTypeExpr(node *ast.MapType, ctx ctContext) cppType {
@@ -3366,9 +3382,14 @@ func getAnotherLambdaParamName(excludedNames []string) string {
 	return getAnotherName(excludedNames, lambdaParamNames)
 }
 
-func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms map[string][]string, param genStructParam) string {
+func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms map[string][]string, param genStructParam) (string, []place) {
 	buf := new(bytes.Buffer)
+	defs := []place{}
 	methods, parents, errors := cv.readMethods(node.Methods, ctContext{ensureHasBlankName: true})
+
+	for _, method := range methods {
+		defs = append(defs, method.defs...)
+	}
 
 	templatePrmList := ""
 	if len(templatePrms) != 0 {
@@ -3586,7 +3607,7 @@ func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templa
 			fmt.Fprintf(buf, "\n")
 		}
 	}
-	return buf.String()
+	return buf.String(), defs
 }
 
 type action func()
@@ -3937,7 +3958,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		expr := cppExpr{}
 		expr.str = cv.withCppBuffer(func() {
 			params := cv.readFields(n.Type.Params)
-			outNames, outTypes := cv.getResultInfos(n.Type)
+			outNames, outTypes, resDefs := cv.getResultInfos(n.Type)
 			resultType := buildOutType(outTypes, nil)
 			captureExpr := cv.getCaptureExpr()
 
@@ -3947,6 +3968,10 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			fmt.Fprintf(cv.cpp.out, "%s(%s) mutable -> %s\n", captureExpr, params, resultType)
 
 			expr.defs = cv.convertInlinedBlockStmt(n.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes, params.Names()), true))
+			expr.defs = append(expr.defs, resDefs...)
+			for _, param := range params {
+				expr.defs = append(expr.defs, param.Type.defs...)
+			}
 			cv.endScope()
 		})
 		return expr

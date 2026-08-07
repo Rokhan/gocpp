@@ -26,6 +26,11 @@ type MultAdder interface {
 	Print()
 }
 
+// Interface with inlined type declaration
+type Context interface {
+	Done() <-chan struct{}
+}
+
 type num struct {
 	value int
 }

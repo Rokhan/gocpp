@@ -1103,6 +1103,15 @@ func appendHeaderEndStrf(places *[]place, format string, params ...any) {
 	*places = append(*places, headerEndStrf(format, params...)...)
 }
 
+func promoteOutlineToHeader(places *[]place) {
+	for i, place := range *places {
+		if place.outline != nil {
+			(*places)[i].header = ArrayPtr(*place.outline)
+			(*places)[i].outline = nil
+		}
+	}
+}
+
 type cppExpr struct {
 	str       string // cpp type as a string
 	dbg       string

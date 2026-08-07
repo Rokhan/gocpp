@@ -10,6 +10,8 @@ namespace golang::main
     struct Adder;
     struct Multiplier;
     struct MultAdder;
+    struct Context;
+    struct gocpp_id_0;
     struct num;
     struct dummy;
     using MyFloat = double;

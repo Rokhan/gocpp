@@ -257,6 +257,61 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
+    // Interface with inlined type declaration
+    
+    template<typename T>
+    Context::Context(T& ref)
+    {
+        mValue.reset(new ContextImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    Context::Context(const T& ref)
+    {
+        mValue.reset(new ContextImpl<T, std::unique_ptr<T>>(new T(ref)));
+    }
+
+    template<typename T>
+    Context::Context(T* ptr)
+    {
+        mValue.reset(new ContextImpl<T, gocpp::ptr<T>>(ptr));
+    }
+
+    std::ostream& Context::PrintTo(std::ostream& os) const
+    {
+        return os;
+    }
+
+    template<typename T, typename TStore, typename TInterface>
+    gocpp::channel<gocpp_id_0> Context::ContextImpl<T, TStore, TInterface>::vDone()
+    {
+        return rec::Done(gocpp::PtrRecv<T, false>(value.get()));
+    }
+
+    inline Context::IContext* Context::value() const
+    {
+        if(auto res = mValue.get()) { return res; }
+        throw gocpp::GoPanic("using nil value for interface 'Context'");
+    }
+
+    namespace rec
+    {
+        gocpp::channel<gocpp_id_0> Done(const gocpp::PtrRecv<struct Context, false>& self)
+        {
+            return self.ptr->value()->vDone();
+        }
+
+        gocpp::channel<gocpp_id_0> Done(const gocpp::ObjRecv<struct Context>& self)
+        {
+            return self.obj.value()->vDone();
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Context& value)
+    {
+        return value.PrintTo(os);
+    }
+
     
     template<typename T> requires gocpp::GoStruct<T>
     num::operator T()

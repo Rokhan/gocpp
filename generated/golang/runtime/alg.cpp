@@ -613,7 +613,6 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-
     uintptr_t ifaceHash(gocpp_id_0 i, uintptr_t seed)
     {
         return interhash(noescape(gocpp::unsafe_pointer(& i)), seed);

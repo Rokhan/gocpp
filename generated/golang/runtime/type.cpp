@@ -521,33 +521,6 @@ namespace golang::runtime
         return rtype {t};
     }
 
-    
-    template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_1::operator T()
-    {
-        T result;
-        return result;
-    }
-
-    template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_1::operator==(const T& ref) const
-    {
-        return true;
-    }
-
-    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
-    {
-        os << '{';
-        os << '}';
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
-    {
-        return value.PrintTo(os);
-    }
-
-
     struct gocpp_id_3
         {
 
@@ -592,6 +565,32 @@ namespace golang::runtime
     // back into earlier ones.
     //
     // Only typelinksinit needs this function.
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    gocpp_id_1::operator T()
+    {
+        T result;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool gocpp_id_1::operator==(const T& ref) const
+    {
+        return true;
+    }
+
+    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    {
+        return value.PrintTo(os);
+    }
+
     bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp_id_1> seen)
     {
         auto tp = _typePair {t, v};

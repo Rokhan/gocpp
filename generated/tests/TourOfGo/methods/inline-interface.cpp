@@ -191,7 +191,6 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-
     void describe(gocpp_id_1 i)
     {
         if(i != nullptr)

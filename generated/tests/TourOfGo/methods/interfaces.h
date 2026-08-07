@@ -201,6 +201,100 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Multiplier& value);
+    struct gocpp_id_0
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            return true;
+        }
+
+        std::ostream& PrintTo(std::ostream& os) const
+        {
+            os << '{';
+            os << '}';
+            return os;
+        }
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    struct Context : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        Context(){}
+        Context(Context& i) = default;
+        Context(const Context& i) = default;
+        Context& operator=(Context& i) = default;
+        Context& operator=(const Context& i) = default;
+
+        inline Context(nullptr_t) {};
+        Context& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        Context(T& ref);
+
+        template<typename T>
+        Context(const T& ref);
+
+        template<typename T>
+        Context(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IContext
+        {
+            virtual gocpp::channel<gocpp_id_0> vDone() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IContext>
+        struct ContextImpl : virtual TInterface
+        {
+            explicit ContextImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            gocpp::channel<gocpp_id_0> vDone() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IContext* value() const;
+
+        std::shared_ptr<IContext> mValue;
+    };
+
+    namespace rec
+    {
+        gocpp::channel<gocpp_id_0> Done(const gocpp::PtrRecv<struct Context, false>& self);
+        gocpp::channel<gocpp_id_0> Done(const gocpp::ObjRecv<struct Context>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Context& value);
     struct num
     {
         int value{};

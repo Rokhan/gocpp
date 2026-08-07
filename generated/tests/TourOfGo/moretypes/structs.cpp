@@ -308,7 +308,6 @@ namespace golang::main
         return value.PrintTo(os);
     }
 
-
     void inlineStructDef(gocpp_id_1 dummy)
     {
         mocklib::Println("inlineStructDef"_s, dummy.a);

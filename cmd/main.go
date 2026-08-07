@@ -3941,8 +3941,8 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		default:
 			switch n.Value[0] {
 			case '`':
-				// TODO: check if there is other replacements to do
-				content := "\"" + strings.ReplaceAll(strings.Trim(n.Value, "`"), "\\", "\\\\") + "\"" + cpp_str_lit
+				len := len(n.Value)
+				content := fmt.Sprintf("%q", n.Value[1:len-1]) + cpp_str_lit
 				return mkCppExpr(content)
 			case '"':
 				return mkCppExpr(n.Value + cpp_str_lit)

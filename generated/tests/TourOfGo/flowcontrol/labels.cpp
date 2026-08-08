@@ -30,6 +30,15 @@ namespace golang::main
         testRange(0);
         testRange(1);
         testRange(2);
+        testSwitchWithLabel1(gocpp::slice<int> {0, 0, 0});
+        testSwitchWithLabel1(gocpp::slice<int> {- 5});
+        testSwitchWithLabel1(gocpp::slice<int> {7});
+        testSwitchWithLabel1(gocpp::slice<int> {7, - 2, 0, 5, 0, 0, - 9});
+
+        testSwitchWithLabel2("\"hello\""_s, 1);
+        testSwitchWithLabel2("\"true\""_s, 1);
+        testSwitchWithLabel2("true"_s, 1);
+        testSwitchWithLabel2("1234567"_s, 1);
     }
 
     void testFor(int k)
@@ -141,6 +150,225 @@ namespace golang::main
 
             mocklib::Printf("............ i = %v, j = %v\n"_s, i, j);
         }
+    }
+
+    void testSwitchWithLabel1(gocpp::slice<int> items)
+    {
+        auto result = ""_s;
+
+        Outer:
+        for(auto [i, item] : items)
+        {
+            if(false) {
+            Outer_continue:
+                continue;
+            Outer_break:
+                break;
+            }
+            Selector:
+            //Go switch emulation
+            {
+                int conditionId = -1;
+                if(item < 0) { conditionId = 0; }
+                else if(item == 0) { conditionId = 1; }
+                else if(item > 0) { conditionId = 2; }
+                switch(conditionId)
+                {
+                    case 0:
+                        if(false) {
+                        Selector_break_0:
+                            break;
+                        }
+                        for(auto j = 0; j < 3; j++)
+                        {
+                            if(j == 1)
+                            {
+                                goto Selector_break_0;
+                            }
+                            result += mocklib::Sprint("neg-scan:"_s, j, " "_s);
+                        }
+                        result += "after-loop;"_s;
+                        break;
+
+                    case 1:
+                        if(false) {
+                        Selector_break_1:
+                            break;
+                        }
+                        for(auto j = 0; j < 3; j++)
+                        {
+                            if(j == i % 3)
+                            {
+                                goto Outer_continue;
+                            }
+                            result += mocklib::Sprint("zero-scan:"_s, j, " "_s);
+                        }
+                        result += "after-loop;"_s;
+                        break;
+
+                    case 2:
+                        if(false) {
+                        Selector_break_2:
+                            break;
+                        }
+                        result += "pos;"_s;
+                        break;
+
+                    default:
+                        if(false) {
+                        Selector_break_3:
+                            break;
+                        }
+                        result += "other;"_s;
+                        break;
+                }
+            }
+
+            result += mocklib::Sprint("["_s, item, "]"_s);
+        }
+
+        mocklib::Println(result);
+    }
+
+    // switch loop from "encoding/json/decode.go"
+    void testSwitchWithLabel2(gocpp::string data, int offset)
+    {
+        auto [d, i] = std::tuple{data, offset};
+        Switch:
+        //Go switch emulation
+        {
+            auto condition = d[i - 1];
+            int conditionId = -1;
+            if(condition == '"') { conditionId = 0; }
+            else if(condition == '0') { conditionId = 1; }
+            else if(condition == '1') { conditionId = 2; }
+            else if(condition == '2') { conditionId = 3; }
+            else if(condition == '3') { conditionId = 4; }
+            else if(condition == '4') { conditionId = 5; }
+            else if(condition == '5') { conditionId = 6; }
+            else if(condition == '6') { conditionId = 7; }
+            else if(condition == '7') { conditionId = 8; }
+            else if(condition == '8') { conditionId = 9; }
+            else if(condition == '9') { conditionId = 10; }
+            else if(condition == '-') { conditionId = 11; }
+            else if(condition == 't') { conditionId = 12; }
+            else if(condition == 'f') { conditionId = 13; }
+            else if(condition == 'n') { conditionId = 14; }
+            switch(conditionId)
+            {
+                case 0:
+                    if(false) {
+                    Switch_break_0:
+                        break;
+                    }
+                    for(; i < len(d); i++)
+                    {
+                        //Go switch emulation
+                        {
+                            auto condition = d[i];
+                            int conditionId = -1;
+                            if(condition == '\\') { conditionId = 0; }
+                            else if(condition == '"') { conditionId = 1; }
+                            switch(conditionId)
+                            {
+                                // escaped char
+                                case 0:
+                                    i++;
+                                    break;
+                                case 1:
+                                    // tokenize the closing quote too
+                                    i++;
+                                    goto Switch_break_0;
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                    if(false) {
+                    Switch_break_1:
+                        break;
+                    }
+                    for(; i < len(d); i++)
+                    {
+                        //Go switch emulation
+                        {
+                            auto condition = d[i];
+                            int conditionId = -1;
+                            if(condition == '0') { conditionId = 0; }
+                            else if(condition == '1') { conditionId = 1; }
+                            else if(condition == '2') { conditionId = 2; }
+                            else if(condition == '3') { conditionId = 3; }
+                            else if(condition == '4') { conditionId = 4; }
+                            else if(condition == '5') { conditionId = 5; }
+                            else if(condition == '6') { conditionId = 6; }
+                            else if(condition == '7') { conditionId = 7; }
+                            else if(condition == '8') { conditionId = 8; }
+                            else if(condition == '9') { conditionId = 9; }
+                            else if(condition == '.') { conditionId = 10; }
+                            else if(condition == 'e') { conditionId = 11; }
+                            else if(condition == 'E') { conditionId = 12; }
+                            else if(condition == '+') { conditionId = 13; }
+                            else if(condition == '-') { conditionId = 14; }
+                            switch(conditionId)
+                            {
+                                case 0:
+                                case 1:
+                                case 2:
+                                case 3:
+                                case 4:
+                                case 5:
+                                case 6:
+                                case 7:
+                                case 8:
+                                case 9:
+                                case 10:
+                                case 11:
+                                case 12:
+                                case 13:
+                                case 14:
+                                    break;
+                                default:
+                                    goto Switch_break_1;
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+                case 12:
+                    if(false) {
+                    Switch_break_12:
+                        break;
+                    }
+                    i += len("rue"_s);
+                    break;
+                case 13:
+                    if(false) {
+                    Switch_break_13:
+                        break;
+                    }
+                    i += len("alse"_s);
+                    break;
+                case 14:
+                    if(false) {
+                    Switch_break_14:
+                        break;
+                    }
+                    i += len("ull"_s);
+                    break;
+            }
+        }
+        mocklib::Println(i);
     }
 
 }

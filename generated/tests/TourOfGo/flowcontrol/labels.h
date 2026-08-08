@@ -16,6 +16,8 @@ namespace golang::main
     void testFor(int k);
     void testRange(int k);
     void testGoTo();
+    void testSwitchWithLabel1(gocpp::slice<int> items);
+    void testSwitchWithLabel2(gocpp::string data, int offset);
 
     namespace rec
     {

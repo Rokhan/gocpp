@@ -615,7 +615,7 @@ namespace golang::runtime
             switch(conditionId)
             {
                 case 0:
-                    print(typestring, "(""_s, *(gocpp::string*)(eface->data), "")"_s);
+                    print(typestring, "(\""_s, *(gocpp::string*)(eface->data), "\")"_s);
                     break;
                 case 1:
                     print(typestring, "("_s, *(bool*)(eface->data), ")"_s);

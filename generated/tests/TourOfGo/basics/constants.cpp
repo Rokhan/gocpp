@@ -25,6 +25,11 @@ namespace golang::main
         mocklib::Println("Hello"_s, World);
         mocklib::Println("Happy"_s, Pi, "Day"_s);
 
+        mocklib::Println("\n    \"Tyger, Tyger, burning bright\n    In the forests of the night,\n    What immortal hand or eye\n    Could frame thy fearful symmetry?\""_s);
+        mocklib::Println();
+
+        mocklib::Println("\\t\\n\\0\""_s);
+
         auto Truth = true;
         mocklib::Println("Go rules?"_s, Truth);
     }

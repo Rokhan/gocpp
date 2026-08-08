@@ -114,7 +114,7 @@ namespace golang::time
                     return {name, nullptr};
                 }
             }
-            return {""_s, errors::New("English name for time zone ""_s + stdname + "" not found in registry"_s)};
+            return {""_s, errors::New("English name for time zone \""_s + stdname + "\" not found in registry"_s)};
         }
         catch(gocpp::GoPanic& gp)
         {

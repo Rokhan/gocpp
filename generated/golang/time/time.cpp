@@ -1459,7 +1459,7 @@ namespace golang::time
     // (e.g., the year is out of range), then an error is reported.
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::MarshalJSON(Time t)
     {
-        auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano) + len(""""_s));
+        auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, len(RFC3339Nano) + len("\"\""_s));
         b = append(b, '"');
         gocpp::error err;
         std::tie(b, err) = rec::appendStrictRFC3339(gocpp::recv(t), b);
@@ -1484,7 +1484,7 @@ namespace golang::time
         {
             return errors::New("Time.UnmarshalJSON: input is not a JSON string"_s);
         }
-        data = data.make_slice(len("""_s), len(data) - len("""_s));
+        data = data.make_slice(len("\""_s), len(data) - len("\""_s));
         gocpp::error err = {};
         std::tie(*t, err) = parseStrictRFC3339(data);
         return err;

@@ -667,7 +667,7 @@ namespace golang::strconv
                             switch(conditionId)
                             {
                                 case 0:
-                                    valid = utf8::ValidString(in.make_slice(len("""_s), end - len("""_s)));
+                                    valid = utf8::ValidString(in.make_slice(len("\""_s), end - len("\""_s)));
                                     break;
                                 case 1:
                                 {

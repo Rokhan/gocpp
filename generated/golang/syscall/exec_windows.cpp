@@ -44,7 +44,7 @@ namespace golang::syscall
     {
         if(len(s) == 0)
         {
-            return """"_s;
+            return "\"\""_s;
         }
         for(auto i = 0; i < len(s); i++)
         {
@@ -81,7 +81,7 @@ namespace golang::syscall
     {
         if(len(s) == 0)
         {
-            return append(b, """"_s);
+            return append(b, "\"\""_s);
         }
 
         auto needsBackslash = false;

@@ -2158,6 +2158,12 @@ namespace mocklib
         return Sprint(value);
     }
 
+    template<typename T, typename... Args>
+    std::string Sprint(const T& value, Args&&... args)
+    {
+        return Sprintf(value) + Sprint(args...);
+    }
+
     // No real formatting at the moment
     template<typename T, typename... Args>
     std::string Sprintf(const T& value, Args&&... args)

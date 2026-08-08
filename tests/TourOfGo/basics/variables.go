@@ -26,6 +26,12 @@ var funcVar3 = func(i int) (int, string) {
 	return 3, "zz"
 }
 
+// TODO
+// func testSwitchWithLabel2(data string, offset int) {
+// 	data, i := data, offset
+// 	fmt.Println(data, i)
+// }
+
 func main() {
 	var i int
 	fmt.Println(i, c, python, java)

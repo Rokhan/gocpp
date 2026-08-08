@@ -72,6 +72,7 @@ type cppConverter struct {
 
 	// Parsing and codegen parameters
 	currentSwitchId *list.List
+	labelSwitchId   map[string]int
 	idCount         int
 	scopes          *list.List
 	iota_value      int
@@ -215,6 +216,7 @@ func (cv *cppConverter) ParseFile(inputName string) *ast.File {
 
 func (cv *cppConverter) Init() {
 	cv.currentSwitchId = new(list.List)
+	cv.labelSwitchId = map[string]int{}
 	cv.scopes = new(list.List)
 	cv.typedefs = make(set[types.Type])
 
@@ -1315,18 +1317,10 @@ func (cv *cppConverter) GetFuncTypeParameters(d *ast.FuncDecl) typeParams {
 }
 
 func (cv *cppConverter) convertBlockStmt(block *ast.BlockStmt, env blockEnv) (outPlaces []place) {
-	return cv.convertBlockStmtImpl(block, env, "\n", nil)
+	return cv.convertBlockStmtOpt(block, env, blockOption{"\n", nil})
 }
 
-func (cv *cppConverter) convertInlinedBlockStmt(block *ast.BlockStmt, env blockEnv) (outPlaces []place) {
-	return cv.convertBlockStmtImpl(block, env, "", nil)
-}
-
-func (cv *cppConverter) convertBlockStmtWithLabel(block *ast.BlockStmt, env blockEnv, label *ast.Ident) (outPlaces []place) {
-	return cv.convertBlockStmtImpl(block, env, "\n", label)
-}
-
-func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv, end string, label *ast.Ident) (outPlaces []place) {
+func (cv *cppConverter) convertBlockStmtOpt(block *ast.BlockStmt, env blockEnv, ctx blockOption) (outPlaces []place) {
 	if block == nil {
 		fmt.Fprintf(cv.cpp.out, "%v/* convertBlockStmt, nil block */;\n", cv.cpp.Indent())
 		return
@@ -1353,11 +1347,11 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 		}
 		env.toBeDeclared = nil
 
-		if label != nil {
+		if ctx.label != nil {
 			fmt.Fprintf(cv.cpp.out, "%sif(false) {\n", cv.cpp.Indent())
-			fmt.Fprintf(cv.cpp.out, "%s%s_continue:\n", cv.cpp.Indent(), label.Name)
+			fmt.Fprintf(cv.cpp.out, "%s%s_continue:\n", cv.cpp.Indent(), ctx.label.Name)
 			fmt.Fprintf(cv.cpp.out, "%s    continue;\n", cv.cpp.Indent())
-			fmt.Fprintf(cv.cpp.out, "%s%s_break:\n", cv.cpp.Indent(), label.Name)
+			fmt.Fprintf(cv.cpp.out, "%s%s_break:\n", cv.cpp.Indent(), ctx.label.Name)
 			fmt.Fprintf(cv.cpp.out, "%s    break;\n", cv.cpp.Indent())
 			fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
 		}
@@ -1407,7 +1401,7 @@ func (cv *cppConverter) convertBlockStmtImpl(block *ast.BlockStmt, env blockEnv,
 	}
 
 	cv.cpp.indent--
-	fmt.Fprintf(cv.cpp.out, "%s}%s", cv.cpp.Indent(), end)
+	fmt.Fprintf(cv.cpp.out, "%s}%s", cv.cpp.Indent(), ctx.end)
 	cv.endScope()
 	return
 }
@@ -1576,7 +1570,9 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		switch s := stmt.(type) {
 		case *ast.ForStmt, *ast.RangeStmt:
 			/* Nothing to do */
-		case *ast.SwitchStmt, *ast.SelectStmt, *ast.TypeSwitchStmt:
+		case *ast.SwitchStmt:
+			/* Nothing to do */
+		case *ast.SelectStmt, *ast.TypeSwitchStmt:
 			cv.Panicf("convertStmt, label not implemented. statement type: %v, input: %v", reflect.TypeOf(s), cv.Position(s))
 		default:
 			/* Nothing to do */
@@ -1635,7 +1631,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		needScope := initNeedScope || postNeedScope
 		cv.AddOptionalScope(cppOut, needScope, func() {
 			cv.WritterExprPrintf(cppOut, "%sfor(%s; %s; %s)\n", cv.cpp.Indent(), initExpr, cv.convertExpr(s.Cond), postExpr)
-			outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
+			outPlaces = cv.convertBlockStmtOpt(s.Body, makeSubBlockEnv(env, false), blockOption{"\n", label})
 		})
 		cv.endScope()
 
@@ -1654,13 +1650,17 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		} else {
 			switch s.Tok {
 			case token.BREAK:
-				cv.WritterExprPrintf(cppOut, "%sgoto %s_break;\n", cv.cpp.Indent(), s.Label)
+				if id, ok := cv.getLabelSwitchId(s.Label); ok {
+					cv.WritterExprPrintf(cppOut, "%sgoto %s_break_%d;\n", cv.cpp.Indent(), s.Label, id)
+				} else {
+					cv.WritterExprPrintf(cppOut, "%sgoto %s_break;\n", cv.cpp.Indent(), s.Label)
+				}
 			case token.CONTINUE:
 				cv.WritterExprPrintf(cppOut, "%sgoto %s_continue;\n", cv.cpp.Indent(), s.Label)
 			case token.GOTO:
 				cv.WritterExprPrintf(cppOut, "%sgoto %s;\n", cv.cpp.Indent(), s.Label)
 			case token.FALLTHROUGH:
-				fallthrough // Not implemented
+				cv.Panicf("convertStmt, illegal code, fallthrough is not supposed to have a label, label: %v, token: %v, input: %v", s.Label, s.Tok, cv.Position(s))
 			default:
 				cv.Panicf("convertStmt, unmanaged labelled BranchStmt, label: %v, token: %v, input: %v", s.Label, s.Tok, cv.Position(s))
 			}
@@ -1708,7 +1708,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		} else {
 			cv.Panicf("Unmanaged case of '*ast.RangeStmt', token: %v; key: %v, value:%v, input: %v", s.Tok, s.Key, s.Value, cv.Position(s))
 		}
-		outPlaces = cv.convertBlockStmtWithLabel(s.Body, makeSubBlockEnv(env, false), label)
+		outPlaces = cv.convertBlockStmtOpt(s.Body, makeSubBlockEnv(env, false), blockOption{"\n", label})
 
 	case *ast.IfStmt:
 		needScope := false
@@ -1755,6 +1755,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			cv.WritterExprPrintf(cppOut, "%sauto %s = %s;\n", cv.cpp.Indent(), inputVarName, cv.convertExpr(s.Tag))
 		}
 
+		env.switchLabel = label
 		outPlaces = cv.convertSwitchBody(env, s.Body, "conditionId", inputVarName)
 
 		if s.Init != nil {
@@ -1808,13 +1809,13 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 	case *ast.CaseClause:
 		var caseType cppExpr
+		id := cv.getSwitchId()
 		if s.List == nil {
 			cv.WritterExprPrintf(cppOut, "%sdefault:\n", cv.cpp.Indent())
 		} else {
 			for range s.List {
-				id := cv.currentSwitchId.Back().Value.(int)
 				cv.WritterExprPrintf(cppOut, "%scase %d:\n", cv.cpp.Indent(), id)
-				cv.currentSwitchId.Back().Value = id + 1
+				id++
 			}
 
 			if env.isTypeSwitch {
@@ -1841,6 +1842,14 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 		var isStmtFallthrough bool
 		var stmtOutPlace []place
+
+		if env.switchLabel != nil {
+			fmt.Fprintf(cv.cpp.out, "%sif(false) {\n", cv.cpp.Indent())
+			fmt.Fprintf(cv.cpp.out, "%s%s_break_%d:\n", cv.cpp.Indent(), env.switchLabel.Name, cv.getSwitchId())
+			fmt.Fprintf(cv.cpp.out, "%s    break;\n", cv.cpp.Indent())
+			fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
+		}
+
 		for _, stmt := range s.Body {
 			if isStmtFallthrough {
 				// Shouldn't happen correctly go file
@@ -1849,9 +1858,11 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			stmtOutPlace, isStmtFallthrough = cv.convertStmt(stmt, env)
 			outPlaces = append(outPlaces, stmtOutPlace...)
 		}
+
 		if !isStmtFallthrough {
 			cv.WritterExprPrintf(cppOut, "%sbreak;\n", cv.cpp.Indent())
 		}
+		cv.SetSwitchId(env.switchLabel, id)
 		cv.cpp.indent--
 
 		if needScope {
@@ -1860,12 +1871,12 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 	case *ast.CommClause:
 
+		id := cv.getSwitchId()
 		if s.Comm == nil {
 			cv.WritterExprPrintf(cppOut, "%sdefault:\n", cv.cpp.Indent())
 		} else {
-			id := cv.currentSwitchId.Back().Value.(int)
 			cv.WritterExprPrintf(cppOut, "%scase %d:\n", cv.cpp.Indent(), id)
-			cv.currentSwitchId.Back().Value = id + 1
+			id++
 		}
 
 		cv.cpp.indent++
@@ -1878,6 +1889,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		if !isStmtFallthrough {
 			cv.WritterExprPrintf(cppOut, "%sbreak;\n", cv.cpp.Indent())
 		}
+		cv.SetSwitchId(env.switchLabel, id)
 		cv.cpp.indent--
 
 	default:
@@ -1887,6 +1899,37 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 	// use defer for this ?
 	outPlaces = append(outPlaces, *cppOut.defs...)
 
+	return
+}
+
+func (cv *cppConverter) startSwitchScope(switchLabel *ast.Ident) {
+	if switchLabel != nil {
+		cv.labelSwitchId[switchLabel.Name] = 0
+	}
+	cv.currentSwitchId.PushBack(0)
+}
+
+func (cv *cppConverter) endSwitchScope(switchLabel *ast.Ident) {
+	if switchLabel != nil {
+		delete(cv.labelSwitchId, switchLabel.Name)
+	}
+	cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
+}
+
+func (cv *cppConverter) SetSwitchId(switchLabel *ast.Ident, id int) {
+	if switchLabel != nil {
+		cv.labelSwitchId[switchLabel.Name] = id
+	}
+	cv.currentSwitchId.Back().Value = id
+}
+
+func (cv *cppConverter) getSwitchId() int {
+	id := cv.currentSwitchId.Back().Value.(int)
+	return id
+}
+
+func (cv *cppConverter) getLabelSwitchId(switchLabel *ast.Ident) (id int, ok bool) {
+	id, ok = cv.labelSwitchId[switchLabel.Name]
 	return
 }
 
@@ -1966,10 +2009,10 @@ func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, con
 	outPlaces = append(outPlaces, caseDefs...)
 	cv.WritterExprPrintf(cppOut, "%sswitch(%s)\n", cv.cpp.Indent(), conditionVarName)
 
-	cv.currentSwitchId.PushBack(0)
+	cv.startSwitchScope(env.switchLabel)
 	blockDefs := cv.convertBlockStmt(body, makeSubBlockEnv(env, false))
 	outPlaces = append(outPlaces, blockDefs...)
-	cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
+	cv.endSwitchScope(env.switchLabel)
 
 	cv.cpp.indent--
 	cv.WritterExprPrintf(cppOut, "%s}\n", cv.cpp.Indent())
@@ -1980,22 +2023,21 @@ func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, con
 
 	return
 }
-
 func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) (outPlaces []place) {
 	cppOut := mkCppWritter(cv.cpp.out)
 
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
-		cv.currentSwitchId.PushBack(0)
+		cv.startSwitchScope(nil)
 		for _, stmt := range s.List {
 			elts := cv.extractCaseExpr(stmt, se)
 			outPlaces = append(outPlaces, elts...)
 		}
-		cv.currentSwitchId.Remove(cv.currentSwitchId.Back())
+		cv.endSwitchScope(nil)
 
 	case *ast.CaseClause:
 		for _, expr := range s.List {
-			id := cv.currentSwitchId.Back().Value.(int)
+			id := cv.getSwitchId()
 			if se.withCondition {
 				if se.isTypeSwitch {
 					cv.WritterExprPrintf(cppOut, "%s%sif(%s == typeid(%s)) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, se.inputVarName, cv.convertExprCppType(expr), se.conditionVarName, id)
@@ -2005,12 +2047,12 @@ func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) (outPl
 			} else {
 				cv.WritterExprPrintf(cppOut, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertExpr(expr), se.conditionVarName, id)
 			}
-			cv.currentSwitchId.Back().Value = id + 1
+			cv.SetSwitchId(nil, id+1)
 			se.prefix = "else "
 		}
 
 	case *ast.CommClause:
-		id := cv.currentSwitchId.Back().Value.(int)
+		id := cv.getSwitchId()
 		switch comm := s.Comm.(type) {
 		case *ast.SendStmt:
 			cv.WritterExprPrintf(cppOut, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(s.Comm), se.conditionVarName, id)
@@ -2021,7 +2063,7 @@ func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) (outPl
 		default:
 			cv.Panicf("extractCaseExpr, commClause, unmanaged type [%v], input %s", reflect.TypeOf(comm), cv.Position(comm))
 		}
-		cv.currentSwitchId.Back().Value = id + 1
+		cv.SetSwitchId(nil, id+1)
 		se.prefix = "else "
 
 	default:
@@ -3967,7 +4009,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 
 			fmt.Fprintf(cv.cpp.out, "%s(%s) mutable -> %s\n", captureExpr, params, resultType)
 
-			expr.defs = cv.convertInlinedBlockStmt(n.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes, params.Names()), true))
+			expr.defs = cv.convertBlockStmtOpt(n.Body, makeBlockEnv(makeStmtEnv(outNames, outTypes, params.Names()), true), blockOptInline)
 			expr.defs = append(expr.defs, resDefs...)
 			for _, param := range params {
 				expr.defs = append(expr.defs, param.Type.defs...)

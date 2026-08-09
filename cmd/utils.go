@@ -310,6 +310,7 @@ func GetFileTimeStamp(filename string, defaultInFuture bool, ignoreEmpty bool) t
 	return fileInfo.ModTime()
 }
 
+// Need refactor, fundamentally redundant with computeDeps/compi
 func internalGetObjectsOfType(t types.Type, seen map[types.Object]bool) {
 	switch typ := t.(type) {
 	case *types.Basic:
@@ -318,7 +319,6 @@ func internalGetObjectsOfType(t types.Type, seen map[types.Object]bool) {
 		obj := typ.Obj()
 		if !seen[obj] {
 			seen[obj] = true
-			internalGetObjectsOfType(typ.Underlying(), seen)
 		}
 	case *types.Pointer:
 		internalGetObjectsOfType(typ.Elem(), seen)
@@ -377,6 +377,7 @@ func internalGetObjectsOfType(t types.Type, seen map[types.Object]bool) {
 }
 
 // GetObjectsOfType returns a list of types.Object used to define the given type.
+// Need refactor, fundamentally redundant with ComputeDeps/ComputePackages
 func GetObjectsOfType(t types.Type) []types.Object {
 	seen := make(map[types.Object]bool)
 	internalGetObjectsOfType(t, seen)
@@ -894,10 +895,14 @@ func ComputePackages(deps map[string]types.Type, pc parsingContext, dm depMode) 
 				}
 
 			case *types.Named:
-				// No need to recurse on this, bring unided dependencies
+				// No need to recurse on this, bring unneeded dependencies
 				addResult(t.Obj())
 
-			case nil, *types.Alias, *types.Basic, *types.TypeParam:
+			case *types.Alias:
+				// No need to recurse on this, bring unneeded dependencies
+				addResult(t.Obj())
+
+			case nil, *types.Basic, *types.TypeParam:
 				// Nothing to do
 
 			default:

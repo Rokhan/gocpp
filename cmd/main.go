@@ -4878,8 +4878,8 @@ func main() {
 	}
 
 	if !*testFile {
-		cv.srcBaseName = JoinPath("$(ImportDir)", pkg.Path(), pkg.Name())
-		cv.baseName = JoinPath(cv.shared.globalSubDir, pkg.Path(), pkg.Name())
+		cv.srcBaseName = JoinPath("$(ImportDir)", pkg.Path(), fileBaseName)
+		cv.baseName = JoinPath(cv.shared.globalSubDir, pkg.Path(), fileBaseName)
 	}
 
 	defer cv.PrintDefsUsage()

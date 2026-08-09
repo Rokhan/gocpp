@@ -13,7 +13,6 @@
 
 #include "golang/internal/goarch/goarch.h"
 #include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mstats.h"
 #include "golang/runtime/panic.h"

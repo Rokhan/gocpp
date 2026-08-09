@@ -13,7 +13,6 @@
 
 #include "golang/fmt/print.h"
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::main
 {

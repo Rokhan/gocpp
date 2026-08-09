@@ -14,7 +14,6 @@
 #include "golang/internal/race/norace.h"
 #include "golang/runtime/debug.h"
 #include "golang/sync/atomic/doc.h"
-#include "golang/sync/atomic/type.h"
 #include "golang/sync/cond.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/poolqueue.h"

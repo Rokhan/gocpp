@@ -12,7 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
-#include "golang/sync/cond.h"
 #include "golang/sync/pool.h"
 
 // Package io provides basic interfaces to I/O primitives.

@@ -11,16 +11,9 @@
 #include "golang/runtime/extern.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/symtab.h"
-#include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/zgoarch_amd64.h"
 #include "golang/internal/goos/zgoos_windows.h"
 #include "golang/runtime/env_posix.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/plugin.h"
-#include "golang/runtime/proc.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/traceback.h"
 

@@ -12,8 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/syscall/windows/zsyscall_windows.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 #include "golang/syscall/dll_windows.h"
 #include "golang/syscall/syscall_windows.h"

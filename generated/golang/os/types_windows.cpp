@@ -25,7 +25,6 @@
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zsyscall_windows.h"
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::os
 {

@@ -14,7 +14,6 @@
 #include "golang/io/fs/fs.h"
 #include "golang/time/format.h"
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::fs
 {

@@ -12,7 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::time
 {

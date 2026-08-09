@@ -14,11 +14,7 @@
 #include "golang/errors/errors.h"
 #include "golang/errors/wrap.h"
 #include "golang/internal/poll/fd.h"
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
-#include "golang/internal/poll/fd_windows.h"
 #include "golang/internal/safefilepath/path.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/internal/testlog/log.h"
 #include "golang/io/fs/fs.h"
 #include "golang/io/io.h"
@@ -37,13 +33,11 @@
 #include "golang/os/types.h"
 #include "golang/os/zero_copy_stub.h"
 #include "golang/runtime/extern.h"
-#include "golang/sync/mutex.h"
 #include "golang/syscall/net.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zerrors_windows.h"
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 // Package os provides a platform-independent interface to operating system
 // functionality. The design is Unix-like, although the error handling is

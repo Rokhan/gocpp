@@ -13,7 +13,6 @@
 
 #include "golang/errors/errors.h"
 #include "golang/hash/hash.h"
-#include "golang/io/io.h"
 
 // Package adler32 implements the Adler-32 checksum.
 //

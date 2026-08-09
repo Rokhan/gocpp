@@ -13,7 +13,6 @@
 
 #include "golang/internal/oserror/errors.h"
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 #include "golang/unicode/utf8/utf8.h"
 
 // Package fs defines basic interfaces to a file system.

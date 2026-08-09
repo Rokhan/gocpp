@@ -11,7 +11,6 @@
 #include "golang/runtime/mem.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/cpu/cpu.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/mem_windows.h"
 #include "golang/runtime/mgcpacer.h"

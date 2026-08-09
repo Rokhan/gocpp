@@ -139,6 +139,8 @@ namespace golang::os
 #include "golang/syscall/net.h"
 #include "golang/time/time.h"
 
+#include "golang/os/dir.fwd.h"
+
 namespace golang::os
 {
 

@@ -12,8 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/runtime/debuglog.h"
-#include "golang/runtime/internal/atomic/types.h"
-#include "golang/runtime/internal/sys/nih.h"
 
 namespace golang::runtime
 {

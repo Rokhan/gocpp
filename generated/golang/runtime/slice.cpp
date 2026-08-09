@@ -18,7 +18,6 @@
 #include "golang/runtime/error.h"
 #include "golang/runtime/internal/math/math.h"
 #include "golang/runtime/internal/sys/intrinsics.h"
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mbitmap_allocheaders.h"
 #include "golang/runtime/mgc.h"

@@ -15,7 +15,6 @@
 #include "golang/runtime/env_posix.h"
 #include "golang/runtime/internal/atomic/types.h"
 #include "golang/runtime/lock_sema.h"
-#include "golang/runtime/lockrank_off.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/proc.h"

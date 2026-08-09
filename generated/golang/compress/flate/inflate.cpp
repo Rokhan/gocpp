@@ -18,8 +18,6 @@
 #include "golang/io/io.h"
 #include "golang/math/bits/bits.h"
 #include "golang/strconv/itoa.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 
 // Package flate implements the DEFLATE compressed data format, described in

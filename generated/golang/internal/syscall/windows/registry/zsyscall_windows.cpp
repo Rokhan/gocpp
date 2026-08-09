@@ -12,7 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/syscall/windows/sysdll/sysdll.h"
-#include "golang/sync/mutex.h"
 #include "golang/syscall/dll_windows.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"

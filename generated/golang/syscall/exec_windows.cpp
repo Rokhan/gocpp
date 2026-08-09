@@ -13,8 +13,6 @@
 
 #include "golang/internal/bytealg/indexbyte_native.h"
 #include "golang/runtime/mfinal.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
 #include "golang/sync/rwmutex.h"
 #include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"

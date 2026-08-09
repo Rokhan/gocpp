@@ -12,13 +12,8 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/poll/fd.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
 #include "golang/internal/poll/fd_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/sync/atomic/doc.h"
-#include "golang/sync/mutex.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 
 namespace golang::poll
 {

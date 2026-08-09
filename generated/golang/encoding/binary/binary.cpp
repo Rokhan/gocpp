@@ -13,14 +13,11 @@
 
 #include "golang/encoding/binary/native_endian_little.h"
 #include "golang/errors/errors.h"
-#include "golang/internal/abi/type.h"
 #include "golang/io/io.h"
 #include "golang/math/unsafe.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
-#include "golang/sync/atomic/type.h"
 #include "golang/sync/map.h"
-#include "golang/sync/mutex.h"
 
 // Package binary implements simple translation between numbers and byte
 // sequences and encoding and decoding of varints.

@@ -12,11 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/bufio/bufio.h"
-#include "golang/compress/flate/deflate.h"
-#include "golang/compress/flate/deflatefast.h"
-#include "golang/compress/flate/huffman_bit_writer.h"
-#include "golang/compress/flate/huffman_code.h"
-#include "golang/compress/flate/token.h"
 #include "golang/compress/zlib/writer.h"
 #include "golang/encoding/binary/binary.h"
 #include "golang/hash/crc32/crc32.h"

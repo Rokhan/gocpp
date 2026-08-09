@@ -11,15 +11,12 @@
 #include "golang/math/rand/rand.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/bisect/bisect.h"
 #include "golang/internal/godebug/godebug.h"
-#include "golang/internal/godebugs/table.h"
 #include "golang/math/rand/exp.h"
 #include "golang/math/rand/normal.h"
 #include "golang/math/rand/rng.h"
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/mutex.h"
-#include "golang/sync/once.h"
 
 // Package rand implements pseudo-random number generators suitable for tasks
 // such as simulation, but it should not be used for security-sensitive work.

@@ -83,6 +83,8 @@ namespace golang::runtime
 
 #include "golang/runtime/runtime2.h"
 
+#include "golang/runtime/type.fwd.h"
+
 namespace golang::runtime
 {
 

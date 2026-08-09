@@ -11,7 +11,6 @@
 #include "golang/reflect/type.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/funcpc.h"
 #include "golang/internal/abi/map.h"
 #include "golang/internal/abi/type.h"
@@ -20,8 +19,6 @@
 #include "golang/reflect/value.h"
 #include "golang/strconv/itoa.h"
 #include "golang/strconv/quote.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/cond.h"
 #include "golang/sync/map.h"
 #include "golang/sync/mutex.h"
 #include "golang/sync/pool.h"

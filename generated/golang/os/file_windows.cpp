@@ -13,8 +13,6 @@
 
 #include "golang/errors/errors.h"
 #include "golang/internal/poll/fd.h"
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
 #include "golang/internal/poll/fd_windows.h"
 #include "golang/internal/syscall/windows/reparse_windows.h"
 #include "golang/internal/syscall/windows/symlink_windows.h"
@@ -29,15 +27,11 @@
 #include "golang/os/stat.h"
 #include "golang/os/types.h"
 #include "golang/runtime/mfinal.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zerrors_windows.h"
 #include "golang/syscall/zsyscall_windows.h"
-#include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::os
 {

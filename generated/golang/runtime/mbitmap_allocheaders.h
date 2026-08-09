@@ -118,6 +118,8 @@ namespace golang::runtime
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/mheap.h"
 
+#include "golang/runtime/type.fwd.h"
+
 namespace golang::runtime
 {
 

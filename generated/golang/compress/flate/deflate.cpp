@@ -13,7 +13,6 @@
 
 #include "golang/compress/flate/deflatefast.h"
 #include "golang/compress/flate/huffman_bit_writer.h"
-#include "golang/compress/flate/huffman_code.h"
 #include "golang/compress/flate/token.h"
 #include "golang/errors/errors.h"
 #include "golang/fmt/errors.h"

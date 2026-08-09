@@ -17,8 +17,6 @@
 #include "golang/internal/oserror/errors.h"
 #include "golang/internal/race/norace.h"
 #include "golang/runtime/extern.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
 #include "golang/syscall/asan0.h"
 #include "golang/syscall/dll_windows.h"

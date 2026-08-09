@@ -15,8 +15,6 @@
 #include "golang/io/fs/fs.h"
 #include "golang/os/stat_windows.h"
 #include "golang/os/types.h"
-#include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::os
 {

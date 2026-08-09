@@ -14,7 +14,6 @@
 #include "golang/errors/errors.h"
 #include "golang/internal/abi/abi.h"
 #include "golang/internal/abi/map.h"
-#include "golang/internal/abi/symtab.h"
 #include "golang/internal/abi/type.h"
 #include "golang/internal/goarch/goarch.h"
 #include "golang/internal/itoa/itoa.h"
@@ -24,15 +23,9 @@
 #include "golang/reflect/makefunc.h"
 #include "golang/reflect/type.h"
 #include "golang/runtime/extern.h"
-#include "golang/runtime/internal/sys/nih.h"
 #include "golang/runtime/mfinal.h"
 #include "golang/runtime/mgc.h"
-#include "golang/runtime/plugin.h"
-#include "golang/runtime/proc.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
 #include "golang/runtime/symtab.h"
-#include "golang/sync/cond.h"
 #include "golang/sync/pool.h"
 
 namespace golang::reflect

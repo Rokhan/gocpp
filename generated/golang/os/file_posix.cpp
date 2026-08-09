@@ -12,25 +12,20 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/poll/fd_fsync_windows.h"
-#include "golang/internal/poll/fd_mutex.h"
 #include "golang/internal/poll/fd_poll_runtime.h"
 #include "golang/internal/poll/fd_posix.h"
 #include "golang/internal/poll/fd_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
 #include "golang/io/fs/fs.h"
-#include "golang/os/dir_windows.h"
 #include "golang/os/error.h"
 #include "golang/os/file.h"
 #include "golang/os/file_windows.h"
 #include "golang/os/path_windows.h"
 #include "golang/os/types.h"
 #include "golang/runtime/mfinal.h"
-#include "golang/sync/mutex.h"
 #include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/types_windows.h"
 #include "golang/syscall/zerrors_windows.h"
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.h"
 
 namespace golang::os
 {

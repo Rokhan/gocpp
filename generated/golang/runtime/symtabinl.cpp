@@ -12,12 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/symtab.h"
-#include "golang/internal/abi/type.h"
-#include "golang/runtime/internal/sys/nih.h"
-#include "golang/runtime/plugin.h"
-#include "golang/runtime/proc.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
 #include "golang/runtime/symtab.h"
 
 namespace golang::runtime

@@ -11,19 +11,12 @@
 #include "golang/os/rawconn.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
 #include "golang/internal/poll/fd_posix.h"
 #include "golang/internal/poll/fd_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
-#include "golang/os/dir_windows.h"
 #include "golang/os/file_posix.h"
 #include "golang/os/file_windows.h"
 #include "golang/os/types.h"
 #include "golang/runtime/mfinal.h"
-#include "golang/sync/mutex.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
 
 namespace golang::os
 {

@@ -12,10 +12,6 @@
 #include "gocpp/support.h"
 
 #include "golang/compress/flate/deflate.h"
-#include "golang/compress/flate/deflatefast.h"
-#include "golang/compress/flate/huffman_bit_writer.h"
-#include "golang/compress/flate/huffman_code.h"
-#include "golang/compress/flate/token.h"
 #include "golang/encoding/binary/binary.h"
 #include "golang/fmt/errors.h"
 #include "golang/hash/adler32/adler32.h"

@@ -35,7 +35,6 @@
 #include "golang/runtime/mheap.h"
 #include "golang/runtime/mpagecache.h"
 #include "golang/runtime/mprof.h"
-#include "golang/runtime/mranges.h"
 #include "golang/runtime/mwbbuf.h"
 #include "golang/runtime/os_windows.h"
 #include "golang/runtime/pagetrace_off.h"
@@ -45,10 +44,7 @@
 #include "golang/runtime/signal_windows.h"
 #include "golang/runtime/symtab.h"
 #include "golang/runtime/time.h"
-#include "golang/runtime/trace2buf.h"
 #include "golang/runtime/trace2runtime.h"
-#include "golang/runtime/trace2status.h"
-#include "golang/runtime/trace2time.h"
 #include "golang/runtime/type.h"
 
 namespace golang::runtime

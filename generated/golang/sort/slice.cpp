@@ -11,7 +11,6 @@
 #include "golang/sort/slice.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/abi/type.h"
 #include "golang/internal/reflectlite/swapper.h"
 #include "golang/internal/reflectlite/value.h"
 #include "golang/math/bits/bits.h"

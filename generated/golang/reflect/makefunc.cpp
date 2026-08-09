@@ -17,7 +17,6 @@
 #include "golang/reflect/abi.h"
 #include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
-#include "golang/sync/cond.h"
 #include "golang/sync/pool.h"
 
 namespace golang::reflect

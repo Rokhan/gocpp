@@ -115,6 +115,8 @@ namespace golang::runtime
 
 #include "golang/runtime/mheap.h"
 
+#include "golang/runtime/type.fwd.h"
+
 namespace golang::runtime
 {
 

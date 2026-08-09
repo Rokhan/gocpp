@@ -67,6 +67,8 @@ namespace golang::os
 
 #include "golang/time/time.h"
 
+#include "golang/os/types.fwd.h"
+
 namespace golang::os
 {
 

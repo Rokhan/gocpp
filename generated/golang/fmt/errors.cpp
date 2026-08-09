@@ -12,10 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/errors/errors.h"
-#include "golang/fmt/format.h"
 #include "golang/fmt/print.h"
-#include "golang/internal/abi/type.h"
-#include "golang/reflect/value.h"
 #include "golang/sort/sort.h"
 
 namespace golang::fmt

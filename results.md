@@ -257,7 +257,7 @@
 | $(ImportDir)/os/dir.go | ✔️ ([cpp](generated/golang/os/dir.cpp), [h](generated/golang/os/dir.h))| ✔️ |
 | $(ImportDir)/os/dir_windows.go | ✔️ ([cpp](generated/golang/os/dir_windows.cpp), [h](generated/golang/os/dir_windows.h))| ❌ |
 | $(ImportDir)/os/env.go | ✔️ ([cpp](generated/golang/os/env.cpp), [h](generated/golang/os/env.h))| ✔️ |
-| $(ImportDir)/os/error.go | ✔️ ([cpp](generated/golang/os/error.cpp), [h](generated/golang/os/error.h))| ❌ |
+| $(ImportDir)/os/error.go | ✔️ ([cpp](generated/golang/os/error.cpp), [h](generated/golang/os/error.h))| ✔️ |
 | $(ImportDir)/os/error_errno.go | ✔️ ([cpp](generated/golang/os/error_errno.cpp), [h](generated/golang/os/error_errno.h))| ✔️ |
 | $(ImportDir)/os/file.go | ✔️ ([cpp](generated/golang/os/file.cpp), [h](generated/golang/os/file.h))| ❌ |
 | $(ImportDir)/os/file_posix.go | ✔️ ([cpp](generated/golang/os/file_posix.cpp), [h](generated/golang/os/file_posix.h))| ❌ |

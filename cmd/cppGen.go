@@ -26,7 +26,10 @@ func printCppIntro(cv *cppConverter, pkgInfos []*pkgInfo, receiversElts set[stri
 	fmt.Fprintf(out, "#include \"%s.h\"\n", cv.shared.supportHeader)
 	fmt.Fprintf(out, "\n")
 
-	includeDependencies(out, cv.shared, pkgInfos, UsesTag, HdrInclude)
+	if pkgInfos != nil {
+		includeDependencies(out, cv.shared, pkgInfos, UsesTag, HdrInclude)
+		fmt.Fprintf(out, "\n")
+	}
 
 	cv.ConvertDoc(cv.astFile.Doc)
 	// Put everything generated in "golang" namespace

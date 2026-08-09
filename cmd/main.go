@@ -108,7 +108,7 @@ func (cv *cppConverter) GenerateId() (id string) {
 	return id
 }
 
-func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, pkgInfos []*pkgInfo, tag tagType, incType includeType) []string {
+func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, pkgInfos []*pkgInfo, tag tagType, incType includeType) set[string] {
 	if pkgInfos == nil {
 		return nil
 	}
@@ -117,7 +117,6 @@ func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, 
 	suffix := getIncludeSuffix(incType)
 
 	var alreadyIncluded set[string] = make(set[string])
-	var nsSet set[string] = make(set[string])
 
 	slices.SortFunc(pkgInfos, func(p1 *pkgInfo, p2 *pkgInfo) int {
 		return strings.Compare(p1.basePath(), p2.basePath())
@@ -125,9 +124,11 @@ func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, 
 
 	for _, pkgInfo := range pkgInfos {
 		if (pkgInfo.tag & tag) != tag {
+			//fmt.Fprintf(out, "// skip, tag value, %v %v %v -- tag: %v\n", globalSubDir, pkgInfo.basePath(), suffix, pkgInfo.tag)
 			continue
 		}
 		if alreadyIncluded.has(pkgInfo.filePath) {
+			//fmt.Fprintf(out, "// skip, duplicate, %v %v %v -- path: %v\n", globalSubDir, pkgInfo.basePath(), suffix, pkgInfo.filePath)
 			continue
 		}
 		alreadyIncluded.add(pkgInfo.filePath)
@@ -140,13 +141,11 @@ func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, 
 				dbgStr = fmt.Sprintf(" /* %s */", pkgInfo.filePath)
 			}
 			fmt.Fprintf(out, "#include \"%v%v%v\"%s\n", globalSubDir, pkgInfo.basePath(), suffix, dbgStr)
-			nsSet.add(pkgInfo.name)
 		case Ignored:
 			fmt.Fprintf(out, "// #include \"%v%v%v\"  [Ignored, known errors]\n", globalSubDir, pkgInfo.basePath(), suffix)
 		}
 	}
-	fmt.Fprintf(out, "\n")
-	return toSortedList(nsSet)
+	return alreadyIncluded
 }
 
 func (cv *cppConverter) includeHeaderDependencies(pkgInfos []*pkgInfo, incType includeType, order *int) (results []*place) {
@@ -516,10 +515,21 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
 	if len(headerEndElts) > 0 {
 		// using io.Discard: just couting the dependencies for headerEndElts
-		deps := includeDependencies(io.Discard, cv.shared, usedPkgInfosHeaderEnd, DefsTag, HdrInclude)
-		if len(deps) > 0 {
+		depsHdr := includeDependencies(io.Discard, cv.shared, usedPkgInfosHeaderEnd, DefsTag, HdrInclude)
+		depsFwd := includeDependencies(io.Discard, cv.shared, usedPkgInfosHeaderEnd, UsesTag, FwdInclude)
+		if len(depsHdr) > 0 && len(depsFwd) > 0 {
 			fmt.Fprintf(cv.hpp.out, "}\n\n")
-			includeDependencies(cv.hpp.out, cv.shared, usedPkgInfosHeaderEnd, DefsTag, HdrInclude)
+			deps := includeDependencies(cv.hpp.out, cv.shared, usedPkgInfosHeaderEnd, DefsTag, HdrInclude)
+			fmt.Fprintf(cv.hpp.out, "\n")
+
+			usedPkgInfosHeaderEnd = slices.DeleteFunc(usedPkgInfosHeaderEnd, func(pi *pkgInfo) bool {
+				return deps.has(pi.filePath)
+			})
+			depsFwd = includeDependencies(cv.hpp.out, cv.shared, usedPkgInfosHeaderEnd, UsesTag, FwdInclude)
+			if len(depsFwd) > 0 {
+				fmt.Fprintf(cv.hpp.out, "\n")
+			}
+
 			hdrInNamespace = false
 		}
 	}
@@ -570,7 +580,8 @@ func (cv *cppConverter) getPackagesUsedByHeaderEnd(headerEndElts []*place, usedP
 	// Collect all depency informations for headerEndElts.
 	headerEndPkgs := set[string]{}
 	for _, place := range headerEndElts {
-		for depPkg := range place.depInfo.depPkgs {
+		di := place.depInfo
+		for depPkg := range di.depPkgs {
 			cv.Logf("headerEndElts: depPkg: %v, place: %v\n", depPkg, cv.Position(place.node))
 			headerEndPkgs.add(depPkg)
 		}

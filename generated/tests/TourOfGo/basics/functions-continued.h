@@ -17,6 +17,24 @@ namespace golang::main
     void main();
     gocpp::unsafe_pointer toto1(int x, int y);
     gocpp::unsafe_pointer toto2(int x, int y);
+}
+#include "golang/fmt/print.h"
+
+namespace golang::main
+{
+    void Formatter(gocpp::slice<fmt::Formatter> ctx);
+    
+    template<typename... Args>
+    void Formatter(Args... ctx)
+    {
+        return Formatter(gocpp::ToSlice<fmt::Formatter>(ctx...));
+    }
+    
+    template<typename... Args>
+    void Formatter(fmt::Formatter value, Args... ctx)
+    {
+        return Formatter(gocpp::ToSlice<fmt::Formatter>(value, ctx...));
+    }
 
     namespace rec
     {

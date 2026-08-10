@@ -42,6 +42,13 @@ namespace golang::main
         mocklib::Println(add(42, 13));
     }
 
+    // Nonreg: there is an ambiguity in identifier dependency tracking code
+    // and declaration of this type was creating an infinite loop in topoSort
+    // (Formater depending on Formater).
+    void Formatter(gocpp::slice<fmt::Formatter> ctx)
+    {
+    }
+
 }
 
 int main()

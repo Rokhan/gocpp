@@ -44,6 +44,32 @@ namespace golang::main
         }
     }
 
+    void sum(gocpp::channel<int> input, gocpp::channel<int> quit)
+    {
+        auto result = 0;
+        for(; ; )
+        {
+            //Go select emulation
+            {
+                int conditionId = -1;
+                int elt;
+                if(input.tryRecv(elt)) { conditionId = 0; }
+                else if(auto [gocpp_ignored , ok] = quit.tryRecv(); ok) { conditionId = 1; }
+                switch(conditionId)
+                {
+                    case 0:
+                        result += elt;
+                        break;
+                    case 1:
+                        mocklib::Println("sum ="_s, result);
+                        return;
+                        break;
+                }
+            }
+            std::this_thread::yield();
+        }
+    }
+
     struct gocpp_id_0
         {
 
@@ -141,6 +167,17 @@ namespace golang::main
             quit.send(0);
         }(); });
         fibonacci(c, quit);
+
+        auto inputs = gocpp::make(gocpp::Tag<gocpp::channel<int>>());
+        gocpp::go([&]{ [=]() mutable -> void
+        {
+            for(auto i = 0; i < 10; i++)
+            {
+                inputs.send(i);
+            }
+            quit.send(0);
+        }(); });
+        sum(inputs, quit);
     }
 
 }

@@ -2665,6 +2665,9 @@ func (cv *cppConverter) appendDepExpr(di *depInfo, expr ast.Expr) {
 	}
 
 	appendMap(&di.depPkgs, cv.getAllUsedPackages(expr))
+	// TODO: getAllUsedNames is probably not the good tool to have always
+	// the good behaviour here as we probably want to use "package.name"
+	// as identifier for external library types and not "package" and "name".
 	appendMap(&di.depIdents, cv.getAllUsedNames(expr))
 
 	if t := cv.typeInfo.Types[expr].Type; t != nil {

@@ -687,6 +687,9 @@ func (depInfo *depInfo) ComputeDeps(dm depMode) {
 	if depInfo.decType != nil {
 		delete(depInfo.dependencies, depInfo.decType.String())
 	}
+	if depInfo.decIdent != "" {
+		delete(depInfo.depIdents, depInfo.decIdent)
+	}
 }
 
 func ComputeDeps(toDo map[string]types.Type, dm depMode) map[string]types.Type {

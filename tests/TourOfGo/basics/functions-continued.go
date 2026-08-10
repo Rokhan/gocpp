@@ -27,3 +27,9 @@ func toto2(x, y int) unsafe.Pointer {
 func main() {
 	fmt.Println(add(42, 13))
 }
+
+// Nonreg: there is an ambiguity in identifier dependency tracking code
+// and declaration of this type was creating an infinite loop in topoSort
+// (Formater depending on Formater).
+func Formatter(ctx ...fmt.Formatter) {
+}

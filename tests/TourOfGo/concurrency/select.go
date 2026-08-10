@@ -18,6 +18,19 @@ func fibonacci(c, quit chan int) {
 	}
 }
 
+func sum(input chan int, quit chan int) {
+	result := 0
+	for {
+		select {
+		case elt := <-input:
+			result += elt
+		case <-quit:
+			fmt.Println("sum =", result)
+			return
+		}
+	}
+}
+
 // from src\runtime\trace2.go:967:3
 func testInlinedType() {
 	var wakeup chan struct{}
@@ -38,4 +51,13 @@ func main() {
 		quit <- 0
 	}()
 	fibonacci(c, quit)
+
+	inputs := make(chan int)
+	go func() {
+		for i := 0; i < 10; i++ {
+			inputs <- i
+		}
+		quit <- 0
+	}()
+	sum(inputs, quit)
 }

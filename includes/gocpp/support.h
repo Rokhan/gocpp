@@ -518,6 +518,7 @@ namespace gocpp
     template <typename T, typename Error>
     struct result_or_error : std::pair<T, bool>
     {
+        result_or_error() {}
         result_or_error(const std::pair<T, bool>& src) : std::pair<T, bool>(src) {}
 
         operator const T() const 
@@ -603,6 +604,13 @@ namespace gocpp
         {
             return mImpl->tryReceive();
         }
+        
+        bool tryRecv(T& val)
+        {
+            auto optVal = mImpl->tryReceive();
+            val = optVal.first;
+            return optVal.second;
+        }
 
         void send(T val)
         {
@@ -612,8 +620,8 @@ namespace gocpp
         bool recv(T& val)
         {
             auto optVal = mImpl->receive();
-            val = optVal.value;
-            return optVal.hasValue;
+            val = optVal.first;
+            return optVal.second;
         }
 
         result_or_error<T, ErrNoValueInChannel> recv()

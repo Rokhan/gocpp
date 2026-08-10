@@ -465,6 +465,7 @@ type blockEnv struct {
 	typeSwitchVarName string
 
 	switchLabel *ast.Ident
+	selectVars  *[]ast.Expr
 }
 
 // maybe should be merged with blockEnv ?
@@ -476,11 +477,11 @@ type blockOption struct {
 var blockOptInline = blockOption{"", nil}
 
 func makeBlockEnv(env stmtEnv, isFunc bool) blockEnv {
-	return blockEnv{env, isFunc, Ptr(false), false, "", "", nil}
+	return blockEnv{env, isFunc, Ptr(false), false, "", "", nil, &[]ast.Expr{}}
 }
 
 func makeSubBlockEnv(env blockEnv, isFunc bool) blockEnv {
-	return blockEnv{env.stmtEnv, isFunc, env.useDefer, env.isTypeSwitch, env.typeSwitchVarName, env.switchVarName, env.switchLabel}
+	return blockEnv{env.stmtEnv, isFunc, env.useDefer, env.isTypeSwitch, env.typeSwitchVarName, env.switchVarName, env.switchLabel, &[]ast.Expr{}}
 }
 
 func Last[EltType any](elts []EltType) (EltType, bool) {

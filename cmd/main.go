@@ -2016,8 +2016,19 @@ func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, con
 
 	cv.WritterExprPrintf(cppOut, "%sint %s = -1;\n", cv.cpp.Indent(), conditionVarName)
 	se := switchEnvName{inputVarName, conditionVarName, "", inputVarName != "", env.isTypeSwitch}
-	caseDefs := cv.extractCaseExpr(body, &se)
-	outPlaces = append(outPlaces, caseDefs...)
+
+	prevSelectVars := env.selectVars
+	cases := cv.withCppBuffer(func() {
+		caseDefs := cv.extractCaseExpr(body, &se, env)
+		outPlaces = append(outPlaces, caseDefs...)
+	})
+
+	for _, v := range *env.selectVars {
+		cv.WritterExprPrintf(cppOut, "%s%s %s;\n", cv.cpp.Indent(), cv.convertExprCppType(v), cv.convertExpr(v))
+	}
+	env.selectVars = prevSelectVars
+	fmt.Fprintf(cv.cpp.out, "%s", cases)
+
 	cv.WritterExprPrintf(cppOut, "%sswitch(%s)\n", cv.cpp.Indent(), conditionVarName)
 
 	cv.startSwitchScope(env.switchLabel)
@@ -2034,14 +2045,14 @@ func (cv *cppConverter) convertSwitchBody(env blockEnv, body *ast.BlockStmt, con
 
 	return
 }
-func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) (outPlaces []place) {
+func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName, env blockEnv) (outPlaces []place) {
 	cppOut := mkCppWritter(cv.cpp.out)
 
 	switch s := stmt.(type) {
 	case *ast.BlockStmt:
 		cv.startSwitchScope(nil)
 		for _, stmt := range s.List {
-			elts := cv.extractCaseExpr(stmt, se)
+			elts := cv.extractCaseExpr(stmt, se, env)
 			outPlaces = append(outPlaces, elts...)
 		}
 		cv.endSwitchScope(nil)
@@ -2066,9 +2077,11 @@ func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) (outPl
 		id := cv.getSwitchId()
 		switch comm := s.Comm.(type) {
 		case *ast.SendStmt:
-			cv.WritterExprPrintf(cppOut, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(s.Comm), se.conditionVarName, id)
+			cv.WritterExprPrintf(cppOut, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(s.Comm, env), se.conditionVarName, id)
 		case *ast.ExprStmt:
-			cv.WritterExprPrintf(cppOut, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(comm.X), se.conditionVarName, id)
+			cv.WritterExprPrintf(cppOut, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(comm.X, env), se.conditionVarName, id)
+		case *ast.AssignStmt:
+			cv.WritterExprPrintf(cppOut, "%s%sif(%s) { %s = %d; }\n", cv.cpp.Indent(), se.prefix, cv.convertSelectCaseNode(comm, env), se.conditionVarName, id)
 		case nil:
 			/* default, nothing to do */
 		default:
@@ -2085,7 +2098,7 @@ func (cv *cppConverter) extractCaseExpr(stmt ast.Stmt, se *switchEnvName) (outPl
 	return
 }
 
-func (cv *cppConverter) convertSelectCaseNode(node ast.Node) (result cppExpr) {
+func (cv *cppConverter) convertSelectCaseNode(node ast.Node, env blockEnv) (result cppExpr) {
 	switch n := node.(type) {
 	case nil:
 		return
@@ -2094,7 +2107,7 @@ func (cv *cppConverter) convertSelectCaseNode(node ast.Node) (result cppExpr) {
 		return ExprPrintf("%s.trySend(%s)", cv.convertExpr(n.Chan), cv.convertExpr(n.Value))
 
 	case *ast.ExprStmt:
-		return cv.convertSelectCaseNode(n.X)
+		return cv.convertSelectCaseNode(n.X, env)
 
 	case *ast.UnaryExpr:
 		switch {
@@ -2103,6 +2116,19 @@ func (cv *cppConverter) convertSelectCaseNode(node ast.Node) (result cppExpr) {
 		default:
 			cv.Panicf("convertSelectCaseStmt,unmanaged token: [%v], inout: %v", reflect.TypeOf(n.Op), cv.Position(n))
 		}
+
+	case *ast.AssignStmt:
+		if len(n.Lhs) == 1 && len(n.Rhs) == 1 {
+			switch send := n.Rhs[0].(type) {
+			case *ast.UnaryExpr:
+				if send.Op == token.ARROW {
+					varName := cv.convertExpr(n.Lhs[0])
+					*env.selectVars = append(*env.selectVars, n.Lhs[0])
+					return ExprPrintf("%s.tryRecv(%v)", cv.convertExpr(send.X), varName)
+				}
+			}
+		}
+		cv.Panicf("convertSelectCaseStmt, unmanaged assignement: [%v], inout: %v", reflect.TypeOf(n), cv.Position(n))
 
 	default:
 		cv.Panicf("convertSelectCaseStmt, unmanaged node: [%v], inout: %v", reflect.TypeOf(n), cv.Position(n))
@@ -2745,9 +2771,13 @@ func (cv *cppConverter) checkStructType(expr ast.Expr, cppType *cppType) {
 }
 
 func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
-
 	idType := cv.typeInfo.Types[id].Type
-	pkg := cv.typeInfo.Uses[id].Pkg()
+	use := cv.typeInfo.Uses[id]
+	if use == nil {
+		// Probable misuse of the function or of a parent function if we get here
+		cv.Panicf("isTypedef, nil 'use' object, the identifier does not represent a type. id: %v, type: %v\n", types.ExprString(id), idType)
+	}
+	pkg := use.Pkg()
 
 	pkgName := ""
 	if pkg != nil {
@@ -2855,7 +2885,7 @@ type ctContext struct {
 // Maybe merge this function with "convertExprCppType" in future ?
 func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 	if node == nil {
-		panic("node is nil")
+		cv.Panicf("node is nil")
 	}
 
 	if ctx.namespace == "" {
@@ -3693,6 +3723,11 @@ func withFileBuffer(action action, file *outFile) string {
 // Maybe merge this function with "convertExpr" in future ?
 // Maybe merge this function with "convertExprToType" in future ?
 // Maybe merge this function with "convertTypeExpr" in future ?
+//
+// The distinction between this two role should be clarified:
+//
+//	-> function that parse an expression that represent a type
+//	-> function that give the type of a particular expression
 func (cv *cppConverter) convertExprCppType(node ast.Expr) cppType {
 	if node == nil {
 		return mkCppType("", nil)

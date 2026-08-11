@@ -149,6 +149,16 @@ namespace gocpp
         }
     };
 
+    template <typename Tuple, typename... Ts> decltype(auto) init_multi(Tuple&& t, Ts&... refs)
+    {
+        return std::apply([&](auto&& head, auto&&... rest) -> decltype(auto) 
+        {
+            static_assert(sizeof...(rest) == sizeof...(refs),"init: need exactly one reference per remaining tuple element");
+            ((refs = std::forward<decltype(rest)>(rest)), ...);
+            return std::forward<decltype(head)>(head);
+        }, std::forward<Tuple>(t));
+    }
+
     struct go_any : std::any {
         using any::any;
     };

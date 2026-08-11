@@ -2305,11 +2305,8 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 			}
 
 			if isNamespace {
-				if s.Type == nil {
+				if s.Type == nil && len(values) == len(s.Names) {
 					for i := range s.Names {
-						if len(values) == 0 {
-							cv.Panicf("convertSpecs, can't compute get variable type: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
-						}
 						expr := cv.convertExpr(values[i])
 						exprType := cv.convertExprCppType(values[i])
 						exprType.comments = append(exprType.comments, comments...)
@@ -2342,6 +2339,26 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 							}
 						}
 					}
+				} else if s.Type == nil && len(values) == 1 {
+					names := []string{}
+					for i, name := range s.Names {
+						exprType := cv.convertExprCppType(name)
+						if i == 0 {
+							result = append(result, headerStrf(s, "extern %s %s%s", exprType, name, end)...)
+						} else if name.Name == "_" {
+							names = append(names, "_")
+						} else {
+							names = append(names, GetCppName(name.Name))
+							result = append(result, headerStrf(s, "extern %s %s%s", exprType, name, end)...)
+							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
+						}
+					}
+					name0 := GetCppName(s.Names[0].Name)
+					type0 := cv.convertExprCppType(s.Names[0])
+					namesStr := strings.Join(names, ", ")
+					result = append(result, inlineStrf(s, "%s %s = gocpp::init_multi(%s, %s)%s", type0, name0, cv.convertExpr(values[0]), namesStr, end)...)
+				} else if s.Type == nil {
+					cv.Panicf("convertSpecs, mismatch #%d name for #%d values. type: %v, input: %v", len(s.Names), len(values), reflect.TypeOf(s), cv.Position(s))
 				} else {
 					for i := range s.Names {
 						name := GetCppName(s.Names[i].Name)

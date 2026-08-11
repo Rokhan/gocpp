@@ -3,10 +3,17 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var c, python, java bool
 var ii, jj, kk int = 3, 4, 5
+
+// var debug, _ = strconv.ParseBool(os.Getenv("GOPACKAGESDEBUG"))
+var debug, _ = ParseBool("True")
+var v1, v2, v3, v4 = FourValues()
+var u1, u2, _, u3 = FourValues()
 
 type pos struct {
 	x, y int
@@ -67,6 +74,10 @@ func main() {
 	fmt.Println(ii, s)
 	withNamedResults()
 	inlineAssign(99)
+
+	fmt.Println(debug)
+	fmt.Println(v1, v2, v3, v4)
+	fmt.Println(u1, u2, u3)
 }
 
 func withNamedResults() (i int, s string) {
@@ -138,3 +149,17 @@ func do()       {}
 func while()    {}
 func template() {}
 func class()    {}
+
+func ParseBool(str string) (bool, error) {
+	switch str {
+	case "1", "t", "T", "true", "TRUE", "True":
+		return true, nil
+	case "0", "f", "F", "false", "FALSE", "False":
+		return false, nil
+	}
+	return false, fmt.Errorf("ParseBool: %s", str)
+}
+
+func FourValues() (bool, string, int, float64) {
+	return true, "aaa", 123, 1.23
+}

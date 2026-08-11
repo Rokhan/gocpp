@@ -2,7 +2,7 @@
 GO_TEST_DIRS:=$(wildcard ./tests ./tests/*/*/)
 GO_TEST_DIRS:=$(filter-out ./tests/TourOfGo/img/, $(GO_TEST_DIRS))
 
-GO_TEST_FILES=$(wildcard tests/*.go tests/*/*/*.go)
+GO_TEST_FILES=$(wildcard tests/*.go tests/*/*.go tests/*/*/*.go)
 OUTDIR=generated
 LOGDIR=log
 SUPPORT_FILES=includes/gocpp/support.h includes/gocpp/support.fwd.h

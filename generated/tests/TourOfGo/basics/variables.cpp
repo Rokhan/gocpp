@@ -11,6 +11,7 @@
 #include "tests/TourOfGo/basics/variables.h"
 #include "gocpp/support.h"
 
+#include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"
 
 namespace golang::main
@@ -25,6 +26,14 @@ namespace golang::main
     int ii = 3;
     int jj = 4;
     int kk = 5;
+    bool debug = gocpp::init_multi(ParseBool("True"_s), _);
+    gocpp::string v2;
+    int v3;
+    double v4;
+    bool v1 = gocpp::init_multi(FourValues(), v2, v3, v4);
+    gocpp::string u2;
+    double u3;
+    bool u1 = gocpp::init_multi(FourValues(), u2, _, u3);
     
     template<typename T> requires gocpp::GoStruct<T>
     pos::operator T()
@@ -108,6 +117,10 @@ namespace golang::main
         mocklib::Println(ii, s);
         withNamedResults();
         inlineAssign(99);
+
+        mocklib::Println(debug);
+        mocklib::Println(v1, v2, v3, v4);
+        mocklib::Println(u1, u2, u3);
     }
 
     std::tuple<int, gocpp::string> withNamedResults()
@@ -205,6 +218,52 @@ namespace golang::main
 
     void go_class()
     {
+    }
+
+    std::tuple<bool, gocpp::error> ParseBool(gocpp::string str)
+    {
+        //Go switch emulation
+        {
+            auto condition = str;
+            int conditionId = -1;
+            if(condition == "1"_s) { conditionId = 0; }
+            else if(condition == "t"_s) { conditionId = 1; }
+            else if(condition == "T"_s) { conditionId = 2; }
+            else if(condition == "true"_s) { conditionId = 3; }
+            else if(condition == "TRUE"_s) { conditionId = 4; }
+            else if(condition == "True"_s) { conditionId = 5; }
+            else if(condition == "0"_s) { conditionId = 6; }
+            else if(condition == "f"_s) { conditionId = 7; }
+            else if(condition == "F"_s) { conditionId = 8; }
+            else if(condition == "false"_s) { conditionId = 9; }
+            else if(condition == "FALSE"_s) { conditionId = 10; }
+            else if(condition == "False"_s) { conditionId = 11; }
+            switch(conditionId)
+            {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                    return {true, nullptr};
+                    break;
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                    return {false, nullptr};
+                    break;
+            }
+        }
+        return {false, mocklib::Errorf("ParseBool: %s"_s, str)};
+    }
+
+    std::tuple<bool, gocpp::string, int, double> FourValues()
+    {
+        return {true, "aaa"_s, 123, 1.23};
     }
 
 }

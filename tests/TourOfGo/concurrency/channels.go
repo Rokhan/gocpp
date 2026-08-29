@@ -13,6 +13,10 @@ func sum(s []int, c chan int) {
 	c <- sum // send sum to c
 }
 
+func NullChannel() <-chan struct{} {
+	return nil
+}
+
 func main() {
 	s := []int{7, 2, 8, -9, 4, 0}
 
@@ -31,4 +35,14 @@ func main() {
 	y = <-c // receive from c
 
 	fmt.Println(x, y, x+y)
+
+	c = nil
+	if c == nil {
+		fmt.Println("nil channel 1")
+	}
+
+	nc := NullChannel()
+	if nc == nil {
+		fmt.Println("nil channel 2")
+	}
 }

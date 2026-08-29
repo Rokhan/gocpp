@@ -559,8 +559,15 @@ namespace gocpp
     public:
         channel() : mImpl(std::make_shared<channelImpl<T>>()) {}
 
+        channel(nullptr_t) : mImpl(nullptr) {}
+
         // TODO: use capacity
         channel(int capacity) : mImpl(std::make_shared<channelImpl<T>>(capacity)) {}
+
+        inline friend bool operator==(const channel<T>& lhs, const channel<T> rhs)
+        {
+            return lhs.mImpl.get() == rhs.mImpl.get();
+        }
 
         struct channel_iterator
         {

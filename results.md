@@ -162,7 +162,7 @@
 | $(ImportDir)/fmt/scan.go | ✔️ ([cpp](generated/golang/fmt/scan.cpp), [h](generated/golang/fmt/scan.h))| ❌ |
 | $(ImportDir)/go/ast/ast.go | ✔️ ([cpp](generated/golang/go/ast/ast.cpp), [h](generated/golang/go/ast/ast.h))| ❌ |
 | $(ImportDir)/go/ast/print.go | ✔️ ([cpp](generated/golang/go/ast/print.cpp), [h](generated/golang/go/ast/print.h))| ❌ |
-| $(ImportDir)/go/ast/resolve.go | ✔️ ([cpp](generated/golang/go/ast/resolve.cpp), [h](generated/golang/go/ast/resolve.h))| ❌ |
+| $(ImportDir)/go/ast/resolve.go | ✔️ ([cpp](generated/golang/go/ast/resolve.cpp), [h](generated/golang/go/ast/resolve.h))| ✔️ |
 | $(ImportDir)/go/ast/scope.go | ✔️ ([cpp](generated/golang/go/ast/scope.cpp), [h](generated/golang/go/ast/scope.h))| ❌ |
 | $(ImportDir)/go/ast/walk.go | ✔️ ([cpp](generated/golang/go/ast/walk.cpp), [h](generated/golang/go/ast/walk.h))| ✔️ |
 | $(ImportDir)/go/build/build.go | ✔️ ([cpp](generated/golang/go/build/build.cpp), [h](generated/golang/go/build/build.h))| ❌ |
@@ -268,8 +268,8 @@
 | $(ImportDir)/golang.org/x/tools/internal/aliases/aliases.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/aliases/aliases.cpp), [h](generated/golang/golang.org/x/tools/internal/aliases/aliases.h))| ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/aliases/aliases_go122.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/aliases/aliases_go122.cpp), [h](generated/golang/golang.org/x/tools/internal/aliases/aliases_go122.h))| ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/event/core/event.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/event/core/event.cpp), [h](generated/golang/golang.org/x/tools/internal/event/core/event.h))| ❌ |
-| $(ImportDir)/golang.org/x/tools/internal/event/core/export.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/event/core/export.cpp), [h](generated/golang/golang.org/x/tools/internal/event/core/export.h))| ❌ |
-| $(ImportDir)/golang.org/x/tools/internal/event/event.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/event/event.cpp), [h](generated/golang/golang.org/x/tools/internal/event/event.h))| ❌ |
+| $(ImportDir)/golang.org/x/tools/internal/event/core/export.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/event/core/export.cpp), [h](generated/golang/golang.org/x/tools/internal/event/core/export.h))| ✔️ |
+| $(ImportDir)/golang.org/x/tools/internal/event/event.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/event/event.cpp), [h](generated/golang/golang.org/x/tools/internal/event/event.h))| ✔️ |
 | $(ImportDir)/golang.org/x/tools/internal/event/keys/keys.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/event/keys/keys.cpp), [h](generated/golang/golang.org/x/tools/internal/event/keys/keys.h))| ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/event/keys/standard.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/event/keys/standard.cpp), [h](generated/golang/golang.org/x/tools/internal/event/keys/standard.h))| ✔️ |
 | $(ImportDir)/golang.org/x/tools/internal/event/label/label.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/event/label/label.cpp), [h](generated/golang/golang.org/x/tools/internal/event/label/label.h))| ❌ |
@@ -396,7 +396,7 @@
 | $(ImportDir)/io/fs/fs.go | ✔️ ([cpp](generated/golang/io/fs/fs.cpp), [h](generated/golang/io/fs/fs.h))| ✔️ |
 | $(ImportDir)/io/fs/readdir.go | ✔️ ([cpp](generated/golang/io/fs/readdir.cpp), [h](generated/golang/io/fs/readdir.h))| ✔️ |
 | $(ImportDir)/io/fs/stat.go | ✔️ ([cpp](generated/golang/io/fs/stat.cpp), [h](generated/golang/io/fs/stat.h))| ✔️ |
-| $(ImportDir)/io/fs/walk.go | ✔️ ([cpp](generated/golang/io/fs/walk.cpp), [h](generated/golang/io/fs/walk.h))| ❌ |
+| $(ImportDir)/io/fs/walk.go | ✔️ ([cpp](generated/golang/io/fs/walk.cpp), [h](generated/golang/io/fs/walk.h))| ✔️ |
 | $(ImportDir)/io/io.go | ✔️ ([cpp](generated/golang/io/io.cpp), [h](generated/golang/io/io.h))| ✔️ |
 | $(ImportDir)/log/internal/internal.go | ✔️ ([cpp](generated/golang/log/internal/internal.cpp), [h](generated/golang/log/internal/internal.h))| ✔️ |
 | $(ImportDir)/log/log.go | ✔️ ([cpp](generated/golang/log/log.cpp), [h](generated/golang/log/log.h))| ❌ |
@@ -472,7 +472,7 @@
 | $(ImportDir)/os/types.go | ✔️ ([cpp](generated/golang/os/types.cpp), [h](generated/golang/os/types.h))| ✔️ |
 | $(ImportDir)/os/types_windows.go | ✔️ ([cpp](generated/golang/os/types_windows.cpp), [h](generated/golang/os/types_windows.h))| ❌ |
 | $(ImportDir)/os/zero_copy_stub.go | ✔️ ([cpp](generated/golang/os/zero_copy_stub.cpp), [h](generated/golang/os/zero_copy_stub.h))| ❌ |
-| $(ImportDir)/path/filepath/path.go | ✔️ ([cpp](generated/golang/path/filepath/path.cpp), [h](generated/golang/path/filepath/path.h))| ❌ |
+| $(ImportDir)/path/filepath/path.go | ✔️ ([cpp](generated/golang/path/filepath/path.cpp), [h](generated/golang/path/filepath/path.h))| ✔️ |
 | $(ImportDir)/path/filepath/path_windows.go | ✔️ ([cpp](generated/golang/path/filepath/path_windows.cpp), [h](generated/golang/path/filepath/path_windows.h))| ✔️ |
 | $(ImportDir)/path/filepath/symlink.go | ✔️ ([cpp](generated/golang/path/filepath/symlink.cpp), [h](generated/golang/path/filepath/symlink.h))| ✔️ |
 | $(ImportDir)/path/filepath/symlink_windows.go | ✔️ ([cpp](generated/golang/path/filepath/symlink_windows.cpp), [h](generated/golang/path/filepath/symlink_windows.h))| ✔️ |

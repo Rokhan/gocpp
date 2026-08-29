@@ -1736,6 +1736,16 @@ namespace mocklib
 
     struct Date
     {
+        Date() = default;
+        Date(const Date&) = default;
+        Date& operator=(const Date&) = default;
+
+        inline Date(const golang::time::Time&) {};
+
+        // declared for mocking, not implemented anywhere.
+        // mocklib::Date will be removed when linking will be implemented
+        operator golang::time::Time();
+
         static Date Now() { return Date{}; };
         static const int Saturday = 6;
     };

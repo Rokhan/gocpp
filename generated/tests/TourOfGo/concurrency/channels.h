@@ -13,6 +13,7 @@
 namespace golang::main
 {
     void sum(gocpp::slice<int> s, gocpp::channel<int> c);
+    gocpp::channel<gocpp_id_0> NullChannel();
     void main();
 
     namespace rec

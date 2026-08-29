@@ -30,6 +30,43 @@ namespace golang::main
         c.send(sum);
     }
 
+    struct gocpp_id_0
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T()
+        {
+            T result;
+            return result;
+        }
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const
+        {
+            return true;
+        }
+
+        std::ostream& PrintTo(std::ostream& os) const
+        {
+            os << '{';
+            os << '}';
+            return os;
+        }
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    {
+        return value.PrintTo(os);
+    }
+
+
+    gocpp::channel<gocpp_id_0> NullChannel()
+    {
+        return nullptr;
+    }
+
     void main()
     {
         auto s = gocpp::slice<int> {7, 2, 8, - 9, 4, 0};
@@ -52,6 +89,18 @@ namespace golang::main
         y = c.recv();
 
         mocklib::Println(x, y, x + y);
+
+        c = nullptr;
+        if(c == nullptr)
+        {
+            mocklib::Println("nil channel 1"_s);
+        }
+
+        auto nc = NullChannel();
+        if(nc == nullptr)
+        {
+            mocklib::Println("nil channel 2"_s);
+        }
     }
 
 }

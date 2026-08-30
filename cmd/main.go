@@ -1766,6 +1766,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			cv.WritterExprPrintf(cppOut, "%sauto %s = %s;\n", cv.cpp.Indent(), inputVarName, cv.convertExpr(s.Tag))
 		}
 
+		env.isTypeSwitch = false
 		env.switchLabel = label
 		outPlaces = cv.convertSwitchBody(env, s.Body, "conditionId", inputVarName)
 
@@ -1793,8 +1794,6 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			cv.WritterExprPrintf(cppOut, "%sconst auto& %s = gocpp::type_info(%s);\n", cv.cpp.Indent(), switchVarName, switchExpr)
 		}
 
-		env.isTypeSwitch = true
-
 		if inputVarName.str != switchExpr.str {
 			env.typeSwitchVarName = inputVarName.str
 			env.switchVarName = switchExpr.str
@@ -1804,6 +1803,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 			cv.WritterExprPrintf(cppOut, "%sconst auto& %s = %s;\n", cv.cpp.Indent(), env.switchVarName, env.typeSwitchVarName)
 		}
 
+		env.isTypeSwitch = true
 		outPlaces = cv.convertSwitchBody(env, s.Body, "conditionId", switchVarName)
 
 		if s.Init != nil {
@@ -1815,6 +1815,7 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		cv.WritterExprPrintf(cppOut, "%s{\n", cv.cpp.Indent())
 		cv.cpp.indent++
 
+		env.isTypeSwitch = false
 		outPlaces = cv.convertSwitchBody(env, s.Body, "conditionId", "")
 		cv.WritterExprPrintf(cppOut, "%sstd::this_thread::yield();\n", cv.cpp.Indent())
 

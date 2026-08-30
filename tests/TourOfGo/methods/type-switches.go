@@ -3,7 +3,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+)
 
 func do(i interface{}) {
 	switch v := i.(type) {
@@ -13,6 +16,26 @@ func do(i interface{}) {
 		fmt.Printf("%q is %v bytes long\n", v, len(v))
 	default:
 		fmt.Printf("I don't know about type %T!\n", v)
+	}
+}
+
+func do_withSecondarySwitch(i interface{}) {
+	switch v := i.(type) {
+	case int:
+		fmt.Printf("Twice %v is %v\n", v, v*2)
+	case string:
+		fmt.Printf("%q is %v bytes long\n", v, len(v))
+	default:
+		fmt.Printf("I don't know about type %T!\n", v)
+		fmt.Print("\nGo runs on ")
+		switch os := runtime.GOOS; os {
+		default:
+			fmt.Println(os)
+		case "darwin":
+			fmt.Println("OS X.")
+		case "linux", "gnu/linux", "debian":
+			fmt.Println("Linux.")
+		}
 	}
 }
 
@@ -52,4 +75,9 @@ func main() {
 	do_WithNameReused(21)
 	do_WithNameReused("hello")
 	do_WithNameReused(true)
+
+	fmt.Println("\n----")
+	do_withSecondarySwitch(21)
+	do_withSecondarySwitch("hello")
+	do_withSecondarySwitch(true)
 }

@@ -421,37 +421,27 @@ namespace golang::types
                         {
                             auto condition = x.mode;
                             int conditionId = -1;
-                            if(condition == typeid(types::operandMode)) { conditionId = 0; }
-                            else if(condition == typeid(types::operandMode)) { conditionId = 1; }
-                            else if(condition == typeid(types::operandMode)) { conditionId = 2; }
+                            if(condition == typexpr) { conditionId = 0; }
+                            else if(condition == invalid) { conditionId = 1; }
+                            else if(condition == novalue) { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:
                                 {
-                                    types::operandMode e0 = gocpp::any_cast<types::operandMode>(e);
                                     auto typ = x.typ;
                                     setDefType(def, typ);
                                     return typ;
                                     break;
                                 }
                                 case 1:
-                                {
-                                    types::operandMode e0 = gocpp::any_cast<types::operandMode>(e);
                                     break;
-                                }
                                 // ignore - error reported before
                                 case 2:
-                                {
-                                    types::operandMode e0 = gocpp::any_cast<types::operandMode>(e);
                                     rec::errorf(gocpp::recv(check), & x, NotAType, "%s used as type"_s, & x);
                                     break;
-                                }
                                 default:
-                                {
-                                    auto e0 = e;
                                     rec::errorf(gocpp::recv(check), & x, NotAType, "%s is not a type"_s, & x);
                                     break;
-                                }
                             }
                         }
                         break;
@@ -466,37 +456,27 @@ namespace golang::types
                         {
                             auto condition = x.mode;
                             int conditionId = -1;
-                            if(condition == typeid(types::operandMode)) { conditionId = 0; }
-                            else if(condition == typeid(types::operandMode)) { conditionId = 1; }
-                            else if(condition == typeid(types::operandMode)) { conditionId = 2; }
+                            if(condition == typexpr) { conditionId = 0; }
+                            else if(condition == invalid) { conditionId = 1; }
+                            else if(condition == novalue) { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:
                                 {
-                                    types::operandMode e0 = gocpp::any_cast<types::operandMode>(e);
                                     auto typ = x.typ;
                                     setDefType(def, typ);
                                     return typ;
                                     break;
                                 }
                                 case 1:
-                                {
-                                    types::operandMode e0 = gocpp::any_cast<types::operandMode>(e);
                                     break;
-                                }
                                 // ignore - error reported before
                                 case 2:
-                                {
-                                    types::operandMode e0 = gocpp::any_cast<types::operandMode>(e);
                                     rec::errorf(gocpp::recv(check), & x, NotAType, "%s used as type"_s, & x);
                                     break;
-                                }
                                 default:
-                                {
-                                    auto e0 = e;
                                     rec::errorf(gocpp::recv(check), & x, NotAType, "%s is not a type"_s, & x);
                                     break;
-                                }
                             }
                         }
                         break;
@@ -644,36 +624,24 @@ namespace golang::types
                         {
                             auto condition = e->Dir;
                             int conditionId = -1;
-                            if(condition == typeid(ast::ChanDir)) { conditionId = 0; }
-                            else if(condition == typeid(ast::ChanDir)) { conditionId = 1; }
-                            else if(condition == typeid(ast::ChanDir)) { conditionId = 2; }
+                            if(condition == ast::SEND | ast::RECV) { conditionId = 0; }
+                            else if(condition == ast::SEND) { conditionId = 1; }
+                            else if(condition == ast::RECV) { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:
-                                {
-                                    ast::ChanDir e0 = gocpp::any_cast<ast::ChanDir>(e);
                                     break;
-                                }
                                 // nothing to do
                                 case 1:
-                                {
-                                    ast::ChanDir e0 = gocpp::any_cast<ast::ChanDir>(e);
                                     dir = SendOnly;
                                     break;
-                                }
                                 case 2:
-                                {
-                                    ast::ChanDir e0 = gocpp::any_cast<ast::ChanDir>(e);
                                     dir = RecvOnly;
                                     break;
-                                }
                                 // ok to continue
                                 default:
-                                {
-                                    auto e0 = e;
                                     rec::errorf(gocpp::recv(check), e, InvalidSyntaxTree, "unknown channel direction %d"_s, e->Dir);
                                     break;
-                                }
                             }
                         }
                         typ->dir = dir;

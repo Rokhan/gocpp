@@ -1228,29 +1228,20 @@ namespace golang::gcimporter
                         {
                             auto condition = rec::Dir(gocpp::recv(t));
                             int conditionId = -1;
-                            if(condition == typeid(types::ChanDir)) { conditionId = 0; }
-                            else if(condition == typeid(types::ChanDir)) { conditionId = 1; }
-                            else if(condition == typeid(types::ChanDir)) { conditionId = 2; }
+                            if(condition == types::RecvOnly) { conditionId = 0; }
+                            else if(condition == types::SendOnly) { conditionId = 1; }
+                            else if(condition == types::SendRecv) { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:
-                                {
-                                    types::ChanDir t_ref = gocpp::any_cast<types::ChanDir>(t);
                                     dir = 1;
                                     break;
-                                }
                                 case 1:
-                                {
-                                    types::ChanDir t_ref = gocpp::any_cast<types::ChanDir>(t);
                                     dir = 2;
                                     break;
-                                }
                                 case 2:
-                                {
-                                    types::ChanDir t_ref = gocpp::any_cast<types::ChanDir>(t);
                                     dir = 3;
                                     break;
-                                }
                             }
                         }
                         rec::uint64(gocpp::recv(w), dir);

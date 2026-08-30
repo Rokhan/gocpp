@@ -564,39 +564,31 @@ namespace golang::types
                     {
                         auto condition = gocpp::getValue<Basic*>(x->typ)->kind;
                         int conditionId = -1;
-                        if(condition == typeid(types::BasicKind)) { conditionId = 0; }
-                        else if(condition == typeid(types::BasicKind)) { conditionId = 1; }
-                        else if(condition == typeid(types::BasicKind)) { conditionId = 2; }
-                        else if(condition == typeid(types::BasicKind)) { conditionId = 3; }
-                        else if(condition == typeid(types::BasicKind)) { conditionId = 4; }
-                        else if(condition == typeid(types::BasicKind)) { conditionId = 5; }
-                        else if(condition == typeid(types::BasicKind)) { conditionId = 6; }
+                        if(condition == UntypedBool) { conditionId = 0; }
+                        else if(condition == UntypedInt) { conditionId = 1; }
+                        else if(condition == UntypedRune) { conditionId = 2; }
+                        else if(condition == UntypedFloat) { conditionId = 3; }
+                        else if(condition == UntypedComplex) { conditionId = 4; }
+                        else if(condition == UntypedString) { conditionId = 5; }
+                        else if(condition == UntypedNil) { conditionId = 6; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                types::BasicKind types::under(target) = gocpp::any_cast<types::BasicKind>(u);
                                 if(! isBoolean(target))
                                 {
                                     return {nullptr, nullptr, InvalidUntypedConversion};
                                 }
                                 break;
-                            }
                             case 1:
                             case 2:
                             case 3:
                             case 4:
-                            {
-                                types::BasicKind types::under(target) = gocpp::any_cast<types::BasicKind>(u);
                                 if(! isNumeric(target))
                                 {
                                     return {nullptr, nullptr, InvalidUntypedConversion};
                                 }
                                 break;
-                            }
                             case 5:
-                            {
-                                types::BasicKind types::under(target) = gocpp::any_cast<types::BasicKind>(u);
                                 // Non-constant untyped string values are not permitted by the spec and
                                 // should not occur during normal typechecking passes, but this path is
                                 // reachable via the AssignableTo API.
@@ -605,10 +597,7 @@ namespace golang::types
                                     return {nullptr, nullptr, InvalidUntypedConversion};
                                 }
                                 break;
-                            }
                             case 6:
-                            {
-                                types::BasicKind types::under(target) = gocpp::any_cast<types::BasicKind>(u);
                                 // Unsafe.Pointer is a basic type that includes nil.
                                 if(! hasNil(target))
                                 {
@@ -617,13 +606,9 @@ namespace golang::types
                                 // Preserve the type of nil as UntypedNil: see go.dev/issue/13061.
                                 return {Typ[UntypedNil], nullptr, 0};
                                 break;
-                            }
                             default:
-                            {
-                                auto types::under(target) = u;
                                 return {nullptr, nullptr, InvalidUntypedConversion};
                                 break;
-                            }
                         }
                     }
                     break;
@@ -1579,16 +1564,15 @@ namespace golang::types
                     {
                         auto condition = e->Kind;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
-                        else if(condition == typeid(token::Token)) { conditionId = 2; }
+                        if(condition == token::INT) { conditionId = 0; }
+                        else if(condition == token::FLOAT) { conditionId = 1; }
+                        else if(condition == token::IMAG) { conditionId = 2; }
                         switch(conditionId)
                         {
                             case 0:
                             case 1:
                             case 2:
                             {
-                                token::Token e_ref = gocpp::any_cast<token::Token>(e);
                                 rec::langCompat(gocpp::recv(check), e);
                                 // The max. mantissa precision for untyped numeric values
                                 // is 512 bits, or 4048 bits for each of the two integer
@@ -1675,8 +1659,6 @@ namespace golang::types
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                bool e_ref = gocpp::any_cast<bool>(e);
                                 // composite literal type present - use it
                                 // [...]T array types may only appear with composite literals.
                                 // Check for them here so we don't have to handle ... in general.
@@ -1698,11 +1680,8 @@ namespace golang::types
                                 typ = rec::typ(gocpp::recv(check), e->Type);
                                 base = typ;
                                 break;
-                            }
 
                             case 1:
-                            {
-                                bool e_ref = gocpp::any_cast<bool>(e);
                                 // no composite literal type present - use hint (element type of enclosing type)
                                 typ = hint;
                                 // *T implies &T{}
@@ -1713,16 +1692,12 @@ namespace golang::types
                                     goto Error;
                                 }
                                 break;
-                            }
 
                             default:
-                            {
-                                auto e_ref = e;
                                 // TODO(gri) provide better error messages depending on context
                                 rec::error(gocpp::recv(check), e, UntypedLit, "missing type in composite literal"_s);
                                 goto Error;
                                 break;
-                            }
                         }
                     }
                     //Go type switch emulation
@@ -2071,28 +2046,20 @@ namespace golang::types
                     {
                         auto condition = x->mode;
                         int conditionId = -1;
-                        if(condition == typeid(types::operandMode)) { conditionId = 0; }
-                        else if(condition == typeid(types::operandMode)) { conditionId = 1; }
+                        if(condition == invalid) { conditionId = 0; }
+                        else if(condition == typexpr) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                types::operandMode e_ref = gocpp::any_cast<types::operandMode>(e);
                                 goto Error;
                                 break;
-                            }
                             case 1:
-                            {
-                                types::operandMode e_ref = gocpp::any_cast<types::operandMode>(e);
                                 rec::validVarType(gocpp::recv(check), e->X, x->typ);
                                 x->typ = gocpp::InitPtr<Pointer>([=](auto& y) {
                                     y.base = x->typ;
                                 });
                                 break;
-                            }
                             default:
-                            {
-                                auto e_ref = e;
                                 golang::types::Type base = {};
                                 if(! types::underIs(x->typ, [=](golang::types::Type u) mutable -> bool
                                 {
@@ -2116,7 +2083,6 @@ namespace golang::types
                                 x->mode = variable;
                                 x->typ = base;
                                 break;
-                            }
                         }
                     }
                     break;

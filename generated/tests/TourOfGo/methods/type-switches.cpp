@@ -12,6 +12,7 @@
 #include "gocpp/support.h"
 
 #include "golang/fmt/print.h"
+#include "golang/runtime/extern.h"
 
 namespace golang::main
 {
@@ -51,7 +52,7 @@ namespace golang::main
         }
     }
 
-    void do_withoutname(gocpp::go_any i)
+    void do_withSecondarySwitch(gocpp::go_any i)
     {
         //Go type switch emulation
         {
@@ -59,6 +60,63 @@ namespace golang::main
             int conditionId = -1;
             if(gocpp_id_1 == typeid(int)) { conditionId = 0; }
             else if(gocpp_id_1 == typeid(gocpp::string)) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    int v = gocpp::any_cast<int>(i);
+                    mocklib::Printf("Twice %v is %v\n"_s, v, v * 2);
+                    break;
+                }
+                case 1:
+                {
+                    gocpp::string v = gocpp::any_cast<gocpp::string>(i);
+                    mocklib::Printf("%q is %v bytes long\n"_s, v, len(v));
+                    break;
+                }
+                default:
+                {
+                    auto v = i;
+                    mocklib::Printf("I don't know about type %T!\n"_s, v);
+                    mocklib::Print("\nGo runs on "_s);
+                    //Go switch emulation
+                    {
+                        auto os = mocklib::GOOS;
+                        auto condition = os;
+                        int conditionId = -1;
+                        if(condition == "darwin"_s) { conditionId = 0; }
+                        else if(condition == "linux"_s) { conditionId = 1; }
+                        else if(condition == "gnu/linux"_s) { conditionId = 2; }
+                        else if(condition == "debian"_s) { conditionId = 3; }
+                        switch(conditionId)
+                        {
+                            default:
+                                mocklib::Println(os);
+                                break;
+                            case 0:
+                                mocklib::Println("OS X."_s);
+                                break;
+                            case 1:
+                            case 2:
+                            case 3:
+                                mocklib::Println("Linux."_s);
+                                break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    void do_withoutname(gocpp::go_any i)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_2 = gocpp::type_info(i);
+            int conditionId = -1;
+            if(gocpp_id_2 == typeid(int)) { conditionId = 0; }
+            else if(gocpp_id_2 == typeid(gocpp::string)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -84,11 +142,11 @@ namespace golang::main
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_2 = gocpp::type_info(v);
+            const auto& gocpp_id_3 = gocpp::type_info(v);
             const auto& v_ref = v;
             int conditionId = -1;
-            if(gocpp_id_2 == typeid(int)) { conditionId = 0; }
-            else if(gocpp_id_2 == typeid(gocpp::string)) { conditionId = 1; }
+            if(gocpp_id_3 == typeid(int)) { conditionId = 0; }
+            else if(gocpp_id_3 == typeid(gocpp::string)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -128,6 +186,11 @@ namespace golang::main
         do_WithNameReused(21);
         do_WithNameReused("hello"_s);
         do_WithNameReused(true);
+
+        mocklib::Println("\n----"_s);
+        do_withSecondarySwitch(21);
+        do_withSecondarySwitch("hello"_s);
+        do_withSecondarySwitch(true);
     }
 
 }

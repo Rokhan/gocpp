@@ -596,13 +596,11 @@ namespace golang::types
                         {
                             auto condition = x.mode;
                             int conditionId = -1;
-                            if(condition == typeid(types::operandMode)) { conditionId = 0; }
-                            else if(condition == typeid(types::operandMode)) { conditionId = 1; }
+                            if(condition == types::builtin) { conditionId = 0; }
+                            else if(condition == typexpr) { conditionId = 1; }
                             switch(conditionId)
                             {
                                 default:
-                                {
-                                    auto s_ref = s;
                                     if(kind == statement)
                                     {
                                         return;
@@ -610,21 +608,14 @@ namespace golang::types
                                     msg = "is not used"_s;
                                     code = UnusedExpr;
                                     break;
-                                }
                                 case 0:
-                                {
-                                    types::operandMode s_ref = gocpp::any_cast<types::operandMode>(s);
                                     msg = "must be called"_s;
                                     code = UncalledBuiltin;
                                     break;
-                                }
                                 case 1:
-                                {
-                                    types::operandMode s_ref = gocpp::any_cast<types::operandMode>(s);
                                     msg = "is not an expression"_s;
                                     code = NotAnExpr;
                                     break;
-                                }
                             }
                         }
                         rec::errorf(gocpp::recv(check), & x, code, "%s %s"_s, & x, msg);
@@ -671,29 +662,20 @@ namespace golang::types
                         {
                             auto condition = s->Tok;
                             int conditionId = -1;
-                            if(condition == typeid(token::Token)) { conditionId = 0; }
-                            else if(condition == typeid(token::Token)) { conditionId = 1; }
+                            if(condition == token::INC) { conditionId = 0; }
+                            else if(condition == token::DEC) { conditionId = 1; }
                             switch(conditionId)
                             {
                                 case 0:
-                                {
-                                    token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                     op = token::ADD;
                                     break;
-                                }
                                 case 1:
-                                {
-                                    token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                     op = token::SUB;
                                     break;
-                                }
                                 default:
-                                {
-                                    auto s_ref = s;
                                     rec::errorf(gocpp::recv(check), inNode(s, s->TokPos), InvalidSyntaxTree, "unknown inc/dec operation %s"_s, s->Tok);
                                     return;
                                     break;
-                                }
                             }
                         }
                         operand x = {};
@@ -729,14 +711,12 @@ namespace golang::types
                         {
                             auto condition = s->Tok;
                             int conditionId = -1;
-                            if(condition == typeid(token::Token)) { conditionId = 0; }
-                            else if(condition == typeid(token::Token)) { conditionId = 1; }
+                            if(condition == token::ASSIGN) { conditionId = 0; }
+                            else if(condition == token::DEFINE) { conditionId = 1; }
                             switch(conditionId)
                             {
                                 case 0:
                                 case 1:
-                                {
-                                    token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                     if(len(s->Lhs) == 0)
                                     {
                                         rec::error(gocpp::recv(check), s, InvalidSyntaxTree, "missing lhs in assignment"_s);
@@ -752,11 +732,9 @@ namespace golang::types
                                         rec::assignVars(gocpp::recv(check), s->Lhs, s->Rhs);
                                     }
                                     break;
-                                }
 
                                 default:
                                 {
-                                    auto s_ref = s;
                                     // assignment operations
                                     if(len(s->Lhs) != 1 || len(s->Rhs) != 1)
                                     {
@@ -843,32 +821,24 @@ namespace golang::types
                         {
                             auto condition = s->Tok;
                             int conditionId = -1;
-                            if(condition == typeid(token::Token)) { conditionId = 0; }
-                            else if(condition == typeid(token::Token)) { conditionId = 1; }
-                            else if(condition == typeid(token::Token)) { conditionId = 2; }
+                            if(condition == token::BREAK) { conditionId = 0; }
+                            else if(condition == token::CONTINUE) { conditionId = 1; }
+                            else if(condition == token::FALLTHROUGH) { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:
-                                {
-                                    token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                     if(ctxt & breakOk == 0)
                                     {
                                         rec::error(gocpp::recv(check), s, MisplacedBreak, "break not in for, switch, or select statement"_s);
                                     }
                                     break;
-                                }
                                 case 1:
-                                {
-                                    token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                     if(ctxt & continueOk == 0)
                                     {
                                         rec::error(gocpp::recv(check), s, MisplacedContinue, "continue not in for statement"_s);
                                     }
                                     break;
-                                }
                                 case 2:
-                                {
-                                    token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                     if(ctxt & fallthroughOk == 0)
                                     {
                                         gocpp::string msg = {};
@@ -880,35 +850,22 @@ namespace golang::types
                                             switch(conditionId)
                                             {
                                                 case 0:
-                                                {
-                                                    bool s_ref = gocpp::any_cast<bool>(s);
                                                     msg = "cannot fallthrough final case in switch"_s;
                                                     break;
-                                                }
                                                 case 1:
-                                                {
-                                                    bool s_ref = gocpp::any_cast<bool>(s);
                                                     msg = "cannot fallthrough in type switch"_s;
                                                     break;
-                                                }
                                                 default:
-                                                {
-                                                    auto s_ref = s;
                                                     msg = "fallthrough statement out of place"_s;
                                                     break;
-                                                }
                                             }
                                         }
                                         rec::error(gocpp::recv(check), s, MisplacedFallthrough, msg);
                                     }
                                     break;
-                                }
                                 default:
-                                {
-                                    auto s_ref = s;
                                     rec::errorf(gocpp::recv(check), s, InvalidSyntaxTree, "branch statement: %s"_s, s->Tok);
                                     break;
-                                }
                             }
                         }
                         break;
@@ -1656,23 +1613,14 @@ namespace golang::types
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                bool arrayPtrDeref(coreType(typ)) = gocpp::any_cast<bool>(typ);
                                 return bad("func must be func(yield func(...) bool): wrong argument count"_s);
                                 break;
-                            }
                             case 1:
-                            {
-                                bool arrayPtrDeref(coreType(typ)) = gocpp::any_cast<bool>(typ);
                                 return bad("func must be func(yield func(...) bool): argument is not func"_s);
                                 break;
-                            }
                             case 2:
-                            {
-                                bool arrayPtrDeref(coreType(typ)) = gocpp::any_cast<bool>(typ);
                                 return bad("func must be func(yield func(...) bool): unexpected results"_s);
                                 break;
-                            }
                         }
                     }
                     auto cb = toSig(rec::Type(gocpp::recv(rec::At(gocpp::recv(rec::Params(gocpp::recv(typ))), 0))));
@@ -1685,17 +1633,11 @@ namespace golang::types
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                bool arrayPtrDeref(coreType(typ)) = gocpp::any_cast<bool>(typ);
                                 return bad("func must be func(yield func(...) bool): yield func has too many parameters"_s);
                                 break;
-                            }
                             case 1:
-                            {
-                                bool arrayPtrDeref(coreType(typ)) = gocpp::any_cast<bool>(typ);
                                 return bad("func must be func(yield func(...) bool): yield func does not return bool"_s);
                                 break;
-                            }
                         }
                     }
                     if(rec::Len(gocpp::recv(rec::Params(gocpp::recv(cb)))) >= 1)

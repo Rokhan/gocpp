@@ -298,14 +298,13 @@ namespace golang::types
                         {
                             auto condition = s->Tok;
                             int conditionId = -1;
-                            if(condition == typeid(token::Token)) { conditionId = 0; }
-                            else if(condition == typeid(token::Token)) { conditionId = 1; }
-                            else if(condition == typeid(token::Token)) { conditionId = 2; }
+                            if(condition == token::BREAK) { conditionId = 0; }
+                            else if(condition == token::CONTINUE) { conditionId = 1; }
+                            else if(condition == token::GOTO) { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:
                                 {
-                                    token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                     // spec: "If there is a label, it must be that of an enclosing
                                     // "for", "switch", or "select" statement, and that is the one
                                     // whose execution terminates."
@@ -345,7 +344,6 @@ namespace golang::types
 
                                 case 1:
                                 {
-                                    token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                     // spec: "If there is a label, it must be that of an enclosing
                                     // "for" statement, and that is the one whose execution advances."
                                     auto valid = false;
@@ -377,8 +375,6 @@ namespace golang::types
                                 }
 
                                 case 2:
-                                {
-                                    token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                     if(rec::gotoTarget(gocpp::recv(b), name) == nullptr)
                                     {
                                         // label may be declared later - add branch to forward jumps
@@ -386,15 +382,11 @@ namespace golang::types
                                         return;
                                     }
                                     break;
-                                }
 
                                 default:
-                                {
-                                    auto s_ref = s;
                                     rec::errorf(gocpp::recv(check), s, InvalidSyntaxTree, "branch statement: %s %s"_s, s->Tok, name);
                                     return;
                                     break;
-                                }
                             }
                         }
                         // record label use

@@ -898,13 +898,12 @@ namespace golang::types
                                     {
                                         auto condition = d->Tok;
                                         int conditionId = -1;
-                                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                                        else if(condition == typeid(token::Token)) { conditionId = 1; }
+                                        if(condition == token::CONST) { conditionId = 0; }
+                                        else if(condition == token::VAR) { conditionId = 1; }
                                         switch(conditionId)
                                         {
                                             case 0:
                                             {
-                                                token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                                 // determine which initialization expressions to use
                                                 auto inherited = true;
                                                 //Go switch emulation
@@ -915,20 +914,14 @@ namespace golang::types
                                                     switch(conditionId)
                                                     {
                                                         case 0:
-                                                        {
-                                                            bool s = gocpp::any_cast<bool>(s_ref);
                                                             last = s;
                                                             inherited = false;
                                                             break;
-                                                        }
                                                         case 1:
-                                                        {
-                                                            bool s = gocpp::any_cast<bool>(s_ref);
                                                             // make sure last exists
                                                             last = new ast::ValueSpec{};
                                                             inherited = false;
                                                             break;
-                                                        }
                                                     }
                                                 }
                                                 rec::arityMatch(gocpp::recv(check), s, last);
@@ -942,18 +935,12 @@ namespace golang::types
                                                 break;
                                             }
                                             case 1:
-                                            {
-                                                token::Token s_ref = gocpp::any_cast<token::Token>(s);
                                                 rec::arityMatch(gocpp::recv(check), s, nullptr);
                                                 f(golang::types::varDecl {s});
                                                 break;
-                                            }
                                             default:
-                                            {
-                                                auto s_ref = s;
                                                 rec::errorf(gocpp::recv(check), s, InvalidSyntaxTree, "invalid token %s"_s, d->Tok);
                                                 break;
-                                            }
                                         }
                                     }
                                     break;
@@ -1590,34 +1577,25 @@ namespace golang::types
                             {
                                 auto condition = len(d.spec->Values);
                                 int conditionId = -1;
-                                if(condition == typeid(int)) { conditionId = 0; }
-                                else if(condition == typeid(long)) { conditionId = 1; }
+                                if(condition == len(d.spec->Names)) { conditionId = 0; }
+                                else if(condition == 1) { conditionId = 1; }
                                 switch(conditionId)
                                 {
                                     case 0:
-                                    {
-                                        int d = gocpp::any_cast<int>(d_ref);
                                         // lhs and rhs match
                                         init = d.spec->Values[i];
                                         break;
-                                    }
                                     case 1:
-                                    {
-                                        long d = gocpp::any_cast<long>(d_ref);
                                         // rhs is expected to be a multi-valued expression
                                         lhs = lhs0;
                                         init = d.spec->Values[0];
                                         break;
-                                    }
                                     default:
-                                    {
-                                        auto d = d_ref;
                                         if(i < len(d.spec->Values))
                                         {
                                             init = d.spec->Values[i];
                                         }
                                         break;
-                                    }
                                 }
                             }
                             rec::varDecl(gocpp::recv(check), obj, lhs, d.spec->Type, init);

@@ -1774,62 +1774,49 @@ namespace golang::fmt
                         auto v = rec::Elem(gocpp::recv(ptr));
                         auto condition = rec::Kind(gocpp::recv(v));
                         int conditionId = -1;
-                        if(condition == typeid(reflect::Kind)) { conditionId = 0; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 1; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 2; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 3; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 4; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 5; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 6; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 7; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 8; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 9; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 10; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 11; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 12; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 13; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 14; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 15; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 16; }
-                        else if(condition == typeid(reflect::Kind)) { conditionId = 17; }
+                        if(condition == reflect::Bool) { conditionId = 0; }
+                        else if(condition == reflect::Int) { conditionId = 1; }
+                        else if(condition == reflect::Int8) { conditionId = 2; }
+                        else if(condition == reflect::Int16) { conditionId = 3; }
+                        else if(condition == reflect::Int32) { conditionId = 4; }
+                        else if(condition == reflect::Int64) { conditionId = 5; }
+                        else if(condition == reflect::Uint) { conditionId = 6; }
+                        else if(condition == reflect::Uint8) { conditionId = 7; }
+                        else if(condition == reflect::Uint16) { conditionId = 8; }
+                        else if(condition == reflect::Uint32) { conditionId = 9; }
+                        else if(condition == reflect::Uint64) { conditionId = 10; }
+                        else if(condition == reflect::Uintptr) { conditionId = 11; }
+                        else if(condition == reflect::String) { conditionId = 12; }
+                        else if(condition == reflect::Slice) { conditionId = 13; }
+                        else if(condition == reflect::Float32) { conditionId = 14; }
+                        else if(condition == reflect::Float64) { conditionId = 15; }
+                        else if(condition == reflect::Complex64) { conditionId = 16; }
+                        else if(condition == reflect::Complex128) { conditionId = 17; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                reflect::Kind arg = gocpp::any_cast<reflect::Kind>(v);
                                 rec::SetBool(gocpp::recv(v), rec::scanBool(gocpp::recv(s), verb));
                                 break;
-                            }
                             case 1:
                             case 2:
                             case 3:
                             case 4:
                             case 5:
-                            {
-                                reflect::Kind arg = gocpp::any_cast<reflect::Kind>(v);
                                 rec::SetInt(gocpp::recv(v), rec::scanInt(gocpp::recv(s), verb, rec::Bits(gocpp::recv(rec::Type(gocpp::recv(v))))));
                                 break;
-                            }
                             case 6:
                             case 7:
                             case 8:
                             case 9:
                             case 10:
                             case 11:
-                            {
-                                reflect::Kind arg = gocpp::any_cast<reflect::Kind>(v);
                                 rec::SetUint(gocpp::recv(v), rec::scanUint(gocpp::recv(s), verb, rec::Bits(gocpp::recv(rec::Type(gocpp::recv(v))))));
                                 break;
-                            }
                             case 12:
-                            {
-                                reflect::Kind arg = gocpp::any_cast<reflect::Kind>(v);
                                 rec::SetString(gocpp::recv(v), rec::convertString(gocpp::recv(s), verb));
                                 break;
-                            }
                             case 13:
                             {
-                                reflect::Kind arg = gocpp::any_cast<reflect::Kind>(v);
                                 // For now, can only handle (renamed) []byte.
                                 auto typ = rec::Type(gocpp::recv(v));
                                 if(rec::Kind(gocpp::recv(rec::Elem(gocpp::recv(typ)))) != reflect::Uint8)
@@ -1846,26 +1833,17 @@ namespace golang::fmt
                             }
                             case 14:
                             case 15:
-                            {
-                                reflect::Kind arg = gocpp::any_cast<reflect::Kind>(v);
                                 rec::SkipSpace(gocpp::recv(s));
                                 rec::notEOF(gocpp::recv(s));
                                 rec::SetFloat(gocpp::recv(v), rec::convertFloat(gocpp::recv(s), rec::floatToken(gocpp::recv(s)), rec::Bits(gocpp::recv(rec::Type(gocpp::recv(v))))));
                                 break;
-                            }
                             case 16:
                             case 17:
-                            {
-                                reflect::Kind arg = gocpp::any_cast<reflect::Kind>(v);
                                 rec::SetComplex(gocpp::recv(v), rec::scanComplex(gocpp::recv(s), verb, rec::Bits(gocpp::recv(rec::Type(gocpp::recv(v))))));
                                 break;
-                            }
                             default:
-                            {
-                                auto arg = v;
                                 rec::errorString(gocpp::recv(s), "can't scan type: "_s + rec::String(gocpp::recv(rec::Type(gocpp::recv(val)))));
                                 break;
-                            }
                         }
                     }
                     break;

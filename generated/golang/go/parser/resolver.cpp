@@ -771,15 +771,13 @@ namespace golang::parser
                         {
                             auto condition = n->Tok;
                             int conditionId = -1;
-                            if(condition == typeid(token::Token)) { conditionId = 0; }
-                            else if(condition == typeid(token::Token)) { conditionId = 1; }
-                            else if(condition == typeid(token::Token)) { conditionId = 2; }
+                            if(condition == token::CONST) { conditionId = 0; }
+                            else if(condition == token::VAR) { conditionId = 1; }
+                            else if(condition == token::TYPE) { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:
                                 case 1:
-                                {
-                                    token::Token node = gocpp::any_cast<token::Token>(n);
                                     for(auto [i, spec] : n->Specs)
                                     {
                                         auto spec_tmp = gocpp::getValue<ast::ValueSpec*>(spec);
@@ -797,10 +795,7 @@ namespace golang::parser
                                         rec::declare(gocpp::recv(r), spec, i, r->topScope, kind, spec->Names);
                                     }
                                     break;
-                                }
                                 case 2:
-                                {
-                                    token::Token node = gocpp::any_cast<token::Token>(n);
                                     for(auto [gocpp_ignored, spec] : n->Specs)
                                     {
                                         auto spec_tmp = gocpp::getValue<ast::TypeSpec*>(spec);
@@ -818,7 +813,6 @@ namespace golang::parser
                                         ast::Walk(r, spec->Type);
                                     }
                                     break;
-                                }
                             }
                         }
                         break;

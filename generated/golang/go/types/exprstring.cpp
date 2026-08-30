@@ -298,28 +298,19 @@ namespace golang::types
                     {
                         auto condition = x->Dir;
                         int conditionId = -1;
-                        if(condition == typeid(ast::ChanDir)) { conditionId = 0; }
-                        else if(condition == typeid(ast::ChanDir)) { conditionId = 1; }
+                        if(condition == ast::SEND) { conditionId = 0; }
+                        else if(condition == ast::RECV) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                ast::ChanDir x_ref = gocpp::any_cast<ast::ChanDir>(x);
                                 s = "chan<- "_s;
                                 break;
-                            }
                             case 1:
-                            {
-                                ast::ChanDir x_ref = gocpp::any_cast<ast::ChanDir>(x);
                                 s = "<-chan "_s;
                                 break;
-                            }
                             default:
-                            {
-                                auto x_ref = x;
                                 s = "chan "_s;
                                 break;
-                            }
                         }
                     }
                     rec::WriteString(gocpp::recv(buf), s);

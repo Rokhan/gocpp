@@ -460,14 +460,12 @@ namespace golang::types
                         {
                             auto condition = t->dir;
                             int conditionId = -1;
-                            if(condition == typeid(types::ChanDir)) { conditionId = 0; }
-                            else if(condition == typeid(types::ChanDir)) { conditionId = 1; }
-                            else if(condition == typeid(types::ChanDir)) { conditionId = 2; }
+                            if(condition == SendRecv) { conditionId = 0; }
+                            else if(condition == SendOnly) { conditionId = 1; }
+                            else if(condition == RecvOnly) { conditionId = 2; }
                             switch(conditionId)
                             {
                                 case 0:
-                                {
-                                    types::ChanDir typ = gocpp::any_cast<types::ChanDir>(t);
                                     s = "chan "_s;
                                     // chan (<-chan T) requires parentheses
                                     if(auto [c, gocpp_id_2] = gocpp::getValue<Chan*>(t->elem); c != nullptr && c->dir == RecvOnly)
@@ -475,25 +473,15 @@ namespace golang::types
                                         parens = true;
                                     }
                                     break;
-                                }
                                 case 1:
-                                {
-                                    types::ChanDir typ = gocpp::any_cast<types::ChanDir>(t);
                                     s = "chan<- "_s;
                                     break;
-                                }
                                 case 2:
-                                {
-                                    types::ChanDir typ = gocpp::any_cast<types::ChanDir>(t);
                                     s = "<-chan "_s;
                                     break;
-                                }
                                 default:
-                                {
-                                    auto typ = t;
                                     rec::error(gocpp::recv(w), "unknown channel direction"_s);
                                     break;
-                                }
                             }
                         }
                         rec::string(gocpp::recv(w), s);

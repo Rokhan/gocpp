@@ -3813,22 +3813,16 @@ namespace golang::parser
                         {
                             auto condition = t->Tok;
                             int conditionId = -1;
-                            if(condition == typeid(token::Token)) { conditionId = 0; }
-                            else if(condition == typeid(token::Token)) { conditionId = 1; }
+                            if(condition == token::ASSIGN) { conditionId = 0; }
+                            else if(condition == token::DEFINE) { conditionId = 1; }
                             switch(conditionId)
                             {
                                 case 0:
-                                {
-                                    token::Token t = gocpp::any_cast<token::Token>(s);
                                     // permit v = x.(type) but complain
                                     rec::error(gocpp::recv(p), t->TokPos, "expected ':=', found '='"_s);
-                                }
                                 case 1:
-                                {
-                                    token::Token t = gocpp::any_cast<token::Token>(s);
                                     return true;
                                     break;
-                                }
                             }
                         }
                     }
@@ -4650,13 +4644,11 @@ namespace golang::parser
                     {
                         auto condition = x->Op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
+                        if(condition == token::MUL) { conditionId = 0; }
+                        else if(condition == token::OR) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 if(auto [name, gocpp_id_13] = gocpp::getValue<ast::Ident*>(x->X); name != nullptr && (force || isTypeElem(x->Y)))
                                 {
                                     // x = name *x.Y
@@ -4666,10 +4658,7 @@ namespace golang::parser
                                     })};
                                 }
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 if(auto [name, lhs] = extractName(x->X, force || isTypeElem(x->Y)); name != nullptr && lhs != nullptr)
                                 {
                                     // x = name lhs|x.Y
@@ -4678,7 +4667,6 @@ namespace golang::parser
                                     return {name, & op};
                                 }
                                 break;
-                            }
                         }
                     }
                     break;

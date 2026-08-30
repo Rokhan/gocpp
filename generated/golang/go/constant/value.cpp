@@ -1476,17 +1476,11 @@ namespace golang::constant
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                bool x_ref = gocpp::any_cast<bool>(x);
                                 return - 1;
                                 break;
-                            }
                             case 1:
-                            {
-                                bool x_ref = gocpp::any_cast<bool>(x);
                                 return 1;
                                 break;
-                            }
                         }
                     }
                     return 0;
@@ -2493,22 +2487,16 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
+                        if(condition == token::LAND) { conditionId = 0; }
+                        else if(condition == token::LOR) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x && y;
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x || y;
                                 break;
-                            }
                         }
                     }
                     break;
@@ -2524,96 +2512,63 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
-                        else if(condition == typeid(token::Token)) { conditionId = 2; }
-                        else if(condition == typeid(token::Token)) { conditionId = 3; }
-                        else if(condition == typeid(token::Token)) { conditionId = 4; }
-                        else if(condition == typeid(token::Token)) { conditionId = 5; }
-                        else if(condition == typeid(token::Token)) { conditionId = 6; }
-                        else if(condition == typeid(token::Token)) { conditionId = 7; }
-                        else if(condition == typeid(token::Token)) { conditionId = 8; }
-                        else if(condition == typeid(token::Token)) { conditionId = 9; }
+                        if(condition == token::ADD) { conditionId = 0; }
+                        else if(condition == token::SUB) { conditionId = 1; }
+                        else if(condition == token::MUL) { conditionId = 2; }
+                        else if(condition == token::QUO) { conditionId = 3; }
+                        else if(condition == token::QUO_ASSIGN) { conditionId = 4; }
+                        else if(condition == token::REM) { conditionId = 5; }
+                        else if(condition == token::AND) { conditionId = 6; }
+                        else if(condition == token::OR) { conditionId = 7; }
+                        else if(condition == token::XOR) { conditionId = 8; }
+                        else if(condition == token::AND_NOT) { conditionId = 9; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 if(! is63bit(a) || ! is63bit(b))
                                 {
                                     return makeInt(rec::Add(gocpp::recv(newInt()), big::NewInt(a), big::NewInt(b)));
                                 }
                                 c = a + b;
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 if(! is63bit(a) || ! is63bit(b))
                                 {
                                     return makeInt(rec::Sub(gocpp::recv(newInt()), big::NewInt(a), big::NewInt(b)));
                                 }
                                 c = a - b;
                                 break;
-                            }
                             case 2:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 if(! is32bit(a) || ! is32bit(b))
                                 {
                                     return makeInt(rec::Mul(gocpp::recv(newInt()), big::NewInt(a), big::NewInt(b)));
                                 }
                                 c = a * b;
                                 break;
-                            }
                             case 3:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return makeRat(big::NewRat(a, b));
                                 break;
-                            }
                             case 4:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 c = a / b;
                                 break;
-                            }
                             case 5:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 c = a % b;
                                 break;
-                            }
                             case 6:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 c = a & b;
                                 break;
-                            }
                             case 7:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 c = a | b;
                                 break;
-                            }
                             case 8:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 c = a ^ b;
                                 break;
-                            }
                             case 9:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 c = a &^ b;
                                 break;
-                            }
                             default:
-                            {
-                                auto x_ref = x;
                                 goto Error;
                                 break;
-                            }
                         }
                     }
                     return int64Val(c);
@@ -2630,84 +2585,51 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
-                        else if(condition == typeid(token::Token)) { conditionId = 2; }
-                        else if(condition == typeid(token::Token)) { conditionId = 3; }
-                        else if(condition == typeid(token::Token)) { conditionId = 4; }
-                        else if(condition == typeid(token::Token)) { conditionId = 5; }
-                        else if(condition == typeid(token::Token)) { conditionId = 6; }
-                        else if(condition == typeid(token::Token)) { conditionId = 7; }
-                        else if(condition == typeid(token::Token)) { conditionId = 8; }
-                        else if(condition == typeid(token::Token)) { conditionId = 9; }
+                        if(condition == token::ADD) { conditionId = 0; }
+                        else if(condition == token::SUB) { conditionId = 1; }
+                        else if(condition == token::MUL) { conditionId = 2; }
+                        else if(condition == token::QUO) { conditionId = 3; }
+                        else if(condition == token::QUO_ASSIGN) { conditionId = 4; }
+                        else if(condition == token::REM) { conditionId = 5; }
+                        else if(condition == token::AND) { conditionId = 6; }
+                        else if(condition == token::OR) { conditionId = 7; }
+                        else if(condition == token::XOR) { conditionId = 8; }
+                        else if(condition == token::AND_NOT) { conditionId = 9; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Add(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Sub(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 2:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Mul(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 3:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return makeRat(rec::SetFrac(gocpp::recv(newRat()), a, b));
                                 break;
-                            }
                             case 4:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Quo(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 5:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Rem(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 6:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::And(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 7:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Or(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 8:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Xor(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 9:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::AndNot(gocpp::recv(c), a, b);
                                 break;
-                            }
                             default:
-                            {
-                                auto x_ref = x;
                                 goto Error;
                                 break;
-                            }
                         }
                     }
                     return makeInt(c);
@@ -2724,42 +2646,27 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
-                        else if(condition == typeid(token::Token)) { conditionId = 2; }
-                        else if(condition == typeid(token::Token)) { conditionId = 3; }
+                        if(condition == token::ADD) { conditionId = 0; }
+                        else if(condition == token::SUB) { conditionId = 1; }
+                        else if(condition == token::MUL) { conditionId = 2; }
+                        else if(condition == token::QUO) { conditionId = 3; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Add(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Sub(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 2:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Mul(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 3:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Quo(gocpp::recv(c), a, b);
                                 break;
-                            }
                             default:
-                            {
-                                auto x_ref = x;
                                 goto Error;
                                 break;
-                            }
                         }
                     }
                     return makeRat(c);
@@ -2776,42 +2683,27 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
-                        else if(condition == typeid(token::Token)) { conditionId = 2; }
-                        else if(condition == typeid(token::Token)) { conditionId = 3; }
+                        if(condition == token::ADD) { conditionId = 0; }
+                        else if(condition == token::SUB) { conditionId = 1; }
+                        else if(condition == token::MUL) { conditionId = 2; }
+                        else if(condition == token::QUO) { conditionId = 3; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Add(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Sub(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 2:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Mul(gocpp::recv(c), a, b);
                                 break;
-                            }
                             case 3:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 rec::Quo(gocpp::recv(c), a, b);
                                 break;
-                            }
                             default:
-                            {
-                                auto x_ref = x;
                                 goto Error;
                                 break;
-                            }
                         }
                     }
                     return makeFloat(c);
@@ -2832,31 +2724,24 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
-                        else if(condition == typeid(token::Token)) { conditionId = 2; }
-                        else if(condition == typeid(token::Token)) { conditionId = 3; }
+                        if(condition == token::ADD) { conditionId = 0; }
+                        else if(condition == token::SUB) { conditionId = 1; }
+                        else if(condition == token::MUL) { conditionId = 2; }
+                        else if(condition == token::QUO) { conditionId = 3; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 // (a+c) + i(b+d)
                                 re = add(a, c);
                                 im = add(b, d);
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 // (a-c) + i(b-d)
                                 re = sub(a, c);
                                 im = sub(b, d);
                                 break;
-                            }
                             case 2:
                             {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 // (ac-bd) + i(bc+ad)
                                 auto ac = mul(a, c);
                                 auto bd = mul(b, d);
@@ -2868,7 +2753,6 @@ namespace golang::constant
                             }
                             case 3:
                             {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 // (ac+bd)/s + i(bc-ad)/s, with s = cc + dd
                                 auto ac = mul(a, c);
                                 auto bd = mul(b, d);
@@ -2884,11 +2768,8 @@ namespace golang::constant
                                 break;
                             }
                             default:
-                            {
-                                auto x_ref = x;
                                 goto Error;
                                 break;
-                            }
                         }
                     }
                     return makeComplex(re, im);
@@ -2967,23 +2848,19 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
+                        if(condition == token::SHL) { conditionId = 0; }
+                        else if(condition == token::SHR) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
                             {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 auto z = i64toi(x).val;
                                 return makeInt(rec::Lsh(gocpp::recv(z), z, s));
                                 break;
                             }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x >> s;
                                 break;
-                            }
                         }
                     }
                     break;
@@ -3001,22 +2878,16 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
+                        if(condition == token::SHL) { conditionId = 0; }
+                        else if(condition == token::SHR) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return makeInt(rec::Lsh(gocpp::recv(z), x.val, s));
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return makeInt(rec::Rsh(gocpp::recv(z), x.val, s));
                                 break;
-                            }
                         }
                     }
                     break;
@@ -3103,22 +2974,16 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
+                        if(condition == token::EQL) { conditionId = 0; }
+                        else if(condition == token::NEQ) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x == y;
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x != y;
                                 break;
-                            }
                         }
                     }
                     break;
@@ -3133,50 +2998,32 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
-                        else if(condition == typeid(token::Token)) { conditionId = 2; }
-                        else if(condition == typeid(token::Token)) { conditionId = 3; }
-                        else if(condition == typeid(token::Token)) { conditionId = 4; }
-                        else if(condition == typeid(token::Token)) { conditionId = 5; }
+                        if(condition == token::EQL) { conditionId = 0; }
+                        else if(condition == token::NEQ) { conditionId = 1; }
+                        else if(condition == token::LSS) { conditionId = 2; }
+                        else if(condition == token::LEQ) { conditionId = 3; }
+                        else if(condition == token::GTR) { conditionId = 4; }
+                        else if(condition == token::GEQ) { conditionId = 5; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x == y;
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x != y;
                                 break;
-                            }
                             case 2:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x < y;
                                 break;
-                            }
                             case 3:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x <= y;
                                 break;
-                            }
                             case 4:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x > y;
                                 break;
-                            }
                             case 5:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return x >= y;
                                 break;
-                            }
                         }
                     }
                     break;
@@ -3214,22 +3061,16 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
+                        if(condition == token::EQL) { conditionId = 0; }
+                        else if(condition == token::NEQ) { conditionId = 1; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return re && im;
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return ! re || ! im;
                                 break;
-                            }
                         }
                     }
                     break;
@@ -3244,50 +3085,32 @@ namespace golang::constant
                     {
                         auto condition = op;
                         int conditionId = -1;
-                        if(condition == typeid(token::Token)) { conditionId = 0; }
-                        else if(condition == typeid(token::Token)) { conditionId = 1; }
-                        else if(condition == typeid(token::Token)) { conditionId = 2; }
-                        else if(condition == typeid(token::Token)) { conditionId = 3; }
-                        else if(condition == typeid(token::Token)) { conditionId = 4; }
-                        else if(condition == typeid(token::Token)) { conditionId = 5; }
+                        if(condition == token::EQL) { conditionId = 0; }
+                        else if(condition == token::NEQ) { conditionId = 1; }
+                        else if(condition == token::LSS) { conditionId = 2; }
+                        else if(condition == token::LEQ) { conditionId = 3; }
+                        else if(condition == token::GTR) { conditionId = 4; }
+                        else if(condition == token::GEQ) { conditionId = 5; }
                         switch(conditionId)
                         {
                             case 0:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return xs == ys;
                                 break;
-                            }
                             case 1:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return xs != ys;
                                 break;
-                            }
                             case 2:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return xs < ys;
                                 break;
-                            }
                             case 3:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return xs <= ys;
                                 break;
-                            }
                             case 4:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return xs > ys;
                                 break;
-                            }
                             case 5:
-                            {
-                                token::Token x_ref = gocpp::any_cast<token::Token>(x);
                                 return xs >= ys;
                                 break;
-                            }
                         }
                     }
                     break;

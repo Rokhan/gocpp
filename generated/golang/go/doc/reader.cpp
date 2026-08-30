@@ -863,15 +863,13 @@ namespace golang::doc
                         {
                             auto condition = d->Tok;
                             int conditionId = -1;
-                            if(condition == typeid(token::Token)) { conditionId = 0; }
-                            else if(condition == typeid(token::Token)) { conditionId = 1; }
-                            else if(condition == typeid(token::Token)) { conditionId = 2; }
-                            else if(condition == typeid(token::Token)) { conditionId = 3; }
+                            if(condition == token::IMPORT) { conditionId = 0; }
+                            else if(condition == token::CONST) { conditionId = 1; }
+                            else if(condition == token::VAR) { conditionId = 2; }
+                            else if(condition == token::TYPE) { conditionId = 3; }
                             switch(conditionId)
                             {
                                 case 0:
-                                {
-                                    token::Token decl = gocpp::any_cast<token::Token>(d);
                                     // imports are handled individually
                                     for(auto [gocpp_ignored, spec] : d->Specs)
                                     {
@@ -911,18 +909,12 @@ namespace golang::doc
                                         }
                                     }
                                     break;
-                                }
                                 case 1:
                                 case 2:
-                                {
-                                    token::Token decl = gocpp::any_cast<token::Token>(d);
                                     // constants and variables are always handled as a group
                                     rec::readValue(gocpp::recv(r), d);
                                     break;
-                                }
                                 case 3:
-                                {
-                                    token::Token decl = gocpp::any_cast<token::Token>(d);
                                     // types are handled individually
                                     if(len(d->Specs) == 1 && ! rec::IsValid(gocpp::recv(d->Lparen)))
                                     {
@@ -955,7 +947,6 @@ namespace golang::doc
                                         }
                                     }
                                     break;
-                                }
                             }
                         }
                         break;

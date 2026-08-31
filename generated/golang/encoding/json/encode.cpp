@@ -660,11 +660,11 @@ namespace golang::json
 
     gocpp::error rec::marshal(encodeState* e, go_any v, encOpts opts)
     {
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::error err;
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &err]{ [=]() mutable -> void
             {
                 if(auto r = gocpp::recover(); r != nullptr)
                 {
@@ -684,6 +684,7 @@ namespace golang::json
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {err};
         }
     }
 

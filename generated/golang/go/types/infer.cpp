@@ -66,17 +66,17 @@ namespace golang::types
     // type parameter. Otherwise the result is nil and appropriate errors will be reported.
     gocpp::slice<golang::types::Type> rec::infer(Checker* check, positioner posn, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::types::Type> targs, Tuple* params, gocpp::slice<operand*> args, bool reverse)
     {
+        gocpp::slice<golang::types::Type> inferred;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<golang::types::Type> inferred;
             // Don't verify result conditions if there's no error handler installed:
             // in that case, an error leads to an exit panic and the result value may
             // be incorrect. But in that case it doesn't matter because callers won't
             // be able to use it either.
             if(check->conf->Error != nullptr)
             {
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &inferred]{ [=]() mutable -> void
                 {
                     assert(inferred == nullptr || len(inferred) == len(tparams) && ! containsNil(inferred));
                 }(); });
@@ -86,7 +86,7 @@ namespace golang::types
             {
                 // aligned with rename print below
                 rec::dump(gocpp::recv(check), "== infer : %s%s ➞ %s"_s, tparams, params, targs);
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &inferred]{ [=]() mutable -> void
                 {
                     rec::dump(gocpp::recv(check), "=> %s ➞ %s\n"_s, tparams, inferred);
                 }(); });
@@ -547,6 +547,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {inferred};
         }
     }
 
@@ -706,17 +707,17 @@ namespace golang::types
 
     bool rec::isParameterized(tpWalker* w, golang::types::Type typ)
     {
+        bool res;
         gocpp::Defer defer;
         try
         {
-            bool res;
             // detect cycles
             if(auto [x, ok] = w->seen[typ]; ok)
             {
                 return x;
             }
             w->seen[typ] = false;
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &res]{ [=]() mutable -> void
             {
                 w->seen[typ] = res;
             }(); });
@@ -873,6 +874,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {res};
         }
     }
 

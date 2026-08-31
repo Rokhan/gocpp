@@ -216,11 +216,11 @@ namespace golang::gcimporter
     // The packages map must contain all packages already imported.
     std::tuple<types::Package*, gocpp::error> Import(gocpp::map<gocpp::string, types::Package*> packages, gocpp::string path, gocpp::string srcDir, std::function<std::tuple<io::ReadCloser, gocpp::error> (gocpp::string path)> lookup)
     {
+        types::Package* pkg;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            types::Package* pkg;
-            gocpp::error err;
             io::ReadCloser rc = {};
             gocpp::string filename = {};
             gocpp::string id = {};
@@ -270,7 +270,7 @@ namespace golang::gcimporter
                 {
                     return {nullptr, err};
                 }
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &err]{ [=]() mutable -> void
                 {
                     if(err != nullptr)
                     {
@@ -369,6 +369,7 @@ namespace golang::gcimporter
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {pkg, err};
         }
     }
 

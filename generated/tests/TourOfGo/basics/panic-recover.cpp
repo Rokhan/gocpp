@@ -11,6 +11,7 @@
 #include "tests/TourOfGo/basics/panic-recover.h"
 #include "gocpp/support.h"
 
+#include "golang/fmt/errors.h"
 #include "golang/fmt/print.h"
 
 namespace golang::main
@@ -77,6 +78,119 @@ namespace golang::main
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+        }
+    }
+
+    // scanOne scans a single value, deriving the scanner from the type of the argument.
+    void scanOne(go_any arg)
+    {
+        //Go type switch emulation
+        {
+            const auto& gocpp_id_0 = gocpp::type_info(arg);
+            int conditionId = -1;
+            if(gocpp_id_0 == typeid(bool*)) { conditionId = 0; }
+            else if(gocpp_id_0 == typeid(int*)) { conditionId = 1; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    bool* v = gocpp::any_cast<bool*>(arg);
+                    *v = true;
+                    break;
+                }
+                case 1:
+                {
+                    int* v = gocpp::any_cast<int*>(arg);
+                    *v = 0;
+                    break;
+                }
+                default:
+                {
+                    auto v = arg;
+                    errorString("can't scan type"_s);
+                    break;
+                }
+            }
+        }
+    }
+
+    
+    template<typename T> requires gocpp::GoStruct<T>
+    scanError::operator T()
+    {
+        T result;
+        result.err = this->err;
+        return result;
+    }
+
+    template<typename T> requires gocpp::GoStruct<T>
+    bool scanError::operator==(const T& ref) const
+    {
+        if (err != ref.err) return false;
+        return true;
+    }
+
+    std::ostream& scanError::PrintTo(std::ostream& os) const
+    {
+        os << '{';
+        os << "" << err;
+        os << '}';
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct scanError& value)
+    {
+        return value.PrintTo(os);
+    }
+
+    void errorString(gocpp::string err)
+    {
+        // panic(scanError{errors.New(err)})
+        gocpp::panic(scanError {mocklib::Errorf("%s"_s, err)});
+    }
+
+    // errorHandler turns local panics into error returns.
+    void errorHandler(gocpp::error* errp)
+    {
+        if(auto e = gocpp::recover(); e != nullptr)
+        {
+            if(auto [se, ok] = gocpp::getValue<scanError>(e); ok)
+            {
+                // catch local error
+                *errp = se.err;
+            }
+            else
+            // } else if eof, ok := e.(error); ok && eof == io.EOF { // out of input
+            // *errp = eof
+            // } else if eof, ok := e.(error); ok && eof == io.EOF { // out of input
+            // *errp = eof
+            {
+                gocpp::panic(e);
+            }
+        }
+    }
+
+    // doScan does the real work for scanning without a format string.
+    std::tuple<int, gocpp::error> doScan(gocpp::slice<go_any> a)
+    {
+        int numProcessed;
+        gocpp::error err;
+        gocpp::Defer defer;
+        try
+        {
+            defer.push_back([=, &err]{ errorHandler(& err); });
+            for(auto [gocpp_ignored, arg] : a)
+            {
+                scanOne(arg);
+                numProcessed++;
+            }
+
+            return {numProcessed, err};
+        }
+        catch(gocpp::GoPanic& gp)
+        {
+            defer.handlePanic(gp);
+            return {numProcessed, err};
         }
     }
 

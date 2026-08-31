@@ -37,11 +37,11 @@ namespace golang::time
     // under the open registry key zones.
     std::tuple<bool, gocpp::error> matchZoneKey(registry::Key zones, gocpp::string kname, gocpp::string stdname, gocpp::string dstname)
     {
+        bool matched;
+        gocpp::error err2;
         gocpp::Defer defer;
         try
         {
-            bool matched;
-            gocpp::error err2;
             auto [k, err] = registry::OpenKey(zones, kname, registry::READ);
             if(err != nullptr)
             {
@@ -83,6 +83,7 @@ namespace golang::time
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {matched, err2};
         }
     }
 

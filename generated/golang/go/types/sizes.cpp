@@ -173,11 +173,11 @@ namespace golang::types
 
     int64_t rec::Alignof(StdSizes* s, golang::types::Type T)
     {
+        int64_t result;
         gocpp::Defer defer;
         try
         {
-            int64_t result;
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &result]{ [=]() mutable -> void
             {
                 assert(result >= 1);
             }(); });
@@ -284,6 +284,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {result};
         }
     }
 

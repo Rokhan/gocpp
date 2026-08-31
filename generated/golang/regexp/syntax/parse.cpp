@@ -1094,12 +1094,12 @@ namespace golang::syntax
 
     std::tuple<Regexp*, gocpp::error> parse(gocpp::string s, Flags flags)
     {
+        Regexp* _1;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            Regexp* _1;
-            gocpp::error err;
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &err]{ [=]() mutable -> void
             {
                 //Go switch emulation
                 {
@@ -1471,6 +1471,7 @@ namespace golang::syntax
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {_1, err};
         }
     }
 

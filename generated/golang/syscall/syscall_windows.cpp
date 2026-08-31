@@ -692,10 +692,10 @@ namespace golang::syscall
 
     gocpp::error Ftruncate(golang::syscall::Handle fd, int64_t length)
     {
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::error err;
             auto [curoffset, e] = Seek(fd, 0, 1);
             if(e != nullptr)
             {
@@ -717,6 +717,7 @@ namespace golang::syscall
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {err};
         }
     }
 
@@ -750,10 +751,10 @@ namespace golang::syscall
 
     gocpp::error Utimes(gocpp::string path, gocpp::slice<Timeval> tv)
     {
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::error err;
             if(len(tv) != 2)
             {
                 return gocpp::error(go_EINVAL);
@@ -785,15 +786,16 @@ namespace golang::syscall
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {err};
         }
     }
 
     gocpp::error UtimesNano(gocpp::string path, gocpp::slice<Timespec> ts)
     {
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::error err;
             if(len(ts) != 2)
             {
                 return gocpp::error(go_EINVAL);
@@ -825,6 +827,7 @@ namespace golang::syscall
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {err};
         }
     }
 
@@ -2172,11 +2175,11 @@ namespace golang::syscall
     // Readlink returns the destination of the named symbolic link.
     std::tuple<int, gocpp::error> Readlink(gocpp::string path, gocpp::slice<unsigned char> buf)
     {
+        int n;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            int n;
-            gocpp::error err;
             Handle fd;
             std::tie(fd, err) = CreateFile(StringToUTF16Ptr(path), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, 0);
             if(err != nullptr)
@@ -2270,6 +2273,7 @@ namespace golang::syscall
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {n, err};
         }
     }
 

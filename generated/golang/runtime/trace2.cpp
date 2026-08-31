@@ -830,11 +830,11 @@ namespace golang::runtime
     //go:systemstack
     std::tuple<gocpp::slice<unsigned char>, bool> readTrace0()
     {
+        gocpp::slice<unsigned char> buf;
+        bool park;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<unsigned char> buf;
-            bool park;
             if(raceenabled)
             {
                 // g0 doesn't have a race context. Borrow the user G's.
@@ -964,6 +964,7 @@ namespace golang::runtime
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {buf, park};
         }
     }
 

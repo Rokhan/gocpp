@@ -357,15 +357,15 @@ namespace golang::types
     // Must only be called by definedType or genericType.
     golang::types::Type rec::typInternal(Checker* check, ast::Expr e0, TypeName* def)
     {
+        golang::types::Type T;
         gocpp::Defer defer;
         try
         {
-            golang::types::Type T;
             if(check->conf->_Trace)
             {
                 rec::trace(gocpp::recv(check), rec::Pos(gocpp::recv(e0)), "-- type %s"_s, e0);
                 check->indent++;
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &T]{ [=]() mutable -> void
                 {
                     check->indent--;
                     golang::types::Type under = {};
@@ -667,6 +667,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {T};
         }
     }
 
@@ -720,15 +721,15 @@ namespace golang::types
 
     golang::types::Type rec::instantiatedType(Checker* check, typeparams::IndexExpr* ix, TypeName* def)
     {
+        golang::types::Type res;
         gocpp::Defer defer;
         try
         {
-            golang::types::Type res;
             if(check->conf->_Trace)
             {
                 rec::trace(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), "-- instantiating type %s with %s"_s, ix->IndexListExpr.X, ix->IndexListExpr.Indices);
                 check->indent++;
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &res]{ [=]() mutable -> void
                 {
                     check->indent--;
                     // Don't format the underlying here. It will always be nil.
@@ -804,6 +805,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {res};
         }
     }
 

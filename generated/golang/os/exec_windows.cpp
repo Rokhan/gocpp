@@ -35,11 +35,11 @@ namespace golang::os
 
     std::tuple<ProcessState*, gocpp::error> rec::wait(Process* p)
     {
+        ProcessState* ps;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            ProcessState* ps;
-            gocpp::error err;
             auto handle = atomic::LoadUintptr(& p->handle);
             auto [s, e] = syscall::WaitForSingleObject(syscall::Handle(handle), syscall::INFINITE);
             //Go switch emulation
@@ -82,6 +82,7 @@ namespace golang::os
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {ps, err};
         }
     }
 

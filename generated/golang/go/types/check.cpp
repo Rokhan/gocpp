@@ -781,10 +781,10 @@ namespace golang::types
     gocpp::error errBadCgo = errors::New("cannot use FakeImportC and go115UsesCgo together"_s);
     gocpp::error rec::checkFiles(Checker* check, gocpp::slice<ast::File*> files)
     {
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::error err;
             if(check->pkg == Unsafe)
             {
                 // Defensive handling for Unsafe, which cannot be type checked, and must
@@ -803,7 +803,7 @@ namespace golang::types
                 return errBadCgo;
             }
 
-            defer.push_back([=]{ rec::handleBailout(gocpp::recv(check), & err); });
+            defer.push_back([=, &err]{ rec::handleBailout(gocpp::recv(check), & err); });
 
             auto print = [=](gocpp::string msg) mutable -> void
             {
@@ -867,6 +867,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {err};
         }
     }
 

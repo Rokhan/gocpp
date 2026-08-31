@@ -355,10 +355,10 @@ namespace golang::types
     // reports an error if it is not.
     bool rec::validCycle(Checker* check, Object obj)
     {
+        bool valid;
         gocpp::Defer defer;
         try
         {
-            bool valid;
             // The object map contains the package scope objects and the non-interface methods.
             if(debug)
             {
@@ -482,7 +482,7 @@ namespace golang::types
                 {
                     rec::trace(gocpp::recv(check), rec::Pos(gocpp::recv(obj)), "## cycle contains: %d values, %d type definitions"_s, nval, ndef);
                 }
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &valid]{ [=]() mutable -> void
                 {
                     if(valid)
                     {
@@ -520,6 +520,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {valid};
         }
     }
 

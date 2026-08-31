@@ -33,11 +33,11 @@ namespace golang::execenv
     // will be sourced from syscall.Environ().
     std::tuple<gocpp::slice<gocpp::string>, gocpp::error> Default(syscall::SysProcAttr* sys)
     {
+        gocpp::slice<gocpp::string> env;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<gocpp::string> env;
-            gocpp::error err;
             if(sys == nullptr || sys->Token == 0)
             {
                 return {syscall::Environ(), nullptr};
@@ -70,6 +70,7 @@ namespace golang::execenv
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {env, err};
         }
     }
 

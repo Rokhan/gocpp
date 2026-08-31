@@ -442,12 +442,12 @@ namespace golang::syscall
     SysProcAttr zeroSysProcAttr;
     std::tuple<int, uintptr_t, gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr)
     {
+        int pid;
+        uintptr_t handle;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            int pid;
-            uintptr_t handle;
-            gocpp::error err;
             if(len(argv0) == 0)
             {
                 return {0, 0, gocpp::error(go_EWINDOWS)};
@@ -628,6 +628,7 @@ namespace golang::syscall
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {pid, handle, err};
         }
     }
 

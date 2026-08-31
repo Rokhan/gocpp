@@ -225,15 +225,15 @@ namespace golang::gcimporter
 
     std::tuple<int, types::Package*, gocpp::error> UImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path)
     {
+        int _1;
+        types::Package* pkg;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            int _1;
-            types::Package* pkg;
-            gocpp::error err;
             if(! debug)
             {
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &err]{ [=]() mutable -> void
                 {
                     if(auto x = gocpp::recover(); x != nullptr)
                     {
@@ -251,6 +251,7 @@ namespace golang::gcimporter
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {_1, pkg, err};
         }
     }
 

@@ -1201,10 +1201,10 @@ namespace golang::fmt
 
     bool rec::handleMethods(pp* p, gocpp::rune verb)
     {
+        bool handled;
         gocpp::Defer defer;
         try
         {
-            bool handled;
             if(p->erroring)
             {
                 return handled;
@@ -1306,6 +1306,7 @@ namespace golang::fmt
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {handled};
         }
     }
 

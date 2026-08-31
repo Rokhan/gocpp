@@ -272,16 +272,16 @@ namespace golang::gcimporter
 
     std::tuple<gocpp::slice<types::Package*>, gocpp::error> iimportCommon(token::FileSet* fset, GetPackagesFunc getPackages, gocpp::slice<unsigned char> data, bool bundle, gocpp::string path, bool shallow, ReportFunc reportf)
     {
+        gocpp::slice<types::Package*> pkgs;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<types::Package*> pkgs;
-            gocpp::error err;
             auto currentVersion = iexportVersionCurrent;
             auto version = int64_t(- 1);
             if(! debug)
             {
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &err]{ [=]() mutable -> void
                 {
                     if(auto e = gocpp::recover(); e != nullptr)
                     {
@@ -542,6 +542,7 @@ namespace golang::gcimporter
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {pkgs, err};
         }
     }
 
@@ -1347,16 +1348,16 @@ namespace golang::gcimporter
 
     types::Type rec::doType(importReader* r, types::Named* base)
     {
+        types::Type res;
         gocpp::Defer defer;
         try
         {
-            types::Type res;
             auto k = rec::kind(gocpp::recv(r));
             if(debug)
             {
                 rec::trace(gocpp::recv(r->p), "importing type %d (base: %s)"_s, k, base);
                 r->p->indent++;
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &res]{ [=]() mutable -> void
                 {
                     r->p->indent--;
                     rec::trace(gocpp::recv(r->p), "=> %s"_s, res);
@@ -1563,6 +1564,7 @@ namespace golang::gcimporter
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {res};
         }
     }
 

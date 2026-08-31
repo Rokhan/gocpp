@@ -205,13 +205,13 @@ namespace golang::gcimporter
 
     gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int version, gocpp::slice<types::Package*> pkgs)
     {
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::error err;
             if(! debug)
             {
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &err]{ [=]() mutable -> void
                 {
                     if(auto e = gocpp::recover(); e != nullptr)
                     {
@@ -347,6 +347,7 @@ namespace golang::gcimporter
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {err};
         }
     }
 

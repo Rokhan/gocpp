@@ -339,16 +339,16 @@ namespace golang::types
     // Must not be called directly from outside the unifier.
     bool rec::nify(unifier* u, golang::types::Type x, golang::types::Type y, unifyMode mode, ifacePair* p)
     {
+        bool result;
         gocpp::Defer defer;
         try
         {
-            bool result;
             u->depth++;
             if(traceInference)
             {
                 rec::tracef(gocpp::recv(u), "%s ≡ %s\t// %s"_s, x, y, mode);
             }
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &result]{ [=]() mutable -> void
             {
                 if(traceInference && ! result)
                 {
@@ -1050,6 +1050,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {result};
         }
     }
 

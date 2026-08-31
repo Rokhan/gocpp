@@ -576,12 +576,12 @@ namespace golang::fmt
 
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> rec::Token(ss* s, bool skipSpace, std::function<bool (gocpp::rune _1)> f)
     {
+        gocpp::slice<unsigned char> tok;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<unsigned char> tok;
-            gocpp::error err;
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &err]{ [=]() mutable -> void
             {
                 if(auto e = gocpp::recover(); e != nullptr)
                 {
@@ -606,6 +606,7 @@ namespace golang::fmt
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {tok, err};
         }
     }
 
@@ -1878,12 +1879,12 @@ namespace golang::fmt
     // doScan does the real work for scanning without a format string.
     std::tuple<int, gocpp::error> rec::doScan(ss* s, gocpp::slice<go_any> a)
     {
+        int numProcessed;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            int numProcessed;
-            gocpp::error err;
-            defer.push_back([=]{ errorHandler(& err); });
+            defer.push_back([=, &err]{ errorHandler(& err); });
             for(auto [gocpp_ignored, arg] : a)
             {
                 rec::scanOne(gocpp::recv(s), 'v', arg);
@@ -1911,6 +1912,7 @@ namespace golang::fmt
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {numProcessed, err};
         }
     }
 
@@ -2028,12 +2030,12 @@ namespace golang::fmt
     // At the moment, it handles only pointers to basic types.
     std::tuple<int, gocpp::error> rec::doScanf(ss* s, gocpp::string format, gocpp::slice<go_any> a)
     {
+        int numProcessed;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            int numProcessed;
-            gocpp::error err;
-            defer.push_back([=]{ errorHandler(& err); });
+            defer.push_back([=, &err]{ errorHandler(& err); });
             auto end = len(format) - 1;
             // We process one item per non-trivial format
             for(auto i = 0; i <= end; )
@@ -2107,6 +2109,7 @@ namespace golang::fmt
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {numProcessed, err};
         }
     }
 

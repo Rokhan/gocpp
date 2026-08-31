@@ -15,6 +15,26 @@ namespace golang::main
     void main();
     void f();
     void g(int i);
+    void scanOne(go_any arg);
+    struct scanError
+    {
+        gocpp::error err{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct scanError& value);
+    void errorString(gocpp::string err);
+    void errorHandler(gocpp::error* errp);
+    std::tuple<int, gocpp::error> doScan(gocpp::slice<go_any> a);
 
     namespace rec
     {

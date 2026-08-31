@@ -85,10 +85,10 @@ namespace golang::ast
 
     gocpp::error fprint(io::Writer w, token::FileSet* fset, go_any x, FieldFilter f)
     {
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::error err;
             // setup printer
             auto p = gocpp::Init<printer>([=](auto& y) {
                 y.output = w;
@@ -99,7 +99,7 @@ namespace golang::ast
             });
 
             // install error handler
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &err]{ [=]() mutable -> void
             {
                 if(auto e = gocpp::recover(); e != nullptr)
                 {
@@ -122,6 +122,7 @@ namespace golang::ast
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {err};
         }
     }
 

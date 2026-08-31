@@ -280,11 +280,11 @@ namespace golang::packages
     // See driver for more details.
     std::tuple<DriverResponse*, gocpp::error> goListDriver(Config* cfg, gocpp::slice<gocpp::string> patterns)
     {
+        DriverResponse* _1;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            DriverResponse* _1;
-            gocpp::error err;
             // Make sure that any asynchronous go commands are killed when we return.
             auto parentCtx = cfg->Context;
             if(parentCtx == nullptr)
@@ -313,7 +313,7 @@ namespace golang::packages
                     response->dr->Arch = arch;
                     errCh.send(err);
                 }(); });
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &err]{ [=]() mutable -> void
                 {
                     if(auto sizesErr = errCh.recv(); sizesErr != nullptr)
                     {
@@ -407,6 +407,7 @@ namespace golang::packages
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {_1, err};
         }
     }
 

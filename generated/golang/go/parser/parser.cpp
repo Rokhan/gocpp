@@ -672,11 +672,11 @@ namespace golang::parser
     // later on.
     token::Pos rec::safePos(golang::parser::parser* p, token::Pos pos)
     {
+        token::Pos res;
         gocpp::Defer defer;
         try
         {
-            token::Pos res;
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &res]{ [=]() mutable -> void
             {
                 if(gocpp::recover() != nullptr)
                 {
@@ -691,6 +691,7 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {res};
         }
     }
 
@@ -716,10 +717,10 @@ namespace golang::parser
 
     gocpp::slice<ast::Ident*> rec::parseIdentList(golang::parser::parser* p)
     {
+        gocpp::slice<ast::Ident*> list;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<ast::Ident*> list;
             if(p->trace)
             {
                 defer.push_back([=]{ un(parser::trace(p, "IdentList"_s)); });
@@ -737,16 +738,17 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {list};
         }
     }
 
     // If lhs is set, result list elements which are identifiers are not resolved.
     gocpp::slice<ast::Expr> rec::parseExprList(golang::parser::parser* p)
     {
+        gocpp::slice<ast::Expr> list;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<ast::Expr> list;
             if(p->trace)
             {
                 defer.push_back([=]{ un(parser::trace(p, "ExpressionList"_s)); });
@@ -764,6 +766,7 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {list};
         }
     }
 
@@ -1266,10 +1269,10 @@ namespace golang::parser
 
     field rec::parseParamDecl(golang::parser::parser* p, ast::Ident* name, bool typeSetsOK)
     {
+        field f;
         gocpp::Defer defer;
         try
         {
-            field f;
             // TODO(rFindley) refactor to be more similar to paramDeclOrNil in the syntax
             // package
             if(p->trace)
@@ -1431,15 +1434,16 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {f};
         }
     }
 
     gocpp::slice<ast::Field*> rec::parseParameterList(golang::parser::parser* p, ast::Ident* name0, ast::Expr typ0, token::Token closing)
     {
+        gocpp::slice<ast::Field*> params;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<ast::Field*> params;
             if(p->trace)
             {
                 defer.push_back([=]{ un(parser::trace(p, "ParameterList"_s)); });
@@ -1674,16 +1678,17 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {params};
         }
     }
 
     std::tuple<ast::FieldList*, ast::FieldList*> rec::parseParameters(golang::parser::parser* p, bool acceptTParams)
     {
+        ast::FieldList* tparams;
+        ast::FieldList* params;
         gocpp::Defer defer;
         try
         {
-            ast::FieldList* tparams;
-            ast::FieldList* params;
             if(p->trace)
             {
                 defer.push_back([=]{ un(parser::trace(p, "Parameters"_s)); });
@@ -1730,6 +1735,7 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {tparams, params};
         }
     }
 
@@ -2287,10 +2293,10 @@ namespace golang::parser
 
     gocpp::slice<ast::Stmt> rec::parseStmtList(golang::parser::parser* p)
     {
+        gocpp::slice<ast::Stmt> list;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<ast::Stmt> list;
             if(p->trace)
             {
                 defer.push_back([=]{ un(parser::trace(p, "StatementList"_s)); });
@@ -2306,6 +2312,7 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {list};
         }
     }
 
@@ -2789,10 +2796,10 @@ namespace golang::parser
 
     gocpp::slice<ast::Expr> rec::parseElementList(golang::parser::parser* p)
     {
+        gocpp::slice<ast::Expr> list;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<ast::Expr> list;
             if(p->trace)
             {
                 defer.push_back([=]{ un(parser::trace(p, "ElementList"_s)); });
@@ -2813,6 +2820,7 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {list};
         }
     }
 
@@ -4169,10 +4177,10 @@ namespace golang::parser
 
     ast::Stmt rec::parseStmt(golang::parser::parser* p)
     {
+        ast::Stmt s;
         gocpp::Defer defer;
         try
         {
-            ast::Stmt s;
             defer.push_back([=]{ decNestLev(incNestLev(p)); });
 
             if(p->trace)
@@ -4327,6 +4335,7 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {s};
         }
     }
 

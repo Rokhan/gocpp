@@ -732,10 +732,10 @@ namespace golang::gocommand
     // before os.Kill.
     gocpp::error runCmdContext(context::Context ctx, exec::Cmd* cmd)
     {
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::error err;
             // If cmd.Stdout is not an *os.File, the exec package will create a pipe and
             // copy it to the Writer in a goroutine until the process has finished and
             // either the pipe reaches EOF or command's WaitDelay expires.
@@ -770,7 +770,7 @@ namespace golang::gocommand
                         }
                         stdoutErr.send(err);
                     }(); });
-                    defer.push_back([=]{ [=]() mutable -> void
+                    defer.push_back([=, &err]{ [=]() mutable -> void
                     {
                         // We started a goroutine to copy a stdout pipe.
                         // Wait for it to finish, or terminate it if need be.
@@ -937,6 +937,7 @@ namespace golang::gocommand
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {err};
         }
     }
 
@@ -1026,12 +1027,12 @@ namespace golang::gocommand
     // when the files are no longer needed.
     std::tuple<gocpp::string, std::function<void ()>, gocpp::error> WriteOverlays(gocpp::map<gocpp::string, gocpp::slice<unsigned char>> overlay)
     {
+        gocpp::string filename;
+        std::function<void ()> cleanup;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            gocpp::string filename;
-            std::function<void ()> cleanup;
-            gocpp::error err;
             // Do nothing if there are no overlays in the config.
             if(len(overlay) == 0)
             {
@@ -1051,7 +1052,7 @@ namespace golang::gocommand
             // unless this function returns an error.
             // (The cleanup operand of each return
             // statement below is ignored.)
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &cleanup, &err]{ [=]() mutable -> void
             {
                 cleanup = [=]() mutable -> void
                 {
@@ -1120,6 +1121,7 @@ namespace golang::gocommand
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {filename, cleanup, err};
         }
     }
 

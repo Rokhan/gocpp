@@ -69,10 +69,10 @@ namespace golang::types
     // false, and *x is undefined.
     bool rec::builtin(Checker* check, operand* x, ast::CallExpr* call, builtinId id)
     {
+        bool _1;
         gocpp::Defer defer;
         try
         {
-            bool _1;
             auto argList = call->Args;
 
             // append is the only built-in that permits the use of ... for the last argument
@@ -1353,6 +1353,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {_1};
         }
     }
 
@@ -1361,10 +1362,10 @@ namespace golang::types
     // yet been checked.
     bool hasVarSize(golang::types::Type t, gocpp::map<Named*, bool> seen)
     {
+        bool varSized;
         gocpp::Defer defer;
         try
         {
-            bool varSized;
             // Cycles are only possible through *Named types.
             // The seen map is used to detect cycles and track
             // the results of previously seen types.
@@ -1380,7 +1381,7 @@ namespace golang::types
                 }
                 // possibly cyclic until proven otherwise
                 seen[named] = true;
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &varSized]{ [=]() mutable -> void
                 {
                     // record final determination for named
                     seen[named] = varSized;
@@ -1436,6 +1437,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {varSized};
         }
     }
 

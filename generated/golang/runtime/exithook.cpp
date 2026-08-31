@@ -124,11 +124,11 @@ namespace golang::runtime
 
         auto runExitHook = [=](std::function<void ()> f) mutable -> bool
         {
+            bool caughtPanic;
             gocpp::Defer defer;
             try
             {
-                bool caughtPanic;
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &caughtPanic]{ [=]() mutable -> void
                 {
                     if(auto x = gocpp::recover(); x != nullptr)
                     {
@@ -141,6 +141,7 @@ namespace golang::runtime
             catch(gocpp::GoPanic& gp)
             {
                 defer.handlePanic(gp);
+                return {caughtPanic};
             }
         };
 

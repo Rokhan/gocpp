@@ -205,10 +205,10 @@ namespace golang::types
 
     Signature* rec::instantiateSignature(Checker* check, token::Pos pos, ast::Expr expr, Signature* typ, gocpp::slice<golang::types::Type> targs, gocpp::slice<ast::Expr> xlist)
     {
+        Signature* res;
         gocpp::Defer defer;
         try
         {
-            Signature* res;
             assert(check != nullptr);
             assert(len(targs) == rec::Len(gocpp::recv(rec::TypeParams(gocpp::recv(typ)))));
 
@@ -216,7 +216,7 @@ namespace golang::types
             {
                 rec::trace(gocpp::recv(check), pos, "-- instantiating signature %s with %s"_s, typ, targs);
                 check->indent++;
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &res]{ [=]() mutable -> void
                 {
                     check->indent--;
                     rec::trace(gocpp::recv(check), pos, "=> %s (under = %s)"_s, res, rec::Underlying(gocpp::recv(res)));
@@ -255,6 +255,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {res};
         }
     }
 
@@ -518,15 +519,15 @@ namespace golang::types
     // xlistList elements are the operand's partial type arguments and type expression lists.
     std::tuple<gocpp::slice<operand*>, gocpp::slice<gocpp::slice<golang::types::Type>>, gocpp::slice<gocpp::slice<ast::Expr>>> rec::genericExprList(Checker* check, gocpp::slice<ast::Expr> elist)
     {
+        gocpp::slice<operand*> resList;
+        gocpp::slice<gocpp::slice<golang::types::Type>> targsList;
+        gocpp::slice<gocpp::slice<ast::Expr>> xlistList;
         gocpp::Defer defer;
         try
         {
-            gocpp::slice<operand*> resList;
-            gocpp::slice<gocpp::slice<golang::types::Type>> targsList;
-            gocpp::slice<gocpp::slice<ast::Expr>> xlistList;
             if(debug)
             {
-                defer.push_back([=]{ [=]() mutable -> void
+                defer.push_back([=, &targsList, &xlistList, &resList]{ [=]() mutable -> void
                 {
                     // targsList and xlistList must have matching lengths
                     assert(len(targsList) == len(xlistList));
@@ -648,6 +649,7 @@ namespace golang::types
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {resList, targsList, xlistList};
         }
     }
 

@@ -503,12 +503,12 @@ namespace golang::constraint
     // parseExpr parses a boolean build tag expression.
     std::tuple<Expr, gocpp::error> parseExpr(gocpp::string text)
     {
+        Expr x;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            Expr x;
-            gocpp::error err;
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &err]{ [=]() mutable -> void
             {
                 if(auto e = gocpp::recover(); e != nullptr)
                 {
@@ -541,6 +541,7 @@ namespace golang::constraint
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {x, err};
         }
     }
 

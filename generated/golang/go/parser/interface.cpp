@@ -121,11 +121,11 @@ namespace golang::parser
     // are returned via a scanner.ErrorList which is sorted by source position.
     std::tuple<ast::File*, gocpp::error> ParseFile(token::FileSet* fset, gocpp::string filename, go_any src, Mode mode)
     {
+        ast::File* f;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            ast::File* f;
-            gocpp::error err;
             if(fset == nullptr)
             {
                 gocpp::panic("parser.ParseFile: no token.FileSet provided (fset == nil)"_s);
@@ -140,7 +140,7 @@ namespace golang::parser
             }
 
             golang::parser::parser p = {};
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &f, &err]{ [=]() mutable -> void
             {
                 if(auto e = gocpp::recover(); e != nullptr)
                 {
@@ -182,6 +182,7 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {f, err};
         }
     }
 
@@ -263,11 +264,11 @@ namespace golang::parser
     // are returned via a scanner.ErrorList which is sorted by source position.
     std::tuple<ast::Expr, gocpp::error> ParseExprFrom(token::FileSet* fset, gocpp::string filename, go_any src, Mode mode)
     {
+        ast::Expr expr;
+        gocpp::error err;
         gocpp::Defer defer;
         try
         {
-            ast::Expr expr;
-            gocpp::error err;
             if(fset == nullptr)
             {
                 gocpp::panic("parser.ParseExprFrom: no token.FileSet provided (fset == nil)"_s);
@@ -282,7 +283,7 @@ namespace golang::parser
             }
 
             golang::parser::parser p = {};
-            defer.push_back([=]{ [=]() mutable -> void
+            defer.push_back([=, &err]{ [=]() mutable -> void
             {
                 if(auto e = gocpp::recover(); e != nullptr)
                 {
@@ -319,6 +320,7 @@ namespace golang::parser
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {expr, err};
         }
     }
 

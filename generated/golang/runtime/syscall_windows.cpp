@@ -787,11 +787,11 @@ namespace golang::runtime
     //go:cgo_unsafe_args
     std::tuple<uintptr_t, uintptr_t> syscall_loadlibrary(uint16_t* filename)
     {
+        uintptr_t handle;
+        uintptr_t err;
         gocpp::Defer defer;
         try
         {
-            uintptr_t handle;
-            uintptr_t err;
             lockOSThread();
             defer.push_back([=]{ unlockOSThread(); });
             auto c = & getg()->m->syscall;
@@ -810,6 +810,7 @@ namespace golang::runtime
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {handle, err};
         }
     }
 
@@ -818,11 +819,11 @@ namespace golang::runtime
     //go:cgo_unsafe_args
     std::tuple<uintptr_t, uintptr_t> syscall_getprocaddress(uintptr_t handle, unsigned char* procname)
     {
+        uintptr_t outhandle;
+        uintptr_t err;
         gocpp::Defer defer;
         try
         {
-            uintptr_t outhandle;
-            uintptr_t err;
             lockOSThread();
             defer.push_back([=]{ unlockOSThread(); });
             auto c = & getg()->m->syscall;
@@ -841,6 +842,7 @@ namespace golang::runtime
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {outhandle, err};
         }
     }
 
@@ -908,12 +910,12 @@ namespace golang::runtime
     //go:nosplit
     std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_SyscallN(uintptr_t trap, gocpp::slice<uintptr_t> args)
     {
+        uintptr_t r1;
+        uintptr_t r2;
+        uintptr_t err;
         gocpp::Defer defer;
         try
         {
-            uintptr_t r1;
-            uintptr_t r2;
-            uintptr_t err;
             auto nargs = len(args);
 
             // asmstdcall expects it can access the first 4 arguments
@@ -948,6 +950,7 @@ namespace golang::runtime
         catch(gocpp::GoPanic& gp)
         {
             defer.handlePanic(gp);
+            return {r1, r2, err};
         }
     }
 

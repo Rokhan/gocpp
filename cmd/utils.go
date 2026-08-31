@@ -1276,20 +1276,26 @@ func getAllIdentifiers(expr ast.Expr) map[*ast.Ident]bool {
 	return gi.idents
 }
 
-type UseIdentfier struct {
-	identifier string
-	used       bool
+type UseIdentifiers struct {
+	identifiers map[string]bool
+	used        map[string]bool
 }
 
-func (visitor *UseIdentfier) Visit(node ast.Node) ast.Visitor {
+func (visitor *UseIdentifiers) Visit(node ast.Node) ast.Visitor {
+	// Optim, once every identifier has been found, stop searching.
+	if len(visitor.used) == len(visitor.identifiers) {
+		return nil
+	}
+
 	switch n := node.(type) {
 	case *ast.Ident:
-		if n.Name == visitor.identifier {
-			visitor.used = true
-			return nil
+		if visitor.identifiers[n.Name] {
+			visitor.used[n.Name] = true
 		}
+		return nil
+
 	case *ast.SelectorExpr:
-		// ignore field names
+		// ignore field/method names, only descend into the receiver
 		ast.Walk(visitor, n.X)
 		return nil
 
@@ -1299,10 +1305,22 @@ func (visitor *UseIdentfier) Visit(node ast.Node) ast.Visitor {
 	return visitor
 }
 
+func usedIdentifiers(identifiers []string, expr ast.Expr) map[string]bool {
+	idSet := make(map[string]bool, len(identifiers))
+	for _, id := range identifiers {
+		idSet[id] = true
+	}
+	visitor := &UseIdentifiers{
+		identifiers: idSet,
+		used:        make(map[string]bool, len(identifiers)),
+	}
+	ast.Walk(visitor, expr)
+	return visitor.used
+}
+
 func isIdentifierUsed(identifier string, expr ast.Expr) bool {
-	gi := &UseIdentfier{identifier, false}
-	ast.Walk(gi, expr)
-	return gi.used
+	used := usedIdentifiers([]string{identifier}, expr)
+	return used[identifier]
 }
 
 // appendMap merges all entries from src into target.

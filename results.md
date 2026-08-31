@@ -159,7 +159,7 @@
 | $(ImportDir)/fmt/errors.go | ✔️ ([cpp](generated/golang/fmt/errors.cpp), [h](generated/golang/fmt/errors.h))| ✔️ |
 | $(ImportDir)/fmt/format.go | ✔️ ([cpp](generated/golang/fmt/format.cpp), [h](generated/golang/fmt/format.h))| ✔️ |
 | $(ImportDir)/fmt/print.go | ✔️ ([cpp](generated/golang/fmt/print.cpp), [h](generated/golang/fmt/print.h))| ✔️ |
-| $(ImportDir)/fmt/scan.go | ✔️ ([cpp](generated/golang/fmt/scan.cpp), [h](generated/golang/fmt/scan.h))| ❌ |
+| $(ImportDir)/fmt/scan.go | ✔️ ([cpp](generated/golang/fmt/scan.cpp), [h](generated/golang/fmt/scan.h))| ✔️ |
 | $(ImportDir)/go/ast/ast.go | ✔️ ([cpp](generated/golang/go/ast/ast.cpp), [h](generated/golang/go/ast/ast.h))| ❌ |
 | $(ImportDir)/go/ast/print.go | ✔️ ([cpp](generated/golang/go/ast/print.cpp), [h](generated/golang/go/ast/print.h))| ❌ |
 | $(ImportDir)/go/ast/resolve.go | ✔️ ([cpp](generated/golang/go/ast/resolve.cpp), [h](generated/golang/go/ast/resolve.h))| ✔️ |

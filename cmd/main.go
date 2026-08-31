@@ -1350,13 +1350,13 @@ func (cv *cppConverter) convertBlockStmtOpt(block *ast.BlockStmt, env blockEnv, 
 	fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
 	cv.cpp.indent++
 
-	cppOut := cv.withCppBuffer(func() {
+	for i, tbdName := range env.toBeDeclared {
+		fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppOutType(env.outTypes[i]), tbdName)
+		*env.varNames = append(*env.varNames, tbdName)
+	}
+	env.toBeDeclared = nil
 
-		for i, tbdName := range env.toBeDeclared {
-			fmt.Fprintf(cv.cpp.out, "%s%s %s;\n", cv.cpp.Indent(), GetCppOutType(env.outTypes[i]), tbdName)
-			*env.varNames = append(*env.varNames, tbdName)
-		}
-		env.toBeDeclared = nil
+	cppOut := cv.withCppBuffer(func() {
 
 		if ctx.label != nil {
 			fmt.Fprintf(cv.cpp.out, "%sif(false) {\n", cv.cpp.Indent())
@@ -1406,6 +1406,9 @@ func (cv *cppConverter) convertBlockStmtOpt(block *ast.BlockStmt, env blockEnv, 
 		fmt.Fprintf(cv.cpp.out, "%scatch(gocpp::GoPanic& gp)\n", cv.cpp.Indent())
 		fmt.Fprintf(cv.cpp.out, "%s{\n", cv.cpp.Indent())
 		fmt.Fprintf(cv.cpp.out, "%s    defer.handlePanic(gp);\n", cv.cpp.Indent())
+		if len(env.outNames) > 0 {
+			fmt.Fprintf(cv.cpp.out, "%s    return {%s};\n", cv.cpp.Indent(), strings.Join(env.outNames, ", "))
+		}
 		fmt.Fprintf(cv.cpp.out, "%s}\n", cv.cpp.Indent())
 	} else {
 		fmt.Fprintf(cv.cpp.out, "%s", cppOut)
@@ -1626,7 +1629,9 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 
 	case *ast.DeferStmt:
 		*env.useDefer = true
-		cv.WritterExprPrintf(cppOut, "%sdefer.push_back([=]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))
+		usedOutVars := maps.Keys(usedIdentifiers(env.outNames, s.Call))
+		byRefString := JoinWithPrefix(usedOutVars, ", &")
+		cv.WritterExprPrintf(cppOut, "%sdefer.push_back([=%s]{ %s; });\n", cv.cpp.Indent(), byRefString, cv.convertExpr(s.Call))
 
 	case *ast.GoStmt:
 		cv.WritterExprPrintf(cppOut, "%sgocpp::go([&]{ %s; });\n", cv.cpp.Indent(), cv.convertExpr(s.Call))

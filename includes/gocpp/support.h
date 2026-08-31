@@ -41,7 +41,7 @@ namespace golang
     namespace tree
     {
         struct Tree;
-        std::ostream& operator<<(std::ostream& os, Tree const&)
+        inline std::ostream& operator<<(std::ostream& os, Tree const&)
         {
             os << "Tree";
             return os;
@@ -203,7 +203,7 @@ namespace gocpp
     }
 
     template<>
-    std::string any_cast<std::string>(const std::any& value)
+    inline std::string any_cast<std::string>(const std::any& value)
     {
         if(value.type() == typeid(const char * const))
         {
@@ -296,12 +296,12 @@ namespace gocpp
     {
         void* ptr = nullptr;
 
-        unsafe_pointer() = default;
-        unsafe_pointer(void* p) : ptr(p) { }
-        unsafe_pointer(uintptr_t p) : ptr(reinterpret_cast<void*>(p)) { }
+        inline unsafe_pointer() = default;
+        inline unsafe_pointer(void* p) : ptr(p) { }
+        inline unsafe_pointer(uintptr_t p) : ptr(reinterpret_cast<void*>(p)) { }
 
-        operator void*() const { return ptr; }
-        operator uintptr_t() const { return reinterpret_cast<uintptr_t>(ptr); }
+        inline operator void*() const { return ptr; }
+        inline operator uintptr_t() const { return reinterpret_cast<uintptr_t>(ptr); }
         template<typename T>
         operator T*() const { return reinterpret_cast<T*>(ptr); }
     };
@@ -675,7 +675,7 @@ namespace gocpp
 
     struct Defer : std::vector<std::function<void()>>
     {
-        void unwind()
+        inline void unwind()
         {
             while(!empty())
             {
@@ -684,7 +684,7 @@ namespace gocpp
             }
         }
 
-        void handlePanic(GoPanic& gp)
+        inline void handlePanic(GoPanic& gp)
         {
             unwind();
 
@@ -693,7 +693,7 @@ namespace gocpp
             }            
         }
 
-        ~Defer()
+        inline ~Defer()
         {
             unwind();
         }
@@ -718,9 +718,9 @@ namespace gocpp
     {
         using optional::optional;
 
-        error() : optional(std::nullopt) {}
-        error(std::nullptr_t) : optional(std::nullopt) {}
-        error(const gocpp::string& msg) : optional(msg) {}
+        inline error() : optional(std::nullopt) {}
+        inline error(std::nullptr_t) : optional(std::nullopt) {}
+        inline error(const gocpp::string& msg) : optional(msg) {}
         
         template<typename T>
         error(T& ref)
@@ -750,14 +750,14 @@ namespace gocpp
         template<typename T, typename TStore, typename TInterface = Ierror>
         struct errorImpl : virtual TInterface
         {
-            explicit errorImpl(T* ptr)
+            inline explicit errorImpl(T* ptr)
             {
                 value.reset(ptr);
             }
 
             gocpp::string vError() override;
 
-            void* getPtr() override
+            inline void* getPtr() override
             {
                 return value.get();
             }
@@ -767,13 +767,13 @@ namespace gocpp
 
         std::shared_ptr<Ierror> mValue;
 
-        error& operator=(const std::string& msg)
+        inline error& operator=(const std::string& msg)
         {
             this->optional::operator=(msg);
             return *this;
         }
 
-        error& operator=(std::nullptr_t)
+        inline error& operator=(std::nullptr_t)
         {
             this->optional::operator=(std::nullopt);
             return *this;
@@ -786,30 +786,30 @@ namespace gocpp
             return *this;
         }
 
-        friend bool operator==(const error& lhs, const error& rhs) = default;
+        friend inline bool operator==(const error& lhs, const error& rhs) = default;
 
-        friend bool operator==(const error& lhs, const gocpp::string& rhs)
+        friend inline bool operator==(const error& lhs, const gocpp::string& rhs)
         {
             return lhs.has_value() && lhs.value() == rhs;
         }
 
-        friend bool operator==(const error& lhs, std::nullptr_t)
+        friend inline bool operator==(const error& lhs, std::nullptr_t)
         {
             return !lhs.has_value();
         }
 
-        friend bool operator==(const gocpp::string& lhs, const error& rhs)
+        friend inline bool operator==(const gocpp::string& lhs, const error& rhs)
         {
             return rhs == lhs;
         }
 
-        friend bool operator==(std::nullptr_t, const error& rhs)
+        friend inline bool operator==(std::nullptr_t, const error& rhs)
         {
             return rhs == nullptr;
         }
     };
 
-    std::string Error(const std::type_identity_t<error>& e)
+    inline std::string Error(const std::type_identity_t<error>& e)
     {
         if(e.has_value())
         {
@@ -824,7 +824,7 @@ namespace gocpp
         return os;
     }
 
-    [[noreturn]] void panic(const std::type_identity_t<error>& err)
+    [[noreturn]] inline void panic(const std::type_identity_t<error>& err)
     {
         panic(err);
     }
@@ -861,12 +861,12 @@ namespace gocpp
     {
         bool isNil = true;
 
-        bool operator==(nullptr_t ptr)
+        inline bool operator==(nullptr_t ptr)
         {
             return isNil;
         }
         
-        bool operator!=(nullptr_t ptr)
+        inline bool operator!=(nullptr_t ptr)
         {
             return !isNil;
         }
@@ -893,7 +893,7 @@ namespace gocpp
         throw GoPanic(Error(error));
     }
 
-    go_any recover()
+    inline go_any recover()
     {
         try
         {
@@ -992,12 +992,12 @@ namespace gocpp
 
     namespace rec
     {
-        gocpp::string Error(const gocpp::PtrRecv<error, false>& self)
+        inline gocpp::string Error(const gocpp::PtrRecv<error, false>& self)
         {
             return self.ptr->mValue->vError();
         }
 
-        gocpp::string Error(const gocpp::ObjRecv<error>& self)
+        inline gocpp::string Error(const gocpp::ObjRecv<error>& self)
         {
             return self.obj.mValue->vError();
         }
@@ -1746,8 +1746,8 @@ namespace mocklib
         // mocklib::Date will be removed when linking will be implemented
         operator golang::time::Time();
 
-        static Date Now() { return Date{}; };
-        static const int Saturday = 6;
+        inline static Date Now() { return Date{}; };
+        inline static const int Saturday = 6;
     };
     
     std::ostream& operator<<(std::ostream& os, const Date& date)
@@ -1803,7 +1803,7 @@ namespace mocklib
     // mock "sync" types and functions
     struct Mutex : std::shared_ptr<std::mutex>
     {
-        Mutex() : std::shared_ptr<std::mutex>(new std::mutex()) { }
+        inline Mutex() : std::shared_ptr<std::mutex>(new std::mutex()) { }
     };
 
     namespace rec
@@ -2020,22 +2020,22 @@ namespace mocklib
     template<typename T, typename... Args>
     void PrintToVect(std::vector<std::string>& out, const T& value, Args&&... args);
 
-    std::ostream& PrintTo(std::ostream& os, const Date& value)
+    inline std::ostream& PrintTo(std::ostream& os, const Date& value)
     {
         return os << "[DATE]";
     }
 
-    std::ostream& PrintTo(std::ostream& os, bool value)
+    inline std::ostream& PrintTo(std::ostream& os, bool value)
     {
         return os << value;
     }   
 
-    std::ostream& PrintTo(std::ostream& os, char value)
+    inline std::ostream& PrintTo(std::ostream& os, char value)
     {
         return os << int(value);
     }
 
-    std::ostream& PrintTo(std::ostream& os, unsigned char value)
+    inline std::ostream& PrintTo(std::ostream& os, unsigned char value)
     {
         return os << int(value);
     }
@@ -2051,7 +2051,7 @@ namespace mocklib
         return std::string(buf.data(), result.ptr - buf.data());
     }
 
-    std::ostream& PrintTo(std::ostream& os, double value)
+    inline std::ostream& PrintTo(std::ostream& os, double value)
     {
         return os << to_go_string(value);
     }
@@ -2115,7 +2115,7 @@ namespace mocklib
         std::cout << value;
     }
 
-    void Printf(const double& value)
+    inline void Printf(const double& value)
     {
         std::cout << to_go_string(value);
     }
@@ -2153,17 +2153,17 @@ namespace mocklib
         std::cout << "\n";
     }
     
-    void Println()
+    inline void Println()
     {
         std::cout << "\n";
     }    
 
-    std::string Sprint(const std::any& value)
+    inline std::string Sprint(const std::any& value)
     {
         return "<std::any>";
     }
 
-    std::string Sprint(const gocpp::go_any& value)
+    inline std::string Sprint(const gocpp::go_any& value)
     {
         if (value.type() == typeid(int)) {
             std::stringstream sstr;
@@ -2215,7 +2215,7 @@ namespace mocklib
         return Sprintf(std::forward<Args>(args)...);
     }
 
-    void PrintToVect(std::vector<std::string>&) { }
+    inline void PrintToVect(std::vector<std::string>&) { }
 
     template<typename T>
     void PrintToVect(std::vector<std::string>& out, const T& value)
@@ -2244,7 +2244,7 @@ namespace mocklib
         return sstr.str();
     }
 
-    gocpp::slice<std::string> StringsFields(const std::string& strList)
+    inline gocpp::slice<std::string> StringsFields(const std::string& strList)
     {
         gocpp::slice<std::string> strings;
         std::istringstream iss(strList);

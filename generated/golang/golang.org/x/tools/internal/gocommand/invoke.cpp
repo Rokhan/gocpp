@@ -50,6 +50,7 @@ namespace golang::gocommand
     namespace rec
     {
         using bytes::rec::Reset;
+        using bytes::rec::Write;
         using context::rec::Done;
         using context::rec::Err;
         using exec::rec::Run;
@@ -59,7 +60,9 @@ namespace golang::gocommand
         using mocklib::rec::Error;
         using os::rec::Close;
         using os::rec::Kill;
+        using os::rec::Read;
         using os::rec::Signal;
+        using os::rec::Write;
         using reflect::rec::Elem;
         using reflect::rec::FieldByName;
         using reflect::rec::IsValid;

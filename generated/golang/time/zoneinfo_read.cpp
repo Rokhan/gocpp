@@ -24,6 +24,7 @@ namespace golang::time
 {
     namespace rec
     {
+        using syscall::rec::Error;
     }
 
     // registerLoadFromEmbeddedTZData is called by the time/tzdata package,

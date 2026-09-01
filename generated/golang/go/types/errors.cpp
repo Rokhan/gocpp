@@ -43,6 +43,7 @@ namespace golang::types
         using bytes::rec::WriteString;
         using strings::rec::Len;
         using strings::rec::String;
+        using strings::rec::Write;
         using strings::rec::WriteRune;
         using strings::rec::WriteString;
         using token::rec::IsValid;

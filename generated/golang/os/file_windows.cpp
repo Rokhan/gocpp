@@ -37,11 +37,13 @@ namespace golang::os
 {
     namespace rec
     {
+        using fs::rec::Error;
         using fs::rec::IsDir;
         using poll::rec::Close;
         using poll::rec::Init;
         using poll::rec::Seek;
         using sync::rec::Do;
+        using syscall::rec::Error;
         using windows::rec::Path;
     }
 

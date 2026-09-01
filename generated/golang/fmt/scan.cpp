@@ -31,6 +31,7 @@ namespace golang::fmt
     {
         using io::rec::ReadRune;
         using io::rec::UnreadRune;
+        using os::rec::Read;
         using reflect::rec::Bits;
         using reflect::rec::Elem;
         using reflect::rec::Index;

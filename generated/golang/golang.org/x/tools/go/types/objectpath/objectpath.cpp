@@ -65,6 +65,7 @@ namespace golang::objectpath
         using types::rec::Elem;
         using types::rec::Exported;
         using types::rec::Field;
+        using types::rec::Id;
         using types::rec::IsAlias;
         using types::rec::Key;
         using types::rec::Len;
@@ -77,15 +78,27 @@ namespace golang::objectpath
         using types::rec::Obj;
         using types::rec::Origin;
         using types::rec::Params;
+        using types::rec::Parent;
         using types::rec::Path;
         using types::rec::Pkg;
+        using types::rec::Pos;
         using types::rec::Recv;
         using types::rec::RecvTypeParams;
         using types::rec::Results;
         using types::rec::Scope;
+        using types::rec::String;
         using types::rec::Type;
         using types::rec::TypeParams;
         using types::rec::Underlying;
+        using types::rec::color;
+        using types::rec::order;
+        using types::rec::sameId;
+        using types::rec::scopePos;
+        using types::rec::setColor;
+        using types::rec::setOrder;
+        using types::rec::setParent;
+        using types::rec::setScopePos;
+        using types::rec::setType;
     }
 
     // A Path is an opaque name that identifies a types.Object

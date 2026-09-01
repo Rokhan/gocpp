@@ -31,6 +31,7 @@ namespace golang::os
 {
     namespace rec
     {
+        using syscall::rec::Error;
     }
 
     std::tuple<ProcessState*, gocpp::error> rec::wait(Process* p)

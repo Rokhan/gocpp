@@ -36,6 +36,7 @@ namespace golang::doc
         using ast::rec::NumFields;
         using ast::rec::Pos;
         using ast::rec::Text;
+        using ast::rec::exprNode;
         using lazyregexp::rec::FindStringSubmatchIndex;
         using lazyregexp::rec::MatchString;
         using strings::rec::String;

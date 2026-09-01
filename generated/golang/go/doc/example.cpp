@@ -33,6 +33,8 @@ namespace golang::doc
         using ast::rec::End;
         using ast::rec::Pos;
         using ast::rec::Text;
+        using ast::rec::declNode;
+        using ast::rec::specNode;
         using lazyregexp::rec::FindStringSubmatchIndex;
         using lazyregexp::rec::MatchString;
     }

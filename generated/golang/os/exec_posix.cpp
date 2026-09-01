@@ -29,6 +29,7 @@ namespace golang::os
 {
     namespace rec
     {
+        using fs::rec::Error;
         using syscall::rec::Continued;
         using syscall::rec::CoreDump;
         using syscall::rec::ExitStatus;

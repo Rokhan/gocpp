@@ -35,6 +35,9 @@ namespace golang::types
 {
     namespace rec
     {
+        using ast::rec::End;
+        using ast::rec::Pos;
+        using ast::rec::exprNode;
     }
 
     // A Union represents a union of terms embedded in an interface.

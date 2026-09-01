@@ -53,9 +53,13 @@ namespace golang::gcimporter
 {
     namespace rec
     {
+        using bufio::rec::Read;
         using exec::rec::Output;
         using fs::rec::IsDir;
         using io::rec::Close;
+        using io::rec::Read;
+        using os::rec::Close;
+        using os::rec::Read;
         using sync::rec::Do;
         using sync::rec::Load;
         using sync::rec::LoadOrStore;

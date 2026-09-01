@@ -19,6 +19,7 @@ namespace golang::image
 {
     namespace rec
     {
+        using color::rec::RGBA;
     }
 
     // A Point is an X, Y coordinate pair. The axes increase right and down.

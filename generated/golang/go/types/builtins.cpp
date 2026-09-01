@@ -58,6 +58,7 @@ namespace golang::types
 {
     namespace rec
     {
+        using ast::rec::End;
         using ast::rec::Pos;
         using constant::rec::Kind;
         using token::rec::IsValid;

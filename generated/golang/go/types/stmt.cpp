@@ -59,6 +59,8 @@ namespace golang::types
     {
         using ast::rec::End;
         using ast::rec::Pos;
+        using ast::rec::exprNode;
+        using ast::rec::stmtNode;
         using constant::rec::Kind;
         using token::rec::Position;
     }

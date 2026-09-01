@@ -22,6 +22,7 @@ namespace golang::core
 {
     namespace rec
     {
+        using fmt::rec::Write;
         using label::rec::Key;
         using label::rec::Valid;
         using time::rec::Format;

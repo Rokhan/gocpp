@@ -22,6 +22,7 @@ namespace golang::gcimporter
 {
     namespace rec
     {
+        using bufio::rec::Read;
         using bufio::rec::ReadSlice;
     }
 

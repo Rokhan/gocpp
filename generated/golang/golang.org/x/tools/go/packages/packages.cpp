@@ -69,6 +69,7 @@ namespace golang::packages
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
         using os::rec::Close;
+        using os::rec::Read;
         using sync::rec::Add;
         using sync::rec::Do;
         using sync::rec::Done;
@@ -76,6 +77,7 @@ namespace golang::packages
         using token::rec::Position;
         using token::rec::String;
         using types::rec::Complete;
+        using types::rec::Error;
         using types::rec::Files;
     }
 

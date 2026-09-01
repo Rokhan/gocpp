@@ -33,6 +33,7 @@ namespace golang::big
         using io::rec::ReadByte;
         using io::rec::UnreadByte;
         using strings::rec::ReadByte;
+        using strings::rec::UnreadByte;
     }
 
     bool ratTok(gocpp::rune ch)

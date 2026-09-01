@@ -33,7 +33,10 @@ namespace golang::packages
     namespace rec
     {
         using bytes::rec::Bytes;
+        using bytes::rec::Read;
+        using bytes::rec::Write;
         using exec::rec::Run;
+        using os::rec::Write;
     }
 
     // DriverRequest defines the schema of a request for package metadata

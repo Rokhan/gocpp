@@ -28,7 +28,9 @@ namespace golang::aliases
         using types::rec::Check;
         using types::rec::Lookup;
         using types::rec::Scope;
+        using types::rec::String;
         using types::rec::Type;
+        using types::rec::Underlying;
     }
 
     // Alias is an alias of types.Alias.

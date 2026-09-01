@@ -31,10 +31,14 @@ namespace golang::png
     namespace rec
     {
         using binary::rec::Uint32;
+        using color::rec::Convert;
+        using color::rec::RGBA;
         using hash::rec::Reset;
         using hash::rec::Sum32;
         using hash::rec::Write;
+        using image::rec::At;
         using image::rec::Bounds;
+        using image::rec::ColorModel;
         using image::rec::SetColorIndex;
         using image::rec::SetGray;
         using image::rec::SetGray16;

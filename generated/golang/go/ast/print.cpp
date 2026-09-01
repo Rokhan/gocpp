@@ -25,6 +25,7 @@ namespace golang::ast
     namespace rec
     {
         using io::rec::Write;
+        using os::rec::Write;
         using reflect::rec::Elem;
         using reflect::rec::Field;
         using reflect::rec::Index;

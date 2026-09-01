@@ -28,6 +28,7 @@ namespace golang::big
     {
         using fmt::rec::SkipSpace;
         using strings::rec::ReadByte;
+        using strings::rec::UnreadByte;
     }
 
     Float floatZero;

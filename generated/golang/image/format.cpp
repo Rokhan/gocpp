@@ -24,6 +24,7 @@ namespace golang::image
     {
         using atomic::rec::Load;
         using atomic::rec::Store;
+        using bufio::rec::Peek;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
     }

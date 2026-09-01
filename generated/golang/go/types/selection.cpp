@@ -26,6 +26,7 @@ namespace golang::types
     namespace rec
     {
         using bytes::rec::String;
+        using bytes::rec::Write;
         using bytes::rec::WriteByte;
         using bytes::rec::WriteString;
     }

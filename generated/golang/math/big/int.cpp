@@ -26,6 +26,8 @@ namespace golang::big
     namespace rec
     {
         using io::rec::ReadByte;
+        using strings::rec::ReadByte;
+        using strings::rec::UnreadByte;
     }
 
     // An Int represents a signed multi-precision integer.

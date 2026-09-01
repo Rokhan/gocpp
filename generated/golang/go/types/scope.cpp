@@ -30,6 +30,7 @@ namespace golang::types
     namespace rec
     {
         using strings::rec::String;
+        using strings::rec::Write;
         using sync::rec::Do;
         using token::rec::IsValid;
     }

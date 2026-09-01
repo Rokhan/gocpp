@@ -28,6 +28,7 @@ namespace golang::filepath
     {
         using fs::rec::IsDir;
         using fs::rec::Mode;
+        using syscall::rec::Error;
     }
 
     std::tuple<gocpp::string, gocpp::error> walkSymlinks(gocpp::string path)

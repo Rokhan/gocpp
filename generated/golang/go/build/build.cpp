@@ -66,7 +66,10 @@ namespace golang::build
         using godebug::rec::Value;
         using io::rec::Close;
         using io::rec::Read;
+        using os::rec::Close;
+        using os::rec::Read;
         using strings::rec::String;
+        using strings::rec::Write;
         using token::rec::Position;
     }
 

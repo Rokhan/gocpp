@@ -26,6 +26,7 @@ namespace golang::types
 {
     namespace rec
     {
+        using ast::rec::Pos;
         using token::rec::IsValid;
         using token::rec::Position;
     }

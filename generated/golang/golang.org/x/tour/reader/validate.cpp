@@ -21,6 +21,7 @@ namespace golang::reader
     namespace rec
     {
         using io::rec::Read;
+        using os::rec::Write;
     }
 
     void Validate(io::Reader r)

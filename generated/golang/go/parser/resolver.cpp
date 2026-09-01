@@ -24,6 +24,7 @@ namespace golang::parser
 {
     namespace rec
     {
+        using ast::rec::End;
         using ast::rec::Insert;
         using ast::rec::Lookup;
         using ast::rec::Pos;

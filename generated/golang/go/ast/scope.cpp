@@ -22,6 +22,7 @@ namespace golang::ast
     namespace rec
     {
         using strings::rec::String;
+        using strings::rec::Write;
     }
 
     // A Scope maintains the set of named language entities declared

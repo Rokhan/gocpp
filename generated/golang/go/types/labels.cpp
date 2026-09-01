@@ -28,6 +28,7 @@ namespace golang::types
     {
         using ast::rec::End;
         using ast::rec::Pos;
+        using ast::rec::stmtNode;
         using token::rec::IsValid;
         using token::rec::Position;
     }

@@ -36,6 +36,7 @@ namespace golang::buildcfg
 {
     namespace rec
     {
+        using os::rec::Write;
     }
 
     gocpp::string GOROOT = runtime::GOROOT();

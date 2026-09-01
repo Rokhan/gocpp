@@ -44,6 +44,9 @@ namespace golang::zlib
     {
         using binary::rec::Uint16;
         using binary::rec::Uint32;
+        using bufio::rec::Read;
+        using bufio::rec::ReadByte;
+        using flate::rec::Read;
         using flate::rec::Reset;
         using hash::rec::Sum32;
         using hash::rec::Write;

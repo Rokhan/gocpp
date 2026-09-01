@@ -21,6 +21,7 @@ namespace golang::main
     namespace rec
     {
         using io::rec::Read;
+        using os::rec::Write;
     }
 
     

@@ -58,8 +58,13 @@ namespace golang::types
 {
     namespace rec
     {
+        using ast::rec::End;
         using ast::rec::Pos;
+        using ast::rec::exprNode;
         using token::rec::IsValid;
+        using typeparams::rec::End;
+        using typeparams::rec::Pos;
+        using typeparams::rec::exprNode;
     }
 
     // funcInst type-checks a function instantiation.

@@ -54,6 +54,7 @@ namespace golang::types
         using ast::rec::Pos;
         using godebug::rec::Value;
         using strings::rec::String;
+        using strings::rec::Write;
         using strings::rec::WriteString;
     }
 

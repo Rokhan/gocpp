@@ -69,6 +69,8 @@ namespace golang::gcimporter
         using types::rec::Complete;
         using types::rec::EmbeddedType;
         using types::rec::ExplicitMethod;
+        using types::rec::Exported;
+        using types::rec::Id;
         using types::rec::Insert;
         using types::rec::Lookup;
         using types::rec::MarkComplete;
@@ -77,6 +79,7 @@ namespace golang::gcimporter
         using types::rec::NumEmbeddeds;
         using types::rec::NumExplicitMethods;
         using types::rec::Params;
+        using types::rec::Parent;
         using types::rec::Pkg;
         using types::rec::Pos;
         using types::rec::Results;
@@ -85,9 +88,19 @@ namespace golang::gcimporter
         using types::rec::SetImports;
         using types::rec::SetTypeParams;
         using types::rec::SetUnderlying;
+        using types::rec::String;
         using types::rec::Type;
         using types::rec::Underlying;
         using types::rec::Variadic;
+        using types::rec::color;
+        using types::rec::order;
+        using types::rec::sameId;
+        using types::rec::scopePos;
+        using types::rec::setColor;
+        using types::rec::setOrder;
+        using types::rec::setParent;
+        using types::rec::setScopePos;
+        using types::rec::setType;
     }
 
     // A pkgReader holds the shared state for reading a unified IR package

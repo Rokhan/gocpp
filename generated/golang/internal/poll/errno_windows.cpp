@@ -18,6 +18,7 @@ namespace golang::poll
 {
     namespace rec
     {
+        using syscall::rec::Error;
     }
 
     gocpp::error errERROR_IO_PENDING = syscall::Errno(syscall::ERROR_IO_PENDING);

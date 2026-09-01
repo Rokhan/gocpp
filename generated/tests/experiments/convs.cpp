@@ -26,6 +26,7 @@ namespace golang::main
 {
     namespace rec
     {
+        using ast::rec::End;
         using ast::rec::Pos;
         using token::rec::Position;
         using types::rec::Method;

@@ -52,6 +52,7 @@ namespace golang::types
     {
         using ast::rec::End;
         using ast::rec::Pos;
+        using ast::rec::exprNode;
     }
 
     // A Signature represents a (non-builtin) function or method type.

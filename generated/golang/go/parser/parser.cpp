@@ -42,6 +42,10 @@ namespace golang::parser
         using ast::rec::End;
         using ast::rec::NumFields;
         using ast::rec::Pos;
+        using ast::rec::declNode;
+        using ast::rec::exprNode;
+        using ast::rec::specNode;
+        using ast::rec::stmtNode;
         using scanner::rec::Add;
         using scanner::rec::Init;
         using scanner::rec::Len;

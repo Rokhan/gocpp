@@ -34,6 +34,7 @@ namespace golang::build
         using bufio::rec::Discard;
         using bufio::rec::Peek;
         using bufio::rec::ReadByte;
+        using scanner::rec::Error;
         using token::rec::Position;
     }
 

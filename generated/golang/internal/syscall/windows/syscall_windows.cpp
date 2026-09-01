@@ -24,6 +24,7 @@ namespace golang::windows
     namespace rec
     {
         using sync::rec::Do;
+        using syscall::rec::Error;
         using syscall::rec::Find;
     }
 

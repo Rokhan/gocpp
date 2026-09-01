@@ -21,8 +21,10 @@ namespace golang::doc
 {
     namespace rec
     {
+        using ast::rec::End;
         using ast::rec::IsExported;
         using ast::rec::Pos;
+        using ast::rec::exprNode;
     }
 
     // filterIdentList removes unexported names from list in place

@@ -27,6 +27,7 @@ namespace golang::comment
     {
         using bytes::rec::Bytes;
         using bytes::rec::Truncate;
+        using bytes::rec::Write;
         using bytes::rec::WriteByte;
         using bytes::rec::WriteString;
         using strings::rec::Reset;

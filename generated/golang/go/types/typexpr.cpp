@@ -58,9 +58,12 @@ namespace golang::types
 {
     namespace rec
     {
+        using ast::rec::End;
         using ast::rec::Pos;
+        using ast::rec::exprNode;
         using constant::rec::Kind;
         using mocklib::rec::Error;
+        using typeparams::rec::Pos;
     }
 
     // ident type-checks identifier e and initializes x with the value or type of e.

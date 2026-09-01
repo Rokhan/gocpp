@@ -25,6 +25,7 @@ namespace golang::os
 {
     namespace rec
     {
+        using fs::rec::Error;
     }
 
     // random number source provided by runtime.

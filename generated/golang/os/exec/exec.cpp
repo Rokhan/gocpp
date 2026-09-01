@@ -143,6 +143,7 @@ namespace golang::exec
         using mocklib::rec::Error;
         using os::rec::Close;
         using os::rec::Kill;
+        using os::rec::Read;
         using os::rec::String;
         using os::rec::Success;
         using os::rec::Wait;

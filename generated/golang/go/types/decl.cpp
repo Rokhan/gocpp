@@ -54,6 +54,7 @@ namespace golang::types
         using ast::rec::End;
         using ast::rec::NumFields;
         using ast::rec::Pos;
+        using ast::rec::exprNode;
         using token::rec::IsValid;
     }
 

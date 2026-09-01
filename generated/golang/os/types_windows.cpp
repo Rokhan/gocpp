@@ -30,6 +30,7 @@ namespace golang::os
 {
     namespace rec
     {
+        using fs::rec::Error;
         using fs::rec::Sys;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;

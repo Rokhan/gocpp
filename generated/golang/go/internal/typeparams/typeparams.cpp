@@ -18,6 +18,9 @@ namespace golang::typeparams
 {
     namespace rec
     {
+        using ast::rec::End;
+        using ast::rec::Pos;
+        using ast::rec::exprNode;
     }
 
     ast::Expr PackIndexExpr(ast::Expr x, token::Pos lbrack, gocpp::slice<ast::Expr> exprs, token::Pos rbrack)

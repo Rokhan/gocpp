@@ -46,6 +46,7 @@ namespace golang::packages
 {
     namespace rec
     {
+        using bytes::rec::Read;
         using bytes::rec::String;
         using gocommand::rec::Run;
         using gocommand::rec::RunRaw;

@@ -27,6 +27,7 @@ namespace golang::os
 {
     namespace rec
     {
+        using fs::rec::Error;
     }
 
     // Stat returns the FileInfo structure describing file.

@@ -78,9 +78,11 @@ namespace golang::os
 {
     namespace rec
     {
+        using fs::rec::Error;
         using fs::rec::Mode;
         using fs::rec::Size;
         using mocklib::rec::Error;
+        using syscall::rec::Error;
         using testlog::rec::Chdir;
     }
 

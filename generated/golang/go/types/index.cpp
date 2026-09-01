@@ -43,8 +43,14 @@ namespace golang::types
 {
     namespace rec
     {
+        using ast::rec::End;
+        using ast::rec::Pos;
+        using ast::rec::exprNode;
         using constant::rec::Kind;
         using constant::rec::String;
+        using typeparams::rec::End;
+        using typeparams::rec::Pos;
+        using typeparams::rec::exprNode;
     }
 
     // If e is a valid function instantiation, indexExpr returns true.

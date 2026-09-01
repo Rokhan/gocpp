@@ -41,6 +41,14 @@ namespace golang::pkgbits
         using big::rec::SetFrac;
         using big::rec::SetPrec;
         using big::rec::UnmarshalText;
+        using binary::rec::PutUint16;
+        using binary::rec::PutUint32;
+        using binary::rec::PutUint64;
+        using binary::rec::String;
+        using binary::rec::Uint16;
+        using binary::rec::Uint32;
+        using binary::rec::Uint64;
+        using strings::rec::Read;
         using strings::rec::ReadByte;
         using strings::rec::Reset;
         using strings::rec::Seek;

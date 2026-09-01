@@ -31,6 +31,7 @@ namespace golang::png
         using binary::rec::PutUint32;
         using bufio::rec::Flush;
         using bufio::rec::Reset;
+        using bufio::rec::Write;
         using color::rec::Convert;
         using color::rec::RGBA;
         using hash::rec::Sum32;

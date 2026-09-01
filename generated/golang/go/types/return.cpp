@@ -21,6 +21,9 @@ namespace golang::types
 {
     namespace rec
     {
+        using ast::rec::End;
+        using ast::rec::Pos;
+        using ast::rec::stmtNode;
     }
 
     // isTerminating reports if s is a terminating statement.

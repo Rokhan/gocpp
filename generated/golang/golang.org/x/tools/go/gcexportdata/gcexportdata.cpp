@@ -44,6 +44,7 @@ namespace golang::gcexportdata
     namespace rec
     {
         using exec::rec::Output;
+        using io::rec::Read;
     }
 
     struct gocpp_id_0

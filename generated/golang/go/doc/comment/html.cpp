@@ -23,6 +23,7 @@ namespace golang::comment
     namespace rec
     {
         using bytes::rec::Bytes;
+        using bytes::rec::Write;
         using bytes::rec::WriteString;
     }
 

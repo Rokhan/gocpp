@@ -39,6 +39,7 @@ namespace golang::poll
         using mocklib::rec::Error;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
+        using syscall::rec::Error;
         using syscall::rec::Sockaddr;
     }
 

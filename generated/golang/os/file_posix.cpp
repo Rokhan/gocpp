@@ -31,6 +31,7 @@ namespace golang::os
 {
     namespace rec
     {
+        using fs::rec::Error;
         using fs::rec::Perm;
         using poll::rec::Fchdir;
         using poll::rec::Fchmod;

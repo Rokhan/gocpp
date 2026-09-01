@@ -62,6 +62,7 @@ namespace golang::gcimporter
         using big::rec::SetInt64;
         using big::rec::SetMantExp;
         using big::rec::Sign;
+        using bytes::rec::Read;
         using bytes::rec::ReadByte;
         using bytes::rec::Reset;
         using bytes::rec::Seek;
@@ -71,6 +72,8 @@ namespace golang::gcimporter
         using types::rec::AddMethod;
         using types::rec::At;
         using types::rec::Complete;
+        using types::rec::Exported;
+        using types::rec::Id;
         using types::rec::Info;
         using types::rec::Insert;
         using types::rec::Kind;
@@ -81,16 +84,28 @@ namespace golang::gcimporter
         using types::rec::Name;
         using types::rec::NumEmbeddeds;
         using types::rec::NumExplicitMethods;
+        using types::rec::Parent;
         using types::rec::Path;
         using types::rec::Pkg;
+        using types::rec::Pos;
         using types::rec::Scope;
         using types::rec::SetConstraint;
         using types::rec::SetImports;
         using types::rec::SetTypeParams;
         using types::rec::SetUnderlying;
+        using types::rec::String;
         using types::rec::Type;
         using types::rec::TypeArgs;
         using types::rec::Underlying;
+        using types::rec::color;
+        using types::rec::order;
+        using types::rec::sameId;
+        using types::rec::scopePos;
+        using types::rec::setColor;
+        using types::rec::setOrder;
+        using types::rec::setParent;
+        using types::rec::setScopePos;
+        using types::rec::setType;
     }
 
     

@@ -21,6 +21,7 @@ namespace golang::time
 {
     namespace rec
     {
+        using syscall::rec::Error;
     }
 
     // for testing: whatever interrupts a sleep

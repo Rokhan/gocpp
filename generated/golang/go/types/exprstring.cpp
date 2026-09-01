@@ -23,8 +23,12 @@ namespace golang::types
 {
     namespace rec
     {
+        using ast::rec::End;
         using ast::rec::NumFields;
+        using ast::rec::Pos;
+        using ast::rec::exprNode;
         using bytes::rec::String;
+        using bytes::rec::Write;
         using bytes::rec::WriteByte;
         using bytes::rec::WriteString;
         using token::rec::IsValid;

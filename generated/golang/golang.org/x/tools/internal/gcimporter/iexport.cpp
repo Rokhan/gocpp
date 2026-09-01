@@ -95,7 +95,9 @@ namespace golang::gcimporter
         using types::rec::Elem;
         using types::rec::EmbeddedType;
         using types::rec::ExplicitMethod;
+        using types::rec::Exported;
         using types::rec::Field;
+        using types::rec::Id;
         using types::rec::Imports;
         using types::rec::Index;
         using types::rec::Info;
@@ -115,6 +117,7 @@ namespace golang::gcimporter
         using types::rec::Obj;
         using types::rec::Origin;
         using types::rec::Params;
+        using types::rec::Parent;
         using types::rec::Path;
         using types::rec::Pkg;
         using types::rec::Pos;
@@ -122,6 +125,7 @@ namespace golang::gcimporter
         using types::rec::RecvTypeParams;
         using types::rec::Results;
         using types::rec::Scope;
+        using types::rec::String;
         using types::rec::Tag;
         using types::rec::Term;
         using types::rec::Tilde;
@@ -131,6 +135,15 @@ namespace golang::gcimporter
         using types::rec::Underlying;
         using types::rec::Val;
         using types::rec::Variadic;
+        using types::rec::color;
+        using types::rec::order;
+        using types::rec::sameId;
+        using types::rec::scopePos;
+        using types::rec::setColor;
+        using types::rec::setOrder;
+        using types::rec::setParent;
+        using types::rec::setScopePos;
+        using types::rec::setType;
     }
 
     // IExportShallow encodes "shallow" export data for the specified package.

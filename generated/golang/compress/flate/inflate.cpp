@@ -27,6 +27,8 @@ namespace golang::flate
 {
     namespace rec
     {
+        using bufio::rec::Read;
+        using bufio::rec::ReadByte;
         using bufio::rec::Reset;
         using mocklib::rec::Error;
         using sync::rec::Do;

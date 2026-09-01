@@ -22,6 +22,7 @@ namespace golang::registry
     namespace rec
     {
         using syscall::rec::Addr;
+        using syscall::rec::Error;
         using syscall::rec::NewProc;
     }
 

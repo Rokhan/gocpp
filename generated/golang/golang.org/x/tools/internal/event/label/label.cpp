@@ -19,6 +19,7 @@ namespace golang::label
 {
     namespace rec
     {
+        using fmt::rec::Write;
     }
 
     // Key is used as the identity of a Label.

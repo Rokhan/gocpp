@@ -26,6 +26,7 @@ namespace golang::json
     namespace rec
     {
         using bytes::rec::Bytes;
+        using bytes::rec::Read;
         using bytes::rec::WriteByte;
         using io::rec::Read;
         using io::rec::Write;

@@ -27,6 +27,7 @@ namespace golang::hex
         using io::rec::Write;
         using strings::rec::Grow;
         using strings::rec::String;
+        using strings::rec::Write;
     }
 
     // EncodedLen returns the length of an encoding of n source bytes.

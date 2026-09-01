@@ -35,6 +35,7 @@ namespace golang::types
     namespace rec
     {
         using strings::rec::String;
+        using strings::rec::Write;
     }
 
     // A MethodSet is an ordered set of concrete or abstract (interface) methods;

@@ -36,6 +36,7 @@ namespace golang::os
 {
     namespace rec
     {
+        using fs::rec::Error;
         using fs::rec::IsDir;
         using fs::rec::Type;
         using sync::rec::Get;

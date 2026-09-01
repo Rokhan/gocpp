@@ -483,6 +483,9 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 		}
 	}
 
+	convs := FindInterfaceConversions(&cv.parsingInfos)
+	receiversElts.append(ReceiverFullNames(convs, cv.namespace))
+
 	printFwdIntro(cv)
 	printHppIntro(cv)
 	printCppIntro(cv, usedPkgInfos, receiversElts)

@@ -489,6 +489,14 @@ func makeSubBlockEnv(env blockEnv, isFunc bool) blockEnv {
 	return blockEnv{env.stmtEnv, isFunc, env.useDefer, env.isTypeSwitch, env.typeSwitchVarName, env.switchVarName, env.switchLabel, &[]ast.Expr{}}
 }
 
+func First[EltType any](elts []EltType) (EltType, bool) {
+	if len(elts) == 0 {
+		var zero EltType
+		return zero, false
+	}
+	return elts[0], true
+}
+
 func Last[EltType any](elts []EltType) (EltType, bool) {
 	if len(elts) == 0 {
 		var zero EltType
@@ -1183,6 +1191,7 @@ func (ct cppType) getTypeBasedName() string {
 		return ct.eltType.getTypeBasedName()
 	}
 	str, _ := Last(strings.Split(ct.str, "::"))
+	str, _ = First(strings.Split(str, "<"))
 	return str
 }
 

@@ -315,6 +315,11 @@ func internalGetObjectsOfType(t types.Type, seen map[types.Object]bool) {
 	switch typ := t.(type) {
 	case *types.Basic:
 		// Basic types do not have associated objects
+	case *types.Alias:
+		obj := typ.Obj()
+		if !seen[obj] {
+			seen[obj] = true
+		}
 	case *types.Named:
 		obj := typ.Obj()
 		if !seen[obj] {
@@ -372,7 +377,7 @@ func internalGetObjectsOfType(t types.Type, seen map[types.Object]bool) {
 			internalGetObjectsOfType(typ.Term(i).Type(), seen)
 		}
 	default:
-		Panicf("internalGetObjectsOfType: unhandled type %T", typ)
+		Panicf("internalGetObjectsOfType: unhandled switch type %T, type:%v", typ, typ)
 	}
 }
 

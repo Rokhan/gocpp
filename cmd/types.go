@@ -102,6 +102,15 @@ func (cv *parsingInfos) GetTypeParameters(goType types.Type, expr ast.Expr) []ty
 	case *types.Basic:
 		return nil
 
+	case *types.Alias:
+		if t.TypeArgs() != nil && t.TypeArgs().Len() > 0 {
+			var result []types.Type
+			for i := 0; i < t.TypeArgs().Len(); i++ {
+				result = append(result, t.TypeArgs().At(i))
+			}
+			return result
+		}
+
 	case *types.Named:
 		if t.TypeArgs() != nil && t.TypeArgs().Len() > 0 {
 			var result []types.Type

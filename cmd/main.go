@@ -2993,6 +2993,21 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		cppType.typenames = append(cppType.typenames, typeName.str)
 		return cppType
 
+	case *ast.IndexListExpr:
+		cppIndices := []string{}
+		for _, index := range n.Indices {
+			cppIndex := cv.convertTypeExpr(index, ctx)
+			cppIndices = append(cppIndices, cppIndex.str)
+
+			msgInfo := fmt.Sprintf("expr: %v, position: %v", types.ExprString(n), cv.Position(index))
+			//cv.Assertf(len(typeName.typenames) == 0, "convertTypeExpr, IndexListExpr, typeName.typenames should be empty, %s", msgInfo)
+			cv.Assertf(len(cppIndex.defs) == 0, "convertTypeExpr, IndexListExpr, cppIndex.defs should be empty, %s", msgInfo)
+			cv.Assertf(len(cppIndex.comments) == 0, "convertTypeExpr, IndexListExpr, cppIndex.comments should be empty, %s", msgInfo)
+			cv.Assertf(cppIndex.dbg == "", "convertTypeExpr, IndexListExpr, cppIndex.dbg should be empty, %s", msgInfo)
+		}
+		cppType := ExprPrintf("%s<%s>", cv.convertTypeExpr(n.X, ctx), strings.Join(cppIndices, ", ")).toCppType()
+		return cppType
+
 	case *ast.MapType:
 		return cv.convertMapTypeExpr(n, ctx)
 
@@ -4304,6 +4319,24 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			return ExprPrintf("%s<%s>", cv.convertExpr(n.X), cv.convertExprCppType(n.Index))
 		} else {
 			return ExprPrintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
+		}
+
+	case *ast.IndexListExpr:
+		var indexStrs []string
+		for _, index := range n.Indices {
+			indexExpr := cv.convertExprCppType(index)
+			indexStrs = append(indexStrs, indexExpr.str)
+
+			msgInfo := fmt.Sprintf("expr: %v, position: %v", types.ExprString(n), cv.Position(index))
+			//cv.Assertf(len(indexExpr.typenames) == 0, "convertTypeExpr, IndexListExpr, indexExpr.typenames should be empty, %s", msgInfo)
+			cv.Assertf(len(indexExpr.defs) == 0, "convertTypeExpr, IndexListExpr, indexExpr.defs should be empty, %s", msgInfo)
+			cv.Assertf(len(indexExpr.comments) == 0, "convertTypeExpr, IndexListExpr, indexExpr.comments should be empty, %s", msgInfo)
+			cv.Assertf(indexExpr.dbg == "", "convertTypeExpr, IndexListExpr, indexExpr.dbg should be empty, %s", msgInfo)
+		}
+		if cv.IsFunc(n.X) && cv.IsFunc(n) {
+			return ExprPrintf("%s<%s>", cv.convertExpr(n.X), strings.Join(indexStrs, ", "))
+		} else {
+			return ExprPrintf("%s[%s]", cv.convertExpr(n.X), strings.Join(indexStrs, ", "))
 		}
 
 	case *ast.SelectorExpr:

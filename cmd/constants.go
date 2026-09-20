@@ -2,6 +2,9 @@ package main
 
 var baseIndent string = "    "
 
+// global namespace for all generated code
+var goNs = "golang"
+
 // receiver namespace
 var recNs = "rec"
 

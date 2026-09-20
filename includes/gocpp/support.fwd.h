@@ -4,6 +4,7 @@
 
 // TODO: try to not need this 
 #include <string>
+#include <functional>
 
 // Temporary definitions to mock broken include files
 namespace golang

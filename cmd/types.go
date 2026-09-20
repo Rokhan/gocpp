@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -67,6 +68,24 @@ func getArrayLen(goType types.Type, position token.Position) int64 {
 
 	Panicf("getArrayLen. Unmanaged type, type [%v], position[%v]", reflect.TypeOf(goType), position)
 	return 0
+}
+
+// posFilePath return the path computed via the shared FileSet.
+func (cv *parsingInfos) posFilePath(t token.Pos) string {
+	tf := cv.pcShared.fileSet.File(t)
+	if tf == nil {
+		return "<unknown>"
+	}
+	return CleanPath(tf.Name())
+}
+
+// posFilePath return the base name computed via the shared FileSet.
+func (cv *parsingInfos) posBaseName(t token.Pos) string {
+	tf := cv.pcShared.fileSet.File(t)
+	if tf == nil {
+		return "<unknown>"
+	}
+	return strings.TrimRight(filepath.Base(tf.Name()), ".go")
 }
 
 // Get the type parameters from an expression

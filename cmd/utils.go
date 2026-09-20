@@ -9,10 +9,12 @@ import (
 	"go/types"
 	"io"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/exp/maps"
@@ -28,6 +30,7 @@ func second[T1 any, T2 any](t1 T1, t2 T2) T2 {
 
 type Logger interface {
 	Logf(format string, a ...any) (n int, err error)
+	VerboseLogf(format string, a ...any) (n int, err error)
 	Panicf(format string, params ...interface{})
 	VerboseLog() bool
 }
@@ -51,6 +54,15 @@ func Assertf(ok bool, format string, a ...interface{}) {
 		Panicf(format, a...)
 	}
 }
+
+// goroot returns the active toolchain's GOROOT by asking "go env  GOROOT" directly
+var getGoRoot = sync.OnceValues(func() (string, error) {
+	out, err := exec.Command("go", "env", "GOROOT").Output()
+	if err != nil {
+		return "", fmt.Errorf("running 'go env GOROOT': %w", err)
+	}
+	return strings.TrimSpace(string(out)), nil
+})
 
 func GetCppType(goType string) string {
 	return GetNsCppType(goType).String()
@@ -680,6 +692,8 @@ type depInfo struct {
 
 	depVars map[types.Object]bool
 
+	depNss map[string]bool
+
 	decPkg  string
 	depPkgs map[string]includeType
 
@@ -940,6 +954,26 @@ type receiverDesc interface {
 type goReceiverDesc ast.SelectorExpr
 type mockReceiverDesc string
 
+type namespaceAlias struct {
+	alias string
+	ns    string
+}
+
+func (ns *namespaceAlias) aliasString() string {
+	if ns.alias == "" || ns.alias == "unsafe" {
+		return fmt.Sprintf("/* alias: %q, namespace: '%s::%v' */", ns.alias, goNs, ns.ns)
+	}
+	return fmt.Sprintf("namespace %v = %s::%v", ns.alias, goNs, ns.ns)
+}
+
+// func (ns *namespaceAlias) aliasHeader() *place {
+// 	return &place{nil, nil, ArrayPtr(ns.aliasString()), nil, nil, NotInclude, depInfo{}, nil, nil, nil, ns}
+// }
+
+// func (ns *namespaceAlias) aliasFwdHeader() *place {
+// 	return &place{nil, nil, nil, nil, ArrayPtr(ns.aliasString()), NotInclude, depInfo{}, nil, nil, nil, ns}
+// }
+
 func extractParamDefs(srcParams ...any) (defs []place, params []any, typeNames []string, comments []string, dbgs []string) {
 	for _, srcParam := range srcParams {
 		switch prm := srcParam.(type) {
@@ -967,6 +1001,20 @@ func ExprPrintf(format string, srcParams ...any) cppExpr {
 	defs, params, typeNames, comments, dbgs := extractParamDefs(srcParams...)
 	return cppExpr{
 		str:       fmt.Sprintf(format, params...),
+		dbg:       strings.Join(dbgs, ""),
+		defs:      defs,
+		typenames: typeNames,
+		comments:  comments}
+}
+
+func JoinExpr(indexStrs []cppType, sep string) any {
+	defs, _, typeNames, comments, dbgs := extractParamDefs(indexStrs)
+	strs := []string{}
+	for _, indexStr := range indexStrs {
+		strs = append(strs, indexStr.str)
+	}
+	return cppExpr{
+		str:       strings.Join(strs, sep),
 		dbg:       strings.Join(dbgs, ""),
 		defs:      defs,
 		typenames: typeNames,
@@ -1020,6 +1068,9 @@ type place struct {
 
 	// used receivers
 	receiver receiverDesc
+
+	// used namespace
+	namespace *namespaceAlias
 }
 
 func (place place) DepInfoTypeStr() string {
@@ -1033,6 +1084,10 @@ func (place place) isInclude() bool {
 	return place.includeType != NotInclude
 }
 
+func (place place) isUsingNs() bool {
+	return place.namespace != nil
+}
+
 func getHeader(place place) []string {
 	return *place.header
 }
@@ -1042,7 +1097,7 @@ func getFwdHeader(place place) []string {
 }
 
 func inlineStr(str string, node ast.Node) place {
-	return place{ArrayPtr(str), nil, nil, nil, nil, NotInclude, depInfo{}, nil, node, nil}
+	return place{ArrayPtr(str), nil, nil, nil, nil, NotInclude, depInfo{}, nil, node, nil, nil}
 }
 
 func inlineStrs(strs []string, node ast.Node) place {
@@ -1050,19 +1105,23 @@ func inlineStrs(strs []string, node ast.Node) place {
 }
 
 func goReceiver(rec ast.SelectorExpr) place {
-	return place{nil, nil, nil, nil, nil, NotInclude, depInfo{}, nil, nil, goReceiverDesc(rec)}
+	return place{nil, nil, nil, nil, nil, NotInclude, depInfo{}, nil, nil, goReceiverDesc(rec), nil}
 }
 
 func mockReceiver(rec string) place {
-	return place{nil, nil, nil, nil, nil, NotInclude, depInfo{}, nil, nil, mockReceiverDesc(rec)}
+	return place{nil, nil, nil, nil, nil, NotInclude, depInfo{}, nil, nil, mockReceiverDesc(rec), nil}
+}
+
+func useNamespace(alias string, ns string, depInfo depInfo) place {
+	return place{nil, nil, nil, nil, nil, NotInclude, depInfo, nil, nil, nil, &namespaceAlias{alias, ns}}
 }
 
 func outlineStr(str string, node ast.Node) place {
-	return place{nil, &str, nil, nil, nil, NotInclude, depInfo{}, nil, node, nil}
+	return place{nil, &str, nil, nil, nil, NotInclude, depInfo{}, nil, node, nil, nil}
 }
 
 func headerStr(str string, node ast.Node) place {
-	return place{nil, nil, ArrayPtr(str), nil, nil, NotInclude, depInfo{}, nil, node, nil}
+	return place{nil, nil, ArrayPtr(str), nil, nil, NotInclude, depInfo{}, nil, node, nil, nil}
 }
 
 func headerStrs(strs []string, node ast.Node) place {
@@ -1070,11 +1129,11 @@ func headerStrs(strs []string, node ast.Node) place {
 }
 
 func headerEndStr(str string) place {
-	return place{nil, nil, nil, &str, nil, NotInclude, depInfo{}, nil, nil, nil}
+	return place{nil, nil, nil, &str, nil, NotInclude, depInfo{}, nil, nil, nil, nil}
 }
 
 func fwdHeaderStr(str string, node ast.Node, depInfo depInfo) place {
-	return place{nil, nil, nil, nil, ArrayPtr(str), NotInclude, depInfo, nil, node, nil}
+	return place{nil, nil, nil, nil, ArrayPtr(str), NotInclude, depInfo, nil, node, nil, nil}
 }
 
 func fwdHeaderStrs(strs []string, node ast.Node, depInfo depInfo) place {
@@ -1083,11 +1142,11 @@ func fwdHeaderStrs(strs []string, node ast.Node, depInfo depInfo) place {
 
 // Maybe create one version for headers and one for fwd headers.
 func includeStr(str string, depInfo depInfo, pkgInfo *pkgInfo, incType includeType) place {
-	return place{nil, nil, ArrayPtr(str), nil, ArrayPtr(str), incType, depInfo, pkgInfo, nil, nil}
+	return place{nil, nil, ArrayPtr(str), nil, ArrayPtr(str), incType, depInfo, pkgInfo, nil, nil, nil}
 }
 
 func importPackage(name string, pkgPath string, filePath string, pkgType pkgType, node ast.Node) place {
-	return place{nil, nil, nil, nil, nil, NotInclude, depInfo{}, &pkgInfo{name, CleanPath(pkgPath), filePath, UnknownTag, pkgType}, node, nil}
+	return place{nil, nil, nil, nil, nil, NotInclude, depInfo{}, &pkgInfo{name, CleanPath(pkgPath), filePath, UnknownTag, pkgType}, node, nil, nil}
 }
 
 func inlineStrf(node ast.Node, format string, params ...any) []place {
@@ -1286,6 +1345,31 @@ func (visitor *GetIdentfiers) Visit(node ast.Node) ast.Visitor {
 
 func getAllIdentifiers(expr ast.Expr) map[*ast.Ident]bool {
 	gi := &GetIdentfiers{map[*ast.Ident]bool{}}
+	ast.Walk(gi, expr)
+	return gi.idents
+}
+
+type GetNsSelectorIds struct {
+	typeInfos *types.Info
+	idents    map[*ast.Ident]*ast.Ident
+}
+
+func (visitor *GetNsSelectorIds) Visit(node ast.Node) ast.Visitor {
+	switch n := node.(type) {
+	case *ast.SelectorExpr:
+		if ns, ok := n.X.(*ast.Ident); ok {
+			visitor.idents[ns] = n.Sel
+		}
+		return nil
+	}
+	return visitor
+}
+
+func getAllNsSelectorIds(expr ast.Expr, typeInfos *types.Info) map[*ast.Ident]*ast.Ident {
+	gi := &GetNsSelectorIds{
+		typeInfos: typeInfos,
+		idents:    map[*ast.Ident]*ast.Ident{},
+	}
 	ast.Walk(gi, expr)
 	return gi.idents
 }

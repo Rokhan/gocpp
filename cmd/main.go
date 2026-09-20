@@ -16,7 +16,6 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"runtime/debug"
 	"slices"
 	"strings"
@@ -44,6 +43,7 @@ type cppConverterSharedData struct {
 	generatedFiles map[string]bool
 	usedFiles      map[string]bool
 	packagePaths   map[string]string
+	nsNamer        *NsNamer
 
 	// logging
 	logPerf outFile
@@ -83,11 +83,12 @@ type cppConverter struct {
 	binOutDir   string
 
 	// Cpp files parameters
-	cpp       outFile
-	hpp       outFile
-	fwd       outFile
-	hasMain   bool
-	namespace string
+	cpp           outFile
+	hpp           outFile
+	fwd           outFile
+	hasMain       bool
+	namespace     string
+	fullNamespace string
 }
 
 func (cv *cppConverter) ResetIota() {
@@ -168,7 +169,7 @@ func (cv *cppConverter) includeHeaderDependencies(pkgInfos []*pkgInfo, incType i
 		alreadyIncluded[pkgInfo.filePath] = true
 
 		*order++
-		di := depInfo{nil, map[string]types.Type{}, "", map[string]bool{}, nil, pkgInfo.basePath(), map[string]includeType{}, *order, 0}
+		di := depInfo{nil, map[string]types.Type{}, "", map[string]bool{}, nil, nil, pkgInfo.basePath(), map[string]includeType{}, *order, 0}
 
 		switch pkgInfo.fileType {
 		case GoFiles, CompiledGoFiles:
@@ -182,12 +183,13 @@ func (cv *cppConverter) includeHeaderDependencies(pkgInfos []*pkgInfo, incType i
 	return
 }
 
-func buildSharedData() (shared *cppConverterSharedData) {
+func buildSharedData(fset *token.FileSet) (shared *cppConverterSharedData) {
 	shared = new(cppConverterSharedData)
 	shared.generatedFiles = map[string]bool{}
 	shared.parsedFiles = map[string]*ast.File{}
 	shared.usedFiles = map[string]bool{}
 	shared.packagePaths = map[string]string{}
+	shared.nsNamer = NewNsNamer(fset)
 	return
 }
 
@@ -410,6 +412,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.cpp.indent++
 
 	cv.namespace = cv.astFile.Name.Name
+	cv.fullNamespace = cv.shared.nsNamer.NamespaceFromAstFile(cv.astFile)
 	cv.commentMap = ast.NewCommentMap(cv.pcShared.fileSet, cv.astFile, cv.astFile.Comments)
 	cv.declareVar(cv.namespace, false)
 
@@ -452,7 +455,9 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
 	var headerElts []*place
 	var fwdHeaderElts []*place
+	var usingElts []*place
 	var receiversElts = set[string]{}
+	var namespaceElts = set[string]{}
 	var headerEndElts []*place
 	var headerEnds []string
 	hdrInitialOrder := 0
@@ -476,6 +481,13 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 			if place.receiver != nil {
 				receiversElts.addOpt(place.receiver.getFullReceiverName(cv))
 			}
+			if place.namespace != nil {
+				aliasDecl := place.namespace.aliasString()
+				namespaceElts.add(aliasDecl)
+				place.header = ArrayPtr(aliasDecl + ";\n")
+				place.fwdHeader = ArrayPtr(aliasDecl + ";\n")
+				usingElts = append(usingElts, &place)
+			}
 
 			if place.inline != nil {
 				cv.Panicf("BUG: place.inline should always be nil at this point. position %s\n", cv.Position(place.node))
@@ -483,12 +495,20 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 		}
 	}
 
+	initialOrder := max(hdrInitialOrder, fwdInitialOrder)
+	for _, elt := range usingElts {
+		elt.depInfo.initialOrder = initialOrder
+		initialOrder++
+		headerElts = append(headerElts, elt)
+		fwdHeaderElts = append(fwdHeaderElts, elt)
+	}
+
 	convs := FindInterfaceConversions(&cv.parsingInfos)
 	receiversElts.append(ReceiverFullNames(convs, cv.namespace))
 
 	printFwdIntro(cv)
 	printHppIntro(cv)
-	printCppIntro(cv, usedPkgInfos, receiversElts)
+	printCppIntro(cv, usedPkgInfos, receiversElts, namespaceElts)
 
 	for i := 0; i < len(allOutPlaces); i++ {
 		for _, place := range allOutPlaces[i] {
@@ -538,7 +558,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	}
 
 	if !hdrInNamespace {
-		fmt.Fprintf(cv.hpp.out, "namespace golang::%v\n{\n", cv.namespace)
+		fmt.Fprintf(cv.hpp.out, "namespace %s::%v\n{\n", goNs, cv.fullNamespace)
 	}
 
 	// nb, we want to have always a rec namespace even if empty
@@ -681,6 +701,16 @@ func (rec mockReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
 	return Ptr(string(rec))
 }
 
+func logPlace(logger Logger, prefix string, place *place) {
+	di := &place.depInfo
+	ns := ""
+	if place.namespace != nil {
+		ns = place.namespace.ns
+	}
+	pid := getPlaceLogId(place)
+	logger.Logf("'%s' decl (before) pid:%3d -- info[%v, %v]: type='%v', deps=%v, vars=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v, ns=%s, depNs:%v\n", prefix, pid, di.rank, di.initialOrder, di.decType, di.dependencies, di.depVars, di.decPkg, di.depPkgs, di.decIdent, di.depIdents, ns, di.depNss)
+}
+
 func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(place) []string, dm depMode, outFile outFile, inNamespace bool, keepTag tagType) bool {
 	indent := ""
 	if inNamespace {
@@ -690,10 +720,10 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 	if len(headerElts) != 0 {
 		for _, place := range headerElts {
 			di := &place.depInfo
-			cv.Logf("'%s' decl (before) info[%v, %v]: type='%v', deps=%v, vars=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.depVars, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
+			logPlace(cv, outFile.name, place)
 			di.ComputeDeps(dm)
 			di.ComputePackages(cv.parsingContext, dm)
-			cv.Logf("'%s' decl (after)  info[%v, %v]: type='%v', deps=%v, vars=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.depVars, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
+			logPlace(cv, outFile.name, place)
 		}
 
 		cv.Logf("'%s' decl: Sorting.\n", outFile.name)
@@ -701,17 +731,23 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 
 		maxDecIndex := -1
 		for i, place := range headerElts {
-			if !place.isInclude() {
+			if !place.isInclude() && !place.isUsingNs() {
 				maxDecIndex = i
 			}
 		}
 
+		if cv.shared.debugMode {
+			fmt.Fprintf(outFile.out, "%s /* maxDecIndex: %v */\n", indent, maxDecIndex)
+			outFile.out.Flush()
+		}
+
 		hdrIncluded := map[string]bool{}
+		usingIncluded := map[string]bool{}
 
 		for i, place := range headerElts {
 
 			// Skip includes not needed by any definitions
-			if i > maxDecIndex && keepTag != place.pkgInfo.tag {
+			if i > maxDecIndex {
 				continue
 			}
 
@@ -729,6 +765,14 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 				}
 			}
 
+			if place.namespace != nil {
+				_, included := usingIncluded[place.namespace.ns]
+				if included {
+					continue
+				}
+				usingIncluded[place.namespace.ns] = true
+			}
+
 			// Close namespace for includes
 			if place.isInclude() && inNamespace {
 				fmt.Fprintf(outFile.out, "}\n")
@@ -738,7 +782,7 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 
 			// Open namespace for declarartions
 			if !place.isInclude() && !inNamespace {
-				fmt.Fprintf(outFile.out, "\nnamespace golang::%v\n{\n", cv.namespace)
+				fmt.Fprintf(outFile.out, "\nnamespace %s::%v\n{\n", goNs, cv.fullNamespace)
 				inNamespace = true
 				indent = outFile.Indent()
 			}
@@ -747,8 +791,7 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 				fmt.Fprintf(outFile.out, "%s%s", indent, line)
 			}
 
-			di := &place.depInfo
-			cv.Logf("'%s' decl info[%v, %v]: type='%v', deps=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v\n", outFile.name, di.rank, di.initialOrder, di.decType, di.dependencies, di.decPkg, di.depPkgs, di.decIdent, di.depIdents)
+			logPlace(cv, outFile.name, place)
 		}
 	}
 	return inNamespace
@@ -764,6 +807,13 @@ func ToString(obj fmt.Stringer) string {
 func (cv *cppConverter) Logf(format string, a ...any) (n int, err error) {
 	fmt.Printf("%s", cv.logPrefix)
 	return fmt.Printf(format, a...)
+}
+
+func (cv *cppConverter) VerboseLogf(format string, a ...any) (n int, err error) {
+	if cv.VerboseLog() {
+		return cv.Logf(format, a...)
+	}
+	return
 }
 
 func perfLogPrefix() string {
@@ -2490,13 +2540,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 
 			cfg := &packages.Config{Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedCompiledGoFiles}
 
-			pkgs, err := cv.PkgLoad(cfg, pkg.Path())
-			if err != nil {
-				cv.Panicf("load: %v\n", err)
-			}
-			if packages.PrintErrors(pkgs) > 0 {
-				panic("convertSpecs, packages.PrintErrors(pkgs) > 0")
-			}
+			pkgs := cv.PkgLoad(cfg, pkg.Path())
 
 			// Print the names of the source files
 			// for each package listed on the command line.
@@ -2663,6 +2707,21 @@ func (cv *cppConverter) getAllUsedPackages(expr ast.Expr) map[string]includeType
 	return result
 }
 
+func (cv *cppConverter) getAllUsedNameSpaces(expr ast.Expr) map[string]bool {
+	result := map[string]bool{}
+	for goNs, selector := range getAllNsSelectorIds(expr, cv.typeInfo) {
+		// Check if the identifier is a package name
+		if defObj := cv.typeInfo.Uses[goNs]; defObj != nil {
+			if _, ok := defObj.(*types.PkgName); ok {
+				selType := cv.typeInfo.Uses[selector]
+				ns := cv.NamespaceFromTypePkg(selType.Pkg())
+				result[ns] = true
+			}
+		}
+	}
+	return result
+}
+
 func (cv *cppConverter) getAllUsedNames(expr ast.Expr) map[string]bool {
 	result := map[string]bool{}
 	for ident := range getAllIdentifiers(expr) {
@@ -2695,6 +2754,7 @@ func (cv *cppConverter) appendDepExpr(di *depInfo, expr ast.Expr) {
 	// the good behaviour here as we probably want to use "package.name"
 	// as identifier for external library types and not "package" and "name".
 	appendMap(&di.depIdents, cv.getAllUsedNames(expr))
+	appendMap(&di.depNss, cv.getAllUsedNameSpaces(expr))
 
 	if t := cv.typeInfo.Types[expr].Type; t != nil {
 		if di.dependencies == nil {
@@ -2718,6 +2778,7 @@ func (cv *cppConverter) getFunDeclDepInfo(n *ast.FuncDecl) depInfo {
 		dependencies: map[string]types.Type{},
 		depIdents:    make(map[string]bool),
 		depPkgs:      make(map[string]includeType),
+		depNss:       make(map[string]bool),
 		decIdent:     n.Name.Name,
 	}
 
@@ -2742,11 +2803,13 @@ func (cv *cppConverter) getTypeDepInfo(n *ast.TypeSpec) depInfo {
 	pkgs := cv.getAllUsedPackages(n.Type)
 	definedType := cv.typeInfo.Defs[n.Name].Type()
 	usedType := cv.typeInfo.Types[n.Type].Type
-	return depInfo{definedType, map[string]types.Type{usedType.String(): usedType}, n.Name.Name, map[string]bool{}, nil, "", pkgs, 0, 0}
+	namespaces := cv.getAllUsedNameSpaces(n.Type)
+	return depInfo{definedType, map[string]types.Type{usedType.String(): usedType}, n.Name.Name, map[string]bool{}, nil, namespaces, "", pkgs, 0, 0}
 }
 
 func (cv *cppConverter) getStructDepInfo(n *ast.StructType) depInfo {
 	pkgs := cv.getAllUsedPackages(n)
+	namespaces := cv.getAllUsedNameSpaces(n)
 	// Try to get the type for the struct, if possible
 	var structType types.Type
 	if n != nil {
@@ -2756,7 +2819,7 @@ func (cv *cppConverter) getStructDepInfo(n *ast.StructType) depInfo {
 	if structType != nil {
 		deps[structType.String()] = structType
 	}
-	return depInfo{structType, deps, "", map[string]bool{}, nil, "", pkgs, 0, 0}
+	return depInfo{structType, deps, "", map[string]bool{}, nil, namespaces, "", pkgs, 0, 0}
 }
 
 func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
@@ -2765,20 +2828,24 @@ func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
 	pkgs := map[string]includeType{}
 	vars := map[types.Object]bool{}
 	names := make(set[string])
+	namespaces := map[string]bool{}
 	if n.Values != nil {
 		appendMap(&pkgs, cv.getAllUsedPackages(n.Values[i]))
 		names.append(cv.getAllUsedNames(n.Values[i]))
 		appendMap(&vars, cv.getAllUsedVars(n.Values[i]))
+		appendMap(&namespaces, cv.getAllUsedNameSpaces(n.Values[i]))
 	}
 
 	if n.Type != nil {
 		appendMap(&pkgs, cv.getAllUsedPackages(n.Type))
 		names.append(cv.getAllUsedNames(n.Type))
+		//appendMap(&vars, cv.getAllUsedVars(n.Type)) ??
+		appendMap(&namespaces, cv.getAllUsedNameSpaces(n.Type))
 		declType := cv.typeInfo.Types[n.Type].Type
 		deps[declType.String()] = declType
 	}
 
-	return depInfo{nil, deps, n.Names[i].Name, names, vars, "", pkgs, 0, 0}
+	return depInfo{nil, deps, n.Names[i].Name, names, vars, namespaces, "", pkgs, 0, 0}
 }
 
 func (cv *cppConverter) checkStructType(expr ast.Expr, cppType *cppType) {
@@ -2799,7 +2866,7 @@ func (cv *cppConverter) checkStructType(expr ast.Expr, cppType *cppType) {
 	}
 }
 
-func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
+func (cv *cppConverter) isTypedef(id *ast.Ident) (isTD bool, pkgName string, namespace string, nsDeps depInfo) {
 	idType := cv.typeInfo.Types[id].Type
 	use := cv.typeInfo.Uses[id]
 	if use == nil {
@@ -2808,29 +2875,36 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 	}
 	pkg := use.Pkg()
 
-	pkgName := ""
 	if pkg != nil {
+		namespace = cv.NamespaceFromTypePkg(pkg)
 		pkgName = pkg.Name()
+		// pkgId := pkg.Path() + "/" + cv.posBaseName(use.Pos())
+		// nsDeps = depInfo{depPkgs: map[string]includeType{pkgId: FwdInclude}}
+		nsDeps = depInfo{} // TODO
 	}
 
 	// We should probably remove 'cv.typedefs` and all its usages as it make the code dependent on declaration order.
 	if cv.typedefs.has(idType) {
 		cv.Logf("isTypedef[true], found typedef for %v, type: %v, pkg:%v\n", types.ExprString(id), idType, pkg)
-		return true, pkgName
+		isTD = true
+		return
 	}
 
 	if typeCanBeDefined(idType) {
-		return true, pkgName
+		isTD = true
+		return
 	} else {
 		switch idType.(type) {
 		case *types.Alias:
 			cv.Logf("isTypedef[true], found typedef for %v, type: %v, pkg:%v\n", types.ExprString(id), idType, pkg)
-			return true, pkgName
+			isTD = true
+			return
 		case *types.Named:
 			switch idType.Underlying().(type) {
 			case *types.Basic:
 				cv.Logf("isTypedef[true], found typedef for %v, type: %v, pkg:%v\n", types.ExprString(id), idType, pkg)
-				return true, pkgName
+				isTD = true
+				return
 			}
 		}
 	}
@@ -2838,7 +2912,11 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (bool, string) {
 	if pkg == nil {
 		cv.Logf("isTypedef[false], pkg is nil for %v, type: %v\n", types.ExprString(id), idType)
 	}
-	return false, pkgName
+	return
+}
+
+func (cv *cppConverter) NamespaceFromTypePkg(pkg *types.Package) string {
+	return cv.shared.nsNamer.NamespaceFromTypePkg(pkg)
 }
 
 func checkCanFwd(cppType *cppType) {
@@ -2924,16 +3002,17 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 	switch n := node.(type) {
 	case *ast.Ident:
 		var identType cppType
-		isTD, pkg := cv.isTypedef(n)
+		isTD, pkg, pkgNs, nsDeps := cv.isTypedef(n)
 		isParam, _ := cv.isParam(n)
 
 		identType = mkCppType(GetCppType(n.Name), nil)
 
 		addNamespace := func() {
 			if cv.isAmbiguousName(pkg) {
-				identType.str = fmt.Sprintf("golang::%s::%s", pkg, identType.str)
+				identType.str = fmt.Sprintf("%s::%s::%s", goNs, pkgNs, identType.str)
 			} else {
 				identType.str = fmt.Sprintf("%s::%s", pkg, identType.str)
+				identType.defs = append(identType.defs, useNamespace(pkg, pkgNs, nsDeps))
 			}
 		}
 
@@ -3015,7 +3094,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		return cv.convertTypeExpr(n.X, ctx)
 
 	case *ast.SelectorExpr:
-		namespace := cv.convertExpr(n.X)
+		namespace := cv.convertExprCtx(n.X, exprCtx{parent: n})
 		keepDbg := ctx.keepDebug
 		ctx.keepDebug = true
 		ctx.ignoreNameSpace = true
@@ -3044,6 +3123,24 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		cppType.isStruct = typeExpr.isStruct
 		cppType.manageDbg(ctx.keepDebug)
 		return cppType
+
+	case *ast.BinaryExpr:
+		switch n.Op {
+		case token.OR:
+			//Just ignore the tilde, as it is not used in C++ type expressions.
+			return cppType{}
+		default:
+			cv.Panicf("convertTypeExpr, unmanaged token %s, type %v, expr '%v', position %v", n.Op, reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
+		}
+
+	case *ast.UnaryExpr:
+		switch n.Op {
+		case token.TILDE:
+			//Just ignore the tilde, as it is not used in C++ type expressions.
+			return cv.convertTypeExpr(n.X, ctx)
+		default:
+			cv.Panicf("convertTypeExpr, unmanaged token %s, type %v, expr '%v', position %v", n.Op, reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
+		}
 
 	case *ast.StructType:
 		name, first := cv.GetOrCreateExprId(node, ctx, "Struct")
@@ -3147,7 +3244,7 @@ func (cv *cppConverter) convertInterfaceField(node ast.Expr) (pt parentType, err
 	case *ast.Ident:
 		return parentType{GetNsCppType(n.Name), nodeType}, nil
 	case *ast.SelectorExpr:
-		return parentType{nsType{cv.convertExpr(n.X).str, n.Sel.Name}, nodeType}, nil
+		return parentType{nsType{cv.convertExprCtx(n.X, exprCtx{parent: n}).str, n.Sel.Name}, nodeType}, nil
 	case *ast.BinaryExpr:
 		if n.Op == token.OR {
 			return parentType{}, fmt.Errorf("Union type not implemented: %s", types.ExprString(n))
@@ -4053,6 +4150,7 @@ type exprCtx struct {
 	isSubExpr     bool
 	isTarget      bool
 	explicitError bool
+	parent        ast.Node
 }
 
 func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
@@ -4170,7 +4268,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			if isType {
 				cv.BuffExprPrintf(buf, "%v(", cv.convertTypeExpr(fun, ctContext{ignoreNameSpace: true}))
 			} else if cv.isNameSpace(fun.X) {
-				funcName := ExprPrintf("%s::%s", cv.convertExpr(fun.X), cv.convertExpr(fun.Sel))
+				funcName := ExprPrintf("%s::%s", cv.convertExprCtx(fun.X, exprCtx{parent: fun}), cv.convertExpr(fun.Sel))
 				funcName = GetCppExprFunc(funcName)
 				// Need a special case for unsafe::Sizeof to avoid difficulties with constexpr
 				switch funcName.str {
@@ -4301,6 +4399,14 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			dbg := cv.DbgSprintf("/* %s, %T, %v */", usedObj, usedObj, isTopLevel(usedObj))
 
 			switch obj := usedObj.(type) {
+			case *types.PkgName:
+				id := mkCppExpr(n.Name).addDbg(dbg)
+				if selExpr, ok := ctx.parent.(*ast.SelectorExpr); ok {
+					di := cv.buildPkgDepInfo(obj, selExpr.Sel)
+					id.defs = append(id.defs, useNamespace(n.Name, cv.nsFromPkg(obj), di))
+					return id
+				}
+				cv.Panicf("convertExpr, unexpected parent type for ident of type PkgName, ctx.parent: %T, expr: %s, position: %v", ctx.parent, types.ExprString(n), cv.Position(n))
 			case *types.TypeName:
 				return ExprPrintf("gocpp::Tag<%s>()", n.Name)
 			case *types.Const, *types.Var:
@@ -4322,10 +4428,10 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		}
 
 	case *ast.IndexListExpr:
-		var indexStrs []string
+		var indexStrs []cppType
 		for _, index := range n.Indices {
 			indexExpr := cv.convertExprCppType(index)
-			indexStrs = append(indexStrs, indexExpr.str)
+			indexStrs = append(indexStrs, indexExpr)
 
 			msgInfo := fmt.Sprintf("expr: %v, position: %v", types.ExprString(n), cv.Position(index))
 			//cv.Assertf(len(indexExpr.typenames) == 0, "convertTypeExpr, IndexListExpr, indexExpr.typenames should be empty, %s", msgInfo)
@@ -4334,21 +4440,22 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 			cv.Assertf(indexExpr.dbg == "", "convertTypeExpr, IndexListExpr, indexExpr.dbg should be empty, %s", msgInfo)
 		}
 		if cv.IsFunc(n.X) && cv.IsFunc(n) {
-			return ExprPrintf("%s<%s>", cv.convertExpr(n.X), strings.Join(indexStrs, ", "))
+			return ExprPrintf("%s<%s>", cv.convertExpr(n.X), JoinExpr(indexStrs, ", "))
 		} else {
-			return ExprPrintf("%s[%s]", cv.convertExpr(n.X), strings.Join(indexStrs, ", "))
+			return ExprPrintf("%s[%s]", cv.convertExpr(n.X), JoinExpr(indexStrs, ", "))
 		}
 
 	case *ast.SelectorExpr:
-		name := cv.convertExpr(n.X)
+		name := cv.convertExprCtx(n.X, exprCtx{parent: n})
 
 		if cv.isNameSpace(n.X) {
 			return GetCppExprFunc(ExprPrintf("%s::%s", name, cv.convertTypeExpr(n.Sel, ctContext{ignoreNameSpace: true})))
 		} else if isFunc, hasReceiv, nbParams := cv.IsSelectorExprSignature(n); isFunc && !ctx.isTarget {
-			_, pkg := cv.isTypedef(n.Sel)
-			ns := ""
+			_, pkg, pkgNs, nsDeps := cv.isTypedef(n.Sel)
+			ns := cppExpr{}
 			if pkg != cv.namespace {
-				ns = fmt.Sprintf("%s::", pkg)
+				ns = ExprPrintf("%s::", pkg)
+				ns.defs = append(ns.defs, useNamespace(pkg, pkgNs, nsDeps))
 			}
 
 			excludedNames := cv.getScopeVars()
@@ -4442,6 +4549,17 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		cv.Panicf("convertExprImpl, type %v, expr '%v', position %v", reflect.TypeOf(node), types.ExprString(n), cv.Position(n))
 	}
 	panic("convertExprImpl, bug, unreacheable code reached !")
+}
+
+func (cv *cppConverter) buildPkgDepInfo(obj *types.PkgName, selector *ast.Ident) depInfo {
+	use := cv.typeInfo.Uses[selector]
+	pkgId := obj.Imported().Path() + "/" + cv.posBaseName(use.Pos())
+	di := depInfo{depPkgs: map[string]includeType{pkgId: FwdInclude}}
+	return di
+}
+
+func (cv *cppConverter) nsFromPkg(obj *types.PkgName) string {
+	return cv.shared.nsNamer.NamespaceFromTypePkg(obj.Imported())
 }
 
 func (cv *cppConverter) DbgSprintf(format string, params ...any) string {
@@ -4686,13 +4804,7 @@ func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
 
 	query := "file=" + absPath
 	cv.Logf("addPkgDependencies, query = %q\n", query)
-	pkgs, err := cv.PkgLoad(cfg, query)
-	if err != nil {
-		cv.Panicf("load: %v\n", err)
-	}
-	if packages.PrintErrors(pkgs) > 0 {
-		cv.Panicf("addPkgDependencies, packages.PrintErrors(pkgs) > 0, pkgPath: %s\n", inputPath)
-	}
+	pkgs := cv.PkgLoad(cfg, query)
 
 	cv.basePkgName = pkgs[0].PkgPath
 
@@ -4733,19 +4845,28 @@ func (cv *cppConverter) addPkgDependencies(inputPath string) []*ast.File {
 
 var pkgCache = map[string][]*packages.Package{}
 
-func (cv *cppConverter) PkgLoad(cfg *packages.Config, query string) ([]*packages.Package, error) {
+func (cv *cppConverter) PkgLoad(cfg *packages.Config, query string) []*packages.Package {
 	perf := cv.startPerfScope("packages.Load")
 	defer perf.Logf("query:%s", query)
 
 	if pkgs, ok := pkgCache[query]; ok {
 		perf.tag += " (cached)"
-		return pkgs, nil
+		return pkgs
 	}
 	pkgs, err := packages.Load(cfg, query)
-	if err == nil {
-		pkgCache[query] = pkgs
+	if err != nil {
+		cv.Panicf("load: %v\n", err)
 	}
-	return pkgs, err
+	if packages.PrintErrors(pkgs) > 0 {
+		cv.Panicf("addPkgDependencies, packages.PrintErrors(pkgs) > 0, query: %s\n", query)
+	}
+
+	cv.Logf("PkgLoad, query %q, loaded %d packages\n", query, len(pkgs))
+
+	pkgCache[query] = pkgs
+	cv.shared.nsNamer.PkgRegister(pkgs)
+
+	return pkgs
 }
 
 func (cv *cppConverter) PrintDefsUsage() {
@@ -4930,7 +5051,7 @@ func main() {
 		panic("Cannot use --tryRecover and --strictMode at the same time")
 	}
 
-	shared := buildSharedData()
+	shared := buildSharedData(fset)
 	shared.globalSubDir = "golang/" // TODO, remove '/' and use JoinPath when using it
 	shared.cppOutDir = *cppOutDir
 	shared.supportHeader = "gocpp/support"
@@ -4945,7 +5066,8 @@ func main() {
 	pcShared := &sharedParsingContext{}
 	pcShared.fileSet = fset
 
-	gorootSrc = JoinPath(CleanPath(runtime.GOROOT()), "src", "")
+	goRoot, _ := getGoRoot()
+	gorootSrc = JoinPath(CleanPath(goRoot), "src", "")
 
 	cv := new(cppConverter)
 	cv.shared = shared
@@ -4965,6 +5087,8 @@ func main() {
 	if *testFile {
 		cv.InitAndParse()
 		astFiles = append(astFiles, cv.astFile)
+		// Register package name for the test file without using "packages.Load".
+		cv.shared.nsNamer.Register(astFiles, &PackageInfo{PkgPath: cv.astFile.Name.Name})
 		cv.baseName = strings.TrimSuffix(*inputPath, ".go")
 		cv.basePkgName = cv.astFile.Name.Name
 	} else {

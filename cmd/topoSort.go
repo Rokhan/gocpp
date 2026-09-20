@@ -1,9 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 )
+
+var maxPlaceId = 1
+var placeLogIds = map[*place]int{}
+
+func getPlaceLogId(pp *place) int {
+	if pp == nil {
+		return -1
+	}
+	if id, ok := placeLogIds[pp]; ok {
+		return id
+	}
+	maxPlaceId++
+	placeLogIds[pp] = maxPlaceId
+	return maxPlaceId
+}
 
 func ComparePlace(cv Logger, x *place, y *place, getter func(place) []string, logPrefix string) int {
 	xstr := strings.TrimSpace(getter(*x)[0])
@@ -12,44 +28,62 @@ func ComparePlace(cv Logger, x *place, y *place, getter func(place) []string, lo
 	xstr = strings.SplitN(xstr, "\n", 2)[0]
 	ystr = strings.SplitN(ystr, "\n", 2)[0]
 
+	logPrefix = fmt.Sprintf("%q, (%3d vs %3d)", logPrefix, getPlaceLogId(x), getPlaceLogId(y))
+
 	_, ok := x.depInfo.dependencies[y.DepInfoTypeStr()]
 	if ok {
-		cv.Logf("'%s' sort type: '%v' use type '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decType, y.depInfo.rank)
+		cv.Logf("%s sort type: '%v' use type '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decType, y.depInfo.rank)
 		return 1
 	}
 	_, ok = y.depInfo.dependencies[x.DepInfoTypeStr()]
 	if ok {
-		cv.Logf("'%s' sort type: '%v' use type '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decType, x.depInfo.rank)
+		cv.Logf("%s sort type: '%v' use type '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decType, x.depInfo.rank)
 		return -1
 	}
 
 	_, ok = x.depInfo.depIdents[y.depInfo.decIdent]
 	if ok {
-		cv.Logf("'%s' sort ident: '%v' use ident '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decIdent, y.depInfo.rank)
+		cv.Logf("%s sort ident: '%v' use ident '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decIdent, y.depInfo.rank)
 		return 1
 	}
 	_, ok = y.depInfo.depIdents[x.depInfo.decIdent]
 	if ok {
-		cv.Logf("'%s' sort ident: '%v' use ident '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decIdent, x.depInfo.rank)
+		cv.Logf("%s sort ident: '%v' use ident '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decIdent, x.depInfo.rank)
 		return -1
 	}
 
 	var incType includeType
 	incType, ok = x.depInfo.depPkgs[y.depInfo.decPkg]
 	if ok && incType == y.includeType {
-		cv.Logf("'%s' sort pkg: '%v' use pkg '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decPkg, y.depInfo.rank)
+		cv.Logf("%s sort pkg: '%v' use pkg '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decPkg, y.depInfo.rank)
 		return 1
 	}
 	incType, ok = y.depInfo.depPkgs[x.depInfo.decPkg]
 	if ok && incType == x.includeType {
-		cv.Logf("'%s' sort pkg: '%v' use pkg '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decPkg, x.depInfo.rank)
+		cv.Logf("%s sort pkg: '%v' use pkg '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decPkg, x.depInfo.rank)
 		return -1
+	}
+
+	if y.namespace != nil {
+		_, ok = x.depInfo.depNss[y.namespace.ns]
+		if ok {
+			cv.Logf("%s sort ns:  '%v' use ns '%v', rank: %v\n", logPrefix, xstr, y.namespace, y.depInfo.rank)
+			return 1
+		}
+	}
+
+	if x.namespace != nil {
+		_, ok = y.depInfo.depNss[x.namespace.ns]
+		if ok {
+			cv.Logf("%s sort ns:  '%v' use ns '%v', rank: %v\n", logPrefix, ystr, x.namespace, x.depInfo.rank)
+			return -1
+		}
 	}
 
 	// TODO: find a way to do include/imports as late as possible
 
 	if cv.VerboseLog() {
-		cv.Logf("'%s' sort: '%v' and '%v' are independant, ranks: %v, %v\n", logPrefix, xstr, ystr, x.depInfo.rank, y.depInfo.rank)
+		cv.Logf("%s sort: '%v' and '%v' are independant, ranks: %v, %v\n", logPrefix, xstr, ystr, x.depInfo.rank, y.depInfo.rank)
 	}
 
 	return 0
@@ -128,46 +162,54 @@ func topoSort(cv Logger, headerElts []*place, getter func(place) []string, logPr
 	elts = splitElts
 	maxIndex = 2 * maxIndex
 
-	// Push imports as late as possible
-	for i := 0; i < maxIndex-1; i++ {
-		for elt1 := range elts[i] {
-			if elt1.depInfo.decPkg == "" {
-				continue
-			}
-			pushLater := true
-			for elt2 := range elts[i+1] {
-				if ComparePlace(cv, elt1, elt2, getter, logPrfix) != 0 {
-					pushLater = false
-					break
+	var changed = true
+	for changed {
+		changed = false
+		// Push imports and usings as late as possible
+		for i := 0; i < maxIndex-1; i++ {
+			for elt1 := range elts[i] {
+				if elt1.depInfo.decPkg == "" && elt1.namespace == nil {
+					continue
 				}
-			}
+				pushLater := true
+				for elt2 := range elts[i+1] {
+					if ComparePlace(cv, elt1, elt2, getter, logPrfix) != 0 {
+						pushLater = false
+						break
+					}
+				}
 
-			if pushLater {
-				delete(elts[i], elt1)
-				elts[i+1][elt1] = true
-				elt1.depInfo.rank = i + 1
+				if pushLater {
+					cv.VerboseLogf("pid %3d pushed later\n", getPlaceLogId(elt1))
+					delete(elts[i], elt1)
+					elts[i+1][elt1] = true
+					elt1.depInfo.rank = i + 1
+					changed = true
+				}
 			}
 		}
-	}
 
-	// Push defintion as soon as possible
-	for i := maxIndex; i > 0; i-- {
-		for elt1 := range elts[i] {
-			if elt1.depInfo.decPkg != "" {
-				continue
-			}
-			pushSooner := true
-			for elt2 := range elts[i-1] {
-				if ComparePlace(cv, elt1, elt2, getter, logPrfix) != 0 {
-					pushSooner = false
-					break
+		// Push defintion as soon as possible
+		for i := maxIndex; i > 0; i-- {
+			for elt1 := range elts[i] {
+				if elt1.depInfo.decPkg != "" || elt1.namespace != nil {
+					continue
 				}
-			}
+				pushSooner := true
+				for elt2 := range elts[i-1] {
+					if ComparePlace(cv, elt1, elt2, getter, logPrfix) != 0 {
+						pushSooner = false
+						break
+					}
+				}
 
-			if pushSooner {
-				delete(elts[i], elt1)
-				elts[i-1][elt1] = true
-				elt1.depInfo.rank = i - 1
+				if pushSooner {
+					cv.VerboseLogf("pid %3d pushed sooner\n", getPlaceLogId(elt1))
+					delete(elts[i], elt1)
+					elts[i-1][elt1] = true
+					elt1.depInfo.rank = i - 1
+					changed = true
+				}
 			}
 		}
 	}

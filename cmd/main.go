@@ -3069,7 +3069,6 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 		// TODO: CppTypePrintf ?
 		typeName := cv.convertTypeExpr(n.Index, ctx)
 		cppType := ExprPrintf("%s<%s>", cv.convertTypeExpr(n.X, ctx), typeName).toCppType()
-		cppType.typenames = append(cppType.typenames, typeName.str)
 		return cppType
 
 	case *ast.IndexListExpr:
@@ -4414,22 +4413,23 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		}
 
 	case *ast.IndexExpr:
-		if cv.IsFunc(n.X) && cv.IsFunc(n) {
+		if cv.IsType(n) {
+			return cv.convertTypeExpr(n, ctContext{}).cppExpr
+		} else if cv.IsFunc(n.X) && cv.IsFunc(n) {
 			return ExprPrintf("%s<%s>", cv.convertExpr(n.X), cv.convertExprCppType(n.Index))
 		} else {
 			return ExprPrintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
 		}
 
 	case *ast.IndexListExpr:
+		if cv.IsType(n) {
+			return cv.convertTypeExpr(n, ctContext{}).cppExpr
+		}
 		indexStrs := []cppType{}
 		for _, index := range n.Indices {
 			indexStrs = append(indexStrs, cv.convertExprCppType(index))
 		}
-		if cv.IsFunc(n.X) && cv.IsFunc(n) {
-			return ExprPrintf("%s<%s>", cv.convertExpr(n.X), JoinExpr(indexStrs, ", "))
-		} else {
-			return ExprPrintf("%s[%s]", cv.convertExpr(n.X), JoinExpr(indexStrs, ", "))
-		}
+		return ExprPrintf("%s<%s>", cv.convertExpr(n.X), JoinExpr(indexStrs, ", "))
 
 	case *ast.SelectorExpr:
 		name := cv.convertExprCtx(n.X, exprCtx{parent: n})

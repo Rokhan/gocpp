@@ -292,6 +292,11 @@ func (cv *parsingInfos) IsTypeMap(goType types.Type) bool {
 	}
 }
 
+func (cv *parsingInfos) IsType(expr ast.Expr) bool {
+	tv, ok := cv.typeInfo.Types[expr]
+	return ok && tv.IsType()
+}
+
 func (cv *parsingInfos) getReferencedTypes() (usedTypes map[types.Object]tagType) {
 	usedTypes = make(map[types.Object]tagType)
 

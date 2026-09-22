@@ -132,3 +132,81 @@ func main() {
 	s2 := Grow(s1, 10)
 	fmt.Printf("Grow: %v, %v\n", s1, s2)
 }
+
+// --- Generic declarations used by the examples below ---
+
+// Generic function, 1 type param
+func Identity[T any](v T) T { return v }
+
+// Generic function, 2 type params
+func MakePair[K comparable, V any](k K, v V) (K, V) { return k, v }
+
+// Generic type, 1 type param, underlying type is convertible (int)
+type Boxed[T any] int
+
+// Generic type, 2 type params, struct
+type Pair[K comparable, V any] struct {
+	Key K
+	Val V
+}
+
+//  1. Real indexing — NOT generic at all. Exercises the "else" branch
+//     (%s[%s]) for its intended purpose. tv.IsType() should be false,
+//     IsFunc should be false.
+func RealIndexing(arr []int, i int) int {
+	return arr[i]
+}
+
+//  2. Generic function instantiation, used as a value (not called).
+//     IsFunc(n.X) && IsFunc(n) == true -> "%s<%s>" via the existing branch.
+func FuncInstantiationAsValue() func(int) int {
+	f := Identity[int]
+	return f
+}
+
+//  3. Generic function instantiation, called directly.
+//     Same IsFunc branch, but n is the Fun of a CallExpr.
+func FuncInstantiationCalled() int {
+	return Identity[int](42)
+}
+
+//  4. Generic TYPE instantiation used as an explicit conversion.
+//     tv.IsType() == true, IsFunc == false -> this is the case that was
+//     previously falling into the wrong "%s[%s]" branch.
+func TypeInstantiationConverted(x int) Boxed[int] {
+	return Boxed[int](x)
+}
+
+// 5. Generic function instantiation with 2 type params, used as a value.
+func FuncInstantiationAsValue2() func(int, string) (int, string) {
+	f := MakePair[int, string]
+	return f
+}
+
+// 6. Generic function instantiation with 2 type params, called directly.
+func FuncInstantiationCalled2() (int, string) {
+	return MakePair[int, string](1, "a")
+}
+
+//  7. Generic TYPE instantiation with 2 type params, as an explicit
+//     conversion. This is the IndexListExpr analog of case 4 — the one
+//     IsFunc(n.X) && IsFunc(n) would miss entirely (falls to default in
+//     CallExpr, then wrongly emitted "%s[%s]" before the fix).
+type BoxedPair[K, V any] int
+
+func TypeInstantiationConverted2(x int) BoxedPair[int, string] {
+	return BoxedPair[int, string](x)
+}
+
+//  8. Generic type with 2 type params used as a receiver — exercises the
+//     original bug (missing template<> on the method) plus the
+//     StarExpr -> IndexListExpr -> typenames propagation via JoinExpr.
+func (p *Pair[K, V]) Swap() (V, K) {
+	return p.Val, p.Key
+}
+
+//  9. Composite literal with 2 type params — exercises convertTypeExpr's
+//     IndexListExpr case directly (type position, not expression position).
+func NewPair() Pair[int, string] {
+	return Pair[int, string]{Key: 1, Val: "a"}
+}

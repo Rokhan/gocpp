@@ -974,24 +974,35 @@ func (ns *namespaceAlias) aliasString() string {
 // 	return &place{nil, nil, nil, nil, ArrayPtr(ns.aliasString()), NotInclude, depInfo{}, nil, nil, nil, ns}
 // }
 
+// appendExprDefs accumulates one cppExpr's defs/typenames/comments/dbg onto the given slices.
+func appendExprDefs(e cppExpr, defs *[]place, typeNames *[]string, comments *[]string, dbgs *[]string) {
+	*defs = append(*defs, e.defs...)
+	*typeNames = append(*typeNames, e.typenames...)
+	*comments = append(*comments, e.comments...)
+	*dbgs = append(*dbgs, e.dbg)
+}
+
 func extractParamDefs(srcParams ...any) (defs []place, params []any, typeNames []string, comments []string, dbgs []string) {
 	for _, srcParam := range srcParams {
 		switch prm := srcParam.(type) {
 		case cppType:
-			defs = append(defs, prm.defs...)
+			appendExprDefs(prm.cppExpr, &defs, &typeNames, &comments, &dbgs)
 			params = append(params, prm.str)
-			typeNames = append(typeNames, prm.typenames...)
-			comments = append(comments, prm.comments...)
-			dbgs = append(dbgs, prm.dbg)
 		case cppExpr:
-			defs = append(defs, prm.defs...)
+			appendExprDefs(prm, &defs, &typeNames, &comments, &dbgs)
 			params = append(params, prm.str)
-			typeNames = append(typeNames, prm.typenames...)
-			comments = append(comments, prm.comments...)
-			dbgs = append(dbgs, prm.dbg)
 		default:
 			params = append(params, srcParam)
 		}
+	}
+	return
+}
+
+func extractCppTypeDefs(items []cppType) (defs []place, strs []string, typeNames []string, comments []string, dbgs []string) {
+	strs = make([]string, 0, len(items))
+	for _, item := range items {
+		appendExprDefs(item.cppExpr, &defs, &typeNames, &comments, &dbgs)
+		strs = append(strs, item.str)
 	}
 	return
 }
@@ -1008,7 +1019,7 @@ func ExprPrintf(format string, srcParams ...any) cppExpr {
 }
 
 func JoinExpr(indexStrs []cppType, sep string) any {
-	defs, _, typeNames, comments, dbgs := extractParamDefs(indexStrs)
+	defs, _, typeNames, comments, dbgs := extractCppTypeDefs(indexStrs)
 	strs := []string{}
 	for _, indexStr := range indexStrs {
 		strs = append(strs, indexStr.str)

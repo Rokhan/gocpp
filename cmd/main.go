@@ -701,14 +701,15 @@ func (rec mockReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
 	return Ptr(string(rec))
 }
 
-func logPlace(logger Logger, prefix string, place *place) {
+func logPlace(logger Logger, place *place, prefixFmt string, params ...any) {
 	di := &place.depInfo
 	ns := ""
 	if place.namespace != nil {
 		ns = place.namespace.ns
 	}
 	pid := getPlaceLogId(place)
-	logger.Logf("'%s' decl (before) pid:%3d -- info[%v, %v]: type='%v', deps=%v, vars=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v, ns=%s, depNs:%v\n", prefix, pid, di.rank, di.initialOrder, di.decType, di.dependencies, di.depVars, di.decPkg, di.depPkgs, di.decIdent, di.depIdents, ns, di.depNss)
+	prefix := fmt.Sprintf(prefixFmt, params...)
+	logger.Logf("%s pid:%3d -- info[%v, %v]: type='%v', deps=%v, vars=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v, ns=%s, depNs:%v\n", prefix, pid, di.rank, di.initialOrder, di.decType, di.dependencies, di.depVars, di.decPkg, di.depPkgs, di.decIdent, di.depIdents, ns, di.depNss)
 }
 
 func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(place) []string, dm depMode, outFile outFile, inNamespace bool, keepTag tagType) bool {
@@ -720,10 +721,10 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 	if len(headerElts) != 0 {
 		for _, place := range headerElts {
 			di := &place.depInfo
-			logPlace(cv, outFile.name, place)
+			logPlace(cv, place, "'%s' decl (before)", outFile.name)
 			di.ComputeDeps(dm)
 			di.ComputePackages(cv.parsingContext, dm)
-			logPlace(cv, outFile.name, place)
+			logPlace(cv, place, "'%s' decl (after)", outFile.name)
 		}
 
 		cv.Logf("'%s' decl: Sorting.\n", outFile.name)
@@ -791,7 +792,7 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 				fmt.Fprintf(outFile.out, "%s%s", indent, line)
 			}
 
-			logPlace(cv, outFile.name, place)
+			logPlace(cv, place, "'%s' decl", outFile.name)
 		}
 	}
 	return inNamespace

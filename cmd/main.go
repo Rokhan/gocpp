@@ -626,6 +626,8 @@ func (cv *cppConverter) computeDepInfos(headerElts []*place) {
 	for _, headerElt := range headerElts {
 		initialOrder := headerElt.depInfo.initialOrder
 		switch spec := headerElt.node.(type) {
+		case *ast.Ident:
+			headerElt.depInfo = cv.getIdentDepInfo(spec)
 		case *ast.FuncDecl:
 			headerElt.depInfo = cv.getFunDeclDepInfo(spec)
 		case *ast.StructType:
@@ -724,7 +726,7 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 			logPlace(cv, place, "'%s' decl (before)", outFile.name)
 			di.ComputeDeps(dm)
 			di.ComputePackages(cv.parsingContext, dm)
-			logPlace(cv, place, "'%s' decl (after)", outFile.name)
+			logPlace(cv, place, "'%s' decl (after) ", outFile.name)
 		}
 
 		cv.Logf("'%s' decl: Sorting.\n", outFile.name)
@@ -789,7 +791,11 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 			}
 
 			for _, line := range getter(*place) {
-				fmt.Fprintf(outFile.out, "%s%s", indent, line)
+				dbg := ""
+				if cv.shared.debugMode {
+					dbg = fmt.Sprintf("/* %d */", getPlaceLogId(place))
+				}
+				fmt.Fprintf(outFile.out, "%s%s%s", indent, dbg, line)
 			}
 
 			logPlace(cv, place, "'%s' decl", outFile.name)
@@ -2366,11 +2372,11 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 
 			if isNamespace {
 				if s.Type == nil && len(values) == len(s.Names) {
-					for i := range s.Names {
+					for i, nameId := range s.Names {
 						expr := cv.convertExpr(values[i])
 						exprType := cv.convertExprCppType(values[i])
 						exprType.comments = append(exprType.comments, comments...)
-						name := GetCppName(s.Names[i].Name)
+						name := GetCppName(nameId.Name)
 
 						canFwd := exprType.canFwd && cv.canForward(values[i])
 						if name == "_" {
@@ -2390,10 +2396,10 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 								}
 							} else {
 								if cv.ignoreKnownError(name, knownMissingDeps) {
-									result = append(result, headerStrf(s, "/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
+									result = append(result, headerStrf(nameId, "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 									result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 								} else {
-									result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
+									result = append(result, headerStrf(nameId, "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 									result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, expr, end)...)
 								}
 							}
@@ -2409,7 +2415,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 							names = append(names, "_")
 						} else {
 							names = append(names, GetCppName(name.Name))
-							result = append(result, headerStrf(s, "extern %s %s%s", exprType, name, end)...)
+							result = append(result, headerStrf(name, "extern %s %s%s", exprType, name, end)...)
 							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
 						}
 					}
@@ -2420,13 +2426,13 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 				} else if s.Type == nil {
 					cv.Panicf("convertSpecs, mismatch #%d name for #%d values. type: %v, input: %v", len(s.Names), len(values), reflect.TypeOf(s), cv.Position(s))
 				} else {
-					for i := range s.Names {
-						name := GetCppName(s.Names[i].Name)
+					for i, nameId := range s.Names {
+						name := GetCppName(nameId.Name)
 						exprType := cv.convertTypeExpr(s.Type, ctContext{usagePosition: UsageInHeader, targetVarName: name})
 						exprType.comments = append(exprType.comments, comments...)
 
 						if len(values) == 0 {
-							result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
+							result = append(result, headerStrf(nameId, "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
 						} else if tok == token.CONST && exprType.canFwd {
 							if cv.ignoreKnownError(name, knownMissingDeps) {
@@ -2445,11 +2451,11 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 								}
 							} else {
 								if cv.ignoreKnownError(name, knownMissingDeps) {
-									result = append(result, headerStrf(s, "/* extern %s %s [known mising deps] */%s", exprType.str /* don't duplicate defs */, name, end)...)
+									result = append(result, headerStrf(nameId, "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 									result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
 								} else {
 									Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
-									result = append(result, headerStrf(s, "extern %s %s%s", exprType.str /* don't duplicate defs */, name, end)...)
+									result = append(result, headerStrf(nameId, "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 									result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
 								}
 							}
@@ -2821,6 +2827,22 @@ func (cv *cppConverter) getStructDepInfo(n *ast.StructType) depInfo {
 		deps[structType.String()] = structType
 	}
 	return depInfo{structType, deps, "", map[string]bool{}, nil, namespaces, "", pkgs, 0, 0}
+}
+
+func (cv *cppConverter) getIdentDepInfo(name *ast.Ident) depInfo {
+	defType := cv.typeInfo.Defs[name].Type()
+	deps := map[string]types.Type{defType.String(): defType}
+	pkgs := map[string]includeType{}
+	vars := map[types.Object]bool{}
+	names := make(set[string])
+	namespaces := map[string]bool{}
+
+	appendMap(&pkgs, cv.getAllUsedPackages(name))
+	names.append(cv.getAllUsedNames(name))
+	appendMap(&vars, cv.getAllUsedVars(name))
+	appendMap(&namespaces, cv.getAllUsedNameSpaces(name))
+
+	return depInfo{nil, deps, name.Name, names, vars, namespaces, "", pkgs, 0, 0}
 }
 
 func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {

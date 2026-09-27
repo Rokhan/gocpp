@@ -1255,6 +1255,11 @@ type cppType struct {
 	canFwd bool // Can go in forward header
 }
 
+func (ct cppType) withoutDefs() cppType {
+	ct.defs = nil
+	return ct
+}
+
 // build a name based on type
 func (ct cppType) getTypeBasedName() string {
 	if ct.eltType != nil {

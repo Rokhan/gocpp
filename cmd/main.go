@@ -751,6 +751,13 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 
 			// Skip includes not needed by any definitions
 			if i > maxDecIndex {
+				if cv.shared.debugMode {
+					for _, line := range getter(*place) {
+						logId := getPlaceLogId(place)
+						line = strings.Replace(line, "\n", "", -1)
+						fmt.Fprintf(outFile.out, "%s/* after maxDecIndex, id:%d, %s*/\n", indent, logId, line)
+					}
+				}
 				continue
 			}
 
@@ -4120,10 +4127,20 @@ func convertTupleToCppTypeList(t *types.Tuple, tcCtx typeConvCtx) string {
 func (cv *cppConverter) BuffExprPrintf(buff *cppExprBuffer, format string, srcParams ...any) (n int, err error) {
 	defs, params /*tns*/, _, coms, dbgs := extractParamDefs(srcParams...)
 	//cv.Assertf(tns == nil, "typenames should be nil here")
-	cv.Assertf(coms == nil, "comments should be nil here")
+	for _, com := range coms {
+		com = cleanCommentString(com)
+		fmt.Fprintf(buff.buff, "    /* %s */\n", com)
+	}
 	*buff.defs = append(*buff.defs, defs...)
 	buff.dbgs = append(buff.dbgs, dbgs...)
 	return fmt.Fprintf(buff.buff, format, params...)
+}
+
+func cleanCommentString(com string) string {
+	com = strings.Replace(com, "/*", "#[[", -1)
+	com = strings.Replace(com, "*/", "]]#", -1)
+	com = strings.Replace(com, "\n", "---", -1)
+	return com
 }
 
 func (cv *cppConverter) printInline(bBuff io.Writer, bDefs *[]place, defs []place) {
@@ -4142,7 +4159,10 @@ func (cv *cppConverter) printInline(bBuff io.Writer, bDefs *[]place, defs []plac
 func (cv *cppConverter) WritterExprPrintf(buff *cppExprWritter[*bufio.Writer], format string, srcParams ...any) (n int, err error) {
 	defs, params /*tns*/, _, coms, dbgs := extractParamDefs(srcParams...)
 	//cv.Assertf(tns == nil, "typenames should be nil here")
-	cv.Assertf(coms == nil, "comments should be nil here")
+	for _, com := range coms {
+		com = cleanCommentString(com)
+		fmt.Fprintf(buff.buff, "    /* %s */\n", com)
+	}
 	cv.printInline(buff.buff, buff.defs, defs)
 	buff.dbgs = append(buff.dbgs, dbgs...)
 	return fmt.Fprintf(buff.buff, format, params...)

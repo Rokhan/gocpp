@@ -43,7 +43,6 @@ type cppConverterSharedData struct {
 	generatedFiles map[string]bool
 	usedFiles      map[string]bool
 	packagePaths   map[string]string
-	nsNamer        *NsNamer
 
 	// logging
 	logPerf outFile
@@ -183,13 +182,12 @@ func (cv *cppConverter) includeHeaderDependencies(pkgInfos []*pkgInfo, incType i
 	return
 }
 
-func buildSharedData(fset *token.FileSet) (shared *cppConverterSharedData) {
+func buildSharedData() (shared *cppConverterSharedData) {
 	shared = new(cppConverterSharedData)
 	shared.generatedFiles = map[string]bool{}
 	shared.parsedFiles = map[string]*ast.File{}
 	shared.usedFiles = map[string]bool{}
 	shared.packagePaths = map[string]string{}
-	shared.nsNamer = NewNsNamer(fset)
 	return
 }
 
@@ -412,7 +410,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	cv.cpp.indent++
 
 	cv.namespace = cv.astFile.Name.Name
-	cv.fullNamespace = cv.shared.nsNamer.NamespaceFromAstFile(cv.astFile)
+	cv.fullNamespace = cv.pcShared.nsNamer.NamespaceFromAstFile(cv.astFile)
 	cv.commentMap = ast.NewCommentMap(cv.pcShared.fileSet, cv.astFile, cv.astFile.Comments)
 	cv.declareVar(cv.namespace, false)
 
@@ -2946,7 +2944,7 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (isTD bool, pkgName string, nam
 }
 
 func (cv *cppConverter) NamespaceFromTypePkg(pkg *types.Package) string {
-	return cv.shared.nsNamer.NamespaceFromTypePkg(pkg)
+	return cv.pcShared.nsNamer.NamespaceFromTypePkg(pkg)
 }
 
 func checkCanFwd(cppType *cppType) {
@@ -4588,7 +4586,7 @@ func (cv *cppConverter) buildPkgDepInfo(obj *types.PkgName, selector *ast.Ident)
 }
 
 func (cv *cppConverter) nsFromPkg(obj *types.PkgName) string {
-	return cv.shared.nsNamer.NamespaceFromTypePkg(obj.Imported())
+	return cv.pcShared.nsNamer.NamespaceFromTypePkg(obj.Imported())
 }
 
 func (cv *cppConverter) DbgSprintf(format string, params ...any) string {
@@ -4896,7 +4894,7 @@ func (cv *cppConverter) PkgLoad(cfg *packages.Config, query string) []*packages.
 	cv.Logf("PkgLoad, query %q, loaded %d packages\n", query, len(pkgs))
 
 	pkgCache[query] = pkgs
-	cv.shared.nsNamer.PkgRegister(pkgs)
+	cv.pcShared.nsNamer.PkgRegister(pkgs)
 
 	return pkgs
 }
@@ -5083,7 +5081,7 @@ func main() {
 		panic("Cannot use --tryRecover and --strictMode at the same time")
 	}
 
-	shared := buildSharedData(fset)
+	shared := buildSharedData()
 	shared.globalSubDir = "golang/" // TODO, remove '/' and use JoinPath when using it
 	shared.cppOutDir = *cppOutDir
 	shared.supportHeader = "gocpp/support"
@@ -5097,6 +5095,7 @@ func main() {
 
 	pcShared := &sharedParsingContext{}
 	pcShared.fileSet = fset
+	pcShared.nsNamer = NewNsNamer(fset)
 
 	goRoot, _ := getGoRoot()
 	gorootSrc = JoinPath(CleanPath(goRoot), "src", "")
@@ -5120,7 +5119,7 @@ func main() {
 		cv.InitAndParse()
 		astFiles = append(astFiles, cv.astFile)
 		// Register package name for the test file without using "packages.Load".
-		cv.shared.nsNamer.Register(astFiles, &PackageInfo{PkgPath: cv.astFile.Name.Name})
+		cv.pcShared.nsNamer.Register(astFiles, &PackageInfo{PkgPath: cv.astFile.Name.Name})
 		cv.baseName = strings.TrimSuffix(*inputPath, ".go")
 		cv.basePkgName = cv.astFile.Name.Name
 	} else {

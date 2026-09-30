@@ -8,6 +8,7 @@ import (
 
 type sharedParsingContext struct {
 	fileSet *token.FileSet
+	nsNamer *NsNamer
 }
 
 type parsingContext struct {

@@ -61,10 +61,10 @@ func (n *NsNamer) filePath(f *ast.File) string {
 	return CleanPath(tf.Name())
 }
 
-// NsSegmentsFromAstFile returns the nested namespace segments for the package
+// nsSegmentsFromAstFile returns the nested namespace segments for the package
 // that f belongs to. f must resolve (via this Namer's FileSet) to a
 // path that was previously passed to Register/RegisterPath.
-func (n *NsNamer) NsSegmentsFromAstFile(f *ast.File) []string {
+func (n *NsNamer) nsSegmentsFromAstFile(f *ast.File) []string {
 	path := n.filePath(f)
 	info, ok := n.pathToPkg[path]
 	if !ok {
@@ -73,8 +73,8 @@ func (n *NsNamer) NsSegmentsFromAstFile(f *ast.File) []string {
 	return n.nsSegmentsFromPath(info.PkgPath)
 }
 
-// NsSegmentsForTypePkg returns the nested namespace segments for pkg, using its import path.
-func (n *NsNamer) NsSegmentsForTypePkg(pkg *types.Package) []string {
+// nsSegmentsFromTypePkg returns the nested namespace segments for pkg, using its import path.
+func (n *NsNamer) nsSegmentsFromTypePkg(pkg *types.Package) []string {
 	if pkg == nil {
 		Panicf("namer: NamespaceForType called with nil *types.Package (universe/builtin object?)")
 	}
@@ -103,18 +103,22 @@ func (n *NsNamer) nsSegmentsFromPath(pkgPath string) []string {
 	return segs
 }
 
-// NamespaceFromAstFile is the "::"-joined convenience form of NamespaceFor.
+const cppNsSep = "::"
+
+// NamespaceFrom(AstFile,Path,TypePkg): convenience to get c++ namespace from AstFile, Path, TypePkg
 func (n *NsNamer) NamespaceFromAstFile(f *ast.File) string {
-	return strings.Join(n.NsSegmentsFromAstFile(f), "::")
+	return strings.Join(n.nsSegmentsFromAstFile(f), cppNsSep)
 }
 
-// NamespaceFromTypePkg is the "::"-joined convenience form of
-// NamespaceForType.
+func (n *NsNamer) NamespaceFromPath(path string) string {
+	return strings.Join(n.nsSegmentsFromPath(path), cppNsSep)
+}
+
 func (n *NsNamer) NamespaceFromTypePkg(pkg *types.Package) string {
-	return strings.Join(n.NsSegmentsForTypePkg(pkg), "::")
+	return strings.Join(n.nsSegmentsFromTypePkg(pkg), cppNsSep)
 }
 
-// sanitizeIdent turns one import-path segment into a valid C++ identifier:
+// sanitizeIdent turns one import path segment into a valid C++ identifier:
 //   - dots and hyphens become underscores
 //   - a leading digit gets an underscore prefix.
 func sanitizeIdent(s string) string {

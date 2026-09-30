@@ -43,31 +43,31 @@ func ComparePlace(cv Logger, x *place, y *place, getter func(place) []string, lo
 
 	_, ok = x.depInfo.depIdents[y.depInfo.decIdent]
 	if ok {
-		cv.Logf("%s sort ident: '%v' use ident '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decIdent, y.depInfo.rank)
+		cv.Logf("%s sort ident:'%v' use ident '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decIdent, y.depInfo.rank)
 		return 1
 	}
 	_, ok = y.depInfo.depIdents[x.depInfo.decIdent]
 	if ok {
-		cv.Logf("%s sort ident: '%v' use ident '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decIdent, x.depInfo.rank)
+		cv.Logf("%s sort ident:'%v' use ident '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decIdent, x.depInfo.rank)
 		return -1
 	}
 
 	var incType includeType
 	incType, ok = x.depInfo.depPkgs[y.depInfo.decPkg]
 	if ok && incType == y.includeType {
-		cv.Logf("%s sort pkg: '%v' use pkg '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decPkg, y.depInfo.rank)
+		cv.Logf("%s sort pkg:  '%v' use pkg '%v', rank: %v\n", logPrefix, xstr, y.depInfo.decPkg, y.depInfo.rank)
 		return 1
 	}
 	incType, ok = y.depInfo.depPkgs[x.depInfo.decPkg]
 	if ok && incType == x.includeType {
-		cv.Logf("%s sort pkg: '%v' use pkg '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decPkg, x.depInfo.rank)
+		cv.Logf("%s sort pkg:  '%v' use pkg '%v', rank: %v\n", logPrefix, ystr, x.depInfo.decPkg, x.depInfo.rank)
 		return -1
 	}
 
 	if y.namespace != nil {
 		_, ok = x.depInfo.depNss[y.namespace.ns]
 		if ok {
-			cv.Logf("%s sort ns:  '%v' use ns '%v', rank: %v\n", logPrefix, xstr, y.namespace, y.depInfo.rank)
+			cv.Logf("%s sort ns:   '%v' use ns '%v', rank: %v\n", logPrefix, xstr, y.namespace, y.depInfo.rank)
 			return 1
 		}
 	}
@@ -75,7 +75,7 @@ func ComparePlace(cv Logger, x *place, y *place, getter func(place) []string, lo
 	if x.namespace != nil {
 		_, ok = y.depInfo.depNss[x.namespace.ns]
 		if ok {
-			cv.Logf("%s sort ns:  '%v' use ns '%v', rank: %v\n", logPrefix, ystr, x.namespace, x.depInfo.rank)
+			cv.Logf("%s sort ns:   '%v' use ns '%v', rank: %v\n", logPrefix, ystr, x.namespace, x.depInfo.rank)
 			return -1
 		}
 	}

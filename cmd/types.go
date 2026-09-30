@@ -85,7 +85,7 @@ func (cv *parsingInfos) posBaseName(t token.Pos) string {
 	if tf == nil {
 		return "<unknown>"
 	}
-	return strings.TrimRight(filepath.Base(tf.Name()), ".go")
+	return strings.TrimSuffix(filepath.Base(tf.Name()), ".go")
 }
 
 // Get the type parameters from an expression

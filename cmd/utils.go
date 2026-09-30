@@ -814,11 +814,21 @@ func (depInfo *depInfo) ComputePackages(pc parsingContext, dm depMode) {
 	if dm == FwdDepend {
 		return
 	}
-	appendMap(&depInfo.depPkgs, ComputePackages(depInfo.dependencies, pc, dm))
+
+    // TODO: rework ComputePackages to avoid this
+	includes, _ := ComputePackages(depInfo.dependencies, pc, dm)
+	_, usings := ComputePackages(depInfo.dependencies, pc, FwdDepend)
+	appendMap(&depInfo.depPkgs, includes)
+
+	initMap(&depInfo.depNss)
+	for path := range usings {
+		depInfo.depNss[pc.pcShared.nsNamer.NamespaceFromPath(path)] = true
+	}
 
 	for varObj := range depInfo.depVars {
 		pkg := pc.getPackageFromType(varObj, UnknownTag)
 		depInfo.depPkgs[pkg.basePath()] = HdrInclude
+		depInfo.depNss[pc.pcShared.nsNamer.NamespaceFromPath(pkg.pkgPath)] = true
 	}
 
 	if depInfo.decPkg != "" {
@@ -826,18 +836,25 @@ func (depInfo *depInfo) ComputePackages(pc parsingContext, dm depMode) {
 	}
 }
 
-func ComputePackages(deps map[string]types.Type, pc parsingContext, dm depMode) map[string]includeType {
+func ComputePackages(deps map[string]types.Type, pc parsingContext, dm depMode) (includes map[string]includeType, usings map[string]bool) {
 
 	toDo := map[string]types.Type{}
 	for k, v := range deps {
 		toDo[k] = v
 	}
 
-	result := map[string]includeType{}
+	includes = map[string]includeType{}
+	usings = map[string]bool{}
 
 	addResult := func(obj types.Object) {
 		pkg := pc.getPackageFromType(obj, UnknownTag)
-		result[pkg.basePath()] = HdrInclude
+		includes[pkg.basePath()] = HdrInclude
+		if pkg != nil {
+			usings[pkg.pkgPath] = true
+		} else {
+			errPath := fmt.Sprintf("<<%s>>", obj.Name())
+			usings[errPath] = true
+		}
 	}
 
 	done := map[string]types.Type{}
@@ -945,7 +962,7 @@ func ComputePackages(deps map[string]types.Type, pc parsingContext, dm depMode) 
 		}
 	}
 
-	return result
+	return
 }
 
 type receiverDesc interface {

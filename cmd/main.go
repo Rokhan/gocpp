@@ -537,7 +537,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	usedPkgInfosHeaderEnd := cv.getPackagesUsedByHeaderEnd(headerEndElts, usedPkgInfos)
 
 	if len(headerEndElts) > 0 {
-		// using io.Discard: just couting the dependencies for headerEndElts
+		// using io.Discard: just counting the dependencies for headerEndElts
 		depsHdr := includeDependencies(io.Discard, cv.shared, usedPkgInfosHeaderEnd, DefsTag, HdrInclude)
 		depsFwd := includeDependencies(io.Discard, cv.shared, usedPkgInfosHeaderEnd, UsesTag, FwdInclude)
 		if len(depsHdr) > 0 && len(depsFwd) > 0 {

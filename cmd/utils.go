@@ -1241,6 +1241,11 @@ func (expr cppExpr) toCppType() cppType {
 	return cppType{expr, false, false, false, nil, true}
 }
 
+func (ce cppExpr) withoutDefs() cppExpr {
+	ce.defs = nil
+	return ce
+}
+
 func mkCppExpr(str string) cppExpr {
 	return cppExpr{str: str}
 }
@@ -1253,11 +1258,6 @@ type cppType struct {
 	eltType    *cppType
 
 	canFwd bool // Can go in forward header
-}
-
-func (ct cppType) withoutDefs() cppType {
-	ct.defs = nil
-	return ct
 }
 
 // build a name based on type
@@ -1437,15 +1437,19 @@ func isIdentifierUsed(identifier string, expr ast.Expr) bool {
 	return used[identifier]
 }
 
+func initMap[K comparable, V any](target *map[K]V) {
+	if *target == nil {
+		*target = map[K]V{}
+	}
+}
+
 // appendMap merges all entries from src into target.
 // target is initialized if needed.
 func appendMap[K comparable, V any](target *map[K]V, src map[K]V) {
 	if src == nil {
 		panic("appendMap: src map is nil")
 	}
-	if *target == nil {
-		*target = make(map[K]V)
-	}
+	initMap(target)
 	for k, v := range src {
 		(*target)[k] = v
 	}

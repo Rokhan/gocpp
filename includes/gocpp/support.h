@@ -38,7 +38,7 @@ namespace golang
         struct Frame{};
     }
 
-    namespace tree
+    namespace golang_org::x::tour::tree
     {
         struct Tree;
         inline std::ostream& operator<<(std::ostream& os, Tree const&)

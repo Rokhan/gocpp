@@ -10,4 +10,5 @@ require (
 require (
 	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/tour v0.1.0 // indirect
 )

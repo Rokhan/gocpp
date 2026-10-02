@@ -815,7 +815,7 @@ func (depInfo *depInfo) ComputePackages(pc parsingContext, dm depMode) {
 		return
 	}
 
-    // TODO: rework ComputePackages to avoid this
+	// TODO: rework ComputePackages to avoid this
 	includes, _ := ComputePackages(depInfo.dependencies, pc, dm)
 	_, usings := ComputePackages(depInfo.dependencies, pc, FwdDepend)
 	appendMap(&depInfo.depPkgs, includes)
@@ -1488,6 +1488,12 @@ func (target set[T]) addOpt(elt *T) {
 func (target set[T]) append(src map[T]bool) {
 	for k, v := range src {
 		target[k] = v
+	}
+}
+
+func (target set[T]) remove(src map[T]bool) {
+	for k := range src {
+		delete(target, k)
 	}
 }
 

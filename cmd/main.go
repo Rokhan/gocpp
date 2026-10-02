@@ -455,7 +455,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	var fwdHeaderElts []*place
 	var usingElts []*place
 	var receiversElts = set[string]{}
-	var namespaceElts = set[string]{}
+	var namespaceElts = map[string]namespaceAlias{}
 	var headerEndElts []*place
 	var headerEnds []string
 	hdrInitialOrder := 0
@@ -481,7 +481,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 			}
 			if place.namespace != nil {
 				aliasDecl := place.namespace.aliasString()
-				namespaceElts.add(aliasDecl)
+				namespaceElts[place.namespace.alias] = *place.namespace
 				place.header = ArrayPtr(aliasDecl + ";\n")
 				place.fwdHeader = ArrayPtr(aliasDecl + ";\n")
 				usingElts = append(usingElts, &place)
@@ -529,7 +529,10 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 
 	headerElts = append(headerElts, cv.includeHeaderDependencies(usedPkgInfos, HdrInclude, &hdrInitialOrder)...)
 	headerElts = append(headerElts, cv.includeHeaderDependencies(usedPkgInfos, FwdInclude, &hdrInitialOrder)...)
-	hdrInNamespace := cv.generateSortedHeader(headerElts, getHeader, DecDepend, cv.hpp, false, DefsTag)
+	usingEmitted, hdrInNamespace := cv.generateSortedHeader(headerElts, getHeader, DecDepend, cv.hpp, false)
+
+	// Compute dependencies for recievers defined at end of the header file.
+	cv.computeDepInfos(headerEndElts)
 
 	// Compute packages used by recievers defined at end of the header file.
 	usedPkgInfosHeaderEnd := cv.getPackagesUsedByHeaderEnd(headerEndElts, usedPkgInfos)
@@ -559,6 +562,10 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 		fmt.Fprintf(cv.hpp.out, "namespace %s::%v\n{\n", goNs, cv.fullNamespace)
 	}
 
+	for _, alias := range cv.getNeededNamespaceAliasesForHeaderEnd(headerEndElts, usingEmitted, namespaceElts) {
+		fmt.Fprintf(cv.hpp.out, "%s%s;\n", cv.hpp.Indent(), alias)
+	}
+
 	// nb, we want to have always a rec namespace even if empty
 	fmt.Fprintf(cv.hpp.out, "\n%snamespace %s\n", cv.hpp.Indent(), recNs)
 	fmt.Fprintf(cv.hpp.out, "%s{\n", cv.hpp.Indent())
@@ -570,7 +577,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	fmt.Fprintf(cv.hpp.out, "%s}\n", cv.hpp.Indent())
 
 	fwdHeaderElts = append(fwdHeaderElts, cv.includeHeaderDependencies(usedPkgInfos, FwdInclude, &fwdInitialOrder)...)
-	fwdInNamespace := cv.generateSortedHeader(fwdHeaderElts, getFwdHeader, FwdDepend, cv.fwd, false, NoneTag)
+	_, fwdInNamespace := cv.generateSortedHeader(fwdHeaderElts, getFwdHeader, FwdDepend, cv.fwd, false)
 
 	if cv.genMakeFile {
 		fmt.Fprintf(cv.makeFile.out, "\t g++ -std=c++20 -I. -I../includes -I../thirdparty/includes %s.cpp -o ../%s/%s.exe\n", cv.baseName, cv.binOutDir, cv.baseName)
@@ -595,9 +602,6 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 }
 
 func (cv *cppConverter) getPackagesUsedByHeaderEnd(headerEndElts []*place, usedPkgInfos []*pkgInfo) []*pkgInfo {
-	// Compute dependencies for recievers defined at end of the header file.
-	cv.computeDepInfos(headerEndElts)
-
 	// Collect all depency informations for headerEndElts.
 	headerEndPkgs := set[string]{}
 	for _, place := range headerEndElts {
@@ -618,6 +622,29 @@ func (cv *cppConverter) getPackagesUsedByHeaderEnd(headerEndElts []*place, usedP
 		}
 	}
 	return usedPkgInfosHeaderEnd
+}
+
+func (cv *cppConverter) getNeededNamespaceAliasesForHeaderEnd(headerEndElts []*place, usingEmitted set[string], namespaceElt map[string]namespaceAlias) []string {
+	neededNs := set[string]{}
+	for _, elt := range headerEndElts {
+		for ns := range elt.depInfo.depNss {
+			neededNs.add(ns)
+		}
+	}
+	if len(neededNs) == 0 {
+		return nil
+	}
+
+	neededNs.remove(usingEmitted)
+
+	var result []string
+	for _, ns := range namespaceElt {
+		if neededNs.has(ns.ns) {
+			result = append(result, ns.aliasString())
+		}
+	}
+	slices.Sort(result)
+	return result
 }
 
 func (cv *cppConverter) computeDepInfos(headerElts []*place) {
@@ -712,12 +739,13 @@ func logPlace(logger Logger, place *place, prefixFmt string, params ...any) {
 	logger.Logf("%s pid:%3d -- info[%v, %v]: type='%v', deps=%v, vars=%v, pkg='%v', depPkgs=%v, name='%v', depNames=%v, ns=%s, depNs:%v\n", prefix, pid, di.rank, di.initialOrder, di.decType, di.dependencies, di.depVars, di.decPkg, di.depPkgs, di.decIdent, di.depIdents, ns, di.depNss)
 }
 
-func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(place) []string, dm depMode, outFile outFile, inNamespace bool, keepTag tagType) bool {
+func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(place) []string, dm depMode, outFile outFile, inNamespace bool) (set[string], bool) {
 	indent := ""
 	if inNamespace {
 		indent = outFile.Indent()
 	}
 
+	usingIncluded := set[string]{}
 	if len(headerElts) != 0 {
 		for _, place := range headerElts {
 			di := &place.depInfo
@@ -742,8 +770,7 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 			outFile.out.Flush()
 		}
 
-		hdrIncluded := map[string]bool{}
-		usingIncluded := map[string]bool{}
+		hdrIncluded := set[string]{}
 
 		for i, place := range headerElts {
 
@@ -806,7 +833,7 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 			logPlace(cv, place, "'%s' decl", outFile.name)
 		}
 	}
-	return inNamespace
+	return usingIncluded, inNamespace
 }
 
 func ToString(obj fmt.Stringer) string {

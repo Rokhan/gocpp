@@ -27,6 +27,8 @@ OUT_MD_TEST_FILES=$(addprefix $(LOGDIR)/,$(MD_TEST_FILES))
 
 CCACHE := $(shell which ccache 2> /dev/null)
 
+GCC_TIMEOUT ?= 30s
+
 GOCPP_ALWAYS_REGENERATE = false
 GOCPP_STRICT_MODE = false
 GOCPP_DEBUG_MODE = false
@@ -191,7 +193,7 @@ go-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FILES)
 
 GOLANG_LIB_COMPILE = \
 	(cd $(OUTDIR) && \
-	$(CCACHE) g++ -w -c -std=c++20 \
+	timeout $(GCC_TIMEOUT) $(CCACHE) g++ -w -c -std=c++20 \
 		-I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes \
 		$(1).cpp \
 		-o ../$(LOGDIR)/$(1).o)

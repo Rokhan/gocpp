@@ -781,7 +781,7 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 				if cv.shared.debugMode {
 					for _, line := range getter(*place) {
 						logId := getPlaceLogId(place)
-						line = strings.Replace(line, "\n", "", -1)
+						line = cleanCommentString(line)
 						fmt.Fprintf(outFile.out, "%s/* after maxDecIndex, id:%d, %s*/\n", indent, logId, line)
 					}
 				}
@@ -2417,6 +2417,8 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 							result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, cv.GenerateId(), expr, end)...)
 						} else if tok == token.CONST && canFwd {
 							if cv.ignoreKnownError(name, knownMissingDeps) {
+								exprType = exprType.inComment()
+								expr = expr.inComment()
 								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 							} else {
 								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "const %s %s = %s%s", exprType, name, expr, end)...)
@@ -2424,12 +2426,16 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 						} else {
 							if tok == token.CONST {
 								if cv.ignoreKnownError(name, knownMissingDeps) {
+									exprType = exprType.inComment()
+									expr = expr.inComment()
 									result = append(result, headerStrf(s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 								} else {
 									result = append(result, headerStrf(s, "const %s %s = %s%s", exprType, name, expr, end)...)
 								}
 							} else {
 								if cv.ignoreKnownError(name, knownMissingDeps) {
+									exprType = exprType.inComment()
+									expr = expr.inComment()
 									result = append(result, headerStrf(nameId, "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 									result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 								} else {
@@ -2468,29 +2474,38 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 						if len(values) == 0 {
 							result = append(result, headerStrf(nameId, "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
-						} else if tok == token.CONST && exprType.canFwd {
-							if cv.ignoreKnownError(name, knownMissingDeps) {
-								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
-							} else {
-								Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
-								result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "const %s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
-							}
 						} else {
-							if tok == token.CONST {
+							expr := cv.convertExpr(values[i])
+							if tok == token.CONST && exprType.canFwd {
 								if cv.ignoreKnownError(name, knownMissingDeps) {
-									result = append(result, headerStrf(s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
+									exprType = exprType.inComment()
+									expr := expr.inComment()
+									result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 								} else {
 									Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
-									result = append(result, headerStrf(s, "const %s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
+									result = append(result, fwdHeaderStrf(cv.getValueDepInfo(s, i), s, "const %s %s = %s%s", exprType, name, expr, end)...)
 								}
 							} else {
-								if cv.ignoreKnownError(name, knownMissingDeps) {
-									result = append(result, headerStrf(nameId, "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
-									result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, cv.convertExpr(values[i]), end)...)
+								if tok == token.CONST {
+									if cv.ignoreKnownError(name, knownMissingDeps) {
+										exprType = exprType.inComment()
+										expr := expr.inComment()
+										result = append(result, headerStrf(s, "/*const %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+									} else {
+										Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
+										result = append(result, headerStrf(s, "const %s %s = %s%s", exprType, name, expr, end)...)
+									}
 								} else {
-									Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
-									result = append(result, headerStrf(nameId, "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
-									result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, cv.convertExpr(values[i]), end)...)
+									if cv.ignoreKnownError(name, knownMissingDeps) {
+										exprType = exprType.inComment()
+										expr := expr.inComment()
+										result = append(result, headerStrf(nameId, "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
+										result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
+									} else {
+										Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
+										result = append(result, headerStrf(nameId, "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
+										result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, expr, end)...)
+									}
 								}
 							}
 						}
@@ -4162,14 +4177,6 @@ func (cv *cppConverter) BuffExprPrintf(buff *cppExprBuffer, format string, srcPa
 	buff.dbgs = append(buff.dbgs, dbgs...)
 	return fmt.Fprintf(buff.buff, format, params...)
 }
-
-func cleanCommentString(com string) string {
-	com = strings.Replace(com, "/*", "#[[", -1)
-	com = strings.Replace(com, "*/", "]]#", -1)
-	com = strings.Replace(com, "\n", "---", -1)
-	return com
-}
-
 func (cv *cppConverter) printInline(bBuff io.Writer, bDefs *[]place, defs []place) {
 	for _, def := range defs {
 		if def.inline != nil {

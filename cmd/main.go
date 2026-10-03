@@ -647,6 +647,8 @@ func (cv *cppConverter) getNeededNamespaceAliasesForHeaderEnd(headerEndElts []*p
 	return result
 }
 
+// NB: This only init the depInfo fields.
+// The full dependencies are available when ComputeDeps is call on depInfo fields.
 func (cv *cppConverter) computeDepInfos(headerElts []*place) {
 	for _, headerElt := range headerElts {
 		initialOrder := headerElt.depInfo.initialOrder

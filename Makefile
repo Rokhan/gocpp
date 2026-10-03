@@ -56,7 +56,19 @@ else ifeq ($(SHOW_DEBUG_LOG),false)
 endif
 
 define check-nonempty
-	test -s $(1) || (echo "Error: $(1) is empty" && false)
+	test -s "$(1)" || (echo "Error: $(1) is empty" && false)
+endef
+
+define compute-time
+	$(call check-nonempty,$(1)) && \
+	start=$$(date +%s%N); \
+	$(2); \
+	status=$$?; \
+	end=$$(date +%s%N); \
+	elapsed=$$((end - start)); \
+	echo -n "$(1) | " > $(3); \
+	printf '%8.3f\n' "$$(awk "BEGIN {print $$elapsed / 1000000000}")" >> $(3); \
+	exit $$status
 endef
 
 ## ------------------------------------------------------ ##
@@ -80,6 +92,11 @@ doc:
 	make -j4 md-stdlib
 	cat $$(find log/golang -type f -name "*.full.md" | sort) >> results.md
 	dos2unix results.md
+
+	echo > times.md
+	echo "File | compilation time " >> times.md
+	echo "---- | ---------------- " >> times.md
+	cat $$(find . -type f -name '*.time') >> times.md
 
 format-tests:
 	go fmt $(GO_TEST_DIRS)
@@ -172,6 +189,12 @@ go-stdlib-all: allexe
 go-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FILES)
 #	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_FILES))
 
+GOLANG_LIB_COMPILE = \
+	(cd $(OUTDIR) && \
+	$(CCACHE) g++ -w -c -std=c++20 \
+		-I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes \
+		$(1).cpp \
+		-o ../$(LOGDIR)/$(1).o)
 
 $(GENERATED_GOLANG_LIB_OBJ_FILES): $(LOGDIR)/%.o : $(OUTDIR)/%.cpp $(SUPPORT_FILES)
 	$(call DEBUG_LOG, " => $<")
@@ -180,7 +203,7 @@ $(GENERATED_GOLANG_LIB_OBJ_FILES): $(LOGDIR)/%.o : $(OUTDIR)/%.cpp $(SUPPORT_FIL
 
 	mkdir -p $$(dirname $@) || true
 
-	($(call check-nonempty, $<) && cd $(OUTDIR) && $(CCACHE) g++ -w -c -std=c++20 -I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o) \
+	$(call compute-time,$<,$(call GOLANG_LIB_COMPILE,$*),$(LOGDIR)/$*.time) \
 		&&  echo -n " ✔️ |" > $(LOGDIR)/$*.obj.md \
 		|| (echo    " ❌ |" > $(LOGDIR)/$*.obj.md && $(ON_GCC_ERROR))
 

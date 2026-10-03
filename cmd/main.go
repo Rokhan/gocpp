@@ -2695,7 +2695,7 @@ func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamesp
 
 		if isNamespace {
 			structFwdDecl := fmt.Sprintf("%sstruct %s;\n", templateDec, name)
-			defs = append(defs, fwdHeaderStr(structFwdDecl, node, cv.getTypeDepInfo(node)))
+			defs = append(defs, fwdHeaderStr(structFwdDecl, node.Name, cv.getIdentDepInfo(node.Name)))
 
 			structDecl, places := cv.convertStructTypeExpr(n, templatePrms, genStructParam{name, decl, with, false})
 
@@ -2891,7 +2891,7 @@ func (cv *cppConverter) getIdentDepInfo(name *ast.Ident) depInfo {
 	appendMap(&vars, cv.getAllUsedVars(name))
 	appendMap(&namespaces, cv.getAllUsedNameSpaces(name))
 
-	return depInfo{nil, deps, name.Name, names, vars, namespaces, "", pkgs, 0, 0}
+	return depInfo{defType, deps, name.Name, names, vars, namespaces, "", pkgs, 0, 0}
 }
 
 func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
@@ -3221,14 +3221,14 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 				structImpl, _ := cv.convertStructTypeExpr(n, nil, genStructParam{name, implem, with, false})
 				defs = append(defs, outlineStr(structImpl, node))
 				if ctx.usagePosition == UsageInHeader {
-					defs = append(defs, fwdHeaderStr(structFwdDecl, node, depInfo{}))
+					defs = append(defs, fwdHeaderStr(structFwdDecl, nil, depInfo{}))
 				}
 				return mkCppType(name, defs)
 			case UsageDefaut:
 				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, all, with, false})
 				//defs = append(defs, inlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{}))
 
-				defs = append(defs, outlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{}))
+				defs = append(defs, outlineStr(structDef, node), fwdHeaderStr(structFwdDecl, nil, depInfo{}))
 				return mkCppType(name, defs)
 			default:
 				cv.Panicf("convertTypeExpr, unknown usage mode, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))

@@ -1231,6 +1231,13 @@ func promoteOutlineToHeader(places *[]place) {
 	}
 }
 
+func cleanCommentString(com string) string {
+	com = strings.Replace(com, "/*", "#[[", -1)
+	com = strings.Replace(com, "*/", "]]#", -1)
+	com = strings.Replace(com, "\n", "---", -1)
+	return com
+}
+
 type cppExpr struct {
 	str       string // cpp type as a string
 	dbg       string
@@ -1263,6 +1270,11 @@ func (ce cppExpr) withoutDefs() cppExpr {
 	return ce
 }
 
+func (ce cppExpr) inComment() cppExpr {
+	ce.str = cleanCommentString(ce.str)
+	return ce
+}
+
 func mkCppExpr(str string) cppExpr {
 	return cppExpr{str: str}
 }
@@ -1285,6 +1297,11 @@ func (ct cppType) getTypeBasedName() string {
 	str, _ := Last(strings.Split(ct.str, "::"))
 	str, _ = First(strings.Split(str, "<"))
 	return str
+}
+
+func (ce cppType) inComment() cppType {
+	ce.str = cleanCommentString(ce.str)
+	return ce
 }
 
 func mkCppType(str string, defs []place) cppType {

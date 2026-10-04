@@ -1190,7 +1190,7 @@ func inlineStrf(node ast.Node, format string, params ...any) []place {
 // 	return expr.defs
 // }
 
-func headerStrf(node ast.Node, format string, params ...any) []place {
+func headerStrf(node *ast.ValueSpec, format string, params ...any) []place {
 	expr := ExprPrintf(format, params...)
 	commentedExprStr := append(expr.comments, expr.str)
 	expr.defs = append(expr.defs, headerStrs(commentedExprStr, node))

@@ -654,7 +654,8 @@ func (cv *cppConverter) computeDepInfos(headerElts []*place) {
 		initialOrder := headerElt.depInfo.initialOrder
 		switch spec := headerElt.node.(type) {
 		case *ast.Ident:
-			headerElt.depInfo = cv.getIdentDepInfo(spec)
+			// Panic to be sure old code that generate this case has been removed.
+			cv.Panicf("ERROR: computeDepInfos, unexpected *ast.Ident node: %v, position: %s\n", spec.Name, cv.Position(spec))
 		case *ast.FuncDecl:
 			headerElt.depInfo = cv.getFunDeclDepInfo(spec)
 		case *ast.StructType:
@@ -895,7 +896,7 @@ func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
 	cv.shared.usedFiles[cv.inputName] = true
 
 	for usedType, tag := range usedTypes {
-		result := cv.getPackageFromType(usedType, tag)
+		result := cv.getPackageFromObject(usedType, tag)
 		if result != nil {
 			pkgInfos = append(pkgInfos, result)
 		}
@@ -903,7 +904,7 @@ func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
 	return
 }
 
-func (cv *cppConverter) getPackageFromType(usedType types.Object, tag tagType) *pkgInfo {
+func (cv *cppConverter) getPackageFromObject(usedType types.Object, tag tagType) *pkgInfo {
 	if usedType == nil {
 		return nil
 	}
@@ -2436,10 +2437,10 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 								if cv.ignoreKnownError(name, knownMissingDeps) {
 									exprType = exprType.inComment()
 									expr = expr.inComment()
-									result = append(result, headerStrf(nameId, "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
+									result = append(result, headerStrf(typeOnlySpec(s), "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 									result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 								} else {
-									result = append(result, headerStrf(nameId, "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
+									result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 									result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, expr, end)...)
 								}
 							}
@@ -2450,12 +2451,12 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 					for i, name := range s.Names {
 						exprType := cv.convertExprCppType(name)
 						if i == 0 {
-							result = append(result, headerStrf(s, "extern %s %s%s", exprType, name, end)...)
+							result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType, name, end)...)
 						} else if name.Name == "_" {
 							names = append(names, "_")
 						} else {
 							names = append(names, GetCppName(name.Name))
-							result = append(result, headerStrf(name, "extern %s %s%s", exprType, name, end)...)
+							result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType, name, end)...)
 							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
 						}
 					}
@@ -2472,7 +2473,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 						exprType.comments = append(exprType.comments, comments...)
 
 						if len(values) == 0 {
-							result = append(result, headerStrf(nameId, "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
+							result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
 						} else {
 							expr := cv.convertExpr(values[i])
@@ -2499,11 +2500,11 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 									if cv.ignoreKnownError(name, knownMissingDeps) {
 										exprType = exprType.inComment()
 										expr := expr.inComment()
-										result = append(result, headerStrf(nameId, "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
+										result = append(result, headerStrf(typeOnlySpec(s), "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 										result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 									} else {
 										Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
-										result = append(result, headerStrf(nameId, "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
+										result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 										result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, expr, end)...)
 									}
 								}
@@ -2623,6 +2624,12 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 	}
 
 	return result
+}
+
+func typeOnlySpec(s *ast.ValueSpec) *ast.ValueSpec {
+	hdrValueSpec := *s
+	hdrValueSpec.Values = nil
+	return &hdrValueSpec
 }
 
 func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamespace bool) cppType {
@@ -2754,7 +2761,7 @@ func (cv *cppConverter) getAllUsedPackages(expr ast.Expr) map[string]includeType
 	for ident := range getAllIdentifiers(expr) {
 		defObj := cv.typeInfo.Uses[ident]
 		if defObj != nil {
-			pkg := cv.getPackageFromType(defObj, UnknownTag)
+			pkg := cv.getPackageFromObject(defObj, UnknownTag)
 			if pkg != nil {
 				result[pkg.basePath()] = FwdInclude
 			}
@@ -2911,7 +2918,7 @@ func (cv *cppConverter) getValueDepInfo(n *ast.ValueSpec, i int) depInfo {
 	if n.Type != nil {
 		appendMap(&pkgs, cv.getAllUsedPackages(n.Type))
 		names.append(cv.getAllUsedNames(n.Type))
-		//appendMap(&vars, cv.getAllUsedVars(n.Type)) ??
+		appendMap(&vars, cv.getAllUsedVars(n.Type))
 		appendMap(&namespaces, cv.getAllUsedNameSpaces(n.Type))
 		declType := cv.typeInfo.Types[n.Type].Type
 		deps[declType.String()] = declType

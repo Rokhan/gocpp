@@ -62,7 +62,7 @@ define check-nonempty
 endef
 
 define compute-time
-	$(call check-nonempty,$(1)) && \
+	$(call check-nonempty,$(1)) || { echo "$(1) | ERROR: empty input" > $(3); exit 1; }; \
 	start=$$(date +%s%N); \
 	$(2); \
 	status=$$?; \
@@ -205,7 +205,7 @@ $(GENERATED_GOLANG_LIB_OBJ_FILES): $(LOGDIR)/%.o : $(OUTDIR)/%.cpp $(SUPPORT_FIL
 
 	mkdir -p $$(dirname $@) || true
 
-	$(call compute-time,$<,$(call GOLANG_LIB_COMPILE,$*),$(LOGDIR)/$*.time) \
+	($(call compute-time,$<,$(call GOLANG_LIB_COMPILE,$*),$(LOGDIR)/$*.time)) \
 		&&  echo -n " ✔️ |" > $(LOGDIR)/$*.obj.md \
 		|| (echo    " ❌ |" > $(LOGDIR)/$*.obj.md && $(ON_GCC_ERROR))
 

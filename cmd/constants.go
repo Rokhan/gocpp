@@ -121,10 +121,12 @@ var cppKeyWordsMapping = map[string]string{
 	"void":      "go_void",      // keyword
 	"while":     "go_while",     // keyword
 
-	"EOF":    "go_EOF",    // Macro of <cstdio>
-	"stdin":  "go_stdin",  // Macro of <cstdio>
-	"stdout": "go_stdout", // Macro of <cstdio>
-	"stderr": "go_stderr", // Macro of <cstdio>
+	"alignof":  "go_alignof",  // Macro of <cstddef>
+	"offsetof": "go_offsetof", // Macro of <cstddef>
+	"EOF":      "go_EOF",      // Macro of <cstdio>
+	"stdin":    "go_stdin",    // Macro of <cstdio>
+	"stdout":   "go_stdout",   // Macro of <cstdio>
+	"stderr":   "go_stderr",   // Macro of <cstdio>
 
 	"SEEK_SET": "go_SEEK_SET", // Macro of <stdio.h>
 	"SEEK_CUR": "go_SEEK_CUR", // Macro of <stdio.h>

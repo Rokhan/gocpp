@@ -182,6 +182,19 @@ func (cv *parsingInfos) GetTypeParameters(goType types.Type, expr ast.Expr) []ty
 	return nil
 }
 
+func (cv *parsingInfos) IsExprInt(expr ast.Expr) bool {
+	goType := cv.convertExprToType(expr)
+	switch t := goType.(type) {
+	case *types.Basic:
+		switch t.Kind() {
+		case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
+			types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64:
+			return true
+		}
+	}
+	return false
+}
+
 func (cv *parsingInfos) IsExprPtr(expr ast.Expr) bool {
 	goType := cv.convertExprToType(expr)
 

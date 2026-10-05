@@ -25,4 +25,10 @@ func main() {
 	for range pow {
 		n++
 	}
+
+	var i, j = 0, 0 // check conflict with generated loop variable names
+	for range 5 {
+		fmt.Println("for range 5")
+	}
+	fmt.Println(i, j)
 }

@@ -1815,7 +1815,13 @@ func (cv *cppConverter) convertLabelledStmt(stmt ast.Stmt, env blockEnv, label *
 		} else if s.Key == nil && s.Value != nil && s.Tok == token.DEFINE {
 			cv.WritterExprPrintf(cppOut, "%sfor(auto [gocpp_ignored, %s] : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.Value), cv.convertExpr(s.X))
 		} else if s.Key == nil && s.Value == nil {
-			cv.WritterExprPrintf(cppOut, "%sfor(const auto& _ : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.X))
+			if cv.IsExprInt(s.X) {
+				excludedNames := cv.getScopeVars()
+				loopVarName := getAnotherLoopParamName(excludedNames)
+				cv.WritterExprPrintf(cppOut, "%sfor(int %[2]s = 0; %[2]s < %[3]s; ++%[2]s)\n", cv.cpp.Indent(), loopVarName, cv.convertExpr(s.X))
+			} else {
+				cv.WritterExprPrintf(cppOut, "%sfor(const auto& _ : %s)\n", cv.cpp.Indent(), cv.convertExpr(s.X))
+			}
 		} else {
 			cv.Panicf("Unmanaged case of '*ast.RangeStmt', token: %v; key: %v, value:%v, input: %v", s.Tok, s.Key, s.Value, cv.Position(s))
 		}
@@ -3641,12 +3647,6 @@ func PrintTemplatePrefix(buf *bytes.Buffer, data genStructData, templatePrms map
 	}
 }
 
-var defaultTemplateNames = []string{"T", "U", "V", "W"}
-
-func getAnotherTemplateParamName(excludedNames []string) string {
-	return getAnotherName(excludedNames, defaultTemplateNames)
-}
-
 func getAnotherName(excludedNames []string, defaultNames []string) string {
 	usedNames := make(map[string]bool)
 	for _, name := range excludedNames {
@@ -3671,10 +3671,22 @@ func getAnotherName(excludedNames []string, defaultNames []string) string {
 	}
 }
 
+var defaultTemplateNames = []string{"T", "U", "V", "W"}
+
+func getAnotherTemplateParamName(excludedNames []string) string {
+	return getAnotherName(excludedNames, defaultTemplateNames)
+}
+
 var lambdaParamNames = []string{"x", "y", "z", "t", "u", "v"}
 
 func getAnotherLambdaParamName(excludedNames []string) string {
 	return getAnotherName(excludedNames, lambdaParamNames)
+}
+
+var loopParamNames = []string{"i", "j", "k", "l", "m", "n"}
+
+func getAnotherLoopParamName(excludedNames []string) string {
+	return getAnotherName(excludedNames, loopParamNames)
 }
 
 func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms map[string][]string, param genStructParam) (string, []place) {
